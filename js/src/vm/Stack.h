@@ -282,12 +282,12 @@ class StackFrame
   private:
     mutable uint32_t    flags_;         /* bits described by Flags */
     union {                             /* describes what code is executing in a */
-        JSScript        *script;        /*   global frame */
+        RawScript       script;         /*   global frame */
         JSFunction      *fun;           /*   function frame, pre GetScopeChain */
     } exec;
     union {                             /* describes the arguments of a function */
         unsigned        nactual;        /*   for non-eval frames */
-        JSScript        *evalScript;    /*   the script of an eval-in-function */
+        RawScript       evalScript;     /*   the script of an eval-in-function */
     } u;
     mutable JSObject    *scopeChain_;   /* if HAS_SCOPECHAIN, current scope chain */
     StackFrame          *prev_;         /* if HAS_PREVPC, previous cx->regs->fp */
@@ -345,13 +345,13 @@ class StackFrame
 
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
     void initCallFrame(JSContext *cx, JSFunction &callee,
-                       JSScript *script, uint32_t nactual, StackFrame::Flags flags);
+                       UnrootedScript script, uint32_t nactual, StackFrame::Flags flags);
 
     /* Used for getFixupFrame (for FixupArity). */
     void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual);
 
     /* Used for eval. */
-    void initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs,
+    void initExecuteFrame(UnrootedScript script, StackFrame *prev, FrameRegs *regs,
                           const Value &thisv, JSObject &scopeChain, ExecuteType type);
 
   public:
@@ -434,11 +434,11 @@ class StackFrame
     }
 
     inline bool isStrictEvalFrame() const {
-        return isEvalFrame() && script()->strictModeCode;
+        return isEvalFrame() && script()->strict;
     }
 
     bool isNonStrictEvalFrame() const {
-        return isEvalFrame() && !script()->strictModeCode;
+        return isEvalFrame() && !script()->strict;
     }
 
     bool isDirectEvalFrame() const {
@@ -1192,7 +1192,7 @@ class FrameRegs
     }
 
     /* For stubs::CompileFunction, ContextStack: */
-    void prepareToRun(StackFrame &fp, JSScript *script) {
+    void prepareToRun(StackFrame &fp, UnrootedScript script) {
         pc = script->code;
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
@@ -1489,7 +1489,7 @@ class ContextStack
 
     inline StackFrame *
     getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
-                 JSFunction *fun, JSScript *script, StackFrame::Flags *pflags) const;
+                 JSFunction *fun, HandleScript script, StackFrame::Flags *pflags) const;
 
     /* Make pop* functions private since only called by guard classes. */
     void popSegment();
@@ -1590,11 +1590,11 @@ class ContextStack
      * The 'stackLimit' overload updates 'stackLimit' if it changes.
      */
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                         JSFunction &callee, JSScript *script,
+                         JSFunction &callee, HandleScript script,
                          InitialFrameFlags initial,
                          MaybeReportError report = REPORT_ERROR);
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                         JSFunction &callee, JSScript *script,
+                         JSFunction &callee, HandleScript script,
                          InitialFrameFlags initial, Value **stackLimit);
     void popInlineFrame(FrameRegs &regs);
 
@@ -1611,8 +1611,8 @@ class ContextStack
         DONT_ALLOW_CROSS_COMPARTMENT = false,
         ALLOW_CROSS_COMPARTMENT = true
     };
-    inline JSScript *currentScript(jsbytecode **pc = NULL,
-                                   MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
+    inline UnrootedScript currentScript(jsbytecode **pc = NULL,
+                                        MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
 
     /* Get the scope chain for the topmost scripted call on the stack. */
     inline HandleObject currentScriptedScopeChain() const;
@@ -1623,7 +1623,7 @@ class ContextStack
      * FixupArity returns.
      */
     StackFrame *getFixupFrame(JSContext *cx, MaybeReportError report,
-                              const CallArgs &args, JSFunction *fun, JSScript *script,
+                              const CallArgs &args, JSFunction *fun, HandleScript script,
                               void *ncode, InitialFrameFlags initial, Value **stackLimit);
 
     bool saveFrameChain();

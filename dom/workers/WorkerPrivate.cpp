@@ -2244,7 +2244,7 @@ WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx, jsval aMessage,
 
   {
     MutexAutoLock lock(mMutex);
-    if (mParentStatus != Running) {
+    if (mParentStatus > Running) {
       return true;
     }
   }

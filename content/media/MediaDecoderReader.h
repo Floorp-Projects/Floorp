@@ -158,6 +158,16 @@ public:
                            int64_t aTimecode,
                            nsIntRect aPicture);
 
+  static VideoData* CreateFromImage(VideoInfo& aInfo,
+                                    ImageContainer* aContainer,
+                                    int64_t aOffset,
+                                    int64_t aTime,
+                                    int64_t aEndTime,
+                                    const nsRefPtr<Image>& aImage,
+                                    bool aKeyframe,
+                                    int64_t aTimecode,
+                                    nsIntRect aPicture);
+
   // Constructs a duplicate VideoData object. This intrinsically tells the
   // player that it does not need to update the displayed frame when this
   // frame is played; this frame is identical to the previous.

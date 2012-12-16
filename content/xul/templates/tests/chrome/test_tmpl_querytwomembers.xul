@@ -14,6 +14,28 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output" unordered="true">
+    <label id="http://www.some-fictitious-zoo.com/arachnids/tarantula" value="Tarantula"/>
+    <label step="3" id="http://www.some-fictitious-zoo.com/birds/wren" value="Wren"/>
+    <label id="http://www.some-fictitious-zoo.com/birds/emu" value="Emu"/>
+    <label step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl" value="Barn Owl"/>
+    <label id="http://www.some-fictitious-zoo.com/birds/raven" value="Raven"/>
+    <label step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx" value="Archaeopteryx"/>
+    <label step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin" value="Emperor Penguin"/>
+    <label id="http://www.some-fictitious-zoo.com/fish/cod" value="Cod"/>
+    <label id="http://www.some-fictitious-zoo.com/fish/swordfish" value="Swordfish"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/lion" value="Lion"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/hippopotamus" value="HIPPOPOTAMUS"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/llama" value="LLAMA"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/polarbear" value="Polar Bear"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/aardvark" value="aardvark"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo" value="Nine-banded Armadillo"/>
+    <label id="http://www.some-fictitious-zoo.com/mammals/gorilla" value="Gorilla"/>
+    <label id="http://www.some-fictitious-zoo.com/reptiles/anaconda" value="Anaconda"/>
+    <label id="http://www.some-fictitious-zoo.com/reptiles/chameleon" value="Chameleon"/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,28 +48,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output unordered="true">
-  <label id="http://www.some-fictitious-zoo.com/arachnids/tarantula" value="Tarantula"/>
-  <label step="3" id="http://www.some-fictitious-zoo.com/birds/wren" value="Wren"/>
-  <label id="http://www.some-fictitious-zoo.com/birds/emu" value="Emu"/>
-  <label step="-4" id="http://www.some-fictitious-zoo.com/birds/barnowl" value="Barn Owl"/>
-  <label id="http://www.some-fictitious-zoo.com/birds/raven" value="Raven"/>
-  <label step="2" id="http://www.some-fictitious-zoo.com/birds/archaeopteryx" value="Archaeopteryx"/>
-  <label step="1" id="http://www.some-fictitious-zoo.com/birds/emperorpenguin" value="Emperor Penguin"/>
-  <label id="http://www.some-fictitious-zoo.com/fish/cod" value="Cod"/>
-  <label id="http://www.some-fictitious-zoo.com/fish/swordfish" value="Swordfish"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/lion" value="Lion"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/hippopotamus" value="HIPPOPOTAMUS"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/africanelephant" value="African Elephant"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/llama" value="LLAMA"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/polarbear" value="Polar Bear"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/aardvark" value="aardvark"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo" value="Nine-banded Armadillo"/>
-  <label id="http://www.some-fictitious-zoo.com/mammals/gorilla" value="Gorilla"/>
-  <label id="http://www.some-fictitious-zoo.com/reptiles/anaconda" value="Anaconda"/>
-  <label id="http://www.some-fictitious-zoo.com/reptiles/chameleon" value="Chameleon"/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [
   // step 1

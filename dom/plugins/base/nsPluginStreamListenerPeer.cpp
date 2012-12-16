@@ -27,7 +27,7 @@
 #include "nsNetUtil.h"
 #include "nsPluginNativeWindow.h"
 #include "sampler.h"
-#include "nsObjectLoadingContent.h"
+#include "nsPluginInstanceOwner.h"
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
@@ -314,91 +314,47 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
     mPluginInstance->FileCachedStreamListeners()->RemoveElement(this);
 }
 
-// Called as a result of GetURL and PostURL
+// Called as a result of GetURL and PostURL, or by the host in the case of the
+// initial plugin stream.
 nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
                                                 nsNPAPIPluginInstance *aInstance,
                                                 nsNPAPIPluginStreamListener* aListener)
 {
 #ifdef PLUGIN_LOGGING
   nsAutoCString urlSpec;
-  if (aURL != nullptr) aURL->GetAsciiSpec(urlSpec);
-  
+  if (aURL != nullptr) aURL->GetSpec(urlSpec);
+
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
          ("nsPluginStreamListenerPeer::Initialize instance=%p, url=%s\n", aInstance, urlSpec.get()));
-  
-  PR_LogFlush();
-#endif
-  
-  mURL = aURL;
-  
-  mPluginInstance = aInstance;
 
-  mPStreamListener = aListener;
-  mPStreamListener->SetStreamListenerPeer(this);
-
-  mPendingRequests = 1;
-  
-  mDataForwardToRequest = new nsHashtable(16, false);
-  if (!mDataForwardToRequest)
-    return NS_ERROR_FAILURE;
-  
-  return NS_OK;
-}
-
-nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
-                                                        nsNPAPIPluginInstance* aInstance,
-                                                        nsObjectLoadingContent *aContent)
-{
-#ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec;
-  aURL->GetSpec(urlSpec);
-  
-  PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-         ("nsPluginStreamListenerPeer::InitializeEmbedded url=%s\n", urlSpec.get()));
-  
   PR_LogFlush();
 #endif
 
-  // We have to have one or the other.
-  if (!aInstance && !aContent) {
+  // Not gonna work out
+  if (!aInstance) {
     return NS_ERROR_FAILURE;
   }
 
   mURL = aURL;
-  
-  if (aInstance) {
-    NS_ASSERTION(mPluginInstance == nullptr, "nsPluginStreamListenerPeer::InitializeEmbedded mPluginInstance != nullptr");
-    mPluginInstance = aInstance;
-  } else {
-    mContent = aContent;
-  }
-  
-  mPendingRequests = 1;
-  
-  mDataForwardToRequest = new nsHashtable(16, false);
-  if (!mDataForwardToRequest)
-    return NS_ERROR_FAILURE;
-  
-  return NS_OK;
-}
 
-// Called by NewFullPagePluginStream()
-nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIURI* aURL, nsNPAPIPluginInstance *aInstance)
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-             ("nsPluginStreamListenerPeer::InitializeFullPage instance=%p\n",aInstance));
-  
-  NS_ASSERTION(mPluginInstance == nullptr, "nsPluginStreamListenerPeer::InitializeFullPage mPluginInstance != nullptr");
+  NS_ASSERTION(mPluginInstance == nullptr,
+               "nsPluginStreamListenerPeer::Initialize mPluginInstance != nullptr");
   mPluginInstance = aInstance;
-  
-  mURL = aURL;
-  
+
+  // If the plugin did not request this stream, e.g. the initial stream, we wont
+  // have a nsNPAPIPluginStreamListener yet - this will be handled by
+  // SetUpStreamListener
+  if (aListener) {
+    mPStreamListener = aListener;
+    mPStreamListener->SetStreamListenerPeer(this);
+  }
+
+  mPendingRequests = 1;
+
   mDataForwardToRequest = new nsHashtable(16, false);
   if (!mDataForwardToRequest)
     return NS_ERROR_FAILURE;
 
-  mPendingRequests = 1;
-  
   return NS_OK;
 }
 
@@ -497,16 +453,16 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
                  "Only our initial stream should be unknown!");
     TrackRequest(request);
   }
-  
+
   if (mHaveFiredOnStartRequest) {
     return NS_OK;
   }
-  
+
   mHaveFiredOnStartRequest = true;
-  
+
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
-  
+
   // deal with 404 (Not Found) HTTP response,
   // just return, this causes the request to be ignored.
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
@@ -521,7 +477,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
       mRequestFailed = true;
       return NS_ERROR_FAILURE;
     }
-    
+
     if (responseCode > 206) { // not normal
       bool bWantsAllNetworkStreams = false;
 
@@ -542,7 +498,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
       }
     }
   }
-  
+
   // Get the notification callbacks from the channel and save it as
   // week ref we'll use it in nsPluginStreamInfo::RequestRead() when
   // we'll create channel for byte range request.
@@ -550,15 +506,15 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
   if (callbacks)
     mWeakPtrChannelCallbacks = do_GetWeakReference(callbacks);
-  
+
   nsCOMPtr<nsILoadGroup> loadGroup;
   channel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
     mWeakPtrChannelLoadGroup = do_GetWeakReference(loadGroup);
-  
+
   int64_t length;
   rv = channel->GetContentLength(&length);
-  
+
   // it's possible for the server to not send a Content-Length.
   // we should still work in this case.
   if (NS_FAILED(rv) || length == -1) {
@@ -574,48 +530,34 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   else {
     mLength = length;
   }
-  
+
   nsAutoCString aContentType; // XXX but we already got the type above!
   rv = channel->GetContentType(aContentType);
   if (NS_FAILED(rv))
     return rv;
-  
+
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv))
     return rv;
-  
+
   aURL->GetSpec(mURLSpec);
-  
+
   if (!aContentType.IsEmpty())
     mContentType = aContentType;
-  
+
 #ifdef PLUGIN_LOGGING
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NOISY,
          ("nsPluginStreamListenerPeer::OnStartRequest this=%p request=%p mime=%s, url=%s\n",
           this, request, aContentType.get(), mURLSpec.get()));
-  
+
   PR_LogFlush();
 #endif
-
-  // If we don't have an instance yet it means we weren't able to load
-  // a plugin previously because we didn't have the mimetype. Try again
-  // if we have a mime type now.
-  if (!mPluginInstance && mContent && !aContentType.IsEmpty()) {
-    nsObjectLoadingContent *olc = static_cast<nsObjectLoadingContent*>(mContent.get());
-    rv = olc->InstantiatePluginInstance();
-    if (NS_SUCCEEDED(rv)) {
-      rv = olc->GetPluginInstance(getter_AddRefs(mPluginInstance));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
 
   // Set up the stream listener...
   rv = SetUpStreamListener(request, aURL);
   if (NS_FAILED(rv)) return rv;
-  
+
   return rv;
 }
 

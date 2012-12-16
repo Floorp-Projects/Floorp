@@ -51,6 +51,12 @@ enum nsAsyncCopyMode {
 };
 
 /**
+ * This function is called when a new chunk of data has been copied.  The
+ * reported count is the size of the current chunk.
+ */
+typedef void (* nsAsyncCopyProgressFun)(void *closure, uint32_t count);
+
+/**
  * This function is called when the async copy process completes.  The reported
  * status is NS_OK on success and some error code on failure.
  */
@@ -82,7 +88,8 @@ NS_AsyncCopy(nsIInputStream         *aSource,
              void                   *aCallbackClosure = nullptr,
              bool                    aCloseSource = true,
              bool                    aCloseSink = true,
-             nsISupports           **aCopierCtx = nullptr);
+             nsISupports           **aCopierCtx = nullptr,
+             nsAsyncCopyProgressFun  aProgressCallbackFun = nullptr);
 
 /**
  * This function cancels copying started by function NS_AsyncCopy.

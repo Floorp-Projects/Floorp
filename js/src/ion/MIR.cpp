@@ -434,6 +434,26 @@ MPhi::New(uint32_t slot)
     return new MPhi(slot);
 }
 
+void
+MPhi::removeOperand(size_t index)
+{
+    JS_ASSERT(index < inputs_.length());
+    JS_ASSERT(inputs_.length() > 1);
+
+    // If we have phi(..., a, b, c, d, ..., z) and we plan
+    // on removing a, then first shift downward so that we have
+    // phi(..., b, c, d, ..., z, z):
+    size_t length = inputs_.length();
+    for (size_t i = index + 1; i < length; i++)
+        replaceOperand(i - 1, getOperand(i));
+
+    // remove the final operand that now appears twice:
+    replaceOperand(length - 1, NULL);
+
+    // truncate the inputs_ list:
+    inputs_.shrinkBy(1);
+}
+
 MDefinition *
 MPhi::foldsTo(bool useValueNumbers)
 {
@@ -716,6 +736,12 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
         return rhs; // x op id => x
 
     return this;
+}
+
+bool
+MAbs::fallible() const
+{
+    return !range() || !range()->isFinite();
 }
 
 MDefinition *

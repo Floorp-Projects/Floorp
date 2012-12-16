@@ -31,7 +31,7 @@ sync/DelayedWorkTracker.java
 sync/delegates/ClientsDataDelegate.java
 sync/delegates/FreshStartDelegate.java
 sync/delegates/GlobalSessionCallback.java
-sync/delegates/InfoCollectionsDelegate.java
+sync/delegates/JSONRecordFetchDelegate.java
 sync/delegates/KeyUploadDelegate.java
 sync/delegates/MetaGlobalDelegate.java
 sync/delegates/WipeServerDelegate.java
@@ -40,6 +40,7 @@ sync/ExtendedJSONObject.java
 sync/GlobalSession.java
 sync/HTTPFailureException.java
 sync/InfoCollections.java
+sync/InfoCounts.java
 sync/jpake/BigIntegerHelper.java
 sync/jpake/Gx3OrGx4IsZeroOrOneException.java
 sync/jpake/IncorrectZkpException.java
@@ -66,6 +67,7 @@ sync/jpake/stage/JPakeStage.java
 sync/jpake/stage/PutRequestStage.java
 sync/jpake/stage/VerifyPairingStage.java
 sync/jpake/Zkp.java
+sync/JSONRecordFetcher.java
 sync/KeyBundleProvider.java
 sync/log/writers/AndroidLevelCachingLogWriter.java
 sync/log/writers/AndroidLogWriter.java
@@ -227,6 +229,7 @@ sync/stage/GlobalSyncStage.java
 sync/stage/NoSuchStageException.java
 sync/stage/NoSyncIDException.java
 sync/stage/PasswordsServerSyncStage.java
+sync/stage/SafeConstrainedServer11Repository.java
 sync/stage/ServerSyncStage.java
 sync/stage/SyncClientsEngineStage.java
 sync/stage/UploadMetaGlobalStage.java

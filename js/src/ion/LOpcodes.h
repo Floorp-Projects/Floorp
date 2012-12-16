@@ -35,12 +35,12 @@
     _(CallKnown)                    \
     _(CallGeneric)                  \
     _(CallNative)                   \
-    _(CallConstructor)              \
     _(ApplyArgsGeneric)             \
     _(StackArgT)                    \
     _(StackArgV)                    \
-    _(CreateThis)                   \
-    _(CreateThisVM)                 \
+    _(CreateThisV)                  \
+    _(CreateThisO)                  \
+    _(CreateThisWithTemplate)       \
     _(ReturnFromCtor)               \
     _(BitNotI)                      \
     _(BitNotV)                      \

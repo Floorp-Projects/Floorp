@@ -33,6 +33,7 @@
 #include "mozilla/TimeStamp.h"
 #include "prclist.h"
 #include "Layers.h"
+#include "nsRefreshDriver.h"
 
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -66,7 +67,6 @@ struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
 class nsAnimationManager;
-class nsRefreshDriver;
 class imgIContainer;
 class nsIDOMMediaQueryList;
 
@@ -654,6 +654,22 @@ public:
   {
     mDrawColorBackground = aCanDraw;
   }
+  
+  /**
+   * Getter and setter for OMTA time counters
+   */
+  bool ThrottledStyleIsUpToDate() const {
+    return mLastUpdateThrottledStyle == mRefreshDriver->MostRecentRefresh();
+  }
+  void TickLastUpdateThrottledStyle() {
+    mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
+  }
+  bool StyleUpdateForAllAnimationsIsUpToDate() const {
+    return mLastStyleUpdateForAllAnimations == mRefreshDriver->MostRecentRefresh();
+  }
+  void TickLastStyleUpdateForAllAnimations() {
+    mLastStyleUpdateForAllAnimations = mRefreshDriver->MostRecentRefresh();
+  }
 
 #ifdef IBMBIDI
   /**
@@ -971,6 +987,17 @@ public:
     mUsesViewportUnits = aValue;
   }
 
+  // true if there are OMTA transition updates for the current document which
+  // have been throttled, and therefore some style information may not be up
+  // to date
+  bool ExistThrottledUpdates() const {
+    return mExistThrottledUpdates;
+  }
+
+  void SetExistThrottledUpdates(bool aExistThrottledUpdates) {
+    mExistThrottledUpdates = aExistThrottledUpdates;
+  }
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -1182,6 +1209,8 @@ protected:
   ScrollbarStyles       mViewportStyleOverflow;
   uint8_t               mFocusRingWidth;
 
+  bool mExistThrottledUpdates;
+
   uint16_t              mImageAnimationMode;
   uint16_t              mImageAnimationModePref;
 
@@ -1192,6 +1221,11 @@ protected:
   uint32_t              mInterruptChecksToSkip;
 
   mozilla::TimeStamp    mReflowStartTime;
+
+  // last time animations/transition styles were flushed to their primary frames
+  mozilla::TimeStamp    mLastUpdateThrottledStyle;
+  // last time we did a full style flush
+  mozilla::TimeStamp    mLastStyleUpdateForAllAnimations;
 
   unsigned              mHasPendingInterrupt : 1;
   unsigned              mInterruptsEnabled : 1;

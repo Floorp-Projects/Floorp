@@ -155,9 +155,13 @@ DASHDecoder::DASHDecoder() :
   mAudioSubsegmentIdx(0),
   mVideoSubsegmentIdx(0),
   mAudioMetadataReadCount(0),
-  mVideoMetadataReadCount(0)
+  mVideoMetadataReadCount(0),
+  mSeeking(false),
+  mStatisticsLock("DASHDecoder.mStatisticsLock")
 {
   MOZ_COUNT_CTOR(DASHDecoder);
+  mAudioStatistics = new MediaChannelStatistics();
+  mVideoStatistics = new MediaChannelStatistics();
 }
 
 DASHDecoder::~DASHDecoder()
@@ -191,8 +195,8 @@ DASHDecoder::ReleaseStateMachine()
 
 nsresult
 DASHDecoder::Load(MediaResource* aResource,
-                    nsIStreamListener** aStreamListener,
-                    MediaDecoder* aCloneDonor)
+                  nsIStreamListener** aStreamListener,
+                  MediaDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -535,6 +539,7 @@ DASHDecoder::CreateAudioSubResource(nsIURI* aUrl,
     = MediaResource::Create(aAudioDecoder, channel);
   NS_ENSURE_TRUE(audioResource, nullptr);
 
+  audioResource->RecordStatisticsTo(mAudioStatistics);
   return audioResource;
 }
 
@@ -556,6 +561,7 @@ DASHDecoder::CreateVideoSubResource(nsIURI* aUrl,
     = MediaResource::Create(aVideoDecoder, channel);
   NS_ENSURE_TRUE(videoResource, nullptr);
 
+  videoResource->RecordStatisticsTo(mVideoStatistics);
   return videoResource;
 }
 
@@ -909,19 +915,23 @@ DASHDecoder::PossiblySwitchDecoder(DASHRepDecoder* aRepDecoder)
 
   // Now, determine if and which decoder to switch to.
   // XXX This download rate is averaged over time, and only refers to the bytes
-  // downloaded for the given decoder. A running average would be better, and
+  // downloaded for the video decoder. A running average would be better, and
   // something that includes all downloads. But this will do for now.
   NS_ASSERTION(VideoRepDecoder(), "Video decoder should not be null.");
   NS_ASSERTION(VideoRepDecoder()->GetResource(),
                "Video resource should not be null");
   bool reliable = false;
-  double downloadRate = VideoRepDecoder()->GetResource()->GetDownloadRate(&reliable);
+  double downloadRate = 0;
+  {
+    MutexAutoLock lock(mStatisticsLock);
+    downloadRate = mVideoStatistics->GetRate(&reliable);
+  }
   uint32_t bestRepIdx = UINT32_MAX;
   bool noRepAvailable = !mMPDManager->GetBestRepForBandwidth(mVideoAdaptSetIdx,
                                                              downloadRate,
                                                              bestRepIdx);
-  LOG("downloadRate [%f] reliable [%s] bestRepIdx [%d] noRepAvailable",
-      downloadRate, (reliable ? "yes" : "no"), bestRepIdx,
+  LOG("downloadRate [%0.2f kbps] reliable [%s] bestRepIdx [%d] noRepAvailable [%s]",
+      downloadRate/1000.0, (reliable ? "yes" : "no"), bestRepIdx,
       (noRepAvailable ? "yes" : "no"));
 
   // If there is a higher bitrate stream that can be downloaded with the
@@ -935,6 +945,18 @@ DASHDecoder::PossiblySwitchDecoder(DASHRepDecoder* aRepDecoder)
     // stream directly.
     toDecoderIdx = bestRepIdx;
   }
+
+  // Upgrade |toDecoderIdx| if a better subsegment was previously downloaded and
+  // is still cached.
+  if (mVideoSubsegmentIdx < mVideoSubsegmentLoads.Length() &&
+      toDecoderIdx < mVideoSubsegmentLoads[mVideoSubsegmentIdx]) {
+    // Check if the subsegment is cached.
+    uint32_t betterRepIdx = mVideoSubsegmentLoads[mVideoSubsegmentIdx];
+    if (mVideoRepDecoders[betterRepIdx]->IsSubsegmentCached(mVideoSubsegmentIdx)) {
+      toDecoderIdx = betterRepIdx;
+    }
+  }
+
   NS_ENSURE_TRUE(toDecoderIdx < mVideoRepDecoders.Length(),
                  NS_ERROR_ILLEGAL_VALUE);
 
@@ -958,6 +980,95 @@ DASHDecoder::PossiblySwitchDecoder(DASHRepDecoder* aRepDecoder)
   return NS_OK;
 }
 
+nsresult
+DASHDecoder::Seek(double aTime)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  NS_ENSURE_FALSE(mShuttingDown, NS_ERROR_UNEXPECTED);
+
+  LOG("Seeking to [%.2fs]", aTime);
+
+  {
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    // We want to stop the current series of downloads and restart later with
+    // the appropriate subsegment.
+
+    // 1 - Set the seeking flag, so that when current subsegments download (if
+    // any), the next subsegment will not be downloaded.
+    mSeeking = true;
+
+    // 2 - Cancel all current downloads to reset for seeking.
+    for (uint32_t i = 0; i < mAudioRepDecoders.Length(); i++) {
+      mAudioRepDecoders[i]->CancelByteRangeLoad();
+    }
+    for (uint32_t i = 0; i < mVideoRepDecoders.Length(); i++) {
+      mVideoRepDecoders[i]->CancelByteRangeLoad();
+    }
+  }
+
+  return MediaDecoder::Seek(aTime);
+}
+
+void
+DASHDecoder::NotifySeekInVideoSubsegment(int32_t aRepDecoderIdx,
+                                         int32_t aSubsegmentIdx)
+{
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  NS_ASSERTION(0 <= aRepDecoderIdx &&
+               aRepDecoderIdx < mVideoRepDecoders.Length(),
+               "Video decoder index is out of bounds");
+
+  // Reset current subsegment to match the one being seeked.
+  mVideoSubsegmentIdx = aSubsegmentIdx;
+  // Reset current decoder to match the one returned by
+  // |GetRepIdxForVideoSubsegmentLoad|.
+  mVideoRepDecoderIdx = aRepDecoderIdx;
+
+  mSeeking = false;
+
+  LOG("Dispatching load for video decoder [%d] [%p]: seek in subsegment [%d]",
+      mVideoRepDecoderIdx, VideoRepDecoder(), aSubsegmentIdx);
+
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(VideoRepDecoder(),
+                         &DASHRepDecoder::LoadNextByteRange);
+  nsresult rv = NS_DispatchToMainThread(event);
+  if (NS_FAILED(rv)) {
+    LOG("Error dispatching video byte range load: rv[0x%x].",
+        rv);
+    NetworkError();
+    return;
+  }
+}
+
+void
+DASHDecoder::NotifySeekInAudioSubsegment(int32_t aSubsegmentIdx)
+{
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  // Reset current subsegment to match the one being seeked.
+  mAudioSubsegmentIdx = aSubsegmentIdx;
+
+  LOG("Dispatching seeking load for audio decoder [%d] [%p]: subsegment [%d]",
+     mAudioRepDecoderIdx, AudioRepDecoder(), aSubsegmentIdx);
+
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(AudioRepDecoder(),
+                         &DASHRepDecoder::LoadNextByteRange);
+  nsresult rv = NS_DispatchToMainThread(event);
+  if (NS_FAILED(rv)) {
+    LOG("Error dispatching audio byte range load: rv[0x%x].",
+        rv);
+    NetworkError();
+    return;
+  }
+}
+
 bool
 DASHDecoder::IsDecoderAllowedToDownloadData(DASHRepDecoder* aRepDecoder)
 {
@@ -978,6 +1089,10 @@ DASHDecoder::IsDecoderAllowedToDownloadSubsegment(DASHRepDecoder* aRepDecoder,
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
+  // Forbid any downloads until we've been told what subsegment to seek to.
+  if (mSeeking) {
+    return false;
+  }
   // Return false if there is still metadata to be downloaded.
   if (mAudioMetadataReadCount != 0 || mVideoMetadataReadCount != 0) {
     return false;
@@ -994,5 +1109,143 @@ DASHDecoder::IsDecoderAllowedToDownloadSubsegment(DASHRepDecoder* aRepDecoder,
   return false;
 }
 
-} // namespace mozilla
+void
+DASHDecoder::SetSubsegmentIndex(DASHRepDecoder* aRepDecoder,
+                                int32_t aSubsegmentIdx)
+{
+  NS_ASSERTION(0 <= aSubsegmentIdx,
+               "Subsegment index should not be negative!");
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  if (aRepDecoder == AudioRepDecoder()) {
+    mAudioSubsegmentIdx = aSubsegmentIdx;
+  } else if (aRepDecoder == VideoRepDecoder()) {
+    // If this is called in the context of a Seek, we need to cancel downloads
+    // from other rep decoders, or all rep decoders if we're not seeking in the
+    // current subsegment.
+    // Note: NotifySeekInSubsegment called from DASHReader will already have
+    // set the current decoder.
+    mVideoSubsegmentIdx = aSubsegmentIdx;
+  }
+}
 
+double
+DASHDecoder::ComputePlaybackRate(bool* aReliable)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  NS_ASSERTION(aReliable, "Bool pointer aRelible should not be null!");
+
+  // While downloading the MPD, return 0; do not count manifest as media data.
+  if (mResource && !mMPDManager) {
+    return 0;
+  }
+
+  // Once MPD is downloaded, use the rate from the video decoder.
+  // XXX Not ideal, but since playback rate is used to estimate if we have
+  // enough data to continue playing, this should be sufficient.
+  double videoRate = 0;
+  if (VideoRepDecoder()) {
+    videoRate = VideoRepDecoder()->ComputePlaybackRate(aReliable);
+  }
+  return videoRate;
+}
+
+void
+DASHDecoder::UpdatePlaybackRate()
+{
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  // While downloading the MPD, return silently; playback rate has no meaning
+  // for the manifest.
+  if (mResource && !mMPDManager) {
+    return;
+  }
+  // Once MPD is downloaded and audio/video decoder(s) are loading, forward to
+  // active rep decoders.
+  if (AudioRepDecoder()) {
+    AudioRepDecoder()->UpdatePlaybackRate();
+  }
+  if (VideoRepDecoder()) {
+    VideoRepDecoder()->UpdatePlaybackRate();
+  }
+}
+
+void
+DASHDecoder::NotifyPlaybackStarted()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  // While downloading the MPD, return silently; playback rate has no meaning
+  // for the manifest.
+  if (mResource && !mMPDManager) {
+    return;
+  }
+  // Once MPD is downloaded and audio/video decoder(s) are loading, forward to
+  // active rep decoders.
+  if (AudioRepDecoder()) {
+    AudioRepDecoder()->NotifyPlaybackStarted();
+  }
+  if (VideoRepDecoder()) {
+    VideoRepDecoder()->NotifyPlaybackStarted();
+  }
+}
+
+void
+DASHDecoder::NotifyPlaybackStopped()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  // While downloading the MPD, return silently; playback rate has no meaning
+  // for the manifest.
+  if (mResource && !mMPDManager) {
+    return;
+  }
+  // Once  // Once MPD is downloaded and audio/video decoder(s) are loading, forward to
+  // active rep decoders.
+  if (AudioRepDecoder()) {
+    AudioRepDecoder()->NotifyPlaybackStopped();
+  }
+  if (VideoRepDecoder()) {
+    VideoRepDecoder()->NotifyPlaybackStopped();
+  }
+}
+
+MediaDecoder::Statistics
+DASHDecoder::GetStatistics()
+{
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  Statistics result;
+
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  if (mResource && !mMPDManager) {
+    return MediaDecoder::GetStatistics();
+  }
+
+  // XXX Use video decoder and its media resource to get stats.
+  // This assumes that the following getter functions are getting relevant
+  // video data only.
+  if (VideoRepDecoder() && VideoRepDecoder()->GetResource()) {
+    MediaResource *resource = VideoRepDecoder()->GetResource();
+    // Note: this rate reflects the rate observed for all video downloads.
+    result.mDownloadRate =
+      resource->GetDownloadRate(&result.mDownloadRateReliable);
+    result.mDownloadPosition =
+      resource->GetCachedDataEnd(VideoRepDecoder()->mDecoderPosition);
+    result.mTotalBytes = resource->GetLength();
+    result.mPlaybackRate = ComputePlaybackRate(&result.mPlaybackRateReliable);
+    result.mDecoderPosition = VideoRepDecoder()->mDecoderPosition;
+    result.mPlaybackPosition = VideoRepDecoder()->mPlaybackPosition;
+  }
+  else {
+    result.mDownloadRate = 0;
+    result.mDownloadRateReliable = true;
+    result.mPlaybackRate = 0;
+    result.mPlaybackRateReliable = true;
+    result.mDecoderPosition = 0;
+    result.mPlaybackPosition = 0;
+    result.mDownloadPosition = 0;
+    result.mTotalBytes = 0;
+  }
+
+  return result;
+}
+
+} // namespace mozilla

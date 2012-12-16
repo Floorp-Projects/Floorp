@@ -48,6 +48,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
+    _(Folded)        /* Has constant folded uses not reflected in SSA */        \
                                                                                 \
     /* The instruction has been marked dead for lazy removal from resume
      * points.
@@ -1570,28 +1571,60 @@ class MGuardString
 };
 
 // Caller-side allocation of |this| for |new|:
+// Given a templateobject, construct |this| for JSOP_NEW
+class MCreateThisWithTemplate
+  : public MNullaryInstruction
+{
+    // Template for |this|, provided by TI
+    CompilerRootObject templateObject_;
+
+    MCreateThisWithTemplate(JSObject *templateObject)
+      : templateObject_(templateObject)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CreateThisWithTemplate);
+    static MCreateThisWithTemplate *New(JSObject *templateObject)
+    {
+        return new MCreateThisWithTemplate(templateObject);
+    }
+    JSObject *getTemplateObject() const {
+        return templateObject_;
+    }
+
+    // Although creation of |this| modifies global state, it is safely repeatable.
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// Caller-side allocation of |this| for |new|:
 // Given a prototype operand, construct |this| for JSOP_NEW.
 // For native constructors, returns MagicValue(JS_IS_CONSTRUCTING).
 class MCreateThis
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
 {
-    // Template for |this|, provided by TI, or NULL.
-    CompilerRootObject templateObject_;
+    bool needNativeCheck_;
 
-    MCreateThis(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
-      : templateObject_(templateObject)
+    MCreateThis(MDefinition *callee, MDefinition *prototype)
+      : needNativeCheck_(true)
     {
         initOperand(0, callee);
         initOperand(1, prototype);
-        setResultType(MIRType_Object);
+
+        // Type is mostly object, except for native constructors
+        // therefore the need of Value type.
+        setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(CreateThis)
-    static MCreateThis *New(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
+    static MCreateThis *New(MDefinition *callee, MDefinition *prototype)
     {
-        return new MCreateThis(callee, prototype, templateObject);
+        return new MCreateThis(callee, prototype);
     }
 
     MDefinition *getCallee() const {
@@ -1600,12 +1633,12 @@ class MCreateThis
     MDefinition *getPrototype() const {
         return getOperand(1);
     }
-    bool hasTemplateObject() const {
-        return !!templateObject_;
+    void removeNativeCheck() {
+        needNativeCheck_ = false;
+        setResultType(MIRType_Object);
     }
-    JSObject *getTemplateObject() const {
-        JS_ASSERT(hasTemplateObject());
-        return templateObject_;
+    bool needNativeCheck() const {
+        return needNativeCheck_;
     }
 
     // Although creation of |this| modifies global state, it is safely repeatable.
@@ -2242,6 +2275,7 @@ class MAbs
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }
+    bool fallible() const;
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
@@ -2736,12 +2770,10 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
     uint32_t slot_;
     bool triedToSpecialize_;
-    bool hasBytecodeUses_;
     bool isIterator_;
     MPhi(uint32_t slot)
       : slot_(slot),
         triedToSpecialize_(false),
-        hasBytecodeUses_(false),
         isIterator_(false)
     {
         setResultType(MIRType_Value);
@@ -2755,6 +2787,8 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
   public:
     INSTRUCTION_HEADER(Phi)
     static MPhi *New(uint32_t slot);
+
+    void removeOperand(size_t index);
 
     MDefinition *getOperand(size_t index) const {
         return inputs_[index];
@@ -2778,12 +2812,6 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 
     bool congruentTo(MDefinition * const &ins) const;
 
-    bool hasBytecodeUses() const {
-        return hasBytecodeUses_;
-    }
-    void setHasBytecodeUses() {
-        hasBytecodeUses_ = true;
-    }
     bool isIterator() const {
         return isIterator_;
     }
@@ -2795,6 +2823,18 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
         return AliasSet::None();
     }
     void computeRange();
+
+    MDefinition *operandIfRedundant() {
+        // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
+        // returns the operand that it will always be equal to (a, in
+        // those two cases).
+        MDefinition *first = getOperand(0);
+        for (size_t i = 1; i < numOperands(); i++) {
+            if (getOperand(i) != first && getOperand(i) != this)
+                return NULL;
+        }
+        return first;
+    }
 };
 
 // The goal of a Beta node is to split a def at a conditionally taken
@@ -3036,15 +3076,15 @@ class MRegExpTest
         return new MRegExpTest(regexp, string);
     }
 
-    TypePolicy *typePolicy() {
-        return this;
+    MDefinition *string() const {
+        return getOperand(0);
     }
-
     MDefinition *regexp() const {
         return getOperand(1);
     }
-    MDefinition *string() const {
-        return getOperand(0);
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
@@ -4429,11 +4469,11 @@ class MBindNameCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    PropertyName *name_;
-    JSScript *script_;
+    CompilerRootPropertyName name_;
+    CompilerRootScript script_;
     jsbytecode *pc_;
 
-    MBindNameCache(MDefinition *scopeChain, PropertyName *name, JSScript *script, jsbytecode *pc)
+    MBindNameCache(MDefinition *scopeChain, PropertyName *name, UnrootedScript script, jsbytecode *pc)
       : MUnaryInstruction(scopeChain), name_(name), script_(script), pc_(pc)
     {
         setResultType(MIRType_Object);
@@ -4442,7 +4482,7 @@ class MBindNameCache
   public:
     INSTRUCTION_HEADER(BindNameCache)
 
-    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, JSScript *script,
+    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, UnrootedScript script,
                                jsbytecode *pc) {
         return new MBindNameCache(scopeChain, name, script, pc);
     }
@@ -4456,7 +4496,7 @@ class MBindNameCache
     PropertyName *name() const {
         return name_;
     }
-    JSScript *script() const {
+    UnrootedScript script() const {
         return script_;
     }
     jsbytecode *pc() const {
@@ -4469,10 +4509,10 @@ class MGuardShape
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    const Shape *shape_;
+    CompilerRootShape shape_;
     BailoutKind bailoutKind_;
 
-    MGuardShape(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind)
+    MGuardShape(MDefinition *obj, UnrootedShape shape, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         shape_(shape),
         bailoutKind_(bailoutKind)
@@ -4485,7 +4525,7 @@ class MGuardShape
   public:
     INSTRUCTION_HEADER(GuardShape)
 
-    static MGuardShape *New(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind) {
+    static MGuardShape *New(MDefinition *obj, UnrootedShape shape, BailoutKind bailoutKind) {
         return new MGuardShape(obj, shape, bailoutKind);
     }
 
@@ -4495,7 +4535,7 @@ class MGuardShape
     MDefinition *obj() const {
         return getOperand(0);
     }
-    const Shape *shape() const {
+    const UnrootedShape shape() const {
         return shape_;
     }
     BailoutKind bailoutKind() const {
@@ -5635,7 +5675,7 @@ class MFunctionBoundary : public MNullaryInstruction
     Type type_;
     unsigned inlineLevel_;
 
-    MFunctionBoundary(JSScript *script, Type type, unsigned inlineLevel)
+    MFunctionBoundary(UnrootedScript script, Type type, unsigned inlineLevel)
       : script_(script), type_(type), inlineLevel_(inlineLevel)
     {
         JS_ASSERT_IF(type != Inline_Exit, script != NULL);
@@ -5646,12 +5686,12 @@ class MFunctionBoundary : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(FunctionBoundary)
 
-    static MFunctionBoundary *New(JSScript *script, Type type,
+    static MFunctionBoundary *New(UnrootedScript script, Type type,
                                   unsigned inlineLevel = 0) {
         return new MFunctionBoundary(script, type, inlineLevel);
     }
 
-    JSScript *script() {
+    UnrootedScript script() {
         return script_;
     }
 

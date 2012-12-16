@@ -270,19 +270,15 @@ NS_IMETHODIMP
 nsMIMEInfoAndroid::ExtensionExists(const nsACString & aExtension, bool *aRetVal)
 {
   NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
-  bool found = false;
-  uint32_t extCount = mExtensions.Length();
-  if (extCount < 1) return NS_OK;
 
-  for (uint8_t i=0; i < extCount; i++) {
-    const nsCString& ext = mExtensions[i];
-    if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-      found = true;
-      break;
-    }
+  nsCString mimeType;
+  if (mozilla::AndroidBridge::Bridge()) {
+      mozilla::AndroidBridge::Bridge()->
+        GetMimeTypeFromExtensions(aExtension, mimeType);
   }
 
-  *aRetVal = found;
+  // "*/*" means the bridge didn't find anything (i.e., extension doesn't exist).
+  *aRetVal = !mimeType.Equals(nsDependentCString("*/*"), nsCaseInsensitiveCStringComparator());
   return NS_OK;
 }
 

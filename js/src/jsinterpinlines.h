@@ -87,7 +87,7 @@ ComputeThis(JSContext *cx, StackFrame *fp)
     if (thisv.isObject())
         return true;
     if (fp->isFunctionFrame()) {
-        if (fp->fun()->inStrictMode() || fp->fun()->isSelfHostedBuiltin())
+        if (fp->fun()->strict() || fp->fun()->isSelfHostedBuiltin())
             return true;
         /*
          * Eval function frames have their own |this| slot, which is a copy of the function's
@@ -174,15 +174,16 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
 }
 
 inline bool
-NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Shape *shape,
+NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Shape *shapeArg,
           unsigned getHow, MutableHandleValue vp)
 {
-    if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
+    if (shapeArg->isDataDescriptor() && shapeArg->hasDefaultGetter()) {
         /* Fast path for Object instance properties. */
-        JS_ASSERT(shape->hasSlot());
-        vp.set(pobj->nativeGetSlot(shape->slot()));
+        JS_ASSERT(shapeArg->hasSlot());
+        vp.set(pobj->nativeGetSlot(shapeArg->slot()));
     } else {
-        if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp.address()))
+        RootedShape shape(cx, shapeArg);
+        if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp))
             return false;
     }
     return true;
@@ -346,7 +347,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
                 JSObject::nativeSetSlotWithType(cx, obj, shape, rval);
             } else {
                 RootedValue rref(cx, rval);
-                bool strict = cx->stack.currentScript()->strictModeCode;
+                bool strict = cx->stack.currentScript()->strict;
                 if (!js_NativeSet(cx, obj, obj, shape, false, strict, rref.address()))
                     return false;
             }
@@ -356,7 +357,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
         GET_NAME_FROM_BYTECODE(cx->stack.currentScript(), pc, 0, name);
     }
 
-    bool strict = cx->stack.currentScript()->strictModeCode;
+    bool strict = cx->stack.currentScript()->strict;
     RootedValue rref(cx, rval);
 
     RootedId id(cx, NameToId(name));
@@ -446,7 +447,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
     JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
-    bool strict = script->strictModeCode;
+    bool strict = script->strict;
     RootedPropertyName name(cx, script->getName(pc));
     RootedValue valCopy(cx, val);
 
@@ -779,7 +780,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
         }
     }
 
-    assertSameCompartment(cx, res);
+    assertSameCompartmentDebugOnly(cx, res);
     return true;
 }
 
@@ -790,11 +791,11 @@ GetElementOperation(JSContext *cx, JSOp op, HandleValue lref, HandleValue rref,
     AssertCanGC();
     JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
-    if (lref.isString() && rref.isInt32()) {
+    uint32_t index;
+    if (lref.isString() && IsDefinitelyIndex(rref, &index)) {
         JSString *str = lref.toString();
-        int32_t i = rref.toInt32();
-        if (size_t(i) < str->length()) {
-            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
+        if (index < str->length()) {
+            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, index);
             if (!str)
                 return false;
             res.setString(str);
@@ -876,6 +877,54 @@ TypeOfOperation(JSContext *cx, HandleValue v)
 {
     JSType type = JS_TypeOfValue(cx, v);
     return TypeName(type, cx);
+}
+
+static JS_ALWAYS_INLINE bool
+InitElemOperation(JSContext *cx, HandleObject obj, MutableHandleValue idval, HandleValue val)
+{
+    JS_ASSERT(!obj->isDenseArray());
+    JS_ASSERT(!val.isMagic(JS_ARRAY_HOLE));
+
+    RootedId id(cx);
+    if (!FetchElementId(cx, obj, idval, id.address(), idval))
+        return false;
+
+    return JSObject::defineGeneric(cx, obj, id, val, NULL, NULL, JSPROP_ENUMERATE);
+}
+
+static JS_ALWAYS_INLINE bool
+InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t index, HandleValue val)
+{
+    JSOp op = JSOp(*pc);
+    JS_ASSERT(op == JSOP_INITELEM_ARRAY || op == JSOP_INITELEM_INC);
+
+    JS_ASSERT(obj->isArray());
+
+    /*
+     * If val is a hole, do not call JSObject::defineElement. In this case,
+     * if the current op is the last element initialiser, set the array length
+     * to one greater than id.
+     */
+    if (val.isMagic(JS_ARRAY_HOLE)) {
+        JSOp next = JSOp(*GetNextPc(pc));
+
+        if ((op == JSOP_INITELEM_ARRAY && next == JSOP_ENDINIT) ||
+            (op == JSOP_INITELEM_INC && next == JSOP_POP))
+        {
+            if (!SetLengthProperty(cx, obj, index + 1))
+                return false;
+        }
+    } else {
+        if (!JSObject::defineElement(cx, obj, index, val, NULL, NULL, JSPROP_ENUMERATE))
+            return false;
+    }
+
+    if (op == JSOP_INITELEM_INC && index == INT32_MAX) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SPREAD_TOO_LARGE);
+        return false;
+    }
+
+    return true;
 }
 
 #define RELATIONAL_OP(OP)                                                     \

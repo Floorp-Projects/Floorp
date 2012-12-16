@@ -21,7 +21,6 @@ SDK_XPIDLSRCS = 				\
 	nsIDOMCSSStyleDeclaration.idl		\
 	nsIDOMCSSStyleSheet.idl			\
 	nsIDOMCSSValue.idl			\
-	nsIDOMCSSValueList.idl			\
 	nsIDOMElementCSSInlineStyle.idl		\
 	$(NULL)
 

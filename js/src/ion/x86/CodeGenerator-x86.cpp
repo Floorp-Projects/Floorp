@@ -137,7 +137,7 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 void
 CodeGeneratorX86::linkAbsoluteLabels()
 {
-    JSScript *script = gen->info().script();
+    UnrootedScript script = gen->info().script();
     IonCode *method = script->ion->method();
 
     for (size_t i = 0; i < deferredDoubles_.length(); i++) {

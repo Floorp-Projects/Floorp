@@ -118,10 +118,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 0d3bfc0e-661c-4e70-933e-98efc912a75b
+// a43e26cd-9573-44c7-8fe5-859549eff814
 #define NS_IPRESSHELL_IID \
-{ 0x0d3bfc0e, 0x661c, 0x4e70, \
-  { 0x93, 0x3e, 0x98, 0xef, 0xc9, 0x12, 0xa7, 0x5b } }
+{ 0x13b031cb, 0x738a, 0x4e97, \
+  { 0xb0, 0xca, 0x8b, 0x4b, 0x6c, 0xbb, 0xea, 0xa9 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -524,6 +524,7 @@ public:
    * @param aType the type of notifications to flush
    */
   virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType) = 0;
+  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
 
   /**
    * Callbacks will be called even if reflow itself fails for

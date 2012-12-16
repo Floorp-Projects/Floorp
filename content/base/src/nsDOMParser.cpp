@@ -420,7 +420,7 @@ nsDOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
 
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner);
-    if (aOwner) {
+    if (window) {
       nsCOMPtr<nsIDOMDocument> domdoc = window->GetExtantDocument();
       doc = do_QueryInterface(domdoc);
     }
@@ -501,10 +501,10 @@ nsDOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
   // work if the document has a null principal, so use
   // mOriginalPrincipal when creating the document, then reset the
   // principal.
-  return nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nullptr,
-                                        mDocumentURI, mBaseURI,
-                                        mOriginalPrincipal,
-                                        scriptHandlingObject,
-                                        aFlavor,
-                                        aResult);
+  return NS_NewDOMDocument(aResult, EmptyString(), EmptyString(), nullptr,
+                           mDocumentURI, mBaseURI,
+                           mOriginalPrincipal,
+                           true,
+                           scriptHandlingObject,
+                           aFlavor);
 }

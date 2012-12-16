@@ -793,14 +793,16 @@ HashableValue::mark(JSTracer *trc) const
 class js::MapIteratorObject : public JSObject
 {
   public:
-    enum { TargetSlot, RangeSlot, SlotCount };
+    enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
     static JSFunctionSpec methods[];
-    static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data);
+    static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data,
+                                     MapObject::IteratorKind kind);
     static void finalize(FreeOp *fop, RawObject obj);
 
   private:
     static inline bool is(const Value &v);
     inline ValueMap::Range *range();
+    inline MapObject::IteratorKind kind() const;
     static bool next_impl(JSContext *cx, CallArgs args);
     static JSBool next(JSContext *cx, unsigned argc, Value *vp);
 };
@@ -813,7 +815,7 @@ JSObject::asMapIterator()
 }
 
 Class js::MapIteratorClass = {
-    "Iterator",
+    "Map Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
@@ -836,6 +838,14 @@ MapIteratorObject::range()
     return static_cast<ValueMap::Range *>(getSlot(RangeSlot).toPrivate());
 }
 
+inline MapObject::IteratorKind
+MapIteratorObject::kind() const
+{
+    int32_t i = getSlot(KindSlot).toInt32();
+    JS_ASSERT(i == MapObject::Keys || i == MapObject::Values || i == MapObject::Entries);
+    return MapObject::IteratorKind(i);
+}
+
 bool
 GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
 {
@@ -854,7 +864,8 @@ GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
 }
 
 MapIteratorObject *
-MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data)
+MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
+                          MapObject::IteratorKind kind)
 {
     Rooted<GlobalObject *> global(cx, &mapobj->global());
     Rooted<JSObject*> proto(cx, global->getOrCreateMapIteratorPrototype(cx));
@@ -871,6 +882,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data)
         return NULL;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*mapobj));
+    iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     iterobj->setSlot(RangeSlot, PrivateValue(range));
     return static_cast<MapIteratorObject *>(iterobj);
 }
@@ -900,14 +912,27 @@ MapIteratorObject::next_impl(JSContext *cx, CallArgs args)
         return js_ThrowStopIteration(cx);
     }
 
-    Value pair[2] = { range->front().key.get(), range->front().value };
-    AutoValueArray root(cx, pair, 2);
+    switch (thisobj.kind()) {
+      case MapObject::Keys:
+        args.rval().set(range->front().key.get());
+        break;
 
-    JSObject *pairobj = NewDenseCopiedArray(cx, 2, pair);
-    if (!pairobj)
-        return false;
+      case MapObject::Values:
+        args.rval().set(range->front().value);
+        break;
+
+      case MapObject::Entries: {
+        Value pair[2] = { range->front().key.get(), range->front().value };
+        AutoValueArray root(cx, pair, 2);
+
+        JSObject *pairobj = NewDenseCopiedArray(cx, 2, pair);
+        if (!pairobj)
+            return false;
+        args.rval().setObject(*pairobj);
+        break;
+      }
+    }
     range->popFront();
-    args.rval().setObject(*pairobj);
     return true;
 }
 
@@ -957,7 +982,10 @@ JSFunctionSpec MapObject::methods[] = {
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
     JS_FN("delete", delete_, 1, 0),
-    JS_FN("iterator", iterator, 0, 0),
+    JS_FN("keys", keys, 0, 0),
+    JS_FN("values", values, 0, 0),
+    JS_FN("entries", entries, 0, 0),
+    JS_FN("iterator", entries, 0, 0),
     JS_FN("clear", clear, 0, 0),
     JS_FS_END
 };
@@ -1218,22 +1246,54 @@ MapObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-MapObject::iterator_impl(JSContext *cx, CallArgs args)
+MapObject::iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind)
 {
     Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().asMap());
     ValueMap &map = *mapobj->getData();
-    Rooted<JSObject*> iterobj(cx, MapIteratorObject::create(cx, mapobj, &map));
+    Rooted<JSObject*> iterobj(cx, MapIteratorObject::create(cx, mapobj, &map, kind));
     if (!iterobj)
         return false;
     args.rval().setObject(*iterobj);
     return true;
 }
 
+bool
+MapObject::keys_impl(JSContext *cx, CallArgs args)
+{
+    return iterator_impl(cx, args, Keys);
+}
+
 JSBool
-MapObject::iterator(JSContext *cx, unsigned argc, Value *vp)
+MapObject::keys(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, iterator_impl, args);
+    return CallNonGenericMethod(cx, is, keys_impl, args);
+}
+
+bool
+MapObject::values_impl(JSContext *cx, CallArgs args)
+{
+    return iterator_impl(cx, args, Values);
+}
+
+JSBool
+MapObject::values(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, values_impl, args);
+}
+
+bool
+MapObject::entries_impl(JSContext *cx, CallArgs args)
+{
+    return iterator_impl(cx, args, Entries);
+}
+
+JSBool
+MapObject::entries(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, entries_impl, args);
 }
 
 bool
@@ -1287,7 +1347,7 @@ JSObject::asSetIterator()
 }
 
 Class js::SetIteratorClass = {
-    "Iterator",
+    "Set Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

@@ -15,25 +15,18 @@ namespace js {
 namespace frontend {
 
 inline
-SharedContext::SharedContext(JSContext *cx, bool isFun, StrictMode sms)
+SharedContext::SharedContext(JSContext *cx, bool isFun, bool strict)
   : context(cx),
     isFunction(isFun),
     anyCxFlags(),
-    strictModeState(sms)
+    strict(strict)
 {
-}
-
-inline bool
-SharedContext::inStrictMode()
-{
-    JS_ASSERT(strictModeState != StrictMode::UNKNOWN);
-    return strictModeState == StrictMode::STRICT;
 }
 
 inline bool
 SharedContext::needStrictChecks()
 {
-    return context->hasStrictOption() || strictModeState != StrictMode::NOTSTRICT;
+    return context->hasStrictOption() || strict;
 }
 
 inline GlobalSharedContext *
@@ -50,8 +43,8 @@ SharedContext::asFunbox()
     return static_cast<FunctionBox*>(this);
 }
 
-GlobalSharedContext::GlobalSharedContext(JSContext *cx, JSObject *scopeChain, StrictMode sms)
-  : SharedContext(cx, /* isFunction = */ false, sms),
+GlobalSharedContext::GlobalSharedContext(JSContext *cx, JSObject *scopeChain, bool strict)
+  : SharedContext(cx, /* isFunction = */ false, strict),
     scopeChain_(cx, scopeChain)
 {
 }
@@ -130,7 +123,7 @@ frontend::LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename Cont
             continue;
 
         StaticBlockObject &blockObj = *stmt->blockObj;
-        Shape *shape = blockObj.nativeLookup(ct->sc->context, AtomToId(atom));
+        UnrootedShape shape = blockObj.nativeLookup(ct->sc->context, AtomToId(atom));
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 

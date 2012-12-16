@@ -22,8 +22,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_form_restore_events_sample.html \
 	browser_formdata_format.js \
 	browser_formdata_format_sample.html \
-	browser_248970_a.js \
-	browser_248970_b.js \
 	browser_248970_b_sample.html \
 	browser_339445.js \
 	browser_339445_sample.html \
@@ -139,9 +137,12 @@ ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
 	browser_354894_perwindowpb.js \
 	browser_394759_perwindowpb.js \
+	browser_819510_perwindowpb.js \
 	$(NULL)
 else
 MOCHITEST_BROWSER_FILES += \
+	browser_248970_a.js \
+	browser_248970_b.js \
 	browser_354894.js \
 	browser_394759_privatebrowsing.js \
 	$(NULL)

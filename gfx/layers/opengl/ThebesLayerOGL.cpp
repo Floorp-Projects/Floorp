@@ -857,12 +857,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   uint32_t flags = 0;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
-  gfxMatrix transform2d;
-  if (GetEffectiveTransform().Is2D(&transform2d)) {
-    if (transform2d.HasNonIntegerTranslation()) {
-      flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
-    }
-  } else {
+  if (MayResample()) {
     flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
   }
 #endif

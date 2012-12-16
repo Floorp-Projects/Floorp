@@ -5,8 +5,15 @@
 
 #include "nsISupports.idl"
 
+/**
+ * Represents a task which can be dispatched to a thread for execution.
+ */
+
 [scriptable, function, uuid(4a2abaf0-6886-11d3-9382-00104ba0fd40)]
 interface nsIRunnable : nsISupports
 {
+    /**
+     * The function implementing the task to be run.
+     */
     void run();
 };

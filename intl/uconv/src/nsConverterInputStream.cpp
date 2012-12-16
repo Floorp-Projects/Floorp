@@ -46,7 +46,11 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
 
     mInput = aStream;
     mReplacementChar = aReplacementChar;
-    
+    if (!aReplacementChar ||
+        aReplacementChar != mConverter->GetCharacterForUnMapped()) {
+        mConverter->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
+    }
+
     return NS_OK;
 }
 

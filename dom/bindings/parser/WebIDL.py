@@ -473,8 +473,8 @@ class IDLInterface(IDLObjectWithScope):
         if originalObject.tag != IDLInterfaceMember.Tags.Method or \
            newObject.tag != IDLInterfaceMember.Tags.Method:
             # Call the base class method, which will throw
-            IDLScope.resolveIdentifierConflict(self, identifier, originalObject,
-                                               newObject)
+            IDLScope.resolveIdentifierConflict(self, scope, identifier,
+                                               originalObject, newObject)
             assert False # Not reached
 
         retval = originalObject.addOverload(newObject)
@@ -524,22 +524,6 @@ class IDLInterface(IDLObjectWithScope):
                                    self.parent.identifier.name),
                                   [self.location, self.parent.location])
 
-            # Now make sure our parent doesn't have any [Unforgeable]
-            # attributes.  We don't need to check its ancestors, because it has
-            # already checked those.  We don't need to check its consequential
-            # interfaces, because it has already imported those into its
-            # .members.
-            unforgeableParentMembers = [
-                attr for attr in parent.members
-                if attr.isAttr() and attr.isUnforgeable() ]
-            if len(unforgeableParentMembers) != 0:
-                locs = [self.location, parent.location]
-                locs.extend(attr.location for attr in unforgeableParentMembers)
-                raise WebIDLError("Interface %s inherits from %s, which has "
-                                  "[Unforgeable] members" %
-                                  (self.identifier.name, parent.identifier.name),
-                                  locs)
-
         for iface in self.implementedInterfaces:
             iface.finish(scope)
 
@@ -571,7 +555,7 @@ class IDLInterface(IDLObjectWithScope):
         if ctor is not None:
             ctor.finish(scope)
 
-        # Make a copy of our member list, so things tht implement us
+        # Make a copy of our member list, so things that implement us
         # can get those without all the stuff we implement ourselves
         # admixed.
         self.originalMembers = list(self.members)
@@ -598,6 +582,37 @@ class IDLInterface(IDLObjectWithScope):
             ancestor.interfacesBasedOnSelf.add(self)
             for ancestorConsequential in ancestor.getConsequentialInterfaces():
                 ancestorConsequential.interfacesBasedOnSelf.add(self)
+
+        if self.parent:
+            # Make sure we don't shadow any of the [Unforgeable] attributes on
+            # our ancestor interfaces.  We don't have to worry about
+            # consequential interfaces here, because those have already been
+            # imported into the relevant .members lists.  And we don't have to
+            # worry about anything other than our parent, because it has already
+            # imported its ancestors unforgeable attributes into its member
+            # list.
+            for unforgeableAttr in (attr for attr in self.parent.members if
+                                    attr.isAttr() and not attr.isStatic() and
+                                    attr.isUnforgeable()):
+                shadows = [ m for m in self.members if
+                            (m.isAttr() or m.isMethod()) and
+                            not m.isStatic() and
+                            m.identifier.name == unforgeableAttr.identifier.name ]
+                if len(shadows) != 0:
+                    locs = [unforgeableAttr.location] + [ s.location for s
+                                                          in shadows ]
+                    raise WebIDLError("Interface %s shadows [Unforgeable] "
+                                      "members of %s" %
+                                      (self.identifier.name,
+                                       ancestor.identifier.name),
+                                      locs)
+                # And now just stick it in our members, since we won't be
+                # inheriting this down the proto chain.  If we really cared we
+                # could try to do something where we set up the unforgeable
+                # attributes of ancestor interfaces, with their corresponding
+                # getters, on our interface, but that gets pretty complicated
+                # and seems unnecessary.
+                self.members.append(unforgeableAttr)
 
         # Ensure that there's at most one of each {named,indexed}
         # {getter,setter,creator,deleter} and at most one stringifier.
@@ -2607,24 +2622,32 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return [overload for overload in self._overloads if
                 len(overload.arguments) == argc or
                 (len(overload.arguments) > argc and
-                 overload.arguments[argc].optional)]
+                 overload.arguments[argc].optional) or
+                (len(overload.arguments) < argc and
+                 len(overload.arguments) > 0 and
+                 overload.arguments[-1].variadic)]
 
     def signaturesForArgCount(self, argc):
         return [(overload.returnType, overload.arguments) for overload
                 in self.overloadsForArgCount(argc)]
 
     def locationsForArgCount(self, argc):
-        return [overload.location for overload in self._overloads if
-                len(overload.arguments) == argc or
-                (len(overload.arguments) > argc and
-                 overload.arguments[argc].optional)]
+        return [overload.location for overload in self.overloadsForArgCount(argc)]
 
     def distinguishingIndexForArgCount(self, argc):
         def isValidDistinguishingIndex(idx, signatures):
             for (firstSigIndex, (firstRetval, firstArgs)) in enumerate(signatures[:-1]):
                 for (secondRetval, secondArgs) in signatures[firstSigIndex+1:]:
-                    firstType = firstArgs[idx].type
-                    secondType = secondArgs[idx].type
+                    if idx < len(firstArgs):
+                        firstType = firstArgs[idx].type
+                    else:
+                        assert(firstArgs[-1].variadic)
+                        firstType = firstArgs[-1].type
+                    if idx < len(secondArgs):
+                        secondType = secondArgs[idx].type
+                    else:
+                        assert(secondArgs[-1].variadic)
+                        secondType = secondArgs[-1].type
                     if not firstType.isDistinguishableFrom(secondType):
                         return False
             return True

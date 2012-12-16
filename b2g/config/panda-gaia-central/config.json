@@ -4,15 +4,15 @@
     "mock_target": "mozilla-centos6-i386",
     "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel"],
     "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
-    "build_targets": ["boottarball", "systemtarball", "userdatatarball"],
+    "build_targets": ["boottarball", "systemtarball", "userdatatarball", "package-tests"],
     "upload_files": [
         "{workdir}/out/target/product/panda/*.tar.bz2",
-        "{objdir}/dist/b2g-update/*.mar",
-        "{objdir}/dist/b2g-*.tar.gz",
+        "{workdir}/out/target/product/panda/tests/*.zip",
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
         "{srcdir}/b2g/config/panda/README",
         "{workdir}/sources.xml"
     ],
+    "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {
         "vcs": "hgtool",
         "repo": "http://hg.mozilla.org/integration/gaia-central",

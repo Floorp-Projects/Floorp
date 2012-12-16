@@ -142,7 +142,12 @@ endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
-ABS_topsrcdir   := $(call core_abspath,$(topsrcdir))
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ifeq ($(HOST_OS_ARCH),WINNT)
+ifdef .PYMAKE
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd -W)
+endif
+endif
 # Hack to force NSS build system to use "normal" object directories
 DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $(ABS_topsrcdir)/security/,,$$(CURDIR))'
 DEFAULT_GMAKE_FLAGS += BUILD_TREE='$$(BUILD)' OBJDIR='$$(BUILD)' DEPENDENCIES='$$(BUILD)/.deps' SINGLE_SHLIB_DIR='$$(BUILD)'
@@ -246,6 +251,10 @@ DEFAULT_GMAKE_FLAGS += XCFLAGS="$(CFLAGS)"
 DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS="-compatibility_version 1 -current_version 1 $(LDFLAGS)"
 endif
 
+ifdef MOZ_B2G_CERTDATA
+include $(srcdir)/b2g-certdata.mk
+endif
+
 ifdef MOZ_NSS_PATCH
 # If we're applying a patch, we'll copy the NSS source to the objdir
 # and build it from there.
@@ -285,10 +294,14 @@ NSS_DIRS += \
   $(NULL)
 endif
 
+ifneq (,$(filter %--build-id,$(LDFLAGS)))
+DEFAULT_GMAKE_ENV = LDFLAGS=-Wl,--build-id
+endif
+
 ifndef MOZ_NATIVE_NSS
 define build_rules
 libs::
-	$$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
+	$$(DEFAULT_GMAKE_ENV) $$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS)
 
 clean clobber clobber_all realclean distclean depend::
 	$$(MAKE) -C $$(NSS_SRCDIR)/security/$(1) $$(DEFAULT_GMAKE_FLAGS) clean

@@ -45,7 +45,7 @@ IDBWrapperCache::~IDBWrapperCache()
   NS_DROP_JS_OBJECTS(this, IDBWrapperCache);
 }
 
-bool
+void
 IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
 {
   NS_ASSERTION(aScriptOwner, "This should never be null!");
@@ -56,8 +56,6 @@ IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
   nsXPCOMCycleCollectionParticipant* participant;
   CallQueryInterface(this, &participant);
   nsContentUtils::HoldJSObjects(thisSupports, participant);
-
-  return true;
 }
 
 #ifdef DEBUG

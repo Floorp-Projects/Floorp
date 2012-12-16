@@ -12,8 +12,8 @@ load 746813-1.html
 # this test crashes in a bunch places still
 #load 745818-large-source.html
 load 743499-negative-size.html
-load 767337-1.html
-load 780392-1.html
+skip-if(Android) load 767337-1.html
+skip-if(Android) load 780392-1.html
 load 789933-1.html
 load 794463-1.html
 load 802926-1.html

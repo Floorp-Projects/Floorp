@@ -45,20 +45,7 @@ DEFINES = \
 ifeq ($(OS_TARGET),WINNT)
 DEFINES += -D__Userspace_os_Windows=1
 else
-ifeq ($(OS_TARGET),Darwin)
-DEFINES += -D__Userspace_os_Darwin=1
-else
-ifeq ($(OS_TARGET),Linux)
-DEFINES += -D__Userspace_os_Linux=1
-else
-ifeq ($(OS_TARGET),FreeBSD)
-DEFINES += -D__Userspace_os_FreeBSD=1
-else
-#default_fallback; probably doesn't work
 DEFINES += -D__Userspace_os_$(OS_TARGET)=1
-endif
-endif
-endif
 endif
 
 

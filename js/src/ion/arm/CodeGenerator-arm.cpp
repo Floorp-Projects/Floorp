@@ -1105,7 +1105,7 @@ CodeGeneratorARM::linkAbsoluteLabels()
     // On arm, everything should just go in a pool.
 # if 0
     JS_NOT_REACHED("Absolute Labels NYI");
-    JSScript *script = gen->info().script();
+    UnrootedScript script = gen->info().script();
     IonCode *method = script->ion->method();
 
     for (size_t i = 0; i < deferredDoubles_.length(); i++) {

@@ -17,6 +17,7 @@ var _passedChecks = 0, _falsePassedChecks = 0;
 var _todoChecks = 0;
 var _cleanupFunctions = [];
 var _pendingTimers = [];
+var _profileInitialized = false;
 
 function _dump(str) {
   let start = /^TEST-/.test(str) ? "\n" : "";
@@ -728,15 +729,17 @@ function do_register_cleanup(aFunction)
  * @return nsILocalFile of the profile directory.
  */
 function do_get_profile() {
-  // Since we have a profile, we will notify profile shutdown topics at
-  // the end of the current test, to ensure correct cleanup on shutdown.
-  do_register_cleanup(function() {
-    let obsSvc = Components.classes["@mozilla.org/observer-service;1"].
-                 getService(Components.interfaces.nsIObserverService);
-    obsSvc.notifyObservers(null, "profile-change-net-teardown", null);
-    obsSvc.notifyObservers(null, "profile-change-teardown", null);
-    obsSvc.notifyObservers(null, "profile-before-change", null);
-  });
+  if (!_profileInitialized) {
+    // Since we have a profile, we will notify profile shutdown topics at
+    // the end of the current test, to ensure correct cleanup on shutdown.
+    do_register_cleanup(function() {
+      let obsSvc = Components.classes["@mozilla.org/observer-service;1"].
+                   getService(Components.interfaces.nsIObserverService);
+      obsSvc.notifyObservers(null, "profile-change-net-teardown", null);
+      obsSvc.notifyObservers(null, "profile-change-teardown", null);
+      obsSvc.notifyObservers(null, "profile-before-change", null);
+    });
+  }
 
   let env = Components.classes["@mozilla.org/process/environment;1"]
                       .getService(Components.interfaces.nsIEnvironment);
@@ -768,12 +771,21 @@ function do_get_profile() {
   dirSvc.QueryInterface(Components.interfaces.nsIDirectoryService)
         .registerProvider(provider);
 
-  // The methods of 'provider' will entrain this scope so null out everything
+  let obsSvc = Components.classes["@mozilla.org/observer-service;1"].
+        getService(Components.interfaces.nsIObserverService);
+
+  if (!_profileInitialized) {
+    obsSvc.notifyObservers(null, "profile-do-change", "xpcshell-do-get-profile");
+    _profileInitialized = true;
+  }
+
+  // The methods of 'provider' will retain this scope so null out everything
   // to avoid spurious leak reports.
   env = null;
   profd = null;
   dirSvc = null;
   provider = null;
+  obsSvc = null;
   return file.clone();
 }
 
@@ -863,32 +875,86 @@ function run_test_in_child(testFile, optionalCallback)
  *
  * @return the test function that was passed in.
  */
-let gTests = [];
+let _gTests = [];
 function add_test(func) {
-  gTests.push(func);
+  _gTests.push([false, func]);
   return func;
+}
+
+// We lazy import Task.jsm so we don't incur a run-time penalty for all tests.
+let _Task;
+
+/**
+ * Add a test function which is a Task function.
+ *
+ * Task functions are functions fed into Task.jsm's Task.spawn(). They are
+ * generators that emit promises.
+ *
+ * If an exception is thrown, a do_check_* comparison fails, or if a rejected
+ * promise is yielded, the test function aborts immediately and the test is
+ * reported as a failure.
+ *
+ * Unlike add_test(), there is no need to call run_next_test(). The next test
+ * will run automatically as soon the task function is exhausted. To trigger
+ * premature (but successful) termination of the function, simply return or
+ * throw a Task.Result instance.
+ *
+ * Example usage:
+ *
+ * add_task(function test() {
+ *   let result = yield Promise.resolve(true);
+ *
+ *   do_check_true(result);
+ *
+ *   let secondary = yield someFunctionThatReturnsAPromise(result);
+ *   do_check_eq(secondary, "expected value");
+ * });
+ *
+ * add_task(function test_early_return() {
+ *   let result = yield somethingThatReturnsAPromise();
+ *
+ *   if (!result) {
+ *     // Test is ended immediately, with success.
+ *     return;
+ *   }
+ *
+ *   do_check_eq(result, "foo");
+ * });
+ */
+function add_task(func) {
+  if (!_Task) {
+    let ns = {};
+    _Task = Components.utils.import("resource://gre/modules/Task.jsm", ns).Task;
+  }
+
+  _gTests.push([true, func]);
 }
 
 /**
  * Runs the next test function from the list of async tests.
  */
-let gRunningTest = null;
-let gTestIndex = 0; // The index of the currently running test.
+let _gRunningTest = null;
+let _gTestIndex = 0; // The index of the currently running test.
 function run_next_test()
 {
   function _run_next_test()
   {
-    if (gTestIndex < gTests.length) {
+    if (_gTestIndex < _gTests.length) {
       do_test_pending();
-      gRunningTest = gTests[gTestIndex++];
-      print("TEST-INFO | " + _TEST_FILE + " | Starting " +
-            gRunningTest.name);
-      // Exceptions do not kill asynchronous tests, so they'll time out.
-      try {
-        gRunningTest();
-      }
-      catch (e) {
-        do_throw(e);
+      let _isTask;
+      [_isTask, _gRunningTest] = _gTests[_gTestIndex++];
+      print("TEST-INFO | " + _TEST_FILE + " | Starting " + _gRunningTest.name);
+
+      if (_isTask) {
+        _Task.spawn(_gRunningTest)
+             .then(run_next_test, do_report_unexpected_exception);
+      } else {
+        // Exceptions do not kill asynchronous tests, so they'll time out.
+        try {
+          _gRunningTest();
+        } catch (e) {
+          do_throw(e);
+        }
       }
     }
   }
@@ -899,7 +965,7 @@ function run_next_test()
   // (do_execute_soon bumps that counter).
   do_execute_soon(_run_next_test);
 
-  if (gRunningTest !== null) {
+  if (_gRunningTest !== null) {
     // Close the previous test do_test_pending call.
     do_test_finished();
   }

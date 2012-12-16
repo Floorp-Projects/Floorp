@@ -25,15 +25,15 @@ function run_test()
 
 var gFrames = [
   // Function calls...
-  { type: "call", calleeName: "depth3" },
-  { type: "call", calleeName: "depth2" },
-  { type: "call", calleeName: "depth1" },
+  { type: "call", callee: { name: "depth3" } },
+  { type: "call", callee: { name: "depth2" } },
+  { type: "call", callee: { name: "depth1" } },
 
   // Anonymous function call in our eval...
-  { type: "call", calleeName: undefined },
+  { type: "call", callee: { name: undefined } },
 
   // The eval itself.
-  { type: "eval", calleeName: undefined },
+  { type: "eval", callee: { name: undefined } },
 ];
 
 var gSliceTests = [

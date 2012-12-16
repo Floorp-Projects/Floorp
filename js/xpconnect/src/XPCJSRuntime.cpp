@@ -538,8 +538,8 @@ DoDeferredRelease(nsTArray<T> &array)
 
 struct DeferredFinalizeFunction
 {
-  XPCJSRuntime::DeferredFinalizeFunction run;
-  void* data;
+    XPCJSRuntime::DeferredFinalizeFunction run;
+    void *data;
 };
 
 class XPCIncrementalReleaseRunnable : public nsRunnable
@@ -561,11 +561,10 @@ class XPCIncrementalReleaseRunnable : public nsRunnable
 };
 
 bool
-ReleaseSliceNow(uint32_t slice, void* data)
+ReleaseSliceNow(uint32_t slice, void *data)
 {
     MOZ_ASSERT(slice > 0, "nonsensical/useless call with slice == 0");
-    nsTArray<nsISupports *>* items =
-        static_cast<nsTArray<nsISupports *>*>(data);
+    nsTArray<nsISupports *> *items = static_cast<nsTArray<nsISupports *>*>(data);
 
     slice = NS_MIN(slice, items->Length());
     for (uint32_t i = 0; i < slice; ++i) {
@@ -588,12 +587,11 @@ XPCIncrementalReleaseRunnable::XPCIncrementalReleaseRunnable(XPCJSRuntime *rt,
 {
     nsLayoutStatics::AddRef();
     this->items.SwapElements(items);
-    DeferredFinalizeFunction* function =
-        deferredFinalizeFunctions.AppendElement();
+    DeferredFinalizeFunction *function = deferredFinalizeFunctions.AppendElement();
     function->run = ReleaseSliceNow;
     function->data = &this->items;
     for (uint32_t i = 0; i < rt->mDeferredFinalizeFunctions.Length(); ++i) {
-        void* data = (rt->mDeferredFinalizeFunctions[i].start)();
+        void *data = (rt->mDeferredFinalizeFunctions[i].start)();
         if (data) {
             function = deferredFinalizeFunctions.AppendElement();
             function->run = rt->mDeferredFinalizeFunctions[i].run;
@@ -621,22 +619,22 @@ XPCIncrementalReleaseRunnable::ReleaseNow(bool limited)
     TimeStamp started = TimeStamp::Now();
     bool timeout = false;
     do {
-        const DeferredFinalizeFunction& function =
+        const DeferredFinalizeFunction &function =
             deferredFinalizeFunctions[finalizeFunctionToRun];
         if (limited) {
             bool done = false;
             while (!timeout && !done) {
-                /* We don't want to read the clock too often, so we try to
-                   release slices of 100 items. */
+                /*
+                 * We don't want to read the clock too often, so we try to
+                 * release slices of 100 items.
+                 */
                 done = function.run(100, function.data);
                 timeout = TimeStamp::Now() - started >= sliceTime;
             }
-            if (done) {
+            if (done)
                 ++finalizeFunctionToRun;
-            }
-            if (timeout) {
+            if (timeout)
                 break;
-            }
         } else {
             function.run(UINT32_MAX, function.data);
             MOZ_ASSERT(!items.Length());
@@ -736,10 +734,8 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
             } else {
                 DoDeferredRelease(self->mNativesToReleaseArray);
                 for (uint32_t i = 0; i < self->mDeferredFinalizeFunctions.Length(); ++i) {
-                    void* data = self->mDeferredFinalizeFunctions[i].start();
-                    if (data) {
+                    if (void *data = self->mDeferredFinalizeFunctions[i].start())
                         self->mDeferredFinalizeFunctions[i].run(UINT32_MAX, data);
-                    }
                 }
             }
             break;
@@ -2607,9 +2603,9 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
 }
 
 bool
-XPCJSRuntime::DeferredRelease(nsISupports* obj)
+XPCJSRuntime::DeferredRelease(nsISupports *obj)
 {
-    NS_ASSERTION(obj, "bad param");
+    MOZ_ASSERT(obj);
 
     if (mNativesToReleaseArray.IsEmpty()) {
         // This array sometimes has 1000's

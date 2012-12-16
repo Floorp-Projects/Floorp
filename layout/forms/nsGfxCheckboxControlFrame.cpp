@@ -90,7 +90,7 @@ nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 a11y::AccType
 nsGfxCheckboxControlFrame::AccessibleType()
 {
-  return a11y::eHTMLCheckboxAccessible;
+  return a11y::eHTMLCheckbox;
 }
 #endif
 

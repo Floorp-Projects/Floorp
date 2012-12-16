@@ -75,6 +75,8 @@ const MEM_HISTOGRAMS = {
 // start asynchronous tasks to gather data.  On the next idle the data is sent.
 const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
+const SHUTDOWN_TIME_READ_DELAY_MS = 5413;
+
 var gLastMemoryPoll = null;
 
 let gWasDebuggerAttached = false;
@@ -147,7 +149,7 @@ function getSimpleMeasurements() {
            .getService(Ci.nsIJSEngineTelemetryStats)
            .telemetryValue;
 
-  let shutdownDuration = Services.startup.lastShutdownDuration;
+  let shutdownDuration = Telemetry.lastShutdownDuration;
   if (shutdownDuration)
     ret.shutdownDuration = shutdownDuration;
 
@@ -423,6 +425,8 @@ TelemetryPing.prototype = {
       return;
     }
 
+    let histogram = Telemetry.getHistogramById("TELEMETRY_MEMORY_REPORTER_MS");
+    let startTime = new Date();
     let e = mgr.enumerateReporters();
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
@@ -439,6 +443,7 @@ TelemetryPing.prototype = {
       catch (e) {
       }
     }
+    histogram.add(new Date() - startTime);
   },
 
   handleMemoryReport: function handleMemoryReport(id, path, units, amount) {
@@ -611,6 +616,7 @@ TelemetryPing.prototype = {
       this.sendPingsFromIterator(server, reason, i);
     }
     function onError() {
+      this.savePing(data, true);
       // Notify that testing is complete, even if we didn't send everything.
       finishPings(reason);
     }
@@ -1021,6 +1027,12 @@ TelemetryPing.prototype = {
       break;
     case "xul-window-visible":
       Services.obs.removeObserver(this, "xul-window-visible");
+
+      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      timer.initWithCallback(function() {
+        Telemetry.asyncReadShutdownTime(function () {
+        });
+      }, SHUTDOWN_TIME_READ_DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
       this._hasXulWindowVisibleObserver = false;   
       var counters = processInfo.getCounters();
       if (counters) {

@@ -8,7 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 
-[scriptable, builtinclass, uuid(caaf5c38-a730-4dbb-a0f0-12384bfac8e3)]
+[scriptable, builtinclass, uuid(1b3b8a3e-7ee6-4192-ae8f-a627b2ece95b)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short getNumberOfMessagesForText(in DOMString text);
@@ -32,7 +32,9 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
   nsIDOMMozSmsRequest getThreadList();
 
   [implicit_jscontext] attribute jsval onreceived;
+  [implicit_jscontext] attribute jsval onsending;
   [implicit_jscontext] attribute jsval onsent;
+  [implicit_jscontext] attribute jsval onfailed;
   [implicit_jscontext] attribute jsval ondeliverysuccess;
   [implicit_jscontext] attribute jsval ondeliveryerror;
 };

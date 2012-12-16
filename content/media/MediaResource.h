@@ -46,22 +46,25 @@ class MediaDecoder;
 class MediaChannelStatistics {
 public:
   MediaChannelStatistics() { Reset(); }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaChannelStatistics)
+
   void Reset() {
     mLastStartTime = TimeStamp();
     mAccumulatedTime = TimeDuration(0);
     mAccumulatedBytes = 0;
     mIsStarted = false;
   }
-  void Start(TimeStamp aNow) {
+  void Start() {
     if (mIsStarted)
       return;
-    mLastStartTime = aNow;
+    mLastStartTime = TimeStamp::Now();
     mIsStarted = true;
   }
-  void Stop(TimeStamp aNow) {
+  void Stop() {
     if (!mIsStarted)
       return;
-    mAccumulatedTime += aNow - mLastStartTime;
+    mAccumulatedTime += TimeStamp::Now() - mLastStartTime;
     mIsStarted = false;
   }
   void AddBytes(int64_t aBytes) {
@@ -79,10 +82,10 @@ public:
       return 0.0;
     return static_cast<double>(mAccumulatedBytes)/seconds;
   }
-  double GetRate(TimeStamp aNow, bool* aReliable) {
+  double GetRate(bool* aReliable) {
     TimeDuration time = mAccumulatedTime;
     if (mIsStarted) {
-      time += aNow - mLastStartTime;
+      time += TimeStamp::Now() - mLastStartTime;
     }
     double seconds = time.ToSeconds();
     *aReliable = seconds >= 3.0;
@@ -97,6 +100,9 @@ private:
   bool         mIsStarted;
 };
 
+// Forward declaration for use in MediaByteRange.
+class TimestampedMediaByteRange;
+
 // Represents a section of contiguous media, with a start and end offset.
 // Used to denote ranges of data which are cached.
 class MediaByteRange {
@@ -108,6 +114,8 @@ public:
   {
     NS_ASSERTION(mStart < mEnd, "Range should end after start!");
   }
+
+  MediaByteRange(TimestampedMediaByteRange& aByteRange);
 
   bool IsNull() const {
     return mStart == 0 && mEnd == 0;
@@ -121,6 +129,39 @@ public:
 
   int64_t mStart, mEnd;
 };
+
+// Represents a section of contiguous media, with a start and end offset, and
+// a timestamp representing the start time.
+class TimestampedMediaByteRange : public MediaByteRange {
+public:
+  TimestampedMediaByteRange() : MediaByteRange(), mStartTime(-1) {}
+
+  TimestampedMediaByteRange(int64_t aStart, int64_t aEnd, int64_t aStartTime)
+    : MediaByteRange(aStart, aEnd), mStartTime(aStartTime)
+  {
+    NS_ASSERTION(aStartTime >= 0, "Start time should not be negative!");
+  }
+
+  bool IsNull() const {
+    return MediaByteRange::IsNull() && mStartTime == -1;
+  }
+
+  // Clears byte range values.
+  void Clear() {
+    MediaByteRange::Clear();
+    mStartTime = -1;
+  }
+
+  // In usecs.
+  int64_t mStartTime;
+};
+
+inline MediaByteRange::MediaByteRange(TimestampedMediaByteRange& aByteRange)
+  : mStart(aByteRange.mStart), mEnd(aByteRange.mEnd)
+{
+  NS_ASSERTION(mStart < mEnd, "Range should end after start!");
+}
+
 
 /**
  * Provides a thread-safe, seek/read interface to resources
@@ -175,6 +216,8 @@ public:
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
   virtual MediaResource* CloneData(MediaDecoder* aDecoder) = 0;
+  // Set statistics to be recorded to the object passed in.
+  virtual void RecordStatisticsTo(MediaChannelStatistics *aStatistics) { }
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -299,6 +342,12 @@ public:
   }
 
   /**
+   * Cancels current byte range requests previously opened via
+   * OpenByteRange.
+   */
+  virtual void CancelByteRangeOpen() { }
+
+  /**
    * Fills aRanges with MediaByteRanges representing the data which is cached
    * in the media cache. Stream should be pinned during call and while
    * aRanges is being used.
@@ -406,6 +455,7 @@ public:
   virtual nsresult Open(nsIStreamListener** aStreamListener);
   virtual nsresult OpenByteRange(nsIStreamListener** aStreamListener,
                                  MediaByteRange const & aByteRange);
+  virtual void     CancelByteRangeOpen();
   virtual nsresult Close();
   virtual void     Suspend(bool aCloseImmediately);
   virtual void     Resume();
@@ -414,6 +464,15 @@ public:
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual bool     CanClone();
   virtual MediaResource* CloneData(MediaDecoder* aDecoder);
+  // Set statistics to be recorded to the object passed in. If not called,
+  // |ChannelMediaResource| will create it's own statistics objects in |Open|.
+  void RecordStatisticsTo(MediaChannelStatistics *aStatistics) MOZ_OVERRIDE {
+    NS_ASSERTION(aStatistics, "Statistics param cannot be null!");
+    MutexAutoLock lock(mLock);
+    if (!mChannelStatistics) {
+      mChannelStatistics = aStatistics;
+    }
+  }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
   virtual void     EnsureCacheUpToDate();
 
@@ -443,6 +502,7 @@ public:
   {
   public:
     Listener(ChannelMediaResource* aResource) : mResource(aResource) {}
+    ~Listener() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
@@ -521,7 +581,7 @@ protected:
 
   // This lock protects mChannelStatistics
   Mutex               mLock;
-  MediaChannelStatistics mChannelStatistics;
+  nsRefPtr<MediaChannelStatistics> mChannelStatistics;
 
   // True if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the

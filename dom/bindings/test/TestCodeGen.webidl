@@ -100,6 +100,7 @@ interface TestInterface {
   void passOptionalByteWithDefault(optional byte arg = 0);
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
+  void passVariadicByte(byte... arg);
 
   readonly attribute short readonlyShort;
   attribute short writableShort;
@@ -333,6 +334,7 @@ interface TestInterface {
   void passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
   void passOptionalNullableString(optional DOMString? arg);
   void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
+  void passVariadicString(DOMString... arg);
 
   // Enumerated types
   void passEnum(TestEnum arg);
@@ -424,6 +426,14 @@ interface TestInterface {
   static attribute boolean staticAttribute;
   static void staticMethod(boolean arg);
 
+  // Overload resolution tests
+  //void overload1(DOMString... strs);
+  boolean overload1(TestInterface arg);
+  TestInterface overload1(DOMString strs, TestInterface arg);
+
+  // Variadic handling
+  void passVariadicThirdArg(DOMString arg1, long arg2, TestInterface... arg3);
+
   // Miscellania
   [LenientThis] attribute long attrWithLenientThis;
   [Unforgeable] readonly attribute long unforgeableAttr;
@@ -439,6 +449,9 @@ interface TestInterface {
   [SetterThrows] attribute boolean throwingSetterAttr;
 
   // If you add things here, add them to TestExampleGen as well
+};
+
+interface TestChildInterface : TestInterface {
 };
 
 interface TestNonWrapperCacheInterface {

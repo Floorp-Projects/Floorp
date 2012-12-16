@@ -44,6 +44,13 @@ nsProfiler::StopProfiler()
 }
 
 NS_IMETHODIMP
+nsProfiler::AddMarker(const char *aMarker)
+{
+  SAMPLE_MARKER(aMarker);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProfiler::GetProfile(char **aProfile)
 {
   char *profile = SAMPLER_GET_PROFILE();

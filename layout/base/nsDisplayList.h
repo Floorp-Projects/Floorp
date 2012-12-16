@@ -1913,6 +1913,9 @@ protected:
                                   gfxRect* aDestRect);
   nsRect GetBoundsInternal();
 
+  void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
+                     const nsRect& aBounds, nsRect* aClipRect);
+
   // Cache the result of nsCSSRendering::FindBackground. Always null if
   // mIsThemed is true or if FindBackground returned false.
   const nsStyleBackground* mBackgroundStyle;
@@ -1970,6 +1973,7 @@ public:
   nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
+    mBounds = GetBoundsInternal();
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayBoxShadowOuter() {
@@ -1999,8 +2003,11 @@ public:
     }
   }
 
+  nsRect GetBoundsInternal();
+
 private:
   nsRegion mVisibleRegion;
+  nsRect mBounds;
 };
 
 /**

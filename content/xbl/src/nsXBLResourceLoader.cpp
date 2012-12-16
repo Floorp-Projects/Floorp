@@ -16,7 +16,7 @@
 #include "nsXBLPrototypeResources.h"
 #include "nsIDocumentObserver.h"
 #include "imgILoader.h"
-#include "imgIRequest.h"
+#include "imgRequestProxy.h"
 #include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -102,7 +102,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
       // Now kick off the image load...
       // Passing NULL for pretty much everything -- cause we don't care!
       // XXX: initialDocumentURI is NULL! 
-      nsCOMPtr<imgIRequest> req;
+      nsRefPtr<imgRequestProxy> req;
       nsContentUtils::LoadImage(url, doc, docPrincipal, docURL, nullptr,
                                 nsIRequest::LOAD_BACKGROUND,
                                 getter_AddRefs(req));

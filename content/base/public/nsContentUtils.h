@@ -34,8 +34,6 @@
 #include "nsThreadUtils.h"
 #include "nsIContent.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "gfxContext.h"
-#include "gfxFont.h"
 #include "nsContentList.h"
 
 #include "mozilla/AutoRestore.h"
@@ -65,7 +63,7 @@ class nsIIOService;
 class nsIURI;
 class imgIContainer;
 class imgINotificationObserver;
-class imgIRequest;
+class imgRequestProxy;
 class imgLoader;
 class imgICache;
 class nsIImageLoadingContent;
@@ -102,7 +100,6 @@ struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
 class nsIDOMHTMLInputElement;
-class gfxTextObjectPaint;
 
 namespace mozilla {
 
@@ -199,6 +196,7 @@ public:
   static JSContext* GetContextFromDocument(nsIDocument *aDocument);
 
   static bool     IsCallerChrome();
+  static bool     IsCallerXBL();
 
   static bool     IsImageSrcSetDisabled();
 
@@ -642,7 +640,7 @@ public:
                             nsIURI* aReferrer,
                             imgINotificationObserver* aObserver,
                             int32_t aLoadFlags,
-                            imgIRequest** aRequest);
+                            imgRequestProxy** aRequest);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy status.
@@ -668,7 +666,7 @@ public:
   /**
    * Helper method to call imgIRequest::GetStaticRequest.
    */
-  static already_AddRefed<imgIRequest> GetStaticRequest(imgIRequest* aRequest);
+  static already_AddRefed<imgRequestProxy> GetStaticRequest(imgRequestProxy* aRequest);
 
   /**
    * Method that decides whether a content node is draggable
@@ -1180,34 +1178,6 @@ public:
                                      nsAString& aResultBuffer,
                                      uint32_t aFlags,
                                      uint32_t aWrapCol);
-
-  /**
-   * Creates a new XML document, which is marked to be loaded as data.
-   *
-   * @param aNamespaceURI Namespace for the root element to create and insert in
-   *                      the document. Only used if aQualifiedName is not
-   *                      empty.
-   * @param aQualifiedName Qualified name for the root element to create and
-   *                       insert in the document. If empty no root element will
-   *                       be created.
-   * @param aDoctype Doctype node to insert in the document.
-   * @param aDocumentURI URI of the document. Must not be null.
-   * @param aBaseURI Base URI of the document. Must not be null.
-   * @param aPrincipal Prinicpal of the document. Must not be null.
-   * @param aScriptObject The object from which the context for event handling
-   *                      can be got.
-   * @param aFlavor Select the kind of document to create.
-   * @param aResult [out] The document that was created.
-   */
-  static nsresult CreateDocument(const nsAString& aNamespaceURI, 
-                                 const nsAString& aQualifiedName, 
-                                 nsIDOMDocumentType* aDoctype,
-                                 nsIURI* aDocumentURI,
-                                 nsIURI* aBaseURI,
-                                 nsIPrincipal* aPrincipal,
-                                 nsIScriptGlobalObject* aScriptObject,
-                                 DocumentFlavor aFlavor,
-                                 nsIDOMDocument** aResult);
 
   /**
    * Sets the text contents of a node by replacing all existing children
@@ -2149,13 +2119,6 @@ public:
                                         int32_t& aOutEndOffset);
 
   static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
-
-  static bool PaintSVGGlyph(Element *aElement, gfxContext *aContext,
-                            gfxFont::DrawMode aDrawMode,
-                            gfxTextObjectPaint *aObjectPaint);
-
-  static bool GetSVGGlyphExtents(Element *aElement, const gfxMatrix& aSVGToAppSpace,
-                                 gfxRect *aResult);
 
   /**
    * Check whether a spec feature/version is supported.

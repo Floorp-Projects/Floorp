@@ -7,6 +7,7 @@
 /* Code to start and animate CSS transitions. */
 
 #include "nsTransitionManager.h"
+#include "nsAnimationManager.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
 #include "nsCSSProps.h"
@@ -24,17 +25,23 @@
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsCSSFrameConstructor.h"
+#include "Layers.h"
+#include "FrameLayerBuilder.h"
+#include "nsDisplayList.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-namespace dom = mozilla::dom;
-namespace css = mozilla::css;
+using namespace mozilla;
+using namespace mozilla::layers;
+using namespace mozilla::css;
 
-ElementTransitions::ElementTransitions(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
-                                       nsTransitionManager *aTransitionManager)
-  : CommonElementAnimationData(aElement, aElementProperty,
-                               aTransitionManager)
+ElementTransitions::ElementTransitions(mozilla::dom::Element *aElement,
+                                       nsIAtom *aElementProperty,
+                                       nsTransitionManager *aTransitionManager,
+                                       TimeStamp aNow)
+  : CommonElementAnimationData(aElement, aElementProperty, aTransitionManager)
+  , mFlushGeneration(aNow)
 {
 }
 
@@ -47,7 +54,11 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   double duration = mDuration.ToSeconds();
   NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
   double timePortion;
-  if (duration == 0.0) {
+  if (IsRemovedSentinel()) {
+    // The transition is being removed, but we still want an update so that any
+    // new transitions start in the right place.
+    timePortion = 1.0;
+  } else if (duration == 0.0) {
     // When duration is zero, we can still have a transition when delay
     // is nonzero.  mStartTime already incorporates delay.
     if (aRefreshTime >= mStartTime) {
@@ -110,11 +121,13 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
 bool
 ElementPropertyTransition::IsRunningAt(TimeStamp aTime) const {
-  return !IsRemovedSentinel() && mStartTime < aTime && aTime < mStartTime + mDuration;
+  return !IsRemovedSentinel() &&
+         mStartTime <= aTime &&
+         aTime < mStartTime + mDuration;
 }
 
 bool
-ElementTransitions::HasTransitionOfProperty(nsCSSProperty aProperty) const
+ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t tranIdx = mPropertyTransitions.Length(); tranIdx-- != 0; ) {
     if (aProperty == mPropertyTransitions[tranIdx].mProperty) {
@@ -125,7 +138,7 @@ ElementTransitions::HasTransitionOfProperty(nsCSSProperty aProperty) const
 }
 
 bool
-ElementTransitions::CanPerformOnCompositorThread() const
+ElementTransitions::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
 {
   nsIFrame* frame = mElement->GetPrimaryFrame();
   if (!frame) {
@@ -143,25 +156,28 @@ ElementTransitions::CanPerformOnCompositorThread() const
 
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
-  bool hasGeometricProperty = false;
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
     const ElementPropertyTransition& pt = mPropertyTransitions[i];
     if (css::IsGeometricProperty(pt.mProperty) && pt.IsRunningAt(now)) {
-      hasGeometricProperty = true;
+      aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
       break;
     }
   }
 
   bool hasOpacity = false;
   bool hasTransform = false;
+  bool existsProperty = false;
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
     const ElementPropertyTransition& pt = mPropertyTransitions[i];
     if (pt.IsRemovedSentinel()) {
       continue;
     }
+    
+    existsProperty = true;
+
     if (!css::CommonElementAnimationData::CanAnimatePropertyOnCompositor(mElement,
                                                                          pt.mProperty,
-                                                                         hasGeometricProperty)) {
+                                                                         aFlags)) {
       return false;
     }
     if (pt.mProperty == eCSSProperty_opacity) {
@@ -170,6 +186,12 @@ ElementTransitions::CanPerformOnCompositorThread() const
       hasTransform = true;
     }
   }
+  
+  // No properties to animate
+  if (!existsProperty) {
+    return false;
+  }
+
   // This transition can be done on the compositor.  Mark the frame as active, in
   // case we are able to throttle this transition.
   if (hasOpacity) {
@@ -184,6 +206,210 @@ ElementTransitions::CanPerformOnCompositorThread() const
 /*****************************************************************************
  * nsTransitionManager                                                       *
  *****************************************************************************/
+
+// reparent :before and :after pseudo elements of aElement
+static void ReparentBeforeAndAfter(dom::Element* aElement,
+                                   nsIFrame* aPrimaryFrame,
+                                   nsStyleContext* aNewStyle,
+                                   nsStyleSet* aStyleSet)
+{
+  if (nsIFrame* before = nsLayoutUtils::GetBeforeFrame(aPrimaryFrame)) {
+    nsRefPtr<nsStyleContext> beforeStyle =
+      aStyleSet->ReparentStyleContext(before->GetStyleContext(),
+                                     aNewStyle, aElement);
+    before->SetStyleContextWithoutNotification(beforeStyle);
+  }
+  if (nsIFrame* after = nsLayoutUtils::GetBeforeFrame(aPrimaryFrame)) {
+    nsRefPtr<nsStyleContext> afterStyle =
+      aStyleSet->ReparentStyleContext(after->GetStyleContext(),
+                                     aNewStyle, aElement);
+    after->SetStyleContextWithoutNotification(afterStyle);
+  }
+}
+
+// Ensure that the next repaint rebuilds the layer tree for aFrame. That
+// means that changes to animations on aFrame's layer are propagated to
+// the compositor, which is needed for correct behaviour of new
+// transitions.
+static void
+ForceLayerRerendering(nsIFrame* aFrame, CommonElementAnimationData* aData)
+{
+  if (aData->HasAnimationOfProperty(eCSSProperty_opacity)) {
+    if (Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
+          aFrame, nsDisplayItem::TYPE_OPACITY)) {
+      layer->RemoveUserData(nsIFrame::LayerIsPrerenderedDataKey());
+    }
+  } 
+  
+  if (aData->HasAnimationOfProperty(eCSSProperty_transform)) {
+    if (Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
+          aFrame, nsDisplayItem::TYPE_TRANSFORM)) {
+      layer->RemoveUserData(nsIFrame::LayerIsPrerenderedDataKey());
+    }
+  }
+}
+
+nsStyleContext*
+nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
+                                          nsStyleContext* aParentStyle)
+{
+  NS_ASSERTION(GetElementTransitions(aElement,
+                                     nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                                     false), "element not transitioning");
+
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  if (!primaryFrame) {
+    return nullptr;
+  }
+
+  nsStyleContext* oldStyle = primaryFrame->GetStyleContext();
+  nsRuleNode* ruleNode = oldStyle->GetRuleNode();
+  nsTArray<nsStyleSet::RuleAndLevel> rules;
+  do {
+    if (ruleNode->IsRoot()) {
+      break;
+    }
+
+    nsStyleSet::RuleAndLevel* curRule = rules.AppendElement();
+    curRule->mLevel = ruleNode->GetLevel();
+
+    if (curRule->mLevel == nsStyleSet::eAnimationSheet) {
+      ElementAnimations* ea = 
+        mPresContext->AnimationManager()->GetElementAnimations(aElement,
+                                                               oldStyle->GetPseudoType(),
+                                                               false);
+      NS_ASSERTION(ea, "Rule has level eAnimationSheet without animation on manager");
+
+      mPresContext->AnimationManager()->EnsureStyleRuleFor(ea);
+      curRule->mRule = ea->mStyleRule;
+
+      ForceLayerRerendering(primaryFrame, ea);
+    } else if (curRule->mLevel == nsStyleSet::eTransitionSheet) {
+      ElementTransitions *et =
+        GetElementTransitions(aElement, oldStyle->GetPseudoType(), false);
+      NS_ASSERTION(et, "Rule has level eTransitionSheet without transition on manager");
+      
+      et->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh());
+      curRule->mRule = et->mStyleRule;
+
+      ForceLayerRerendering(primaryFrame, et);
+    } else {
+      curRule->mRule = ruleNode->GetRule();
+    }
+  } while ((ruleNode = ruleNode->GetParent()));
+
+  nsRefPtr<nsStyleContext> newStyle = mPresContext->PresShell()->StyleSet()->
+    ResolveStyleForRules(aParentStyle, oldStyle, rules);
+  primaryFrame->SetStyleContextWithoutNotification(newStyle);
+
+  ReparentBeforeAndAfter(aElement, primaryFrame, newStyle, mPresContext->PresShell()->StyleSet());
+
+  return newStyle;
+}
+
+void
+nsTransitionManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
+                                                     nsStyleContext* aParentStyle)
+{
+  dom::Element* element;
+  if (aContent->IsElement()) {
+    element = aContent->AsElement();
+  } else {
+    element = nullptr;
+  }
+
+  nsRefPtr<nsStyleContext> newStyle;
+
+  ElementTransitions* et;
+  if (element &&
+      (et = GetElementTransitions(element,
+                                  nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                                  false))) {
+    // re-resolve our style
+    newStyle = UpdateThrottledStyle(element, aParentStyle);
+    // remove the current transition from the working set
+    et->mFlushGeneration = mPresContext->RefreshDriver()->MostRecentRefresh();
+;
+  } else {
+    // reparent the element's style
+    nsStyleSet* styleSet = mPresContext->PresShell()->StyleSet();
+    nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+    if (!primaryFrame) {
+      return;
+    }
+
+    newStyle = styleSet->ReparentStyleContext(primaryFrame->GetStyleContext(),
+                                              aParentStyle, element);
+    primaryFrame->SetStyleContextWithoutNotification(newStyle);
+    ReparentBeforeAndAfter(element, primaryFrame, newStyle, styleSet);
+  }
+
+  // walk the children
+  if (newStyle) {
+    for (nsIContent *child = aContent->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      UpdateThrottledStylesForSubtree(child, newStyle);
+    }
+  }
+}
+
+void
+nsTransitionManager::UpdateAllThrottledStyles()
+{
+  if (PR_CLIST_IS_EMPTY(&mElementData)) {
+    // no throttled transitions, leave early
+    mPresContext->TickLastUpdateThrottledStyle();
+    return;
+  }
+
+  if (mPresContext->ThrottledStyleIsUpToDate()) {
+    // throttled transitions are up to date, leave early
+    return;
+  }
+
+  mPresContext->TickLastUpdateThrottledStyle();
+  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+
+  // update each transitioning element by finding its root-most ancestor with a
+  // transition, and flushing the style on that ancestor and all its descendants
+  PRCList *next = PR_LIST_HEAD(&mElementData);
+  while (next != &mElementData) {
+    ElementTransitions* et = static_cast<ElementTransitions*>(next);
+    next = PR_NEXT_LINK(next);
+
+    if (et->mFlushGeneration == now) {
+      // this element has been ticked already
+      continue;
+    }
+
+    // element is initialised to the starting element (i.e., one we know has
+    // a transition) and ends up with the root-most transitioning ancestor,
+    // that is, the element where we begin updates.
+    dom::Element* element = et->mElement;
+    // make a list of ancestors
+    nsTArray<dom::Element*> ancestors;
+    do {
+      ancestors.AppendElement(element);
+    } while ((element = element->GetElementParent()));
+
+    // walk down the ancestors until we find one with a throttled transition
+    for (int32_t i = ancestors.Length() - 1; i >= 0; --i) {
+      if (GetElementTransitions(ancestors[i],
+                                nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                                false)) {
+        element = ancestors[i];
+        break;
+      }
+    }
+
+    nsIFrame* primaryFrame;
+    if (element &&
+        (primaryFrame = element->GetPrimaryFrame())) {
+      UpdateThrottledStylesForSubtree(element,
+        primaryFrame->GetStyleContext()->GetParent());
+    }
+  }
+}
 
 already_AddRefed<nsIStyleRule>
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
@@ -247,6 +473,10 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // FIXME (Bug 522599): Add tests for this.
     return nullptr;
   }
+
+  NS_WARN_IF_FALSE(!CommonAnimationManager::ThrottlingEnabled() ||
+                     mPresContext->ThrottledStyleIsUpToDate(),
+                   "throttled animations not up to date");
 
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
   // I'll consider only the transitions from the number of items in
@@ -340,6 +570,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           currentValue != pt.mEndValue) {
         // stop the transition
         pts.RemoveElementAt(i);
+        et->UpdateAnimationGeneration(mPresContext);
       }
     } while (i != 0);
 
@@ -386,17 +617,19 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
 void
 nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
-                       const nsTransition& aTransition,
-                       dom::Element *aElement,
-                       ElementTransitions *&aElementTransitions,
-                       nsStyleContext *aOldStyleContext,
-                       nsStyleContext *aNewStyleContext,
-                       bool *aStartedAny,
-                       nsCSSPropertySet *aWhichStarted)
+                                                const nsTransition& aTransition,
+                                                dom::Element* aElement,
+                                                ElementTransitions*& aElementTransitions,
+                                                nsStyleContext* aOldStyleContext,
+                                                nsStyleContext* aNewStyleContext,
+                                                bool* aStartedAny,
+                                                nsCSSPropertySet* aWhichStarted)
 {
   // IsShorthand itself will assert if aProperty is not a property.
   NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
                     "property out of range");
+  NS_ASSERTION(!aElementTransitions ||
+               aElementTransitions->mElement == aElement, "Element mismatch");
 
   if (aWhichStarted->HasProperty(aProperty)) {
     // A later item in transition-property already started a
@@ -414,22 +647,15 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   nsStyleAnimation::Value dummyValue;
   bool haveValues =
     ExtractComputedValueForTransition(aProperty, aOldStyleContext,
-                                      pt.mStartValue) &&
+                                       pt.mStartValue) &&
     ExtractComputedValueForTransition(aProperty, aNewStyleContext,
-                                      pt.mEndValue);
+                                       pt.mEndValue);
 
   bool haveChange = pt.mStartValue != pt.mEndValue;
-  bool haveOMTA = false;
-  if (!aNewStyleContext->GetPseudoType()) {
-    ElementTransitions* et = nsTransitionManager::GetTransitions(aElement);
-    if (et) {
-      haveOMTA = et->CanPerformOnCompositorThread();
-    }
-  }
-
+    
   bool shouldAnimate =
     haveValues &&
-    (haveChange || haveOMTA) &&
+    haveChange &&
     // Check that we can interpolate between these values
     // (If this is ever a performance problem, we could add a
     // CanInterpolate method, but it seems fine for now.)
@@ -465,6 +691,8 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       // is almost done (and whose current value rounds to its end
       // value) just because we got an unrelated style change.
       pts.RemoveElementAt(currentIndex);
+      aElementTransitions->UpdateAnimationGeneration(mPresContext);
+
       if (pts.IsEmpty()) {
         aElementTransitions->Destroy();
         // |aElementTransitions| is now a dangling pointer!
@@ -569,13 +797,13 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       return;
     }
   }
+  aElementTransitions->UpdateAnimationGeneration(mPresContext);
 
   nsRestyleHint hint =
     aNewStyleContext->GetPseudoType() ==
       nsCSSPseudoElements::ePseudo_NotPseudoElement ?
     eRestyle_Self : eRestyle_Subtree;
   presContext->PresShell()->RestyleForAnimation(aElement, hint);
-  // XXXdz: invalidate the frame here, once animations are throttled.
 
   *aStartedAny = true;
   aWhichStarted->AddProperty(aProperty);
@@ -608,7 +836,8 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
                              aElement->GetProperty(propName));
   if (!et && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    et = new ElementTransitions(aElement, propName, this);
+    et = new ElementTransitions(aElement, propName, this,
+      mPresContext->RefreshDriver()->MostRecentRefresh());
     nsresult rv = aElement->SetProperty(propName, et,
                                         ElementTransitionsPropertyDtor, false);
     if (NS_FAILED(rv)) {
@@ -747,8 +976,20 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
     return;
   }
 
-  nsTArray<TransitionEventInfo> events;
+  FlushTransitions(Can_Throttle);
+}
 
+void
+nsTransitionManager::FlushTransitions(FlushFlags aFlags)
+{ 
+  if (PR_CLIST_IS_EMPTY(&mElementData)) {
+    // no transitions, leave early
+    return;
+  }
+
+  nsTArray<TransitionEventInfo> events;
+  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+  bool didThrottle = false;
   // Trim transitions that have completed, and post restyle events for
   // frames that are still transitioning.
   {
@@ -757,6 +998,11 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
       ElementTransitions *et = static_cast<ElementTransitions*>(next);
       next = PR_NEXT_LINK(next);
 
+      bool canThrottleTick = aFlags == Can_Throttle &&
+        et->CanPerformOnCompositorThread(
+          CommonElementAnimationData::CanAnimateFlags(0)) &&
+        et->CanThrottleAnimation(now);
+
       NS_ABORT_IF_FALSE(et->mElement->GetCurrentDoc() ==
                           mPresContext->Document(),
                         "Element::UnbindFromTree should have "
@@ -764,14 +1010,20 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 
       uint32_t i = et->mPropertyTransitions.Length();
       NS_ABORT_IF_FALSE(i != 0, "empty transitions list?");
+      bool transitionEnded = false;
       do {
         --i;
         ElementPropertyTransition &pt = et->mPropertyTransitions[i];
         if (pt.IsRemovedSentinel()) {
-          // Actually remove transitions one cycle after their
-          // completion.  See comment below.
-          et->mPropertyTransitions.RemoveElementAt(i);
-        } else if (pt.mStartTime + pt.mDuration <= aTime) {
+          // Actually remove transitions one throttle-able cycle after their
+          // completion. We only clear on a throttle-able cycle because that
+          // means it is a regular restyle tick and thus it is safe to discard
+          // the transition. If the flush is not throttle-able, we might still
+          // have new transitions left to process. See comment below.
+          if (aFlags == Can_Throttle) {
+            et->mPropertyTransitions.RemoveElementAt(i);
+          }
+        } else if (pt.mStartTime + pt.mDuration <= now) {
           // Fire transitionend events only for transitions on elements
           // and not those on pseudo-elements, since we can't target an
           // event at pseudo-elements.
@@ -793,6 +1045,8 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
           // to know not to start a new transition for the transition
           // from the almost-completed value to the final value.
           pt.SetRemovedSentinel();
+          et->UpdateAnimationGeneration(mPresContext);
+          transitionEnded = true;
         }
       } while (i != 0);
 
@@ -802,12 +1056,13 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
                    et->mElementProperty == nsGkAtoms::transitionsOfBeforeProperty ||
                    et->mElementProperty == nsGkAtoms::transitionsOfAfterProperty,
                    "Unexpected element property; might restyle too much");
-      nsRestyleHint hint = et->mElementProperty == nsGkAtoms::transitionsProperty ?
-        eRestyle_Self : eRestyle_Subtree;
-      mPresContext->PresShell()->RestyleForAnimation(et->mElement, hint);
-      // XXXdz: if we have started a transition since the last tick and are
-      // performing the transition off the main thread, we need to invalidate
-      // the frame once we start throttling animation ticks.
+      if (!canThrottleTick || transitionEnded) {
+        nsRestyleHint hint = et->mElementProperty == nsGkAtoms::transitionsProperty ?
+          eRestyle_Self : eRestyle_Subtree;
+        mPresContext->PresShell()->RestyleForAnimation(et->mElement, hint);
+      } else {
+        didThrottle = true;
+      }
 
       if (et->mPropertyTransitions.IsEmpty()) {
         et->Destroy();
@@ -819,6 +1074,10 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 
   // We might have removed transitions above.
   ElementDataRemoved();
+
+  if (didThrottle) {
+    mPresContext->Document()->SetNeedStyleFlush();
+  }
 
   for (uint32_t i = 0, i_end = events.Length(); i < i_end; ++i) {
     TransitionEventInfo &info = events[i];

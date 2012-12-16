@@ -154,6 +154,7 @@ public:
   void PassOptionalByteWithDefault(int8_t);
   void PassNullableByte(const Nullable<int8_t>&);
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
+  void PassVariadicByte(const Sequence<int8_t>&);
 
   int16_t ReadonlyShort();
   int16_t WritableShort();
@@ -381,6 +382,7 @@ public:
   void PassOptionalStringWithDefaultValue(const nsAString&);
   void PassOptionalNullableString(const Optional<nsAString>&);
   void PassOptionalNullableStringWithDefaultValue(const nsAString&);
+  void PassVariadicString(const Sequence<nsString>&);
 
   // Enumerated types
   void PassEnum(TestEnum);
@@ -473,6 +475,14 @@ public:
   static bool StaticAttribute(nsISupports*);
   static void SetStaticAttribute(nsISupports*, bool);
 
+  // Overload resolution tests
+  bool Overload1(TestInterface&);
+  TestInterface* Overload1(const nsAString&, TestInterface&);
+
+  // Variadic handling
+  void PassVariadicThirdArg(const nsAString&, int32_t,
+                            const Sequence<OwningNonNull<TestInterface> >&);
+
   // Miscellania
   int32_t AttrWithLenientThis();
   void SetAttrWithLenientThis(int32_t);
@@ -522,6 +532,7 @@ private:
   void PassOptionalByte(const Optional<T>&) MOZ_DELETE;
   template<typename T>
   void PassOptionalByteWithDefault(T) MOZ_DELETE;
+  void PassVariadicByte(Sequence<int8_t>&) MOZ_DELETE;
 
   void SetReadonlyShort(int16_t) MOZ_DELETE;
   template<typename T>
@@ -631,7 +642,7 @@ private:
   void PassOptionalStringWithDefaultValue(nsAString&) MOZ_DELETE;
   void PassOptionalNullableString(Optional<nsAString>&) MOZ_DELETE;
   void PassOptionalNullableStringWithDefaultValue(nsAString&) MOZ_DELETE;
-
+  void PassVariadicString(Sequence<nsString>&) MOZ_DELETE;
 };
 
 class TestIndexedGetterInterface : public nsISupports,
@@ -855,6 +866,12 @@ public:
   void DelNamedItem(const nsAString&);
   void DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
   void GetSupportedNames(nsTArray<nsString>&);
+};
+
+class TestChildInterface : public TestInterface
+{
+public:
+  NS_DECL_ISUPPORTS
 };
 
 } // namespace dom

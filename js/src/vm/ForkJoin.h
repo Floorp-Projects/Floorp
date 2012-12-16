@@ -94,6 +94,7 @@ struct ForkJoinOp;
 // thread will also execute one slice.
 ParallelResult ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op);
 
+class PerThreadData;
 class ForkJoinShared;
 class AutoRendezvous;
 class AutoSetForkJoinSlice;

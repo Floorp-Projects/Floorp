@@ -25,5 +25,6 @@ mochikit.jar:
   content/tests/SimpleTest/WindowSnapshot.js (tests/SimpleTest/WindowSnapshot.js)
   content/tests/SimpleTest/MockObjects.js (tests/SimpleTest/MockObjects.js)
   content/tests/SimpleTest/NativeKeyCodes.js (tests/SimpleTest/NativeKeyCodes.js)
+  content/tests/SimpleTest/paint_listener.js (tests/SimpleTest/paint_listener.js)
   content/tests/SimpleTest/docshell_helpers.js (../../docshell/test/chrome/docshell_helpers.js)
 

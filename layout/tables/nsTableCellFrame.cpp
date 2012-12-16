@@ -5,6 +5,7 @@
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
+#include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsTablePainter.h"
 #include "nsStyleContext.h"
@@ -985,7 +986,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 a11y::AccType
 nsTableCellFrame::AccessibleType()
 {
-  return a11y::eHTMLTableCellAccessible;
+  return a11y::eHTMLTableCell;
 }
 #endif
 

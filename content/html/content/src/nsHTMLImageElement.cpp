@@ -28,8 +28,8 @@
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
-#include "imgIRequest.h"
 #include "imgINotificationObserver.h"
+#include "imgRequestProxy.h"
 
 #include "nsILoadGroup.h"
 

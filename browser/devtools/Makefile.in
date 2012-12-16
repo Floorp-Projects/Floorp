@@ -27,6 +27,7 @@ DIRS = \
   shared \
   responsivedesign \
   framework \
+  profiler \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

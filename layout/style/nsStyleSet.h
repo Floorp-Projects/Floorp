@@ -89,6 +89,21 @@ class nsStyleSet
   ResolveStyleForRules(nsStyleContext* aParentContext,
                        const nsTArray< nsCOMPtr<nsIStyleRule> > &aRules);
 
+  // used in ResolveStyleForRules below
+  struct RuleAndLevel
+  {
+    nsIStyleRule* mRule;
+    uint8_t mLevel;
+  };
+
+  // Get a new style context for aElement for the rules in aRules
+  // aRules is an array of rules and their levels in reverse order,
+  // that is from the leaf-most to the root-most rule in the rule tree.
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForRules(nsStyleContext* aParentContext,
+                       nsStyleContext* aOldStyle,
+                       const nsTArray<RuleAndLevel>& aRules);
+
   // Get a style context that represents aBaseContext, but as though
   // it additionally matched the rules in the aRules array (in that
   // order, as more specific than any other rules).

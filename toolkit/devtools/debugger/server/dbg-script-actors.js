@@ -1507,9 +1507,27 @@ update(ObjectActor.prototype, {
    * Returns a grip for this actor for returning in a protocol message.
    */
   grip: function OA_grip() {
-    return { "type": "object",
-             "class": this.obj.class,
-             "actor": this.actorID };
+    let g = { "type": "object",
+              "class": this.obj.class,
+              "actor": this.actorID };
+
+    // Add additional properties for functions.
+    if (this.obj.class === "Function") {
+      if (this.obj.name) {
+        g.name = this.obj.name;
+      } else if (this.obj.displayName) {
+        g.displayName = this.obj.displayName;
+      }
+
+      // Check if the developer has added a de-facto standard displayName
+      // property for us to use.
+      let desc = this.obj.getOwnPropertyDescriptor("displayName");
+      if (desc && desc.value && typeof desc.value == "string") {
+        g.userDisplayName = this.threadActor.createValueGrip(desc.value);
+      }
+    }
+
+    return g;
   },
 
   /**
@@ -1655,20 +1673,19 @@ update(ObjectActor.prototype, {
   }),
 
   /**
-   * Handle a protocol request to provide the name and parameters of a function.
+   * Handle a protocol request to provide the parameters of a function.
    *
    * @param aRequest object
    *        The protocol request object.
    */
-  onNameAndParameters: PauseScopedActor.withPaused(function OA_onNameAndParameters(aRequest) {
+  onParameterNames: PauseScopedActor.withPaused(function OA_onParameterNames(aRequest) {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
-               message: "nameAndParameters request is only valid for object " +
+               message: "'parameterNames' request is only valid for object " +
                         "grips with a 'Function' class." };
     }
 
-    return { name: this.obj.name || null,
-             parameters: this.obj.parameterNames };
+    return { parameterNames: this.obj.parameterNames };
   }),
 
   /**
@@ -1701,7 +1718,7 @@ update(ObjectActor.prototype, {
 });
 
 ObjectActor.prototype.requestTypes = {
-  "nameAndParameters": ObjectActor.prototype.onNameAndParameters,
+  "parameterNames": ObjectActor.prototype.onParameterNames,
   "prototypeAndProperties": ObjectActor.prototype.onPrototypeAndProperties,
   "prototype": ObjectActor.prototype.onPrototype,
   "property": ObjectActor.prototype.onProperty,
@@ -1832,7 +1849,6 @@ FrameActor.prototype = {
                  type: this.frame.type };
     if (this.frame.type === "call") {
       form.callee = this.threadActor.createValueGrip(this.frame.callee);
-      form.calleeName = getFunctionName(this.frame.callee);
     }
 
     let envActor = this.threadActor
@@ -2024,7 +2040,6 @@ EnvironmentActor.prototype = {
       if (aObject.callee) {
         form.type = "function";
         form.function = this.threadActor.createValueGrip(aObject.callee);
-        form.functionName = getFunctionName(aObject.callee);
       } else {
         form.type = "block";
       }
@@ -2176,30 +2191,6 @@ EnvironmentActor.prototype.requestTypes = {
   "assign": EnvironmentActor.prototype.onAssign,
   "bindings": EnvironmentActor.prototype.onBindings
 };
-
-/**
- * Helper function to deduce the name of the provided function.
- *
- * @param Debugger.Object aFunction
- *        The function whose name will be returned.
- */
-function getFunctionName(aFunction) {
-  let name;
-  if (aFunction.name) {
-    name = aFunction.name;
-  } else {
-    // Check if the developer has added a de-facto standard displayName
-    // property for us to use.
-    let desc = aFunction.getOwnPropertyDescriptor("displayName");
-    if (desc && desc.value && typeof desc.value == "string") {
-      name = desc.value;
-    } else {
-      // Otherwise use SpiderMonkey's inferred name.
-      name = aFunction.displayName;
-    }
-  }
-  return name;
-}
 
 /**
  * Override the toString method in order to get more meaningful script output

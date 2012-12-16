@@ -4,12 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 this.EXPORTED_SYMBOLS = ["ToolSidebar"];
 
+Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -131,7 +130,6 @@ ToolSidebar.prototype = {
     }
   },
 
-
   /**
    * Toggle sidebar's visibility state.
    */
@@ -173,6 +171,11 @@ ToolSidebar.prototype = {
    * Clean-up.
    */
   destroy: function ToolSidebar_destroy() {
+    if (this._destroyed) {
+      return Promise.resolve(null);
+    }
+    this._destroyed = true;
+
     this._tabbox.removeEventListener("select", this, true);
 
     while (this._tabbox.tabpanels.hasChildNodes()) {
@@ -187,5 +190,7 @@ ToolSidebar.prototype = {
     this._tabbox = null;
     this._panelDoc = null;
     this._toolPanel = null;
+
+    return Promise.resolve(null);
   },
 }
