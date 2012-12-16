@@ -130,8 +130,6 @@ enum nsEventStructType {
 
 #define NS_EVENT_FLAG_EXCEPTION_THROWN    0x10000
 
-#define NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS 0x20000
-
 #define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
 
 #define NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS 0x100000
@@ -534,6 +532,12 @@ public:
   // consumed by content.
   // Note that mDefaultPrevented must be true when this is true.
   bool    mDefaultPreventedByContent : 1;
+  // mMultipleActionsPrevented may be used when default handling don't want to
+  // be prevented, but only one of the event targets should handle the event.
+  // For example, when a <label> element is in another <label> element and
+  // the first <label> element is clicked, that one may set this true.
+  // Then, the second <label> element won't handle the event.
+  bool    mMultipleActionsPrevented : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const

@@ -1588,7 +1588,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
                             nsInputEvent* aSourceEvent,
                             nsIContent* aTarget,
                             bool aFullDispatch,
-                            uint32_t aFlags,
+                            const widget::EventFlags* aExtraEventFlags,
                             nsEventStatus* aStatus)
 {
   NS_PRECONDITION(aTarget, "Must have target");
@@ -1612,7 +1612,10 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   event.clickCount = clickCount;
   event.inputSource = inputSource;
   event.modifiers = aSourceEvent->modifiers;
-  event.flags |= aFlags; // Be careful not to overwrite existing flags!
+  if (aExtraEventFlags) {
+    // Be careful not to overwrite existing flags!
+    event.mFlags |= *aExtraEventFlags;
+  }
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
 }
@@ -2316,7 +2319,7 @@ Element::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
        (aVisitor.mEvent->message != NS_KEY_PRESS) &&
        (aVisitor.mEvent->message != NS_UI_ACTIVATE)) ||
       !aVisitor.mPresContext ||
-      (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS)) {
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return false;
   }
 
@@ -2362,7 +2365,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
                                   false, true, true);
       // Make sure any ancestor links don't also TriggerLink
-      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
     break;
 
@@ -2372,7 +2375,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
   case NS_BLUR_CONTENT:
     rv = LeaveLink(aVisitor.mPresContext);
     if (NS_SUCCEEDED(rv)) {
-      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
     break;
 
@@ -2420,7 +2423,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (handler && document) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+            aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
             nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
             fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOUSE |
                                nsIFocusManager::FLAG_NOSCROLL);
@@ -2477,7 +2480,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
           rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                  false, 0, &status);
+                                  false, nullptr, &status);
           if (NS_SUCCEEDED(rv)) {
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }
