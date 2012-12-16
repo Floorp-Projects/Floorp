@@ -2151,10 +2151,10 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_ORIGINAL_CHECKED_VALUE;
   }
 
-  // If NS_EVENT_FLAG_NO_CONTENT_DISPATCH is set we will not allow content to handle
+  // If mNoContentDispatch is true we will not allow content to handle
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
-  if (aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) {
+  if (aVisitor.mEvent->mFlags.mNoContentDispatch) {
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if (IsSingleLineTextControl(false) &&
@@ -2162,7 +2162,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
       static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eMiddleButton) {
-    aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+    aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
@@ -2282,8 +2282,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   }
 
   // Reset the flag for other content besides this text field
-  aVisitor.mEvent->flags |=
-    noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
+  aVisitor.mEvent->mFlags.mNoContentDispatch = noContentDispatch;
 
   // now check to see if the event was "cancelled"
   if (mCheckedIsToggled && outerActivateEvent) {
