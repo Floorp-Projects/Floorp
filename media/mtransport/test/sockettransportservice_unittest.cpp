@@ -129,6 +129,9 @@ class SocketHandler : public nsASocketHandler {
     *aIsLocal = false;
   }
 
+  virtual uint64_t ByteCountSent() { return 0; }
+  virtual uint64_t ByteCountReceived() { return 0; }
+
   NS_DECL_ISUPPORTS
 
  private:

@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class sdnAccessible : public ISimpleDOMNode
+class sdnAccessible MOZ_FINAL : public ISimpleDOMNode
 {
 public:
   sdnAccessible(nsINode* aNode) : mNode(aNode) { }

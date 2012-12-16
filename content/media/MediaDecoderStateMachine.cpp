@@ -1222,7 +1222,7 @@ void MediaDecoderStateMachine::StopPlayback()
                "Should be on state machine thread or the decoder thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  mDecoder->mPlaybackStatistics.Stop(TimeStamp::Now());
+  mDecoder->NotifyPlaybackStopped();
 
   if (IsPlaying()) {
     mPlayDuration += DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
@@ -1241,7 +1241,7 @@ void MediaDecoderStateMachine::StartPlayback()
   NS_ASSERTION(!IsPlaying(), "Shouldn't be playing when StartPlayback() is called");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   LOG(PR_LOG_DEBUG, ("%p StartPlayback", mDecoder.get()));
-  mDecoder->mPlaybackStatistics.Start(TimeStamp::Now());
+  mDecoder->NotifyPlaybackStarted();
   mPlayStartTime = TimeStamp::Now();
 
   NS_ASSERTION(IsPlaying(), "Should report playing by end of StartPlayback()");

@@ -47,9 +47,6 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gBrowserGlue",
-                                   "@mozilla.org/browser/browserglue;1",
-                                   "nsIBrowserGlue");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -78,7 +75,7 @@ const kDownloadsStringsRequiringFormatting = {
 };
 
 const kDownloadsStringsRequiringPluralForm = {
-  otherDownloads: true
+  otherDownloads2: true
 };
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
@@ -1863,7 +1860,7 @@ DownloadsSummaryData.prototype = {
       DownloadsCommon.summarizeDownloads(this._dataItemsForSummary());
 
     this._description = DownloadsCommon.strings
-                                       .otherDownloads(summary.numActive);
+                                       .otherDownloads2(summary.numActive);
     this._percentComplete = summary.percentComplete;
 
     // If all downloads are paused, show the progress indicator as paused.

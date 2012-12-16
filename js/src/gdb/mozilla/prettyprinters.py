@@ -231,7 +231,7 @@ def lookup_for_objfile(objfile):
                 for t2 in implemented_types(t.target()):
                     if t2.code == gdb.TYPE_CODE_TYPEDEF:
                         p = check_table(ptr_printers_by_tag, str(t2))
-                    elif t2.code == gdb.TYPE_CODE_STRUCT:
+                    elif t2.code == gdb.TYPE_CODE_STRUCT and t2.tag:
                         p = check_table(ptr_printers_by_tag, t2.tag)
                     else:
                         p = None
@@ -239,7 +239,7 @@ def lookup_for_objfile(objfile):
             else:
                 if t.code == gdb.TYPE_CODE_TYPEDEF:
                     p = check_table(printers_by_tag, str(t))
-                elif t.code == gdb.TYPE_CODE_STRUCT:
+                elif t.code == gdb.TYPE_CODE_STRUCT and t.tag:
                     m = template_regexp.match(t.tag)
                     if m:
                         p = check_table(template_printers_by_tag, m.group(1))
@@ -311,3 +311,22 @@ class Pointer(object):
 
     def summary(self):
         raise NotImplementedError
+
+field_enum_value = None
+
+# Given |t|, a gdb.Type instance representing an enum type, return the
+# numeric value of the enum value named |name|.
+#
+# Pre-2012-4-18 versions of GDB store the value of an enum member on the
+# gdb.Field's 'bitpos' attribute; later versions store it on the 'enumval'
+# attribute. This function retrieves the value from either.
+def enum_value(t, name):
+    global field_enum_value
+    f = t[name]
+    # Monkey-patching is a-okay in polyfills! Just because.
+    if not field_enum_value:
+        if hasattr(f, 'enumval'):
+            field_enum_value = lambda f: f.enumval
+        else:
+            field_enum_value = lambda f: f.bitpos
+    return field_enum_value(f)

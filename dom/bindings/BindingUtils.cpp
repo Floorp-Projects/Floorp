@@ -271,6 +271,11 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
     }
     js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
                                   STRING_TO_JSVAL(str));
+
+    if (!JS_DefineProperty(cx, constructor, "length", JS::Int32Value(ctorNargs),
+                           nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT)) {
+      return NULL;
+    }
   }
 
   if (properties) {

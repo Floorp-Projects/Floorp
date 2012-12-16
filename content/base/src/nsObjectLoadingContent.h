@@ -116,10 +116,13 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     }
 
     /**
-     * Immediately instantiate a plugin instance. This is a no-op if
-     * mType != eType_Plugin or a plugin is already running.
+     * Immediately instantiate a plugin instance. This is a no-op if mType !=
+     * eType_Plugin or a plugin is already running.
+     *
+     * aIsLoading indicates that we are in the loading code, and we can bypass
+     * the mIsLoading check.
      */
-    nsresult InstantiatePluginInstance();
+    nsresult InstantiatePluginInstance(bool aIsLoading = false);
 
     /**
      * Notify this class the document state has changed
@@ -180,12 +183,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eSupportSVG          = 1u << 3, // SVG is supported (image/svg+xml)
       eSupportClassID      = 1u << 4, // The classid attribute is supported
 
-      // Allows us to load a plugin if it matches a MIME type or file extension
-      // registered to a plugin without opening its specified URI first. Can
-      // result in launching plugins for URIs that return differing content
-      // types. Plugins without URIs may instantiate regardless.
-      // XXX(johns) this is our legacy behavior on <embed> tags, whereas object
-      // will always open a channel and check its MIME if a URI is present.
+      // If possible to get a *plugin* type from the type attribute *or* file
+      // extension, we can use that type and begin loading the plugin before
+      // opening a channel.
+      // A side effect of this is if the channel fails, the plugin is still
+      // running.
       eAllowPluginSkipChannel  = 1u << 5
     };
 
@@ -218,6 +220,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
                         bool aNullParent = true);
 
   private:
+
     // Object parameter changes returned by UpdateObjectParameters
     enum ParameterUpdateFlags {
       eParamNoChange           = 0,
@@ -329,6 +332,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool IsSupportedDocument(const nsCString& aType);
 
     /**
+     * Gets the plugin instance and creates a plugin stream listener, assigning
+     * it to mFinalListener
+     */
+    bool MakePluginListener();
+
+    /**
      * Unloads all content and resets the object to a completely unloaded state
      *
      * NOTE Calls StopPluginInstance() and may spin the event loop
@@ -411,8 +420,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // The type of fallback content we're showing (see ObjectState())
     FallbackType                mFallbackType : 8;
 
-    // If true, the current load has finished opening a channel. Does not imply
-    // mChannel -- mChannelLoaded && !mChannel may occur for a load that failed
+    // If true, we have opened a channel as the listener and it has reached
+    // OnStartRequest. Does not get set for channels that are passed directly to
+    // the plugin listener.
     bool                        mChannelLoaded    : 1;
 
     // Whether we are about to call instantiate on our frame. If we aren't,

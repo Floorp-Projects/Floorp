@@ -138,7 +138,8 @@ let StackFrameUtils = {
    */
   getFrameTitle: function SFU_getFrameTitle(aFrame) {
     if (aFrame.type == "call") {
-      return aFrame.calleeName || "(anonymous)";
+      let c = aFrame.callee;
+      return (c.name || c.userDisplayName || c.displayName || "(anonymous)");
     }
     return "(" + aFrame.type + ")";
   }
@@ -1455,8 +1456,12 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
    * Called when all the sources have been fetched.
    */
   _onFetchSourcesFinished: function DVGS__onFetchSourcesFinished() {
+    if (!this._sourcesCount) {
+      return;
+    }
     // All sources are fetched and stored in the cache, we can start searching.
     this._performGlobalSearch();
+    this._sourcesCount = 0;
   },
 
   /**

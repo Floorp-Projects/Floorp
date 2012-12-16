@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=810494
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 810494</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=810494">Mozilla Bug 810494</a>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+function test(tag, type) {
+  "use strict";
+  info("testing " + tag + " tag with type " + type);
+
+  const OBJLC = Components.interfaces.nsIObjectLoadingContent;
+  let obj = document.createElement(tag);
+  obj.type = type;
+  document.body.appendChild(obj);
+
+  obj instanceof OBJLC;
+  obj = SpecialPowers.wrap(obj);
+
+  // We expect this tag to simply go to alternate content, not get a
+  // pluginProblem binding or fire any events.
+  ok(obj.displayedType == OBJLC.TYPE_NULL, "expected null type");
+  ok(obj.pluginFallbackType == OBJLC.PLUGIN_ALTERNATE,
+     "expected alternate fallback mode");
+}
+
+// Test all non-plugin types these tags can load to make sure none of them
+// trigger plugin-specific fallbacks when loaded with no URI
+test("object", "text/html");     // Document
+test("object", "image/png");     // Image
+test("object", "image/svg+xml"); // SVG Document
+
+test("embed", "image/png");      // Image
+test("embed", "image/svg+xml");  // SVG Document
+</script>
+</pre>
+</body>
+</html>

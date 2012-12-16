@@ -59,9 +59,6 @@ const uint32_t USE_ROLE_STRING = 0;
 static gAccessibles = 0;
 #endif
 
-EXTERN_C GUID CDECL CLSID_Accessible =
-{ 0x61044601, 0xa811, 0x4e2b, { 0xbb, 0xba, 0x17, 0xbf, 0xab, 0xd3, 0x29, 0xd7 } };
-
 static const int32_t kIEnumVariantDisconnected = -1;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +67,7 @@ static const int32_t kIEnumVariantDisconnected = -1;
 
 ITypeInfo* AccessibleWrap::gTypeInfo = NULL;
 
-NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, Accessible);
+NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, Accessible)
 
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
@@ -97,7 +94,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
     *ppv = static_cast<IAccessible2*>(this);
   else if (IID_ISimpleDOMNode == iid) {
-    if (IsDefunct() || !HasOwnContent() && !IsDoc())
+    if (IsDefunct() || (!HasOwnContent() && !IsDoc()))
       return E_NOINTERFACE;
 
     *ppv = new sdnAccessible(GetNode());
@@ -145,7 +142,7 @@ AccessibleWrap::QueryService(REFGUID aGuidService, REFIID aIID,
   // UIA IAccessibleEx
   if (aGuidService == IID_IAccessibleEx &&
       Preferences::GetBool("accessibility.uia.enable")) {
-    IAccessibleEx* accEx = new uiaRawElmProvider(this);
+    uiaRawElmProvider* accEx = new uiaRawElmProvider(this);
     HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
     if (FAILED(hr))
       delete accEx;
@@ -175,8 +172,8 @@ AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
     // Return window system accessible object for root document and tab document
     // accessibles.
     if (!doc->ParentDocument() ||
-        nsWinUtils::IsWindowEmulationStarted() &&
-        nsCoreUtils::IsTabDocument(doc->DocumentNode())) {
+        (nsWinUtils::IsWindowEmulationStarted() &&
+         nsCoreUtils::IsTabDocument(doc->DocumentNode()))) {
       HWND hwnd = static_cast<HWND>(doc->GetNativeWindow());
       if (hwnd && SUCCEEDED(::AccessibleObjectFromWindow(hwnd, OBJID_WINDOW,
                                                          IID_IAccessible,
@@ -585,7 +582,7 @@ AccessibleWrap::get_accFocus(
 
 // This helper class implements IEnumVARIANT for a nsIArray containing nsIAccessible objects.
 
-class AccessibleEnumerator : public IEnumVARIANT
+class AccessibleEnumerator MOZ_FINAL : public IEnumVARIANT
 {
 public:
   AccessibleEnumerator(nsIArray* aArray) : mArray(aArray), mCurIndex(0) { }
@@ -1102,7 +1099,7 @@ AccessibleWrap::get_relation(long aRelationIndex,
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  uint32_t relIdx = 0;
+  long relIdx = 0;
   for (uint32_t relType = nsIAccessibleRelation::RELATION_FIRST;
        relType <= nsIAccessibleRelation::RELATION_LAST; relType++) {
     Relation rel = RelationByType(relType);
@@ -1569,8 +1566,7 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
                  eventType < nsIAccessibleEvent::EVENT_LAST_ENTRY,
                  NS_ERROR_FAILURE);
 
-  uint32_t winLastEntry = gWinEventMap[nsIAccessibleEvent::EVENT_LAST_ENTRY];
-  NS_ASSERTION(winLastEntry == kEVENT_LAST_ENTRY,
+  NS_ASSERTION(gWinEventMap[nsIAccessibleEvent::EVENT_LAST_ENTRY] == kEVENT_LAST_ENTRY,
                "MSAA event map skewed");
 
   uint32_t winEvent = gWinEventMap[eventType];
@@ -1711,7 +1707,7 @@ AccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
     if (NS_FAILED(propElem->GetKey(name)))
       return E_FAIL;
 
-    uint32_t offset = 0;
+    int32_t offset = 0;
     while ((offset = name.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
       name.Insert('\\', offset);
       offset += 2;

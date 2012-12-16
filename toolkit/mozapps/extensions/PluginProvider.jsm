@@ -236,7 +236,7 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
       let size = 0;
       let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
       let entry;
-      while (entry = entries.nextFile) {
+      while ((entry = entries.nextFile)) {
         if (entry.isSymlink() || !entry.isDirectory())
           size += entry.fileSize;
         else

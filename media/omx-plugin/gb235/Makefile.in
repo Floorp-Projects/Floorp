@@ -54,6 +54,8 @@ EXTRA_DSO_LDOPTS += \
 		-lutils \
 		-L$(DEPTH)/media/omx-plugin/lib/gb235/libstagefright \
 		-lstagefright \
+		-L$(DEPTH)/media/omx-plugin/lib/gb/libstagefright_color_conversion \
+		-lstagefright_color_conversion \
 		$(NULL)
 
 INCLUDES        += \

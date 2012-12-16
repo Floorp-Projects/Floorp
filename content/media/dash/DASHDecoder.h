@@ -61,6 +61,13 @@ public:
   // Called on the main thread only.
   void NotifyDownloadEnded(nsresult aStatus);
 
+  // Notification from |DASHReader| that a seek has occurred in
+  // |aSubsegmentIdx|. Passes notification onto subdecoder which downloaded
+  // the subsegment already, if download is in the past. Otherwise, it returns.
+  void NotifySeekInVideoSubsegment(int32_t aRepDecoderIdx,
+                                   int32_t aSubsegmentIdx);
+  void NotifySeekInAudioSubsegment(int32_t aSubsegmentIdx);
+
   // Notifies that a byte range download has ended. As per the DASH spec, this
   // allows for stream switching at the boundaries of the byte ranges.
   // Called on the main thread only.
@@ -71,6 +78,9 @@ public:
   // Notification from an |MediaDecoderReader| class that metadata has been
   // read. Declared here to allow overloading.
   void OnReadMetadataCompleted() MOZ_OVERRIDE { }
+
+  // Seeks to aTime in seconds
+  nsresult Seek(double aTime) MOZ_OVERRIDE;
 
   // Notification from |DASHRepDecoder| that a metadata has been read.
   // |DASHDecoder| will initiate load of data bytes for active audio/video
@@ -102,15 +112,7 @@ public:
   // Requires monitor because of write to |mAudioSubsegmentIdx| or
   // |mVideoSubsegmentIdx|.
   void SetSubsegmentIndex(DASHRepDecoder* aRepDecoder,
-                          uint32_t aSubsegmentIdx)
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    if (aRepDecoder == AudioRepDecoder()) {
-      mAudioSubsegmentIdx = aSubsegmentIdx;
-    } else if (aRepDecoder == VideoRepDecoder()) {
-      mVideoSubsegmentIdx = aSubsegmentIdx;
-    }
-  }
+                          int32_t aSubsegmentIdx);
 private:
   // Increments the byte range index for audio|video downloads. Will only
   // increment for current active decoders. Could be called from any thread.
@@ -145,7 +147,7 @@ public:
   // monitor for read access off the decode thread.
   int32_t GetRepIdxForVideoSubsegmentLoad(int32_t aSubsegmentIdx)
   {
-    NS_ASSERTION(0 < aSubsegmentIdx, "Subsegment index should not be negative.");
+    NS_ASSERTION(0 <= aSubsegmentIdx, "Subsegment index should not be negative.");
     ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),
                                            GetReentrantMonitor());
     if ((uint32_t)aSubsegmentIdx < mVideoSubsegmentLoads.Length()) {
@@ -155,6 +157,52 @@ public:
       return 0;
     }
   }
+
+  int32_t GetSwitchCountAtVideoSubsegment(int32_t aSubsegmentIdx)
+  {
+    ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),
+                                           GetReentrantMonitor());
+    NS_ASSERTION(0 <= aSubsegmentIdx, "Subsegment index should not be negative.");
+    if (aSubsegmentIdx == 0) {
+      // Do the zeroeth switch next.
+      return 0;
+    }
+    int32_t switchCount = 0;
+    for (uint32_t i = 1;
+         i < mVideoSubsegmentLoads.Length() &&
+         i <= (uint32_t)aSubsegmentIdx;
+         i++) {
+      if (mVideoSubsegmentLoads[i-1] != mVideoSubsegmentLoads[i]) {
+        switchCount++;
+      }
+    }
+    return switchCount;
+  }
+
+  // The actual playback rate computation. The monitor must be held.
+  // XXX Computes playback for the current video rep decoder only.
+  double ComputePlaybackRate(bool* aReliable) MOZ_OVERRIDE;
+
+  // Something has changed that could affect the computed playback rate,
+  // so recompute it. The monitor must be held. Will be forwarded to current
+  // audio and video rep decoders.
+  void UpdatePlaybackRate() MOZ_OVERRIDE;
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity starting on the channel. The monitor must be held.
+  virtual void NotifyPlaybackStarted() MOZ_OVERRIDE;
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity stopping on the channel. The monitor must be held.
+  virtual void NotifyPlaybackStopped() MOZ_OVERRIDE;
+
+  // Return statistics. This is used for progress events and other things.
+  // This can be called from any thread. It's only a snapshot of the
+  // current state, since other threads might be changing the state
+  // at any time.
+  // XXX Stats are calculated based on the current video rep decoder, with the
+  // exception of download rate, which is based on all video downloads.
+  virtual Statistics GetStatistics() MOZ_OVERRIDE;
 
   // Drop reference to state machine and tell sub-decoders to do the same.
   // Only called during shutdown dance, on main thread only.
@@ -292,6 +340,18 @@ private:
   // Array records the index of the decoder/Representation which loaded each
   // subsegment.
   nsTArray<int32_t> mVideoSubsegmentLoads;
+
+  // True when Seek is called; will block any downloads until
+  // |NotifySeekInSubsegment| is called, which will set it to false, and will
+  // start a new series of downloads from the seeked subsegment.
+  bool mSeeking;
+
+  // Mutex for statistics.
+  Mutex mStatisticsLock;
+  // Stores snapshot statistics, such as download rate, for the audio|video
+  // data streams. |mStatisticsLock| must be locked for access.
+  nsRefPtr<MediaChannelStatistics> mAudioStatistics;
+  nsRefPtr<MediaChannelStatistics> mVideoStatistics;
 };
 
 } // namespace mozilla

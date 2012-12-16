@@ -151,6 +151,7 @@ static const char* sBluetoothDBusSignals[] =
 static nsAutoPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sAuthorizeReqTable;
+static bool sIsPairing = false;
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 
 class DistributeBluetoothSignalTask : public nsRunnable {
@@ -819,8 +820,12 @@ RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
 void
 GetObjectPathCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
-  RunDBusCallback(aMsg, aBluetoothReplyRunnable,
-                  UnpackObjectPathMessage);
+  if (sIsPairing) {
+    RunDBusCallback(aMsg, aBluetoothReplyRunnable,
+                    UnpackObjectPathMessage);
+
+    sIsPairing = false;
+  }
 }
 
 void
@@ -1566,6 +1571,8 @@ BluetoothDBusService::StopInternal()
   sAuthorizeReqTable.EnumerateRead(UnrefDBusMessages, nullptr);
   sAuthorizeReqTable.Clear();
 
+  sIsPairing = false;
+
   StopDBus();
   return NS_OK;
 }
@@ -2086,6 +2093,21 @@ BluetoothDBusService::CreatePairedDeviceInternal(const nsAString& aAdapterPath,
     NS_WARNING("Could not start async function!");
     return NS_ERROR_FAILURE;
   }
+
+
+  /**
+   * FIXME: Bug 820274
+   *
+   * If the user turns off Bluetooth in the middle of pairing process, the
+   * callback function GetObjectPathCallback (see the third argument of the
+   * function call above) may still be called while enabling next time by
+   * dbus daemon. To prevent this from happening, added a flag to distinguish
+   * if Bluetooth has been turned off. Nevertheless, we need a check if there
+   * is a better solution.
+   *
+   * Please see Bug 818696 for more information.
+   */
+  sIsPairing = true;
 
   runnable.forget();
   return NS_OK;

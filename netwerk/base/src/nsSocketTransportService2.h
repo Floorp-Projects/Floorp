@@ -19,6 +19,7 @@
 #include "nsASocketHandler.h"
 #include "nsIObserver.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/net/DashboardTypes.h"
 
 //-----------------------------------------------------------------------------
 
@@ -73,6 +74,9 @@ public:
         return mActiveCount + mIdleCount < gMaxCount;
     }
 
+    // Called by the networking dashboard
+    // Fills the passed array with socket information
+    void GetSocketConnections(nsTArray<mozilla::net::SocketInfo> *);
 protected:
 
     virtual ~nsSocketTransportService();
@@ -183,6 +187,11 @@ private:
     void ProbeMaxCount();
 #endif
     bool mProbedMaxCount;
+
+    void AnalyzeConnection(nsTArray<mozilla::net::SocketInfo> *data,
+                           SocketContext *context, bool aActive);
+
+    void ClosePrivateConnections();
 };
 
 extern nsSocketTransportService *gSocketTransportService;

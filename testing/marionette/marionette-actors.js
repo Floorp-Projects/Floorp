@@ -1880,16 +1880,17 @@ MarionetteDriverActor.prototype = {
         } catch (ex) {
           // browserType remains undefined.
         }
-        let reg;
+        let reg = {};
         if (!browserType || browserType != "content") {
-          reg = this.curBrowser.register(this.generateFrameId(message.json.value),
+          reg.id = this.curBrowser.register(this.generateFrameId(message.json.value),
                                          message.json.href); 
         }
-        this.curBrowser.elementManager.seenItems[reg] = listenerWindow; //add to seenItems
+        this.curBrowser.elementManager.seenItems[reg.id] = listenerWindow; //add to seenItems
+        reg.importedScripts = this.importedScripts.path;
         if (nullPrevious && (this.curBrowser.curFrameId != null)) {
           this.sendAsync("newSession", {B2G: (appName == "B2G")});
           if (this.curBrowser.newSession) {
-            this.sendResponse(reg);
+            this.sendResponse(reg.id);
           }
         }
         return reg;

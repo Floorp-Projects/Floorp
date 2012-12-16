@@ -17,12 +17,6 @@ interface nsISmsRequest;
 [scriptable, uuid(c2cb2af7-6b96-4915-bcc8-54ad705d6110)]
 interface nsISmsDatabaseService : nsISupports
 {
-  // Takes some information required to save the message and returns its id.
-  long saveReceivedMessage(in DOMString aSender, in DOMString aBody, in DOMString aMessageClass, in unsigned long long aDate);
-  // Takes some information required to save the message and returns its id.
-  long saveSentMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
-  void setMessageDeliveryStatus(in long aMessageId, in DOMString aDeliveryStatus);
-
   [binaryname(GetMessageMoz)]
   void getMessage(in long messageId, in nsISmsRequest request);
   void deleteMessage(in long messageId, in nsISmsRequest request);

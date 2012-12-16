@@ -160,7 +160,7 @@ ProcessMatrix3D(gfx3DMatrix& aMatrix,
 }
 
 /* Helper function to process two matrices that we need to interpolate between */
-static void
+void
 ProcessInterpolateMatrix(gfx3DMatrix& aMatrix,
                          const nsCSSValue::Array* aData,
                          nsStyleContext* aContext,

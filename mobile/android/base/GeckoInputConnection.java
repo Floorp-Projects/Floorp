@@ -52,9 +52,10 @@ class GeckoInputConnection
     private final ExtractedText mUpdateExtract = new ExtractedText();
     private boolean mBatchSelectionChanged;
     private boolean mBatchTextChanged;
+    private Runnable mRestartInputRunnable;
 
-    public static InputConnectionHandler create(View targetView,
-                                                GeckoEditableClient editable) {
+    public static GeckoEditableListener create(View targetView,
+                                               GeckoEditableClient editable) {
         if (DEBUG)
             return DebugGeckoInputConnection.create(targetView, editable);
         else
@@ -65,8 +66,6 @@ class GeckoInputConnection
                                    GeckoEditableClient editable) {
         super(targetView, true);
         mEditableClient = editable;
-        // install the editable => input connection listener
-        editable.setListener(this);
         mIMEState = IME_STATE_DISABLED;
     }
 
@@ -198,16 +197,27 @@ class GeckoInputConnection
     }
 
     private void restartInput() {
-        final InputMethodManager imm = getInputMethodManager();
-        if (imm != null) {
-            final View v = getView();
-            final Editable editable = getEditable();
-            // Fake a selection change, so that when we restart the input,
-            // the IME will make sure that any old composition string is cleared
-            notifySelectionChange(Selection.getSelectionStart(editable),
-                                  Selection.getSelectionEnd(editable));
-            imm.restartInput(v);
+        if (mRestartInputRunnable != null) {
+            return;
         }
+        final InputMethodManager imm = getInputMethodManager();
+        if (imm == null) {
+            return;
+        }
+        mRestartInputRunnable = new Runnable() {
+            @Override
+            public void run() {
+                final View v = getView();
+                final Editable editable = getEditable();
+                // Fake a selection change, so that when we restart the input,
+                // the IME will make sure that any old composition string is cleared
+                notifySelectionChange(Selection.getSelectionStart(editable),
+                                      Selection.getSelectionEnd(editable));
+                imm.restartInput(v);
+                mRestartInputRunnable = null;
+            }
+        };
+        GeckoApp.mAppContext.mMainHandler.postDelayed(mRestartInputRunnable, 200);
     }
 
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
@@ -531,8 +541,8 @@ final class DebugGeckoInputConnection
         super(targetView, editable);
     }
 
-    public static InputConnectionHandler create(View targetView,
-                                                GeckoEditableClient editable) {
+    public static GeckoEditableListener create(View targetView,
+                                               GeckoEditableClient editable) {
         final Class[] PROXY_INTERFACES = { InputConnection.class,
                 InputConnectionHandler.class,
                 GeckoEditableListener.class };
@@ -541,8 +551,7 @@ final class DebugGeckoInputConnection
         dgic.mProxy = (InputConnection)Proxy.newProxyInstance(
                 GeckoInputConnection.class.getClassLoader(),
                 PROXY_INTERFACES, dgic);
-        editable.setListener((GeckoEditableListener)dgic.mProxy);
-        return (InputConnectionHandler)dgic.mProxy;
+        return (GeckoEditableListener)dgic.mProxy;
     }
 
     private static StringBuilder debugAppend(StringBuilder sb, Object obj) {

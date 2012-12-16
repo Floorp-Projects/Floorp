@@ -16,6 +16,9 @@ namespace gc {
 void
 MarkRuntime(JSTracer *trc, bool useSavedRoots = false);
 
+void
+BufferGrayRoots(GCMarker *gcmarker);
+
 class AutoCopyFreeListToArenas {
     JSRuntime *runtime;
 
@@ -82,6 +85,11 @@ class IncrementalSafety
 
 IncrementalSafety
 IsIncrementalGCSafe(JSRuntime *rt);
+
+#ifdef JSGC_ROOT_ANALYSIS
+bool
+IsAddressableGCThing(JSRuntime *rt, uintptr_t w);
+#endif
 
 #ifdef JS_GC_ZEAL
 void

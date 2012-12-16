@@ -1,0 +1,264 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage basic test, while in sesison only mode</title>
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<script type="text/javascript">
+
+const Ci = Components.interfaces;
+var mainWindow;
+
+var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+prefBranch.setIntPref("browser.startup.page", 0);
+prefBranch.setCharPref("browser.startup.homepage_override.mstone", "ignore");
+
+function startTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShellTreeItem)
+                      .rootTreeItem
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow);
+
+  doTest();
+}
+
+var contentPage = "http://mochi.test:8888/chrome/dom/tests/mochitest/localstorage/page_blank.html";
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      // I am at my wits' end figuring out how to stop this load from occurring. I give up.
+      if (win.content.location.href == "about:privatebrowsing") {
+        win.gBrowser.loadURI(contentPage);
+        return;
+      }
+      win.removeEventListener("DOMConten/tLoaded", onInnerLoad, true);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+    win.gBrowser.loadURI(contentPage);
+  }, true);
+}
+
+function doTest() {
+  testOnWindow(false, function(aWin) {
+    aWin.content.localStorage.setItem("persistent", "persistent1");
+
+    testOnWindow(true, function(privateWin) {
+      is(privateWin.content.localStorage.getItem("persistent"), null, "previous values are inaccessible");
+
+      // Initially check the privateWin.content.localStorage is empty
+      is(privateWin.content.localStorage.length, 0, "The storage is empty [1]");
+      is(privateWin.content.localStorage.key(0), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.getItem("nonexisting"), null, "Nonexisting item is null (getItem())");
+      is(privateWin.content.localStorage["nonexisting"], undefined, "Nonexisting item is null (array access)");
+      is(privateWin.content.localStorage.nonexisting, undefined, "Nonexisting item is null (property access)");
+      privateWin.content.localStorage.removeItem("nonexisting"); // Just check there is no exception
+
+      is(typeof privateWin.content.localStorage.getItem("nonexisting"), "object", "getItem('nonexisting') is object");
+      is(typeof privateWin.content.localStorage["nonexisting"], "undefined", "['nonexisting'] is undefined");
+      is(typeof privateWin.content.localStorage.nonexisting, "undefined", "nonexisting is undefined");
+      is(typeof privateWin.content.localStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
+      is(typeof privateWin.content.localStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
+      is(typeof privateWin.content.localStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
+
+      // add an empty-value key
+      privateWin.content.localStorage.setItem("empty", "");
+      is(privateWin.content.localStorage.getItem("empty"), "", "Empty value (getItem())");
+      is(privateWin.content.localStorage["empty"], "", "Empty value (array access)");
+      is(privateWin.content.localStorage.empty, "", "Empty value (property access)");
+      is(typeof privateWin.content.localStorage.getItem("empty"), "string", "getItem('empty') is string");
+      is(typeof privateWin.content.localStorage["empty"], "string", "['empty'] is string");
+      is(typeof privateWin.content.localStorage.empty, "string", "empty is string");
+      privateWin.content.localStorage.removeItem("empty");
+      is(privateWin.content.localStorage.length, 0, "The storage has no keys");
+      is(privateWin.content.localStorage.getItem("empty"), null, "empty item is null (getItem())");
+      is(privateWin.content.localStorage["empty"], null, "empty item is undefined (array access)");
+      is(privateWin.content.localStorage.empty, null, "empty item is undefined (property access)");
+      is(typeof privateWin.content.localStorage.getItem("empty"), "object", "getItem('empty') is object");
+      is(typeof privateWin.content.localStorage["empty"], "undefined", "['empty'] is undefined");
+      is(typeof privateWin.content.localStorage.empty, "undefined", "empty is undefined");
+
+      // add one key, check it is there
+      privateWin.content.localStorage.setItem("key1", "value1");
+      is(privateWin.content.localStorage.length, 1, "The storage has one key-value pair");
+      is(privateWin.content.localStorage.key(0), "key1");
+      is(privateWin.content.localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(1), null, "key() should return null for out-of-bounds access");
+
+      // check all access method give the correct result
+      // and are of the correct type
+      is(privateWin.content.localStorage.getItem("key1"), "value1", "getItem('key1') == value1");
+      is(privateWin.content.localStorage["key1"], "value1", "['key1'] == value1");
+      is(privateWin.content.localStorage.key1, "value1", "key1 == value1");
+
+      is(typeof privateWin.content.localStorage.getItem("key1"), "string", "getItem('key1') is string");
+      is(typeof privateWin.content.localStorage["key1"], "string", "['key1'] is string");
+      is(typeof privateWin.content.localStorage.key1, "string", "key1 is string");
+
+      // remove the previously added key and check the storage is empty
+      privateWin.content.localStorage.removeItem("key1");
+      is(privateWin.content.localStorage.length, 0, "The storage is empty [2]");
+      is(privateWin.content.localStorage.key(0), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.getItem("key1"), null, "\'key1\' removed");
+
+      is(typeof privateWin.content.localStorage.getItem("key1"), "object", "getItem('key1') is object");
+      is(typeof privateWin.content.localStorage["key1"], "undefined", "['key1'] is undefined");
+      is(typeof privateWin.content.localStorage.key1, "undefined", "key1 is undefined");
+
+      // add one key, check it is there
+      privateWin.content.localStorage.setItem("key1", "value1");
+      is(privateWin.content.localStorage.length, 1, "The storage has one key-value pair");
+      is(privateWin.content.localStorage.key(0), "key1");
+      is(privateWin.content.localStorage.getItem("key1"), "value1");
+
+      // add a second key
+      privateWin.content.localStorage.setItem("key2", "value2");
+      is(privateWin.content.localStorage.length, 2, "The storage has two key-value pairs");
+      is(privateWin.content.localStorage.getItem("key1"), "value1");
+      is(privateWin.content.localStorage.getItem("key2"), "value2");
+      var firstKey = privateWin.content.localStorage.key(0);
+      var secondKey = privateWin.content.localStorage.key(1);
+      ok((firstKey == 'key1' && secondKey == 'key2') ||
+         (firstKey == 'key2' && secondKey == 'key1'),
+         'key() API works.');
+
+      // change the second key
+      privateWin.content.localStorage.setItem("key2", "value2-2");
+      is(privateWin.content.localStorage.length, 2, "The storage has two key-value pairs");
+      is(privateWin.content.localStorage.key(0), firstKey); // After key value changes the order must be preserved
+      is(privateWin.content.localStorage.key(1), secondKey);
+      is(privateWin.content.localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(2), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.getItem("key1"), "value1");
+      is(privateWin.content.localStorage.getItem("key2"), "value2-2");
+
+      // change the first key
+      privateWin.content.localStorage.setItem("key1", "value1-2");
+      is(privateWin.content.localStorage.length, 2, "The storage has two key-value pairs");
+      is(privateWin.content.localStorage.key(0), firstKey); // After key value changes the order must be preserved
+      is(privateWin.content.localStorage.key(1), secondKey);
+      is(privateWin.content.localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(2), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.getItem("key1"), "value1-2");
+      is(privateWin.content.localStorage.getItem("key2"), "value2-2");
+
+      // remove the second key
+      privateWin.content.localStorage.removeItem("key2");
+      is(privateWin.content.localStorage.length, 1, "The storage has one key-value pair");
+      is(privateWin.content.localStorage.key(0), "key1");
+      is(privateWin.content.localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.getItem("key1"), "value1-2");
+
+      // JS property test
+      privateWin.content.localStorage.testA = "valueA";
+      is(privateWin.content.localStorage.testA, "valueA");
+      is(privateWin.content.localStorage["testA"], "valueA");
+      is(privateWin.content.localStorage.getItem("testA"), "valueA");
+
+      privateWin.content.localStorage.testA = "valueA2";
+      is(privateWin.content.localStorage.testA, "valueA2");
+      is(privateWin.content.localStorage["testA"], "valueA2");
+      is(privateWin.content.localStorage.getItem("testA"), "valueA2");
+
+      privateWin.content.localStorage["testB"] = "valueB";
+      is(privateWin.content.localStorage.testB, "valueB");
+      is(privateWin.content.localStorage["testB"], "valueB");
+      is(privateWin.content.localStorage.getItem("testB"), "valueB");
+
+      privateWin.content.localStorage["testB"] = "valueB2";
+      is(privateWin.content.localStorage.testB, "valueB2");
+      is(privateWin.content.localStorage["testB"], "valueB2");
+      is(privateWin.content.localStorage.getItem("testB"), "valueB2");
+
+      privateWin.content.localStorage.setItem("testC", "valueC");
+      is(privateWin.content.localStorage.testC, "valueC");
+      is(privateWin.content.localStorage["testC"], "valueC");
+      is(privateWin.content.localStorage.getItem("testC"), "valueC");
+
+      privateWin.content.localStorage.setItem("testC", "valueC2");
+      is(privateWin.content.localStorage.testC, "valueC2");
+      is(privateWin.content.localStorage["testC"], "valueC2");
+      is(privateWin.content.localStorage.getItem("testC"), "valueC2");
+
+      privateWin.content.localStorage.setItem("testC", null);
+      is("testC" in privateWin.content.localStorage, true);
+      is(privateWin.content.localStorage.getItem("testC"), "null");
+      is(privateWin.content.localStorage["testC"], "null");
+      is(privateWin.content.localStorage.testC, "null");
+
+      privateWin.content.localStorage.removeItem("testC");
+      privateWin.content.localStorage["testC"] = null;
+      is("testC" in privateWin.content.localStorage, true);
+      is(privateWin.content.localStorage.getItem("testC"), "null");
+      is(privateWin.content.localStorage["testC"], "null");
+      is(privateWin.content.localStorage.testC, "null");
+
+      privateWin.content.localStorage.setItem(null, "test");
+      is("null" in privateWin.content.localStorage, true);
+      is(privateWin.content.localStorage.getItem("null"), "test");
+      is(privateWin.content.localStorage.getItem(null), "test");
+      is(privateWin.content.localStorage["null"], "test");
+      privateWin.content.localStorage.removeItem(null, "test");
+      // bug 350023
+      todo_is("null" in privateWin.content.localStorage, false);
+
+      privateWin.content.localStorage.setItem(null, "test");
+      is("null" in privateWin.content.localStorage, true);
+      privateWin.content.localStorage.removeItem("null", "test");
+      // bug 350023
+      todo_is("null" in privateWin.content.localStorage, false);
+
+      // Clear the storage
+      privateWin.content.localStorage.clear();
+      is(privateWin.content.localStorage.length, 0, "The storage is empty [3]");
+      is(privateWin.content.localStorage.key(0), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(-1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.key(1), null, "key() should return null for out-of-bounds access");
+      is(privateWin.content.localStorage.getItem("nonexisting"), null, "Nonexisting item is null");
+      is(privateWin.content.localStorage.getItem("key1"), null, "key1 removed");
+      is(privateWin.content.localStorage.getItem("key2"), null, "key2 removed");
+      privateWin.content.localStorage.removeItem("nonexisting"); // Just check there is no exception
+      privateWin.content.localStorage.removeItem("key1"); // Just check there is no exception
+      privateWin.content.localStorage.removeItem("key2"); // Just check there is no exception
+
+      privateWin.content.localStorage.setItem("must disappear", "private browsing value");
+
+      privateWin.close();
+
+      testOnWindow(true, function(newPrivateWin) {
+        is(newPrivateWin.content.localStorage.getItem("must disappear"), null, "private browsing values threw away");
+        is(newPrivateWin.content.localStorage.length, 0, "No items");
+
+        newPrivateWin.close();
+        is(aWin.content.localStorage.getItem("persistent"), "persistent1", "back in normal mode");
+        aWin.content.localStorage.clear();
+        aWin.close();
+
+        prefBranch.clearUserPref("browser.startup.page")
+        prefBranch.clearUserPref("browser.startup.homepage_override.mstone");
+        SimpleTest.finish();
+      });
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

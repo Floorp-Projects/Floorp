@@ -1125,7 +1125,7 @@ void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
 }
 
 // Coordinates are global display pixels
-NS_IMETHODIMP nsCocoaWindow::Move(int32_t aX, int32_t aY)
+NS_IMETHODIMP nsCocoaWindow::Move(double aX, double aY)
 {
   if (!mWindow) {
     return NS_OK;
@@ -1135,7 +1135,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(int32_t aX, int32_t aY)
   // it to Cocoa ones (origin bottom-left).
   NSPoint coord = {
     static_cast<float>(aX),
-    static_cast<float>(nsCocoaUtils::FlippedScreenY(aY))
+    static_cast<float>(nsCocoaUtils::FlippedScreenY(NSToIntRound(aY)))
   };
 
   NSRect frame = [mWindow frame];
@@ -1308,8 +1308,8 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
 }
 
 // Coordinates are global display pixels
-nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
-                                 int32_t aWidth, int32_t aHeight,
+nsresult nsCocoaWindow::DoResize(double aX, double aY,
+                                 double aWidth, double aHeight,
                                  bool aRepaint,
                                  bool aConstrainToCurrentScreen)
 {
@@ -1322,13 +1322,13 @@ nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
   // ConstrainSize operates in device pixels, so we need to convert using
   // the backing scale factor here
   CGFloat scale = BackingScaleFactor();
-  aWidth *= scale;
-  aHeight *= scale;
-  ConstrainSize(&aWidth, &aHeight);
-  aWidth = NSToIntRound(aWidth / scale);
-  aHeight = NSToIntRound(aHeight / scale);
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
+  ConstrainSize(&width, &height);
 
-  nsIntRect newBounds(aX, aY, aWidth, aHeight);
+  nsIntRect newBounds(aX, aY,
+                      NSToIntRound(width / scale),
+                      NSToIntRound(height / scale));
 
   // constrain to the screen that contains the largest area of the new rect
   FitRectToVisibleAreaForScreen(newBounds, aConstrainToCurrentScreen ?
@@ -1358,19 +1358,18 @@ nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
 }
 
 // Coordinates are global display pixels
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY,
-                                    int32_t aWidth, int32_t aHeight,
+NS_IMETHODIMP nsCocoaWindow::Resize(double aX, double aY,
+                                    double aWidth, double aHeight,
                                     bool aRepaint)
 {
   return DoResize(aX, aY, aWidth, aHeight, aRepaint, false);
 }
 
 // Coordinates are global display pixels
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
+NS_IMETHODIMP nsCocoaWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
   double invScale = 1.0 / GetDefaultScale();
-  return DoResize(NSToIntRound(mBounds.x * invScale),
-                  NSToIntRound(mBounds.y * invScale),
+  return DoResize(mBounds.x * invScale, mBounds.y * invScale,
                   aWidth, aHeight, aRepaint, true);
 }
 
@@ -1430,6 +1429,48 @@ nsCocoaWindow::GetDefaultScaleInternal()
   return BackingScaleFactor();
 }
 
+static CGFloat
+GetBackingScaleFactor(NSWindow* aWindow)
+{
+  NSRect frame = [aWindow frame];
+  if (frame.size.width > 0 && frame.size.height > 0) {
+    return nsCocoaUtils::GetBackingScaleFactor(aWindow);
+  }
+
+  // For windows with zero width or height, the backingScaleFactor method
+  // is broken - it will always return 2 on a retina macbook, even when
+  // the window position implies it's on a non-hidpi external display
+  // (to the extent that a zero-area window can be said to be "on" a
+  // display at all!)
+  // And to make matters worse, Cocoa even fires a
+  // windowDidChangeBackingProperties notification with the
+  // NSBackingPropertyOldScaleFactorKey key when a window on an
+  // external display is resized to/from zero height, even though it hasn't
+  // really changed screens.
+
+  // This causes us to handle popup window sizing incorrectly when the
+  // popup is resized to zero height (bug 820327) - nsXULPopupManager
+  // becomes (incorrectly) convinced the popup has been explicitly forced
+  // to a non-default size and needs to have size attributes attached.
+
+  // Workaround: instead of asking the window, we'll find the screen it is on
+  // and ask that for *its* backing scale factor.
+
+  // First, expand the rect so that it actually has a measurable area,
+  // for FindTargetScreenForRect to use.
+  if (frame.size.width == 0) {
+    frame.size.width = 1;
+  }
+  if (frame.size.height == 0) {
+    frame.size.height = 1;
+  }
+
+  // Then identify the screen it belongs to, and return its scale factor.
+  NSScreen *screen =
+    FindTargetScreenForRect(nsCocoaUtils::CocoaRectToGeckoRect(frame));
+  return nsCocoaUtils::GetBackingScaleFactor(screen);
+}
+
 CGFloat
 nsCocoaWindow::BackingScaleFactor()
 {
@@ -1439,14 +1480,14 @@ nsCocoaWindow::BackingScaleFactor()
   if (!mWindow) {
     return 1.0;
   }
-  mBackingScaleFactor = nsCocoaUtils::GetBackingScaleFactor(mWindow);
+  mBackingScaleFactor = GetBackingScaleFactor(mWindow);
   return mBackingScaleFactor;
 }
 
 void
 nsCocoaWindow::BackingScaleFactorChanged()
 {
-  CGFloat newScale = nsCocoaUtils::GetBackingScaleFactor(mWindow);
+  CGFloat newScale = GetBackingScaleFactor(mWindow);
 
   // ignore notification if it hasn't really changed (or maybe we have
   // disabled HiDPI mode via prefs)
@@ -2378,7 +2419,7 @@ GetDPI(NSWindow* aWindow)
 
   // Account for HiDPI mode where Cocoa's "points" do not correspond to real
   // device pixels
-  CGFloat backingScale = nsCocoaUtils::GetBackingScaleFactor(aWindow);
+  CGFloat backingScale = GetBackingScaleFactor(aWindow);
 
   return dpi * backingScale;
 }

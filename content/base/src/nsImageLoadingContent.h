@@ -124,11 +124,11 @@ protected:
 
   /**
    * UseAsPrimaryRequest is called by subclasses when they have an existing
-   * imgIRequest that they want this nsImageLoadingContent to use.  This may
+   * imgRequestProxy that they want this nsImageLoadingContent to use.  This may
    * effectively be called instead of LoadImage or LoadImageWithChannel.
    * If aNotify is true, this method will notify on state changes.
    */
-  nsresult UseAsPrimaryRequest(imgIRequest* aRequest, bool aNotify);
+  nsresult UseAsPrimaryRequest(imgRequestProxy* aRequest, bool aNotify);
 
   /**
    * Derived classes of nsImageLoadingContent MUST call
@@ -255,7 +255,7 @@ protected:
    * "pending" until it becomes usable. Otherwise, this becomes the current
    * request.
    */
-   nsCOMPtr<imgIRequest>& PrepareNextRequest();
+   nsRefPtr<imgRequestProxy>& PrepareNextRequest();
 
   /**
    * Called when we would normally call PrepareNextRequest(), but the request was
@@ -270,8 +270,8 @@ protected:
    * Clear*Request(NS_BINDING_ABORTED) instead, since it passes a more appropriate
    * aReason than Prepare*Request() does (NS_ERROR_IMAGE_SRC_CHANGED).
    */
-  nsCOMPtr<imgIRequest>& PrepareCurrentRequest();
-  nsCOMPtr<imgIRequest>& PreparePendingRequest();
+  nsRefPtr<imgRequestProxy>& PrepareCurrentRequest();
+  nsRefPtr<imgRequestProxy>& PreparePendingRequest();
 
   /**
    * Switch our pending request to be our current request.
@@ -316,8 +316,8 @@ protected:
   nsresult UntrackImage(imgIRequest* aImage);
 
   /* MEMBERS */
-  nsCOMPtr<imgIRequest> mCurrentRequest;
-  nsCOMPtr<imgIRequest> mPendingRequest;
+  nsRefPtr<imgRequestProxy> mCurrentRequest;
+  nsRefPtr<imgRequestProxy> mPendingRequest;
   uint32_t mCurrentRequestFlags;
   uint32_t mPendingRequestFlags;
 

@@ -27,7 +27,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
   }, "bookmarks-restore-success", false);
 }
 
-let gTests = [
+[
 
   // This test must be the first one.
   function test_checkPreferences() {
@@ -263,7 +263,7 @@ let gTests = [
                                               TOPICDATA_FORCE_PLACES_INIT);
   }
 
-];
+].forEach(add_test);
 
 do_register_cleanup(function () {
   remove_all_bookmarks();

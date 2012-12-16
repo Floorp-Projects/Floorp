@@ -11,6 +11,7 @@
 #include "mozilla/HalTypes.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIFMRadio.h"
+#include "AudioChannelService.h"
 
 #define NS_FMRADIO_CONTRACTID "@mozilla.org/fmradio;1"
 // 9cb91834-78a9-4029-b644-7806173c5e2d
@@ -26,10 +27,12 @@ class FMRadio : public nsDOMEventTargetHelper
               , public nsIFMRadio
               , public hal::FMRadioObserver
               , public hal::SwitchObserver
+              , public nsIAudioChannelAgentCallback
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFMRADIO
+  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
@@ -41,8 +44,11 @@ public:
 
 private:
   ~FMRadio();
-  bool mHasInternalAntenna;
+
   hal::SwitchState mHeadphoneState;
+  bool mHasInternalAntenna;
+  bool mHidden;
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 };
 
 } // namespace fm

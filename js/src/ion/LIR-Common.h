@@ -420,13 +420,37 @@ class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 
 // Allocate an object for |new| on the caller-side.
 // Always performs object initialization with a fast path.
-class LCreateThis : public LInstructionHelper<1, 0, 0>
+class LCreateThisWithTemplate : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(CreateThis)
+    LIR_HEADER(CreateThisWithTemplate)
 
-    LCreateThis()
+    LCreateThisWithTemplate()
     { }
+
+    MCreateThisWithTemplate *mir() const {
+        return mir_->toCreateThisWithTemplate();
+    }
+};
+
+// Allocate an object for |new| on the caller-side, when there is no templateObject.
+class LCreateThisV : public LCallInstructionHelper<BOX_PIECES, 2, 0>
+{
+  public:
+    LIR_HEADER(CreateThisV)
+
+    LCreateThisV(const LAllocation &callee, const LAllocation &prototype)
+    {
+        setOperand(0, callee);
+        setOperand(1, prototype);
+    }
+
+    const LAllocation *getCallee() {
+        return getOperand(0);
+    }
+    const LAllocation *getPrototype() {
+        return getOperand(1);
+    }
 
     MCreateThis *mir() const {
         return mir_->toCreateThis();
@@ -434,12 +458,12 @@ class LCreateThis : public LInstructionHelper<1, 0, 0>
 };
 
 // Allocate an object for |new| on the caller-side, when there is no templateObject.
-class LCreateThisVM : public LCallInstructionHelper<1, 2, 0>
+class LCreateThisO : public LCallInstructionHelper<1, 2, 0>
 {
   public:
-    LIR_HEADER(CreateThisVM)
+    LIR_HEADER(CreateThisO)
 
-    LCreateThisVM(const LAllocation &callee, const LAllocation &prototype)
+    LCreateThisO(const LAllocation &callee, const LAllocation &prototype)
     {
         setOperand(0, callee);
         setOperand(1, prototype);
@@ -681,24 +705,6 @@ class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 5>
     }
 };
 
-// Generates a polymorphic callsite for |new|, where |this| has not been
-// pre-allocated by the caller.
-class LCallConstructor : public LJSCallInstructionHelper<BOX_PIECES, 1, 0>
-{
-  public:
-    LIR_HEADER(CallConstructor)
-
-    LCallConstructor(const LAllocation &func, uint32_t argslot)
-      : JSCallHelper(argslot)
-    {
-        setOperand(0, func);
-    }
-
-    const LAllocation *getFunction() {
-        return getOperand(0);
-    }
-};
-
 template <size_t defs, size_t ops>
 class LDOMPropertyInstructionHelper : public LCallInstructionHelper<defs, 1 + ops, 3>
 {
@@ -830,7 +836,7 @@ class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
-class LTestDAndBranch : public LInstructionHelper<0, 1, 1>
+class LTestDAndBranch : public LInstructionHelper<0, 1, 0>
 {
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
@@ -3258,7 +3264,7 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
         return getTemp(0);
     }
 
-    JSScript *script() {
+    UnrootedScript script() {
         return mir_->toFunctionBoundary()->script();
     }
 

@@ -216,11 +216,13 @@ int VideoEngine::SetAndroidObjects(void* javaVM, void* javaContext) {
                  "Could not set capture Android VM");
     return -1;
   }
+#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
   if (SetRenderAndroidVM(javaVM) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,
                  "Could not set render Android VM");
     return -1;
   }
+#endif
   return 0;
 #else
   WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,

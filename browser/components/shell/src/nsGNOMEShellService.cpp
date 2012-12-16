@@ -30,6 +30,7 @@
 #ifdef MOZ_WIDGET_GTK2
 #include "nsIImageToPixbuf.h"
 #endif
+#include "nsXULAppAPI.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -108,11 +109,8 @@ nsGNOMEShellService::Init()
   NS_ENSURE_TRUE(dirSvc, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIFile> appPath;
-  rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
+  rv = dirSvc->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
                    getter_AddRefs(appPath));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = appPath->AppendNative(NS_LITERAL_CSTRING(MOZ_APP_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return appPath->GetNativePath(mAppPath);

@@ -421,25 +421,18 @@ nsContextMenu.prototype = {
     let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
     let imported = {};
     Cu.import("resource:///modules/devtools/Target.jsm", imported);
-    var target = imported.TargetFactory.forTab(gBrowser.selectedTab);
-    let inspector = gDevTools.getPanelForTarget("inspector", target);
-    if (inspector && inspector.isReady) {
-      inspector.selection.setNode(this.target);
-    } else {
-      let toolbox = gDevTools.openToolboxForTab(target, "inspector");
-      toolbox.once("inspector-ready", function(event, panel) {
-        let inspector = gDevTools.getPanelForTarget("inspector", target);
-        inspector.selection.setNode(this.target, "browser-context-menu");
-      }.bind(this));
-    }
+    let tt = imported.TargetFactory.forTab(gBrowser.selectedTab);
+    return gDevTools.showToolbox(tt, "inspector").then(function(toolbox) {
+      let inspector = toolbox.getCurrentPanel();
+      inspector.selection.setNode(this.target, "browser-context-menu");
+    }.bind(this));
   },
 
   // Set various context menu attributes based on the state of the world.
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
-        aNode.nodeType == Node.DOCUMENT_NODE ||
-        this.isTargetAFormControl(aNode)) {
+        aNode.nodeType == Node.DOCUMENT_NODE) {
       this.shouldDisplay = false;
       return;
     }
@@ -1295,18 +1288,6 @@ nsContextMenu.prototype = {
            "contextMenu.link       = " + this.link + "\n" +
            "contextMenu.inFrame    = " + this.inFrame + "\n" +
            "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
-  },
-
-  // Returns true if aNode is a from control (except text boxes and images).
-  // This is used to disable the context menu for form controls.
-  isTargetAFormControl: function(aNode) {
-    if (aNode instanceof HTMLInputElement)
-      return (!aNode.mozIsTextField(false) && aNode.type != "image");
-
-    return (aNode instanceof HTMLButtonElement) ||
-           (aNode instanceof HTMLSelectElement) ||
-           (aNode instanceof HTMLOptionElement) ||
-           (aNode instanceof HTMLOptGroupElement);
   },
 
   isTargetATextBox: function(node) {

@@ -31,6 +31,7 @@
 
 #include "jsalloc.h"
 #include "js/Vector.h"
+#include "js/HashTable.h"
 
 /************************************************************************/
 
@@ -1041,7 +1042,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
         *stackTop = down;
     }
 
-    /* Implemented in jsgc.cpp. */
+    /* Implemented in gc/RootMarking.cpp. */
     inline void trace(JSTracer *trc);
     static void traceAll(JSTracer *trc);
     static void traceAllWrappers(JSTracer *trc);
@@ -1087,7 +1088,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
         IONMASM =     -28, /* js::ion::MacroAssembler */
         IONALLOC =    -29, /* js::ion::AutoTempAllocatorRooter */
         WRAPVECTOR =  -30, /* js::AutoWrapperVector */
-        WRAPPER =     -31  /* js::AutoWrapperRooter */
+        WRAPPER =     -31, /* js::AutoWrapperRooter */
+        OBJOBJHASHMAP=-32  /* js::AutoObjectObjectHashMap */
     };
 
   private:
@@ -1324,6 +1326,129 @@ class AutoVectorRooter : protected AutoGCRooter
 
     /* Prevent overwriting of inline elements in vector. */
     js::SkipRoot vectorRoot;
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+template<class Key, class Value>
+class AutoHashMapRooter : protected AutoGCRooter
+{
+  private:
+    typedef js::HashMap<Key, Value> HashMapImpl;
+
+  public:
+    explicit AutoHashMapRooter(JSContext *cx, ptrdiff_t tag
+                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, tag), map(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    typedef Key KeyType;
+    typedef Value ValueType;
+    typedef typename HashMapImpl::Lookup Lookup;
+    typedef typename HashMapImpl::Ptr Ptr;
+    typedef typename HashMapImpl::AddPtr AddPtr;
+
+    bool init(uint32_t len = 16) {
+        return map.init(len);
+    }
+    bool initialized() const {
+        return map.initialized();
+    }
+    Ptr lookup(const Lookup &l) const {
+        return map.lookup(l);
+    }
+    void remove(Ptr p) {
+        map.remove(p);
+    }
+    AddPtr lookupForAdd(const Lookup &l) const {
+        return map.lookupForAdd(l);
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool add(AddPtr &p, const KeyInput &k, const ValueInput &v) {
+        return map.add(k, v);
+    }
+
+    bool add(AddPtr &p, const Key &k) {
+        return map.add(p, k);
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
+        return map.relookupOrAdd(p, k, v);
+    }
+
+    typedef typename HashMapImpl::Range Range;
+    Range all() const {
+        return map.all();
+    }
+
+    typedef typename HashMapImpl::Enum Enum;
+
+    void clear() {
+        map.clear();
+    }
+
+    void finish() {
+        map.finish();
+    }
+
+    bool empty() const {
+        return map.empty();
+    }
+
+    uint32_t count() const {
+        return map.count();
+    }
+
+    size_t capacity() const {
+        return map.capacity();
+    }
+
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+        return map.sizeOfExcludingThis(mallocSizeOf);
+    }
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+        return map.sizeOfIncludingThis(mallocSizeOf);
+    }
+
+    unsigned generation() const {
+        return map.generation();
+    }
+
+    /************************************************** Shorthand operations */
+
+    bool has(const Lookup &l) const {
+        return map.has(l);
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool put(const KeyInput &k, const ValueInput &v) {
+        return map.put(k, v);
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool putNew(const KeyInput &k, const ValueInput &v) {
+        return map.putNew(k, v);
+    }
+
+    Ptr lookupWithDefault(const Key &k, const Value &defaultValue) {
+        return map.lookupWithDefault(k, defaultValue);
+    }
+
+    void remove(const Lookup &l) {
+        map.remove(l);
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    AutoHashMapRooter(const AutoHashMapRooter &hmr) MOZ_DELETE;
+    AutoHashMapRooter &operator=(const AutoHashMapRooter &hmr) MOZ_DELETE;
+
+    HashMapImpl map;
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -4915,6 +5040,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     bool compileAndGo;
     bool noScriptRval;
     bool selfHostingMode;
+    bool userBit;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -4932,6 +5058,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
+    CompileOptions &setUserBit(bool bit) { userBit = bit; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 

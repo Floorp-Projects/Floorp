@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xdb9b0931, 0xebf9, 0x4e0d, \
-    { 0xb2, 0x0a, 0xf7, 0x5f, 0xcb, 0x17, 0xe6, 0xe1 } }
+  { 0x476D5716, 0xE225, 0x4497, \
+    { 0x80, 0x41, 0x92, 0xF8, 0x67, 0x59, 0xC4, 0x38 } }
 
 /*
  * Window shadow styles
@@ -697,8 +697,14 @@ class nsIWidget : public nsISupports {
      * case with mixed hi-dpi and lo-dpi displays). This applies to all the
      * following Move and Resize widget APIs.
      *
-     * Currently, only Mac OS X implements a display-/device-pixel distinction;
-     * this may change in future, however.
+     * The display-/device-pixel distinction becomes important for (at least)
+     * Mac OS X with Hi-DPI (retina) displays, and Windows when the UI scale
+     * factor is set to other than 100%.
+     *
+     * The Move and Resize methods take floating-point parameters, rather than
+     * integer ones. This is important when manipulating top-level widgets,
+     * where the coordinate system may not be an integral multiple of the
+     * device-pixel space.
      **/
 
     /**
@@ -711,7 +717,7 @@ class nsIWidget : public nsISupports {
      * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
-    NS_IMETHOD Move(int32_t aX, int32_t aY) = 0;
+    NS_IMETHOD Move(double aX, double aY) = 0;
 
     /**
      * Reposition this widget so that the client area has the given offset.
@@ -726,7 +732,7 @@ class nsIWidget : public nsISupports {
      *                 screen coordinates)
      *
      **/
-    NS_IMETHOD MoveClient(int32_t aX, int32_t aY) = 0;
+    NS_IMETHOD MoveClient(double aX, double aY) = 0;
 
     /**
      * Resize this widget. Any size constraints set for the window by a
@@ -737,9 +743,9 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD Resize(int32_t aWidth,
-                      int32_t aHeight,
-                      bool     aRepaint) = 0;
+    NS_IMETHOD Resize(double aWidth,
+                      double aHeight,
+                      bool   aRepaint) = 0;
 
     /**
      * Move or resize this widget. Any size constraints set for the window by
@@ -752,11 +758,11 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
-    NS_IMETHOD Resize(int32_t aX,
-                      int32_t aY,
-                      int32_t aWidth,
-                      int32_t aHeight,
-                      bool     aRepaint) = 0;
+    NS_IMETHOD Resize(double aX,
+                      double aY,
+                      double aWidth,
+                      double aHeight,
+                      bool   aRepaint) = 0;
 
     /**
      * Resize the widget so that the inner client area has the given size.
@@ -766,9 +772,9 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD ResizeClient(int32_t aWidth,
-                            int32_t aHeight,
-                            bool  aRepaint) = 0;
+    NS_IMETHOD ResizeClient(double aWidth,
+                            double aHeight,
+                            bool   aRepaint) = 0;
 
     /**
      * Resize and reposition the widget so tht inner client area has the given
@@ -787,11 +793,11 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD ResizeClient(int32_t aX,
-                            int32_t aY,
-                            int32_t aWidth,
-                            int32_t aHeight,
-                            bool    aRepaint) = 0;
+    NS_IMETHOD ResizeClient(double aX,
+                            double aY,
+                            double aWidth,
+                            double aHeight,
+                            bool   aRepaint) = 0;
 
     /**
      * Sets the widget's z-index.

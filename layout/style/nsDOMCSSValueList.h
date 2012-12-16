@@ -8,53 +8,59 @@
 #define nsDOMCSSValueList_h___
 
 #include "nsIDOMCSSValue.h"
-#include "nsIDOMCSSValueList.h"
+#include "CSSValue.h"
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 
+class nsComputedDOMStyle;
 
-#include "nsCOMPtr.h"
-
-class nsDOMCSSValueList : public nsIDOMCSSValueList
+class nsDOMCSSValueList MOZ_FINAL : public mozilla::dom::CSSValue,
+  public nsIDOMCSSValue
 {
 public:
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMCSSValueList
-  NS_DECL_NSIDOMCSSVALUELIST
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMCSSValueList, mozilla::dom::CSSValue)
 
   // nsIDOMCSSValue
   NS_DECL_NSIDOMCSSVALUE
 
   // nsDOMCSSValueList
   nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly);
-  virtual ~nsDOMCSSValueList();
+  ~nsDOMCSSValueList();
 
   /**
    * Adds a value to this list.
    */
-  void AppendCSSValue(nsIDOMCSSValue* aValue);
+  void AppendCSSValue(CSSValue* aValue);
 
-  nsIDOMCSSValue* GetItemAt(uint32_t aIndex)
+  virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv)
+    MOZ_OVERRIDE MOZ_FINAL;
+  virtual void SetCssText(const nsAString& aText,
+                          mozilla::ErrorResult& aRv) MOZ_OVERRIDE MOZ_FINAL;
+  virtual uint16_t CssValueType() const MOZ_OVERRIDE MOZ_FINAL;
+
+  CSSValue* IndexedGetter(uint32_t aIdx, bool& aFound) const
   {
-    return mCSSValues.SafeElementAt(aIndex, nullptr);
+    aFound = aIdx <= Length();
+    return Item(aIdx);
   }
 
-  static nsDOMCSSValueList* FromSupports(nsISupports* aSupports)
+  CSSValue* Item(uint32_t aIndex) const
   {
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDOMCSSValueList> list_qi = do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsIDOMCSSValueList pointer as the nsISupports
-      // pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(list_qi == static_cast<nsIDOMCSSValueList*>(aSupports),
-                   "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<nsDOMCSSValueList*>(aSupports);
+    return mCSSValues.SafeElementAt(aIndex);
   }
+
+  uint32_t Length() const
+  {
+    return mCSSValues.Length();
+  }
+
+  nsISupports* GetParentObject()
+  {
+    return nullptr;
+  }
+
+  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
 
 private:
   bool                        mCommaDelimited;  // some value lists use a comma
@@ -63,8 +69,7 @@ private:
 
   bool                        mReadonly;    // Are we read-only?
 
-  InfallibleTArray<nsCOMPtr<nsIDOMCSSValue> > mCSSValues;
+  InfallibleTArray<nsRefPtr<CSSValue> > mCSSValues;
 };
-
 
 #endif /* nsDOMCSSValueList_h___ */

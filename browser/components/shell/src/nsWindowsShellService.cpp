@@ -26,6 +26,7 @@
 #include "nsIWinTaskbar.h"
 #include "nsISupportsPrimitives.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 #include "windows.h"
 #include "shellapi.h"
@@ -198,12 +199,12 @@ GetHelperPath(nsAutoString& aPath)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> appHelper;
-  rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+  rv = directoryService->Get(XRE_EXECUTABLE_FILE,
                              NS_GET_IID(nsIFile),
                              getter_AddRefs(appHelper));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = appHelper->AppendNative(NS_LITERAL_CSTRING("uninstall"));
+  rv = appHelper->SetNativeLeafName(NS_LITERAL_CSTRING("uninstall"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = appHelper->AppendNative(NS_LITERAL_CSTRING("helper.exe"));

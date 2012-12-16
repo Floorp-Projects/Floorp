@@ -219,7 +219,7 @@ template <> struct TypeToArgProperties<HandleFunction> {
     static const uint32_t result = TypeToArgProperties<JSFunction *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleScript> {
-    static const uint32_t result = TypeToArgProperties<JSScript *>::result | VMFunction::ByRef;
+    static const uint32_t result = TypeToArgProperties<RawScript>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleValue> {
     static const uint32_t result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
@@ -411,7 +411,6 @@ class AutoDetectInvalidation
 };
 
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value *rval);
-bool InvokeConstructor(JSContext *cx, JSObject *obj, uint32_t argc, Value *argv, Value *rval);
 JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 
 bool CheckOverRecursed(JSContext *cx);
@@ -446,6 +445,7 @@ bool ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *le
 bool ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 JSObject *ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res);
 
+bool CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code);
 JSFlatString *StringFromCharCode(JSContext *cx, int32_t code);
 
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,

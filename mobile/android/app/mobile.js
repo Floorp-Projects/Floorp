@@ -76,8 +76,9 @@ pref("offline-apps.quota.warn", 1024); // kilobytes
 // cache compression turned off for now - see bug #715198
 pref("browser.cache.compression_level", 0);
 
-/* protocol warning prefs */
+/* disable some protocol warnings */
 pref("network.protocol-handler.warn-external.tel", false);
+pref("network.protocol-handler.warn-external.sms", false);
 pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
 
@@ -343,8 +344,6 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
 
-pref("gfx.java.screenshot.enabled", false);
-
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
@@ -428,10 +427,6 @@ pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
 
 pref("plugins.click_to_play", true);
-// Disabled because of thread safety problem
-// in getting the bits from the surface.
-// Bug 756253
-pref("plugins.use_placeholder", 0);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
@@ -615,9 +610,6 @@ pref("full-screen-api.enabled", true);
 pref("direct-texture.force.enabled", false);
 pref("direct-texture.force.disabled", false);
 
-// show checkerboard pattern on android; we use background colour instead
-pref("gfx.show_checkerboard_pattern", true);
-
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
 pref("ui.scrolling.friction_slow", -1);
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is high.
@@ -635,6 +627,7 @@ pref("ui.scrolling.min_scrollable_distance", -1);
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);
+pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,ListItem");
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);

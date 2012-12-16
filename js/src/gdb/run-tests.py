@@ -159,10 +159,9 @@ class Test(TaskPool.Task):
                 '--ex', 'add-auto-load-safe-path %s' % (OPTIONS.builddir,),
                 '--ex', 'set env LD_LIBRARY_PATH %s' % (OPTIONS.libdir,),
                 '--ex', 'file %s' % (os.path.join(OPTIONS.builddir, 'gdb-tests'),),
-                '--eval-command', 'python sys.path[0:0] = [%r]' % testlibdir,
-                '--python', os.path.join(testlibdir, 'catcher.py'),
-                            os.path.join(testlibdir, 'prolog.py'),
-                self.test_path]
+                '--eval-command', 'python testlibdir=%r' % (testlibdir,),
+                '--eval-command', 'python testscript=%r' % (self.test_path,),
+                '--eval-command', 'python execfile(%r)' % os.path.join(testlibdir, 'catcher.py')]
 
     def start(self, pipe, deadline):
         super(Test, self).start(pipe, deadline)
@@ -340,7 +339,7 @@ def main(argv):
         run_tests(test_list, summary)
         summary.finish()
     except OSError as err:
-        sys.stderr.write("Error running tests: %s\n", (err,))
+        sys.stderr.write("Error running tests: %s\n" % (err,))
         sys.exit(1)
 
     sys.exit(0)

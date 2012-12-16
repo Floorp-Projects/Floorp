@@ -2,33 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "prerror.h"
-#include "prprf.h"
 #include "plarena.h"
-#include "prnetdb.h"
 
 #include "seccomon.h"
 #include "secitem.h"
-#include "secoidt.h"
 #include "secasn1.h"
 #include "secder.h"
 #include "cert.h"
-#include "xconst.h"
 #include "secerr.h"
 #include "secoid.h"
-#include "hasht.h"
 #include "sechash.h"
-#include "secasn1.h"
 #include "keyhi.h"
 #include "cryptohi.h"
 #include "ocsp.h"
 #include "ocspti.h"
 #include "ocspi.h"
-#include "genname.h"
-#include "certxutl.h"
-#include "pk11func.h"   /* for PK11_HashBuf */
-#include <stdarg.h>
-#include <plhash.h>
+#include "pk11pub.h"
 
 
 extern const SEC_ASN1Template ocsp_ResponderIDByNameTemplate[];
@@ -270,7 +259,7 @@ static const SEC_ASN1Template ocsp_EncodeBasicOCSPResponseTemplate[] = {
 static CERTOCSPSingleResponse*
 ocsp_CreateSingleResponse(PLArenaPool *arena,
                           CERTOCSPCertID *id, ocspCertStatus *status,
-                          PRTime thisUpdate, PRTime *nextUpdate)
+                          PRTime thisUpdate, const PRTime *nextUpdate)
 {
     CERTOCSPSingleResponse *sr;
 
@@ -312,9 +301,10 @@ ocsp_CreateSingleResponse(PLArenaPool *arena,
 }
 
 CERTOCSPSingleResponse*
-OCSP_CreateSingleResponseGood(PLArenaPool *arena,
-                              CERTOCSPCertID *id,
-                              PRTime thisUpdate, PRTime *nextUpdate)
+CERT_CreateOCSPSingleResponseGood(PLArenaPool *arena,
+                                  CERTOCSPCertID *id,
+                                  PRTime thisUpdate,
+                                  const PRTime *nextUpdate)
 {
     ocspCertStatus * cs;
     if (!arena) {
@@ -328,9 +318,10 @@ OCSP_CreateSingleResponseGood(PLArenaPool *arena,
 }
 
 CERTOCSPSingleResponse*
-OCSP_CreateSingleResponseUnknown(PLArenaPool *arena,
-                                 CERTOCSPCertID *id,
-                                 PRTime thisUpdate, PRTime *nextUpdate)
+CERT_CreateOCSPSingleResponseUnknown(PLArenaPool *arena,
+                                     CERTOCSPCertID *id,
+                                     PRTime thisUpdate,
+                                     const PRTime *nextUpdate)
 {
     ocspCertStatus * cs;
     if (!arena) {
@@ -344,13 +335,17 @@ OCSP_CreateSingleResponseUnknown(PLArenaPool *arena,
 }
 
 CERTOCSPSingleResponse*
-OCSP_CreateSingleResponseRevoked(PLArenaPool *arena,
-                                 CERTOCSPCertID *id,
-                                 PRTime thisUpdate, PRTime *nextUpdate,
-                                 PRTime revocationTime)
+CERT_CreateOCSPSingleResponseRevoked(
+    PLArenaPool *arena,
+    CERTOCSPCertID *id,
+    PRTime thisUpdate,
+    const PRTime *nextUpdate,
+    PRTime revocationTime,
+    const CERTCRLEntryReasonCode* revocationReason)
 {
     ocspCertStatus * cs;
-    if (!arena) {
+    /* revocationReason is not yet supported, so it must be NULL. */
+    if (!arena || revocationReason) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
@@ -361,16 +356,18 @@ OCSP_CreateSingleResponseRevoked(PLArenaPool *arena,
 }
 
 SECItem*
-OCSP_CreateSuccessResponseEncodedBasicV1(PLArenaPool *arena,
-                                         CERTCertificate *responderCert,
-                                         PRBool idByName, /* false: by key */
-                                         PRTime producedAt,
-                                         CERTOCSPSingleResponse **responses,
-                                         void *wincx)
+CERT_CreateEncodedOCSPSuccessResponse(
+    PLArenaPool *arena,
+    CERTCertificate *responderCert,
+    CERTOCSPResponderIDType responderIDType,
+    PRTime producedAt,
+    CERTOCSPSingleResponse **responses,
+    void *wincx)
 {
     PLArenaPool *tmpArena;
     ocspResponseData *rd = NULL;
     ocspResponderID *rid = NULL;
+    const SEC_ASN1Template *responderIDTemplate = NULL;
     ocspBasicOCSPResponse *br = NULL;
     ocspResponseBytes *rb = NULL;
     CERTOCSPResponse *response = NULL;
@@ -381,6 +378,11 @@ OCSP_CreateSuccessResponseEncodedBasicV1(PLArenaPool *arena,
     SECItem *result = NULL;
   
     if (!arena || !responderCert || !responses) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+    if (responderIDType != ocspResponderID_byName &&
+        responderIDType != ocspResponderID_byKey) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
@@ -412,21 +414,22 @@ OCSP_CreateSuccessResponseEncodedBasicV1(PLArenaPool *arena,
     if (DER_TimeToGeneralizedTimeArena(tmpArena, &rd->producedAt, producedAt)
             != SECSuccess)
         goto done;
-    if (idByName) {
-        rid->responderIDType = ocspResponderID_byName;
+    rid->responderIDType = responderIDType;
+    if (responderIDType == ocspResponderID_byName) {
+        responderIDTemplate = ocsp_ResponderIDByNameTemplate;
         if (CERT_CopyName(tmpArena, &rid->responderIDValue.name,
                            &responderCert->subject) != SECSuccess)
             goto done;
     }
     else {
-        rid->responderIDType = ocspResponderID_byKey;
+        responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
         if (!CERT_GetSPKIDigest(tmpArena, responderCert, SEC_OID_SHA1,
                                       &rid->responderIDValue.keyHash))
             goto done;
     }
 
     if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
-            idByName ? ocsp_ResponderIDByNameTemplate : ocsp_ResponderIDByKeyTemplate))
+            responderIDTemplate))
         goto done;
 
     br->tbsResponseData = rd;
@@ -497,7 +500,7 @@ done:
     return result;
 }
 
-static const SEC_ASN1Template ocsp_OCSPFailureResponseTemplate[] = {
+static const SEC_ASN1Template ocsp_OCSPErrorResponseTemplate[] = {
     { SEC_ASN1_SEQUENCE,
         0, NULL, sizeof(CERTOCSPResponse) },
     { SEC_ASN1_ENUMERATED,
@@ -508,12 +511,12 @@ static const SEC_ASN1Template ocsp_OCSPFailureResponseTemplate[] = {
 };
 
 SECItem*
-OCSP_CreateFailureResponse(PLArenaPool *arena, PRErrorCode reason)
+CERT_CreateEncodedOCSPErrorResponse(PLArenaPool *arena, int error)
 {
     CERTOCSPResponse response;
     SECItem *result = NULL;
 
-    switch (reason) {
+    switch (error) {
         case SEC_ERROR_OCSP_MALFORMED_REQUEST:
             response.statusValue = ocspResponse_malformedRequest;
             break;
@@ -538,7 +541,8 @@ OCSP_CreateFailureResponse(PLArenaPool *arena, PRErrorCode reason)
                                response.statusValue))
         return NULL;
 
-    result = SEC_ASN1EncodeItem(arena, NULL, &response, ocsp_OCSPFailureResponseTemplate);
+    result = SEC_ASN1EncodeItem(arena, NULL, &response,
+                                ocsp_OCSPErrorResponseTemplate);
 
     SECITEM_FreeItem(&response.responseStatus, PR_FALSE);
 

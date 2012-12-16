@@ -68,32 +68,35 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 
     RecompilationMonitor monitor(f.cx);
 
-    Shape *shape = obj->nativeLookup(f.cx, NameToId(name));
-
-    if (monitor.recompiled()) {
-        stubs::Name(f);
-        return;
-    }
-
-    if (!shape ||
-        !shape->hasDefaultGetter() ||
-        !shape->hasSlot())
+    uint32_t slot;
     {
-        if (shape)
-            PatchGetFallback(f, ic);
-        stubs::Name(f);
-        return;
+        RootedShape shape(f.cx, obj->nativeLookup(f.cx, NameToId(name)));
+
+        if (monitor.recompiled()) {
+            stubs::Name(f);
+            return;
+        }
+
+        if (!shape ||
+            !shape->hasDefaultGetter() ||
+            !shape->hasSlot())
+        {
+            if (shape)
+                PatchGetFallback(f, ic);
+            stubs::Name(f);
+            return;
+        }
+        slot = shape->slot();
+
+        /* Patch shape guard. */
+        Repatcher repatcher(f.chunk());
+        repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj->lastProperty());
+
+        /* Patch loads. */
+        uint32_t index = obj->dynamicSlotIndex(slot);
+        JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
+        repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
     }
-    uint32_t slot = shape->slot();
-
-    /* Patch shape guard. */
-    Repatcher repatcher(f.chunk());
-    repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj->lastProperty());
-
-    /* Patch loads. */
-    uint32_t index = obj->dynamicSlotIndex(slot);
-    JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
-    repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
 
     /* Do load anyway... this time. */
     stubs::Name(f);
@@ -117,14 +120,14 @@ PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 }
 
 void
-SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, Shape *shape)
+SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, UnrootedShape shape)
 {
     JSC::CodeLocationDataLabelPtr label = fastPathStart.dataLabelPtrAtOffset(shapeOffset);
     repatcher.repatch(label, shape);
 }
 
 static LookupStatus
-UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, Shape *shape)
+UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, UnrootedShape shape)
 {
     /* Give globals a chance to appear. */
     if (!shape)
@@ -162,12 +165,14 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 
     RecompilationMonitor monitor(f.cx);
 
-    Shape *shape = obj->nativeLookup(f.cx, NameToId(name));
+    {
+        UnrootedShape shape = obj->nativeLookup(f.cx, NameToId(name));
 
-    if (!monitor.recompiled()) {
-        LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);
-        if (status == Lookup_Error)
-            THROW();
+        if (!monitor.recompiled()) {
+            LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);
+            if (status == Lookup_Error)
+                THROW();
+        }
     }
 
     stubs::SetName(f, name);

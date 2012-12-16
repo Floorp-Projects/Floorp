@@ -23,6 +23,7 @@
 #include "nsILoadGroup.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
+#include "imgRequestProxy.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsAsyncDOMEvent.h"
@@ -464,7 +465,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   AutoStateChanger changer(this, true);
 
   // Do the load.
-  nsCOMPtr<imgIRequest>& req = PrepareNextRequest();
+  nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
   nsresult rv = nsContentUtils::GetImgLoaderForChannel(aChannel)->
     LoadImageWithChannel(aChannel, this, doc, aListener,
                          getter_AddRefs(req));
@@ -558,7 +559,7 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
 
   if (aNewURI.IsEmpty() &&
       doc->GetDocumentURI() &&
-      NS_SUCCEEDED(doc->GetDocumentURI()->Equals(imageURI, &equal)) && 
+      NS_SUCCEEDED(doc->GetDocumentURI()->EqualsExceptRef(imageURI, &equal)) &&
       equal)  {
 
     // Loading an embedded img from the same URI as the document URI will not work
@@ -654,7 +655,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   }
 
   // Not blocked. Do the load.
-  nsCOMPtr<imgIRequest>& req = PrepareNextRequest();
+  nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
   nsresult rv;
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->NodePrincipal(),
@@ -784,7 +785,7 @@ nsImageLoadingContent::CancelImageRequests(bool aNotify)
 }
 
 nsresult
-nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
+nsImageLoadingContent::UseAsPrimaryRequest(imgRequestProxy* aRequest,
                                            bool aNotify)
 {
   // Our state will change. Watch it.
@@ -795,7 +796,7 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
   ClearCurrentRequest(NS_BINDING_ABORTED);
 
   // Clone the request we were given.
-  nsCOMPtr<imgIRequest>& req = PrepareNextRequest();;
+  nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
   nsresult rv = aRequest->Clone(this, getter_AddRefs(req));
   if (NS_SUCCEEDED(rv))
     TrackImage(req);
@@ -883,7 +884,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   return NS_OK;
 }
 
-nsCOMPtr<imgIRequest>&
+nsRefPtr<imgRequestProxy>&
 nsImageLoadingContent::PrepareNextRequest()
 {
   // If we don't have a usable current request, get rid of any half-baked
@@ -922,7 +923,7 @@ nsImageLoadingContent::SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision)
   }
 }
 
-nsCOMPtr<imgIRequest>&
+nsRefPtr<imgRequestProxy>&
 nsImageLoadingContent::PrepareCurrentRequest()
 {
   // Blocked images go through SetBlockedRequest, which is a separate path. For
@@ -940,7 +941,7 @@ nsImageLoadingContent::PrepareCurrentRequest()
   return mCurrentRequest;
 }
 
-nsCOMPtr<imgIRequest>&
+nsRefPtr<imgRequestProxy>&
 nsImageLoadingContent::PreparePendingRequest()
 {
   // Get rid of anything that was there previously.

@@ -29,7 +29,7 @@ function inspectorRuleViewOpened()
 
   gDevTools.once("toolbox-destroyed", inspectorClosed);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolboxForTarget(target);
+  let toolbox = gDevTools.getToolbox(target);
   executeSoon(function() {
     toolbox.destroy();
   });

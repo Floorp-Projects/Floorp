@@ -83,6 +83,18 @@ public:
     mValue -= aOther.mValue;
     return *this;
   }
+  TimeDuration operator*(const double aMultiplier) const {
+    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+  }
+  TimeDuration operator*(const int32_t aMultiplier) const {
+    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+  }
+  TimeDuration operator*(const uint32_t aMultiplier) const {
+    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+  }
+  TimeDuration operator*(const int64_t aMultiplier) const {
+    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+  }
   double operator/(const TimeDuration& aOther) {
     return static_cast<double>(mValue) / aOther.mValue;
   }

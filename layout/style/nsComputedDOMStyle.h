@@ -11,9 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "nsDOMCSSDeclaration.h"
 
-#include "nsROCSSPrimitiveValue.h"
 #include "nsDOMCSSRGBColor.h"
-#include "nsDOMCSSValueList.h"
 #include "nsCSSProps.h"
 
 #include "nsIContent.h"
@@ -25,6 +23,8 @@
 
 class nsIFrame;
 class nsIPresShell;
+class nsDOMCSSValueList;
+class nsROCSSPrimitiveValue;
 
 class nsComputedDOMStyle MOZ_FINAL : public nsDOMCSSDeclaration
 {
@@ -35,7 +35,11 @@ public:
 
   NS_DECL_NSICSSDECLARATION
 
-  NS_DECL_NSIDOMCSSSTYLEDECLARATION
+  NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
+  virtual already_AddRefed<mozilla::dom::CSSValue>
+  GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
+    MOZ_OVERRIDE;
+  using nsICSSDeclaration::GetPropertyCSSValue;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 
   enum StyleType {
@@ -101,41 +105,41 @@ private:
   // that has just been created, but the refcount is still 0. Caller must take
   // ownership.
 
-  nsIDOMCSSValue* GetEllipseRadii(const nsStyleCorners& aRadius,
-                                  uint8_t aFullCorner,
-                                  bool aIsBorder); // else outline
+  mozilla::dom::CSSValue* GetEllipseRadii(const nsStyleCorners& aRadius,
+                                          uint8_t aFullCorner,
+                                          bool aIsBorder); // else outline
 
-  nsIDOMCSSValue* GetOffsetWidthFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetOffsetWidthFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetAbsoluteOffset(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetAbsoluteOffset(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetRelativeOffset(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetRelativeOffset(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetStaticOffset(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetStaticOffset(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetPaddingWidthFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetPaddingWidthFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetBorderColorsFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetBorderColorsFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetBorderStyleFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetBorderStyleFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetBorderWidthFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetBorderWidthFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetBorderColorFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetBorderColorFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetMarginWidthFor(mozilla::css::Side aSide);
+  mozilla::dom::CSSValue* GetMarginWidthFor(mozilla::css::Side aSide);
 
-  nsIDOMCSSValue* GetSVGPaintFor(bool aFill);
+  mozilla::dom::CSSValue* GetSVGPaintFor(bool aFill);
 
   bool GetLineHeightCoord(nscoord& aCoord);
 
-  nsIDOMCSSValue* GetCSSShadowArray(nsCSSShadowArray* aArray,
-                                    const nscolor& aDefaultColor,
-                                    bool aIsBoxShadow);
+  mozilla::dom::CSSValue* GetCSSShadowArray(nsCSSShadowArray* aArray,
+                                            const nscolor& aDefaultColor,
+                                            bool aIsBoxShadow);
 
-  nsIDOMCSSValue* GetBackgroundList(uint8_t nsStyleBackground::Layer::* aMember,
-                                    uint32_t nsStyleBackground::* aCount,
-                                    const int32_t aTable[]);
+  mozilla::dom::CSSValue* GetBackgroundList(uint8_t nsStyleBackground::Layer::* aMember,
+                                            uint32_t nsStyleBackground::* aCount,
+                                            const int32_t aTable[]);
 
   void GetCSSGradientString(const nsStyleGradient* aGradient,
                             nsAString& aString);
@@ -150,273 +154,273 @@ private:
    * DoGetXXX instead of GetXXX.
    */
 
-  nsIDOMCSSValue* DoGetAppearance();
+  mozilla::dom::CSSValue* DoGetAppearance();
 
   /* Box properties */
-  nsIDOMCSSValue* DoGetBoxAlign();
-  nsIDOMCSSValue* DoGetBoxDirection();
-  nsIDOMCSSValue* DoGetBoxFlex();
-  nsIDOMCSSValue* DoGetBoxOrdinalGroup();
-  nsIDOMCSSValue* DoGetBoxOrient();
-  nsIDOMCSSValue* DoGetBoxPack();
-  nsIDOMCSSValue* DoGetBoxSizing();
+  mozilla::dom::CSSValue* DoGetBoxAlign();
+  mozilla::dom::CSSValue* DoGetBoxDirection();
+  mozilla::dom::CSSValue* DoGetBoxFlex();
+  mozilla::dom::CSSValue* DoGetBoxOrdinalGroup();
+  mozilla::dom::CSSValue* DoGetBoxOrient();
+  mozilla::dom::CSSValue* DoGetBoxPack();
+  mozilla::dom::CSSValue* DoGetBoxSizing();
 
-  nsIDOMCSSValue* DoGetWidth();
-  nsIDOMCSSValue* DoGetHeight();
-  nsIDOMCSSValue* DoGetMaxHeight();
-  nsIDOMCSSValue* DoGetMaxWidth();
-  nsIDOMCSSValue* DoGetMinHeight();
-  nsIDOMCSSValue* DoGetMinWidth();
-  nsIDOMCSSValue* DoGetLeft();
-  nsIDOMCSSValue* DoGetTop();
-  nsIDOMCSSValue* DoGetRight();
-  nsIDOMCSSValue* DoGetBottom();
-  nsIDOMCSSValue* DoGetStackSizing();
+  mozilla::dom::CSSValue* DoGetWidth();
+  mozilla::dom::CSSValue* DoGetHeight();
+  mozilla::dom::CSSValue* DoGetMaxHeight();
+  mozilla::dom::CSSValue* DoGetMaxWidth();
+  mozilla::dom::CSSValue* DoGetMinHeight();
+  mozilla::dom::CSSValue* DoGetMinWidth();
+  mozilla::dom::CSSValue* DoGetLeft();
+  mozilla::dom::CSSValue* DoGetTop();
+  mozilla::dom::CSSValue* DoGetRight();
+  mozilla::dom::CSSValue* DoGetBottom();
+  mozilla::dom::CSSValue* DoGetStackSizing();
 
   /* Font properties */
-  nsIDOMCSSValue* DoGetColor();
-  nsIDOMCSSValue* DoGetFontFamily();
-  nsIDOMCSSValue* DoGetFontFeatureSettings();
-  nsIDOMCSSValue* DoGetFontLanguageOverride();
-  nsIDOMCSSValue* DoGetFontSize();
-  nsIDOMCSSValue* DoGetFontSizeAdjust();
-  nsIDOMCSSValue* DoGetFontStretch();
-  nsIDOMCSSValue* DoGetFontStyle();
-  nsIDOMCSSValue* DoGetFontWeight();
-  nsIDOMCSSValue* DoGetFontVariant();
+  mozilla::dom::CSSValue* DoGetColor();
+  mozilla::dom::CSSValue* DoGetFontFamily();
+  mozilla::dom::CSSValue* DoGetFontFeatureSettings();
+  mozilla::dom::CSSValue* DoGetFontLanguageOverride();
+  mozilla::dom::CSSValue* DoGetFontSize();
+  mozilla::dom::CSSValue* DoGetFontSizeAdjust();
+  mozilla::dom::CSSValue* DoGetFontStretch();
+  mozilla::dom::CSSValue* DoGetFontStyle();
+  mozilla::dom::CSSValue* DoGetFontWeight();
+  mozilla::dom::CSSValue* DoGetFontVariant();
 
   /* Background properties */
-  nsIDOMCSSValue* DoGetBackgroundAttachment();
-  nsIDOMCSSValue* DoGetBackgroundColor();
-  nsIDOMCSSValue* DoGetBackgroundImage();
-  nsIDOMCSSValue* DoGetBackgroundPosition();
-  nsIDOMCSSValue* DoGetBackgroundRepeat();
-  nsIDOMCSSValue* DoGetBackgroundClip();
-  nsIDOMCSSValue* DoGetBackgroundInlinePolicy();
-  nsIDOMCSSValue* DoGetBackgroundOrigin();
-  nsIDOMCSSValue* DoGetBackgroundSize();
+  mozilla::dom::CSSValue* DoGetBackgroundAttachment();
+  mozilla::dom::CSSValue* DoGetBackgroundColor();
+  mozilla::dom::CSSValue* DoGetBackgroundImage();
+  mozilla::dom::CSSValue* DoGetBackgroundPosition();
+  mozilla::dom::CSSValue* DoGetBackgroundRepeat();
+  mozilla::dom::CSSValue* DoGetBackgroundClip();
+  mozilla::dom::CSSValue* DoGetBackgroundInlinePolicy();
+  mozilla::dom::CSSValue* DoGetBackgroundOrigin();
+  mozilla::dom::CSSValue* DoGetBackgroundSize();
 
   /* Padding properties */
-  nsIDOMCSSValue* DoGetPaddingTop();
-  nsIDOMCSSValue* DoGetPaddingBottom();
-  nsIDOMCSSValue* DoGetPaddingLeft();
-  nsIDOMCSSValue* DoGetPaddingRight();
+  mozilla::dom::CSSValue* DoGetPaddingTop();
+  mozilla::dom::CSSValue* DoGetPaddingBottom();
+  mozilla::dom::CSSValue* DoGetPaddingLeft();
+  mozilla::dom::CSSValue* DoGetPaddingRight();
 
   /* Table Properties */
-  nsIDOMCSSValue* DoGetBorderCollapse();
-  nsIDOMCSSValue* DoGetBorderSpacing();
-  nsIDOMCSSValue* DoGetCaptionSide();
-  nsIDOMCSSValue* DoGetEmptyCells();
-  nsIDOMCSSValue* DoGetTableLayout();
-  nsIDOMCSSValue* DoGetVerticalAlign();
+  mozilla::dom::CSSValue* DoGetBorderCollapse();
+  mozilla::dom::CSSValue* DoGetBorderSpacing();
+  mozilla::dom::CSSValue* DoGetCaptionSide();
+  mozilla::dom::CSSValue* DoGetEmptyCells();
+  mozilla::dom::CSSValue* DoGetTableLayout();
+  mozilla::dom::CSSValue* DoGetVerticalAlign();
 
   /* Border Properties */
-  nsIDOMCSSValue* DoGetBorderTopStyle();
-  nsIDOMCSSValue* DoGetBorderBottomStyle();
-  nsIDOMCSSValue* DoGetBorderLeftStyle();
-  nsIDOMCSSValue* DoGetBorderRightStyle();
-  nsIDOMCSSValue* DoGetBorderTopWidth();
-  nsIDOMCSSValue* DoGetBorderBottomWidth();
-  nsIDOMCSSValue* DoGetBorderLeftWidth();
-  nsIDOMCSSValue* DoGetBorderRightWidth();
-  nsIDOMCSSValue* DoGetBorderTopColor();
-  nsIDOMCSSValue* DoGetBorderBottomColor();
-  nsIDOMCSSValue* DoGetBorderLeftColor();
-  nsIDOMCSSValue* DoGetBorderRightColor();
-  nsIDOMCSSValue* DoGetBorderBottomColors();
-  nsIDOMCSSValue* DoGetBorderLeftColors();
-  nsIDOMCSSValue* DoGetBorderRightColors();
-  nsIDOMCSSValue* DoGetBorderTopColors();
-  nsIDOMCSSValue* DoGetBorderBottomLeftRadius();
-  nsIDOMCSSValue* DoGetBorderBottomRightRadius();
-  nsIDOMCSSValue* DoGetBorderTopLeftRadius();
-  nsIDOMCSSValue* DoGetBorderTopRightRadius();
-  nsIDOMCSSValue* DoGetFloatEdge();
+  mozilla::dom::CSSValue* DoGetBorderTopStyle();
+  mozilla::dom::CSSValue* DoGetBorderBottomStyle();
+  mozilla::dom::CSSValue* DoGetBorderLeftStyle();
+  mozilla::dom::CSSValue* DoGetBorderRightStyle();
+  mozilla::dom::CSSValue* DoGetBorderTopWidth();
+  mozilla::dom::CSSValue* DoGetBorderBottomWidth();
+  mozilla::dom::CSSValue* DoGetBorderLeftWidth();
+  mozilla::dom::CSSValue* DoGetBorderRightWidth();
+  mozilla::dom::CSSValue* DoGetBorderTopColor();
+  mozilla::dom::CSSValue* DoGetBorderBottomColor();
+  mozilla::dom::CSSValue* DoGetBorderLeftColor();
+  mozilla::dom::CSSValue* DoGetBorderRightColor();
+  mozilla::dom::CSSValue* DoGetBorderBottomColors();
+  mozilla::dom::CSSValue* DoGetBorderLeftColors();
+  mozilla::dom::CSSValue* DoGetBorderRightColors();
+  mozilla::dom::CSSValue* DoGetBorderTopColors();
+  mozilla::dom::CSSValue* DoGetBorderBottomLeftRadius();
+  mozilla::dom::CSSValue* DoGetBorderBottomRightRadius();
+  mozilla::dom::CSSValue* DoGetBorderTopLeftRadius();
+  mozilla::dom::CSSValue* DoGetBorderTopRightRadius();
+  mozilla::dom::CSSValue* DoGetFloatEdge();
 
   /* Border Image */
-  nsIDOMCSSValue* DoGetBorderImageSource();
-  nsIDOMCSSValue* DoGetBorderImageSlice();
-  nsIDOMCSSValue* DoGetBorderImageWidth();
-  nsIDOMCSSValue* DoGetBorderImageOutset();
-  nsIDOMCSSValue* DoGetBorderImageRepeat();
+  mozilla::dom::CSSValue* DoGetBorderImageSource();
+  mozilla::dom::CSSValue* DoGetBorderImageSlice();
+  mozilla::dom::CSSValue* DoGetBorderImageWidth();
+  mozilla::dom::CSSValue* DoGetBorderImageOutset();
+  mozilla::dom::CSSValue* DoGetBorderImageRepeat();
 
   /* Box Shadow */
-  nsIDOMCSSValue* DoGetBoxShadow();
+  mozilla::dom::CSSValue* DoGetBoxShadow();
 
   /* Window Shadow */
-  nsIDOMCSSValue* DoGetWindowShadow();
+  mozilla::dom::CSSValue* DoGetWindowShadow();
 
   /* Margin Properties */
-  nsIDOMCSSValue* DoGetMarginTopWidth();
-  nsIDOMCSSValue* DoGetMarginBottomWidth();
-  nsIDOMCSSValue* DoGetMarginLeftWidth();
-  nsIDOMCSSValue* DoGetMarginRightWidth();
+  mozilla::dom::CSSValue* DoGetMarginTopWidth();
+  mozilla::dom::CSSValue* DoGetMarginBottomWidth();
+  mozilla::dom::CSSValue* DoGetMarginLeftWidth();
+  mozilla::dom::CSSValue* DoGetMarginRightWidth();
 
   /* Outline Properties */
-  nsIDOMCSSValue* DoGetOutlineWidth();
-  nsIDOMCSSValue* DoGetOutlineStyle();
-  nsIDOMCSSValue* DoGetOutlineColor();
-  nsIDOMCSSValue* DoGetOutlineOffset();
-  nsIDOMCSSValue* DoGetOutlineRadiusBottomLeft();
-  nsIDOMCSSValue* DoGetOutlineRadiusBottomRight();
-  nsIDOMCSSValue* DoGetOutlineRadiusTopLeft();
-  nsIDOMCSSValue* DoGetOutlineRadiusTopRight();
+  mozilla::dom::CSSValue* DoGetOutlineWidth();
+  mozilla::dom::CSSValue* DoGetOutlineStyle();
+  mozilla::dom::CSSValue* DoGetOutlineColor();
+  mozilla::dom::CSSValue* DoGetOutlineOffset();
+  mozilla::dom::CSSValue* DoGetOutlineRadiusBottomLeft();
+  mozilla::dom::CSSValue* DoGetOutlineRadiusBottomRight();
+  mozilla::dom::CSSValue* DoGetOutlineRadiusTopLeft();
+  mozilla::dom::CSSValue* DoGetOutlineRadiusTopRight();
 
   /* Content Properties */
-  nsIDOMCSSValue* DoGetContent();
-  nsIDOMCSSValue* DoGetCounterIncrement();
-  nsIDOMCSSValue* DoGetCounterReset();
-  nsIDOMCSSValue* DoGetMarkerOffset();
+  mozilla::dom::CSSValue* DoGetContent();
+  mozilla::dom::CSSValue* DoGetCounterIncrement();
+  mozilla::dom::CSSValue* DoGetCounterReset();
+  mozilla::dom::CSSValue* DoGetMarkerOffset();
 
   /* Quotes Properties */
-  nsIDOMCSSValue* DoGetQuotes();
+  mozilla::dom::CSSValue* DoGetQuotes();
 
   /* z-index */
-  nsIDOMCSSValue* DoGetZIndex();
+  mozilla::dom::CSSValue* DoGetZIndex();
 
   /* List properties */
-  nsIDOMCSSValue* DoGetListStyleImage();
-  nsIDOMCSSValue* DoGetListStylePosition();
-  nsIDOMCSSValue* DoGetListStyleType();
-  nsIDOMCSSValue* DoGetImageRegion();
+  mozilla::dom::CSSValue* DoGetListStyleImage();
+  mozilla::dom::CSSValue* DoGetListStylePosition();
+  mozilla::dom::CSSValue* DoGetListStyleType();
+  mozilla::dom::CSSValue* DoGetImageRegion();
 
   /* Text Properties */
-  nsIDOMCSSValue* DoGetLineHeight();
-  nsIDOMCSSValue* DoGetTextAlign();
-  nsIDOMCSSValue* DoGetTextAlignLast();
-  nsIDOMCSSValue* DoGetMozTextBlink();
-  nsIDOMCSSValue* DoGetTextDecoration();
-  nsIDOMCSSValue* DoGetTextDecorationColor();
-  nsIDOMCSSValue* DoGetTextDecorationLine();
-  nsIDOMCSSValue* DoGetTextDecorationStyle();
-  nsIDOMCSSValue* DoGetTextIndent();
-  nsIDOMCSSValue* DoGetTextOverflow();
-  nsIDOMCSSValue* DoGetTextTransform();
-  nsIDOMCSSValue* DoGetTextShadow();
-  nsIDOMCSSValue* DoGetLetterSpacing();
-  nsIDOMCSSValue* DoGetWordSpacing();
-  nsIDOMCSSValue* DoGetWhiteSpace();
-  nsIDOMCSSValue* DoGetWordBreak();
-  nsIDOMCSSValue* DoGetWordWrap();
-  nsIDOMCSSValue* DoGetHyphens();
-  nsIDOMCSSValue* DoGetTabSize();
-  nsIDOMCSSValue* DoGetTextSizeAdjust();
+  mozilla::dom::CSSValue* DoGetLineHeight();
+  mozilla::dom::CSSValue* DoGetTextAlign();
+  mozilla::dom::CSSValue* DoGetTextAlignLast();
+  mozilla::dom::CSSValue* DoGetMozTextBlink();
+  mozilla::dom::CSSValue* DoGetTextDecoration();
+  mozilla::dom::CSSValue* DoGetTextDecorationColor();
+  mozilla::dom::CSSValue* DoGetTextDecorationLine();
+  mozilla::dom::CSSValue* DoGetTextDecorationStyle();
+  mozilla::dom::CSSValue* DoGetTextIndent();
+  mozilla::dom::CSSValue* DoGetTextOverflow();
+  mozilla::dom::CSSValue* DoGetTextTransform();
+  mozilla::dom::CSSValue* DoGetTextShadow();
+  mozilla::dom::CSSValue* DoGetLetterSpacing();
+  mozilla::dom::CSSValue* DoGetWordSpacing();
+  mozilla::dom::CSSValue* DoGetWhiteSpace();
+  mozilla::dom::CSSValue* DoGetWordBreak();
+  mozilla::dom::CSSValue* DoGetWordWrap();
+  mozilla::dom::CSSValue* DoGetHyphens();
+  mozilla::dom::CSSValue* DoGetTabSize();
+  mozilla::dom::CSSValue* DoGetTextSizeAdjust();
 
   /* Visibility properties */
-  nsIDOMCSSValue* DoGetOpacity();
-  nsIDOMCSSValue* DoGetPointerEvents();
-  nsIDOMCSSValue* DoGetVisibility();
+  mozilla::dom::CSSValue* DoGetOpacity();
+  mozilla::dom::CSSValue* DoGetPointerEvents();
+  mozilla::dom::CSSValue* DoGetVisibility();
 
   /* Direction properties */
-  nsIDOMCSSValue* DoGetDirection();
-  nsIDOMCSSValue* DoGetUnicodeBidi();
+  mozilla::dom::CSSValue* DoGetDirection();
+  mozilla::dom::CSSValue* DoGetUnicodeBidi();
 
   /* Display properties */
-  nsIDOMCSSValue* DoGetBinding();
-  nsIDOMCSSValue* DoGetClear();
-  nsIDOMCSSValue* DoGetCssFloat();
-  nsIDOMCSSValue* DoGetDisplay();
-  nsIDOMCSSValue* DoGetPosition();
-  nsIDOMCSSValue* DoGetClip();
-  nsIDOMCSSValue* DoGetOverflow();
-  nsIDOMCSSValue* DoGetOverflowX();
-  nsIDOMCSSValue* DoGetOverflowY();
-  nsIDOMCSSValue* DoGetResize();
-  nsIDOMCSSValue* DoGetPageBreakAfter();
-  nsIDOMCSSValue* DoGetPageBreakBefore();
-  nsIDOMCSSValue* DoGetPageBreakInside();
-  nsIDOMCSSValue* DoGetTransform();
-  nsIDOMCSSValue* DoGetTransformOrigin();
-  nsIDOMCSSValue* DoGetPerspective();
-  nsIDOMCSSValue* DoGetBackfaceVisibility();
-  nsIDOMCSSValue* DoGetPerspectiveOrigin();
-  nsIDOMCSSValue* DoGetTransformStyle();
-  nsIDOMCSSValue* DoGetOrient();
+  mozilla::dom::CSSValue* DoGetBinding();
+  mozilla::dom::CSSValue* DoGetClear();
+  mozilla::dom::CSSValue* DoGetCssFloat();
+  mozilla::dom::CSSValue* DoGetDisplay();
+  mozilla::dom::CSSValue* DoGetPosition();
+  mozilla::dom::CSSValue* DoGetClip();
+  mozilla::dom::CSSValue* DoGetOverflow();
+  mozilla::dom::CSSValue* DoGetOverflowX();
+  mozilla::dom::CSSValue* DoGetOverflowY();
+  mozilla::dom::CSSValue* DoGetResize();
+  mozilla::dom::CSSValue* DoGetPageBreakAfter();
+  mozilla::dom::CSSValue* DoGetPageBreakBefore();
+  mozilla::dom::CSSValue* DoGetPageBreakInside();
+  mozilla::dom::CSSValue* DoGetTransform();
+  mozilla::dom::CSSValue* DoGetTransformOrigin();
+  mozilla::dom::CSSValue* DoGetPerspective();
+  mozilla::dom::CSSValue* DoGetBackfaceVisibility();
+  mozilla::dom::CSSValue* DoGetPerspectiveOrigin();
+  mozilla::dom::CSSValue* DoGetTransformStyle();
+  mozilla::dom::CSSValue* DoGetOrient();
 
   /* User interface properties */
-  nsIDOMCSSValue* DoGetCursor();
-  nsIDOMCSSValue* DoGetForceBrokenImageIcon();
-  nsIDOMCSSValue* DoGetIMEMode();
-  nsIDOMCSSValue* DoGetUserFocus();
-  nsIDOMCSSValue* DoGetUserInput();
-  nsIDOMCSSValue* DoGetUserModify();
-  nsIDOMCSSValue* DoGetUserSelect();
+  mozilla::dom::CSSValue* DoGetCursor();
+  mozilla::dom::CSSValue* DoGetForceBrokenImageIcon();
+  mozilla::dom::CSSValue* DoGetIMEMode();
+  mozilla::dom::CSSValue* DoGetUserFocus();
+  mozilla::dom::CSSValue* DoGetUserInput();
+  mozilla::dom::CSSValue* DoGetUserModify();
+  mozilla::dom::CSSValue* DoGetUserSelect();
 
   /* Column properties */
-  nsIDOMCSSValue* DoGetColumnCount();
-  nsIDOMCSSValue* DoGetColumnFill();
-  nsIDOMCSSValue* DoGetColumnWidth();
-  nsIDOMCSSValue* DoGetColumnGap();
-  nsIDOMCSSValue* DoGetColumnRuleWidth();
-  nsIDOMCSSValue* DoGetColumnRuleStyle();
-  nsIDOMCSSValue* DoGetColumnRuleColor();
+  mozilla::dom::CSSValue* DoGetColumnCount();
+  mozilla::dom::CSSValue* DoGetColumnFill();
+  mozilla::dom::CSSValue* DoGetColumnWidth();
+  mozilla::dom::CSSValue* DoGetColumnGap();
+  mozilla::dom::CSSValue* DoGetColumnRuleWidth();
+  mozilla::dom::CSSValue* DoGetColumnRuleStyle();
+  mozilla::dom::CSSValue* DoGetColumnRuleColor();
 
   /* CSS Transitions */
-  nsIDOMCSSValue* DoGetTransitionProperty();
-  nsIDOMCSSValue* DoGetTransitionDuration();
-  nsIDOMCSSValue* DoGetTransitionDelay();
-  nsIDOMCSSValue* DoGetTransitionTimingFunction();
+  mozilla::dom::CSSValue* DoGetTransitionProperty();
+  mozilla::dom::CSSValue* DoGetTransitionDuration();
+  mozilla::dom::CSSValue* DoGetTransitionDelay();
+  mozilla::dom::CSSValue* DoGetTransitionTimingFunction();
 
   /* CSS Animations */
-  nsIDOMCSSValue* DoGetAnimationName();
-  nsIDOMCSSValue* DoGetAnimationDuration();
-  nsIDOMCSSValue* DoGetAnimationDelay();
-  nsIDOMCSSValue* DoGetAnimationTimingFunction();
-  nsIDOMCSSValue* DoGetAnimationDirection();
-  nsIDOMCSSValue* DoGetAnimationFillMode();
-  nsIDOMCSSValue* DoGetAnimationIterationCount();
-  nsIDOMCSSValue* DoGetAnimationPlayState();
+  mozilla::dom::CSSValue* DoGetAnimationName();
+  mozilla::dom::CSSValue* DoGetAnimationDuration();
+  mozilla::dom::CSSValue* DoGetAnimationDelay();
+  mozilla::dom::CSSValue* DoGetAnimationTimingFunction();
+  mozilla::dom::CSSValue* DoGetAnimationDirection();
+  mozilla::dom::CSSValue* DoGetAnimationFillMode();
+  mozilla::dom::CSSValue* DoGetAnimationIterationCount();
+  mozilla::dom::CSSValue* DoGetAnimationPlayState();
 
 #ifdef MOZ_FLEXBOX
   /* CSS Flexbox properties */
-  nsIDOMCSSValue* DoGetAlignItems();
-  nsIDOMCSSValue* DoGetAlignSelf();
-  nsIDOMCSSValue* DoGetFlexBasis();
-  nsIDOMCSSValue* DoGetFlexDirection();
-  nsIDOMCSSValue* DoGetFlexGrow();
-  nsIDOMCSSValue* DoGetFlexShrink();
-  nsIDOMCSSValue* DoGetOrder();
-  nsIDOMCSSValue* DoGetJustifyContent();
+  mozilla::dom::CSSValue* DoGetAlignItems();
+  mozilla::dom::CSSValue* DoGetAlignSelf();
+  mozilla::dom::CSSValue* DoGetFlexBasis();
+  mozilla::dom::CSSValue* DoGetFlexDirection();
+  mozilla::dom::CSSValue* DoGetFlexGrow();
+  mozilla::dom::CSSValue* DoGetFlexShrink();
+  mozilla::dom::CSSValue* DoGetOrder();
+  mozilla::dom::CSSValue* DoGetJustifyContent();
 #endif // MOZ_FLEXBOX
 
   /* SVG properties */
-  nsIDOMCSSValue* DoGetFill();
-  nsIDOMCSSValue* DoGetStroke();
-  nsIDOMCSSValue* DoGetMarkerEnd();
-  nsIDOMCSSValue* DoGetMarkerMid();
-  nsIDOMCSSValue* DoGetMarkerStart();
-  nsIDOMCSSValue* DoGetStrokeDasharray();
+  mozilla::dom::CSSValue* DoGetFill();
+  mozilla::dom::CSSValue* DoGetStroke();
+  mozilla::dom::CSSValue* DoGetMarkerEnd();
+  mozilla::dom::CSSValue* DoGetMarkerMid();
+  mozilla::dom::CSSValue* DoGetMarkerStart();
+  mozilla::dom::CSSValue* DoGetStrokeDasharray();
 
-  nsIDOMCSSValue* DoGetStrokeDashoffset();
-  nsIDOMCSSValue* DoGetStrokeWidth();
-  nsIDOMCSSValue* DoGetVectorEffect();
+  mozilla::dom::CSSValue* DoGetStrokeDashoffset();
+  mozilla::dom::CSSValue* DoGetStrokeWidth();
+  mozilla::dom::CSSValue* DoGetVectorEffect();
 
-  nsIDOMCSSValue* DoGetFillOpacity();
-  nsIDOMCSSValue* DoGetFloodOpacity();
-  nsIDOMCSSValue* DoGetStopOpacity();
-  nsIDOMCSSValue* DoGetStrokeMiterlimit();
-  nsIDOMCSSValue* DoGetStrokeOpacity();
+  mozilla::dom::CSSValue* DoGetFillOpacity();
+  mozilla::dom::CSSValue* DoGetFloodOpacity();
+  mozilla::dom::CSSValue* DoGetStopOpacity();
+  mozilla::dom::CSSValue* DoGetStrokeMiterlimit();
+  mozilla::dom::CSSValue* DoGetStrokeOpacity();
 
-  nsIDOMCSSValue* DoGetClipRule();
-  nsIDOMCSSValue* DoGetFillRule();
-  nsIDOMCSSValue* DoGetStrokeLinecap();
-  nsIDOMCSSValue* DoGetStrokeLinejoin();
-  nsIDOMCSSValue* DoGetTextAnchor();
+  mozilla::dom::CSSValue* DoGetClipRule();
+  mozilla::dom::CSSValue* DoGetFillRule();
+  mozilla::dom::CSSValue* DoGetStrokeLinecap();
+  mozilla::dom::CSSValue* DoGetStrokeLinejoin();
+  mozilla::dom::CSSValue* DoGetTextAnchor();
 
-  nsIDOMCSSValue* DoGetColorInterpolation();
-  nsIDOMCSSValue* DoGetColorInterpolationFilters();
-  nsIDOMCSSValue* DoGetDominantBaseline();
-  nsIDOMCSSValue* DoGetImageRendering();
-  nsIDOMCSSValue* DoGetShapeRendering();
-  nsIDOMCSSValue* DoGetTextRendering();
+  mozilla::dom::CSSValue* DoGetColorInterpolation();
+  mozilla::dom::CSSValue* DoGetColorInterpolationFilters();
+  mozilla::dom::CSSValue* DoGetDominantBaseline();
+  mozilla::dom::CSSValue* DoGetImageRendering();
+  mozilla::dom::CSSValue* DoGetShapeRendering();
+  mozilla::dom::CSSValue* DoGetTextRendering();
 
-  nsIDOMCSSValue* DoGetFloodColor();
-  nsIDOMCSSValue* DoGetLightingColor();
-  nsIDOMCSSValue* DoGetStopColor();
+  mozilla::dom::CSSValue* DoGetFloodColor();
+  mozilla::dom::CSSValue* DoGetLightingColor();
+  mozilla::dom::CSSValue* DoGetStopColor();
 
-  nsIDOMCSSValue* DoGetClipPath();
-  nsIDOMCSSValue* DoGetFilter();
-  nsIDOMCSSValue* DoGetMask();
+  mozilla::dom::CSSValue* DoGetClipPath();
+  mozilla::dom::CSSValue* DoGetFilter();
+  mozilla::dom::CSSValue* DoGetMask();
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited);
@@ -473,7 +477,7 @@ private:
   struct ComputedStyleMapEntry
   {
     // Create a pointer-to-member-function type.
-    typedef nsIDOMCSSValue* (nsComputedDOMStyle::*ComputeMethod)();
+    typedef mozilla::dom::CSSValue* (nsComputedDOMStyle::*ComputeMethod)();
 
     nsCSSProperty mProperty;
     ComputeMethod mGetter;

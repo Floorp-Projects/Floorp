@@ -22,5 +22,3 @@ REQUIRES = dbm seccmd
 # So, look in the local Makefile for the defines for the list of libs.
 
 PROGRAM = ocspclnt
-
-USE_STATIC_LIBS = 1

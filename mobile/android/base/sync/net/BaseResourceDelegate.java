@@ -16,7 +16,7 @@ import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
  */
 public abstract class BaseResourceDelegate implements ResourceDelegate {
   public static int connectionTimeoutInMillis = 1000 * 30;     // Wait 30s for a connection to open.
-  public static int socketTimeoutInMillis     = 1000 * 5 * 60; // Wait 5 minutes for data.
+  public static int socketTimeoutInMillis     = 1000 * 2 * 60; // Wait 2 minutes for data.
 
   protected Resource resource;
   public BaseResourceDelegate(Resource resource) {
