@@ -517,6 +517,17 @@ public:
   // If mIsTrusted is true, the event is a trusted event.  Otherwise, it's
   // an untrusted event.
   bool    mIsTrusted : 1;
+  // If mInBubblingPhase is true, the event is in bubbling phase or target
+  // phase.
+  bool    mInBubblingPhase : 1;
+  // If mInCapturePhase is true, the event is in capture phase or target phase.
+  bool    mInCapturePhase : 1;
+
+  // If the event is being handled in target phase, returns true.
+  bool InTargetPhase() const
+  {
+    return (mInBubblingPhase && mInCapturePhase);
+  }
 
   EventFlags()
   {

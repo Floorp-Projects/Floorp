@@ -274,8 +274,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 
   // Capture
   nsEventTargetChainItem* item = this;
-  aVisitor.mEvent->flags |= NS_EVENT_FLAG_CAPTURE;
-  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_BUBBLE;
+  aVisitor.mEvent->mFlags.mInCapturePhase = true;
+  aVisitor.mEvent->mFlags.mInBubblingPhase = false;
   while (item->mChild) {
     if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
          item->ForceContentDispatch()) &&
@@ -303,7 +303,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   }
 
   // Target
-  aVisitor.mEvent->flags |= NS_EVENT_FLAG_BUBBLE;
+  aVisitor.mEvent->mFlags.mInBubblingPhase = true;
   if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
       (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
        item->ForceContentDispatch())) {
@@ -320,7 +320,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   }
 
   // Bubble
-  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_CAPTURE;
+  aVisitor.mEvent->mFlags.mInCapturePhase = false;
   item = item->mParent;
   while (item) {
     nsIDOMEventTarget* newTarget = item->GetNewTarget();
@@ -344,7 +344,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     }
     item = item->mParent;
   }
-  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_BUBBLE;
+  aVisitor.mEvent->mFlags.mInBubblingPhase = false;
 
   if (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
     // Dispatch to the system event group.  Make sure to clear the
