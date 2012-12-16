@@ -105,16 +105,6 @@ enum nsEventStructType {
   NS_PLUGIN_EVENT                    // nsPluginEvent
 };
 
-// These flags are sort of a mess. They're sort of shared between event
-// listener flags and event flags, but only some of them. You've been
-// warned!
-#define NS_EVENT_FLAG_NONE                0x0000
-#define NS_EVENT_FLAG_BUBBLE              0x0002
-#define NS_EVENT_FLAG_CAPTURE             0x0004
-#define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
-#define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
-#define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
-
 #define NS_EVENT_TYPE_NULL                   0
 #define NS_EVENT_TYPE_ALL                  1 // Not a real event type
 

@@ -114,33 +114,26 @@ nsEditorEventListener::InstallToEditor()
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("keydown"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("keyup"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
 #endif
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("keypress"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("dragenter"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("dragover"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("dragexit"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("drop"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   // XXX We should add the mouse event listeners as system event group.
   //     E.g., web applications cannot prevent middle mouse paste by
   //     preventDefault() of click event at bubble phase.
@@ -148,33 +141,30 @@ nsEditorEventListener::InstallToEditor()
   //     code need to check if it's editable.  It makes easier create new bugs.
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("mousedown"),
-                               NS_EVENT_FLAG_CAPTURE);
+                               dom::TrustedEventsAtCapture());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("mouseup"),
-                               NS_EVENT_FLAG_CAPTURE);
+                               dom::TrustedEventsAtCapture());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("click"),
-                               NS_EVENT_FLAG_CAPTURE);
+                               dom::TrustedEventsAtCapture());
 // Focus event doesn't bubble so adding the listener to capturing phase.
 // Make sure this works after bug 235441 gets fixed.
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("blur"),
-                               NS_EVENT_FLAG_CAPTURE);
+                               dom::TrustedEventsAtCapture());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("focus"),
-                               NS_EVENT_FLAG_CAPTURE);
+                               dom::TrustedEventsAtCapture());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("text"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("compositionstart"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("compositionend"),
-                               NS_EVENT_FLAG_BUBBLE |
-                               NS_EVENT_FLAG_SYSTEM_EVENT);
+                               dom::TrustedEventsAtSystemGroupBubble());
 
   return NS_OK;
 }
@@ -206,60 +196,50 @@ nsEditorEventListener::UninstallFromEditor()
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("keydown"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("keyup"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
 #endif
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("keypress"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("dragenter"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("dragover"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("dragexit"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("drop"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("mousedown"),
-                                  NS_EVENT_FLAG_CAPTURE);
+                                  dom::TrustedEventsAtCapture());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("mouseup"),
-                                  NS_EVENT_FLAG_CAPTURE);
+                                  dom::TrustedEventsAtCapture());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("click"),
-                                  NS_EVENT_FLAG_CAPTURE);
+                                  dom::TrustedEventsAtCapture());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("blur"),
-                                  NS_EVENT_FLAG_CAPTURE);
+                                  dom::TrustedEventsAtCapture());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("focus"),
-                                  NS_EVENT_FLAG_CAPTURE);
+                                  dom::TrustedEventsAtCapture());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("text"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("compositionstart"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   elmP->RemoveEventListenerByType(this,
                                   NS_LITERAL_STRING("compositionend"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
 }
 
 already_AddRefed<nsIPresShell>
