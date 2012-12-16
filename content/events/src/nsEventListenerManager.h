@@ -129,7 +129,7 @@ public:
                    nsEventStatus* aEventStatus,
                    nsCxPusher* aPusher)
   {
-    if (mListeners.IsEmpty() || aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+    if (mListeners.IsEmpty() || aEvent->mFlags.mPropagationStopped) {
       return;
     }
 

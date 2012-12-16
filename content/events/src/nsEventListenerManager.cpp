@@ -945,7 +945,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   bool hasListener = false;
   while (iter.HasMore()) {
-    if (aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY) {
+    if (aEvent->mFlags.mImmediatePropagationStopped) {
       break;
     }
     nsListenerStruct* ls = &iter.GetNext();
