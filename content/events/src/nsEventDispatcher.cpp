@@ -464,7 +464,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   bool retargeted = false;
 
-  if (aEvent->flags & NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS) {
+  if (aEvent->mFlags.mRetargetToNonNativeAnonymous) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(target);
     if (content && content->IsInNativeAnonymousSubtree()) {
       nsCOMPtr<nsPIDOMEventTarget> newTarget =

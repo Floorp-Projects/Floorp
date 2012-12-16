@@ -120,10 +120,6 @@ enum nsEventStructType {
 
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
-#define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
-
-#define NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS 0x100000
-
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 
@@ -540,6 +536,12 @@ public:
   // If mExceptionHasBeenRisen is true, one of the event handlers has risen an
   // exception.
   bool    mExceptionHasBeenRisen : 1;
+  // If mRetargetToNonNativeAnonymous is true and the target is in a non-native
+  // native anonymous subtree, the event target is set to originalTarget.
+  bool    mRetargetToNonNativeAnonymous : 1;
+  // If mNoCrossProcessBoundaryForwarding is true, the event is not allowed to
+  // cross process boundary.
+  bool    mNoCrossProcessBoundaryForwarding : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
