@@ -995,8 +995,11 @@ public:
   bool SetPointerLock(Element* aElement, int aCursorStyle);
   static void UnlockPointer();
 
-  virtual void UpdateVisibilityState(bool aFireEventSync);
-  void FireVisibilityChangeEvent();
+  // This method may fire a DOM event; if it does so it will happen
+  // synchronously.
+  void UpdateVisibilityState();
+  // Posts an event to call UpdateVisibilityState
+  virtual void PostVisibilityUpdateEvent();
 
   virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
   // DocSizeOfIncludingThis is inherited from nsIDocument.
