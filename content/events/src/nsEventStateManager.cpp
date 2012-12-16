@@ -1237,7 +1237,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendTextEvent(*textEvent)) {
           // Cancel local dispatching
-          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+          aEvent->mFlags.mPropagationStopped = true;
         }
       }
     }
@@ -1264,7 +1264,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendCompositionEvent(*compositionEvent)) {
           // Cancel local dispatching
-          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+          aEvent->mFlags.mPropagationStopped = true;
         }
       }
     }
@@ -2155,7 +2155,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
                                               targetContent, selection);
         if (dragStarted) {
           sActiveESM = nullptr;
-          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+          aEvent->mFlags.mPropagationStopped = true;
         }
       }
 
@@ -4178,7 +4178,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
         } else if (aEvent->refPoint == sSynthCenteringPoint) {
           // This is the "synthetic native" event we dispatched to re-center the
           // pointer. Cancel it so we don't expose the centering move to content.
-          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+          aEvent->mFlags.mPropagationStopped = true;
           // Clear sSynthCenteringPoint so we don't cancel other events
           // targeted at the center.
           sSynthCenteringPoint = kInvalidRefPoint;
