@@ -142,7 +142,6 @@ public:
    * item in the chain.
    */
   nsresult HandleEventTargetChain(nsEventChainPostVisitor& aVisitor,
-                                  uint32_t aFlags,
                                   nsDispatchingCallback* aCallback,
                                   bool aMayHaveNewListenerManagers,
                                   nsCxPusher* aPusher);
@@ -157,7 +156,7 @@ public:
    * If the current item in the event target chain has an event listener
    * manager, this method calls nsEventListenerManager::HandleEvent().
    */
-  nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, uint32_t aFlags,
+  nsresult HandleEvent(nsEventChainPostVisitor& aVisitor,
                        bool aMayHaveNewListenerManagers,
                        nsCxPusher* aPusher)
   {
@@ -179,7 +178,7 @@ public:
                    "CurrentTarget should be null!");
       mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
                             &aVisitor.mDOMEvent,
-                            CurrentTarget(), aFlags,
+                            CurrentTarget(),
                             &aVisitor.mEventStatus,
                             aPusher);
       NS_ASSERTION(aVisitor.mEvent->currentTarget == nullptr,
@@ -263,10 +262,11 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor,
 }
 
 nsresult
-nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor, uint32_t aFlags,
-                                               nsDispatchingCallback* aCallback,
-                                               bool aMayHaveNewListenerManagers,
-                                               nsCxPusher* aPusher)
+nsEventTargetChainItem::HandleEventTargetChain(
+                          nsEventChainPostVisitor& aVisitor,
+                          nsDispatchingCallback* aCallback,
+                          bool aMayHaveNewListenerManagers,
+                          nsCxPusher* aPusher)
 {
   uint32_t createdELMs = nsEventListenerManager::sCreatedCount;
   // Save the target so that it can be restored later.
@@ -280,7 +280,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item->ForceContentDispatch()) &&
         !aVisitor.mEvent->mFlags.mPropagationStopped) {
-      item->HandleEvent(aVisitor, aFlags & NS_EVENT_CAPTURE_MASK,
+      item->HandleEvent(aVisitor,
                         aMayHaveNewListenerManagers ||
                         createdELMs != nsEventListenerManager::sCreatedCount,
                         aPusher);
@@ -307,15 +307,12 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        item->ForceContentDispatch())) {
-    // FIXME Should use aFlags & NS_EVENT_BUBBLE_MASK because capture phase
-    //       event listeners should not be fired. But it breaks at least
-    //       <xul:dialog>'s buttons. Bug 235441.
-    item->HandleEvent(aVisitor, aFlags,
+    item->HandleEvent(aVisitor,
                       aMayHaveNewListenerManagers ||
                       createdELMs != nsEventListenerManager::sCreatedCount,
                       aPusher);
   }
-  if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
+  if (aVisitor.mEvent->mFlags.mInSystemGroup) {
     item->PostHandleEvent(aVisitor, aPusher);
   }
 
@@ -334,11 +331,11 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
       if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
            item->ForceContentDispatch()) &&
           !aVisitor.mEvent->mFlags.mPropagationStopped) {
-        item->HandleEvent(aVisitor, aFlags & NS_EVENT_BUBBLE_MASK,
+        item->HandleEvent(aVisitor,
                           createdELMs != nsEventListenerManager::sCreatedCount,
                           aPusher);
       }
-      if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
+      if (aVisitor.mEvent->mFlags.mInSystemGroup) {
         item->PostHandleEvent(aVisitor, aPusher);
       }
     }
@@ -346,7 +343,7 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   }
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
 
-  if (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+  if (!aVisitor.mEvent->mFlags.mInSystemGroup) {
     // Dispatch to the system event group.  Make sure to clear the
     // STOP_DISPATCH flag since this resets for each event group.
     aVisitor.mEvent->mFlags.mPropagationStopped = false;
@@ -365,10 +362,12 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     // Retarget for system event group (which does the default handling too).
     // Setting back the target which was used also for default event group.
     aVisitor.mEvent->target = firstTarget;
-    HandleEventTargetChain(aVisitor, aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
+    aVisitor.mEvent->mFlags.mInSystemGroup = true;
+    HandleEventTargetChain(aVisitor,
                            aCallback,
                            createdELMs != nsEventListenerManager::sCreatedCount,
                            aPusher);
+    aVisitor.mEvent->mFlags.mInSystemGroup = false;
 
     // After dispatch, clear all the propagation flags so that
     // system group listeners don't affect to the event.
@@ -627,8 +626,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
         nsEventChainPostVisitor postVisitor(preVisitor);
         nsCxPusher pusher;
         rv = topEtci->HandleEventTargetChain(postVisitor,
-                                             NS_EVENT_FLAG_BUBBLE |
-                                             NS_EVENT_FLAG_CAPTURE,
                                              aCallback,
                                              false,
                                              &pusher);

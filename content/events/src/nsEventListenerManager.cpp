@@ -897,7 +897,6 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEventListener* aListener,
                                            nsIDOMEvent* aDOMEvent,
                                            nsIDOMEventTarget* aCurrentTarget,
-                                           uint32_t aPhaseFlags,
                                            nsCxPusher* aPusher)
 {
   nsresult result = NS_OK;
@@ -932,7 +931,6 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent,
                                             nsIDOMEventTarget* aCurrentTarget,
-                                            uint32_t aFlags,
                                             nsEventStatus* aEventStatus,
                                             nsCxPusher* aPusher)
 {
@@ -955,9 +953,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
       hasListener = true;
       // XXX The (mFlags & aFlags) test here seems fragile. Shouldn't we
       // specifically only test the capture/bubble flags.
-      if ((ls->mFlags & aFlags & ~NS_EVENT_FLAG_SYSTEM_EVENT) &&
-          (ls->mFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ==
-          (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
+      if (ls->IsListening(aEvent) &&
           (aEvent->mFlags.mIsTrusted ||
            ls->mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED)) {
         if (!*aDOMEvent) {
@@ -990,8 +986,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
           nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
           if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
-                                           aCurrentTarget, aFlags,
-                                           aPusher))) {
+                                           aCurrentTarget, aPusher))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
           }
         }
