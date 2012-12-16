@@ -542,6 +542,14 @@ public:
   // If mNoCrossProcessBoundaryForwarding is true, the event is not allowed to
   // cross process boundary.
   bool    mNoCrossProcessBoundaryForwarding : 1;
+  // If mNoContentDispatch is true, the event is never dispatched to the
+  // event handlers which are added to the contents, onfoo attributes and
+  // properties.  Note that this flag is ignored when
+  // nsEventChainPreVisitor::mForceContentDispatch is set true.  For exapmle,
+  // window and document object sets it true.  Therefore, web applications
+  // can handle the event if they add event listeners to the window or the
+  // document.
+  bool    mNoContentDispatch : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
