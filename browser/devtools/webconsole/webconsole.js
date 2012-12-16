@@ -2410,6 +2410,10 @@ WebConsoleFrame.prototype = {
       else if (locationNode.parentNode.category == CATEGORY_CSS) {
         this.owner.viewSourceInStyleEditor(aSourceURL, aSourceLine);
       }
+      else if (locationNode.parentNode.category == CATEGORY_JS ||
+               locationNode.parentNode.category == CATEGORY_WEBDEV) {
+        this.owner.viewSourceInDebugger(aSourceURL, aSourceLine);
+      }
       else {
         this.owner.viewSource(aSourceURL, aSourceLine);
       }
