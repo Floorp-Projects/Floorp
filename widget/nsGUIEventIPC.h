@@ -41,7 +41,6 @@ struct ParamTraits<nsEvent>
     WriteParam(aMsg, aParam.message);
     WriteParam(aMsg, aParam.refPoint);
     WriteParam(aMsg, aParam.time);
-    WriteParam(aMsg, aParam.flags);
     WriteParam(aMsg, aParam.mFlags);
   }
 
@@ -52,7 +51,6 @@ struct ParamTraits<nsEvent>
                ReadParam(aMsg, aIter, &aResult->message) &&
                ReadParam(aMsg, aIter, &aResult->refPoint) &&
                ReadParam(aMsg, aIter, &aResult->time) &&
-               ReadParam(aMsg, aIter, &aResult->flags) &&
                ReadParam(aMsg, aIter, &aResult->mFlags);
     aResult->eventStructType = static_cast<nsEventStructType>(eventStructType);
     return ret;

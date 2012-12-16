@@ -780,7 +780,6 @@ nsDOMEvent::DuplicatePrivateData()
   newEvent->target                 = mEvent->target;
   newEvent->currentTarget          = mEvent->currentTarget;
   newEvent->originalTarget         = mEvent->originalTarget;
-  newEvent->flags                  = mEvent->flags;
   newEvent->mFlags                 = mEvent->mFlags;
   newEvent->time                   = mEvent->time;
   newEvent->refPoint               = mEvent->refPoint;
