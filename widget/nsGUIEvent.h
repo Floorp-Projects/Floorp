@@ -120,8 +120,6 @@ enum nsEventStructType {
 
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
-#define NS_EVENT_FLAG_EXCEPTION_THROWN    0x10000
-
 #define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
 
 #define NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS 0x100000
@@ -539,6 +537,9 @@ public:
   // If mIsSynthesizedForTests is true, the event has been synthesized for
   // automated tests or something hacky approach of an add-on.
   bool    mIsSynthesizedForTests : 1;
+  // If mExceptionHasBeenRisen is true, one of the event handlers has risen an
+  // exception.
+  bool    mExceptionHasBeenRisen : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
