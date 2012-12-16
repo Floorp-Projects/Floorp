@@ -340,14 +340,14 @@ nsDOMEvent::GetEventPhase(uint16_t* aEventPhase)
 NS_IMETHODIMP
 nsDOMEvent::GetBubbles(bool* aBubbles)
 {
-  *aBubbles = !(mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE);
+  *aBubbles = mEvent->mFlags.mBubbles;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCancelable(bool* aCancelable)
 {
-  *aCancelable = !(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL);
+  *aCancelable = mEvent->mFlags.mCancelable;
   return NS_OK;
 }
 
@@ -427,7 +427,7 @@ nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
 NS_IMETHODIMP
 nsDOMEvent::PreventDefault()
 {
-  if (!(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL)) {
+  if (mEvent->mFlags.mCancelable) {
     mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
     // Need to set an extra flag for drag events.
@@ -471,17 +471,8 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
 
   SetEventType(aEventTypeArg);
 
-  if (aCanBubbleArg) {
-    mEvent->flags &= ~NS_EVENT_FLAG_CANT_BUBBLE;
-  } else {
-    mEvent->flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-  }
-
-  if (aCancelableArg) {
-    mEvent->flags &= ~NS_EVENT_FLAG_CANT_CANCEL;
-  } else {
-    mEvent->flags |= NS_EVENT_FLAG_CANT_CANCEL;
-  }
+  mEvent->mFlags.mBubbles = aCanBubbleArg;
+  mEvent->mFlags.mCancelable = aCancelableArg;
 
   // Clearing the old targets, so that the event is targeted correctly when
   // re-dispatching it.

@@ -23,10 +23,9 @@ nsDOMSVGEvent::nsDOMSVGEvent(nsPresContext* aPresContext,
     mEvent->time = PR_Now();
   }
 
-  mEvent->flags |= NS_EVENT_FLAG_CANT_CANCEL;
-  if (mEvent->message == NS_SVG_LOAD || mEvent->message == NS_SVG_UNLOAD) {
-    mEvent->flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-  }
+  mEvent->mFlags.mCancelable = false;
+  mEvent->mFlags.mBubbles =
+    (mEvent->message != NS_SVG_LOAD && mEvent->message != NS_SVG_UNLOAD);
 }
 
 //----------------------------------------------------------------------
