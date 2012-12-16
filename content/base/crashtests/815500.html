@@ -1,0 +1,14 @@
+>><address id=test1> A,*/^㰞﷑ dq豑><script>
+function initCF() {
+try { test2 = document.createElementNS("http://www.w3.org/1999/xhtml", "tt"); } catch(e) {}
+try { test2.setAttribute("dir", "auto"); } catch(e) {}
+setTimeout("CFcrash()", 253);
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+function editFuzz() {
+}
+function CFcrash() {
+try { test2.appendChild(test1); } catch(e) {}
+setTimeout('try { test2.setAttribute("dir", "&locale.dir;"); } catch(e) {}', 462);
+try { test1.innerHTML = "Z3 ᜃ 洿G0겨=#⨝  g B 	md^뛳 j # 	 鮪  8媾䝀 &#x30054;ᖾd煏됚M:㕑,i⼷  Geኔ	≴핛 "; } catch(e) {}
+}</script>>
