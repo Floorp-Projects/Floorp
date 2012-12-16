@@ -59,6 +59,21 @@ struct nsListenerStruct
       static_cast<nsIJSEventListener*>(mListener.get())->Disconnect();
     }
   }
+
+  MOZ_ALWAYS_INLINE bool IsListening(const nsEvent* aEvent) const
+  {
+    if (((mFlags & NS_EVENT_FLAG_SYSTEM_EVENT) != 0) !=
+          aEvent->mFlags.mInSystemGroup) {
+      return false;
+    }
+    // FIXME Should check NS_EVENT_FLAG_CAPTURE when the event is in target
+    //       phase because capture phase event listeners should not be fired.
+    //       But it breaks at least <xul:dialog>'s buttons. Bug 235441.
+    return ((mFlags & NS_EVENT_FLAG_CAPTURE) &&
+            aEvent->mFlags.mInCapturePhase) ||
+           ((mFlags & NS_EVENT_FLAG_BUBBLE) &&
+            aEvent->mFlags.mInBubblingPhase);
+  }
 };
 
 /*
@@ -125,7 +140,6 @@ public:
                    nsEvent* aEvent, 
                    nsIDOMEvent** aDOMEvent,
                    nsIDOMEventTarget* aCurrentTarget,
-                   uint32_t aFlags,
                    nsEventStatus* aEventStatus,
                    nsCxPusher* aPusher)
   {
@@ -137,8 +151,7 @@ public:
       return;
     }
 
-    if (!mMayHaveSystemGroupListeners &&
-        aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
+    if (!mMayHaveSystemGroupListeners && aEvent->mFlags.mInSystemGroup) {
       return;
     }
 
@@ -149,16 +162,8 @@ public:
       return;
     }
     HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
-                        aFlags, aEventStatus, aPusher);
+                        aEventStatus, aPusher);
   }
-
-  void HandleEventInternal(nsPresContext* aPresContext,
-                           nsEvent* aEvent, 
-                           nsIDOMEvent** aDOMEvent,
-                           nsIDOMEventTarget* aCurrentTarget,
-                           uint32_t aFlags,
-                           nsEventStatus* aEventStatus,
-                           nsCxPusher* aPusher);
 
   /**
    * Tells the event listener manager that its target (which owns it) is
@@ -238,11 +243,17 @@ public:
 
   nsISupports* GetTarget() { return mTarget; }
 protected:
+  void HandleEventInternal(nsPresContext* aPresContext,
+                           nsEvent* aEvent, 
+                           nsIDOMEvent** aDOMEvent,
+                           nsIDOMEventTarget* aCurrentTarget,
+                           nsEventStatus* aEventStatus,
+                           nsCxPusher* aPusher);
+
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,
                               nsIDOMEvent* aDOMEvent,
                               nsIDOMEventTarget* aCurrentTarget,
-                              uint32_t aPhaseFlags,
                               nsCxPusher* aPusher);
 
   /**

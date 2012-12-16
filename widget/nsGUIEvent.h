@@ -112,12 +112,8 @@ enum nsEventStructType {
 #define NS_EVENT_FLAG_BUBBLE              0x0002
 #define NS_EVENT_FLAG_CAPTURE             0x0004
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
-#define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
-
-#define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
-#define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 
 #define NS_EVENT_TYPE_NULL                   0
 #define NS_EVENT_TYPE_ALL                  1 // Not a real event type
@@ -493,6 +489,8 @@ public:
   bool    mInBubblingPhase : 1;
   // If mInCapturePhase is true, the event is in capture phase or target phase.
   bool    mInCapturePhase : 1;
+  // If mInSystemGroup is true, the event is being dispatched in system group.
+  bool    mInSystemGroup: 1;
   // If mCancelable is true, the event can be consumed.  I.e., calling
   // nsDOMEvent::PreventDefault() can prevent the default action.
   bool    mCancelable : 1;
