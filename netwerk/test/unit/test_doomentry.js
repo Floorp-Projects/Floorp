@@ -138,8 +138,8 @@ function check_doom3(status)
   // entry was doomed but writing should still succeed
   var data = "testdata";
   write_and_check(gOstream, data, data.length);
-  gEntry.close();
   gOstream.close();
+  gEntry.close();
   // dooming the same entry again should fail
   new DoomEntry("testentry", check_doom4);
 }

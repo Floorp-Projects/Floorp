@@ -38,7 +38,7 @@
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "StyleRule.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 #define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
   /* virtual */ nsIDOMCSSRule* class_::GetDOMRule()               \
@@ -1619,12 +1619,13 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(const nsAString & propertyName,
 }
 
 // nsIDOMCSSValue getPropertyCSSValue (in DOMString propertyName);
-NS_IMETHODIMP
+already_AddRefed<dom::CSSValue>
 nsCSSFontFaceStyleDecl::GetPropertyCSSValue(const nsAString & propertyName,
-                                            nsIDOMCSSValue **aResult)
+                                            ErrorResult& aRv)
 {
   // ??? nsDOMCSSDeclaration returns null/NS_OK, but that seems wrong.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
 }
 
 // DOMString removeProperty (in DOMString propertyName) raises (DOMException);

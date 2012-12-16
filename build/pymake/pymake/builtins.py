@@ -86,8 +86,35 @@ def touch(args):
     """
     Emulate the behavior of touch(1).
     """
+    try:
+        opts, args = getopt(args, "t:")
+    except GetoptError, e:
+        raise PythonException, ("touch: %s" % e, 1)
+    opts = dict(opts)
+    times = None
+    if '-t' in opts:
+        import re
+        from time import mktime, localtime
+        m = re.match('^(?P<Y>(?:\d\d)?\d\d)?(?P<M>\d\d)(?P<D>\d\d)(?P<h>\d\d)(?P<m>\d\d)(?:\.(?P<s>\d\d))?$', opts['-t'])
+        if not m:
+            raise PythonException, ("touch: invalid date format '%s'" % opts['-t'], 1)
+        def normalized_field(m, f):
+            if f == 'Y':
+                if m.group(f) is None:
+                    return localtime()[0]
+                y = int(m.group(f))
+                if y < 69:
+                    y += 2000
+                elif y < 100:
+                    y += 1900
+                return y
+            if m.group(f) is None:
+                return localtime()[0] if f == 'Y' else 0
+            return int(m.group(f))
+        time = [normalized_field(m, f) for f in ['Y', 'M', 'D', 'h', 'm', 's']] + [0, 0, -1]
+        time = mktime(time)
+        times = (time, time)
     for f in args:
-        if os.path.exists(f):
-            os.utime(f, None)
-        else:
-            open(f, 'w').close()
+        if not os.path.exists(f):
+            open(f, 'a').close()
+        os.utime(f, times)

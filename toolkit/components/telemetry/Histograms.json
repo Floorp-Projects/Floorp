@@ -1000,17 +1000,35 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_LAZYINIT"
   },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_CLOSE": {
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_CLOSEINTERNAL": {
     "kind": "exponential",
     "high": "10 * 1000",
     "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_CLOSE"
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_CLOSEINTERNAL"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_DESTRUCTOR": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_DESTRUCTOR"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_LAZYINIT": {
     "kind": "exponential",
     "high": "10 * 1000",
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_LAZYINIT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_CLOSEINTERNAL": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_CLOSEINTERNAL"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_DESTRUCTOR": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_DESTRUCTOR"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSEVICTDISKCACHEENTRIESEVENT_RUN": {
     "kind": "exponential",
@@ -1149,6 +1167,12 @@
     "high": "10 * 1000",
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_DISKDEVICEHEAPSIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_CLOSEALLSTREAMS": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_CLOSEALLSTREAMS"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_DOOM": {
     "kind": "exponential",
@@ -1697,18 +1721,6 @@
     "high": "10000",
     "n_buckets": 10,
     "description": "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)"
-  },
-  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheOutputStream::CloseInternal() on non-main thread (ms)"
-  },
-  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheOutputStream::CloseInternal on the main thread (ms)"
   },
   "IDLE_NOTIFY_BACK_MS": {
     "kind": "exponential",
@@ -2487,5 +2499,11 @@
     "high": "5000",
     "n_buckets": 15,
     "description": "Time (ms) it takes to figure out extension last modified time"
+  },
+  "TELEMETRY_MEMORY_REPORTER_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "Time (ms) it takes to run memory reporters when sending a telemetry ping"
   }
 }

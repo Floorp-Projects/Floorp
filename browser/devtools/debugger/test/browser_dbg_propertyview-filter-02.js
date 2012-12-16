@@ -35,18 +35,23 @@ function testSearchbox()
 {
   ok(!gDebugger.DebuggerView.Variables._searchboxNode,
     "There should not initially be a searchbox available in the variables view.");
-  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should not be found.");
+  ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should not be found.");
 
   gDebugger.DebuggerView.Variables.enableSearch();
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling.");
-  ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
-    "There searchbox element should be found.");
+  ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
+    "The searchbox element should be found.");
+  ok(gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should be hidden at this point.");
 }
 
 function testVariablesFiltering()
 {
+  ok(!gDebugger.DebuggerView.Variables._searchboxContainer.hidden,
+    "The searchbox container should not be hidden at this point.");
+
   function test1()
   {
     write("htmldocument");

@@ -463,6 +463,7 @@ public:
   virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                          nsAString& aResult) const;
   virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
+  // aCaseSensitive == eIgnoreCaase means ASCII case-insensitive matching.
   virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue,
                              nsCaseTreatment aCaseSensitive) const;

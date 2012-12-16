@@ -113,6 +113,10 @@ repackage-zip:  libs-$(AB_CD)
 	-$(PERL) -pi.old -e "s/en-US/$(AB_CD)/g" $(JARLOG_DIR_AB_CD)/*.jar.log
 # call a hook for apps to put their uninstall helper.exe into the package
 	$(UNINSTALLER_PACKAGE_HOOK)
+# call a hook for apps to build the stub installer
+ifdef MOZ_STUB_INSTALLER
+	$(STUB_HOOK)
+endif
 # copy xpi-stage over, but not install.rdf and chrome.manifest,
 # those are just for language packs
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \

@@ -10,7 +10,6 @@
 
 #include "nsAttrAndChildArray.h"
 #include "nsMappedAttributeElement.h"
-#include "prmem.h"
 #include "prbit.h"
 #include "nsString.h"
 #include "nsHTMLStyleSheet.h"
@@ -100,7 +99,7 @@ nsAttrAndChildArray::~nsAttrAndChildArray()
 
   Clear();
 
-  PR_Free(mImpl);
+  moz_free(mImpl);
 }
 
 nsIContent*
@@ -616,11 +615,11 @@ nsAttrAndChildArray::Compact()
   // Then resize or free buffer
   uint32_t newSize = attrCount * ATTRSIZE + childCount;
   if (!newSize && !mImpl->mMappedAttrs) {
-    PR_Free(mImpl);
+    moz_free(mImpl);
     mImpl = nullptr;
   }
   else if (newSize < mImpl->mBufferSize) {
-    mImpl = static_cast<Impl*>(PR_Realloc(mImpl, (newSize + NS_IMPL_EXTRA_SIZE) * sizeof(nsIContent*)));
+    mImpl = static_cast<Impl*>(moz_realloc(mImpl, (newSize + NS_IMPL_EXTRA_SIZE) * sizeof(nsIContent*)));
     NS_ASSERTION(mImpl, "failed to reallocate to smaller buffer");
 
     mImpl->mBufferSize = newSize;
@@ -757,7 +756,7 @@ nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
   }
 
   bool needToInitialize = !mImpl;
-  Impl* newImpl = static_cast<Impl*>(PR_Realloc(mImpl, size * sizeof(void*)));
+  Impl* newImpl = static_cast<Impl*>(moz_realloc(mImpl, size * sizeof(void*)));
   NS_ENSURE_TRUE(newImpl, false);
 
   mImpl = newImpl;

@@ -182,41 +182,6 @@ TokenKindIsAssignment(TokenKind tt)
 }
 
 inline bool
-TokenContinuesStringExpression(TokenKind tt)
-{
-    switch (tt) {
-      // comma expression
-      case TOK_COMMA:
-      // conditional expression
-      case TOK_HOOK:
-      // binary expression
-      case TOK_OR:
-      case TOK_AND:
-      case TOK_BITOR:
-      case TOK_BITXOR:
-      case TOK_BITAND:
-      case TOK_PLUS:
-      case TOK_MINUS:
-      case TOK_STAR:
-      case TOK_DIV:
-      case TOK_MOD:
-      case TOK_IN:
-      case TOK_INSTANCEOF:
-      // member expression
-      case TOK_DOT:
-      case TOK_LB:
-      case TOK_LP:
-      case TOK_DBLDOT:
-        return true;
-      default:
-        return TokenKindIsEquality(tt) ||
-               TokenKindIsRelational(tt) ||
-               TokenKindIsShift(tt) ||
-               TokenKindIsAssignment(tt);
-    }
-}
-
-inline bool
 TokenKindIsDecl(TokenKind tt)
 {
 #if JS_HAS_BLOCK_SCOPE
@@ -465,17 +430,10 @@ struct CompileError {
     void throwError();
 };
 
-/* For an explanation of how these are used, see the comment in the FunctionBox definition. */
-MOZ_BEGIN_ENUM_CLASS(StrictMode, uint8_t)
-    NOTSTRICT,
-    UNKNOWN,
-    STRICT
-MOZ_END_ENUM_CLASS(StrictMode)
-
-inline StrictMode
+inline bool
 StrictModeFromContext(JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_STRICT_MODE) ? StrictMode::STRICT : StrictMode::UNKNOWN;
+    return cx->hasRunOption(JSOPTION_STRICT_MODE);
 }
 
 // Ideally, tokenizing would be entirely independent of context.  But the
@@ -484,18 +442,14 @@ StrictModeFromContext(JSContext *cx)
 //
 // This class is a tiny back-channel from TokenStream to the strict mode flag
 // that avoids exposing the rest of SharedContext to TokenStream. get()
-// returns the current strict mode state. The other two methods get and set
-// the queuedStrictModeError member of ParseContext. StrictModeGetter's
-// non-inline methods are implemented in Parser.cpp.
+// returns the current strictness.
 //
 class StrictModeGetter {
     Parser *parser;
   public:
     StrictModeGetter(Parser *p) : parser(p) { }
 
-    StrictMode get() const;
-    CompileError *queuedStrictModeError() const;
-    void setQueuedStrictModeError(CompileError *e);
+    bool get() const;
 };
 
 class TokenStream
@@ -506,8 +460,9 @@ class TokenStream
         PARA_SEPARATOR = 0x2029
     };
 
-    static const size_t ntokens = 4;                /* 1 current + 3 lookahead, rounded
+    static const size_t ntokens = 4;                /* 1 current + 2 lookahead, rounded
                                                        to power of 2 to avoid divmod by 3 */
+    static const unsigned maxLookahead = 2;
     static const unsigned ntokensMask = ntokens - 1;
 
   public:
@@ -538,11 +493,11 @@ class TokenStream
     /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    // TokenStream::allowsXML() can be true even if Parser::allowsXML() is
-    // false. Read the comment at Parser::allowsXML() to find out why.
-    bool allowsXML() const { return allowXML && strictModeState() != StrictMode::STRICT; }
+    bool allowsXML() const { return banXML == 0 && !strictMode(); }
     bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
     void setMoarXML(bool enabled) { moarXML = enabled; }
+    void incBanXML() { banXML++; }
+    void decBanXML() { JS_ASSERT(banXML); banXML--; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
 
     bool isCurrentTokenEquality() const {
@@ -566,14 +521,12 @@ class TokenStream
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
 
-    StrictMode strictModeState() const
-    {
-        return strictModeGetter ? strictModeGetter->get() : StrictMode(StrictMode::NOTSTRICT);
-    }
+    bool strictMode() const { return strictModeGetter && strictModeGetter->get(); }
     bool isXMLTagMode() const { return !!(flags & TSF_XMLTAGMODE); }
     bool isXMLOnlyMode() const { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
+    bool sawOctalEscape() const { return !!(flags & TSF_OCTAL_CHAR); }
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
@@ -652,7 +605,7 @@ class TokenStream
 
     TokenKind peekToken() {
         if (lookahead != 0) {
-            JS_ASSERT(lookahead <= 2);
+            JS_ASSERT(lookahead < maxLookahead);
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
         TokenKind tt = getTokenInternal();
@@ -670,7 +623,7 @@ class TokenStream
             return TOK_EOL;
 
         if (lookahead != 0) {
-            JS_ASSERT(lookahead <= 2);
+            JS_ASSERT(lookahead < maxLookahead);
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
 
@@ -707,6 +660,18 @@ class TokenStream
         JS_ALWAYS_TRUE(matchToken(tt));
     }
 
+    class Position {
+        friend class TokenStream;
+        const jschar *buf;
+        unsigned flags;
+        unsigned lineno;
+        const jschar *linebase;
+        const jschar *prevLinebase;
+    };
+
+    void tell(Position *);
+    void seek(const Position &pos);
+    void positionAfterLastFunctionKeyword(Position &pos);
 
     /*
      * Return the offset into the source buffer of the end of the token.
@@ -898,11 +863,12 @@ class TokenStream
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
-    bool                allowXML;       /* see JSOPTION_ALLOW_XML */
+    unsigned            banXML;         /* see JSOPTION_ALLOW_XML */
     bool                moarXML;        /* see JSOPTION_MOAR_XML */
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */
+    Position            lastFunctionKeyword; /* used as a starting point for reparsing strict functions */
 };
 
 struct KeywordInfo {

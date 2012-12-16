@@ -173,7 +173,7 @@ class Bytecode
 };
 
 static inline unsigned
-GetDefCount(JSScript *script, unsigned offset)
+GetDefCount(UnrootedScript script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
@@ -202,7 +202,7 @@ GetDefCount(JSScript *script, unsigned offset)
 }
 
 static inline unsigned
-GetUseCount(JSScript *script, unsigned offset)
+GetUseCount(UnrootedScript script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
@@ -331,7 +331,7 @@ NegateCompareOp(JSOp op)
 }
 
 static inline unsigned
-FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
+FollowBranch(JSContext *cx, UnrootedScript script, unsigned offset)
 {
     /*
      * Get the target offset of a branch. For GOTO opcodes implementing
@@ -359,18 +359,18 @@ static inline uint32_t ThisSlot() {
 static inline uint32_t ArgSlot(uint32_t arg) {
     return 2 + arg;
 }
-static inline uint32_t LocalSlot(JSScript *script, uint32_t local) {
+static inline uint32_t LocalSlot(UnrootedScript script, uint32_t local) {
     return 2 + (script->function() ? script->function()->nargs : 0) + local;
 }
-static inline uint32_t TotalSlots(JSScript *script) {
+static inline uint32_t TotalSlots(UnrootedScript script) {
     return LocalSlot(script, 0) + script->nfixed;
 }
 
-static inline uint32_t StackSlot(JSScript *script, uint32_t index) {
+static inline uint32_t StackSlot(UnrootedScript script, uint32_t index) {
     return TotalSlots(script) + index;
 }
 
-static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
+static inline uint32_t GetBytecodeSlot(UnrootedScript script, jsbytecode *pc)
 {
     switch (JSOp(*pc)) {
 
@@ -546,7 +546,7 @@ struct LifetimeVariable
     }
 
     /* Return true if the variable cannot decrease during the body of a loop. */
-    bool nonDecreasing(JSScript *script, LoopAnalysis *loop) const {
+    bool nonDecreasing(UnrootedScript script, LoopAnalysis *loop) const {
         Lifetime *segment = lifetime ? lifetime : saved;
         while (segment && segment->start <= loop->backedge) {
             if (segment->start >= loop->head && segment->write) {
@@ -862,7 +862,7 @@ class ScriptAnalysis
 
   public:
 
-    ScriptAnalysis(JSScript *script) {
+    ScriptAnalysis(UnrootedScript script) {
         PodZero(this);
         this->script_ = script;
 #ifdef DEBUG
@@ -1264,8 +1264,9 @@ class CrossScriptSSA
         uint32_t parent;
         jsbytecode *parentpc;
 
-        Frame(uint32_t index, JSScript *script, uint32_t depth, uint32_t parent, jsbytecode *parentpc)
-            : index(index), script(script), depth(depth), parent(parent), parentpc(parentpc)
+        Frame(uint32_t index, UnrootedScript script, uint32_t depth, uint32_t parent,
+              jsbytecode *parentpc)
+          : index(index), script(script), depth(depth), parent(parent), parentpc(parentpc)
         {}
     };
 
@@ -1282,7 +1283,7 @@ class CrossScriptSSA
         return inlineFrames[i - 1];
     }
 
-    JSScript *outerScript() { return outerFrame.script; }
+    UnrootedScript outerScript() { return outerFrame.script; }
 
     /* Total length of scripts preceding a frame. */
     size_t frameLength(uint32_t index) {
@@ -1298,13 +1299,14 @@ class CrossScriptSSA
         return getFrame(cv.frame).script->analysis()->getValueTypes(cv.v);
     }
 
-    bool addInlineFrame(JSScript *script, uint32_t depth, uint32_t parent, jsbytecode *parentpc)
+    bool addInlineFrame(UnrootedScript script, uint32_t depth, uint32_t parent,
+                        jsbytecode *parentpc)
     {
         uint32_t index = inlineFrames.length();
         return inlineFrames.append(Frame(index, script, depth, parent, parentpc));
     }
 
-    CrossScriptSSA(JSContext *cx, JSScript *outer)
+    CrossScriptSSA(JSContext *cx, UnrootedScript outer)
         : outerFrame(OUTER_FRAME, outer, 0, INVALID_FRAME, NULL), inlineFrames(cx)
     {}
 
@@ -1316,7 +1318,7 @@ class CrossScriptSSA
 };
 
 #ifdef DEBUG
-void PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc);
+void PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc);
 #endif
 
 } /* namespace analyze */

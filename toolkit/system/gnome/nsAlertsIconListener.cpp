@@ -200,9 +200,9 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
   if (!il)
     return ShowAlert(NULL);
 
-  return il->LoadImage(imageUri, nullptr, nullptr, nullptr, nullptr, this,
-                       nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
-                       getter_AddRefs(mIconRequest));
+  return il->LoadImageXPCOM(imageUri, nullptr, nullptr, nullptr, nullptr, this,
+			    nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
+			    getter_AddRefs(mIconRequest));
 }
 
 void

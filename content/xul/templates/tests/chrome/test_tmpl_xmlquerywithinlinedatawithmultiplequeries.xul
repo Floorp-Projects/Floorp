@@ -14,6 +14,14 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <button anyid="true" label="Nathan"/>
+    <button anyid="true" label="Marie"/>
+    <checkbox anyid="true" label="Nathan"/>
+    <checkbox anyid="true" label="Luke"/>
+    <checkbox anyid="true" label="Marie"/>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,14 +34,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <button anyid="true" label="Nathan"/>
-  <button anyid="true" label="Marie"/>
-  <checkbox anyid="true" label="Nathan"/>
-  <checkbox anyid="true" label="Luke"/>
-  <checkbox anyid="true" label="Marie"/>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>

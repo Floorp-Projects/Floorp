@@ -59,7 +59,7 @@ TextDecoder::Decode(const ArrayBufferView* aView,
                     ErrorResult& aRv)
 {
   const char* data;
-  uint32_t length;
+  int32_t length;
   // If view is not specified, let view be a Uint8Array of length 0.
   if (!aView) {
     data = EmptyCString().BeginReading();
@@ -87,27 +87,10 @@ TextDecoder::Decode(const ArrayBufferView* aView,
     return;
   }
 
-  for (;;) {
-    int32_t srcLen = length;
-    int32_t dstLen = outLen;
-    rv = mDecoder->Convert(data, &srcLen, buf, &dstLen);
-    // Convert will convert the input partially even if the status
-    // indicates a failure.
-    buf[dstLen] = 0;
-    aOutDecodedString.Append(buf, dstLen);
-    if (mFatal || rv != NS_ERROR_ILLEGAL_INPUT) {
-      break;
-    }
-    // Emit a decode error manually because some decoders
-    // do not support kOnError_Recover (bug 638379)
-    if (srcLen == -1) {
-      mDecoder->Reset();
-    } else {
-      data += srcLen + 1;
-      length -= srcLen + 1;
-      aOutDecodedString.Append(kReplacementChar);
-    }
-  }
+  rv = mDecoder->Convert(data, &length, buf, &outLen);
+  MOZ_ASSERT(mFatal || rv != NS_ERROR_ILLEGAL_INPUT);
+  buf[outLen] = 0;
+  aOutDecodedString.Append(buf, outLen);
 
   // If the internal streaming flag of the decoder object is not set,
   // then reset the encoding algorithm state to the default values

@@ -166,19 +166,6 @@ public:
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual Relation RelationByType(uint32_t aRelationType);
 
-  // HTMLTableAccessible
-
-  /**
-   * Retun cell element at the given row and column index.
-   */
-  nsresult GetCellAt(int32_t aRowIndex, int32_t aColIndex,
-                     nsIDOMElement* &aCell);
-
-  /**
-   * Return nsITableLayout for the frame of the accessible table.
-   */
-  nsITableLayout* GetTableLayout();
-
 protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;

@@ -140,19 +140,19 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   screenPoint.y = nsCocoaUtils::FlippedScreenY(screenPoint.y);
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
-  nsIntPoint pt =
-    nsCocoaUtils::CocoaPointsToDevPixels(NSMakePoint(screenPoint.x,
-                                                     screenPoint.y),
-                                         scaleFactor);
 
   nsRefPtr<gfxASurface> surface;
   nsPresContext* pc;
-  nsresult rv = DrawDrag(aDOMNode, aRegion, pt.x, pt.y,
+  nsresult rv = DrawDrag(aDOMNode, aRegion,
+                         NSToIntRound(screenPoint.x),
+                         NSToIntRound(screenPoint.y),
                          aDragRect, getter_AddRefs(surface), &pc);
   if (!aDragRect->width || !aDragRect->height) {
     // just use some suitable defaults
     int32_t size = nsCocoaUtils::CocoaPointsToDevPixels(20, scaleFactor);
-    aDragRect->SetRect(pt.x, pt.y, size, size);
+    aDragRect->SetRect(nsCocoaUtils::CocoaPointsToDevPixels(screenPoint.x, scaleFactor),
+                       nsCocoaUtils::CocoaPointsToDevPixels(screenPoint.y, scaleFactor),
+                       size, size);
   }
 
   if (NS_FAILED(rv) || !surface)

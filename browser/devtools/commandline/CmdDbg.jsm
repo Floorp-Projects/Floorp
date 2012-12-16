@@ -33,7 +33,7 @@ gcli.addCommand({
   exec: function (args, context) {
     let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.openToolboxForTab(target, "jsdebugger");
+    return gDevTools.showToolbox(target, "jsdebugger");
   }
 });
 
@@ -47,11 +47,7 @@ gcli.addCommand({
   exec: function (args, context) {
     let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
-
-    if (dbg /* FIXME: and debugger panel is currently active */) {
-      gDevTools.closeToolbox(target);
-    }
+    return gDevTools.closeToolbox(target);
   }
 });
 
@@ -63,16 +59,15 @@ gcli.addCommand({
   description: gcli.lookup("dbgInterrupt"),
   params: [],
   exec: function(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+    let dbg = getPanel(context, "jsdebugger");
+    if (!dbg) {
+      return gcli.lookup("debuggerStopped");
+    }
 
-    if (dbg) {
-      let controller = dbg._controller;
-      let thread = controller.activeThread;
-      if (!thread.paused) {
-        thread.interrupt();
-      }
+    let controller = dbg._controller;
+    let thread = controller.activeThread;
+    if (!thread.paused) {
+      thread.interrupt();
     }
   }
 });
@@ -85,20 +80,18 @@ gcli.addCommand({
   description: gcli.lookup("dbgContinue"),
   params: [],
   exec: function(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+    let dbg = getPanel(context, "jsdebugger");
+    if (!dbg) {
+      return gcli.lookup("debuggerStopped");
+    }
 
-    if (dbg) {
-      let controller = dbg._controller;
-      let thread = controller.activeThread;
-      if (thread.paused) {
-        thread.resume();
-      }
+    let controller = dbg._controller;
+    let thread = controller.activeThread;
+    if (thread.paused) {
+      thread.resume();
     }
   }
 });
-
 
 /**
  * 'dbg step' command
@@ -109,7 +102,6 @@ gcli.addCommand({
   manual: gcli.lookup("dbgStepManual")
 });
 
-
 /**
  * 'dbg step over' command
  */
@@ -118,16 +110,15 @@ gcli.addCommand({
   description: gcli.lookup("dbgStepOverDesc"),
   params: [],
   exec: function(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+    let dbg = getPanel(context, "jsdebugger");
+    if (!dbg) {
+      return gcli.lookup("debuggerStopped");
+    }
 
-    if (dbg) {
-      let controller = dbg._controller;
-      let thread = controller.activeThread;
-      if (thread.paused) {
-        thread.stepOver();
-      }
+    let controller = dbg._controller;
+    let thread = controller.activeThread;
+    if (thread.paused) {
+      thread.stepOver();
     }
   }
 });
@@ -140,16 +131,15 @@ gcli.addCommand({
   description: gcli.lookup("dbgStepInDesc"),
   params: [],
   exec: function(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+    let dbg = getPanel(context, "jsdebugger");
+    if (!dbg) {
+      return gcli.lookup("debuggerStopped");
+    }
 
-    if (dbg) {
-      let controller = dbg._controller;
-      let thread = controller.activeThread;
-      if (thread.paused) {
-        thread.stepIn();
-      }
+    let controller = dbg._controller;
+    let thread = controller.activeThread;
+    if (thread.paused) {
+      thread.stepIn();
     }
   }
 });
@@ -162,16 +152,25 @@ gcli.addCommand({
   description: gcli.lookup("dbgStepOutDesc"),
   params: [],
   exec: function(args, context) {
-    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let dbg = gDevTools.getPanelForTarget("jsdebugger", target);
+    let dbg = getPanel(context, "jsdebugger");
+    if (!dbg) {
+      return gcli.lookup("debuggerStopped");
+    }
 
-    if (dbg) {
-      let controller = dbg._controller;
-      let thread = controller.activeThread;
-      if (thread.paused) {
-        thread.stepOut();
-      }
+    let controller = dbg._controller;
+    let thread = controller.activeThread;
+    if (thread.paused) {
+      thread.stepOut();
     }
   }
 });
+
+/**
+ * A helper to go from a command context to a debugger panel
+ */
+function getPanel(context, id) {
+  let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = gDevTools.getToolbox(target);
+  return toolbox == null ? undefined : toolbox.getPanel(id);
+}

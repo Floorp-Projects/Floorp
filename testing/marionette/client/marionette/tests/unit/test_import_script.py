@@ -18,13 +18,13 @@ class TestImportScript(MarionetteTestCase):
                 os.path.join(__file__, os.path.pardir, "importscript.js"))
         secondjs = os.path.abspath(
                 os.path.join(__file__, os.path.pardir, "importanotherscript.js"))
-        
+
         self.marionette.import_script(firstjs)
         self.marionette.import_script(secondjs)
 
         self.assertEqual("i'm a test function!", 
                 self.marionette.execute_script("return testFunc();"))
-        
+
         self.assertEqual("i'm yet another test function!",
                     self.marionette.execute_script("return testAnotherFunc();"))
 

@@ -719,7 +719,7 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
         goto print_int;
 
       case JOF_UINT24:
-        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY);
+        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY || op == JSOP_INITELEM_ARRAY);
         i = (int)GET_UINT24(pc);
         goto print_int;
 
@@ -4952,7 +4952,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * that checks for JSOP_LAMBDA.
                      */
                     bool grouped = !fun->isExprClosure();
-                    bool strict = jp->script->strictModeCode;
+                    bool strict = jp->script->strict;
                     str = js_DecompileToString(cx, "lambda", fun, 0,
                                                false, grouped, strict,
                                                DecompileFunction);
@@ -5263,9 +5263,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 /* Turn off all parens for xval and lval, which we control. */
                 xval = PopStr(ss, JSOP_NOP, &xvalpc);
                 lval = PopStr(ss, JSOP_NOP, &lvalpc);
-                sn = js_GetSrcNote(cx, jp->script, pc);
 
-                if (sn && SN_TYPE(sn) == SRC_INITPROP) {
+                if (op == JSOP_INITELEM) {
                     atom = NULL;
                     goto do_initprop;
                 }
@@ -5273,7 +5272,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 maybeSpread = op == JSOP_SPREAD ? "..." : "";
                 todo = Sprint(&ss->sprinter, "%s%s%s", lval, maybeComma, maybeSpread);
                 SprintOpcode(ss, rval, rvalpc, pc, todo);
-                if (op != JSOP_INITELEM && todo != -1) {
+                if (todo != -1) {
                     if (!UpdateDecompiledText(ss, pushpc, todo))
                         return NULL;
                     if (!PushOff(ss, todo, saveop, pushpc))
@@ -5282,6 +5281,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         return NULL;
                     todo = -2;
                 }
+                break;
+
+              case JSOP_INITELEM_ARRAY:
+                JS_ASSERT(ss->top >= 2);
+                isFirst = IsInitializerOp(ss->opcodes[ss->top - 2]);
+
+                /* Turn off most parens. */
+                rval = PopStr(ss, JSOP_SETNAME, &rvalpc);
+
+                /* Turn off all parens for lval, which we control. */
+                lval = PopStr(ss, JSOP_NOP, &lvalpc);
+
+                maybeComma = isFirst ? "" : ", ";
+                todo = Sprint(&ss->sprinter, "%s%s", lval, maybeComma);
+                SprintOpcode(ss, rval, rvalpc, pc, todo);
                 break;
 
               case JSOP_INITPROP:
@@ -5630,7 +5644,7 @@ static JSBool
 DecompileBody(JSPrinter *jp, JSScript *script, jsbytecode *pc)
 {
     /* Print a strict mode code directive, if needed. */
-    if (script->strictModeCode && !jp->strict) {
+    if (script->strict && !jp->strict) {
         if (jp->fun && jp->fun->isExprClosure()) {
             /*
              * We have no syntax for strict function expressions;

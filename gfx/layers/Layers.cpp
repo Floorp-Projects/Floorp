@@ -289,7 +289,8 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mUseClipRect(false),
   mUseTileSourceRect(false),
   mIsFixedPosition(false),
-  mDebugColorIndex(0)
+  mDebugColorIndex(0),
+  mAnimationGeneration(0)
 {}
 
 Layer::~Layer()
@@ -591,6 +592,26 @@ Layer::SnapTransform(const gfx3DMatrix& aTransform,
     result = aTransform;
   }
   return result;
+}
+
+static bool
+AncestorLayerMayChangeTransform(Layer* aLayer)
+{
+  for (Layer* l = aLayer; l; l = l->GetParent()) {
+    if (l->GetContentFlags() & Layer::CONTENT_MAY_CHANGE_TRANSFORM) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+Layer::MayResample()
+{
+  gfxMatrix transform2d;
+  return !GetEffectiveTransform().Is2D(&transform2d) ||
+         transform2d.HasNonIntegerTranslation() ||
+         AncestorLayerMayChangeTransform(this);
 }
 
 nsIntRect

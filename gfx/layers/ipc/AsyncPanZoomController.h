@@ -108,7 +108,7 @@ public:
   void UpdateCompositionBounds(const nsIntRect& aCompositionBounds);
 
   /**
-   * We have found a scrollable subframe, so disable our machinery until we hit
+   * We are scrolling a subframe, so disable our machinery until we hit
    * a touch end or a new touch start. This prevents us from accidentally
    * panning both the subframe and the parent frame.
    *
@@ -116,6 +116,12 @@ public:
    * subframes.
    */
   void CancelDefaultPanZoom();
+
+  /**
+   * We have found a scrollable subframe, so we need to delay the scrolling
+   * gesture executed and let subframe do the scrolling first.
+   */
+  void DetectScrollableSubframe();
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
@@ -548,6 +554,12 @@ private:
   // queued up event block. If set, this means that we are handling this queue
   // and we don't want to queue the events back up again.
   bool mHandlingTouchQueue;
+
+  // Flag used to determine whether or not we should try scrolling by
+  // BrowserElementScrolling first. If set, this means we should pend touch move
+  // event, which not be cosumed by GestureListener. This flag will be reset
+  // after touch move event has been handled by content process.
+  bool mDelayPanning;
 
   friend class Axis;
 };

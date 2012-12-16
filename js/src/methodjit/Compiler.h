@@ -714,7 +714,7 @@ private:
     bool jsop_regexp();
     void jsop_initmethod();
     void jsop_initprop();
-    void jsop_initelem();
+    void jsop_initelem_array();
     void jsop_setelem_dense();
 #ifdef JS_METHODJIT_TYPED_ARRAY
     void jsop_setelem_typed(int atype);

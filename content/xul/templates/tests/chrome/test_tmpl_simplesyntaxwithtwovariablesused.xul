@@ -14,6 +14,21 @@
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
+  <data id="output">
+    <hbox id="http://www.some-fictitious-zoo.com/birds/emu">
+      <label value="Emu"/>
+      <label value="12"/>
+    </hbox>
+    <hbox id="http://www.some-fictitious-zoo.com/birds/barnowl">
+      <label value="Barn Owl"/>
+      <label value="4"/>
+    </hbox>
+    <hbox id="http://www.some-fictitious-zoo.com/birds/raven">
+      <label value="Raven"/>
+      <label value="0"/>
+    </hbox>
+  </data>
+
 <script src="templates_shared.js"/>
 
 <script>
@@ -26,21 +41,7 @@ var isTreeBuilder = false;
 var needsOpen = false;
 var notWorkingYet = false;
 var notWorkingYetDynamic = false;
-var expectedOutput =
-<output>
-  <hbox id="http://www.some-fictitious-zoo.com/birds/emu">
-    <label value="Emu"/>
-    <label value="12"/>
-  </hbox>
-  <hbox id="http://www.some-fictitious-zoo.com/birds/barnowl">
-    <label value="Barn Owl"/>
-    <label value="4"/>
-  </hbox>
-  <hbox id="http://www.some-fictitious-zoo.com/birds/raven">
-    <label value="Raven"/>
-    <label value="0"/>
-  </hbox>
-</output>;
+var expectedOutput = document.getElementById("output");
 
 var changes = [];
 ]]>

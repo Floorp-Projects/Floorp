@@ -32,6 +32,7 @@ UTIL_JAVA_FILES := \
   INISection.java \
   util/EventDispatcher.java \
   util/FloatUtils.java \
+  util/StringUtils.java \
   $(NULL)
 
 FENNEC_JAVA_FILES = \
@@ -123,7 +124,6 @@ FENNEC_JAVA_FILES = \
   ReaderModeUtils.java \
   RemoteTabs.java \
   RobocopAPI.java \
-  ScreenshotHandler.java \
   SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
@@ -149,7 +149,6 @@ FENNEC_JAVA_FILES = \
   gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
-  gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
   gfx/DrawTimingQueue.java \
@@ -169,7 +168,6 @@ FENNEC_JAVA_FILES = \
   gfx/PointUtils.java \
   gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
-  gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
   gfx/TextLayer.java \
@@ -231,16 +229,11 @@ FENNEC_PP_JAVA_FILES = \
 FENNEC_PP_XML_FILES = \
   res/color/awesome_bar_title.xml \
   res/color/awesome_bar_title_hint.xml \
-  res/color/tabs_counter_color.xml \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
   res/drawable/awesomebar_tabs_bg.xml \
   res/drawable/menu_level.xml \
-  res/drawable/tabs_button.xml \
-  res/drawable/tabs_level.xml \
-  res/drawable-xlarge-mdpi-v11/tabs_button.xml \
-  res/drawable-xlarge-mdpi-v11/tabs_level.xml \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
@@ -497,7 +490,6 @@ RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
   res/drawable-nodpi/abouthome_bg_pb.png \
   res/drawable-nodpi/tabs_tray_bg.png \
-  res/drawable-nodpi/tabs_tray_bg_pb.png \
   res/drawable-nodpi/tabs_tray_selected_bg.png \
   $(NULL)
 
@@ -547,7 +539,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_thumbnail_default.png \
   res/drawable/tab_thumbnail_shadow.png \
   res/drawable/tabs_carat.png \
-  res/drawable/tabs_carat_pb.png \
   res/drawable/address_bar_texture_port.png \
   res/drawable/address_bar_texture_port_pb.png \
   res/drawable/address_bar_url_default.9.png \
@@ -579,8 +570,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/validation_arrow.png \
   res/drawable/validation_arrow_inverted.png \
   res/drawable/validation_bg.9.png \
-  res/drawable/bookmarkdefaults_favicon_support.png \
-  res/drawable/bookmarkdefaults_favicon_addons.png \
   res/drawable/handle_end.png \
   res/drawable/handle_middle.png \
   res/drawable/handle_start.png \
@@ -635,7 +624,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_default.png \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_carat.png \
-  res/drawable-hdpi/tabs_carat_pb.png \
   res/drawable-hdpi/address_bar_texture_port.png \
   res/drawable-hdpi/address_bar_texture_port_pb.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
@@ -719,7 +707,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_thumbnail_default.png \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_carat.png \
-  res/drawable-xhdpi/tabs_carat_pb.png \
   res/drawable-xhdpi/doorhanger_arrow.png \
   res/drawable-xhdpi/doorhanger_bg.9.png \
   res/drawable-xhdpi/doorhanger_shadow_bg.9.png \
@@ -845,7 +832,6 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tab_new.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
-  res/drawable-land-mdpi-v14/tabs_carat_pb.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
   res/drawable-land-mdpi-v14/menu.png \
   res/drawable-land-mdpi-v14/menu_pb.png \
@@ -867,7 +853,6 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tab_new.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
-  res/drawable-land-hdpi-v14/tabs_carat_pb.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
   res/drawable-land-hdpi-v14/menu.png \
   res/drawable-land-hdpi-v14/menu_pb.png \
@@ -889,7 +874,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tab_new.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
-  res/drawable-land-xhdpi-v14/tabs_carat_pb.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/menu.png \
   res/drawable-land-xhdpi-v14/menu_pb.png \
@@ -923,7 +907,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/menu.png \
   res/drawable-large-mdpi-v11/menu_pb.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
-  res/drawable-large-mdpi-v11/tabs_carat_pb.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -949,7 +932,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/menu.png \
   res/drawable-large-hdpi-v11/menu_pb.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
-  res/drawable-large-hdpi-v11/tabs_carat_pb.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -975,7 +957,6 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/menu.png \
   res/drawable-large-xhdpi-v11/menu_pb.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
-  res/drawable-large-xhdpi-v11/tabs_carat_pb.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -984,10 +965,10 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-mdpi-v11/menu.png \
   res/drawable-xlarge-mdpi-v11/menu_pb.png \
+  res/drawable-xlarge-mdpi-v11/tabs_button.xml \
+  res/drawable-xlarge-mdpi-v11/tabs_level.xml \
   res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-mdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-mdpi-v11/tabs_carat_expanded_pb.png \
   res/drawable-xlarge-mdpi-v11/tabs_menu.png \
   $(NULL)
 
@@ -998,9 +979,7 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/menu.png \
   res/drawable-xlarge-hdpi-v11/menu_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-hdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-hdpi-v11/tabs_carat_expanded_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_menu.png \
   $(NULL)
 
@@ -1011,15 +990,14 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/menu.png \
   res/drawable-xlarge-xhdpi-v11/menu_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_COLOR = \
   res/color/menu_item_title.xml \
   res/color/select_item_multichoice.xml \
+  res/color/tabs_counter_color.xml \
   $(NULL)
 
 RES_MENU = \
@@ -1076,8 +1054,9 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_button.xml                     \
+  mobile/android/base/resources/drawable/tabs_button.xml                        \
+  mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
-  mobile/android/base/resources/drawable/tabs_tray_bg_pb_repeat.xml             \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
   mobile/android/base/resources/drawable/tabs_tray_default_selector.xml         \

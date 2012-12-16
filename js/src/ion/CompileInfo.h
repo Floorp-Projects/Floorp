@@ -30,7 +30,7 @@ enum ExecutionMode {
 class CompileInfo
 {
   public:
-    CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
+    CompileInfo(UnrootedScript script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
                 ExecutionMode executionMode)
       : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
         executionMode_(executionMode)
@@ -39,7 +39,7 @@ class CompileInfo
         nslots_ = script->nslots + CountArgSlots(fun);
     }
 
-    JSScript *script() const {
+    UnrootedScript script() const {
         return script_;
     }
     JSFunction *fun() const {

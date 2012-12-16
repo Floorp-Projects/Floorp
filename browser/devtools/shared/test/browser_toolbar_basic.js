@@ -39,8 +39,7 @@ function checkOpen() {
   ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.openToolboxForTab(target, "webconsole");
-  toolbox.once("webconsole-selected", function BTBT_selected(id, aInspector) {
+  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
     ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
 
     addTab("about:blank", function(browser, tab) {

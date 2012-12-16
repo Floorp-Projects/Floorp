@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
 /**
  * The SocialService is the public API to social providers - it tracks which
@@ -27,6 +28,50 @@ let SocialServiceInternal = {
   }
 };
 
+let ActiveProviders = {
+  get _providers() {
+    delete this._providers;
+    this._providers = {};
+    try {
+      let pref = Services.prefs.getComplexValue("social.activeProviders",
+                                                Ci.nsISupportsString);
+      this._providers = JSON.parse(pref);
+    } catch(ex) {}
+    return this._providers;
+  },
+
+  has: function (origin) {
+    return (origin in this._providers);
+  },
+
+  add: function (origin) {
+    this._providers[origin] = 1;
+    this._deferredTask.start();
+  },
+
+  delete: function (origin) {
+    delete this._providers[origin];
+    this._deferredTask.start();
+  },
+
+  flush: function () {
+    this._deferredTask.flush();
+  },
+
+  get _deferredTask() {
+    delete this._deferredTask;
+    return this._deferredTask = new DeferredTask(this._persist.bind(this), 0);
+  },
+
+  _persist: function () {
+    let string = Cc["@mozilla.org/supports-string;1"].
+                 createInstance(Ci.nsISupportsString);
+    string.data = JSON.stringify(this._providers);
+    Services.prefs.setComplexValue("social.activeProviders",
+                                   Ci.nsISupportsString, string);
+  }
+};
+
 function initService() {
   // Add a pref observer for the enabled state
   function prefObserver(subject, topic, data) {
@@ -34,6 +79,8 @@ function initService() {
   }
   Services.prefs.addObserver("social.enabled", prefObserver, false);
   Services.obs.addObserver(function xpcomShutdown() {
+    ActiveProviders.flush();
+    SocialService._providerListeners = null;
     Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
     Services.prefs.removeObserver("social.enabled", prefObserver);
   }, "xpcom-shutdown", false);
@@ -65,7 +112,7 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
     try {
       var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
       if (manifest && typeof(manifest) == "object") {
-        let provider = new SocialProvider(manifest, appinfo.inSafeMode ? false : SocialServiceInternal.enabled);
+        let provider = new SocialProvider(manifest);
         providers[provider.origin] = provider;
       }
     } catch (err) {
@@ -99,10 +146,12 @@ this.SocialService = {
     this._setEnabled(enable);
   },
   _setEnabled: function _setEnabled(enable) {
+    if (!enable)
+      SocialServiceInternal.providerArray.forEach(function (p) p.enabled = false);
+
     if (enable == SocialServiceInternal.enabled)
       return;
 
-    SocialServiceInternal.providerArray.forEach(function (p) p.enabled = enable);
     SocialServiceInternal.enabled = enable;
     MozSocialAPI.enabled = enable;
     Services.obs.notifyObservers(null, "social:pref-changed", enable ? "enabled" : "disabled");
@@ -114,12 +163,15 @@ this.SocialService = {
     if (SocialServiceInternal.providers[manifest.origin])
       throw new Error("SocialService.addProvider: provider with this origin already exists");
 
-    let provider = new SocialProvider(manifest, SocialServiceInternal.enabled);
+    let provider = new SocialProvider(manifest);
     SocialServiceInternal.providers[provider.origin] = provider;
 
     schedule(function () {
-      onDone(provider);
-    });
+      this._notifyProviderListeners("provider-added",
+                                    SocialServiceInternal.providerArray);
+      if (onDone)
+        onDone(provider);
+    }.bind(this));
   },
 
   // Removes a provider with the given origin, and notifies when the removal is
@@ -131,10 +183,16 @@ this.SocialService = {
     let provider = SocialServiceInternal.providers[origin];
     provider.enabled = false;
 
+    ActiveProviders.delete(provider.origin);
+
     delete SocialServiceInternal.providers[origin];
 
-    if (onDone)
-      schedule(onDone);
+    schedule(function () {
+      this._notifyProviderListeners("provider-removed",
+                                    SocialServiceInternal.providerArray);
+      if (onDone)
+        onDone();
+    }.bind(this));
   },
 
   // Returns a single provider object with the specified origin.
@@ -149,6 +207,24 @@ this.SocialService = {
     schedule(function () {
       onDone(SocialServiceInternal.providerArray);
     });
+  },
+
+  _providerListeners: new Map(),
+  registerProviderListener: function registerProviderListener(listener) {
+    this._providerListeners.set(listener, 1);
+  },
+  unregisterProviderListener: function unregisterProviderListener(listener) {
+    this._providerListeners.delete(listener);
+  },
+
+  _notifyProviderListeners: function (topic, data) {
+    for (let [listener, ] of this._providerListeners) {
+      try {
+        listener(topic, data);
+      } catch (ex) {
+        Components.utils.reportError("SocialService: provider listener threw an exception: " + ex);
+      }
+    }
   }
 };
 
@@ -158,9 +234,8 @@ this.SocialService = {
  *
  * @constructor
  * @param {jsobj} object representing the manifest file describing this provider
- * @param {bool} whether the provider should be initially enabled (defaults to true)
  */
-function SocialProvider(input, enabled) {
+function SocialProvider(input) {
   if (!input.name)
     throw new Error("SocialProvider must be passed a name");
   if (!input.origin)
@@ -172,17 +247,14 @@ function SocialProvider(input, enabled) {
   this.sidebarURL = input.sidebarURL;
   this.origin = input.origin;
   this.ambientNotificationIcons = {};
-
-  // If enabled is |undefined|, default to true.
-  this._enabled = !(enabled == false);
-  if (this._enabled)
-    this._activate();
+  this.errorState = null;
+  this._active = ActiveProviders.has(this.origin);
 }
 
 SocialProvider.prototype = {
   // Provider enabled/disabled state. Disabled providers do not have active
   // connections to their FrameWorkers.
-  _enabled: true,
+  _enabled: false,
   get enabled() {
     return this._enabled;
   },
@@ -198,6 +270,18 @@ SocialProvider.prototype = {
     } else {
       this._terminate();
     }
+  },
+
+  _active: false,
+  get active() {
+    return this._active;
+  },
+  set active(val) {
+    this._active = val;
+    if (val)
+      ActiveProviders.add(this.origin);
+    else
+      ActiveProviders.delete(this.origin);
   },
 
   // Reference to a workerAPI object for this provider. Null if the provider has
@@ -339,7 +423,7 @@ SocialProvider.prototype = {
   _terminate: function _terminate() {
     if (this.workerURL) {
       try {
-        getFrameWorkerHandle(this.workerURL, null).terminate();
+        getFrameWorkerHandle(this.workerURL).terminate();
       } catch (e) {
         Cu.reportError("SocialProvider FrameWorker termination failed: " + e);
       }
@@ -347,6 +431,7 @@ SocialProvider.prototype = {
     if (this.workerAPI) {
       this.workerAPI.terminate();
     }
+    this.errorState = null;
     this.workerAPI = null;
     this.profile = undefined;
   },
@@ -362,6 +447,7 @@ SocialProvider.prototype = {
   getWorkerPort: function getWorkerPort(window) {
     if (!this.workerURL || !this.enabled)
       return null;
-    return getFrameWorkerHandle(this.workerURL, window).port;
+    return getFrameWorkerHandle(this.workerURL, window,
+                                "SocialProvider:" + this.origin, this.origin).port;
   }
 }

@@ -74,6 +74,12 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isUnbox() || ins->isParameter())
                 continue;
 
+            // If the instruction's behavior has been constant folded into a
+            // separate instruction, we can't determine precisely where the
+            // instruction becomes dead and can't eliminate its uses.
+            if (ins->isFolded())
+                continue;
+
             // Check if this instruction's result is only used within the
             // current block, and keep track of its last use in a definition
             // (not resume point). This requires the instructions in the block
@@ -81,7 +87,11 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // analysis.
             uint32_t maxDefinition = 0;
             for (MUseDefIterator uses(*ins); uses; uses++) {
-                if (uses.def()->block() != *block || uses.def()->isBox() || uses.def()->isPassArg()) {
+                if (uses.def()->block() != *block ||
+                    uses.def()->isBox() ||
+                    uses.def()->isPassArg() ||
+                    uses.def()->isPhi())
+                {
                     maxDefinition = UINT32_MAX;
                     break;
                 }
@@ -119,10 +129,6 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                 block->insertBefore(*(block->begin()), constant);
                 uses = mrp->replaceOperand(uses, constant);
             }
-
-            MResumePoint *mrp = ins->resumePoint();
-            if (!mrp)
-                continue;
         }
     }
 
@@ -157,19 +163,36 @@ ion::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
 }
 
 static inline bool
-IsPhiObservable(MPhi *phi)
+IsPhiObservable(MPhi *phi, Observability observe)
 {
-    // If the phi has bytecode uses, there may be no SSA uses but the value
-    // is still observable in the interpreter after a bailout.
-    if (phi->hasBytecodeUses())
+    // If the phi has uses which are not reflected in SSA, then behavior in the
+    // interpreter may be affected by removing the phi.
+    if (phi->isFolded())
         return true;
 
-    // Check for any SSA uses. Note that this skips reading resume points,
-    // which we don't count as actual uses. If the only uses are resume points,
-    // then the SSA name is never consumed by the program.
-    for (MUseDefIterator iter(phi); iter; iter++) {
-        if (!iter.def()->isPhi())
-            return true;
+    // Check for uses of this phi node outside of other phi nodes.
+    // Note that, initially, we skip reading resume points, which we
+    // don't count as actual uses. If the only uses are resume points,
+    // then the SSA name is never consumed by the program.  However,
+    // after optimizations have been performed, it's possible that the
+    // actual uses in the program have been (incorrectly) optimized
+    // away, so we must be more conservative and consider resume
+    // points as well.
+    switch (observe) {
+      case AggressiveObservability:
+        for (MUseDefIterator iter(phi); iter; iter++) {
+            if (!iter.def()->isPhi())
+                return true;
+        }
+        break;
+
+      case ConservativeObservability:
+        for (MUseIterator iter(phi->usesBegin()); iter != phi->usesEnd(); iter++) {
+            if (!iter->node()->isDefinition() ||
+                !iter->node()->toDefinition()->isPhi())
+                return true;
+        }
+        break;
     }
 
     // If the Phi is of the |this| value, it must always be observable.
@@ -193,27 +216,47 @@ IsPhiObservable(MPhi *phi)
 // Handles cases like:
 //    x is phi(a, x) --> a
 //    x is phi(a, a) --> a
-static inline MDefinition *
+inline MDefinition *
 IsPhiRedundant(MPhi *phi)
 {
-    MDefinition *first = phi->getOperand(0);
+    MDefinition *first = phi->operandIfRedundant();
+    if (first == NULL)
+        return NULL;
 
-    for (size_t i = 1; i < phi->numOperands(); i++) {
-        if (phi->getOperand(i) != first && phi->getOperand(i) != phi)
-            return NULL;
-    }
-
-    // Propagate the HasBytecodeUses flag if |phi| is replaced with
-    // another phi.
-    if (phi->hasBytecodeUses() && first->isPhi())
-        first->toPhi()->setHasBytecodeUses();
+    // Propagate the Folded flag if |phi| is replaced with another phi.
+    if (phi->isFolded())
+        first->setFoldedUnchecked();
 
     return first;
 }
 
 bool
-ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph)
+ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
+                   Observability observe)
 {
+    // Eliminates redundant or unobservable phis from the graph.  A
+    // redundant phi is something like b = phi(a, a) or b = phi(a, b),
+    // both of which can be replaced with a.  An unobservable phi is
+    // one that whose value is never used in the program.
+    //
+    // Note that we must be careful not to eliminate phis representing
+    // values that the interpreter will require later.  When the graph
+    // is first constructed, we can be more aggressive, because there
+    // is a greater correspondence between the CFG and the bytecode.
+    // After optimizations such as GVN have been performed, however,
+    // the bytecode and CFG may not correspond as closely to one
+    // another.  In that case, we must be more conservative.  The flag
+    // |conservativeObservability| is used to indicate that eliminate
+    // phis is being run after some optimizations have been performed,
+    // and thus we should use more conservative rules about
+    // observability.  The particular danger is that we can optimize
+    // away uses of a phi because we think they are not executable,
+    // but the foundation for that assumption is false TI information
+    // that will eventually be invalidated.  Therefore, if
+    // |conservativeObservability| is set, we will consider any use
+    // from a resume point to be observable.  Otherwise, we demand a
+    // use from an actual instruction.
+
     Vector<MPhi *, 16, SystemAllocPolicy> worklist;
 
     // Add all observable phis to a worklist. We use the "in worklist" bit to
@@ -236,7 +279,7 @@ ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph)
             }
 
             // Enqueue observable Phis.
-            if (IsPhiObservable(*iter)) {
+            if (IsPhiObservable(*iter, observe)) {
                 iter->setInWorklist();
                 if (!worklist.append(*iter))
                     return false;
@@ -871,7 +914,10 @@ ion::AssertGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
     // Assert successor and predecessor list coherency.
+    uint32_t count = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        count++;
+
         for (size_t i = 0; i < block->numSuccessors(); i++)
             JS_ASSERT(CheckSuccessorImpliesPredecessor(*block, block->getSuccessor(i)));
 
@@ -884,7 +930,61 @@ ion::AssertGraphCoherency(MIRGraph &graph)
         }
     }
 
+    JS_ASSERT(graph.numBlocks() == count);
+
     AssertReversePostOrder(graph);
+#endif
+}
+
+void
+ion::AssertExtendedGraphCoherency(MIRGraph &graph)
+{
+    // Checks the basic GraphCoherency but also other conditions that
+    // do not hold immediately (such as the fact that critical edges
+    // are split)
+
+#ifdef DEBUG
+    AssertGraphCoherency(graph);
+
+    uint32_t idx = 0;
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        JS_ASSERT(block->id() == idx++);
+
+        // No critical edges:
+        if (block->numSuccessors() > 1)
+            for (size_t i = 0; i < block->numSuccessors(); i++)
+                JS_ASSERT(block->getSuccessor(i)->numPredecessors() == 1);
+
+        if (block->isLoopHeader()) {
+            JS_ASSERT(block->numPredecessors() == 2);
+            MBasicBlock *backedge = block->getPredecessor(1);
+            JS_ASSERT(backedge->id() >= block->id());
+            JS_ASSERT(backedge->numSuccessors() == 1);
+            JS_ASSERT(backedge->getSuccessor(0) == *block);
+        }
+
+        if (!block->phisEmpty()) {
+            for (size_t i = 0; i < block->numPredecessors(); i++) {
+                MBasicBlock *pred = block->getPredecessor(i);
+                JS_ASSERT(pred->successorWithPhis() == *block);
+                JS_ASSERT(pred->positionInPhiSuccessor() == i);
+            }
+        }
+
+        uint32_t successorWithPhis = 0;
+        for (size_t i = 0; i < block->numSuccessors(); i++)
+            if (!block->getSuccessor(i)->phisEmpty())
+                successorWithPhis++;
+
+        JS_ASSERT(successorWithPhis <= 1);
+        JS_ASSERT_IF(successorWithPhis, block->successorWithPhis() != NULL);
+
+        // I'd like to assert this, but it's not necc. true.  Sometimes we set this
+        // flag to non-NULL just because a successor has multiple preds, even if it
+        // does not actually have any phis.
+        //
+        // JS_ASSERT_IF(!successorWithPhis, block->successorWithPhis() == NULL);
+    }
 #endif
 }
 

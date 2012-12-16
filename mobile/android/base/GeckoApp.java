@@ -838,17 +838,17 @@ abstract public class GeckoApp
                 handleContentLoaded(tabId);
                 Tab tab = Tabs.getInstance().getTab(tabId);
                 if (backgroundColor != null) {
-                    tab.setCheckerboardColor(backgroundColor);
+                    tab.setBackgroundColor(backgroundColor);
                 } else {
                     // Default to white if no color is given
-                    tab.setCheckerboardColor(Color.WHITE);
+                    tab.setBackgroundColor(Color.WHITE);
                 }
 
                 // Sync up the layer view and the tab if the tab is
                 // currently displayed.
                 LayerView layerView = mLayerView;
                 if (layerView != null && Tabs.getInstance().isSelectedTab(tab)) {
-                    layerView.setCheckerboardColor(tab.getCheckerboardColor());
+                    layerView.setBackgroundColor(tab.getBackgroundColor());
                 }
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
@@ -1132,8 +1132,6 @@ abstract public class GeckoApp
         tab.setState(shouldShowProgress(uri) ? Tab.STATE_SUCCESS : Tab.STATE_LOADING);
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
-        if (Tabs.getInstance().isSelectedTab(tab))
-            mLayerView.getRenderer().resetCheckerboard();
         Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START, showProgress);
     }
 
@@ -1154,11 +1152,6 @@ abstract public class GeckoApp
                     return;
 
                 ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createStartPaintListentingEvent(tab.getId()));
-                    ScreenshotHandler.screenshotWholePage(tab);
-                }
-
             }
         }, 500);
     }

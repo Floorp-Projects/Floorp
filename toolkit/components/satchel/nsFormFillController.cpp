@@ -57,8 +57,6 @@ nsFormFillController::nsFormFillController() :
   mSuppressOnInput(false)
 {
   mController = do_GetService("@mozilla.org/autocomplete/controller;1");
-  mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");
-  mPopups = do_CreateInstance("@mozilla.org/supports-array;1");
   mPwmgrInputs.Init();
 }
 
@@ -86,12 +84,9 @@ nsFormFillController::~nsFormFillController()
   mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
 
   // Remove ourselves as a focus listener from all cached docShells
-  uint32_t count;
-  mDocShells->Count(&count);
+  uint32_t count = mDocShells.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDocShell> docShell;
-    mDocShells->GetElementAt(i, getter_AddRefs(docShell));
-    nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(docShell);
+    nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(mDocShells[i]);
     RemoveWindowListeners(domWindow);
   }
 }
@@ -204,8 +199,8 @@ nsFormFillController::AttachToBrowser(nsIDocShell *aDocShell, nsIAutoCompletePop
 {
   NS_ENSURE_TRUE(aDocShell && aPopup, NS_ERROR_ILLEGAL_VALUE);
 
-  mDocShells->AppendElement(aDocShell);
-  mPopups->AppendElement(aPopup);
+  mDocShells.AppendElement(aDocShell);
+  mPopups.AppendElement(aPopup);
 
   // Listen for focus events on the domWindow of the docShell
   nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(aDocShell);
@@ -221,13 +216,12 @@ nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
 
   // Stop listening for focus events on the domWindow of the docShell
-  nsCOMPtr<nsIDocShell> docShell;
-  mDocShells->GetElementAt(index, getter_AddRefs(docShell));
-  nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(docShell);
+  nsCOMPtr<nsIDOMWindow> domWindow =
+    GetWindowForDocShell(mDocShells.SafeElementAt(index));
   RemoveWindowListeners(domWindow);
 
-  mDocShells->RemoveElementAt(index);
-  mPopups->RemoveElementAt(index);
+  mDocShells.RemoveElementAt(index);
+  mPopups.RemoveElementAt(index);
 
   return NS_OK;
 }
@@ -1060,7 +1054,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
     return;
 
   // Cache the popup for the focused docShell
-  mPopups->GetElementAt(index, getter_AddRefs(mFocusedPopup));
+  mFocusedPopup = mPopups.SafeElementAt(index);
 
   nsCOMPtr<nsINode> node = do_QueryInterface(aInput);
   if (!node) {
@@ -1145,12 +1139,9 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
     return -1;
 
   // Loop through our cached docShells looking for the given docShell
-  uint32_t count;
-  mDocShells->Count(&count);
+  uint32_t count = mDocShells.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDocShell> docShell;
-    mDocShells->GetElementAt(i, getter_AddRefs(docShell));
-    if (docShell == aDocShell)
+    if (mDocShells[i] == aDocShell)
       return i;
   }
 

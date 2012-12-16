@@ -2,18 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const MARIONETTE_CONTRACTID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 const DEBUGGER_ENABLED_PREF = 'devtools.debugger.remote-enabled';
 const MARIONETTE_ENABLED_PREF = 'marionette.defaultPrefs.enabled';
 const MARIONETTE_LOADEARLY_PREF = 'marionette.loadearly';
+const DEBUGGER_FORCELOCAL_PREF = 'devtools.debugger.force-local';
+const MARIONETTE_FORCELOCAL_PREF = 'marionette.force-local';
+
+const ServerSocket = CC("@mozilla.org/network/server-socket;1",
+                        "nsIServerSocket",
+                        "init");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource:///modules/services-common/log4moz.js");
+Cu.import("resource://gre/modules/services-common/log4moz.js");
 
 function MarionetteComponent() {
   this._loaded = false;
@@ -34,6 +40,16 @@ MarionetteComponent.prototype = {
   contractID: MARIONETTE_CONTRACTID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
   _xpcom_categories: [{category: "profile-after-change", service: true}],
+  original_forcelocal: null,
+
+  onSocketAccepted: function mc_onSocketAccepted(aSocket, aTransport) {
+    this.logger.info("onSocketAccepted for Marionette dummy socket");
+  },
+
+  onStopListening: function mc_onStopListening(aSocket, status) {
+    this.logger.info("onStopListening for Marionette dummy socket, code " + status);
+    aSocket.close();
+  },
 
   observe: function mc_observe(aSubject, aTopic, aData) {
     let observerService = Services.obs;
@@ -65,6 +81,26 @@ MarionetteComponent.prototype = {
       case "system-message-listener-ready":
         this.logger.info("marionette initializing at system-message-listener-ready");
         observerService.removeObserver(this, "system-message-listener-ready");
+
+        try {
+          this.original_forcelocal = Services.prefs.getBoolPref(DEBUGGER_FORCELOCAL_PREF);
+        }
+        catch(e) {}
+
+        let marionette_forcelocal = false;
+        try {
+          marionette_forcelocal = Services.prefs.getBoolPref(MARIONETTE_FORCELOCAL_PREF);
+        }
+        catch(e) {}
+        Services.prefs.setBoolPref(DEBUGGER_FORCELOCAL_PREF, marionette_forcelocal);
+
+        // See bug 800138.  Because the first socket that opens with
+        // force-local=false fails, we open a dummy socket that will fail.
+        // This allows the following attempt by Marionette to open a socket
+        // to succeed.
+        let insaneSacrificialGoat = new ServerSocket(666, false, 4);
+        insaneSacrificialGoat.asyncListen(this);
+
         this.init();
         break;
       case "final-ui-startup":
@@ -94,16 +130,23 @@ MarionetteComponent.prototype = {
         DebuggerServer.addActors('chrome://marionette/content/marionette-actors.js');
         // This pref is required for the remote debugger to open a socket,
         // so force it to true.  See bug 761252.
+
         let original = false;
         try {
           original = Services.prefs.getBoolPref(DEBUGGER_ENABLED_PREF);
         }
         catch(e) { }
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, true);
+
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
         DebuggerServer.openListener(port);
+
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, original);
+        if (this.original_forcelocal != null) {
+          Services.prefs.setBoolPref(DEBUGGER_FORCELOCAL_PREF,
+                                     this.original_forcelocal);
+        }
         this.logger.info("marionette listener opened");
       }
       catch(e) {

@@ -6,9 +6,9 @@
 #define nsTableColFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "celldata.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "nsTablePainter.h"
 #include "nsTArray.h"
 
 class nsTableCellFrame;
@@ -285,10 +285,10 @@ protected:
   // when colspans were present).
   nscoord mFinalWidth;
 
-  // the index of the column with respect to the whole tabble (starting at 0) 
+  // the index of the column with respect to the whole table (starting at 0) 
   // it should never be smaller then the start column index of the parent 
   // colgroup
-  uint32_t mColIndex:        16;
+  uint32_t mColIndex;
   
   // border width in pixels of the inner half of the border only
   BCPixelSize mLeftBorderWidth;

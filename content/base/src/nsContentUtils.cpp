@@ -53,7 +53,7 @@
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
 #include "imgINotificationObserver.h"
-#include "imgIRequest.h"
+#include "imgRequestProxy.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
 #include "nsDocShellCID.h"
@@ -122,10 +122,6 @@
 #include "nsILoadContext.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
-#include "nsSVGUtils.h"
-#include "nsISVGChildFrame.h"
-#include "nsRenderingContext.h"
-#include "gfxSVGGlyphs.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -1757,6 +1753,17 @@ nsContentUtils::IsCallerChrome()
 }
 
 bool
+nsContentUtils::IsCallerXBL()
+{
+    JSScript *script;
+    JSContext *cx = GetCurrentJSContext();
+    if (!cx || !JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
+        return false;
+    return JS_GetScriptUserBit(script);
+}
+
+
+bool
 nsContentUtils::IsImageSrcSetDisabled()
 {
   return Preferences::GetBool("dom.disable_image_src_set") &&
@@ -2678,7 +2685,7 @@ nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
-                          imgIRequest** aRequest)
+                          imgRequestProxy** aRequest)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
@@ -2761,11 +2768,11 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
 }
 
 //static
-already_AddRefed<imgIRequest>
-nsContentUtils::GetStaticRequest(imgIRequest* aRequest)
+already_AddRefed<imgRequestProxy>
+nsContentUtils::GetStaticRequest(imgRequestProxy* aRequest)
 {
   NS_ENSURE_TRUE(aRequest, nullptr);
-  nsCOMPtr<imgIRequest> retval;
+  nsRefPtr<imgRequestProxy> retval;
   aRequest->GetStaticRequest(getter_AddRefs(retval));
   return retval.forget();
 }
@@ -3594,27 +3601,10 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
 
   const char* data = flatInput.get();
   aOutput.Truncate();
-  for (;;) {
-    int32_t srcLen = length;
-    int32_t dstLen = outLen;
-    rv = decoder->Convert(data, &srcLen, ustr, &dstLen);
-    // Convert will convert the input partially even if the status
-    // indicates a failure.
-    ustr[dstLen] = 0;
-    aOutput.Append(ustr, dstLen);
-    if (rv != NS_ERROR_ILLEGAL_INPUT) {
-      break;
-    }
-    // Emit a decode error manually because some decoders
-    // do not support kOnError_Recover (bug 638379)
-    if (srcLen == -1) {
-      decoder->Reset();
-    } else {
-      data += srcLen + 1;
-      length -= srcLen + 1;
-      aOutput.Append(static_cast<PRUnichar>(0xFFFD));
-    }
-  }
+  rv = decoder->Convert(data, &length, ustr, &outLen);
+  MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_INPUT);
+  ustr[outLen] = 0;
+  aOutput.Append(ustr, outLen);
 
   nsMemory::Free(ustr);
   return rv;
@@ -4274,15 +4264,16 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIPrincipal> principal =
     do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
   nsCOMPtr<nsIDOMDocument> domDocument;
-  nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
-                                               EmptyString(),
-                                               nullptr,
-                                               uri,
-                                               uri,
-                                               principal,
-                                               nullptr,
-                                               DocumentFlavorHTML,
-                                               getter_AddRefs(domDocument));
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
+                                  EmptyString(),
+                                  EmptyString(),
+                                  nullptr,
+                                  uri,
+                                  uri,
+                                  principal,
+                                  true,
+                                  nullptr,
+                                  DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
@@ -4299,22 +4290,6 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   encoder->SetWrapColumn(aWrapCol);
 
   return encoder->EncodeToString(aResultBuffer);
-}
-
-/* static */
-nsresult
-nsContentUtils::CreateDocument(const nsAString& aNamespaceURI, 
-                               const nsAString& aQualifiedName, 
-                               nsIDOMDocumentType* aDoctype,
-                               nsIURI* aDocumentURI, nsIURI* aBaseURI,
-                               nsIPrincipal* aPrincipal,
-                               nsIScriptGlobalObject* aEventObject,
-                               DocumentFlavor aFlavor,
-                               nsIDOMDocument** aResult)
-{
-  return NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
-                           aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                           true, aEventObject, aFlavor);
 }
 
 /* static */
@@ -6008,35 +5983,10 @@ nsContentTypeParser::GetParameter(const char* aParameterName, nsAString& aResult
 
 /* static */
 
-// If you change this code, change also AllowedToAct() in
-// XPCSystemOnlyWrapper.cpp!
 bool
 nsContentUtils::CanAccessNativeAnon()
 {
-  JSContext* cx = GetCurrentJSContext();
-  if (!cx) {
-    return true;
-  }
-
-  if (IsCallerChrome()) {
-    return true;
-  }
-
-  // Allow any code loaded from chrome://global/ to touch us, even if it was
-  // cloned into a less privileged context.
-  JSScript *script;
-  if (!JS_DescribeScriptedCaller(cx, &script, nullptr) || !script) {
-    return false;
-  }
-  static const char prefix[] = "chrome://global/";
-  const char *filename;
-  if ((filename = JS_GetScriptFilename(cx, script)) &&
-      !strncmp(filename, prefix, ArrayLength(prefix) - 1))
-  {
-    return true;
-  }
-
-  return false;
+  return IsCallerChrome() || IsCallerXBL();
 }
 
 /* static */ nsresult
@@ -6168,7 +6118,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
                                  jsval& aBlob)
 {
   uint32_t blobLen = aData.Length();
-  void* blobData = PR_Malloc(blobLen);
+  void* blobData = moz_malloc(blobLen);
   nsCOMPtr<nsIDOMBlob> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);
@@ -6934,60 +6884,6 @@ nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
     aRetVal.AppendObject(a);
   }
   return NS_OK;
-}
-
-/* static */
-bool
-nsContentUtils::PaintSVGGlyph(Element *aElement, gfxContext *aContext,
-                              gfxFont::DrawMode aDrawMode,
-                              gfxTextObjectPaint *aObjectPaint)
-{
-  nsIFrame *frame = aElement->GetPrimaryFrame();
-  if (!frame) {
-    NS_WARNING("No frame for SVG glyph");
-    return false;
-  }
-
-  nsISVGChildFrame *displayFrame = do_QueryFrame(frame);
-  if (!displayFrame) {
-    NS_WARNING("Non SVG frame for SVG glyph");
-    return false;
-  }
-
-  nsRenderingContext context;
-
-  context.Init(frame->PresContext()->DeviceContext(), aContext);
-  context.AddUserData(&gfxTextObjectPaint::sUserDataKey, aObjectPaint, nullptr);
-
-  nsresult rv = displayFrame->PaintSVG(&context, nullptr);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return true;
-}
-
-/* static */
-bool
-nsContentUtils::GetSVGGlyphExtents(Element *aElement, const gfxMatrix& aSVGToAppSpace,
-                                   gfxRect *aResult)
-{
-  nsIFrame *frame = aElement->GetPrimaryFrame();
-  if (!frame) {
-    NS_WARNING("No frame for SVG glyph");
-    return false;
-  }
-
-  nsISVGChildFrame *displayFrame = do_QueryFrame(frame);
-  if (!displayFrame) {
-    NS_WARNING("Non SVG frame for SVG glyph");
-    return false;
-  }
-
-  *aResult = displayFrame->GetBBoxContribution(aSVGToAppSpace,
-      nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
-      nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
-      nsSVGUtils::eBBoxIncludeMarkers);
-
-  return true;
 }
 
 // static

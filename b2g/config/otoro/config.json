@@ -6,8 +6,6 @@
     "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
     "build_targets": [],
     "upload_files": [
-        "{objdir}/dist/b2g-update/*.mar",
-        "{objdir}/dist/b2g-*.tar.gz",
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
         "{workdir}/sources.xml"
     ],
@@ -24,6 +22,7 @@
         "MOZILLA_OFFICIAL": "1",
         "B2GUPDATER": "1"
     },
+    "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {
         "vcs": "hgtool",
         "repo": "http://hg.mozilla.org/integration/gaia-nightly",

@@ -265,8 +265,12 @@ template <> struct RootKind<JS::Value> : SpecificRootKind<JS::Value, THING_ROOT_
 struct ContextFriendFields {
     JSRuntime *const    runtime;
 
-    ContextFriendFields(JSRuntime *rt)
-      : runtime(rt) { }
+    /* The current compartment. */
+    JSCompartment       *compartment;
+
+    explicit ContextFriendFields(JSRuntime *rt)
+      : runtime(rt), compartment(NULL)
+    { }
 
     static const ContextFriendFields *get(const JSContext *cx) {
         return reinterpret_cast<const ContextFriendFields *>(cx);

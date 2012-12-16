@@ -45,7 +45,9 @@ const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
+const kSmsSendingObserverTopic           = "sms-sending";
 const kSmsSentObserverTopic              = "sms-sent";
+const kSmsFailedObserverTopic            = "sms-failed";
 const kSmsDeliverySuccessObserverTopic   = "sms-delivery-success";
 const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
@@ -55,7 +57,9 @@ const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
 const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
 
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
+const DOM_SMS_DELIVERY_SENDING           = "sending";
 const DOM_SMS_DELIVERY_SENT              = "sent";
+const DOM_SMS_DELIVERY_ERROR             = "error";
 
 const RIL_IPC_TELEPHONY_MSG_NAMES = [
   "RIL:EnumerateCalls",
@@ -107,7 +111,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsDatabaseService",
                                    "@mozilla.org/sms/rilsmsdatabaseservice;1",
-                                   "nsISmsDatabaseService");
+                                   "nsIRilSmsDatabaseService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -1404,38 +1408,34 @@ RadioInterfaceLayer.prototype = {
       return;
     }
 
-    let timestamp = Date.now();
-    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
-    let id = gSmsDatabaseService.saveSentMessage(options.number,
-                                                 options.fullBody,
-                                                 timestamp);
-    let sms = gSmsService.createSmsMessage(id,
+    gSmsDatabaseService.setMessageDelivery(options.sms.id,
                                            DOM_SMS_DELIVERY_SENT,
-                                           RIL.GECKO_SMS_DELIVERY_STATUS_PENDING,
+                                           options.sms.deliveryStatus);
+
+    let sms = gSmsService.createSmsMessage(options.sms.id,
+                                           DOM_SMS_DELIVERY_SENT,
+                                           options.sms.deliveryStatus,
                                            null,
-                                           options.number,
-                                           options.fullBody,
-                                           messageClass,
-                                           timestamp,
+                                           options.sms.receiver,
+                                           options.sms.body,
+                                           options.sms.messageClass,
+                                           options.sms.timestamp,
                                            true);
 
     gSystemMessenger.broadcastMessage("sms-sent",
-                                      {id: id,
+                                      {id: options.sms.id,
                                        delivery: DOM_SMS_DELIVERY_SENT,
-                                       deliveryStatus: RIL.GECKO_SMS_DELIVERY_STATUS_PENDING,
+                                       deliveryStatus: options.sms.deliveryStatus,
                                        sender: message.sender || null,
-                                       receiver: options.number,
-                                       body: options.fullBody,
-                                       messageClass: messageClass,
-                                       timestamp: timestamp,
+                                       receiver: options.sms.receiver,
+                                       body: options.sms.body,
+                                       messageClass: options.sms.messageClass,
+                                       timestamp: options.sms.timestamp,
                                        read: true});
 
     if (!options.requestStatusReport) {
       // No more used if STATUS-REPORT not requested.
       delete this._sentSmsEnvelopes[message.envelopeId];
-    } else {
-      options.id = id;
-      options.timestamp = timestamp;
     }
 
     options.request.notifyMessageSent(sms);
@@ -1452,17 +1452,18 @@ RadioInterfaceLayer.prototype = {
     }
     delete this._sentSmsEnvelopes[message.envelopeId];
 
-    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
-    gSmsDatabaseService.setMessageDeliveryStatus(options.id,
-                                                 message.deliveryStatus);
-    let sms = gSmsService.createSmsMessage(options.id,
-                                           DOM_SMS_DELIVERY_SENT,
+    gSmsDatabaseService.setMessageDelivery(options.sms.id,
+                                           options.sms.delivery,
+                                           message.deliveryStatus);
+
+    let sms = gSmsService.createSmsMessage(options.sms.id,
+                                           options.sms.delivery,
                                            message.deliveryStatus,
                                            null,
-                                           options.number,
-                                           options.fullBody,
-                                           messageClass,
-                                           options.timestamp,
+                                           options.sms.receiver,
+                                           options.sms.body,
+                                           options.sms.messageClass,
+                                           options.sms.timestamp,
                                            true);
 
     let topic = (message.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
@@ -1487,7 +1488,23 @@ RadioInterfaceLayer.prototype = {
         break;
     }
 
+    gSmsDatabaseService.setMessageDelivery(options.sms.id,
+                                           DOM_SMS_DELIVERY_ERROR,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_ERROR);
+
+    let sms = gSmsService.createSmsMessage(options.sms.id,
+                                           DOM_SMS_DELIVERY_ERROR,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
+                                           null,
+                                           options.sms.receiver,
+                                           options.sms.body,
+                                           options.sms.messageClass,
+                                           options.sms.timestamp,
+                                           true);
+
     options.request.notifySendMessageFailed(error);
+
+    Services.obs.notifyObservers(sms, kSmsFailedObserverTopic, null);
   },
 
   /**
@@ -2366,10 +2383,28 @@ RadioInterfaceLayer.prototype = {
       options.segmentRef = this.nextSegmentRef;
     }
 
+    let timestamp = Date.now();
+    let id = gSmsDatabaseService.saveSendingMessage(options.number,
+                                                    options.fullBody,
+                                                    timestamp);
+    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
+    let deliveryStatus = options.requestStatusReport
+                       ? RIL.GECKO_SMS_DELIVERY_STATUS_PENDING
+                       : RIL.GECKO_SMS_DELIVERY_STATUS_NOT_APPLICABLE;
+    let sms = gSmsService.createSmsMessage(id,
+                                           DOM_SMS_DELIVERY_SENDING,
+                                           deliveryStatus,
+                                           null,
+                                           options.number,
+                                           options.fullBody,
+                                           messageClass,
+                                           timestamp,
+                                           true);
+    Services.obs.notifyObservers(sms, kSmsSendingObserverTopic, null);
+
     // Keep current SMS message info for sent/delivered notifications
     options.envelopeId = this.createSmsEnvelope({request: request,
-                                                 number: options.number,
-                                                 fullBody: options.fullBody,
+                                                 sms: sms,
                                                  requestStatusReport: options.requestStatusReport});
 
     this.worker.postMessage(options);
@@ -2616,7 +2651,15 @@ RILNetworkInterface.prototype = {
   },
 
   dataCallStateChanged: function dataCallStateChanged(datacall) {
-    if (datacall.apn != this.dataCallSettings["apn"]) {
+    if (this.cid && this.cid != datacall.cid) {
+    // If data call for this connection existed but cid mismatched,
+    // it means this datacall state change is not for us.
+      return;
+    }
+    // If data call for this connection does not exist, it could be state
+    // change for new data call.  We only update data call state change
+    // if APN name matched.
+    if (!this.cid && datacall.apn != this.dataCallSettings["apn"]) {
       return;
     }
     debug("Data call ID: " + datacall.cid + ", interface name: " +
@@ -2640,7 +2683,10 @@ RILNetworkInterface.prototype = {
         this.registeredAsNetworkInterface = true;
       }
     }
-    if (this.cid != datacall.cid) {
+    // In current design, we don't update status of secondary APN if it shares
+    // same APN name with the default APN.  In this condition, this.cid will
+    // not be set and we don't want to update its status.
+    if (this.cid == null) {
       return;
     }
     if (this.state == datacall.state) {
@@ -2660,6 +2706,7 @@ RILNetworkInterface.prototype = {
        this.registeredAsNetworkInterface) {
       gNetworkManager.unregisterNetworkInterface(this);
       this.registeredAsNetworkInterface = false;
+      this.cid = null;
       return;
     }
 

@@ -9,7 +9,6 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.ScreenshotHandler;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
@@ -17,7 +16,6 @@ import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
-import org.mozilla.gecko.util.GeckoEventResponder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,20 +30,17 @@ import android.util.Log;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GeckoLayerClient
-        implements GeckoEventResponder, LayerView.Listener, PanZoomTarget
+public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 {
     private static final String LOGTAG = "GeckoLayerClient";
 
     private LayerRenderer mLayerRenderer;
     private boolean mLayerRendererInitialized;
 
-    private final EventDispatcher mEventDispatcher;
     private Context mContext;
     private IntSize mScreenSize;
     private IntSize mWindowSize;
     private DisplayPortMetrics mDisplayPort;
-    private DisplayPortMetrics mReturnDisplayPort;
 
     private boolean mRecordDrawTimes;
     private final DrawTimingQueue mDrawTimingQueue;
@@ -109,7 +104,6 @@ public class GeckoLayerClient
     public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
-        mEventDispatcher = eventDispatcher;
         mContext = context;
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
@@ -128,7 +122,7 @@ public class GeckoLayerClient
         mViewportMetrics = new ImmutableViewportMetrics(displayMetrics);
         mZoomConstraints = new ZoomConstraints(false);
 
-        mPanZoomController = new PanZoomController(this, mEventDispatcher);
+        mPanZoomController = new PanZoomController(this, eventDispatcher);
         mView = view;
     }
 
@@ -139,26 +133,14 @@ public class GeckoLayerClient
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = mView.getRenderer();
 
-        registerEventListener("Checkerboard:Toggle");
-
         mView.setListener(this);
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();
-        PluginLayer.initPrefs();
     }
 
     public void destroy() {
         mPanZoomController.destroy();
-        unregisterEventListener("Checkerboard:Toggle");
-    }
-
-    private void registerEventListener(String event) {
-        mEventDispatcher.registerEventListener(event, this);
-    }
-
-    private void unregisterEventListener(String event) {
-        mEventDispatcher.unregisterEventListener(event, this);
     }
 
     /**
@@ -455,34 +437,6 @@ public class GeckoLayerClient
         return mProgressiveUpdateData;
     }
 
-    /** Implementation of GeckoEventResponder/GeckoEventListener. */
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if ("Checkerboard:Toggle".equals(event)) {
-                mView.setCheckerboardShouldShowChecks(message.getBoolean("value"));
-            }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error decoding JSON in " + event + " handler", e);
-        }
-    }
-
-    /** Implementation of GeckoEventResponder. */
-    public String getResponse() {
-        // We are responding to the events handled in handleMessage() above with the
-        // display port we calculated. Different messages will generate different
-        // display ports and put them in mReturnDisplayPort, so we just return that.
-        // Note that mReturnDisplayPort is always touched on the Gecko thread, so
-        // no synchronization is needed for it.
-        if (mReturnDisplayPort == null) {
-            return "";
-        }
-        try {
-            return mReturnDisplayPort.toJSON();
-        } finally {
-            mReturnDisplayPort = null;
-        }
-    }
-
     void setZoomConstraints(ZoomConstraints constraints) {
         mZoomConstraints = constraints;
     }
@@ -515,7 +469,7 @@ public class GeckoLayerClient
             setViewportMetrics(newMetrics);
 
             Tab tab = Tabs.getInstance().getSelectedTab();
-            mView.setCheckerboardColor(tab.getCheckerboardColor());
+            mView.setBackgroundColor(tab.getBackgroundColor());
             setZoomConstraints(tab.getZoomConstraints());
 
             // At this point, we have just switched to displaying a different document than we
@@ -535,8 +489,6 @@ public class GeckoLayerClient
         }
         DisplayPortCalculator.resetPageState();
         mDrawTimingQueue.reset();
-        mView.getRenderer().resetCheckerboard();
-        ScreenshotHandler.screenshotWholePage(Tabs.getInstance().getSelectedTab());
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.

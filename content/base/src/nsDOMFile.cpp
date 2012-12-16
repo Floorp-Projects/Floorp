@@ -36,8 +36,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 
-#include "plbase64.h"
-#include "prmem.h"
 #include "mozilla/dom/FileListBinding.h"
 
 using namespace mozilla;
@@ -470,23 +468,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMFileCC)
 ////////////////////////////////////////////////////////////////////////////
 // nsDOMFileFile implementation
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsDOMFileFile, nsDOMFile,
-                             nsIJSNativeInitializer)
-
 already_AddRefed<nsIDOMBlob>
 nsDOMFileFile::CreateSlice(uint64_t aStart, uint64_t aLength,
                            const nsAString& aContentType)
 {
   nsCOMPtr<nsIDOMBlob> t = new nsDOMFileFile(this, aStart, aLength, aContentType);
   return t.forget();
-}
-
-/* static */ nsresult
-nsDOMFileFile::NewFile(nsISupports* *aNewObject)
-{
-  nsCOMPtr<nsISupports> file = do_QueryObject(new nsDOMFileFile());
-  file.forget(aNewObject);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -591,71 +578,6 @@ nsDOMFileFile::GetInternalStream(nsIInputStream **aStream)
     NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
     NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
                                       -1, -1, sFileStreamFlags);
-}
-
-NS_IMETHODIMP
-nsDOMFileFile::Initialize(nsISupports* aOwner,
-                          JSContext* aCx,
-                          JSObject* aObj,
-                          uint32_t aArgc,
-                          JS::Value* aArgv)
-{
-  nsresult rv;
-
-  NS_ASSERTION(!mImmutable, "Something went wrong ...");
-  NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
-
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR; // Real short trip
-  }
-
-  NS_ENSURE_TRUE(aArgc > 0, NS_ERROR_UNEXPECTED);
-
-  // We expect to get a path to represent as a File object,
-  // or an nsIFile
-  nsCOMPtr<nsIFile> file;
-  if (!aArgv[0].isString()) {
-    // Lets see if it's an nsIFile
-    if (!aArgv[0].isObject()) {
-      return NS_ERROR_UNEXPECTED; // We're not interested
-    }
-
-    JSObject* obj = &aArgv[0].toObject();
-
-    // Is it an nsIFile
-    file = do_QueryInterface(
-      nsContentUtils::XPConnect()->
-        GetNativeOfWrapper(aCx, obj));
-    if (!file)
-      return NS_ERROR_UNEXPECTED;
-  } else {
-    // It's a string
-    JSString* str = JS_ValueToString(aCx, aArgv[0]);
-    NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
-
-    nsDependentJSString xpcomStr;
-    if (!xpcomStr.init(aCx, str)) {
-      return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
-    rv = NS_NewLocalFile(xpcomStr, false, getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  bool exists;
-  rv = file->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(exists, NS_ERROR_FILE_NOT_FOUND);
-
-  bool isDir;
-  rv = file->IsDirectory(&isDir);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_FALSE(isDir, NS_ERROR_FILE_IS_DIRECTORY);
-
-  mFile = file;
-  file->GetLeafName(mName);
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////

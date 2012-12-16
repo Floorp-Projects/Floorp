@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIRequest;
 interface nsIFrame;
 interface nsIObjectFrame;
 interface nsIPluginTag;
@@ -21,7 +22,7 @@ interface nsIURI;
  * This interface represents a content node that loads objects.
  */
 
-[scriptable, uuid(649b8a75-8623-437f-ad30-0ac596c8452e)]
+[scriptable, uuid(e9102696-4bb4-4a98-a31f-be9da5a3d18e)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -129,6 +130,19 @@ interface nsIObjectLoadingContent : nsISupports
 
   [noscript] void syncStartPluginInstance();
   [noscript] void asyncStartPluginInstance();
+
+  /**
+   * Puts the tag in the "waiting on a channel" state and adopts this
+   * channel. This does not override the normal logic of examining attributes
+   * and the channel type, so the load may cancel this channel if it decides not
+   * to use one.
+   *
+   * This assumes:
+   *  - This tag has not begun loading yet
+   *  - This channel has not yet hit OnStartRequest
+   *  - The caller will continue to pass channel events to us as a listener
+   */
+  [noscript] void initializeFromChannel(in nsIRequest request);
 
   /**
    * Requests the plugin instance for scripting, attempting to spawn it if

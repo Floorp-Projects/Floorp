@@ -13,6 +13,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/GuardObjects.h"
 
+#include "js/Utility.h"
 #include "js/TemplateLib.h"
 
 #include "jspubtd.h"
@@ -243,6 +244,8 @@ class Handle : public js::HandleBase<T>
     operator T() const { return get(); }
     T operator->() const { return get(); }
 
+    bool operator!=(const T &other) { return *ptr != other; }
+
   private:
     Handle() {}
 
@@ -279,14 +282,16 @@ class MutableHandle : public js::MutableHandleBase<T>
     }
 
     template <typename S>
-    inline
-    MutableHandle(js::Rooted<S> *root,
-                  typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
+    inline MutableHandle(js::Rooted<S> *root,
+                         typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     void set(T v) {
         JS_ASSERT(!js::RootMethods<T>::poisoned(v));
         *ptr = v;
     }
+
+    template <typename S>
+    inline void set(const js::Unrooted<S> &v);
 
     /*
      * This may be called only if the location of the T is guaranteed
@@ -336,7 +341,7 @@ typedef JSFunction *                RawFunction;
 typedef JSScript *                  RawScript;
 typedef JSString *                  RawString;
 typedef jsid                        RawId;
-typedef Value                       RawValue;
+typedef JS::Value                   RawValue;
 
 /*
  * InternalHandle is a handle to an internal pointer into a gcthing. Use
@@ -391,7 +396,7 @@ class InternalHandle<T*>
      * fromMarkedLocation().
      */
     InternalHandle(T *field)
-      : holder(reinterpret_cast<void * const *>(&NullPtr::constNullValue)),
+      : holder(reinterpret_cast<void * const *>(&JS::NullPtr::constNullValue)),
         offset(uintptr_t(field))
     {}
 };
@@ -426,7 +431,7 @@ class Unrooted
       : ptr_(root.get())
     {
         JS_ASSERT(ptr_ != UninitializedTag());
-        EnterAssertNoGCScope();
+        JS::EnterAssertNoGCScope();
     }
 
     /*
@@ -442,31 +447,31 @@ class Unrooted
       : ptr_(static_cast<T>(static_cast<S>(other)))
     {
         if (ptr_ != UninitializedTag())
-            EnterAssertNoGCScope();
+            JS::EnterAssertNoGCScope();
     }
 
     Unrooted(const Unrooted &other) : ptr_(other.ptr_) {
         if (ptr_ != UninitializedTag())
-            EnterAssertNoGCScope();
+            JS::EnterAssertNoGCScope();
     }
 
     Unrooted(const T &p) : ptr_(p) {
         JS_ASSERT(ptr_ != UninitializedTag());
-        EnterAssertNoGCScope();
+        JS::EnterAssertNoGCScope();
     }
 
     Unrooted(const JS::NullPtr &) : ptr_(NULL) {
-        EnterAssertNoGCScope();
+        JS::EnterAssertNoGCScope();
     }
 
     ~Unrooted() {
         if (ptr_ != UninitializedTag())
-            LeaveAssertNoGCScope();
+            JS::LeaveAssertNoGCScope();
     }
 
     void drop() {
         if (ptr_ != UninitializedTag())
-            LeaveAssertNoGCScope();
+            JS::LeaveAssertNoGCScope();
         ptr_ = UninitializedTag();
     }
 
@@ -474,8 +479,15 @@ class Unrooted
     Unrooted &operator=(T other) {
         JS_ASSERT(other != UninitializedTag());
         if (ptr_ == UninitializedTag())
-            EnterAssertNoGCScope();
+            JS::EnterAssertNoGCScope();
         ptr_ = other;
+        return *this;
+    }
+    Unrooted &operator=(Unrooted other) {
+        JS_ASSERT(other.ptr_ != UninitializedTag());
+        if (ptr_ == UninitializedTag())
+            JS::EnterAssertNoGCScope();
+        ptr_ = other.ptr_;
         return *this;
     }
 
@@ -762,7 +774,7 @@ Unrooted<T>::Unrooted(const Rooted<S> &root,
   : ptr_(root.get())
 {
     JS_ASSERT(ptr_ != UninitializedTag());
-    EnterAssertNoGCScope();
+    JS::EnterAssertNoGCScope();
 }
 #endif /* DEBUG */
 
@@ -771,7 +783,7 @@ typedef Rooted<JSFunction*>  RootedFunction;
 typedef Rooted<JSScript*>    RootedScript;
 typedef Rooted<JSString*>    RootedString;
 typedef Rooted<jsid>         RootedId;
-typedef Rooted<Value>        RootedValue;
+typedef Rooted<JS::Value>    RootedValue;
 
 /*
  * Mark a stack location as a root for the rooting analysis, without actually
@@ -859,6 +871,13 @@ MutableHandle<T>::MutableHandle(js::Rooted<S> *root,
     ptr = root->address();
 }
 
+template <typename T> template <typename S>
+inline void MutableHandle<T>::set(const js::Unrooted<S> &v)
+{
+    JS_ASSERT(!js::RootMethods<T>::poisoned(v));
+    *ptr = static_cast<S>(v);
+}
+
 /*
  * The scoped guard object AutoAssertNoGC forces the GC to assert if a GC is
  * attempted while the guard object is live.  If you have a GC-unsafe operation
@@ -909,7 +928,7 @@ namespace js {
  */
 inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
-    AssertCanGC();
+    JS::AssertCanGC();
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     if (relax && NeedRelaxedRootChecks())
         return;

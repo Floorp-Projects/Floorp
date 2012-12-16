@@ -162,7 +162,8 @@ CanvasLayerOGL::Initialize(const Data& aData)
       
   // Check the maximum texture size supported by GL. glTexImage2D supports
   // images of up to 2 + GL_MAX_TEXTURE_SIZE
-  GLint texSize = gl()->GetMaxTextureSize();
+  GLint texSize;
+  gl()->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &texSize);
   if (mBounds.width > (2 + texSize) || mBounds.height > (2 + texSize)) {
     mDelayedUpdates = true;
     MakeTextureIfNeeded(gl(), mTexture);

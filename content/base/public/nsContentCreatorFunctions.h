@@ -18,7 +18,7 @@
 class nsAString;
 class nsIContent;
 class nsINodeInfo;
-class imgIRequest;
+class imgRequestProxy;
 class nsNodeInfoManager;
 class nsGenericHTMLElement;
 
@@ -95,6 +95,6 @@ NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 nsresult
 NS_NewGenConImageContent(nsIContent** aResult,
                          already_AddRefed<nsINodeInfo> aNodeInfo,
-                         imgIRequest* aImageRequest);
+                         imgRequestProxy* aImageRequest);
 
 #endif // nsContentCreatorFunctions_h__

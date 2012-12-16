@@ -119,12 +119,12 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIDOMDocument> document;
 
-  rv = nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
-                                      mDocumentURI, mBaseURI,
-                                      mOwner->NodePrincipal(),
-                                      scriptHandlingObject,
-                                        DocumentFlavorLegacyGuess,
-                                      getter_AddRefs(document));
+  rv = NS_NewDOMDocument(getter_AddRefs(document),
+                         aNamespaceURI, aQualifiedName, aDoctype,
+                         mDocumentURI, mBaseURI,
+                         mOwner->NodePrincipal(),
+                         true, scriptHandlingObject,
+                         DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
@@ -186,12 +186,12 @@ DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
   nsCOMPtr<nsIDOMDocument> document;
-  rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(),
-                                      doctype, mDocumentURI, mBaseURI,
-                                      mOwner->NodePrincipal(),
-                                      scriptHandlingObject,
-                                      DocumentFlavorLegacyGuess,
-                                      getter_AddRefs(document));
+  rv = NS_NewDOMDocument(getter_AddRefs(document),
+                         EmptyString(), EmptyString(),
+                         doctype, mDocumentURI, mBaseURI,
+                         mOwner->NodePrincipal(),
+                         true, scriptHandlingObject,
+                         DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
 

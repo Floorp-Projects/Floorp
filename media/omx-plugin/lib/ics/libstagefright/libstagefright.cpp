@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/Types.h"
 #define STAGEFRIGHT_EXPORT __attribute__ ((visibility ("default")))
+#include "stagefright/ColorConverter.h"
 #include "stagefright/DataSource.h"
 #include "media/stagefright/MediaBuffer.h"
 #include "stagefright/MediaExtractor.h"
@@ -162,4 +163,26 @@ virtual ~UnknownDataSource() { }
 UnknownDataSource foo;
 
 MOZ_EXPORT UnknownDataSource::UnknownDataSource() { }
+
+MOZ_EXPORT
+ColorConverter::ColorConverter(OMX_COLOR_FORMATTYPE, OMX_COLOR_FORMATTYPE) { }
+
+MOZ_EXPORT
+ColorConverter::~ColorConverter() { }
+
+MOZ_EXPORT bool
+ColorConverter::isValid() const { return false; }
+
+MOZ_EXPORT status_t
+ColorConverter::convert(const void *srcBits,
+                        size_t srcWidth, size_t srcHeight,
+                        size_t srcCropLeft, size_t srcCropTop,
+                        size_t srcCropRight, size_t srcCropBottom,
+                        void *dstBits,
+                        size_t dstWidth, size_t dstHeight,
+                        size_t dstCropLeft, size_t dstCropTop,
+                        size_t dstCropRight, size_t dstCropBottom)
+{
+  return 0;
+}
 }

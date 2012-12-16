@@ -1250,6 +1250,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      const char *aURL,
                                      uint32_t aLineNo,
                                      uint32_t aVersion,
+                                     bool aIsXBL,
                                      JS::Value* aRetValue,
                                      bool* aIsUndefined)
 {
@@ -1324,7 +1325,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     JS::CompileOptions options(mContext);
     options.setFileAndLine(aURL, aLineNo)
            .setVersion(JSVersion(aVersion))
-           .setPrincipals(nsJSPrincipals::get(principal));
+           .setPrincipals(nsJSPrincipals::get(principal))
+           .setUserBit(aIsXBL);
     js::RootedObject rootedScope(mContext, aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, options, PromiseFlatString(aScript).get(),
                       aScript.Length(), &val);
@@ -1782,7 +1784,8 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 
   JS::CompileOptions options(mContext);
   options.setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo);
+         .setFileAndLine(aURL, aLineNo)
+         .setUserBit(aIsXBL);
   js::RootedObject empty(mContext, NULL);
   JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
                                         aArgCount, aArgNames,
@@ -1791,11 +1794,6 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   if (!fun) {
     ReportPendingException();
     return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  // If this is an XBL function, make a note to that effect on its script.
-  if (aIsXBL) {
-    JS_SetScriptUserBit(JS_GetFunctionScript(mContext, fun), true);
   }
 
   JSObject *handler = ::JS_GetFunctionObject(fun);
@@ -1849,7 +1847,8 @@ nsJSContext::CompileFunction(JSObject* aTarget,
   JS::CompileOptions options(mContext);
   options.setPrincipals(nsJSPrincipals::get(principal))
          .setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo);
+         .setFileAndLine(aURL, aLineNo)
+         .setUserBit(aIsXBL);
   JSFunction* fun = JS::CompileFunction(mContext, target,
                                         options, PromiseFlatCString(aName).get(),
                                         aArgCount, aArgArray,
@@ -1857,11 +1856,6 @@ nsJSContext::CompileFunction(JSObject* aTarget,
 
   if (!fun)
     return NS_ERROR_FAILURE;
-
-  // If this is an XBL function, make a note to that effect on its script.
-  if (aIsXBL) {
-    JS_SetScriptUserBit(JS_GetFunctionScript(mContext, fun), true);
-  }
 
   *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
@@ -2630,6 +2624,70 @@ static JSFunctionSpec TraceMallocFunctions[] = {
 
 #endif /* NS_TRACE_MALLOC */
 
+#ifdef MOZ_DMD
+
+#include <errno.h>
+
+namespace mozilla {
+namespace dmd {
+
+// See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
+// how to use DMD.
+
+static JSBool
+MaybeReportAndDump(JSContext *cx, unsigned argc, jsval *vp, bool report)
+{
+  JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+  if (!str)
+    return JS_FALSE;
+  JSAutoByteString pathname(cx, str);
+  if (!pathname)
+    return JS_FALSE;
+
+  FILE* fp = fopen(pathname.ptr(), "w");
+  if (!fp) {
+    JS_ReportError(cx, "DMD can't open %s: %s",
+                   pathname.ptr(), strerror(errno));
+    return JS_FALSE;
+  }
+
+  if (report) {
+    fprintf(stderr, "DMD: running reporters...\n");
+    dmd::RunReporters();
+  }
+  dmd::Writer writer(FpWrite, fp);
+  dmd::Dump(writer);
+
+  fclose(fp);
+
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  return JS_TRUE;
+}
+
+static JSBool
+ReportAndDump(JSContext *cx, unsigned argc, jsval *vp)
+{
+  return MaybeReportAndDump(cx, argc, vp, /* report = */ true);
+}
+
+static JSBool
+Dump(JSContext *cx, unsigned argc, jsval *vp)
+{
+  return MaybeReportAndDump(cx, argc, vp, /* report = */ false);
+}
+
+
+} // namespace dmd
+} // namespace mozilla
+
+static JSFunctionSpec DMDFunctions[] = {
+    JS_FS("DMDReportAndDump", dmd::ReportAndDump, 1, 0),
+    JS_FS("DMDDump",          dmd::Dump,          1, 0),
+    JS_FS_END
+};
+
+#endif  // defined(MOZ_DMD)
+
 #ifdef MOZ_JPROF
 
 #include <signal.h>
@@ -2739,15 +2797,22 @@ static JSFunctionSpec JProfFunctions[] = {
 // See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
 // how to use DMDV.
 
+namespace mozilla {
+namespace dmdv {
+
 static JSBool
-DMDVCheckAndDumpJS(JSContext *cx, unsigned argc, jsval *vp)
+ReportAndDump(JSContext *cx, unsigned argc, jsval *vp)
 {
-  mozilla::DMDVCheckAndDump();
+  mozilla::dmd::RunReporters();
+  mozilla::dmdv::Dump();
   return JS_TRUE;
 }
 
+} // namespace dmdv
+} // namespace mozilla
+
 static JSFunctionSpec DMDVFunctions[] = {
-    JS_FS("DMDV",                       DMDVCheckAndDumpJS,         0, 0),
+    JS_FS("DMDVReportAndDump", dmdv::ReportAndDump, 0, 0),
     JS_FS_END
 };
 
@@ -2769,6 +2834,11 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
   ::JS_DefineFunctions(mContext, aGlobalObj, TraceMallocFunctions);
+#endif
+
+#ifdef MOZ_DMD
+  // Attempt to initialize DMD functions
+  ::JS_DefineFunctions(mContext, aGlobalObj, DMDFunctions);
 #endif
 
 #ifdef MOZ_JPROF

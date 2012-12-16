@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+  attachConsole([], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  onEvaluate = onEvaluate.bind(null, aState);
+  aState.client.evaluateJS("document.__proto__", onEvaluate);
+}
+
+function onEvaluate(aState, aResponse)
+{
+  checkObject(aResponse, {
+    from: aState.actor,
+    input: "document.__proto__",
+    result: {
+      type: "object",
+      actor: /[a-z]/,
+      inspectable: true,
+    },
+  });
+
+  ok(!aResponse.error, "no js error");
+  ok(!aResponse.helperResult, "no helper result");
+
+  onInspect = onInspect.bind(null, aState);
+  aState.client.inspectObjectProperties(aResponse.result.actor, onInspect);
+}
+
+function onInspect(aState, aResponse)
+{
+  ok(!aResponse.error, "no response error");
+
+  let expectedProps = [
+    { name: "ATTRIBUTE_NODE", value: 2 },
+    { name: "CDATA_SECTION_NODE", value: 4 },
+    { name: "COMMENT_NODE", value: 8 },
+    { name: "DOCUMENT_FRAGMENT_NODE", value: 11 },
+  ];
+
+  let props = aResponse.properties;
+  ok(props, "response properties available");
+
+  if (props) {
+    ok(props.length > expectedProps.length,
+       "number of enumerable properties");
+    checkObject(props, expectedProps);
+  }
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

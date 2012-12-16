@@ -21,18 +21,6 @@ def add_libdir_to_path():
 add_libdir_to_path()
 from progressbar import ProgressBar, NullProgressBar
 
-DEBUGGER_INFO = {
-  "gdb": {
-    "interactive": True,
-    "args": "-q --args"
-  },
-
-  "valgrind": {
-    "interactive": False,
-    "args": "--leak-check=full"
-  }
-}
-
 # Backported from Python 3.1 posixpath.py
 def _relpath(path, start=None):
     """Return a relative version of a path"""
@@ -226,8 +214,10 @@ def run_test(test, lib_dir, shell_args):
              for d in os.environ['PATH'].split(os.pathsep)])):
         valgrind_prefix = [ 'valgrind',
                             '-q',
-                            '--smc-check=all',
+                            '--smc-check=all-non-file',
                             '--error-exitcode=1',
+                            '--gen-suppressions=all',
+                            '--show-possibly-lost=no',
                             '--leak-check=full']
         if os.uname()[0] == 'Darwin':
             valgrind_prefix += ['--dsymutil=yes']

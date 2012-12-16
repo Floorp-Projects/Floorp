@@ -64,15 +64,6 @@ would prefer to do this manually, hit CTRL+c, install Homebrew yourself, ensure
 "brew" is in your $PATH, and relaunch bootstrap.
 '''
 
-HOMEBREW_XQUARTZ = '''
-Homebrew needs XQuartz installed in order to build some dependencies. Please
-download and install XQuartz from the following URL:
-
-    http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.3.dmg\
-
-When that has finished, please relaunch bootstrap.
-'''
-
 HOMEBREW_PACKAGES = '''
 We are now installing all required packages via Homebrew. You will see a lot of
 output as packages are built.
@@ -86,13 +77,13 @@ We will install a modern version of Clang through Homebrew.
 
 
 class OSXBootstrapper(BaseBootstrapper):
-    def __init__(self, major, minor, point):
+    def __init__(self, version):
         BaseBootstrapper.__init__(self)
 
-        if major == 10 and minor < 6:
-            raise Exception('OS X 10.6 or above is required.')
+        self.os_version = StrictVersion(version)
 
-        self.os_version = minor
+        if self.os_version < StrictVersion('10.6'):
+            raise Exception('OS X 10.6 or above is required.')
 
     def install_system_packages(self):
         self.ensure_xcode()
@@ -100,14 +91,14 @@ class OSXBootstrapper(BaseBootstrapper):
         self.ensure_homebrew_packages()
 
     def ensure_xcode(self):
-        if self.os_version < 7:
+        if self.os_version < StrictVersion('10.7'):
             if not os.path.exists('/Developer/Applications/Xcode.app'):
                 print(XCODE_REQUIRED_LEGACY)
 
                 subprocess.check_call(['open', XCODE_LEGACY])
                 sys.exit(1)
 
-        elif self.os_version >= 7:
+        elif self.os_version >= StrictVersion('10.7'):
             if not os.path.exists('/Applications/Xcode.app'):
                 print(XCODE_REQUIRED)
 
@@ -122,14 +113,14 @@ class OSXBootstrapper(BaseBootstrapper):
             output = self.check_output(['/usr/bin/xcrun', 'clang'],
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-             if 'license' in e.output:
-                 xcodebuild = self.which('xcodebuild')
-                 subprocess.check_call([xcodebuild, '-license'])
+            if 'license' in e.output:
+                xcodebuild = self.which('xcodebuild')
+                subprocess.check_call([xcodebuild, '-license'])
 
         # Even then we're not done! We need to install the Xcode command line tools.
         # As of Mountain Lion, apparently the only way to do this is to go through a
         # menu dialog inside Xcode itself. We're not making this up.
-        if self.os_version >= 7:
+        if self.os_version >= StrictVersion('10.7'):
             if not os.path.exists('/usr/bin/clang'):
                 print(XCODE_COMMAND_LINE_TOOLS_MISSING)
                 print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
@@ -159,21 +150,11 @@ class OSXBootstrapper(BaseBootstrapper):
 
             subprocess.check_call(['ruby', tf.name])
 
-    def ensure_xquartz(self):
-        if os.path.exists('/Applications/Utilities/XQuartz.app'):
-            return
-
-        print(HOMEBREW_XQUARTZ)
-        sys.exit(1)
-
     def ensure_homebrew_packages(self):
         brew = self.which('brew')
         assert brew is not None
 
         installed = self.check_output([brew, 'list']).split()
-
-        if 'python' not in installed:
-            self.ensure_xquartz()
 
         packages = [
             # We need to install Python because Mercurial requires the Python
@@ -198,9 +179,8 @@ class OSXBootstrapper(BaseBootstrapper):
 
             subprocess.check_call([brew, '-v', 'install', package])
 
-        if self.os_version < 7 and 'llvm' not in installed:
+        if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
             print(HOMEBREW_OLD_CLANG)
 
             subprocess.check_call([brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
-

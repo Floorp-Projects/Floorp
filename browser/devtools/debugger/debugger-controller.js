@@ -637,6 +637,7 @@ StackFrames.prototype = {
       let arrow = L10N.getStr("watchExpressionsSeparatorLabel");
       let scope = DebuggerView.Variables.addScope(label);
       scope.separator = arrow;
+      scope.showDescriptorTooltip = false;
       scope.allowNameInput = true;
       scope.allowDeletion = true;
       scope.contextMenu = "debuggerWatchExpressionsContextMenu";
@@ -926,7 +927,9 @@ StackFrames.prototype = {
         label += " [" + aEnv.object.class + "]";
         break;
       case "function":
-        label += " [" + aEnv.functionName + "]";
+        let f = aEnv.function;
+        label += " [" + (f.name || f.userDisplayName || f.displayName ||
+                         "(anonymous)") + "]";
         break;
     }
     return label;

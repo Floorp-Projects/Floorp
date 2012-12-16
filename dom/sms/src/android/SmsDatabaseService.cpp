@@ -14,40 +14,6 @@ namespace sms {
 NS_IMPL_ISUPPORTS1(SmsDatabaseService, nsISmsDatabaseService)
 
 NS_IMETHODIMP
-SmsDatabaseService::SaveReceivedMessage(const nsAString& aSender,
-                                        const nsAString& aBody,
-                                        const nsAString& aMessageClass,
-                                        uint64_t aDate, int32_t* aId)
-{
-  // The Android stock SMS app does this already.
-  *aId = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsDatabaseService::SaveSentMessage(const nsAString& aReceiver,
-                                    const nsAString& aBody,
-                                    uint64_t aDate, int32_t* aId)
-{
-  *aId = -1;
-
-  if (!AndroidBridge::Bridge()) {
-    return NS_OK;
-  }
-
-  *aId = AndroidBridge::Bridge()->SaveSentMessage(aReceiver, aBody, aDate);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsDatabaseService::SetMessageDeliveryStatus(int32_t aMessageId,
-                                             const nsAString& aDeliveryStatus)
-{
-  // TODO: Bug 803828: update delivery status for sent messages in Android.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 SmsDatabaseService::GetMessageMoz(int32_t aMessageId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {

@@ -142,7 +142,10 @@ typedef enum {
   // - The shader spec is SH_WEBGL_SPEC.
   // - The compile options contain the SH_TIMING_RESTRICTIONS flag.
   // - The shader type is SH_FRAGMENT_SHADER.
-  SH_DEPENDENCY_GRAPH = 0x0400
+  SH_DEPENDENCY_GRAPH = 0x0400,
+
+  // Enforce the GLSL 1.017 Appendix A section 7 packing restrictions.
+  SH_ENFORCE_PACKING_RESTRICTIONS = 0x0800,
 } ShCompileOptions;
 
 //

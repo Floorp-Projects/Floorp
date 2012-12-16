@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -99,18 +99,20 @@ RegExpObject::setSticky(bool enabled)
     setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
 }
 
-#if ENABLE_YARR_JIT
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
 inline bool
-detail::RegExpCode::isJITRuntimeEnabled(JSContext *cx)
+RegExpShared::isJITRuntimeEnabled(JSContext *cx)
 {
-#if defined(ANDROID) && defined(JS_METHODJIT)
+#if ENABLE_YARR_JIT
+# if defined(ANDROID) && defined(JS_METHODJIT)
     return cx->methodJitEnabled;
-#else
+# else
     return true;
+# endif
+#else
+    return false;
 #endif
 }
-#endif
 
 inline bool
 RegExpToShared(JSContext *cx, JSObject &obj, RegExpGuard *g)

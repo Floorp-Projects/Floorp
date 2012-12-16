@@ -198,6 +198,12 @@ GetRuntime(const JSContext *cx)
     return ContextFriendFields::get(cx)->runtime;
 }
 
+inline JSCompartment *
+GetContextCompartment(const JSContext *cx)
+{
+    return ContextFriendFields::get(cx)->compartment;
+}
+
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
 
@@ -681,9 +687,6 @@ GetOwnerThread(const JSContext *cx);
 JS_FRIEND_API(bool)
 ContextHasOutstandingRequests(const JSContext *cx);
 #endif
-
-JS_FRIEND_API(JSCompartment *)
-GetContextCompartment(const JSContext *cx);
 
 JS_FRIEND_API(bool)
 HasUnrootedGlobal(const JSContext *cx);
@@ -1424,9 +1427,16 @@ typedef bool
                   void *specializedThis, unsigned argc, JS::Value *vp);
 
 struct JSJitInfo {
+    enum OpType {
+        Getter,
+        Setter,
+        Method
+    };
+
     JSJitPropertyOp op;
     uint32_t protoID;
     uint32_t depth;
+    OpType type;
     bool isInfallible;    /* Is op fallible? False in setters. */
     bool isConstant;      /* Getting a construction-time constant? */
 };

@@ -1074,6 +1074,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
    NS_INTERFACE_MAP_ENTRY(nsICancelable)
    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+   NS_INTERFACE_MAP_ENTRY(nsIBackgroundFileSaverObserver)   
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
@@ -1095,7 +1096,7 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 , mReason(aReason)
 , mContentLength(-1)
 , mProgress(0)
-, mDataBuffer(nullptr)
+, mSaver(nullptr)
 , mKeepRequestAlive(false)
 , mRequest(nullptr)
 , mExtProtSvc(aExtProtSvc)
@@ -1127,15 +1128,11 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   EnsureSuggestedFileName();
 
   mBufferSize = Preferences::GetUint("network.buffer.cache.size", 4096);
-  mDataBuffer = (char*) malloc(mBufferSize);
-  if (!mDataBuffer)
-    return;
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
-  if (mDataBuffer)
-    free(mDataBuffer);
+  MOZ_ASSERT(!mSaver, "Saver should hold a reference to us until deleted");
 }
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)
@@ -1355,31 +1352,19 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mTempFile,
-                                   PR_WRONLY | PR_CREATE_FILE, 0600);
+  MOZ_ASSERT(!mSaver, "Output file initialization called more than once!");
+  mSaver = do_CreateInstance(NS_BACKGROUNDFILESAVERSTREAMLISTENER_CONTRACTID,
+                             &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mSaver->SetObserver(this);
   if (NS_FAILED(rv)) {
-    mTempFile->Remove(false);
+    mSaver = nullptr;
     return rv;
   }
 
-  mOutStream = NS_BufferOutputStream(outputStream, BUFFERED_OUTPUT_SIZE);
-
-#if defined(XP_MACOSX) && !defined(__LP64__)
-    nsAutoCString contentType;
-    mMimeInfo->GetMIMEType(contentType);
-    if (contentType.LowerCaseEqualsLiteral(APPLICATION_APPLEFILE) ||
-        contentType.LowerCaseEqualsLiteral(MULTIPART_APPLEDOUBLE))
-    {
-      nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        rv = appleFileDecoder->Initialize(mOutStream, mTempFile);
-        if (NS_SUCCEEDED(rv))
-          mOutStream = do_QueryInterface(appleFileDecoder, &rv);
-      }
-    }
-#endif
+  rv = mSaver->SetTarget(mTempFile, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
@@ -1749,57 +1734,24 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
 {
   nsresult rv = NS_OK;
   // first, check to see if we've been canceled....
-  if (mCanceled || !mDataBuffer) // then go cancel our underlying channel too
+  if (mCanceled || !mSaver) // then go cancel our underlying channel too
     return request->Cancel(NS_BINDING_ABORTED);
 
   // read the data out of the stream and write it to the temp file.
-  if (mOutStream && count > 0)
+  if (count > 0)
   {
-    uint32_t numBytesRead = 0; 
-    uint32_t numBytesWritten = 0;
     mProgress += count;
-    bool readError = true;
-    while (NS_SUCCEEDED(rv) && count > 0) // while we still have bytes to copy...
-    {
-      readError = true;
-      rv = inStr->Read(mDataBuffer, NS_MIN(count, mBufferSize - 1), &numBytesRead);
-      if (NS_SUCCEEDED(rv))
-      {
-        if (count >= numBytesRead)
-          count -= numBytesRead; // subtract off the number of bytes we just read
-        else
-          count = 0;
-        readError = false;
-        // Write out the data until something goes wrong, or, it is
-        // all written.  We loop because for some errors (e.g., disk
-        // full), we get NS_OK with some bytes written, then an error.
-        // So, we want to write again in that case to get the actual
-        // error code.
-        const char *bufPtr = mDataBuffer; // Where to write from.
-        while (NS_SUCCEEDED(rv) && numBytesRead)
-        {
-          numBytesWritten = 0;
-          rv = mOutStream->Write(bufPtr, numBytesRead, &numBytesWritten);
-          if (NS_SUCCEEDED(rv))
-          {
-            numBytesRead -= numBytesWritten;
-            bufPtr += numBytesWritten;
-            // Force an error if (for some reason) we get NS_OK but
-            // no bytes written.
-            if (!numBytesWritten)
-            {
-              rv = NS_ERROR_FAILURE;
-            }
-          }
-        }
-      }
-    }
+
+    nsCOMPtr<nsIStreamListener> saver = do_QueryInterface(mSaver);
+    rv = saver->OnDataAvailable(request, aCtxt, inStr, sourceOffset, count);
     if (NS_SUCCEEDED(rv))
     {
       // Send progress notification.
       if (mWebProgressListener)
       {
-        mWebProgressListener->OnProgressChange64(nullptr, request, mProgress, mContentLength, mProgress, mContentLength);
+        mWebProgressListener->OnProgressChange64(nullptr, request, mProgress,
+                                                 mContentLength, mProgress,
+                                                 mContentLength);
       }
     }
     else
@@ -1808,7 +1760,7 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
       nsAutoString tempFilePath;
       if (mTempFile)
         mTempFile->GetPath(tempFilePath);
-      SendStatusChange(readError ? kReadError : kWriteError, rv, request, tempFilePath);
+      SendStatusChange(kReadError, rv, request, tempFilePath);
 
       // Cancel the download.
       Cancel(rv);
@@ -1838,21 +1790,41 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   }
 
   // first, check to see if we've been canceled....
+  if (mCanceled || !mSaver)
+    return NS_OK;
+
+  return mSaver->Finish(NS_OK);
+}
+
+NS_IMETHODIMP
+nsExternalAppHandler::OnTargetChange(nsIBackgroundFileSaver *aSaver,
+                                     nsIFile *aTarget)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
+                                     nsresult aStatus)
+{
+  // Free the reference that the saver keeps on us.
+  mSaver = nullptr;
+
   if (mCanceled)
     return NS_OK;
 
-  // close the stream...
-  if (mOutStream)
-  {
-    mOutStream->Close();
-    mOutStream = nullptr;
+  if (NS_FAILED(aStatus)) {
+    nsAutoString path;
+    mTempFile->GetPath(path);
+    SendStatusChange(kWriteError, aStatus, nullptr, path);
+    if (!mCanceled)
+      Cancel(aStatus);
+    return NS_OK;
   }
 
   // Do what the user asked for
   ExecuteDesiredAction();
 
-  // At this point, the channel should still own us. So releasing the reference
-  // to us in the nsITransfer should be ok.
   // This nsITransfer object holds a reference to us (we are its observer), so
   // we need to release the reference to break a reference cycle (and therefore
   // to prevent leaking)
@@ -2130,27 +2102,19 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, bool 
       name.AppendLiteral(".part");
       movedFile->SetLeafName(name);
 
-      nsCOMPtr<nsIFile> dir;
-      movedFile->GetParent(getter_AddRefs(dir));
-
-      mOutStream->Close();
-
-      rv = mTempFile->MoveTo(dir, name);
-      if (NS_SUCCEEDED(rv)) // if it failed, we just continue with $TEMP
-        mTempFile = movedFile;
-
-      nsCOMPtr<nsIOutputStream> outputStream;
-      rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mTempFile,
-                                       PR_WRONLY | PR_APPEND, 0600);
-      if (NS_FAILED(rv)) { // (Re-)opening the output stream failed. bad luck.
-        nsAutoString path;
-        mTempFile->GetPath(path);
-        SendStatusChange(kWriteError, rv, nullptr, path);
-        Cancel(rv);
-        return NS_OK;
+      if (mSaver)
+      {
+        rv = mSaver->SetTarget(movedFile, true);
+        if (NS_FAILED(rv)) {
+          nsAutoString path;
+          mTempFile->GetPath(path);
+          SendStatusChange(kWriteError, rv, nullptr, path);
+          Cancel(rv);
+          return NS_OK;
+        }
       }
 
-      mOutStream = NS_BufferOutputStream(outputStream, BUFFERED_OUTPUT_SIZE);
+      mTempFile = movedFile;
     }
   }
 
@@ -2315,35 +2279,14 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   // XXX should not ignore the reason
 
   mCanceled = true;
+  if (mSaver)
+    mSaver->Finish(aReason);
+
   // Break our reference cycle with the helper app dialog (set up in
   // OnStartRequest)
   mDialog = nullptr;
 
   mRequest = nullptr;
-
-  // shutdown our stream to the temp file
-  if (mOutStream)
-  {
-    mOutStream->Close();
-    mOutStream = nullptr;
-  }
-
-  // Clean up after ourselves and delete the temp file only if the user
-  // canceled the helper app dialog (we didn't get the disposition info yet).
-  // We leave the partial file for everything else because it could be useful
-  // e.g., resume a download
-  if (mTempFile && !mReceivedDispositionInfo)
-  {
-    mTempFile->Remove(false);
-    mTempFile = nullptr;
-  }
-
-  // If we have already created a final destination file, we remove it as well
-  if (mFinalFileDestination)
-  {
-    mFinalFileDestination->Remove(false);
-    mFinalFileDestination = nullptr;
-  }
 
   // Release the listener, to break the reference cycle with it (we are the
   // observer of the listener).

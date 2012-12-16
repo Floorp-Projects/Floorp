@@ -12,6 +12,7 @@
 #include "ImageContainer.h"
 #include "GonkIOSurfaceImage.h"
 #include "GrallocImages.h"
+#include "SharedRGBImage.h"
 #include "mozilla/layers/ShmemYCbCrImage.h"
 #include "mozilla/ReentrantMonitor.h"
 
@@ -596,12 +597,13 @@ already_AddRefed<Image> ImageContainerChild::CreateImage(const uint32_t *aFormat
                                                          uint32_t aNumFormats)
 {
   nsRefPtr<Image> img;
-#ifdef MOZ_WIDGET_GONK
   for (uint32_t i = 0; i < aNumFormats; i++) {
     switch (aFormats[i]) {
       case PLANAR_YCBCR:
-#endif
         img = new SharedPlanarYCbCrImage(this);
+        return img.forget();
+      case SHARED_RGB:
+        img = new SharedRGBImage(this);
         return img.forget();
 #ifdef MOZ_WIDGET_GONK
       case GONK_IO_SURFACE:
@@ -610,11 +612,11 @@ already_AddRefed<Image> ImageContainerChild::CreateImage(const uint32_t *aFormat
       case GRALLOC_PLANAR_YCBCR:
         img = new GrallocPlanarYCbCrImage();
         return img.forget();
+#endif
     }
   }
 
   return nullptr;
-#endif
 }
 
 SharedImage* ImageContainerChild::AsSharedImage(Image* aImage)
@@ -635,6 +637,11 @@ SharedImage* ImageContainerChild::AsSharedImage(Image* aImage)
       = static_cast<PlanarYCbCrImage*>(aImage)->AsSharedPlanarYCbCrImage();
     if (sharedYCbCr) {
       return sharedYCbCr->ToSharedImage();
+    }
+  } else if (aImage->GetFormat() == SHARED_RGB) {
+    SharedRGBImage *rgbImage = static_cast<SharedRGBImage*>(aImage);
+    if (rgbImage) {
+      return rgbImage->ToSharedImage();
     }
   }
   return nullptr;

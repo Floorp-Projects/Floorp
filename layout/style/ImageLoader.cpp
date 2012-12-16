@@ -121,13 +121,13 @@ ImageLoader::MaybeRegisterCSSImage(ImageLoader::Image* aImage)
     return;
   }
 
-  imgIRequest* canonicalRequest = aImage->mRequests.GetWeak(nullptr);
+  imgRequestProxy* canonicalRequest = aImage->mRequests.GetWeak(nullptr);
   if (!canonicalRequest) {
     // The image was blocked or something.
     return;
   }
 
-  nsCOMPtr<imgIRequest> request;
+  nsRefPtr<imgRequestProxy> request;
 
   // Ignore errors here.  If cloning fails for some reason we'll put a null
   // entry in the hash and we won't keep trying to clone.
@@ -261,7 +261,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
     return;
   }
 
-  nsCOMPtr<imgIRequest> request;
+  nsRefPtr<imgRequestProxy> request;
   nsContentUtils::LoadImage(aURI, mDocument, aOriginPrincipal, aReferrer,
                             nullptr, nsIRequest::LOAD_NORMAL,
                             getter_AddRefs(request));
@@ -270,7 +270,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
     return;
   }
 
-  nsCOMPtr<imgIRequest> clonedRequest;
+  nsRefPtr<imgRequestProxy> clonedRequest;
   mInClone = true;
   nsresult rv = request->Clone(this, getter_AddRefs(clonedRequest));
   mInClone = false;
@@ -341,7 +341,7 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet)
     nsIFrame* frame = aFrameSet->ElementAt(i);
 
     if (frame->GetStyleVisibility()->IsVisible()) {
-      FrameLayerBuilder::IterateVisibleRetainedDataFor(frame, InvalidateImagesCallback);
+      FrameLayerBuilder::IterateRetainedDataFor(frame, InvalidateImagesCallback);
     }
   }
 }

@@ -11,13 +11,20 @@
 #include "jsprf.h"
 #include "jsutil.h"
 
+#include "mozilla/Util.h"
+
 #include "js/HashTable.h"
 #include "gc/GCInternals.h"
 
 #include "jsgcinlines.h"
 
+#ifdef MOZ_VALGRIND
+# include <valgrind/memcheck.h>
+#endif
+
 using namespace js;
 using namespace js::gc;
+using namespace mozilla;
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
@@ -40,16 +47,11 @@ static void
 CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
 {
     /* Mark memory as defined for valgrind, as in MarkWordConservatively. */
-#ifdef JS_VALGRIND
+#ifdef MOZ_VALGRIND
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    void *thing;
-    ArenaHeader *aheader;
-    AllocKind thingKind;
-    ConservativeGCTest status =
-        IsAddressableGCThing(rt, *w, false, &thingKind, &aheader, &thing);
-    if (status != CGCT_VALID)
+    if (!IsAddressableGCThing(rt, *w))
         return;
     /*
      * Note that |thing| may be in a free list (InFreeList(aheader, thing)),
@@ -157,9 +159,9 @@ SuppressCheckRoots(Vector<Rooter, 0, SystemAllocPolicy> &rooters)
     unsigned int pos;
 
     // Compute the hash of the current stack
-    uint32_t hash = mozilla::HashGeneric(&pos);
+    uint32_t hash = HashGeneric(&pos);
     for (unsigned int i = 0; i < Min(StackCheckDepth, rooters.length()); i++)
-        hash = mozilla::AddToHash(hash, rooters[rooters.length() - i - 1].rooter);
+        hash = AddToHash(hash, rooters[rooters.length() - i - 1].rooter);
 
     // Scan through the remembered stacks to find the current stack
     for (pos = 0; pos < numMemories; pos++) {
@@ -287,7 +289,8 @@ JS::CheckStackRoots(JSContext *cx)
     JS_ASSERT(stackMin <= stackEnd);
     CheckStackRootsRangeAndSkipIon(rt, stackMin, stackEnd, firstToScan, rooters.end());
     CheckStackRootsRange(rt, cgcd->registerSnapshot.words,
-                         ArrayEnd(cgcd->registerSnapshot.words), firstToScan, rooters.end());
+                         ArrayEnd(cgcd->registerSnapshot.words),
+                         firstToScan, rooters.end());
 
     // Mark all rooters as scanned
     for (Rooter *p = rooters.begin(); p != rooters.end(); p++)
@@ -493,7 +496,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
 
     rt->gcVerifyPreData = trc;
     rt->gcIncrementalState = MARK;
-    rt->gcMarker.start(rt);
+    rt->gcMarker.start();
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         PurgeJITCaches(c);
         c->setNeedsBarrier(true, JSCompartment::UpdateIon);

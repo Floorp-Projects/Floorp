@@ -18,11 +18,11 @@ using namespace js::types;
 using namespace js::analyze;
 
 bool
-TypeInferenceOracle::init(JSContext *cx, JSScript *script)
+TypeInferenceOracle::init(JSContext *cx, HandleScript script)
 {
     this->cx = cx;
     this->script_.init(script);
-    return script->ensureRanInference(cx);
+    return JSScript::ensureRanInference(cx, script);
 }
 
 MIRType
@@ -64,9 +64,9 @@ TypeInferenceOracle::getMIRType(HeapTypeSet *types)
 }
 
 TypeOracle::UnaryTypes
-TypeInferenceOracle::unaryTypes(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::unaryTypes(UnrootedScript script, jsbytecode *pc)
 {
-    JS_ASSERT(script == this->script_);
+    JS_ASSERT(script == this->script());
 
     UnaryTypes res;
     res.inTypes = script->analysis()->poppedTypes(pc, 0);
@@ -75,9 +75,9 @@ TypeInferenceOracle::unaryTypes(JSScript *script, jsbytecode *pc)
 }
 
 TypeOracle::BinaryTypes
-TypeInferenceOracle::binaryTypes(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::binaryTypes(UnrootedScript script, jsbytecode *pc)
 {
-    JS_ASSERT(script == this->script_);
+    JS_ASSERT(script == this->script());
 
     JSOp op = (JSOp)*pc;
 
@@ -95,9 +95,9 @@ TypeInferenceOracle::binaryTypes(JSScript *script, jsbytecode *pc)
 }
 
 TypeOracle::Unary
-TypeInferenceOracle::unaryOp(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::unaryOp(UnrootedScript script, jsbytecode *pc)
 {
-    JS_ASSERT(script == this->script_);
+    JS_ASSERT(script == this->script());
 
     Unary res;
     res.ival = getMIRType(script->analysis()->poppedTypes(pc, 0));
@@ -106,9 +106,9 @@ TypeInferenceOracle::unaryOp(JSScript *script, jsbytecode *pc)
 }
 
 TypeOracle::Binary
-TypeInferenceOracle::binaryOp(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::binaryOp(UnrootedScript script, jsbytecode *pc)
 {
-    JS_ASSERT(script == this->script_);
+    JS_ASSERT(script == this->script());
 
     JSOp op = (JSOp)*pc;
 
@@ -126,9 +126,9 @@ TypeInferenceOracle::binaryOp(JSScript *script, jsbytecode *pc)
 }
 
 StackTypeSet *
-TypeInferenceOracle::thisTypeSet(JSScript *script)
+TypeInferenceOracle::thisTypeSet(UnrootedScript script)
 {
-    JS_ASSERT(script == this->script_);
+    JS_ASSERT(script == this->script());
     return TypeScript::ThisTypes(script);
 }
 
@@ -136,18 +136,18 @@ bool
 TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
 {
     JS_ASSERT(JSOp(*osrPc) == JSOP_LOOPENTRY);
-    JS_ASSERT(script_->code < osrPc);
-    JS_ASSERT(osrPc < script_->code + script_->length);
+    JS_ASSERT(script()->code < osrPc);
+    JS_ASSERT(osrPc < script()->code + script()->length);
 
     Vector<types::StackTypeSet *> slotTypeSets(cx);
-    if (!slotTypeSets.resize(TotalSlots(script_)))
+    if (!slotTypeSets.resize(TotalSlots(script())))
         return false;
 
-    for (uint32_t slot = ThisSlot(); slot < TotalSlots(script_); slot++)
-        slotTypeSets[slot] = TypeScript::SlotTypes(script_, slot);
+    for (uint32_t slot = ThisSlot(); slot < TotalSlots(script()); slot++)
+        slotTypeSets[slot] = TypeScript::SlotTypes(script(), slot);
 
-    jsbytecode *pc = script_->code;
-    ScriptAnalysis *analysis = script_->analysis();
+    jsbytecode *pc = script()->code;
+    ScriptAnalysis *analysis = script()->analysis();
 
     // To determine the slot types at the OSR pc, we have to do a forward walk
     // over the bytecode to reconstruct the types.
@@ -158,7 +158,7 @@ TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
                 // Update variable types for all new values at this bytecode.
                 if (const SlotValue *newv = analysis->newValues(pc)) {
                     while (newv->slot) {
-                        if (newv->slot < TotalSlots(script_))
+                        if (newv->slot < TotalSlots(script()))
                             slotTypeSets[newv->slot] = analysis->getValueTypes(newv->value);
                         newv++;
                     }
@@ -166,7 +166,7 @@ TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
             }
 
             if (BytecodeUpdatesSlot(JSOp(*pc))) {
-                uint32_t slot = GetBytecodeSlot(script_, pc);
+                uint32_t slot = GetBytecodeSlot(script(), pc);
                 if (analysis->trackSlot(slot))
                     slotTypeSets[slot] = analysis->pushedTypes(pc, 0);
             }
@@ -189,15 +189,15 @@ TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
     uint32_t stackDepth = analysis->getCode(osrPc).stackDepth;
 #endif
 
-    if (script_->function()) {
-        JS_ASSERT(slotTypes.length() == TotalSlots(script_) + stackDepth);
+    if (script()->function()) {
+        JS_ASSERT(slotTypes.length() == TotalSlots(script()) + stackDepth);
 
-        for (size_t i = ThisSlot(); i < TotalSlots(script_); i++)
+        for (size_t i = ThisSlot(); i < TotalSlots(script()); i++)
             slotTypes[i] = getMIRType(slotTypeSets[i]);
     } else {
-        JS_ASSERT(slotTypes.length() == TotalSlots(script_) + stackDepth - 1);
+        JS_ASSERT(slotTypes.length() == TotalSlots(script()) + stackDepth - 1);
 
-        for (size_t i = ArgSlot(0); i < TotalSlots(script_); i++)
+        for (size_t i = ArgSlot(0); i < TotalSlots(script()); i++)
             slotTypes[i - 1] = getMIRType(slotTypeSets[i]);
     }
 
@@ -205,20 +205,20 @@ TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
 }
 
 StackTypeSet *
-TypeInferenceOracle::parameterTypeSet(JSScript *script, size_t index)
+TypeInferenceOracle::parameterTypeSet(UnrootedScript script, size_t index)
 {
-    JS_ASSERT(script == this->script_);
+    JS_ASSERT(script == this->script());
     return TypeScript::ArgTypes(script, index);
 }
 
 StackTypeSet *
-TypeInferenceOracle::propertyRead(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::propertyRead(UnrootedScript script, jsbytecode *pc)
 {
     return script->analysis()->pushedTypes(pc, 0);
 }
 
 StackTypeSet *
-TypeInferenceOracle::propertyReadBarrier(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::propertyReadBarrier(HandleScript script, jsbytecode *pc)
 {
     if (script->analysis()->typeBarriers(cx, pc))
         return script->analysis()->bytecodeTypes(pc);
@@ -226,12 +226,12 @@ TypeInferenceOracle::propertyReadBarrier(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::propertyReadIdempotent(JSScript *script, jsbytecode *pc, HandleId id)
+TypeInferenceOracle::propertyReadIdempotent(HandleScript script, jsbytecode *pc, HandleId id)
 {
     if (script->analysis()->getCode(pc).notIdempotent)
         return false;
 
-    if (id.get() != MakeTypeId(cx, id))
+    if (id != MakeTypeId(cx, id))
         return false;
 
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 0);
@@ -257,13 +257,13 @@ TypeInferenceOracle::propertyReadIdempotent(JSScript *script, jsbytecode *pc, Ha
 }
 
 bool
-TypeInferenceOracle::propertyReadAccessGetter(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::propertyReadAccessGetter(UnrootedScript script, jsbytecode *pc)
 {
     return script->analysis()->getCode(pc).accessGetter;
 }
 
 bool
-TypeInferenceOracle::inObjectIsDenseArray(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::inObjectIsDenseArray(HandleScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 1);
@@ -281,14 +281,14 @@ TypeInferenceOracle::inObjectIsDenseArray(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::inArrayIsPacked(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::inArrayIsPacked(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 0);
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
 }
 
 bool
-TypeInferenceOracle::elementReadIsDenseArray(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementReadIsDenseArray(UnrootedScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
@@ -306,7 +306,7 @@ TypeInferenceOracle::elementReadIsDenseArray(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType)
+TypeInferenceOracle::elementReadIsTypedArray(UnrootedScript script, jsbytecode *pc, int *arrayType)
 {
     // Check whether the object is a typed array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
@@ -346,16 +346,17 @@ TypeInferenceOracle::elementReadIsTypedArray(JSScript *script, jsbytecode *pc, i
 }
 
 bool
-TypeInferenceOracle::elementReadIsString(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementReadIsString(UnrootedScript script, jsbytecode *pc)
 {
-    // Check for string[int32].
+    // Check for string[index].
     StackTypeSet *value = script->analysis()->poppedTypes(pc, 1);
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 0);
 
     if (value->getKnownTypeTag() != JSVAL_TYPE_STRING)
         return false;
 
-    if (id->getKnownTypeTag() != JSVAL_TYPE_INT32)
+    JSValueType idType = id->getKnownTypeTag();
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
     // This function is used for jsop_getelem_string which should return
@@ -369,14 +370,14 @@ TypeInferenceOracle::elementReadIsString(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementReadIsPacked(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementReadIsPacked(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 1);
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
 }
 
 void
-TypeInferenceOracle::elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult)
+TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult)
 {
     MIRType obj = getMIRType(script->analysis()->poppedTypes(pc, 1));
     MIRType id = getMIRType(script->analysis()->poppedTypes(pc, 0));
@@ -396,7 +397,7 @@ TypeInferenceOracle::elementReadGeneric(JSScript *script, jsbytecode *pc, bool *
 }
 
 bool
-TypeInferenceOracle::elementWriteIsDenseArray(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsDenseArray(HandleScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
@@ -414,7 +415,7 @@ TypeInferenceOracle::elementWriteIsDenseArray(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, int *arrayType)
+TypeInferenceOracle::elementWriteIsTypedArray(UnrootedScript script, jsbytecode *pc, int *arrayType)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
@@ -439,20 +440,20 @@ TypeInferenceOracle::elementWriteIsTypedArray(JSScript *script, jsbytecode *pc, 
 }
 
 bool
-TypeInferenceOracle::elementWriteIsPacked(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsPacked(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 2);
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
 }
 
 bool
-TypeInferenceOracle::setElementHasWrittenHoles(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::setElementHasWrittenHoles(UnrootedScript script, jsbytecode *pc)
 {
     return script->analysis()->getCode(pc).arrayWriteHole;
 }
 
 MIRType
-TypeInferenceOracle::elementWrite(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWrite(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *objTypes = script->analysis()->poppedTypes(pc, 2);
     MIRType elementType = MIRType_None;
@@ -484,31 +485,31 @@ TypeInferenceOracle::elementWrite(JSScript *script, jsbytecode *pc)
 bool
 TypeInferenceOracle::arrayPrototypeHasIndexedProperty()
 {
-    RootedScript script(cx, script_);
-    return ArrayPrototypeHasIndexedProperty(cx, script);
+    RootedScript scriptRoot(cx, script());
+    return ArrayPrototypeHasIndexedProperty(cx, scriptRoot);
 }
 
 bool
 TypeInferenceOracle::canInlineCalls()
 {
-    return script_->analysis()->hasFunctionCalls();
+    return script()->analysis()->hasFunctionCalls();
 }
 
 bool
-TypeInferenceOracle::propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::propertyWriteCanSpecialize(UnrootedScript script, jsbytecode *pc)
 {
     return !script->analysis()->getCode(pc).monitoredTypes;
 }
 
 bool
-TypeInferenceOracle::propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id)
+TypeInferenceOracle::propertyWriteNeedsBarrier(UnrootedScript script, jsbytecode *pc, jsid id)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 1);
     return types->propertyNeedsBarrier(cx, id);
 }
 
 bool
-TypeInferenceOracle::elementWriteNeedsBarrier(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteNeedsBarrier(UnrootedScript script, jsbytecode *pc)
 {
     // Return true if SETELEM-like instructions need a write barrier before modifying
     // a property. The object is the third value popped by SETELEM.
@@ -517,17 +518,17 @@ TypeInferenceOracle::elementWriteNeedsBarrier(JSScript *script, jsbytecode *pc)
 }
 
 StackTypeSet *
-TypeInferenceOracle::getCallTarget(JSScript *caller, uint32_t argc, jsbytecode *pc)
+TypeInferenceOracle::getCallTarget(UnrootedScript caller, uint32_t argc, jsbytecode *pc)
 {
-    JS_ASSERT(caller == this->script_);
+    JS_ASSERT(caller == this->script());
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE && JSOp(*pc) != JSOP_EVAL);
 
-    ScriptAnalysis *analysis = script_->analysis();
+    ScriptAnalysis *analysis = script()->analysis();
     return analysis->poppedTypes(pc, argc + 1);
 }
 
 StackTypeSet *
-TypeInferenceOracle::getCallArg(JSScript *script, uint32_t argc, uint32_t arg, jsbytecode *pc)
+TypeInferenceOracle::getCallArg(UnrootedScript script, uint32_t argc, uint32_t arg, jsbytecode *pc)
 {
     JS_ASSERT(argc >= arg);
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
@@ -536,13 +537,13 @@ TypeInferenceOracle::getCallArg(JSScript *script, uint32_t argc, uint32_t arg, j
 }
 
 StackTypeSet *
-TypeInferenceOracle::getCallReturn(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::getCallReturn(UnrootedScript script, jsbytecode *pc)
 {
     return script->analysis()->pushedTypes(pc, 0);
 }
 
 bool
-TypeInferenceOracle::canInlineCall(JSScript *caller, jsbytecode *pc)
+TypeInferenceOracle::canInlineCall(HandleScript caller, jsbytecode *pc)
 {
     JS_ASSERT(types::IsInlinableCall(pc));
 
@@ -575,7 +576,7 @@ TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
 }
 
 HeapTypeSet *
-TypeInferenceOracle::globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id,
+TypeInferenceOracle::globalPropertyWrite(UnrootedScript script, jsbytecode *pc, jsid id,
                                          bool *canSpecialize)
 {
     *canSpecialize = !script->analysis()->getCode(pc).monitoredTypes;
@@ -586,7 +587,7 @@ TypeInferenceOracle::globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid 
 }
 
 StackTypeSet *
-TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier)
+TypeInferenceOracle::returnTypeSet(UnrootedScript script, jsbytecode *pc, types::StackTypeSet **barrier)
 {
     if (script->analysis()->getCode(pc).monitoredTypesReturn)
         *barrier = script->analysis()->bytecodeTypes(pc);
@@ -596,14 +597,14 @@ TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::Stac
 }
 
 StackTypeSet *
-TypeInferenceOracle::aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier)
+TypeInferenceOracle::aliasedVarBarrier(UnrootedScript script, jsbytecode *pc, types::StackTypeSet **barrier)
 {
     *barrier = script->analysis()->bytecodeTypes(pc);
     return script->analysis()->pushedTypes(pc, 0);
 }
 
 HeapTypeSet *
-TypeInferenceOracle::globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id)
+TypeInferenceOracle::globalPropertyTypeSet(UnrootedScript script, jsbytecode *pc, jsid id)
 {
     TypeObject *type = script->global().getType(cx);
     if (type->unknownProperties())
@@ -623,21 +624,21 @@ TypeInferenceOracle::isArgumentObject(types::StackTypeSet *obj)
 }
 
 LazyArgumentsType
-TypeInferenceOracle::propertyReadMagicArguments(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::propertyReadMagicArguments(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 0);
     return isArgumentObject(obj);
 }
 
 LazyArgumentsType
-TypeInferenceOracle::elementReadMagicArguments(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementReadMagicArguments(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
     return isArgumentObject(obj);
 }
 
 LazyArgumentsType
-TypeInferenceOracle::elementWriteMagicArguments(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteMagicArguments(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
     return isArgumentObject(obj);

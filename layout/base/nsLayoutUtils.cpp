@@ -91,8 +91,9 @@
 #include "nsTransitionManager.h"
 
 using namespace mozilla;
-using namespace mozilla::layers;
+using namespace mozilla::css;
 using namespace mozilla::dom;
+using namespace mozilla::layers;
 using namespace mozilla::layout;
 
 #define FLEXBOX_ENABLED_PREF_NAME "layout.css.flexbox.enabled"
@@ -177,31 +178,38 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 }
 #endif // MOZ_FLEXBOX
 
+template <class AnimationsOrTransitions>
+static bool
+HasAnimationOrTransition(nsIContent* aContent,
+                         nsIAtom* aAnimationProperty,
+                         nsCSSProperty aProperty)
+{
+  AnimationsOrTransitions* animations =
+    static_cast<AnimationsOrTransitions*>(aContent->GetProperty(aAnimationProperty));
+  if (animations) {
+    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+    if (propertyMatches &&
+        animations->CanPerformOnCompositorThread(
+          CommonElementAnimationData::CanAnimate_AllowPartial)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool
 nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
                                           nsCSSProperty aProperty)
 {
   if (!aContent->MayHaveAnimations())
     return false;
-  ElementAnimations* animations =
-    static_cast<ElementAnimations*>(aContent->GetProperty(nsGkAtoms::animationsProperty));
-  if (animations) {
-    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
-    if (propertyMatches && animations->CanPerformOnCompositorThread()) {
-      return true;
-    }
+  if (HasAnimationOrTransition<ElementAnimations>
+        (aContent, nsGkAtoms::animationsProperty, aProperty)) {
+    return true;
   }
-
-  ElementTransitions* transitions =
-    static_cast<ElementTransitions*>(aContent->GetProperty(nsGkAtoms::transitionsProperty));
-  if (transitions) {
-    bool propertyMatches = transitions->HasTransitionOfProperty(aProperty);
-    if (propertyMatches && transitions->CanPerformOnCompositorThread()) {
-      return true;
-    }
-  }
-
-  return false;
+  return HasAnimationOrTransition<ElementTransitions>
+    (aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
 bool
@@ -5216,3 +5224,32 @@ nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
 
   return true;
 }
+
+/* static */ nsRect
+nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame, 
+                                        const nsSize& aFrameSize)
+{
+  nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
+  if (!boxShadows) {
+    return nsRect();
+  }
+  
+  nsRect shadows;
+  int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
+  for (uint32_t i = 0; i < boxShadows->Length(); ++i) {
+    nsRect tmpRect(nsPoint(0, 0), aFrameSize);
+    nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
+
+    // inset shadows are never painted outside the frame
+    if (shadow->mInset)
+      continue;
+
+    tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
+    tmpRect.Inflate(shadow->mSpread);
+    tmpRect.Inflate(
+      nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
+    shadows.UnionRect(shadows, tmpRect);
+  }
+  return shadows;
+}
+

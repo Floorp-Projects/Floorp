@@ -55,11 +55,13 @@ NS_IsSpace(PRUnichar u)
   return u == 0x0020 ||                  // SPACE
          u == 0x0009 ||                  // CHARACTER TABULATION
          u == 0x000D ||                  // CARRIAGE RETURN
+         u == 0x1680 ||                  // OGHAM SPACE MARK
          (0x2000 <= u && u <= 0x2006) || // EN QUAD, EM QUAD, EN SPACE,
                                          // EM SPACE, THREE-PER-EM SPACE,
                                          // FOUR-PER-SPACE, SIX-PER-EM SPACE,
-         (0x2008 <= u && u <= 0x200B);   // PUNCTUATION SPACE, THIN SPACE,
+         (0x2008 <= u && u <= 0x200B) || // PUNCTUATION SPACE, THIN SPACE,
                                          // HAIR SPACE, ZERO WIDTH SPACE
+         u == 0x205F;                    // MEDIUM MATHEMATICAL SPACE 
 }
 
 static inline bool

@@ -56,7 +56,7 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value
         if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
             return false;
         if (!fun->nonLazyScript()->canIonCompile()) {
-            JSScript *script = GetTopIonJSScript(cx);
+            UnrootedScript script = GetTopIonJSScript(cx);
             if (script->hasIonScript() &&
                 ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit)
             {
@@ -87,35 +87,6 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value
 
     // Run the function in the interpreter.
     bool ok = Invoke(cx, thisv, fval, argc, argvWithoutThis, rval);
-    if (ok && needsMonitor)
-        types::TypeScript::Monitor(cx, *rval);
-
-    return ok;
-}
-
-bool
-InvokeConstructor(JSContext *cx, JSObject *obj, uint32_t argc, Value *argv, Value *rval)
-{
-    Value fval = ObjectValue(*obj);
-
-    // See the comment in InvokeFunction.
-    bool needsMonitor;
-
-    if (obj->isFunction()) {
-        if (obj->toFunction()->isInterpretedLazy() &&
-            !obj->toFunction()->getOrCreateScript(cx))
-        {
-            return false;
-        }
-        needsMonitor = ShouldMonitorReturnType(obj->toFunction());
-    } else {
-        needsMonitor = true;
-    }
-
-    // Data in the argument vector is arranged for a JIT -> JIT call.
-    Value *argvWithoutThis = argv + 1;
-
-    bool ok = js::InvokeConstructor(cx, fval, argc, argvWithoutThis, rval);
     if (ok && needsMonitor)
         types::TypeScript::Monitor(cx, *rval);
 
@@ -171,7 +142,7 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue v
 
     if (name == cx->names().proto)
         return baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false);
-    return !!DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
+    return DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
 }
 
 template<bool Equal>
@@ -387,6 +358,19 @@ ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObje
     if (!js::array_concat(cx, 1, argv))
         return NULL;
     return &argv[0].toObject();
+}
+
+bool
+CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code)
+{
+    JS_ASSERT(index < str->length());
+
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return false;
+
+    *code = chars[index];
+    return true;
 }
 
 JSFlatString *
