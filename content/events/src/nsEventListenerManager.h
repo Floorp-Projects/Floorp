@@ -133,8 +133,7 @@ public:
       return;
     }
 
-    if (!mMayHaveCapturingListeners &&
-        !(aEvent->flags & NS_EVENT_FLAG_BUBBLE)) {
+    if (!mMayHaveCapturingListeners && !aEvent->mFlags.mInBubblingPhase) {
       return;
     }
 

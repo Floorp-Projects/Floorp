@@ -325,12 +325,11 @@ nsDOMEvent::GetEventPhase(uint16_t* aEventPhase)
   // if or when Bug 235441 is fixed.
   if ((mEvent->currentTarget &&
        mEvent->currentTarget == mEvent->target) ||
-      ((mEvent->flags & NS_EVENT_FLAG_CAPTURE) &&
-       (mEvent->flags & NS_EVENT_FLAG_BUBBLE))) {
+       mEvent->mFlags.InTargetPhase()) {
     *aEventPhase = nsIDOMEvent::AT_TARGET;
-  } else if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
+  } else if (mEvent->mFlags.mInCapturePhase) {
     *aEventPhase = nsIDOMEvent::CAPTURING_PHASE;
-  } else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
+  } else if (mEvent->mFlags.mInBubblingPhase) {
     *aEventPhase = nsIDOMEvent::BUBBLING_PHASE;
   } else {
     *aEventPhase = nsIDOMEvent::NONE;
