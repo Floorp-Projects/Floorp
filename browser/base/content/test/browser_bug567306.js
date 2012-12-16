@@ -3,45 +3,42 @@
  */
 
 let Ci = Components.interfaces;
-let testWindow = null;
 
 function test() {
   waitForExplicitFinish();
 
-  testWindow = OpenBrowserWindow();
-  testWindow.addEventListener("load", function(aEvent) {
-    testWindow.removeEventListener("load", arguments.callee, false);
-    ok(true, "Load listener called");
-
-    executeSoon(function() {
-      let selectedBrowser = testWindow.gBrowser.selectedBrowser;
+  whenNewWindowLoaded(undefined, function (win) {
+    whenDelayedStartupFinished(win, function () {
+      let selectedBrowser = win.gBrowser.selectedBrowser;
       selectedBrowser.addEventListener("pageshow", function() {
         selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
-        ok(true, "pageshow listener called");
-        waitForFocus(onFocus, testWindow.contentWindow);
+        ok(true, "pageshow listener called: " + win.content.location);
+        waitForFocus(function () {
+          onFocus(win);
+        }, selectedBrowser.contentWindow);
       }, true);
-      testWindow.content.location = "data:text/html,<h1 id='h1'>Select Me</h1>";
+      selectedBrowser.loadURI("data:text/html,<h1 id='h1'>Select Me</h1>");
     });
-  }, false);
+  });
 }
 
-function selectText() {
-  let elt = testWindow.content.document.getElementById("h1");
-  let selection = testWindow.content.getSelection();
-  let range = testWindow.content.document.createRange();
+function selectText(win) {
+  let elt = win.document.getElementById("h1");
+  let selection = win.getSelection();
+  let range = win.document.createRange();
   range.setStart(elt, 0);
   range.setEnd(elt, 1);
   selection.removeAllRanges();
   selection.addRange(range);
 }
 
-function onFocus() {
-  ok(!testWindow.gFindBarInitialized, "find bar is not yet initialized");
-  let findBar = testWindow.gFindBar;
-  selectText();
+function onFocus(win) {
+  ok(!win.gFindBarInitialized, "find bar is not yet initialized");
+  let findBar = win.gFindBar;
+  selectText(win.content);
   findBar.onFindCommand();
   is(findBar._findField.value, "Select Me", "Findbar is initialized with selection");
   findBar.close();
-  testWindow.close();
+  win.close();
   finish();
 }
