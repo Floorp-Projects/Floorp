@@ -4507,7 +4507,6 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
                                               nsEventStatus* aStatus)
 {
   nsresult ret = NS_OK;
-  int32_t flags = NS_EVENT_FLAG_NONE;
 
   //If mouse is still over same element, clickcount will be > 1.
   //If it has moved it will be zero, so no click.
@@ -4518,11 +4517,9 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
       return ret;
     }
     //fire click
-    if (aEvent->button == nsMouseEvent::eMiddleButton ||
-        aEvent->button == nsMouseEvent::eRightButton) {
-      flags |=
-        sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
-    }
+    bool notDispatchToContents =
+     (aEvent->button == nsMouseEvent::eMiddleButton ||
+      aEvent->button == nsMouseEvent::eRightButton);
 
     nsMouseEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
                        aEvent->widget, nsMouseEvent::eReal);
@@ -4531,7 +4528,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.modifiers = aEvent->modifiers;
     event.buttons = aEvent->buttons;
     event.time = aEvent->time;
-    event.flags |= flags;
+    event.mFlags.mNoContentDispatch = notDispatchToContents;
     event.button = aEvent->button;
     event.inputSource = aEvent->inputSource;
 
@@ -4549,7 +4546,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
         event2.clickCount = aEvent->clickCount;
         event2.modifiers = aEvent->modifiers;
         event2.buttons = aEvent->buttons;
-        event2.flags |= flags;
+        event2.mFlags.mNoContentDispatch = notDispatchToContents;
         event2.button = aEvent->button;
         event2.inputSource = aEvent->inputSource;
 
