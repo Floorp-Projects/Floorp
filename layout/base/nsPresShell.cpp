@@ -6386,8 +6386,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           // DOM full-screen mode. This prevents the browser ESC key
           // handler from stopping all loads in the document, which
           // would cause <video> loads to stop.
-          aEvent->flags |= (NS_EVENT_FLAG_NO_DEFAULT |
-                            NS_EVENT_FLAG_ONLY_CHROME_DISPATCH);
+          aEvent->mFlags.mDefaultPrevented = true;
+          aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
 
           if (aEvent->message == NS_KEY_UP) {
              // ESC key released while in DOM full-screen mode.

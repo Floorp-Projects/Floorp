@@ -3022,7 +3022,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     KeymapWrapper::InitKeyEvent(event, aEvent);
     if (isKeyDownCancelled) {
       // If prevent default set for onkeydown, do the same for onkeypress
-      event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      event.mFlags.mDefaultPrevented = true;
     }
 
     // before we dispatch a key, check if it's the context menu key.
