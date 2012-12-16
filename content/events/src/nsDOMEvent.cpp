@@ -428,7 +428,7 @@ NS_IMETHODIMP
 nsDOMEvent::PreventDefault()
 {
   if (mEvent->mFlags.mCancelable) {
-    mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    mEvent->mFlags.mDefaultPrevented = true;
 
     // Need to set an extra flag for drag events.
     if (mEvent->eventStructType == NS_DRAG_EVENT && mEvent->mFlags.mIsTrusted) {
@@ -440,7 +440,7 @@ nsDOMEvent::PreventDefault()
         }
       }
       if (node && !nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
-        mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT;
+        mEvent->mFlags.mDefaultPreventedByContent = true;
       }
     }
   }
@@ -1143,7 +1143,7 @@ NS_IMETHODIMP
 nsDOMEvent::GetPreventDefault(bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
+  *aReturn = mEvent && mEvent->mFlags.mDefaultPrevented;
   return NS_OK;
 }
 

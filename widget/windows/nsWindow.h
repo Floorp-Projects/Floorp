@@ -17,6 +17,7 @@
 #include "nsToolkit.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsEvent.h"
 #include "gfxWindowsSurface.h"
 #include "nsWindowDbg.h"
 #include "cairo.h"
@@ -375,7 +376,7 @@ protected:
                                  const NativeKey& aNativeKey,
                                  const mozilla::widget::ModifierKeyState &aModKeyState,
                                  bool *aEventDispatched,
-                                 uint32_t aFlags = 0);
+                                 const mozilla::widget::EventFlags* aExtraFlags = nullptr);
   LRESULT                 OnKeyDown(const MSG &aMsg,
                                     const mozilla::widget::ModifierKeyState &aModKeyState,
                                     bool *aEventDispatched,

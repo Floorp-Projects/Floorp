@@ -111,7 +111,6 @@ enum nsEventStructType {
 #define NS_EVENT_FLAG_NONE                0x0000
 #define NS_EVENT_FLAG_BUBBLE              0x0002
 #define NS_EVENT_FLAG_CAPTURE             0x0004
-#define NS_EVENT_FLAG_NO_DEFAULT          0x0010
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
@@ -126,9 +125,6 @@ enum nsEventStructType {
 
 // Use this flag if the event should be dispatched only to chrome.
 #define NS_EVENT_FLAG_ONLY_CHROME_DISPATCH 0x2000
-
-// A flag for drag&drop handling.
-#define NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT 0x4000
 
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
@@ -530,6 +526,14 @@ public:
   // nsDOMEvent::StopImmediatePropagation() has been called.
   // Note that mPropagationStopped must be true when this is true.
   bool    mImmediatePropagationStopped : 1;
+  // If mDefaultPrevented is true, the event has been consumed.
+  // E.g., nsDOMEvent::PreventDefault() has been called or
+  // the default action has been performed.
+  bool    mDefaultPrevented : 1;
+  // If mDefaultPreventedByContent is true, the event has been
+  // consumed by content.
+  // Note that mDefaultPrevented must be true when this is true.
+  bool    mDefaultPreventedByContent : 1;
 
   // If the event is being handled in target phase, returns true.
   bool InTargetPhase() const
