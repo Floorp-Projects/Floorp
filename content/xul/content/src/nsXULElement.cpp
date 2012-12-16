@@ -1155,7 +1155,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                     static_cast<nsInputEvent*>(aVisitor.mEvent);
                 nsContentUtils::DispatchXULCommand(
                   commandContent,
-                  NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                  aVisitor.mEvent->mFlags.mIsTrusted,
                   aVisitor.mDOMEvent,
                   nullptr,
                   orig->IsControl(),

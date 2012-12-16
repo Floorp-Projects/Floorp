@@ -267,12 +267,7 @@ nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 NS_IMETHODIMP
 nsDOMEvent::SetTrusted(bool aTrusted)
 {
-  if (aTrusted) {
-    mEvent->flags |= NS_EVENT_FLAG_TRUSTED;
-  } else {
-    mEvent->flags &= ~NS_EVENT_FLAG_TRUSTED;
-  }
-
+  mEvent->mFlags.mIsTrusted = aTrusted;
   return NS_OK;
 }
 
@@ -426,8 +421,7 @@ nsDOMEvent::PreventCapture()
 NS_IMETHODIMP
 nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
 {
-  *aIsTrusted = NS_IS_TRUSTED_EVENT(mEvent);
-
+  *aIsTrusted = mEvent->mFlags.mIsTrusted;
   return NS_OK;
 }
 
@@ -438,8 +432,7 @@ nsDOMEvent::PreventDefault()
     mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
     // Need to set an extra flag for drag events.
-    if (mEvent->eventStructType == NS_DRAG_EVENT &&
-        NS_IS_TRUSTED_EVENT(mEvent)) {
+    if (mEvent->eventStructType == NS_DRAG_EVENT && mEvent->mFlags.mIsTrusted) {
       nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
       if (!node) {
         nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
@@ -470,7 +463,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
   // Make sure this event isn't already being dispatched.
   NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(mEvent), NS_OK);
 
-  if (NS_IS_TRUSTED_EVENT(mEvent)) {
+  if (mEvent->mFlags.mIsTrusted) {
     // Ensure the caller is permitted to dispatch trusted DOM events.
     if (!nsContentUtils::IsCallerChrome()) {
       SetTrusted(false);
@@ -798,6 +791,7 @@ nsDOMEvent::DuplicatePrivateData()
   newEvent->currentTarget          = mEvent->currentTarget;
   newEvent->originalTarget         = mEvent->originalTarget;
   newEvent->flags                  = mEvent->flags;
+  newEvent->mFlags                 = mEvent->mFlags;
   newEvent->time                   = mEvent->time;
   newEvent->refPoint               = mEvent->refPoint;
   newEvent->userType               = mEvent->userType;
@@ -934,7 +928,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     }
     break;
   case NS_KEY_EVENT :
-    if (NS_IS_TRUSTED_EVENT(aEvent)) {
+    if (aEvent->mFlags.mIsTrusted) {
       uint32_t key = static_cast<nsKeyEvent *>(aEvent)->keyCode;
       switch(aEvent->message) {
       case NS_KEY_PRESS :
@@ -959,7 +953,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     }
     break;
   case NS_MOUSE_EVENT :
-    if (NS_IS_TRUSTED_EVENT(aEvent) &&
+    if (aEvent->mFlags.mIsTrusted &&
         static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
       switch(aEvent->message) {
       case NS_MOUSE_BUTTON_UP :

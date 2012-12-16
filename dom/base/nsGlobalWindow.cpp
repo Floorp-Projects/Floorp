@@ -2464,11 +2464,11 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   } else if (msg == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = true;
   } else if (msg == NS_MOUSE_BUTTON_DOWN &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = true;
   } else if ((msg == NS_MOUSE_BUTTON_UP ||
               msg == NS_DRAGDROP_END) &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = false;
     if (gDragServiceDisabled) {
       nsCOMPtr<nsIDragService> ds =
@@ -2484,7 +2484,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Handle 'active' event.
   if (!mIdleObservers.IsEmpty() &&
-      NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
+      aVisitor.mEvent->mFlags.mIsTrusted &&
       (NS_IS_MOUSE_EVENT(aVisitor.mEvent) ||
        NS_IS_DRAG_EVENT(aVisitor.mEvent))) {
     mAddActiveEventFuzzTime = false;
@@ -2633,7 +2633,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = false;
   } else if (aVisitor.mEvent->message == NS_PAGE_UNLOAD &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     // Execute bindingdetached handlers before we tear ourselves
     // down.
     if (mDocument) {
@@ -2642,7 +2642,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     }
     mIsDocumentLoaded = false;
   } else if (aVisitor.mEvent->message == NS_LOAD &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     // This is page load event since load events don't propagate to |window|.
     // @see nsDocument::PreHandleEvent.
     mIsDocumentLoaded = true;
@@ -2663,7 +2663,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_LOAD);
+      nsEvent event(aVisitor.mEvent->mFlags.mIsTrusted, NS_LOAD);
       event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
       // Most of the time we could get a pres context to pass in here,
