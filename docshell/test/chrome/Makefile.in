@@ -96,7 +96,6 @@ MOCHITEST_CHROME_FILES =	\
 		test_bug789773.xul \
 		test_bug754029.xul \
 		bug754029_window.xul \
-		test_bug818371.xul \
     docshell_helpers.js \
     generic.html \
     $(NULL)
