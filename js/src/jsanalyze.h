@@ -1293,11 +1293,11 @@ void PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc);
 
 namespace mozilla {
 
-template <> struct IsPod<js::analyze::LifetimeVariable> { static const bool value = true; };
-template <> struct IsPod<js::analyze::LoopAnalysis>     { static const bool value = true; };
-template <> struct IsPod<js::analyze::SlotValue>        { static const bool value = true; };
-template <> struct IsPod<js::analyze::SSAValue>         { static const bool value = true; };
-template <> struct IsPod<js::analyze::SSAUseChain>      { static const bool value = true; };
+template <> struct IsPod<js::analyze::LifetimeVariable> : TrueType {};
+template <> struct IsPod<js::analyze::LoopAnalysis>     : TrueType {};
+template <> struct IsPod<js::analyze::SlotValue>        : TrueType {};
+template <> struct IsPod<js::analyze::SSAValue>         : TrueType {};
+template <> struct IsPod<js::analyze::SSAUseChain>      : TrueType {};
 
 } /* namespace mozilla */
 

@@ -17,24 +17,76 @@
 
 namespace mozilla {
 
+/**
+ * Helper class used as a base for various type traits, exposed publicly
+ * because <type_traits> exposes it as well.
+ */
+template<typename T, T Value>
+struct IntegralConstant
+{
+    static const T value = Value;
+    typedef T ValueType;
+    typedef IntegralConstant<T, Value> Type;
+};
+
+/** Convenient aliases. */
+typedef IntegralConstant<bool, true> TrueType;
+typedef IntegralConstant<bool, false> FalseType;
+
 namespace detail {
 
-/**
- * The trickery used to implement IsBaseOf here makes it possible to use it for
- * the cases of private and multiple inheritance.  This code was inspired by the
- * sample code here:
- *
- * http://stackoverflow.com/questions/2910979/how-is-base-of-works
- */
+// The trickery used to implement IsBaseOf here makes it possible to use it for
+// the cases of private and multiple inheritance.  This code was inspired by the
+// sample code here:
+//
+// http://stackoverflow.com/questions/2910979/how-is-base-of-works
 template<class Base, class Derived>
-class IsBaseOfHelper
+struct BaseOfHelper
 {
   public:
     operator Base*() const;
     operator Derived*();
 };
 
+template<class Base, class Derived>
+struct BaseOfTester
+{
+  private:
+    template<class T>
+    static char test(Derived*, T);
+    static int test(Base*, int);
+
+  public:
+    static const bool value =
+      sizeof(test(BaseOfHelper<Base, Derived>(), int())) == sizeof(char);
+};
+
+template<class Base, class Derived>
+struct BaseOfTester<Base, const Derived>
+{
+  private:
+    template<class T>
+    static char test(Derived*, T);
+    static int test(Base*, int);
+
+  public:
+    static const bool value =
+      sizeof(test(BaseOfHelper<Base, Derived>(), int())) == sizeof(char);
+};
+
+template<class Base, class Derived>
+struct BaseOfTester<Base&, Derived&> : FalseType {};
+
+template<class Type>
+struct BaseOfTester<Type, Type> : TrueType {};
+
+template<class Type>
+struct BaseOfTester<Type, const Type> : TrueType {};
+
 } /* namespace detail */
+
+template<bool Condition, typename A, typename B>
+struct Conditional;
 
 /*
  * IsBaseOf allows to know whether a given class is derived from another.
@@ -49,53 +101,32 @@ class IsBaseOfHelper
  * mozilla::IsBaseOf<A, C>::value is false;
  */
 template<class Base, class Derived>
-class IsBaseOf
+struct IsBaseOf
+  : Conditional<detail::BaseOfTester<Base, Derived>::value, TrueType, FalseType>::Type
+{};
+
+namespace detail {
+
+template<typename From, typename To>
+struct ConvertibleTester
 {
   private:
-    template<class T>
-    static char test(Derived*, T);
-    static int test(Base*, int);
+    static From create();
+
+    template<typename From1, typename To1>
+    static char test(To to);
+
+    template<typename From1, typename To1>
+    static int test(...);
 
   public:
     static const bool value =
-      sizeof(test(detail::IsBaseOfHelper<Base, Derived>(), int())) == sizeof(char);
+      sizeof(test<From, To>(create())) == sizeof(char);
 };
 
-template<class Base, class Derived>
-class IsBaseOf<Base, const Derived>
-{
-  private:
-    template<class T>
-    static char test(Derived*, T);
-    static int test(Base*, int);
+} // namespace detail
 
-  public:
-    static const bool value =
-      sizeof(test(detail::IsBaseOfHelper<Base, Derived>(), int())) == sizeof(char);
-};
-
-template<class Base, class Derived>
-class IsBaseOf<Base&, Derived&>
-{
-  public:
-    static const bool value = false;
-};
-
-template<class Type>
-class IsBaseOf<Type, Type>
-{
-  public:
-    static const bool value = true;
-};
-
-template<class Type>
-class IsBaseOf<Type, const Type>
-{
-  public:
-    static const bool value = true;
-};
-
-/*
+/**
  * IsConvertible determines whether a value of type From will implicitly convert
  * to a value of type To.  For example:
  *
@@ -118,28 +149,16 @@ class IsBaseOf<Type, const Type>
  */
 template<typename From, typename To>
 struct IsConvertible
-{
-  private:
-    static From create();
+  : Conditional<detail::ConvertibleTester<From, To>::value, TrueType, FalseType>::Type
+{};
 
-    template<typename From1, typename To1>
-    static char test(To to);
-
-    template<typename From1, typename To1>
-    static int test(...);
-
-  public:
-    static const bool value =
-      sizeof(test<From, To>(create())) == sizeof(char);
-};
-
-/*
+/**
  * Conditional selects a class between two, depending on a given boolean value.
  *
  * mozilla::Conditional<true, A, B>::Type is A;
  * mozilla::Conditional<false, A, B>::Type is B;
  */
-template<bool condition, class A, class B>
+template<bool Condition, typename A, typename B>
 struct Conditional
 {
     typedef A Type;
@@ -151,7 +170,7 @@ struct Conditional<false, A, B>
     typedef B Type;
 };
 
-/*
+/**
  * EnableIf is a struct containing a typedef of T if and only if B is true.
  *
  * mozilla::EnableIf<true, int>::Type is int;
@@ -164,7 +183,7 @@ struct Conditional<false, A, B>
  *   template<typename T>
  *   class PodVector // vector optimized to store POD (memcpy-able) types
  *   {
- *      EnableIf<IsPod<T>, T>::Type* vector;
+ *      EnableIf<IsPod<T>::value, T>::Type* vector;
  *      size_t length;
  *      ...
  *   };
@@ -190,42 +209,38 @@ struct EnableIf<true, T>
  * mozilla::IsSame<struct S, struct S>::value is true.
  */
 template<typename T, typename U>
-struct IsSame
-{
-    static const bool value = false;
-};
+struct IsSame : FalseType {};
 
 template<typename T>
-struct IsSame<T, T>
-{
-    static const bool value = true;
-};
+struct IsSame<T, T> : TrueType {};
 
-/*
- * Traits class for identifying POD types. Until C++0x, there is no automatic
- * way to detect PODs, so for the moment it is done manually.
+/**
+ * Traits class for identifying POD types.  Until C++11 there's no automatic
+ * way to detect PODs, so for the moment this is done manually.  Users may
+ * define specializations of this class that inherit from mozilla::TrueType and
+ * mozilla::FalseType (or equivalently mozilla::IntegralConstant<bool, true or
+ * false>, or conveniently from mozilla::IsPod for composite types) as needed to
+ * ensure correct IsPod behavior.
  */
 template<typename T>
-struct IsPod
-{
-    static const bool value = false;
-};
-template<> struct IsPod<char>               { static const bool value = true; };
-template<> struct IsPod<signed char>        { static const bool value = true; };
-template<> struct IsPod<unsigned char>      { static const bool value = true; };
-template<> struct IsPod<short>              { static const bool value = true; };
-template<> struct IsPod<unsigned short>     { static const bool value = true; };
-template<> struct IsPod<int>                { static const bool value = true; };
-template<> struct IsPod<unsigned int>       { static const bool value = true; };
-template<> struct IsPod<long>               { static const bool value = true; };
-template<> struct IsPod<unsigned long>      { static const bool value = true; };
-template<> struct IsPod<long long>          { static const bool value = true; };
-template<> struct IsPod<unsigned long long> { static const bool value = true; };
-template<> struct IsPod<bool>               { static const bool value = true; };
-template<> struct IsPod<float>              { static const bool value = true; };
-template<> struct IsPod<double>             { static const bool value = true; };
-template<> struct IsPod<wchar_t>            { static const bool value = true; };
-template<typename T> struct IsPod<T*>       { static const bool value = true; };
+struct IsPod : public FalseType {};
+
+template<> struct IsPod<char>               : TrueType {};
+template<> struct IsPod<signed char>        : TrueType {};
+template<> struct IsPod<unsigned char>      : TrueType {};
+template<> struct IsPod<short>              : TrueType {};
+template<> struct IsPod<unsigned short>     : TrueType {};
+template<> struct IsPod<int>                : TrueType {};
+template<> struct IsPod<unsigned int>       : TrueType {};
+template<> struct IsPod<long>               : TrueType {};
+template<> struct IsPod<unsigned long>      : TrueType {};
+template<> struct IsPod<long long>          : TrueType {};
+template<> struct IsPod<unsigned long long> : TrueType {};
+template<> struct IsPod<bool>               : TrueType {};
+template<> struct IsPod<float>              : TrueType {};
+template<> struct IsPod<double>             : TrueType {};
+template<> struct IsPod<wchar_t>            : TrueType {};
+template<typename T> struct IsPod<T*>       : TrueType {};
 
 /**
  * IsPointer determines whether a type is a pointer type (but not a pointer-to-
@@ -238,15 +253,10 @@ template<typename T> struct IsPod<T*>       { static const bool value = true; };
  * mozilla::IsPointer<struct S>::value is false.
  */
 template<typename T>
-struct IsPointer
-{
-    static const bool value = false;
-};
+struct IsPointer : FalseType {};
+
 template<typename T>
-struct IsPointer<T*>
-{
-    static const bool value = true;
-};
+struct IsPointer<T*> : TrueType {};
 
 } /* namespace mozilla */
 
