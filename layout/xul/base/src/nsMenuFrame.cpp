@@ -1226,7 +1226,7 @@ nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, bool aFlipChecked)
   // Create a trusted event if the triggering event was trusted, or if
   // we're called from chrome code (since at least one of our caller
   // passes in a null event).
-  bool isTrusted = aEvent ? NS_IS_TRUSTED_EVENT(aEvent) :
+  bool isTrusted = aEvent ? aEvent->mFlags.mIsTrusted :
                               nsContentUtils::IsCallerChrome();
 
   bool shift = false, control = false, alt = false, meta = false;

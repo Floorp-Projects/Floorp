@@ -5339,7 +5339,7 @@ nsContentUtils::GetDragSession()
 nsresult
 nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
 {
-  if (aDragEvent->dataTransfer || !NS_IS_TRUSTED_EVENT(aDragEvent))
+  if (aDragEvent->dataTransfer || !aDragEvent->mFlags.mIsTrusted)
     return NS_OK;
 
   // For draggesture and dragstart events, the data transfer object is
