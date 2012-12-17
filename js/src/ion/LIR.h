@@ -938,11 +938,22 @@ class LSafepoint : public TempObject
     typedef Vector<NunboxEntry, 0, IonAllocPolicy> NunboxList;
 
   private:
-    // The set of registers which are live after the safepoint. This is empty
-    // for instructions marked as calls.
+    // The information in a safepoint describes the registers and gc related
+    // values that are live at the start of the associated instruction.
+
+    // The set of registers which are live at an OOL call made within the
+    // instruction. This includes any registers for inputs which are not
+    // use-at-start, any registers for temps, and any registers live after the
+    // call except outputs of the instruction.
+    //
+    // For call instructions, the live regs are empty. Call instructions may
+    // have register inputs or temporaries, which will *not* be in the live
+    // registers: if passed to the call, the values passed will be marked via
+    // MarkIonExitFrame, and no registers can be live after the instruction
+    // except its outputs.
     RegisterSet liveRegs_;
 
-    // The set of registers which contain gcthings.
+    // The subset of liveRegs which contains gcthing pointers.
     GeneralRegisterSet gcRegs_;
 
     // Offset to a position in the safepoint stream, or
@@ -952,20 +963,20 @@ class LSafepoint : public TempObject
     // Assembler buffer displacement to OSI point's call location.
     uint32_t osiCallPointOffset_;
 
-    // List of stack slots which have gc pointers.
+    // List of stack slots which have gcthing pointers.
     SlotList gcSlots_;
 
     // List of stack slots which have Values.
     SlotList valueSlots_;
 
 #ifdef JS_NUNBOX32
-    // List of registers which contain pieces of values.
+    // List of registers (in liveRegs) and stack slots which contain pieces of Values.
     NunboxList nunboxParts_;
 
     // Number of nunboxParts which are not completely filled in.
     uint32_t partialNunboxes_;
 #elif JS_PUNBOX64
-    // List of registers which contain values.
+    // The subset of liveRegs which have Values.
     GeneralRegisterSet valueRegs_;
 #endif
 
@@ -996,11 +1007,12 @@ class LSafepoint : public TempObject
         return gcSlots_;
     }
 
-    void addGcPointer(LAllocation alloc) {
+    bool addGcPointer(LAllocation alloc) {
+        if (alloc.isStackSlot())
+            return addGcSlot(alloc.toStackSlot()->slot());
         if (alloc.isRegister())
             addGcRegister(alloc.toRegister().gpr());
-        else if (alloc.isStackSlot())
-            addGcSlot(alloc.toStackSlot()->slot());
+        return true;
     }
 
     bool hasGcPointer(LAllocation alloc) {
