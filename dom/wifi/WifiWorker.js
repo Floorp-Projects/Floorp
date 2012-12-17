@@ -1632,6 +1632,7 @@ function WifiWorker() {
   // all cases, the supplicant will take the last quotation that we pass it as
   // the end of the string.
   this.configuredNetworks = Object.create(null);
+  this._addingNetworks = Object.create(null);
 
   this.currentNetwork = null;
   this.ipAddress = "";
@@ -2646,6 +2647,11 @@ WifiWorker.prototype = {
     let networkKey = getNetworkKey(privnet);
     let configured;
 
+    if (networkKey in this._addingNetworks) {
+      this._sendMessage(message, false, "Racing associates");
+      return;
+    }
+
     if (networkKey in this.configuredNetworks)
       configured = this.configuredNetworks[networkKey];
 
@@ -2668,7 +2674,10 @@ WifiWorker.prototype = {
       // set it to being "enabled" before we add it and save the
       // configuration.
       privnet.disabled = 0;
+      this._addingNetworks[networkKey] = privnet;
       WifiManager.addNetwork(privnet, (function(ok) {
+        delete this._addingNetworks[networkKey];
+
         if (!ok) {
           this._sendMessage(message, false, "Network is misconfigured", msg);
           return;
