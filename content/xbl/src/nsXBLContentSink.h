@@ -107,7 +107,7 @@ protected:
     void ConstructHandler(const PRUnichar **aAtts, uint32_t aLineNumber);
     void ConstructResource(const PRUnichar **aAtts, nsIAtom* aResourceType);
     void ConstructImplementation(const PRUnichar **aAtts);
-    void ConstructProperty(const PRUnichar **aAtts);
+    void ConstructProperty(const PRUnichar **aAtts, uint32_t aLineNumber);
     void ConstructMethod(const PRUnichar **aAtts);
     void ConstructParameter(const PRUnichar **aAtts);
     void ConstructField(const PRUnichar **aAtts, uint32_t aLineNumber);
