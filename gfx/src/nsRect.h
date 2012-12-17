@@ -16,6 +16,7 @@
 #include "nsTraceRefcnt.h"
 #include "mozilla/gfx/BaseRect.h"
 #include "mozilla/Likely.h"
+#include <climits>
 
 struct nsIntRect;
 
@@ -231,16 +232,16 @@ struct NS_GFX nsIntRect :
 
   // Returns a special nsIntRect that's used in some places to signify
   // "all available space".
-  static const nsIntRect& GetMaxSizedIntRect() { return kMaxSizedIntRect; }
+  static const nsIntRect& GetMaxSizedIntRect() {
+    static const nsIntRect r(0, 0, INT_MAX, INT_MAX);
+    return r;
+  }
 
   // This is here only to keep IPDL-generated code happy. DO NOT USE.
   bool operator==(const nsIntRect& aRect) const
   {
     return IsEqualEdges(aRect);
   }
-
-protected:
-  static const nsIntRect kMaxSizedIntRect;
 };
 
 /*
