@@ -49,6 +49,7 @@ xpcshell-tests:
 	  --testing-modules-dir=$(DEPTH)/_tests/modules \
 	  --xunit-file=$(testxpcobjdir)/$(relativesrcdir)/results.xml \
 	  --xunit-suite-name=xpcshell \
+	  --test-plugin-path=$(DIST)/plugins \
 	  $(EXTRA_TEST_ARGS) \
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
@@ -83,6 +84,7 @@ check-interactive:
 	  --test-path=$(SOLO_FILE) \
 	  --testing-modules-dir=$(DEPTH)/_tests/modules \
 	  --profile-name=$(MOZ_APP_NAME) \
+	  --test-plugin-path=$(DIST)/plugins \
 	  --interactive \
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
@@ -98,6 +100,7 @@ check-one:
 	  --test-path=$(SOLO_FILE) \
 	  --testing-modules-dir=$(DEPTH)/_tests/modules \
 	  --profile-name=$(MOZ_APP_NAME) \
+	  --test-plugin-path=$(DIST)/plugins \
 	  --verbose \
 	  $(EXTRA_TEST_ARGS) \
 	  $(LIBXUL_DIST)/bin/xpcshell \
