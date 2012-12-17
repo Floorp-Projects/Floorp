@@ -273,6 +273,7 @@ class ICEntry
                                 \
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
+    _(Compare_Double)           \
                                 \
     _(ToBool_Fallback)          \
     _(ToBool_Int32)             \
@@ -1079,12 +1080,12 @@ class ICCompare_Fallback : public ICFallbackStub
     };
 };
 
-class ICCompare_Int32 : public ICFallbackStub
+class ICCompare_Int32 : public ICStub
 {
     friend class ICStubSpace;
 
     ICCompare_Int32(IonCode *stubCode)
-      : ICFallbackStub(ICStub::Compare_Int32, stubCode) {}
+      : ICStub(ICStub::Compare_Int32, stubCode) {}
 
   public:
     static inline ICCompare_Int32 *New(ICStubSpace *space, IonCode *code) {
@@ -1102,6 +1103,34 @@ class ICCompare_Int32 : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCompare_Int32::New(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_Double(IonCode *stubCode)
+      : ICStub(ICStub::Compare_Double, stubCode)
+    {}
+
+  public:
+    static inline ICCompare_Double *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_Double>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Double, op)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_Double::New(space, getStubCode());
         }
     };
 };
@@ -1315,8 +1344,6 @@ class ICBinaryArith_Double : public ICStub
 
     class Compiler : public ICMultiStubCompiler {
       protected:
-        void ensureDouble(MacroAssembler &masm, const ValueOperand &source, FloatRegister dest,
-                          Label *failure);
         bool generateStubCode(MacroAssembler &masm);
 
       public:
