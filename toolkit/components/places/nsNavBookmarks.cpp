@@ -642,7 +642,7 @@ NS_IMETHODIMP
 nsNavBookmarks::RemoveItem(int64_t aItemId)
 {
   SAMPLE_LABEL("bookmarks", "RemoveItem");
-  NS_ENSURE_ARG(aItemId != mRoot);
+  NS_ENSURE_ARG(!IsRoot(aItemId));
 
   BookmarkData bookmark;
   nsresult rv = FetchItemInfo(aItemId, bookmark);
@@ -1137,6 +1137,7 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId)
 {
   SAMPLE_LABEL("bookmarks", "RemoveFolderChilder");
   NS_ENSURE_ARG_MIN(aFolderId, 1);
+  NS_ENSURE_ARG(aFolderId != mRoot);
 
   BookmarkData folder;
   nsresult rv = FetchItemInfo(aFolderId, folder);
@@ -1272,13 +1273,13 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId)
 NS_IMETHODIMP
 nsNavBookmarks::MoveItem(int64_t aItemId, int64_t aNewParent, int32_t aIndex)
 {
-  NS_ENSURE_TRUE(aItemId != mRoot, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG(!IsRoot(aItemId));
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_MIN(aNewParent, 1);
   // -1 is append, but no other negative number is allowed.
   NS_ENSURE_ARG_MIN(aIndex, -1);
   // Disallow making an item its own parent.
-  NS_ENSURE_TRUE(aItemId != aNewParent, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG(aItemId != aNewParent);
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
 
