@@ -68,6 +68,7 @@ MAKEFILES_dom="
   dom/plugins/base/Makefile
   dom/plugins/ipc/Makefile
   dom/power/Makefile
+  dom/quota/Makefile
   dom/settings/Makefile
   dom/sms/Makefile
   dom/sms/interfaces/Makefile

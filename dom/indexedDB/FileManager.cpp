@@ -7,8 +7,8 @@
 #include "FileManager.h"
 
 #include "mozIStorageConnection.h"
-#include "mozIStorageServiceQuotaManagement.h"
 #include "mozIStorageStatement.h"
+#include "nsIInputStream.h"
 #include "nsISimpleEnumerator.h"
 
 #include "mozStorageCID.h"
@@ -17,6 +17,8 @@
 #include "FileInfo.h"
 #include "IndexedDatabaseManager.h"
 #include "OpenDatabaseHelper.h"
+
+#include "IndexedDatabaseInlines.h"
 
 #define JOURNAL_DIRECTORY_NAME "journals"
 
@@ -262,13 +264,11 @@ FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId)
 
 // static
 nsresult
-FileManager::InitDirectory(mozIStorageServiceQuotaManagement* aService,
-                           nsIFile* aDirectory,
+FileManager::InitDirectory(nsIFile* aDirectory,
                            nsIFile* aDatabaseFile,
-                           FactoryPrivilege aPrivilege)
+                           const nsACString& aOrigin)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aService, "Null service!");
   NS_ASSERTION(aDirectory, "Null directory!");
   NS_ASSERTION(aDatabaseFile, "Null database file!");
 
@@ -310,8 +310,8 @@ FileManager::InitDirectory(mozIStorageServiceQuotaManagement* aService,
 
     if (hasElements) {
       nsCOMPtr<mozIStorageConnection> connection;
-      rv = OpenDatabaseHelper::CreateDatabaseConnection(
-        NullString(), aDatabaseFile, aDirectory, getter_AddRefs(connection));
+      rv = OpenDatabaseHelper::CreateDatabaseConnection(aDatabaseFile,
+        aDirectory, NullString(), aOrigin, getter_AddRefs(connection));
       NS_ENSURE_SUCCESS(rv, rv);
 
       mozStorageTransaction transaction(connection, false);
@@ -377,12 +377,17 @@ FileManager::InitDirectory(mozIStorageServiceQuotaManagement* aService,
     }
   }
 
-  if (aPrivilege == Chrome) {
-    return NS_OK;
-  }
+  return NS_OK;
+}
+
+// static
+nsresult
+FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
+{
+  uint64_t usage = 0;
 
   nsCOMPtr<nsISimpleEnumerator> entries;
-  rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasMore;
@@ -402,9 +407,13 @@ FileManager::InitDirectory(mozIStorageServiceQuotaManagement* aService,
       continue;
     }
 
-    rv = aService->UpdateQuotaInformationForFile(file);
+    int64_t fileSize;
+    rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    IncrementUsage(&usage, uint64_t(fileSize));
   }
 
+  *aUsage = usage;
   return NS_OK;
 }
