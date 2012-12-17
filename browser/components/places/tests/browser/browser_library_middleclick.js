@@ -88,7 +88,7 @@ gTests.push({
     isnot(gLibrary.PlacesOrganizer._places.selectedNode, null,
           "We correctly have selection in the Library left pane");
     // Get our bookmark in the right pane.
-    var bookmarkNode = gLibrary.PlacesOrganizer._content.view.nodeForTreeIndex(0);
+    var bookmarkNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
     is(bookmarkNode.uri, this.URIs[0], "Found bookmark in the right pane");
   },
 
@@ -130,7 +130,7 @@ gTests.push({
     isnot(gLibrary.PlacesOrganizer._places.selectedNode, null,
           "We correctly have selection in the Library left pane");
     // Get our bookmark in the right pane.
-    var folderNode = gLibrary.PlacesOrganizer._content.view.nodeForTreeIndex(0);
+    var folderNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
     is(folderNode.title, "Folder", "Found folder in the right pane");
   },
 
@@ -187,7 +187,7 @@ gTests.push({
     isnot(gLibrary.PlacesOrganizer._places.selectedNode, null,
           "We correctly have selection in the Library left pane");
     // Get our bookmark in the right pane.
-    var folderNode = gLibrary.PlacesOrganizer._content.view.nodeForTreeIndex(0);
+    var folderNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
     is(folderNode.title, "Query", "Found query in the right pane");
   },
 
@@ -243,7 +243,7 @@ function runNextTest() {
     // Middle click on first node in the content tree of the Library.
     gLibrary.focus();
     waitForFocus(function() {
-      mouseEventOnCell(gLibrary.PlacesOrganizer._content, 0, 0, { button: 1 });
+      mouseEventOnCell(gLibrary.ContentTree.view, 0, 0, { button: 1 });
     }, gLibrary);
   }
   else {

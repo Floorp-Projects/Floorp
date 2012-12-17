@@ -202,3 +202,71 @@ treechildren::-moz-tree-image(cutting) {
 treechildren::-moz-tree-cell-text(cutting) {
   opacity: 0.7;
 }
+
+
+/** Downloads View **/
+
+richlistitem.download {
+  height: 7em;
+  margin: 0;
+  padding: 8px;
+  -moz-padding-end: 0;
+}
+
+richlistitem.download:first-child {
+  border-top: 1px solid transparent;
+}
+
+richlistitem.download:last-child {
+  border-bottom: 1px solid transparent;
+}
+
+.downloadTypeIcon {
+  -moz-margin-end: 8px;
+  /* Prevent flickering when changing states. */
+  min-height: 32px;
+  min-width: 32px;
+}
+
+.blockedIcon {
+  list-style-image: url("chrome://global/skin/icons/Error.png");
+}
+
+.downloadTarget {
+  margin-bottom: 6px;
+  cursor: inherit;
+}
+
+.downloadDetails {
+  opacity: 0.7;
+  font-size: 95%;
+  cursor: inherit;
+}
+
+.downloadButton {
+  -moz-appearance: none;
+  min-width: 0;
+  min-height: 0;
+  margin: 3px;
+  border: none;
+  padding: 5px;
+  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
+}
+
+.downloadButton > .button-box {
+  padding: 0;
+}
+
+/*** Button icons ***/
+
+.downloadButton.downloadCancel {
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.downloadButton.downloadShow {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+
+.downloadButton.downloadRetry {
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
