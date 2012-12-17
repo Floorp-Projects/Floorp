@@ -243,9 +243,9 @@ class ScriptCounts
     }
 };
 
-typedef HashMap<JSScript *,
+typedef HashMap<RawScript,
                 ScriptCounts,
-                DefaultHasher<JSScript *>,
+                DefaultHasher<RawScript>,
                 SystemAllocPolicy> ScriptCountsMap;
 
 class DebugScript
@@ -271,9 +271,9 @@ class DebugScript
     BreakpointSite  *breakpoints[1];
 };
 
-typedef HashMap<JSScript *,
+typedef HashMap<RawScript,
                 DebugScript *,
-                DefaultHasher<JSScript *>,
+                DefaultHasher<RawScript>,
                 SystemAllocPolicy> DebugScriptMap;
 
 struct ScriptSource;
@@ -515,9 +515,9 @@ struct JSScript : public js::gc::Cell
     //
 
   public:
-    static JSScript *Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
-                            const JS::CompileOptions &options, unsigned staticLevel,
-                            js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
+    static js::UnrootedScript Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
+                                    const JS::CompileOptions &options, unsigned staticLevel,
+                                    js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
 
     // Three ways ways to initialize a JSScript.  Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
@@ -657,10 +657,10 @@ struct JSScript : public js::gc::Cell
      * Ensure the script has bytecode analysis information. Performed when the
      * script first runs, or first runs after a TypeScript GC purge.
      */
-    inline bool ensureRanAnalysis(JSContext *cx);
+    static inline bool ensureRanAnalysis(JSContext *cx, JS::HandleScript script);
 
     /* Ensure the script has type inference analysis information. */
-    inline bool ensureRanInference(JSContext *cx);
+    static inline bool ensureRanInference(JSContext *cx, JS::HandleScript script);
 
     inline bool hasAnalysis();
     inline void clearAnalysis();
@@ -788,7 +788,7 @@ struct JSScript : public js::gc::Cell
 
     bool hasArray(ArrayKind kind)           { return (hasArrayBits & (1 << kind)); }
     void setHasArray(ArrayKind kind)        { hasArrayBits |= (1 << kind); }
-    void cloneHasArray(JSScript *script)    { hasArrayBits = script->hasArrayBits; }
+    void cloneHasArray(js::UnrootedScript script) { hasArrayBits = script->hasArrayBits; }
 
     bool hasConsts()        { return hasArray(CONSTS);      }
     bool hasObjects()       { return hasArray(OBJECTS);     }
@@ -936,8 +936,8 @@ struct JSScript : public js::gc::Cell
 
     void finalize(js::FreeOp *fop);
 
-    static inline void writeBarrierPre(JSScript *script);
-    static inline void writeBarrierPost(JSScript *script, void *addr);
+    static inline void writeBarrierPre(js::UnrootedScript script);
+    static inline void writeBarrierPost(js::UnrootedScript script, void *addr);
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
@@ -1013,7 +1013,7 @@ class AliasedFormalIter
     }
 
   public:
-    explicit inline AliasedFormalIter(JSScript *script);
+    explicit inline AliasedFormalIter(js::UnrootedScript script);
 
     bool done() const { return p_ == end_; }
     operator bool() const { return !done(); }
@@ -1024,20 +1024,6 @@ class AliasedFormalIter
     unsigned frameIndex() const { JS_ASSERT(!done()); return p_ - begin_; }
     unsigned scopeSlot() const { JS_ASSERT(!done()); return slot_; }
 };
-
-}  /* namespace js */
-
-/*
- * New-script-hook calling is factored from JSScript::fullyInitFromEmitter() so
- * that it and callers of XDRScript() can share this code.  In the case of
- * callers of XDRScript(), the hook should be invoked only after successful
- * decode of any owning function (the fun parameter) or script object (null
- * fun).
- */
-extern JS_FRIEND_API(void)
-js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
-
-namespace js {
 
 struct SourceCompressionToken;
 
@@ -1229,6 +1215,16 @@ struct SourceCompressionToken
     bool active() const { return !!ss; }
 };
 
+/*
+ * New-script-hook calling is factored from JSScript::fullyInitFromEmitter() so
+ * that it and callers of XDRScript() can share this code.  In the case of
+ * callers of XDRScript(), the hook should be invoked only after successful
+ * decode of any owning function (the fun parameter) or script object (null
+ * fun).
+ */
+extern void
+CallNewScriptHook(JSContext *cx, JS::HandleScript script, JS::HandleFunction fun);
+
 extern void
 CallDestroyScriptHook(FreeOp *fop, js::RawScript script);
 
@@ -1269,7 +1265,8 @@ FreeScriptFilenames(JSRuntime *rt);
 
 struct ScriptAndCounts
 {
-    JSScript *script;
+    /* This structure is stored and marked from the JSRuntime. */
+    js::RawScript script;
     ScriptCounts scriptCounts;
 
     PCCounts &getPCCounts(jsbytecode *pc) const {
@@ -1322,7 +1319,7 @@ enum LineOption {
 inline void
 CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
-extern JSScript *
+extern UnrootedScript
 CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script);
 
 /*

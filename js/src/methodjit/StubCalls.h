@@ -28,7 +28,7 @@ void JS_FASTCALL DebuggerStatement(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Interrupt(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL TriggerIonCompile(VMFrame &f);
 void JS_FASTCALL RecompileForInline(VMFrame &f);
-void JS_FASTCALL InitElem(VMFrame &f, uint32_t last);
+void JS_FASTCALL InitElem(VMFrame &f);
 void JS_FASTCALL InitProp(VMFrame &f, PropertyName *name);
 
 void JS_FASTCALL HitStackQuota(VMFrame &f);

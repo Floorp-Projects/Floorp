@@ -41,6 +41,7 @@ import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.ProfileMigrator;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
+import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.app.SearchManager;
 import android.content.ContentProvider;
@@ -60,6 +61,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
@@ -1018,31 +1020,72 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void setDefaultFavicon(SQLiteDatabase db, String name, String url) {
-            Class<?> drawablesClass = R.drawable.class;
-            ByteArrayOutputStream stream = null;
-            try {
-                // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
-                Field faviconField = drawablesClass.getField(name.replace("_title_", "_favicon_"));
-                if (faviconField == null)
-                  return;
-
-                int faviconId = faviconField.getInt(null);
-                Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), faviconId);
-                stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            } catch (java.lang.IllegalAccessException ex) {
-                Log.e(LOGTAG, "Can't create favicon " + name, ex);
-            } catch (java.lang.NoSuchFieldException ex) {
-                // if there is no such field, create the bookmark without a favicon
-                Log.d(LOGTAG, "Can't create favicon " + name);
+            ByteArrayOutputStream stream = getDefaultFaviconFromPath(db, name, url);
+            if (stream == null) {
+              stream = getDefaultFaviconFromDrawable(db, name, url);
             }
-
             if (stream != null) {
                 ContentValues values = new ContentValues();
                 values.put(Favicons.DATA, stream.toByteArray());
                 values.put(Favicons.PAGE_URL, url);
                 insertFavicon(db, values);
             }
+        }
+
+        private ByteArrayOutputStream getDefaultFaviconFromPath(SQLiteDatabase db, String name, String url) {
+            ByteArrayOutputStream stream = null;
+            Class stringClass = R.string.class;
+            try {
+                // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
+                Field faviconField = stringClass.getField(name.replace("_title_", "_favicon_"));
+                if (faviconField == null)
+                  return null;
+                int faviconId = faviconField.getInt(null);
+                String path = mContext.getString(faviconId);
+
+                String apkPath = mContext.getPackageResourcePath();
+                File apkFile = new File(apkPath);
+                BitmapDrawable bitmapDrawable = GeckoJarReader.getBitmapDrawable(mContext.getResources(),
+                                                                                 "jar:jar:" + apkFile.toURI() + "!/omni.ja!/" + path);
+                if (bitmapDrawable == null) {
+                  return null;
+                }
+                Bitmap bitmap = bitmapDrawable.getBitmap();
+                if (bitmap == null) {
+                  return null;
+                }
+                stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            } catch (java.lang.IllegalAccessException ex) {
+                Log.e(LOGTAG, "[Path] Can't create favicon " + name, ex);
+            } catch (java.lang.NoSuchFieldException ex) {
+                // if there is no such field, create the bookmark without a favicon
+                Log.d(LOGTAG, "[Path] Can't create favicon " + name);
+            }
+            return stream;
+        }
+
+        private ByteArrayOutputStream getDefaultFaviconFromDrawable(SQLiteDatabase db, String name, String url) {
+            Class<?> drawablesClass = R.drawable.class;
+            ByteArrayOutputStream stream = null;
+            try {
+                // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
+                Field faviconField = drawablesClass.getField(name.replace("_title_", "_favicon_"));
+                if (faviconField == null)
+                  return null;
+
+                int faviconId = faviconField.getInt(null);
+                Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), faviconId);
+                stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            } catch (java.lang.IllegalAccessException ex) {
+                Log.e(LOGTAG, "[Drawable] Can't create favicon " + name, ex);
+            } catch (java.lang.NoSuchFieldException ex) {
+                // if there is no such field, create the bookmark without a favicon
+                Log.d(LOGTAG, "[Drawable] Can't create favicon " + name);
+            }
+
+            return stream;
         }
 
         private void createOrUpdateAllSpecialFolders(SQLiteDatabase db) {

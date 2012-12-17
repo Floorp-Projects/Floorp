@@ -73,7 +73,7 @@ Probes::discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chun
 
 bool
 Probes::registerICCode(JSContext *cx,
-                       mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
+                       mjit::JITChunk *chunk, UnrootedScript script, jsbytecode* pc,
                        void *start, size_t size)
 {
     if (cx->runtime->spsProfiler.enabled() &&
@@ -149,7 +149,7 @@ Probes::shutdown()
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char *
-ScriptFilename(const JSScript *script)
+ScriptFilename(const UnrootedScript script)
 {
     if (!script)
         return Probes::nullName;
@@ -176,7 +176,7 @@ FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString* bytes)
  * a number of usually unused lines of code would cause.
  */
 void
-Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
+Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), Probes::nullName,
@@ -184,7 +184,7 @@ Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
 }
 
 void
-Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
+Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), Probes::nullName,
@@ -196,7 +196,7 @@ Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
 static void
 current_location(JSContext *cx, int* lineno, char const **filename)
 {
-    JSScript *script = cx->stack.currentScript()
+    UnrootedScript script = cx->stack.currentScript()
     if (! script) {
         *lineno = -1;
         *filename = "(uninitialized)";
@@ -243,7 +243,7 @@ Probes::ETWShutdown()
 }
 
 bool
-Probes::ETWEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter)
+Probes::ETWEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int counter)
 {
     int lineno = script ? script->lineno : -1;
     JSAutoByteString bytes;
@@ -253,7 +253,7 @@ Probes::ETWEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int coun
 }
 
 bool
-Probes::ETWExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter)
+Probes::ETWExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int counter)
 {
     int lineno = script ? script->lineno : -1;
     JSAutoByteString bytes;
@@ -425,14 +425,14 @@ Probes::ETWCustomMark(int marker)
 }
 
 bool
-Probes::ETWStartExecution(JSScript *script)
+Probes::ETWStartExecution(UnrootedScript script)
 {
     int lineno = script ? script->lineno : -1;
     return EventWriteEvtExecuteStart(ScriptFilename(script), lineno) == ERROR_SUCCESS;
 }
 
 bool
-Probes::ETWStopExecution(JSScript *script)
+Probes::ETWStopExecution(UnrootedScript script)
 {
     int lineno = script ? script->lineno : -1;
     return EventWriteEvtExecuteDone(ScriptFilename(script), lineno) == ERROR_SUCCESS;

@@ -696,7 +696,6 @@ class FrameState
 
     /* Compiler-owned metadata about stack entries, reset on push/pop/copy. */
     struct StackEntryExtra {
-        bool initArray;
         JSObject *initObject;
         types::StackTypeSet *types;
         JSAtom *name;

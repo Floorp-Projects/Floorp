@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1648,13 +1648,6 @@ class StringRegExpGuard
     RegExpShared &regExp() { return *re_; }
 };
 
-/* ExecuteRegExp indicates success in two ways, based on the 'test' flag. */
-static JS_ALWAYS_INLINE bool
-Matched(RegExpExecType type, const Value &v)
-{
-    return (type == RegExpTest) ? v.isTrue() : !v.isNull();
-}
-
 typedef bool (*DoMatchCallback)(JSContext *cx, RegExpStatics *res, size_t count, void *data);
 
 /*
@@ -1680,34 +1673,60 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
     if (!stableStr)
         return false;
 
+    StableCharPtr chars = stableStr->chars();
+    size_t charsLen = stableStr->length();
+
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+
     if (re.global()) {
-        RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
+        bool isTest = bool(flags & TEST_GLOBAL_BIT);
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
-            StableCharPtr chars = stableStr->chars();
-            size_t charsLen = stableStr->length();
-
-            if (!ExecuteRegExp(cx, res, re, stableStr, chars, charsLen, &i, type, rval))
+            RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+            if (status == RegExpRunStatus_Error)
                 return false;
-            if (!Matched(type, *rval))
+
+            if (status == RegExpRunStatus_Success_NotFound) {
+                rval->setNull();
                 break;
+            }
+
+            res->updateFromMatchPairs(cx, stableStr, matches);
+            if (!isTest && !CreateRegExpMatchResult(cx, stableStr, matches, rval))
+                return false;
+
             if (!callback(cx, res, count, data))
                 return false;
             if (!res->matched())
                 ++i;
         }
     } else {
-        StableCharPtr chars = stableStr->chars();
-        size_t charsLen = stableStr->length();
-
-        RegExpExecType type = (flags & TEST_SINGLE_BIT) ? RegExpTest : RegExpExec;
+        bool isTest = bool(flags & TEST_SINGLE_BIT);
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
-        if (!ExecuteRegExp(cx, res, re, stableStr, chars, charsLen, &i, type, rval))
+
+        RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+        if (status == RegExpRunStatus_Error)
             return false;
-        if (callbackOnSingle && Matched(type, *rval) && !callback(cx, res, 0, data))
+
+        /* Emulate ExecuteRegExpLegacy() behavior. */
+        if (status == RegExpRunStatus_Success_NotFound) {
+            rval->setNull();
+            return true;
+        }
+
+        res->updateFromMatchPairs(cx, stableStr, matches);
+
+        if (isTest) {
+            rval->setBoolean(true);
+        } else {
+            if (!CreateRegExpMatchResult(cx, stableStr, matches, rval))
+                return false;
+        }
+
+        if (callbackOnSingle && !callback(cx, res, 0, data))
             return false;
     }
     return true;
@@ -1832,14 +1851,19 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
-    Value result;
-    if (!ExecuteRegExp(cx, res, g.regExp(), stableStr, chars, length, &i, RegExpTest, &result))
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+
+    RegExpRunStatus status = g.regExp().execute(cx, chars, length, &i, matches);
+    if (status == RegExpRunStatus_Error)
         return false;
 
-    if (result.isTrue())
-        args.rval().setInt32(res->matchStart());
-    else
+    if (status == RegExpRunStatus_Success) {
+        res->updateFromMatchPairs(cx, stableStr, matches);
+        args.rval().setInt32(matches[0].start);
+    } else {
         args.rval().setInt32(-1);
+    }
+
     return true;
 }
 
@@ -1882,13 +1906,13 @@ InterpretDollar(RegExpStatics *res, const jschar *dp, const jschar *ep,
     if (JS7_ISDEC(dc)) {
         /* ECMA-262 Edition 3: 1-9 or 01-99 */
         unsigned num = JS7_UNDEC(dc);
-        if (num > res->parenCount())
+        if (num > res->getMatches().parenCount())
             return false;
 
         const jschar *cp = dp + 2;
         if (cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
             unsigned tmp = 10 * num + JS7_UNDEC(dc);
-            if (tmp <= res->parenCount()) {
+            if (tmp <= res->getMatches().parenCount()) {
                 cp++;
                 num = tmp;
             }
@@ -1898,7 +1922,7 @@ InterpretDollar(RegExpStatics *res, const jschar *dp, const jschar *ep,
 
         *skip = cp - dp;
 
-        JS_ASSERT(num <= res->parenCount());
+        JS_ASSERT(num <= res->getMatches().parenCount());
 
         /*
          * Note: we index to get the paren with the (1-indexed) pair
@@ -1989,7 +2013,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
          * For $&, etc., we must create string jsvals from cx->regExpStatics.
          * We grab up stack space to keep the newborn strings GC-rooted.
          */
-        unsigned p = res->parenCount();
+        unsigned p = res->getMatches().parenCount();
         unsigned argc = 1 + p + 2;
 
         InvokeArgsGuard &args = rdata.fig.args();
@@ -2004,13 +2028,13 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (!res->createLastMatch(cx, &args[argi++]))
             return false;
 
-        for (size_t i = 0; i < res->parenCount(); ++i) {
+        for (size_t i = 0; i < res->getMatches().parenCount(); ++i) {
             if (!res->createParen(cx, i + 1, &args[argi++]))
                 return false;
         }
 
         /* Push match index and input string. */
-        args[argi++].setInt32(res->matchStart());
+        args[argi++].setInt32(res->getMatches()[0].start);
         args[argi].setString(rdata.str);
 
         if (!rdata.fig.invoke(cx))
@@ -2091,10 +2115,14 @@ ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 {
     ReplaceData &rdata = *static_cast<ReplaceData *>(p);
 
+    const MatchPair &match = res->getMatches()[0];
+    JS_ASSERT(!match.isUndefined());
+    JS_ASSERT(match.limit >= match.start && match.limit >= 0);
+
     rdata.calledBack = true;
     size_t leftoff = rdata.leftIndex;
-    size_t leftlen = res->matchStart() - leftoff;
-    rdata.leftIndex = res->matchLimit();
+    size_t leftlen = match.start - leftoff;
+    rdata.leftIndex = match.limit;
 
     size_t replen = 0;  /* silence 'unused' warning */
     if (!FindReplaceLength(cx, res, rdata, &replen))
@@ -2623,9 +2651,10 @@ SplitHelper(JSContext *cx, Handle<JSStableString*> str, uint32_t limit, const Ma
         /* Step 13(c)(iii)(6-7). */
         if (Matcher::returnsCaptures) {
             RegExpStatics *res = cx->regExpStatics();
-            for (size_t i = 0; i < res->parenCount(); i++) {
+            const MatchPairs &matches = res->getMatches();
+            for (size_t i = 0; i < matches.parenCount(); i++) {
                 /* Steps 13(c)(iii)(7)(a-c). */
-                if (res->pairIsPresent(i + 1)) {
+                if (!matches[i + 1].isUndefined()) {
                     JSSubString parsub;
                     res->getParen(i + 1, &parsub);
                     sub = js_NewStringCopyN(cx, parsub.chars, parsub.length);
@@ -2678,15 +2707,21 @@ class SplitRegExpMatcher
                     SplitMatchResult *result) const
     {
         AssertCanGC();
-        Value rval = UndefinedValue();
         StableCharPtr chars = str->chars();
         size_t length = str->length();
-        if (!ExecuteRegExp(cx, res, re, str, chars, length, &index, RegExpTest, &rval))
+
+        ScopedMatchPairs matches(&cx->tempLifoAlloc());
+        RegExpRunStatus status = re.execute(cx, chars, length, &index, matches);
+        if (status == RegExpRunStatus_Error)
             return false;
-        if (!rval.isTrue()) {
+
+        if (status == RegExpRunStatus_Success_NotFound) {
             result->setFailure();
             return true;
         }
+
+        res->updateFromMatchPairs(cx, str, matches);
+
         JSSubString sep;
         res->getLastMatch(&sep);
 

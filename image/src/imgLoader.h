@@ -239,6 +239,25 @@ public:
       return static_cast<imgLoader*>(loader);
   }
 
+  static already_AddRefed<imgLoader> GetInstance();
+
+  nsresult LoadImage(nsIURI *aURI,
+                     nsIURI *aInitialDocumentURI,
+                     nsIURI *aReferrerURI,
+                     nsIPrincipal* aLoadingPrincipal,
+                     nsILoadGroup *aLoadGroup,
+                     imgINotificationObserver *aObserver,
+                     nsISupports *aCX,
+                     nsLoadFlags aLoadFlags,
+                     nsISupports *aCacheKey,
+                     nsIChannelPolicy *aPolicy,
+                     imgRequestProxy **_retval);
+  nsresult LoadImageWithChannel(nsIChannel *channel,
+                                imgINotificationObserver *aObserver,
+                                nsISupports *aCX,
+                                nsIStreamListener **listener,
+                                imgRequestProxy **_retval);
+
   static nsresult GetMimeTypeFromContent(const char* aContents, uint32_t aLength, nsACString& aContentType);
   // exported for use by mimei.cpp in libxul sdk builds
   static NS_EXPORT_(bool) SupportImageWithMimeType(const char* aMimeType);
@@ -304,7 +323,7 @@ private: // methods
                        nsILoadGroup *aLoadGroup,
                        imgINotificationObserver *aObserver, nsISupports *aCX,
                        nsLoadFlags aLoadFlags, bool aCanMakeNewChannel,
-                       imgIRequest **aProxyRequest,
+                       imgRequestProxy **aProxyRequest,
                        nsIChannelPolicy *aPolicy,
                        nsIPrincipal* aLoadingPrincipal,
                        int32_t aCORSMode);
@@ -315,14 +334,14 @@ private: // methods
                                        nsILoadGroup *aLoadGroup,
                                        imgINotificationObserver *aObserver,
                                        nsISupports *aCX, nsLoadFlags aLoadFlags,
-                                       imgIRequest **aProxyRequest,
+                                       imgRequestProxy **aProxyRequest,
                                        nsIChannelPolicy *aPolicy,
                                        nsIPrincipal* aLoadingPrincipal,
                                        int32_t aCORSMode);
 
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgINotificationObserver *aObserver,
-                                    nsLoadFlags aLoadFlags, imgIRequest **_retval);
+                                    nsLoadFlags aLoadFlags, imgRequestProxy **_retval);
 
   void ReadAcceptHeaderPref();
 

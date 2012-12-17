@@ -1688,7 +1688,8 @@ BytecodeEmitter::needsImplicitThis()
 void
 BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext *cx)
 {
-    js_CallNewScriptHook(cx, script, script->function());
+    RootedFunction function(cx, script->function());
+    CallNewScriptHook(cx, script, function);
     if (!parent) {
         GlobalObject *compileAndGoGlobal = NULL;
         if (script->compileAndGo)
@@ -5782,11 +5783,8 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return false;
         }
 
-        /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
         if (pn3->isKind(PNK_NUMBER)) {
             obj = NULL;
-            if (NewSrcNote(cx, bce, SRC_INITPROP) < 0)
-                return false;
             if (Emit1(cx, bce, JSOP_INITELEM) < 0)
                 return false;
         } else {
@@ -5848,8 +5846,8 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Emit code for [a, b, c] that is equivalent to constructing a new
      * array and in source order evaluating each element value and adding
      * it to the array, without invoking latent setters.  We use the
-     * JSOP_NEWINIT and JSOP_INITELEM bytecodes to ignore setters and to
-     * avoid dup'ing and popping the array as each element is added, as
+     * JSOP_NEWINIT and JSOP_INITELEM_ARRAY bytecodes to ignore setters and
+     * to avoid dup'ing and popping the array as each element is added, as
      * JSOP_SETELEM/JSOP_SETPROP would do.
      */
 
@@ -5899,8 +5897,6 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (nspread && !EmitNumberOp(cx, 0, bce))
         return false;
     for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
-        if (!nspread && !EmitNumberOp(cx, atomIndex, bce))
-            return false;
         if (pn2->isKind(PNK_COMMA) && pn2->isArity(PN_NULLARY)) {
             if (Emit1(cx, bce, JSOP_HOLE) < 0)
                 return false;
@@ -5912,8 +5908,14 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (pn2->isKind(PNK_SPREAD)) {
             if (Emit1(cx, bce, JSOP_SPREAD) < 0)
                 return false;
-        } else if (Emit1(cx, bce, nspread ? JSOP_INITELEM_INC : JSOP_INITELEM) < 0) {
-            return false;
+        } else if (nspread) {
+            if (Emit1(cx, bce, JSOP_INITELEM_INC) < 0)
+                return false;
+        } else {
+            off = EmitN(cx, bce, JSOP_INITELEM_ARRAY, 3);
+            if (off < 0)
+                return false;
+            SET_UINT24(bce->code(off), atomIndex);
         }
     }
     JS_ASSERT(atomIndex == pn->pn_count);

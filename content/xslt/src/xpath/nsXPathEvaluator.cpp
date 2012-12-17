@@ -6,7 +6,6 @@
 #include "nsXPathEvaluator.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsDOMClassInfoID.h"
 #include "nsXPathExpression.h"
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
@@ -20,6 +19,9 @@
 #include "nsDOMString.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/XPathEvaluatorBinding.h"
+
+using namespace mozilla;
 
 // txIParseContext implementation
 class nsXPathEvaluatorParseContext : public txIParseContext
@@ -62,13 +64,10 @@ private:
     bool mIsCaseSensitive;
 };
 
-DOMCI_DATA(XPathEvaluator, nsXPathEvaluator)
-
 NS_IMPL_AGGREGATED(nsXPathEvaluator)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsXPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XPathEvaluator)
 NS_INTERFACE_MAP_END
 
 nsXPathEvaluator::nsXPathEvaluator(nsISupports *aOuter)
@@ -212,6 +211,54 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
     NS_ADDREF(*aResult);
     return NS_OK;
 }
+
+JSObject*
+nsXPathEvaluator::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+    return dom::XPathEvaluatorBinding::Wrap(aCx, aScope, this);
+}
+
+/* static */
+already_AddRefed<nsXPathEvaluator>
+nsXPathEvaluator::Constructor(nsISupports* aGlobal, ErrorResult& rv)
+{
+    nsRefPtr<nsXPathEvaluator> newObj = new nsXPathEvaluator(nullptr);
+    newObj->Init();
+    return newObj.forget();
+}
+
+already_AddRefed<nsIDOMXPathExpression>
+nsXPathEvaluator::CreateExpression(const nsAString& aExpression,
+                                   nsIDOMXPathNSResolver* aResolver,
+                                   ErrorResult& rv)
+{
+  nsCOMPtr<nsIDOMXPathExpression> expr;
+  rv = CreateExpression(aExpression, aResolver, getter_AddRefs(expr));
+  return expr.forget();
+}
+
+already_AddRefed<nsIDOMXPathNSResolver>
+nsXPathEvaluator::CreateNSResolver(nsINode* aNodeResolver,
+                                   ErrorResult& rv)
+{
+  nsCOMPtr<nsIDOMNode> nodeResolver = do_QueryInterface(aNodeResolver);
+  nsCOMPtr<nsIDOMXPathNSResolver> res;
+  rv = CreateNSResolver(nodeResolver, getter_AddRefs(res));
+  return res.forget();
+}
+
+already_AddRefed<nsISupports>
+nsXPathEvaluator::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
+                           nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+                           nsISupports* aResult, ErrorResult& rv)
+{
+  nsCOMPtr<nsIDOMNode> contextNode = do_QueryInterface(aContextNode);
+  nsCOMPtr<nsISupports> res;
+  rv = Evaluate(aExpression, contextNode, aResolver, aType,
+                aResult, getter_AddRefs(res));
+  return res.forget();
+}
+
 
 /*
  * Implementation of txIParseContext private to nsXPathEvaluator, based on a

@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-// IID for the dom::Element interface
+// IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \
 { 0x0a5aed21, 0x0bab, 0x48b3, \
  { 0xbe, 0x4b, 0xd4, 0xf9, 0xd4, 0xea, 0xc7, 0xdb } }

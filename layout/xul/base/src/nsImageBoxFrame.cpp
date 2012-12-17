@@ -250,7 +250,7 @@ nsImageBoxFrame::UpdateImage()
     if (!(appearance && nsBox::gTheme &&
           nsBox::gTheme->ThemeSupportsWidget(nullptr, this, appearance))) {
       // get the list-style-image
-      imgIRequest *styleRequest = GetStyleList()->GetListStyleImage();
+      imgRequestProxy *styleRequest = GetStyleList()->GetListStyleImage();
       if (styleRequest) {
         styleRequest->Clone(mListener, getter_AddRefs(mImageRequest));
       }

@@ -63,7 +63,7 @@ class nsIIOService;
 class nsIURI;
 class imgIContainer;
 class imgINotificationObserver;
-class imgIRequest;
+class imgRequestProxy;
 class imgLoader;
 class imgICache;
 class nsIImageLoadingContent;
@@ -640,7 +640,7 @@ public:
                             nsIURI* aReferrer,
                             imgINotificationObserver* aObserver,
                             int32_t aLoadFlags,
-                            imgIRequest** aRequest);
+                            imgRequestProxy** aRequest);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy status.
@@ -666,7 +666,7 @@ public:
   /**
    * Helper method to call imgIRequest::GetStaticRequest.
    */
-  static already_AddRefed<imgIRequest> GetStaticRequest(imgIRequest* aRequest);
+  static already_AddRefed<imgRequestProxy> GetStaticRequest(imgRequestProxy* aRequest);
 
   /**
    * Method that decides whether a content node is draggable

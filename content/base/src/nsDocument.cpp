@@ -171,6 +171,7 @@
 #include "mozilla/Preferences.h"
 
 #include "imgILoader.h"
+#include "imgRequestProxy.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
 #include "nsIAppsService.h"
@@ -7468,7 +7469,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
   }
 
   // Image not in cache - trigger preload
-  nsCOMPtr<imgIRequest> request;
+  nsRefPtr<imgRequestProxy> request;
   nsresult rv =
     nsContentUtils::LoadImage(uri,
                               this,
@@ -7945,12 +7946,13 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
   }
 
   uint32_t i, n = mImageMaps->Length(true);
+  nsString name;
   for (i = 0; i < n; ++i) {
     nsIContent* map = mImageMaps->Item(i);
     if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
                          eCaseMatters) ||
-        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
-                         eIgnoreCase)) {
+        (map->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name) &&
+         mapName.Equals(name, nsCaseInsensitiveStringComparator()))) {
       return map->AsElement();
     }
   }

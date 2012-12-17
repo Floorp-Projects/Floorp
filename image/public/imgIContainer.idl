@@ -57,7 +57,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(01e12ac9-7d9f-40d9-9ec1-70b64c53ce7a)]
+[scriptable, builtinclass, uuid(01e12ac9-7d9f-40d9-9ec1-70b64c53ce7a)]
 interface imgIContainer : nsISupports
 {
   /**

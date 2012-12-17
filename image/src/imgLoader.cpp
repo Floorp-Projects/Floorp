@@ -5,6 +5,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ClearOnShutdown.h"
 
 #include "ImageLogging.h"
 #include "imgLoader.h"
@@ -681,7 +682,7 @@ imgCacheQueue::const_iterator imgCacheQueue::end() const
 
 nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                              imgINotificationObserver *aObserver,
-                                             nsLoadFlags aLoadFlags, imgIRequest **_retval)
+                                             nsLoadFlags aLoadFlags, imgRequestProxy **_retval)
 {
   LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgLoader::CreateNewProxyForRequest", "imgRequest", aRequest);
 
@@ -709,7 +710,7 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
   }
 
   // transfer reference to caller
-  *_retval = static_cast<imgIRequest*>(proxyRequest);
+  *_retval = proxyRequest;
 
   return NS_OK;
 }
@@ -785,6 +786,20 @@ imgLoader::imgLoader()
 {
   sMemReporter->AddRef();
   sMemReporter->RegisterLoader(this);
+}
+
+already_AddRefed<imgLoader>
+imgLoader::GetInstance()
+{
+  static StaticRefPtr<imgLoader> singleton;
+  if (!singleton) {
+    singleton = imgLoader::Create();
+    if (!singleton)
+        return nullptr;
+    ClearOnShutdown(&singleton);
+  }
+  nsRefPtr<imgLoader> loader = singleton.get();
+  return loader.forget();
 }
 
 imgLoader::~imgLoader()
@@ -1159,7 +1174,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                                                 imgINotificationObserver *aObserver,
                                                 nsISupports *aCX,
                                                 nsLoadFlags aLoadFlags,
-                                                imgIRequest **aProxyRequest,
+                                                imgRequestProxy **aProxyRequest,
                                                 nsIChannelPolicy *aPolicy,
                                                 nsIPrincipal* aLoadingPrincipal,
                                                 int32_t aCORSMode)
@@ -1173,8 +1188,8 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
   // If we're currently in the middle of validating this request, just hand
   // back a proxy to it; the required work will be done for us.
   if (request->mValidator) {
-    rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aLoadFlags,
-                                  reinterpret_cast<imgIRequest **>(aProxyRequest));
+    rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
+                                  aLoadFlags, aProxyRequest);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -1214,7 +1229,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
       return false;
     }
 
-    nsCOMPtr<imgIRequest> req;
+    nsRefPtr<imgRequestProxy> req;
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   aLoadFlags, getter_AddRefs(req));
     if (NS_FAILED(rv)) {
@@ -1280,7 +1295,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 nsISupports *aCX,
                                 nsLoadFlags aLoadFlags,
                                 bool aCanMakeNewChannel,
-                                imgIRequest **aProxyRequest,
+                                imgRequestProxy **aProxyRequest,
                                 nsIChannelPolicy *aPolicy,
                                 nsIPrincipal* aLoadingPrincipal,
                                 int32_t aCORSMode)
@@ -1516,10 +1531,7 @@ nsresult imgLoader::EvictEntries(imgCacheQueue &aQueueToClear)
                                   nsIRequest::VALIDATE_NEVER |    \
                                   nsIRequest::VALIDATE_ONCE_PER_SESSION)
 
-
-/* imgIRequest loadImage(in nsIURI aURI, in nsIURI aInitialDocumentURL, in nsIURI aReferrerURI, in nsIPrincipal aLoadingPrincipal, in nsILoadGroup aLoadGroup, in imgINotificationObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in nsIChannelPolicy channelPolicy); */
-
-NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, 
+NS_IMETHODIMP imgLoader::LoadImageXPCOM(nsIURI *aURI,
                                    nsIURI *aInitialDocumentURI,
                                    nsIURI *aReferrerURI,
                                    nsIPrincipal* aLoadingPrincipal,
@@ -1531,7 +1543,39 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
                                    nsIChannelPolicy *aPolicy,
                                    imgIRequest **_retval)
 {
-  VerifyCacheSizes();
+    imgRequestProxy *proxy;
+    nsresult result = LoadImage(aURI,
+                                aInitialDocumentURI,
+                                aReferrerURI,
+                                aLoadingPrincipal,
+                                aLoadGroup,
+                                aObserver,
+                                aCX,
+                                aLoadFlags,
+                                aCacheKey,
+                                aPolicy,
+                                &proxy);
+    *_retval = proxy;
+    return result;
+}
+
+
+
+/* imgIRequest loadImage(in nsIURI aURI, in nsIURI aInitialDocumentURL, in nsIURI aReferrerURI, in nsIPrincipal aLoadingPrincipal, in nsILoadGroup aLoadGroup, in imgINotificationObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in nsIChannelPolicy channelPolicy); */
+
+nsresult imgLoader::LoadImage(nsIURI *aURI,
+			      nsIURI *aInitialDocumentURI,
+			      nsIURI *aReferrerURI,
+			      nsIPrincipal* aLoadingPrincipal,
+			      nsILoadGroup *aLoadGroup,
+			      imgINotificationObserver *aObserver,
+			      nsISupports *aCX,
+			      nsLoadFlags aLoadFlags,
+			      nsISupports *aCacheKey,
+			      nsIChannelPolicy *aPolicy,
+			      imgRequestProxy **_retval)
+{
+	VerifyCacheSizes();
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
@@ -1747,7 +1791,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       return rv;
     }
 
-    imgRequestProxy *proxy = static_cast<imgRequestProxy *>(*_retval);
+    imgRequestProxy *proxy = *_retval;
 
     // Make sure that OnStatus/OnProgress calls have the right request set, if
     // we did create a channel here.
@@ -1780,8 +1824,21 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   return NS_OK;
 }
 
-/* imgIRequest loadImageWithChannel(in nsIChannel channel, in imgINotificationObserver aObserver, in nsISupports cx, out nsIStreamListener); */
-NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgINotificationObserver *aObserver, nsISupports *aCX, nsIStreamListener **listener, imgIRequest **_retval)
+/* imgIRequest loadImageWithChannelXPCOM(in nsIChannel channel, in imgINotificationObserver aObserver, in nsISupports cx, out nsIStreamListener); */
+NS_IMETHODIMP imgLoader::LoadImageWithChannelXPCOM(nsIChannel *channel, imgINotificationObserver *aObserver, nsISupports *aCX, nsIStreamListener **listener, imgIRequest **_retval)
+{
+    nsresult result;
+    imgRequestProxy* proxy;
+    result = LoadImageWithChannel(channel,
+                                  aObserver,
+                                  aCX,
+                                  listener,
+                                  &proxy);
+    *_retval = proxy;
+    return result;
+}
+
+nsresult imgLoader::LoadImageWithChannel(nsIChannel *channel, imgINotificationObserver *aObserver, nsISupports *aCX, nsIStreamListener **listener, imgRequestProxy **_retval)
 {
   NS_ASSERTION(channel, "imgLoader::LoadImageWithChannel -- NULL channel pointer");
 

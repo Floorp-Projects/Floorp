@@ -37,7 +37,7 @@ CheckLength(JSContext *cx, size_t length)
 }
 
 static bool
-SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, JSScript *script)
+SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, UnrootedScript script)
 {
     if (tokenStream.hasSourceMap()) {
         if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap(), script->filename))
@@ -46,7 +46,7 @@ SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, JSScript
     return true;
 }
 
-JSScript *
+UnrootedScript
 frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
                         const CompileOptions &options,
                         StableCharPtr chars, size_t length,
@@ -76,17 +76,17 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     if (!CheckLength(cx, length))
-        return NULL;
+        return UnrootedScript(NULL);
     JS_ASSERT_IF(staticLevel != 0, options.sourcePolicy != CompileOptions::LAZY_SOURCE);
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
-        return NULL;
+        return UnrootedScript(NULL);
     ScriptSourceHolder ssh(cx->runtime, ss);
     SourceCompressionToken sct(cx);
     switch (options.sourcePolicy) {
       case CompileOptions::SAVE_SOURCE:
         if (!ss->setSourceCopy(cx, chars, length, false, &sct))
-            return NULL;
+            return UnrootedScript(NULL);
         break;
       case CompileOptions::LAZY_SOURCE:
         ss->setSourceRetrievable();
@@ -97,26 +97,26 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     Parser parser(cx, options, chars, length, /* foldConstants = */ true);
     if (!parser.init())
-        return NULL;
+        return UnrootedScript(NULL);
     parser.sct = &sct;
 
     GlobalSharedContext globalsc(cx, scopeChain, StrictModeFromContext(cx));
 
     ParseContext pc(&parser, &globalsc, staticLevel, /* bodyid = */ 0);
     if (!pc.init())
-        return NULL;
+        return UnrootedScript(NULL);
 
     bool savedCallerFun = options.compileAndGo && callerFrame && callerFrame->isFunctionFrame();
     Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), savedCallerFun,
                                                   options, staticLevel, ss, 0, length));
     if (!script)
-        return NULL;
+        return UnrootedScript(NULL);
 
     // Global/eval script bindings are always empty (all names are added to the
     // scope dynamically via JSOP_DEFFUN/VAR).
     InternalHandle<Bindings*> bindings(script, &script->bindings);
     if (!Bindings::initWithTemporaryStorage(cx, bindings, 0, 0, NULL))
-        return NULL;
+        return UnrootedScript(NULL);
 
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
     JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? (JSObject*) scopeChain : NULL;
@@ -126,7 +126,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     BytecodeEmitter bce(/* parent = */ NULL, &parser, &globalsc, script, callerFrame, !!globalScope,
                         options.lineno, options.selfHostingMode);
     if (!bce.init())
-        return NULL;
+        return UnrootedScript(NULL);
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->script()->strict)
@@ -141,7 +141,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
             JSAtom *atom = AtomizeString(cx, source);
             jsatomid _;
             if (!atom || !bce.makeAtomIndex(atom, &_))
-                return NULL;
+                return UnrootedScript(NULL);
         }
 
         if (callerFrame && callerFrame->isFunctionFrame()) {
@@ -153,7 +153,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
             JSFunction *fun = callerFrame->fun();
             ObjectBox *funbox = parser.newFunctionBox(fun, &pc, fun->strict());
             if (!funbox)
-                return NULL;
+                return UnrootedScript(NULL);
             bce.objectList.add(funbox);
         }
     }
@@ -173,25 +173,25 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
             if (tt == TOK_EOF)
                 break;
             JS_ASSERT(tt == TOK_ERROR);
-            return NULL;
+            return UnrootedScript(NULL);
         }
 
         pn = parser.statement();
         if (!pn)
-            return NULL;
+            return UnrootedScript(NULL);
 
         if (canHaveDirectives) {
             if (!parser.maybeParseDirective(pn, &canHaveDirectives))
-                return NULL;
+                return UnrootedScript(NULL);
         }
 
         if (!FoldConstants(cx, pn, &parser))
-            return NULL;
+            return UnrootedScript(NULL);
         if (!NameFunctions(cx, pn))
-            return NULL;
+            return UnrootedScript(NULL);
 
         if (!EmitTree(cx, &bce, pn))
-            return NULL;
+            return UnrootedScript(NULL);
 
 #if JS_HAS_XML_SUPPORT
         if (!pn->isKind(PNK_SEMI) || !pn->pn_kid || !pn->pn_kid->isXMLItem())
@@ -201,7 +201,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     }
 
     if (!SetSourceMap(cx, tokenStream, ss, script))
-        return NULL;
+        return UnrootedScript(NULL);
 
 #if JS_HAS_XML_SUPPORT
     /*
@@ -212,7 +212,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
      */
     if (pn && onlyXML && !callerFrame) {
         parser.reportError(NULL, JSMSG_XML_WHOLE_PROGRAM);
-        return NULL;
+        return UnrootedScript(NULL);
     }
 #endif
 
@@ -222,7 +222,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
                 parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
-                return NULL;
+                return UnrootedScript(NULL);
             }
         }
     }
@@ -232,15 +232,15 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
      * do have to emit that here.
      */
     if (Emit1(cx, &bce, JSOP_STOP) < 0)
-        return NULL;
+        return UnrootedScript(NULL);
 
     if (!JSScript::fullyInitFromEmitter(cx, script, &bce))
-        return NULL;
+        return UnrootedScript(NULL);
 
     bce.tellDebuggerAboutCompiledScript(cx);
 
     if (!sct.complete())
-        return NULL;
+        return UnrootedScript(NULL);
 
     return script;
 }

@@ -868,6 +868,12 @@ public:
   void GetSupportedNames(nsTArray<nsString>&);
 };
 
+class TestChildInterface : public TestInterface
+{
+public:
+  NS_DECL_ISUPPORTS
+};
+
 } // namespace dom
 } // namespace mozilla
 

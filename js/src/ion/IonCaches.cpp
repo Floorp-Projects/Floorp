@@ -819,7 +819,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Mu
     AutoFlushCache afc ("GetPropertyCache");
     const SafepointIndex *safepointIndex;
     void *returnAddr;
-    JSScript *topScript = GetTopIonJSScript(cx, &safepointIndex, &returnAddr);
+    RootedScript topScript(cx, GetTopIonJSScript(cx, &safepointIndex, &returnAddr));
     IonScript *ion = topScript->ionScript();
 
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
@@ -1372,7 +1372,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
 
     void *returnAddr;
     const SafepointIndex *safepointIndex;
-    JSScript *script = GetTopIonJSScript(cx, &safepointIndex, &returnAddr);
+    RootedScript script(cx, GetTopIonJSScript(cx, &safepointIndex, &returnAddr));
     IonScript *ion = script->ion;
     IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
     RootedPropertyName name(cx, cache.name());

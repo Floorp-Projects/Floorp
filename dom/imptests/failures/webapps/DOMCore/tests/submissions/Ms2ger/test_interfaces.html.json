@@ -1,5 +1,4 @@
 {
   "Should be able to delete Document.": true,
-  "Should be able to delete CharacterData.": true,
-  "Should be able to delete NodeFilter.": true
+  "Should be able to delete CharacterData.": true
 }

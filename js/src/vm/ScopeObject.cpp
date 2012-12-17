@@ -158,7 +158,7 @@ CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, Heap
  * callee) or used as a template for jit compilation.
  */
 CallObject *
-CallObject::createTemplateObject(JSContext *cx, JSScript *script)
+CallObject::createTemplateObject(JSContext *cx, HandleScript script)
 {
     RootedShape shape(cx, script->bindings.callObjShape());
 

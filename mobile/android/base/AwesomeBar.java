@@ -413,28 +413,20 @@ public class AwesomeBar extends GeckoActivity {
              imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
              return true;
         } else {
-            int selStart = -1;
-            int selEnd = -1;
-            if (mText.hasSelection()) {
-                selStart = mText.getSelectionStart();
-                selEnd = mText.getSelectionEnd();
-            }
+            int prevSelStart = mText.getSelectionStart();
+            int prevSelEnd = mText.getSelectionEnd();
 
-            if (selStart >= 0) {
-                // Restore the selection, which gets lost due to the focus switch
-                mText.setSelection(selStart, selEnd);
-            }
-
-            // Manually dispatch the key event to the AwesomeBar before restoring (default) input
-            // focus. dispatchKeyEvent() will update AwesomeBar's cursor position.
+            // Manually dispatch the key event to the AwesomeBar. If selection changed as
+            // a result of the key event, then give focus back to mText
             mText.dispatchKeyEvent(event);
-            int newCursorPos = mText.getSelectionEnd();
 
-            // requestFocusFromTouch() will select all AwesomeBar text, so we must restore cursor
-            // position so subsequent typing does not overwrite all text.
-            mText.requestFocusFromTouch();
-            mText.setSelection(newCursorPos);
-
+            int curSelStart = mText.getSelectionStart();
+            int curSelEnd = mText.getSelectionEnd();
+            if (prevSelStart != curSelStart || prevSelEnd != curSelEnd) {
+                mText.requestFocusFromTouch();
+                // Restore the selection, which gets lost due to the focus switch
+                mText.setSelection(curSelStart, curSelEnd);
+            }
             return true;
         }
     }

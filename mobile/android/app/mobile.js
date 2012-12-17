@@ -344,8 +344,6 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
 
-pref("gfx.java.screenshot.enabled", false);
-
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
@@ -611,9 +609,6 @@ pref("full-screen-api.enabled", true);
 
 pref("direct-texture.force.enabled", false);
 pref("direct-texture.force.disabled", false);
-
-// show checkerboard pattern on android; we use background colour instead
-pref("gfx.show_checkerboard_pattern", true);
 
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
 pref("ui.scrolling.friction_slow", -1);

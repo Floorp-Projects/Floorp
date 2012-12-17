@@ -764,12 +764,6 @@ js::ContextHasOutstandingRequests(const JSContext *cx)
 }
 #endif
 
-JS_FRIEND_API(JSCompartment *)
-js::GetContextCompartment(const JSContext *cx)
-{
-    return cx->compartment;
-}
-
 JS_FRIEND_API(bool)
 js::HasUnrootedGlobal(const JSContext *cx)
 {
