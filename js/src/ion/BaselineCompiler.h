@@ -81,6 +81,8 @@ namespace ion {
     _(JSOP_NE)                 \
     _(JSOP_BITNOT)             \
     _(JSOP_NEG)                \
+    _(JSOP_NEWARRAY)           \
+    _(JSOP_ENDINIT)            \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
     _(JSOP_GETGNAME)           \

@@ -273,6 +273,8 @@ class ICEntry
                                 \
     _(DefVar_Fallback)          \
                                 \
+    _(NewArray_Fallback)        \
+                                \
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
     _(Compare_Double)           \
@@ -1079,6 +1081,33 @@ class ICDefVar_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICDefVar_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+class ICNewArray_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICNewArray_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode)
+    {}
+
+  public:
+    static inline ICNewArray_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICNewArray_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICNewArray_Fallback::New(space, getStubCode());
         }
     };
 };
