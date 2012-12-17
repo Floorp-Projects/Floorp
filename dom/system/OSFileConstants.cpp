@@ -66,7 +66,7 @@ namespace {
  */
 bool gInitialized = false;
 
-typedef struct {
+struct Paths {
   /**
    * The name of the directory holding all the libraries (libxpcom, libnss, etc.)
    */
@@ -74,7 +74,15 @@ typedef struct {
   nsString tmpDir;
   nsString profileDir;
   nsString localProfileDir;
-} Paths;
+
+  Paths()
+  {
+    libDir.SetIsVoid(true);
+    tmpDir.SetIsVoid(true);
+    profileDir.SetIsVoid(true);
+    localProfileDir.SetIsVoid(true);
+  }
+};
 
 /**
  * System directories.
@@ -95,15 +103,10 @@ nsresult GetPathToSpecialDir(const char *aKey, nsString& aOutPath)
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_GetSpecialDirectory(aKey, getter_AddRefs(file));
   if (NS_FAILED(rv) || !file) {
-    aOutPath.SetIsVoid(true);
     return rv;
   }
 
-  rv = file->GetPath(aOutPath);
-  if (NS_FAILED(rv)) {
-    aOutPath.SetIsVoid(true);
-  }
-  return rv;
+  return file->GetPath(aOutPath);
 }
 
 /**
