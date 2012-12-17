@@ -2043,7 +2043,23 @@ RadioInterfaceLayer.prototype = {
 
       septet = langShiftTable.indexOf(c);
       if (septet < 0) {
-        return -1;
+        if (!strict7BitEncoding) {
+          return -1;
+        }
+
+        // Bug 816082, when strict7BitEncoding is enabled, we should replace
+        // characters that can't be encoded with GSM 7-Bit alphabets with '*'.
+        c = '*';
+        if (langTable.indexOf(c) >= 0) {
+          length++;
+        } else if (langShiftTable.indexOf(c) >= 0) {
+          length += 2;
+        } else {
+          // We can't even encode a '*' character with current configuration.
+          return -1;
+        }
+
+        continue;
       }
 
       // According to 3GPP TS 23.038 B.2, "This code represents a control
@@ -2253,15 +2269,23 @@ RadioInterfaceLayer.prototype = {
         inc = 1;
       } else {
         septet = langShiftTable.indexOf(c);
-        if (septet < 0) {
-          throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
-        }
-
         if (septet == RIL.PDU_NL_RESERVED_CONTROL) {
           continue;
         }
 
         inc = 2;
+        if (septet < 0) {
+          if (!strict7BitEncoding) {
+            throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
+          }
+
+          // Bug 816082, when strict7BitEncoding is enabled, we should replace
+          // characters that can't be encoded with GSM 7-Bit alphabets with '*'.
+          c = '*';
+          if (langTable.indexOf(c) >= 0) {
+            inc = 1;
+          }
+        }
       }
 
       if ((len + inc) > segmentSeptets) {
