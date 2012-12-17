@@ -22,6 +22,8 @@ this.ObjectWrapper = {
       return "file";
     } else if (aObject instanceof Ci.nsIDOMBlob) {
       return "blob";
+    } else if (aObject instanceof Date) {
+      return "date";
     } else if (typeof aObject == "object") {
       return "object";
     } else {
@@ -44,6 +46,8 @@ this.ObjectWrapper = {
                               type: aObject.type });
     } else if (kind == "blob") {
       return new aCtxt.Blob([aObject], { type: aObject.type });
+    } else if (kind == "date") {
+      return Cu.createDateIn(aCtxt, aObject.getTime());
     } else if (kind == "primitive") {
       return aObject;
     }
