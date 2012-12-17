@@ -167,7 +167,7 @@ class TestExtract(unittest.TestCase):
 class TestRemoveTree(unittest.TestCase):
     """test our ability to remove a directory tree"""
 
-    def remove_directory(self):
+    def test_remove_directory(self):
         tempdir = create_stub()
         self.assertTrue(os.path.exists(tempdir))
         self.assertTrue(os.path.isdir(tempdir))
@@ -177,6 +177,14 @@ class TestRemoveTree(unittest.TestCase):
             shutil.rmtree(tempdir)
             raise
         self.assertFalse(os.path.exists(tempdir))
+
+class TestNamedTemporaryFile(unittest.TestCase):
+    """test our fix for NamedTemporaryFile"""
+
+    def test_named_temporary_file(self):
+        temp = mozfile.NamedTemporaryFile()
+        temp.write("A simple test")
+        del temp
 
 if __name__ == '__main__':
     unittest.main()
