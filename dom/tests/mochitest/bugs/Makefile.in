@@ -22,7 +22,6 @@ MOCHITEST_FILES	= \
 		file_bug291653.html \
 		test_bug291653.html \
 		test_bug308856.html \
-		test_bug317448.html \
 		test_bug327891.html \
 		test_bug333983.html \
 		test_bug335976.xhtml \
