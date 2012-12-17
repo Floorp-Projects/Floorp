@@ -193,7 +193,8 @@ public:
 };
 
 AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
-                 mObserver(new HeadphoneSwitchObserver())
+                 mObserver(new HeadphoneSwitchObserver()),
+                 mFMChannelIsMuted(0)
 {
   RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
 
