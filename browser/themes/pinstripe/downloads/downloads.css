@@ -150,7 +150,7 @@ richlistitem[type="download"][state="1"]:hover {
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.4);
   background-color: Highlight;
-  background-image: -moz-linear-gradient(hsl(210,100%,50%), hsl(210,96%,41%));
+  background-image: linear-gradient(hsl(210,100%,50%), hsl(210,96%,41%));
   color: HighlightText;
   cursor: pointer;
 }
@@ -303,7 +303,7 @@ richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloa
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-image: -moz-linear-gradient(#505050, #575757);
+  background-image: linear-gradient(#505050, #575757);
   border: 1px solid;
   border-color: hsla(0,0%,0%,.6) hsla(0,0%,0%,.4) hsla(0,0%,0%,.4);
   -moz-border-start: none;
@@ -315,5 +315,5 @@ richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloa
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
-  background-image: -moz-linear-gradient(#4b5000, #515700);
+  background-image: linear-gradient(#4b5000, #515700);
 }
