@@ -136,5 +136,25 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
   }
 }
 
-END_BLUETOOTH_NAMESPACE
+void
+ParseAtCommand(const nsACString& aAtCommand, const int aStart,
+               nsTArray<nsCString>& aRetValues)
+{
+  int length = aAtCommand.Length();
+  int begin = aStart;
 
+  for (int i = aStart; i < length; ++i) {
+    // Use ',' as separator
+    if (aAtCommand[i] == ',') {
+      nsCString tmp(nsDependentCSubstring(aAtCommand, begin, i - begin));
+      aRetValues.AppendElement(tmp);
+
+      begin = i + 1;
+    }
+  }
+
+  nsCString tmp(nsDependentCSubstring(aAtCommand, begin));
+  aRetValues.AppendElement(tmp);
+}
+
+END_BLUETOOTH_NAMESPACE
