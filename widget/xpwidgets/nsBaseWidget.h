@@ -226,6 +226,7 @@ public:
     ~AutoUseBasicLayerManager();
   private:
     nsBaseWidget* mWidget;
+    bool mPreviousTemporarilyUseBasicLayerManager;
   };
   friend class AutoUseBasicLayerManager;
 
