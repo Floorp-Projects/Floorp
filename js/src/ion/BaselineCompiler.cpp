@@ -386,6 +386,35 @@ BaselineCompiler::emit_JSOP_SWAP()
 }
 
 bool
+BaselineCompiler::emit_JSOP_PICK()
+{
+    frame.syncStack(0);
+
+    // Pick takes a value on the stack and moves it to the top.
+    // For instance, pick 2:
+    //     before: A B C D E
+    //     after : A B D E C
+
+    // First, move value at -(amount + 1) into R0.
+    int depth = -(GET_INT8(pc) + 1);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(depth)), R0);
+
+    // Move the other values down.
+    depth++;
+    for (; depth < 0; depth++) {
+        Address source = frame.addressOfStackValue(frame.peek(depth));
+        Address dest = frame.addressOfStackValue(frame.peek(depth - 1));
+        masm.loadValue(source, R1);
+        masm.storeValue(R1, dest);
+    }
+
+    // Push R0.
+    frame.pop();
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GOTO()
 {
     frame.syncStack(0);
@@ -971,6 +1000,34 @@ bool
 BaselineCompiler::emit_JSOP_LENGTH()
 {
     return emit_JSOP_GETPROP();
+}
+
+bool
+BaselineCompiler::emit_JSOP_DEFVAR()
+{
+    frame.syncStack(0);
+
+    // Pass name in R0, attributes in R1.
+    masm.movePtr(ImmGCPtr(script->getName(pc)), R0.scratchReg());
+
+    unsigned attrs = JSPROP_ENUMERATE;
+    if (!script->isForEval())
+        attrs |= JSPROP_PERMANENT;
+    if (JSOp(*pc) == JSOP_DEFCONST)
+        attrs |= JSPROP_READONLY;
+
+    JS_ASSERT(attrs <= UINT32_MAX);
+    masm.move32(Imm32(attrs), R1.scratchReg());
+
+    // Call IC.
+    ICDefVar_Fallback::Compiler compiler(cx);
+    return emitIC(compiler.getStub(&stubSpace_));
+}
+
+bool
+BaselineCompiler::emit_JSOP_DEFCONST()
+{
+    return emit_JSOP_DEFVAR();
 }
 
 bool
