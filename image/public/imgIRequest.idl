@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(3ea9fc87-2e97-45bf-b373-d1dd253a0b5e)]
+[scriptable, builtinclass, uuid(3ea9fc87-2e97-45bf-b373-d1dd253a0b5e)]
 interface imgIRequest : nsIRequest
 {
   /**

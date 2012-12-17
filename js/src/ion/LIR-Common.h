@@ -836,7 +836,7 @@ class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
-class LTestDAndBranch : public LInstructionHelper<0, 1, 1>
+class LTestDAndBranch : public LInstructionHelper<0, 1, 0>
 {
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
@@ -3264,7 +3264,7 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
         return getTemp(0);
     }
 
-    JSScript *script() {
+    UnrootedScript script() {
         return mir_->toFunctionBoundary()->script();
     }
 

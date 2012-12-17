@@ -260,6 +260,7 @@ MOZ_NEVER_INLINE
 UnrootedShape
 js::ObjectImpl::nativeLookup(JSContext *cx, jsid idArg)
 {
+    AssertCanGC();
     MOZ_ASSERT(isNative());
     Shape **spp;
     RootedId id(cx, idArg);

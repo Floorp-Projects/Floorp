@@ -1016,6 +1016,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             else if (mAwesomeBar instanceof GeckoRelativeLayout)
                 ((GeckoRelativeLayout) mAwesomeBar).setPrivateMode(tab.isPrivate());
 
+            mTabs.setPrivateMode(tab.isPrivate());
             mTitle.setPrivateMode(tab.isPrivate());
             mMenu.setPrivateMode(tab.isPrivate());
 

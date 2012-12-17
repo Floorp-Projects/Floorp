@@ -198,7 +198,11 @@ class LAllocation : public TempObject
         return bits_;
     }
 
-    static void PrintAllocation(FILE *fp, const LAllocation *a);
+#ifdef DEBUG
+    const char *toString() const;
+#else
+    const char *toString() const { return "???"; }
+#endif
 };
 
 class LUse : public LAllocation
@@ -1038,7 +1042,7 @@ class LSafepoint : public TempObject
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
             if (nunboxParts_[i].type == type)
                 return true;
-            if (nunboxParts_[i].type == LUse(LUse::ANY, typeVreg)) {
+            if (nunboxParts_[i].type == LUse(typeVreg, LUse::ANY)) {
                 nunboxParts_[i].type = type;
                 partialNunboxes_--;
                 return true;
@@ -1067,7 +1071,7 @@ class LSafepoint : public TempObject
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
             if (nunboxParts_[i].payload == payload)
                 return true;
-            if (nunboxParts_[i].payload == LUse(LUse::ANY, payloadVreg)) {
+            if (nunboxParts_[i].payload == LUse(payloadVreg, LUse::ANY)) {
                 partialNunboxes_--;
                 nunboxParts_[i].payload = payload;
                 return true;

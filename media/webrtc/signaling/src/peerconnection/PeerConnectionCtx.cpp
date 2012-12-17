@@ -33,13 +33,13 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread) {
   } else {
     MOZ_ASSERT(gMainThread == mainThread);
   }
-  bool on;
 
   nsresult res;
 
 #ifdef MOZILLA_INTERNAL_API
   // This check fails on the unit tests because they do not
   // have the right thread behavior.
+  bool on;
   res = gMainThread->IsOnCurrentThread(&on);
   NS_ENSURE_SUCCESS(res, res);
   MOZ_ASSERT(on);

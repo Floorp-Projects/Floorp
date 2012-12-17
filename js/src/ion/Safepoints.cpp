@@ -216,11 +216,14 @@ SafepointWriter::writeNunboxParts(LSafepoint *safepoint)
 # ifdef DEBUG
     if (IonSpewEnabled(IonSpew_Safepoints)) {
         for (uint32_t i = 0; i < entries.length(); i++) {
+            SafepointNunboxEntry &entry = entries[i];
+            if (entry.type.isUse() || entry.payload.isUse())
+                continue;
             IonSpewHeader(IonSpew_Safepoints);
             fprintf(IonSpewFile, "    nunbox (type in ");
-            DumpNunboxPart(entries[i].type);
+            DumpNunboxPart(entry.type);
             fprintf(IonSpewFile, ", payload in ");
-            DumpNunboxPart(entries[i].payload);
+            DumpNunboxPart(entry.payload);
             fprintf(IonSpewFile, ")\n");
         }
     }

@@ -245,28 +245,16 @@ CodeGenerator::visitRegExp(LRegExp *lir)
     return callVM(CloneRegExpObjectInfo, lir);
 }
 
-typedef bool (*ExecuteRegExpFn)(JSContext *cx, RegExpExecType type, HandleObject regexp,
-                                HandleString string, MutableHandleValue rval);
-static const VMFunction ExecuteRegExpInfo = FunctionInfo<ExecuteRegExpFn>(ExecuteRegExp);
+typedef bool (*RegExpTestRawFn)(JSContext *cx, HandleObject regexp,
+                                HandleString input, JSBool *result);
+static const VMFunction RegExpTestRawInfo = FunctionInfo<RegExpTestRawFn>(regexp_test_raw);
 
 bool
 CodeGenerator::visitRegExpTest(LRegExpTest *lir)
 {
     pushArg(ToRegister(lir->string()));
     pushArg(ToRegister(lir->regexp()));
-    pushArg(Imm32(RegExpTest));
-    if (!callVM(ExecuteRegExpInfo, lir))
-        return false;
-
-    Register output = ToRegister(lir->output());
-    Label notBool, end;
-    masm.branchTestBoolean(Assembler::NotEqual, JSReturnOperand, &notBool);
-    masm.unboxBoolean(JSReturnOperand, output);
-    masm.jump(&end);
-    masm.bind(&notBool);
-    masm.mov(Imm32(0), output);
-    masm.bind(&end);
-    return true;
+    return callVM(RegExpTestRawInfo, lir);
 }
 
 typedef JSObject *(*LambdaFn)(JSContext *, HandleFunction, HandleObject);

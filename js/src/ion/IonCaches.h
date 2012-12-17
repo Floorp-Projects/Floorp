@@ -228,7 +228,7 @@ class IonCache
         return *(IonCacheName *)this;
     }
 
-    void setScriptedLocation(JSScript *script, jsbytecode *pc) {
+    void setScriptedLocation(UnrootedScript script, jsbytecode *pc) {
         JS_ASSERT(!idempotent_);
         this->script = script;
         this->pc = pc;

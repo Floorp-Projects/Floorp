@@ -27,7 +27,7 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(278c4c8e-934f-4364-b49b-081cd8b1d595)]
+[scriptable, builtinclass, uuid(c8126129-8dac-43cd-b1ba-3896fba2dd01)]
 interface imgILoader : nsISupports
 {
   // Extra flags to pass to loadImage if you want a load to use CORS
@@ -54,16 +54,16 @@ interface imgILoader : nsISupports
    * make sure to Cancel() the resulting request before the observer
    * goes away.
    */
-  imgIRequest loadImage(in nsIURI aURI,
-                        in nsIURI aInitialDocumentURL,
-                        in nsIURI aReferrerURI,
-                        in nsIPrincipal aLoadingPrincipal,
-                        in nsILoadGroup aLoadGroup,
-                        in imgINotificationObserver aObserver,
-                        in nsISupports aCX,
-                        in nsLoadFlags aLoadFlags,
-                        in nsISupports cacheKey,
-                        in nsIChannelPolicy channelPolicy);
+  imgIRequest loadImageXPCOM(in nsIURI aURI,
+                             in nsIURI aInitialDocumentURL,
+                             in nsIURI aReferrerURI,
+                             in nsIPrincipal aLoadingPrincipal,
+                             in nsILoadGroup aLoadGroup,
+                             in imgINotificationObserver aObserver,
+                             in nsISupports aCX,
+                             in nsLoadFlags aLoadFlags,
+                             in nsISupports cacheKey,
+                             in nsIChannelPolicy channelPolicy);
 
   /**
    * Start the load and decode of an image.
@@ -82,8 +82,8 @@ interface imgILoader : nsISupports
    * reference cycles.  This means that callers of loadImageWithChannel should
    * make sure to Cancel() the resulting request before the observer goes away.
    */
-  imgIRequest loadImageWithChannel(in nsIChannel aChannel,
-                        in imgINotificationObserver aObserver,
-                        in nsISupports cx,
-                        out nsIStreamListener aListener);
+  imgIRequest loadImageWithChannelXPCOM(in nsIChannel aChannel,
+                                        in imgINotificationObserver aObserver,
+                                        in nsISupports cx,
+                                        out nsIStreamListener aListener);
 };

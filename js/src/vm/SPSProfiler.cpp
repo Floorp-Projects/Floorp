@@ -371,7 +371,7 @@ SPSProfiler::discardMJITCode(mjit::JITScript *jscr,
 }
 
 void
-SPSProfiler::unregisterScript(JSScript *script, mjit::JITChunk *chunk)
+SPSProfiler::unregisterScript(UnrootedScript script, mjit::JITChunk *chunk)
 {
     JITInfoMap::Ptr ptr = jminfo.lookup(script);
     if (!ptr)

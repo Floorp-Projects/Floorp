@@ -53,7 +53,7 @@
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
 #include "imgINotificationObserver.h"
-#include "imgIRequest.h"
+#include "imgRequestProxy.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
 #include "nsDocShellCID.h"
@@ -2685,7 +2685,7 @@ nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
-                          imgIRequest** aRequest)
+                          imgRequestProxy** aRequest)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
@@ -2768,11 +2768,11 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
 }
 
 //static
-already_AddRefed<imgIRequest>
-nsContentUtils::GetStaticRequest(imgIRequest* aRequest)
+already_AddRefed<imgRequestProxy>
+nsContentUtils::GetStaticRequest(imgRequestProxy* aRequest)
 {
   NS_ENSURE_TRUE(aRequest, nullptr);
-  nsCOMPtr<imgIRequest> retval;
+  nsRefPtr<imgRequestProxy> retval;
   aRequest->GetStaticRequest(getter_AddRefs(retval));
   return retval.forget();
 }

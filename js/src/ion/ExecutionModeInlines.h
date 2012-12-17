@@ -11,7 +11,7 @@
 namespace js {
 namespace ion {
 
-static inline bool HasIonScript(JSScript *script, ExecutionMode cmode)
+static inline bool HasIonScript(UnrootedScript script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->hasIonScript();
@@ -21,7 +21,7 @@ static inline bool HasIonScript(JSScript *script, ExecutionMode cmode)
     return false;
 }
 
-static inline IonScript *GetIonScript(JSScript *script, ExecutionMode cmode)
+static inline IonScript *GetIonScript(UnrootedScript script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->ion;
@@ -31,7 +31,7 @@ static inline IonScript *GetIonScript(JSScript *script, ExecutionMode cmode)
     return NULL;
 }
 
-static inline void SetIonScript(JSScript *script, ExecutionMode cmode, IonScript *ionScript)
+static inline void SetIonScript(UnrootedScript script, ExecutionMode cmode, IonScript *ionScript)
 {
     switch (cmode) {
       case SequentialExecution: script->ion = ionScript; return;
@@ -58,7 +58,7 @@ static inline bool CanIonCompile(JSContext *cx, HandleFunction fun, ExecutionMod
     return CanIonCompile(script, cmode);
 }
 
-static inline bool CompilingOffThread(JSScript *script, ExecutionMode cmode)
+static inline bool CompilingOffThread(UnrootedScript script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->isIonCompilingOffThread();
@@ -78,7 +78,7 @@ static inline bool CompilingOffThread(HandleScript script, ExecutionMode cmode)
     return false;
 }
 
-static inline bool Disabled(JSScript *script, ExecutionMode cmode) {
+static inline bool Disabled(UnrootedScript script, ExecutionMode cmode) {
     switch (cmode) {
       case SequentialExecution: return script->isIonCompilingOffThread();
       case ParallelExecution: return script->isParallelIonCompilingOffThread();

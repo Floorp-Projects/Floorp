@@ -161,7 +161,7 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(HandleScript script)
 {
-    if (!script->ensureRanAnalysis(cx))
+    if (!JSScript::ensureRanAnalysis(cx, script))
         return Compile_Error;
 
     if (!script->analysis()->jaegerCompileable()) {
@@ -169,7 +169,7 @@ mjit::Compiler::checkAnalysis(HandleScript script)
         return Compile_Abort;
     }
 
-    if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
+    if (cx->typeInferenceEnabled() && !JSScript::ensureRanInference(cx, script))
         return Compile_Error;
 
     ScriptAnalysis *analysis = script->analysis();
@@ -672,9 +672,10 @@ mjit::SetChunkLimit(uint32_t limit)
 }
 
 JITScript *
-MakeJITScript(JSContext *cx, JSScript *script)
+MakeJITScript(JSContext *cx, HandleScript script)
 {
-    if (!script->ensureRanAnalysis(cx))
+    AssertCanGC();
+    if (!JSScript::ensureRanAnalysis(cx, script))
         return NULL;
 
     ScriptAnalysis *analysis = script->analysis();
@@ -689,7 +690,7 @@ MakeJITScript(JSContext *cx, JSScript *script)
         if (!chunks.append(desc))
             return NULL;
     } else {
-        if (!script->ensureRanInference(cx))
+        if (!JSScript::ensureRanInference(cx, script))
             return NULL;
 
         /* Outgoing edges within the current chunk. */
@@ -993,11 +994,10 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
 }
 
 CompileStatus
-mjit::CanMethodJIT(JSContext *cx, JSScript *scriptArg, jsbytecode *pc,
+mjit::CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
                    bool construct, CompileRequest request, StackFrame *frame)
 {
     bool compiledOnce = false;
-    RootedScript script(cx, scriptArg);
   checkOutput:
     if (!cx->methodJitEnabled)
         return Compile_Abort;
@@ -1020,7 +1020,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *scriptArg, jsbytecode *pc,
         if (frame->hasPushedSPSFrame() != cx->runtime->spsProfiler.enabled())
             return Compile_Skipped;
     }
-		
+
     if (IonGetsFirstChance(cx, script, request))
         return Compile_Skipped;
 
@@ -3052,8 +3052,13 @@ mjit::Compiler::generateMethod()
             frame.pop();
           END_CASE(JSOP_INITPROP)
 
+          BEGIN_CASE(JSOP_INITELEM_ARRAY)
+            jsop_initelem_array();
+          END_CASE(JSOP_INITELEM_ARRAY)
+
           BEGIN_CASE(JSOP_INITELEM)
-            jsop_initelem();
+            prepareStubCall(Uses(3));
+            INLINE_STUBCALL(stubs::InitElem, REJOIN_FALLTHROUGH);
             frame.popn(2);
           END_CASE(JSOP_INITELEM)
 
@@ -6939,9 +6944,7 @@ mjit::Compiler::jsop_newinit()
         INLINE_STUBCALL(stub, REJOIN_FALLTHROUGH);
         frame.pushSynced(knownPushedType(0));
 
-        frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
         frame.extra(frame.peek(-1)).initObject = baseobj;
-
         return true;
     }
 
@@ -6968,9 +6971,7 @@ mjit::Compiler::jsop_newinit()
 
     stubcc.rejoin(Changes(1));
 
-    frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
     frame.extra(frame.peek(-1)).initObject = baseobj;
-
     return true;
 }
 
