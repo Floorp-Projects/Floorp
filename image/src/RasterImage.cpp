@@ -1805,7 +1805,7 @@ get_header_str (char *buf, char *data, size_t data_len)
 }
 
 nsresult
-RasterImage::SourceDataComplete()
+RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult)
 {
   if (mError)
     return NS_ERROR_FAILURE;
@@ -1867,7 +1867,27 @@ RasterImage::SourceDataComplete()
 }
 
 nsresult
-RasterImage::NewSourceData()
+RasterImage::OnImageDataAvailable(nsIRequest*,
+                                  nsISupports*,
+                                  nsIInputStream* aInStr,
+                                  uint64_t,
+                                  uint32_t aCount)
+{
+  nsresult rv;
+ 
+  // WriteToRasterImage always consumes everything it gets
+  // if it doesn't run out of memory
+  uint32_t bytesRead;
+  rv = aInStr->ReadSegments(WriteToRasterImage, this, aCount, &bytesRead);
+
+  NS_ABORT_IF_FALSE(bytesRead == aCount || HasError(),
+    "WriteToRasterImage should consume everything or the image must be in error!");
+
+  return rv;
+}
+
+nsresult
+RasterImage::OnNewSourceData()
 {
   nsresult rv;
 
