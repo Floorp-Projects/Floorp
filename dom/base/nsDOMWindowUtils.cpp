@@ -66,6 +66,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMFileHandle.h"
 #include "nsPrintfCString.h"
+#include "nsViewportInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -266,14 +267,14 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
   NS_ENSURE_STATE(doc);
 
-  ViewportInfo info = nsContentUtils::GetViewportInfo(doc, aDisplayWidth, aDisplayHeight);
-  *aDefaultZoom = info.defaultZoom;
-  *aAllowZoom = info.allowZoom;
-  *aMinZoom = info.minZoom;
-  *aMaxZoom = info.maxZoom;
-  *aWidth = info.width;
-  *aHeight = info.height;
-  *aAutoSize = info.autoSize;
+  nsViewportInfo info = nsContentUtils::GetViewportInfo(doc, aDisplayWidth, aDisplayHeight);
+  *aDefaultZoom = info.GetDefaultZoom();
+  *aAllowZoom = info.IsZoomAllowed();
+  *aMinZoom = info.GetMinZoom();
+  *aMaxZoom = info.GetMaxZoom();
+  *aWidth = info.GetWidth();
+  *aHeight = info.GetHeight();
+  *aAutoSize = info.IsAutoSizeEnabled();
   return NS_OK;
 }
 
