@@ -552,15 +552,27 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     }
 
     // Try to generate new stubs.
-    if (lhs.isInt32()) {
-        if (rhs.isInt32()) {
-            ICCompare_Int32::Compiler compilerInt32(cx, op);
-            ICStub *int32Stub = compilerInt32.getStub(ICStubSpace::StubSpaceFor(script));
-            if (!int32Stub)
-                return false;
+    if (lhs.isInt32() && rhs.isInt32()) {
+        ICCompare_Int32::Compiler compiler(cx, op);
+        ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!int32Stub)
+            return false;
 
-            stub->addNewStub(int32Stub);
-        }
+        stub->addNewStub(int32Stub);
+        return true;
+    }
+
+    if (lhs.isNumber() && rhs.isNumber()) {
+        // Unlink int32 stubs, it's faster to always use the double stub.
+        stub->unlinkStubsWithKind(ICStub::Compare_Int32);
+
+        ICCompare_Double::Compiler compiler(cx, op);
+        ICStub *doubleStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!doubleStub)
+            return false;
+
+        stub->addNewStub(doubleStub);
+        return true;
     }
 
     return true;
@@ -845,34 +857,12 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     return tailCallVM(DoBinaryArithFallbackInfo, masm);
 }
 
-void
-ICBinaryArith_Double::Compiler::ensureDouble(MacroAssembler &masm, const ValueOperand &source,
-                                             FloatRegister dest, Label *failure)
-{
-    // If source is a double, load it into dest. If source is int32,
-    // convert it to double. Else, branch to failure.
-
-    Label isDouble, done;
-    Register tag = masm.splitTagForTest(source);
-    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
-    masm.branchTestInt32(Assembler::NotEqual, tag, failure);
-
-    Register payload = masm.extractInt32(source, ExtractTemp0);
-    masm.convertInt32ToDouble(payload, dest);
-    masm.jump(&done);
-
-    masm.bind(&isDouble);
-    masm.unboxDouble(source, dest);
-
-    masm.bind(&done);
-}
-
 bool
 ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
-    ensureDouble(masm, R0, FloatReg0, &failure);
-    ensureDouble(masm, R1, FloatReg1, &failure);
+    masm.ensureDouble(R0, FloatReg0, &failure);
+    masm.ensureDouble(R1, FloatReg1, &failure);
 
     switch (op) {
       case JSOP_ADD:

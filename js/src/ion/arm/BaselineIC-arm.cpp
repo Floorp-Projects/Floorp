@@ -44,6 +44,31 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+bool
+ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure, isNaN;
+    masm.ensureDouble(R0, FloatReg0, &failure);
+    masm.ensureDouble(R1, FloatReg1, &failure);
+
+    Register dest = R0.scratchReg();
+
+    Assembler::DoubleCondition doubleCond = JSOpToDoubleCondition(op);
+    Assembler::Condition cond = Assembler::ConditionFromDoubleCondition(doubleCond);
+
+    masm.compareDouble(FloatReg0, FloatReg1);
+    masm.ma_mov(Imm32(0), dest);
+    masm.ma_mov(Imm32(1), dest, NoSetCond, cond);
+
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, dest, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
 // ICBinaryArith_Int32
 
 extern "C" {

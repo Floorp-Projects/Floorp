@@ -47,8 +47,8 @@ static const Register BaselineSecondScratchReg = r6;
 // register.  In ARM code emission, we do not clobber BaselineTailCallReg
 // since we keep the return address for calls there.
 
-// FloatReg0 must be equal to ReturnFloatReg.
-static const FloatRegister FloatReg0      = d1;
+// FloatReg0 must be equal to ReturnFloatReg. d1 is ScratchFloatReg.
+static const FloatRegister FloatReg0      = d0;
 static const FloatRegister FloatReg1      = d2;
 
 } // namespace ion
