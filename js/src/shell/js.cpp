@@ -3985,10 +3985,11 @@ PrintHelpString(JSContext *cx, jsval v)
 static bool
 PrintHelp(JSContext *cx, HandleObject obj)
 {
-    jsval usage, help;
-    if (!JS_LookupProperty(cx, obj, "usage", &usage))
+    RootedValue usage(cx);
+    if (!JS_LookupProperty(cx, obj, "usage", usage.address()))
         return false;
-    if (!JS_LookupProperty(cx, obj, "help", &help))
+    RootedValue help(cx);
+    if (!JS_LookupProperty(cx, obj, "help", help.address()))
         return false;
 
     if (JSVAL_IS_VOID(usage) || JSVAL_IS_VOID(help))
