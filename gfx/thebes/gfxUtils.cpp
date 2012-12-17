@@ -261,10 +261,6 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
                     gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
 
-    nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);
-    if (!resultPattern)
-        return nullptr;
-
     nsRefPtr<gfxDrawable> drawable = 
         new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     return drawable.forget();
