@@ -193,15 +193,7 @@ function verifyFoundMsgs(foundSmsList, reverse) {
     is(foundSmsList[x].body, smsList[x].body, "body");
     is(foundSmsList[x].delivery, smsList[x].delivery, "delivery");
     is(foundSmsList[x].read, smsList[x].read, "read");
-
-    // Bug 805799: receiver null when onreceived event is fired, until do a
-    // getMessage. Default emulator (receiver) phone number is 15555215554
-    if (!smsList[x].receiver) {
-      isIn(foundSmsList[x].receiver, ["15555215554", "+15555215554"], "receiver");
-    } else {
-      isIn(foundSmsList[x].receiver, [smsList[x].receiver, "+15555215554"], "receiver");
-    }
-
+    is(foundSmsList[x].receiver, null, "receiver (getMessage)");
     isIn(foundSmsList[x].sender, [smsList[x].sender, "+15552229797"], "sender");
     is(foundSmsList[x].timestamp.getTime(), smsList[x].timestamp.getTime(),
         "timestamp");
