@@ -10,8 +10,12 @@ import android.widget.@VIEWTYPE@;
 
 public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
     private static final int[] STATE_PRIVATE_MODE = { R.attr.state_private };
+    private static final int[] STATE_LIGHT = { R.attr.state_light };
+    private static final int[] STATE_DARK = { R.attr.state_dark };
 
     private boolean mIsPrivate = false;
+    private boolean mIsLight = false;
+    private boolean mIsDark = false;
 
     public Gecko@VIEWTYPE@(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -23,6 +27,10 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
 
         if (mIsPrivate)
             mergeDrawableStates(drawableState, STATE_PRIVATE_MODE);
+        else if (mIsLight)
+            mergeDrawableStates(drawableState, STATE_LIGHT);
+        else if (mIsDark)
+            mergeDrawableStates(drawableState, STATE_DARK);
 
         return drawableState;
     }
@@ -36,5 +44,29 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
             mIsPrivate = isPrivate;
             refreshDrawableState();
         }
-   }
+    }
+
+    public void setTheme(boolean isLight) {
+        // Set the theme only if it is different from existing theme.
+        if ((isLight && mIsLight != isLight) ||
+            (!isLight && mIsDark == isLight)) {
+            if (isLight) {
+                mIsLight = true;
+                mIsDark = false;
+            } else {
+                mIsLight = false;
+                mIsDark = true;
+            }
+
+            refreshDrawableState();
+        }
+    }
+
+    public void resetTheme() {
+        if (mIsLight || mIsDark) {
+            mIsLight = false;
+            mIsDark = false;
+            refreshDrawableState();
+        }
+    } 
 }
