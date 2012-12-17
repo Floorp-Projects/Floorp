@@ -9,9 +9,8 @@ namespace mozilla {
 namespace image {
 
 // Constructor
-Image::Image(imgStatusTracker* aStatusTracker, nsIURI* aURI) :
+Image::Image(imgStatusTracker* aStatusTracker) :
   mInnerWindowId(0),
-  mURI(aURI),
   mAnimationConsumers(0),
   mAnimationMode(kNormalAnimMode),
   mInitialized(false),
@@ -22,7 +21,7 @@ Image::Image(imgStatusTracker* aStatusTracker, nsIURI* aURI) :
     mStatusTracker = aStatusTracker;
     mStatusTracker->SetImage(this);
   } else {
-    mStatusTracker = new imgStatusTracker(this);
+    mStatusTracker = new imgStatusTracker(this, nullptr);
   }
 }
 

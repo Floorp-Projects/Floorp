@@ -149,8 +149,6 @@ var imgFile = do_get_file(imgName);
 var istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 8415);
 
-// Use decodeImageData for this test even though it's deprecated to ensure that
-// it correctly forwards to decodeImage and continues to work.
 var outParam = { value: null };
 imgTools.decodeImageData(istream, inMimeType, outParam);
 var container = outParam.value;
@@ -211,7 +209,9 @@ imgFile = do_get_file(imgName);
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 3494);
 
-container = imgTools.decodeImage(istream, inMimeType);
+outParam = {};
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -273,7 +273,9 @@ imgFile = do_get_file(imgName);
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 1406);
 
-container = imgTools.decodeImage(istream, inMimeType);
+outParam = { value: null };
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -331,7 +333,9 @@ imgFile = do_get_file(imgName);
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 1809);
 
-container = imgTools.decodeImage(istream, inMimeType);
+outParam = { value: null };
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -439,7 +443,9 @@ imgFile = do_get_file(imgName);
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 3494);
 
-container = imgTools.decodeImage(istream, inMimeType);
+outParam = {};
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
 
 // It's not easy to look at the pixel values from JS, so just
 // check the container's size.
@@ -657,7 +663,9 @@ for(var i=0; i<testData.length; ++i) {
     imgFile = do_get_file(dict["preImage"]);
     istream = getFileInputStream(imgFile);
 
-    var container = imgTools.decodeImage(istream, dict["preImageMimeType"]);
+    var outParam = { value: null };
+    imgTools.decodeImageData(istream, dict["preImageMimeType"], outParam);
+    var container = outParam.value;
 
     istream = imgTools.encodeImage(container, dict["refImageMimeType"]);
 
@@ -693,9 +701,11 @@ do_check_eq(istream.available(), 17759);
 var errsrc = "none";
 
 try {
-  container = imgTools.decodeImage(istream, inMimeType);
+  outParam = { value: null };
+  imgTools.decodeImageData(istream, inMimeType, outParam);
+  container = outParam.value;
 
-  // We should never hit this - decodeImage throws an assertion because the
+  // We should never hit this - decodeImageData throws an assertion because the
   // image decoded doesn't have enough frames.
   try {
       istream = imgTools.encodeImage(container, "image/png");
@@ -723,7 +733,9 @@ imgFile = do_get_file(imgName);
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 4286);
 
-container = imgTools.decodeImage(istream, inMimeType);
+outParam = { value: null };
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
 
 var props = container.QueryInterface(Ci.nsIProperties);
 

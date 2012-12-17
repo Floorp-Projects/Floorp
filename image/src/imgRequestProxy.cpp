@@ -148,19 +148,17 @@ imgRequestProxy::~imgRequestProxy()
   }
 }
 
-nsresult imgRequestProxy::Init(imgRequest* aOwner,
-                               imgStatusTracker* aStatusTracker,
+nsresult imgRequestProxy::Init(imgStatusTracker* aStatusTracker,
                                nsILoadGroup* aLoadGroup,
-                               nsIURI* aURI,
-                               imgINotificationObserver* aObserver)
+                               nsIURI* aURI, imgINotificationObserver* aObserver)
 {
   NS_PRECONDITION(!GetOwner() && !mListener, "imgRequestProxy is already initialized");
 
-  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequestProxy::Init", "request", aOwner);
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequestProxy::Init", "request", aStatusTracker->GetRequest());
 
   NS_ABORT_IF_FALSE(mAnimationConsumers == 0, "Cannot have animation before Init");
 
-  mBehaviour->SetOwner(aOwner);
+  mBehaviour->SetOwner(aStatusTracker->GetRequest());
   mListener = aObserver;
   // Make sure to addref mListener before the AddProxy call below, since
   // that call might well want to release it if the imgRequest has
@@ -586,8 +584,7 @@ nsresult imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
   // XXXldb That's not true anymore.  Stuff from imgLoader adds the
   // request to the loadgroup.
   clone->SetLoadFlags(mLoadFlags);
-  nsresult rv = clone->Init(mBehaviour->GetOwner(), &GetStatusTracker(),
-                            mLoadGroup, mURI, aObserver);
+  nsresult rv = clone->Init(&GetStatusTracker(), mLoadGroup, mURI, aObserver);
   if (NS_FAILED(rv))
     return rv;
 
@@ -682,20 +679,6 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
 
 /** imgIDecoderObserver methods **/
 
-void imgRequestProxy::OnStartDecode()
-{
-  // This notification is deliberately not propagated since there are no
-  // listeners who care about it.
-  if (GetOwner()) {
-    // In the case of streaming jpegs, it is possible to get multiple
-    // OnStartDecodes which indicates the beginning of a new decode.  The cache
-    // entry's size therefore needs to be reset to 0 here.  If we do not do
-    // this, the code in imgStatusTrackerObserver::OnStopFrame will continue to
-    // increase the data size cumulatively.
-    GetOwner()->ResetCacheEntry();
-  }
-}
-
 void imgRequestProxy::OnStartContainer()
 {
   LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStartContainer");
@@ -740,15 +723,9 @@ void imgRequestProxy::OnStopDecode()
     mListener->Notify(this, imgINotificationObserver::DECODE_COMPLETE, nullptr);
   }
 
-  if (GetOwner()) {
-    // We finished the decode, and thus have the decoded frames. Update the cache
-    // entry size to take this into account.
-    GetOwner()->UpdateCacheEntrySize();
-
-    // Multipart needs reset for next OnStartContainer.
-    if (GetOwner()->GetMultipart())
-      mSentStartContainer = false;
-  }
+  // Multipart needs reset for next OnStartContainer
+  if (GetOwner() && GetOwner()->GetMultipart())
+    mSentStartContainer = false;
 }
 
 void imgRequestProxy::OnDiscard()
@@ -759,10 +736,6 @@ void imgRequestProxy::OnDiscard()
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
     mListener->Notify(this, imgINotificationObserver::DISCARD, nullptr);
-  }
-  if (GetOwner()) {
-    // Update the cache entry size, since we just got rid of frame data.
-    GetOwner()->UpdateCacheEntrySize();
   }
 }
 
@@ -913,7 +886,7 @@ imgRequestProxy::GetStaticRequest(imgRequestProxy** aReturn)
   nsCOMPtr<nsIPrincipal> currentPrincipal;
   GetImagePrincipal(getter_AddRefs(currentPrincipal));
   nsRefPtr<imgRequestProxy> req = new imgRequestProxyStatic(frame, currentPrincipal);
-  req->Init(nullptr, &frame->GetStatusTracker(), nullptr, mURI, nullptr);
+  req->Init(&frame->GetStatusTracker(), nullptr, mURI, nullptr);
 
   NS_ADDREF(*aReturn = req);
 
@@ -929,7 +902,7 @@ void imgRequestProxy::NotifyListener()
 
   if (GetOwner()) {
     // Send the notifications to our listener asynchronously.
-    GetStatusTracker().Notify(this);
+    GetStatusTracker().Notify(GetOwner(), this);
   } else {
     // We don't have an imgRequest, so we can only notify the clone of our
     // current state, but we still have to do that asynchronously.
