@@ -17,6 +17,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ipc/Blob.h"
+#include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -27,10 +28,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "snappy/snappy.h"
-#include "test_quota.h"
 
 #include "AsyncConnectionHelper.h"
-#include "FileStream.h"
 #include "IDBCursor.h"
 #include "IDBEvents.h"
 #include "IDBFileHandle.h"
@@ -51,6 +50,7 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom;
 using namespace mozilla::dom::indexedDB::ipc;
+using mozilla::dom::quota::FileOutputStream;
 
 namespace {
 
@@ -2734,9 +2734,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
         nativeFile = fileManager->GetFileForId(directory, id);
         NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-        nsRefPtr<FileStream> outputStream = new FileStream();
-        rv = outputStream->Init(nativeFile, NS_LITERAL_STRING("wb"), 0);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        nsRefPtr<FileOutputStream> outputStream = FileOutputStream::Create(
+          mObjectStore->Transaction()->Database()->Origin(), nativeFile);
+        NS_ENSURE_TRUE(outputStream, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
         rv = CopyData(inputStream, outputStream);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);

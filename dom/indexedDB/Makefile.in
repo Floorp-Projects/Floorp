@@ -25,7 +25,6 @@ CPPSRCS = \
   DatabaseInfo.cpp \
   FileInfo.cpp \
   FileManager.cpp \
-  FileStream.cpp \
   IDBCursor.cpp \
   IDBDatabase.cpp \
   IDBEvents.cpp \
@@ -93,7 +92,6 @@ XPIDLSRCS = \
   nsIIDBVersionChangeEvent.idl \
   nsIIDBOpenDBRequest.idl \
   nsIIndexedDatabaseManager.idl \
-  nsIStandardFileStream.idl \
   $(NULL)
 
 DIRS += ipc

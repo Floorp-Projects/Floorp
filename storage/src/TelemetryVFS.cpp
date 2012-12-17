@@ -10,6 +10,7 @@
 #include "sqlite3.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 
 /**
  * This preference is a workaround to allow users/sysadmins to identify
@@ -24,6 +25,7 @@
 namespace {
 
 using namespace mozilla;
+using namespace mozilla::dom::quota;
 
 struct Histograms {
   const char *name;
@@ -82,9 +84,17 @@ private:
 };
 
 struct telemetry_file {
-  sqlite3_file base;        // Base class.  Must be first
-  Histograms *histograms;   // histograms pertaining to this file
-  sqlite3_file pReal[1];    // This contains the vfs that actually does work
+  // Base class.  Must be first
+  sqlite3_file base;
+
+  // histograms pertaining to this file
+  Histograms *histograms;
+
+  // quota object for this file
+  nsRefPtr<QuotaObject> quotaObject;
+
+  // This contains the vfs that actually does work
+  sqlite3_file pReal[1];
 };
 
 /*
@@ -99,6 +109,7 @@ xClose(sqlite3_file *pFile)
   if( rc==SQLITE_OK ){
     delete p->base.pMethods;
     p->base.pMethods = NULL;
+    p->quotaObject = nullptr;
   }
   return rc;
 }
@@ -126,6 +137,9 @@ int
 xWrite(sqlite3_file *pFile, const void *zBuf, int iAmt, sqlite_int64 iOfst)
 {
   telemetry_file *p = (telemetry_file *)pFile;
+  if (p->quotaObject && !p->quotaObject->MaybeAllocateMoreSpace(iOfst, iAmt)) {
+    return SQLITE_FULL;
+  }
   IOThreadAutoTimer ioTimer(p->histograms->writeMS);
   int rc;
   rc = p->pReal->pMethods->xWrite(p->pReal, zBuf, iAmt, iOfst);
@@ -144,6 +158,9 @@ xTruncate(sqlite3_file *pFile, sqlite_int64 size)
   int rc;
   Telemetry::AutoTimer<Telemetry::MOZ_SQLITE_TRUNCATE_MS> timer;
   rc = p->pReal->pMethods->xTruncate(p->pReal, size);
+  if (rc == SQLITE_OK && p->quotaObject) {
+    p->quotaObject->UpdateSize(size);
+  }
   return rc;
 }
 
@@ -300,6 +317,18 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
       break;
   }
   p->histograms = h;
+
+  const char* origin;
+  if ((flags & SQLITE_OPEN_URI) &&
+      (origin = sqlite3_uri_parameter(zName, "origin"))) {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    p->quotaObject = quotaManager->GetQuotaObject(nsDependentCString(origin),
+                                                  NS_ConvertUTF8toUTF16(zName));
+
+  }
+
   rc = orig_vfs->xOpen(orig_vfs, zName, p->pReal, flags, pOutFlags);
   if( rc != SQLITE_OK )
     return rc;

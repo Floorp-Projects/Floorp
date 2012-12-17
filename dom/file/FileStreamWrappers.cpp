@@ -8,7 +8,6 @@
 
 #include "nsIFileStorage.h"
 #include "nsISeekableStream.h"
-#include "nsIStandardFileStream.h"
 #include "mozilla/Attributes.h"
 
 #include "FileHelper.h"
@@ -246,16 +245,6 @@ FileOutputStreamWrapper::Close()
   nsresult rv = NS_OK;
 
   if (!mFirstTime) {
-    // We must flush buffers of the stream on the same thread on which we wrote
-    // some data.
-    nsCOMPtr<nsIStandardFileStream> sstream = do_QueryInterface(mFileStream);
-    if (sstream) {
-      rv = sstream->FlushBuffers();
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to flush buffers of the stream!");
-      }
-    }
-
     NS_ASSERTION(PR_GetCurrentThread() == mWriteThread,
                  "Unsetting thread locals on wrong thread!");
     mFileHelper->mFileStorage->UnsetThreadLocals();

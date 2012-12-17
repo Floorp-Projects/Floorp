@@ -132,6 +132,7 @@ EXPORTS
         sqlite3_transfer_bindings
         sqlite3_unlock_notify
         sqlite3_update_hook
+        sqlite3_uri_parameter
         sqlite3_user_data
         sqlite3_value_blob
         sqlite3_value_bytes

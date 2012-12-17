@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const DEFAULT_QUOTA = 50 * 1024 * 1024;
+
 var bufferCache = [];
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -182,25 +184,6 @@ function getUsage(usageHandler)
   };
 
   idbManager.getUsageForURI(uri, callback);
-}
-
-function getUsageSync()
-{
-  let usage;
-
-  getUsage(function(aUsage, aFileUsage) {
-    usage = aUsage;
-  });
-
-  let comp = SpecialPowers.wrap(Components);
-  let thread = comp.classes["@mozilla.org/thread-manager;1"]
-                   .getService(comp.interfaces.nsIThreadManager)
-                   .currentThread;
-  while (!usage) {
-    thread.processNextEvent(true);
-  }
-
-  return usage;
 }
 
 function scheduleGC()

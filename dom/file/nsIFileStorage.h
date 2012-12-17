@@ -10,13 +10,16 @@
 #include "nsISupports.h"
 
 #define NS_FILESTORAGE_IID \
-  {0xbba9c2ff, 0x85c9, 0x47c1, \
-  { 0xaf, 0xce, 0x0a, 0x7e, 0x6f, 0x21, 0x50, 0x95 } }
+  {0xa0801944, 0x2f1c, 0x4203, \
+  { 0x9c, 0xaa, 0xaa, 0x47, 0xe0, 0x0c, 0x67, 0x92 } }
 
 class nsIFileStorage : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FILESTORAGE_IID)
+
+  virtual const nsACString&
+  StorageOrigin() = 0;
 
   virtual nsISupports*
   StorageId() = 0;
@@ -36,20 +39,23 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileStorage, NS_FILESTORAGE_IID)
 
-#define NS_DECL_NSIFILESTORAGE \
-  virtual nsISupports*         \
-  StorageId();                 \
-                               \
-  virtual bool                 \
-  IsStorageInvalidated();      \
-                               \
-  virtual bool                 \
-  IsStorageShuttingDown();     \
-                               \
-  virtual void                 \
-  SetThreadLocals();           \
-                               \
-  virtual void                 \
-  UnsetThreadLocals();
+#define NS_DECL_NSIFILESTORAGE                                                 \
+  virtual const nsACString&                                                    \
+  StorageOrigin() MOZ_OVERRIDE;                                                \
+                                                                               \
+  virtual nsISupports*                                                         \
+  StorageId() MOZ_OVERRIDE;                                                    \
+                                                                               \
+  virtual bool                                                                 \
+  IsStorageInvalidated() MOZ_OVERRIDE;                                         \
+                                                                               \
+  virtual bool                                                                 \
+  IsStorageShuttingDown() MOZ_OVERRIDE;                                        \
+                                                                               \
+  virtual void                                                                 \
+  SetThreadLocals() MOZ_OVERRIDE;                                              \
+                                                                               \
+  virtual void                                                                 \
+  UnsetThreadLocals() MOZ_OVERRIDE;
 
 #endif // nsIFileStorage_h__

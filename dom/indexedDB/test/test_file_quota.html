@@ -13,14 +13,12 @@
   function testSteps()
   {
     const READ_WRITE = IDBTransaction.READ_WRITE;
-    const DEFAULT_QUOTA_MB = 50;
 
     const name = window.location.pathname;
 
     const objectStoreName = "Blobs";
 
-    const testData = { key: 0, value: {} };
-    const fileData = { key: 1, file: null };
+    const fileData = { key: 1, file: getNullFile("random.bin", DEFAULT_QUOTA) };
 
     let request = indexedDB.open(name, 1);
     request.onerror = errorHandler;
@@ -32,21 +30,17 @@
 
     let db = event.target.result;
 
-    let objectStore = db.createObjectStore(objectStoreName, { });
-    objectStore.add(testData.value, testData.key);
-
-    let size = (DEFAULT_QUOTA_MB + 1) * 1024 * 1024 - getUsageSync();
-    fileData.file = getNullFile("random.bin", size);
+    db.createObjectStore(objectStoreName, { });
 
     event = yield;
 
     is(event.type, "success", "Got correct event type");
 
     trans = db.transaction([objectStoreName], READ_WRITE);
-    objectStore = trans.objectStore(objectStoreName);
+    let objectStore = trans.objectStore(objectStoreName);
 
     request = objectStore.add(fileData.file, fileData.key);
-    request.addEventListener("error", new ExpectError("UnknownError"));
+    request.addEventListener("error", new ExpectError("UnknownError", true));
     request.onsuccess = unexpectedSuccessHandler;
     event = yield;
 
