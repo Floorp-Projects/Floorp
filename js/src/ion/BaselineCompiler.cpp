@@ -911,6 +911,41 @@ BaselineCompiler::emit_JSOP_CALLGNAME()
 }
 
 bool
+BaselineCompiler::emit_JSOP_BINDGNAME()
+{
+    frame.push(ObjectValue(script->global()));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_SETPROP()
+{
+    // Keep lhs in R0, rhs in R1.
+    frame.popRegsAndSync(2);
+
+    // Call IC.
+    ICSetProp_Fallback::Compiler compiler(cx);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    // The IC will return the RHS value in R0, mark it as pushed value.
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_SETNAME()
+{
+    return emit_JSOP_SETPROP();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SETGNAME()
+{
+    return emit_JSOP_SETPROP();
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETPROP()
 {
     // Keep object in R0.
