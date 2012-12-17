@@ -44,8 +44,37 @@ function runSocialTestWithProvider(manifest, callback) {
 
   info("runSocialTestWithProvider: " + manifests.toSource());
 
+  let finishCount = 0;
+  function finishIfDone(callFinish) {
+    finishCount++;
+    if (finishCount == manifests.length)
+      finish();
+  }
+  function removeAddedProviders(cleanup) {
+    manifests.forEach(function (m) {
+      // If we're "cleaning up", don't call finish when done.
+      let callback = cleanup ? function () {} : finishIfDone;
+      // Similarly, if we're cleaning up, catch exceptions from removeProvider
+      let removeProvider = SocialService.removeProvider.bind(SocialService);
+      if (cleanup) {
+        removeProvider = function (origin, cb) {
+          try {
+            SocialService.removeProvider(origin, cb);
+          } catch (ex) {
+            // Ignore "provider doesn't exist" errors.
+            if (ex.message == "SocialService.removeProvider: no provider with this origin exists!")
+              return;
+            info("Failed to clean up provider " + origin + ": " + ex);
+          }
+        }
+      }
+      removeProvider(m.origin, callback);
+    });
+  }
+
   let providersAdded = 0;
   let firstProvider;
+
   manifests.forEach(function (m) {
     SocialService.addProvider(m, function(provider) {
       provider.active = true;
@@ -65,23 +94,15 @@ function runSocialTestWithProvider(manifest, callback) {
         Social.provider = firstProvider;
         Social.enabled = true;
 
-        registerCleanupFunction(function () {
+        function finishSocialTest(cleanup) {
           // disable social before removing the providers to avoid providers
           // being activated immediately before we get around to removing it.
           Services.prefs.clearUserPref("social.enabled");
-          // if one test happens to fail, it is likely finishSocialTest will not
-          // be called, causing most future social tests to also fail as they
-          // attempt to add a provider which already exists - so work
-          // around that by also attempting to remove the test provider.
-          manifests.forEach(function (m) {
-            try {
-              SocialService.removeProvider(m.origin, finish);
-            } catch (ex) {}
-          });
-        });
-        function finishSocialTest() {
-          SocialService.removeProvider(provider.origin, finish);
+          removeAddedProviders(cleanup);
         }
+        registerCleanupFunction(function () {
+          finishSocialTest(true);
+        });
         callback(finishSocialTest);
       }
     });
