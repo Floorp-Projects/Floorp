@@ -535,29 +535,36 @@ DownloadElementShell.prototype = {
  * as they exist they "collapses" their history "counterpart" (So we don't show two
  * items for every download).
  */
-function DownloadsPlacesView(aRichListBox, aPlace) {
+function DownloadsPlacesView(aRichListBox) {
   this._richlistbox = aRichListBox;
   this._richlistbox._placesView = this;
-  this._downloadElementsShellsForURI = new Map();
-  this._viewItemsForDataItems = new WeakMap();
-  this._shells = new Set();
-  this._lastSessionDownloadElement = null;
-  this.place = aPlace;
   this._richlistbox.controllers.appendController(this);
+
+  // Map download URLs to download element shells regardless of their type
+  this._downloadElementsShellsForURI = new Map();
+
+  // Map download data items to their element shells.
+  this._viewItemsForDataItems = new WeakMap();
+
+  // Points to the last session download element. We keep track of this
+  // in order to keep all session downloads above past downloads.
+  this._lastSessionDownloadElement = null;
+
+  this._searchTerm = "";
+
+  // Register as a downloads view. The places data will be initialized by
+  // the places setter.
+  let downloadsData = DownloadsCommon.getData(window.opener || window);
+  downloadsData.addView(this);
+
+  // Make sure to unregister the view if the window is closed.
+  window.addEventListener("unload", function() {
+    downloadsData.removeView(this);
+    this.result = null;
+  }.bind(this), true);
 }
 
 DownloadsPlacesView.prototype = {
-  _registerAsDownloadsView: function DPV__registerAsDownloadsView() {
-    let downloadsData = DownloadsCommon.getData(window.opener || window);
-    downloadsData.addView(this);
-    // Make sure to unregister the view if the window is closed.
-    window.addEventListener("unload", function() {
-      if (this._result) {
-        downloadsData.removeView(this);
-      }
-    }.bind(this), true);
-  },
-
   get associatedElement() this._richlistbox,
 
   _forEachDownloadElementShellForURI:
@@ -658,6 +665,11 @@ DownloadsPlacesView.prototype = {
       else {
         this._richlistbox.appendChild(newOrUpdatedShell.element);
       }
+
+      if (this.searchTerm) {
+        newOrUpdatedShell.element.hidden =
+          !newOrUpdatedShell.element._shell.matchesSearchTerm(this.searchTerm);
+      }
     }
   },
 
@@ -672,8 +684,8 @@ DownloadsPlacesView.prototype = {
     this._richlistbox.removeChild(aElement);
   },
 
-  _historyDownloadRemoved:
-  function DPV__historyDownloadRemoved(aPlacesNode) {
+  _removeHistoryDownloadFromView:
+  function DPV__removeHistoryDownloadFromView(aPlacesNode) {
     let downloadURI = aPlacesNode.uri;
     let shellsForURI = this._downloadElementsShellsForURI.get(downloadURI, null);
     if (shellsForURI) {
@@ -691,8 +703,8 @@ DownloadsPlacesView.prototype = {
     }
   },
 
-  _sessionDownloadRemoved:
-  function DPV__sessionDownloadRemoved(aDataItem) {
+  _removeSessionDownloadFromView:
+  function DPV__removeSessionDownloadFromView(aDataItem) {
     let shells = this._downloadElementsShellsForURI.get(aDataItem.uri, null);
     if (shells.size == 0)
       throw new Error("Should have had at leaat one shell for this uri");
@@ -729,10 +741,13 @@ DownloadsPlacesView.prototype = {
   get place() this._place,
 
   set place(val) {
-    // Cleanup
-    this.result = null;
+    // Don't reload everything if we don't have to.
+    if (this._place == val) {
+      // XXXmano: places.js relies on this behavior (see Bug 822203).
+      this.searchTerm = "";
+      return val;
+    }
 
-    this._searchTerm = "";
     this._place = val;
 
     let history = PlacesUtils.history;
@@ -744,27 +759,9 @@ DownloadsPlacesView.prototype = {
     let result = history.executeQueries(queries.value, queries.value.length,
                                         options.value);
     result.addObserver(this, false);
-
-    this._registerAsDownloadsView();
-
     return val;
   },
 
-  _cleanUp: function() {
-    while (this._richlistbox.firstChild) {
-      this._richlistbox.removeChild(this._richlistbox.firstChild);
-    }
-    this._searchTerm = "";
-    DownloadsCommon.getData(window.opener || window).removeView();
-    this._downloadElementsShellsForURI = new Map();
-    this._viewItemsForDataItems = new WeakMap();
-    this._shells = new Set();
-    this._resultNode = null;
-    this._result = null;
-    this._lastSessionDownloadElement = null;
-  },
-
-  _result: null,
   get result() this._result,
   set result(val) {
     if (this._result == val)
@@ -775,13 +772,14 @@ DownloadsPlacesView.prototype = {
       this._resultNode.containerOpen = false;
     }
 
-    this._result = val;
     if (val) {
+      this._result = val;
       this._resultNode = val.root;
       this._resultNode.containerOpen = true;
     }
     else {
-      this._cleanUp();
+      delete this._resultNode;
+      delete this._result;
     }
 
     return val;
@@ -813,19 +811,23 @@ DownloadsPlacesView.prototype = {
   function DPV_invalidateContainer(aContainer) {
     if (aContainer != this._resultNode)
       throw new Error("Unexpected container node");
-
-    if (aContainer.containerOpen) {
-      for (let i = 0; i < aContainer.childCount; i++) {
-        try {
-          this._addDownloadData(null, aContainer.getChild(i), false)
-        }
-        catch(ex) {
-          Cu.reportError(ex);
-        }
-      }
-    }
-    else {
+    if (!aContainer.containerOpen)
       throw new Error("Root container for the downloads query cannot be closed");
+
+    // Remove the invalidated history downloads from the list and unset the
+    // places node for data downloads.
+    for (let element of this._richlistbox.childNodes) {
+      if (element._shell.placesNode)
+        this._removeHistoryDownloadFromView(element._shell.placesNode);
+    }
+
+    for (let i = 0; i < aContainer.childCount; i++) {
+      try {
+        this._addDownloadData(null, aContainer.getChild(i), false)
+      }
+      catch(ex) {
+        Cu.reportError(ex);
+      }
     }
   },
 
@@ -834,7 +836,7 @@ DownloadsPlacesView.prototype = {
   },
 
   nodeRemoved: function DPV_nodeRemoved(aParent, aPlacesNode, aOldIndex) {
-    this._historyDownloadRemoved(aPlacesNode);
+    this._removeHistoryDownloadFromView(aPlacesNode);
   },
 
   nodeIconChanged: function DPV_nodeIconChanged(aNode) {
@@ -869,10 +871,12 @@ DownloadsPlacesView.prototype = {
 
   get searchTerm() this._searchTerm,
   set searchTerm(aValue) {
-    for (let element of this._richlistbox.childNodes) {
-      element.hidden = !element._shell.matchesSearchTerm(aValue);
+    if (this._searchTerm != aValue) {
+      for (let element of this._richlistbox.childNodes) {
+        element.hidden = !element._shell.matchesSearchTerm(aValue);
+      }
     }
-    return aValue;
+    return this._searchTerm = aValue;
   },
 
   applyFilter: function() {
@@ -891,7 +895,7 @@ DownloadsPlacesView.prototype = {
   },
 
   onDataItemRemoved: function DPV_onDataItemRemoved(aDataItem) {
-    this._sessionDownloadRemoved(aDataItem)
+    this._removeSessionDownloadFromView(aDataItem)
   },
 
   getViewItem: function(aDataItem)
