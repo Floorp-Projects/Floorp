@@ -63,6 +63,9 @@ const nsIDM = Ci.nsIDownloadManager;
 const kDownloadsStringBundleUrl =
   "chrome://browser/locale/downloads/downloads.properties";
 
+const kPrefBdmScanWhenDone =   "browser.download.manager.scanWhenDone";
+const kPrefBdmAlertOnExeOpen = "browser.download.manager.alertOnEXEOpen";
+
 const kDownloadsStringsRequiringFormatting = {
   sizeWithUnits: true,
   shortTimeLeftSeconds: true,
@@ -396,6 +399,117 @@ this.DownloadsCommon = {
     // never adding to the time left.  Ensure that we never fall below one
     // second left until all downloads are actually finished.
     return aLastSeconds = Math.max(aSeconds, 1);
+  },
+
+  /**
+   * Opens a downloaded file.
+   * If you've a dataItem, you should call dataItem.openLocalFile.
+   * @param aFile
+   *        the downloaded file to be opened.
+   * @param aMimeInfo
+   *        the mime type info object.  May be null.
+   * @param aOwnerWindow
+   *        the window with which this action is associated.
+   */
+  openDownloadedFile: function DC_openDownloadedFile(aFile, aMimeInfo, aOwnerWindow) {
+    if (!(aFile instanceof Ci.nsIFile))
+      throw new Error("aFile must be a nsIFile object");
+    if (aMimeInfo && !(aMimeInfo instanceof Ci.nsIMIMEInfo))
+      throw new Error("Invalid value passed for aMimeInfo");
+    if (!(aOwnerWindow instanceof Ci.nsIDOMWindow))
+      throw new Error("aOwnerWindow must be a dom-window object");
+
+    // Confirm opening executable files if required.
+    if (aFile.isExecutable()) {
+      let showAlert = true;
+      try {
+        showAlert = Services.prefs.getBoolPref(kPrefBdmAlertOnExeOpen);
+      } catch (ex) { }
+
+      // On Vista and above, we rely on native security prompting for
+      // downloaded content unless it's disabled.
+      if (DownloadsCommon.isWinVistaOrHigher) {
+        try {
+          if (Services.prefs.getBoolPref(kPrefBdmScanWhenDone)) {
+            showAlert = false;
+          }
+        } catch (ex) { }
+      }
+
+      if (showAlert) {
+        let name = this.dataItem.target;
+        let message =
+          DownloadsCommon.strings.fileExecutableSecurityWarning(name, name);
+        let title =
+          DownloadsCommon.strings.fileExecutableSecurityWarningTitle;
+        let dontAsk =
+          DownloadsCommon.strings.fileExecutableSecurityWarningDontAsk;
+
+        let checkbox = { value: false };
+        let open = Services.prompt.confirmCheck(aOwnerWindow, title, message,
+                                                dontAsk, checkbox);
+        if (!open) {
+          return;
+        }
+
+        Services.prefs.setBoolPref(kPrefBdmAlertOnExeOpen,
+                                   !checkbox.value);
+      }
+    }
+
+    // Actually open the file.
+    try {
+      if (aMimeInfo && aMimeInfo.preferredAction == aMimeInfo.useHelperApp) {
+        aMimeInfo.launchWithFile(aFile);
+        return;
+      }
+    }
+    catch(ex) { }
+
+    // If either we don't have the mime info, or the preferred action failed,
+    // attempt to launch the file directly.
+    try {
+      aFile.launch();
+    }
+    catch(ex) {
+      // If launch fails, try sending it through the system's external "file:"
+      // URL handler.
+      Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+        .getService(Ci.nsIExternalProtocolService)
+        .loadUrl(NetUtil.newURI(aFile));
+    }
+  },
+
+  /**
+   * Show a donwloaded file in the system file manager.
+   * If you have a dataItem, use dataItem.showLocalFile.
+   *
+   * @param aFile
+   *        a downloaded file.
+   */
+  showDownloadedFile: function DC_showDownloadedFile(aFile) {
+    if (!(aFile instanceof Ci.nsIFile))
+      throw new Error("aFile must be a nsIFile object");
+    try {
+      // Show the directory containing the file and select the file.
+      aFile.reveal();
+    } catch (ex) {
+      // If reveal fails for some reason (e.g., it's not implemented on unix
+      // or the file doesn't exist), try using the parent if we have it.
+      let parent = aFile.parent;
+      if (parent) {
+        try {
+          // Open the parent directory to show where the file should be.
+          parent.launch();
+        } catch (ex) {
+          // If launch also fails (probably because it's not implemented), let
+          // the OS handler try to open the parent.
+          Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+            .getService(Ci.nsIExternalProtocolService)
+            .loadUrl(NetUtil.newURI(parent));
+        }
+      }
+    }
   }
 };
 
@@ -1212,6 +1326,101 @@ DownloadsDataItem.prototype = {
       // file, though this may throw an exception if the path is invalid.
       return new DownloadsLocalFileCtor(aFilename);
     }
+  },
+
+  /**
+   * Open the target file for this download.
+   *
+   * @param aOwnerWindow
+   *        The window with which the required action is associated.
+   * @throws if the file cannot be opened.
+   */
+  openLocalFile: function DDI_openLocalFile(aOwnerWindow) {
+    this.getDownload(function(aDownload) {
+      DownloadsCommon.openDownloadedFile(this.localFile,
+                                         aDownload.MIMEInfo,
+                                         aOwnerWindow);
+    }.bind(this));
+  },
+
+  /**
+   * Show the downloaded file in the system file manager.
+   */
+  showLocalFile: function DDI_showLocalFile() {
+    DownloadsCommon.showDownloadedFile(this.localFile);
+  },
+
+  /**
+   * Resumes the download if paused, pauses it if active.
+   * @throws if the download is not resumable or if has already done.
+   */
+  togglePauseResume: function DDI_togglePauseResume() {
+    if (!this.inProgress || !this.resumable)
+      throw new Error("The given download cannot be paused or resumed");
+
+    this.getDownload(function(aDownload) {
+      if (this.inProgress) {
+        if (this.paused)
+          aDownload.resume();
+        else
+          aDownload.pause();
+      }
+    }.bind(this));
+  },
+
+  /**
+   * Attempts to retry the download.
+   * @throws if we cannot.
+   */
+  retry: function DDI_retry() {
+    if (!this.canRetry)
+      throw new Error("Cannot rerty this download");
+
+    this.getDownload(function(aDownload) {
+      aDownload.retry();
+    });
+  },
+
+  /**
+   * Support function that deletes the local file for a download. This is
+   * used in cases where the Download Manager service doesn't delete the file
+   * from disk when cancelling. See bug 732924.
+   */
+  _ensureLocalFileRemoved: function DDI__ensureLocalFileRemoved()
+  {
+    try {
+      let localFile = this.localFile;
+      if (localFile.exists()) {
+        localFile.remove(false);
+      }
+    } catch (ex) { }
+  },
+
+  /**
+   * Cancels the download.
+   * @throws if the download is already done.
+   */
+  cancel: function() {
+    if (!this.inProgress)
+      throw new Error("Cannot cancel this download");
+
+    this.getDownload(function (aDownload) {
+      aDownload.cancel();
+      this._ensureLocalFileRemoved();
+    }.bind(this));
+  },
+
+  /**
+   * Remove the download.
+   */
+  remove: function DDI_remove() {
+    this.getDownload(function (aDownload) {
+      if (this.inProgress) {
+        aDownload.cancel();
+        this._ensureLocalFileRemoved();
+      }
+      aDownload.remove();
+    }.bind(this));
   }
 };
 
