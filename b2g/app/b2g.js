@@ -482,6 +482,14 @@ pref("app.update.interval", 86400); // 1 day
 // Don't throttle background updates.
 pref("app.update.download.backgroundInterval", 0);
 
+// Retry update socket connections every 30 seconds in the cases of certain kinds of errors
+pref("app.update.socket.retryTimeout", 30000);
+
+// Max of 20 consecutive retries (total 10 minutes) before giving up and marking
+// the update download as failed.
+// Note: Offline errors will always retry when the network comes online.
+pref("app.update.socket.maxErrors", 20);
+
 // Enable update logging for now, to diagnose growing pains in the
 // field.
 pref("app.update.log", true);
