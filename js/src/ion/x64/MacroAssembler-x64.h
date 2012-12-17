@@ -857,6 +857,24 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         addPtr(Imm32(1), Address(ScratchReg, 0));
     }
 
+    // If source is a double, load it into dest. If source is int32,
+    // convert it to double. Else, branch to failure.
+    void ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure) {
+        Label isDouble, done;
+        Register tag = splitTagForTest(source);
+        branchTestDouble(Assembler::Equal, tag, &isDouble);
+        branchTestInt32(Assembler::NotEqual, tag, failure);
+
+        unboxInt32(source, ScratchReg);
+        convertInt32ToDouble(ScratchReg, dest);
+        jump(&done);
+
+        bind(&isDouble);
+        unboxDouble(source, dest);
+
+        bind(&done);
+    }
+
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //

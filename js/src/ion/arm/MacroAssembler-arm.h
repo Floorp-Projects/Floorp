@@ -1077,6 +1077,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_lsl(imm, dest, dest);
     }
 
+    // If source is a double, load it into dest. If source is int32,
+    // convert it to double. Else, branch to failure.
+    void ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure);
+
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //
