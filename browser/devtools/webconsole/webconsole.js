@@ -3181,20 +3181,71 @@ JSTerm.prototype = {
   keyPress: function JSTF_keyPress(aEvent)
   {
     if (aEvent.ctrlKey) {
+      let inputNode = this.inputNode;
+      let closePopup = false;
       switch (aEvent.charCode) {
         case 97:
           // control-a
-          this.inputNode.setSelectionRange(0, 0);
+          let lineBeginPos = 0;
+          if (this.hasMultilineInput()) {
+            // find index of closest newline <= to cursor
+            for (let i = inputNode.selectionStart-1; i >= 0; i--) {
+              if (inputNode.value.charAt(i) == "\r" ||
+                  inputNode.value.charAt(i) == "\n") {
+                lineBeginPos = i+1;
+                break;
+              }
+            }
+          }
+          inputNode.setSelectionRange(lineBeginPos, lineBeginPos);
           aEvent.preventDefault();
+          closePopup = true;
           break;
         case 101:
           // control-e
-          this.inputNode.setSelectionRange(this.inputNode.value.length,
-                                           this.inputNode.value.length);
+          let lineEndPos = inputNode.value.length;
+          if (this.hasMultilineInput()) {
+            // find index of closest newline >= cursor
+            for (let i = inputNode.selectionEnd; i<lineEndPos; i++) {
+              if (inputNode.value.charAt(i) == "\r" ||
+                  inputNode.value.charAt(i) == "\n") {
+                lineEndPos = i;
+                break;
+              }
+            }
+          }
+          inputNode.setSelectionRange(lineEndPos, lineEndPos);
           aEvent.preventDefault();
+          break;
+        case 110:
+          // Control-N differs from down arrow: it ignores autocomplete state.
+          // Note that we preserve the default 'down' navigation within
+          // multiline text.
+          if (Services.appinfo.OS == "Darwin" &&
+              this.canCaretGoNext() &&
+              this.historyPeruse(HISTORY_FORWARD)) {
+            aEvent.preventDefault();
+          }
+          closePopup = true;
+          break;
+        case 112:
+          // Control-P differs from up arrow: it ignores autocomplete state.
+          // Note that we preserve the default 'up' navigation within
+          // multiline text.
+          if (Services.appinfo.OS == "Darwin" &&
+              this.canCaretGoPrevious() &&
+              this.historyPeruse(HISTORY_BACK)) {
+            aEvent.preventDefault();
+          }
+          closePopup = true;
           break;
         default:
           break;
+      }
+      if (closePopup) {
+        if (this.autocompletePopup.isOpen) {
+          this.clearCompletion();
+        }
       }
       return;
     }
@@ -3314,6 +3365,17 @@ JSTerm.prototype = {
     }
 
     return true;
+  },
+
+  /**
+   * Test for multiline input.
+   *
+   * @return boolean
+   *         True if CR or LF found in node value; else false.
+   */
+  hasMultilineInput: function JST_hasMultilineInput()
+  {
+    return /[\r\n]/.test(this.inputNode.value);
   },
 
   /**
