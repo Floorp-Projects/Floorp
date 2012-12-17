@@ -254,11 +254,13 @@ public:
     mSource = aSource;
     mType.Assign(NS_LITERAL_STRING("video"));
     mSource->GetName(mName);
+    mSource->GetUUID(mID);
   }
   MediaDevice(MediaEngineAudioSource* aSource) {
     mSource = aSource;
     mType.Assign(NS_LITERAL_STRING("audio"));
     mSource->GetName(mName);
+    mSource->GetUUID(mID);
   }
   virtual ~MediaDevice() {}
 
@@ -266,6 +268,7 @@ public:
 private:
   nsString mName;
   nsString mType;
+  nsString mID;
   nsRefPtr<MediaEngineSource> mSource;
 };
 
