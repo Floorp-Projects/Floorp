@@ -860,7 +860,9 @@ function switchToFrame(msg) {
                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   if ((msg.json.value == null) && (msg.json.element == null)) {
     curWindow = content;
-    curWindow.focus();
+    if(msg.json.focus == true) {
+      curWindow.focus();
+    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
     return;
   }
@@ -921,7 +923,9 @@ function switchToFrame(msg) {
   }
   else {
     curWindow = curWindow.contentWindow;
-    curWindow.focus();
+    if(msg.json.focus == true) {
+      curWindow.focus();
+    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 }
