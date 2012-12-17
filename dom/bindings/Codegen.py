@@ -7605,7 +7605,9 @@ class CGNativeMember(ClassMethod):
             return (declType % "JSObject"), False, False
 
         if type.isDictionary():
-            return type.inner.identifier.name, True, True
+            typeName = CGDictionary.makeDictionaryName(type.inner,
+                                                       self.descriptor.workers)
+            return typeName, True, True
 
         assert type.isPrimitive()
 
