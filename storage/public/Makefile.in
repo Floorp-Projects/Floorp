@@ -36,7 +36,6 @@ XPIDLSRCS = \
   mozIStorageCompletionCallback.idl \
   mozIStorageBaseStatement.idl \
   mozIStorageAsyncStatement.idl \
-  mozIStorageServiceQuotaManagement.idl \
   mozIStorageVacuumParticipant.idl \
 	$(NULL)
 # SEE ABOVE NOTE!

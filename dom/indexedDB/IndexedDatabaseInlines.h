@@ -79,4 +79,17 @@ AppendConditionClause(const nsACString& aColumnName,
   aResult += NS_LITERAL_CSTRING(" :") + aArgName;
 }
 
+inline void
+IncrementUsage(uint64_t* aUsage, uint64_t aDelta)
+{
+  // Watch for overflow!
+  if ((UINT64_MAX - *aUsage) < aDelta) {
+    NS_WARNING("Usage exceeds the maximum!");
+    *aUsage = UINT64_MAX;
+  }
+  else {
+    *aUsage += aDelta;
+  }
+}
+
 END_INDEXEDDB_NAMESPACE

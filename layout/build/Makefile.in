@@ -69,6 +69,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/encoding/$(LIB_PREFIX)domencoding_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/file/$(LIB_PREFIX)domfile_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/power/$(LIB_PREFIX)dom_power_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/quota/$(LIB_PREFIX)domquota_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/settings/$(LIB_PREFIX)jsdomsettings_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/permission/$(LIB_PREFIX)jsdompermissionsettings_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/network/src/$(LIB_PREFIX)dom_network_s.$(LIB_SUFFIX) \
