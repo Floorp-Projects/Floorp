@@ -68,6 +68,8 @@ InspectorPanel.prototype = {
     this._selection = new Selection();
     this.onNewSelection = this.onNewSelection.bind(this);
     this.selection.on("new-node", this.onNewSelection);
+    this.onDetached = this.onDetached.bind(this);
+    this.selection.on("detached", this.onDetached);
 
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
@@ -281,6 +283,15 @@ InspectorPanel.prototype = {
   },
 
   /**
+   * When a node is deleted, select its parent node.
+   */
+  onDetached: function InspectorPanel_onDetached(event, parentNode) {
+    this.cancelLayoutChange();
+    this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
+    this.selection.setNode(parentNode, "detached");
+  },
+
+  /**
    * Destroy the inspector.
    */
   destroy: function InspectorPanel__destroy() {
@@ -315,6 +326,7 @@ InspectorPanel.prototype = {
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
     this.breadcrumbs.destroy();
     this.selection.off("new-node", this.onNewSelection);
+    this.selection.off("detached", this.onDetached);
     this._destroyMarkup();
     this._selection.destroy();
     this._selection = null;
