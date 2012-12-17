@@ -815,8 +815,6 @@ StackTrace::Get(Thread* aT)
 // Heap blocks
 //---------------------------------------------------------------------------
 
-static const char* gUnreportedName = "unreported";
-
 // A live heap block.
 class LiveBlock
 {
@@ -843,7 +841,6 @@ public:
   // to be |mutable|.
 private:
   mutable const StackTrace* mReportStackTrace;  // nullptr if unreported
-  mutable const char*       mReporterName;      // gUnreportedName if unreported
   mutable bool              mReportedOnAlloc;   // true if block was reported
                                                 //   immediately after alloc
 
@@ -855,22 +852,13 @@ public:
       mSampled(aSampled),
       mAllocStackTrace(aAllocStackTrace),
       mReportStackTrace(nullptr),
-      mReporterName(gUnreportedName),
       mReportedOnAlloc(false)
  {
     if (mReqSize != aReqSize)
     {
       MOZ_CRASH();              // overflowed mReqSize
     }
-    MOZ_ASSERT(IsSane());
-  }
-
-  bool IsSane() const
-  {
-    bool hasReporterName = mReporterName != gUnreportedName;
-    return mAllocStackTrace &&
-           (( mReportStackTrace &&  hasReporterName) ||
-            (!mReportStackTrace && !hasReporterName && !mReportedOnAlloc));
+    MOZ_ASSERT(mAllocStackTrace);
   }
 
   size_t ReqSize() const { return mReqSize; }
@@ -888,19 +876,12 @@ public:
 
   bool IsSampled() const { return mSampled; }
 
-  bool IsReported() const
-  {
-    MOZ_ASSERT(IsSane());
-    bool isRep = mReporterName != gUnreportedName;
-    return isRep;
-  }
+  bool IsReported() const { return !!mReportStackTrace; }
 
   const StackTrace* ReportStackTrace() const { return mReportStackTrace; }
-  const char* ReporterName() const { return mReporterName; }
 
   // This is |const| thanks to the |mutable| fields above.
-  void Report(Thread* aT, const char* aReporterName, bool aReportedOnAlloc)
-       const;
+  void Report(Thread* aT, bool aReportedOnAlloc) const;
 
   void UnreportIfNotReportedOnAlloc() const;
 
@@ -908,9 +889,9 @@ public:
 
   typedef const void* Lookup;
 
-  static uint32_t hash(const void* const& aPc)
+  static uint32_t hash(const void* const& aPtr)
   {
-    return mozilla::HashGeneric(aPc);
+    return mozilla::HashGeneric(aPtr);
   }
 
   static bool match(const LiveBlock& aB, const void* const& aPtr)
@@ -1130,55 +1111,34 @@ public:
   const StackTrace* const mAllocStackTrace;   // never null
 protected:
   const StackTrace* const mReportStackTrace;  // nullptr if unreported
-  const char*       const mReporterName;      // gUnreportedName if unreported
 
 public:
   LiveBlockKey(const LiveBlock& aB)
     : mAllocStackTrace(aB.mAllocStackTrace),
-      mReportStackTrace(aB.ReportStackTrace()),
-      mReporterName(aB.ReporterName())
+      mReportStackTrace(aB.ReportStackTrace())
   {
-    MOZ_ASSERT(IsSane());
-  }
-
-  bool IsSane() const
-  {
-    bool hasReporterName = mReporterName != gUnreportedName;
-    return mAllocStackTrace &&
-           (( mReportStackTrace &&  hasReporterName) ||
-            (!mReportStackTrace && !hasReporterName));
+    MOZ_ASSERT(mAllocStackTrace);
   }
 
   bool IsReported() const
   {
-    MOZ_ASSERT(IsSane());
-    bool isRep = mReporterName != gUnreportedName;
-    return isRep;
+    return !!mReportStackTrace;
   }
 
   // Hash policy.
-  //
-  // hash() and match() both assume that identical reporter names have
-  // identical pointers.  In practice this always happens because they are
-  // static strings (as specified in the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN
-  // macro).  This is true even for multi-reporters.  (If it ever became
-  // untrue, the worst that would happen is that some blocks that should be in
-  // the same block group would end up in separate block groups.)
 
   typedef LiveBlockKey Lookup;
 
   static uint32_t hash(const LiveBlockKey& aKey)
   {
     return mozilla::HashGeneric(aKey.mAllocStackTrace,
-                                aKey.mReportStackTrace,
-                                aKey.mReporterName);
+                                aKey.mReportStackTrace);
   }
 
   static bool match(const LiveBlockKey& aA, const LiveBlockKey& aB)
   {
     return aA.mAllocStackTrace  == aB.mAllocStackTrace &&
-           aA.mReportStackTrace == aB.mReportStackTrace &&
-           aA.mReporterName     == aB.mReporterName;
+           aA.mReportStackTrace == aB.mReportStackTrace;
   }
 };
 
@@ -1189,40 +1149,22 @@ public:
 
 protected:
   // When double-reports occur we record (and later print) the stack trace
-  // and reporter name of *both* the reporting locations.
+  // of *both* the reporting locations.
   const StackTrace* const mReportStackTrace1;   // never null
   const StackTrace* const mReportStackTrace2;   // never null
-  const char*       const mReporterName1;       // never gUnreportedName
-  const char*       const mReporterName2;       // never gUnreportedName
 
 public:
   DoubleReportBlockKey(const StackTrace* aAllocStackTrace,
                        const StackTrace* aReportStackTrace1,
-                       const StackTrace* aReportStackTrace2,
-                       const char* aReporterName1,
-                       const char* aReporterName2)
+                       const StackTrace* aReportStackTrace2)
     : mAllocStackTrace(aAllocStackTrace),
       mReportStackTrace1(aReportStackTrace1),
-      mReportStackTrace2(aReportStackTrace2),
-      mReporterName1(aReporterName1),
-      mReporterName2(aReporterName2)
+      mReportStackTrace2(aReportStackTrace2)
   {
-    MOZ_ASSERT(IsSane());
-  }
-
-  bool IsSane() const
-  {
-    return mAllocStackTrace &&
-           mReportStackTrace1 &&
-           mReportStackTrace2 &&
-           mReporterName1 != gUnreportedName &&
-           mReporterName2 != gUnreportedName;
+    MOZ_ASSERT(mAllocStackTrace && mReportStackTrace1 && mReportStackTrace2);
   }
 
   // Hash policy.
-  //
-  // hash() and match() both assume that identical reporter names have
-  // identical pointers.  See LiveBlockKey for more.
 
   typedef DoubleReportBlockKey Lookup;
 
@@ -1230,9 +1172,7 @@ public:
   {
     return mozilla::HashGeneric(aKey.mAllocStackTrace,
                                 aKey.mReportStackTrace1,
-                                aKey.mReportStackTrace2,
-                                aKey.mReporterName1,
-                                aKey.mReporterName2);
+                                aKey.mReportStackTrace2);
   }
 
   static bool match(const DoubleReportBlockKey& aA,
@@ -1240,9 +1180,7 @@ public:
   {
     return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
            aA.mReportStackTrace1 == aB.mReportStackTrace1 &&
-           aA.mReportStackTrace2 == aB.mReportStackTrace2 &&
-           aA.mReporterName1     == aB.mReporterName1 &&
-           aA.mReporterName2     == aB.mReporterName2;
+           aA.mReportStackTrace2 == aB.mReportStackTrace2;
   }
 };
 
@@ -1386,7 +1324,7 @@ LiveBlockGroup::Print(const Writer& aWriter, LocationService* aLocService,
   mAllocStackTrace->Print(aWriter, aLocService);
 
   if (IsReported()) {
-    W("\n Reported by '%s' at\n", mReporterName);
+    W("\n Reported at\n");
     mReportStackTrace->Print(aWriter, aLocService);
   }
 
@@ -1448,10 +1386,10 @@ DoubleReportBlockGroup::Print(const Writer& aWriter,
   W(" Allocated at\n");
   mAllocStackTrace->Print(aWriter, aLocService);
 
-  W("\n Previously reported by '%s' at\n", mReporterName1);
+  W("\n Previously reported at\n");
   mReportStackTrace1->Print(aWriter, aLocService);
 
-  W("\n Now reported by '%s' at\n", mReporterName2);
+  W("\n Now reported at\n");
   mReportStackTrace2->Print(aWriter, aLocService);
 
   W("\n");
@@ -1795,22 +1733,20 @@ Init(const malloc_table_t* aMallocTable)
 //---------------------------------------------------------------------------
 
 void
-LiveBlock::Report(Thread* aT, const char* aReporterName, bool aOnAlloc) const
+LiveBlock::Report(Thread* aT, bool aOnAlloc) const
 {
   if (IsReported()) {
-    DoubleReportBlockKey doubleReportKey(mAllocStackTrace,
-                                         mReportStackTrace, StackTrace::Get(aT),
-                                         mReporterName, aReporterName);
+    DoubleReportBlockKey key(mAllocStackTrace, mReportStackTrace,
+                             StackTrace::Get(aT));
     DoubleReportBlockGroupTable::AddPtr p =
-      gDoubleReportBlockGroupTable->lookupForAdd(doubleReportKey);
+      gDoubleReportBlockGroupTable->lookupForAdd(key);
     if (!p) {
-      DoubleReportBlockGroup bg(doubleReportKey);
+      DoubleReportBlockGroup bg(key);
       (void)gDoubleReportBlockGroupTable->add(p, bg);
     }
     p->Add(*this);
 
   } else {
-    mReporterName     = aReporterName;
     mReportStackTrace = StackTrace::Get(aT);
     mReportedOnAlloc  = aOnAlloc;
   }
@@ -1820,13 +1756,12 @@ void
 LiveBlock::UnreportIfNotReportedOnAlloc() const
 {
   if (!mReportedOnAlloc) {
-    mReporterName     = gUnreportedName;
     mReportStackTrace = nullptr;
   }
 }
 
 static void
-ReportHelper(const void* aPtr, const char* aReporterName, bool aOnAlloc)
+ReportHelper(const void* aPtr, bool aOnAlloc)
 {
   if (!gIsDMDRunning || !aPtr) {
     return;
@@ -1838,7 +1773,7 @@ ReportHelper(const void* aPtr, const char* aReporterName, bool aOnAlloc)
   AutoLockState lock;
 
   if (LiveBlockTable::Ptr p = gLiveBlockTable->lookup(aPtr)) {
-    p->Report(t, aReporterName, aOnAlloc);
+    p->Report(t, aOnAlloc);
   } else {
     // We have no record of the block.  Do nothing.  Either:
     // - We're sampling and we skipped this block.  This is likely.
@@ -1848,15 +1783,15 @@ ReportHelper(const void* aPtr, const char* aReporterName, bool aOnAlloc)
 }
 
 MOZ_EXPORT void
-Report(const void* aPtr, const char* aReporterName)
+Report(const void* aPtr)
 {
-  ReportHelper(aPtr, aReporterName, /* onAlloc */ false);
+  ReportHelper(aPtr, /* onAlloc */ false);
 }
 
 MOZ_EXPORT void
-ReportOnAlloc(const void* aPtr, const char* aReporterName)
+ReportOnAlloc(const void* aPtr)
 {
-  ReportHelper(aPtr, aReporterName, /* onAlloc */ true);
+  ReportHelper(aPtr, /* onAlloc */ true);
 }
 
 //---------------------------------------------------------------------------
@@ -2182,9 +2117,9 @@ void foo()
    }
 
    for (int i = 0; i <= 1; i++)
-      Report(a[i], "a01");              // reported
-   Report(a[2], "a23");                 // reported
-   Report(a[3], "a23");                 // reported
+      Report(a[i]);                     // reported
+   Report(a[2]);                        // reported
+   Report(a[3]);                        // reported
    // a[4], a[5] unreported
 }
 
@@ -2225,55 +2160,54 @@ RunTestMode(FILE* fp)
   // 1st Dump: reported.
   // 2nd Dump: re-reported, twice;  double-report warning.
   char* a2 = (char*) malloc(0);
-  Report(a2, "a2");
+  Report(a2);
 
   // Operator new[].
   // 1st Dump: reported.
   // 2nd Dump: reportedness carries over, due to ReportOnAlloc.
   char* b = new char[10];
-  ReportOnAlloc(b, "b");
+  ReportOnAlloc(b);
 
   // ReportOnAlloc, then freed.
   // 1st Dump: freed, irrelevant.
   // 2nd Dump: freed, irrelevant.
   char* b2 = new char;
-  ReportOnAlloc(b2, "b2");
+  ReportOnAlloc(b2);
   free(b2);
 
   // 1st Dump: reported, plus 3 double-report warnings.
   // 2nd Dump: freed, irrelevant.
   char* c = (char*) calloc(10, 3);
-  Report(c, "c");
+  Report(c);
   for (int i = 0; i < 3; i++) {
-    Report(c, "c");
+    Report(c);
   }
 
   // 1st Dump: ignored.
   // 2nd Dump: irrelevant.
-  Report((void*)(intptr_t)i, "d");
+  Report((void*)(intptr_t)i);
 
   // jemalloc rounds this up to 8192.
   // 1st Dump: reported.
   // 2nd Dump: freed.
   char* e = (char*) malloc(4096);
   e = (char*) realloc(e, 4097);
-  Report(e, "e");
+  Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.
   // 1st Dump: reported.
   // 2nd Dump: re-reported.
   char* e2 = (char*) realloc(nullptr, 1024);
   e2 = (char*) realloc(e2, 512);
-  Report(e2, "e2");
+  Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
-  // 1st Dump: reported (re-use "a2" reporter name because the order of this
-  //           report and the "a2" above is non-deterministic).
+  // 1st Dump: reported.
   // 2nd Dump: freed, irrelevant.
   char* e3 = (char*) realloc(nullptr, 1024);
   e3 = (char*) realloc(e3, 0);
   MOZ_ASSERT(e3);
-  Report(e3, "a2");
+  Report(e3);
 
   // 1st Dump: freed, irrelevant.
   // 2nd Dump: freed, irrelevant.
@@ -2282,7 +2216,7 @@ RunTestMode(FILE* fp)
 
   // 1st Dump: ignored.
   // 2nd Dump: irrelevant.
-  Report((void*)(intptr_t)0x0, "zero");
+  Report((void*)(intptr_t)0x0);
 
   // 1st Dump: mixture of reported and unreported.
   // 2nd Dump: all unreported.
@@ -2308,11 +2242,11 @@ RunTestMode(FILE* fp)
 
   //---------
 
-  Report(a2, "a2b");
-  Report(a2, "a2b");
+  Report(a2);
+  Report(a2);
   free(c);
   free(e);
-  Report(e2, "e2b");
+  Report(e2);
   free(e3);
 //free(x);
 //free(y);
