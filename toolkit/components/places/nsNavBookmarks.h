@@ -283,6 +283,12 @@ private:
   int64_t mUnfiledRoot;
   int64_t mToolbarRoot;
 
+  inline bool IsRoot(int64_t aFolderId) {
+    return aFolderId == mRoot || aFolderId == mMenuRoot ||
+           aFolderId == mTagsRoot || aFolderId == mUnfiledRoot ||
+           aFolderId == mToolbarRoot;
+  }
+
   nsresult IsBookmarkedInDatabase(int64_t aBookmarkID, bool* aIsBookmarked);
 
   nsresult SetItemDateInternal(enum mozilla::places::BookmarkDate aDateType,
