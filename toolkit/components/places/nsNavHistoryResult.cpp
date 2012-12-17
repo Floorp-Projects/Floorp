@@ -880,7 +880,7 @@ bool
 nsNavHistoryContainerResultNode::DoesChildNeedResorting(uint32_t aIndex,
     SortComparator aComparator, const char* aData)
 {
-  NS_ASSERTION(aIndex >= 0 && aIndex < uint32_t(mChildren.Count()),
+  NS_ASSERTION(aIndex < uint32_t(mChildren.Count()),
                "Input index out of range");
   if (mChildren.Count() == 1)
     return false;
@@ -4024,8 +4024,7 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
       NS_NOTREACHED("Can't find folder that is moving!");
       return NS_ERROR_FAILURE;
     }
-    NS_ASSERTION(index >= 0 && index < uint32_t(mChildren.Count()),
-                 "Invalid index!");
+    NS_ASSERTION(index < uint32_t(mChildren.Count()), "Invalid index!");
     node->mBookmarkIndex = aNewIndex;
 
     // adjust position
