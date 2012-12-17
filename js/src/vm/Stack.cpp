@@ -1671,7 +1671,10 @@ StackIter::isConstructing() const
         break;
       case ION:
 #ifdef JS_ION
-        return ionInlineFrames_.isConstructing();
+        if (ionFrames_.isOptimizedJS())
+            return ionInlineFrames_.isConstructing();
+        JS_ASSERT(ionFrames_.isBaselineJS());
+        return ionFrames_.isConstructing();
 #else
         break;
 #endif        

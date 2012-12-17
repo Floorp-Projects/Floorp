@@ -84,7 +84,11 @@ namespace ion {
     _(JSOP_SETELEM)            \
     _(JSOP_GETGNAME)           \
     _(JSOP_CALLGNAME)          \
+    _(JSOP_BINDGNAME)          \
+    _(JSOP_SETGNAME)           \
+    _(JSOP_SETNAME)            \
     _(JSOP_GETPROP)            \
+    _(JSOP_SETPROP)            \
     _(JSOP_CALLPROP)           \
     _(JSOP_LENGTH)             \
     _(JSOP_GETLOCAL)           \
