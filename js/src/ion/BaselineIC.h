@@ -271,6 +271,8 @@ class ICEntry
                                 \
     _(This_Fallback)            \
                                 \
+    _(DefVar_Fallback)          \
+                                \
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
     _(Compare_Double)           \
@@ -1045,6 +1047,38 @@ class ICThis_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICThis_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+
+// DefVar
+//     JSOP_DEFVAR
+//     JSOP_DEFCONST
+
+class ICDefVar_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICDefVar_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::DefVar_Fallback, stubCode)
+    {}
+
+  public:
+    static inline ICDefVar_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICDefVar_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::DefVar_Fallback)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICDefVar_Fallback::New(space, getStubCode());
         }
     };
 };

@@ -37,6 +37,7 @@ namespace ion {
     _(JSOP_DUP)                \
     _(JSOP_DUP2)               \
     _(JSOP_SWAP)               \
+    _(JSOP_PICK)               \
     _(JSOP_GOTO)               \
     _(JSOP_IFEQ)               \
     _(JSOP_IFNE)               \
@@ -91,6 +92,8 @@ namespace ion {
     _(JSOP_SETPROP)            \
     _(JSOP_CALLPROP)           \
     _(JSOP_LENGTH)             \
+    _(JSOP_DEFVAR)             \
+    _(JSOP_DEFCONST)           \
     _(JSOP_GETLOCAL)           \
     _(JSOP_CALLLOCAL)          \
     _(JSOP_SETLOCAL)           \

@@ -499,6 +499,29 @@ ICThis_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
+// DefVar_Fallback
+//
+
+typedef bool (*DefVarOrConstFn)(JSContext *, HandlePropertyName, unsigned, HandleObject);
+static const VMFunction DefVarOrConstInfo = FunctionInfo<DefVarOrConstFn>(DefVarOrConst);
+
+bool
+ICDefVar_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    // Push the scope chain.
+    masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScopeChain()),
+                 BaselineStubReg);
+    masm.push(BaselineStubReg);
+
+    masm.push(R1.scratchReg()); // attributes
+    masm.push(R0.scratchReg()); // name
+
+    return tailCallVM(DefVarOrConstInfo, masm);
+}
+
+//
 // Compare_Fallback
 //
 
