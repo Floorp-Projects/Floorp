@@ -874,7 +874,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     if (!types::UseNewTypeForInitializer(cx, script, pc, JSProto_Array)) {
         type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
         if (!type)
-            return NULL;
+            return false;
     }
 
     // Pass length in R0, type in R1.
