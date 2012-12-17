@@ -1265,7 +1265,7 @@ let ContentArea = {
     if (this._specialViews.has(aQueryString))
       return this._specialViews.get(aQueryString);
     if (aQueryString == DOWNLOADS_QUERY && this._shouldUseNewDownloadsView()) {
-      let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"), aQueryString);
+      let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"));
       this.setContentViewForQueryString(aQueryString, view);
       return view;
     }
