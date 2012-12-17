@@ -1733,6 +1733,9 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
   if (mIsThemed || !mBackgroundStyle)
     return false;
 
+  if (mBackgroundStyle->mLayers.Length() != 1)
+    return false;
+
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
