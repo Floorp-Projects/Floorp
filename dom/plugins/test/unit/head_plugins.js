@@ -5,29 +5,30 @@
 
 // Finds the test plugin library
 function get_test_plugin() {
-  var plugins = gDirSvc.get("GreD", Ci.nsILocalFile);
-  plugins.append("plugins");
-  do_check_true(plugins.exists());
-  var plugin = plugins.clone();
-  // OSX plugin
-  plugin.append("Test.plugin");
-  if (plugin.exists()) {
-    plugin.normalize();
-    return plugin;
-  }
-  plugin = plugins.clone();
-  // *nix plugin
-  plugin.append("libnptest.so");
-  if (plugin.exists()) {
-    plugin.normalize();
-    return plugin;
-  }
-  // Windows plugin
-  plugin = plugins.clone();
-  plugin.append("nptest.dll");
-  if (plugin.exists()) {
-    plugin.normalize();
-    return plugin;
+  var pluginEnum = gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
+  while (pluginEnum.hasMoreElements()) {
+    let dir = pluginEnum.getNext().QueryInterface(Ci.nsILocalFile);
+    let plugin = dir.clone();
+    // OSX plugin
+    plugin.append("Test.plugin");
+    if (plugin.exists()) {
+      plugin.normalize();
+      return plugin;
+    }
+    plugin = dir.clone();
+    // *nix plugin
+    plugin.append("libnptest.so");
+    if (plugin.exists()) {
+      plugin.normalize();
+      return plugin;
+    }
+    // Windows plugin
+    plugin = dir.clone();
+    plugin.append("nptest.dll");
+    if (plugin.exists()) {
+      plugin.normalize();
+      return plugin;
+    }
   }
   return null;
 }
