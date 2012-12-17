@@ -255,4 +255,9 @@
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt2;</string>
 
+  <!-- Wallpaper Notifications -->
+  <string name="wallpaper_success">&wallpaper_success;</string>
+  <string name="wallpaper_progress">&wallpaper_progress;</string>
+  <string name="wallpaper_fail">&wallpaper_fail;</string>
+
 </resources>

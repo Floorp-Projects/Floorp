@@ -483,6 +483,18 @@ var BrowserApp = {
         ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null,
                                       aTarget.ownerDocument.documentURIObject, aTarget.ownerDocument, true, null);
       });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.setWallpaper"),
+      NativeWindow.contextmenus.imageSaveableContext,
+      function(aTarget) {
+        let src = aTarget.src;
+        sendMessageToJava({
+          gecko: {
+            type: "Wallpaper:Set",
+            url: src
+          }
+        });
+      });
   },
 
   onAppUpdated: function() {
