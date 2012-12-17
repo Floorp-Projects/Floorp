@@ -31,7 +31,7 @@ TextDecoder::Init(const nsAString& aEncoding,
   // If the constructor is called with an options argument,
   // and the fatal property of the dictionary is set,
   // set the internal fatal flag of the decoder object.
-  mFatal = aFatal.fatal;
+  mFatal = aFatal.mFatal;
 
   // Create a decoder object for mEncoding.
   nsCOMPtr<nsICharsetConverterManager> ccm =
@@ -94,7 +94,7 @@ TextDecoder::Decode(const ArrayBufferView* aView,
 
   // If the internal streaming flag of the decoder object is not set,
   // then reset the encoding algorithm state to the default values
-  if (!aOptions.stream) {
+  if (!aOptions.mStream) {
     mDecoder->Reset();
     if (rv == NS_OK_UDEC_MOREINPUT) {
       if (mFatal) {

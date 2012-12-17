@@ -167,7 +167,7 @@ MobileConnection::Observe(nsISupports* aSubject,
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
     nsRefPtr<USSDReceivedEvent> event =
-      USSDReceivedEvent::Create(dict.message, dict.sessionEnded);
+      USSDReceivedEvent::Create(dict.mMessage, dict.mSessionEnded);
     NS_ASSERTION(event, "This should never fail!");
 
     nsresult rv = event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
