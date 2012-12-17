@@ -191,15 +191,15 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
       if (!d.Init(aCx, nullptr, aArgv[1])) {
         return NS_ERROR_TYPE_ERR;
       }
-      mContentType = d.type;
-      nativeEOL = d.endings == EndingTypesValues::Native;
+      mContentType = d.mType;
+      nativeEOL = d.mEndings == EndingTypesValues::Native;
     } else {
       BlobPropertyBagWorkers d;
       if (!d.Init(aCx, nullptr, aArgv[1])) {
         return NS_ERROR_TYPE_ERR;
       }
-      mContentType = d.type;
-      nativeEOL = d.endings == EndingTypesValues::Native;
+      mContentType = d.mType;
+      nativeEOL = d.mEndings == EndingTypesValues::Native;
     }
   }
 
@@ -286,9 +286,9 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
     if (!d.Init(aCx, nullptr, aArgv[1])) {
       return NS_ERROR_TYPE_ERR;
     }
-    mName = d.name;
-    mContentType = d.type;
-    nativeEOL = d.endings == EndingTypesValues::Native;
+    mName = d.mName;
+    mContentType = d.mType;
+    nativeEOL = d.mEndings == EndingTypesValues::Native;
   }
 
   // We expect to get a path to represent as a File object,

@@ -6400,7 +6400,8 @@ class CGDictionary(CGThing):
         else:
             inheritance = ""
         memberDecls = ["  %s %s;" %
-                       (self.getMemberType(m), m[0].identifier.name)
+                       (self.getMemberType(m),
+                        self.makeMemberName(m[0].identifier.name))
                        for m in self.memberInfo]
 
         return (string.Template(
@@ -6545,6 +6546,10 @@ class CGDictionary(CGThing):
     def makeClassName(self, dictionary):
         return self.makeDictionaryName(dictionary, self.workers)
 
+    @staticmethod
+    def makeMemberName(name):
+        return "m" + name[0].upper() + name[1:]
+
     def getMemberType(self, memberInfo):
         (member, (templateBody, declType,
                   holderType, dealWithOptional)) = memberInfo
@@ -6559,14 +6564,7 @@ class CGDictionary(CGThing):
                   holderType, dealWithOptional)) = memberInfo
         replacements = { "val": "temp",
                          "valPtr": "&temp",
-                         # Use this->%s to refer to members, because we don't
-                         # control the member names and want to make sure we're
-                         # talking about the member, not some local that
-                         # shadows the member.  Another option would be to move
-                         # the guts of init to a static method which is passed
-                         # an explicit reference to our dictionary object, so
-                         # we couldn't screw this up even if we wanted to....
-                         "declName": ("(this->%s)" % member.identifier.name),
+                         "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
                          # anything we want.
@@ -6594,7 +6592,7 @@ class CGDictionary(CGThing):
                        propId)
 
         conversionReplacements = {
-            "prop": "(this->%s)" % member.identifier.name,
+            "prop": self.makeMemberName(member.identifier.name),
             "convert": string.Template(templateBody).substitute(replacements),
             "propCheck": propCheck,
             "propGet": propGet
@@ -6631,14 +6629,7 @@ class CGDictionary(CGThing):
     def getMemberDefinition(self, memberInfo):
         member = memberInfo[0]
         declType = memberInfo[1][1]
-        # Use this->%s to refer to members, because we don't control
-        # the member names and want to make sure we're talking about
-        # the member, not some local that shadows the member.  Another
-        # option would be to move the guts of init to a static method
-        # which is passed an explicit reference to our dictionary
-        # object, so we couldn't screw this up even if we wanted
-        # to....
-        memberLoc = "(this->%s)" % member.identifier.name
+        memberLoc = self.makeMemberName(member.identifier.name)
         if member.defaultValue:
             memberData = memberLoc
         else:
