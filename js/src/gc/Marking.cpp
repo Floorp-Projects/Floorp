@@ -107,10 +107,12 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     JS_ASSERT(thing);
     JS_ASSERT(thing->compartment());
     JS_ASSERT(thing->compartment()->rt == trc->runtime);
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc), !thing->compartment()->scheduledForDestruction);
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
     DebugOnly<JSRuntime *> rt = trc->runtime;
+
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadCompartments,
+                 !thing->compartment()->scheduledForDestruction);
 
 #ifdef DEBUG
     rt->assertValidThread();
