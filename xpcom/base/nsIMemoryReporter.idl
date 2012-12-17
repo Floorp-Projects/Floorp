@@ -398,8 +398,8 @@ void Dump();
 
 #include "DMD.h"
 
-#define MOZ_REPORT(ptr, usable, name)          mozilla::dmd::Report(ptr, name)
-#define MOZ_REPORT_ON_ALLOC(ptr, usable, name) mozilla::dmd::ReportOnAlloc(ptr, name)
+#define MOZ_REPORT(ptr, usable, name)          mozilla::dmd::Report(ptr)
+#define MOZ_REPORT_ON_ALLOC(ptr, usable, name) mozilla::dmd::ReportOnAlloc(ptr)
 
 #else
 

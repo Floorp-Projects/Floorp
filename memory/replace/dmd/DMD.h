@@ -17,11 +17,11 @@ namespace dmd {
 
 // Mark a heap block as reported by a memory reporter.
 MOZ_EXPORT void
-Report(const void* aPtr, const char* aReporterName);
+Report(const void* aPtr);
 
 // Mark a heap block as reported immediately on allocation.
 MOZ_EXPORT void
-ReportOnAlloc(const void* aPtr, const char* aReporterName);
+ReportOnAlloc(const void* aPtr);
 
 class Writer
 {
