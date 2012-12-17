@@ -1382,8 +1382,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(EventSource, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -1511,9 +1509,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(LocalMediaStream, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequestUpload, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
 
   // DOM Traversal NodeIterator class  
   NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
@@ -3866,14 +3861,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequest, nsIXMLHttpRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLHttpProgressEvent, nsIDOMEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLSProgressEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
@@ -4088,12 +4075,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocalMediaStream)
   DOM_CLASSINFO_MAP_END
 #endif
-
-  DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequestUpload, nsIXMLHttpRequestUpload)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestUpload)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DataTransfer, nsIDOMDataTransfer)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataTransfer)

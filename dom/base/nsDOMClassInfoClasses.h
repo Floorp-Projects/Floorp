@@ -334,7 +334,6 @@ DOMCI_CLASS(StorageItem)
 
 // XMLHttpRequest
 DOMCI_CLASS(XMLHttpProgressEvent)
-DOMCI_CLASS(XMLHttpRequest)
 
 // Server-sent events
 DOMCI_CLASS(EventSource)
@@ -412,8 +411,6 @@ DOMCI_CLASS(TimeRanges)
 DOMCI_CLASS(MediaStream)
 DOMCI_CLASS(LocalMediaStream)
 #endif
-
-DOMCI_CLASS(XMLHttpRequestUpload)
 
 // DOM Traversal NodeIterator class
 DOMCI_CLASS(NodeIterator)
