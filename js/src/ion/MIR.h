@@ -893,11 +893,7 @@ class MTest
   : public MAryControlInstruction<1, 2>,
     public TestPolicy
 {
-    bool operandMightEmulateUndefined_;
-
-    MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false)
-      : operandMightEmulateUndefined_(true)
-    {
+    MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false) {
         initOperand(0, ins);
         setSuccessor(0, if_true);
         setSuccessor(1, if_false);
@@ -924,15 +920,7 @@ class MTest
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void infer(const TypeOracle::UnaryTypes &u, JSContext *cx);
     MDefinition *foldsTo(bool useValueNumbers);
-
-    void markOperandCantEmulateUndefined() {
-        operandMightEmulateUndefined_ = false;
-    }
-    bool operandMightEmulateUndefined() const {
-        return operandMightEmulateUndefined_;
-    }
 };
 
 // Returns from this function to the previous caller.
@@ -1382,12 +1370,10 @@ class MCompare
     public ComparePolicy
 {
     JSOp jsop_;
-    bool operandMightEmulateUndefined_;
 
     MCompare(MDefinition *left, MDefinition *right, JSOp jsop)
       : MBinaryInstruction(left, right),
-        jsop_(jsop),
-        operandMightEmulateUndefined_(true)
+        jsop_(jsop)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -1401,7 +1387,7 @@ class MCompare
     bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(bool useValueNumbers);
 
-    void infer(const TypeOracle::BinaryTypes &b, JSContext *cx);
+    void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
     MIRType specialization() const {
         return specialization_;
     }
@@ -1411,12 +1397,6 @@ class MCompare
     }
     TypePolicy *typePolicy() {
         return this;
-    }
-    void markNoOperandEmulatesUndefined() {
-        operandMightEmulateUndefined_ = false;
-    }
-    bool operandMightEmulateUndefined() const {
-        return operandMightEmulateUndefined_;
     }
     AliasSet getAliasSet() const {
         // Strict equality is never effectful.
@@ -2206,7 +2186,7 @@ class MBinaryArithInstruction
 
     virtual double getIdentity() = 0;
 
-    void infer(const TypeOracle::BinaryTypes &b, JSContext *cx);
+    void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
 
     void setInt32() {
         specialization_ = MIRType_Int32;
@@ -3426,12 +3406,9 @@ class MNot
   : public MUnaryInstruction,
     public TestPolicy
 {
-    bool operandMightEmulateUndefined_;
-
   public:
-    MNot(MDefinition *input)
-      : MUnaryInstruction(input),
-        operandMightEmulateUndefined_(true)
+    MNot(MDefinition *elements)
+      : MUnaryInstruction(elements)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -3439,15 +3416,7 @@ class MNot
 
     INSTRUCTION_HEADER(Not)
 
-    void infer(const TypeOracle::UnaryTypes &u, JSContext *cx);
     MDefinition *foldsTo(bool useValueNumbers);
-
-    void markOperandCantEmulateUndefined() {
-        operandMightEmulateUndefined_ = false;
-    }
-    bool operandMightEmulateUndefined() const {
-        return operandMightEmulateUndefined_;
-    }
 
     MDefinition *operand() const {
         return getOperand(0);
