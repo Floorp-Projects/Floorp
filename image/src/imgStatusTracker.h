@@ -8,6 +8,7 @@
 #define imgStatusTracker_h__
 
 class imgIContainer;
+class imgRequest;
 class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
@@ -20,7 +21,6 @@ class Image;
 } // namespace mozilla
 
 
-#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsTObserverArray.h"
@@ -32,7 +32,6 @@ class Image;
 enum {
   stateRequestStarted    = 1u << 0,
   stateHasSize           = 1u << 1,
-  stateDecodeStarted     = 1u << 2,
   stateDecodeStopped     = 1u << 3,
   stateFrameStopped      = 1u << 4,
   stateRequestStopped    = 1u << 5,
@@ -71,13 +70,13 @@ private:
  * and the notifications will be replayed to the proxy asynchronously.
  */
 
-class imgStatusTracker : public mozilla::RefCounted<imgStatusTracker>
+class imgStatusTracker
 {
 public:
   // aImage is the image that this status tracker will pass to the
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
-  imgStatusTracker(mozilla::image::Image* aImage);
+  imgStatusTracker(mozilla::image::Image* aImage, imgRequest* aRequest);
   imgStatusTracker(const imgStatusTracker& aOther);
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
@@ -86,15 +85,12 @@ public:
   // without an image.
   void SetImage(mozilla::image::Image* aImage);
 
-  // Inform this status tracker that it is associated with a multipart image.
-  void SetIsMultipart() { mIsMultipart = true; }
-
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
   // We will also take note of any notifications that happen between the time
   // Notify() is called and when we call SyncNotify on |proxy|, and replay them
   // as well.
-  void Notify(imgRequestProxy* proxy);
+  void Notify(imgRequest* request, imgRequestProxy* proxy);
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the state we are in right now.
@@ -152,8 +148,6 @@ public:
   void RecordDecoded();
 
   /* non-virtual imgIDecoderObserver methods */
-  void RecordStartDecode();
-  void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
   void RecordDataAvailable();
@@ -192,10 +186,12 @@ public:
 
   void MaybeUnblockOnload();
 
-  bool IsMultipart() const { return mIsMultipart; }
+  // Null out any reference to an associated image request
+  void ClearRequest();
 
   // Weak pointer getters - no AddRefs.
   inline mozilla::image::Image* GetImage() const { return mImage; }
+  inline imgRequest* GetRequest() const { return mRequest; }
 
   inline imgIDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
@@ -204,24 +200,22 @@ private:
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
 
-  void FireFailureNotification();
-
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
-  // Weak pointer to the image. The image owns the status tracker.
+  // Weak pointers to the image and request. The request owns the image, and
+  // the image (or the request, if there's no image) owns the status tracker.
   mozilla::image::Image* mImage;
+  imgRequest* mRequest;
+  uint32_t mState;
+  uint32_t mImageStatus;
+  bool mHadLastPart;
+  bool mBlockingOnload;
 
   // List of proxies attached to the image. Each proxy represents a consumer
   // using the image.
   nsTObserverArray<imgRequestProxy*> mConsumers;
 
   nsRefPtr<imgStatusTrackerObserver> mTrackerObserver;
-
-  uint32_t mState;
-  uint32_t mImageStatus;
-  bool mIsMultipart    : 1;
-  bool mHadLastPart    : 1;
-  bool mBlockingOnload : 1;
 };
 
 #endif

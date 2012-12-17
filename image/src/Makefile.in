@@ -26,7 +26,6 @@ EXPORTS		=  imgLoader.h \
 
 CPPSRCS		= \
 			Image.cpp \
-			ImageFactory.cpp \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			RasterImage.cpp \
@@ -43,9 +42,6 @@ CPPSRCS		= \
 
 # We need to instantiate the decoders
 LOCAL_INCLUDES += -I$(topsrcdir)/image/decoders
-
-# For URI-related functionality
-LOCAL_INCLUDES += -I$(topsrcdir)/netwerk/base/src
 
 # Because SVGDocumentWrapper.cpp includes "nsSVGSVGElement.h"
 LOCAL_INCLUDES += \
