@@ -227,6 +227,9 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
+  res/color/abouthome_section_more_text.xml \
+  res/color/abouthome_section_subtitle.xml \
+  res/color/abouthome_section_title.xml \
   res/color/awesome_bar_title.xml \
   res/color/awesome_bar_title_hint.xml \
   res/drawable/address_bar_bg.xml \
