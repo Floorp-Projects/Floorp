@@ -47,10 +47,10 @@ Double-reported: 3 blocks in block group 1 of 1
  Allocated at
    (stack omitted due to test mode)
 
- Previously reported by 'c' at
+ Previously reported at
    (stack omitted due to test mode)
 
- Now reported by 'c' at
+ Now reported at
    (stack omitted due to test mode)
 
 ------------------------------------------------------------------
@@ -91,7 +91,7 @@ Reported: 1 block in block group 1 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'e' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 2 of 12
@@ -100,7 +100,7 @@ Reported: 1 block in block group 2 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'e2' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 2 blocks in block group 3 of 12
@@ -109,7 +109,7 @@ Reported: 2 blocks in block group 3 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a01' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 2 blocks in block group 4 of 12
@@ -118,7 +118,7 @@ Reported: 2 blocks in block group 4 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a01' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 5 of 12
@@ -127,7 +127,7 @@ Reported: 1 block in block group 5 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a23' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 6 of 12
@@ -136,7 +136,7 @@ Reported: 1 block in block group 6 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a23' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 7 of 12
@@ -145,7 +145,7 @@ Reported: 1 block in block group 7 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a23' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 8 of 12
@@ -154,7 +154,7 @@ Reported: 1 block in block group 8 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a23' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 9 of 12
@@ -163,7 +163,7 @@ Reported: 1 block in block group 9 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'c' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 10 of 12
@@ -172,7 +172,7 @@ Reported: 1 block in block group 10 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'b' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 11 of 12
@@ -181,7 +181,7 @@ Reported: 1 block in block group 11 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a2' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 12 of 12
@@ -190,7 +190,7 @@ Reported: 1 block in block group 12 of 12
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a2' at
+ Reported at
    (stack omitted due to test mode)
 
 ------------------------------------------------------------------
@@ -217,10 +217,10 @@ Double-reported: 1 block in block group 1 of 1
  Allocated at
    (stack omitted due to test mode)
 
- Previously reported by 'a2b' at
+ Previously reported at
    (stack omitted due to test mode)
 
- Now reported by 'a2b' at
+ Now reported at
    (stack omitted due to test mode)
 
 ------------------------------------------------------------------
@@ -255,7 +255,7 @@ Reported: 1 block in block group 1 of 3
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'e2b' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 2 of 3
@@ -264,7 +264,7 @@ Reported: 1 block in block group 2 of 3
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'b' at
+ Reported at
    (stack omitted due to test mode)
 
 Reported: 1 block in block group 3 of 3
@@ -273,7 +273,7 @@ Reported: 1 block in block group 3 of 3
  Allocated at
    (stack omitted due to test mode)
 
- Reported by 'a2b' at
+ Reported at
    (stack omitted due to test mode)
 
 ------------------------------------------------------------------
