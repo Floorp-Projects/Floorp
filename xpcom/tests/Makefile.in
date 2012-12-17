@@ -35,6 +35,7 @@ CPPSRCS = \
   nsIFileEnumerator.cpp \
   TestCallTemplates.cpp \
   TestINIParser.cpp \
+  TestPRIntN.cpp \
   TestRacingServiceManager.cpp \
   TestRegistrationOrder.cpp \
   TestThreadPoolListener.cpp \

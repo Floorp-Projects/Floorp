@@ -22,6 +22,7 @@ class TempAllocator;
 // Possible register allocators which may be used.
 enum IonRegisterAllocator {
     RegisterAllocator_LSRA,
+    RegisterAllocator_Backtracking,
     RegisterAllocator_Stupid
 };
 
@@ -283,7 +284,7 @@ IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args);
 void Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
 void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
-bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true);
+bool Invalidate(JSContext *cx, UnrootedScript script, bool resetUses = true);
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
@@ -297,20 +298,20 @@ class CodeGenerator;
 CodeGenerator *CompileBackEnd(MIRGenerator *mir);
 void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);
-bool TestIonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing);
+bool TestIonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing);
 
 static inline bool IsEnabled(JSContext *cx)
 {
     return cx->hasRunOption(JSOPTION_ION) && cx->typeInferenceEnabled();
 }
 
-void ForbidCompilation(JSContext *cx, JSScript *script);
-uint32_t UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc);
+void ForbidCompilation(JSContext *cx, UnrootedScript script);
+uint32_t UsesBeforeIonRecompile(UnrootedScript script, jsbytecode *pc);
 
-void PurgeCaches(JSScript *script, JSCompartment *c);
-size_t MemoryUsed(JSScript *script, JSMallocSizeOfFun mallocSizeOf);
-void DestroyIonScripts(FreeOp *fop, JSScript *script);
-void TraceIonScripts(JSTracer* trc, JSScript *script);
+void PurgeCaches(UnrootedScript script, JSCompartment *c);
+size_t MemoryUsed(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf);
+void DestroyIonScripts(FreeOp *fop, UnrootedScript script);
+void TraceIonScripts(JSTracer* trc, UnrootedScript script);
 
 } // namespace ion
 } // namespace js

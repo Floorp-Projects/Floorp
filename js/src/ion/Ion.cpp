@@ -23,6 +23,7 @@
 #include "jsworkers.h"
 #include "IonCompartment.h"
 #include "CodeGenerator.h"
+#include "BacktrackingAllocator.h"
 #include "StupidAllocator.h"
 #include "UnreachableCodeElimination.h"
 
@@ -492,7 +493,7 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     size_t paddedPrebarrierEntriesSize =
         AlignBytes(prebarrierEntries * sizeof(CodeOffsetLabel), DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
-    size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(JSScript *), DataAlignment);
+    size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(RawScript), DataAlignment);
     size_t bytes = paddedSnapshotsSize +
                    paddedBailoutSize +
                    paddedConstantsSize +
@@ -783,7 +784,7 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
     IonContext ictx(NULL, comp, NULL);
     AutoFlushCache afc("ToggleBarriers");
     for (gc::CellIterUnderGC i(comp, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
+        UnrootedScript script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ion->toggleBarriers(needs);
     }
@@ -1012,6 +1013,19 @@ CompileBackEnd(MIRGenerator *mir)
         break;
       }
 
+      case RegisterAllocator_Backtracking: {
+        integrity.record();
+
+        BacktrackingAllocator regalloc(mir, &lirgen, *lir);
+        if (!regalloc.go())
+            return NULL;
+        if (!integrity.check(true))
+            return NULL;
+
+        IonSpewPass("Allocate Registers [Backtracking]");
+        break;
+      }
+
       case RegisterAllocator_Stupid: {
         // Use the integrity checker to populate safepoint information, so
         // run it in all builds.
@@ -1135,7 +1149,7 @@ static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
 template <typename CompileContext>
 static bool
-IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
+IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing,
            CompileContext &compileContext)
 {
     AssertCanGC();
@@ -1197,7 +1211,8 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     JS_ASSERT(!builder->script()->ion);
     JSContext *cx = GetIonContext()->cx;
 
-    IonSpewNewFunction(graph, builder->script());
+    RootedScript builderScript(cx, builder->script());
+    IonSpewNewFunction(graph, builderScript);
 
     if (!builder->build()) {
         IonSpew(IonSpew_Abort, "Builder failed to build.");
@@ -1241,7 +1256,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
 }
 
 bool
-TestIonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
+TestIonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing)
 {
     SequentialCompileContext compileContext;
     if (!IonCompile(cx, script, fun, osrPc, constructing, compileContext)) {
@@ -1293,7 +1308,7 @@ CheckFrame(StackFrame *fp)
 }
 
 static bool
-CheckScript(JSScript *script)
+CheckScript(UnrootedScript script)
 {
     if (script->needsArgsObj()) {
         // Functions with arguments objects, are not supported yet.
@@ -1310,7 +1325,7 @@ CheckScript(JSScript *script)
 }
 
 static bool
-CheckScriptSize(JSScript *script)
+CheckScriptSize(UnrootedScript script)
 {
     if (!js_IonOptions.limitScriptSize)
         return true;
@@ -1339,7 +1354,7 @@ CanIonCompileScript(JSScript *script)
 }
 
 static MethodStatus
-Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
+Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
@@ -1412,7 +1427,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbyte
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
+    RootedFunction fun(cx, fp->isFunctionFrame() ? fp->fun() : NULL);
     MethodStatus status = Compile(cx, script, fun, pc, fp->isConstructing());
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
@@ -1461,7 +1476,7 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
+    RootedFunction fun(cx, fp->isFunctionFrame() ? fp->fun() : NULL);
     MethodStatus status = Compile(cx, script, fun, NULL, fp->isConstructing());
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
@@ -1516,6 +1531,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     int maxArgc = 0;
     Value *maxArgv = NULL;
     int numActualArgs = 0;
+    RootedValue thisv(cx);
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
@@ -1544,6 +1560,9 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         calleeToken = CalleeToToken(&fp->callee());
     } else {
         calleeToken = CalleeToToken(fp->script());
+        thisv = fp->thisValue();
+        maxArgc = 1;
+        maxArgv = thisv.address();
     }
 
     // Caller must construct |this| before invoking the Ion function.
@@ -1728,7 +1747,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
             const char *type = it.isOptimizedJS() ? "Optimized" : "Baseline";
             IonSpew(IonSpew_Invalidate, "#%d %s JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
                     frameno, type, it.fp(), it.script()->filename, it.script()->lineno,
-                    it.maybeCallee(), it.script(), it.returnAddressToFp());
+                    it.maybeCallee(), (RawScript)it.script(), it.returnAddressToFp());
             break;
           }
           case IonFrame_BaselineStub:
@@ -1906,7 +1925,7 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
             break;
         }
         JS_ASSERT(co.isValid());
-        JSScript *script = co.script;
+        UnrootedScript script = co.script;
         IonScript *ionScript = GetIonScript(script, executionMode);
 
         JSCompartment *compartment = script->compartment();
@@ -1932,12 +1951,14 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
 void
 ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
+    AutoAssertNoGC nogc;
     ion::Invalidate(cx->compartment->types, cx->runtime->defaultFreeOp(), invalid, resetUses);
 }
 
 bool
-ion::Invalidate(JSContext *cx, JSScript *script, bool resetUses)
+ion::Invalidate(JSContext *cx, UnrootedScript script, bool resetUses)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(script->hasIonScript());
 
     Vector<types::RecompileInfo> scripts(cx);
@@ -1949,7 +1970,7 @@ ion::Invalidate(JSContext *cx, JSScript *script, bool resetUses)
 }
 
 void
-ion::FinishInvalidation(FreeOp *fop, JSScript *script)
+ion::FinishInvalidation(FreeOp *fop, UnrootedScript script)
 {
     if (!script->hasIonScript())
         return;
@@ -1982,7 +2003,7 @@ ion::MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 }
 
 void
-ion::ForbidCompilation(JSContext *cx, JSScript *script)
+ion::ForbidCompilation(JSContext *cx, UnrootedScript script)
 {
     IonSpew(IonSpew_Abort, "Disabling Ion compilation of script %s:%d",
             script->filename, script->lineno);
@@ -2003,7 +2024,7 @@ ion::ForbidCompilation(JSContext *cx, JSScript *script)
 }
 
 uint32_t
-ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
+ion::UsesBeforeIonRecompile(UnrootedScript script, jsbytecode *pc)
 {
     JS_ASSERT(pc == script->code || JSOp(*pc) == JSOP_LOOPENTRY);
 
@@ -2078,7 +2099,7 @@ AutoFlushInhibitor::~AutoFlushInhibitor()
 int js::ion::LabelBase::id_count = 0;
 
 void
-ion::PurgeCaches(JSScript *script, JSCompartment *c) {
+ion::PurgeCaches(UnrootedScript script, JSCompartment *c) {
     if (script->hasIonScript())
         script->ion->purgeCaches(c);
 
@@ -2087,7 +2108,7 @@ ion::PurgeCaches(JSScript *script, JSCompartment *c) {
 }
 
 size_t
-ion::MemoryUsed(JSScript *script, JSMallocSizeOfFun mallocSizeOf) {
+ion::MemoryUsed(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf) {
     size_t result = 0;
 
     if (script->hasIonScript())
@@ -2100,7 +2121,7 @@ ion::MemoryUsed(JSScript *script, JSMallocSizeOfFun mallocSizeOf) {
 }
 
 void
-ion::DestroyIonScripts(FreeOp *fop, JSScript *script) {
+ion::DestroyIonScripts(FreeOp *fop, UnrootedScript script) {
     if (script->hasIonScript())
         ion::IonScript::Destroy(fop, script->ion);
 
@@ -2109,7 +2130,7 @@ ion::DestroyIonScripts(FreeOp *fop, JSScript *script) {
 }
 
 void
-ion::TraceIonScripts(JSTracer* trc, JSScript *script) {
+ion::TraceIonScripts(JSTracer* trc, UnrootedScript script) {
     if (script->hasIonScript())
         ion::IonScript::Trace(trc, script->ion);
 

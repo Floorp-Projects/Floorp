@@ -23,6 +23,7 @@
 #include "nsIConsoleService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsCRT.h"
+#include "SharedSSLState.h"
 
 #include "ssl.h"
 #include "sslproto.h"
@@ -841,7 +842,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   // If the handshake completed, then we know the site is TLS tolerant (if this
   // was a TLS connection).
-  nsSSLIOLayerHelpers::rememberTolerantSite(infoObject);
+  nsSSLIOLayerHelpers& ioLayerHelpers = infoObject->SharedState().IOLayerHelpers();
+  ioLayerHelpers.rememberTolerantSite(infoObject);
 
   if (SECSuccess != SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
                                        &encryptBits, &signer, nullptr)) {
@@ -859,7 +861,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn, &siteSupportsSafeRenego) != SECSuccess
       || !siteSupportsSafeRenego) {
 
-    bool wantWarning = (nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746() > 0);
+    bool wantWarning = (ioLayerHelpers.getWarnLevelMissingRFC5746() > 0);
 
     nsCOMPtr<nsIConsoleService> console;
     if (infoObject && wantWarning) {
@@ -875,7 +877,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
         console->LogStringMessage(msg.get());
       }
     }
-    if (nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()) {
+    if (ioLayerHelpers.treatUnsafeNegotiationAsBroken()) {
       secStatus = nsIWebProgressListener::STATE_IS_BROKEN;
     }
   }

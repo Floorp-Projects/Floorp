@@ -17,7 +17,7 @@ interface nsIProperties;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(b06e0fa5-d6e2-4fa3-8fc0-7775aed96522)]
+[scriptable, builtinclass, uuid(b06e0fa5-d6e2-4fa3-8fc0-7775aed96522)]
 interface imgICache : nsISupports
 {
   /**

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -768,6 +768,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcNumArenasFreeCommitted(0),
+    gcMarker(this),
     gcVerifyPreData(NULL),
     gcVerifyPostData(NULL),
     gcChunkAllocationSinceLastGC(false),
@@ -6738,8 +6739,10 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *ch
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    return ExecuteRegExp(cx, res, reobj->asRegExp(), NullPtr(), StableCharPtr(chars, length),
-                         length, indexp, test ? RegExpTest : RegExpExec, rval);
+    StableCharPtr charPtr(chars, length);
+
+    return ExecuteRegExpLegacy(cx, res, reobj->asRegExp(), NullPtr(),
+                               charPtr, length, indexp, test, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -6773,8 +6776,9 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NullPtr(), StableCharPtr(chars, length),
-                         length, indexp, test ? RegExpTest : RegExpExec, rval);
+    StableCharPtr charPtr(chars, length);
+    return ExecuteRegExpLegacy(cx, NULL, obj->asRegExp(), NullPtr(),
+                               charPtr, length, indexp, test, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -7141,7 +7145,7 @@ JS::AssertArgumentsAreSane(JSContext *cx, const JS::Value &value)
 #endif /* DEBUG */
 
 JS_PUBLIC_API(void *)
-JS_EncodeScript(JSContext *cx, JSRawScript scriptArg, uint32_t *lengthp)
+JS_EncodeScript(JSContext *cx, RawScript scriptArg, uint32_t *lengthp)
 {
     XDREncoder encoder(cx);
     RootedScript script(cx, scriptArg);

@@ -271,36 +271,29 @@ static const size_t kNoSize = size_t(-1);
 
 class MutexBase
 {
-  HANDLE mMutex;
+  CRITICAL_SECTION mCS;
 
   DISALLOW_COPY_AND_ASSIGN(MutexBase);
 
 public:
   MutexBase()
-    : mMutex(CreateMutexW(nullptr, false, nullptr))
   {
-    MOZ_ASSERT(mMutex);
+    InitializeCriticalSection(&mCS);
   }
 
   ~MutexBase()
   {
-    if (mMutex) {
-      CloseHandle(mMutex);
-    }
+    DeleteCriticalSection(&mCS);
   }
 
   void Lock()
   {
-    if (mMutex) {
-      WaitForSingleObject(mMutex, INFINITE);
-    }
+    EnterCriticalSection(&mCS);
   }
 
   void Unlock()
   {
-    if (mMutex) {
-      ReleaseMutex(mMutex);
-    }
+    LeaveCriticalSection(&mCS);
   }
 };
 

@@ -203,9 +203,7 @@ PrintDefinition(FILE *fp, const LDefinition &def)
     if (def.virtualRegister())
         fprintf(fp, ":%d", def.virtualRegister());
     if (def.policy() == LDefinition::PRESET) {
-        fprintf(fp, " (");
-        LAllocation::PrintAllocation(fp, def.output());
-        fprintf(fp, ")");
+        fprintf(fp, " (%s)", def.output()->toString());
     } else if (def.policy() == LDefinition::MUST_REUSE_INPUT) {
         fprintf(fp, " (!)");
     } else if (def.policy() == LDefinition::PASSTHROUGH) {
@@ -215,60 +213,62 @@ PrintDefinition(FILE *fp, const LDefinition &def)
 }
 
 static void
-PrintUse(FILE *fp, const LUse *use)
+PrintUse(char *buf, size_t size, const LUse *use)
 {
-    fprintf(fp, "v%d:", use->virtualRegister());
     if (use->policy() == LUse::ANY) {
-        fprintf(fp, "*");
+        JS_snprintf(buf, size, "v%d:*", use->virtualRegister());
     } else if (use->policy() == LUse::REGISTER) {
-        fprintf(fp, "r");
+        JS_snprintf(buf, size, "v%d:r", use->virtualRegister());
     } else {
         // Unfortunately, we don't know here whether the virtual register is a
         // float or a double. Should we steal a bit in LUse for help? For now,
         // nothing defines any fixed xmm registers.
-        fprintf(fp, "%s", Registers::GetName(Registers::Code(use->registerCode())));
+        JS_snprintf(buf, size, "v%d:%s", use->virtualRegister(),
+                    Registers::GetName(Registers::Code(use->registerCode())));
     }
 }
 
-void
-LAllocation::PrintAllocation(FILE *fp, const LAllocation *a)
+#ifdef DEBUG
+const char *
+LAllocation::toString() const
 {
-    switch (a->kind()) {
+    // Not reentrant!
+    static char buf[40];
+
+    switch (kind()) {
       case LAllocation::CONSTANT_VALUE:
       case LAllocation::CONSTANT_INDEX:
-        fprintf(fp, "c");
-        break;
+        return "c";
       case LAllocation::GPR:
-        fprintf(fp, "=%s", a->toGeneralReg()->reg().name());
-        break;
+        JS_snprintf(buf, sizeof(buf), "=%s", toGeneralReg()->reg().name());
+        return buf;
       case LAllocation::FPU:
-        fprintf(fp, "=%s", a->toFloatReg()->reg().name());
-        break;
+        JS_snprintf(buf, sizeof(buf), "=%s", toFloatReg()->reg().name());
+        return buf;
       case LAllocation::STACK_SLOT:
-        fprintf(fp, "stack:i%d", a->toStackSlot()->slot());
-        break;
+        JS_snprintf(buf, sizeof(buf), "stack:i%d", toStackSlot()->slot());
+        return buf;
       case LAllocation::DOUBLE_SLOT:
-        fprintf(fp, "stack:d%d", a->toStackSlot()->slot());
-        break;
+        JS_snprintf(buf, sizeof(buf), "stack:d%d", toStackSlot()->slot());
+        return buf;
       case LAllocation::ARGUMENT:
-        fprintf(fp, "arg:%d", a->toArgument()->index());
-        break;
+        JS_snprintf(buf, sizeof(buf), "arg:%d", toArgument()->index());
+        return buf;
       case LAllocation::USE:
-        PrintUse(fp, a->toUse());
-        break;
+        PrintUse(buf, sizeof(buf), toUse());
+        return buf;
       default:
         JS_NOT_REACHED("what?");
-        break;
+        return "???";
     }
 }
+#endif // DEBUG
 
 void
 LInstruction::printOperands(FILE *fp)
 {
     for (size_t i = 0; i < numOperands(); i++) {
-        fprintf(fp, " (");
-        LAllocation::PrintAllocation(fp, getOperand(i));
-        fprintf(fp, ")");
+        fprintf(fp, " (%s)", getOperand(i)->toString());
         if (i != numOperands() - 1)
             fprintf(fp, ",");
     }
@@ -368,11 +368,9 @@ LMoveGroup::printOperands(FILE *fp)
 {
     for (size_t i = 0; i < numMoves(); i++) {
         const LMove &move = getMove(i);
-        fprintf(fp, "[");
-        LAllocation::PrintAllocation(fp, move.from());
-        fprintf(fp, " -> ");
-        LAllocation::PrintAllocation(fp, move.to());
-        fprintf(fp, "]");
+        // Use two printfs, as LAllocation::toString is not reentrant.
+        fprintf(fp, "[%s", move.from()->toString());
+        fprintf(fp, " -> %s]", move.to()->toString());
         if (i != numMoves() - 1)
             fprintf(fp, ", ");
     }

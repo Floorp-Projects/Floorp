@@ -3076,15 +3076,15 @@ class MRegExpTest
         return new MRegExpTest(regexp, string);
     }
 
-    TypePolicy *typePolicy() {
-        return this;
+    MDefinition *string() const {
+        return getOperand(0);
     }
-
     MDefinition *regexp() const {
         return getOperand(1);
     }
-    MDefinition *string() const {
-        return getOperand(0);
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
@@ -4473,7 +4473,7 @@ class MBindNameCache
     CompilerRootScript script_;
     jsbytecode *pc_;
 
-    MBindNameCache(MDefinition *scopeChain, PropertyName *name, JSScript *script, jsbytecode *pc)
+    MBindNameCache(MDefinition *scopeChain, PropertyName *name, UnrootedScript script, jsbytecode *pc)
       : MUnaryInstruction(scopeChain), name_(name), script_(script), pc_(pc)
     {
         setResultType(MIRType_Object);
@@ -4482,7 +4482,7 @@ class MBindNameCache
   public:
     INSTRUCTION_HEADER(BindNameCache)
 
-    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, JSScript *script,
+    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, UnrootedScript script,
                                jsbytecode *pc) {
         return new MBindNameCache(scopeChain, name, script, pc);
     }
@@ -4496,7 +4496,7 @@ class MBindNameCache
     PropertyName *name() const {
         return name_;
     }
-    JSScript *script() const {
+    UnrootedScript script() const {
         return script_;
     }
     jsbytecode *pc() const {
@@ -5675,7 +5675,7 @@ class MFunctionBoundary : public MNullaryInstruction
     Type type_;
     unsigned inlineLevel_;
 
-    MFunctionBoundary(JSScript *script, Type type, unsigned inlineLevel)
+    MFunctionBoundary(UnrootedScript script, Type type, unsigned inlineLevel)
       : script_(script), type_(type), inlineLevel_(inlineLevel)
     {
         JS_ASSERT_IF(type != Inline_Exit, script != NULL);
@@ -5686,12 +5686,12 @@ class MFunctionBoundary : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(FunctionBoundary)
 
-    static MFunctionBoundary *New(JSScript *script, Type type,
+    static MFunctionBoundary *New(UnrootedScript script, Type type,
                                   unsigned inlineLevel = 0) {
         return new MFunctionBoundary(script, type, inlineLevel);
     }
 
-    JSScript *script() {
+    UnrootedScript script() {
         return script_;
     }
 

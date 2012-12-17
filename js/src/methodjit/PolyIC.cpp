@@ -419,9 +419,9 @@ class SetPropCompiler : public PICStubCompiler
                 return false;
 
             jsbytecode *pc;
-            JSScript *script = cx->stack.currentScript(&pc);
+            RootedScript script(cx, cx->stack.currentScript(&pc));
 
-            if (!script->ensureRanInference(cx) || monitor.recompiled())
+            if (!JSScript::ensureRanInference(cx, script) || monitor.recompiled())
                 return false;
 
             JS_ASSERT(*pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
@@ -2219,7 +2219,7 @@ frameCountersOffset(VMFrame &f)
     }
 
     jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc);
+    UnrootedScript script = cx->stack.currentScript(&pc);
     offset += pc - script->code;
 
     return offset;

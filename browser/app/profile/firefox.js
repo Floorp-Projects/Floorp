@@ -1047,6 +1047,9 @@ pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 
+// Enable the Profiler
+pref("devtools.profiler.enabled", true);
+
 // Enable the Tilt inspector
 pref("devtools.tilt.enabled", true);
 pref("devtools.tilt.intro_transition", true);

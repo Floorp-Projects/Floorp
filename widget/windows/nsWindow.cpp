@@ -1342,8 +1342,12 @@ NS_METHOD nsWindow::Move(double aX, double aY)
     return NS_OK;
   }
 
-  int32_t x = NSToIntRound(aX * GetDefaultScale());
-  int32_t y = NSToIntRound(aY * GetDefaultScale());
+  // for top-level windows only, convert coordinates from global display pixels
+  // (the "parent" coordinate space) to the window's device pixel space
+  double scale =
+    (mWindowType <= eWindowType_popup) ? GetDefaultScale() : 1.0;
+  int32_t x = NSToIntRound(aX * scale);
+  int32_t y = NSToIntRound(aY * scale);
 
   mBounds.x = x;
   mBounds.y = y;
@@ -1392,8 +1396,12 @@ NS_METHOD nsWindow::Move(double aX, double aY)
 // Resize this component
 NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-  int32_t width = NSToIntRound(aWidth * GetDefaultScale());
-  int32_t height = NSToIntRound(aHeight * GetDefaultScale());
+  // for top-level windows only, convert coordinates from global display pixels
+  // (the "parent" coordinate space) to the window's device pixel space
+  double scale =
+    (mWindowType <= eWindowType_popup) ? GetDefaultScale() : 1.0;
+  int32_t width = NSToIntRound(aWidth * scale);
+  int32_t height = NSToIntRound(aHeight * scale);
 
   NS_ASSERTION((width >= 0) , "Negative width passed to nsWindow::Resize");
   NS_ASSERTION((height >= 0), "Negative height passed to nsWindow::Resize");
@@ -1439,7 +1447,10 @@ NS_METHOD nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 // Resize this component
 NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint)
 {
-  double scale = GetDefaultScale();
+  // for top-level windows only, convert coordinates from global display pixels
+  // (the "parent" coordinate space) to the window's device pixel space
+  double scale =
+    (mWindowType <= eWindowType_popup) ? GetDefaultScale() : 1.0;
   int32_t x = NSToIntRound(aX * scale);
   int32_t y = NSToIntRound(aY * scale);
   int32_t width = NSToIntRound(aWidth * scale);
@@ -4342,12 +4353,20 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   }
 
   // Get the window which caused the event and ask it to process the message
-  nsWindow *someWindow = WinUtils::GetNSWindowPtr(hWnd);
+  nsWindow *targetWindow = WinUtils::GetNSWindowPtr(hWnd);
+  NS_ASSERTION(targetWindow, "nsWindow* is null!");
+  if (!targetWindow)
+    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 
-  if (someWindow)
-    someWindow->IPCWindowProcHandler(msg, wParam, lParam);
+  // Hold the window for the life of this method, in case it gets
+  // destroyed during processing, unless we're in the dtor already.
+  nsCOMPtr<nsISupports> kungFuDeathGrip;
+  if (!targetWindow->mInDtor)
+    kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)targetWindow);
 
-  // create this here so that we store the last rolled up popup until after
+  targetWindow->IPCWindowProcHandler(msg, wParam, lParam);
+
+  // Create this here so that we store the last rolled up popup until after
   // the event has been processed.
   nsAutoRollup autoRollup;
 
@@ -4355,27 +4374,13 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   if (DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult))
     return popupHandlingResult;
 
-  // XXX This fixes 50208 and we are leaving 51174 open to further investigate
-  // why we are hitting this assert
-  if (nullptr == someWindow) {
-    NS_ASSERTION(someWindow, "someWindow is null, cannot call any CallWindowProc");
-    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-  }
-
-  // hold on to the window for the life of this method, in case it gets
-  // deleted during processing. yes, it's a double hack, since someWindow
-  // is not really an interface.
-  nsCOMPtr<nsISupports> kungFuDeathGrip;
-  if (!someWindow->mInDtor) // not if we're in the destructor!
-    kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)someWindow);
-
   // Call ProcessMessage
   LRESULT retValue;
-  if (true == someWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
+  if (targetWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
     return retValue;
   }
 
-  LRESULT res = ::CallWindowProcW(someWindow->GetPrevWindowProc(),
+  LRESULT res = ::CallWindowProcW(targetWindow->GetPrevWindowProc(),
                                   hWnd, msg, wParam, lParam);
 
   return res;

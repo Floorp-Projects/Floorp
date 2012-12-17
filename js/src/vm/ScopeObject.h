@@ -189,7 +189,7 @@ class CallObject : public ScopeObject
     create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
 
     static CallObject *
-    createTemplateObject(JSContext *cx, JSScript *script);
+    createTemplateObject(JSContext *cx, HandleScript script);
 
     static const uint32_t RESERVED_SLOTS = 2;
 

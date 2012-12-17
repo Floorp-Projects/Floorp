@@ -541,7 +541,7 @@ uint32_t
 ion::BoundsCheckFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    JSScript *script = GetBailedJSScript(cx);
+    UnrootedScript script = GetBailedJSScript(cx);
 
     IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d", script->filename,
             script->lineno);
@@ -562,7 +562,7 @@ uint32_t
 ion::ShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    JSScript *script = GetBailedJSScript(cx);
+    UnrootedScript script = GetBailedJSScript(cx);
 
     JS_ASSERT(script->hasIonScript());
     JS_ASSERT(!script->ion->invalidated());
@@ -578,7 +578,7 @@ uint32_t
 ion::CachedShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    JSScript *script = GetBailedJSScript(cx);
+    UnrootedScript script = GetBailedJSScript(cx);
 
     JS_ASSERT(script->hasIonScript());
     JS_ASSERT(!script->ion->invalidated());
@@ -627,7 +627,7 @@ ion::ThunkToInterpreter(Value *vp)
         br->entryfp()->clearRunningInIon();
         ScriptFrameIter iter(cx);
         StackFrame *fp = NULL;
-        Rooted<JSScript*> script(cx, NULL);
+        Rooted<JSScript*> script(cx);
         do {
             fp = iter.interpFrame();
             script = iter.script();

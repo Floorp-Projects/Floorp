@@ -192,6 +192,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "URL interface object manipulation via an Xray shouldn't throw" + e);
       }
 
+      try {
+        url.revokeObjectURL("");
+      } catch (e) {
+        // Just testing whether revokeObjectURL crashes us
+      }
+      ok(true, "We didn't crash!");
+
       // And now tests that don't use a window-associated sandbox
       sandbox = Components.utils.Sandbox(win.document.nodePrincipal,
                                          { sandboxPrototype: win });

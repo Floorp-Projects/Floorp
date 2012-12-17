@@ -948,7 +948,7 @@ ElementIteratorObject::next_impl(JSContext *cx, CallArgs args)
 }
 
 Class js::ElementIteratorClass = {
-    "Iterator",
+    "Array Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(ElementIteratorObject::NumSlots),
     JS_PropertyStub,         /* addProperty */

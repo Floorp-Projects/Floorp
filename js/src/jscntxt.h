@@ -204,10 +204,10 @@ struct EvalCacheHashPolicy
     typedef EvalCacheLookup Lookup;
 
     static HashNumber hash(const Lookup &l);
-    static bool match(JSScript *script, const EvalCacheLookup &l);
+    static bool match(UnrootedScript script, const EvalCacheLookup &l);
 };
 
-typedef HashSet<JSScript *, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
+typedef HashSet<RawScript, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
 
 class NativeIterCache
 {
@@ -1374,9 +1374,6 @@ struct JSContext : js::ContextFriendFields,
 
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
-
-    /* The current compartment. */
-    JSCompartment       *compartment;
 
     inline void setCompartment(JSCompartment *c) { compartment = c; }
 

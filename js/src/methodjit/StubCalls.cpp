@@ -834,7 +834,8 @@ stubs::TriggerIonCompile(VMFrame &f)
         if (*osrPC != JSOP_LOOPENTRY)
             osrPC = NULL;
 
-        if (!ion::TestIonCompile(f.cx, script, script->function(), osrPC, f.fp()->isConstructing())) {
+        RootedFunction scriptFunction(f.cx, script->function());
+        if (!ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing())) {
             if (f.cx->isExceptionPending())
                 THROW();
         }
@@ -998,7 +999,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 }
 
 void JS_FASTCALL
-stubs::InitElem(VMFrame &f, uint32_t last)
+stubs::InitElem(VMFrame &f)
 {
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
@@ -1006,33 +1007,15 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     /* Pop the element's value into rval. */
     JS_ASSERT(regs.stackDepth() >= 3);
     HandleValue rref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+    MutableHandleValue idval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
 
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
     JS_ASSERT(lref.isObject());
     RootedObject obj(cx, &lref.toObject());
 
-    /* Fetch id now that we have obj. */
-    RootedId id(cx);
-    MutableHandleValue idval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
-    if (!FetchElementId(f.cx, obj, idval, id.address(), idval))
+    if (!InitElemOperation(cx, obj, idval, rref))
         THROW();
-
-    /*
-     * If rref is a hole, do not call JSObject::defineProperty. In this case,
-     * obj must be an array, so if the current op is the last element
-     * initialiser, set the array length to one greater than id.
-     */
-    if (rref.isMagic(JS_ARRAY_HOLE)) {
-        JS_ASSERT(obj->isArray());
-        JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (last && !SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
-            THROW();
-    } else {
-        if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
-            THROW();
-    }
 }
 
 void JS_FASTCALL

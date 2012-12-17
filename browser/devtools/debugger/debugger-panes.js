@@ -138,7 +138,8 @@ let StackFrameUtils = {
    */
   getFrameTitle: function SFU_getFrameTitle(aFrame) {
     if (aFrame.type == "call") {
-      return aFrame.calleeName || "(anonymous)";
+      let c = aFrame.callee;
+      return (c.name || c.userDisplayName || c.displayName || "(anonymous)");
     }
     return "(" + aFrame.type + ")";
   }

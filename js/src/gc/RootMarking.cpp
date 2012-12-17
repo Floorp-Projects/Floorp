@@ -682,9 +682,12 @@ Shape::Range::AutoRooter::trace(JSTracer *trc)
 void
 RegExpStatics::AutoRooter::trace(JSTracer *trc)
 {
-    if (statics->matchPairsInput)
-        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->matchPairsInput),
-                       "RegExpStatics::AutoRooter matchPairsInput");
+    if (statics->regexp)
+        MarkObjectRoot(trc, reinterpret_cast<JSObject**>(&statics->regexp),
+                       "RegExpStatics::AutoRooter regexp");
+    if (statics->matchesInput)
+        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->matchesInput),
+                       "RegExpStatics::AutoRooter matchesInput");
     if (statics->pendingInput)
         MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
                        "RegExpStatics::AutoRooter pendingInput");

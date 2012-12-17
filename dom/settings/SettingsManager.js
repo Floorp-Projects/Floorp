@@ -4,8 +4,9 @@
 
 "use strict";
 
+const DEBUG = false;
 function debug(s) {
-//  dump("-*- SettingsManager: " + s + "\n");
+  if (DEBUG) dump("-*- SettingsManager: " + s + "\n");
 }
 
 const Cc = Components.classes;
@@ -43,7 +44,7 @@ SettingsLock.prototype = {
 
     while (!lock._requests.isEmpty()) {
       let info = lock._requests.dequeue();
-      debug("info: " + info.intent);
+      if (DEBUG) debug("info: " + info.intent);
       let request = info.request;
       switch (info.intent) {
         case "clear":
@@ -58,12 +59,12 @@ SettingsLock.prototype = {
           for (let i = 0; i < keys.length; i++) {
             let key = keys[i];
             let last = i === keys.length - 1;
-            debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
+            if (DEBUG) debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
 
             let checkKeyRequest = store.get(key);
             checkKeyRequest.onsuccess = function (event) {
               if (!event.target.result) {
-                debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database. Please add it to build/settings.js\n");
+                if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database. Please add it to build/settings.js\n");
               }
             }
 
@@ -96,12 +97,12 @@ SettingsLock.prototype = {
                                     : store.mozGetAll(info.name);
 
           req.onsuccess = function(event) {
-            debug("Request for '" + info.name + "' successful. " + 
+            if (DEBUG) debug("Request for '" + info.name + "' successful. " + 
                   "Record count: " + event.target.result.length);
-            debug("result: " + JSON.stringify(event.target.result));
+            if (DEBUG) debug("result: " + JSON.stringify(event.target.result));
 
             if (event.target.result.length == 0) {
-              debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database. Please add it to build/settings.js\n");
+              if (DEBUG) debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database. Please add it to build/settings.js\n");
             }
 
             let results = {
@@ -166,7 +167,7 @@ SettingsLock.prototype = {
       this.createTransactionAndProcess();
       return req;
     } else {
-      debug("get not allowed");
+      if (DEBUG) debug("get not allowed");
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     }
   },
@@ -179,12 +180,12 @@ SettingsLock.prototype = {
 
     if (this._settingsManager.hasWritePrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
-      debug("send: " + JSON.stringify(aSettings));
+      if (DEBUG) debug("send: " + JSON.stringify(aSettings));
       this._requests.enqueue({request: req, intent: "set", settings: aSettings});
       this.createTransactionAndProcess();
       return req;
     } else {
-      debug("set not allowed");
+      if (DEBUG) debug("set not allowed");
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     }
   },
@@ -201,7 +202,7 @@ SettingsLock.prototype = {
       this.createTransactionAndProcess();
       return req;
     } else {
-      debug("clear not allowed");
+      if (DEBUG) debug("clear not allowed");
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     }
   },
@@ -260,7 +261,7 @@ SettingsManager.prototype = {
   },
 
   createLock: function() {
-    debug("get lock!");
+    if (DEBUG) debug("get lock!");
     var lock = new SettingsLock(this);
     this._locks.enqueue(lock);
     this._settingsDB.ensureDB(
@@ -272,14 +273,14 @@ SettingsManager.prototype = {
   },
 
   receiveMessage: function(aMessage) {
-    debug("Settings::receiveMessage: " + aMessage.name);
+    if (DEBUG) debug("Settings::receiveMessage: " + aMessage.name);
     let msg = aMessage.json;
 
     switch (aMessage.name) {
       case "Settings:Change:Return:OK":
-        debug("Settings:Change:Return:OK");
+        if (DEBUG) debug("Settings:Change:Return:OK");
         if (this._onsettingchange || this._callbacks) {
-          debug('data:' + msg.key + ':' + msg.value + '\n');
+          if (DEBUG) debug('data:' + msg.key + ':' + msg.value + '\n');
 
           if (this._onsettingchange) {
             let event = new this._window.MozSettingsEvent("settingchanged", {
@@ -289,23 +290,23 @@ SettingsManager.prototype = {
             this._onsettingchange.handleEvent(event);
           }
           if (this._callbacks && this._callbacks[msg.key]) {
-            debug("observe callback called! " + msg.key + " " + this._callbacks[msg.key].length);
+            if (DEBUG) debug("observe callback called! " + msg.key + " " + this._callbacks[msg.key].length);
             this._callbacks[msg.key].forEach(function(cb) {
               cb({settingName: msg.key, settingValue: msg.value,
                   __exposedProps__: {settingName: 'r', settingValue: 'r'}});
             });
           }
         } else {
-          debug("no observers stored!");
+          if (DEBUG) debug("no observers stored!");
         }
         break;
       default: 
-        debug("Wrong message: " + aMessage.name);
+        if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
   },
 
   addObserver: function addObserver(aName, aCallback) {
-    debug("addObserver " + aName);
+    if (DEBUG) debug("addObserver " + aName);
     if (!this._callbacks) {
       cpmm.sendAsyncMessage("Settings:RegisterForMessages");
       this._callbacks = {};
@@ -318,16 +319,16 @@ SettingsManager.prototype = {
   },
 
   removeObserver: function removeObserver(aName, aCallback) {
-    debug("deleteObserver " + aName);
+    if (DEBUG) debug("deleteObserver " + aName);
     if (this._callbacks && this._callbacks[aName]) {
       let index = this._callbacks[aName].indexOf(aCallback)
       if (index != -1) {
         this._callbacks[aName].splice(index, 1)
       } else {
-        debug("Callback not found for: " + aName);
+        if (DEBUG) debug("Callback not found for: " + aName);
       }
     } else {
-      debug("No observers stored for " + aName);
+      if (DEBUG) debug("No observers stored for " + aName);
     }
   },
 
@@ -354,7 +355,7 @@ SettingsManager.prototype = {
   },
 
   observe: function(aSubject, aTopic, aData) {
-    debug("Topic: " + aTopic);
+    if (DEBUG) debug("Topic: " + aTopic);
     if (aTopic == "inner-window-destroyed") {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {

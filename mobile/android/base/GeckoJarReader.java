@@ -118,6 +118,11 @@ public final class GeckoJarReader {
                     entry = zip.getEntry(fileName);
                 }
 
+                if (entry == null) {
+                    Log.d(LOGTAG, "No Entry for " + fileName);
+                    return null;
+                }
+
                 // if there is nothing else on the stack, this will throw and break us out of the loop
                 jarUrls.peek();
 
@@ -125,11 +130,6 @@ public final class GeckoJarReader {
                     inputStream = new ZipInputStream(inputStream);
                 } else {
                     inputStream = new ZipInputStream(zip.getInputStream(entry));
-                }
-  
-                if (entry == null) {
-                    Log.d(LOGTAG, "No Entry for " + fileName);
-                    return null;
                 }
             }
         } catch (EmptyStackException ex) {

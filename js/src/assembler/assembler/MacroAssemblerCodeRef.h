@@ -206,10 +206,10 @@ public:
         m_executablePool = NULL;
     }
 
-    MacroAssemblerCodePtr code() {
+    MacroAssemblerCodePtr code() const {
         return m_code;
     }
-    size_t size() {
+    size_t size() const {
         return m_size;
     }
 

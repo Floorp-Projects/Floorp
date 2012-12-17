@@ -778,6 +778,10 @@ this.DOMApplicationRegistry = {
         this.doInstallPackage(msg, mm);
         break;
       case "Webapps:GetBasePath":
+        if (!this.webapps[msg.id]) {
+          debug("No webapp for " + msg.id);
+          return null;
+        }
         return this.webapps[msg.id].basePath;
         break;
       case "Webapps:RegisterForMessages":
@@ -1150,7 +1154,7 @@ this.DOMApplicationRegistry = {
           // Check if the appcache is updatable, and send "downloadavailable" or
           // "downloadapplied".
           let updateObserver = {
-            observe: function(aSubject, aTopic, aData) {
+            observe: function(aSubject, aTopic, aObsData) {
               aData.event =
                 aTopic == "offline-cache-update-available" ? "downloadavailable"
                                                            : "downloadapplied";
@@ -1691,10 +1695,10 @@ this.DOMApplicationRegistry = {
         },
         onProgress: function notifProgress(aRequest, aContext,
                                            aProgress, aProgressMax) {
-          debug("onProgress: " + aProgress + "/" + aProgressMax);
           app.progress = aProgress;
           let now = Date.now();
           if (now - lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
+            debug("onProgress: " + aProgress + "/" + aProgressMax);
             self.broadcastMessage("Webapps:PackageEvent",
                                   { type: "progress",
                                     manifestURL: aApp.manifestURL,
@@ -1723,34 +1727,41 @@ this.DOMApplicationRegistry = {
       // installed apps should morph to 'updating'.
       app.installState = aIsUpdate ? "updating" : "pending";
 
-      NetUtil.asyncFetch(requestChannel, function(aInput, aResult, aRequest) {
-        if (!Components.isSuccessCode(aResult)) {
-          // We failed to fetch the zip.
-          cleanup("NETWORK_ERROR");
-          return;
-        }
-        // Copy the zip on disk. XXX: this can consume all disk space.
-        let zipFile = FileUtils.getFile("TmpD",
-                                        ["webapps", id, "application.zip"], true);
-        let ostream = FileUtils.openSafeFileOutputStream(zipFile);
-        NetUtil.asyncCopy(aInput, ostream, function (aResult) {
-          if (!Components.isSuccessCode(aResult)) {
-            // We failed to save the zip.
-            cleanup("DOWNLOAD_ERROR");
+      // Staging the zip in TmpD until all the checks are done.
+      let zipFile = FileUtils.getFile("TmpD",
+                                      ["webapps", id, "application.zip"], true);
+
+      // We need an output stream to write the channel content to the zip file.
+      let outputStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                           .createInstance(Ci.nsIFileOutputStream);
+      // write, create, truncate
+      outputStream.init(zipFile, 0x02 | 0x08 | 0x20, parseInt("0664", 8), 0);
+      let bufferedOutputStream = Cc['@mozilla.org/network/buffered-output-stream;1']
+                                   .createInstance(Ci.nsIBufferedOutputStream);
+      bufferedOutputStream.init(outputStream, 1024);
+
+      // Create a listener that will give data to the file output stream.
+      let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
+                       .createInstance(Ci.nsISimpleStreamListener);
+      listener.init(bufferedOutputStream, {
+        onStartRequest: function(aRequest, aContext) { },
+        onStopRequest: function(aRequest, aContext, aStatusCode) {
+          debug("onStopRequest " + aStatusCode);
+          bufferedOutputStream.close();
+          outputStream.close();
+
+          let certdb;
+          try {
+            certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                       .getService(Ci.nsIX509CertDB);
+          } catch (e) {
+            cleanup("CERTDB_ERROR");
             return;
           }
 
-		  let certdb;
-		  try {
-			certdb = Cc["@mozilla.org/security/x509certdb;1"]
-					   .getService(Ci.nsIX509CertDB);
-		  } catch (e) {
-		    cleanup("CERTDB_ERROR");
-			return;
-		  }
           certdb.openSignedJARFileAsync(zipFile, function(aRv, aZipReader) {
+            let zipReader;
             try {
-              let zipReader;
               let isSigned;
               if (Components.isSuccessCode(aRv)) {
                 isSigned = true;
@@ -1802,6 +1813,7 @@ this.DOMApplicationRegistry = {
             } catch (e) {
               // Something bad happened when reading the package.
               if (typeof e == 'object') {
+                debug(e);
                 cleanup("INVALID_PACKAGE");
               } else {
                 cleanup(e);
@@ -1810,8 +1822,10 @@ this.DOMApplicationRegistry = {
               zipReader.close();
             }
           });
-        });
+        }
       });
+
+      requestChannel.asyncOpen(listener, null);
     };
 
     let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
