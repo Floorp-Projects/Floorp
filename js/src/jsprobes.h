@@ -92,10 +92,10 @@ bool callTrackingActive(JSContext *);
 bool wantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
-bool enterScript(JSContext *, UnrootedScript , JSFunction *, StackFrame *);
+bool enterScript(JSContext *, UnrootedScript, UnrootedFunction , StackFrame *);
 
 /* About to leave a JS function */
-bool exitScript(JSContext *, UnrootedScript , JSFunction *, StackFrame *);
+bool exitScript(JSContext *, UnrootedScript, UnrootedFunction , StackFrame *);
 
 /* Executing a script */
 bool startExecution(UnrootedScript script);
@@ -147,10 +147,10 @@ bool compileScriptBegin(const char *filename, int lineno);
 bool compileScriptEnd(const char *filename, int lineno);
 
 /* About to make a call from JS into native code */
-bool calloutBegin(JSContext *cx, JSFunction *fun);
+bool calloutBegin(JSContext *cx, UnrootedFunction fun);
 
 /* Native code called by JS has terminated */
-bool calloutEnd(JSContext *cx, JSFunction *fun);
+bool calloutEnd(JSContext *cx, UnrootedFunction fun);
 
 /* Unimplemented */
 bool acquireMemory(JSContext *cx, void *address, size_t nbytes);
@@ -240,8 +240,8 @@ discardExecutableRegion(void *start, size_t size);
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
-void DTraceEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script);
-void DTraceExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script);
+void DTraceEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script);
+void DTraceExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script);
 
 /*
  * Internal: ETW-specific probe functions
@@ -252,8 +252,8 @@ bool ETWCreateRuntime(JSRuntime *rt);
 bool ETWDestroyRuntime(JSRuntime *rt);
 bool ETWShutdown();
 bool ETWCallTrackingActive();
-bool ETWEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int counter);
-bool ETWExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int counter);
+bool ETWEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter);
+bool ETWExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter);
 bool ETWCreateObject(JSContext *cx, JSObject *obj);
 bool ETWFinalizeObject(JSObject *obj);
 bool ETWResizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
@@ -261,8 +261,8 @@ bool ETWCreateString(JSContext *cx, JSString *string, size_t length);
 bool ETWFinalizeString(JSString *string);
 bool ETWCompileScriptBegin(const char *filename, int lineno);
 bool ETWCompileScriptEnd(const char *filename, int lineno);
-bool ETWCalloutBegin(JSContext *cx, JSFunction *fun);
-bool ETWCalloutEnd(JSContext *cx, JSFunction *fun);
+bool ETWCalloutBegin(JSContext *cx, UnrootedFunction fun);
+bool ETWCalloutEnd(JSContext *cx, UnrootedFunction fun);
 bool ETWAcquireMemory(JSContext *cx, void *address, size_t nbytes);
 bool ETWReleaseMemory(JSContext *cx, void *address, size_t nbytes);
 bool ETWGCStart();
@@ -312,7 +312,7 @@ Probes::wantNativeAddressInfo(JSContext *cx)
 }
 
 inline bool
-Probes::enterScript(JSContext *cx, UnrootedScript script, JSFunction *maybeFun,
+Probes::enterScript(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun,
                     StackFrame *fp)
 {
     bool ok = true;
@@ -339,7 +339,7 @@ Probes::enterScript(JSContext *cx, UnrootedScript script, JSFunction *maybeFun,
 }
 
 inline bool
-Probes::exitScript(JSContext *cx, UnrootedScript script, JSFunction *maybeFun,
+Probes::exitScript(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun,
                    StackFrame *fp)
 {
     bool ok = true;
@@ -512,7 +512,7 @@ Probes::compileScriptEnd(const char *filename, int lineno)
 }
 
 inline bool
-Probes::calloutBegin(JSContext *cx, JSFunction *fun)
+Probes::calloutBegin(JSContext *cx, UnrootedFunction fun)
 {
     bool ok = true;
 
@@ -525,7 +525,7 @@ Probes::calloutBegin(JSContext *cx, JSFunction *fun)
 }
 
 inline bool
-Probes::calloutEnd(JSContext *cx, JSFunction *fun)
+Probes::calloutEnd(JSContext *cx, UnrootedFunction fun)
 {
     bool ok = true;
 
