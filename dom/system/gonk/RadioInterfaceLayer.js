@@ -2135,7 +2135,6 @@ RadioInterfaceLayer.prototype = {
         langIndex: langIndex,
         langShiftIndex: langShiftIndex,
         segmentMaxSeq: segments,
-        strict7BitEncoding: strict7BitEncoding
       };
     }
 
@@ -2192,8 +2191,6 @@ RadioInterfaceLayer.prototype = {
    * @param dcs
    *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
    *        constants.
-   * @param fullBody
-   *        Original unfragmented text message.
    * @param userDataHeaderLength
    *        Length of embedded user data header, in bytes. The whole header
    *        size will be userDataHeaderLength + 1; 0 for no header.
@@ -2213,10 +2210,6 @@ RadioInterfaceLayer.prototype = {
     let options = this._calculateUserDataLength7Bit(message, strict7BitEncoding);
     if (!options) {
       options = this._calculateUserDataLengthUCS2(message);
-    }
-
-    if (options) {
-      options.fullBody = message;
     }
 
     debug("_calculateUserDataLength: " + JSON.stringify(options));
@@ -2244,7 +2237,7 @@ RadioInterfaceLayer.prototype = {
     const headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
     const segmentSeptets = RIL.PDU_MAX_USER_DATA_7BIT - headerSeptets;
     let ret = [];
-    let begin = 0, len = 0;
+    let body = "", len = 0;
     for (let i = 0, inc = 0; i < text.length; i++) {
       let c = text.charAt(i);
       if (strict7BitEncoding) {
@@ -2273,19 +2266,20 @@ RadioInterfaceLayer.prototype = {
 
       if ((len + inc) > segmentSeptets) {
         ret.push({
-          body: text.substring(begin, i),
+          body: body,
           encodedBodyLength: len,
         });
-        begin = i;
-        len = 0;
+        body = c;
+        len = inc;
+      } else {
+        body += c;
+        len += inc;
       }
-
-      len += inc;
     }
 
     if (len) {
       ret.push({
-        body: text.substring(begin),
+        body: body,
         encodedBodyLength: len,
       });
     }
@@ -2341,20 +2335,15 @@ RadioInterfaceLayer.prototype = {
       options = this._calculateUserDataLength(text, strict7BitEncoding);
     }
 
-    if (options.segmentMaxSeq <= 1) {
-      options.segments = null;
-      return options;
-    }
-
     if (options.dcs == RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
       const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[options.langIndex];
       const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[options.langShiftIndex];
-      options.segments = this._fragmentText7Bit(options.fullBody,
+      options.segments = this._fragmentText7Bit(text,
                                                 langTable, langShiftTable,
                                                 options.userDataHeaderLength,
-                                                options.strict7BitEncodingEncoding);
+                                                strict7BitEncoding);
     } else {
-      options.segments = this._fragmentTextUCS2(options.fullBody,
+      options.segments = this._fragmentTextUCS2(text,
                                                 options.userDataHeaderLength);
     }
 
@@ -2382,21 +2371,17 @@ RadioInterfaceLayer.prototype = {
       strict7BitEncoding = false;
     }
 
-    let options = this._calculateUserDataLength(message, strict7BitEncoding);
+    let options = this._fragmentText(message, null, strict7BitEncoding);
     options.rilMessageType = "sendSMS";
     options.number = number;
     options.requestStatusReport = true;
-
-    this._fragmentText(message, options, strict7BitEncoding);
     if (options.segmentMaxSeq > 1) {
       options.segmentRef16Bit = this.segmentRef16Bit;
       options.segmentRef = this.nextSegmentRef;
     }
 
     let timestamp = Date.now();
-    let id = gSmsDatabaseService.saveSendingMessage(options.number,
-                                                    options.fullBody,
-                                                    timestamp);
+    let id = gSmsDatabaseService.saveSendingMessage(number, message, timestamp);
     let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
     let deliveryStatus = options.requestStatusReport
                        ? RIL.GECKO_SMS_DELIVERY_STATUS_PENDING
@@ -2405,8 +2390,8 @@ RadioInterfaceLayer.prototype = {
                                            DOM_SMS_DELIVERY_SENDING,
                                            deliveryStatus,
                                            null,
-                                           options.number,
-                                           options.fullBody,
+                                           number,
+                                           message,
                                            messageClass,
                                            timestamp,
                                            true);
