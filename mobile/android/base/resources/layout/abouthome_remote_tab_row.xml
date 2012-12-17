@@ -7,7 +7,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="47dip"
                 android:orientation="vertical"
-                android:background="@drawable/action_bar_button">
+                android:background="@drawable/action_bar_button"
+                android:duplicateParentState="true">
 
     <TextView android:id="@+id/remote_tab_title"
               android:layout_width="fill_parent"
@@ -16,9 +17,10 @@
               android:paddingRight="12dip"
               android:gravity="center_vertical"
               android:textSize="15sp"
-              android:textColor="#222222"
               android:singleLine="true"
-              android:ellipsize="middle"/>
+              android:ellipsize="middle"
+              android:textColor="@color/abouthome_section_title"
+              android:duplicateParentState="true"/>
 
     <View android:layout_width="fill_parent"
           android:layout_height="1dp"
