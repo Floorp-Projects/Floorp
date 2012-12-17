@@ -113,7 +113,6 @@ nsUnicodeToGBK::nsUnicodeToGBK(uint32_t aMaxLength) :
 {
   mExtensionEncoder = nullptr;
   m4BytesEncoder = nullptr;
-  mUtil.InitToGBKTable();
   mSurrogateHigh = 0;
 }
 void nsUnicodeToGBK::CreateExtensionEncoder()
