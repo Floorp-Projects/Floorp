@@ -14,6 +14,8 @@ MODULE          = osfile
 
 MOCHITEST_CHROME_FILES := \
   test_osfile_back.xul \
+  worker_handler.js \
+  worker_test_osfile_shared.js \
   worker_test_osfile_unix.js \
   worker_test_osfile_win.js \
   test_osfile_front.xul \
