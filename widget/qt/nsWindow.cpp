@@ -2955,7 +2955,7 @@ nsWindow::Show(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(double aWidth, int32_t double, bool aRepaint)
+nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
     mBounds.width = NSToIntRound(aWidth);
     mBounds.height = NSToIntRound(aHeight);
