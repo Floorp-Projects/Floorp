@@ -1,0 +1,19 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
+
+    <!-- dark theme -->
+    <item gecko:state_dark="true" android:color="#80FFFFFF" />
+
+    <!-- light theme -->
+    <item gecko:state_light="true" android:color="#80222222" />
+
+    <!-- default -->
+    <item android:color="#FF22629E"/>
+
+</selector>
