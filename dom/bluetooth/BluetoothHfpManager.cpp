@@ -393,13 +393,14 @@ BluetoothHfpManager::NotifySettings()
 void
 BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
 {
-  nsString type, name, command;
-  command = aCommand;
+  nsString type, name;
+  BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
   type.AssignLiteral("bluetooth-dialer-command");
 
-  BluetoothValue v(command);
-  parameters.AppendElement(BluetoothNamedValue(type, v));
+  name.AssignLiteral("command");
+  v = nsString(aCommand);
+  parameters.AppendElement(BluetoothNamedValue(name, v));
 
   if (!BroadcastSystemMessage(type, parameters)) {
     NS_WARNING("Failed to broadcast system message to dialer");
@@ -600,6 +601,21 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     SendLine("OK");
   } else if (!strncmp(msg, "AT+CHUP", 7)) {
     NotifyDialer(NS_LITERAL_STRING("CHUP"));
+    SendLine("OK");
+  } else if (!strncmp(msg, "ATD>", 4)) {
+    // Currently, we don't support memory dialing in Dialer app
+    SendLine("ERROR");
+  } else if (!strncmp(msg, "ATD", 3)) {
+    nsAutoCString message(msg), newMsg;
+    int end = message.FindChar(';');
+    if (end < 0) {
+      NS_WARNING("Could't get the value of command [ATD]");
+      SendLine("OK");
+      return;
+    }
+
+    newMsg += nsDependentCSubstring(message, 0, end);
+    NotifyDialer(NS_ConvertUTF8toUTF16(newMsg));
     SendLine("OK");
   } else if (!strncmp(msg, "AT+CKPD", 7)) {
     // For Headset
