@@ -1428,6 +1428,67 @@ ICGetProp_DenseLength::Compiler::generateStubCode(MacroAssembler &masm)
     EmitStubGuardFailure(masm);
     return true;
 }
+
+//
+// SetProp_Fallback
+//
+
+static bool
+DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, HandleValue rhs,
+                  MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+
+    JS_ASSERT(JSOp(*pc) == JSOP_SETPROP ||
+              JSOp(*pc) == JSOP_SETNAME ||
+              JSOp(*pc) == JSOP_SETGNAME);
+
+    RootedPropertyName name(cx, script->getName(pc));
+    RootedId id(cx, NameToId(name));
+
+    RootedObject obj(cx, ToObjectFromStack(cx, lhs));
+    if (!obj)
+        return false;
+
+    if (script->strict) {
+        if (!js::SetProperty<true>(cx, obj, id, rhs))
+            return false;
+    } else {
+        if (!js::SetProperty<false>(cx, obj, id, rhs))
+            return false;
+    }
+
+    // Leave the RHS on the stack.
+    res.set(rhs);
+
+    if (stub->numOptimizedStubs() >= ICSetProp_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with generic setprop stub.
+        return true;
+    }
+
+    return true;
+}
+
+typedef bool (*DoSetPropFallbackFn)(JSContext *, ICSetProp_Fallback *, HandleValue, HandleValue,
+                                    MutableHandleValue);
+static const VMFunction DoSetPropFallbackInfo =
+    FunctionInfo<DoSetPropFallbackFn>(DoSetPropFallback);
+
+bool
+ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoSetPropFallbackInfo, masm);
+}
+
 //
 // Call_Fallback
 //
