@@ -378,6 +378,7 @@ WebConsoleFrame.prototype = {
                                         timeout, Ci.nsITimer.TYPE_ONE_SHOT);
 
     this.proxy.connect(function() {
+      // Don't complete connection if the connection timed-out.
       if (this._connectTimer) {
         this._connectTimer.cancel();
         this._connectTimer = null;
@@ -4045,7 +4046,7 @@ function WebConsoleConnectionProxy(aWebConsole, aTarget)
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onFileActivity = this._onFileActivity.bind(this);
-  this._onLocationChange = this._onLocationChange.bind(this);
+  this._onTabNavigated = this._onTabNavigated.bind(this);
 }
 
 WebConsoleConnectionProxy.prototype = {
@@ -4056,6 +4057,12 @@ WebConsoleConnectionProxy.prototype = {
    * @type object
    */
   owner: null,
+
+  /**
+   * The target that the console connects to.
+   * @type RemoteTarget
+   */
+  target: null,
 
   /**
    * The DebuggerClient object.
@@ -4074,6 +4081,12 @@ WebConsoleConnectionProxy.prototype = {
   webConsoleClient: null,
 
   /**
+   * The TabClient instance we use.
+   * @type object
+   */
+  tabClient: null,
+
+  /**
    * Tells if the connection is established.
    * @type boolean
    */
@@ -4086,6 +4099,14 @@ WebConsoleConnectionProxy.prototype = {
    * @type string
    */
   _consoleActor: null,
+
+  /**
+   * The TabActor ID.
+   *
+   * @private
+   * @type string
+   */
+  _tabActor: null,
 
   /**
    * Tells if the window.console object of the remote web page is the native
@@ -4131,23 +4152,24 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("networkEvent", this._onNetworkEvent);
     client.addListener("networkEventUpdate", this._onNetworkEventUpdate);
     client.addListener("fileActivity", this._onFileActivity);
-    client.addListener("locationChange", this._onLocationChange);
+    client.addListener("tabNavigated", this._onTabNavigated);
 
     if (this.target.isRemote) {
-      this._consoleActor = this.target.form.consoleActor;
       if (!this.target.chrome) {
-        this.owner.onLocationChange(this.target.url, this.target.name);
+        // target.form is a TabActor grip
+        this._attachTab(this.target.form, aCallback);
       }
-
-      let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
-                       "FileActivity", "LocationChange"];
-      this.client.attachConsole(this._consoleActor, listeners,
-                                this._onAttachConsole.bind(this, aCallback));
-      return;
+      else {
+        // target.form is a RootActor grip
+        this._consoleActor = this.target.form.consoleActor;
+        this._attachConsole(aCallback);
+      }
     }
-    client.connect(function(aType, aTraits) {
-      client.listTabs(this._onListTabs.bind(this, aCallback));
-    }.bind(this));
+    else {
+      client.connect(function(aType, aTraits) {
+        client.listTabs(this._onListTabs.bind(this, aCallback));
+      }.bind(this));
+    }
   },
 
   /**
@@ -4161,19 +4183,67 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onListTabs: function WCCP__onListTabs(aCallback, aResponse)
   {
-    let selectedTab = aResponse.tabs[aResponse.selected];
-    if (selectedTab) {
-      this._consoleActor = selectedTab.consoleActor;
-      this.owner.onLocationChange(selectedTab.url, selectedTab.title);
-    }
-    else {
-      this._consoleActor = aResponse.consoleActor;
+    if (aResponse.error) {
+      Cu.reportError("listTabs failed: " + aResponse.error + " " +
+                     aResponse.message);
+      return;
     }
 
-    this.owner._resetConnectionTimeout();
+    this._attachTab(aResponse.tabs[aResponse.selected], aCallback);
+  },
 
+  /**
+   * Attach to the tab actor.
+   *
+   * @private
+   * @param object aTab
+   *        Grip for the tab to attach to.
+   * @param function aCallback
+   *        Function to invoke when the connection is established.
+   */
+  _attachTab: function WCCP__attachTab(aTab, aCallback)
+  {
+    this._consoleActor = aTab.consoleActor;
+    this._tabActor = aTab.actor;
+    this.owner.onLocationChange(aTab.url, aTab.title);
+    this.client.attachTab(this._tabActor,
+                          this._onAttachTab.bind(this, aCallback));
+  },
+
+  /**
+   * The "attachTab" response handler.
+   *
+   * @private
+   * @param function [aCallback]
+   *        Optional function to invoke once the connection is established.
+   * @param object aResponse
+   *        The JSON response object received from the server.
+   * @param object aTabClient
+   *        The TabClient instance for the attached tab.
+   */
+  _onAttachTab: function WCCP__onAttachTab(aCallback, aResponse, aTabClient)
+  {
+    if (aResponse.error) {
+      Cu.reportError("attachTab failed: " + aResponse.error + " " +
+                     aResponse.message);
+      return;
+    }
+
+    this.tabClient = aTabClient;
+    this._attachConsole(aCallback);
+  },
+
+  /**
+   * Attach to the Web Console actor.
+   *
+   * @private
+   * @param function aCallback
+   *        Function to invoke when the connection is established.
+   */
+  _attachConsole: function WCCP__attachConsole(aCallback)
+  {
     let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
-                     "FileActivity", "LocationChange"];
+                     "FileActivity"];
     this.client.attachConsole(this._consoleActor, listeners,
                               this._onAttachConsole.bind(this, aCallback));
   },
@@ -4322,7 +4392,7 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
-   * The "locationChange" message type handler. We redirect any message to
+   * The "tabNavigated" message type handler. We redirect any message to
    * the UI for displaying.
    *
    * @private
@@ -4331,13 +4401,16 @@ WebConsoleConnectionProxy.prototype = {
    * @param object aPacket
    *        The message received from the server.
    */
-  _onLocationChange: function WCCP__onLocationChange(aType, aPacket)
+  _onTabNavigated: function WCCP__onTabNavigated(aType, aPacket)
   {
-    if (!this.owner || aPacket.from != this._consoleActor) {
+    if (!this.owner || aPacket.from != this._tabActor) {
       return;
     }
 
-    this.owner.onLocationChange(aPacket.uri, aPacket.title);
+    if (aPacket.url) {
+      this.owner.onLocationChange(aPacket.url, aPacket.title);
+    }
+
     if (aPacket.state == "stop" && !aPacket.nativeConsoleAPI) {
       this.owner.logWarningAboutReplacedAPI();
     }
@@ -4381,7 +4454,8 @@ WebConsoleConnectionProxy.prototype = {
     };
 
     let timer = null;
-    if (aOnDisconnect) {
+    let remoteTarget = this.target.isRemote;
+    if (aOnDisconnect && !remoteTarget) {
       timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       timer.initWithCallback(onDisconnect, 1500, Ci.nsITimer.TYPE_ONE_SHOT);
     }
@@ -4391,11 +4465,20 @@ WebConsoleConnectionProxy.prototype = {
     this.client.removeListener("networkEvent", this._onNetworkEvent);
     this.client.removeListener("networkEventUpdate", this._onNetworkEventUpdate);
     this.client.removeListener("fileActivity", this._onFileActivity);
-    this.client.removeListener("locationChange", this._onLocationChange);
+    this.client.removeListener("tabNavigated", this._onTabNavigated);
+
+    let client = this.client;
+
+    this.client = null;
+    this.webConsoleClient = null;
+    this.tabClient = null;
+    this.target = null;
+    this.connected = false;
+    this.owner = null;
 
     try {
-      if (!this.target.isRemote) {
-        this.client.close(onDisconnect);
+      if (!remoteTarget) {
+        client.close(onDisconnect);
       }
     }
     catch (ex) {
@@ -4404,10 +4487,9 @@ WebConsoleConnectionProxy.prototype = {
       onDisconnect();
     }
 
-    this.client = null;
-    this.webConsoleClient = null;
-    this.connected = false;
-    this.owner = null;
+    if (remoteTarget) {
+      onDisconnect();
+    }
   },
 };
 
