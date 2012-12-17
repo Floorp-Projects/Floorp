@@ -403,21 +403,20 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     proxy->BlockOnload();
 
   if (mImage) {
-    int16_t imageType = mImage->GetType();
-    // Send frame messages (OnDataAvailable, OnStopFrame)
-    if (imageType == imgIContainer::TYPE_VECTOR ||
-        static_cast<RasterImage*>(mImage)->GetNumFrames() > 0) {
+    // OnDataAvailable
+    // XXX - Should only send partial rects here, but that needs to
+    // wait until we fix up the observer interface
+    nsIntRect r;
+    mImage->GetCurrentFrameRect(r);
 
-      // OnDataAvailable
-      // XXX - Should only send partial rects here, but that needs to
-      // wait until we fix up the observer interface
-      nsIntRect r;
-      mImage->GetCurrentFrameRect(r);
+    // If there's any content in this frame at all (always true for
+    // vector images, true for raster images that have decoded at
+    // least one frame) then send OnFrameUpdate.
+    if (!r.IsEmpty())
       proxy->OnFrameUpdate(&r);
 
-      if (mState & stateFrameStopped)
-        proxy->OnStopFrame();
-    }
+    if (mState & stateFrameStopped)
+      proxy->OnStopFrame();
 
     // OnImageIsAnimated
     bool isAnimated = false;

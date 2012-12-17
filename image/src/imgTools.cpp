@@ -57,6 +57,9 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
 
   NS_ENSURE_ARG_POINTER(aInStr);
 
+  // XXX(seth) This needs to be switched over to use ImageFactory, but we need
+  // to be sure that no callers actually provide an existing imgIContainer first.
+
   // If the caller didn't provide an imgIContainer, create one.
   if (*aContainer) {
     NS_ABORT_IF_FALSE((*aContainer)->GetType() == imgIContainer::TYPE_RASTER,
@@ -98,7 +101,7 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   "WriteToRasterImage should consume everything or the image must be in error!");
 
   // Let the Image know we've sent all the data
-  rv = image->SourceDataComplete();
+  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // All done
