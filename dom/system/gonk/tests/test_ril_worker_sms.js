@@ -56,6 +56,7 @@ add_test(function test_nl_single_shift_tables_validity() {
 
 add_test(function test_gsm_sms_strict_7bit_charmap_validity() {
   let defaultTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  let defaultShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
   for (let from in GSM_SMS_STRICT_7BIT_CHARMAP) {
     let to = GSM_SMS_STRICT_7BIT_CHARMAP[from];
     do_print("Verifying GSM_SMS_STRICT_7BIT_CHARMAP[\"\\u0x"
@@ -64,8 +65,12 @@ add_test(function test_gsm_sms_strict_7bit_charmap_validity() {
 
     // Make sure "from" is not in default table
     do_check_eq(defaultTable.indexOf(from), -1);
+    do_check_eq(defaultShiftTable.indexOf(from), -1);
     // Make sure "to" is in default table
-    do_check_eq(defaultTable.indexOf(to) >= 0, true);
+    if ((defaultTable.indexOf(to) < 0)
+        && (defaultShiftTable.indexOf(to) < 0)) {
+      do_check_eq(false, true);
+    }
   }
 
   run_next_test();
@@ -234,7 +239,7 @@ add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
     helper.octetsWritten++;
   };
 
-  function do_check_calc(str, expectedCalcLen, lst, sst, strict7BitEncoding) {
+  function do_check_calc(str, expectedCalcLen, lst, sst, strict7BitEncoding, strToWrite) {
     do_check_eq(expectedCalcLen,
                 ril._countGsm7BitSeptets(str,
                                          PDU_NL_LOCKING_SHIFT_TABLES[lst],
@@ -242,7 +247,8 @@ add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
                                          strict7BitEncoding));
 
     helper.resetOctetWritten();
-    helper.writeStringAsSeptets(str, 0, lst, sst, strict7BitEncoding);
+    strToWrite = strToWrite || str;
+    helper.writeStringAsSeptets(strToWrite, 0, lst, sst);
     do_check_eq(Math.ceil(expectedCalcLen * 7 / 8), helper.octetsWritten);
   }
 
@@ -287,8 +293,19 @@ add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
   }
 
   // Bug 790192: support strict GSM SMS 7-Bit encoding
-  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
-  do_check_calc(str, str.length, PDU_NL_IDENTIFIER_DEFAULT, PDU_NL_IDENTIFIER_DEFAULT, true);
+  let str = "", strToWrite = "", gsmLen = 0;
+  for (let c in GSM_SMS_STRICT_7BIT_CHARMAP) {
+    str += c;
+    strToWrite += GSM_SMS_STRICT_7BIT_CHARMAP[c];
+    if (PDU_NL_LOCKING_SHIFT_TABLES.indexOf(GSM_SMS_STRICT_7BIT_CHARMAP[c])) {
+      gsmLen += 1;
+    } else {
+      gsmLen += 2;
+    }
+  }
+  do_check_calc(str, gsmLen,
+                PDU_NL_IDENTIFIER_DEFAULT, PDU_NL_IDENTIFIER_DEFAULT,
+                true, strToWrite);
 
   run_next_test();
 });
@@ -300,17 +317,15 @@ add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
 add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
   let ril = newRadioInterfaceLayer();
 
-  function test_calc(str, expected, enabledGsmTableTuples) {
+  function test_calc(str, expected, enabledGsmTableTuples, strict7BitEncoding) {
     ril.enabledGsmTableTuples = enabledGsmTableTuples;
-    let options = ril._calculateUserDataLength(str, expected[5]);
+    let options = ril._calculateUserDataLength(str, strict7BitEncoding);
 
-    do_check_eq(str, options.fullBody);
     do_check_eq(expected[0], options.dcs);
     do_check_eq(expected[1], options.encodedFullBodyLength);
     do_check_eq(expected[2], options.userDataHeaderLength);
     do_check_eq(expected[3], options.langIndex);
     do_check_eq(expected[4], options.langShiftIndex);
-    do_check_eq(expected[5], options.strict7BitEncoding);
   }
 
   // Test UCS fallback
@@ -364,9 +379,20 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
             [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 0, 0, 0], [[3, 0], [0, 0]]);
 
   // Test Bug 790192: support strict GSM SMS 7-Bit encoding
-  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
-  test_calc(str, [PDU_DCS_MSG_CODING_7BITS_ALPHABET, str.length, 0, 0, 0, true], [[0, 0]]);
-  test_calc(str, [PDU_DCS_MSG_CODING_16BITS_ALPHABET, str.length * 2, 0], [[0, 0]]);
+  let str = "", gsmLen = 0, udhl = 0;
+  for (let c in GSM_SMS_STRICT_7BIT_CHARMAP) {
+    str += c;
+    if (PDU_NL_LOCKING_SHIFT_TABLES.indexOf(GSM_SMS_STRICT_7BIT_CHARMAP[c])) {
+      gsmLen += 1;
+    } else {
+      gsmLen += 2;
+    }
+  }
+  if (str.length > PDU_MAX_USER_DATA_UCS2) {
+    udhl = 5;
+  }
+  test_calc(str, [PDU_DCS_MSG_CODING_7BITS_ALPHABET, gsmLen, 0, 0, 0], [[0, 0]], true);
+  test_calc(str, [PDU_DCS_MSG_CODING_16BITS_ALPHABET, str.length * 2, udhl], [[0, 0]]);
 
   run_next_test();
 });
@@ -411,20 +437,15 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength7Bit_multipar
 add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
   let ril = newRadioInterfaceLayer();
 
-  function test_calc(str, strict7BitEncoding, expected) {
+  function test_calc(str, strict7BitEncoding, expectedSegments) {
+    expectedSegments = expectedSegments || 1;
     let options = ril._fragmentText(str, null, strict7BitEncoding);
-    if (expected) {
-      do_check_eq(expected, options.segments.length);
-    } else {
-      do_check_eq(null, options.segments);
-    }
+    do_check_eq(expectedSegments, options.segments.length);
   }
 
   // 7-Bit
 
   // Boundary checks
-  test_calc("", false);
-  test_calc("", true);
   test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT), false);
   test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT), true);
   test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1), false, 2);
@@ -447,7 +468,9 @@ add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
   test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2));
   test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2), true);
   test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), false, 2);
-  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), true, 2);
+  // Bug 816082: when strict GSM SMS 7-Bit encoding is enabled, replace unicode
+  // chars with '*'.
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), true, 1);
 
   // UCS2 character cannot be separated
   ril.segmentRef16Bit = true;
@@ -455,9 +478,7 @@ add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
   ril.segmentRef16Bit = false;
 
   // Test Bug 790192: support strict GSM SMS 7-Bit encoding
-  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
-  for (let i = 0; i < str.length; i++) {
-    let c = str.charAt(i);
+  for (let c in GSM_SMS_STRICT_7BIT_CHARMAP) {
     test_calc(generateStringOfLength(c, PDU_MAX_USER_DATA_7BIT), false, 3);
     test_calc(generateStringOfLength(c, PDU_MAX_USER_DATA_7BIT), true);
     test_calc(generateStringOfLength(c, PDU_MAX_USER_DATA_UCS2), false);
@@ -501,13 +522,6 @@ add_test(function test_GsmPDUHelper_writeStringAsSeptets() {
                   helper.octetsWritten);
     }
   }
-
-  // Test Bug 790192: support strict GSM SMS 7-Bit encoding
-  let str = "\u00c1\u00e1\u00cd\u00ed\u00d3\u00f3\u00da\u00fa\u00e7";
-  helper.resetOctetWritten();
-  do_print("Verifying GsmPDUHelper.writeStringAsSeptets(" + str + ", 0, <default>, <default>, true)");
-  helper.writeStringAsSeptets(str, 0, PDU_NL_IDENTIFIER_DEFAULT, PDU_NL_IDENTIFIER_DEFAULT, true);
-  do_check_eq(Math.ceil(str.length * 7 / 8), helper.octetsWritten);
 
   run_next_test();
 });
@@ -746,7 +760,6 @@ add_test(function test_sendSMS_UCS2_without_langIndex_langShiftIndex_defined() {
     dcs: PDU_DCS_MSG_CODING_16BITS_ALPHABET,
     segmentRef16Bit: false,
     userDataHeaderLength: 5,
-    strict7BitEncoding: false,
     requestStatusReport: true,
     segments: [
       {
