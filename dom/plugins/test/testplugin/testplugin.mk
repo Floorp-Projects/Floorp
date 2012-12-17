@@ -61,6 +61,21 @@ OS_LIBS  += $(call EXPAND_LIBNAME,msimg32)
 MOZ_OPTIMIZE=
 endif
 
+TEST_PLUGIN_FILES = $(SHARED_LIBRARY)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+MAC_PLIST_FILES += $(srcdir)/Info.plist
+MAC_PLIST_DEST   = $(DIST)/plugins/$(COCOA_NAME).plugin/Contents
+TEST_PLUGIN_DEST = $(DIST)/plugins/$(COCOA_NAME).plugin/Contents/MacOS
+INSTALL_TARGETS += \
+	TEST_PLUGIN \
+	MAC_PLIST \
+	$(NULL)
+else
+TEST_PLUGIN_DEST = $(DIST)/plugins
+INSTALL_TARGETS += TEST_PLUGIN
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifndef __LP64__
@@ -74,15 +89,3 @@ CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
 CFLAGS          += $(MOZ_GTK2_CFLAGS)
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
 endif
-
-install-plugin: $(SHARED_LIBRARY)
-ifdef SHARED_LIBRARY
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-	$(INSTALL) $(srcdir)/Info.plist $(DIST)/bin/plugins/$(COCOA_NAME).plugin/Contents
-	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins/$(COCOA_NAME).plugin/Contents/MacOS
-else
-	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
-endif
-endif
-
-libs:: install-plugin
