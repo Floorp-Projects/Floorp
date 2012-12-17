@@ -170,6 +170,7 @@ InspectorPanel.prototype = {
     }.bind(this);
 
     this.sidebar.on("select", this._setDefaultSidebar);
+    this.toggleHighlighter = this.toggleHighlighter.bind(this);
 
     this.sidebar.addTab("ruleview",
                         "chrome://browser/content/devtools/cssruleview.xul",
@@ -182,6 +183,10 @@ InspectorPanel.prototype = {
     this.sidebar.addTab("layoutview",
                         "chrome://browser/content/devtools/layoutview/view.xhtml",
                         "layoutview" == defaultTab);
+
+    let ruleViewTab = this.sidebar.getTab("ruleview");
+    ruleViewTab.addEventListener("mouseover", this.toggleHighlighter, false);
+    ruleViewTab.addEventListener("mouseout", this.toggleHighlighter, false);
 
     this.sidebar.show();
   },
@@ -445,6 +450,19 @@ InspectorPanel.prototype = {
       }
     }
     this.selection.emit("pseudoclass");
+  },
+
+  /**
+   * Toggle the highlighter when ruleview is hovered.
+   */
+  toggleHighlighter: function InspectorPanel_toggleHighlighter(event)
+  {
+    if (event.type == "mouseover") {
+      this.highlighter.hide();
+    }
+    else if (event.type == "mouseout") {
+      this.highlighter.show();
+    }
   },
 
   /**
