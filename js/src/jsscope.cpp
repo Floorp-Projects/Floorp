@@ -1182,7 +1182,7 @@ InitialShapeEntry::InitialShapeEntry(const ReadBarriered<Shape> &shape, TaggedPr
 }
 
 inline InitialShapeEntry::Lookup
-InitialShapeEntry::getLookup()
+InitialShapeEntry::getLookup() const
 {
     return Lookup(shape->getObjectClass(), proto, shape->getObjectParent(),
                   shape->numFixedSlots(), shape->getObjectFlags());
@@ -1200,11 +1200,12 @@ InitialShapeEntry::hash(const Lookup &lookup)
 /* static */ inline bool
 InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 {
-    return lookup.clasp == key.shape->getObjectClass()
+    const Shape *shape = *key.shape.unsafeGet();
+    return lookup.clasp == shape->getObjectClass()
         && lookup.proto.toWord() == key.proto.toWord()
-        && lookup.parent == key.shape->getObjectParent()
-        && lookup.nfixed == key.shape->numFixedSlots()
-        && lookup.baseFlags == key.shape->getObjectFlags();
+        && lookup.parent == shape->getObjectParent()
+        && lookup.nfixed == shape->numFixedSlots()
+        && lookup.baseFlags == shape->getObjectFlags();
 }
 
 /* static */ Shape *
