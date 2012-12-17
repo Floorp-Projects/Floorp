@@ -378,7 +378,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
 
   nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
   if (rootFrame) {
-    rootFrame->InvalidateFrame();
+    rootFrame->SchedulePaint();
 
     // If we are hiding something that is a display root then send empty paint
     // transaction in order to release retained layers because it won't get
