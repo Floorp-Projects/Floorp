@@ -56,7 +56,6 @@
 
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
-#include "jsboolinlines.h"
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -518,7 +517,7 @@ JSBool
 js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, HandleId id,
                   MutableHandleObject objp, MutableHandleShape propp)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING);
     if (lookup) {
         if (!lookup(cx, obj, id, objp, propp))
             return false;
@@ -1009,7 +1008,7 @@ obj_keys(JSContext *cx, unsigned argc, Value *vp)
 static bool
 HasProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp, bool *foundp)
 {
-    if (!JSObject::hasProperty(cx, obj, id, foundp, JSRESOLVE_QUALIFIED))
+    if (!JSObject::hasProperty(cx, obj, id, foundp, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING))
         return false;
     if (!*foundp) {
         vp.setUndefined();
@@ -2477,8 +2476,13 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
     unsigned flags = 0;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
-    if (format & JOF_SET)
+    if (format & JOF_SET) {
         flags |= JSRESOLVE_ASSIGNING;
+    } else if (cs->length >= 0) {
+        pc += cs->length;
+        if (pc < script->code + script->length && Detecting(cx, script, pc))
+            flags |= JSRESOLVE_DETECTING;
+    }
     return flags;
 }
 
@@ -4332,6 +4336,8 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
                 pc += js_CodeSpec[op].length;
                 if (Detecting(cx, script, pc))
                     return JS_TRUE;
+            } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
+                return JS_TRUE;
             }
 
             unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
@@ -5019,11 +5025,7 @@ js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
 JSType
 baseops::TypeOf(JSContext *cx, HandleObject obj)
 {
-    if (EmulatesUndefined(obj))
-        return JSTYPE_VOID;
-    if (obj->isCallable())
-        return JSTYPE_FUNCTION;
-    return JSTYPE_OBJECT;
+    return obj->isCallable() ? JSTYPE_FUNCTION : JSTYPE_OBJECT;
 }
 
 bool

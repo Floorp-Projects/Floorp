@@ -37,23 +37,11 @@ BEGIN_TEST(testLookup_bug522590)
 }
 END_TEST(testLookup_bug522590)
 
-static JSClass DocumentAllClass = {
-    "DocumentAll",
-    JSCLASS_EMULATES_UNDEFINED,
-    JS_PropertyStub,
-    JS_PropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
-};
-
 JSBool
 document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                  JSMutableHandleObject objp)
 {
-    // If id is "all", resolve document.all=true.
+    // If id is "all", and we're not detecting, resolve document.all=true.
     js::RootedValue v(cx);
     if (!JS_IdToValue(cx, id, v.address()))
         return false;
@@ -62,12 +50,8 @@ document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flag
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return false;
-        if (JS_FlatStringEqualsAscii(flatStr, "all")) {
-            js::Rooted<JSObject*> docAll(cx, JS_NewObject(cx, &DocumentAllClass, NULL, NULL));
-            if (!docAll)
-                return false;
-            js::Rooted<JS::Value> allValue(cx, ObjectValue(*docAll));
-            JSBool ok = JS_DefinePropertyById(cx, obj, id, allValue, NULL, NULL, 0);
+        if (JS_FlatStringEqualsAscii(flatStr, "all") && !(flags & JSRESOLVE_DETECTING)) {
+            JSBool ok = JS_DefinePropertyById(cx, obj, id, JSVAL_TRUE, NULL, NULL, 0);
             objp.set(ok ? obj.get() : NULL);
             return ok;
         }
@@ -91,7 +75,7 @@ BEGIN_TEST(testLookup_bug570195)
     EVAL("document.all ? true : false", v.address());
     CHECK_SAME(v, JSVAL_FALSE);
     EVAL("document.hasOwnProperty('all')", v.address());
-    CHECK_SAME(v, JSVAL_TRUE);
+    CHECK_SAME(v, JSVAL_FALSE);
     return true;
 }
 END_TEST(testLookup_bug570195)
