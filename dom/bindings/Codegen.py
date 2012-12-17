@@ -2137,7 +2137,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
             if type.nullable():
                 templateBody += (
                     "} else if (${val}.isNullOrUndefined()) {\n"
-                    "  %s;\n" % codeToSetNull)
+                    "%s;\n" % CGIndenter(CGGeneric(codeToSetNull)).define())
             templateBody += (
                 "} else {\n" +
                 CGIndenter(onFailureNotAnObject(failureCode)).define() +
@@ -2753,11 +2753,11 @@ for (uint32_t i = 0; i < length; ++i) {
         assert not isEnforceRange and not isClamp
         assert not type.treatNonCallableAsNull() or type.nullable()
 
-        if isMember:
-            raise TypeError("Can't handle member callbacks; need to sort out "
-                            "rooting issues")
-
         if descriptorProvider.workers:
+            if isMember:
+                raise NoSuchDescriptorError("Can't handle member callbacks in "
+                                            "workers; need to sort out rooting"
+                                            "issues")
             if type.nullable():
                 declType = CGGeneric("JSObject*")
             else:
@@ -2815,17 +2815,38 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isObject():
         assert not isEnforceRange and not isClamp
 
-        if isMember:
-            raise TypeError("Can't handle member 'object'; need to sort out "
-                            "rooting issues")
-        template = wrapObjectTemplate("${declName} = &${val}.toObject();",
-                                      type,
-                                      "${declName} = NULL",
-                                      failureCode)
-        if type.nullable():
-            declType = CGGeneric("JSObject*")
+        if isMember and isMember != "Dictionary":
+            raise TypeError("Can't handle member 'object' not in a dictionary;"
+                            "need to sort out rooting issues")
+
+        if isMember == "Dictionary":
+            if type.nullable():
+                declType = CGGeneric("LazyRootedObject")
+            else:
+                declType = CGGeneric("NonNullLazyRootedObject")
+
+            # If cx is null then LazyRootedObject will not be
+            # constructed and behave as nullptr.
+            templateBody = ("if (cx) {\n"
+                            "  ${declName}.construct(cx, &${val}.toObject());\n"
+                            "}")
+
+            # Cast of nullptr to (JSObject*) is required for template deduction.
+            setToNullCode = ("if (cx) {\n"
+                             "  ${declName}.construct(cx, (JSObject*) nullptr);\n"
+                             "}")
         else:
-            declType = CGGeneric("NonNull<JSObject>")
+            if type.nullable():
+                declType = CGGeneric("JSObject*")
+            else:
+                declType = CGGeneric("NonNull<JSObject>")
+
+            templateBody = "${declName} = &${val}.toObject();"
+            setToNullCode = "${declName} = NULL"
+
+        template = wrapObjectTemplate(templateBody, type, setToNullCode,
+                                      failureCode)
+
         return (template, declType, None, isOptional)
 
     if type.isDictionary():
@@ -3148,7 +3169,7 @@ if (${argc} > ${index}) {
         return variadicConversion
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
-                           isCreator, exceptionCode):
+                           isCreator, exceptionCode, isMember=False):
     """
     Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
     "successCode" is the code to run once we have successfully done the
@@ -3348,7 +3369,10 @@ if (!%(resultStr)s) {
         if type.nullable():
             toValue = "JS::ObjectOrNullValue(%s)"
         else:
-            toValue = "JS::ObjectValue(*%s)"
+            if isMember:
+                toValue = "JS::ObjectValue(%s)"
+            else:
+                toValue = "JS::ObjectValue(*%s)"
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         return (setValue(toValue % result, True), False)
 
@@ -3398,9 +3422,10 @@ if (!%(resultStr)s) {
     else:
         raise TypeError("Need to learn to wrap primitive: %s" % type)
 
-def wrapForType(type, descriptorProvider, templateValues):
+def wrapForType(type, descriptorProvider, templateValues, isMember=False):
     """
-    Reflect a C++ value of IDL type "type" into JS.  TemplateValues is a dict
+    Reflect a C++ value of IDL type "type" into JS.  isMember should
+    be true if the type is of a dictionary member. TemplateValues is a dict
     that should contain:
 
       * 'jsvalRef': a C++ reference to the jsval in which to store the result of
@@ -3427,7 +3452,8 @@ def wrapForType(type, descriptorProvider, templateValues):
                                   templateValues.get('successCode', None),
                                   templateValues.get('isCreator', False),
                                   templateValues.get('exceptionCode',
-                                                     "return false;"))[0]
+                                                     "return false;"),
+                                  isMember)[0]
 
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
@@ -6380,7 +6406,7 @@ class CGDictionary(CGThing):
                 (member,
                  getJSToNativeConversionTemplate(member.type,
                                                  descriptorProvider,
-                                                 isMember=True,
+                                                 isMember="Dictionary",
                                                  isOptional=(not member.defaultValue),
                                                  defaultValue=member.defaultValue))
                 for member in dictionary.members ]
@@ -6656,8 +6682,7 @@ class CGDictionary(CGThing):
                 'jsvalPtr': "&temp",
                 'isCreator': False,
                 'obj': "parentObject"
-                }
-            )
+            }, isMember=True)
         conversion = CGGeneric(innerTemplate)
         conversion = CGWrapper(conversion,
                                pre=("JS::Value temp;\n"
@@ -6779,11 +6804,19 @@ class CGBindingRoot(CGThing):
             forwardDeclares.append(declareNativeType(x.nativeType))
 
         # Now add the forward declarations we need for our union types
+        # and callback functions.
         for callback in callbacks:
             forwardDeclares.extend(
                 declareNativeType("mozilla::dom::" + str(t.unroll()))
                 for t in getTypesFromCallback(callback)
-                if t.unroll().isUnion())
+                if t.unroll().isUnion() or t.unroll().isCallback())
+
+        # Forward declarations for callback functions used in dictionaries.
+        for dictionary in dictionaries:
+            forwardDeclares.extend(
+                declareNativeType("mozilla::dom::" + str(t.unroll()))
+                for t in getTypesFromDictionary(dictionary)
+                if t.unroll().isCallback())
 
         forwardDeclares = CGList(forwardDeclares)
 
