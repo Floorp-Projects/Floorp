@@ -120,7 +120,7 @@ function getReceivedSms() {
     is(foundSms.delivery, "received", "delivery");
     is(foundSms.deliveryStatus, "success", "deliveryStatus");
     is(foundSms.read, false, "read");
-    isIn(foundSms.receiver, myNumberFormats, "receiver");
+    is(foundSms.receiver, null, "receiver (getMessage)");
     isIn(foundSms.sender, remoteNumberFormats, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
@@ -154,7 +154,7 @@ function getSentSms() {
     is(foundSms.deliveryStatus, "pending", "deliveryStatus");
     is(foundSms.read, true, "read");
     isIn(foundSms.receiver, remoteNumberFormats, "receiver");
-    isIn(foundSms.sender, myNumberFormats, "sender");
+    is(foundSms.sender, null, "sender (getMessage)");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), outSmsTimeStamp.getTime(), "timestamp matches");
