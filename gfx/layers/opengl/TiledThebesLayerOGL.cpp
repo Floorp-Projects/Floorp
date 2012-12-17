@@ -21,9 +21,7 @@ TiledLayerBufferOGL::~TiledLayerBufferOGL()
 
   mContext->MakeCurrent();
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-    if (mRetainedTiles[i] == GetPlaceholderTile())
-      continue;
-    mContext->fDeleteTextures(1, &mRetainedTiles[i].mTextureHandle);
+    ReleaseTile(mRetainedTiles[i]);
   }
 }
 
@@ -34,6 +32,8 @@ TiledLayerBufferOGL::ReleaseTile(TiledTexture aTile)
   if (aTile == GetPlaceholderTile())
     return;
   mContext->fDeleteTextures(1, &aTile.mTextureHandle);
+
+  GLContext::UpdateTextureMemoryUsage(GLContext::MemoryFreed, aTile.mFormat, GetTileType(aTile), GetTileLength());
 }
 
 void
@@ -57,6 +57,13 @@ TiledLayerBufferOGL::Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
     printf_stderr("Time to upload %i\n", PR_IntervalNow() - start);
   }
 #endif
+}
+
+GLenum
+TiledLayerBufferOGL::GetTileType(TiledTexture aTile)
+{
+  // Deduce the type that was assigned in GetFormatAndTileForImageFormat
+  return aTile.mFormat == LOCAL_GL_RGB ? LOCAL_GL_UNSIGNED_SHORT_5_6_5 : LOCAL_GL_UNSIGNED_BYTE;
 }
 
 void
@@ -91,6 +98,9 @@ TiledLayerBufferOGL::ValidateTile(TiledTexture aTile,
     mContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
   } else {
     mContext->fBindTexture(LOCAL_GL_TEXTURE_2D, aTile.mTextureHandle);
+    // We're re-using a texture, but the format may change. Update the memory
+    // reporter with a free and alloc (below) using the old and new formats.
+    GLContext::UpdateTextureMemoryUsage(GLContext::MemoryFreed, aTile.mFormat, GetTileType(aTile), GetTileLength());
   }
 
   nsRefPtr<gfxReusableSurfaceWrapper> reusableSurface = mMainMemoryTiledBuffer->GetTile(aTileOrigin).mSurface.get();
@@ -101,6 +111,8 @@ TiledLayerBufferOGL::ValidateTile(TiledTexture aTile,
   mContext->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, format,
                        GetTileLength(), GetTileLength(), 0,
                        format, type, buf);
+
+  GLContext::UpdateTextureMemoryUsage(GLContext::MemoryAllocated, format, type, GetTileLength());
 
   aTile.mFormat = format;
 

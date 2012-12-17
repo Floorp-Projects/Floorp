@@ -25,6 +25,8 @@
 
 #include "GLTextureImage.h"
 
+#include "nsIMemoryReporter.h"
+
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -87,6 +89,33 @@ static const char *sExtensionNames[] = {
     "GL_EXT_packed_depth_stencil",
     nullptr
 };
+
+static int64_t sTextureMemoryUsage = 0;
+
+static int64_t
+GetTextureMemoryUsage()
+{
+    return sTextureMemoryUsage;
+}
+
+void
+GLContext::UpdateTextureMemoryUsage(MemoryUse action, GLenum format, GLenum type, uint16_t tileSize)
+{
+    uint32_t bytesPerTexel = mozilla::gl::GetBitsPerTexel(format, type) / 8;
+    int64_t bytes = (int64_t)(tileSize * tileSize * bytesPerTexel);
+    if (action == MemoryFreed) {
+        sTextureMemoryUsage -= bytes;
+    } else {
+        sTextureMemoryUsage += bytes;
+    }
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(TextureMemoryUsage,
+    "gfx-textures",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetTextureMemoryUsage,
+    "Memory used for storing GL textures.")
 
 /*
  * XXX - we should really know the ARB/EXT variants of these
@@ -644,6 +673,7 @@ void
 GLContext::PlatformStartup()
 {
   CacheCanUploadNPOT();
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(TextureMemoryUsage));
 }
 
 void
