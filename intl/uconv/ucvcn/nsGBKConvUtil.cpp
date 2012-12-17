@@ -11,17 +11,17 @@
 // nsGBKConvUtil
 //--------------------------------------------------------------------
 
-static bool gInitToGBKTable = false;
 static const PRUnichar gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
 #include "cp936map.h"
 };
-static uint16_t gUnicodeToGBKTable[0xA000-0x4e00];
+static const uint16_t gUnicodeToGBKTable[0xA000-0x4e00] = {
+#include "cp936invmap.h"
+};
 
 bool nsGBKConvUtil::UnicodeToGBKChar(
   PRUnichar aChar, bool aToGL, char* 
   aOutByte1, char* aOutByte2)
 {
-  NS_ASSERTION(gInitToGBKTable, "gGBKToUnicodeTable is not init yet. need to call InitToGBKTable first");
   bool found=false;
   *aOutByte1 = *aOutByte2 = 0;
   if(UNICHAR_IN_RANGE(0xd800, aChar, 0xdfff))
@@ -90,29 +90,4 @@ PRUnichar nsGBKConvUtil::GBKCharToUnicode(char aByte1, char aByte2)
     return gGBKToUnicodeTable[ idx ];
   else
     return UCS2_NO_MAPPING;
-}
-void nsGBKConvUtil::InitToGBKTable()
-{
-  if ( gInitToGBKTable )
-   return;
-
-  PRUnichar unicode;
-  PRUnichar i;
-  // zap it to zero first
-  memset(gUnicodeToGBKTable,0, sizeof(gUnicodeToGBKTable));
-
-  for ( i=0; i<MAX_GBK_LENGTH; i++ )
-  {
-    unicode = gGBKToUnicodeTable[i];
-    // to reduce size of gUnicodeToGBKTable, we only do direct unicode to GB 
-    // table mapping between unicode 0x4E00 and 0xA000. Others by searching
-    // gGBKToUnicodeTable. There is a trade off between memory usage and speed.
-    if(UNICHAR_IN_RANGE(0x4e00, unicode, 0x9fff))
-    {
-      unicode -= 0x4E00; 
-      gUnicodeToGBKTable[unicode] =  (( i / 0x00BF + 0x0081) << 8) | 
-                                    ( i % 0x00BF+ 0x0040);
-    }
-  }
-  gInitToGBKTable = true;
 }
