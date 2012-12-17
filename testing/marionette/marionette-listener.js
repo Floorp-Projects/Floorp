@@ -50,7 +50,6 @@ let sandbox;
 let asyncTestRunning = false;
 let asyncTestCommandId;
 let asyncTestTimeoutId;
-let originalOnError;
 //timer for doc changes
 let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
@@ -482,11 +481,11 @@ function executeWithCallback(msg, useFinish) {
     sandbox.asyncComplete('timed out', 28);
   }, msg.json.timeout);
 
-  originalOnError = curWindow.onerror;
-  curWindow.onerror = function errHandler(errMsg, url, line) {
-    sandbox.asyncComplete(errMsg, 17);
-    curWindow.onerror = originalOnError;
-  };
+  curWindow.addEventListener('error', function win__onerror(evt) {
+    curWindow.removeEventListener('error', win__onerror, true);
+    sandbox.asyncComplete(evt, 17);
+    return true;
+  }, true);
 
   let scriptSrc;
   if (useFinish) {
