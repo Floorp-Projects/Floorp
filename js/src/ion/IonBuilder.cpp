@@ -3098,9 +3098,12 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32_t argc, bool construc
 {
     AssertCanGC();
 
+    int calleePos = -((int) argc + 2);
+    current->peek(calleePos)->setFoldedUnchecked();
+
     // Rewrite the stack position containing the function with the constant
     // function definition, before we take the inlineResumePoint
-    current->rewriteAtDepth(-((int) argc + 2), constFun);
+    current->rewriteAtDepth(calleePos, constFun);
 
     // This resume point collects outer variables only.  It is used to recover
     // the stack state before the current bytecode.
@@ -3506,6 +3509,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool co
         MPassArg *passArg = top->peek(argSlotDepth)->toPassArg();
         MBasicBlock *block = passArg->block();
         MDefinition *wrapped = passArg->getArgument();
+        wrapped->setFoldedUnchecked();
         passArg->replaceAllUsesWith(wrapped);
         top->rewriteAtDepth(argSlotDepth, wrapped);
         block->discard(passArg);
