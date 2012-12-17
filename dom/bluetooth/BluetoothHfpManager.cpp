@@ -14,6 +14,7 @@
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
 
+#include "MobileConnection.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -25,8 +26,13 @@
 
 #include <unistd.h> /* usleep() */
 
-#define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define AUDIO_VOLUME_BT_SCO "audio.volume.bt_sco"
+#define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
+#define MOBILE_CONNECTION_ICCINFO_CHANGED "mobile-connection-iccinfo-changed"
+#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
+
+#define TOA_UNKNOWN 0x81
+#define TOA_INTERNATIONAL 0x91
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -116,6 +122,11 @@ public:
       return false;
     }
 
+    if (NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED, false))) {
+      NS_WARNING("Failed to add mobile connection iccinfo change observer!");
+      return false;
+    }
+
     return true;
   }
 
@@ -123,8 +134,9 @@ public:
   {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (!obs ||
-        (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
-         NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
+        NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
+        NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)) ||
+        NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED))) {
       NS_WARNING("Can't unregister observers, or already unregistered!");
       return false;
     }
@@ -193,6 +205,8 @@ BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
     return gBluetoothHfpManager->HandleVolumeChanged(nsDependentString(aData));
   } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     return gBluetoothHfpManager->HandleShutdown();
+  } else if (!strcmp(aTopic, MOBILE_CONNECTION_ICCINFO_CHANGED)) {
+    return gBluetoothHfpManager->HandleIccInfoChanged();
   }
 
   MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
@@ -466,6 +480,27 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 }
 
 nsresult
+BluetoothHfpManager::HandleIccInfoChanged()
+{
+  nsCOMPtr<nsIMobileConnectionProvider> connection =
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+  NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
+
+  nsIDOMMozMobileICCInfo* iccInfo;
+  connection->GetIccInfo(&iccInfo);
+  NS_ENSURE_TRUE(iccInfo, NS_ERROR_FAILURE);
+
+  nsString msisdn;
+  iccInfo->GetMsisdn(msisdn);
+
+  if (!msisdn.Equals(mMsisdn)) {
+    mMsisdn = msisdn;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 BluetoothHfpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -585,6 +620,16 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
         NS_WARNING("Not handling state changed");
 #endif
         break;
+    }
+    SendLine("OK");
+  } else if (!strncmp(msg, "AT+CNUM", 7)) {
+    if (!mMsisdn.IsEmpty()) {
+      nsAutoCString message("+CNUM: ,\"");
+      message += NS_ConvertUTF16toUTF8(mMsisdn).get();
+      message += "\",";
+      message.AppendInt(TOA_UNKNOWN);
+      message += ",,4";
+      SendLine(message.get());
     }
     SendLine("OK");
   } else {

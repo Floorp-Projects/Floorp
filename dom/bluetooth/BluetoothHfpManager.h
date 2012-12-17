@@ -43,6 +43,8 @@ private:
   BluetoothHfpManager();
   nsresult HandleVolumeChanged(const nsAString& aData);
   nsresult HandleShutdown();
+  nsresult HandleIccInfoChanged();
+
   bool Init();
   void Cleanup();
   void NotifyDialer(const nsAString& aCommand);
@@ -55,6 +57,7 @@ private:
   int mCurrentCallIndex;
   bool mReceiveVgsFlag;
   nsString mDevicePath;
+  nsString mMsisdn;
   enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
   nsTArray<int> mCurrentCallStateArray;
   nsAutoPtr<BluetoothRilListener> mListener;
