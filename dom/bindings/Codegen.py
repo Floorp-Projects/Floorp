@@ -485,11 +485,12 @@ class CGHeaders(CGWrapper):
             dictionary, if passed, to decide what to do with interface types.
             """
             assert not descriptor or not dictionary
-            if t.unroll().isUnion():
+            unrolled = t.unroll()
+            if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
                 bindingHeaders.add("mozilla/dom/UnionConversions.h")
-            elif t.unroll().isInterface():
-                if t.unroll().isSpiderMonkeyInterface():
+            elif unrolled.isInterface():
+                if unrolled.isSpiderMonkeyInterface():
                     bindingHeaders.add("jsfriendapi.h")
                     bindingHeaders.add("mozilla/dom/TypedArray.h")
                 else:
@@ -497,16 +498,19 @@ class CGHeaders(CGWrapper):
                                                      config)
                     for p in providers:
                         try:
-                            typeDesc = p.getDescriptor(t.unroll().inner.identifier.name)
+                            typeDesc = p.getDescriptor(unrolled.inner.identifier.name)
                         except NoSuchDescriptorError:
                             continue
                         implementationIncludes.add(typeDesc.headerFile)
                         bindingHeaders.add(self.getDeclarationFilename(typeDesc.interface))
-            elif t.unroll().isDictionary():
-                bindingHeaders.add(self.getDeclarationFilename(t.unroll().inner))
-            elif t.unroll().isCallback():
+            elif unrolled.isDictionary():
+                bindingHeaders.add(self.getDeclarationFilename(unrolled.inner))
+            elif unrolled.isCallback():
                 # Callbacks are both a type and an object
                 bindingHeaders.add(self.getDeclarationFilename(t.unroll()))
+            elif unrolled.isFloat() and not unrolled.isUnrestricted():
+                # Restricted floats are tested for finiteness
+                bindingHeaders.add("mozilla/FloatingPoint.h")
 
         callForEachType(descriptors, dictionaries, callbacks, addHeadersForType)
 
