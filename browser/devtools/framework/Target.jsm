@@ -370,8 +370,12 @@ function RemoteTarget(form, client, chrome) {
   this.destroy = this.destroy.bind(this);
   this.client.addListener("tabDetached", this.destroy);
 
-  this._onTabNavigated = function onRemoteTabNavigated() {
-    this.emit("navigate");
+  this._onTabNavigated = function onRemoteTabNavigated(aType, aPacket) {
+    if (aPacket.state == "start") {
+      this.emit("will-navigate", aPacket);
+    } else {
+      this.emit("navigate", aPacket);
+    }
   }.bind(this);
   this.client.addListener("tabNavigated", this._onTabNavigated);
 }
@@ -384,9 +388,9 @@ RemoteTarget.prototype = {
 
   get chrome() this._chrome,
 
-  get name() this._form._title,
+  get name() this._form.title,
 
-  get url() this._form._url,
+  get url() this._form.url,
 
   get client() this._client,
 
