@@ -616,10 +616,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     // Release the directory service
     NS_IF_RELEASE(nsDirectoryService::gService);
 
-    nsCycleCollector_shutdown();
-
     SAMPLE_MARKER("Shutdown xpcom");
     mozilla::PoisonWrite();
+
+    nsCycleCollector_shutdown();
 
     if (moduleLoaders) {
         bool more;
