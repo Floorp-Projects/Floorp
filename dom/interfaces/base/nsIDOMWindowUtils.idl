@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(C98B7275-93C4-4EAD-B7CF-573D872C1071)]
+[scriptable, uuid(c98249a5-d38a-4ec6-b6e0-6866ea87d6bb)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1044,8 +1044,9 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute AString layerManagerType;
 
   void startFrameTimeRecording();
-  void stopFrameTimeRecording([optional] out unsigned long frameCount,
-                              [retval, array, size_is(frameCount)] out float frameTime);
+  void stopFrameTimeRecording([optional, array, size_is(frameCount)] out float paintTimes,
+                              [optional] out unsigned long frameCount,
+                              [retval, array, size_is(frameCount)] out float frameIntervals);
   /**
    * Signals that we're begining to tab switch. This is used by painting code to
    * determine total tab switch time.
