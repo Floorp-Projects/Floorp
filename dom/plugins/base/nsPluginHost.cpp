@@ -2781,9 +2781,17 @@ nsPluginHost::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
 
-    const char *description = reader.LinePtr();
+    char *description = reader.LinePtr();
     if (!reader.NextLine())
       return rv;
+
+#if MOZ_WIDGET_ANDROID
+    // Flash on Android does not populate the version field, but it is tacked on to the description.
+    // For example, "Shockwave Flash 11.1 r115"
+    if (PL_strncmp("Shockwave Flash ", description, 16) == 0 && description[16]) {
+      version = &description[16];
+    }
+#endif
 
     const char *name = reader.LinePtr();
     if (!reader.NextLine())
