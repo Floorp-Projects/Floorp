@@ -1034,7 +1034,7 @@ public class BrowserProvider extends ContentProvider {
 
         private ByteArrayOutputStream getDefaultFaviconFromPath(SQLiteDatabase db, String name, String url) {
             ByteArrayOutputStream stream = null;
-            Class stringClass = R.string.class;
+            Class<?> stringClass = R.string.class;
             try {
                 // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
                 Field faviconField = stringClass.getField(name.replace("_title_", "_favicon_"));
