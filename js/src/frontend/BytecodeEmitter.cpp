@@ -1729,7 +1729,7 @@ BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictModeErrorNumberVA(pn, errorNumber, args);
+    bool result = tokenStream()->reportStrictModeErrorNumberVA(pn, sc->strict, errorNumber, args);
     va_end(args);
     return result;
 }

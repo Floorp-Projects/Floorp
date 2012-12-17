@@ -542,7 +542,8 @@ class TokenStream
     // reportError()) in TokenStream, Parser, and BytecodeEmitter.
     bool reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber,
                                     va_list args);
-    bool reportStrictModeErrorNumberVA(ParseNode *pn, unsigned errorNumber, va_list args);
+    bool reportStrictModeErrorNumberVA(ParseNode *pn, bool strictMode, unsigned errorNumber,
+                                       va_list args);
 
   private:
     void onError();
