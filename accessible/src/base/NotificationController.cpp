@@ -107,7 +107,7 @@ NotificationController::Shutdown()
 void
 NotificationController::QueueEvent(AccEvent* aEvent)
 {
-  NS_ASSERTION(aEvent->mAccessible && aEvent->mAccessible->IsApplication() ||
+  NS_ASSERTION((aEvent->mAccessible && aEvent->mAccessible->IsApplication()) ||
                aEvent->GetDocAccessible() == mDocument,
                "Queued event belongs to another document!");
 
@@ -317,8 +317,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 void
 NotificationController::CoalesceEvents()
 {
-  uint32_t numQueuedEvents = mEvents.Length();
-  int32_t tail = numQueuedEvents - 1;
+  NS_ASSERTION(mEvents.Length(), "There should be at least one pending event!");
+  uint32_t tail = mEvents.Length() - 1;
   AccEvent* tailEvent = mEvents[tail];
 
   switch(tailEvent->mEventRule) {
@@ -394,8 +394,7 @@ NotificationController::CoalesceEvents()
     case AccEvent::eCoalesceSelectionChange:
     {
       AccSelChangeEvent* tailSelChangeEvent = downcast_accEvent(tailEvent);
-      int32_t index = tail - 1;
-      for (; index >= 0; index--) {
+      for (uint32_t index = tail - 1; index < tail; index--) {
         AccEvent* thisEvent = mEvents[index];
         if (thisEvent->mEventRule == tailEvent->mEventRule) {
           AccSelChangeEvent* thisSelChangeEvent =
@@ -508,7 +507,7 @@ NotificationController::CoalesceReorderEvents(AccEvent* aTailEvent)
 void
 NotificationController::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
                                                 AccSelChangeEvent* aThisEvent,
-                                                int32_t aThisIndex)
+                                                uint32_t aThisIndex)
 {
   aTailEvent->mPreceedingCount = aThisEvent->mPreceedingCount + 1;
 
