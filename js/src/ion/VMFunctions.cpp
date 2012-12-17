@@ -13,7 +13,6 @@
 
 #include "vm/StringObject-inl.h"
 
-#include "jsboolinlines.h"
 #include "jsinterpinlines.h"
 
 using namespace js;
@@ -228,11 +227,11 @@ StringsEqual(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res)
 template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res);
 template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res);
 
-JSBool
-ObjectEmulatesUndefined(RawObject obj)
+bool
+ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 {
-    AutoAssertNoGC nogc;
-    return EmulatesUndefined(obj);
+    *output = !ToBoolean(input);
+    return true;
 }
 
 bool
