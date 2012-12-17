@@ -555,6 +555,12 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
     aVal = -aVal;
   }
 
+  bool inverse = false;
+  if (aVal < 1.0) {
+    inverse = true;
+    aVal = 1 / aVal;
+  }
+
   gfxFloat power = log(aVal)/log(kScaleResolution);
 
   // If power is within 1e-6 of an integer, round to nearest to
@@ -562,13 +568,19 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
   // next integer value.
   if (fabs(power - NS_round(power)) < 1e-6) {
     power = NS_round(power);
+  } else if (inverse) {
+    power = floor(power);
   } else {
     power = ceil(power);
   }
 
   gfxFloat scale = pow(kScaleResolution, power);
 
-  return NS_MAX(scale, 1.0);
+  if (inverse) {
+    scale = 1 / scale;
+  }
+
+  return scale;
 }
 
 
