@@ -90,6 +90,10 @@ TextEncoder::Encode(JSContext* aCx,
     buf[dstLen] = '\0';
     outView = Uint8Array::Create(aCx, this, dstLen,
                                  reinterpret_cast<uint8_t*>(buf.get()));
+    if (!outView) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
   }
 
   if (NS_FAILED(rv)) {
