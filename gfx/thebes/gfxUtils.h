@@ -125,6 +125,8 @@ public:
                       unsigned char* aDestBuffer,
                       int32_t aStride);
 
+    static const uint8_t sUnpremultiplyTable[256*256];
+    static const uint8_t sPremultiplyTable[256*256];
 #ifdef MOZ_DUMP_PAINTING
     /**
      * Writes a binary PNG file.
