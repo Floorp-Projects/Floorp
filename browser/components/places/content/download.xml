@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!-- -*- Mode: HTML; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- -->
+<!-- vim: set ts=2 et sw=2 tw=80: -->
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE bindings SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
+
+<bindings id="downloadBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="download"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+   <resources>
+     <stylesheet src="chrome://browser/content/places/download.css"/>
+   </resources>
+
+    <content orient="horizontal" align="center">
+      <xul:image class="downloadTypeIcon"
+                 validate="always"
+                 xbl:inherits="src=image"/>
+      <xul:image class="downloadTypeIcon blockedIcon"/>
+      <xul:vbox pack="center" flex="1">
+        <xul:description class="downloadTarget"
+                         crop="center"
+                         xbl:inherits="value=displayName,tooltiptext=displayName"/>
+        <xul:progressmeter anonid="progressmeter"
+                           class="downloadProgress"
+                           min="0"
+                           max="100"
+                           xbl:inherits="mode=progressmode,value=progress"/>
+        <xul:description class="downloadDetails"
+                         style="width: &downloadDetails.width;"
+                         crop="end"
+                         xbl:inherits="value=status,tooltiptext=statusTip"/>
+      </xul:vbox>
+      <xul:stack>
+        <xul:button class="downloadButton downloadCancel"
+                    command="downloadsCmd_cancel"
+                    tooltiptext="&cmd.cancel.label;"/>
+        <xul:button class="downloadButton downloadRetry"
+                    command="downloadsCmd_retry"
+                    tooltiptext="&cmd.retry.label;"/>
+        <xul:button class="downloadButton downloadShow"
+                    command="downloadsCmd_show"
+                    tooltiptext="&cmd.show.label;"/>
+      </xul:stack>
+    </content>
+  </binding>
+</bindings>

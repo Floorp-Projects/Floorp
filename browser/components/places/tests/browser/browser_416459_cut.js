@@ -7,6 +7,7 @@ const TEST_URL = "http://example.com/";
 let gLibrary;
 let gItemId;
 let PlacesOrganizer;
+let ContentTree;
 
 function test() {
   waitForExplicitFinish();
@@ -15,11 +16,13 @@ function test() {
 
 function onLibraryReady() {
   PlacesOrganizer = gLibrary.PlacesOrganizer;
+  ContentTree = gLibrary.ContentTree;
 
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils in scope");
   ok(PlacesUIUtils, "PlacesUIUtils in scope");
   ok(PlacesOrganizer, "PlacesOrganizer in scope");
+  ok(ContentTree, "ContentTree is in scope");
 
   gItemId = PlacesUtils.bookmarks.insertBookmark(
     PlacesUtils.toolbarFolderId, NetUtil.newURI(TEST_URL),
@@ -41,21 +44,21 @@ function selectBookmarkIn(aLeftPaneQuery) {
   is(PlacesUtils.bookmarks.getFolderIdForItem(gItemId), rootId,
      "Bookmark has the right parent");
   info("Selecting the bookmark in the right pane");
-  PlacesOrganizer._content.selectItems([gItemId]);
-  let bookmarkNode = PlacesOrganizer._content.selectedNode;
+  ContentTree.view.selectItems([gItemId]);
+  let bookmarkNode = ContentTree.view.selectedNode;
   is(bookmarkNode.uri, TEST_URL, "Found the expected bookmark");
 }
 
 function cutSelection() {
   info("Cutting selection");
-  PlacesOrganizer._content.controller.cut();
+  ContentTree.view.controller.cut();
 }
 
 function pasteClipboard(aLeftPaneQuery) {
   info("Selecting " + aLeftPaneQuery + " in the left pane");
   PlacesOrganizer.selectLeftPaneQuery(aLeftPaneQuery);
   info("Pasting clipboard");
-  PlacesOrganizer._content.controller.paste();
+  ContentTree.view.controller.paste();
 }
 
 function onClipboardReady() {
