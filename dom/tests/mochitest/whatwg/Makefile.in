@@ -50,6 +50,8 @@ MOCHITEST_FILES	= \
 		$(filter disabled-for-intermittent-failures--bug-696306, test_bug500328.html) \
 		$(filter disabled-for-intermittent-failures--bug-696306, file_bug500328_1.html) \
 		$(filter disabled-for-intermittent-failures--bug-696306, file_bug500328_2.html) \
+		test_postMessage_transfer.html \
+		postMessage_transfer_helper.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES	= \
