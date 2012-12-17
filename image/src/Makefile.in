@@ -26,6 +26,7 @@ EXPORTS		=  imgLoader.h \
 
 CPPSRCS		= \
 			Image.cpp \
+			ImageFactory.cpp \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			RasterImage.cpp \
