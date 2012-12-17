@@ -12,7 +12,7 @@ Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
 let gDevTools = tempScope.gDevTools;
 Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
 let TargetFactory = tempScope.TargetFactory;
-Components.utils.import("resource:///modules/devtools/Console.jsm", tempScope);
+Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 
 const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
