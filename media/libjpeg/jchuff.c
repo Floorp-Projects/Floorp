@@ -21,8 +21,10 @@
 #include "jchuff.h"		/* Declarations shared with jcphuff.c */
 #include <limits.h>
 
-static unsigned char jpeg_nbits_table[65536];
-static int jpeg_nbits_table_init = 0;
+static const unsigned char jpeg_nbits_table[65536] = {
+/* Number i needs jpeg_nbits_table[i] bits to be represented. */
+#include "jpeg_nbits_table.h"
+};
 
 #ifndef min
  #define min(a,b) ((a)<(b)?(a):(b))
@@ -269,15 +271,6 @@ jpeg_make_c_derived_tbl (j_compress_ptr cinfo, boolean isDC, int tblno,
       ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
     dtbl->ehufco[i] = huffcode[p];
     dtbl->ehufsi[i] = huffsize[p];
-  }
-
-  if(!jpeg_nbits_table_init) {
-    for(i = 0; i < 65536; i++) {
-      int nbits = 0, temp = i;
-      while (temp) {temp >>= 1;  nbits++;}
-      jpeg_nbits_table[i] = nbits;
-    }
-    jpeg_nbits_table_init = 1;
   }
 }
 
