@@ -6545,6 +6545,17 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     return docFactory.forget();
   }
 #endif // MOZ_MEDIA_PLUGINS
+
+#ifdef MOZ_WMF
+  if (DecoderTraits::IsWMFSupportedType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
+    }
+    return docFactory.forget();
+  }
+#endif
+
 #endif // MOZ_MEDIA
 
   return NULL;

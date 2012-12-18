@@ -98,6 +98,10 @@ ifdef MOZ_MEDIA_PLUGINS
 PARALLEL_DIRS += plugins
 endif
 
+ifdef MOZ_WMF
+PARALLEL_DIRS += wmf
+endif
+
 PARALLEL_DIRS += webrtc
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))

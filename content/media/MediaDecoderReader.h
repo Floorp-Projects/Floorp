@@ -414,6 +414,17 @@ public:
                         int64_t aStartTime,
                         int64_t aEndTime,
                         int64_t aCurrentTime) = 0;
+  
+  // Called when the decode thread is started, before calling any other
+  // decode, read metadata, or seek functions. Do any thread local setup
+  // in this function.
+  virtual void OnDecodeThreadStart() {}
+  
+  // Called when the decode thread is about to finish, after all calls to
+  // any other decode, read metadata, or seek functions. Any backend specific
+  // thread local tear down must be done in this function. Note that another
+  // decode thread could start up and run in future.
+  virtual void OnDecodeThreadFinish() {}
 
 protected:
   // Queue of audio frames. This queue is threadsafe, and is accessed from

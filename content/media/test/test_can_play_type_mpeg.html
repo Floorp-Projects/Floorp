@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=799315
+-->
+<head>
+  <title>Test for MP4 and MP3 support</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<video id="v"></video>
+
+<pre id="test">
+<script src="can_play_type_mpeg.js"></script>
+<script>
+
+function IsWindowsVistaOrLater() {
+  var re = /Windows NT (\d.\d)/;
+  var winver = navigator.userAgent.match(re);
+  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
+}
+
+function getMediaPref(name) {
+  // Can't use SpecialPowers.getBoolPref because it throws when pref isn't
+  // present, and for example on non-Windows systems the WMF prefs won't be
+  // present.
+  var pref = false;
+  var prefService = SpecialPowers.wrap(SpecialPowers.Components)
+                                 .classes["@mozilla.org/preferences-service;1"]
+                                 .getService(SpecialPowers.Ci.nsIPrefService);
+  var branch = prefService.getBranch("media.");
+  try {
+    pref = branch.getBoolPref(name);
+  } catch(ex) { }
+  return pref;
+}
+
+var haveMp4 = (getMediaPref("windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
+               getMediaPref("omx.enabled") ||
+               getMediaPref("gstreamer.enabled");
+// TODO:  Add "getMediaPref("plugins.enabled")" once MP4 works on Gingerbread.
+             
+check_mp4(document.getElementById('v'), haveMp4);
+
+mediaTestCleanup();
+</script>
+</pre>
+</body>
+</html>
