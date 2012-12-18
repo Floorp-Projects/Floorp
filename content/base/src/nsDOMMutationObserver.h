@@ -7,9 +7,7 @@
 #ifndef nsDOMMutationObserver_h
 #define nsDOMMutationObserver_h
 
-#include "nsIDOMMutationObserver.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptContext.h"
 #include "nsStubMutationObserver.h"
@@ -23,22 +21,77 @@
 #include "nsNodeUtils.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/MutationObserverBinding.h"
 
 class nsDOMMutationObserver;
 
-class nsDOMMutationRecord : public nsIDOMMutationRecord
+class nsDOMMutationRecord : public nsISupports,
+                            public nsWrapperCache
 {
 public:
-  nsDOMMutationRecord(const nsAString& aType) : mType(aType)
+  nsDOMMutationRecord(const nsAString& aType, nsISupports* aOwner)
+  : mType(aType), mOwner(aOwner)
   {
     mAttrName.SetIsVoid(PR_TRUE);
     mAttrNamespace.SetIsVoid(PR_TRUE);
     mPrevValue.SetIsVoid(PR_TRUE);
+    SetIsDOMBinding();
   }
   virtual ~nsDOMMutationRecord() {}
+
+  nsISupports* GetParentObject() const
+  {
+    return mOwner;
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap)
+  {
+    return mozilla::dom::MutationRecordBinding::Wrap(aCx, aScope, this,
+                                                     aTriedToWrap);
+  }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMMutationRecord)
-  NS_DECL_NSIDOMMUTATIONRECORD
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMMutationRecord)
+
+  void GetType(nsString& aRetVal) const
+  {
+    aRetVal = mType;
+  }
+
+  nsINode* GetTarget() const
+  {
+    return mTarget;
+  }
+
+  nsINodeList* AddedNodes();
+
+  nsINodeList* RemovedNodes();
+
+  nsINode* GetPreviousSibling() const
+  {
+    return mPreviousSibling;
+  }
+
+  nsINode* GetNextSibling() const
+  {
+    return mNextSibling;
+  }
+
+  void GetAttributeName(nsString& aRetVal) const
+  {
+    aRetVal = mAttrName;
+  }
+
+  void GetAttributeNamespace(nsString& aRetVal) const
+  {
+    aRetVal = mAttrNamespace;
+  }
+
+  void GetOldValue(nsString& aRetVal) const
+  {
+    aRetVal = mPrevValue;
+  }
 
   nsCOMPtr<nsINode>             mTarget;
   nsString                      mType;
@@ -49,6 +102,7 @@ public:
   nsRefPtr<nsSimpleContentList> mRemovedNodes;
   nsCOMPtr<nsINode>             mPreviousSibling;
   nsCOMPtr<nsINode>             mNextSibling;
+  nsCOMPtr<nsISupports>         mOwner;
 };
  
 // Base class just prevents direct access to
@@ -143,7 +197,7 @@ public:
   }
   
 protected:
-  nsMutationReceiverBase(nsINode* aTarget, nsIDOMMutationObserver* aObserver)
+  nsMutationReceiverBase(nsINode* aTarget, nsDOMMutationObserver* aObserver)
   : mTarget(aTarget), mObserver(aObserver), mRegisterTarget(aTarget)
   {
     mRegisterTarget->AddMutationObserver(this);
@@ -181,7 +235,7 @@ protected:
     }
 
     nsCOMArray<nsIAtom>& filters = AttributeFilter();
-    for (int32_t i = 0; i < filters.Count(); ++i) {         
+    for (int32_t i = 0; i < filters.Count(); ++i) {
       if (filters[i] == aAttr) {
         return true;
       }
@@ -191,7 +245,7 @@ protected:
 
   // The target for the MutationObserver.observe() method.
   nsINode*                           mTarget;
-  nsIDOMMutationObserver*            mObserver;
+  nsDOMMutationObserver*             mObserver;
   nsRefPtr<nsMutationReceiverBase>   mParent; // Cleared after microtask.
   // The node to which Gecko-internal nsIMutationObserver was registered to.
   // This is different than mTarget when dealing with transient observers.
@@ -220,11 +274,7 @@ private:
 class nsMutationReceiver : public nsMutationReceiverBase
 {
 public:
-  nsMutationReceiver(nsINode* aTarget, nsIDOMMutationObserver* aObserver)
-  : nsMutationReceiverBase(aTarget, aObserver)
-  {
-    mTarget->BindObject(aObserver);
-  }
+  nsMutationReceiver(nsINode* aTarget, nsDOMMutationObserver* aObserver);
 
   nsMutationReceiver(nsINode* aRegisterTarget, nsMutationReceiverBase* aParent)
   : nsMutationReceiverBase(aRegisterTarget, aParent)
@@ -289,51 +339,44 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsMutationReceiver, NS_MUTATION_OBSERVER_IID)
 
-class nsDOMMutationObserver : public nsIDOMMutationObserver,
-                              public nsIJSNativeInitializer,
+class nsDOMMutationObserver : public nsISupports,
                               public nsWrapperCache
 {
 public:
-  nsDOMMutationObserver() : mWaitingForRun(false), mId(++sCount)
+  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow> aOwner,
+                        mozilla::dom::MutationCallback& aCb)
+  : mOwner(aOwner), mCallback(&aCb), mWaitingForRun(false), mId(++sCount)
   {
     mTransientReceivers.Init();
+    SetIsDOMBinding();
   }
   virtual ~nsDOMMutationObserver();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMMutationObserver,
-                                                         nsIDOMMutationObserver)
-  NS_DECL_NSIDOMMUTATIONOBSERVER
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMMutationObserver)
 
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                        uint32_t argc, jsval* argv);
+  static already_AddRefed<nsDOMMutationObserver>
+  Constructor(nsISupports* aGlobal, mozilla::dom::MutationCallback& aCb,
+              mozilla::ErrorResult& aRv);
 
-  void GetParentObject(nsIScriptGlobalObject** aParentObject)
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap)
   {
-    if (mOwner) {
-      CallQueryInterface(mOwner, aParentObject);
-    } else {
-      *aParentObject = nullptr;
-    }
+    return mozilla::dom::MutationObserverBinding::Wrap(aCx, aScope,
+                                                       this, aTriedToWrap);
   }
 
-  static nsDOMMutationObserver* FromSupports(nsISupports* aSupports)
+  nsISupports* GetParentObject() const
   {
-    nsIDOMMutationObserver* mutationObserver =
-      static_cast<nsIDOMMutationObserver*>(aSupports);
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDOMMutationObserver> mutationObserver_qi =
-        do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsIDOMMutationObserver pointer as the
-      // nsISupports pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(mutationObserver_qi == mutationObserver, "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<nsDOMMutationObserver*>(mutationObserver);
+    return mOwner;
   }
+
+  void Observe(nsINode& aTarget,
+               const mozilla::dom::MutationObserverInit& aOptions,
+               mozilla::ErrorResult& aRv);
+
+  void Disconnect();
+
+  void TakeRecords(nsTArray<nsRefPtr<nsDOMMutationRecord> >& aRetVal);
 
   void HandleMutation();
 
@@ -347,11 +390,6 @@ public:
 
   static void EnterMutationHandling();
   static void LeaveMutationHandling();
-
-  static nsIDOMMutationObserver* CurrentObserver()
-  {
-    return sCurrentObserver;
-  }
 
   static void Shutdown();
 protected:
@@ -383,29 +421,28 @@ protected:
 
   static void AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver);
 
-  nsCOMPtr<nsIScriptContext>                         mScriptContext;
   nsCOMPtr<nsPIDOMWindow>                            mOwner;
 
   nsCOMArray<nsMutationReceiver>                     mReceivers;
   nsClassHashtable<nsISupportsHashKey,
-                   nsCOMArray<nsMutationReceiver> >  mTransientReceivers;  
+                   nsCOMArray<nsMutationReceiver> >  mTransientReceivers;
   // MutationRecords which are being constructed.
   nsAutoTArray<nsDOMMutationRecord*, 4>              mCurrentMutations;
   // MutationRecords which will be handed to the callback at the end of
   // the microtask.
-  nsCOMArray<nsDOMMutationRecord>                    mPendingMutations;
-  nsCOMPtr<nsIMutationObserverCallback>              mCallback;
+  nsTArray<nsRefPtr<nsDOMMutationRecord> >           mPendingMutations;
+  nsRefPtr<mozilla::dom::MutationCallback>           mCallback;
 
   bool                                               mWaitingForRun;
 
   uint64_t                                           mId;
 
   static uint64_t                                    sCount;
-  static nsCOMArray<nsIDOMMutationObserver>*         sScheduledMutationObservers;
-  static nsIDOMMutationObserver*                     sCurrentObserver;
+  static nsTArray<nsRefPtr<nsDOMMutationObserver> >* sScheduledMutationObservers;
+  static nsDOMMutationObserver*                      sCurrentObserver;
 
   static uint32_t                                    sMutationLevel;
-  static nsAutoTArray<nsCOMArray<nsIDOMMutationObserver>, 4>*
+  static nsAutoTArray<nsTArray<nsRefPtr<nsDOMMutationObserver> >, 4>*
                                                      sCurrentlyHandlingObservers;
 };
 
@@ -536,13 +573,5 @@ nsMutationReceiverBase::Observer()
   return mParent ?
     mParent->Observer() : static_cast<nsDOMMutationObserver*>(mObserver);
 }
-
-#define NS_DOMMUTATIONOBSERVER_CID           \
- { /* b66b9490-52f7-4f2a-b998-dbb1d59bc13e */ \
-  0xb66b9490, 0x52f7, 0x4f2a,                 \
-  { 0xb9, 0x98, 0xdb, 0xb1, 0xd5, 0x9b, 0xc1, 0x3e } }
-
-#define NS_DOMMUTATIONOBSERVER_CONTRACTID \
-  "@mozilla.org/dommutationobserver;1"
 
 #endif

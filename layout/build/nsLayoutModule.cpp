@@ -130,8 +130,6 @@ using mozilla::dom::fm::FMRadio;
 #include "AudioChannelAgent.h"
 using mozilla::dom::AudioChannelAgent;
 
-#include "nsDOMMutationObserver.h"
-
 // Editor stuff
 #include "nsEditorCID.h"
 #include "nsEditor.h"
@@ -295,7 +293,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(BluetoothService,
                                          BluetoothService::FactoryCreate)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMMutationObserver)
 
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
@@ -826,7 +823,6 @@ NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
 NS_DEFINE_NAMED_CID(NS_STRUCTUREDCLONECONTAINER_CID);
-NS_DEFINE_NAMED_CID(NS_DOMMUTATIONOBSERVER_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_SENSORS_CID);
 
 #ifndef MOZ_WIDGET_GONK
@@ -1113,7 +1109,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
-  { &kNS_DOMMUTATIONOBSERVER_CID, false, NULL, nsDOMMutationObserverConstructor },
   { &kSMS_SERVICE_CID, false, NULL, nsISmsServiceConstructor },
   { &kSMS_DATABASE_SERVICE_CID, false, NULL, nsISmsDatabaseServiceConstructor },
   { &kNS_POWERMANAGERSERVICE_CID, false, NULL, nsIPowerManagerServiceConstructor },
@@ -1257,7 +1252,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
-  { NS_DOMMUTATIONOBSERVER_CONTRACTID, &kNS_DOMMUTATIONOBSERVER_CID },
   { SMS_SERVICE_CONTRACTID, &kSMS_SERVICE_CID },
   { SMS_DATABASE_SERVICE_CONTRACTID, &kSMS_DATABASE_SERVICE_CID },
   { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID },
