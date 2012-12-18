@@ -79,6 +79,9 @@ this.SystemMessagePermissionsTable = {
   "telephony-new-call": {
     "telephony": []
   },
+  "telephony-call-ended": {
+    "telephony": []
+  },
   "ussd-received": {
     "mobileconnection": []
   }
