@@ -613,15 +613,22 @@ ChannelNotificationListener.prototype = {
     let newSpec = (newChannel && newChannel.URI) ? newChannel.URI.spec : "<undefined>";
     this._log.debug("Channel redirect: " + oldSpec + ", " + newSpec + ", " + flags);
 
+    this._log.debug("Ensuring load flags are set.");
+    newChannel.loadFlags |= DEFAULT_LOAD_FLAGS;
+
     // For internal redirects, copy the headers that our caller set.
     try {
       if ((flags & Ci.nsIChannelEventSink.REDIRECT_INTERNAL) &&
           newChannel.URI.equals(oldChannel.URI)) {
-        this._log.trace("Copying headers for safe internal redirect.");
+        this._log.debug("Copying headers for safe internal redirect.");
         for (let header of this._headersToCopy) {
           let value = oldChannel.getRequestHeader(header);
           if (value) {
+            let printed = (header == "authorization") ? "****" : value;
+            this._log.debug("Header: " + header + " = " + printed);
             newChannel.setRequestHeader(header, value);
+          } else {
+            this._log.warn("No value for header " + header);
           }
         }
       }
