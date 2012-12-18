@@ -2157,14 +2157,15 @@ nsDOMWindowUtils::StartFrameTimeRecording()
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::StopFrameTimeRecording(uint32_t *frameCount, float **frames)
+nsDOMWindowUtils::StopFrameTimeRecording(float** paintTimes, uint32_t *frameCount, float **frameIntervals)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   NS_ENSURE_ARG_POINTER(frameCount);
-  NS_ENSURE_ARG_POINTER(frames);
+  NS_ENSURE_ARG_POINTER(frameIntervals);
+  NS_ENSURE_ARG_POINTER(paintTimes);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2174,20 +2175,27 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t *frameCount, float **frames)
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  nsTArray<float> frameTimes;
-  mgr->StopFrameTimeRecording(frameTimes);
+  nsTArray<float> tmpFrameIntervals;
+  nsTArray<float> tmpPaintTimes;
+  mgr->StopFrameTimeRecording(tmpFrameIntervals, tmpPaintTimes);
 
-  *frames = nullptr;
-  *frameCount = frameTimes.Length();
+  *frameIntervals = nullptr;
+  *paintTimes = nullptr;
+  *frameCount = tmpFrameIntervals.Length();
 
   if (*frameCount != 0) {
-    *frames = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
-    if (!*frames)
+    *frameIntervals = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
+    if (!*frameIntervals)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    /* copy over the frame times into the array we just allocated */
+    *paintTimes = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
+    if (!*paintTimes)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* copy over the frame intervals and paint times into the arrays we just allocated */
     for (uint32_t i = 0; i < *frameCount; i++) {
-      (*frames)[i] = frameTimes[i];
+      (*frameIntervals)[i] = tmpFrameIntervals[i];
+      (*paintTimes)[i] = tmpPaintTimes[i];
     }
   }
 
