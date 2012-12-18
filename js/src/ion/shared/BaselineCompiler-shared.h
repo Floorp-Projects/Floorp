@@ -34,7 +34,14 @@ class BaselineCompilerShared
     // the generated IC-calling code in the main jitcode.  These need
     // to be patched with the actual icEntry offsets after the BaselineScript
     // has been allocated.
-    js::Vector<CodeOffsetLabel, 16, SystemAllocPolicy> icLoadLabels_;
+    struct ICLoadLabel {
+        size_t icEntry;
+        CodeOffsetLabel label;
+    };
+    js::Vector<ICLoadLabel, 16, SystemAllocPolicy> icLoadLabels_;
+
+    uint32_t pushedBeforeCall_;
+    mozilla::DebugOnly<bool> inCall_;
 
     BaselineCompilerShared(JSContext *cx, JSScript *script);
 
@@ -55,13 +62,31 @@ class BaselineCompilerShared
         return &vecEntry;
     }
 
-    bool addICLoadLabel(CodeOffsetLabel offset) {
-        return icLoadLabels_.append(offset);
+    bool addICLoadLabel(CodeOffsetLabel label) {
+        JS_ASSERT(!icEntries_.empty());
+        ICLoadLabel loadLabel;
+        loadLabel.label = label;
+        loadLabel.icEntry = icEntries_.length() - 1;
+        return icLoadLabels_.append(loadLabel);
     }
 
     JSFunction *function() const {
         return script->function();
     }
+
+    template <typename T>
+    void pushArg(const T& t) {
+        masm.Push(t);
+    }
+    void prepareVMCall() {
+        pushedBeforeCall_ = masm.framePushed();
+        inCall_ = true;
+
+        // Save the frame pointer.
+        masm.Push(BaselineFrameReg);
+    }
+
+    bool callVM(const VMFunction &fun);
 };
 
 } // namespace ion

@@ -99,9 +99,10 @@ BaselineCompiler::compile()
 
     // Patch IC loads using IC entries
     for (size_t i = 0; i < icLoadLabels_.length(); i++) {
-        CodeOffsetLabel label = icLoadLabels_[i];
+        CodeOffsetLabel label = icLoadLabels_[i].label;
         label.fixup(&masm);
-        ICEntry *entryAddr = &(baselineScript->icEntry(i));
+        size_t icEntry = icLoadLabels_[i].icEntry;
+        ICEntry *entryAddr = &(baselineScript->icEntry(icEntry));
         Assembler::patchDataWithValueCheck(CodeLocationLabel(code, label),
                                            ImmWord(uintptr_t(entryAddr)),
                                            ImmWord(uintptr_t(-1)));
@@ -1059,26 +1060,30 @@ BaselineCompiler::emit_JSOP_LENGTH()
     return emit_JSOP_GETPROP();
 }
 
+typedef bool (*DefVarOrConstFn)(JSContext *, HandlePropertyName, unsigned, HandleObject);
+static const VMFunction DefVarOrConstInfo = FunctionInfo<DefVarOrConstFn>(DefVarOrConst);
+
 bool
 BaselineCompiler::emit_JSOP_DEFVAR()
 {
     frame.syncStack(0);
-
-    // Pass name in R0, attributes in R1.
-    masm.movePtr(ImmGCPtr(script->getName(pc)), R0.scratchReg());
 
     unsigned attrs = JSPROP_ENUMERATE;
     if (!script->isForEval())
         attrs |= JSPROP_PERMANENT;
     if (JSOp(*pc) == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
-
     JS_ASSERT(attrs <= UINT32_MAX);
-    masm.move32(Imm32(attrs), R1.scratchReg());
 
-    // Call IC.
-    ICDefVar_Fallback::Compiler compiler(cx);
-    return emitIC(compiler.getStub(&stubSpace_));
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(R0.scratchReg());
+    pushArg(Imm32(attrs));
+    pushArg(ImmGCPtr(script->getName(pc)));
+
+    return callVM(DefVarOrConstInfo);
 }
 
 bool
