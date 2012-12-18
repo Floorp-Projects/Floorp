@@ -612,16 +612,6 @@ TokenStream::reportWarning(unsigned errorNumber, ...)
 }
 
 bool
-TokenStream::reportStrictWarning(unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = reportStrictWarningErrorNumberVA(NULL, strictMode(), errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-bool
 TokenStream::reportStrictWarningErrorNumberVA(ParseNode *pn, bool strictMode, unsigned errorNumber,
                                               va_list args)
 {
