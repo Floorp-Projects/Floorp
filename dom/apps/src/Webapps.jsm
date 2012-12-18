@@ -868,15 +868,26 @@ this.DOMApplicationRegistry = {
   },
 
   cancelDownload: function cancelDownload(aManifestURL) {
-    // We can't cancel appcache downloads for now.
-    if (!this.downloads[aManifestURL]) {
+    debug("cancelDownload " + aManifestURL);
+    let download = this.downloads[aManifestURL];
+    if (!download) {
+      debug("Could not find a download for " + aManifestURL);
       return;
     }
-    // This is a HTTP channel.
-    let download = this.downloads[aManifestURL]
-    download.channel.cancel(Cr.NS_BINDING_ABORTED);
-    let app = this.webapps[download.appId];
 
+    if (download.cacheUpdate) {
+      // Cancel hosted app download.
+      try {
+        download.cacheUpdate.cancel();
+      } catch (e) { debug (e); }
+    } else if (download.channel) {
+      // Cancel packaged app download.
+      download.channel.cancel(Cr.NS_BINDING_ABORTED);
+    } else {
+      return;
+    }
+
+    let app = this.webapps[download.appId];
     app.progress = 0;
     app.installState = download.previousState;
     app.downloading = false;
@@ -1038,26 +1049,42 @@ this.DOMApplicationRegistry = {
                                                                 aProfileDir,
                                                                 aOfflineCacheObserver,
                                                                 aIsUpdate) {
-    // if the manifest has an appcache_path property, use it to populate the appcache
-    if (aManifest.appcache_path) {
-      let appcacheURI = Services.io.newURI(aManifest.fullAppcachePath(), null, null);
-      let docURI = Services.io.newURI(aManifest.fullLaunchPath(), null, null);
-      // We determine the app's 'installState' according to its previous
-      // state. Cancelled download should remain as 'pending'. Successfully
-      // installed apps should morph to 'updating'.
-      if (aIsUpdate) {
-        aApp.installState = "updating";
-      }
-      // We set the 'downloading' flag right before starting the app
-      // download/update.
-      aApp.downloading = true;
-      let cacheUpdate = aProfileDir
-        ? updateSvc.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
-        : updateSvc.scheduleAppUpdate(appcacheURI, docURI, aApp.localId, false);
-      cacheUpdate.addObserver(new AppcacheObserver(aApp), false);
-      if (aOfflineCacheObserver) {
-        cacheUpdate.addObserver(aOfflineCacheObserver, false);
-      }
+    if (!aManifest.appcache_path) {
+      return;
+    }
+
+    // If the manifest has an appcache_path property, use it to populate the
+    // appcache.
+    let appcacheURI = Services.io.newURI(aManifest.fullAppcachePath(),
+                                         null, null);
+    let docURI = Services.io.newURI(aManifest.fullLaunchPath(), null, null);
+
+    // We determine the app's 'installState' according to its previous
+    // state. Cancelled downloads should remain as 'pending'. Successfully
+    // installed apps should morph to 'updating'.
+    if (aIsUpdate) {
+      aApp.installState = "updating";
+    }
+
+    // We set the 'downloading' flag right before starting the app
+    // download/update.
+    aApp.downloading = true;
+    let cacheUpdate = aProfileDir
+      ? updateSvc.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
+      : updateSvc.scheduleAppUpdate(appcacheURI, docURI, aApp.localId, false);
+
+    // We save the download details for potential further usage like cancelling
+    // it.
+    let download = {
+      cacheUpdate: cacheUpdate,
+      appId: this._appIdForManifestURL(aApp.manifestURL),
+      previousState: aIsUpdate ? "installed" : "pending"
+    };
+    this.downloads[aApp.manifestURL] = download;
+
+    cacheUpdate.addObserver(new AppcacheObserver(aApp), false);
+    if (aOfflineCacheObserver) {
+      cacheUpdate.addObserver(aOfflineCacheObserver, false);
     }
   },
 
@@ -1714,11 +1741,11 @@ this.DOMApplicationRegistry = {
 
       let requestChannel = NetUtil.newChannel(aManifest.fullPackagePath())
                                   .QueryInterface(Ci.nsIHttpChannel);
-      self.downloads[aApp.manifestURL] =
-        { channel:requestChannel,
-          appId: id,
-          previousState: aIsUpdate ? "installed" : "pending"
-        };
+      self.downloads[aApp.manifestURL] = {
+        channel: requestChannel,
+        appId: id,
+        previousState: aIsUpdate ? "installed" : "pending"
+      };
 
       let lastProgressTime = 0;
       requestChannel.notificationCallbacks = {
