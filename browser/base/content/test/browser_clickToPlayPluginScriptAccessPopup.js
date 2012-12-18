@@ -99,7 +99,7 @@ function testExpectNoPopupPart1() {
 }
 
 function testExpectNoPopupPart2() {
-  var condition = function() gTestBrowser._pluginScriptedState == PLUGIN_SCRIPTED_STATE_DONE;
+  var condition = function() gTestBrowser._pluginScriptedState == gPluginHandler.PLUGIN_SCRIPTED_STATE_DONE;
   waitForCondition(condition, testExpectNoPopupPart3, "waited too long for PluginScripted event handling (" + getCurrentTestLocation() + ")");
 }
 
