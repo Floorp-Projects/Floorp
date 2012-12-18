@@ -82,6 +82,9 @@ class BaselineCompilerShared
         pushedBeforeCall_ = masm.framePushed();
         inCall_ = true;
 
+        // Ensure everything is synced.
+        frame.syncStack(0);
+
         // Save the frame pointer.
         masm.Push(BaselineFrameReg);
     }

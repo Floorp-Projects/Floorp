@@ -118,6 +118,8 @@ BaselineCompiler::trace(JSTracer *trc)
     // so far need to marked.  There should only be fallback stubs in any IC chains.
     for (size_t i = 0; i < icEntries_.length(); i++) {
         ICEntry &entry = icEntries_[i];
+        if (!entry.hasStub())
+            continue;
         JS_ASSERT(entry.firstStub() != NULL);
         JS_ASSERT(entry.firstStub()->isFallback());
         JS_ASSERT(entry.firstStub()->next() == NULL);
@@ -229,6 +231,24 @@ BaselineCompiler::emitStackCheck()
         return false;
 
     masm.bind(&skipIC);
+    return true;
+}
+
+typedef bool (*InterruptCheckFn)(JSContext *);
+static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
+
+bool
+BaselineCompiler::emitInterruptCheck()
+{
+    Label done;
+    void *interrupt = (void *)&cx->compartment->rt->interrupt;
+    masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
+
+    prepareVMCall();
+    if (!callVM(InterruptCheckInfo))
+        return false;
+
+    masm.bind(&done);
     return true;
 }
 
@@ -530,7 +550,7 @@ BaselineCompiler::emit_JSOP_POS()
 bool
 BaselineCompiler::emit_JSOP_LOOPHEAD()
 {
-    return true;
+    return emitInterruptCheck();
 }
 
 bool
