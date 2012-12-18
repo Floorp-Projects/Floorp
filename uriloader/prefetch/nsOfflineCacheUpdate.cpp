@@ -1550,6 +1550,7 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
     nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
 
     if (mState == STATE_CANCELLED) {
+        NotifyState(nsIOfflineCacheUpdateObserver::STATE_ERROR);
         Finish();
         return;
     }
@@ -1807,25 +1808,6 @@ nsOfflineCacheUpdate::Begin()
     return NS_OK;
 }
 
-nsresult
-nsOfflineCacheUpdate::Cancel()
-{
-    LOG(("nsOfflineCacheUpdate::Cancel [%p]", this));
-
-    mState = STATE_CANCELLED;
-    mSucceeded = false;
-
-    // Cancel all running downloads
-    for (uint32_t i = 0; i < mItems.Length(); ++i) {
-        nsOfflineCacheUpdateItem * item = mItems[i];
-
-        if (item->IsInProgress())
-            item->Cancel();
-    }
-
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdate <private>
 //-----------------------------------------------------------------------------
@@ -1882,9 +1864,6 @@ nsOfflineCacheUpdate::ProcessNextURI()
 
     LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p, inprogress=%d, numItems=%d]",
          this, mItemsInProgress, mItems.Length()));
-
-    NS_ASSERTION(mState == STATE_DOWNLOADING,
-                 "ProcessNextURI should only be called from the DOWNLOADING state");
 
     if (mState != STATE_DOWNLOADING) {
         LOG(("  should only be called from the DOWNLOADING state, ignoring"));
@@ -2359,6 +2338,29 @@ nsOfflineCacheUpdate::AddDynamicURI(nsIURI *aURI)
     }
 
     return AddURI(aURI, nsIApplicationCache::ITEM_DYNAMIC);
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdate::Cancel()
+{
+    LOG(("nsOfflineCacheUpdate::Cancel [%p]", this));
+
+    if ((mState == STATE_FINISHED) || (mState == STATE_CANCELLED)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    mState = STATE_CANCELLED;
+    mSucceeded = false;
+
+    // Cancel all running downloads
+    for (uint32_t i = 0; i < mItems.Length(); ++i) {
+        nsOfflineCacheUpdateItem * item = mItems[i];
+
+        if (item->IsInProgress())
+            item->Cancel();
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
