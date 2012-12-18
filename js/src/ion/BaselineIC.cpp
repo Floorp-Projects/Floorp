@@ -1376,8 +1376,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
 
     RootedObject obj(cx, &val.toObject());
 
-    if (obj->isDenseArray()) {
-        JS_ASSERT(res.isInt32());
+    if (obj->isDenseArray() && res.isInt32()) {
         ICGetProp_DenseLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!newStub)
@@ -1469,10 +1468,14 @@ ICGetProp_DenseLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
 
     // Load obj->elements->length.
-    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), obj);
-    masm.load32(Address(obj, ObjectElements::offsetOfLength()), obj);
+    Register scratch = R1.scratchReg();
+    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratch);
+    masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
 
-    masm.tagValue(JSVAL_TYPE_INT32, obj, R0);
+    // Guard length fits in an int32.
+    masm.branchTest32(Assembler::Signed, scratch, scratch, &failure);
+
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
