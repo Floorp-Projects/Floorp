@@ -55,6 +55,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::call;
     using MacroAssemblerX86Shared::Push;
     using MacroAssemblerX86Shared::callWithExitFrame;
+    using MacroAssemblerX86Shared::branch32;
 
     enum Result {
         GENERAL,
@@ -417,6 +418,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void subPtr(const Register &src, const Register &dest) {
         subq(src, dest);
+    }
+
+    void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
+        movq(ImmWord(lhs.addr), ScratchReg);
+        branch32(cond, Address(ScratchReg, 0), rhs, label);
     }
 
     // Specialization for AbsoluteAddress.

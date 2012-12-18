@@ -151,6 +151,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitEpilogue();
     bool emitIC(ICStub *stub);
     bool emitStackCheck();
+    bool emitInterruptCheck();
     bool emitUseCountIncrement();
 
     bool initScopeChain();
