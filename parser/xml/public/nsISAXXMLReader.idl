@@ -14,6 +14,7 @@ interface nsISAXDTDHandler;
 interface nsISAXEntityResolver;
 interface nsISAXErrorHandler;
 interface nsISAXLexicalHandler;
+interface nsIMozSAXXMLDeclarationHandler;
 
 /**
  * Interface for reading an XML document using callbacks.
@@ -24,7 +25,7 @@ interface nsISAXLexicalHandler;
  * handlers for document processing, and to initiate a document
  * parse.
  */
-[scriptable, uuid(5556997e-d816-4218-8b54-803d4261206e)]
+[scriptable, uuid(5b1de802-9091-454f-9972-5753c0d0c70e)]
 interface nsISAXXMLReader : nsIStreamListener {
 
   /**
@@ -66,6 +67,14 @@ interface nsISAXXMLReader : nsIStreamListener {
    * handler immediately.
    */
   attribute nsISAXErrorHandler errorHandler;
+
+  /**
+   * A handler for the (optional) XML declaration of a document.
+   * <?xml version='1.0'?>
+   *
+   * @note This is not part of the SAX standard.
+   */
+  attribute nsIMozSAXXMLDeclarationHandler declarationHandler;
 
   /**
    * If the application does not register a lexical handler, all
