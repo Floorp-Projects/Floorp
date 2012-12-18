@@ -187,8 +187,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_Iconchange.html \
 		test_browserElement_oop_GetScreenshot.html \
 		test_browserElement_oop_BadScreenshot.html \
-		test_browserElement_oop_SetVisibleFrames.html \
-		test_browserElement_oop_SetVisibleFrames2.html \
 		test_browserElement_oop_KeyEvents.html \
 		test_browserElement_oop_XFrameOptions.html \
 		test_browserElement_oop_XFrameOptionsDeny.html \
@@ -231,9 +229,13 @@ MOCHITEST_FILES += \
 ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOCHITEST_FILES += \
 		test_browserElement_oop_SetVisible.html \
+		test_browserElement_oop_SetVisibleFrames.html \
+		test_browserElement_oop_SetVisibleFrames2.html \
 		$(NULL)
 else
 $(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisible.html)
+$(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisibleFrames.html)
+$(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisibleFrames2.html)
 endif
 
 endif #}
