@@ -463,9 +463,6 @@ DOMCI_CLASS(CSSPageRule)
 
 DOMCI_CLASS(MediaQueryList)
 
-DOMCI_CLASS(MutationObserver)
-DOMCI_CLASS(MutationRecord)
-
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(Telephony)
 DOMCI_CLASS(TelephonyCall)
