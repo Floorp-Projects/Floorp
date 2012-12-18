@@ -331,7 +331,7 @@ Toolbox.prototype = {
     let requisition = new Requisition(environment);
     requisition.commandOutputManager = new CommandOutputManager();
 
-    let buttons = CommandUtils.createButtons(toolbarSpec, this.doc, requisition);
+    let buttons = CommandUtils.createButtons(toolbarSpec, this._target, this.doc, requisition);
 
     let container = this.doc.getElementById("toolbox-buttons");
     buttons.forEach(function(button) {

@@ -35,6 +35,25 @@ gcli.addCommand({
   tooltipText: gcli.lookup("resizeModeToggleTooltip"),
   description: gcli.lookup('resizeModeToggleDesc'),
   manual: gcli.lookup('resizeModeManual'),
+  state: {
+    isChecked: function(aTarget) {
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
+      return mgr.isActiveForTab(aTarget.tab);
+    },
+    onChange: function(aTarget, aChangeHandler) {
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
+      mgr.on("on", aChangeHandler);
+      mgr.on("off", aChangeHandler);
+    },
+    offChange: function(aTarget, aChangeHandler) {
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
+      mgr.off("on", aChangeHandler);
+      mgr.off("off", aChangeHandler);
+    },
+  },
   exec: gcli_cmd_resize
 });
 
