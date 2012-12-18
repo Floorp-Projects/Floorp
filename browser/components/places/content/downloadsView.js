@@ -163,7 +163,7 @@ DownloadElementShell.prototype = {
       return this._dataItem.target;
 
     try {
-      return this._getAnnotation(DESTINATION_FILE_NAME_ANNO, "");
+      return this._getAnnotation(DESTINATION_FILE_NAME_ANNO);
     }
     catch(ex) { }
 
