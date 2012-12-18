@@ -890,15 +890,6 @@ void
 LayerManager::StartFrameTimeRecording()
 {
   mLastFrameTime = TimeStamp::Now();
-  mPaintStartTime = mLastFrameTime;
-}
-
-void
-LayerManager::SetPaintStartTime(TimeStamp& aTime)
-{
-  if (!mLastFrameTime.IsNull()) {
-    mPaintStartTime = aTime;
-  }
 }
 
 void
@@ -906,8 +897,7 @@ LayerManager::PostPresent()
 {
   if (!mLastFrameTime.IsNull()) {
     TimeStamp now = TimeStamp::Now();
-    mFrameIntervals.AppendElement((now - mLastFrameTime).ToMilliseconds());
-    mPaintTimes.AppendElement((now - mPaintStartTime).ToMilliseconds());
+    mFrameTimes.AppendElement((now - mLastFrameTime).ToMilliseconds());
     mLastFrameTime = now;
   }
   if (!mTabSwitchStart.IsNull()) {
@@ -918,13 +908,11 @@ LayerManager::PostPresent()
 }
 
 void
-LayerManager::StopFrameTimeRecording(nsTArray<float>& aFrameIntervals, nsTArray<float>& aPaintTimes)
+LayerManager::StopFrameTimeRecording(nsTArray<float>& aTimes)
 {
   mLastFrameTime = TimeStamp();
-  aFrameIntervals.SwapElements(mFrameIntervals);
-  aPaintTimes.SwapElements(mPaintTimes);
-  mFrameIntervals.Clear();
-  mPaintTimes.Clear();
+  aTimes.SwapElements(mFrameTimes);
+  mFrameTimes.Clear();
 }
 
 void
