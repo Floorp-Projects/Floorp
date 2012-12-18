@@ -6660,21 +6660,6 @@ IonBuilder::jsop_lambda(JSFunction *fun)
 }
 
 bool
-IonBuilder::jsop_deflocalfun(uint32_t local, JSFunction *fun)
-{
-    JS_ASSERT(script()->analysis()->usesScopeChain());
-
-    MLambda *ins = MLambda::New(current->scopeChain(), fun);
-    current->add(ins);
-    current->push(ins);
-
-    current->setLocal(local);
-    current->pop();
-
-    return resumeAfter(ins);
-}
-
-bool
 IonBuilder::jsop_defvar(uint32_t index)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
