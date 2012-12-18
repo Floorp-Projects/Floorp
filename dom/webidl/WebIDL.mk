@@ -48,6 +48,7 @@ webidl_files = \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
   ImageData.webidl \
+  MutationObserver.webidl \
   Node.webidl \
   NodeFilter.webidl \
   NodeList.webidl \
