@@ -544,6 +544,8 @@ class TokenStream
                                     va_list args);
     bool reportStrictModeErrorNumberVA(ParseNode *pn, bool strictMode, unsigned errorNumber,
                                        va_list args);
+    bool reportStrictWarningErrorNumberVA(ParseNode *pn, bool strictMode, unsigned errorNumber,
+                                          va_list args);
 
   private:
     void onError();
