@@ -586,10 +586,10 @@ class LocationService
 
   // A direct-mapped cache.  When doing a dump just after starting desktop
   // Firefox (which is similar to dumping after a longer-running session,
-  // thanks to the limit on how many groups we dump), a cache with 2^24 entries
-  // (which approximates an infinite-entry cache) has a ~91% hit rate.  A cache
-  // with 2^12 entries has a ~83% hit rate, and takes up ~85 KiB (on 32-bit
-  // platforms) or ~150 KiB (on 64-bit platforms).
+  // thanks to the limit on how many records we dump), a cache with 2^24
+  // entries (which approximates an infinite-entry cache) has a ~91% hit rate.
+  // A cache with 2^12 entries has a ~83% hit rate, and takes up ~85 KiB (on
+  // 32-bit platforms) or ~150 KiB (on 64-bit platforms).
   static const size_t kNumEntries = 1 << 12;
   static const size_t kMask = kNumEntries - 1;
   Entry mEntries[kNumEntries];
@@ -1197,10 +1197,10 @@ namespace mozilla {
 namespace dmd {
 
 //---------------------------------------------------------------------------
-// Block groups
+// Stack trace records
 //---------------------------------------------------------------------------
 
-class BlockGroupKey
+class TraceRecordKey
 {
 public:
   const StackTrace* const mAllocStackTrace;   // never null
@@ -1209,7 +1209,7 @@ protected:
   const StackTrace* const mReportStackTrace2; // nullptr if not 2x-reported
 
 public:
-  BlockGroupKey(const Block& aB)
+  TraceRecordKey(const Block& aB)
     : mAllocStackTrace(aB.AllocStackTrace()),
       mReportStackTrace1(aB.ReportStackTrace1()),
       mReportStackTrace2(aB.ReportStackTrace2())
@@ -1219,16 +1219,16 @@ public:
 
   // Hash policy.
 
-  typedef BlockGroupKey Lookup;
+  typedef TraceRecordKey Lookup;
 
-  static uint32_t hash(const BlockGroupKey& aKey)
+  static uint32_t hash(const TraceRecordKey& aKey)
   {
     return mozilla::HashGeneric(aKey.mAllocStackTrace,
                                 aKey.mReportStackTrace1,
                                 aKey.mReportStackTrace2);
   }
 
-  static bool match(const BlockGroupKey& aA, const BlockGroupKey& aB)
+  static bool match(const TraceRecordKey& aA, const TraceRecordKey& aB)
   {
     return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
            aA.mReportStackTrace1 == aB.mReportStackTrace1 &&
@@ -1236,16 +1236,16 @@ public:
   }
 };
 
-class GroupSize
+class RecordSize
 {
   static const size_t kReqBits = sizeof(size_t) * 8 - 1;  // 31 or 63
 
   size_t mReq;              // size requested
   size_t mSlop:kReqBits;    // slop bytes
   size_t mSampled:1;        // were one or more blocks contributing to this
-                            //   GroupSize sampled?
+                            //   RecordSize sampled?
 public:
-  GroupSize()
+  RecordSize()
     : mReq(0),
       mSlop(0),
       mSampled(false)
@@ -1264,14 +1264,14 @@ public:
     mSampled = mSampled || aB.IsSampled();
   }
 
-  void Add(const GroupSize& aGroupSize)
+  void Add(const RecordSize& aRecordSize)
   {
-    mReq  += aGroupSize.Req();
-    mSlop += aGroupSize.Slop();
-    mSampled = mSampled || aGroupSize.IsSampled();
+    mReq  += aRecordSize.Req();
+    mSlop += aRecordSize.Slop();
+    mSampled = mSampled || aRecordSize.IsSampled();
   }
 
-  static int Cmp(const GroupSize& aA, const GroupSize& aB)
+  static int Cmp(const RecordSize& aA, const RecordSize& aB)
   {
     // Primary sort: put bigger usable sizes first.
     if (aA.Usable() > aB.Usable()) return -1;
@@ -1281,7 +1281,7 @@ public:
     if (aA.Req() > aB.Req()) return -1;
     if (aA.Req() < aB.Req()) return  1;
 
-    // Tertiary sort: put non-sampled groups before sampled groups.
+    // Tertiary sort: put non-sampled records before sampled records.
     if (!aA.mSampled &&  aB.mSampled) return -1;
     if ( aA.mSampled && !aB.mSampled) return  1;
 
@@ -1289,33 +1289,34 @@ public:
   }
 };
 
-// A group of one or more heap blocks with a common BlockGroupKey.
-class BlockGroup : public BlockGroupKey
+// A collection of one or more heap blocks with a common TraceRecordKey.
+class TraceRecord : public TraceRecordKey
 {
-  // The BlockGroupKey base class serves as the key in BlockGroupTables.  These
-  // two fields constitute the value, so it's ok for them to be |mutable|.
-  mutable uint32_t  mNumBlocks;     // number of blocks with this BlockGroupKey
-  mutable GroupSize mGroupSize;     // combined size of those blocks
+  // The TraceRecordKey base class serves as the key in TraceRecordTables.
+  // These two fields constitute the value, so it's ok for them to be
+  // |mutable|.
+  mutable uint32_t    mNumBlocks; // number of blocks with this TraceRecordKey
+  mutable RecordSize mRecordSize; // combined size of those blocks
 
 public:
-  explicit BlockGroup(const BlockGroupKey& aKey)
-    : BlockGroupKey(aKey),
+  explicit TraceRecord(const TraceRecordKey& aKey)
+    : TraceRecordKey(aKey),
       mNumBlocks(0),
-      mGroupSize()
+      mRecordSize()
   {}
 
   uint32_t NumBlocks() const { return mNumBlocks; }
 
-  const GroupSize& GetGroupSize() const { return mGroupSize; }
+  const RecordSize& GetRecordSize() const { return mRecordSize; }
 
   // This is |const| thanks to the |mutable| fields above.
   void Add(const Block& aB) const
   {
     mNumBlocks++;
-    mGroupSize.Add(aB);
+    mRecordSize.Add(aB);
   }
 
-  static const char* const kName;   // for PrintSortedGroups
+  static const char* const kRecordKind;   // for PrintSortedRecords
 
   void Print(const Writer& aWriter, LocationService* aLocService,
              uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
@@ -1324,44 +1325,42 @@ public:
 
   static int QsortCmp(const void* aA, const void* aB)
   {
-    const BlockGroup* const a =
-      *static_cast<const BlockGroup* const*>(aA);
-    const BlockGroup* const b =
-      *static_cast<const BlockGroup* const*>(aB);
+    const TraceRecord* const a = *static_cast<const TraceRecord* const*>(aA);
+    const TraceRecord* const b = *static_cast<const TraceRecord* const*>(aB);
 
-    return GroupSize::Cmp(a->mGroupSize, b->mGroupSize);
+    return RecordSize::Cmp(a->mRecordSize, b->mRecordSize);
   }
 };
 
-const char* const BlockGroup::kName = "block";
+const char* const TraceRecord::kRecordKind = "trace";
 
-typedef js::HashSet<BlockGroup, BlockGroup, InfallibleAllocPolicy>
-        BlockGroupTable;
+typedef js::HashSet<TraceRecord, TraceRecord, InfallibleAllocPolicy>
+        TraceRecordTable;
 
 void
-BlockGroup::Print(const Writer& aWriter, LocationService* aLocService,
-                  uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
-                  size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-                  size_t aTotalUsableSize) const
+TraceRecord::Print(const Writer& aWriter, LocationService* aLocService,
+                   uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
+                   size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
+                   size_t aTotalUsableSize) const
 {
-  bool showTilde = mGroupSize.IsSampled();
+  bool showTilde = mRecordSize.IsSampled();
 
-  W("%s: %s block%s in block group %s of %s\n",
+  W("%s: %s block%s in stack trace record %s of %s\n",
     aStr,
     Show(mNumBlocks, gBuf1, kBufLen, showTilde), Plural(mNumBlocks),
     Show(aM, gBuf2, kBufLen),
     Show(aN, gBuf3, kBufLen));
 
   W(" %s bytes (%s requested / %s slop)\n",
-    Show(mGroupSize.Usable(), gBuf1, kBufLen, showTilde),
-    Show(mGroupSize.Req(),    gBuf2, kBufLen, showTilde),
-    Show(mGroupSize.Slop(),   gBuf3, kBufLen, showTilde));
+    Show(mRecordSize.Usable(), gBuf1, kBufLen, showTilde),
+    Show(mRecordSize.Req(),    gBuf2, kBufLen, showTilde),
+    Show(mRecordSize.Slop(),   gBuf3, kBufLen, showTilde));
 
   W(" %4.2f%% of the heap (%4.2f%% cumulative); "
     " %4.2f%% of %s (%4.2f%% cumulative)\n",
-    Percent(mGroupSize.Usable(), aTotalUsableSize),
+    Percent(mRecordSize.Usable(), aTotalUsableSize),
     Percent(aCumulativeUsableSize, aTotalUsableSize),
-    Percent(mGroupSize.Usable(), aCategoryUsableSize),
+    Percent(mRecordSize.Usable(), aCategoryUsableSize),
     astr,
     Percent(aCumulativeUsableSize, aCategoryUsableSize));
 
@@ -1381,36 +1380,36 @@ BlockGroup::Print(const Writer& aWriter, LocationService* aLocService,
 }
 
 //---------------------------------------------------------------------------
-// Stack frame groups
+// Stack frame records
 //---------------------------------------------------------------------------
 
-// A group of one or more stack frames (from heap block allocation stack
+// A collection of one or more stack frames (from heap block allocation stack
 // traces) with a common PC.
-class FrameGroup
+class FrameRecord
 {
-  // mPc is used as the key in FrameGroupTable, and the other members
+  // mPc is used as the key in FrameRecordTable, and the other members
   // constitute the value, so it's ok for them to be |mutable|.
-  const void* const mPc;
-  mutable size_t    mNumBlocks;
-  mutable size_t    mNumBlockGroups;
-  mutable GroupSize mGroupSize;
+  const void* const  mPc;
+  mutable size_t     mNumBlocks;
+  mutable size_t     mNumTraceRecords;
+  mutable RecordSize mRecordSize;
 
 public:
-  explicit FrameGroup(const void* aPc)
+  explicit FrameRecord(const void* aPc)
     : mPc(aPc),
       mNumBlocks(0),
-      mNumBlockGroups(0),
-      mGroupSize()
+      mNumTraceRecords(0),
+      mRecordSize()
   {}
 
-  const GroupSize& GetGroupSize() const { return mGroupSize; }
+  const RecordSize& GetRecordSize() const { return mRecordSize; }
 
   // This is |const| thanks to the |mutable| fields above.
-  void Add(const BlockGroup& aBg) const
+  void Add(const TraceRecord& aTr) const
   {
-    mNumBlocks += aBg.NumBlocks();
-    mNumBlockGroups++;
-    mGroupSize.Add(aBg.GetGroupSize());
+    mNumBlocks += aTr.NumBlocks();
+    mNumTraceRecords++;
+    mRecordSize.Add(aTr.GetRecordSize());
   }
 
   void Print(const Writer& aWriter, LocationService* aLocService,
@@ -1420,13 +1419,13 @@ public:
 
   static int QsortCmp(const void* aA, const void* aB)
   {
-    const FrameGroup* const a = *static_cast<const FrameGroup* const*>(aA);
-    const FrameGroup* const b = *static_cast<const FrameGroup* const*>(aB);
+    const FrameRecord* const a = *static_cast<const FrameRecord* const*>(aA);
+    const FrameRecord* const b = *static_cast<const FrameRecord* const*>(aB);
 
-    return GroupSize::Cmp(a->mGroupSize, b->mGroupSize);
+    return RecordSize::Cmp(a->mRecordSize, b->mRecordSize);
   }
 
-  static const char* const kName;   // for PrintSortedGroups
+  static const char* const kRecordKind;   // for PrintSortedRecords
 
   // Hash policy.
 
@@ -1437,42 +1436,42 @@ public:
     return mozilla::HashGeneric(aPc);
   }
 
-  static bool match(const FrameGroup& aFg, const void* const& aPc)
+  static bool match(const FrameRecord& aFr, const void* const& aPc)
   {
-    return aFg.mPc == aPc;
+    return aFr.mPc == aPc;
   }
 };
 
-const char* const FrameGroup::kName = "frame";
+const char* const FrameRecord::kRecordKind = "frame";
 
-typedef js::HashSet<FrameGroup, FrameGroup, InfallibleAllocPolicy>
-        FrameGroupTable;
+typedef js::HashSet<FrameRecord, FrameRecord, InfallibleAllocPolicy>
+        FrameRecordTable;
 
 void
-FrameGroup::Print(const Writer& aWriter, LocationService* aLocService,
-                  uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
-                  size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-                  size_t aTotalUsableSize) const
+FrameRecord::Print(const Writer& aWriter, LocationService* aLocService,
+                   uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
+                   size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
+                   size_t aTotalUsableSize) const
 {
   (void)aCumulativeUsableSize;
 
-  bool showTilde = mGroupSize.IsSampled();
+  bool showTilde = mRecordSize.IsSampled();
 
-  W("%s: %s block%s and %s block group%s in frame group %s of %s\n",
+  W("%s: %s block%s from %s stack trace record%s in stack frame record %s of %s\n",
     aStr,
     Show(mNumBlocks, gBuf1, kBufLen, showTilde), Plural(mNumBlocks),
-    Show(mNumBlockGroups, gBuf2, kBufLen, showTilde), Plural(mNumBlockGroups),
+    Show(mNumTraceRecords, gBuf2, kBufLen, showTilde), Plural(mNumTraceRecords),
     Show(aM, gBuf3, kBufLen),
     Show(aN, gBuf4, kBufLen));
 
   W(" %s bytes (%s requested / %s slop)\n",
-    Show(mGroupSize.Usable(), gBuf1, kBufLen, showTilde),
-    Show(mGroupSize.Req(),    gBuf2, kBufLen, showTilde),
-    Show(mGroupSize.Slop(),   gBuf3, kBufLen, showTilde));
+    Show(mRecordSize.Usable(), gBuf1, kBufLen, showTilde),
+    Show(mRecordSize.Req(),    gBuf2, kBufLen, showTilde),
+    Show(mRecordSize.Slop(),   gBuf3, kBufLen, showTilde));
 
   W(" %4.2f%% of the heap;  %4.2f%% of %s\n",
-    Percent(mGroupSize.Usable(), aTotalUsableSize),
-    Percent(mGroupSize.Usable(), aCategoryUsableSize),
+    Percent(mRecordSize.Usable(), aTotalUsableSize),
+    Percent(mRecordSize.Usable(), aCategoryUsableSize),
     astr);
 
   W(" PC is\n");
@@ -1751,53 +1750,54 @@ ReportOnAlloc(const void* aPtr)
 // DMD output
 //---------------------------------------------------------------------------
 
-// This works for BlockGroups and FrameGroups.
-template <class TGroup>
+// This works for both TraceRecords and StackFrameRecords.
+template <class Record>
 static void
-PrintSortedGroups(const Writer& aWriter, LocationService* aLocService,
-                  const char* aStr, const char* astr,
-                  const js::HashSet<TGroup, TGroup, InfallibleAllocPolicy>& aTGroupTable,
-                  size_t aCategoryUsableSize, size_t aTotalUsableSize)
+PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
+                   const char* aStr, const char* astr,
+                   const js::HashSet<Record, Record, InfallibleAllocPolicy>&
+                         aRecordTable,
+                   size_t aCategoryUsableSize, size_t aTotalUsableSize)
 {
-  const char* name = TGroup::kName;
-  StatusMsg("  creating and sorting %s %s group array...\n", astr, name);
+  const char* kind = Record::kRecordKind;
+  StatusMsg("  creating and sorting %s stack %s record array...\n", astr, kind);
 
   // Convert the table into a sorted array.
-  js::Vector<const TGroup*, 0, InfallibleAllocPolicy> tgArray;
-  tgArray.reserve(aTGroupTable.count());
-  typedef js::HashSet<TGroup, TGroup, InfallibleAllocPolicy> TGroupTable;
-  for (typename TGroupTable::Range r = aTGroupTable.all();
+  js::Vector<const Record*, 0, InfallibleAllocPolicy> recordArray;
+  recordArray.reserve(aRecordTable.count());
+  typedef js::HashSet<Record, Record, InfallibleAllocPolicy> RecordTable;
+  for (typename RecordTable::Range r = aRecordTable.all();
        !r.empty();
        r.popFront()) {
-    tgArray.infallibleAppend(&r.front());
+    recordArray.infallibleAppend(&r.front());
   }
-  qsort(tgArray.begin(), tgArray.length(), sizeof(tgArray[0]),
-        TGroup::QsortCmp);
+  qsort(recordArray.begin(), recordArray.length(), sizeof(recordArray[0]),
+        Record::QsortCmp);
 
-  WriteTitle("%s %ss\n", aStr, name);
+  WriteTitle("%s stack %s records\n", aStr, kind);
 
-  if (tgArray.length() == 0) {
+  if (recordArray.length() == 0) {
     W("(none)\n\n");
     return;
   }
 
-  // Limit the number of block groups printed, because fix-linux-stack.pl is
-  // too damn slow.  Note that we don't break out of this loop because we need
-  // to keep adding to |cumulativeUsableSize|.
-  static const uint32_t MaxTGroups = 1000;
-  uint32_t numTGroups = tgArray.length();
+  // Limit the number of records printed, because fix-linux-stack.pl is too
+  // damn slow.  Note that we don't break out of this loop because we need to
+  // keep adding to |cumulativeUsableSize|.
+  static const uint32_t MaxRecords = 1000;
+  uint32_t numRecords = recordArray.length();
 
-  StatusMsg("  printing %s %s group array...\n", astr, name);
+  StatusMsg("  printing %s stack %s record array...\n", astr, kind);
   size_t cumulativeUsableSize = 0;
-  for (uint32_t i = 0; i < numTGroups; i++) {
-    const TGroup* tg = tgArray[i];
-    cumulativeUsableSize += tg->GetGroupSize().Usable();
-    if (i < MaxTGroups) {
-      tg->Print(aWriter, aLocService, i+1, numTGroups, aStr, astr,
-                aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
-    } else if (i == MaxTGroups) {
-      W("%s: stopping after %s %s groups\n\n", aStr,
-        Show(MaxTGroups, gBuf1, kBufLen), name);
+  for (uint32_t i = 0; i < numRecords; i++) {
+    const Record* r = recordArray[i];
+    cumulativeUsableSize += r->GetRecordSize().Usable();
+    if (i < MaxRecords) {
+      r->Print(aWriter, aLocService, i+1, numRecords, aStr, astr,
+               aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
+    } else if (i == MaxRecords) {
+      W("%s: stopping after %s stack %s records\n\n", aStr,
+        Show(MaxRecords, gBuf1, kBufLen), kind);
     }
   }
 
@@ -1806,29 +1806,29 @@ PrintSortedGroups(const Writer& aWriter, LocationService* aLocService,
 }
 
 static void
-PrintSortedBlockAndFrameGroups(const Writer& aWriter,
-                               LocationService* aLocService,
-                               const char* aStr, const char* astr,
-                               const BlockGroupTable& aBlockGroupTable,
-                               size_t aCategoryUsableSize,
-                               size_t aTotalUsableSize)
+PrintSortedTraceAndFrameRecords(const Writer& aWriter,
+                                LocationService* aLocService,
+                                const char* aStr, const char* astr,
+                                const TraceRecordTable& aTraceRecordTable,
+                                size_t aCategoryUsableSize,
+                                size_t aTotalUsableSize)
 {
-  PrintSortedGroups(aWriter, aLocService, aStr, astr, aBlockGroupTable,
-                    aCategoryUsableSize, aTotalUsableSize);
+  PrintSortedRecords(aWriter, aLocService, aStr, astr, aTraceRecordTable,
+                     aCategoryUsableSize, aTotalUsableSize);
 
-  // Frame groups are totally dependent on vagaries of stack traces, so we
+  // Frame records are totally dependent on vagaries of stack traces, so we
   // can't show them in test mode.
   if (gMode == Test) {
     return;
   }
 
-  FrameGroupTable frameGroupTable;
-  (void)frameGroupTable.init(2048);
-  for (BlockGroupTable::Range r = aBlockGroupTable.all();
+  FrameRecordTable frameRecordTable;
+  (void)frameRecordTable.init(2048);
+  for (TraceRecordTable::Range r = aTraceRecordTable.all();
        !r.empty();
        r.popFront()) {
-    const BlockGroup& bg = r.front();
-    const StackTrace* st = bg.mAllocStackTrace;
+    const TraceRecord& tr = r.front();
+    const StackTrace* st = tr.mAllocStackTrace;
 
     // A single PC can appear multiple times in a stack trace.  We ignore
     // duplicates by first sorting and then ignoring adjacent duplicates.
@@ -1842,16 +1842,16 @@ PrintSortedBlockAndFrameGroups(const Writer& aWriter,
       }
       prevPc = pc;
 
-      FrameGroupTable::AddPtr p = frameGroupTable.lookupForAdd(pc);
+      FrameRecordTable::AddPtr p = frameRecordTable.lookupForAdd(pc);
       if (!p) {
-        FrameGroup fg(pc);
-        (void)frameGroupTable.add(p, fg);
+        FrameRecord fr(pc);
+        (void)frameRecordTable.add(p, fr);
       }
-      p->Add(bg);
+      p->Add(tr);
     }
   }
-  PrintSortedGroups(aWriter, aLocService, aStr, astr, frameGroupTable, kNoSize,
-                    aTotalUsableSize);
+  PrintSortedRecords(aWriter, aLocService, aStr, astr, frameRecordTable,
+                     kNoSize, aTotalUsableSize);
 }
 
 // Note that, unlike most SizeOf* functions, this function does not take a
@@ -1906,20 +1906,20 @@ Dump(Writer aWriter)
   static int dumpCount = 1;
   StatusMsg("Dump %d {\n", dumpCount++);
 
-  StatusMsg("  gathering block groups...\n");
+  StatusMsg("  gathering stack trace records...\n");
 
-  BlockGroupTable unreportedBlockGroupTable;
-  (void)unreportedBlockGroupTable.init(1024);
+  TraceRecordTable unreportedTraceRecordTable;
+  (void)unreportedTraceRecordTable.init(1024);
   size_t unreportedUsableSize = 0;
   size_t unreportedNumBlocks = 0;
 
-  BlockGroupTable onceReportedBlockGroupTable;
-  (void)onceReportedBlockGroupTable.init(1024);
+  TraceRecordTable onceReportedTraceRecordTable;
+  (void)onceReportedTraceRecordTable.init(1024);
   size_t onceReportedUsableSize = 0;
   size_t onceReportedNumBlocks = 0;
 
-  BlockGroupTable twiceReportedBlockGroupTable;
-  (void)twiceReportedBlockGroupTable.init(0);
+  TraceRecordTable twiceReportedTraceRecordTable;
+  (void)twiceReportedTraceRecordTable.init(0);
   size_t twiceReportedUsableSize = 0;
   size_t twiceReportedNumBlocks = 0;
 
@@ -1928,27 +1928,27 @@ Dump(Writer aWriter)
   for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
     const Block& b = r.front();
 
-    BlockGroupTable* table;
+    TraceRecordTable* table;
     uint32_t numReports = b.NumReports();
     if (numReports == 0) {
       unreportedUsableSize += b.UsableSize();
       unreportedNumBlocks++;
-      table = &unreportedBlockGroupTable;
+      table = &unreportedTraceRecordTable;
     } else if (numReports == 1) {
       onceReportedUsableSize += b.UsableSize();
       onceReportedNumBlocks++;
-      table = &onceReportedBlockGroupTable;
+      table = &onceReportedTraceRecordTable;
     } else {
       MOZ_ASSERT(numReports == 2);
       twiceReportedUsableSize += b.UsableSize();
       twiceReportedNumBlocks++;
-      table = &twiceReportedBlockGroupTable;
+      table = &twiceReportedTraceRecordTable;
     }
-    BlockGroupKey key(b);
-    BlockGroupTable::AddPtr p = table->lookupForAdd(key);
+    TraceRecordKey key(b);
+    TraceRecordTable::AddPtr p = table->lookupForAdd(key);
     if (!p) {
-      BlockGroup bg(b);
-      (void)table->add(p, bg);
+      TraceRecord tr(b);
+      (void)table->add(p, tr);
     }
     p->Add(b);
 
@@ -1966,18 +1966,18 @@ Dump(Writer aWriter)
   // Allocate this on the heap instead of the stack because it's fairly large.
   LocationService* locService = InfallibleAllocPolicy::new_<LocationService>();
 
-  PrintSortedGroups(aWriter, locService, "Twice-reported", "twice-reported",
-                    twiceReportedBlockGroupTable, twiceReportedUsableSize,
-                    totalUsableSize);
+  PrintSortedRecords(aWriter, locService, "Twice-reported", "twice-reported",
+                     twiceReportedTraceRecordTable, twiceReportedUsableSize,
+                     totalUsableSize);
 
-  PrintSortedBlockAndFrameGroups(aWriter, locService,
-                                 "Unreported", "unreported",
-                                 unreportedBlockGroupTable,
-                                 unreportedUsableSize, totalUsableSize);
+  PrintSortedTraceAndFrameRecords(aWriter, locService,
+                                  "Unreported", "unreported",
+                                  unreportedTraceRecordTable,
+                                  unreportedUsableSize, totalUsableSize);
 
-  PrintSortedBlockAndFrameGroups(aWriter, locService,
+  PrintSortedTraceAndFrameRecords(aWriter, locService,
                                  "Once-reported", "once-reported",
-                                 onceReportedBlockGroupTable,
+                                 onceReportedTraceRecordTable,
                                  onceReportedUsableSize, totalUsableSize);
 
   bool showTilde = anyBlocksSampled;
@@ -2034,25 +2034,25 @@ Dump(Writer aWriter)
     W("\nData structures that are destroyed after Dump() ends:\n");
 
     size_t unreportedSize =
-      unreportedBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
+      unreportedTraceRecordTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Unreported table:     %10s bytes (%s entries, %s used)\n",
-      Show(unreportedSize,                       gBuf1, kBufLen),
-      Show(unreportedBlockGroupTable.capacity(), gBuf2, kBufLen),
-      Show(unreportedBlockGroupTable.count(),    gBuf3, kBufLen));
+      Show(unreportedSize,                        gBuf1, kBufLen),
+      Show(unreportedTraceRecordTable.capacity(), gBuf2, kBufLen),
+      Show(unreportedTraceRecordTable.count(),    gBuf3, kBufLen));
 
     size_t onceReportedSize =
-      onceReportedBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
+      onceReportedTraceRecordTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Once-reported table:  %10s bytes (%s entries, %s used)\n",
-      Show(onceReportedSize,                       gBuf1, kBufLen),
-      Show(onceReportedBlockGroupTable.capacity(), gBuf2, kBufLen),
-      Show(onceReportedBlockGroupTable.count(),    gBuf3, kBufLen));
+      Show(onceReportedSize,                        gBuf1, kBufLen),
+      Show(onceReportedTraceRecordTable.capacity(), gBuf2, kBufLen),
+      Show(onceReportedTraceRecordTable.count(),    gBuf3, kBufLen));
 
     size_t twiceReportedSize =
-      twiceReportedBlockGroupTable.sizeOfIncludingThis(MallocSizeOf);
+      twiceReportedTraceRecordTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Twice-reported table: %10s bytes (%s entries, %s used)\n",
-      Show(twiceReportedSize,                       gBuf1, kBufLen),
-      Show(twiceReportedBlockGroupTable.capacity(), gBuf2, kBufLen),
-      Show(twiceReportedBlockGroupTable.count(),    gBuf3, kBufLen));
+      Show(twiceReportedSize,                        gBuf1, kBufLen),
+      Show(twiceReportedTraceRecordTable.capacity(), gBuf2, kBufLen),
+      Show(twiceReportedTraceRecordTable.count(),    gBuf3, kBufLen));
 
     W("  Location service:     %10s bytes\n",
       Show(locService->SizeOfIncludingThis(), gBuf1, kBufLen));
@@ -2262,12 +2262,12 @@ RunTestMode(FILE* fp)
 
   char* s;
 
-  // This equals the sample size, and so is recorded exactly.  It should be
-  // listed before groups of the same size that are sampled.
+  // This equals the sample size, and so is reported exactly.  It should be
+  // listed before records of the same size that are sampled.
   s = (char*) malloc(128);
   UseItOrLoseIt(s);
 
-  // This exceeds the sample size, and so is recorded exactly.
+  // This exceeds the sample size, and so is reported exactly.
   s = (char*) malloc(144);
   UseItOrLoseIt(s);
 
@@ -2302,9 +2302,9 @@ RunTestMode(FILE* fp)
   }
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 0);
 
-  // This allocates 16, 32, ..., 128 bytes, which results a block group that
-  // contains a mix of sample and non-sampled blocks, and so should be printed
-  // with '~' signs.
+  // This allocates 16, 32, ..., 128 bytes, which results in a stack trace
+  // record that contains a mix of sample and non-sampled blocks, and so should
+  // be printed with '~' signs.
   for (int i = 1; i <= 8; i++) {
     s = (char*) malloc(i * 16);
     UseItOrLoseIt(s);
