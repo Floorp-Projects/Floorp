@@ -14,7 +14,6 @@
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"

@@ -7,7 +7,6 @@
 #include "nsIconDecoder.h"
 #include "nsIInputStream.h"
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 #include "nspr.h"
 #include "nsRect.h"
 

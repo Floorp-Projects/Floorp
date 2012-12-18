@@ -132,6 +132,8 @@ public:
   void SendStartContainer(imgRequestProxy* aProxy);
   void RecordDataAvailable();
   void SendDataAvailable(imgRequestProxy* aProxy, const nsIntRect* aRect);
+  void RecordFrameChanged(const nsIntRect* aDirtyRect);
+  void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
   void RecordStopFrame();
   void SendStopFrame(imgRequestProxy* aProxy);
   void RecordStopDecode(nsresult statusg);
@@ -140,10 +142,6 @@ public:
   void SendDiscard(imgRequestProxy* aProxy);
   void RecordImageIsAnimated();
   void SendImageIsAnimated(imgRequestProxy *aProxy);
-
-  /* non-virtual imgIContainerObserver methods */
-  void RecordFrameChanged(const nsIntRect* aDirtyRect);
-  void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void RecordStartRequest();
