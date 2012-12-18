@@ -616,10 +616,19 @@ TokenStream::reportStrictWarning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(NULL, JSREPORT_STRICT | JSREPORT_WARNING,
-                                             errorNumber, args);
+    bool result = reportStrictWarningErrorNumberVA(NULL, strictMode(), errorNumber, args);
     va_end(args);
     return result;
+}
+
+bool
+TokenStream::reportStrictWarningErrorNumberVA(ParseNode *pn, bool strictMode, unsigned errorNumber,
+                                              va_list args)
+{
+    if (!strictMode && !cx->hasStrictOption())
+        return true;
+
+    return reportCompileErrorNumberVA(NULL, JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, args);
 }
 
 #if JS_HAS_XML_SUPPORT
