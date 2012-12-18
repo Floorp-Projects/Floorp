@@ -25,7 +25,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(b9c71e0b-7f81-419a-8253-91f4c8893c4f)]
+[scriptable, uuid(8d86d6b2-fc2c-416a-8085-f670d5a35832)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -218,7 +218,8 @@ interface nsIDOMWindow : nsISupports
    * @see <http://www.whatwg.org/html/#dom-window-postmessage>
    */
   [implicit_jscontext, binaryname(PostMessageMoz)]
-    void postMessage(in jsval message, in DOMString targetOrigin);
+    void postMessage(in jsval message, in DOMString targetOrigin,
+                     [optional] in jsval transfer);
 
 
   // WindowBase64

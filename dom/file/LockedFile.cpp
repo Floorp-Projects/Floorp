@@ -953,10 +953,10 @@ FinishHelper::Run()
   }
 
   for (uint32_t index = 0; index < mParallelStreams.Length(); index++) {
-    nsCOMPtr<nsIOutputStream> ostream =
+    nsCOMPtr<nsIInputStream> stream =
       do_QueryInterface(mParallelStreams[index]);
 
-    if (NS_FAILED(ostream->Close())) {
+    if (NS_FAILED(stream->Close())) {
       NS_WARNING("Failed to close stream!");
     }
 
@@ -964,9 +964,9 @@ FinishHelper::Run()
   }
 
   if (mStream) {
-    nsCOMPtr<nsIOutputStream> ostream = do_QueryInterface(mStream);
+    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mStream);
 
-    if (NS_FAILED(ostream->Close())) {
+    if (NS_FAILED(stream->Close())) {
       NS_WARNING("Failed to close stream!");
     }
 

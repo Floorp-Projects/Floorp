@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/StandardInteger.h"
+#include "mozilla/Util.h"
+
 #include "MediaDecoderStateMachine.h"
 #include <limits>
 #include "AudioStream.h"
@@ -19,12 +23,10 @@
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StandardInteger.h"
-#include "mozilla/Util.h"
 
 namespace mozilla {
 
-using namespace layers;
+using namespace mozilla::layers;
 using namespace mozilla::dom;
 
 #ifdef PR_LOGGING
@@ -491,8 +493,8 @@ void MediaDecoderStateMachine::DecodeThreadRun()
 }
 
 void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
-                                                   DecodedStreamData* aStream,
-                                                   AudioSegment* aOutput)
+                                               DecodedStreamData* aStream,
+                                               AudioSegment* aOutput)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
@@ -562,7 +564,8 @@ static const TrackRate RATE_VIDEO = USECS_PER_S;
 
 void MediaDecoderStateMachine::SendStreamData()
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  NS_ASSERTION(OnDecodeThread() ||
+               OnStateMachineThread(), "Should be on decode thread or state machine thread");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
@@ -570,6 +573,13 @@ void MediaDecoderStateMachine::SendStreamData()
     return;
 
   if (mState == DECODER_STATE_DECODING_METADATA)
+    return;
+
+  // If there's still an audio thread alive, then we can't send any stream
+  // data yet since both SendStreamData and the audio thread want to be in
+  // charge of popping the audio queue. We're waiting for the audio thread
+  // to die before sending anything to our stream.
+  if (mAudioThread)
     return;
 
   int64_t minLastAudioPacketTime = INT64_MAX;
@@ -1322,8 +1332,12 @@ void MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (!mAudioCaptured && aCaptured) {
-    StopAudioThread();
+  if (!mAudioCaptured && aCaptured && !mStopAudioThread) {
+    // Make sure the state machine runs as soon as possible. That will
+    // stop the audio thread.
+    // If mStopAudioThread is true then we're already stopping the audio thread
+    // and since we set mAudioCaptured to true, nothing can start it again.
+    ScheduleStateMachine();
   }
   mAudioCaptured = aCaptured;
 }
@@ -1547,7 +1561,15 @@ void MediaDecoderStateMachine::StopDecodeThread()
 
 void MediaDecoderStateMachine::StopAudioThread()
 {
+  NS_ASSERTION(OnDecodeThread() ||
+               OnStateMachineThread(), "Should be on decode thread or state machine thread");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+
+  if (mStopAudioThread) {
+    // Nothing to do, since the thread is already stopping
+    return;
+  }
+
   mStopAudioThread = true;
   mDecoder->GetReentrantMonitor().NotifyAll();
   if (mAudioThread) {
@@ -1557,6 +1579,9 @@ void MediaDecoderStateMachine::StopAudioThread()
       mAudioThread->Shutdown();
     }
     mAudioThread = nullptr;
+    // Now that the audio thread is dead, try sending data to our MediaStream(s).
+    // That may have been waiting for the audio thread to stop.
+    SendStreamData();
   }
 }
 
@@ -1633,8 +1658,13 @@ MediaDecoderStateMachine::StartAudioThread()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  if (mAudioCaptured) {
+    NS_ASSERTION(mStopAudioThread, "mStopAudioThread must always be true if audio is captured");
+    return NS_OK;
+  }
+
   mStopAudioThread = false;
-  if (HasAudio() && !mAudioThread && !mAudioCaptured) {
+  if (HasAudio() && !mAudioThread) {
     nsresult rv = NS_NewNamedThread("Media Audio",
                                     getter_AddRefs(mAudioThread),
                                     nullptr,
@@ -2536,6 +2566,11 @@ nsresult MediaDecoderStateMachine::CallRunStateMachine()
   // Set to true whenever we dispatch an event to run this state machine.
   // This flag prevents us from dispatching
   mDispatchedRunEvent = false;
+
+  // If audio is being captured, stop the audio thread if it's running
+  if (mAudioCaptured) {
+    StopAudioThread();
+  }
 
   mTimeout = TimeStamp();
 

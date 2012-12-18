@@ -1838,7 +1838,6 @@ typedef JSBool
  *
  *  JSRESOLVE_QUALIFIED   a qualified property id: obj.id or obj[id], not id
  *  JSRESOLVE_ASSIGNING   obj[id] is on the left-hand side of an assignment
- *  JSRESOLVE_DETECTING   'if (o.p)...' or similar detection opcode sequence
  *
  * The *objp out parameter, on success, should be null to indicate that id
  * was not resolved; and non-null, referring to obj or one of its prototypes,
@@ -2761,8 +2760,6 @@ ToBoolean(const Value &v)
         return v.toBoolean();
     if (v.isInt32())
         return v.toInt32() != 0;
-    if (v.isObject())
-        return true;
     if (v.isNullOrUndefined())
         return false;
     if (v.isDouble()) {
@@ -2770,7 +2767,7 @@ ToBoolean(const Value &v)
         return !MOZ_DOUBLE_IS_NaN(d) && d != 0;
     }
 
-    /* Slow path. Handle Strings. */
+    /* The slow path handles strings and objects. */
     return js::ToBooleanSlow(v);
 }
 
@@ -4087,7 +4084,9 @@ struct JSClass {
 #define JSCLASS_IS_DOMJSCLASS           (1<<4)  /* objects are DOM */
 #define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  /* Correctly implements GC read
                                                    and write barriers */
-#define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
+#define JSCLASS_EMULATES_UNDEFINED      (1<<6)  /* objects of this class act
+                                                   like the value undefined,
+                                                   in some contexts */
 #define JSCLASS_USERBIT1                (1<<7)  /* Reserved for embeddings. */
 
 /*
@@ -4230,7 +4229,6 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
  */
 #define JSRESOLVE_QUALIFIED     0x01    /* resolve a qualified property id */
 #define JSRESOLVE_ASSIGNING     0x02    /* resolve on the left of assignment */
-#define JSRESOLVE_DETECTING     0x04    /* 'if (o.p)...' or '(o.p) ?...:...' */
 
 /*
  * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on

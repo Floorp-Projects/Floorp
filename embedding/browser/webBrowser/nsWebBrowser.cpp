@@ -1697,7 +1697,7 @@ void nsWebBrowser::WindowLowered(nsIWidget* aWidget)
   Deactivate();
 }
 
-bool nsWebBrowser::PaintWindow(nsIWidget* aWidget, bool isRequest, nsIntRegion aRegion, bool aWillSendDidPaint)
+bool nsWebBrowser::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags)
 {
   LayerManager* layerManager = aWidget->GetLayerManager();
   NS_ASSERTION(layerManager, "Must be in paint event");

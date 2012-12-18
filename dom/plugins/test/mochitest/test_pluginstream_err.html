@@ -41,47 +41,47 @@ var tests = [
     "functiontofail": "npp_newstream",
     "failurecode": "1",
     "frame": "testframe"
-  }, 
+  },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "3",
     "frame": "testframe"
-  }, 
+  },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "5",
     "frame": "testframe"
-  }, 
+  },
   {
     "geturl": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "1",
     "frame": "testframe"
-  }, 
+  },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_write",
     "frame": "testframe"
-  }, 
+  },
   {
     "src": "loremipsum.txt",
     "streammode": "asfile",
     "functiontofail": "npp_write",
     "frame": "testframe"
-  }, 
+  },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_destroystream",
     "failurecode": "1",
     "frame": "testframe"
-  }, 
+  },
 ];
 
 function iframeonload(evt) {
@@ -104,43 +104,55 @@ function iframeonload(evt) {
 var index = 0;
 var gTestWindow;
 function runNextTest() {
-  if (index == tests.length) {
+  if (index == tests.length * 2) {
     SimpleTest.finish();
     return;
   }
 
-  gTestWindow = window.open("plugin_window.html", 
-                            "", 
+  gTestWindow = window.open("plugin_window.html",
+                            "",
                             "width=620,height=320");
 }
 
 function continueTest() {
-  var test = tests[index];
-  
+  // We run each test as an embed and an object, as their initial stream
+  // handling differs.
+  var tag = index % 2 ? "embed" : "object";
+  var test = tests[Math.floor(index / 2)];
+
   var p = gTestWindow.document.createElement("p");
   p.innerHTML = "Plugin Stream Test " + index;
   gTestWindow.document.getElementById("test").appendChild(p);
-  
+
   if (test.frame) {
     var iframe = gTestWindow.document.createElement("iframe");
     iframe.name = test.frame;
     iframe.onload = iframeonload;
     gTestWindow.document.getElementById("test").appendChild(iframe);
   }
-  
-  var embed = gTestWindow.document.createElement("embed");
-  embed.setAttribute("id", "embedtest");
-  embed.setAttribute("style", "width: 400px; height: 100px;");
-  embed.setAttribute("type", "application/x-test");
+
+  var plugin = gTestWindow.document.createElement(tag);
+  plugin.setAttribute("id", "embedtest");
+  plugin.setAttribute("style", "width: 400px; height: 100px;");
+  plugin.setAttribute("type", "application/x-test");
   for (var name in test) {
-    embed.setAttribute(name, test[name]);
+    if (tag == "embed") {
+      plugin.setAttribute(name, test[name]);
+    } else if (name == "src") {
+      plugin.setAttribute("data", test[name]);
+    } else {
+      var param = document.createElement("param");
+      param.name = name;
+      param.value = test[name];
+      plugin.appendChild(param);
+    }
   }
-  gTestWindow.document.getElementById("test").appendChild(embed);
-  
+  gTestWindow.document.getElementById("test").appendChild(plugin);
+
   gTestWindow.document.getElementById("test")
                       .appendChild(document.createElement("br"));
-  
-  index++; 
+
+  index++;
 }
 
 </script>

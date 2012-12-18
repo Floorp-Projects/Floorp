@@ -3427,8 +3427,13 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *pare
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     AutoAssertNoGC nogc;
     if (obj) {
+        TypeObjectFlags flags = 0;
         if (clasp->ext.equality)
-            MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
+            flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
+        if (clasp->emulatesUndefined())
+            flags |= OBJECT_FLAG_EMULATES_UNDEFINED;
+        if (flags)
+            MarkTypeObjectFlags(cx, obj, flags);
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
@@ -3655,8 +3660,7 @@ JS_HasPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, JSBool *foundp)
     RootedId id(cx, idArg);
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    JSBool ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
-                                   &obj2, &prop);
+    JSBool ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop);
     *foundp = (prop != NULL);
     return ok;
 }
@@ -3702,10 +3706,8 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *objArg, jsid id_, JSBool *
         RootedObject obj2(cx);
         RootedShape prop(cx);
 
-        if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
-                                &obj2, &prop)) {
+        if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
             return JS_FALSE;
-        }
         *foundp = (obj == obj2);
         return JS_TRUE;
     }
@@ -6538,7 +6540,7 @@ JS_ReportErrorNumberVA(JSContext *cx, JSErrorCallback errorCallback,
 {
     AssertHeapIsIdle(cx);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
-                           errorNumber, JS_TRUE, ap);
+                           errorNumber, ArgumentsAreASCII, ap);
 }
 
 JS_PUBLIC_API(void)
@@ -6550,7 +6552,7 @@ JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
-                           errorNumber, JS_FALSE, ap);
+                           errorNumber, ArgumentsAreUnicode, ap);
     va_end(ap);
 }
 
@@ -6588,7 +6590,7 @@ JS_ReportErrorFlagsAndNumber(JSContext *cx, unsigned flags,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     ok = js_ReportErrorNumberVA(cx, flags, errorCallback, userRef,
-                                errorNumber, JS_TRUE, ap);
+                                errorNumber, ArgumentsAreASCII, ap);
     va_end(ap);
     return ok;
 }
@@ -6604,7 +6606,7 @@ JS_ReportErrorFlagsAndNumberUC(JSContext *cx, unsigned flags,
     AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
     ok = js_ReportErrorNumberVA(cx, flags, errorCallback, userRef,
-                                errorNumber, JS_FALSE, ap);
+                                errorNumber, ArgumentsAreUnicode, ap);
     va_end(ap);
     return ok;
 }

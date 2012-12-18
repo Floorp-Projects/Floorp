@@ -11,13 +11,13 @@
               android:gravity="center_vertical"
               android:padding="10dip">
 
-    <TextView android:id="@+id/suggestions_prompt_title"
-              android:layout_height="wrap_content"
-              android:layout_width="wrap_content"
-              android:textColor="?android:attr/textColorPrimary"
-              android:layout_marginLeft="6dip"
-              android:textSize="13sp"
-              android:layout_weight="1" />
+    <Gecko.TextView android:id="@+id/suggestions_prompt_title"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/awesome_bar_title"
+                    android:layout_marginLeft="6dip"
+                    android:textSize="13sp"
+                    android:layout_weight="1" />
 
     <TextView android:id="@+id/suggestions_prompt_yes"
             android:layout_height="wrap_content"

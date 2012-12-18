@@ -1204,6 +1204,23 @@ protected:
 #endif
 };
 
+class NonNullLazyRootedObject : public Maybe<js::RootedObject>
+{
+public:
+  operator JSObject&() const {
+    MOZ_ASSERT(!empty() && ref(), "Can not alias null.");
+    return *ref();
+  }
+};
+
+class LazyRootedObject : public Maybe<js::RootedObject>
+{
+public:
+  operator JSObject*() const {
+    return empty() ? (JSObject*) nullptr : ref();
+  }
+};
+
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior
 struct FakeDependentString {

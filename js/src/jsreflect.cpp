@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * JS reflection package.
- */
+/* JS reflection package. */
+
 #include <stdlib.h>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 #include "jspubtd.h"
@@ -34,8 +34,8 @@
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::DebugOnly;
 using mozilla::ArrayLength;
+using mozilla::DebugOnly;
 
 char const *js::aopNames[] = {
     "=",    /* AOP_ASSIGN */

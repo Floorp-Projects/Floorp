@@ -84,7 +84,7 @@ public class LightweightTheme implements GeckoEventListener {
             stream.close();
 
             // The download could be HTTP for previews, so let's be sure we have a bitmap
-            if (mBitmap != null || mBitmap.getWidth() == 0 || mBitmap.getHeight() == 0) {
+            if (mBitmap == null || mBitmap.getWidth() == 0 || mBitmap.getHeight() == 0) {
                 mBitmap = null;
                 return;
             }

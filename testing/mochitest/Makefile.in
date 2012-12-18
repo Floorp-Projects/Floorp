@@ -200,9 +200,9 @@ $(_DEST_DIR):
 	$(NSINSTALL) -D $@
 
 stage-package:
-	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins
+	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins && $(NSINSTALL) -D $(DIST)/plugins
 	(cd $(DEPTH)/_tests/testing/mochitest/ && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
 	@(cd $(DIST_BIN) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)
 	@(cd $(DIST_BIN)/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
 	(cd $(topsrcdir)/build/pgo/certs && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/certs && tar -xf -)
-	@(cd $(DIST_BIN)/plugins && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PLUGINS)) | (cd $(PKG_STAGE)/bin/plugins && tar -xf -)
+	@(cd $(DIST)/plugins && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PLUGINS)) | (cd $(PKG_STAGE)/bin/plugins && tar -xf -)

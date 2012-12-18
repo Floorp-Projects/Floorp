@@ -9,9 +9,11 @@
 #define jsion_ion_spewer_h__
 
 #include <stdarg.h>
+
+#include "mozilla/DebugOnly.h"
+
 #include "C1Spewer.h"
 #include "JSONSpewer.h"
-#include "mozilla/Util.h"
 
 namespace js {
 namespace ion {

@@ -116,4 +116,6 @@ load 752226-2.html
 HTTP(..) load xhr_abortinprogress.html
 load 786854.html
 load xhr_empty_datauri.html
+load 815477.html
+load 815500.html
 load 816253.html

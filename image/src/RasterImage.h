@@ -23,6 +23,7 @@
 #include "imgIContainer.h"
 #include "nsIProperties.h"
 #include "nsITimer.h"
+#include "nsIRequest.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
 #include "imgFrame.h"
@@ -152,7 +153,7 @@ public:
   NS_DECL_IMGICONTAINERDEBUG
 #endif
 
-  RasterImage(imgStatusTracker* aStatusTracker = nullptr);
+  // (no public constructor - use ImageFactory)
   virtual ~RasterImage();
 
   virtual nsresult StartAnimation();
@@ -163,7 +164,7 @@ public:
                 const char* aMimeType,
                 const char* aURIString,
                 uint32_t aFlags);
-  void     GetCurrentFrameRect(nsIntRect& aRect);
+  virtual void  GetCurrentFrameRect(nsIntRect& aRect) MOZ_OVERRIDE;
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
@@ -249,11 +250,15 @@ public:
    */
   nsresult AddSourceData(const char *aBuffer, uint32_t aCount);
 
-  /* Called after the all the source data has been added with addSourceData. */
-  nsresult SourceDataComplete();
-
-  /* Called for multipart images when there's a new source image to add. */
-  nsresult NewSourceData();
+  virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
+                                        nsISupports* aContext,
+                                        nsIInputStream* aInStr,
+                                        uint64_t aSourceOffset,
+                                        uint32_t aCount) MOZ_OVERRIDE;
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
+                                       nsISupports* aContext,
+                                       nsresult aResult) MOZ_OVERRIDE;
+  virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
   /**
    * A hint of the number of bytes of source data that the image contains. If
@@ -728,7 +733,11 @@ private: // data
   bool StoringSourceData() const;
 
 protected:
+  RasterImage(imgStatusTracker* aStatusTracker = nullptr);
+
   bool ShouldAnimate();
+
+  friend class ImageFactory;
 };
 
 inline NS_IMETHODIMP RasterImage::GetAnimationMode(uint16_t *aAnimationMode) {

@@ -13,8 +13,8 @@ function run_test() {
 
 add_test(function test_initialize_profileDir() {
   // Profile has not been set up yet, check that "profileDir" isn't either.
-  do_check_false(!!OS.Constants.Path.profileDir);
-  do_check_false(!!OS.Constants.Path.localProfileDir);
+  do_check_false("profileDir" in OS.Constants.Path);
+  do_check_false("localProfileDir" in OS.Constants.Path);
 
   // Set up profile.
   do_get_profile();

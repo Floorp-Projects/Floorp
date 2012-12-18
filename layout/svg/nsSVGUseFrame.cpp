@@ -124,7 +124,8 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
         aAttribute == nsGkAtoms::y) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nullptr;
-      nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
+      nsSVGUtils::InvalidateBounds(this, false);
+      nsSVGUtils::ScheduleReflowSVG(this);
       nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {
@@ -138,13 +139,15 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
         useElement->SyncWidthOrHeight(aAttribute);
       }
       if (invalidate) {
-        nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
+        nsSVGUtils::InvalidateBounds(this, false);
+        nsSVGUtils::ScheduleReflowSVG(this);
       }
     }
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // we're changing our nature, clear out the clone information
-    nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
+    nsSVGUtils::InvalidateBounds(this, false);
+    nsSVGUtils::ScheduleReflowSVG(this);
     useElement->mOriginal = nullptr;
     useElement->UnlinkSource();
     useElement->TriggerReclone();

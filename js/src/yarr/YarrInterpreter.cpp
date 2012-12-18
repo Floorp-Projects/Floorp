@@ -740,9 +740,13 @@ public:
                     // inputPosition, but for repeats other than fixed these values should be
                     // the same anyway! (We don't pre-check for greedy or non-greedy matches.)
                     ASSERT((&term - term.atom.parenthesesWidth)->type == ByteTerm::TypeParenthesesSubpatternOnceBegin);
+
+		    // Disabled, see bug 808478
+#if 0
                     ASSERT((&term - term.atom.parenthesesWidth)->inputPosition == term.inputPosition);
+#endif
                     unsigned subpatternId = term.atom.subpatternId;
-                    output[subpatternId << 1] = input.getPos() + term.inputPosition;
+                    output[subpatternId << 1] = input.getPos() + (&term - term.atom.parenthesesWidth)->inputPosition;
                 }
                 context->term -= term.atom.parenthesesWidth;
                 return true;

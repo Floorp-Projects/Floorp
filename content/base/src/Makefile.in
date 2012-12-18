@@ -120,6 +120,7 @@ CPPSRCS		= \
 		nsTraversal.cpp \
 		nsTreeSanitizer.cpp \
 		nsTreeWalker.cpp \
+                nsViewportInfo.cpp \
 		WebSocket.cpp \
 		nsXHTMLContentSerializer.cpp \
 		nsXMLContentSerializer.cpp \
@@ -161,12 +162,15 @@ FORCE_STATIC_LIB = 1
 EXTRA_COMPONENTS = \
 		$(srcdir)/nsBadCertHandler.js \
 		nsBadCertHandler.manifest \
-		contentSecurityPolicy.js \
 		contentSecurityPolicy.manifest \
 		contentAreaDropListener.js \
 		contentAreaDropListener.manifest \
 		messageWakeupService.js \
 		messageWakeupService.manifest \
+		$(NULL)
+
+EXTRA_PP_COMPONENTS = \
+		contentSecurityPolicy.js \
 		$(NULL)
 
 EXTRA_JS_MODULES = \

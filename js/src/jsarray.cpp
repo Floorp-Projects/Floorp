@@ -64,8 +64,10 @@
  * array for slot accesses, at some cost in code complexity.
  */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/Util.h"
 
 #include <limits.h>
 #include <stdlib.h>

@@ -46,6 +46,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_CMD_SELECT_ITEM           = 0x24;
   const unsigned short STK_CMD_SET_UP_MENU           = 0x25;
   const unsigned short STK_CMD_PROVIDE_LOCAL_INFO    = 0x26;
+  const unsigned short STK_CMD_TIMER_MANAGEMENT      = 0x27;
   const unsigned short STK_CMD_SET_UP_IDLE_MODE_TEXT = 0x28;
 
   /**
@@ -205,6 +206,13 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_LOCAL_INFO_DATE_TIME_ZONE = 0x03;
   const unsigned short STK_LOCAL_INFO_LANGUAGE       = 0x04;
 
+   /**
+   * Timer Management
+   */
+  const unsigned short STK_TIMER_START             = 0x00;
+  const unsigned short STK_TIMER_DEACTIVATE        = 0x01;
+  const unsigned short STK_TIMER_GET_CURRENT_VALUE = 0x02;
+
   /**
    * Send the response back to ICC after an attempt to execute STK Proactive
    * Command.
@@ -227,6 +235,18 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    */
   void sendStkMenuSelection(in unsigned short itemIdentifier,
                             in boolean        helpRequested);
+
+  /**
+   * Send the "Timer Expiration" Envelope command to ICC for TIMER MANAGEMENT.
+  `*
+   * @param timer
+   *        The identifier and value for a timer.
+   *        timerId: Identifier of the timer that has expired.
+   *        timerValue: Different between the time when this command is issued
+   *                    and when the timer was initially started.
+   *        @see MozStkTimer
+   */
+  void sendStkTimerExpiration(in jsval timer);
 
   /**
    * Send "Event Download" Envelope command to ICC.

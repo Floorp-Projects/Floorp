@@ -2,18 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+
 #include "base/basictypes.h"
 
 #include "nsDeviceStorage.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
-#include "mozilla/Util.h" // DebugOnly
 
 #include "nsAutoPtr.h"
 #include "nsDOMEvent.h"

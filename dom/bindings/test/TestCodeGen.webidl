@@ -510,6 +510,10 @@ dictionary Dict : ParentDict {
   TestEnum otherEnum = "b";
   DOMString otherStr = "def";
   DOMString? yetAnotherStr = null;
+  DOMString template;
+  object someObj;
+  object? anotherObj = null;
+  TestCallback? someCallback = null;
 };
 
 dictionary ParentDict : GrandparentDict {

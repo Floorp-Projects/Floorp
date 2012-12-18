@@ -159,7 +159,7 @@ ScriptFilename(const UnrootedScript script)
 }
 
 static const char *
-FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString* bytes)
+FunctionName(JSContext *cx, UnrootedFunction fun, JSAutoByteString* bytes)
 {
     if (!fun)
         return Probes::nullName;
@@ -176,7 +176,7 @@ FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString* bytes)
  * a number of usually unused lines of code would cause.
  */
 void
-Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script)
+Probes::DTraceEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), Probes::nullName,
@@ -184,7 +184,7 @@ Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script)
 }
 
 void
-Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script)
+Probes::DTraceExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), Probes::nullName,
@@ -243,7 +243,7 @@ Probes::ETWShutdown()
 }
 
 bool
-Probes::ETWEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int counter)
+Probes::ETWEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter)
 {
     int lineno = script ? script->lineno : -1;
     JSAutoByteString bytes;
@@ -253,7 +253,7 @@ Probes::ETWEnterJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int
 }
 
 bool
-Probes::ETWExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int counter)
+Probes::ETWExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter)
 {
     int lineno = script ? script->lineno : -1;
     JSAutoByteString bytes;
@@ -263,7 +263,7 @@ Probes::ETWExitJSFun(JSContext *cx, JSFunction *fun, UnrootedScript script, int 
 }
 
 bool
-Probes::ETWCreateObject(JSContext *cx, JSObject *obj)
+Probes::ETWCreateObject(JSContext *cx, UnrootedObject obj)
 {
     int lineno;
     const char * script_filename;
@@ -275,14 +275,14 @@ Probes::ETWCreateObject(JSContext *cx, JSObject *obj)
 }
 
 bool
-Probes::ETWFinalizeObject(JSObject *obj)
+Probes::ETWFinalizeObject(UnrootedObject obj)
 {
     return EventWriteEvtObjectFinalize(ObjectClassname(obj),
                                        reinterpret_cast<uint64_t_t>(obj)) == ERROR_SUCCESS;
 }
 
 bool
-Probes::ETWResizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize)
+Probes::ETWResizeObject(JSContext *cx, UnrootedObject obj, size_t oldSize, size_t newSize)
 {
     int lineno;
     const char *script_filename;
@@ -294,7 +294,7 @@ Probes::ETWResizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t new
 }
 
 bool
-Probes::ETWCreateString(JSContext *cx, JSString *string, size_t length)
+Probes::ETWCreateString(JSContext *cx, UnrootedString string, size_t length)
 {
     int lineno;
     const char *script_filename;
@@ -306,7 +306,7 @@ Probes::ETWCreateString(JSContext *cx, JSString *string, size_t length)
 }
 
 bool
-Probes::ETWFinalizeString(JSString *string)
+Probes::ETWFinalizeString(UnrootedString string)
 {
     return EventWriteEvtStringFinalize(reinterpret_cast<uint64_t>(string),
                                        string->length()) == ERROR_SUCCESS;
@@ -325,7 +325,7 @@ Probes::ETWCompileScriptEnd(const char *filename, int lineno)
 }
 
 bool
-Probes::ETWCalloutBegin(JSContext *cx, JSFunction *fun)
+Probes::ETWCalloutBegin(JSContext *cx, UnrootedFunction fun)
 {
     const char *script_filename;
     int lineno;
@@ -339,7 +339,7 @@ Probes::ETWCalloutBegin(JSContext *cx, JSFunction *fun)
 }
 
 bool
-Probes::ETWCalloutEnd(JSContext *cx, JSFunction *fun)
+Probes::ETWCalloutEnd(JSContext *cx, UnrootedFunction fun)
 {
         const char *script_filename;
         int lineno;
@@ -406,7 +406,7 @@ Probes::ETWGCEndSweepPhase(JSCompartment *compartment)
 }
 
 bool
-Probes::ETWCustomMark(JSString *string)
+Probes::ETWCustomMark(UnrootedString string)
 {
     const jschar *chars = string->getCharsZ(NULL);
     return !chars || EventWriteEvtCustomString(chars) == ERROR_SUCCESS;

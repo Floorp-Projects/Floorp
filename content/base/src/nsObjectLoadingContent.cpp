@@ -245,7 +245,7 @@ nsPluginCrashedEvent::Run()
 
   event->InitEvent(NS_LITERAL_STRING("PluginCrashed"), true, true);
   event->SetTrusted(true);
-  event->GetInternalNSEvent()->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 
   nsCOMPtr<nsIWritableVariant> variant;
 
@@ -1962,12 +1962,14 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     // Create the final listener if we're loading with a channel. We can't do
     // this in the loading block above as it requires an instance.
     if (aLoadingChannel && NS_SUCCEEDED(rv)) {
-      // Plugins can continue to run even if their initial stream dies. Some
-      // plugins will even return failure codes to reject the stream, but expect
-      // to continue running, so ignore the error code. rv is thus the result of
-      // spawning the plugin above
       if (NS_SUCCEEDED(rv) && MakePluginListener()) {
-        mFinalListener->OnStartRequest(mChannel, nullptr);
+        rv = mFinalListener->OnStartRequest(mChannel, nullptr);
+        if (NS_FAILED(rv)) {
+          // Plugins can reject their initial stream, but continue to run.
+          CloseChannel();
+          NS_ENSURE_TRUE(mIsLoading, NS_OK);
+          rv = NS_OK;
+        }
       }
     }
   } else if (finalListener) {

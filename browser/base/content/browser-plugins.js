@@ -3,57 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const PLUGIN_SCRIPTED_STATE_NONE = 0;
-const PLUGIN_SCRIPTED_STATE_FIRED = 1;
-const PLUGIN_SCRIPTED_STATE_DONE = 2;
-
-function getPluginInfo(pluginElement)
-{
-  var tagMimetype;
-  var pluginsPage;
-  var pluginName = gNavigatorBundle.getString("pluginInfo.unknownPlugin");
-  if (pluginElement instanceof HTMLAppletElement) {
-    tagMimetype = "application/x-java-vm";
-  } else {
-    if (pluginElement instanceof HTMLObjectElement) {
-      pluginsPage = pluginElement.getAttribute("codebase");
-    } else {
-      pluginsPage = pluginElement.getAttribute("pluginspage");
-    }
-
-    // only attempt if a pluginsPage is defined.
-    if (pluginsPage) {
-      var doc = pluginElement.ownerDocument;
-      var docShell = findChildShell(doc, gBrowser.docShell, null);
-      try {
-        pluginsPage = makeURI(pluginsPage, doc.characterSet, docShell.currentURI).spec;
-      } catch (ex) {
-        pluginsPage = "";
-      }
-    }
-
-    tagMimetype = pluginElement.QueryInterface(Components.interfaces.nsIObjectLoadingContent)
-                               .actualType;
-
-    if (tagMimetype == "") {
-      tagMimetype = pluginElement.type;
-    }
-  }
-
-  if (tagMimetype) {
-    let navMimeType = navigator.mimeTypes.namedItem(tagMimetype);
-    if (navMimeType && navMimeType.enabledPlugin) {
-      pluginName = navMimeType.enabledPlugin.name;
-      pluginName = gPluginHandler.makeNicePluginName(pluginName);
-    }
-  }
-
-  return { mimetype: tagMimetype,
-           pluginsPage: pluginsPage,
-           pluginName: pluginName };
-}
-
 var gPluginHandler = {
+  PLUGIN_SCRIPTED_STATE_NONE: 0,
+  PLUGIN_SCRIPTED_STATE_FIRED: 1,
+  PLUGIN_SCRIPTED_STATE_DONE: 2,
 
 #ifdef MOZ_CRASHREPORTER
   get CrashSubmit() {
@@ -62,6 +15,51 @@ var gPluginHandler = {
     return this.CrashSubmit;
   },
 #endif
+
+  _getPluginInfo: function (pluginElement) {
+    let tagMimetype;
+    let pluginsPage;
+    let pluginName = gNavigatorBundle.getString("pluginInfo.unknownPlugin");
+    if (pluginElement instanceof HTMLAppletElement) {
+      tagMimetype = "application/x-java-vm";
+    } else {
+      if (pluginElement instanceof HTMLObjectElement) {
+        pluginsPage = pluginElement.getAttribute("codebase");
+      } else {
+        pluginsPage = pluginElement.getAttribute("pluginspage");
+      }
+
+      // only attempt if a pluginsPage is defined.
+      if (pluginsPage) {
+        let doc = pluginElement.ownerDocument;
+        let docShell = findChildShell(doc, gBrowser.docShell, null);
+        try {
+          pluginsPage = makeURI(pluginsPage, doc.characterSet, docShell.currentURI).spec;
+        } catch (ex) {
+          pluginsPage = "";
+        }
+      }
+
+      tagMimetype = pluginElement.QueryInterface(Ci.nsIObjectLoadingContent)
+                                 .actualType;
+
+      if (tagMimetype == "") {
+        tagMimetype = pluginElement.type;
+      }
+    }
+
+    if (tagMimetype) {
+      let navMimeType = navigator.mimeTypes.namedItem(tagMimetype);
+      if (navMimeType && navMimeType.enabledPlugin) {
+        pluginName = navMimeType.enabledPlugin.name;
+        pluginName = gPluginHandler.makeNicePluginName(pluginName);
+      }
+    }
+
+    return { mimetype: tagMimetype,
+             pluginsPage: pluginsPage,
+             pluginName: pluginName };
+  },
 
   // Map the plugin's name to a filtered version more suitable for user UI.
   makeNicePluginName : function (aName) {
@@ -211,7 +209,7 @@ var gPluginHandler = {
       case "PluginClickToPlay":
         self._handleClickToPlayEvent(plugin);
         let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-        let pluginName = getPluginInfo(plugin).pluginName;
+        let pluginName = self._getPluginInfo(plugin).pluginName;
         let messageString = gNavigatorBundle.getFormattedString("PluginClickToPlay", [pluginName]);
         let overlayText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgClickToPlay");
         overlayText.textContent = messageString;
@@ -234,8 +232,8 @@ var gPluginHandler = {
 
       case "PluginScripted":
         let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
-        if (browser._pluginScriptedState == PLUGIN_SCRIPTED_STATE_NONE) {
-          browser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_FIRED;
+        if (browser._pluginScriptedState == this.PLUGIN_SCRIPTED_STATE_NONE) {
+          browser._pluginScriptedState = this.PLUGIN_SCRIPTED_STATE_FIRED;
           setTimeout(function() {
             gPluginHandler.handlePluginScripted(this);
           }.bind(browser), 500);
@@ -285,7 +283,7 @@ var gPluginHandler = {
       this._notificationDisplayedOnce = true;
     }
 
-    aBrowser._pluginScriptedState = PLUGIN_SCRIPTED_STATE_DONE;
+    aBrowser._pluginScriptedState = this.PLUGIN_SCRIPTED_STATE_DONE;
   },
 
   isKnownPlugin: function PH_isKnownPlugin(objLoadingContent) {
@@ -338,7 +336,6 @@ var gPluginHandler = {
     let browser = gBrowser.getBrowserForDocument(aContentWindow.document);
     let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
     if (notification) {
-      browser._clickToPlayDoorhangerShown = false;
       notification.remove();
     }
     if (pluginNeedsActivation) {
@@ -376,7 +373,7 @@ var gPluginHandler = {
   installSinglePlugin: function (plugin) {
     var missingPlugins = new Map();
 
-    var pluginInfo = getPluginInfo(plugin);
+    var pluginInfo = this._getPluginInfo(plugin);
     missingPlugins.set(pluginInfo.mimetype, pluginInfo);
 
     openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
@@ -454,8 +451,7 @@ var gPluginHandler = {
       }, true);
     }
 
-    if (!browser._clickToPlayDoorhangerShown)
-      gPluginHandler._showClickToPlayNotification(browser);
+    gPluginHandler._showClickToPlayNotification(browser);
   },
 
   _handlePlayPreviewEvent: function PH_handlePlayPreviewEvent(aPlugin) {
@@ -471,7 +467,7 @@ var gPluginHandler = {
       // Force a style flush, so that we ensure our binding is attached.
       aPlugin.clientTop;
     }
-    let pluginInfo = getPluginInfo(aPlugin);
+    let pluginInfo = this._getPluginInfo(aPlugin);
     let playPreviewUri = "data:application/x-moz-playpreview;," + pluginInfo.mimetype;
     iframe.src = playPreviewUri;
 
@@ -520,7 +516,7 @@ var gPluginHandler = {
     for (let plugin of aDOMWindowUtils.plugins) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
       if (gPluginHandler.canActivatePlugin(objLoadingContent)) {
-        let pluginName = getPluginInfo(plugin).pluginName;
+        let pluginName = this._getPluginInfo(plugin).pluginName;
         if (aName == pluginName) {
           plugins.push(objLoadingContent);
         }
@@ -537,7 +533,7 @@ var gPluginHandler = {
     for (let plugin of cwu.plugins) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
       if (gPluginHandler.canActivatePlugin(objLoadingContent)) {
-        let pluginName = getPluginInfo(plugin).pluginName;
+        let pluginName = this._getPluginInfo(plugin).pluginName;
         if (!pluginsDictionary.has(pluginName))
           pluginsDictionary.set(pluginName, []);
         pluginsDictionary.get(pluginName).push(objLoadingContent);
@@ -603,9 +599,7 @@ var gPluginHandler = {
   },
 
   _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser) {
-    aBrowser._clickToPlayDoorhangerShown = true;
     let contentWindow = aBrowser.contentWindow;
-
     let messageString = gNavigatorBundle.getString("activatePluginsMessage.message");
     let mainAction = {
       label: gNavigatorBundle.getString("activateAllPluginsMessage.label"),
@@ -670,7 +664,7 @@ var gPluginHandler = {
     if (!browser.missingPlugins)
       browser.missingPlugins = new Map();
 
-    var pluginInfo = getPluginInfo(plugin);
+    var pluginInfo = this._getPluginInfo(plugin);
     browser.missingPlugins.set(pluginInfo.mimetype, pluginInfo);
 
     var notificationBox = gBrowser.getNotificationBox(browser);
