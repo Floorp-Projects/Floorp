@@ -476,28 +476,28 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
                                mozilla::ErrorResult& aRv)
 {
 
-  if (!(aOptions.childList || aOptions.attributes || aOptions.characterData)) {
+  if (!(aOptions.mChildList || aOptions.mAttributes || aOptions.mCharacterData)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
-  if (aOptions.attributeOldValue && !aOptions.attributes) {
+  if (aOptions.mAttributeOldValue && !aOptions.mAttributes) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
-  if (aOptions.characterDataOldValue && !aOptions.characterData) {
+  if (aOptions.mCharacterDataOldValue && !aOptions.mCharacterData) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
 
   nsCOMArray<nsIAtom> filters;
   bool allAttrs = true;
-  if (aOptions.attributeFilter.WasPassed()) {
+  if (aOptions.mAttributeFilter.WasPassed()) {
     allAttrs = false;
     const mozilla::dom::Sequence<nsString>& filtersAsString =
-      aOptions.attributeFilter.Value();
+      aOptions.mAttributeFilter.Value();
     uint32_t len = filtersAsString.Length();
 
-    if (len != 0 && !aOptions.attributes) {
+    if (len != 0 && !aOptions.mAttributes) {
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return;
     }
@@ -513,12 +513,12 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   }
 
   nsMutationReceiver* r = GetReceiverFor(&aTarget, true);
-  r->SetChildList(aOptions.childList);
-  r->SetAttributes(aOptions.attributes);
-  r->SetCharacterData(aOptions.characterData);
-  r->SetSubtree(aOptions.subtree);
-  r->SetAttributeOldValue(aOptions.attributeOldValue);
-  r->SetCharacterDataOldValue(aOptions.characterDataOldValue);
+  r->SetChildList(aOptions.mChildList);
+  r->SetAttributes(aOptions.mAttributes);
+  r->SetCharacterData(aOptions.mCharacterData);
+  r->SetSubtree(aOptions.mSubtree);
+  r->SetAttributeOldValue(aOptions.mAttributeOldValue);
+  r->SetCharacterDataOldValue(aOptions.mCharacterDataOldValue);
   r->SetAttributeFilter(filters);
   r->SetAllAttributes(allAttrs);
   r->RemoveClones();
