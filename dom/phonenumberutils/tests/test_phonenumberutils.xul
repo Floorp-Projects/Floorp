@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 781379">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=809213"
+     target="_blank">Mozilla Bug 809213</a>
+  </body>
+
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+Components.utils.import("resource://gre/modules/PhoneNumberUtils.jsm");
+
+function CantParseWithMcc(dial, mcc) {
+  var result = PhoneNumberUtils.parseWithMCC(dial, mcc);
+  if (result) {
+  	ok(false, "Shouldn't parse!\n");
+    print("expected: does not parse");
+    print("got: " + dial + " " + mcc);
+  } else {
+    ok(true, "Parses");
+  }
+}
+
+// Unknown mcc
+CantParseWithMcc("1234", 123);
+
+</script>
+</window>
