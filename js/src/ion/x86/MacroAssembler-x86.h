@@ -47,6 +47,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
   public:
     using MacroAssemblerX86Shared::Push;
     using MacroAssemblerX86Shared::callWithExitFrame;
+    using MacroAssemblerX86Shared::branch32;
 
     enum Result {
         GENERAL,
@@ -400,6 +401,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void subPtr(Imm32 imm, const Register &dest) {
         subl(imm, dest);
+    }
+
+    void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
+        cmpl(Operand(lhs), rhs);
+        j(cond, label);
     }
 
     template <typename T, typename S>
