@@ -97,7 +97,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 a11y::AccType
 nsTextControlFrame::AccessibleType()
 {
-  return a11y::eHTMLTextField;
+  return a11y::eHTMLTextFieldType;
 }
 #endif
 

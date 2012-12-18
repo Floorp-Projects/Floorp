@@ -864,7 +864,7 @@ nsHTMLScrollFrame::AccessibleType()
     return a11y::eNoType;
   }
 
-  return a11y::eHyperText;
+  return a11y::eHyperTextType;
 }
 #endif
 
