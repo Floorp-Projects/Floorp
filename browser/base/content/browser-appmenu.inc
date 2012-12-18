@@ -165,7 +165,6 @@
                     observes="devtoolsMenuBroadcaster_PageSource"/>
           <menuitem id="appmenu_errorConsole"
                     observes="devtoolsMenuBroadcaster_ErrorConsole"/>
-          <menuseparator id="appmenu_devToolsConnectSeparator"/>
           <menuitem id="appmenu_devtools_connect"
                     observes="devtoolsMenuBroadcaster_connect"/>
           <menuseparator id="appmenu_devToolsEndSeparator"/>
