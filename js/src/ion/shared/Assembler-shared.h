@@ -9,6 +9,9 @@
 #define jsion_assembler_shared_h__
 
 #include <limits.h>
+
+#include "mozilla/DebugOnly.h"
+
 #include "ion/IonAllocPolicy.h"
 #include "ion/Registers.h"
 #include "ion/RegisterSets.h"

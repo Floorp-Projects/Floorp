@@ -43,6 +43,7 @@ EXPORTS		= \
 		nsCSSValue.h \
 		nsDOMCSSAttrDeclaration.h \
 		nsDOMCSSDeclaration.h \
+	 nsDOMCSSRGBColor.h \
 		nsDOMMediaQueryList.h \
 		nsICSSDeclaration.h \
 		nsICSSLoaderObserver.h \

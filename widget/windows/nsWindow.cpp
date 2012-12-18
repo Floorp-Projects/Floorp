@@ -1195,7 +1195,7 @@ NS_METHOD nsWindow::Show(bool bState)
 #ifdef MOZ_XUL
   if (!wasVisible && bState) {
     Invalidate();
-    if (syncInvalidate) {
+    if (syncInvalidate && !mInDtor && !mOnDestroyCalled) {
       ::UpdateWindow(mWnd);
     }
   }
@@ -3914,7 +3914,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
   }
   else if (aEventType == NS_MOUSE_MOZHITTEST)
   {
-    event.flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+    event.mFlags.mOnlyChromeDispatch = true;
   }
   event.clickCount = sLastClickCount;
 
@@ -6514,7 +6514,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   }
 
   bool isDeadKey = gKbdLayout.IsDeadKey(virtualKeyCode, aModKeyState);
-  uint32_t extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
+  EventFlags extraFlags;
+  extraFlags.mDefaultPrevented = noDefault;
   MSG msg;
   BOOL gotMsg = aFakeCharMessage ||
     ::PeekMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
@@ -6582,7 +6583,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         }
       }
 #endif // #ifdef DEBUG
-      return OnChar(msg, nativeKey, aModKeyState, nullptr, extraFlags);
+      return OnChar(msg, nativeKey, aModKeyState, nullptr, &extraFlags);
     }
 
     // If prevent default set for keydown, do same for keypress
@@ -6602,7 +6603,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
             msg.message == WM_SYSCHAR ? "WM_SYSCHAR" : "WM_CHAR",
             msg.wParam, HIWORD(msg.lParam) & 0xFF));
 
-    BOOL result = OnChar(msg, nativeKey, aModKeyState, nullptr, extraFlags);
+    BOOL result = OnChar(msg, nativeKey, aModKeyState, nullptr, &extraFlags);
     // If a syschar keypress wasn't processed, Windows may want to
     // handle it to activate a native menu.
     if (!result && msg.message == WM_SYSCHAR)
@@ -6756,7 +6757,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       }
 
       nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
-      keypressEvent.flags |= extraFlags;
+      keypressEvent.mFlags |= extraFlags;
       keypressEvent.charCode = uniChar;
       keypressEvent.alternativeCharCodes.AppendElements(altArray);
       InitKeyEvent(keypressEvent, nativeKey, modKeyState);
@@ -6764,7 +6765,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     }
   } else {
     nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
-    keypressEvent.flags |= extraFlags;
+    keypressEvent.mFlags |= extraFlags;
     keypressEvent.keyCode = DOMKeyCode;
     InitKeyEvent(keypressEvent, nativeKey, aModKeyState);
     DispatchKeyEvent(keypressEvent, nullptr);
@@ -6795,7 +6796,8 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
 LRESULT nsWindow::OnChar(const MSG &aMsg,
                          const NativeKey& aNativeKey,
                          const ModifierKeyState &aModKeyState,
-                         bool *aEventDispatched, uint32_t aFlags)
+                         bool *aEventDispatched,
+                         const EventFlags *aExtraFlags)
 {
   // ignore [shift+]alt+space so the OS can handle it
   if (aModKeyState.IsAlt() && !aModKeyState.IsControl() &&
@@ -6867,7 +6869,9 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
   }
 
   nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
-  keypressEvent.flags |= aFlags;
+  if (aExtraFlags) {
+    keypressEvent.mFlags |= *aExtraFlags;
+  }
   keypressEvent.charCode = uniChar;
   if (!keypressEvent.charCode) {
     keypressEvent.keyCode = aNativeKey.GetDOMKeyCode();
@@ -8020,7 +8024,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
         } // foreach parent menu widget
       }
 
-      if (inMsg == WM_MOUSEACTIVATE && popupsToRollup == UINT32_MAX) {
+      if (inMsg == WM_MOUSEACTIVATE) {
         // Prevent the click inside the popup from causing a change in window
         // activation. Since the popup is shown non-activated, we need to eat
         // any requests to activate the window while it is displayed. Windows

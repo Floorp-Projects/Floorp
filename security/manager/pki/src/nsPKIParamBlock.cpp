@@ -94,8 +94,7 @@ nsPKIParamBlock::GetISupportAtIndex(int32_t index, nsISupports **_retval)
 {
   NS_ENSURE_ARG(_retval);
 
-  *_retval = mSupports->ElementAt(index-1);
-  return NS_OK;
+  return mSupports->GetElementAt(index - 1, _retval);
 }
 
 

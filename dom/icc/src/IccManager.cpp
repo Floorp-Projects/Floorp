@@ -139,6 +139,17 @@ IccManager::SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested)
 }
 
 NS_IMETHODIMP
+IccManager::SendStkTimerExpiration(const JS::Value& aTimer)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mProvider->SendStkTimerExpiration(GetOwner(), aTimer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 IccManager::SendStkEventDownload(const JS::Value& aEvent)
 {
   if (!mProvider) {

@@ -1,0 +1,107 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "tests.h"
+
+static JSClass ObjectEmulatingUndefinedClass = {
+    "ObjectEmulatingUndefined",
+    JSCLASS_EMULATES_UNDEFINED,
+    JS_PropertyStub,
+    JS_PropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
+static JSBool
+ObjectEmulatingUndefinedConstructor(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSObject *obj = JS_NewObjectForConstructor(cx, &ObjectEmulatingUndefinedClass, vp);
+    if (!obj)
+        return false;
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+    return true;
+}
+
+BEGIN_TEST(testObjectEmulatingUndefined_truthy)
+{
+    CHECK(JS_InitClass(cx, global, NULL, &ObjectEmulatingUndefinedClass,
+                       ObjectEmulatingUndefinedConstructor, 0, NULL, NULL, NULL, NULL));
+
+    jsval result;
+
+    EVAL("if (new ObjectEmulatingUndefined()) true; else false;", &result);
+    CHECK_SAME(result, JSVAL_FALSE);
+
+    EVAL("if (!new ObjectEmulatingUndefined()) true; else false;", &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    EVAL("var obj = new ObjectEmulatingUndefined(); \n"
+         "var res = []; \n"
+         "for (var i = 0; i < 50; i++) \n"
+         "  res.push(Boolean(obj)); \n"
+         "res.every(function(v) { return v === false; });",
+         &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    return true;
+}
+END_TEST(testObjectEmulatingUndefined_truthy)
+
+BEGIN_TEST(testObjectEmulatingUndefined_equal)
+{
+    CHECK(JS_InitClass(cx, global, NULL, &ObjectEmulatingUndefinedClass,
+                       ObjectEmulatingUndefinedConstructor, 0, NULL, NULL, NULL, NULL));
+
+    jsval result;
+
+    EVAL("if (new ObjectEmulatingUndefined() == undefined) true; else false;", &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    EVAL("if (new ObjectEmulatingUndefined() == null) true; else false;", &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    EVAL("if (new ObjectEmulatingUndefined() != undefined) true; else false;", &result);
+    CHECK_SAME(result, JSVAL_FALSE);
+
+    EVAL("if (new ObjectEmulatingUndefined() != null) true; else false;", &result);
+    CHECK_SAME(result, JSVAL_FALSE);
+
+    EVAL("var obj = new ObjectEmulatingUndefined(); \n"
+         "var res = []; \n"
+         "for (var i = 0; i < 50; i++) \n"
+         "  res.push(obj == undefined); \n"
+         "res.every(function(v) { return v === true; });",
+         &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    EVAL("var obj = new ObjectEmulatingUndefined(); \n"
+         "var res = []; \n"
+         "for (var i = 0; i < 50; i++) \n"
+         "  res.push(obj == null); \n"
+         "res.every(function(v) { return v === true; });",
+         &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    EVAL("var obj = new ObjectEmulatingUndefined(); \n"
+         "var res = []; \n"
+         "for (var i = 0; i < 50; i++) \n"
+         "  res.push(obj != undefined); \n"
+         "res.every(function(v) { return v === false; });",
+         &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    EVAL("var obj = new ObjectEmulatingUndefined(); \n"
+         "var res = []; \n"
+         "for (var i = 0; i < 50; i++) \n"
+         "  res.push(obj != null); \n"
+         "res.every(function(v) { return v === false; });",
+         &result);
+    CHECK_SAME(result, JSVAL_TRUE);
+
+    return true;
+}
+END_TEST(testObjectEmulatingUndefined_equal)

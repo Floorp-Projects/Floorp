@@ -1173,7 +1173,47 @@ this.DOMApplicationRegistry = {
                                               true);
     }
 
-    // First, we download the manifest.
+    // For non-removable hosted apps, we just check the appcache.
+    if (!app.removable) {
+      // Bail out for packaged apps.
+      if (app.origin.startsWith("app://")) {
+        aData.error = "NOT_UPDATABLE";
+        aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
+        return;
+      }
+
+      // We need the manifest to check if we have an appcache.
+      let id = this._appId(app.origin);
+      this._readManifests([{ id: id }], function(aResult) {
+        let manifest = aResult[0].manifest;
+        if (!manifest.appcache_path) {
+          aData.error = "NOT_UPDATABLE";
+          aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
+          return;
+        }
+
+        debug("Checking only appcache for " + aData.manifestURL);
+        // Check if the appcache is updatable, and send "downloadavailable" or
+        // "downloadapplied".
+        let updateObserver = {
+          observe: function(aSubject, aTopic, aObsData) {
+            debug("appcache result: " + aTopic);
+            if (aData.event == "offline-cache-update-available") {
+              aData.event = "downloadavailable";
+              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+            } else {
+              aData.error = "NOT_UPDATABLE";
+              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
+            }
+          }
+        }
+        updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
+                                 app.localId, false, updateObserver);
+      });
+      return;
+    }
+
+    // Try to download a new manifest.
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", aData.manifestURL, true);

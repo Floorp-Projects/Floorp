@@ -48,6 +48,7 @@ webidl_files = \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
   ImageData.webidl \
+  MutationObserver.webidl \
   Node.webidl \
   NodeFilter.webidl \
   NodeList.webidl \
@@ -56,6 +57,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  RGBColor.webidl \
   Screen.webidl \
   SVGLengthList.webidl \
   SVGNumberList.webidl \

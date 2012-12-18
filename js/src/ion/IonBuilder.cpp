@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
 #include "Lowering.h"
@@ -972,11 +974,11 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_getname(name);
       }
 
-      case JSOP_INTRINSICNAME:
+      case JSOP_GETINTRINSIC:
       case JSOP_CALLINTRINSIC:
       {
         RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
-        return jsop_intrinsicname(name);
+        return jsop_intrinsic(name);
       }
 
       case JSOP_BINDNAME:
@@ -2348,7 +2350,8 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
             current->end(MGoto::New(cond));
         } else {
             // End previous conditional block with an MTest.
-            prevCond->end(MTest::New(prevCmpIns, prevBody, cond));
+            MTest *test = MTest::New(prevCmpIns, prevBody, cond);
+            prevCond->end(test);
 
             // If the previous cond shared its body with a prior cond, then
             // add the previous cond as a predecessor to its body (since it's
@@ -2386,7 +2389,8 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
     } else {
         // Last conditional block has body that is distinct from
         // the default block.
-        prevCond->end(MTest::New(prevCmpIns, prevBody, defaultBody));
+        MTest *test = MTest::New(prevCmpIns, prevBody, defaultBody);
+        prevCond->end(test);
 
         // Add the cond as a predecessor as a default, but only if
         // the default is shared with another block, because otherwise
@@ -2718,6 +2722,8 @@ IonBuilder::processCondSwitchBody(CFGState &state)
 bool
 IonBuilder::jsop_andor(JSOp op)
 {
+    JS_ASSERT(op == JSOP_AND || op == JSOP_OR);
+
     jsbytecode *rhsStart = pc + js_CodeSpec[op].length;
     jsbytecode *joinStart = pc + GetJumpOffset(pc);
     JS_ASSERT(joinStart > pc);
@@ -2730,12 +2736,12 @@ IonBuilder::jsop_andor(JSOp op)
     if (!evalRhs || !join)
         return false;
 
-    if (op == JSOP_AND) {
-        current->end(MTest::New(lhs, evalRhs, join));
-    } else {
-        JS_ASSERT(op == JSOP_OR);
-        current->end(MTest::New(lhs, join, evalRhs));
-    }
+    MTest *test = (op == JSOP_AND)
+                  ? MTest::New(lhs, evalRhs, join)
+                  : MTest::New(lhs, join, evalRhs);
+    TypeOracle::UnaryTypes types = oracle->unaryTypes(script(), pc);
+    test->infer(types, cx);
+    current->end(test);
 
     if (!cfgStack_.append(CFGState::AndOr(joinStart, join)))
         return false;
@@ -2785,7 +2791,8 @@ IonBuilder::jsop_ifeq(JSOp op)
     if (!ifTrue || !ifFalse)
         return false;
 
-    current->end(MTest::New(ins, ifTrue, ifFalse));
+    MTest *test = MTest::New(ins, ifTrue, ifFalse);
+    current->end(test);
 
     // The bytecode for if/ternary gets emitted either like this:
     //
@@ -2957,7 +2964,8 @@ IonBuilder::jsop_bitop(JSOp op)
     }
 
     current->add(ins);
-    ins->infer(oracle->binaryTypes(script(), pc));
+    TypeOracle::BinaryTypes types = oracle->binaryTypes(script(), pc);
+    ins->infer(types);
 
     current->push(ins);
     if (ins->isEffectful() && !resumeAfter(ins))
@@ -3010,7 +3018,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
 
     TypeOracle::BinaryTypes types = oracle->binaryTypes(script(), pc);
     current->add(ins);
-    ins->infer(cx, types);
+    ins->infer(types, cx);
     current->push(ins);
 
     if (ins->isEffectful())
@@ -3096,9 +3104,12 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32_t argc, bool construc
 {
     AssertCanGC();
 
+    int calleePos = -((int) argc + 2);
+    current->peek(calleePos)->setFoldedUnchecked();
+
     // Rewrite the stack position containing the function with the constant
     // function definition, before we take the inlineResumePoint
-    current->rewriteAtDepth(-((int) argc + 2), constFun);
+    current->rewriteAtDepth(calleePos, constFun);
 
     // This resume point collects outer variables only.  It is used to recover
     // the stack state before the current bytecode.
@@ -3504,6 +3515,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool co
         MPassArg *passArg = top->peek(argSlotDepth)->toPassArg();
         MBasicBlock *block = passArg->block();
         MDefinition *wrapped = passArg->getArgument();
+        wrapped->setFoldedUnchecked();
         passArg->replaceAllUsesWith(wrapped);
         top->rewriteAtDepth(argSlotDepth, wrapped);
         block->discard(passArg);
@@ -4200,7 +4212,7 @@ IonBuilder::jsop_compare(JSOp op)
     current->push(ins);
 
     TypeOracle::BinaryTypes b = oracle->binaryTypes(script(), pc);
-    ins->infer(cx, b);
+    ins->infer(b, cx);
 
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
@@ -5126,7 +5138,7 @@ IonBuilder::jsop_getname(HandlePropertyName name)
 }
 
 bool
-IonBuilder::jsop_intrinsicname(HandlePropertyName name)
+IonBuilder::jsop_intrinsic(HandlePropertyName name)
 {
     types::StackTypeSet *types = oracle->propertyRead(script(), pc);
     JSValueType type = types->getKnownTypeTag();
@@ -5724,6 +5736,8 @@ IonBuilder::jsop_not()
     MNot *ins = new MNot(value);
     current->add(ins);
     current->push(ins);
+    TypeOracle::UnaryTypes types = oracle->unaryTypes(script(), pc);
+    ins->infer(types, cx);
     return true;
 }
 

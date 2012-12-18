@@ -6,7 +6,7 @@
 
 #include "mozIStorageBaseStatement.idl"
 %{C++
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 %}
 
 [ptr] native octetPtr(uint8_t);

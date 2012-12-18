@@ -822,7 +822,7 @@ public:
       if (mIsMouseDown) {
         nsIPresShell::SetCapturingContent(nullptr, 0);
         nsIPresShell::AllowMouseCapture(true);
-        if (aDocument && NS_IS_TRUSTED_EVENT(aEvent)) {
+        if (aDocument && aEvent->mFlags.mIsTrusted) {
           nsFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
             fm->SetMouseButtonDownHandlingDocument(aDocument);

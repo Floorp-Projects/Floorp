@@ -9,7 +9,6 @@
 #include "AccessibleEventId.h"
 
 const uint32_t kEVENT_WIN_UNKNOWN = 0x00000000;
-const uint32_t kEVENT_LAST_ENTRY  = 0xffffffff;
 
 static const uint32_t gWinEventMap[] = {
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent doesn't have 0 constant
@@ -98,7 +97,6 @@ static const uint32_t gWinEventMap[] = {
   IA2_EVENT_HYPERTEXT_CHANGED,                       // nsIAccessibleEvent::EVENT_HYPERTEXT_CHANGED
   IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,                // nsIAccessibleEvent::EVENT_HYPERTEXT_NLINKS_CHANGED
   IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,                // nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED
-  kEVENT_LAST_ENTRY                                  // nsIAccessibleEvent::EVENT_LAST_ENTRY
+  kEVENT_WIN_UNKNOWN                                 // nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED
 };
 

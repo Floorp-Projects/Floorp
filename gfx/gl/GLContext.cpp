@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#include <string.h>
-#include <stdio.h>
 #include <algorithm>
+#include <stdio.h>
+#include <string.h>
+
+#include "mozilla/DebugOnly.h"
 
 #include "prlink.h"
 #include "prenv.h"
@@ -21,9 +22,10 @@
 #include "gfxUtils.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h" // for DebugOnly
 
 #include "GLTextureImage.h"
+
+#include "nsIMemoryReporter.h"
 
 using namespace mozilla::gfx;
 
@@ -87,6 +89,33 @@ static const char *sExtensionNames[] = {
     "GL_EXT_packed_depth_stencil",
     nullptr
 };
+
+static int64_t sTextureMemoryUsage = 0;
+
+static int64_t
+GetTextureMemoryUsage()
+{
+    return sTextureMemoryUsage;
+}
+
+void
+GLContext::UpdateTextureMemoryUsage(MemoryUse action, GLenum format, GLenum type, uint16_t tileSize)
+{
+    uint32_t bytesPerTexel = mozilla::gl::GetBitsPerTexel(format, type) / 8;
+    int64_t bytes = (int64_t)(tileSize * tileSize * bytesPerTexel);
+    if (action == MemoryFreed) {
+        sTextureMemoryUsage -= bytes;
+    } else {
+        sTextureMemoryUsage += bytes;
+    }
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(TextureMemoryUsage,
+    "gfx-textures",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetTextureMemoryUsage,
+    "Memory used for storing GL textures.")
 
 /*
  * XXX - we should really know the ARB/EXT variants of these
@@ -644,6 +673,7 @@ void
 GLContext::PlatformStartup()
 {
   CacheCanUploadNPOT();
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(TextureMemoryUsage));
 }
 
 void

@@ -142,7 +142,6 @@ public:
    * item in the chain.
    */
   nsresult HandleEventTargetChain(nsEventChainPostVisitor& aVisitor,
-                                  uint32_t aFlags,
                                   nsDispatchingCallback* aCallback,
                                   bool aMayHaveNewListenerManagers,
                                   nsCxPusher* aPusher);
@@ -157,14 +156,14 @@ public:
    * If the current item in the event target chain has an event listener
    * manager, this method calls nsEventListenerManager::HandleEvent().
    */
-  nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, uint32_t aFlags,
+  nsresult HandleEvent(nsEventChainPostVisitor& aVisitor,
                        bool aMayHaveNewListenerManagers,
                        nsCxPusher* aPusher)
   {
     if (WantsWillHandleEvent()) {
       mTarget->WillHandleEvent(aVisitor);
     }
-    if (aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+    if (aVisitor.mEvent->mFlags.mPropagationStopped) {
       return NS_OK;
     }
     if (!mManager) {
@@ -179,7 +178,7 @@ public:
                    "CurrentTarget should be null!");
       mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
                             &aVisitor.mDOMEvent,
-                            CurrentTarget(), aFlags,
+                            CurrentTarget(),
                             &aVisitor.mEventStatus,
                             aPusher);
       NS_ASSERTION(aVisitor.mEvent->currentTarget == nullptr,
@@ -263,10 +262,11 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor,
 }
 
 nsresult
-nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor, uint32_t aFlags,
-                                               nsDispatchingCallback* aCallback,
-                                               bool aMayHaveNewListenerManagers,
-                                               nsCxPusher* aPusher)
+nsEventTargetChainItem::HandleEventTargetChain(
+                          nsEventChainPostVisitor& aVisitor,
+                          nsDispatchingCallback* aCallback,
+                          bool aMayHaveNewListenerManagers,
+                          nsCxPusher* aPusher)
 {
   uint32_t createdELMs = nsEventListenerManager::sCreatedCount;
   // Save the target so that it can be restored later.
@@ -274,13 +274,13 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 
   // Capture
   nsEventTargetChainItem* item = this;
-  aVisitor.mEvent->flags |= NS_EVENT_FLAG_CAPTURE;
-  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_BUBBLE;
+  aVisitor.mEvent->mFlags.mInCapturePhase = true;
+  aVisitor.mEvent->mFlags.mInBubblingPhase = false;
   while (item->mChild) {
-    if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
+    if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item->ForceContentDispatch()) &&
-        !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
-      item->HandleEvent(aVisitor, aFlags & NS_EVENT_CAPTURE_MASK,
+        !aVisitor.mEvent->mFlags.mPropagationStopped) {
+      item->HandleEvent(aVisitor,
                         aMayHaveNewListenerManagers ||
                         createdELMs != nsEventListenerManager::sCreatedCount,
                         aPusher);
@@ -303,24 +303,21 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   }
 
   // Target
-  aVisitor.mEvent->flags |= NS_EVENT_FLAG_BUBBLE;
-  if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
-      (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
+  aVisitor.mEvent->mFlags.mInBubblingPhase = true;
+  if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
+      (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        item->ForceContentDispatch())) {
-    // FIXME Should use aFlags & NS_EVENT_BUBBLE_MASK because capture phase
-    //       event listeners should not be fired. But it breaks at least
-    //       <xul:dialog>'s buttons. Bug 235441.
-    item->HandleEvent(aVisitor, aFlags,
+    item->HandleEvent(aVisitor,
                       aMayHaveNewListenerManagers ||
                       createdELMs != nsEventListenerManager::sCreatedCount,
                       aPusher);
   }
-  if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
+  if (aVisitor.mEvent->mFlags.mInSystemGroup) {
     item->PostHandleEvent(aVisitor, aPusher);
   }
 
   // Bubble
-  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_CAPTURE;
+  aVisitor.mEvent->mFlags.mInCapturePhase = false;
   item = item->mParent;
   while (item) {
     nsIDOMEventTarget* newTarget = item->GetNewTarget();
@@ -330,27 +327,27 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
       aVisitor.mEvent->target = newTarget;
     }
 
-    if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE) || newTarget) {
-      if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
+    if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
+      if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
            item->ForceContentDispatch()) &&
-          !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
-        item->HandleEvent(aVisitor, aFlags & NS_EVENT_BUBBLE_MASK,
+          !aVisitor.mEvent->mFlags.mPropagationStopped) {
+        item->HandleEvent(aVisitor,
                           createdELMs != nsEventListenerManager::sCreatedCount,
                           aPusher);
       }
-      if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
+      if (aVisitor.mEvent->mFlags.mInSystemGroup) {
         item->PostHandleEvent(aVisitor, aPusher);
       }
     }
     item = item->mParent;
   }
-  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_BUBBLE;
+  aVisitor.mEvent->mFlags.mInBubblingPhase = false;
 
-  if (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+  if (!aVisitor.mEvent->mFlags.mInSystemGroup) {
     // Dispatch to the system event group.  Make sure to clear the
     // STOP_DISPATCH flag since this resets for each event group.
-    aVisitor.mEvent->flags &=
-      ~(NS_EVENT_FLAG_STOP_DISPATCH | NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY);
+    aVisitor.mEvent->mFlags.mPropagationStopped = false;
+    aVisitor.mEvent->mFlags.mImmediatePropagationStopped = false;
 
     // Setting back the original target of the event.
     aVisitor.mEvent->target = aVisitor.mEvent->originalTarget;
@@ -365,15 +362,17 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     // Retarget for system event group (which does the default handling too).
     // Setting back the target which was used also for default event group.
     aVisitor.mEvent->target = firstTarget;
-    HandleEventTargetChain(aVisitor, aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
+    aVisitor.mEvent->mFlags.mInSystemGroup = true;
+    HandleEventTargetChain(aVisitor,
                            aCallback,
                            createdELMs != nsEventListenerManager::sCreatedCount,
                            aPusher);
+    aVisitor.mEvent->mFlags.mInSystemGroup = false;
 
     // After dispatch, clear all the propagation flags so that
     // system group listeners don't affect to the event.
-    aVisitor.mEvent->flags &=
-      ~(NS_EVENT_FLAG_STOP_DISPATCH | NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY);
+    aVisitor.mEvent->mFlags.mPropagationStopped = false;
+    aVisitor.mEvent->mFlags.mImmediatePropagationStopped = false;
   }
 
   return NS_OK;
@@ -450,7 +449,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 {
   SAMPLE_LABEL("nsEventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
-  NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(aEvent),
+  NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_ILLEGAL_VALUE);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
 
@@ -464,7 +463,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   bool retargeted = false;
 
-  if (aEvent->flags & NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS) {
+  if (aEvent->mFlags.mRetargetToNonNativeAnonymous) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(target);
     if (content && content->IsInNativeAnonymousSubtree()) {
       nsCOMPtr<nsPIDOMEventTarget> newTarget =
@@ -477,7 +476,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     }
   }
 
-  if (aEvent->flags & NS_EVENT_FLAG_ONLY_CHROME_DISPATCH) {
+  if (aEvent->mFlags.mOnlyChromeDispatch) {
     nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
     if (!node) {
       nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aTarget);
@@ -569,7 +568,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->originalTarget);
   bool isInAnon = (content && content->IsInAnonymousSubtree());
 
-  NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
+  aEvent->mFlags.mIsBeingDispatched = true;
 
   // Create visitor object and start event dispatching.
   // PreHandleEvent for the original target.
@@ -627,8 +626,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
         nsEventChainPostVisitor postVisitor(preVisitor);
         nsCxPusher pusher;
         rv = topEtci->HandleEventTargetChain(postVisitor,
-                                             NS_EVENT_FLAG_BUBBLE |
-                                             NS_EVENT_FLAG_CAPTURE,
                                              aCallback,
                                              false,
                                              &pusher);
@@ -645,7 +642,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   nsEventTargetChainItem::Destroy(pool.GetPool(), targetEtci);
   targetEtci = nullptr;
 
-  NS_MARK_EVENT_DISPATCH_DONE(aEvent);
+  aEvent->mFlags.mIsBeingDispatched = false;
+  aEvent->mFlags.mDispatchedAtLeastOnce = true;
 
   if (!externalDOMEvent && preVisitor.mDOMEvent) {
     // An nsDOMEvent was created while dispatching the event.
@@ -675,7 +673,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
     NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
     bool dontResetTrusted = false;
-    if (innerEvent->flags & NS_EVENT_DISPATCHED) {
+    if (innerEvent->mFlags.mDispatchedAtLeastOnce) {
       innerEvent->target = nullptr;
       innerEvent->originalTarget = nullptr;
     } else {

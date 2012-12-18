@@ -82,7 +82,7 @@ nsImageBoxFrameEvent::Run()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(true, mMessage);
 
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  event.mFlags.mBubbles = false;
   nsEventDispatcher::Dispatch(mContent, pres_context, &event, nullptr, &status);
   return NS_OK;
 }

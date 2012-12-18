@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
 #include "prinit.h"
@@ -19,11 +22,8 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Attributes.h"
 
 #include "sqlite3.h"
-#include "test_quota.h"
-#include "test_quota.c"
 
 #ifdef SQLITE_OS_WIN
 // "windows.h" was included and it can #define lots of things we care about...
@@ -32,63 +32,6 @@
 
 #include "nsIPromptService.h"
 #include "nsIMemoryReporter.h"
-
-#include "mozilla/Util.h"
-
-namespace {
-
-class QuotaCallbackData
-{
-public:
-  QuotaCallbackData(mozIStorageQuotaCallback *aCallback,
-                    nsISupports *aUserData)
-  : callback(aCallback), userData(aUserData)
-  {
-    MOZ_COUNT_CTOR(QuotaCallbackData);
-  }
-
-  ~QuotaCallbackData()
-  {
-    MOZ_COUNT_DTOR(QuotaCallbackData);
-  }
-
-  static void Callback(const char *zFilename,
-                       sqlite3_int64 *piLimit,
-                       sqlite3_int64 iSize,
-                       void *pArg)
-  {
-    NS_ASSERTION(zFilename && strlen(zFilename), "Null or empty filename!");
-    NS_ASSERTION(piLimit, "Null pointer!");
-
-    QuotaCallbackData *data = static_cast<QuotaCallbackData*>(pArg);
-    if (!data) {
-      // No callback specified, return immediately.
-      return;
-    }
-
-    NS_ASSERTION(data->callback, "Should never have a null callback!");
-
-    nsDependentCString filename(zFilename);
-
-    int64_t newLimit;
-    if (NS_SUCCEEDED(data->callback->QuotaExceeded(filename, *piLimit,
-                                                   iSize, data->userData,
-                                                   &newLimit))) {
-      *piLimit = newLimit;
-    }
-  }
-
-  static void Destroy(void *aUserData)
-  {
-    delete static_cast<QuotaCallbackData*>(aUserData);
-  }
-
-private:
-  nsCOMPtr<mozIStorageQuotaCallback> callback;
-  nsCOMPtr<nsISupports> userData;
-};
-
-} // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Defines
@@ -345,11 +288,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// Service
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(
+NS_IMPL_THREADSAFE_ISUPPORTS2(
   Service,
   mozIStorageService,
-  nsIObserver,
-  mozIStorageServiceQuotaManagement
+  nsIObserver
 )
 
 Service *Service::gService = nullptr;
@@ -438,10 +380,6 @@ Service::~Service()
 
   // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
   // there is nothing actionable we can do in that case.
-  rc = ::sqlite3_quota_shutdown();
-  if (rc != SQLITE_OK)
-    NS_WARNING("sqlite3 did not shutdown cleanly.");
-
   rc = ::sqlite3_shutdown();
   if (rc != SQLITE_OK)
     NS_WARNING("sqlite3 did not shutdown cleanly.");
@@ -636,9 +574,6 @@ Service::initialize()
   } else {
     NS_WARNING("Failed to register telemetry VFS");
   }
-  rc = ::sqlite3_quota_initialize("telemetry-vfs", 0);
-  if (rc != SQLITE_OK)
-    return convertResultCode(rc);
 
   // Set the default value for the toolkit.storage.synchronous pref.  It will be
   // updated with the user preference on the main thread.
@@ -739,28 +674,24 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
     // connection to use a memory DB.
   }
   else if (::strcmp(aStorageKey, "profile") == 0) {
-
     rv = NS_GetSpecialDirectory(NS_APP_STORAGE_50_FILE,
                                 getter_AddRefs(storageFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsString filename;
-    storageFile->GetPath(filename);
-    nsCString filename8 = NS_ConvertUTF16toUTF8(filename.get());
     // fall through to DB initialization
   }
   else {
     return NS_ERROR_INVALID_ARG;
   }
 
-  Connection *msc = new Connection(this, SQLITE_OPEN_READWRITE);
-  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<Connection> msc = new Connection(this, SQLITE_OPEN_READWRITE);
 
-  rv = msc->initialize(storageFile);
+  rv = storageFile ? msc->initialize(storageFile) : msc->initialize();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*_connection = msc);
+  msc.forget(_connection);
   return NS_OK;
+
 }
 
 NS_IMETHODIMP
@@ -774,12 +705,11 @@ Service::OpenDatabase(nsIFile *aDatabaseFile,
   int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
               SQLITE_OPEN_CREATE;
   nsRefPtr<Connection> msc = new Connection(this, flags);
-  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*_connection = msc);
+  msc.forget(_connection);
   return NS_OK;
 }
 
@@ -794,12 +724,30 @@ Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
   int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_PRIVATECACHE |
               SQLITE_OPEN_CREATE;
   nsRefPtr<Connection> msc = new Connection(this, flags);
-  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*_connection = msc);
+  msc.forget(_connection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Service::OpenDatabaseWithFileURL(nsIFileURL *aFileURL,
+                                 mozIStorageConnection **_connection)
+{
+  NS_ENSURE_ARG(aFileURL);
+
+  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
+  // reasons.
+  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
+              SQLITE_OPEN_CREATE | SQLITE_OPEN_URI;
+  nsRefPtr<Connection> msc = new Connection(this, flags);
+
+  nsresult rv = msc->initialize(aFileURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  msc.forget(_connection);
   return NS_OK;
 }
 
@@ -881,68 +829,6 @@ Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
     }
 #endif
   }
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// mozIStorageServiceQuotaManagement
-
-NS_IMETHODIMP
-Service::OpenDatabaseWithVFS(nsIFile *aDatabaseFile,
-                             const nsACString &aVFSName,
-                             mozIStorageConnection **_connection)
-{
-  NS_ENSURE_ARG(aDatabaseFile);
-
-  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
-  // reasons.
-  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
-              SQLITE_OPEN_CREATE;
-  nsRefPtr<Connection> msc = new Connection(this, flags);
-  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = msc->initialize(aDatabaseFile,
-                                PromiseFlatCString(aVFSName).get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*_connection = msc);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Service::SetQuotaForFilenamePattern(const nsACString &aPattern,
-                                    int64_t aSizeLimit,
-                                    mozIStorageQuotaCallback *aCallback,
-                                    nsISupports *aUserData)
-{
-  NS_ENSURE_FALSE(aPattern.IsEmpty(), NS_ERROR_INVALID_ARG);
-
-  nsAutoPtr<QuotaCallbackData> data;
-  if (aSizeLimit && aCallback) {
-    data = new QuotaCallbackData(aCallback, aUserData);
-  }
-
-  int rc = ::sqlite3_quota_set(PromiseFlatCString(aPattern).get(),
-                               aSizeLimit, QuotaCallbackData::Callback,
-                               data, QuotaCallbackData::Destroy);
-  NS_ENSURE_TRUE(rc == SQLITE_OK, convertResultCode(rc));
-
-  data.forget();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Service::UpdateQuotaInformationForFile(nsIFile *aFile)
-{
-  NS_ENSURE_ARG_POINTER(aFile);
-
-  nsString path;
-  nsresult rv = aFile->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int rc = ::sqlite3_quota_file(NS_ConvertUTF16toUTF8(path).get());
-  NS_ENSURE_TRUE(rc == SQLITE_OK, convertResultCode(rc));
 
   return NS_OK;
 }

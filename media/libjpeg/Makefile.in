@@ -163,3 +163,9 @@ EXPORTS	= \
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+.PHONY: CONSTANT_TABLES
+CONSTANT_TABLES:
+	$(PYTHON) $(srcdir)/genTables.py
+
+jchuff.$(OBJ_SUFFIX): CONSTANT_TABLES

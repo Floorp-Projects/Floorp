@@ -5,6 +5,8 @@
 
 /* a presentation of a document, part 1 */
 
+#include "mozilla/DebugOnly.h"
+
 #include "base/basictypes.h"
 
 #include "nsCOMPtr.h"

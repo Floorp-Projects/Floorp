@@ -66,6 +66,7 @@ using namespace android;
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::services;
+using namespace mozilla::widget;
 
 bool gDrawRequest = false;
 static nsAppShell *gAppShell = NULL;
@@ -137,8 +138,7 @@ sendMouseEvent(uint32_t msg, uint64_t timeMs, int x, int y, bool forwardToChildr
     if (msg != NS_MOUSE_MOVE)
         event.clickCount = 1;
 
-    if (!forwardToChildren)
-        event.flags |= NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS;
+    event.mFlags.mNoCrossProcessBoundaryForwarding = !forwardToChildren;
 
     nsWindow::DispatchInputEvent(event);
 }
@@ -201,25 +201,27 @@ static nsEventStatus
 sendKeyEventWithMsg(uint32_t keyCode,
                     uint32_t msg,
                     uint64_t timeMs,
-                    uint32_t flags)
+                    const EventFlags& flags)
 {
     nsKeyEvent event(true, msg, NULL);
     event.keyCode = keyCode;
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
     event.time = timeMs;
-    event.flags |= flags;
+    event.mFlags |= flags;
     return nsWindow::DispatchInputEvent(event);
 }
 
 static void
 sendKeyEvent(uint32_t keyCode, bool down, uint64_t timeMs)
 {
+    EventFlags extraFlags;
     nsEventStatus status =
-        sendKeyEventWithMsg(keyCode, down ? NS_KEY_DOWN : NS_KEY_UP, timeMs, 0);
+        sendKeyEventWithMsg(keyCode, down ? NS_KEY_DOWN : NS_KEY_UP, timeMs,
+                            extraFlags);
     if (down) {
-        sendKeyEventWithMsg(keyCode, NS_KEY_PRESS, timeMs,
-                            status == nsEventStatus_eConsumeNoDefault ?
-                            NS_EVENT_FLAG_NO_DEFAULT : 0);
+        extraFlags.mDefaultPrevented =
+            (status == nsEventStatus_eConsumeNoDefault);
+        sendKeyEventWithMsg(keyCode, NS_KEY_PRESS, timeMs, extraFlags);
     }
 }
 

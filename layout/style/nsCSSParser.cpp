@@ -6,6 +6,8 @@
 
 /* parsing of CSS stylesheets, based on a token stream from the CSS scanner */
 
+#include "mozilla/DebugOnly.h"
+
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
@@ -48,8 +50,6 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
-
-#include "mozilla/Util.h"
 
 using namespace mozilla;
 

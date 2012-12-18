@@ -5,6 +5,8 @@
  
 /* the interface (to internal code) for retrieving computed style data */
 
+#include "mozilla/DebugOnly.h"
+
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsPresContext.h"
@@ -18,7 +20,6 @@
 #include "nsStyleContext.h"
 #include "prlog.h"
 #include "nsStyleAnimation.h"
-#include "mozilla/Util.h"
 #include "sampler.h"
 
 #ifdef DEBUG

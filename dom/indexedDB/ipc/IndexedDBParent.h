@@ -5,6 +5,9 @@
 #ifndef mozilla_dom_indexeddb_ipc_indexeddbparent_h__
 #define mozilla_dom_indexeddb_ipc_indexeddbparent_h__
 
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "mozilla/dom/indexedDB/PIndexedDBParent.h"
@@ -15,8 +18,6 @@
 #include "mozilla/dom/indexedDB/PIndexedDBObjectStoreParent.h"
 #include "mozilla/dom/indexedDB/PIndexedDBRequestParent.h"
 #include "mozilla/dom/indexedDB/PIndexedDBTransactionParent.h"
-
-#include "mozilla/Attributes.h"
 
 #include "nsIDOMEventListener.h"
 

@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "jsapi.h"
 #include "jsautooplen.h"
 #include "jsbool.h"
@@ -3589,6 +3591,8 @@ TypeObject::print()
             printf(" uninlineable");
         if (hasAnyFlags(OBJECT_FLAG_SPECIAL_EQUALITY))
             printf(" specialEquality");
+        if (hasAnyFlags(OBJECT_FLAG_EMULATES_UNDEFINED))
+            printf(" emulatesUndefined");
         if (hasAnyFlags(OBJECT_FLAG_ITERATED))
             printf(" iterated");
     }
@@ -3873,7 +3877,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       }
 
       case JSOP_NAME:
-      case JSOP_INTRINSICNAME:
+      case JSOP_GETINTRINSIC:
       case JSOP_CALLNAME:
       case JSOP_CALLINTRINSIC: {
         StackTypeSet *seen = bytecodeTypes(pc);
@@ -3884,6 +3888,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
 
       case JSOP_BINDGNAME:
       case JSOP_BINDNAME:
+      case JSOP_BINDINTRINSIC:
         break;
 
       case JSOP_SETGNAME: {
@@ -3895,6 +3900,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       }
 
       case JSOP_SETNAME:
+      case JSOP_SETINTRINSIC:
       case JSOP_SETCONST:
         cx->compartment->types.monitorBytecode(cx, script, offset);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
@@ -5406,6 +5412,7 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
       /* We keep track of the scopes pushed by BINDNAME separately. */
       case JSOP_BINDNAME:
       case JSOP_BINDGNAME:
+      case JSOP_BINDINTRINSIC:
       case JSOP_BINDXMLNAME:
         return true;
 
@@ -5763,6 +5770,8 @@ JSObject::makeLazyType(JSContext *cx)
 
     if (self->getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
+    if (self->getClass()->emulatesUndefined())
+        type->flags |= OBJECT_FLAG_EMULATES_UNDEFINED;
 
     /*
      * Adjust flags for objects which will have the wrong flags set by just
