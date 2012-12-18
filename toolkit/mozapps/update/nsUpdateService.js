@@ -3622,9 +3622,9 @@ Downloader.prototype = {
         LOG("Downloader:onStopRequest - verification of patch failed, " +
             "downloading complete update patch");
         this._update.isCompleteUpdate = true;
-        var status = this.downloadUpdate(this._update);
+        let updateStatus = this.downloadUpdate(this._update);
 
-        if (status == STATE_NONE) {
+        if (updateStatus == STATE_NONE) {
           cleanupActiveUpdate();
         } else {
           allFailed = false;
