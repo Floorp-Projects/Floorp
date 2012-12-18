@@ -13,7 +13,6 @@
 #include "nsIInputStream.h"
 
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 
 #include "gfxColor.h"
 #include "nsColor.h"

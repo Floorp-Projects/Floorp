@@ -751,14 +751,10 @@ VectorImage::InvalidateObserver()
   if (!mObserver)
     return;
 
-  nsCOMPtr<imgIContainerObserver> containerObs(do_QueryReferent(mObserver));
-  if (containerObs) {
-    containerObs->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
-  }
-
-  nsCOMPtr<imgIDecoderObserver> decoderObs(do_QueryReferent(mObserver));
-  if (decoderObs) {
-    decoderObs->OnStopFrame();
+  nsCOMPtr<imgIDecoderObserver> obs(do_QueryReferent(mObserver));
+  if (obs) {
+    obs->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
+    obs->OnStopFrame();
   }
 }
 

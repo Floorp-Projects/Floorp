@@ -7,8 +7,6 @@
 #include "ImageLogging.h"
 #include "nsJPEGDecoder.h"
 
-#include "imgIContainerObserver.h"
-
 #include "nsIInputStream.h"
 
 #include "nspr.h"
