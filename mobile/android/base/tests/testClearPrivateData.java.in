@@ -1,0 +1,53 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.widget.ListView;
+import android.view.ViewGroup;
+import android.view.View;
+import android.widget.ExpandableListView;
+import android.widget.TabHost;
+
+import java.util.ArrayList;
+
+public class testClearPrivateData extends PixelTest  {
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testClearPrivateData() {
+        blockForGeckoReady();
+	clearHistory();
+    }
+
+    private void clearHistory() {
+        // Loading a page so we are sure that there is at leats one history entry
+        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        loadAndPaint(url);
+
+        // Checking that the history list in not empty
+        ListView hList = getHistoryList();
+        mAsserter.ok(hList.getChildCount() > 0,"checking history exists","history exists");
+
+        // Quit the awesomescreen
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mSolo.waitForText("Browser Blank Page 01");
+
+        // Clearing private data
+        selectMenuItem("Settings");
+        if (mSolo.waitForText("^Clear private data$")) {
+            mSolo.clickOnText("^Clear private data$");
+        }
+        mAsserter.ok(mSolo.searchButton("Clear data"),"checking clear button","clear button exists");
+        mSolo.clickOnButton("Clear data");
+        mAsserter.is(mSolo.waitForText("Private data cleared"),true,"private data cleared successfully");
+
+        // Checking that history list is empty
+        hList = getHistoryList();
+        mAsserter.ok(hList.getChildCount() == 0,"checking history is cleared ","history is cleared");
+    }
+}
