@@ -34,12 +34,11 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      // I am at my wits' end figuring out how to stop this load from occurring. I give up.
       if (win.content.location.href == "about:privatebrowsing") {
         win.gBrowser.loadURI(contentPage);
         return;
       }
-      win.removeEventListener("DOMConten/tLoaded", onInnerLoad, true);
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
       SimpleTest.executeSoon(function() { aCallback(win); });
     }, true);
     win.gBrowser.loadURI(contentPage);
