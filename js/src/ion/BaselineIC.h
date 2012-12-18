@@ -234,8 +234,11 @@ class ICEntry
     jsbytecode *pc(JSScript *script) const {
         return script->code + pcOffset_;
     }
-
+    bool hasStub() const {
+        return firstStub_ != NULL;
+    }
     ICStub *firstStub() const {
+        JS_ASSERT(hasStub());
         return firstStub_;
     }
 
@@ -270,8 +273,6 @@ class ICEntry
     _(TypeUpdate_Fallback)      \
                                 \
     _(This_Fallback)            \
-                                \
-    _(DefVar_Fallback)          \
                                 \
     _(NewArray_Fallback)        \
                                 \
@@ -1049,38 +1050,6 @@ class ICThis_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICThis_Fallback::New(space, getStubCode());
-        }
-    };
-};
-
-
-// DefVar
-//     JSOP_DEFVAR
-//     JSOP_DEFCONST
-
-class ICDefVar_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    ICDefVar_Fallback(IonCode *stubCode)
-      : ICFallbackStub(ICStub::DefVar_Fallback, stubCode)
-    {}
-
-  public:
-    static inline ICDefVar_Fallback *New(ICStubSpace *space, IonCode *code) {
-        return space->allocate<ICDefVar_Fallback>(code);
-    }
-
-    class Compiler : public ICStubCompiler {
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::DefVar_Fallback)
-        {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICDefVar_Fallback::New(space, getStubCode());
         }
     };
 };
