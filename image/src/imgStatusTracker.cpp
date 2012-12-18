@@ -9,6 +9,7 @@
 #include "imgRequest.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
+#include "imgIDecoderObserver.h"
 #include "Image.h"
 #include "ImageLogging.h"
 #include "RasterImage.h"
@@ -26,7 +27,6 @@ class imgStatusTrackerObserver : public imgIDecoderObserver,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
 
   imgStatusTrackerObserver(imgStatusTracker* aTracker)
   : mTracker(aTracker) {}
@@ -41,29 +41,9 @@ private:
   imgStatusTracker* mTracker;
 };
 
-NS_IMPL_ISUPPORTS3(imgStatusTrackerObserver,
+NS_IMPL_ISUPPORTS2(imgStatusTrackerObserver,
                    imgIDecoderObserver,
-                   imgIContainerObserver,
                    nsISupportsWeakReference)
-
-/** imgIContainerObserver methods **/
-
-/* [noscript] void frameChanged (in nsIntRect dirtyRect); */
-NS_IMETHODIMP imgStatusTrackerObserver::FrameChanged(const nsIntRect *dirtyRect)
-{
-  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
-  NS_ABORT_IF_FALSE(mTracker->GetImage(),
-                    "FrameChanged callback before we've created our image");
-
-  mTracker->RecordFrameChanged(dirtyRect);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
-  while (iter.HasMore()) {
-    mTracker->SendFrameChanged(iter.GetNext(), dirtyRect);
-  }
-
-  return NS_OK;
-}
 
 /** imgIDecoderObserver methods **/
 
@@ -132,6 +112,23 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnDataAvailable(const nsIntRect * rect)
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendDataAvailable(iter.GetNext(), rect);
+  }
+
+  return NS_OK;
+}
+
+/* [noscript] void frameChanged (in nsIntRect dirtyRect); */
+NS_IMETHODIMP imgStatusTrackerObserver::FrameChanged(const nsIntRect *dirtyRect)
+{
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
+  NS_ABORT_IF_FALSE(mTracker->GetImage(),
+                    "FrameChanged callback before we've created our image");
+
+  mTracker->RecordFrameChanged(dirtyRect);
+
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
+  while (iter.HasMore()) {
+    mTracker->SendFrameChanged(iter.GetNext(), dirtyRect);
   }
 
   return NS_OK;
@@ -639,7 +636,6 @@ imgStatusTracker::SendDiscard(imgRequestProxy* aProxy)
     aProxy->OnDiscard();
 }
 
-/* non-virtual imgIContainerObserver methods */
 void
 imgStatusTracker::RecordFrameChanged(const nsIntRect* aDirtyRect)
 {

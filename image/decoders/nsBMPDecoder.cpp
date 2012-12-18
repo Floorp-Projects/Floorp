@@ -15,7 +15,6 @@
 
 #include "nsIInputStream.h"
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 
 namespace mozilla {
 namespace image {

@@ -6,7 +6,7 @@
 #include "base/histogram.h"
 #include "ImageLogging.h"
 #include "nsComponentManagerUtils.h"
-#include "imgIContainerObserver.h"
+#include "imgIDecoderObserver.h"
 #include "nsError.h"
 #include "Decoder.h"
 #include "imgIDecoderObserver.h"
@@ -638,7 +638,7 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
   }
 
   if (frameAdvanced) {
-    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+    nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
 
     if (!observer) {
       NS_ERROR("Refreshing image after its imgRequest is gone");
@@ -1660,7 +1660,7 @@ RasterImage::ResetAnimation()
   // we fix bug 500402.
 
   // Update display if we were animating before
-  nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+  nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   if (mAnimating && observer)
     observer->FrameChanged(&(mAnim->firstFrameRefreshArea));
 
@@ -2912,7 +2912,7 @@ RasterImage::ScalingDone(ScaleRequest* request, ScaleStatus status)
   if (status == SCALE_DONE) {
     MOZ_ASSERT(request->done);
 
-    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+    nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
     if (observer) {
       imgFrame *scaledFrame = request->dstFrame.get();
       scaledFrame->ImageUpdated(scaledFrame->GetRect());

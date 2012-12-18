@@ -40,7 +40,6 @@
 #endif
 
 class imgIDecoder;
-class imgIContainerObserver;
 class nsIInputStream;
 
 #define NS_RASTERIMAGE_CID \

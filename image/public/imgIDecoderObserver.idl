@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "imgIContainerObserver.idl"
-
-interface imgIRequest;
-interface imgIContainer;
+#include "nsISupports.idl"
 
 %{C++
 #include "nsRect.h"
 %}
+
+[ptr] native nsIntRect(nsIntRect);
 
 /**
  * imgIDecoderObserver interface
@@ -43,8 +42,8 @@ interface imgIContainer;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(0089cf0c-210c-4b44-9ab0-8099b32bcf64)]
-interface imgIDecoderObserver : imgIContainerObserver
+[scriptable, uuid(eb9f4145-247e-44f5-961d-50da7d08fba7)]
+interface imgIDecoderObserver : nsISupports
 {
   /**
    * Load notification.
@@ -80,6 +79,8 @@ interface imgIDecoderObserver : imgIContainerObserver
    * called when there is more to paint.
    */
   [noscript] void onDataAvailable([const] in nsIntRect aRect);
+
+  [noscript] void frameChanged([const] in nsIntRect aDirtyRect);
 
   /**
    * Decode notification.
