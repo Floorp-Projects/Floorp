@@ -4244,6 +4244,7 @@ MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_DASH=1
+MOZ_WMF=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -5417,6 +5418,29 @@ if test -n "$MOZ_DASH"; then
         AC_MSG_ERROR([WebM is currently disabled and must be enabled for DASH
                      to work.])
     fi
+fi;
+
+
+dnl ========================================================
+dnl = Windows Media Foundation support
+dnl ========================================================
+if test "$OS_ARCH" = "WINNT"; then
+    dnl Enable Windows Media Foundation support by default.
+    dnl Note our minimum SDK version is Windows 7 SDK, so we are (currently)
+    dnl guaranteed to have a recent-enough SDK to build WMF.
+    MOZ_WMF=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(wmf,
+[  --disable-wmf  Disable support for Windows Media Foundation],
+    MOZ_WMF=,
+    MOZ_WMF=1)
+
+if test -n "$MOZ_WMF"; then
+    AC_DEFINE(MOZ_WMF)
+    MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
+    MOZ_MEDIA=1
 fi;
 
 dnl ========================================================
@@ -8831,6 +8855,7 @@ AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_DASH)
+AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
