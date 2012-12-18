@@ -8,6 +8,7 @@
 #include <stagefright/MediaExtractor.h>
 #include <stagefright/MetaData.h>
 #include <stagefright/OMXCodec.h>
+#include <media/stagefright/MediaErrors.h>
 #ifdef MOZ_WIDGET_GONK
 #include <OMX.h>
 #else
@@ -23,6 +24,11 @@
 
 #undef LOG
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "OmxPlugin" , ## args)
+
+#if defined(MOZ_ANDROID_FROYO) || defined(MOZ_ANDROID_GB)
+// Android versions 2.x.x have common API differences
+#define MOZ_ANDROID_V2_X_X
+#endif
 
 using namespace MPAPI;
 
@@ -265,7 +271,7 @@ static uint32_t GetVideoCreationFlags(PluginHost* aPluginHost)
   int32_t flags = 0;
   aPluginHost->GetIntPref("media.stagefright.omxcodec.flags", &flags);
   if (flags != 0) {
-#if !defined(MOZ_ANDROID_GB)
+#if !defined(MOZ_ANDROID_V2_X_X)
     LOG("media.stagefright.omxcodec.flags=%d", flags);
     if ((flags & OMXCodec::kHardwareCodecsOnly) != 0) {
       LOG("FORCE HARDWARE DECODING");
@@ -325,7 +331,7 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
     // Throw away the videoSource and try again with new flags.
     LOG("Falling back to software decoder");
     videoSource.clear();
-#if defined(MOZ_ANDROID_GB)
+#if defined(MOZ_ANDROID_V2_X_X)
     flags = OMXCodec::kPreferSoftwareCodecs;
 #else
     flags = OMXCodec::kSoftwareCodecsOnly;
@@ -398,18 +404,21 @@ bool OmxDecoder::Init() {
   sp<MediaSource> videoTrack;
   sp<MediaSource> videoSource;
   if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != NULL) {
+#if defined(MOZ_ANDROID_FROYO)
+    // Allow up to 720P video.
+    sp<MetaData> meta = extractor->getTrackMetaData(videoTrackIndex);
+    meta->setInt32(kKeyMaxInputSize, (1280 * 720 * 3) / 2);
+#endif
     videoSource = CreateVideoSource(mPluginHost, omx, videoTrack);
     if (videoSource == NULL) {
       LOG("OMXCodec failed to initialize video decoder for \"%s\"", videoMime);
       return false;
     }
-
     status_t status = videoSource->start();
     if (status != OK) {
       LOG("videoSource->start() failed with status %#x", status);
       return false;
     }
-
     int64_t durationUs;
     if (videoTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
       if (durationUs < 0)
@@ -526,7 +535,7 @@ bool OmxDecoder::SetVideoFormat() {
 
   int32_t cropRight, cropBottom;
   // Gingerbread does not support the kKeyCropRect key
-#if !defined(MOZ_ANDROID_GB)
+#if !defined(MOZ_ANDROID_V2_X_X)
   if (!format->findRect(kKeyCropRect, &mVideoCropLeft, &mVideoCropTop,
                                       &cropRight, &cropBottom)) {
 #endif
@@ -535,7 +544,7 @@ bool OmxDecoder::SetVideoFormat() {
     cropRight = mVideoStride - 1;
     cropBottom = mVideoSliceHeight - 1;
     LOG("crop rect not available, assuming no cropping");
-#if !defined(MOZ_ANDROID_GB)
+#if !defined(MOZ_ANDROID_V2_X_X)
   }
 #endif
 
@@ -550,10 +559,14 @@ bool OmxDecoder::SetVideoFormat() {
   MOZ_ASSERT(mVideoWidth > 0 && mVideoWidth <= mVideoStride);
   MOZ_ASSERT(mVideoHeight > 0 && mVideoHeight <= mVideoSliceHeight);
 
+#if !defined(MOZ_ANDROID_FROYO)
   if (!format->findInt32(kKeyRotation, &mVideoRotation)) {
+#endif
     mVideoRotation = 0;
+#if !defined(MOZ_ANDROID_FROYO)
     LOG("rotation not available, assuming 0");
   }
+#endif
 
   if (mVideoRotation != 0 && mVideoRotation != 90 &&
       mVideoRotation != 180 && mVideoRotation != 270) {
@@ -713,7 +726,7 @@ bool OmxDecoder::ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs
 
   aFrame->mSize = mVideoWidth * mVideoHeight * 2;
 
-#ifdef MOZ_ANDROID_GB
+#if defined(MOZ_ANDROID_V2_X_X)
   mColorConverter->convert(mVideoWidth, mVideoHeight,
                            aData, 0 /* srcSkip */,
                            buffer, mVideoWidth * 2);
@@ -732,6 +745,9 @@ bool OmxDecoder::ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs
 
 bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
   switch (mVideoColorFormat) {
+// Froyo support is best handled with the android color conversion code. I
+// get corrupted videos when using our own routines below.
+#if !defined(MOZ_ANDROID_FROYO)
   case OMX_COLOR_FormatYUV420Planar: // e.g. Asus Transformer, Stagefright's software decoder
     ToVideoFrame_YUV420Planar(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
@@ -753,6 +769,7 @@ bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, 
   case OMX_COLOR_Format16bitRGB565:
     return ToVideoFrame_RGB565(aFrame, aTimeUs, aData, aSize, aKeyFrame, aBufferCallback);
     break;
+#endif
   default:
     if (!ToVideoFrame_ColorConverter(aFrame, aTimeUs, aData, aSize, aKeyFrame, aBufferCallback)) {
       LOG("Unknown video color format: %#x", mVideoColorFormat);
