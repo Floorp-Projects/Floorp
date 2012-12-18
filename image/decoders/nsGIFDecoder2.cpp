@@ -219,9 +219,7 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
     // Otherwise, the area may never be refreshed and the placeholder will remain
     // on the screen. (Bug 37589)
     if (mGIFStruct.y_offset > 0) {
-      int32_t imgWidth;
-      mImage.GetWidth(&imgWidth);
-      nsIntRect r(0, 0, imgWidth, mGIFStruct.y_offset);
+      nsIntRect r(0, 0, mGIFStruct.screen_width, mGIFStruct.y_offset);
       PostInvalidation(r);
     }
   }
