@@ -71,7 +71,9 @@ def main():
   config = json.loads(configcontent)
 
   rlock = RLock()
- 
+
+  print 'using result file', options.resultfile
+
   extensionDir = config.get("extensiondir")
   if not extensionDir or extensionDir == '__EXTENSIONDIR__':
     extensionDir = os.path.join(os.getcwd(), "..", "..", "services", "sync", "tps")
