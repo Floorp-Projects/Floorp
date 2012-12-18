@@ -8,9 +8,12 @@
 #ifndef js_HashTable_h__
 #define js_HashTable_h__
 
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Util.h"
+
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
-#include "mozilla/Attributes.h"
 
 namespace js {
 

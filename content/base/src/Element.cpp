@@ -10,7 +10,7 @@
  * utility methods for subclasses, and so forth.
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "mozilla/dom/Element.h"
 
@@ -1588,14 +1588,14 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
                             nsInputEvent* aSourceEvent,
                             nsIContent* aTarget,
                             bool aFullDispatch,
-                            uint32_t aFlags,
+                            const widget::EventFlags* aExtraEventFlags,
                             nsEventStatus* aStatus)
 {
   NS_PRECONDITION(aTarget, "Must have target");
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_CLICK,
+  nsMouseEvent event(aSourceEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
                      aSourceEvent->widget, nsMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   uint32_t clickCount = 1;
@@ -1612,7 +1612,10 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   event.clickCount = clickCount;
   event.inputSource = inputSource;
   event.modifiers = aSourceEvent->modifiers;
-  event.flags |= aFlags; // Be careful not to overwrite existing flags!
+  if (aExtraEventFlags) {
+    // Be careful not to overwrite existing flags!
+    event.mFlags |= *aExtraEventFlags;
+  }
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
 }
@@ -2311,12 +2314,12 @@ Element::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
                                               nsIURI** aURI) const
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      (!NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
+      (!aVisitor.mEvent->mFlags.mIsTrusted &&
        (aVisitor.mEvent->message != NS_MOUSE_CLICK) &&
        (aVisitor.mEvent->message != NS_KEY_PRESS) &&
        (aVisitor.mEvent->message != NS_UI_ACTIVATE)) ||
       !aVisitor.mPresContext ||
-      (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS)) {
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return false;
   }
 
@@ -2362,7 +2365,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
                                   false, true, true);
       // Make sure any ancestor links don't also TriggerLink
-      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
     break;
 
@@ -2372,7 +2375,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
   case NS_BLUR_CONTENT:
     rv = LeaveLink(aVisitor.mPresContext);
     if (NS_SUCCEEDED(rv)) {
-      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
     break;
 
@@ -2420,7 +2423,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (handler && document) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
+            aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
             nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
             fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOUSE |
                                nsIFocusManager::FLAG_NOSCROLL);
@@ -2446,7 +2449,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
       if (shell) {
         // single-click
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+        nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
                            NS_UI_ACTIVATE, 1);
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -2463,7 +2466,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         nsAutoString target;
         GetLinkTarget(target);
         nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                    true, true, NS_IS_TRUSTED_EVENT(aVisitor.mEvent));
+                                    true, true,
+                                    aVisitor.mEvent->mFlags.mIsTrusted);
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     }
@@ -2476,7 +2480,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
           rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                  false, 0, &status);
+                                  false, nullptr, &status);
           if (NS_SUCCEEDED(rv)) {
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }

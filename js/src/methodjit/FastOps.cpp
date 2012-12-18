@@ -439,9 +439,15 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         /* What's the other mask? */
         FrameEntry *test = lhsTest ? rhs : lhs;
 
-        if (test->isType(JSVAL_TYPE_NULL) || test->isType(JSVAL_TYPE_UNDEFINED)) {
+        // Use a stub when comparing to object to address EmulatesUndefined.
+        if (test->isType(JSVAL_TYPE_NULL) ||
+            test->isType(JSVAL_TYPE_UNDEFINED) ||
+            test->isType(JSVAL_TYPE_OBJECT))
+        {
             return emitStubCmpOp(stub, target, fused);
-        } else if (test->isTypeKnown()) {
+        }
+
+        if (test->isTypeKnown()) {
             /* The test will not succeed, constant fold the compare. */
             bool result = GetCompareCondition(op, fused) == Assembler::NotEqual;
             frame.pop();
@@ -452,54 +458,9 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
             return true;
         }
 
-        /* The other side must be null or undefined. */
-        RegisterID reg = frame.ownRegForType(test);
-        frame.pop();
-        frame.pop();
-
-        /*
-         * :FIXME: Easier test for undefined || null?
-         * Maybe put them next to each other, subtract, do a single compare?
-         */
-
-        if (target) {
-            frame.syncAndKillEverything();
-            frame.freeReg(reg);
-
-            Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
-                                               Registers::ReturnReg, Registers::ReturnReg);
-
-            if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
-                (op == JSOP_NE && fused == JSOP_IFEQ)) {
-                Jump b1 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
-                Jump b2 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
-                Jump j1 = masm.jump();
-                b1.linkTo(masm.label(), &masm);
-                b2.linkTo(masm.label(), &masm);
-                Jump j2 = masm.jump();
-                if (!jumpAndRun(j2, target, &sj))
-                    return false;
-                j1.linkTo(masm.label(), &masm);
-            } else {
-                Jump j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
-                Jump j2 = masm.branchPtr(Assembler::NotEqual, reg, ImmType(JSVAL_TYPE_NULL));
-                if (!jumpAndRun(j2, target, &sj))
-                    return false;
-                j.linkTo(masm.label(), &masm);
-            }
-        } else {
-            Jump j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
-            Jump j2 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
-            masm.move(Imm32(op == JSOP_NE), reg);
-            Jump j3 = masm.jump();
-            j2.linkTo(masm.label(), &masm);
-            j.linkTo(masm.label(), &masm);
-            masm.move(Imm32(op == JSOP_EQ), reg);
-            j3.linkTo(masm.label(), &masm);
-            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, reg);
-        }
-        return true;
-    }
+        // If the type of the other side is unknown, use a stub for simplicity.
+        return emitStubCmpOp(stub, target, fused);
+   }
 
     if (cx->typeInferenceEnabled() &&
         lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT))
@@ -603,16 +564,7 @@ mjit::Compiler::jsop_not()
             break;
           }
 
-          case JSVAL_TYPE_OBJECT:
-          {
-            RegisterID reg = frame.allocReg();
-            masm.move(Imm32(0), reg);
-
-            frame.pop();
-            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, reg);
-            break;
-          }
-
+          case JSVAL_TYPE_OBJECT: // EmulatesUndefined makes this non-trivial.
           default:
           {
             prepareStubCall(Uses(1));
@@ -644,19 +596,12 @@ mjit::Compiler::jsop_not()
     Jump jmpNotBool = masm.testBoolean(Assembler::NotEqual, type);
     masm.xor32(Imm32(1), data);
 
-
-    /* OOL path is for int + object. */
+    /* OOL path is for int. */
     Label lblMaybeInt32 = stubcc.masm.label();
 
     Jump jmpNotInt32 = stubcc.masm.testInt32(Assembler::NotEqual, type);
     stubcc.masm.set32(Assembler::Equal, data, Imm32(0), data);
     Jump jmpInt32Exit = stubcc.masm.jump();
-
-    Label lblMaybeObject = stubcc.masm.label();
-    Jump jmpNotObject = stubcc.masm.testPrimitive(Assembler::Equal, type);
-    stubcc.masm.move(Imm32(0), data);
-    Jump jmpObjectExit = stubcc.masm.jump();
-
 
     /* Rejoin location. */
     Label lblRejoin = masm.label();
@@ -664,12 +609,8 @@ mjit::Compiler::jsop_not()
     /* Patch up jumps. */
     stubcc.linkExitDirect(jmpNotBool, lblMaybeInt32);
 
-    jmpNotInt32.linkTo(lblMaybeObject, &stubcc.masm);
+    jmpNotInt32.linkTo(syncTarget, &stubcc.masm);
     stubcc.crossJump(jmpInt32Exit, lblRejoin);
-
-    jmpNotObject.linkTo(syncTarget, &stubcc.masm);
-    stubcc.crossJump(jmpObjectExit, lblRejoin);
-
 
     /* Leave. */
     stubcc.leave();

@@ -1503,8 +1503,8 @@ XMLHttpRequest::Constructor(JSContext* aCx,
   }
 
   if (workerPrivate->XHRParamsAllowed()) {
-    xhr->mMozAnon = aParams.mozAnon;
-    xhr->mMozSystem = aParams.mozSystem;
+    xhr->mMozAnon = aParams.mMozAnon;
+    xhr->mMozSystem = aParams.mMozSystem;
   }
 
   xhr->mJSObject = xhr->GetJSObject();

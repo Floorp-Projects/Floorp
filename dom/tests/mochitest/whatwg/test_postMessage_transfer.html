@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=822094
+-->
+<head><meta charset=utf-8>
+  <title>postMessage transferable tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822094">Mozilla Bug 822094</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<iframe src="postMessage_transfer_helper.html"
+        name="sameDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_transfer_helper.html"
+        name="crossDomain"></iframe>
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  function() { testFunc(window, "http://mochi.test:8888"); },
+  function() { testFunc(frames.sameDomain, "http://mochi.test:8888"); },
+  function() { testFunc(frames.crossDomain, "http://example.org:8000"); },
+  function() { SimpleTest.finish(); },
+];
+
+function testFunc(target, origin) {
+  var ab = new ArrayBuffer(1);
+  var cd = new ArrayBuffer(1);
+
+  target.postMessage([ab, cd], origin, [ab]);
+  is(ab.byteLength, 0, "ab should be neutered");
+  is(cd.byteLength, 1, "cd should not be neutered");
+
+  onmessage = function(e) {
+    is(e.data[0].byteLength, 1, "ab should be transfered");
+    is(e.data[1].byteLength, 1, "cd should be cloned");
+    nextTest();
+  };
+}
+
+function nextTest() {
+  var t = tests.shift();
+  t();
+};
+
+onload = function() {
+  nextTest();
+};
+
+</script>
+</pre>
+</body>
+</html>

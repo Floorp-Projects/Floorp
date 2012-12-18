@@ -102,7 +102,6 @@ members = [
     'nsIDOMText.splitText',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
-    'nsIDOMMutationRecord.*',
 
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
@@ -397,8 +396,6 @@ irregularFilenames = {
 
     'nsIDOMTouch': 'nsIDOMTouchEvent',
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
-
-    'nsIDOMMutationRecord': 'nsIDOMMutationObserver',
 
     'nsITelephoneCallback': 'nsITelephone',
     }

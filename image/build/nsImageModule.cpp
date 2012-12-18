@@ -28,11 +28,6 @@
 #include "nsBMPEncoder.h"
 
 // objects that just require generic constructors
-namespace mozilla {
-namespace image {
-NS_GENERIC_FACTORY_CONSTRUCTOR(RasterImage)
-}
-}
 using namespace mozilla::image;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(imgLoader, Init)
@@ -45,7 +40,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBMPEncoder)
 NS_DEFINE_NAMED_CID(NS_IMGLOADER_CID);
 NS_DEFINE_NAMED_CID(NS_IMGREQUESTPROXY_CID);
 NS_DEFINE_NAMED_CID(NS_IMGTOOLS_CID);
-NS_DEFINE_NAMED_CID(NS_RASTERIMAGE_CID);
 NS_DEFINE_NAMED_CID(NS_ICOENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_JPEGENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_PNGENCODER_CID);
@@ -55,7 +49,6 @@ static const mozilla::Module::CIDEntry kImageCIDs[] = {
   { &kNS_IMGLOADER_CID, false, NULL, imgLoaderConstructor, },
   { &kNS_IMGREQUESTPROXY_CID, false, NULL, imgRequestProxyConstructor, },
   { &kNS_IMGTOOLS_CID, false, NULL, imgToolsConstructor, },
-  { &kNS_RASTERIMAGE_CID, false, NULL, RasterImageConstructor, },
   { &kNS_ICOENCODER_CID, false, NULL, nsICOEncoderConstructor, },
   { &kNS_JPEGENCODER_CID, false, NULL, nsJPEGEncoderConstructor, },
   { &kNS_PNGENCODER_CID, false, NULL, nsPNGEncoderConstructor, },
@@ -68,7 +61,6 @@ static const mozilla::Module::ContractIDEntry kImageContracts[] = {
   { "@mozilla.org/image/loader;1", &kNS_IMGLOADER_CID },
   { "@mozilla.org/image/request;1", &kNS_IMGREQUESTPROXY_CID },
   { "@mozilla.org/image/tools;1", &kNS_IMGTOOLS_CID },
-  { "@mozilla.org/image/rasterimage;1", &kNS_RASTERIMAGE_CID },
   { "@mozilla.org/image/encoder;2?type=image/vnd.microsoft.icon", &kNS_ICOENCODER_CID },
   { "@mozilla.org/image/encoder;2?type=image/jpeg", &kNS_JPEGENCODER_CID },
   { "@mozilla.org/image/encoder;2?type=image/png", &kNS_PNGENCODER_CID },

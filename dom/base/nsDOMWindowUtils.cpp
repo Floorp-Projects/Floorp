@@ -66,6 +66,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMFileHandle.h"
 #include "nsPrintfCString.h"
+#include "nsViewportInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -266,14 +267,14 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
   NS_ENSURE_STATE(doc);
 
-  ViewportInfo info = nsContentUtils::GetViewportInfo(doc, aDisplayWidth, aDisplayHeight);
-  *aDefaultZoom = info.defaultZoom;
-  *aAllowZoom = info.allowZoom;
-  *aMinZoom = info.minZoom;
-  *aMaxZoom = info.maxZoom;
-  *aWidth = info.width;
-  *aHeight = info.height;
-  *aAutoSize = info.autoSize;
+  nsViewportInfo info = nsContentUtils::GetViewportInfo(doc, aDisplayWidth, aDisplayHeight);
+  *aDefaultZoom = info.GetDefaultZoom();
+  *aAllowZoom = info.IsZoomAllowed();
+  *aMinZoom = info.GetMinZoom();
+  *aMaxZoom = info.GetMaxZoom();
+  *aWidth = info.GetWidth();
+  *aHeight = info.GetHeight();
+  *aAutoSize = info.IsAutoSizeEnabled();
   return NS_OK;
 }
 
@@ -378,7 +379,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
 
   nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
   if (rootFrame) {
-    rootFrame->InvalidateFrame();
+    rootFrame->SchedulePaint();
 
     // If we are hiding something that is a display root then send empty paint
     // transaction in order to release retained layers because it won't get
@@ -647,7 +648,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   event.inputSource = aInputSourceArg;
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
-  event.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+  event.mFlags.mIsSynthesizedForTests = true;
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext)
@@ -935,7 +936,7 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
   event.time = PR_IntervalNow();
 
   if (aAdditionalFlags & KEY_FLAG_PREVENT_DEFAULT) {
-    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    event.mFlags.mDefaultPrevented = true;
   }
 
   nsEventStatus status;
@@ -1654,7 +1655,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
     compositionEvent.data = aData;
   }
 
-  compositionEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+  compositionEvent.mFlags.mIsSynthesizedForTests = true;
 
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&compositionEvent, status);
@@ -1733,7 +1734,7 @@ nsDOMWindowUtils::SendTextEvent(const nsAString& aCompositionString,
   textEvent.rangeCount = textRanges.Length();
   textEvent.rangeArray = textRanges.Elements();
 
-  textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+  textEvent.mFlags.mIsSynthesizedForTests = true;
 
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&textEvent, status);

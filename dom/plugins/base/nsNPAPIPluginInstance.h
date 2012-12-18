@@ -58,6 +58,7 @@ public:
   nsCOMPtr<nsITimer> timer;
   void (*callback)(NPP npp, uint32_t timerID);
   bool inCallback;
+  bool needUnschedule;
 };
 
 class nsNPAPIPluginInstance : public nsISupports

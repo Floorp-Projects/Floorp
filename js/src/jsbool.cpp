@@ -196,8 +196,11 @@ js_BooleanToString(JSContext *cx, JSBool b)
 JS_PUBLIC_API(bool)
 js::ToBooleanSlow(const Value &v)
 {
-    JS_ASSERT(v.isString());
-    return v.toString()->length() != 0;
+    if (v.isString())
+        return v.toString()->length() != 0;
+
+    JS_ASSERT(v.isObject());
+    return !EmulatesUndefined(&v.toObject());
 }
 
 bool

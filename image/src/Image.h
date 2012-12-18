@@ -8,6 +8,8 @@
 
 #include "imgIContainer.h"
 #include "imgStatusTracker.h"
+#include "nsIRequest.h"
+#include "nsIInputStream.h"
 
 namespace mozilla {
 namespace image {
@@ -88,12 +90,46 @@ public:
   uint32_t GetAnimationConsumers() { return mAnimationConsumers; }
 #endif
 
+  /**
+   * Called from OnDataAvailable when the stream associated with the image has
+   * received new image data. The arguments are the same as OnDataAvailable's,
+   * but by separating this functionality into a different method we don't
+   * interfere with subclasses which wish to implement nsIStreamListener.
+   *
+   * Images should not do anything that could send out notifications until they
+   * have received their first OnImageDataAvailable notification; in
+   * particular, this means that instantiating decoders should be deferred
+   * until OnImageDataAvailable is called.
+   */
+  virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
+                                        nsISupports* aContext,
+                                        nsIInputStream* aInStr,
+                                        uint64_t aSourceOffset,
+                                        uint32_t aCount) = 0;
+
+  /**
+   * Called from OnStopRequest when the image's underlying request completes.
+   * The arguments are the same as OnStopRequest's, but by separating this
+   * functionality into a different method we don't interfere with subclasses
+   * which wish to implement nsIStreamListener.
+   */
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
+                                       nsISupports* aContext,
+                                       nsresult status) = 0;
+
+  /**
+   * Called for multipart images to allow for any necessary reinitialization
+   * when there's a new part to add.
+   */
+  virtual nsresult OnNewSourceData() = 0;
+
   void SetInnerWindowID(uint64_t aInnerWindowId) {
     mInnerWindowId = aInnerWindowId;
   }
   uint64_t InnerWindowID() const { return mInnerWindowId; }
 
-  bool HasError() { return mError; }
+  bool HasError()    { return mError; }
+  void SetHasError() { mError = true; }
 
 protected:
   Image(imgStatusTracker* aStatusTracker);

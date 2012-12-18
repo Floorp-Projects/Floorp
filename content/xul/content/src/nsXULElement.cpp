@@ -104,6 +104,7 @@
 #include "nsICSSDeclaration.h"
 
 namespace css = mozilla::css;
+namespace dom = mozilla::dom;
 
 //----------------------------------------------------------------------
 
@@ -1155,7 +1156,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                     static_cast<nsInputEvent*>(aVisitor.mEvent);
                 nsContentUtils::DispatchXULCommand(
                   commandContent,
-                  NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                  aVisitor.mEvent->mFlags.mIsTrusted,
                   aVisitor.mDOMEvent,
                   nullptr,
                   orig->IsControl(),
@@ -1579,13 +1580,11 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     if (isContext) {
       manager->AddEventListenerByType(listener,
                                       NS_LITERAL_STRING("contextmenu"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT);
+                                      dom::TrustedEventsAtSystemGroupBubble());
     } else {
       manager->AddEventListenerByType(listener,
                                       NS_LITERAL_STRING("mousedown"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT);
+                                      dom::TrustedEventsAtSystemGroupBubble());
     }
     return NS_OK;
 }

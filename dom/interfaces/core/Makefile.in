@@ -40,7 +40,6 @@ XPIDLSRCS =                                     \
 	nsIDOMDOMTokenList.idl			\
 	nsIDOMDOMSettableTokenList.idl	\
 	nsIInlineEventHandlers.idl              \
-	nsIDOMMutationObserver.idl              \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

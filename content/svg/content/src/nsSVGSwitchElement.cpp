@@ -68,7 +68,8 @@ nsSVGSwitchElement::MaybeInvalidate()
 
   nsIFrame *frame = GetPrimaryFrame();
   if (frame) {
-    nsSVGUtils::InvalidateAndScheduleReflowSVG(frame);
+    nsSVGUtils::InvalidateBounds(frame, false);
+    nsSVGUtils::ScheduleReflowSVG(frame);
   }
 
   mActiveChild = newActiveChild;

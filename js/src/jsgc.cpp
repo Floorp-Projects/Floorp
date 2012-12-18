@@ -8,6 +8,7 @@
 /* JS Mark-and-Sweep Garbage Collector. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 /*
@@ -2643,6 +2644,8 @@ BeginMarkPhase(JSRuntime *rt)
      * If the maybeAlive is false, then we set the scheduledForDestruction flag.
      * At any time later in the GC, if we try to mark an object whose
      * compartment is scheduled for destruction, we will assert.
+     * NOTE: Due to bug 811587, we only assert if gcManipulatingDeadCompartments
+     * is true (e.g., if we're doing a brain transplant).
      *
      * The purpose of this check is to ensure that a compartment that we would
      * normally destroy is not resurrected by a read barrier or an

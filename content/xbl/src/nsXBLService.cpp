@@ -636,14 +636,11 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 
   // listen to these events
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
-                                  NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+                                  dom::TrustedEventsAtSystemGroupBubble());
 
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener, handler,
@@ -684,14 +681,11 @@ nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
     return NS_ERROR_FAILURE;
 
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
-                                     NS_EVENT_FLAG_BUBBLE |
-                                     NS_EVENT_FLAG_SYSTEM_EVENT);
+                                     dom::TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
-                                     NS_EVENT_FLAG_BUBBLE |
-                                     NS_EVENT_FLAG_SYSTEM_EVENT);
+                                     dom::TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
-                                     NS_EVENT_FLAG_BUBBLE |
-                                     NS_EVENT_FLAG_SYSTEM_EVENT);
+                                     dom::TrustedEventsAtSystemGroupBubble());
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 

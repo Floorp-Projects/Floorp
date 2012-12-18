@@ -105,50 +105,6 @@ enum nsEventStructType {
   NS_PLUGIN_EVENT                    // nsPluginEvent
 };
 
-// These flags are sort of a mess. They're sort of shared between event
-// listener flags and event flags, but only some of them. You've been
-// warned!
-#define NS_EVENT_FLAG_NONE                0x0000
-#define NS_EVENT_FLAG_TRUSTED             0x0001
-#define NS_EVENT_FLAG_BUBBLE              0x0002
-#define NS_EVENT_FLAG_CAPTURE             0x0004
-#define NS_EVENT_FLAG_STOP_DISPATCH       0x0008
-#define NS_EVENT_FLAG_NO_DEFAULT          0x0010
-#define NS_EVENT_FLAG_CANT_CANCEL         0x0020
-#define NS_EVENT_FLAG_CANT_BUBBLE         0x0040
-#define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
-#define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
-#define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
-// Event has been dispatched at least once
-#define NS_EVENT_DISPATCHED               0x0400
-#define NS_EVENT_FLAG_DISPATCHING         0x0800
-// When an event is synthesized for testing, this flag will be set.
-// Note that this is currently used only with mouse events, because this
-// flag is not needed on other events now.  It could be added to other
-// events.
-#define NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT 0x1000
-
-// Use this flag if the event should be dispatched only to chrome.
-#define NS_EVENT_FLAG_ONLY_CHROME_DISPATCH 0x2000
-
-// A flag for drag&drop handling.
-#define NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT 0x4000
-
-#define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
-
-#define NS_EVENT_FLAG_EXCEPTION_THROWN    0x10000
-
-#define NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS 0x20000
-
-#define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
-
-#define NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY 0x80000
-
-#define NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS 0x100000
-
-#define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
-#define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
-
 #define NS_EVENT_TYPE_NULL                   0
 #define NS_EVENT_TYPE_ALL                  1 // Not a real event type
 
@@ -510,6 +466,118 @@ enum nsWindowZ {
   nsWindowZRelative   // just below some specified widget
 };
 
+namespace mozilla {
+namespace widget {
+struct EventFlags
+{
+public:
+  // If mIsTrusted is true, the event is a trusted event.  Otherwise, it's
+  // an untrusted event.
+  bool    mIsTrusted : 1;
+  // If mInBubblingPhase is true, the event is in bubbling phase or target
+  // phase.
+  bool    mInBubblingPhase : 1;
+  // If mInCapturePhase is true, the event is in capture phase or target phase.
+  bool    mInCapturePhase : 1;
+  // If mInSystemGroup is true, the event is being dispatched in system group.
+  bool    mInSystemGroup: 1;
+  // If mCancelable is true, the event can be consumed.  I.e., calling
+  // nsDOMEvent::PreventDefault() can prevent the default action.
+  bool    mCancelable : 1;
+  // If mBubbles is true, the event can bubble.  Otherwise, cannot be handled
+  // in bubbling phase.
+  bool    mBubbles : 1;
+  // If mPropagationStopped is true, nsDOMEvent::StopPropagation() or
+  // nsDOMEvent::StopImmediatePropagation() has been called.
+  bool    mPropagationStopped : 1;
+  // If mImmediatePropagationStopped is true,
+  // nsDOMEvent::StopImmediatePropagation() has been called.
+  // Note that mPropagationStopped must be true when this is true.
+  bool    mImmediatePropagationStopped : 1;
+  // If mDefaultPrevented is true, the event has been consumed.
+  // E.g., nsDOMEvent::PreventDefault() has been called or
+  // the default action has been performed.
+  bool    mDefaultPrevented : 1;
+  // If mDefaultPreventedByContent is true, the event has been
+  // consumed by content.
+  // Note that mDefaultPrevented must be true when this is true.
+  bool    mDefaultPreventedByContent : 1;
+  // mMultipleActionsPrevented may be used when default handling don't want to
+  // be prevented, but only one of the event targets should handle the event.
+  // For example, when a <label> element is in another <label> element and
+  // the first <label> element is clicked, that one may set this true.
+  // Then, the second <label> element won't handle the event.
+  bool    mMultipleActionsPrevented : 1;
+  // If mIsBeingDispatched is true, the DOM event created from the event is
+  // dispatching into the DOM tree and not completed.
+  bool    mIsBeingDispatched : 1;
+  // If mDispatchedAtLeastOnce is true, the event has been dispatched
+  // as a DOM event and the dispatch has been completed.
+  bool    mDispatchedAtLeastOnce : 1;
+  // If mIsSynthesizedForTests is true, the event has been synthesized for
+  // automated tests or something hacky approach of an add-on.
+  bool    mIsSynthesizedForTests : 1;
+  // If mExceptionHasBeenRisen is true, one of the event handlers has risen an
+  // exception.
+  bool    mExceptionHasBeenRisen : 1;
+  // If mRetargetToNonNativeAnonymous is true and the target is in a non-native
+  // native anonymous subtree, the event target is set to originalTarget.
+  bool    mRetargetToNonNativeAnonymous : 1;
+  // If mNoCrossProcessBoundaryForwarding is true, the event is not allowed to
+  // cross process boundary.
+  bool    mNoCrossProcessBoundaryForwarding : 1;
+  // If mNoContentDispatch is true, the event is never dispatched to the
+  // event handlers which are added to the contents, onfoo attributes and
+  // properties.  Note that this flag is ignored when
+  // nsEventChainPreVisitor::mForceContentDispatch is set true.  For exapmle,
+  // window and document object sets it true.  Therefore, web applications
+  // can handle the event if they add event listeners to the window or the
+  // document.
+  bool    mNoContentDispatch : 1;
+  // If mOnlyChromeDispatch is true, the event is dispatched to only chrome.
+  bool    mOnlyChromeDispatch : 1;
+
+  // If the event is being handled in target phase, returns true.
+  bool InTargetPhase() const
+  {
+    return (mInBubblingPhase && mInCapturePhase);
+  }
+
+  EventFlags()
+  {
+    Clear();
+  }
+  inline void Clear()
+  {
+    SetRawFlags(0);
+  }
+  inline EventFlags operator|(const EventFlags& aOther) const
+  {
+    EventFlags flags;
+    flags.SetRawFlags(GetRawFlags() | aOther.GetRawFlags());
+    return flags;
+  }
+  inline EventFlags& operator|=(const EventFlags& aOther)
+  {
+    SetRawFlags(GetRawFlags() | aOther.GetRawFlags());
+    return *this;
+  }
+
+private:
+  inline void SetRawFlags(uint32_t aRawFlags)
+  {
+    memcpy(this, &aRawFlags, sizeof(EventFlags));
+  }
+  inline uint32_t GetRawFlags() const
+  {
+    uint32_t result = 0;
+    memcpy(&result, this, sizeof(EventFlags));
+    return result;
+  }
+};
+} // namespace widget
+} // namespace mozilla
+
 /**
  * General event
  */
@@ -523,10 +591,12 @@ protected:
       refPoint(0, 0),
       lastRefPoint(0, 0),
       time(0),
-      flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
   {
     MOZ_COUNT_CTOR(nsEvent);
+    mFlags.mIsTrusted = isTrusted;
+    mFlags.mCancelable = true;
+    mFlags.mBubbles = true;
   }
 
   nsEvent()
@@ -541,10 +611,12 @@ public:
       refPoint(0, 0),
       lastRefPoint(0, 0),
       time(0),
-      flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
   {
     MOZ_COUNT_CTOR(nsEvent);
+    mFlags.mIsTrusted = isTrusted;
+    mFlags.mCancelable = true;
+    mFlags.mBubbles = true;
   }
 
   ~nsEvent()
@@ -570,9 +642,9 @@ public:
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
   uint64_t    time;
-  // Flags to hold event flow stage and capture/bubble cancellation
-  // status. This is used also to indicate whether the event is trusted.
-  uint32_t    flags;
+  // See EventFlags definition for the detail.
+  mozilla::widget::EventFlags mFlags;
+
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
   // Event targets, needed by DOM Events
@@ -852,11 +924,12 @@ protected:
   {
     switch (msg) {
       case NS_MOUSE_MOVE:
-        flags |= NS_EVENT_FLAG_CANT_CANCEL;
+        mFlags.mCancelable = false;
         break;
       case NS_MOUSEENTER:
       case NS_MOUSELEAVE:
-        flags |= (NS_EVENT_FLAG_CANT_CANCEL & NS_EVENT_FLAG_CANT_BUBBLE);
+        mFlags.mBubbles = false;
+        mFlags.mCancelable = false;
         break;
       default:
         break;
@@ -873,11 +946,12 @@ public:
   {
     switch (msg) {
       case NS_MOUSE_MOVE:
-        flags |= NS_EVENT_FLAG_CANT_CANCEL;
+        mFlags.mCancelable = false;
         break;
       case NS_MOUSEENTER:
       case NS_MOUSELEAVE:
-        flags |= (NS_EVENT_FLAG_CANT_CANCEL | NS_EVENT_FLAG_CANT_BUBBLE);
+        mFlags.mBubbles = false;
+        mFlags.mCancelable = false;
         break;
       case NS_CONTEXTMENU:
         button = (context == eNormal) ? eRightButton : eLeftButton;
@@ -922,11 +996,10 @@ public:
     : nsMouseEvent(isTrusted, msg, w, NS_DRAG_EVENT, eReal),
       userCancelled(false)
   {
-    if (msg == NS_DRAGDROP_EXIT_SYNTH ||
-        msg == NS_DRAGDROP_LEAVE_SYNTH ||
-        msg == NS_DRAGDROP_END) {
-      flags |= NS_EVENT_FLAG_CANT_CANCEL;
-    }
+    mFlags.mCancelable =
+      (msg != NS_DRAGDROP_EXIT_SYNTH &&
+       msg != NS_DRAGDROP_LEAVE_SYNTH &&
+       msg != NS_DRAGDROP_END);
   }
 
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
@@ -1149,7 +1222,7 @@ public:
     // XXX compositionstart is cancelable in draft of DOM3 Events.
     //     However, it doesn't make sense for us, we cannot cancel composition
     //     when we send compositionstart event.
-    flags |= NS_EVENT_FLAG_CANT_CANCEL;
+    mFlags.mCancelable = false;
   }
 
   nsString data;
@@ -1592,7 +1665,7 @@ public:
   }
 
   nsSimpleGestureEvent(const nsSimpleGestureEvent& other)
-    : nsMouseEvent_base((other.flags & NS_EVENT_FLAG_TRUSTED) != 0,
+    : nsMouseEvent_base(other.mFlags.mIsTrusted,
                         other.message, other.widget, NS_SIMPLE_GESTURE_EVENT),
       direction(other.direction), delta(other.delta), clickCount(0)
   {
@@ -1746,23 +1819,6 @@ enum nsDragDropEventStatus {
 #define NS_IS_NON_RETARGETED_PLUGIN_EVENT(evnt) \
        (NS_IS_PLUGIN_EVENT(evnt) && \
         !(static_cast<nsPluginEvent*>(evnt)->retargetToFocusedDocument))
-
-#define NS_IS_TRUSTED_EVENT(event) \
-  (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
-
-// Mark an event as being dispatching.
-#define NS_MARK_EVENT_DISPATCH_STARTED(event) \
-  (event)->flags |= NS_EVENT_FLAG_DISPATCHING;
-
-#define NS_IS_EVENT_IN_DISPATCH(event) \
-  (((event)->flags & NS_EVENT_FLAG_DISPATCHING) != 0)
-
-// Mark an event as being done dispatching.
-#define NS_MARK_EVENT_DISPATCH_DONE(event) \
-  NS_ASSERTION(NS_IS_EVENT_IN_DISPATCH(event), \
-               "Event never got marked for dispatch!"); \
-  (event)->flags &= ~NS_EVENT_FLAG_DISPATCHING; \
-  (event)->flags |= NS_EVENT_DISPATCHED;
 
 // Be aware the query content events and the selection events are a part of IME
 // processing.  So, you shouldn't use NS_IS_IME_EVENT macro directly in most

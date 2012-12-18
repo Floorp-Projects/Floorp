@@ -560,19 +560,6 @@ nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
     outerSVGFrame, nsIPresShell::eResize, dirtyBit);
 }
 
-void
-nsSVGUtils::InvalidateAndScheduleReflowSVG(nsIFrame *aFrame)
-{
-  // If this is triggered, the callers should be fixed to call us much
-  // earlier. If we try to mark dirty bits on frames while we're in the
-  // process of removing them, things will get messed up.
-  NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
-               "Must not call under nsISVGChildFrame::ReflowSVG!");
-
-  InvalidateBounds(aFrame, false);
-  ScheduleReflowSVG(aFrame);
-}
-
 bool
 nsSVGUtils::NeedsReflowSVG(nsIFrame *aFrame)
 {
