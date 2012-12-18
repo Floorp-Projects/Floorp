@@ -69,6 +69,9 @@ public:
   static bool IsDASHMPDType(const nsACString& aType);
 #endif
 
+#ifdef MOZ_WMF
+  static bool IsWMFSupportedType(const nsACString& aType);
+#endif
 };
 
 }
