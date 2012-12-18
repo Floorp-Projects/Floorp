@@ -111,7 +111,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
 
   /**
    * Used to find out what type of request one is dealing with (eg
-   * which request got passed through to the imgIDecoderObserver
+   * which request got passed through to the imgINotificationObserver
    * interface of an observer)
    *
    * @param aRequest the request whose type we want to know

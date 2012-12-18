@@ -80,7 +80,7 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 #define MAX_JPEG_MARKER_LENGTH  (((uint32_t)1 << 16) - 1)
 
 
-nsJPEGDecoder::nsJPEGDecoder(RasterImage& aImage, imgIDecoderObserver* aObserver, Decoder::DecodeStyle aDecodeStyle)
+nsJPEGDecoder::nsJPEGDecoder(RasterImage& aImage, imgDecoderObserver* aObserver, Decoder::DecodeStyle aDecodeStyle)
  : Decoder(aImage, aObserver)
  , mDecodeStyle(aDecodeStyle)
 {

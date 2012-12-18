@@ -6,8 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface imgIDecoderObserver;
-
 %{C++
 #include "gfxImageSurface.h"
 #include "gfxContext.h"

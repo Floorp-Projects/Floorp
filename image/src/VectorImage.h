@@ -9,10 +9,10 @@
 #include "Image.h"
 #include "nsIStreamListener.h"
 #include "nsIRequest.h"
-#include "nsWeakReference.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/WeakPtr.h"
 
-class imgIDecoderObserver;
+class imgDecoderObserver;
 
 namespace mozilla {
 namespace layers {
@@ -37,7 +37,7 @@ public:
   virtual ~VectorImage();
 
   // Methods inherited from Image
-  nsresult Init(imgIDecoderObserver* aObserver,
+  nsresult Init(imgDecoderObserver* aObserver,
                 const char* aMimeType,
                 const char* aURIString,
                 uint32_t aFlags);
@@ -69,7 +69,7 @@ protected:
   virtual bool     ShouldAnimate();
 
 private:
-  nsWeakPtr                          mObserver;   //! imgIDecoderObserver
+  WeakPtr<imgDecoderObserver>        mObserver;
   nsRefPtr<SVGDocumentWrapper>       mSVGDocumentWrapper;
   nsRefPtr<SVGRootRenderingObserver> mRenderingObserver;
 

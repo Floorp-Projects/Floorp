@@ -26,8 +26,7 @@ class Image;
 #include "nsTObserverArray.h"
 #include "nsIRunnable.h"
 #include "nscore.h"
-#include "nsWeakReference.h"
-#include "imgIDecoderObserver.h"
+#include "imgDecoderObserver.h"
 
 enum {
   stateRequestStarted    = 1u << 0,
@@ -127,7 +126,7 @@ public:
   // StartFrame, DataAvailable, StopFrame, StopDecode.
   void RecordDecoded();
 
-  /* non-virtual imgIDecoderObserver methods */
+  /* non-virtual imgDecoderObserver methods */
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
   void RecordDataAvailable();
@@ -171,7 +170,7 @@ public:
   inline mozilla::image::Image* GetImage() const { return mImage; }
   inline imgRequest* GetRequest() const { return mRequest; }
 
-  inline imgIDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
+  inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
 private:
   friend class imgStatusNotifyRunnable;
@@ -193,7 +192,7 @@ private:
   // using the image.
   nsTObserverArray<imgRequestProxy*> mConsumers;
 
-  nsRefPtr<imgIDecoderObserver> mTrackerObserver;
+  mozilla::RefPtr<imgDecoderObserver> mTrackerObserver;
 };
 
 #endif

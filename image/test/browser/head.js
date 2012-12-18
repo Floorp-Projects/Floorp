@@ -24,14 +24,3 @@ function actOnMozImage(doc, id, func) {
   func(mozImage);
   return true;
 }
-
-function awaitImageContainer(doc, id, func) {
-  getImageLoading(doc, id).addObserver({
-    QueryInterface: XPCOMUtils.generateQI([Ci.imgIDecoderObserver]),
-    onStartContainer: function(aRequest, aContainer) {
-      getImageLoading(doc, id).removeObserver(this);
-      func(aContainer);
-    },
-  });
-}
-
