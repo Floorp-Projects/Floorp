@@ -645,9 +645,15 @@ public:
 
     MOZ_ASSERT(entry.mPc == aPc);
 
-    // Use "???" for unknown functions.
-    W("   %s[%s +0x%X] %p\n", entry.mFunction ? entry.mFunction : "???",
-      entry.mLibrary, entry.mLOffset, entry.mPc);
+    // Sometimes we get nothing useful.  Just print "???" for the entire entry
+    // so that fix-linux-stack.pl doesn't complain about an empty filename.
+    if (!entry.mFunction && !entry.mLibrary[0] && entry.mLOffset == 0) {
+      W("   ??? %p\n", entry.mPc);
+    } else {
+      // Use "???" for unknown functions.
+      W("   %s[%s +0x%X] %p\n", entry.mFunction ? entry.mFunction : "???",
+        entry.mLibrary, entry.mLOffset, entry.mPc);
+    }
   }
 
   size_t SizeOfIncludingThis()
