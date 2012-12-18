@@ -624,7 +624,7 @@ nsPlacesAutoComplete.prototype = {
   handleResult: function PAC_handleResult(aResultSet)
   {
     let row, haveMatches = false;
-    while (row = aResultSet.getNextRow()) {
+    while ((row = aResultSet.getNextRow())) {
       let match = this._processRow(row);
       haveMatches = haveMatches || match;
 
