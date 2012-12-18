@@ -8,7 +8,7 @@
 #define _nsBMPDecoder_h
 
 #include "nsAutoPtr.h"
-#include "imgIDecoderObserver.h"
+#include "imgDecoderObserver.h"
 #include "gfxColor.h"
 #include "Decoder.h"
 #include "BMPFileHeaders.h"
@@ -25,7 +25,7 @@ class nsBMPDecoder : public Decoder
 {
 public:
 
-    nsBMPDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver);
+    nsBMPDecoder(RasterImage &aImage, imgDecoderObserver* aObserver);
     ~nsBMPDecoder();
 
     // Specifies whether or not the BMP file will contain alpha data
