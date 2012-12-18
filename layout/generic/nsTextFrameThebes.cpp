@@ -3902,7 +3902,7 @@ nsTextFrame::AccessibleType()
     }
   }
 
-  return a11y::eTextLeaf;
+  return a11y::eTextLeafType;
 }
 #endif
 

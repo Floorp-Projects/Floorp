@@ -6252,7 +6252,7 @@ nsBlockFrame::AccessibleType()
 {
   // block frame may be for <hr>
   if (mContent->Tag() == nsGkAtoms::hr) {
-    return a11y::eHTMLHR;
+    return a11y::eHTMLHRType;
   }
 
   if (!HasBullet() || !PresContext()) {
@@ -6275,11 +6275,11 @@ nsBlockFrame::AccessibleType()
     }
 
     // Not a bullet, treat as normal HTML container
-    return a11y::eHyperText;
+    return a11y::eHyperTextType;
   }
 
   // Create special list bullet accessible
-  return a11y::eHTMLLi;
+  return a11y::eHTMLLiType;
 }
 #endif
 
