@@ -3183,14 +3183,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Selection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Selection)
 
-NS_IMETHODIMP
-Selection::SetPresShell(nsIPresShell* aPresShell)
-{
-  mPresShellWeak = do_GetWeakReference(aPresShell);
-  return NS_OK;
-}
-
-
 
 NS_IMETHODIMP
 Selection::GetAnchorNode(nsIDOMNode** aAnchorNode)
