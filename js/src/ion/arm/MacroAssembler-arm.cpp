@@ -2645,6 +2645,12 @@ MacroAssemblerARMCompat::breakpoint()
 }
 
 void
+MacroAssemblerARMCompat::breakpoint(Condition cc)
+{
+    ma_ldr(DTRAddr(r12, DtrRegImmShift(r12, LSL, 0, IsDown)), r12, Offset, cc);
+}
+
+void
 MacroAssemblerARMCompat::setupABICall(uint32_t args)
 {
     JS_ASSERT(!inCall_);

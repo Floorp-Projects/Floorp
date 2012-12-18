@@ -709,28 +709,28 @@ class DtrOffReg : public DtrOff
     // These are designed to be called by a constructor of a subclass.
     // Constructing the necessary RIS/RRS structures are annoying
   protected:
-    DtrOffReg(Register rn, ShiftType type, datastore::RIS shiftImm)
-      : DtrOff(datastore::Reg(rn.code(), type, 0, shiftImm.encode()))
+    DtrOffReg(Register rn, ShiftType type, datastore::RIS shiftImm, IsUp_ iu = IsUp)
+      : DtrOff(datastore::Reg(rn.code(), type, 0, shiftImm.encode()), iu)
     { }
 
-    DtrOffReg(Register rn, ShiftType type, datastore::RRS shiftReg)
-      : DtrOff(datastore::Reg(rn.code(), type, 1, shiftReg.encode()))
+    DtrOffReg(Register rn, ShiftType type, datastore::RRS shiftReg, IsUp_ iu = IsUp)
+      : DtrOff(datastore::Reg(rn.code(), type, 1, shiftReg.encode()), iu)
     { }
 };
 
 class DtrRegImmShift : public DtrOffReg
 {
   public:
-    DtrRegImmShift(Register rn, ShiftType type, uint32_t shift)
-      : DtrOffReg(rn, type, datastore::RIS(shift))
+    DtrRegImmShift(Register rn, ShiftType type, uint32_t shift, IsUp_ iu = IsUp)
+      : DtrOffReg(rn, type, datastore::RIS(shift), iu)
     { }
 };
 
 class DtrRegRegShift : public DtrOffReg
 {
   public:
-    DtrRegRegShift(Register rn, ShiftType type, Register rs)
-      : DtrOffReg(rn, type, datastore::RRS(rs.code()))
+    DtrRegRegShift(Register rn, ShiftType type, Register rs, IsUp_ iu = IsUp)
+      : DtrOffReg(rn, type, datastore::RRS(rs.code()), iu)
     { }
 };
 
