@@ -20,6 +20,27 @@
 
 using namespace mozilla::image;
 
+class imgStatusTrackerObserver : public imgIDecoderObserver,
+                                 public nsSupportsWeakReference
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
+
+  imgStatusTrackerObserver(imgStatusTracker* aTracker)
+  : mTracker(aTracker) {}
+
+  virtual ~imgStatusTrackerObserver() {}
+
+  void SetTracker(imgStatusTracker* aTracker) {
+    mTracker = aTracker;
+  }
+
+private:
+  imgStatusTracker* mTracker;
+};
+
 NS_IMPL_ISUPPORTS3(imgStatusTrackerObserver,
                    imgIDecoderObserver,
                    imgIContainerObserver,
@@ -245,6 +266,9 @@ imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
     // Note: we explicitly don't copy mRequestRunnable, because it won't be
     // nulled out when the mRequestRunnable's Run function eventually gets
     // called.
+{}
+
+imgStatusTracker::~imgStatusTracker()
 {}
 
 void
