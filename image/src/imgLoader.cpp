@@ -250,7 +250,12 @@ private:
       nsRefPtr<imgRequest> req = entry->GetRequest();
       Image *image = static_cast<Image*>(req->mImage.get());
       if (image) {
-        *n += image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
+        // Both this and EntryAllSizes measure images-content-used-uncompressed
+        // memory.  This function's measurement is secondary -- the result
+        // doesn't go in the "explicit" tree -- so we use moz_malloc_size_of
+        // instead of ImagesMallocSizeOf to prevent DMD from seeing it reported
+        // twice.
+        *n += image->HeapSizeOfDecodedWithComputedFallback(moz_malloc_size_of);
         *n += image->NonHeapSizeOfDecoded();
       }
     }
