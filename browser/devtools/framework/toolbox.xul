@@ -7,7 +7,6 @@
  %toolboxDTD;
 ]>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/shared/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/framework/toolbox.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/toolbox.css" type="text/css"?>
