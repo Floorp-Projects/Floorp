@@ -539,7 +539,7 @@ let PlacesProvider = {
       handleResult: function (aResultSet) {
         let row;
 
-        while (row = aResultSet.getNextRow()) {
+        while ((row = aResultSet.getNextRow())) {
           let url = row.getResultByIndex(1);
           if (LinkChecker.checkLoadURI(url)) {
             let title = row.getResultByIndex(2);
