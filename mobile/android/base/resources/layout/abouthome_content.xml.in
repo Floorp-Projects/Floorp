@@ -12,15 +12,15 @@
                     android:paddingLeft="@dimen/abouthome_gutter_large"
                     android:paddingRight="@dimen/abouthome_gutter_large">
 
-        <ImageView android:id="@+id/abouthome_logo"
-                   android:src="@drawable/abouthome_logo"
-                   android:layout_width="wrap_content"
-                   android:layout_height="24dip"
-                   android:layout_marginTop="16dip"
-                   android:layout_marginBottom="10dip"
-                   android:layout_marginLeft="12dip"
-                   android:layout_alignParentTop="true"
-                   android:layout_alignParentLeft="true"/>
+        <Gecko.ImageView android:id="@+id/abouthome_logo"
+                         android:src="@drawable/abouthome_logo"
+                         android:layout_width="wrap_content"
+                         android:layout_height="24dip"
+                         android:layout_marginTop="16dip"
+                         android:layout_marginBottom="10dip"
+                         android:layout_marginLeft="12dip"
+                         android:layout_alignParentTop="true"
+                         android:layout_alignParentLeft="true"/>
 
         <Gecko.TextView android:id="@+id/top_sites_title"
                         android:text="@string/abouthome_top_sites_title"
