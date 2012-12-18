@@ -1275,12 +1275,6 @@
                 if (t.pinned)
                   tabContainer._handleNewTab(t);
                 else {
-                  t._animationLoggingEnabled = tabContainer._cachedTabAnimationLoggingPref;
-                  if (t._animationLoggingEnabled) {
-                    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                    .startFrameTimeRecording();
-                  }
                   t._animStartTime = Date.now();
                   t.setAttribute("fadein", "true");
 
@@ -1581,12 +1575,6 @@
               return;
             }
 
-            aTab._animationLoggingEnabled = this.tabContainer._cachedTabAnimationLoggingPref;
-            if (aTab._animationLoggingEnabled) {
-              window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-              .getInterface(Components.interfaces.nsIDOMWindowUtils)
-              .startFrameTimeRecording();
-            }
             aTab._animStartTime = Date.now();
 
             this._blurTab(aTab);
@@ -2890,12 +2878,6 @@
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
           window.addEventListener("load", this, false);
-
-          try {
-            this._cachedTabAnimationLoggingPref = Services.prefs.getBoolPref("browser.tabs.animationLogging");
-          } catch (ex) {
-            this._cachedTabAnimationLoggingPref = false;
-          }
         ]]>
       </constructor>
 
@@ -3528,18 +3510,6 @@
                                               "FX_TAB_ANIM_OPEN_MS")
                             .add(Date.now() - tab._animStartTime);
           tab._animStartTime = 0;
-
-          if (tab._animationLoggingEnabled) {
-            let paints = {};
-            let intervals = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                            .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                            .stopFrameTimeRecording(paints);
-            let msg = "Tab " + (tab.closing ? "close" : "open") + " (Frame-interval / paint-processing):\n";
-            for (let i = 0; i < intervals.length; i++) {
-              msg += Math.round(intervals[i]) + " / " + Math.round(paints.value[i]) + "\n";
-            }
-            Services.console.logStringMessage(msg);
-          }
         }
 
         if (tab.getAttribute("fadein") == "true") {

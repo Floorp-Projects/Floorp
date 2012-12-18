@@ -484,8 +484,7 @@ public:
   void LogSelf(const char* aPrefix="");
 
   void StartFrameTimeRecording();
-  void SetPaintStartTime(TimeStamp& aTime);
-  void StopFrameTimeRecording(nsTArray<float>& aFrameTimes, nsTArray<float>& aProcessingTimes);
+  void StopFrameTimeRecording(nsTArray<float>& aTimes);
 
   void PostPresent();
 
@@ -517,9 +516,7 @@ protected:
   bool mInTransaction;
 private:
   TimeStamp mLastFrameTime;
-  TimeStamp mPaintStartTime;
-  nsTArray<float> mFrameIntervals;
-  nsTArray<float> mPaintTimes;
+  nsTArray<float> mFrameTimes;
   TimeStamp mTabSwitchStart;
 };
 
