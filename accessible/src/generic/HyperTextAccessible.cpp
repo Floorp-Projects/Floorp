@@ -41,7 +41,7 @@ HyperTextAccessible::
   HyperTextAccessible(nsIContent* aNode, DocAccessible* aDoc) :
   AccessibleWrap(aNode, aDoc)
 {
-  mFlags |= eHyperTextAccessible;
+  mGenericTypes |= eHyperText;
 }
 
 NS_IMPL_ADDREF_INHERITED(HyperTextAccessible, AccessibleWrap)

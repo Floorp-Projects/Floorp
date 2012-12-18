@@ -31,7 +31,7 @@ ImageAccessible::
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   LinkableAccessible(aContent, aDoc)
 {
-  mFlags |= eImageAccessible;
+  mType = eImageType;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(ImageAccessible, Accessible,
