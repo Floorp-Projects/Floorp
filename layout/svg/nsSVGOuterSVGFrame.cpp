@@ -425,8 +425,25 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     nsPresContext::AppUnitsToFloatCSSPixels(aReflowState.ComputedWidth()),
     nsPresContext::AppUnitsToFloatCSSPixels(aReflowState.ComputedHeight()));
 
+  svgFloatSize oldViewportSize = svgElem->GetViewportSize();
+
   uint32_t changeBits = 0;
-  if (newViewportSize != svgElem->GetViewportSize()) {
+  if (newViewportSize != oldViewportSize) {
+    if (oldViewportSize.width <= 0.0f || oldViewportSize.height <= 0.0f) {
+      // The overflow rects of our child frames will be empty if we had a
+      // [synthetic] viewBox during our last reflow, since under
+      // FinishAndStoreOverflow() the nsDisplayTransform::TransformRect call
+      // will have ended up calling nsSVGSVGElement::GetViewBoxTransform()
+      // which will have returned the identity matrix due to our viewport
+      // having been zero-sized. Mark all our child frames as dirty so that we
+      // reflow them below and update their overflow rects:
+      nsIFrame* anonChild = GetFirstPrincipalChild();
+      anonChild->AddStateBits(NS_FRAME_IS_DIRTY);
+      for (nsIFrame* child = anonChild->GetFirstPrincipalChild(); child;
+           child = child->GetNextSibling()) {
+        child->AddStateBits(NS_FRAME_IS_DIRTY);
+      }
+    }
     changeBits |= COORD_CONTEXT_CHANGED;
     svgElem->SetViewportSize(newViewportSize);
   }
@@ -747,11 +764,17 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
   nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
-    if (content->HasViewBox() || content->ShouldSynthesizeViewBox()) {
+    if (content->HasViewBox()) {
       // Percentage lengths on children resolve against the viewBox rect so we
       // don't need to notify them of the viewport change, but the viewBox
       // transform will have changed, so we need to notify them of that instead.
       aFlags = TRANSFORM_CHANGED;
+    }
+    else if (content->ShouldSynthesizeViewBox()) {
+      // In the case of a synthesized viewBox, the synthetic viewBox's rect
+      // changes as the viewport changes. As a result we need to maintain the
+      // COORD_CONTEXT_CHANGED flag.
+      aFlags |= TRANSFORM_CHANGED;
     }
     else if (mCanvasTM && mCanvasTM->IsSingular()) {
       // A width/height of zero will result in us having a singular mCanvasTM
