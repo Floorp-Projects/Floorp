@@ -132,8 +132,16 @@ class TPSTestRunner(object):
       print msg
 
   def writeToResultFile(self, postdata, body=None,
-                        sendTo='crossweave@mozilla.com'):
+                        sendTo=['crossweave@mozilla.com']):
     """Writes results to test file"""
+
+    results = {'results': []}
+
+    if os.access(self.resultfile, os.F_OK):
+      f = open(self.resultfile, 'r')
+      results = json.loads(f.read())
+      f.close()
+
     f = open(self.resultfile, 'w')
     if body is not None:
       postdata['body'] = body
@@ -145,8 +153,7 @@ class TPSTestRunner(object):
       postdata['firefoxrunnerurl'] = self.firefoxRunner.url
 
     postdata['sendTo'] = sendTo
-    results = {}
-    results['results'] = postdata
+    results['results'].append(postdata)
     f.write(json.dumps(results, indent=2))
     f.close()
 
@@ -339,7 +346,13 @@ class TPSTestRunner(object):
         traceback.print_exc()
     else:
       try:
-        self.writeToResultFile(self.postdata)
+
+        if self.numfailed > 0 or self.numpassed == 0:
+          To = self.config['email'].get('notificationlist')
+        else:
+          To = self.config['email'].get('passednotificationlist')
+        self.writeToResultFile(self.postdata,
+                               sendTo=To)
       except:
         traceback.print_exc()
         try:
