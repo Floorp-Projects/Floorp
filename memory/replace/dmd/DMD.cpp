@@ -1973,6 +1973,11 @@ PrintSortedBlockAndFrameGroups(const Writer& aWriter,
 MOZ_EXPORT void
 SizeOf(Sizes* aSizes)
 {
+  if (!gIsDMDRunning) {
+    aSizes->Clear();
+    return;
+  }
+
   aSizes->mStackTraces = 0;
   for (StackTraceTable::Range r = gStackTraceTable->all();
        !r.empty();

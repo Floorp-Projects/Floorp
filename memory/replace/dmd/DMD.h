@@ -57,7 +57,8 @@ struct Sizes
   size_t mLiveBlockTable;
   size_t mDoubleReportTable;
 
-  Sizes() { memset(this, 0, sizeof(Sizes)); }
+  Sizes() { Clear(); }
+  void Clear() { memset(this, 0, sizeof(Sizes)); }
 };
 
 // Gets the size of various data structures.  Used to implement a memory
