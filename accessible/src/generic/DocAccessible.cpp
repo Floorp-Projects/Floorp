@@ -79,7 +79,7 @@ DocAccessible::
   mVirtualCursor(nullptr),
   mPresShell(aPresShell)
 {
-  mFlags |= eDocAccessible;
+  mGenericTypes |= eDocument;
   mStateFlags |= eNotNodeMapEntry;
 
   MOZ_ASSERT(mPresShell, "should have been given a pres shell");
@@ -92,7 +92,7 @@ DocAccessible::
 
   // If this is a XUL Document, it should not implement nsHyperText
   if (mDocumentNode && mDocumentNode->IsXUL())
-    mFlags &= ~eHyperTextAccessible;
+    mGenericTypes &= ~eHyperText;
 
   // For GTK+ native window, we do nothing here.
   if (!mDocumentNode)
