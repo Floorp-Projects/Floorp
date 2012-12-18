@@ -91,7 +91,6 @@ private:
 
   enum stateType {
     GENERATING_SYN_STREAM,
-    SENDING_SYN_STREAM,
     GENERATING_REQUEST_BODY,
     SENDING_REQUEST_BODY,
     SENDING_FIN_STREAM,
@@ -104,7 +103,7 @@ private:
 
   void     ChangeState(enum stateType);
   nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
-  nsresult TransmitFrame(const char *, uint32_t *);
+  nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
   void     GenerateDataFrameHeader(uint32_t, bool);
 
   void     CompressToFrame(const nsACString &);
