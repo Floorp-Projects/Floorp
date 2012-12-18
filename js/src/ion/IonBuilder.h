@@ -512,13 +512,16 @@ class IonBuilder : public MIRGenerator
     // an outer script.
     bool failedShapeGuard_;
 
-    // If this script can use a lazy arguments object, it wil be pre-created
+    // If this script can use a lazy arguments object, it will be pre-created
     // here.
     MInstruction *lazyArguments_;
+
+    // If the script use a callee, it will be retrieved in the first basic
+    // block.
+    MCallee *callee_;
 };
 
 } // namespace ion
 } // namespace js
 
 #endif // jsion_bytecode_analyzer_h__
-
