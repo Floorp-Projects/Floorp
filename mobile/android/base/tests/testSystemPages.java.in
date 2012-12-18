@@ -1,0 +1,101 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.util.Log;
+import java.util.Arrays;
+
+/* This patch tests the System Pages first by loading system pages from
+ the awesome bar and then from Firefox menu */
+    public class testSystemPages extends PixelTest {
+    Actions.EventExpecter tabEventExpecter;
+    Actions.EventExpecter contentEventExpecter;
+    Actions.RepeatedEventExpecter paintExpecter;
+
+    final int mExpectedTabCount = 1;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testSystemPages() {
+        blockForGeckoReady();
+
+        String urls [] = {  "about:firefox", "about:rights", "about:home", "about:addons", "about:downloads", "about:buildconfig", "about:"};
+        String expectedUrls [] = { "about:apps", "about:downloads", "about:addons", "about:"};
+        String menuItems [] = { "Apps", "Downloads", "Add-ons", "Settings"};
+
+        /* This first section loads system pages from the awesome bar
+	and checks that the pages are loaded in the same tab */
+        checkUrl(urls);
+
+	/* Verify that the search field is not in the focus by pressing back. That will load the previous
+        about: page if there is no the keyboard to dismiss, meaning that the search field was not in focus */
+	loadUrl("about:config");
+
+	paintExpecter = mActions.expectPaint();// Set up listener to catch the page load
+
+	// Press back to verify if the keyboard is dismissed or the previous about: page loads
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+	PaintedSurface painted = waitForPaint(paintExpecter);
+
+	verifyUrl("about:");// Verify that the previous about: page is loaded, meaning no keyboard was present
+
+        // The second section loads system pages from Firefox menu in different tabs
+        loadFromMenu(menuItems, expectedUrls);
+    }
+
+     // Load from Url the about: pages,verify the Url and the tabs number
+     public void checkUrl(String urls []) {
+         for (String url:urls) {
+              loadAndPaint(url);
+              verifyTabCount(mExpectedTabCount);
+              verifyUrl(url);
+         }
+     }
+
+     public void loadFromMenu(String menuItems [], String expectedUrls []) {
+         int expectedTabCount = mExpectedTabCount;
+         for (String item:menuItems) {
+	      paintExpecter = mActions.expectPaint();// Set up listener to catch the page load
+
+              expectedTabCount++;
+	      mActions.sendSpecialKey(Actions.SpecialKey.BACK);// Press back to dismiss the awesomebar
+
+              int i = Arrays.asList(menuItems).indexOf(item);
+
+              if (!item.equals("Settings")) {
+
+              // Set up listeners to catch the page load we're about to do
+              tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+              contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+
+	      waitForPaint(paintExpecter);// waiting for the page to load
+              selectMenuItem(item);
+
+              // Wait for the new tab and page to load
+              tabEventExpecter.blockForEvent();
+              contentEventExpecter.blockForEvent();
+
+              verifyTabCount(expectedTabCount);
+              verifyUrl(expectedUrls[i]);
+              }
+              // Make sure the about: page was loaded without opening a new tab and verify the page Url
+              else {
+              waitForPaint(paintExpecter);// waiting for the page to load
+              selectMenuItem(item);
+	      mSolo.waitForText("About");
+
+	      paintExpecter = mActions.expectPaint();// Set up listener to catch the page load
+              mSolo.clickOnText("About");
+	      waitForPaint(paintExpecter);// Waiting for the page to load
+
+              expectedTabCount--;// Decreasing since we don't expect this in a new tab
+              verifyTabCount(expectedTabCount);
+              verifyUrl(expectedUrls[i]);// Since the page is already loaded this should be instantly
+              }
+        }
+   }
+}
