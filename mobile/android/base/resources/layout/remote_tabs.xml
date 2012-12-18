@@ -7,6 +7,7 @@
                     android:id="@+id/list"
                     style="@style/TabsList"
                     android:background="@android:color/transparent"
+                    android:cacheColorHint="@android:color/transparent"
                     android:childDivider="@drawable/tabs_tray_list_divider"
                     android:dividerHeight="2dip"
                     android:groupIndicator="@android:color/transparent"/>
