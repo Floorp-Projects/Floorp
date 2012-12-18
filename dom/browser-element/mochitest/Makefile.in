@@ -164,13 +164,11 @@ MOCHITEST_FILES = \
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
 #		test_browserElement_inproc_Reload.html \
 
-# OOP tests don't work on Windows (bug 763081) or native-fennec (bug
-# 774939).
+# OOP tests don't work on native-fennec (bug 774939).
 #
 # Both the "inproc" and "oop" versions of OpenMixedProcess open remote frames,
 # so we don't run that test on platforms which don't support OOP tests.
 
-ifneq ($(OS_ARCH),WINNT) #{
 ifndef MOZ_ANDROID_OMTC #{
 MOCHITEST_FILES += \
 		browserElement_OpenMixedProcess.js \
@@ -239,7 +237,5 @@ $(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisibleFra
 endif
 
 endif #}
-endif #}
-
 
 include $(topsrcdir)/config/rules.mk
