@@ -34,7 +34,7 @@ GetBMPLog()
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+nsBMPDecoder::nsBMPDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mColors = nullptr;

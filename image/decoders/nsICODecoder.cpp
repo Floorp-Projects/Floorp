@@ -62,7 +62,7 @@ nsICODecoder::GetNumColors()
 }
 
 
-nsICODecoder::nsICODecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+nsICODecoder::nsICODecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mPos = mImageOffset = mCurrIcon = mNumIcons = mBPP = mRowBytes = 0;

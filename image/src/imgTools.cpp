@@ -12,7 +12,6 @@
 #include "imgICache.h"
 #include "imgIContainer.h"
 #include "imgIEncoder.h"
-#include "imgIDecoderObserver.h"
 #include "gfxContext.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
