@@ -366,7 +366,7 @@ public:
 };
 
 // This lock must be held while manipulating global state, such as
-// gStackTraceTable, gLiveBlockTable, etc.
+// gStackTraceTable, gBlockTable, etc.
 static Mutex* gStateLock = nullptr;
 
 class AutoLockState
@@ -865,7 +865,7 @@ public:
 };
 
 // A live heap block.
-class LiveBlock
+class Block
 {
   const void*  mPtr;
   const size_t mReqSize;    // size requested
@@ -883,13 +883,13 @@ class LiveBlock
   //   allocation?  If so, DMD must not clear the report at the end of Dump().
   //   Only relevant if |mReportStackTrace| is non-nullptr.
   //
-  // |mPtr| is used as the key in LiveBlockTable, so it's ok for this member
+  // |mPtr| is used as the key in BlockTable, so it's ok for this member
   // to be |mutable|.
   mutable TaggedPtr<const StackTrace*> mReportStackTrace_mReportedOnAlloc[2];
 
 public:
-  LiveBlock(const void* aPtr, size_t aReqSize,
-            const StackTrace* aAllocStackTrace, bool aSampled)
+  Block(const void* aPtr, size_t aReqSize, const StackTrace* aAllocStackTrace,
+        bool aSampled)
     : mPtr(aPtr),
       mReqSize(aReqSize),
       mAllocStackTrace_mSampled(aAllocStackTrace, aSampled),
@@ -985,15 +985,14 @@ public:
     return mozilla::HashGeneric(aPtr);
   }
 
-  static bool match(const LiveBlock& aB, const void* const& aPtr)
+  static bool match(const Block& aB, const void* const& aPtr)
   {
     return aB.mPtr == aPtr;
   }
 };
 
-// Nb: js::DefaultHasher<void*> is a high quality hasher.
-typedef js::HashSet<LiveBlock, LiveBlock, InfallibleAllocPolicy> LiveBlockTable;
-static LiveBlockTable* gLiveBlockTable = nullptr;
+typedef js::HashSet<Block, Block, InfallibleAllocPolicy> BlockTable;
+static BlockTable* gBlockTable = nullptr;
 
 //---------------------------------------------------------------------------
 // malloc/free callbacks
@@ -1025,14 +1024,13 @@ AllocCallback(void* aPtr, size_t aReqSize, Thread* aT)
     if (gSmallBlockActualSizeCounter >= gSampleBelowSize) {
       gSmallBlockActualSizeCounter -= gSampleBelowSize;
 
-      LiveBlock b(aPtr, gSampleBelowSize, StackTrace::Get(aT),
-                  /* sampled */ true);
-      (void)gLiveBlockTable->putNew(aPtr, b);
+      Block b(aPtr, gSampleBelowSize, StackTrace::Get(aT), /* sampled */ true);
+      (void)gBlockTable->putNew(aPtr, b);
     }
   } else {
     // If this block size is larger than the sample size, record it exactly.
-    LiveBlock b(aPtr, aReqSize, StackTrace::Get(aT), /* sampled */ false);
-    (void)gLiveBlockTable->putNew(aPtr, b);
+    Block b(aPtr, aReqSize, StackTrace::Get(aT), /* sampled */ false);
+    (void)gBlockTable->putNew(aPtr, b);
   }
 }
 
@@ -1048,7 +1046,7 @@ FreeCallback(void* aPtr, Thread* aT)
   AutoLockState lock;
   AutoBlockIntercepts block(aT);
 
-  gLiveBlockTable->remove(aPtr);
+  gBlockTable->remove(aPtr);
 }
 
 //---------------------------------------------------------------------------
@@ -1205,7 +1203,7 @@ protected:
   const StackTrace* const mReportStackTrace2; // nullptr if not 2x-reported
 
 public:
-  BlockGroupKey(const LiveBlock& aB)
+  BlockGroupKey(const Block& aB)
     : mAllocStackTrace(aB.AllocStackTrace()),
       mReportStackTrace1(aB.ReportStackTrace1()),
       mReportStackTrace2(aB.ReportStackTrace2())
@@ -1253,7 +1251,7 @@ public:
 
   bool IsSampled() const { return mSampled; }
 
-  void Add(const LiveBlock& aB)
+  void Add(const Block& aB)
   {
     mReq  += aB.ReqSize();
     mSlop += aB.SlopSize();
@@ -1292,7 +1290,7 @@ class BlockGroup : public BlockGroupKey
 
   // The BlockGroupKey base class serves as the key in BlockGroupTables.  These
   // two fields constitute the value, so it's ok for them to be |mutable|.
-  mutable uint32_t  mNumBlocks;     // number of blocks with this LiveBlockKey
+  mutable uint32_t  mNumBlocks;     // number of blocks with this BlockGroupKey
   mutable GroupSize mGroupSize;     // combined size of those blocks
 
 public:
@@ -1305,7 +1303,7 @@ public:
   const GroupSize& GetGroupSize() const { return mGroupSize; }
 
   // This is |const| thanks to the |mutable| fields above.
-  void Add(const LiveBlock& aB) const
+  void Add(const Block& aB) const
   {
     mNumBlocks++;
     mGroupSize.Add(aB);
@@ -1674,8 +1672,8 @@ Init(const malloc_table_t* aMallocTable)
   gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
   gStackTraceTable->init(8192);
 
-  gLiveBlockTable = InfallibleAllocPolicy::new_<LiveBlockTable>();
-  gLiveBlockTable->init(8192);
+  gBlockTable = InfallibleAllocPolicy::new_<BlockTable>();
+  gBlockTable->init(8192);
 
   if (gMode == Test) {
     // OpenTestOrStressFile() can allocate.  So do this before setting
@@ -1721,7 +1719,7 @@ ReportHelper(const void* aPtr, bool aReportedOnAlloc)
   AutoBlockIntercepts block(t);
   AutoLockState lock;
 
-  if (LiveBlockTable::Ptr p = gLiveBlockTable->lookup(aPtr)) {
+  if (BlockTable::Ptr p = gBlockTable->lookup(aPtr)) {
     p->Report(t, aReportedOnAlloc);
   } else {
     // We have no record of the block.  Do nothing.  Either:
@@ -1873,7 +1871,7 @@ SizeOf(Sizes* aSizes)
   aSizes->mStackTraceTable =
     gStackTraceTable->sizeOfIncludingThis(MallocSizeOf);
 
-  aSizes->mLiveBlockTable = gLiveBlockTable->sizeOfIncludingThis(MallocSizeOf);
+  aSizes->mBlockTable = gBlockTable->sizeOfIncludingThis(MallocSizeOf);
 }
 
 static void
@@ -1881,9 +1879,7 @@ ClearGlobalState()
 {
   // Unreport all blocks, except those that were reported on allocation,
   // because they need to keep their reported marking.
-  for (LiveBlockTable::Range r = gLiveBlockTable->all();
-       !r.empty();
-       r.popFront()) {
+  for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
     r.front().UnreportIfNotReportedOnAlloc();
   }
 }
@@ -1920,10 +1916,8 @@ Dump(Writer aWriter)
 
   bool anyBlocksSampled = false;
 
-  for (LiveBlockTable::Range r = gLiveBlockTable->all();
-       !r.empty();
-       r.popFront()) {
-    const LiveBlock& b = r.front();
+  for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
+    const Block& b = r.front();
 
     BlockGroupTable* table;
     uint32_t numReports = b.NumReports();
@@ -2005,10 +1999,10 @@ Dump(Writer aWriter)
       Show(gStackTraceTable->capacity(), gBuf2, kBufLen),
       Show(gStackTraceTable->count(),    gBuf3, kBufLen));
 
-    W("  Live block table:     %10s bytes (%s entries, %s used)\n",
-      Show(sizes.mLiveBlockTable,       gBuf1, kBufLen),
-      Show(gLiveBlockTable->capacity(), gBuf2, kBufLen),
-      Show(gLiveBlockTable->count(),    gBuf3, kBufLen));
+    W("  Block table:          %10s bytes (%s entries, %s used)\n",
+      Show(sizes.mBlockTable,       gBuf1, kBufLen),
+      Show(gBlockTable->capacity(), gBuf2, kBufLen),
+      Show(gBlockTable->count(),    gBuf3, kBufLen));
 
     W("\nData structures that are destroyed after Dump() ends:\n");
 
@@ -2234,7 +2228,7 @@ RunTestMode(FILE* fp)
   //---------
 
   // Clear all knowledge of existing blocks to give us a clean slate.
-  gLiveBlockTable->clear();
+  gBlockTable->clear();
 
   // Reset the counter just in case |sample-size| was specified in $DMD.
   // Otherwise the assertions fail.
