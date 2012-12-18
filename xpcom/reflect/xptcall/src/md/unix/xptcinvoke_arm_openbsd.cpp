@@ -140,7 +140,7 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
  *
  */
 
-#if (__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 8))
+#ifdef __GNUC__
   __asm__ __volatile__(
     "ldr	r1, [%1, #12]	\n\t"	/* prepare to call invoke_count_words	*/
     "ldr	ip, [%1, #16]	\n\t"	/* r0=paramCount, r1=params		*/
