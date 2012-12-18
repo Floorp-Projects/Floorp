@@ -9,6 +9,7 @@
 #include "jsfriendapi.h"
 #include "js/Vector.h"
 #include "mozilla/Util.h"
+#include "nsAutoJSValHolder.h"
 
 #include "Events.h"
 #include "EventTarget.h"
@@ -332,7 +333,12 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
   }
 
   ContextAllocPolicy ap(aCx);
-  js::Vector<JSObject*, 10, ContextAllocPolicy> listeners(ap);
+
+  // XXXbent There is no reason to use nsAutoJSValHolder here as we should be
+  //         able to use js::AutoValueVector. Worse, nsAutoJSValHolder is much
+  //         slower. However, js::AutoValueVector causes crashes on Android at
+  //         the moment so we don't have much choice.
+  js::Vector<nsAutoJSValHolder, 10, ContextAllocPolicy> listeners(ap);
 
   for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
        elem != &collection->mListenerHead;
@@ -341,10 +347,19 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
 
     // Listeners that don't want untrusted events will be skipped if this is an
     // untrusted event.
-    if ((eventIsTrusted || listenerData->mWantsUntrusted) &&
-        !listeners.append(listenerData->mListener)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return false;
+    if (eventIsTrusted || listenerData->mWantsUntrusted) {
+      nsAutoJSValHolder holder;
+      if (!holder.Hold(aCx)) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return false;
+      }
+
+      holder = listenerData->mListener;
+
+      if (!listeners.append(holder)) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return false;
+      }
     }
   }
 
@@ -365,7 +380,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     // out of memory or the operation callback has indicated that we should
     // stop running.
 
-    jsval listenerVal = OBJECT_TO_JSVAL(listeners[index]);
+    jsval listenerVal = listeners[index];
 
     JSObject* listenerObj;
     if (!JS_ValueToObject(aCx, listenerVal, &listenerObj)) {
