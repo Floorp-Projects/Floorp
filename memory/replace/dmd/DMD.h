@@ -55,7 +55,6 @@ struct Sizes
   size_t mStackTraces;
   size_t mStackTraceTable;
   size_t mLiveBlockTable;
-  size_t mDoubleReportTable;
 
   Sizes() { Clear(); }
   void Clear() { memset(this, 0, sizeof(Sizes)); }
