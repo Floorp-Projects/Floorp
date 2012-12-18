@@ -170,6 +170,7 @@ public:
   void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint);
   bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags);
   void DidPaintWindow();
+  void RequestRepaint() MOZ_OVERRIDE;
   nsEventStatus HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents);
 
   virtual ~nsView();
