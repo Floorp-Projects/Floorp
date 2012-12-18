@@ -88,7 +88,7 @@ XULColorPickerAccessible::
   XULColorPickerAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULColorPickerTileAccessible(aContent, aDoc)
 {
-  mFlags |= eMenuButtonAccessible;
+  mGenericTypes |= eMenuButton;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -436,12 +436,12 @@ XULMenupopupAccessible::
 {
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
   if (menuPopupFrame && menuPopupFrame->IsMenu())
-    mFlags |= eMenuPopupAccessible;
+    mType = eMenuPopupType;
 
   // May be the anonymous <menupopup> inside <menulist> (a combobox)
   mSelectControl = do_QueryInterface(mContent->GetParent());
   if (!mSelectControl)
-    mFlags &= ~eSelectAccessible;
+    mGenericTypes &= ~eSelect;
 }
 
 uint64_t
