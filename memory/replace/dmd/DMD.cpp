@@ -447,19 +447,19 @@ class Thread
 public:
   static Thread* Fetch();
 
-  bool blockIntercepts()
+  bool BlockIntercepts()
   {
     MOZ_ASSERT(!mBlockIntercepts);
     return mBlockIntercepts = true;
   }
 
-  bool unblockIntercepts()
+  bool UnblockIntercepts()
   {
     MOZ_ASSERT(mBlockIntercepts);
     return mBlockIntercepts = false;
   }
 
-  bool interceptsAreBlocked() const
+  bool InterceptsAreBlocked() const
   {
     return mBlockIntercepts;
   }
@@ -492,12 +492,12 @@ public:
   AutoBlockIntercepts(Thread* aT)
     : mT(aT)
   {
-    mT->blockIntercepts();
+    mT->BlockIntercepts();
   }
   ~AutoBlockIntercepts()
   {
-    MOZ_ASSERT(mT->interceptsAreBlocked());
-    mT->unblockIntercepts();
+    MOZ_ASSERT(mT->InterceptsAreBlocked());
+    mT->UnblockIntercepts();
   }
 };
 
@@ -780,7 +780,7 @@ StackTrace::Print(const Writer& aWriter, LocationService* aLocService) const
 StackTrace::Get(Thread* aT)
 {
   MOZ_ASSERT(gStateLock->IsLocked());
-  MOZ_ASSERT(aT->interceptsAreBlocked());
+  MOZ_ASSERT(aT->InterceptsAreBlocked());
 
   // On Windows, NS_StackWalk can acquire a lock from the shared library
   // loader.  Another thread might call malloc while holding that lock (when
@@ -1078,7 +1078,7 @@ replace_malloc(size_t aSize)
   }
 
   Thread* t = Thread::Fetch();
-  if (t->interceptsAreBlocked()) {
+  if (t->InterceptsAreBlocked()) {
     // Intercepts are blocked, which means this must be a call to malloc
     // triggered indirectly by DMD (e.g. via NS_StackWalk).  Be infallible.
     return InfallibleAllocPolicy::malloc_(aSize);
@@ -1100,7 +1100,7 @@ replace_calloc(size_t aCount, size_t aSize)
   }
 
   Thread* t = Thread::Fetch();
-  if (t->interceptsAreBlocked()) {
+  if (t->InterceptsAreBlocked()) {
     return InfallibleAllocPolicy::calloc_(aCount * aSize);
   }
 
@@ -1119,7 +1119,7 @@ replace_realloc(void* aOldPtr, size_t aSize)
   }
 
   Thread* t = Thread::Fetch();
-  if (t->interceptsAreBlocked()) {
+  if (t->InterceptsAreBlocked()) {
     return InfallibleAllocPolicy::realloc_(aOldPtr, aSize);
   }
 
@@ -1156,7 +1156,7 @@ replace_memalign(size_t aAlignment, size_t aSize)
   }
 
   Thread* t = Thread::Fetch();
-  if (t->interceptsAreBlocked()) {
+  if (t->InterceptsAreBlocked()) {
     return InfallibleAllocPolicy::memalign_(aAlignment, aSize);
   }
 
@@ -1176,7 +1176,7 @@ replace_free(void* aPtr)
   }
 
   Thread* t = Thread::Fetch();
-  if (t->interceptsAreBlocked()) {
+  if (t->InterceptsAreBlocked()) {
     return InfallibleAllocPolicy::free_(aPtr);
   }
 
