@@ -12,7 +12,7 @@ class imgRequest;
 class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
-class imgStatusTracker;
+class imgStatusTrackerObserver;
 struct nsIntRect;
 namespace mozilla {
 namespace image {
@@ -38,27 +38,6 @@ enum {
   stateBlockingOnload    = 1u << 6
 };
 
-class imgStatusTrackerObserver : public imgIDecoderObserver,
-                                 public nsSupportsWeakReference
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
-
-  imgStatusTrackerObserver(imgStatusTracker* aTracker)
-  : mTracker(aTracker) {}
-
-  virtual ~imgStatusTrackerObserver() {}
-
-  void SetTracker(imgStatusTracker* aTracker) {
-    mTracker = aTracker;
-  }
-
-private:
-  imgStatusTracker* mTracker;
-};
-
 /*
  * The image status tracker is a class that encapsulates all the loading and
  * decoding status about an Image, and makes it possible to send notifications
@@ -78,6 +57,7 @@ public:
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(mozilla::image::Image* aImage, imgRequest* aRequest);
   imgStatusTracker(const imgStatusTracker& aOther);
+  ~imgStatusTracker();
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
   // are created before their Image is created.  This method should only
@@ -215,7 +195,7 @@ private:
   // using the image.
   nsTObserverArray<imgRequestProxy*> mConsumers;
 
-  nsRefPtr<imgStatusTrackerObserver> mTrackerObserver;
+  nsRefPtr<imgIDecoderObserver> mTrackerObserver;
 };
 
 #endif
