@@ -35,6 +35,14 @@ struct ImageFactory
                                              nsIURI* aURI,
                                              bool aIsMultiPart,
                                              uint32_t aInnerWindowId);
+  /**
+   * Creates a new image which isn't associated with a URI or loaded through
+   * the usual image loading mechanism.
+   *
+   * @param aMimeType      The mimetype of the image.
+   */
+  static already_AddRefed<Image> CreateAnonymousImage(const nsCString& aMimeType);
+
 
 private:
   // Factory functions that create specific types of image containers.

@@ -117,6 +117,20 @@ BadImage(nsRefPtr<T>& image)
 }
 
 /* static */ already_AddRefed<Image>
+ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
+{
+  nsresult rv;
+
+  nsRefPtr<RasterImage> newImage = new RasterImage();
+
+  rv = newImage->Init(nullptr, aMimeType.get(), "<unknown>", Image::INIT_FLAG_NONE);
+  NS_ENSURE_SUCCESS(rv, BadImage(newImage));
+
+  return newImage.forget();
+}
+
+/* static */ already_AddRefed<Image>
+
 ImageFactory::CreateRasterImage(nsIRequest* aRequest,
                                 imgStatusTracker* aStatusTracker,
                                 const nsCString& aMimeType,
