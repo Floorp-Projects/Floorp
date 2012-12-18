@@ -75,8 +75,6 @@ const MEM_HISTOGRAMS = {
 // start asynchronous tasks to gather data.  On the next idle the data is sent.
 const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
-const SHUTDOWN_TIME_READ_DELAY_MS = 5413;
-
 var gLastMemoryPoll = null;
 
 let gWasDebuggerAttached = false;
@@ -743,6 +741,9 @@ TelemetryPing.prototype = {
       this._initialized = true;
       this.attachObservers();
       this.gatherMemory();
+
+      Telemetry.asyncReadShutdownTime(function () {
+      });
       delete this._timer;
     }
     this._timer.initWithCallback(timerCallback.bind(this), TELEMETRY_DELAY,
@@ -1027,12 +1028,6 @@ TelemetryPing.prototype = {
       break;
     case "xul-window-visible":
       Services.obs.removeObserver(this, "xul-window-visible");
-
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.initWithCallback(function() {
-        Telemetry.asyncReadShutdownTime(function () {
-        });
-      }, SHUTDOWN_TIME_READ_DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
       this._hasXulWindowVisibleObserver = false;   
       var counters = processInfo.getCounters();
       if (counters) {
