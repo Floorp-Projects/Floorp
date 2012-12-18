@@ -2776,11 +2776,8 @@ MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg)
 void MacroAssemblerARMCompat::checkStackAlignment()
 {
 #ifdef DEBUG
-    Label good;
     ma_tst(sp, Imm32(StackAlignment - 1));
-    ma_b(&good, Equal);
-    breakpoint();
-    bind(&good);
+    breakpoint(Equal);
 #endif
 }
 
