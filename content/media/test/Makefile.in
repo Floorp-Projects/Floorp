@@ -225,18 +225,20 @@ MOCHITEST_FILES += \
 		variable-preskip.opus \
 		dirac.ogg \
 		multiple-bos.ogg \
+		owl.mp3 \
 		split.webm \
 		seek.ogv \
 		seek.webm \
 		seek.yuv \
 		short-video.ogv \
 		small-shot.ogg \
+		small-shot.m4a \
+		small-shot.mp3 \
 		sound.ogg \
 		spacestorm-1000Hz-100ms.ogg \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		detodos.opus \
-		short.mp4 \
 		notags.mp3 \
 		id3tags.mp3 \
 		$(NULL)
