@@ -4518,7 +4518,6 @@ var TabsProgressListener = {
       // or history.push/pop/replaceState.
       if (aRequest) {
         // Initialize the click-to-play state.
-        aBrowser._clickToPlayDoorhangerShown = false;
         aBrowser._clickToPlayPluginsActivated = false;
         aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
       }
