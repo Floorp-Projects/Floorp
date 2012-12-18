@@ -1,0 +1,59 @@
+# Copyright 2012 Mozilla Foundation and Mozilla contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+DEPTH   = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = libandroidstagefrightfroyo
+MODULE_NAME = libandroidstagefrightfroyo
+LIBRARY_NAME = stagefright
+FORCE_SHARED_LIB = 1
+
+# Don't use STL wrappers; this isn't Gecko code
+STL_FLAGS =
+
+# must link statically with the CRT; this isn't Gecko code
+USE_STATIC_LIBS = 1
+
+# Need to custom install OMX media plugin
+NO_DIST_INSTALL = 1
+NO_INSTALL = 1
+
+ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
+CPPSRCS = \
+	libstagefright.cpp \
+	$(NULL)
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef GNU_CXX
+# Turn off C++ 11 features due to conflicts with Android OS headers and char16_t definition
+CXXFLAGS += -std=gnu++98
+endif
+
+INCLUDES        += \
+                -I$(topsrcdir)/media/omx-plugin/include/froyo \
+                -I$(topsrcdir)/media/omx-plugin/include/froyo/media/stagefright/openmax \
+                $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+		-L$(DEPTH)/media/omx-plugin/lib/gb/libutils \
+		-lutils \
+		$(NULL)
+
+
