@@ -187,5 +187,8 @@ skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                           
 skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                                == webgl-color-test.html?native-gl        wrapper.html?colors.png
 skip-if(!winWidget) pref(webgl.prefer-native-gl,true) pref(webgl.prefer-16bpp,true)  == webgl-color-test.html?native-gl&16bpp  wrapper.html?colors.png
 
+# Do we correctly handle multiple clip paths?
+!= clip-multiple-paths.html clip-multiple-paths-badref.html
+
 # Bug 815648
 == stroketext-shadow.html stroketext-shadow-ref.html
