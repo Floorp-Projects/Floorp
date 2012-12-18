@@ -57,6 +57,12 @@ APP_INI_DEPS += $(DEPTH)/config/buildid
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DAPP_BUILDID=$(APP_BUILDID)
 
+# Set a flag that can be used in pref files to disable features if
+# we are not building for Aurora or Nightly.
+ifeq (,$(findstring a,$(GRE_MILESTONE)))
+PREF_PPFLAGS += -DRELEASE_BUILD
+endif
+
 DEFINES += -DMOZ_APP_VERSION="$(MOZ_APP_VERSION)"
 APP_INI_DEPS += $(DEPTH)/config/autoconf.mk
 
