@@ -175,9 +175,11 @@ tier_platform_dirs += \
 		media/omx-plugin/lib/gb/libstagefright \
 		media/omx-plugin/lib/gb/libstagefright_color_conversion \
 		media/omx-plugin/lib/gb235/libstagefright \
+		media/omx-plugin/lib/froyo/libstagefright \
 		media/omx-plugin \
 		media/omx-plugin/gb \
 		media/omx-plugin/gb235 \
+		media/omx-plugin/froyo \
 		media/omx-plugin/lib/hc/libstagefright \
 		media/omx-plugin/hc \
 		media/omx-plugin/sony \
