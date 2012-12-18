@@ -75,9 +75,9 @@ enum FlipStyle {
 #define POPUPALIGNMENT_BOTTOMRIGHT -2
 
 #define POPUPALIGNMENT_LEFTCENTER 16
-#define POPUPALIGNMENT_RIGHTCENTER 17
-#define POPUPALIGNMENT_TOPCENTER 18
-#define POPUPALIGNMENT_BOTTOMCENTER 19
+#define POPUPALIGNMENT_RIGHTCENTER -16
+#define POPUPALIGNMENT_TOPCENTER 17
+#define POPUPALIGNMENT_BOTTOMCENTER 18
 
 // The constants here are selected so that horizontally and vertically flipping
 // can be easily handled using the two flip macros below.
