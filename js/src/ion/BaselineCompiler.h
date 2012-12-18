@@ -82,6 +82,7 @@ namespace ion {
     _(JSOP_BITNOT)             \
     _(JSOP_NEG)                \
     _(JSOP_NEWARRAY)           \
+    _(JSOP_INITELEM_ARRAY)     \
     _(JSOP_ENDINIT)            \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
