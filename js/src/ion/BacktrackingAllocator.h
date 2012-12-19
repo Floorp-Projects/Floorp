@@ -39,13 +39,6 @@ struct VirtualRegisterGroup : public TempObject
     VirtualRegisterGroup()
       : allocation(LUse(0, LUse::ANY)), spill(LUse(0, LUse::ANY))
     {}
-
-    uint32_t canonicalReg() {
-        uint32_t minimum = registers[0];
-        for (size_t i = 1; i < registers.length(); i++)
-            minimum = Min(minimum, registers[i]);
-        return minimum;
-    }
 };
 
 class BacktrackingVirtualRegister : public VirtualRegister
@@ -56,10 +49,6 @@ class BacktrackingVirtualRegister : public VirtualRegister
 
     // Spill location to use for this register.
     LAllocation canonicalSpill_;
-
-    // Code position above which the canonical spill cannot be used; such
-    // intervals may overlap other registers in the same group.
-    CodePosition canonicalSpillExclude_;
 
     // If this register is associated with a group of other registers,
     // information about the group. This structure is shared between all
@@ -78,18 +67,10 @@ class BacktrackingVirtualRegister : public VirtualRegister
         canonicalSpill_ = alloc;
     }
     const LAllocation *canonicalSpill() const {
-        return canonicalSpill_.isUse() ? NULL : &canonicalSpill_;
+        return canonicalSpill_.isStackSlot() ? &canonicalSpill_ : NULL;
     }
-
-    void setCanonicalSpillExclude(CodePosition pos) {
-        canonicalSpillExclude_ = pos;
-    }
-    bool hasCanonicalSpillExclude() const {
-        return canonicalSpillExclude_.pos() != 0;
-    }
-    CodePosition canonicalSpillExclude() const {
-        JS_ASSERT(hasCanonicalSpillExclude());
-        return canonicalSpillExclude_;
+    unsigned canonicalSpillSlot() const {
+        return canonicalSpill_.toStackSlot()->slot();
     }
 
     void setGroup(VirtualRegisterGroup *group) {
@@ -102,22 +83,16 @@ class BacktrackingVirtualRegister : public VirtualRegister
 
 class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegister>
 {
-    // Priority queue element: either an interval or group of intervals and the
-    // associated priority.
-    struct QueueItem
+    // Priority queue element: an interval and its immutable priority.
+    struct QueuedInterval
     {
         LiveInterval *interval;
-        VirtualRegisterGroup *group;
 
-        QueueItem(LiveInterval *interval, size_t priority)
-          : interval(interval), group(NULL), priority_(priority)
+        QueuedInterval(LiveInterval *interval, size_t priority)
+          : interval(interval), priority_(priority)
         {}
 
-        QueueItem(VirtualRegisterGroup *group, size_t priority)
-          : interval(NULL), group(group), priority_(priority)
-        {}
-
-        static size_t priority(const QueueItem &v) {
+        static size_t priority(const QueuedInterval &v) {
             return v.priority_;
         }
 
@@ -125,7 +100,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
         size_t priority_;
     };
 
-    PriorityQueue<QueueItem, QueueItem, 0, SystemAllocPolicy> allocationQueue;
+    PriorityQueue<QueuedInterval, QueuedInterval, 0, SystemAllocPolicy> queuedIntervals;
 
     // A subrange over which a physical register is allocated.
     struct AllocatedRange {
@@ -181,18 +156,14 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool init();
     bool canAddToGroup(VirtualRegisterGroup *group, BacktrackingVirtualRegister *reg);
     bool tryGroupRegisters(uint32_t vreg0, uint32_t vreg1);
-    bool tryGroupReusedRegister(uint32_t def, uint32_t use);
     bool groupAndQueueRegisters();
     bool processInterval(LiveInterval *interval);
-    bool processGroup(VirtualRegisterGroup *group);
     bool setIntervalRequirement(LiveInterval *interval);
     bool tryAllocateRegister(PhysicalRegister &r, LiveInterval *interval,
                              bool *success, LiveInterval **pconflicting);
-    bool tryAllocateGroupRegister(PhysicalRegister &r, VirtualRegisterGroup *group,
-                                  bool *psuccess, LiveInterval **pconflicting);
     bool evictInterval(LiveInterval *interval);
-    bool split(LiveInterval *interval, const LiveIntervalVector &newIntervals);
-    bool requeueIntervals(const LiveIntervalVector &newIntervals);
+    bool splitAndRequeueInterval(LiveInterval *interval,
+                                 const LiveIntervalVector &newIntervals);
     void spill(LiveInterval *interval);
 
     bool isReusedInput(LUse *use, LInstruction *ins, bool considerCopy = false);
@@ -206,8 +177,6 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     void dumpLiveness();
     void dumpAllocations();
 
-    struct PrintLiveIntervalRange;
-
     CodePosition minimalDefEnd(LInstruction *ins);
     bool minimalDef(const LiveInterval *interval, LInstruction *ins);
     bool minimalUse(const LiveInterval *interval, LInstruction *ins);
@@ -217,9 +186,6 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
 
     size_t computePriority(const LiveInterval *interval);
     size_t computeSpillWeight(const LiveInterval *interval);
-
-    size_t computePriority(const VirtualRegisterGroup *group);
-    size_t computeSpillWeight(const VirtualRegisterGroup *group);
 
     bool chooseIntervalSplit(LiveInterval *interval);
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
