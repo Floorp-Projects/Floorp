@@ -1310,7 +1310,7 @@ public:
       mGroupSize()
   {}
 
-  const GroupSize& GroupSize() const { return mGroupSize; }
+  const GroupSize& GetGroupSize() const { return mGroupSize; }
 
   // This is |const| thanks to the |mutable| fields above.
   void Add(const LiveBlock& aB) const
@@ -1480,7 +1480,7 @@ public:
       mGroupSize()
   {}
 
-  const GroupSize& GroupSize() const { return mGroupSize; }
+  const GroupSize& GetGroupSize() const { return mGroupSize; }
 
   // This is |const| thanks to the |mutable| fields above.
   void Add(const LiveBlockGroup& aBg) const
@@ -1903,7 +1903,7 @@ PrintSortedGroups(const Writer& aWriter, LocationService* aLocService,
   size_t cumulativeUsableSize = 0;
   for (uint32_t i = 0; i < numTGroups; i++) {
     const TGroup* tg = tgArray[i];
-    cumulativeUsableSize += tg->GroupSize().Usable();
+    cumulativeUsableSize += tg->GetGroupSize().Usable();
     if (i < MaxTGroups) {
       tg->Print(aWriter, aLocService, i+1, numTGroups, aStr, astr,
                 aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
