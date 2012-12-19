@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.PropertyAnimator.Property;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
@@ -63,7 +64,11 @@ public class TabsTray extends LinearLayout
         mList = (ListView) findViewById(R.id.list);
         mList.setItemsCanFocus(true);
 
-        mTabsAdapter = new TabsAdapter(mContext);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsTray);
+        boolean isPrivate = (a.getInt(R.styleable.TabsTray_tabs, 0x0) == 1);
+        a.recycle();
+
+        mTabsAdapter = new TabsAdapter(mContext, isPrivate);
         mList.setAdapter(mTabsAdapter);
 
         mSwipeListener = new TabSwipeGestureListener(mList);
@@ -126,13 +131,15 @@ public class TabsTray extends LinearLayout
     // Adapter to bind tabs into a list
     private class TabsAdapter extends BaseAdapter implements Tabs.OnTabsChangedListener {
         private Context mContext;
+        private boolean mIsPrivate;
         private ArrayList<Tab> mTabs;
         private LayoutInflater mInflater;
         private Button.OnClickListener mOnCloseClickListener;
 
-        public TabsAdapter(Context context) {
+        public TabsAdapter(Context context, boolean isPrivate) {
             mContext = context;
             mInflater = LayoutInflater.from(mContext);
+            mIsPrivate = isPrivate;
 
             mOnCloseClickListener = new Button.OnClickListener() {
                 public void onClick(View v) {
@@ -177,7 +184,8 @@ public class TabsTray extends LinearLayout
 
             Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
             for (Tab tab : tabs) {
-                mTabs.add(tab);
+                if (tab.isPrivate() == mIsPrivate)
+                    mTabs.add(tab);
             }
 
             notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
@@ -218,8 +226,10 @@ public class TabsTray extends LinearLayout
         }
 
         private void removeTab(Tab tab) {
-            mTabs.remove(tab);
-            notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
+            if (tab.isPrivate() == mIsPrivate) {
+                mTabs.remove(tab);
+                notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
+            }
         }
 
         private void assignValues(TabRow row, Tab tab) {
