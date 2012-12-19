@@ -41,9 +41,12 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     private static final int IMAGE_LEVEL_LTR = 0;
     private static final int IMAGE_LEVEL_RTL = 1;
 
+    private GeckoApp mActivity;
+
     TextSelectionHandle(Context context, AttributeSet attrs) {
         super(context, attrs);
         setOnTouchListener(this);
+        mActivity = (GeckoApp) context;
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TextSelectionHandle);
         int handleType = a.getInt(R.styleable.TextSelectionHandle_handleType, 0x01);
@@ -96,7 +99,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         mLeft = mLeft + newX - mTouchStartX;
         mTop = mTop + newY - mTouchStartY;
 
-        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        LayerView layerView = mActivity.getLayerView();
         if (layerView == null) {
             Log.e(LOGTAG, "Can't move selection because layerView is null");
             return;
@@ -121,7 +124,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     }
 
     void positionFromGecko(int left, int top, boolean rtl) {
-        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        LayerView layerView = mActivity.getLayerView();
         if (layerView == null) {
             Log.e(LOGTAG, "Can't position handle because layerView is null");
             return;
