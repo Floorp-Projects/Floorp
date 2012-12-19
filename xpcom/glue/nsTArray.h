@@ -75,8 +75,8 @@ struct nsTArrayInfallibleAllocator
 };
 
 #else
-
 #include <stdlib.h>
+
 struct nsTArrayFallibleAllocator
 {
   static void* Malloc(size_t size) {
@@ -95,12 +95,40 @@ struct nsTArrayFallibleAllocator
   }
 };
 
-#endif
+struct nsTArrayInfallibleAllocator
+{
+  static void* Malloc(size_t size) {
+    void* ptr = malloc(size);
+    if (MOZ_UNLIKELY(!ptr)) {
+      HandleOOM();
+    }
+    return ptr;
+  }
 
-#if defined(MOZALLOC_HAVE_XMALLOC)
-struct nsTArrayDefaultAllocator : public nsTArrayInfallibleAllocator { };
-#else
-struct nsTArrayDefaultAllocator : public nsTArrayFallibleAllocator { };
+  static void* Realloc(void* ptr, size_t size) {
+    void* newptr = realloc(ptr, size);
+    if (MOZ_UNLIKELY(!ptr && size)) {
+      HandleOOM();
+    }
+    return newptr;
+  }
+
+  static void Free(void* ptr) {
+    free(ptr);
+  }
+
+  static void SizeTooBig() {
+    HandleOOM();
+  }
+
+private:
+  static void HandleOOM() {
+    fputs("Out of memory allocating nsTArray buffer.\n", stderr);
+    MOZ_CRASH();
+    MOZ_NOT_REACHED();
+  }
+};
+
 #endif
 
 // nsTArray_base stores elements into the space allocated beyond
@@ -414,7 +442,7 @@ template <class E> class FallibleTArray;
 // the *in*fallible allocator is chosen.  When in doubt, choose the
 // infallible allocator.
 //
-template<class E, class Alloc=nsTArrayDefaultAllocator>
+template<class E, class Alloc=nsTArrayInfallibleAllocator>
 class nsTArray : public nsTArray_base<Alloc>,
                  public nsTArray_SafeElementAtHelper<E, nsTArray<E, Alloc> >
 {
@@ -1436,7 +1464,7 @@ private:
   };
 };
 
-template<class E, uint32_t N, class Alloc=nsTArrayDefaultAllocator>
+template<class E, uint32_t N, class Alloc=nsTArrayInfallibleAllocator>
 class nsAutoTArray : public nsAutoArrayBase<nsTArray<E, Alloc>, N>
 {
   typedef nsAutoArrayBase<nsTArray<E, Alloc>, N> Base;
@@ -1501,8 +1529,8 @@ public:
 // specializations for N = 0. this makes the inheritance model easier for
 // templated users of nsAutoTArray.
 template<class E>
-class nsAutoTArray<E, 0, nsTArrayDefaultAllocator> :
-  public nsAutoArrayBase< nsTArray<E, nsTArrayDefaultAllocator>, 0>
+class nsAutoTArray<E, 0, nsTArrayInfallibleAllocator> :
+  public nsAutoArrayBase< nsTArray<E, nsTArrayInfallibleAllocator>, 0>
 {
 public:
   nsAutoTArray() {}
