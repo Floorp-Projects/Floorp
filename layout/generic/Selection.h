@@ -52,7 +52,7 @@ public:
   NS_DECL_NSISELECTIONPRIVATE
 
   // utility methods for scrolling the selection into view
-  nsresult      GetPresContext(nsPresContext **aPresContext);
+  nsPresContext* GetPresContext() const;
   nsIPresShell* GetPresShell() const;
   // Returns a rect containing the selection region, and frame that that
   // position is relative to. For SELECTION_ANCHOR_REGION or

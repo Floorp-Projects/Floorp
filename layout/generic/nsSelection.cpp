@@ -4371,10 +4371,7 @@ Selection::RemoveAllRanges()
 {
   if (!mFrameSelection)
     return NS_OK;//nothing to do
-  nsRefPtr<nsPresContext>  presContext;
-  GetPresContext(getter_AddRefs(presContext));
-
-
+  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   nsresult  result = Clear(presContext);
   if (NS_FAILED(result))
     return result;
@@ -4418,8 +4415,7 @@ Selection::AddRange(nsIDOMRange* aDOMRange)
   if (mType == nsISelectionController::SELECTION_NORMAL)
     SetInterlinePosition(true);
 
-  nsRefPtr<nsPresContext>  presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   selectFrames(presContext, range, true);
 
   if (!mFrameSelection)
@@ -4475,8 +4471,7 @@ Selection::RemoveRange(nsIDOMRange* aDOMRange)
   }
 
   // clear the selected bit from the removed range's frames
-  nsRefPtr<nsPresContext>  presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   selectFrames(presContext, range, false);
 
   // add back the selected bit for each range touching our nodes
@@ -4540,8 +4535,7 @@ Selection::Collapse(nsINode* aParentNode, int32_t aOffset)
     return NS_ERROR_FAILURE;
   nsresult result;
   // Delete all of the current ranges
-  nsRefPtr<nsPresContext>  presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   Clear(presContext);
 
   // Turn off signal for table selection
@@ -4701,8 +4695,7 @@ void
 Selection::ReplaceAnchorFocusRange(nsRange* aRange)
 {
   NS_ENSURE_TRUE_VOID(mAnchorFocusRange);
-  nsRefPtr<nsPresContext> presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
   if (presContext) {
     selectFrames(presContext, mAnchorFocusRange, false);
     SetAnchorFocusToRange(aRange);
@@ -4803,8 +4796,7 @@ Selection::Extend(nsINode* aParentNode, int32_t aOffset)
                                                   aParentNode, aOffset,
                                                   &disconnected);
 
-  nsRefPtr<nsPresContext>  presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   nsRefPtr<nsRange> difRange = new nsRange();
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2
     //select from 1 to 2 unless they are collapsed
@@ -5063,18 +5055,15 @@ Selection::ContainsNode(nsIDOMNode* aNode, bool aAllowPartial, bool* aYes)
 }
 
 
-nsresult
-Selection::GetPresContext(nsPresContext** aPresContext)
+nsPresContext*
+Selection::GetPresContext() const
 {
-  if (!mFrameSelection)
-    return NS_ERROR_FAILURE;//nothing to do
-  nsIPresShell *shell = mFrameSelection->GetShell();
+  nsIPresShell *shell = GetPresShell();
+  if (!shell) {
+    return nullptr;
+  }
 
-  if (!shell)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_IF_ADDREF(*aPresContext = shell->GetPresContext());
-  return NS_OK;
+  return shell->GetPresContext();
 }
 
 nsIPresShell*
@@ -5543,11 +5532,11 @@ Selection::SelectionLanguageChange(bool aLangRTL)
 
   int32_t frameStart, frameEnd;
   focusFrame->GetOffsets(frameStart, frameEnd);
-  nsRefPtr<nsPresContext> context;
+  nsRefPtr<nsPresContext> context = GetPresContext();
   uint8_t levelBefore, levelAfter;
-  result = GetPresContext(getter_AddRefs(context));
-  if (NS_FAILED(result) || !context)
-    return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
 
   uint8_t level = NS_GET_EMBEDDING_LEVEL(focusFrame);
   int32_t focusOffset = GetFocusOffset();
