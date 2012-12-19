@@ -20,6 +20,7 @@ include $(topsrcdir)/dom/dom-config.mk
 EXPORTS_NAMESPACES = mozilla/dom/quota
 
 CPPSRCS = \
+  CheckQuotaHelper.cpp \
   FileStreams.cpp \
   QuotaManager.cpp \
   $(NULL)

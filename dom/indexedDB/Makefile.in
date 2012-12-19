@@ -21,7 +21,6 @@ EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
   CheckPermissionsHelper.cpp \
-  CheckQuotaHelper.cpp \
   DatabaseInfo.cpp \
   FileInfo.cpp \
   FileManager.cpp \

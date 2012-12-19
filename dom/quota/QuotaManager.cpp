@@ -10,8 +10,9 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "nsComponentManagerUtils.h"
+#include "xpcpublic.h"
 
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "CheckQuotaHelper.h"
 
 USING_QUOTA_NAMESPACE
 
@@ -121,8 +122,21 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 
   int64_t newUsage = mOriginInfo->mUsage - mSize + end;
   if (newUsage > mOriginInfo->mLimit) {
-    if (!indexedDB::IndexedDatabaseManager::QuotaIsLifted()) {
+    // This will block the thread, but it will also drop the mutex while
+    // waiting. The mutex will be reacquired again when the waiting is finished.
+    if (!quotaManager->LockedQuotaIsLifted()) {
       return false;
+    }
+
+    // Threads raced, the origin info removal has been done by some other
+    // thread.
+    if (!mOriginInfo) {
+      // The other thread could allocate more space.
+      if (end > mSize) {
+        mSize = end;
+      }
+
+      return true;
     }
 
     nsCString origin = mOriginInfo->mOrigin;
@@ -132,6 +146,10 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
                  "Should have cleared in LockedClearOriginInfos!");
 
     quotaManager->mOriginInfos.Remove(origin);
+
+    // Some other thread could increase the size without blocking (increasing
+    // the origin usage without hitting the limit), but no more than this one.
+    NS_ASSERTION(mSize < end, "This shouldn't happen!");
 
     mSize = end;
 
@@ -171,6 +189,18 @@ OriginInfo::ClearOriginInfoCallback(const nsAString& aKey,
   return PL_DHASH_NEXT;
 }
 
+QuotaManager::QuotaManager()
+: mCurrentWindowIndex(BAD_TLS_INDEX),
+  mQuotaMutex("QuotaManager.mQuotaMutex")
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+}
+
+QuotaManager::~QuotaManager()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+}
+
 // static
 QuotaManager*
 QuotaManager::GetOrCreate()
@@ -178,7 +208,11 @@ QuotaManager::GetOrCreate()
   if (!gInstance) {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    gInstance = new QuotaManager();
+    nsAutoPtr<QuotaManager> instance(new QuotaManager());
+
+    NS_ENSURE_TRUE(instance->Init(), nullptr);
+
+    gInstance = instance.forget();
 
     ClearOnShutdown(&gInstance);
   }
@@ -192,6 +226,24 @@ QuotaManager::Get()
 {
   // Does not return an owning reference.
   return gInstance;
+}
+
+bool
+QuotaManager::Init()
+{
+  // We need a thread-local to hold the current window.
+  NS_ASSERTION(mCurrentWindowIndex == BAD_TLS_INDEX, "Huh?");
+
+  if (PR_NewThreadPrivateIndex(&mCurrentWindowIndex, nullptr) != PR_SUCCESS) {
+    NS_ERROR("PR_NewThreadPrivateIndex failed, QuotaManager disabled");
+    mCurrentWindowIndex = BAD_TLS_INDEX;
+    return false;
+  }
+
+  mOriginInfos.Init();
+  mCheckQuotaHelpers.Init();
+
+  return true;
 }
 
 void
@@ -291,4 +343,84 @@ QuotaManager::GetQuotaObject(const nsACString& aOrigin,
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return GetQuotaObject(aOrigin, file);
+}
+
+void
+QuotaManager::SetCurrentWindowInternal(nsPIDOMWindow* aWindow)
+{
+  NS_ASSERTION(mCurrentWindowIndex != BAD_TLS_INDEX,
+               "Should have a valid TLS storage index!");
+
+  if (aWindow) {
+    NS_ASSERTION(!PR_GetThreadPrivate(mCurrentWindowIndex),
+                 "Somebody forgot to clear the current window!");
+    PR_SetThreadPrivate(mCurrentWindowIndex, aWindow);
+  }
+  else {
+    // We cannot assert PR_GetThreadPrivate(mCurrentWindowIndex) here because
+    // there are some cases where we did not already have a window.
+    PR_SetThreadPrivate(mCurrentWindowIndex, nullptr);
+  }
+}
+
+void
+QuotaManager::CancelPromptsForWindowInternal(nsPIDOMWindow* aWindow)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<CheckQuotaHelper> helper;
+
+  MutexAutoLock autoLock(mQuotaMutex);
+
+  if (mCheckQuotaHelpers.Get(aWindow, getter_AddRefs(helper))) {
+    helper->Cancel();
+  }
+}
+
+bool
+QuotaManager::LockedQuotaIsLifted()
+{
+  mQuotaMutex.AssertCurrentThreadOwns();
+
+  NS_ASSERTION(mCurrentWindowIndex != BAD_TLS_INDEX,
+               "Should have a valid TLS storage index!");
+
+  nsPIDOMWindow* window =
+    static_cast<nsPIDOMWindow*>(PR_GetThreadPrivate(mCurrentWindowIndex));
+
+  // Quota is not enforced in chrome contexts (e.g. for components and JSMs)
+  // so we must have a window here.
+  NS_ASSERTION(window, "Why don't we have a Window here?");
+
+  bool createdHelper = false;
+
+  nsRefPtr<CheckQuotaHelper> helper;
+  if (!mCheckQuotaHelpers.Get(window, getter_AddRefs(helper))) {
+    helper = new CheckQuotaHelper(window, mQuotaMutex);
+    createdHelper = true;
+
+    mCheckQuotaHelpers.Put(window, helper);
+
+    // Unlock while calling out to XPCOM
+    {
+      MutexAutoUnlock autoUnlock(mQuotaMutex);
+
+      nsresult rv = NS_DispatchToMainThread(helper);
+      NS_ENSURE_SUCCESS(rv, false);
+    }
+
+    // Relocked.  If any other threads hit the quota limit on the same Window,
+    // they are using the helper we created here and are now blocking in
+    // PromptAndReturnQuotaDisabled.
+  }
+
+  bool result = helper->PromptAndReturnQuotaIsDisabled();
+
+  // If this thread created the helper and added it to the hash, this thread
+  // must remove it.
+  if (createdHelper) {
+    mCheckQuotaHelpers.Remove(window);
+  }
+
+  return result;
 }
