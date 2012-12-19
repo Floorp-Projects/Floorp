@@ -10,8 +10,16 @@
 
         <TabWidget android:id="@android:id/tabs"
                    android:layout_width="0dip"
-                   android:layout_height="fill_parent"
-                   android:layout_weight="1.0"/>
+                   android:layout_height="0dip"
+                   android:visibility="gone"/>
+
+        <Button android:id="@+id/tabs_menu"
+                android:layout_width="0dip"
+                android:layout_height="fill_parent"
+                android:layout_weight="1.0"
+                android:text="@string/tabs_normal"
+                android:textColor="@color/tabs_counter_color"
+                android:background="@drawable/action_bar_button"/>
 
         <ImageButton android:id="@+id/add_tab"
                      android:layout_width="@dimen/browser_toolbar_height"
