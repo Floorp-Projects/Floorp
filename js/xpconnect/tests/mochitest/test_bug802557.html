@@ -8,6 +8,81 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
   <title>Test for Bug 802557</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 802557 **/
+  SimpleTest.waitForExplicitFinish();
+
+  // In the case of apply()ing on a Location object that's script access only,
+  // we just throw a very bland XPConnect message. In other cases though, we want
+  // to check the message to make sure we're throwing a security exception and not
+  // something else.
+  function checkThrows(fun, desc, skipMessageCheck) {
+    try {
+      fun();
+      ok(false, "Didn't throw when " + desc);
+    } catch(e) {
+      ok(true, "Threw when " + desc + " " + e);
+      (skipMessageCheck ? todo : ok)(/denied|insecure/.exec(e), "Should be security exception");
+    }
+  }
+
+  var loadCount = 0;
+  function go() {
+    ++loadCount;
+    window.ifr = document.getElementById('ifr');
+    window.iWin = ifr.contentWindow;
+
+    if (loadCount == 1) {
+      gLoc = iWin.location;
+      // Note that accessors pulled off Xrays are currently bound. This is bug 658909.
+      // [getter, description, locationObj, bound]
+      gGetters = [[ location.toString, 'toString from LW' ],
+                  [ gLoc.toString, 'toString from XLW' ],
+                  [ Location.prototype.toString, 'toString from Location.prototype' ],
+                  [ iWin.Location.prototype.toString, 'toString from iWin.Location.prototype' ],
+                  [ Object.__lookupGetter__.call(location, 'href'), 'href getter from LW' ],
+                  [ Object.__lookupGetter__.call(gLoc, 'href'), 'href getter from XLW' ],
+                  [ Object.getOwnPropertyDescriptor(Location.prototype, 'href').get, 'href getter from Location.prototype' ],
+                  [ Object.getOwnPropertyDescriptor(iWin.Location.prototype, 'href').get, 'href getter from iWin.Location.prototype' ],
+                  [ function() { return this + ''; }, 'implicit conversion via [[DefaultValue]]', /* doMessageCheck = */ true ]];
+      gGetters.forEach(function(item) {
+        try {
+          is(item[0].call(location), location.toString(), 'Same-origin LW: ' + item[1]);
+          is(item[0].call(gLoc), gLoc.toString(), 'Same-origin XLW: ' + item[1]);
+        } catch (e) {
+          ok(false, "Threw while applying " + item[1] + " to same-origin location object: " + e);
+        }
+      });
+      ifr.src = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    }
+    else if (loadCount == 2) {
+      gGetters.forEach(function(item) {
+        checkThrows(function() { item[0].call(gLoc); },
+                    'call()ing ' + item[1] + ' after navigation cross-origin',
+                    /* skipMessageCheck = */ false);
+      });
+      ifr.src = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
+    }
+    else if (loadCount == 3) {
+      gTestFunctions = ifr.contentWindow.getAllTests();
+      var win = ifr.contentWindow;
+      for (fun in gTestFunctions)
+         is(gTestFunctions[fun](), win.location.toString(), "allowed via " + fun);
+      win.location = 'http://example.org/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
+    }
+    else if (loadCount == 4) {
+      for (fun in gTestFunctions) {
+        var f = gTestFunctions[fun];
+        checkThrows(f, "calling " + fun, f.skipMessageCheck);
+      }
+      SimpleTest.finish();
+    }
+  }
+
+
+
+</script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=802557">Mozilla Bug 802557</a>
@@ -17,81 +92,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
 </div>
 <iframe id="ifr" onload="go();" src="file_empty.html"></iframe>
 <pre id="test">
-<script type="application/javascript">
-
-/** Test for Bug 802557 **/
-SimpleTest.waitForExplicitFinish();
-
-// In the case of apply()ing on a Location object that's script access only,
-// we just throw a very bland XPConnect message. In other cases though, we want
-// to check the message to make sure we're throwing a security exception and not
-// something else.
-function checkThrows(fun, desc, skipMessageCheck) {
-  try {
-    fun();
-    ok(false, "Didn't throw when " + desc);
-  } catch(e) {
-    ok(true, "Threw when " + desc + " " + e);
-    (skipMessageCheck ? todo : ok)(/denied|insecure/.exec(e), "Should be security exception");
-  }
-}
-
-var loadCount = 0;
-var ifr = document.getElementById('ifr');
-var iWin = ifr.contentWindow;
-function go() {
-  ++loadCount;
-
-  if (loadCount == 1) {
-    gLoc = iWin.location;
-    // Note that accessors pulled off Xrays are currently bound. This is bug 658909.
-    // [getter, description, locationObj, bound]
-    gGetters = [[ location.toString, 'toString from LW' ],
-                [ gLoc.toString, 'toString from XLW' ],
-                [ Location.prototype.toString, 'toString from Location.prototype' ],
-                [ iWin.Location.prototype.toString, 'toString from iWin.Location.prototype' ],
-                [ Object.__lookupGetter__.call(location, 'href'), 'href getter from LW' ],
-                [ Object.__lookupGetter__.call(gLoc, 'href'), 'href getter from XLW' ],
-                [ Object.getOwnPropertyDescriptor(Location.prototype, 'href').get, 'href getter from Location.prototype' ],
-                [ Object.getOwnPropertyDescriptor(iWin.Location.prototype, 'href').get, 'href getter from iWin.Location.prototype' ],
-                [ function() { return this + ''; }, 'implicit conversion via [[DefaultValue]]', /* doMessageCheck = */ true ]];
-    gGetters.forEach(function(item) {
-      try {
-        is(item[0].call(location), location.toString(), 'Same-origin LW: ' + item[1]);
-        is(item[0].call(gLoc), gLoc.toString(), 'Same-origin XLW: ' + item[1]);
-      } catch (e) {
-        ok(false, "Threw while applying " + item[1] + " to same-origin location object: " + e);
-      }
-    });
-    ifr.src = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
-  }
-  else if (loadCount == 2) {
-    gGetters.forEach(function(item) {
-      checkThrows(function() { item[0].call(gLoc); },
-                  'call()ing ' + item[1] + ' after navigation cross-origin',
-                  /* skipMessageCheck = */ false);
-    });
-    ifr.src = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
-  }
-  else if (loadCount == 3) {
-    gTestFunctions = ifr.contentWindow.getAllTests();
-    var win = ifr.contentWindow;
-    for (fun in gTestFunctions)
-       is(gTestFunctions[fun](), win.location.toString(), "allowed via " + fun);
-    win.location = 'http://example.org/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
-  }
-  else if (loadCount == 4) {
-    for (fun in gTestFunctions) {
-      var f = gTestFunctions[fun];
-      checkThrows(f, "calling " + fun, f.skipMessageCheck);
-    }
-    SimpleTest.finish();
-  }
-}
-
-
-
-</script>
 </pre>
 </body>
 </html>
