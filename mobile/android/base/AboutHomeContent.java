@@ -689,23 +689,11 @@ public class AboutHomeContent extends ScrollView
 
          drawable.setAlpha(255, 0);
          setBackgroundDrawable(drawable);
-
-         boolean isLight = mActivity.getLightweightTheme().isLightTheme();
-         mAddons.setTheme(isLight);
-         mLastTabs.setTheme(isLight);
-         mRemoteTabs.setTheme(isLight);
-         ((GeckoImageView) findViewById(R.id.abouthome_logo)).setTheme(isLight);
-         ((GeckoTextView) findViewById(R.id.top_sites_title)).setTheme(isLight);
     }
 
     @Override
     public void onLightweightThemeReset() {
         setBackgroundResource(R.drawable.abouthome_bg_repeat);
-        mAddons.resetTheme();
-        mLastTabs.resetTheme();
-        mRemoteTabs.resetTheme();
-        ((GeckoImageView) findViewById(R.id.abouthome_logo)).resetTheme();
-        ((GeckoTextView) findViewById(R.id.top_sites_title)).resetTheme();
     }
 
     @Override
