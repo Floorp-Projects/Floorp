@@ -3134,12 +3134,11 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32_t argc, bool construc
     for (int32_t i = argc; i >= 0; i--)
         argv[i] = current->pop();
 
-    // Compilation information is allocated for the duration of the current tempLifoAlloc
-    // lifetime.
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     RootedScript calleeScript(cx, callee->nonLazyScript());
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(calleeScript.get(), callee,
-                                                              (jsbytecode *)NULL, constructing,
-                                                              SequentialExecution);
+    CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), callee,
+                                                 (jsbytecode *)NULL, constructing,
+                                                 SequentialExecution);
     if (!info)
         return false;
 
