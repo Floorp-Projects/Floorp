@@ -9,9 +9,28 @@
 #include "CSFLog.h"
 #include "base/basictypes.h"
 #include "prtypes.h"
-#include "prlog.h"
 
 static PRLogModuleInfo *gLogModuleInfo = NULL;
+
+PRLogModuleInfo *GetSignalingLogInfo()
+{
+  if (gLogModuleInfo == NULL)
+    gLogModuleInfo = PR_NewLogModule("signaling");
+
+  return gLogModuleInfo;
+}
+
+static PRLogModuleInfo *gWebRTCLogModuleInfo = NULL;
+int gWebrtcTraceLoggingOn = 0;
+
+PRLogModuleInfo *GetWebRTCLogInfo()
+{
+  if (gWebRTCLogModuleInfo == NULL)
+    gWebRTCLogModuleInfo = PR_NewLogModule("webrtc_trace");
+
+  return gWebRTCLogModuleInfo;
+}
+
 
 void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args)
 {
@@ -25,8 +44,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 
   vsnprintf(message, MAX_MESSAGE_LENGTH, format, args);
 
-  if (gLogModuleInfo == NULL)
-    gLogModuleInfo = PR_NewLogModule("ikran");
+  GetSignalingLogInfo();
 
   switch(priority)
   {
