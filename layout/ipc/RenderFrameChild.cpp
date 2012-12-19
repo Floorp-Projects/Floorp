@@ -38,12 +38,6 @@ RenderFrameChild::CancelDefaultPanZoom()
   SendCancelDefaultPanZoom();
 }
 
-void
-RenderFrameChild::DetectScrollableSubframe()
-{
-  SendDetectScrollableSubframe();
-}
-
 PLayersChild*
 RenderFrameChild::AllocPLayers()
 {

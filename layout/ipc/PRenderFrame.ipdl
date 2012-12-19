@@ -42,7 +42,6 @@ parent:
     async NotifyCompositorTransaction();
 
     async CancelDefaultPanZoom();
-    async DetectScrollableSubframe();
 
     async __delete__();
 
