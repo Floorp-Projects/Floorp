@@ -390,7 +390,7 @@ struct ParamTraits<InfallibleTArray<E> > :
   // deserialize the array fallibly, but return an InfallibleTArray
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    nsTArray<E> temp;
+    FallibleTArray<E> temp;
     if (!ReadParam(aMsg, aIter, &temp))
       return false;
 
