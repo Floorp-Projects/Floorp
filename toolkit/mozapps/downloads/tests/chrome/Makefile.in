@@ -30,7 +30,6 @@ MOCHITEST_CHROME_FILES = \
   test_search_keys.xul \
   test_select_all.xul \
   test_space_key_pauses_resumes.xul \
-  test_privatebrowsing_title.xul \
   test_ui_stays_open_on_alert_clickback.xul \
   test_unknownContentType_dialog_layout.xul \
   test_bug_412360.xul \
@@ -53,6 +52,12 @@ ifeq ($(OS_ARCH),WINNT)
 MOCHITEST_CHROME_FILES += \
   test_taskbarprogress_downloadstates.xul \
   $(filter disabled-for-very-frequent-orange--bug-630567, test_taskbarprogress_service.xul) \
+  $(NULL)
+endif
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_CHROME_FILES += \
+  test_privatebrowsing_title.xul \
   $(NULL)
 endif
 

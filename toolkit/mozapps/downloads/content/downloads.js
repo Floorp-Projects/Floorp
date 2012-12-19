@@ -436,8 +436,10 @@ function Startup()
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
   obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
   obs.addObserver(gDownloadObserver, "private-browsing", false);
   obs.addObserver(gDownloadObserver, "private-browsing-change-granted", false);
+#endif
   obs.addObserver(gDownloadObserver, "browser-lastwindow-close-granted", false);
 
   // Clear the search box and move focus to the list on escape from the box
@@ -462,8 +464,10 @@ function Shutdown()
 
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
   obs.removeObserver(gDownloadObserver, "private-browsing");
   obs.removeObserver(gDownloadObserver, "private-browsing-change-granted");
+#endif
   obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
   obs.removeObserver(gDownloadObserver, "browser-lastwindow-close-granted");
 
@@ -488,6 +492,7 @@ let gDownloadObserver = {
         let dl = getDownload(id.data);
         removeFromView(dl);
         break;
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
       case "private-browsing-change-granted":
         // Finalize our statements cause the connection will be closed by the
         // service during the private browsing transition.
@@ -515,6 +520,7 @@ let gDownloadObserver = {
           }, 0);
         }
         break;
+#endif
       case "browser-lastwindow-close-granted":
 #ifndef XP_MACOSX
         if (gDownloadManager.activeDownloadCount == 0) {
@@ -1346,10 +1352,12 @@ function getDownload(aID)
 
 /**
  * Initialize the statement which is used to retrieve the list of downloads.
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
  *
  * This function gets called both at startup, and when entering the private
  * browsing mode (because the database connection is changed when entering
  * the private browsing mode, and a new statement should be initialized.
+#endif
  */
 function initStatement()
 {
