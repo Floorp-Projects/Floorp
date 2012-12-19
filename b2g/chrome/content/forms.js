@@ -64,6 +64,9 @@ let FormAssistant = {
   },
 
   setFocusedElement: function fa_setFocusedElement(element) {
+    if (element instanceof HTMLOptionElement)
+      element = element.parentNode;
+
     if (element === this.focusedElement)
       return;
 
@@ -92,13 +95,16 @@ let FormAssistant = {
         if (this.isTextInputElement(target) && this.isIMEDisabled())
           return;
 
-        if (target && this.isFocusableElement(target))
+        if (target && this.isFocusableElement(target)) {
+          this.setFocusedElement(target);
           this.showKeyboard(target);
+        }
         break;
 
       case "blur":
         if (this.focusedElement)
           this.hideKeyboard();
+        this.setFocusedElement(null);
         break;
 
       case 'mousedown':
@@ -211,24 +217,19 @@ let FormAssistant = {
     return disabled;
   },
 
-  showKeyboard: function fa_showKeyboard(target) {
+  showKeyboard: function fa_showKeyboard() {
     if (this.isKeyboardOpened)
       return;
 
-    if (target instanceof HTMLOptionElement)
-      target = target.parentNode;
-
+    let target = this.focusedElement;
     let kbOpened = this.sendKeyboardState(target);
     if (this.isTextInputElement(target))
       this.isKeyboardOpened = kbOpened;
-
-    this.setFocusedElement(target);
   },
 
   hideKeyboard: function fa_hideKeyboard() {
     sendAsyncMessage("Forms:Input", { "type": "blur" });
     this.isKeyboardOpened = false;
-    this.setFocusedElement(null);
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
