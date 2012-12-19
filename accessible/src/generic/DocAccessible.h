@@ -574,8 +574,7 @@ private:
 inline DocAccessible*
 Accessible::AsDoc()
 {
-  return mFlags & eDocAccessible ?
-    static_cast<DocAccessible*>(this) : nullptr;
+  return IsDoc() ? static_cast<DocAccessible*>(this) : nullptr;
 }
 
 } // namespace a11y

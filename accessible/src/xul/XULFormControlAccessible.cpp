@@ -40,7 +40,7 @@ XULButtonAccessible::
   AccessibleWrap(aContent, aDoc)
 {
   if (ContainsMenu())
-    mFlags |= eMenuButtonAccessible;
+    mGenericTypes |= eMenuButton;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

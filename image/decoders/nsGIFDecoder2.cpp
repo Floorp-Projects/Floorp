@@ -42,7 +42,6 @@ mailing address.
 
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
-#include "imgIContainerObserver.h"
 #include "RasterImage.h"
 
 #include "gfxColor.h"
@@ -72,7 +71,7 @@ namespace image {
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 
-nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage, imgIDecoderObserver* aObserver)
+nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage, imgDecoderObserver* aObserver)
   : Decoder(aImage, aObserver)
   , mCurrentRow(-1)
   , mLastFlushedRow(-1)
@@ -219,9 +218,7 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
     // Otherwise, the area may never be refreshed and the placeholder will remain
     // on the screen. (Bug 37589)
     if (mGIFStruct.y_offset > 0) {
-      int32_t imgWidth;
-      mImage.GetWidth(&imgWidth);
-      nsIntRect r(0, 0, imgWidth, mGIFStruct.y_offset);
+      nsIntRect r(0, 0, mGIFStruct.screen_width, mGIFStruct.y_offset);
       PostInvalidation(r);
     }
   }

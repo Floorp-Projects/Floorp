@@ -1502,13 +1502,27 @@ UnmarkGrayGCThing(void *thing)
     static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
 }
 
+static void
+UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind);
+
 struct UnmarkGrayTracer : public JSTracer
 {
-    UnmarkGrayTracer() : tracingShape(false), previousShape(NULL) {}
-    UnmarkGrayTracer(JSTracer *trc, bool tracingShape)
-        : tracingShape(tracingShape), previousShape(NULL)
+    /*
+     * We set eagerlyTraceWeakMaps to false because the cycle collector will fix
+     * up any color mismatches involving weakmaps when it runs.
+     */
+    UnmarkGrayTracer(JSRuntime *rt)
+      : tracingShape(false), previousShape(NULL)
     {
-        JS_TracerInit(this, trc->runtime, trc->callback);
+        JS_TracerInit(this, rt, UnmarkGrayChildren);
+        eagerlyTraceWeakMaps = false;
+    }
+
+    UnmarkGrayTracer(JSTracer *trc, bool tracingShape)
+      : tracingShape(tracingShape), previousShape(NULL)
+    {
+        JS_TracerInit(this, trc->runtime, UnmarkGrayChildren);
+        eagerlyTraceWeakMaps = false;
     }
 
     /* True iff we are tracing the immediate children of a shape. */
@@ -1593,7 +1607,6 @@ js::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
     UnmarkGrayGCThing(thing);
 
     JSRuntime *rt = static_cast<Cell *>(thing)->compartment()->rt;
-    UnmarkGrayTracer trc;
-    JS_TracerInit(&trc, rt, UnmarkGrayChildren);
+    UnmarkGrayTracer trc(rt);
     JS_TraceChildren(&trc, thing, kind);
 }

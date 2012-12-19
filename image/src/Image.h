@@ -47,7 +47,7 @@ public:
    * @param aMimeType The mimetype of the image.
    * @param aFlags Initialization flags of the INIT_FLAG_* variety.
    */
-  virtual nsresult Init(imgIDecoderObserver* aObserver,
+  virtual nsresult Init(imgDecoderObserver* aObserver,
                         const char* aMimeType,
                         const char* aURIString,
                         uint32_t aFlags) = 0;

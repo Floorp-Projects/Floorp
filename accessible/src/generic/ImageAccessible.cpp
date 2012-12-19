@@ -31,7 +31,7 @@ ImageAccessible::
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   LinkableAccessible(aContent, aDoc)
 {
-  mFlags |= eImageAccessible;
+  mType = eImageType;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(ImageAccessible, Accessible,
@@ -158,7 +158,8 @@ ImageAccessible::GetImagePosition(uint32_t aCoordType, int32_t* aX, int32_t* aY)
   if (NS_FAILED(rv))
     return rv;
 
-  return nsAccUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
+  nsAccUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
