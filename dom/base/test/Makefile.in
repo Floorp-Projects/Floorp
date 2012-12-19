@@ -19,6 +19,7 @@ MOCHITEST_FILES = \
   test_nondomexception.html \
   test_screen_orientation.html \
   test_window_enumeration.html \
+  test_writable-replaceable.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
