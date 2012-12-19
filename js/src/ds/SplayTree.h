@@ -136,12 +136,6 @@ class SplayTree
         checkCoherency(root, NULL);
     }
 
-    template <class Op>
-    void forEach(Op op)
-    {
-        forEachInner(op, root);
-    }
-
   private:
 
     Node *lookup(const T &v)
@@ -238,17 +232,6 @@ class SplayTree
         } else {
             root = node;
         }
-    }
-
-    template <class Op>
-    void forEachInner(Op op, Node *node)
-    {
-        if (!node)
-            return;
-
-        forEachInner(op, node->left);
-        op(node->item);
-        forEachInner(op, node->right);
     }
 
     Node *checkCoherency(Node *node, Node *minimum)
