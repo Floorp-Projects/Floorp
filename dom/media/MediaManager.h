@@ -71,12 +71,14 @@ class GetUserMediaCallbackMediaStreamListener : public MediaStreamListener
 public:
   GetUserMediaCallbackMediaStreamListener(nsIThread *aThread,
     nsDOMMediaStream* aStream,
+    already_AddRefed<MediaInputPort> aPort,
     MediaEngineSource* aAudioSource,
     MediaEngineSource* aVideoSource)
     : mMediaThread(aThread)
     , mAudioSource(aAudioSource)
     , mVideoSource(aVideoSource)
     , mStream(aStream)
+    , mPort(aPort)
     , mSourceStream(aStream->GetStream()->AsSourceStream())
     , mLastEndTimeAudio(0)
     , mLastEndTimeVideo(0) { MOZ_ASSERT(mSourceStream); }
@@ -135,6 +137,7 @@ private:
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   nsRefPtr<nsDOMMediaStream> mStream;
+  nsRefPtr<MediaInputPort> mPort;
   SourceMediaStream *mSourceStream; // mStream controls ownership
   TrackTicks mLastEndTimeAudio;
   TrackTicks mLastEndTimeVideo;
@@ -161,6 +164,7 @@ public:
     , mStream(aStream)
     {}
 
+  // so we can send Stop without AddRef()ing from the MSG thread
   MediaOperationRunnable(MediaOperation aType,
     GetUserMediaCallbackMediaStreamListener* aListener,
     MediaEngineSource* aAudioSource,
@@ -242,6 +246,7 @@ public:
           }
           // Do this after stopping all tracks with EndTrack()
           source->Finish();
+          // the TrackUnion destination of the port will autofinish
 
           nsRefPtr<GetUserMediaNotificationEvent> event =
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
