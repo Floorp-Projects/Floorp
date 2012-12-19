@@ -8,11 +8,10 @@
 
 %{C++
 struct PrefTuple;
-template<class E, class A> class nsTArray;
-struct nsTArrayInfallibleAllocator;
+#include "nsTArrayForwardDeclare.h"
 %}
 
-[ptr] native nsPreferencesArrayPtr(nsTArray<PrefTuple, nsTArrayInfallibleAllocator>);
+[ptr] native nsPreferencesArrayPtr(nsTArray<PrefTuple>);
 [ptr] native nsPreferencePtr(PrefTuple);
 [ptr] native nsPreferencePtrConst(const PrefTuple);
 

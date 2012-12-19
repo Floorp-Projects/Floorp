@@ -19,11 +19,11 @@
 #include "nsMargin.h"
 #include "nsCOMPtr.h"
 #include "SVGAttrValueWrapper.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsAString;
 class nsIAtom;
 class nsIDocument;
-template<class E, class A> class nsTArray;
 class nsStyledElementNotElementCSSInlineStyle;
 struct MiscContainer;
 

@@ -14,10 +14,10 @@
 #include "nsQueryFrame.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsBaseContentList;
 class nsIFrame;
-template <class T, class A> class nsTArray;
 
 /**
  * Any source for anonymous content can implement this interface to provide it.
