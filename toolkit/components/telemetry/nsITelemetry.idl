@@ -6,13 +6,13 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
-[scriptable,function, uuid(5c25e4b0-398f-11e2-81c1-0800200c9a66)]
-interface nsIReadShutdownTimeCallback : nsISupports
+[scriptable,function, uuid(3d3b9075-5549-4244-9c08-b64fefa1dd60)]
+interface nsIFetchTelemetryDataCallback : nsISupports
 {
   void complete();
 };
 
-[scriptable, uuid(420ebbd5-efe3-42f2-8a13-f695e0fdcca0)]
+[scriptable, uuid(23fdd971-8db1-48ef-b9b3-99dbf60f04dd)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -193,8 +193,8 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval addonHistogramSnapshots;
 
   /**
-   * Read how long the previous run took to shutdown. After the callback is
-   * called the data is available in lastShutdownDuration.
+   * Read data from the previous run. After the callback is called, the data is
+   * available in lastShutdownDuration.
    */
-  void asyncReadShutdownTime(in nsIReadShutdownTimeCallback aCallback);
+  void asyncFetchTelemetryData(in nsIFetchTelemetryDataCallback aCallback);
 };
