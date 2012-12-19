@@ -2351,6 +2351,10 @@ html|*#gcli-output-frame {
   list-style-image: none;
 }
 
+#social-provider-button {
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
 #social-provider-button > image {
   margin: 5px 3px;
 }
