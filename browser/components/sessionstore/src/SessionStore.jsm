@@ -1273,8 +1273,8 @@ let SessionStoreInternal = {
     // If this tab was in the middle of restoring or still needs to be restored,
     // we need to reset that state. If the tab was restoring, we will attempt to
     // restore the next tab.
-    let previousState;
-    if (previousState = browser.__SS_restoreState) {
+    let previousState = browser.__SS_restoreState;
+    if (previousState) {
       this._resetTabRestoringState(aTab);
       if (previousState == TAB_STATE_RESTORING)
         this.restoreNextTab();

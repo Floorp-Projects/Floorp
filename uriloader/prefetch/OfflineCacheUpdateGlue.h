@@ -34,7 +34,8 @@ namespace docshell {
   NS_IMETHOD AddDynamicURI(nsIURI *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddDynamicURI(aURI); } \
   NS_IMETHOD AddObserver(nsIOfflineCacheUpdateObserver *aObserver, bool aHoldWeak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(aObserver, aHoldWeak); } \
   NS_IMETHOD RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(aObserver); } \
-  NS_IMETHOD GetByteProgress(uint64_t * _result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetByteProgress(_result); }
+  NS_IMETHOD GetByteProgress(uint64_t * _result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetByteProgress(_result); } \
+  NS_IMETHOD Cancel() { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(); }
 
 class OfflineCacheUpdateGlue MOZ_FINAL : public nsSupportsWeakReference
                                        , public nsIOfflineCacheUpdate

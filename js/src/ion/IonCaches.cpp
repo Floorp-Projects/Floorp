@@ -1388,9 +1388,10 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     if (!SetProperty(cx, obj, name, value, cache.strict(), isSetName))
         return false;
 
-    // The property did not exists before, now we can try again to inline the
-    // procedure which is adding the property.
-    if (inlinable && !addedSetterStub && IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape)) {
+    // The property did not exist before, now we can try to inline the propery add.
+    if (inlinable && !addedSetterStub && obj->lastProperty() != oldShape &&
+        IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape))
+    {
         RootedShape newShape(cx, obj->lastProperty());
         cache.incrementStubCount();
         if (!cache.attachNativeAdding(cx, ion, obj, oldShape, newShape, shape))

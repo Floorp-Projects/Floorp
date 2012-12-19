@@ -995,12 +995,25 @@ public:
 
     // Read call hooks:
     void fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
+        y = FixYValue(y, height);
+
         BeforeGLReadCall();
         raw_fReadPixels(x, y, width, height, format, type, pixels);
         AfterGLReadCall();
     }
 
     void fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
+        y = FixYValue(y, height);
+
+        if (!IsTextureSizeSafeToPassToDriver(target, width, height)) {
+            // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
+            // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
+            level = -1;
+            width = -1;
+            height = -1;
+            border = -1;
+        }
+
         BeforeGLReadCall();
         raw_fCopyTexImage2D(target, level, internalformat,
                             x, y, width, height, border);
@@ -1008,6 +1021,8 @@ public:
     }
 
     void fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
+        y = FixYValue(y, height);
+
         BeforeGLReadCall();
         raw_fCopyTexSubImage2D(target, level, xoffset, yoffset,
                                x, y, width, height);
@@ -1713,6 +1728,15 @@ public:
 
 #endif
 
+#define ASSERT_SYMBOL_PRESENT(func) \
+    do {\
+        MOZ_ASSERT(strstr(MOZ_FUNCTION_NAME, #func) != nullptr, "Mismatched symbol check.");\
+        if (MOZ_UNLIKELY(!mSymbols.func)) {\
+            printf_stderr("RUNTIME ASSERT: Uninitialized GL function: %s\n", #func);\
+            MOZ_CRASH();\
+        }\
+    } while (0)
+
     /*** In GL debug mode, we completely override glGetError ***/
 
     GLenum fGetError() {
@@ -1732,29 +1756,19 @@ public:
     /*** Scissor functions ***/
 
 protected:
-
     GLint FixYValue(GLint y, GLint height)
     {
+        MOZ_ASSERT( !(mIsOffscreen && mFlipped) );
         return mFlipped ? ViewportRect().height - (height + y) : y;
     }
 
-    // only does the glScissor call, no ScissorRect business
-    void raw_fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
-        BEFORE_GL_CALL;
-        // GL's coordinate system is flipped compared to ours (in the Y axis),
-        // so we may need to flip our rectangle.
-        mSymbols.fScissor(x, 
-                          FixYValue(y, height),
-                          width, 
-                          height);
-        AFTER_GL_CALL;
-    }
-
 public:
-
-    // but let GL-using code use that instead, updating the ScissorRect
     void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
         ScissorRect().SetRect(x, y, width, height);
+
+        // GL's coordinate system is flipped compared to the one we use in
+        // OGL Layers (in the Y axis), so we may need to flip our rectangle.
+        y = FixYValue(y, height);
         raw_fScissor(x, y, width, height);
     }
 
@@ -1788,8 +1802,7 @@ public:
 
     /*** Viewport functions ***/
 
-protected:
-
+private:
     // only does the glViewport call, no ViewportRect business
     void raw_fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
@@ -1803,7 +1816,6 @@ protected:
     }
 
 public:
-
     void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
         ViewportRect().SetRect(x, y, width, height);
         raw_fViewport(x, y, width, height);
@@ -1899,9 +1911,16 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage) {
+private:
+    void raw_fBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage) {
         BEFORE_GL_CALL;
         mSymbols.fBufferData(target, size, data, usage);
+        AFTER_GL_CALL;
+    }
+
+public:
+    void fBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage) {
+        raw_fBufferData(target, size, data, usage);
 
         // bug 744888
         if (WorkAroundDriverBugs() &&
@@ -1909,10 +1928,8 @@ public:
             Vendor() == VendorNVIDIA)
         {
             char c = 0;
-            mSymbols.fBufferSubData(target, size-1, 1, &c);
+            fBufferSubData(target, size-1, 1, &c);
         }
-
-        AFTER_GL_CALL;
     }
 
     void fBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data) {
@@ -1921,12 +1938,14 @@ public:
         AFTER_GL_CALL;
     }
 
+private:
     void raw_fClear(GLbitfield mask) {
         BEFORE_GL_CALL;
         mSymbols.fClear(mask);
         AFTER_GL_CALL;
     }
 
+public:
     void fClearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
         BEFORE_GL_CALL;
         mSymbols.fClearColor(r, g, b, a);
@@ -1993,6 +2012,7 @@ public:
         AFTER_GL_CALL;
     }
 
+private:
     void raw_fDrawArrays(GLenum mode, GLint first, GLsizei count) {
         BEFORE_GL_CALL;
         mSymbols.fDrawArrays(mode, first, count);
@@ -2005,6 +2025,7 @@ public:
         AFTER_GL_CALL;
     }
 
+public:
     void fEnable(GLenum capability) {
         BEFORE_GL_CALL;
         mSymbols.fEnable(capability);
@@ -2128,21 +2149,16 @@ public:
     }
 
     void fGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *img) {
-        if (!mSymbols.fGetTexImage) {
-          return;
-        }
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetTexImage);
         mSymbols.fGetTexImage(target, level, format, type, img);
         AFTER_GL_CALL;
     }
 
     void fGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
     {  
-        if (!mSymbols.fGetTexLevelParameteriv) {
-          *params = 0;
-          return;
-        }
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetTexLevelParameteriv);
         mSymbols.fGetTexLevelParameteriv(target, level, pname, params);
         AFTER_GL_CALL;
     }
@@ -2209,28 +2225,28 @@ public:
         return retval;
     }
 
-    realGLboolean fIsEnabled (GLenum capability) {
+    realGLboolean fIsEnabled(GLenum capability) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsEnabled(capability);
         AFTER_GL_CALL;
         return retval;
     }
 
-    realGLboolean fIsProgram (GLuint program) {
+    realGLboolean fIsProgram(GLuint program) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsProgram(program);
         AFTER_GL_CALL;
         return retval;
     }
 
-    realGLboolean fIsShader (GLuint shader) {
+    realGLboolean fIsShader(GLuint shader) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsShader(shader);
         AFTER_GL_CALL;
         return retval;
     }
 
-    realGLboolean fIsTexture (GLuint texture) {
+    realGLboolean fIsTexture(GLuint texture) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsTexture(texture);
         AFTER_GL_CALL;
@@ -2273,18 +2289,28 @@ public:
         AFTER_GL_CALL;
     }
 
+private:
     void raw_fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
         BEFORE_GL_CALL;
         mSymbols.fReadPixels(x, FixYValue(y, height), width, height, format, type, pixels);
         AFTER_GL_CALL;
     }
 
+public:
     void fSampleCoverage(GLclampf value, realGLboolean invert) {
         BEFORE_GL_CALL;
         mSymbols.fSampleCoverage(value, invert);
         AFTER_GL_CALL;
     }
 
+private:
+    void raw_fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+        BEFORE_GL_CALL;
+        mSymbols.fScissor(x, y, width, height);
+        AFTER_GL_CALL;
+    }
+
+public:
     void fStencilFunc(GLenum func, GLint ref, GLuint mask) {
         BEFORE_GL_CALL;
         mSymbols.fStencilFunc(func, ref, mask);
@@ -2321,16 +2347,25 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) {
+private:
+    void raw_fTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) {
         BEFORE_GL_CALL;
-        if (IsTextureSizeSafeToPassToDriver(target, width, height)) {
-          mSymbols.fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
-        } else {
-          // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
-          // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
-          mSymbols.fTexImage2D(target, -1, internalformat, -1, -1, -1, format, type, nullptr);
-        }
+        mSymbols.fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
         AFTER_GL_CALL;
+    }
+
+public:
+    void fTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) {
+        if (!IsTextureSizeSafeToPassToDriver(target, width, height)) {
+            // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
+            // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
+            level = -1;
+            width = -1;
+            height = -1;
+            border = -1;
+        }
+
+        raw_fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
     }
 
     void fTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
@@ -2525,32 +2560,20 @@ public:
         AFTER_GL_CALL;
     }
 
+private:
     void raw_fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
         BEFORE_GL_CALL;
-        if (IsTextureSizeSafeToPassToDriver(target, width, height)) {
-          mSymbols.fCopyTexImage2D(target, level, internalformat, 
-                                   x, FixYValue(y, height),
-                                   width, height, border);
-
-        } else {
-          // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
-          // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
-          mSymbols.fCopyTexImage2D(target, -1, internalformat, 
-                                   x, FixYValue(y, height),
-                                   -1, -1, -1);
-
-        }
+        mSymbols.fCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
         AFTER_GL_CALL;
     }
 
     void raw_fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
-        mSymbols.fCopyTexSubImage2D(target, level, xoffset, yoffset, 
-                                    x, FixYValue(y, height),
-                                    width, height);
+        mSymbols.fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         AFTER_GL_CALL;
     }
 
+public:
     void fGetShaderiv(GLuint shader, GLenum pname, GLint* param) {
         BEFORE_GL_CALL;
         mSymbols.fGetShaderiv(shader, pname, param);
@@ -2563,15 +2586,24 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+private:
+    void raw_fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+        MOZ_ASSERT(mIsGLES2);
+
         BEFORE_GL_CALL;
-        if (mIsGLES2) {
-            mSymbols.fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+        ASSERT_SYMBOL_PRESENT(fGetShaderPrecisionFormat);
+        mSymbols.fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+        AFTER_GL_CALL;
+    }
+
+public:
+    void fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+       if (mIsGLES2) {
+            raw_fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
         } else {
             // Fall back to automatic values because almost all desktop hardware supports the OpenGL standard precisions.
             GetShaderPrecisionFormatNonES2(shadertype, precisiontype, range, precision);
         }
-        AFTER_GL_CALL;
     }
 
     void fGetShaderSource(GLint obj, GLsizei maxLength, GLsizei* length, GLchar* source) {
@@ -2638,12 +2670,15 @@ public:
         return retval;
     }
 
+private:
     void raw_fBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBlitFramebuffer);
         mSymbols.fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
         AFTER_GL_CALL;
     }
 
+public:
     realGLboolean fIsRenderbuffer (GLuint renderbuffer) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsRenderbuffer(renderbuffer);
@@ -2659,32 +2694,68 @@ public:
 
     void fRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fRenderbufferStorageMultisample);
         mSymbols.fRenderbufferStorageMultisample(target, samples, internalFormat, width, height);
         AFTER_GL_CALL;
     }
 
-    void fDepthRange(GLclampf a, GLclampf b) {
+private:
+    void raw_fDepthRange(GLclampf a, GLclampf b) {
+        MOZ_ASSERT(!mIsGLES2);
+
         BEFORE_GL_CALL;
-        if (mIsGLES2) {
-            mSymbols.fDepthRangef(a, b);
-        } else {
-            mSymbols.fDepthRange(a, b);
-        }
+        ASSERT_SYMBOL_PRESENT(fDepthRange);
+        mSymbols.fDepthRange(a, b);
         AFTER_GL_CALL;
     }
 
-    void fClearDepth(GLclampf v) {
+    void raw_fDepthRangef(GLclampf a, GLclampf b) {
+        MOZ_ASSERT(mIsGLES2);
+
         BEFORE_GL_CALL;
-        if (mIsGLES2) {
-            mSymbols.fClearDepthf(v);
-        } else {
-            mSymbols.fClearDepth(v);
-        }
+        ASSERT_SYMBOL_PRESENT(fDepthRangef);
+        mSymbols.fDepthRangef(a, b);
         AFTER_GL_CALL;
+    }
+
+    void raw_fClearDepth(GLclampf v) {
+        MOZ_ASSERT(!mIsGLES2);
+
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fClearDepth);
+        mSymbols.fClearDepth(v);
+        AFTER_GL_CALL;
+    }
+
+    void raw_fClearDepthf(GLclampf v) {
+        MOZ_ASSERT(mIsGLES2);
+
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fClearDepthf);
+        mSymbols.fClearDepthf(v);
+        AFTER_GL_CALL;
+    }
+
+public:
+    void fDepthRange(GLclampf a, GLclampf b) {
+        if (mIsGLES2) {
+            raw_fDepthRangef(a, b);
+        } else {
+            raw_fDepthRange(a, b);
+        }
+    }
+
+    void fClearDepth(GLclampf v) {
+        if (mIsGLES2) {
+            raw_fClearDepthf(v);
+        } else {
+            raw_fClearDepth(v);
+        }
     }
 
     void* fMapBuffer(GLenum target, GLenum access) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fMapBuffer);
         void *ret = mSymbols.fMapBuffer(target, access);
         AFTER_GL_CALL;
         return ret;
@@ -2692,12 +2763,14 @@ public:
 
     realGLboolean fUnmapBuffer(GLenum target) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUnmapBuffer);
         realGLboolean ret = mSymbols.fUnmapBuffer(target);
         AFTER_GL_CALL;
         return ret;
     }
 
 
+private:
 #ifdef DEBUG
     GLContext *TrackingContext() {
         GLContext *tip = this;
@@ -2711,106 +2784,163 @@ public:
 #define TRACKING_CONTEXT(a) do {} while (0)
 #endif
 
-    GLuint GLAPIENTRY fCreateProgram() {
+    GLuint GLAPIENTRY raw_fCreateProgram() {
         BEFORE_GL_CALL;
         GLuint ret = mSymbols.fCreateProgram();
         AFTER_GL_CALL;
+        return ret;
+    }
+
+    GLuint GLAPIENTRY raw_fCreateShader(GLenum t) {
+        BEFORE_GL_CALL;
+        GLuint ret = mSymbols.fCreateShader(t);
+        AFTER_GL_CALL;
+        return ret;
+    }
+
+    void GLAPIENTRY raw_fGenBuffers(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenBuffers(n, names);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY raw_fGenFramebuffers(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenFramebuffers(n, names);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY raw_fGenRenderbuffers(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenRenderbuffers(n, names);
+        AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY raw_fGenTextures(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenTextures(n, names);
+        AFTER_GL_CALL;
+    }
+
+public:
+    GLuint fCreateProgram() {
+        GLuint ret = raw_fCreateProgram();
         TRACKING_CONTEXT(CreatedProgram(this, ret));
         return ret;
     }
 
-    GLuint GLAPIENTRY fCreateShader(GLenum t) {
-        BEFORE_GL_CALL;
-        GLuint ret = mSymbols.fCreateShader(t);
-        AFTER_GL_CALL;
+    GLuint fCreateShader(GLenum t) {
+        GLuint ret = raw_fCreateShader(t);
         TRACKING_CONTEXT(CreatedShader(this, ret));
         return ret;
     }
 
-    void GLAPIENTRY fGenBuffers(GLsizei n, GLuint* names) {
-        BEFORE_GL_CALL;
-        mSymbols.fGenBuffers(n, names);
-        AFTER_GL_CALL;
+    void fGenBuffers(GLsizei n, GLuint* names) {
+        raw_fGenBuffers(n, names);
         TRACKING_CONTEXT(CreatedBuffers(this, n, names));
     }
 
-    void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
-        BEFORE_GL_CALL;
-        mSymbols.fGenTextures(n, names);
-        AFTER_GL_CALL;
-        TRACKING_CONTEXT(CreatedTextures(this, n, names));
-    }
-
-    void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
-        BEFORE_GL_CALL;
-        mSymbols.fGenFramebuffers(n, names);
-        AFTER_GL_CALL;
+    void fGenFramebuffers(GLsizei n, GLuint* names) {
+        raw_fGenFramebuffers(n, names);
         TRACKING_CONTEXT(CreatedFramebuffers(this, n, names));
     }
 
-    void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
-        BEFORE_GL_CALL;
-        mSymbols.fGenRenderbuffers(n, names);
-        AFTER_GL_CALL;
+    void fGenRenderbuffers(GLsizei n, GLuint* names) {
+        raw_fGenRenderbuffers(n, names);
         TRACKING_CONTEXT(CreatedRenderbuffers(this, n, names));
     }
 
-    void GLAPIENTRY fDeleteProgram(GLuint program) {
+    void fGenTextures(GLsizei n, GLuint* names) {
+        raw_fGenTextures(n, names);
+        TRACKING_CONTEXT(CreatedTextures(this, n, names));
+    }
+
+private:
+    void GLAPIENTRY raw_fDeleteProgram(GLuint program) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteProgram(program);
         AFTER_GL_CALL;
-        TRACKING_CONTEXT(DeletedProgram(this, program));
     }
 
-    void GLAPIENTRY fDeleteShader(GLuint shader) {
+    void GLAPIENTRY raw_fDeleteShader(GLuint shader) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteShader(shader);
         AFTER_GL_CALL;
-        TRACKING_CONTEXT(DeletedShader(this, shader));
     }
 
-    void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteBuffers(GLsizei n, GLuint *names) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteBuffers(n, names);
         AFTER_GL_CALL;
-        TRACKING_CONTEXT(DeletedBuffers(this, n, names));
     }
 
-    void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteFramebuffers(GLsizei n, GLuint *names) {
         BEFORE_GL_CALL;
-        mSymbols.fDeleteTextures(n, names);
+        mSymbols.fDeleteFramebuffers(n, names);
         AFTER_GL_CALL;
-        TRACKING_CONTEXT(DeletedTextures(this, n, names));
     }
 
-    void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
-        BEFORE_GL_CALL;
-        if (n == 1 && *names == 0) {
-           /* Deleting framebuffer 0 causes hangs on the DROID. See bug 623228 */
-        } else {
-           mSymbols.fDeleteFramebuffers(n, names);
-        }
-        AFTER_GL_CALL;
-        TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
-    }
-
-    void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteRenderbuffers(GLsizei n, GLuint *names) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteRenderbuffers(n, names);
         AFTER_GL_CALL;
+    }
+
+    void GLAPIENTRY raw_fDeleteTextures(GLsizei n, GLuint *names) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteTextures(n, names);
+        AFTER_GL_CALL;
+    }
+
+public:
+    void fDeleteProgram(GLuint program) {
+        raw_fDeleteProgram(program);
+        TRACKING_CONTEXT(DeletedProgram(this, program));
+    }
+
+    void fDeleteShader(GLuint shader) {
+        raw_fDeleteShader(shader);
+        TRACKING_CONTEXT(DeletedShader(this, shader));
+    }
+
+    void fDeleteBuffers(GLsizei n, GLuint *names) {
+        raw_fDeleteBuffers(n, names);
+        TRACKING_CONTEXT(DeletedBuffers(this, n, names));
+    }
+
+    void fDeleteFramebuffers(GLsizei n, GLuint *names) {
+        if (n == 1 && *names == 0) {
+            // Deleting framebuffer 0 causes hangs on the DROID. See bug 623228.
+        } else {
+            raw_fDeleteFramebuffers(n, names);
+        }
+        TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
+    }
+
+    void fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+        raw_fDeleteRenderbuffers(n, names);
         TRACKING_CONTEXT(DeletedRenderbuffers(this, n, names));
+    }
+
+    void fDeleteTextures(GLsizei n, GLuint *names) {
+        raw_fDeleteTextures(n, names);
+        TRACKING_CONTEXT(DeletedTextures(this, n, names));
     }
 
 
     GLenum GLAPIENTRY fGetGraphicsResetStatus() {
+        MOZ_ASSERT(mHasRobustness);
+
         BEFORE_GL_CALL;
-        GLenum ret = mHasRobustness ? mSymbols.fGetGraphicsResetStatus() : 0;
+        ASSERT_SYMBOL_PRESENT(fGetGraphicsResetStatus);
+        GLenum ret = mSymbols.fGetGraphicsResetStatus();
         AFTER_GL_CALL;
         return ret;
     }
 
     GLsync GLAPIENTRY fFenceSync(GLenum condition, GLbitfield flags) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fFenceSync);
         GLsync ret = mSymbols.fFenceSync(condition, flags);
         AFTER_GL_CALL;
         return ret;
@@ -2818,6 +2948,7 @@ public:
 
     realGLboolean GLAPIENTRY fIsSync(GLsync sync) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsSync);
         realGLboolean ret = mSymbols.fIsSync(sync);
         AFTER_GL_CALL;
         return ret;
@@ -2825,12 +2956,14 @@ public:
 
     void GLAPIENTRY fDeleteSync(GLsync sync) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteSync);
         mSymbols.fDeleteSync(sync);
         AFTER_GL_CALL;
     }
 
     GLenum GLAPIENTRY fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fClientWaitSync);
         GLenum ret = mSymbols.fClientWaitSync(sync, flags, timeout);
         AFTER_GL_CALL;
         return ret;
@@ -2838,29 +2971,34 @@ public:
 
     void GLAPIENTRY fWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fWaitSync);
         mSymbols.fWaitSync(sync, flags, timeout);
         AFTER_GL_CALL;
     }
 
     void GLAPIENTRY fGetInteger64v(GLenum pname, GLint64 *params) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetInteger64v);
         mSymbols.fGetInteger64v(pname, params);
         AFTER_GL_CALL;
     }
 
     void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetSynciv);
         mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
         AFTER_GL_CALL;
     }
 
     // OES_EGL_image (GLES)
-    void fEGLImageTargetTexture2D(GLenum target, GLeglImage image)
-    {
+    void fEGLImageTargetTexture2D(GLenum target, GLeglImage image) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fEGLImageTargetTexture2D);
         mSymbols.fEGLImageTargetTexture2D(target, image);
         AFTER_GL_CALL;
     }
+
+#undef ASSERT_SYMBOL_PRESENT
 
 #ifdef DEBUG
     void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);

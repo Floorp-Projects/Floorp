@@ -54,7 +54,7 @@ arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
 i?86-*android*)
-    android_tool_prefix="i686-android-linux"
+    android_tool_prefix="i686-linux-android"
     ;;
 mipsel-*android*)
     android_tool_prefix="mipsel-linux-android"
@@ -118,6 +118,17 @@ case "$target" in
             AC_MSG_ERROR([not found. You have to specify --with-android-platform=/path/to/ndk/platform.])
         fi
     fi
+
+    dnl Old NDK support. If minimum requirement is changed to NDK r8b,
+    dnl please remove this.
+    case "$target_cpu" in
+    i?86)
+        if ! test -e "$android_toolchain"/bin/"$android_tool_prefix"-gcc; then
+            dnl Old NDK toolchain name
+            android_tool_prefix="i686-android-linux"
+        fi
+        ;;
+    esac
 
     dnl set up compilers
     TOOLCHAIN_PREFIX="$android_toolchain/bin/$android_tool_prefix-"
