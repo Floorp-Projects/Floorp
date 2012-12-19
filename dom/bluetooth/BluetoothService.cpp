@@ -703,7 +703,7 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BluetoothService::Notify(const BluetoothSignal& aData)
 {
-  InfallibleTArray<BluetoothNamedValue> arr = aData.value().get_ArrayOfBluetoothNamedValue();
+  InfallibleTArray<BluetoothNamedValue> arr(aData.value().get_ArrayOfBluetoothNamedValue());
   nsString type;
 
   JSContext* cx = nsContentUtils::GetSafeJSContext();

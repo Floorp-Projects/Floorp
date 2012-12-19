@@ -393,9 +393,8 @@ BluetoothRequestParent::DoRequest(const DevicePropertiesRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TDevicePropertiesRequest);
 
-  // Have to copy because our array types don't match up
   nsresult rv =
-    mService->GetPairedDevicePropertiesInternal(nsTArray<nsString>(aRequest.addresses()),
+    mService->GetPairedDevicePropertiesInternal(aRequest.addresses(),
                                                 mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
 
