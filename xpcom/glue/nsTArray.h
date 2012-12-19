@@ -374,6 +374,9 @@ public:
   }
 };
 
+template <class E> class InfallibleTArray;
+template <class E> class FallibleTArray;
+
 //
 // The templatized array class that dynamically resizes its storage as
 // elements are added.  This class is designed to behave a bit like
@@ -461,6 +464,20 @@ public:
   template<typename Allocator>
   explicit nsTArray(const nsTArray<E, Allocator>& other) {
     AppendElements(other);
+  }
+
+  // Allow converting to a const array with a different kind of allocator,
+  // Since the allocator doesn't matter for const arrays
+  template<typename Allocator>
+  operator const nsTArray<E, Allocator>&() const {
+    return *reinterpret_cast<const nsTArray<E, Allocator>*>(this);
+  }
+  // And we have to do this for our subclasses too
+  operator const InfallibleTArray<E>&() const {
+    return *reinterpret_cast<const InfallibleTArray<E>*>(this);
+  }
+  operator const FallibleTArray<E>&() const {
+    return *reinterpret_cast<const FallibleTArray<E>*>(this);
   }
 
   // The array's assignment operator performs a 'deep' copy of the given
