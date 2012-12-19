@@ -4302,6 +4302,9 @@ let RIL = {
         // Call is still valid.
         if (newCall.state != currentCall.state) {
           // State has changed.
+          if (!currentCall.started && newCall.state == CALL_STATE_ACTIVE) {
+            currentCall.started = new Date().getTime();
+          }
           currentCall.state = newCall.state;
           this._handleChangedCallState(currentCall);
         }
@@ -4321,6 +4324,11 @@ let RIL = {
             newCall.toa == TOA_INTERNATIONAL &&
             newCall.number[0] != "+") {
           newCall.number = "+" + newCall.number;
+        }
+        if (newCall.state == CALL_STATE_INCOMING) {
+          newCall.direction = 'incoming';
+        } else if (newCall.state == CALL_STATE_DIALING) {
+          newCall.direction = 'outgoing';
         }
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;

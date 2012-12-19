@@ -26,7 +26,7 @@ using namespace mozilla::a11y;
 ApplicationAccessible::ApplicationAccessible() :
   AccessibleWrap(nullptr, nullptr)
 {
-  mFlags |= eApplicationAccessible;
+  mType = eApplicationType;
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
 }
 

@@ -1030,6 +1030,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void setStackArg(const Register &reg, uint32_t arg);
 
     void breakpoint();
+    // conditional breakpoint
+    void breakpoint(Condition cc);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
     void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,

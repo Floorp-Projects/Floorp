@@ -610,6 +610,22 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'description': 'https://example.com Privileged App with manifest policy',
         'appStatus': _APP_STATUS_PRIVILEGED
       }, 
+      {
+        'name': 'https_a_domain_certified',
+        'csp' : "",
+        'origin': 'https://acertified.com',
+        'manifestURL': 'https://acertified.com/manifest.webapp',
+        'description': 'https://acertified.com Certified App',
+        'appStatus': _APP_STATUS_CERTIFIED
+      }, 
+      {
+        'name': 'https_a_domain_privileged',
+        'csp': "",
+        'origin': 'https://aprivileged.com',
+        'manifestURL': 'https://aprivileged.com/manifest.webapp',
+        'description': 'https://aprivileged.com Privileged App ',
+        'appStatus': _APP_STATUS_PRIVILEGED
+      }, 
     ];
     self.setupTestApps(profileDir, apps)
 

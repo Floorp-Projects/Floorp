@@ -686,6 +686,7 @@ class MCallee : public MNullaryInstruction
     MCallee()
     {
         setResultType(MIRType_Object);
+        setMovable();
     }
 
   public:

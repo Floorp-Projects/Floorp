@@ -13,6 +13,9 @@
 #ifdef MOZ_GSTREAMER
 #include "mozilla/Preferences.h"
 #endif
+#ifdef MOZ_WMF
+#include "WMFDecoder.h"
+#endif
 
 namespace mozilla
 {
@@ -242,6 +245,13 @@ DecoderTraits::IsDASHMPDType(const nsACString& aType)
 }
 #endif
 
+#ifdef MOZ_WMF
+bool DecoderTraits::IsWMFSupportedType(const nsACString& aType)
+{
+  return WMFDecoder::GetSupportedCodecs(aType, nullptr);
+}
+#endif
+
 /* static */
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
 {
@@ -297,7 +307,6 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     result = CANPLAY_YES;
   }
 #endif
-
 #ifdef MOZ_GSTREAMER
   if (IsH264Type(nsDependentCString(aMIMEType))) {
     codecList = gH264Codecs;
@@ -307,6 +316,11 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
 #ifdef MOZ_WIDGET_GONK
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
     codecList = gH264Codecs;
+    result = CANPLAY_MAYBE;
+  }
+#endif
+#ifdef MOZ_WMF
+  if (WMFDecoder::GetSupportedCodecs(nsDependentCString(aMIMEType), &codecList)) {
     result = CANPLAY_MAYBE;
   }
 #endif
