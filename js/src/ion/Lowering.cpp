@@ -466,7 +466,7 @@ LIRGenerator::visitTest(MTest *test)
 
             LIsNullOrLikeUndefinedAndBranch *lir =
                 new LIsNullOrLikeUndefinedAndBranch(ifTrue, ifFalse, temp0, temp1);
-            if (!useBox(lir, LIsNullOrLikeUndefinedAndBranch::Value, left))
+            if (!useBoxAtStart(lir, LIsNullOrLikeUndefinedAndBranch::Value, left))
                 return false;
             return add(lir, comp);
         }
