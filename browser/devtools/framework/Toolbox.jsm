@@ -127,7 +127,7 @@ this.Toolbox = function Toolbox(target, selectedTool, hostType) {
 
   this._host = this._createHost(hostType);
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
@@ -268,6 +268,10 @@ Toolbox.prototype = {
 
     while (dockBox.firstChild) {
       dockBox.removeChild(dockBox.firstChild);
+    }
+
+    if (!this._target.isLocalTab) {
+      return;
     }
 
     let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
@@ -473,6 +477,10 @@ Toolbox.prototype = {
    */
   switchHost: function TBOX_switchHost(hostType) {
     if (hostType == this._host.type) {
+      return;
+    }
+
+    if (!this._target.isLocalTab) {
       return;
     }
 

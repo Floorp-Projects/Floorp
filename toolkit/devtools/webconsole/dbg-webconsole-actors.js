@@ -160,23 +160,7 @@ WebConsoleActor.prototype =
     return { actor: this.actorID };
   },
 
-  /**
-   * Tells if the window.console object is native or overwritten by script in
-   * the page.
-   *
-   * @return boolean
-   *         True if the window.console object is native, or false otherwise.
-   */
-  hasNativeConsoleAPI: function WCA_hasNativeConsoleAPI()
-  {
-    let isNative = false;
-    try {
-      let consoleObject = WebConsoleUtils.unwrap(this.window).console;
-      isNative = "__mozillaConsole__" in consoleObject;
-    }
-    catch (ex) { }
-    return isNative;
-  },
+  hasNativeConsoleAPI: BrowserTabActor.prototype.hasNativeConsoleAPI,
 
   /**
    * Destroy the current WebConsoleActor instance.
@@ -336,20 +320,11 @@ WebConsoleActor.prototype =
                                                     MONITOR_FILE_ACTIVITY);
           startedListeners.push(listener);
           break;
-        case "LocationChange":
-          if (!this.consoleProgressListener) {
-            this.consoleProgressListener =
-              new ConsoleProgressListener(this.window, this);
-          }
-          this.consoleProgressListener.startMonitor(this.consoleProgressListener.
-                                                    MONITOR_LOCATION_CHANGE);
-          startedListeners.push(listener);
-          break;
       }
     }
     return {
       startedListeners: startedListeners,
-      nativeConsoleAPI: this.hasNativeConsoleAPI(),
+      nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
     };
   },
 
@@ -370,7 +345,7 @@ WebConsoleActor.prototype =
     // listeners.
     let toDetach = aRequest.listeners ||
                    ["PageError", "ConsoleAPI", "NetworkActivity",
-                    "FileActivity", "LocationChange"];
+                    "FileActivity"];
 
     while (toDetach.length > 0) {
       let listener = toDetach.shift();
@@ -400,13 +375,6 @@ WebConsoleActor.prototype =
           if (this.consoleProgressListener) {
             this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
                                                      MONITOR_FILE_ACTIVITY);
-          }
-          stoppedListeners.push(listener);
-          break;
-        case "LocationChange":
-          if (this.consoleProgressListener) {
-            this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
-                                                     MONITOR_LOCATION_CHANGE);
           }
           stoppedListeners.push(listener);
           break;
@@ -733,34 +701,6 @@ WebConsoleActor.prototype =
       from: this.actorID,
       type: "fileActivity",
       uri: aFileURI,
-    };
-    this.conn.send(packet);
-  },
-
-  /**
-   * Handler for location changes. This method sends the new browser location
-   * to the remote Web Console client.
-   *
-   * @see ConsoleProgressListener
-   * @param string aState
-   *        Tells the location change state:
-   *        - "start" means a load has begun.
-   *        - "stop" means load completed.
-   * @param string aURI
-   *        The new browser URI.
-   * @param string aTitle
-   *        The new page title URI.
-   */
-  onLocationChange: function WCA_onLocationChange(aState, aURI, aTitle)
-  {
-    // TODO: Bug 792062 - Make the tabNavigated notification reusable by the Web Console
-    let packet = {
-      from: this.actorID,
-      type: "locationChange",
-      uri: aURI,
-      title: aTitle,
-      state: aState,
-      nativeConsoleAPI: this.hasNativeConsoleAPI(),
     };
     this.conn.send(packet);
   },

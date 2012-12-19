@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "StyleEditorChrome",
                         "resource:///modules/devtools/StyleEditorChrome.jsm");
 
 this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
   this._target = toolbox.target;

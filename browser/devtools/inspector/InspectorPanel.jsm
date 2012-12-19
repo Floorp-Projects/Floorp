@@ -42,7 +42,7 @@ this.InspectorPanel = function InspectorPanel(iframeWindow, toolbox) {
   this.tabTarget = (this.target.tab != null);
   this.winTarget = (this.target.window != null);
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 }
 
 InspectorPanel.prototype = {

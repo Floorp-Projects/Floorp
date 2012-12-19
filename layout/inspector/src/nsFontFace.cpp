@@ -8,13 +8,14 @@
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsCSSRules.h"
 #include "gfxUserFontSet.h"
+#include "nsFontFaceLoader.h"
 #include "zlib.h"
 
 nsFontFace::nsFontFace(gfxFontEntry*      aFontEntry,
-                       uint8_t            aMatchType,
-                       nsCSSFontFaceRule* aRule)
+                       gfxFontGroup*      aFontGroup,
+                       uint8_t            aMatchType)
   : mFontEntry(aFontEntry),
-    mRule(aRule),
+    mFontGroup(aFontGroup),
     mMatchType(aMatchType)
 {
 }
@@ -75,6 +76,45 @@ nsFontFace::GetName(nsAString & aName)
 NS_IMETHODIMP
 nsFontFace::GetCSSFamilyName(nsAString & aCSSFamilyName)
 {
+  if (mFontEntry->IsUserFont()) {
+    // for a user font, find CSS family name from the @font-face rule
+    nsUserFontSet* fontSet =
+      static_cast<nsUserFontSet*>(mFontGroup->GetUserFontSet());
+    if (fontSet) {
+      nsCSSFontFaceRule* rule = fontSet->FindRuleForEntry(mFontEntry);
+      if (rule) {
+        nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
+        nsresult rv = rule->GetStyle(getter_AddRefs(style));
+        if (NS_SUCCEEDED(rv)) {
+          nsString familyName;
+          rv = style->GetPropertyValue(NS_LITERAL_STRING("font-family"),
+                                       aCSSFamilyName);
+          if (NS_SUCCEEDED(rv)) {
+            // GetPropertyValue gives us the name in "quotes"; strip them off.
+            // XXX What about possible CSS escapes - should we unescape here?
+            // Or don't we care, as this is just for display/debugging use?
+            if (aCSSFamilyName[0] == '"' &&
+                aCSSFamilyName[aCSSFamilyName.Length() - 1] == '"') {
+              aCSSFamilyName.Truncate(aCSSFamilyName.Length() - 1);
+              aCSSFamilyName.Cut(0, 1);
+            }
+            return NS_OK;
+          }
+        }
+      }
+    }
+  }
+
+  // look through the font-group's list for this entry
+  uint32_t count = mFontGroup->FontListLength();
+  for (uint32_t i = 0; i < count; ++i) {
+    if (mFontGroup->GetFontAt(i)->GetFontEntry() == mFontEntry) {
+      aCSSFamilyName = mFontGroup->GetFamilyNameAt(i);
+      return NS_OK;
+    }
+  }
+
+  // if it wasn't found there, query the font entry itself
   aCSSFamilyName = mFontEntry->FamilyName();
   return NS_OK;
 }
@@ -83,7 +123,18 @@ nsFontFace::GetCSSFamilyName(nsAString & aCSSFamilyName)
 NS_IMETHODIMP
 nsFontFace::GetRule(nsIDOMCSSFontFaceRule **aRule)
 {
-  NS_IF_ADDREF(*aRule = mRule.get());
+  // check whether this font entry is associated with an @font-face rule
+  // in the relevant font group's user font set
+  nsCSSFontFaceRule* rule = nullptr;
+  if (mFontEntry->IsUserFont()) {
+    nsUserFontSet* fontSet =
+      static_cast<nsUserFontSet*>(mFontGroup->GetUserFontSet());
+    if (fontSet) {
+      rule = fontSet->FindRuleForEntry(mFontEntry);
+    }
+  }
+
+  NS_IF_ADDREF(*aRule = rule);
   return NS_OK;
 }
 

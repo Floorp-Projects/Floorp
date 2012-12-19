@@ -25,7 +25,7 @@ function DebuggerPanel(iframeWindow, toolbox) {
   this._controller._target = this.target;
   this._bkp = this._controller.Breakpoints;
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 }
 
 DebuggerPanel.prototype = {
