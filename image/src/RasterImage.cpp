@@ -353,7 +353,7 @@ NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
 //******************************************************************************
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
                          nsIURI* aURI /* = nullptr */) :
-  Image(aStatusTracker, aURI), // invoke superclass's constructor
+  ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
   mAnim(nullptr),
@@ -3268,7 +3268,7 @@ RasterImage::WriteToRasterImage(nsIInputStream* /* unused */,
 bool
 RasterImage::ShouldAnimate()
 {
-  return Image::ShouldAnimate() && mFrames.Length() >= 2 &&
+  return ImageResource::ShouldAnimate() && mFrames.Length() >= 2 &&
          !mAnimationFinished;
 }
 
