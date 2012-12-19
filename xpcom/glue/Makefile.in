@@ -69,6 +69,7 @@ SDK_HEADERS = \
 		nsStringGlue.h \
 		nsTArray.h \
 		nsTArray-inl.h \
+		nsTArrayForwardDeclare.h \
 		nsTHashtable.h \
 		nsTObserverArray.h \
 		nsTWeakRef.h \
