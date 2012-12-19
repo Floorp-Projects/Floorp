@@ -310,7 +310,7 @@ public:
     // initialize font lists
     virtual nsresult InitFontList();
 
-    virtual gfxFontEntry* GetDefaultFont(const gfxFontStyle* aStyle, bool& aNeedsBold);
+    virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                           const nsAString& aFontName);
