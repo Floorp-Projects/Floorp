@@ -766,10 +766,16 @@ public:
     GetFullNameFromSFNT(const uint8_t* aFontData, uint32_t aLength,
                         nsAString& aFullName);
 
-    // helper to get fullname from name table
+    // helper to get fullname from name table, constructing from family+style
+    // if no explicit fullname is present
     static nsresult
     GetFullNameFromTable(FallibleTArray<uint8_t>& aNameTable,
                          nsAString& aFullName);
+
+    // helper to get family name from name table
+    static nsresult
+    GetFamilyNameFromTable(FallibleTArray<uint8_t>& aNameTable,
+                           nsAString& aFamilyName);
 
     // create a new name table and build a new font with that name table
     // appended on the end, returns true on success

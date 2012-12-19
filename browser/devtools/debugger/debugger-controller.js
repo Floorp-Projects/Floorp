@@ -215,9 +215,18 @@ let DebuggerController = {
 
   /**
    * Called for each location change in the debugged tab.
+   *
+   * @param string aType
+   *        Packet type.
+   * @param object aPacket
+   *        Packet received from the server.
    */
-  _onTabNavigated: function DC__onTabNavigated() {
-    DebuggerView._handleTabNavigation();
+  _onTabNavigated: function DC__onTabNavigated(aType, aPacket) {
+    if (aPacket.state == "start") {
+      DebuggerView._handleTabNavigation();
+      return;
+    }
+
     this.ThreadState._handleTabNavigation();
     this.StackFrames._handleTabNavigation();
     this.SourceScripts._handleTabNavigation();

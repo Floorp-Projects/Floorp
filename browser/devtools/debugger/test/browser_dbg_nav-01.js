@@ -26,7 +26,13 @@ function get_tab()
     get_tab_actor_for_url(gClient, TAB1_URL, function(aGrip) {
       gTab1Actor = aGrip.actor;
       gClient.request({ to: aGrip.actor, type: "attach" }, function(aResponse) {
-        gClient.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
+        gClient.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
+          dump("onTabNavigated state " + aPacket.state + "\n");
+          if (aPacket.state == "start") {
+            return;
+          }
+          gClient.removeListener("tabNavigated", onTabNavigated);
+
           is(aPacket.url, TAB2_URL, "Got a tab navigation notification.");
           gClient.addOneTimeListener("tabDetached", function (aEvent, aPacket) {
             ok(true, "Got a tab detach notification.");

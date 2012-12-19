@@ -26,7 +26,7 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  */
 this.ToolSidebar = function ToolSidebar(tabbox, panel, showTabstripe=true)
 {
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   this._tabbox = tabbox;
   this._panelDoc = this._tabbox.ownerDocument;

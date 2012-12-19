@@ -365,9 +365,7 @@ TextAttrsMgr::FontFamilyTextAttr::
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
 
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
-  gfxFont* font = fontGroup->GetFontAt(0);
-  gfxFontEntry* fontEntry = font->GetFontEntry();
-  aFamily = fontEntry->FamilyName();
+  aFamily = fontGroup->GetFamilyNameAt(0);
   return true;
 }
 

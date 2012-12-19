@@ -13,13 +13,21 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <notificationbox id="toolbox-notificationbox" flex="1">
     <toolbar class="devtools-tabbar">
+#ifdef XP_MACOSX
       <hbox id="toolbox-controls">
         <toolbarbutton id="toolbox-close" class="devtools-closebutton"></toolbarbutton>
         <hbox id="toolbox-dock-buttons"/>
       </hbox>
+#endif
       <radiogroup id="toolbox-tabs" orient="horizontal">
       </radiogroup>
       <hbox id="toolbox-buttons" flex="1" pack="end"/>
+#ifndef XP_MACOSX
+      <hbox id="toolbox-controls">
+        <hbox id="toolbox-dock-buttons"/>
+        <toolbarbutton id="toolbox-close" class="devtools-closebutton"></toolbarbutton>
+      </hbox>
+#endif
     </toolbar>
     <deck id="toolbox-deck" flex="1">
     </deck>
