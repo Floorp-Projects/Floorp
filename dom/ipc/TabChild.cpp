@@ -1693,6 +1693,14 @@ TabChild::RecvDestroy()
   return Send__delete__(this);
 }
 
+/* virtual */ bool
+TabChild::RecvSetAppType(const nsString& aAppType)
+{
+  MOZ_ASSERT_IF(!aAppType.IsEmpty(), HasOwnApp());
+  mAppType = aAppType;
+  return true;
+}
+
 PRenderFrameChild*
 TabChild::AllocPRenderFrame(ScrollingBehavior* aScrolling,
                             LayersBackend* aBackend,
