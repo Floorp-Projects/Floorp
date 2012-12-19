@@ -37,10 +37,8 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
-#include "xpcpublic.h"
 
 #include "AsyncConnectionHelper.h"
-#include "CheckQuotaHelper.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
@@ -346,9 +344,7 @@ GetASCIIOriginFromPrincipal(nsIPrincipal* aPrincipal,
 } // anonymous namespace
 
 IndexedDatabaseManager::IndexedDatabaseManager()
-: mCurrentWindowIndex(BAD_TLS_INDEX),
-  mQuotaHelperMutex("IndexedDatabaseManager.mQuotaHelperMutex"),
-  mFileMutex("IndexedDatabaseManager.mFileMutex")
+: mFileMutex("IndexedDatabaseManager.mFileMutex")
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!gInstance, "More than one instance!");
@@ -382,18 +378,7 @@ IndexedDatabaseManager::GetOrCreate()
     instance = new IndexedDatabaseManager();
 
     instance->mLiveDatabases.Init();
-    instance->mQuotaHelperHash.Init();
     instance->mFileManagers.Init();
-
-    // We need a thread-local to hold the current window.
-    NS_ASSERTION(instance->mCurrentWindowIndex == BAD_TLS_INDEX, "Huh?");
-
-    if (PR_NewThreadPrivateIndex(&instance->mCurrentWindowIndex, nullptr) !=
-        PR_SUCCESS) {
-      NS_ERROR("PR_NewThreadPrivateIndex failed, IndexedDB disabled");
-      instance->mCurrentWindowIndex = BAD_TLS_INDEX;
-      return nullptr;
-    }
 
     nsresult rv;
 
@@ -420,14 +405,14 @@ IndexedDatabaseManager::GetOrCreate()
                            NS_LITERAL_CSTRING("IndexedDB I/O"),
                            LazyIdleThread::ManualShutdown);
 
-      // Make sure that the quota manager is up.
-      NS_ENSURE_TRUE(QuotaManager::GetOrCreate(), nullptr);
-
       // Make a timer here to avoid potential failures later. We don't actually
       // initialize the timer until shutdown.
       instance->mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
       NS_ENSURE_TRUE(instance->mShutdownTimer, nullptr);
     }
+
+    // Make sure that the quota manager is up.
+    NS_ENSURE_TRUE(QuotaManager::GetOrCreate(), nullptr);
 
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     NS_ENSURE_TRUE(obs, nullptr);
@@ -912,25 +897,6 @@ IndexedDatabaseManager::OnDatabaseClosed(IDBDatabase* aDatabase)
   }
 }
 
-void
-IndexedDatabaseManager::SetCurrentWindowInternal(nsPIDOMWindow* aWindow)
-{
-  if (aWindow) {
-#ifdef DEBUG
-    NS_ASSERTION(!PR_GetThreadPrivate(mCurrentWindowIndex),
-                 "Somebody forgot to clear the current window!");
-#endif
-    PR_SetThreadPrivate(mCurrentWindowIndex, aWindow);
-  }
-  else {
-    // We cannot assert PR_GetThreadPrivate(mCurrentWindowIndex) here
-    // because we cannot distinguish between the thread private became
-    // null and that it was set to null on the first place, 
-    // because we didn't have a window.
-    PR_SetThreadPrivate(mCurrentWindowIndex, nullptr);
-  }
-}
-
 // static
 uint32_t
 IndexedDatabaseManager::GetIndexedDBQuotaMB()
@@ -1113,71 +1079,6 @@ IndexedDatabaseManager::UninitializeOriginsByPattern(
     if (PatternMatchesOrigin(aPattern, mInitializedOrigins[i])) {
       mInitializedOrigins.RemoveElementAt(i);
     }
-  }
-}
-
-bool
-IndexedDatabaseManager::QuotaIsLiftedInternal()
-{
-  nsPIDOMWindow* window = nullptr;
-  nsRefPtr<CheckQuotaHelper> helper = nullptr;
-  bool createdHelper = false;
-
-  window =
-    static_cast<nsPIDOMWindow*>(PR_GetThreadPrivate(mCurrentWindowIndex));
-
-  // Once IDB is supported outside of Windows this should become an early
-  // return true.
-  NS_ASSERTION(window, "Why don't we have a Window here?");
-
-  // Hold the lock from here on.
-  MutexAutoLock autoLock(mQuotaHelperMutex);
-
-  mQuotaHelperHash.Get(window, getter_AddRefs(helper));
-
-  if (!helper) {
-    helper = new CheckQuotaHelper(window, mQuotaHelperMutex);
-    createdHelper = true;
-
-    mQuotaHelperHash.Put(window, helper);
-
-    // Unlock while calling out to XPCOM
-    {
-      MutexAutoUnlock autoUnlock(mQuotaHelperMutex);
-
-      nsresult rv = NS_DispatchToMainThread(helper);
-      NS_ENSURE_SUCCESS(rv, false);
-    }
-
-    // Relocked.  If any other threads hit the quota limit on the same Window,
-    // they are using the helper we created here and are now blocking in
-    // PromptAndReturnQuotaDisabled.
-  }
-
-  bool result = helper->PromptAndReturnQuotaIsDisabled();
-
-  // If this thread created the helper and added it to the hash, this thread
-  // must remove it.
-  if (createdHelper) {
-    mQuotaHelperHash.Remove(window);
-  }
-
-  return result;
-}
-
-void
-IndexedDatabaseManager::CancelPromptsForWindowInternal(nsPIDOMWindow* aWindow)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsRefPtr<CheckQuotaHelper> helper;
-
-  MutexAutoLock autoLock(mQuotaHelperMutex);
-
-  mQuotaHelperHash.Get(aWindow, getter_AddRefs(helper));
-
-  if (helper) {
-    helper->Cancel();
   }
 }
 

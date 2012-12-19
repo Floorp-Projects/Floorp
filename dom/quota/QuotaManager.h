@@ -14,8 +14,11 @@
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
 
+class nsPIDOMWindow;
+
 BEGIN_QUOTA_NAMESPACE
 
+class CheckQuotaHelper;
 class OriginInfo;
 class QuotaManager;
 
@@ -123,23 +126,71 @@ public:
   GetQuotaObject(const nsACString& aOrigin,
                  const nsAString& aPath);
 
+  // Set the Window that the current thread is doing operations for.
+  // The caller is responsible for ensuring that aWindow is held alive.
+  static void
+  SetCurrentWindow(nsPIDOMWindow* aWindow)
+  {
+    QuotaManager* quotaManager = Get();
+    NS_ASSERTION(quotaManager, "Must have a manager here!");
+
+    quotaManager->SetCurrentWindowInternal(aWindow);
+  }
+
+  static void
+  CancelPromptsForWindow(nsPIDOMWindow* aWindow)
+  {
+    NS_ASSERTION(aWindow, "Passed null window!");
+
+    QuotaManager* quotaManager = Get();
+    NS_ASSERTION(quotaManager, "Must have a manager here!");
+
+    quotaManager->CancelPromptsForWindowInternal(aWindow);
+  }
+
 private:
-  QuotaManager()
-  : mQuotaMutex("QuotaManager.mQuotaMutex")
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  QuotaManager();
 
-    mOriginInfos.Init();
-  }
+  virtual ~QuotaManager();
 
-  virtual ~QuotaManager()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  }
+  bool
+  Init();
+
+  void
+  SetCurrentWindowInternal(nsPIDOMWindow* aWindow);
+
+  void
+  CancelPromptsForWindowInternal(nsPIDOMWindow* aWindow);
+
+  // Determine if the quota is lifted for the Window the current thread is
+  // using.
+  bool
+  LockedQuotaIsLifted();
+
+  // TLS storage index for the current thread's window.
+  unsigned int mCurrentWindowIndex;
 
   mozilla::Mutex mQuotaMutex;
 
   nsRefPtrHashtable<nsCStringHashKey, OriginInfo> mOriginInfos;
+
+  // A map of Windows to the corresponding quota helper.
+  nsRefPtrHashtable<nsPtrHashKey<nsPIDOMWindow>,
+                    CheckQuotaHelper> mCheckQuotaHelpers;
+};
+
+class AutoEnterWindow
+{
+public:
+  AutoEnterWindow(nsPIDOMWindow* aWindow)
+  {
+    QuotaManager::SetCurrentWindow(aWindow);
+  }
+
+  ~AutoEnterWindow()
+  {
+    QuotaManager::SetCurrentWindow(nullptr);
+  }
 };
 
 END_QUOTA_NAMESPACE
