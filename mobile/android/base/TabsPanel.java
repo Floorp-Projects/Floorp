@@ -61,6 +61,7 @@ public class TabsPanel extends TabHost
     private static ImageButton mMenuButton;
     private static ImageButton mAddTab;
     private TabWidget mTabWidget;
+    private Button mTabsMenuButton;
 
     private Panel mCurrentPanel;
     private boolean mIsSideBar;
@@ -69,6 +70,9 @@ public class TabsPanel extends TabHost
 
     private GeckoPopupMenu mPopupMenu;
     private Menu mMenu;
+
+    private GeckoPopupMenu mTabsPopupMenu;
+    private Menu mTabsMenu;
 
     private static final int REMOTE_TABS_HIDDEN = 1;
     private static final int REMOTE_TABS_SHOWN = 2;
@@ -89,6 +93,11 @@ public class TabsPanel extends TabHost
         mPopupMenu.inflate(R.menu.tabs_menu);
         mPopupMenu.setOnMenuItemClickListener(this);
         mMenu = mPopupMenu.getMenu();
+
+        mTabsPopupMenu = new GeckoPopupMenu(context);
+        mTabsPopupMenu.inflate(R.menu.tabs_switcher_menu);
+        mTabsPopupMenu.setOnMenuItemClickListener(this);
+        mTabsMenu = mTabsPopupMenu.getMenu();
 
         LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
     }
@@ -163,6 +172,15 @@ public class TabsPanel extends TabHost
             }
         });
 
+        mTabsMenuButton = (Button) mToolbar.findViewById(R.id.tabs_menu);
+        mTabsMenuButton.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View view) {
+                TabsPanel.this.openTabsSwitcherMenu();
+            }
+        });
+
+        mTabsPopupMenu.setAnchor(mTabsMenuButton);
+
         mMenuButton = (ImageButton) mToolbar.findViewById(R.id.menu);
         mMenuButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View view) {
@@ -217,17 +235,38 @@ public class TabsPanel extends TabHost
         mMenu.findItem(R.id.synced_tabs).setEnabled(enable);
     }
 
+    public void openTabsSwitcherMenu() {
+        mTabsPopupMenu.show();
+    }
+
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.tabs_normal:
+                mTabsMenuButton.setText(R.string.tabs_normal);
+                show(Panel.NORMAL_TABS);
+                return true;
+
+            case R.id.tabs_private:
+                mTabsMenuButton.setText(R.string.tabs_private);
+                show(Panel.PRIVATE_TABS);
+                return true;
+
+            case R.id.tabs_synced:
+                mTabsMenuButton.setText(R.string.tabs_synced);
+                show(Panel.REMOTE_TABS);
+                return true;
+
             case R.id.synced_tabs:
                 show(Panel.REMOTE_TABS);
                 return true;
+
             case R.id.close_all_tabs:
                 for (Tab tab : Tabs.getInstance().getTabsInOrder()) {
                     Tabs.getInstance().closeTab(tab);
                 }
                 return true;
+
             case R.id.new_tab:
             case R.id.new_private_tab:
                 hide();

@@ -29,6 +29,11 @@
                        android:layout_height="fill_parent"
                        android:layout_weight="1.0"/>
 
+            <Button android:id="@+id/tabs_menu"
+                    android:layout_width="0dip"
+                    android:layout_height="0dip"
+                    android:visibility="gone"/>
+
             <org.mozilla.gecko.TabsPanelButton android:id="@+id/add_tab"
                                                android:layout_width="85dip"
                                                android:layout_height="@dimen/browser_toolbar_height"
