@@ -2064,6 +2064,14 @@ nsFrameLoader::TryRemoteBrowser()
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mRemoteBrowser->SetOwnerElement(element);
 
+    // If we're an app, send the frame element's mozapptype down to the child
+    // process.  This ends up in TabChild::GetAppType().
+    if (ownApp) {
+      nsAutoString appType;
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, appType);
+      mRemoteBrowser->SendSetAppType(appType);
+    }
+
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
     parentAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
     nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);

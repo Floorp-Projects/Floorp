@@ -17,6 +17,23 @@ function test() {
 }
 
 var tests = {
+  testProfileNone: function(next, useNull) {
+    let profile = useNull ? null : {};
+    Social.provider.updateUserProfile(profile);
+    // check dom values
+    let portrait = document.getElementsByClassName("social-statusarea-user-portrait")[0].getAttribute("src");
+    // this is the default image for the profile area when not logged in.
+    is(portrait, "chrome://global/skin/icons/information-32.png", "portrait is empty");
+    let userDetailsBroadcaster = document.getElementById("socialBroadcaster_userDetails");
+    let notLoggedInStatusValue = userDetailsBroadcaster.getAttribute("notLoggedInLabel");
+    let userButton = document.getElementsByClassName("social-statusarea-loggedInStatus")[0];
+    ok(!userButton.hidden, "username is visible");
+    is(userButton.getAttribute("label"), notLoggedInStatusValue, "label reflects not being logged in");
+    next();
+  },
+  testProfileNull: function(next) {
+    this.testProfileNone(next, true);
+  },
   testProfileSet: function(next) {
     let profile = {
       portrait: "https://example.com/portrait.jpg",

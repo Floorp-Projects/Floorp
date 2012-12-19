@@ -270,11 +270,7 @@ void ResizeFilter::ComputeFilters(int src_size,
     // downscale should "cover" the pixels around the pixel with *its center*
     // at coordinates (2.5, 2.5) in the source, not those around (0, 0).
     // Hence we need to scale coordinates (0.5, 0.5), not (0, 0).
-    // TODO(evannier): this code is therefore incorrect and should read:
-    // float src_pixel = (static_cast<float>(dest_subset_i) + 0.5f) * inv_scale;
-    // I leave it incorrect, because changing it would require modifying
-    // the results for the webkit test, which I will do in a subsequent checkin.
-    float src_pixel = dest_subset_i * inv_scale;
+    float src_pixel = (static_cast<float>(dest_subset_i) + 0.5f) * inv_scale;
 
     // Compute the (inclusive) range of source pixels the filter covers.
     int src_begin = NS_MAX(0, FloorInt(src_pixel - src_support));
@@ -291,11 +287,8 @@ void ResizeFilter::ComputeFilters(int src_size,
       // example used above the distance from the center of the filter to
       // the pixel with coordinates (2, 2) should be 0, because its center
       // is at (2.5, 2.5).
-      // TODO(evannier): as above (in regards to the 0.5 pixel error),
-      // this code is incorrect, but is left it for the same reasons.
-      // float src_filter_dist =
-      //     ((static_cast<float>(cur_filter_pixel) + 0.5f) - src_pixel);
-      float src_filter_dist = cur_filter_pixel - src_pixel;
+      float src_filter_dist =
+           ((static_cast<float>(cur_filter_pixel) + 0.5f) - src_pixel);
 
       // Since the filter really exists in dest space, map it there.
       float dest_filter_dist = src_filter_dist * clamped_scale;

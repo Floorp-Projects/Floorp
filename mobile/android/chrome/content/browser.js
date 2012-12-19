@@ -1704,9 +1704,6 @@ var SelectionHandler = {
           // Knowing when the page is done drawing is hard, so let's just cancel
           // the selection when the window changes. We should fix this later.
           this.endSelection();
-        } else if (this._activeType == this.TYPE_CURSOR) {
-          //  Hide the cursor if the window changes
-          this.hideThumb();
         }
         break;
       }
@@ -1721,8 +1718,13 @@ var SelectionHandler = {
         let data = JSON.parse(aData);
         if (this._activeType == this.TYPE_SELECTION)
           this.moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
-        else if (this._activeType == this.TYPE_CURSOR)
+        else if (this._activeType == this.TYPE_CURSOR) {
+          // Send a click event to the text box, which positions the caret
           this._sendMouseEvents(data.x, data.y);
+
+          // Move the handle directly under the caret
+          this.positionHandles();
+        }
         break;
       }
       case "TextSelection:Position": {
@@ -1936,9 +1938,49 @@ var SelectionHandler = {
   },
 
   _sendMouseEvents: function sh_sendMouseEvents(aX, aY, useShift) {
-    // Send mouse event 1px too high to prevent selection from entering the line below where it should be
-    this._cwu.sendMouseEventToWindow("mousedown", aX, aY - 1, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
-    this._cwu.sendMouseEventToWindow("mouseup", aX, aY - 1, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
+    // If we're positioning a cursor in an input field, make sure the handle
+    // stays within the bounds of the field
+    if (this._activeType == this.TYPE_CURSOR) {
+      // Get rect of text inside element
+      let range = document.createRange();
+      range.selectNodeContents(this._target.QueryInterface(Ci.nsIDOMNSEditableElement).editor.rootElement);
+      let textBounds = range.getBoundingClientRect();
+
+      // Get rect of editor
+      let editorBounds = this._cwu.sendQueryContentEvent(this._cwu.QUERY_EDITOR_RECT, 0, 0, 0, 0);
+      let editorRect = new Rect(editorBounds.left, editorBounds.top, editorBounds.width, editorBounds.height);
+
+      // Use intersection of the text rect and the editor rect
+      let rect = new Rect(textBounds.left, textBounds.top, textBounds.width, textBounds.height);
+      rect.restrictTo(editorRect);
+
+      // Clamp vertically and scroll if handle is at bounds. The top and bottom
+      // must be restricted by an additional pixel since clicking on the top
+      // edge of an input field moves the cursor to the beginning of that
+      // field's text (and clicking the bottom moves the cursor to the end).
+      if (aY < rect.y + 1) {
+        aY = rect.y + 1;
+        this.getSelectionController().scrollLine(false);
+      } else if (aY > rect.y + rect.height - 1) {
+        aY = rect.y + rect.height - 1;
+        this.getSelectionController().scrollLine(true);
+      }
+
+      // Clamp horizontally and scroll if handle is at bounds
+      if (aX < rect.x) {
+        aX = rect.x;
+        this.getSelectionController().scrollCharacter(false);
+      } else if (aX > rect.x + rect.width) {
+        aX = rect.x + rect.width;
+        this.getSelectionController().scrollCharacter(true);
+      }
+    } else if (this._activeType == this.TYPE_SELECTION) {
+      // Send mouse event 1px too high to prevent selection from entering the line below where it should be
+      aY -= 1;
+    }
+
+    this._cwu.sendMouseEventToWindow("mousedown", aX, aY, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
+    this._cwu.sendMouseEventToWindow("mouseup", aX, aY, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
   },
 
   // aX/aY are in top-level window browser coordinates
