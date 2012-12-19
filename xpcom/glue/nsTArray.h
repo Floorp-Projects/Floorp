@@ -1377,10 +1377,10 @@ public:
 
   nsTArray() {}
   explicit nsTArray(size_type capacity) : base_type(capacity) {}
-  nsTArray(const nsTArray& other) : base_type(other) {}
+  explicit nsTArray(const nsTArray& other) : base_type(other) {}
 
   template<class Allocator>
-  nsTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
+  explicit nsTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
 };
 
 //
@@ -1396,10 +1396,10 @@ public:
 
   FallibleTArray() {}
   explicit FallibleTArray(size_type capacity) : base_type(capacity) {}
-  FallibleTArray(const FallibleTArray<E>& other) : base_type(other) {}
+  explicit FallibleTArray(const FallibleTArray<E>& other) : base_type(other) {}
 
   template<class Allocator>
-  FallibleTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
+  explicit FallibleTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
 };
 
 //
@@ -1487,7 +1487,7 @@ public:
   nsAutoTArray() {}
 
   template<typename Allocator>
-  nsAutoTArray(const nsTArray_Impl<E, Allocator>& other) {
+  explicit nsAutoTArray(const nsTArray_Impl<E, Allocator>& other) {
     Base::AppendElements(other);
   }
 
@@ -1510,7 +1510,7 @@ public:
   AutoFallibleTArray() {}
 
   template<typename Allocator>
-  AutoFallibleTArray(const nsTArray_Impl<E, Allocator>& other) {
+  explicit AutoFallibleTArray(const nsTArray_Impl<E, Allocator>& other) {
     Base::AppendElements(other);
   }
 
