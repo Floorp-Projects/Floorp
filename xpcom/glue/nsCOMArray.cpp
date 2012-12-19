@@ -6,23 +6,47 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 
-static bool ReleaseObjects(void* aElement, void*);
+// This specialization is private to nsCOMArray.
+// It exists solely to automatically zero-out newly created array elements.
+template<>
+class nsTArrayElementTraits<nsISupports*>
+{
+    typedef nsISupports* E;
+public:
+    // Zero out the value
+    static inline void Construct(E *e) {
+        new (static_cast<void *>(e)) E();
+    }
+    // Invoke the copy-constructor in place.
+    template<class A>
+    static inline void Construct(E *e, const A &arg) {
+        new (static_cast<void *>(e)) E(arg);
+    }
+    // Invoke the destructor in place.
+    static inline void Destruct(E *e) {
+        e->~E();
+    }
+};
+
+static void ReleaseObjects(nsTArray<nsISupports*> &aArray);
 
 // implementations of non-trivial methods in nsCOMArray_base
 
-// copy constructor - we can't just memcpy here, because
-// we have to make sure we own our own array buffer, and that each
-// object gets another AddRef()
 nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
 {
     // make sure we do only one allocation
-    mArray.SizeTo(aOther.Count());
+    mArray.SetCapacity(aOther.Count());
     AppendObjects(aOther);
 }
 
 nsCOMArray_base::~nsCOMArray_base()
 {
-  Clear();
+    Clear();
+}
+
+int32_t
+nsCOMArray_base::IndexOf(nsISupports* aObject) const {
+    return mArray.IndexOf(aObject);
 }
 
 int32_t
@@ -30,12 +54,11 @@ nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
     nsCOMPtr<nsISupports> supports = do_QueryInterface(aObject);
     NS_ENSURE_TRUE(supports, -1);
 
-    int32_t i, count;
+    uint32_t i, count;
     int32_t retval = -1;
-    count = mArray.Count();
+    count = mArray.Length();
     for (i = 0; i < count; ++i) {
-        nsCOMPtr<nsISupports> arrayItem =
-            do_QueryInterface(reinterpret_cast<nsISupports*>(mArray.ElementAt(i)));
+        nsCOMPtr<nsISupports> arrayItem = do_QueryInterface(mArray[i]);
         if (arrayItem == supports) {
             retval = i;
             break;
@@ -45,40 +68,79 @@ nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
 }
 
 bool
+nsCOMArray_base::EnumerateForwards(nsBaseArrayEnumFunc aFunc, void* aData) const
+{
+    for (uint32_t index = 0; index < mArray.Length(); index++)
+        if (!(*aFunc)(mArray[index], aData))
+            return false;
+
+    return true;
+}
+
+bool
+nsCOMArray_base::EnumerateBackwards(nsBaseArrayEnumFunc aFunc, void* aData) const
+{
+    for (uint32_t index = mArray.Length(); index--; )
+        if (!(*aFunc)(mArray[index], aData))
+            return false;
+
+    return true;
+}
+
+int
+nsCOMArray_base::nsCOMArrayComparator(const void* aElement1, const void* aElement2, void* aData)
+{
+    nsCOMArrayComparatorContext* ctx = static_cast<nsCOMArrayComparatorContext*>(aData);
+    return (*ctx->mComparatorFunc)(*static_cast<nsISupports* const*>(aElement1),
+                                   *static_cast<nsISupports* const*>(aElement2),
+                                   ctx->mData);
+}
+
+void nsCOMArray_base::Sort(nsBaseArrayComparatorFunc aFunc, void* aData)
+{
+    if (mArray.Length() > 1) {
+        nsCOMArrayComparatorContext ctx = {aFunc, aData};
+        NS_QuickSort(mArray.Elements(), mArray.Length(), sizeof(nsISupports*),
+                     nsCOMArrayComparator, &ctx);
+    }
+}
+
+bool
 nsCOMArray_base::InsertObjectAt(nsISupports* aObject, int32_t aIndex) {
-    bool result = mArray.InsertElementAt(aObject, aIndex);
-    if (result)
-        NS_IF_ADDREF(aObject);
-    return result;
+    if ((uint32_t)aIndex > mArray.Length())
+        return false;
+
+    if (!mArray.InsertElementAt(aIndex, aObject))
+        return false;
+
+    NS_IF_ADDREF(aObject);
+    return true;
 }
 
 bool
 nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, int32_t aIndex) {
-    bool result = mArray.InsertElementsAt(aObjects.mArray, aIndex);
-    if (result) {
-        // need to addref all these
-        int32_t count = aObjects.Count();
-        for (int32_t i = 0; i < count; ++i) {
-            NS_IF_ADDREF(aObjects.ObjectAt(i));
-        }
-    }
-    return result;
+    if ((uint32_t)aIndex > mArray.Length())
+        return false;
+
+    if (!mArray.InsertElementsAt(aIndex, aObjects.mArray))
+        return false;
+
+    // need to addref all these
+    int32_t count = aObjects.Count();
+    for (int32_t i = 0; i < count; ++i)
+        NS_IF_ADDREF(aObjects.ObjectAt(i));
+
+    return true;
 }
 
 bool
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, int32_t aIndex)
 {
-    // its ok if oldObject is null here
-    nsISupports *oldObject =
-        reinterpret_cast<nsISupports*>(mArray.SafeElementAt(aIndex));
-
-    bool result = mArray.ReplaceElementAt(aObject, aIndex);
-
-    // ReplaceElementAt could fail, such as if the array grows
-    // so only release the existing object if the replacement succeeded
+    bool result = mArray.EnsureLengthAtLeast(aIndex + 1);
     if (result) {
+        nsISupports *oldObject = mArray[aIndex];
         // Make sure to addref first, in case aObject == oldObject
-        NS_IF_ADDREF(aObject);
+        NS_IF_ADDREF(mArray[aIndex] = aObject);
         NS_IF_RELEASE(oldObject);
     }
     return result;
@@ -96,12 +158,12 @@ nsCOMArray_base::RemoveObject(nsISupports *aObject)
 bool
 nsCOMArray_base::RemoveObjectAt(int32_t aIndex)
 {
-    if (uint32_t(aIndex) < uint32_t(Count())) {
-        nsISupports* element = ObjectAt(aIndex);
+    if (uint32_t(aIndex) < mArray.Length()) {
+        nsISupports* element = mArray[aIndex];
 
-        bool result = mArray.RemoveElementAt(aIndex);
+        mArray.RemoveElementAt(aIndex);
         NS_IF_RELEASE(element);
-        return result;
+        return true;
     }
 
     return false;
@@ -110,38 +172,31 @@ nsCOMArray_base::RemoveObjectAt(int32_t aIndex)
 bool
 nsCOMArray_base::RemoveObjectsAt(int32_t aIndex, int32_t aCount)
 {
-    if (uint32_t(aIndex) + uint32_t(aCount) <= uint32_t(Count())) {
-        nsVoidArray elementsToDestroy(aCount);
-        for (int32_t i = 0; i < aCount; ++i) {
-            elementsToDestroy.InsertElementAt(mArray.FastElementAt(aIndex + i), i);
-        }
-        bool result = mArray.RemoveElementsAt(aIndex, aCount);
-        for (int32_t i = 0; i < aCount; ++i) {
-            nsISupports* element = static_cast<nsISupports*> (elementsToDestroy.FastElementAt(i));
-            NS_IF_RELEASE(element);
-        }
-        return result;
+    if (uint32_t(aIndex) + uint32_t(aCount) <= mArray.Length()) {
+        nsTArray<nsISupports*> elementsToDestroy(aCount);
+        elementsToDestroy.AppendElements(mArray.Elements() + aIndex, aCount);
+        mArray.RemoveElementsAt(aIndex, aCount);
+        ReleaseObjects(elementsToDestroy);
+        return true;
     }
 
     return false;
 }
 
 // useful for destructors
-bool
-ReleaseObjects(void* aElement, void*)
+void
+ReleaseObjects(nsTArray<nsISupports*> &aArray)
 {
-    nsISupports* element = static_cast<nsISupports*>(aElement);
-    NS_IF_RELEASE(element);
-    return true;
+    for (uint32_t i = 0; i < aArray.Length(); i++)
+        NS_IF_RELEASE(aArray[i]);
 }
 
 void
 nsCOMArray_base::Clear()
 {
-    nsAutoVoidArray objects;
-    objects = mArray;
-    mArray.Clear();
-    objects.EnumerateForwards(ReleaseObjects, nullptr);
+    nsTArray<nsISupports*> objects;
+    objects.SwapElements(mArray);
+    ReleaseObjects(objects);
 }
 
 bool
@@ -149,18 +204,24 @@ nsCOMArray_base::SetCount(int32_t aNewCount)
 {
     NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
     if (aNewCount < 0)
-      return false;
+        return false;
 
-    int32_t count = Count(), i;
-    nsAutoVoidArray objects;
-    if (count > aNewCount) {
-        objects.SetCount(count - aNewCount);
-        for (i = aNewCount; i < count; ++i) {
-            objects.ReplaceElementAt(ObjectAt(i), i - aNewCount);
-        }
-    }
-    bool result = mArray.SetCount(aNewCount);
-    objects.EnumerateForwards(ReleaseObjects, nullptr);
-    return result;
+    int32_t count = mArray.Length();
+    if (count > aNewCount)
+        RemoveObjectsAt(aNewCount, mArray.Length() - aNewCount);
+    return mArray.SetLength(aNewCount);
 }
 
+size_t
+nsCOMArray_base::SizeOfExcludingThis(
+                   nsBaseArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
+                   nsMallocSizeOfFun aMallocSizeOf, void* aData) const
+{
+    size_t n = mArray.SizeOfExcludingThis(aMallocSizeOf);
+
+    if (aSizeOfElementIncludingThis)
+        for (uint32_t index = 0; index < mArray.Length(); index++)
+            n += aSizeOfElementIncludingThis(mArray[index], aMallocSizeOf, aData);
+
+    return n;
+}
