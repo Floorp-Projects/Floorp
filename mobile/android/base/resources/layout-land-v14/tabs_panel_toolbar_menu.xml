@@ -24,24 +24,11 @@
                       android:layout_height="fill_parent"
                       android:layout_marginRight="15dip">
 
-            <TextView android:id="@+id/title"
-                      android:layout_width="wrap_content"
-                      android:layout_height="fill_parent"
-                      android:layout_weight="1.0"
-                      style="@style/TabRowTextAppearance"
-                      android:gravity="center_vertical"
-                      android:padding="10dip"
-                      android:textSize="13sp"/>
+            <TabWidget android:id="@android:id/tabs"
+                       android:layout_width="0dip"
+                       android:layout_height="fill_parent"
+                       android:layout_weight="1.0"/>
 
-            <ImageButton android:id="@+id/remote_tabs"
-                         android:layout_width="@dimen/browser_toolbar_height"
-                         android:layout_height="@dimen/browser_toolbar_height"
-                         android:gravity="center_vertical"
-                         android:padding="10dip"
-                         android:src="@drawable/remote_tabs_level"
-                         android:contentDescription="@string/remote_tabs"
-                         android:background="@drawable/action_bar_button"
-                         android:visibility="gone"/>
 
             <org.mozilla.gecko.TabsPanelButton android:id="@+id/add_tab"
                                                android:layout_width="63dip"

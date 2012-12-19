@@ -249,6 +249,7 @@ FENNEC_PP_XML_FILES = \
   res/layout-large-v11/browser_toolbar_menu.xml \
   res/layout-xlarge-v11/browser_toolbar_menu.xml \
   res/layout/gecko_app.xml \
+  res/layout/tabs_panel.xml \
   res/layout/text_selection_handles.xml \
   res/layout-xlarge-land-v11/abouthome_content.xml \
   res/layout-xlarge-v11/awesomebar_search.xml \
@@ -405,7 +406,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
-  res/layout/tabs_panel.xml \
+  res/layout/tabs_panel_indicator.xml \
   res/layout/tabs_panel_toolbar_menu.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
@@ -1063,6 +1064,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tab_new_button.xml                     \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
+  mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \

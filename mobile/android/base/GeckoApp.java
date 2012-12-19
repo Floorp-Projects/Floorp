@@ -804,7 +804,9 @@ abstract public class GeckoApp
 
     void addTab() { }
 
-    public void showLocalTabs() { }
+    public void showNormalTabs() { }
+
+    public void showPrivateTabs() { }
 
     public void showRemoteTabs() { }
 
