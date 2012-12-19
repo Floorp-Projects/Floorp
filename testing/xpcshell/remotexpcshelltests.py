@@ -435,9 +435,9 @@ def main():
 
     if (options.dm_trans == "adb"):
       if (options.deviceIP):
-        dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
+        dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, packageName=None)
       else:
-        dm = devicemanagerADB.DeviceManagerADB()
+        dm = devicemanagerADB.DeviceManagerADB(packageName=None)
     else:
       dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
       if (options.deviceIP == None):
