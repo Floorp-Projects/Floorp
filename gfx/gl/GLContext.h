@@ -1728,6 +1728,15 @@ public:
 
 #endif
 
+#define ASSERT_SYMBOL_PRESENT(func) \
+    do {\
+        MOZ_ASSERT(strstr(MOZ_FUNCTION_NAME, #func) != nullptr, "Mismatched symbol check.");\
+        if (MOZ_UNLIKELY(!mSymbols.func)) {\
+            printf_stderr("RUNTIME ASSERT: Uninitialized GL function: %s\n", #func);\
+            MOZ_CRASH();\
+        }\
+    } while (0)
+
     /*** In GL debug mode, we completely override glGetError ***/
 
     GLenum fGetError() {
@@ -2140,21 +2149,16 @@ public:
     }
 
     void fGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *img) {
-        if (!mSymbols.fGetTexImage) {
-            return;
-        }
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetTexImage);
         mSymbols.fGetTexImage(target, level, format, type, img);
         AFTER_GL_CALL;
     }
 
     void fGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
     {  
-        if (!mSymbols.fGetTexLevelParameteriv) {
-            *params = 0;
-            return;
-        }
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetTexLevelParameteriv);
         mSymbols.fGetTexLevelParameteriv(target, level, pname, params);
         AFTER_GL_CALL;
     }
@@ -2221,28 +2225,28 @@ public:
         return retval;
     }
 
-    realGLboolean fIsEnabled (GLenum capability) {
+    realGLboolean fIsEnabled(GLenum capability) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsEnabled(capability);
         AFTER_GL_CALL;
         return retval;
     }
 
-    realGLboolean fIsProgram (GLuint program) {
+    realGLboolean fIsProgram(GLuint program) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsProgram(program);
         AFTER_GL_CALL;
         return retval;
     }
 
-    realGLboolean fIsShader (GLuint shader) {
+    realGLboolean fIsShader(GLuint shader) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsShader(shader);
         AFTER_GL_CALL;
         return retval;
     }
 
-    realGLboolean fIsTexture (GLuint texture) {
+    realGLboolean fIsTexture(GLuint texture) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsTexture(texture);
         AFTER_GL_CALL;
@@ -2587,6 +2591,7 @@ private:
         MOZ_ASSERT(mIsGLES2);
 
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetShaderPrecisionFormat);
         mSymbols.fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
         AFTER_GL_CALL;
     }
@@ -2668,6 +2673,7 @@ public:
 private:
     void raw_fBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBlitFramebuffer);
         mSymbols.fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
         AFTER_GL_CALL;
     }
@@ -2688,6 +2694,7 @@ public:
 
     void fRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fRenderbufferStorageMultisample);
         mSymbols.fRenderbufferStorageMultisample(target, samples, internalFormat, width, height);
         AFTER_GL_CALL;
     }
@@ -2697,6 +2704,7 @@ private:
         MOZ_ASSERT(!mIsGLES2);
 
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDepthRange);
         mSymbols.fDepthRange(a, b);
         AFTER_GL_CALL;
     }
@@ -2705,6 +2713,7 @@ private:
         MOZ_ASSERT(mIsGLES2);
 
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDepthRangef);
         mSymbols.fDepthRangef(a, b);
         AFTER_GL_CALL;
     }
@@ -2713,6 +2722,7 @@ private:
         MOZ_ASSERT(!mIsGLES2);
 
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fClearDepth);
         mSymbols.fClearDepth(v);
         AFTER_GL_CALL;
     }
@@ -2721,6 +2731,7 @@ private:
         MOZ_ASSERT(mIsGLES2);
 
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fClearDepthf);
         mSymbols.fClearDepthf(v);
         AFTER_GL_CALL;
     }
@@ -2744,6 +2755,7 @@ public:
 
     void* fMapBuffer(GLenum target, GLenum access) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fMapBuffer);
         void *ret = mSymbols.fMapBuffer(target, access);
         AFTER_GL_CALL;
         return ret;
@@ -2751,6 +2763,7 @@ public:
 
     realGLboolean fUnmapBuffer(GLenum target) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUnmapBuffer);
         realGLboolean ret = mSymbols.fUnmapBuffer(target);
         AFTER_GL_CALL;
         return ret;
@@ -2916,14 +2929,18 @@ public:
 
 
     GLenum GLAPIENTRY fGetGraphicsResetStatus() {
+        MOZ_ASSERT(mHasRobustness);
+
         BEFORE_GL_CALL;
-        GLenum ret = mHasRobustness ? mSymbols.fGetGraphicsResetStatus() : 0;
+        ASSERT_SYMBOL_PRESENT(fGetGraphicsResetStatus);
+        GLenum ret = mSymbols.fGetGraphicsResetStatus();
         AFTER_GL_CALL;
         return ret;
     }
 
     GLsync GLAPIENTRY fFenceSync(GLenum condition, GLbitfield flags) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fFenceSync);
         GLsync ret = mSymbols.fFenceSync(condition, flags);
         AFTER_GL_CALL;
         return ret;
@@ -2931,6 +2948,7 @@ public:
 
     realGLboolean GLAPIENTRY fIsSync(GLsync sync) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsSync);
         realGLboolean ret = mSymbols.fIsSync(sync);
         AFTER_GL_CALL;
         return ret;
@@ -2938,12 +2956,14 @@ public:
 
     void GLAPIENTRY fDeleteSync(GLsync sync) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteSync);
         mSymbols.fDeleteSync(sync);
         AFTER_GL_CALL;
     }
 
     GLenum GLAPIENTRY fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fClientWaitSync);
         GLenum ret = mSymbols.fClientWaitSync(sync, flags, timeout);
         AFTER_GL_CALL;
         return ret;
@@ -2951,29 +2971,34 @@ public:
 
     void GLAPIENTRY fWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fWaitSync);
         mSymbols.fWaitSync(sync, flags, timeout);
         AFTER_GL_CALL;
     }
 
     void GLAPIENTRY fGetInteger64v(GLenum pname, GLint64 *params) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetInteger64v);
         mSymbols.fGetInteger64v(pname, params);
         AFTER_GL_CALL;
     }
 
     void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetSynciv);
         mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
         AFTER_GL_CALL;
     }
 
     // OES_EGL_image (GLES)
-    void fEGLImageTargetTexture2D(GLenum target, GLeglImage image)
-    {
+    void fEGLImageTargetTexture2D(GLenum target, GLeglImage image) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fEGLImageTargetTexture2D);
         mSymbols.fEGLImageTargetTexture2D(target, image);
         AFTER_GL_CALL;
     }
+
+#undef ASSERT_SYMBOL_PRESENT
 
 #ifdef DEBUG
     void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);
