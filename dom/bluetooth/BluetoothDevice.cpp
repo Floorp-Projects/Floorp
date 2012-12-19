@@ -181,7 +181,7 @@ BluetoothDevice::Notify(const BluetoothSignal& aData)
   if (aData.name().EqualsLiteral("PropertyChanged")) {
     NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "PropertyChanged: Invalid value type");
-    InfallibleTArray<BluetoothNamedValue> arr = aData.value().get_ArrayOfBluetoothNamedValue();
+    InfallibleTArray<BluetoothNamedValue> arr(aData.value().get_ArrayOfBluetoothNamedValue());
 
     NS_ASSERTION(arr.Length() == 1, "Got more than one property in a change message!");
     BluetoothNamedValue v = arr[0];

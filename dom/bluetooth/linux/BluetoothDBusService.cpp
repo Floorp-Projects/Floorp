@@ -1720,7 +1720,7 @@ public:
     BluetoothValue v = mSignal.value();
     if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue &&
         v.get_ArrayOfBluetoothNamedValue().Length() ) {
-      InfallibleTArray<BluetoothNamedValue> arr = v.get_ArrayOfBluetoothNamedValue();
+      const InfallibleTArray<BluetoothNamedValue>& arr = v.get_ArrayOfBluetoothNamedValue();
       NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString, "failed to get_nsString");
       devicePath = arr[0].value().get_nsString();
     }
@@ -1737,11 +1737,11 @@ public:
       NS_WARNING("Getting properties failed!");
       return NS_ERROR_FAILURE;
     }
-    InfallibleTArray<BluetoothNamedValue> properties = prop.get_ArrayOfBluetoothNamedValue();
+    InfallibleTArray<BluetoothNamedValue> properties(prop.get_ArrayOfBluetoothNamedValue());
     if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue) {
       // Return original dbus message parameters and also device name
       // for agent events "RequestConfirmation", "RequestPinCode", and "RequestPasskey"
-      InfallibleTArray<BluetoothNamedValue> parameters = v.get_ArrayOfBluetoothNamedValue();
+      InfallibleTArray<BluetoothNamedValue> parameters(v.get_ArrayOfBluetoothNamedValue());
 
       // For consistency, append path
       nsString path = parameters[0].value();
@@ -1804,7 +1804,7 @@ public:
 
     BluetoothValue values = InfallibleTArray<BluetoothNamedValue>();
 
-    for (int i = 0; i < mDeviceAddresses.Length(); i++) {
+    for (uint32_t i = 0; i < mDeviceAddresses.Length(); i++) {
       BluetoothValue v;
       if (!GetPropertiesInternal(mDeviceAddresses[i], DBUS_DEVICE_IFACE, v)) {
         nsAutoString errorStr;
