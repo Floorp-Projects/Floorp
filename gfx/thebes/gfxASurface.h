@@ -199,6 +199,14 @@ public:
 
     virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
     virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+    // gfxASurface has many sub-classes.  This method indicates if a sub-class
+    // is capable of measuring its own size accurately.  If not, the caller
+    // must fall back to a computed size.  (Note that gfxASurface can actually
+    // measure itself, but we must |return false| here because it serves as the
+    // (conservative) default for all the sub-classes.  Therefore, this
+    // function should only be called on a |gfxASurface*| that actually points
+    // to a sub-class of gfxASurface.)
+    virtual bool SizeOfIsMeasured() const { return false; }
 
     /**
      * The memory used by this surface (as reported by KnownMemoryUsed()) can
