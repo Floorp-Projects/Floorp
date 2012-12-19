@@ -9,6 +9,10 @@
 
 #include "mozilla/Assertions.h"
 
+template<typename E, class Allocator> class nsTArray;
+template<typename E> class InfallibleTArray;
+template<typename E> class FallibleTArray;
+
 namespace mozilla {
 namespace dom {
 
@@ -17,17 +21,19 @@ template <typename T>
 struct Nullable
 {
 private:
-  T mValue;
+  // mIsNull MUST COME FIRST because otherwise the casting in our array
+  // conversion operators would shift where it is found in the struct.
   bool mIsNull;
+  T mValue;
 
 public:
   Nullable()
     : mIsNull(true)
   {}
 
-  Nullable(T aValue)
-    : mValue(aValue)
-    , mIsNull(false)
+  explicit Nullable(T aValue)
+    : mIsNull(false)
+    , mValue(aValue)
   {}
 
   void SetValue(T aValue) {
@@ -59,6 +65,30 @@ public:
 
   bool IsNull() const {
     return mIsNull;
+  }
+
+  // Make it possible to use a const Nullable of an array type with other
+  // array types.
+  template<typename U, typename Allocator>
+  operator const Nullable< nsTArray<U, Allocator> >&() const {
+    // Make sure that T is ok to reinterpret to nsTArray<U, Allocator>
+    const nsTArray<U, Allocator>& arr = mValue;
+    (void)arr;
+    return *reinterpret_cast<const Nullable< nsTArray<U, Allocator> >*>(this);
+  }
+  template<typename U>
+  operator const Nullable< InfallibleTArray<U> >&() const {
+    // Make sure that T is ok to reinterpret to InfallibleTArray<U>
+    const InfallibleTArray<U>& arr = mValue;
+    (void)arr;
+    return *reinterpret_cast<const Nullable< InfallibleTArray<U> >*>(this);
+  }
+  template<typename U>
+  operator const Nullable< FallibleTArray<U> >&() const {
+    // Make sure that T is ok to reinterpret to FallibleTArray<U>
+    const FallibleTArray<U>& arr = mValue;
+    (void)arr;
+    return *reinterpret_cast<const Nullable< FallibleTArray<U> >*>(this);
   }
 };
 
