@@ -685,7 +685,63 @@ BaselineCompiler::emit_JSOP_DOUBLE()
 bool
 BaselineCompiler::emit_JSOP_STRING()
 {
-    frame.push(StringValue(script->getAtom(GET_UINT32_INDEX(pc))));
+    frame.push(StringValue(script->getAtom(pc)));
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_OBJECT()
+{
+    frame.push(ObjectValue(*script->getObject(pc)));
+    return true;
+}
+
+typedef JSObject *(*CloneRegExpObjectFn)(JSContext *, JSObject *, JSObject *);
+static const VMFunction CloneRegExpObjectInfo =
+    FunctionInfo<CloneRegExpObjectFn>(CloneRegExpObject);
+
+bool
+BaselineCompiler::emit_JSOP_REGEXP()
+{
+    RootedObject reObj(cx, script->getRegExp(GET_UINT32_INDEX(pc)));
+    RootedObject proto(cx, script->global().getOrCreateRegExpPrototype(cx));
+    if (!proto)
+        return false;
+
+    prepareVMCall();
+
+    pushArg(ImmGCPtr(proto));
+    pushArg(ImmGCPtr(reObj));
+
+    if (!callVM(CloneRegExpObjectInfo))
+        return false;
+
+    // Box and push return value.
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
+typedef JSObject *(*LambdaFn)(JSContext *, HandleFunction, HandleObject);
+static const VMFunction LambdaInfo = FunctionInfo<LambdaFn>(js::Lambda);
+
+bool
+BaselineCompiler::emit_JSOP_LAMBDA()
+{
+    RootedFunction fun(cx, script->getFunction(GET_UINT32_INDEX(pc)));
+
+    prepareVMCall();
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    pushArg(R0.scratchReg());
+    pushArg(ImmGCPtr(fun));
+
+    if (!callVM(LambdaInfo))
+        return false;
+
+    // Box and push return value.
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
     return true;
 }
 
