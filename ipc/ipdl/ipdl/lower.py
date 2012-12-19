@@ -3292,7 +3292,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     indent=1),
                 StmtDecl(
                     Decl(p.managedVarType(managed, self.side), kidsvar.name),
-                    init=p.managedVar(managed, self.side)),
+                    initargs=[ p.managedVar(managed, self.side) ]),
                 foreachdestroy,
             ])
             destroysubtree.addstmt(block)
@@ -4401,7 +4401,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 tmpvar = ExprVar('tmp')
                 ct = c.bareType()
                 readcase.addstmts([
-                    StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue()),
+                    StmtDecl(Decl(ct, tmpvar.name)),
                     StmtExpr(ExprAssn(ExprDeref(var), tmpvar)),
                     StmtReturn(self.read(
                         c.ipdltype,
