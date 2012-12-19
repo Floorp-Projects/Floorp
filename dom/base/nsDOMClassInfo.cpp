@@ -7368,20 +7368,18 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         }
       }
 
-      // Define a fast expando, the key here is to use JS_PropertyStub
-      // as the getter/setter, which makes us stay out of XPConnect
-      // when using this property.
+      // Define a fast expando.  The key here is to use JS_PropertyStub as the
+      // getter/setter, which makes us stay out of XPConnect when using this
+      // property.
       //
-      // We don't need to worry about property attributes here as we
-      // know here we're dealing with an undefined property set, so
-      // we're not declaring readonly or permanent properties.
+      // We're adding a new property here, so we don't need to worry about
+      // conflicting with any existing ones.
       //
-      // Since we always create the undeclared property here without given a
-      // chance for the interpreter to report applicable strict mode warnings,
-      // we must take care to check those warnings here.
-      JSString *str = JSID_TO_STRING(id);
-      if ((!(flags & JSRESOLVE_QUALIFIED) &&
-           !js::CheckUndeclaredVarAssignment(cx, str)) ||
+      // Since we always create the undeclared property here, shortcutting the
+      // normal process, we go out of our way to tell the JS engine to report
+      // strict warnings/errors using js::ReportIfUndeclaredVarAssignment.
+      js::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
+      if (!js::ReportIfUndeclaredVarAssignment(cx, str) ||
           !::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
                                    JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
         *_retval = JS_FALSE;
