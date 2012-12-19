@@ -200,7 +200,7 @@ OrientationObserver::Notify(const hal::SensorData& aSensorData)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSensorData.sensor() == hal::SensorType::SENSOR_ORIENTATION);
 
-  InfallibleTArray<float> values = aSensorData.values();
+  const InfallibleTArray<float>& values = aSensorData.values();
   // Azimuth (values[0]): the device's horizontal orientation
   // (0 degree is north). It's unused for screen rotation.
   float pitch = values[1];
