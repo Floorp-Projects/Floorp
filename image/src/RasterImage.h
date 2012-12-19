@@ -135,7 +135,7 @@ namespace image {
 
 class Decoder;
 
-class RasterImage : public Image
+class RasterImage : public ImageResource
                   , public nsIProperties
                   , public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
