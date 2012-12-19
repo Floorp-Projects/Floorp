@@ -27,10 +27,10 @@ Once-reported blocks
 Summary
 ------------------------------------------------------------------
 
-Total:                    0 bytes
-Unreported:               0 bytes ( 0.00%)
-Once-reported:            0 bytes ( 0.00%)
-Twice-reported:           0 bytes ( 0.00%)
+Total:                     0 bytes (100.00%) in       0 blocks (100.00%)
+Unreported:                0 bytes (  0.00%) in       0 blocks (  0.00%)
+Once-reported:             0 bytes (  0.00%) in       0 blocks (  0.00%)
+Twice-reported:            0 bytes (  0.00%) in       0 blocks (  0.00%)
 
 ------------------------------------------------------------------
 Invocation
@@ -226,10 +226,10 @@ Once-reported: 1 block in block group 11 of 11
 Summary
 ------------------------------------------------------------------
 
-Total:               15,168 bytes
-Unreported:           5,328 bytes (35.13%)
-Once-reported:        9,568 bytes (63.08%)
-Twice-reported:         272 bytes ( 1.79%)
+Total:                15,168 bytes (100.00%) in      31 blocks (100.00%)
+Unreported:            5,328 bytes ( 35.13%) in      14 blocks ( 45.16%)
+Once-reported:         9,568 bytes ( 63.08%) in      13 blocks ( 41.94%)
+Twice-reported:          272 bytes (  1.79%) in       4 blocks ( 12.90%)
 
 ------------------------------------------------------------------
 Invocation
@@ -332,10 +332,10 @@ Once-reported: 1 block in block group 4 of 4
 Summary
 ------------------------------------------------------------------
 
-Total:                2,840 bytes
-Unreported:           2,064 bytes (72.68%)
-Once-reported:          688 bytes (24.23%)
-Twice-reported:          88 bytes ( 3.10%)
+Total:                 2,840 bytes (100.00%) in      27 blocks (100.00%)
+Unreported:            2,064 bytes ( 72.68%) in      21 blocks ( 77.78%)
+Once-reported:           688 bytes ( 24.23%) in       4 blocks ( 14.81%)
+Twice-reported:           88 bytes (  3.10%) in       2 blocks (  7.41%)
 
 ------------------------------------------------------------------
 Invocation
@@ -406,8 +406,8 @@ Once-reported blocks
 Summary
 ------------------------------------------------------------------
 
-Total:               ~1,424 bytes
-Unreported:          ~1,424 bytes (100.00%)
-Once-reported:           ~0 bytes ( 0.00%)
-Twice-reported:          ~0 bytes ( 0.00%)
+Total:                ~1,424 bytes (100.00%) in     ~10 blocks (100.00%)
+Unreported:           ~1,424 bytes (100.00%) in     ~10 blocks (100.00%)
+Once-reported:            ~0 bytes (  0.00%) in      ~0 blocks (  0.00%)
+Twice-reported:           ~0 bytes (  0.00%) in      ~0 blocks (  0.00%)
 
