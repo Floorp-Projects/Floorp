@@ -275,8 +275,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore);
 
-    void branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, FloatRegister fr);
-
     void branchIfFunctionHasNoScript(Register fun, Label *label) {
         // 16-bit loads are slow and unaligned 32-bit loads may be too so
         // perform an aligned 32-bit load and adjust the bitmask accordingly.

@@ -15,7 +15,7 @@
 
 /* storage of the frame tree and information about it */
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "nscore.h"
 #include "nsPresContext.h"

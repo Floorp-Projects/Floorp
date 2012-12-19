@@ -221,6 +221,9 @@ class XPCShellTests(object):
     if self.debuggerInfo:
       self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
 
+    if self.pluginsPath:
+      self.xpcsCmd.extend(['-p', os.path.abspath(self.pluginsPath)])
+
   def buildTestPath(self):
     """
       If we specifiy a testpath, set the self.testPath variable to be the given directory or file.
@@ -609,7 +612,8 @@ class XPCShellTests(object):
                debuggerArgs=None, debuggerInteractive=False,
                profileName=None, mozInfo=None, shuffle=False,
                testsRootDir=None, xunitFilename=None, xunitName=None,
-               testingModulesDir=None, autolog=False, **otherOptions):
+               testingModulesDir=None, autolog=False, pluginsPath=None,
+               **otherOptions):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -622,6 +626,8 @@ class XPCShellTests(object):
     |testdirs|, if provided, is a list of absolute paths of test directories.
       No-manifest only option.
     |testPath|, if provided, indicates a single path and/or test to run.
+    |pluginsPath|, if provided, custom plugins directory to be returned from
+      the xpcshell dir svc provider for NS_APP_PLUGINS_DIR_LIST.
     |interactive|, if set to True, indicates to provide an xpcshell prompt
       instead of automatically executing the test.
     |verbose|, if set to True, will cause stdout/stderr from tests to
@@ -702,6 +708,7 @@ class XPCShellTests(object):
     self.profileName = profileName or "xpcshell"
     self.mozInfo = mozInfo
     self.testingModulesDir = testingModulesDir
+    self.pluginsPath = pluginsPath
 
     # If we have an interactive debugger, disable ctrl-c.
     if self.debuggerInfo and self.debuggerInfo["interactive"]:
@@ -1033,6 +1040,11 @@ class XPCShellOptions(OptionParser):
     self.add_option("--testing-modules-dir",
                     dest="testingModulesDir", default=None,
                     help="Directory where testing modules are located.")
+    self.add_option("--test-plugin-path",
+                    type="string", dest="pluginsPath", default=None,
+                    help="Path to the location of a plugins directory containing the test plugin or plugins required for tests. "
+                         "By default xpcshell's dir svc provider returns gre/plugins. Use test-plugin-path to add a directory "
+                         "to return for NS_APP_PLUGINS_DIR_LIST when queried.")
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks", default=1,
                     help = "how many chunks to split the tests up into")

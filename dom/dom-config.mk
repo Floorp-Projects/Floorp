@@ -8,6 +8,7 @@ DOM_SRCDIRS = \
   dom/encoding \
   dom/file \
   dom/power \
+  dom/quota \
   dom/media \
   dom/network/src \
   dom/settings \

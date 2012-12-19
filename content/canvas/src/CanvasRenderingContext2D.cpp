@@ -525,8 +525,6 @@ NS_INTERFACE_MAP_END
 
 // Initialize our static variables.
 uint32_t CanvasRenderingContext2D::sNumLivingContexts = 0;
-uint8_t (*CanvasRenderingContext2D::sUnpremultiplyTable)[256] = nullptr;
-uint8_t (*CanvasRenderingContext2D::sPremultiplyTable)[256] = nullptr;
 DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 
@@ -551,10 +549,6 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   }
   sNumLivingContexts--;
   if (!sNumLivingContexts) {
-    delete[] sUnpremultiplyTable;
-    delete[] sPremultiplyTable;
-    sUnpremultiplyTable = nullptr;
-    sPremultiplyTable = nullptr;
     NS_IF_RELEASE(sErrorTarget);
   }
 }
@@ -2554,7 +2548,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
-  bool doDrawShadow = aOp == TEXT_DRAW_OPERATION_FILL && NeedToDrawShadow();
+  bool doDrawShadow = NeedToDrawShadow();
 
   CanvasBidiProcessor processor;
 
@@ -2859,7 +2853,7 @@ CanvasRenderingContext2D::IsPointInPath(double x, double y)
 }
 
 bool
-CanvasRenderingContext2D::MozIsPointInStroke(double x, double y)
+CanvasRenderingContext2D::IsPointInStroke(double x, double y)
 {
   if (!FloatValidate(x,y)) {
     return false;
@@ -3325,33 +3319,6 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* elem,
 // device pixel getting/setting
 //
 
-void
-CanvasRenderingContext2D::EnsureUnpremultiplyTable() {
-  if (sUnpremultiplyTable)
-    return;
-
-  // Infallably alloc the unpremultiply table.
-  sUnpremultiplyTable = new uint8_t[256][256];
-
-  // It's important that the array be indexed first by alpha and then by rgb
-  // value.  When we unpremultiply a pixel, we're guaranteed to do three
-  // lookups with the same alpha; indexing by alpha first makes it likely that
-  // those three lookups will be close to one another in memory, thus
-  // increasing the chance of a cache hit.
-
-  // a == 0 case
-  for (uint32_t c = 0; c <= 255; c++) {
-    sUnpremultiplyTable[0][c] = c;
-  }
-
-  for (int a = 1; a <= 255; a++) {
-    for (int c = 0; c <= 255; c++) {
-      sUnpremultiplyTable[a][c] = (uint8_t)((c * 255) / a);
-    }
-  }
-}
-
-
 already_AddRefed<ImageData>
 CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
                                        double aSy, double aSw,
@@ -3484,9 +3451,6 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     }
   }
 
-  // make sure sUnpremultiplyTable has been created
-  EnsureUnpremultiplyTable();
-
   // NOTE! dst is the same as src, and this relies on reading
   // from src and advancing that ptr before writing to dst.
   // NOTE! I'm not sure that it is, I think this comment might have been
@@ -3508,9 +3472,9 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
       uint8_t b = *src++;
 #endif
       // Convert to non-premultiplied color
-      *dst++ = sUnpremultiplyTable[a][r];
-      *dst++ = sUnpremultiplyTable[a][g];
-      *dst++ = sUnpremultiplyTable[a][b];
+      *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + r];
+      *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + g];
+      *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + b];
       *dst++ = a;
     }
     src += srcStride - (dstWriteRect.width * 4);
@@ -3519,25 +3483,6 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
 
   *aRetval = darray;
   return NS_OK;
-}
-
-void
-CanvasRenderingContext2D::EnsurePremultiplyTable() {
-  if (sPremultiplyTable)
-    return;
-
-  // Infallably alloc the premultiply table.
-  sPremultiplyTable = new uint8_t[256][256];
-
-  // Like the unpremultiply table, it's important that we index the premultiply
-  // table with the alpha value as the first index to ensure good cache
-  // performance.
-
-  for (int a = 0; a <= 255; a++) {
-    for (int c = 0; c <= 255; c++) {
-      sPremultiplyTable[a][c] = (a * c + 254) / 255;
-    }
-  }
 }
 
 void
@@ -3662,9 +3607,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
     return NS_ERROR_FAILURE;
   }
 
-  // ensure premultiply table has been created
-  EnsurePremultiplyTable();
-
   uint8_t *src = aData;
   uint8_t *dst = imgsurf->Data();
 
@@ -3677,15 +3619,15 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
 
       // Convert to premultiplied color (losslessly if the input came from getImageData)
 #ifdef IS_LITTLE_ENDIAN
-      *dst++ = sPremultiplyTable[a][b];
-      *dst++ = sPremultiplyTable[a][g];
-      *dst++ = sPremultiplyTable[a][r];
+      *dst++ = gfxUtils::sPremultiplyTable[a * 256 + b];
+      *dst++ = gfxUtils::sPremultiplyTable[a * 256 + g];
+      *dst++ = gfxUtils::sPremultiplyTable[a * 256 + r];
       *dst++ = a;
 #else
       *dst++ = a;
-      *dst++ = sPremultiplyTable[a][r];
-      *dst++ = sPremultiplyTable[a][g];
-      *dst++ = sPremultiplyTable[a][b];
+      *dst++ = gfxUtils::sPremultiplyTable[a * 256 + r];
+      *dst++ = gfxUtils::sPremultiplyTable[a * 256 + g];
+      *dst++ = gfxUtils::sPremultiplyTable[a * 256 + b];
 #endif
     }
   }

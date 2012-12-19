@@ -58,7 +58,7 @@ nr_stun_message_create(nr_stun_message **msg)
     m = RCALLOC(sizeof(*m));
     if (!m)
         ABORT(R_NO_MEMORY);
- 
+
     TAILQ_INIT(&m->attributes);
 
     *msg = m;
@@ -73,6 +73,10 @@ nr_stun_message_create2(nr_stun_message **msg, UCHAR *buffer, int length)
 {
     int r,_status;
     nr_stun_message *m = 0;
+
+    if (length > sizeof(m->buffer)) {
+        ABORT(R_BAD_DATA);
+    }
 
     if ((r=nr_stun_message_create(&m)))
         ABORT(r);
@@ -200,7 +204,7 @@ NR_STUN_MESSAGE_ADD_ATTRIBUTE(
 int
 nr_stun_message_add_error_code_attribute(nr_stun_message *msg, UINT2 number, char *reason)
 NR_STUN_MESSAGE_ADD_ATTRIBUTE(
-    NR_STUN_ATTR_ERROR_CODE, 
+    NR_STUN_ATTR_ERROR_CODE,
     {
         attr->u.error_code.number = number;
         strlcpy(attr->u.error_code.reason, reason, sizeof(attr->u.error_code.reason));

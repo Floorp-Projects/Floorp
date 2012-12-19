@@ -9,7 +9,7 @@ const TEST_HOST = 'mochi.test:8888';
 let tempScope = {};
 Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
 let TargetFactory = tempScope.TargetFactory;
-Components.utils.import("resource:///modules/devtools/Console.jsm", tempScope);
+Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 
 let gChromeWindow;               //StyleEditorChrome window

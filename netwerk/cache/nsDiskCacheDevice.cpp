@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCache.h"
 #include <limits.h>
+
+#include "mozilla/DebugOnly.h"
+
+#include "nsCache.h"
 
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX)
@@ -46,7 +49,6 @@
 
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Util.h"
 
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 using namespace mozilla;

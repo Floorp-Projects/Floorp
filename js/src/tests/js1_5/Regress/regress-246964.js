@@ -50,7 +50,7 @@ else
 
 
   status = summary + ' ' + inSection(4) + ' if (document.all !== undefined) ';
-  expect = false;
+  expect = true;
   actual = false;
   if (document.all !== undefined)
   {
@@ -104,7 +104,7 @@ else
   reportCompare(expect, actual, status);
 
   status = summary + ' ' + inSection(10) + ' if (document.all === undefined) ';
-  expect = true;
+  expect = false;
   actual = false;
   if (document.all === undefined)
   {

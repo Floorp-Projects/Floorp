@@ -2464,11 +2464,11 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   } else if (msg == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = true;
   } else if (msg == NS_MOUSE_BUTTON_DOWN &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = true;
   } else if ((msg == NS_MOUSE_BUTTON_UP ||
               msg == NS_DRAGDROP_END) &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = false;
     if (gDragServiceDisabled) {
       nsCOMPtr<nsIDragService> ds =
@@ -2484,7 +2484,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Handle 'active' event.
   if (!mIdleObservers.IsEmpty() &&
-      NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
+      aVisitor.mEvent->mFlags.mIsTrusted &&
       (NS_IS_MOUSE_EVENT(aVisitor.mEvent) ||
        NS_IS_DRAG_EVENT(aVisitor.mEvent))) {
     mAddActiveEventFuzzTime = false;
@@ -2633,7 +2633,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = false;
   } else if (aVisitor.mEvent->message == NS_PAGE_UNLOAD &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     // Execute bindingdetached handlers before we tear ourselves
     // down.
     if (mDocument) {
@@ -2642,7 +2642,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     }
     mIsDocumentLoaded = false;
   } else if (aVisitor.mEvent->message == NS_LOAD &&
-             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+             aVisitor.mEvent->mFlags.mIsTrusted) {
     // This is page load event since load events don't propagate to |window|.
     // @see nsDocument::PreHandleEvent.
     mIsDocumentLoaded = true;
@@ -2663,8 +2663,8 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_LOAD);
-      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+      nsEvent event(aVisitor.mEvent->mFlags.mIsTrusted, NS_LOAD);
+      event.mFlags.mBubbles = false;
 
       // Most of the time we could get a pres context to pass in here,
       // but not always (i.e. if this window is not shown there won't
@@ -6368,9 +6368,10 @@ PostMessageEvent::Run()
 NS_IMETHODIMP
 nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
                                const nsAString& aOrigin,
+                               const jsval& aTransfer,
                                JSContext* aCx)
 {
-  FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin, aCx),
+  FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin, aTransfer, aCx),
                    NS_ERROR_NOT_INITIALIZED);
 
   //
@@ -6463,7 +6464,7 @@ nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
   if (NS_FAILED(callerPrin->Subsumes(principal, &scInfo.subsumes)))
     return NS_ERROR_DOM_DATA_CLONE_ERR;
 
-  if (!buffer.write(aCx, aMessage, &kPostMessageCallbacks, &scInfo))
+  if (!buffer.write(aCx, aMessage, aTransfer, &kPostMessageCallbacks, &scInfo))
     return NS_ERROR_DOM_DATA_CLONE_ERR;
 
   event->SetJSData(buffer);
@@ -9096,7 +9097,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     if (fireMozStorageChanged) {
       nsEvent *internalEvent = event->GetInternalNSEvent();
-      internalEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+      internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
     if (IsFrozen()) {

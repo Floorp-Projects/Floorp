@@ -19,7 +19,5 @@
 <!ENTITY charsetMenuMore4.accesskey    "S">
 <!ENTITY charsetMenuMore5.label        "Middle Eastern">
 <!ENTITY charsetMenuMore5.accesskey    "M">
-<!ENTITY charsetMenuUnicode.label      "Unicode">
-<!ENTITY charsetMenuUnicode.accesskey  "U">
 <!ENTITY charsetCustomize.label        "Customize List…">
 <!ENTITY charsetCustomize.accesskey    "c">

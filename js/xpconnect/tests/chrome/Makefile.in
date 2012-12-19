@@ -66,12 +66,19 @@ MOCHITEST_CHROME_FILES = \
 		test_nodelists.xul \
 		test_precisegc.xul \
 		test_sandboxImport.xul \
-		test_weakmaps.xul \
 		test_weakmap_keys_preserved.xul \
 		test_weakmap_keys_preserved2.xul \
 		test_weakref.xul \
 		test_wrappers.xul \
 		$(NULL)
+
+ifneq ($(OS_ARCH),WINNT)
+MOCHITEST_CHROME_FILES += \
+		test_weakmaps.xul \
+		$(NULL)
+else
+$(filter disabled-temporarily--bug-820471, test_weakmaps.xul)
+endif
 
 # Disabled until this test gets updated to test the new proxy based
 # wrappers.

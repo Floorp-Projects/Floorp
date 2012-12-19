@@ -7,6 +7,7 @@
 
 interface mozIStorageConnection;
 interface nsIFile;
+interface nsIFileURL;
 
 /**
  * The mozIStorageService interface is intended to be implemented by
@@ -15,7 +16,7 @@ interface nsIFile;
  *
  * This is the only way to open a database connection.
  */
-[scriptable, uuid(fe8e95cb-b377-4c8d-bccb-d9198c67542b)]
+[scriptable, uuid(12bfad34-cca3-40fb-8736-d8bf9db61a27)]
 interface mozIStorageService : nsISupports {
   /**
    * Get a connection to a named special database storage.
@@ -105,6 +106,16 @@ interface mozIStorageService : nsISupports {
    *         If the database file is corrupted.
    */
   mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
+
+  /**
+   * See openDatabase(). Exactly the same only initialized with a file URL.
+   * Custom parameters can be passed to SQLite and VFS implementations through
+   * the query part of the URL.
+   *
+   * @param aURL
+   *        A nsIFileURL that represents the database that is to be opened.
+   */
+  mozIStorageConnection openDatabaseWithFileURL(in nsIFileURL aFileURL);
 
   /*
    * Utilities

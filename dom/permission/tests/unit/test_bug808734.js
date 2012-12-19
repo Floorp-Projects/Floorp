@@ -51,7 +51,7 @@ function do_check_set_eq(a1, a2) {
 
 function run_test() {
   var scope = {};
-  Cu.import("resource://gre/modules/PermissionsInstaller.jsm", scope);
+  Cu.import("resource://gre/modules/PermissionsTable.jsm", scope);
 
   for (var i = 0; i < gData.length; i++) {
     var perms = scope.expandPermissions(gData[i].permission,

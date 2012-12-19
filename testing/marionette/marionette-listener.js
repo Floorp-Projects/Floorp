@@ -50,6 +50,7 @@ let sandbox;
 let asyncTestRunning = false;
 let asyncTestCommandId;
 let asyncTestTimeoutId;
+let originalOnError;
 //timer for doc changes
 let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
@@ -481,11 +482,11 @@ function executeWithCallback(msg, useFinish) {
     sandbox.asyncComplete('timed out', 28);
   }, msg.json.timeout);
 
-  curWindow.addEventListener('error', function win__onerror(evt) {
-    curWindow.removeEventListener('error', win__onerror, true);
-    sandbox.asyncComplete(evt, 17);
-    return true;
-  }, true);
+  originalOnError = curWindow.onerror;
+  curWindow.onerror = function errHandler(errMsg, url, line) {
+    sandbox.asyncComplete(errMsg, 17);
+    curWindow.onerror = originalOnError;
+  };
 
   let scriptSrc;
   if (useFinish) {
@@ -860,7 +861,9 @@ function switchToFrame(msg) {
                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   if ((msg.json.value == null) && (msg.json.element == null)) {
     curWindow = content;
-    curWindow.focus();
+    if(msg.json.focus == true) {
+      curWindow.focus();
+    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
     return;
   }
@@ -921,7 +924,9 @@ function switchToFrame(msg) {
   }
   else {
     curWindow = curWindow.contentWindow;
-    curWindow.focus();
+    if(msg.json.focus == true) {
+      curWindow.focus();
+    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 }

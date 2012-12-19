@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
 #include <initguid.h>
 #include "Nv3DVUtils.h"
-#include "mozilla/Util.h"
 
 DEFINE_GUID(CLSID_NV3DVStreaming, 
 0xf7747266, 0x777d, 0x4f61, 0xa1, 0x75, 0xdd, 0x5a, 0xdf, 0x1e, 0x37, 0xdf);

@@ -109,51 +109,6 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     freeStack(reserved);
 }
 
-void
-MacroAssembler::branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, FloatRegister fr)
-{
-    Register tag = splitTagForTest(value);
-    Label ifFalse;
-    Assembler::Condition cond;
-
-    // Eventually we will want some sort of type filter here. For now, just
-    // emit all easy cases. For speed we use the cached tag for all comparison,
-    // except for doubles, which we test last (as the operation can clobber the
-    // tag, which may be in ScratchReg).
-    branchTestUndefined(Assembler::Equal, tag, &ifFalse);
-
-    branchTestNull(Assembler::Equal, tag, &ifFalse);
-    branchTestObject(Assembler::Equal, tag, ifTrue);
-
-    Label notBoolean;
-    branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    branchTestBooleanTruthy(false, value, &ifFalse);
-    jump(ifTrue);
-    bind(&notBoolean);
-
-    Label notInt32;
-    branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-    cond = testInt32Truthy(false, value);
-    j(cond, &ifFalse);
-    jump(ifTrue);
-    bind(&notInt32);
-
-    // Test if a string is non-empty.
-    Label notString;
-    branchTestString(Assembler::NotEqual, tag, &notString);
-    cond = testStringTruthy(false, value);
-    j(cond, &ifFalse);
-    jump(ifTrue);
-    bind(&notString);
-
-    // If we reach here the value is a double.
-    unboxDouble(value, fr);
-    cond = testDoubleTruthy(false, fr);
-    j(cond, &ifFalse);
-    jump(ifTrue);
-    bind(&ifFalse);
-}
-
 template<typename T>
 void
 MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp,

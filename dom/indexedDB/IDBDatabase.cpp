@@ -779,6 +779,12 @@ IDBDatabase::Close()
   return NS_OK;
 }
 
+const nsACString&
+IDBDatabase::StorageOrigin()
+{
+  return Origin();
+}
+
 nsISupports*
 IDBDatabase::StorageId()
 {

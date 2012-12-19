@@ -20,49 +20,20 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
-static uint8_t sUnpremultiplyTable[256*256];
-static uint8_t sPremultiplyTable[256*256];
-static bool sTablesInitialized = false;
+const uint8_t gfxUtils::sPremultiplyTable[256*256] = {
+#include "sPremultiplyTable.h"
+};
+
+const uint8_t gfxUtils::sUnpremultiplyTable[256*256] = {
+#include "sUnpremultiplyTable.h"
+};
 
 static const uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
-    return sPremultiplyTable[a*256+v];
+    return gfxUtils::sPremultiplyTable[a*256+v];
 }
 
 static const uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
-    return sUnpremultiplyTable[a*256+v];
-}
-
-static void
-CalculateTables()
-{
-    // It's important that the array be indexed first by alpha and then by rgb
-    // value.  When we unpremultiply a pixel, we're guaranteed to do three
-    // lookups with the same alpha; indexing by alpha first makes it likely that
-    // those three lookups will be close to one another in memory, thus
-    // increasing the chance of a cache hit.
-
-    // Unpremultiply table
-
-    // a == 0 case
-    for (uint32_t c = 0; c <= 255; c++) {
-        sUnpremultiplyTable[c] = c;
-    }
-
-    for (int a = 1; a <= 255; a++) {
-        for (int c = 0; c <= 255; c++) {
-            sUnpremultiplyTable[a*256+c] = (uint8_t)((c * 255) / a);
-        }
-    }
-
-    // Premultiply table
-
-    for (int a = 0; a <= 255; a++) {
-        for (int c = 0; c <= 255; c++) {
-            sPremultiplyTable[a*256+c] = (a * c + 254) / 255;
-        }
-    }
-
-    sTablesInitialized = true;
+    return gfxUtils::sUnpremultiplyTable[a*256+v];
 }
 
 void
@@ -89,9 +60,6 @@ gfxUtils::PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
         }
         return;
     }
-
-    if (!sTablesInitialized)
-        CalculateTables();
 
     uint8_t *src = aSourceSurface->Data();
     uint8_t *dst = aDestSurface->Data();
@@ -146,9 +114,6 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
         }
         return;
     }
-
-    if (!sTablesInitialized)
-        CalculateTables();
 
     uint8_t *src = aSourceSurface->Data();
     uint8_t *dst = aDestSurface->Data();
@@ -295,10 +260,6 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     tmpCtx->SetOperator(OptimalFillOperator());
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
                     gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
-
-    nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);
-    if (!resultPattern)
-        return nullptr;
 
     nsRefPtr<gfxDrawable> drawable = 
         new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
@@ -590,6 +551,12 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
     aVal = -aVal;
   }
 
+  bool inverse = false;
+  if (aVal < 1.0) {
+    inverse = true;
+    aVal = 1 / aVal;
+  }
+
   gfxFloat power = log(aVal)/log(kScaleResolution);
 
   // If power is within 1e-6 of an integer, round to nearest to
@@ -597,13 +564,19 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
   // next integer value.
   if (fabs(power - NS_round(power)) < 1e-6) {
     power = NS_round(power);
+  } else if (inverse) {
+    power = floor(power);
   } else {
     power = ceil(power);
   }
 
   gfxFloat scale = pow(kScaleResolution, power);
 
-  return NS_MAX(scale, 1.0);
+  if (inverse) {
+    scale = 1 / scale;
+  }
+
+  return scale;
 }
 
 

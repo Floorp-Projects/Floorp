@@ -5,7 +5,7 @@
 
 /* rendering object for replaced elements with bitmap image data */
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
@@ -70,7 +70,6 @@
 #include "ImageContainer.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h" // for DebugOnly
 
 using namespace mozilla;
 
@@ -164,10 +163,10 @@ nsImageFrame::AccessibleType()
 {
   // Don't use GetImageMap() to avoid reentrancy into accessibility.
   if (HasImageMap()) {
-    return a11y::eHTMLImageMap;
+    return a11y::eHTMLImageMapType;
   }
 
-  return a11y::eImage;
+  return a11y::eImageType;
 }
 #endif
 

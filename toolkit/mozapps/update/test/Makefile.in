@@ -29,8 +29,7 @@ ifdef MOZ_MAINTENANCE_SERVICE
 DEFINES += -DMOZ_MAINTENANCE_SERVICE=$(MOZ_MAINTENANCE_SERVICE)
 endif
 
-# Android doesn't build the updater binary, so it skips the things that test it.
-ifneq ($(OS_TARGET),Android)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 DIRS = \
   chrome \
   $(NULL)
@@ -68,7 +67,7 @@ endif # Not Android
 
 include $(topsrcdir)/config/rules.mk
 
-ifneq ($(OS_TARGET),Android)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 # TestAUSReadStrings runs during check in the following directory with a Unicode
 # char in order to test bug 473417 on Windows.
 ifeq ($(OS_ARCH),WINNT)
@@ -89,9 +88,9 @@ endif # Not Android
 libs:: unit/head_update.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
 
-ifneq ($(OS_TARGET),Android)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 ifndef MOZ_PROFILE_GENERATE
 libs::
 	$(INSTALL) TestAUSHelper$(BIN_SUFFIX) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
-endif # Not Android
+endif

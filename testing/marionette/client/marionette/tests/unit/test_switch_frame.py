@@ -4,33 +4,40 @@
 
 import os
 from marionette_test import MarionetteTestCase
+from errors import JavascriptException
+
+# boiler plate for the initial navigation and frame switch
+def switch_to_window_verify(test, start_url, frame, verify_title, verify_url):
+    test.assertTrue(test.marionette.execute_script("window.location.href = 'about:blank'; return true;"))
+    test.assertEqual("about:blank", test.marionette.execute_script("return window.location.href;"))
+    test_html = test.marionette.absolute_url(start_url)
+    test.marionette.navigate(test_html)
+    test.assertNotEqual("about:blank", test.marionette.execute_script("return window.location.href;"))
+    test.assertEqual(verify_title, test.marionette.title)
+    test.marionette.switch_to_frame(frame)
+    test.assertTrue(verify_url in test.marionette.get_url())
 
 class TestSwitchFrame(MarionetteTestCase):
     def test_switch_simple(self):
-        self.assertTrue(self.marionette.execute_script("window.location.href = 'about:blank'; return true;"))
-        self.assertEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
-        test_html = self.marionette.absolute_url("test_iframe.html")
-        self.marionette.navigate(test_html)
-        self.assertNotEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
-        self.assertEqual("Marionette IFrame Test", self.marionette.title)
-        self.marionette.switch_to_frame("test_iframe")
-        self.assertTrue("test.html" in self.marionette.get_url())
+        switch_to_window_verify(self, "test_iframe.html", "test_iframe", "Marionette IFrame Test", "test.html")
 
     def test_switch_nested(self):
-        self.assertTrue(self.marionette.execute_script("window.location.href = 'about:blank'; return true;"))
-        self.assertEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
-        test_html = self.marionette.absolute_url("test_nested_iframe.html")
-        self.marionette.navigate(test_html)
-        self.assertNotEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
-        self.assertEqual("Marionette IFrame Test", self.marionette.title)
-        self.marionette.switch_to_frame("test_iframe")
-        self.assertTrue("test_inner_iframe.html" in self.marionette.get_url())
+        switch_to_window_verify(self, "test_nested_iframe.html", "test_iframe", "Marionette IFrame Test", "test_inner_iframe.html")
         self.marionette.switch_to_frame("inner_frame")
         self.assertTrue("test.html" in self.marionette.get_url())
         self.marionette.switch_to_frame() # go back to main frame
         self.assertTrue("test_nested_iframe.html" in self.marionette.get_url())
         #test that we're using the right window object server-side
         self.assertTrue("test_nested_iframe.html" in self.marionette.execute_script("return window.location.href;"))
+
+    def test_stack_trace(self):
+        switch_to_window_verify(self, "test_iframe.html", "test_iframe", "Marionette IFrame Test", "test.html")
+        #can't use assertRaises in context manager with python2.6
+        self.assertRaises(JavascriptException, self.marionette.execute_async_script, "foo();")
+        try:
+            self.marionette.execute_async_script("foo();")
+        except JavascriptException as e:
+            self.assertTrue("foo" in e.msg)
 
 class TestSwitchFrameChrome(MarionetteTestCase):
     def setUp(self):
@@ -62,6 +69,11 @@ class TestSwitchFrameChrome(MarionetteTestCase):
         self.marionette.switch_to_frame()
         self.assertTrue("test.xul" in self.marionette.get_url())
         
-    #I can't seem to access a xul iframe within a xul iframe
-    def test_switch_nested(self):
-        pass
+    def test_stack_trace(self):
+        self.assertTrue("test.xul" in self.marionette.get_url())
+        self.marionette.switch_to_frame(0)
+        self.assertRaises(JavascriptException, self.marionette.execute_async_script, "foo();")
+        try:
+            self.marionette.execute_async_script("foo();")
+        except JavascriptException as e:
+            self.assertTrue("foo" in e.msg)

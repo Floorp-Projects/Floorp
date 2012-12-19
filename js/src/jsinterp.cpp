@@ -9,6 +9,7 @@
  * JavaScript bytecode interpreter.
  */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <stdio.h>
@@ -51,6 +52,7 @@
 #include "ion/BaselineJIT.h"
 
 #include "jsatominlines.h"
+#include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -655,12 +657,13 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     }
 
     if (lval.isNullOrUndefined()) {
-        *result = rval.isNullOrUndefined();
+        *result = rval.isNullOrUndefined() ||
+                  (rval.isObject() && EmulatesUndefined(&rval.toObject()));
         return true;
     }
 
     if (rval.isNullOrUndefined()) {
-        *result = false;
+        *result = (lval.isObject() && EmulatesUndefined(&lval.toObject()));
         return true;
     }
 
@@ -1362,8 +1365,6 @@ ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_UNUSED2)
 ADD_EMPTY_CASE(JSOP_UNUSED3)
-ADD_EMPTY_CASE(JSOP_UNUSED10)
-ADD_EMPTY_CASE(JSOP_UNUSED11)
 ADD_EMPTY_CASE(JSOP_UNUSED12)
 ADD_EMPTY_CASE(JSOP_UNUSED13)
 ADD_EMPTY_CASE(JSOP_UNUSED17)
@@ -1812,6 +1813,10 @@ BEGIN_CASE(JSOP_BINDGNAME)
     PUSH_OBJECT(regs.fp()->global());
 END_CASE(JSOP_BINDGNAME)
 
+BEGIN_CASE(JSOP_BINDINTRINSIC)
+    PUSH_OBJECT(*cx->global()->intrinsicsHolder());
+END_CASE(JSOP_BINDGNAME)
+
 BEGIN_CASE(JSOP_BINDNAME)
 {
     RootedObject &scopeChain = rootObject0;
@@ -2252,6 +2257,18 @@ BEGIN_CASE(JSOP_CALLPROP)
 }
 END_CASE(JSOP_GETPROP)
 
+BEGIN_CASE(JSOP_SETINTRINSIC)
+{
+    HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    if (!SetIntrinsicOperation(cx, script, regs.pc, value))
+        goto error;
+
+    regs.sp[-2] = regs.sp[-1];
+    regs.sp--;
+}
+END_CASE(JSOP_SETINTRINSIC)
+
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 {
@@ -2508,18 +2525,18 @@ BEGIN_CASE(JSOP_CALLNAME)
 }
 END_CASE(JSOP_NAME)
 
-BEGIN_CASE(JSOP_INTRINSICNAME)
+BEGIN_CASE(JSOP_GETINTRINSIC)
 BEGIN_CASE(JSOP_CALLINTRINSIC)
 {
     RootedValue &rval = rootValue0;
 
-    if (!IntrinsicNameOperation(cx, script, regs.pc, &rval))
+    if (!GetIntrinsicOperation(cx, script, regs.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
     TypeScript::Monitor(cx, script, regs.pc, rval);
 }
-END_CASE(JSOP_INTRINSICNAME)
+END_CASE(JSOP_GETINTRINSIC)
 
 BEGIN_CASE(JSOP_UINT16)
     PUSH_INT32((int32_t) GET_UINT16(regs.pc));

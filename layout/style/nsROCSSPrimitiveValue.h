@@ -55,7 +55,7 @@ public:
                       mozilla::ErrorResult& aRv);
   already_AddRefed<nsIDOMCounter> GetCounterValue(mozilla::ErrorResult& aRv);
   already_AddRefed<nsIDOMRect> GetRectValue(mozilla::ErrorResult& aRv);
-  already_AddRefed<nsIDOMRGBColor> GetRGBColorValue(mozilla::ErrorResult& aRv);
+  nsDOMCSSRGBColor *GetRGBColorValue(mozilla::ErrorResult& aRv);
 
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();

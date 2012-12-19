@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Scoped.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,8 +22,7 @@
 
 #include "jstypes.h"
 
-# include "js/TemplateLib.h"
-# include "mozilla/Scoped.h"
+#include "js/TemplateLib.h"
 
 /* The public JS engine namespace. */
 namespace JS {}

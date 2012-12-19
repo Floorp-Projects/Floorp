@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
 
 #ifdef MOZ_LOGGING
 // this next define has to appear before the include of prlog.h
@@ -45,10 +48,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include "mozilla/storage.h"
-#include "mozilla/Util.h" // for DebugOnly
-#include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/Likely.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
 

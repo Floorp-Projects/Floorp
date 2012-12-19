@@ -2699,167 +2699,168 @@ public:
 
 
 #ifdef DEBUG
-     GLContext *TrackingContext() {
-         GLContext *tip = this;
-         while (tip->mSharedContext)
-             tip = tip->mSharedContext;
-         return tip;
-     }
+    GLContext *TrackingContext() {
+        GLContext *tip = this;
+        while (tip->mSharedContext)
+            tip = tip->mSharedContext;
+        return tip;
+    }
 
 #define TRACKING_CONTEXT(a) do { TrackingContext()->a; } while (0)
 #else
 #define TRACKING_CONTEXT(a) do {} while (0)
 #endif
 
-     GLuint GLAPIENTRY fCreateProgram() {
-         BEFORE_GL_CALL;
-         GLuint ret = mSymbols.fCreateProgram();
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(CreatedProgram(this, ret));
-         return ret;
-     }
+    GLuint GLAPIENTRY fCreateProgram() {
+        BEFORE_GL_CALL;
+        GLuint ret = mSymbols.fCreateProgram();
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedProgram(this, ret));
+        return ret;
+    }
 
-     GLuint GLAPIENTRY fCreateShader(GLenum t) {
-         BEFORE_GL_CALL;
-         GLuint ret = mSymbols.fCreateShader(t);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(CreatedShader(this, ret));
-         return ret;
-     }
+    GLuint GLAPIENTRY fCreateShader(GLenum t) {
+        BEFORE_GL_CALL;
+        GLuint ret = mSymbols.fCreateShader(t);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedShader(this, ret));
+        return ret;
+    }
 
-     void GLAPIENTRY fGenBuffers(GLsizei n, GLuint* names) {
-         BEFORE_GL_CALL;
-         mSymbols.fGenBuffers(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(CreatedBuffers(this, n, names));
-     }
+    void GLAPIENTRY fGenBuffers(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenBuffers(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedBuffers(this, n, names));
+    }
 
-     void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
-         BEFORE_GL_CALL;
-         mSymbols.fGenTextures(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(CreatedTextures(this, n, names));
-     }
+    void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenTextures(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedTextures(this, n, names));
+    }
 
-     void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
-         BEFORE_GL_CALL;
-         mSymbols.fGenFramebuffers(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(CreatedFramebuffers(this, n, names));
-     }
+    void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenFramebuffers(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedFramebuffers(this, n, names));
+    }
 
-     void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
-         BEFORE_GL_CALL;
-         mSymbols.fGenRenderbuffers(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(CreatedRenderbuffers(this, n, names));
-     }
+    void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        mSymbols.fGenRenderbuffers(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedRenderbuffers(this, n, names));
+    }
 
-     void GLAPIENTRY fDeleteProgram(GLuint program) {
-         BEFORE_GL_CALL;
-         mSymbols.fDeleteProgram(program);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(DeletedProgram(this, program));
-     }
+    void GLAPIENTRY fDeleteProgram(GLuint program) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteProgram(program);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedProgram(this, program));
+    }
 
-     void GLAPIENTRY fDeleteShader(GLuint shader) {
-         BEFORE_GL_CALL;
-         mSymbols.fDeleteShader(shader);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(DeletedShader(this, shader));
-     }
+    void GLAPIENTRY fDeleteShader(GLuint shader) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteShader(shader);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedShader(this, shader));
+    }
 
-     void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
-         BEFORE_GL_CALL;
-         mSymbols.fDeleteBuffers(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(DeletedBuffers(this, n, names));
-     }
+    void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteBuffers(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedBuffers(this, n, names));
+    }
 
-     void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
-         BEFORE_GL_CALL;
-         mSymbols.fDeleteTextures(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(DeletedTextures(this, n, names));
-     }
+    void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteTextures(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedTextures(this, n, names));
+    }
 
-     void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
-         BEFORE_GL_CALL;
-         if (n == 1 && *names == 0) {
-            /* Deleting framebuffer 0 causes hangs on the DROID. See bug 623228 */
-         } else {
-            mSymbols.fDeleteFramebuffers(n, names);
-         }
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
-     }
+    void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
+        BEFORE_GL_CALL;
+        if (n == 1 && *names == 0) {
+           /* Deleting framebuffer 0 causes hangs on the DROID. See bug 623228 */
+        } else {
+           mSymbols.fDeleteFramebuffers(n, names);
+        }
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
+    }
 
-     void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
-         BEFORE_GL_CALL;
-         mSymbols.fDeleteRenderbuffers(n, names);
-         AFTER_GL_CALL;
-         TRACKING_CONTEXT(DeletedRenderbuffers(this, n, names));
-     }
+    void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteRenderbuffers(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedRenderbuffers(this, n, names));
+    }
 
-     GLenum GLAPIENTRY fGetGraphicsResetStatus() {
-         BEFORE_GL_CALL;
-         GLenum ret = mHasRobustness ? mSymbols.fGetGraphicsResetStatus() : 0;
-         AFTER_GL_CALL;
-         return ret;
-     }
 
-     GLsync GLAPIENTRY fFenceSync(GLenum condition, GLbitfield flags) {
-         BEFORE_GL_CALL;
-         GLsync ret = mSymbols.fFenceSync(condition, flags);
-         AFTER_GL_CALL;
-         return ret;
-     }
+    GLenum GLAPIENTRY fGetGraphicsResetStatus() {
+        BEFORE_GL_CALL;
+        GLenum ret = mHasRobustness ? mSymbols.fGetGraphicsResetStatus() : 0;
+        AFTER_GL_CALL;
+        return ret;
+    }
 
-     realGLboolean GLAPIENTRY fIsSync(GLsync sync) {
-         BEFORE_GL_CALL;
-         realGLboolean ret = mSymbols.fIsSync(sync);
-         AFTER_GL_CALL;
-         return ret;
-     }
+    GLsync GLAPIENTRY fFenceSync(GLenum condition, GLbitfield flags) {
+        BEFORE_GL_CALL;
+        GLsync ret = mSymbols.fFenceSync(condition, flags);
+        AFTER_GL_CALL;
+        return ret;
+    }
 
-     void GLAPIENTRY fDeleteSync(GLsync sync) {
-         BEFORE_GL_CALL;
-         mSymbols.fDeleteSync(sync);
-         AFTER_GL_CALL;
-     }
+    realGLboolean GLAPIENTRY fIsSync(GLsync sync) {
+        BEFORE_GL_CALL;
+        realGLboolean ret = mSymbols.fIsSync(sync);
+        AFTER_GL_CALL;
+        return ret;
+    }
 
-     GLenum GLAPIENTRY fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
-         BEFORE_GL_CALL;
-         GLenum ret = mSymbols.fClientWaitSync(sync, flags, timeout);
-         AFTER_GL_CALL;
-         return ret;
-     }
+    void GLAPIENTRY fDeleteSync(GLsync sync) {
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteSync(sync);
+        AFTER_GL_CALL;
+    }
 
-     void GLAPIENTRY fWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
-         BEFORE_GL_CALL;
-         mSymbols.fWaitSync(sync, flags, timeout);
-         AFTER_GL_CALL;
-     }
+    GLenum GLAPIENTRY fClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
+        BEFORE_GL_CALL;
+        GLenum ret = mSymbols.fClientWaitSync(sync, flags, timeout);
+        AFTER_GL_CALL;
+        return ret;
+    }
 
-     void GLAPIENTRY fGetInteger64v(GLenum pname, GLint64 *params) {
-         BEFORE_GL_CALL;
-         mSymbols.fGetInteger64v(pname, params);
-         AFTER_GL_CALL;
-     }
+    void GLAPIENTRY fWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) {
+        BEFORE_GL_CALL;
+        mSymbols.fWaitSync(sync, flags, timeout);
+        AFTER_GL_CALL;
+    }
 
-     void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
-         BEFORE_GL_CALL;
-         mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
-         AFTER_GL_CALL;
-     }
+    void GLAPIENTRY fGetInteger64v(GLenum pname, GLint64 *params) {
+        BEFORE_GL_CALL;
+        mSymbols.fGetInteger64v(pname, params);
+        AFTER_GL_CALL;
+    }
 
-     // OES_EGL_image (GLES)
-     void fEGLImageTargetTexture2D(GLenum target, GLeglImage image)
-     {
-         BEFORE_GL_CALL;
-         mSymbols.fEGLImageTargetTexture2D(target, image);
-         AFTER_GL_CALL;
-     }
+    void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
+        BEFORE_GL_CALL;
+        mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
+        AFTER_GL_CALL;
+    }
+
+    // OES_EGL_image (GLES)
+    void fEGLImageTargetTexture2D(GLenum target, GLeglImage image)
+    {
+        BEFORE_GL_CALL;
+        mSymbols.fEGLImageTargetTexture2D(target, image);
+        AFTER_GL_CALL;
+    }
 
 #ifdef DEBUG
     void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);
@@ -2914,6 +2915,20 @@ public:
     nsTArray<NamedResource> mTrackedBuffers;
 #endif
 
+public:
+    enum MemoryUse {
+        // when memory being allocated is reported to a memory reporter
+        MemoryAllocated,
+        // when memory being freed is reported to a memory reporter
+        MemoryFreed
+    };
+
+    // When memory is used/freed for tile textures, call this method
+    // to update the value reported by the memory reporter.
+    static void UpdateTextureMemoryUsage(MemoryUse action,
+                                         GLenum format,
+                                         GLenum type,
+                                         uint16_t tileSize);
 };
 
 inline bool
@@ -3107,6 +3122,8 @@ protected:
         mGL->BindUserFBO(mOldState);
     }
 };
+
+uint32_t GetBitsPerTexel(GLenum format, GLenum type);
 
 } /* namespace gl */
 } /* namespace mozilla */

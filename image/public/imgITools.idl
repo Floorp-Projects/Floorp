@@ -14,29 +14,44 @@ interface nsIDOMDocument;
 interface imgIScriptedNotificationObserver;
 interface imgINotificationObserver;
 
-[scriptable, builtinclass, uuid(98bd5bf9-87eb-4d92-81b1-4cd10c64f7b2)]
+[scriptable, builtinclass, uuid(4c2383a4-931c-484d-8c4a-973590f66e3f)]
 interface imgITools : nsISupports
 {
+    /**
+     * decodeImage
+     * Caller provides an input stream and mimetype. We read from the stream
+     * and decompress it (according to the specified mime type) and return
+     * the resulting imgIContainer.
+     *
+     * @param aStream
+     *        An input stream for an encoded image file.
+     * @param aMimeType
+     *        Type of image in the stream.
+     */
+    imgIContainer decodeImage(in nsIInputStream aStream,
+                              in ACString aMimeType);
+
     /**
      * decodeImageData
      * Caller provides an input stream and mimetype. We read from the stream
      * and decompress it (according to the specified mime type) and return
-     * the resulting imgIContainer. (If the caller already has a container,
-     * it can be provided as input to be reused).
+     * the resulting imgIContainer.
+     *
+     * This method is deprecated and will be removed at some time in the future;
+     * new code should use |decodeImage|.
      *
      * @param aStream
      *        An input stream for an encoded image file.
      * @param aMimeType
      *        Type of image in the stream.
      * @param aContainer
-     *        An imgIContainer holding the decoded image. Specify |null| when
-     *        calling to have one created, otherwise specify a container to
-     *        be used. It is an error to pass an already-initialized container
-     *        as aContainer.
+     *        An imgIContainer holding the decoded image will be returned via
+     *        this parameter. It is an error to provide any initial value but
+     *        |null|.
      */
-    void decodeImageData(in nsIInputStream aStream,
-                         in ACString aMimeType,
-                         inout imgIContainer aContainer);
+    [deprecated] void decodeImageData(in nsIInputStream aStream,
+                                      in ACString aMimeType,
+                                      inout imgIContainer aContainer);
 
     /**
      * encodeImage

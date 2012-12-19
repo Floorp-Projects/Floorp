@@ -57,40 +57,6 @@ public class testNewTab extends BaseTest {
         closeTabs();
     }
 
-    private void addTab(String url) {
-        final int addTabId = addTab.getId();
-
-        boolean clicked = tabs.click();
-        if (!clicked) {
-            mAsserter.ok(clicked != false, "checking that tabs clicked", "tabs element clicked");
-        }
-
-        // wait for addTab to appear (this is usually immediate)
-        boolean success = waitForTest(new BooleanTest() {
-            public boolean test() {
-                View addTabView = getActivity().findViewById(addTabId);
-                if (addTabView == null) {
-                    return false;
-                }
-                return true;
-            }
-        }, MAX_WAIT_MS);
-        if (!success) {
-            mAsserter.ok(success != false, "waiting for add tab view", "add tab view available");
-        }
-
-        clicked = addTab.click();
-        if (!clicked) {
-            mAsserter.ok(clicked != false, "checking that add_tab clicked", "add_tab element clicked");
-        }
-        // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
-        mSolo.waitForText("History");
-
-        // cannot use loadUrl(): getText fails because we are using a different urlbar
-        mActions.sendKeys(url);
-        hitEnterAndWait();
-    }
-
     private void closeTabs() {
         final int closeTabId = closeTab.getId();
         String tabCountText = null;

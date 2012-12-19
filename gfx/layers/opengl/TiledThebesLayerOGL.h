@@ -100,6 +100,7 @@ private:
   const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
   gfxSize mFrameResolution;
 
+  GLenum GetTileType(TiledTexture aTile);
   void GetFormatAndTileForImageFormat(gfxASurface::gfxImageFormat aFormat,
                                       GLenum& aOutFormat,
                                       GLenum& aOutType);

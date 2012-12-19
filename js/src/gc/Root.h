@@ -337,8 +337,6 @@ namespace js {
  * rooted.
  */
 typedef JSObject *                  RawObject;
-typedef JSFunction *                RawFunction;
-typedef JSScript *                  RawScript;
 typedef JSString *                  RawString;
 typedef jsid                        RawId;
 typedef JS::Value                   RawValue;
@@ -518,18 +516,18 @@ class Unrooted
  * This macro simplifies declaration of the required matching raw-pointer for
  * optimized builds and Unrooted<T> template for debug builds.
  */
-# define ForwardDeclare(type)                                                 \
-    class type;                                                               \
-    typedef Unrooted<type*> Unrooted##type;                                   \
+# define ForwardDeclare(type)                        \
+    class type;                                      \
+    typedef Unrooted<type*> Unrooted##type;          \
     typedef type * Raw##type
 
-# define ForwardDeclareJS(type)                                               \
-    struct JS##type;                                                          \
-    namespace js {                                                            \
-        typedef Unrooted<JS##type*> Unrooted##type;                           \
-        typedef JS##type * Raw##type;                                         \
-    }                                                                         \
-    struct JS##type
+# define ForwardDeclareJS(type)                      \
+    class JS##type;                                  \
+    namespace js {                                   \
+        typedef js::Unrooted<JS##type*> Unrooted##type; \
+        typedef JS##type * Raw##type;                \
+    }                                                \
+    class JS##type
 
 template <typename T>
 T DropUnrooted(Unrooted<T> &unrooted)
@@ -553,18 +551,18 @@ inline RawId DropUnrooted(RawId &id) { return id; }
 #else /* NDEBUG */
 
 /* In opt builds |UnrootedFoo| is a real |Foo*|. */
-# define ForwardDeclare(type)                                                 \
-    class type;                                                               \
-    typedef type * Unrooted##type;                                            \
+# define ForwardDeclare(type)        \
+    class type;                      \
+    typedef type * Unrooted##type;   \
     typedef type * Raw##type
 
 # define ForwardDeclareJS(type)                                               \
-    struct JS##type;                                                          \
+    class JS##type;                                                           \
     namespace js {                                                            \
         typedef JS##type * Unrooted##type;                                    \
         typedef JS##type * Raw##type;                                         \
     }                                                                         \
-    struct JS##type
+    class JS##type
 
 template <typename T>
 class Unrooted
@@ -957,6 +955,9 @@ class CompilerRootNode
 };
 
 }  /* namespace js */
+
+ForwardDeclareJS(Script);
+ForwardDeclareJS(Function);
 
 #endif  /* __cplusplus */
 

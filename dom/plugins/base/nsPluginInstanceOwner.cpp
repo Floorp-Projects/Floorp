@@ -1828,7 +1828,7 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   nsEvent* theEvent = aFocusEvent->GetInternalNSEvent();
   if (theEvent) {
     // we only care about the message in ProcessEvent
-    nsGUIEvent focusEvent(NS_IS_TRUSTED_EVENT(theEvent), theEvent->message,
+    nsGUIEvent focusEvent(theEvent->mFlags.mIsTrusted, theEvent->message,
                           nullptr);
     nsEventStatus rv = ProcessEvent(focusEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -2002,7 +2002,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
     nsEvent* ievent = aEvent->GetInternalNSEvent();
-    if ((ievent && NS_IS_TRUSTED_EVENT(ievent)) &&
+    if ((ievent && ievent->mFlags.mIsTrusted) &&
          ievent->message != NS_DRAGDROP_ENTER && ievent->message != NS_DRAGDROP_OVER) {
       aEvent->PreventDefault();
     }
@@ -3383,6 +3383,8 @@ nsPluginInstanceOwner::UpdateDocumentActiveState(bool aIsActive)
   if (mInstance) {
     if (!mPluginDocumentActiveState)
       RemovePluginView();
+    else if (mPluginDocumentActiveState && mFullScreen)
+      AddPluginView();
 
     mInstance->NotifyOnScreen(mPluginDocumentActiveState);
 

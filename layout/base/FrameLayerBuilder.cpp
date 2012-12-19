@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "FrameLayerBuilder.h"
 
 #include "nsDisplayList.h"
@@ -2720,9 +2722,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
         int32_t(NSAppUnitsToDoublePixels(appUnitOffset.x, appUnitsPerDevPixel)*aIncomingScale.mXScale),
         int32_t(NSAppUnitsToDoublePixels(appUnitOffset.y, appUnitsPerDevPixel)*aIncomingScale.mYScale));
   }
-  transform = gfx3DMatrix::Translation(aIncomingScale.mOffset.x, aIncomingScale.mOffset.y, 0) * 
-              transform * 
-              gfx3DMatrix::Translation(offset.x, offset.y, 0);
+  transform = transform * gfx3DMatrix::Translation(offset.x + aIncomingScale.mOffset.x, offset.y + aIncomingScale.mOffset.y, 0);
 
 
   bool canDraw2D = transform.CanDraw2D(&transform2d);

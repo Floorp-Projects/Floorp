@@ -61,7 +61,7 @@ this.SyncTestingInfrastructure =
   let auth = ns.Service.identity;
   auth.account = username || "foo";
   auth.basicPassword = password || "password";
-  auth.syncKey = syncKey || "foo";
+  auth.syncKey = syncKey || "abcdeabcdeabcdeabcdeabcdea";
 
   ns.Service.serverURL = TEST_SERVER_URL;
   ns.Service.clusterURL = TEST_CLUSTER_URL;

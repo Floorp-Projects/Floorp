@@ -91,6 +91,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:CancelMMI",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
+  "RIL:SendStkTimerExpiration",
   "RIL:SendStkEventDownload",
   "RIL:RegisterMobileConnectionMsg",
   "RIL:SetCallForwardingOption",
@@ -457,6 +458,9 @@ RadioInterfaceLayer.prototype = {
         break;
       case "RIL:SendStkMenuSelection":
         this.sendStkMenuSelection(msg.json);
+        break;
+      case "RIL:SendStkTimerExpiration":
+        this.sendStkTimerExpiration(msg.json);
         break;
       case "RIL:SendStkEventDownload":
         this.sendStkEventDownload(msg.json);
@@ -1238,6 +1242,14 @@ RadioInterfaceLayer.prototype = {
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
     call.state = nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED;
+    let duration = ("started" in call && typeof call.started == "number") ?
+      new Date().getTime() - call.started : 0;
+    let data = {
+      number: call.number,
+      duration: duration,
+      direction: call.direction
+    };
+    gSystemMessenger.broadcastMessage("telephony-call-ended", data);
     this.updateCallAudioState(call);
     this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
@@ -1605,6 +1617,7 @@ RadioInterfaceLayer.prototype = {
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
     debug("handleUSSDReceived " + JSON.stringify(ussd));
+    gSystemMessenger.broadcastMessage("ussd-received", ussd);
     this._sendTargetMessage("mobileconnection", "RIL:USSDReceived", ussd);
   },
 
@@ -1912,6 +1925,11 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage(message);
   },
 
+  sendStkTimerExpiration: function sendStkTimerExpiration(message) {
+    message.rilMessageType = "sendStkTimerExpiration";
+    this.worker.postMessage(message);
+  },
+
   sendStkEventDownload: function sendStkEventDownload(message) {
     message.rilMessageType = "sendStkEventDownload";
     this.worker.postMessage(message);
@@ -2033,7 +2051,23 @@ RadioInterfaceLayer.prototype = {
 
       septet = langShiftTable.indexOf(c);
       if (septet < 0) {
-        return -1;
+        if (!strict7BitEncoding) {
+          return -1;
+        }
+
+        // Bug 816082, when strict7BitEncoding is enabled, we should replace
+        // characters that can't be encoded with GSM 7-Bit alphabets with '*'.
+        c = '*';
+        if (langTable.indexOf(c) >= 0) {
+          length++;
+        } else if (langShiftTable.indexOf(c) >= 0) {
+          length += 2;
+        } else {
+          // We can't even encode a '*' character with current configuration.
+          return -1;
+        }
+
+        continue;
       }
 
       // According to 3GPP TS 23.038 B.2, "This code represents a control
@@ -2125,7 +2159,6 @@ RadioInterfaceLayer.prototype = {
         langIndex: langIndex,
         langShiftIndex: langShiftIndex,
         segmentMaxSeq: segments,
-        strict7BitEncoding: strict7BitEncoding
       };
     }
 
@@ -2182,8 +2215,6 @@ RadioInterfaceLayer.prototype = {
    * @param dcs
    *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
    *        constants.
-   * @param fullBody
-   *        Original unfragmented text message.
    * @param userDataHeaderLength
    *        Length of embedded user data header, in bytes. The whole header
    *        size will be userDataHeaderLength + 1; 0 for no header.
@@ -2203,10 +2234,6 @@ RadioInterfaceLayer.prototype = {
     let options = this._calculateUserDataLength7Bit(message, strict7BitEncoding);
     if (!options) {
       options = this._calculateUserDataLengthUCS2(message);
-    }
-
-    if (options) {
-      options.fullBody = message;
     }
 
     debug("_calculateUserDataLength: " + JSON.stringify(options));
@@ -2234,7 +2261,7 @@ RadioInterfaceLayer.prototype = {
     const headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
     const segmentSeptets = RIL.PDU_MAX_USER_DATA_7BIT - headerSeptets;
     let ret = [];
-    let begin = 0, len = 0;
+    let body = "", len = 0;
     for (let i = 0, inc = 0; i < text.length; i++) {
       let c = text.charAt(i);
       if (strict7BitEncoding) {
@@ -2250,32 +2277,41 @@ RadioInterfaceLayer.prototype = {
         inc = 1;
       } else {
         septet = langShiftTable.indexOf(c);
-        if (septet < 0) {
-          throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
-        }
-
         if (septet == RIL.PDU_NL_RESERVED_CONTROL) {
           continue;
         }
 
         inc = 2;
+        if (septet < 0) {
+          if (!strict7BitEncoding) {
+            throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
+          }
+
+          // Bug 816082, when strict7BitEncoding is enabled, we should replace
+          // characters that can't be encoded with GSM 7-Bit alphabets with '*'.
+          c = '*';
+          if (langTable.indexOf(c) >= 0) {
+            inc = 1;
+          }
+        }
       }
 
       if ((len + inc) > segmentSeptets) {
         ret.push({
-          body: text.substring(begin, i),
+          body: body,
           encodedBodyLength: len,
         });
-        begin = i;
-        len = 0;
+        body = c;
+        len = inc;
+      } else {
+        body += c;
+        len += inc;
       }
-
-      len += inc;
     }
 
     if (len) {
       ret.push({
-        body: text.substring(begin),
+        body: body,
         encodedBodyLength: len,
       });
     }
@@ -2331,20 +2367,15 @@ RadioInterfaceLayer.prototype = {
       options = this._calculateUserDataLength(text, strict7BitEncoding);
     }
 
-    if (options.segmentMaxSeq <= 1) {
-      options.segments = null;
-      return options;
-    }
-
     if (options.dcs == RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
       const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[options.langIndex];
       const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[options.langShiftIndex];
-      options.segments = this._fragmentText7Bit(options.fullBody,
+      options.segments = this._fragmentText7Bit(text,
                                                 langTable, langShiftTable,
                                                 options.userDataHeaderLength,
-                                                options.strict7BitEncodingEncoding);
+                                                strict7BitEncoding);
     } else {
-      options.segments = this._fragmentTextUCS2(options.fullBody,
+      options.segments = this._fragmentTextUCS2(text,
                                                 options.userDataHeaderLength);
     }
 
@@ -2372,21 +2403,17 @@ RadioInterfaceLayer.prototype = {
       strict7BitEncoding = false;
     }
 
-    let options = this._calculateUserDataLength(message, strict7BitEncoding);
+    let options = this._fragmentText(message, null, strict7BitEncoding);
     options.rilMessageType = "sendSMS";
     options.number = number;
     options.requestStatusReport = true;
-
-    this._fragmentText(message, options, strict7BitEncoding);
     if (options.segmentMaxSeq > 1) {
       options.segmentRef16Bit = this.segmentRef16Bit;
       options.segmentRef = this.nextSegmentRef;
     }
 
     let timestamp = Date.now();
-    let id = gSmsDatabaseService.saveSendingMessage(options.number,
-                                                    options.fullBody,
-                                                    timestamp);
+    let id = gSmsDatabaseService.saveSendingMessage(number, message, timestamp);
     let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
     let deliveryStatus = options.requestStatusReport
                        ? RIL.GECKO_SMS_DELIVERY_STATUS_PENDING
@@ -2395,8 +2422,8 @@ RadioInterfaceLayer.prototype = {
                                            DOM_SMS_DELIVERY_SENDING,
                                            deliveryStatus,
                                            null,
-                                           options.number,
-                                           options.fullBody,
+                                           number,
+                                           message,
                                            messageClass,
                                            timestamp,
                                            true);

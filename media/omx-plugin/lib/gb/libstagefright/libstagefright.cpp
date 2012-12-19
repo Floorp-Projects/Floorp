@@ -52,6 +52,11 @@ MOZ_EXPORT size_t MediaBuffer::size() const
   return 0;
 }
 
+MOZ_EXPORT bool MetaData::setInt32(uint32_t key, int32_t value)
+{
+  return false;
+}
+
 MOZ_EXPORT bool MetaData::findInt32(uint32_t key, int32_t *value)
 {
   return false;
@@ -76,7 +81,11 @@ MOZ_EXPORT MediaSource::ReadOptions::ReadOptions()
 {
 }
 
-MOZ_EXPORT void MediaSource::ReadOptions::setSeekTo(int64_t time_us, SeekMode mode)
+MOZ_EXPORT void MediaSource::ReadOptions::setSeekTo(int64_t time_us
+#if !defined(MOZ_ANDROID_FROYO)
+, SeekMode mode
+#endif
+)
 {
 }
 
