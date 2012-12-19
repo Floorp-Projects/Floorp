@@ -35,8 +35,6 @@ public:
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    int32_t width, int32_t height,
                    gfxASurface::gfxImageFormat format);
-  void SetAnimFrameInfo();
-
   void EndImageFrame();
 
   // Check if PNG is valid ICO (32bpp RGBA)

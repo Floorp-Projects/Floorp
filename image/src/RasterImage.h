@@ -270,7 +270,7 @@ public:
 
   // "Blend" method indicates how the current image is combined with the
   // previous image.
-  enum {
+  enum FrameBlendMethod {
     // All color components of the frame, including alpha, overwrite the current
     // contents of the frame's output buffer region
     kBlendSource =  0,
@@ -280,7 +280,7 @@ public:
     kBlendOver
   };
 
-  enum {
+  enum FrameDisposalMethod {
     kDisposeClearAll         = -1, // Clear the whole image, revealing
                                    // what was there before the gif displayed
     kDisposeNotSpecified,   // Leave frame, let new frame draw on top
@@ -289,7 +289,14 @@ public:
     kDisposeRestorePrevious // Restore the previous (composited) frame
   };
 
-  nsCString GetURIString() {
+  // A hint as to whether an individual frame is entirely opaque, or requires
+  // alpha blending.
+  enum FrameAlpha {
+    kFrameHasAlpha,
+    kFrameOpaque
+  };
+
+ nsCString GetURIString() {
     nsCString spec;
     if (GetURI()) {
       GetURI()->GetSpec(spec);
