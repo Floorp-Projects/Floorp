@@ -155,6 +155,8 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     Preferences::AddStrongObservers(gFontListPrefObserver, kObservedPrefs);
 
     mSharedCmaps.Init(16);
+
+    NS_RegisterMemoryMultiReporter(new MemoryReporter);
 }
 
 gfxPlatformFontList::~gfxPlatformFontList()
@@ -177,14 +179,13 @@ gfxPlatformFontList::InitFontList()
     }
     mFaceNamesInitialized = false;
     mPrefFonts.Clear();
+    mReplacementCharFallbackFamily = nullptr;
     CancelLoader();
 
     // initialize ranges of characters for which system-wide font search should be skipped
     mCodepointsWithNoFonts.reset();
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
-
-    NS_RegisterMemoryMultiReporter(new MemoryReporter);
 
     sPlatformFontList = this;
 
@@ -390,32 +391,37 @@ gfxPlatformFontList::SystemFindFontForChar(const uint32_t aCh,
         return nullptr;
     }
 
-    // try to short-circuit font fallback for U+FFFD, used to represent
-    // encoding errors: just use a platform-specific fallback system
-    // font that is guaranteed (or at least highly likely) to be around,
-    // or a cached family from last time U+FFFD was seen. this helps
-    // speed up pages with lots of encoding errors, binary-as-text, etc.
-    if (aCh == 0xFFFD && mReplacementCharFallbackFamily.Length() > 0) {
+    // Try to short-circuit font fallback for U+FFFD, used to represent
+    // encoding errors: just use cached family from last time U+FFFD was seen.
+    // This helps speed up pages with lots of encoding errors, binary-as-text,
+    // etc.
+    if (aCh == 0xFFFD && mReplacementCharFallbackFamily) {
         bool needsBold;  // ignored in the system fallback case
 
-        fontEntry = FindFontForFamily(mReplacementCharFallbackFamily,
-                                      aStyle, needsBold);
+        fontEntry =
+            mReplacementCharFallbackFamily->FindFontForStyle(*aStyle,
+                                                             needsBold);
 
-        if (fontEntry && fontEntry->TestCharacterMap(aCh))
+        // this should never fail, as we must have found U+FFFD in order to set
+        // mReplacementCharFallbackFamily at all, but better play it safe
+        if (fontEntry && fontEntry->TestCharacterMap(aCh)) {
             return fontEntry;
+        }
     }
 
     TimeStamp start = TimeStamp::Now();
 
     // search commonly available fonts
     bool common = true;
-    fontEntry = CommonFontFallback(aCh, aRunScript, aStyle);
+    gfxFontFamily *fallbackFamily = nullptr;
+    fontEntry = CommonFontFallback(aCh, aRunScript, aStyle, &fallbackFamily);
  
     // if didn't find a font, do system-wide fallback (except for specials)
     uint32_t cmapCount = 0;
     if (!fontEntry) {
         common = false;
-        fontEntry = GlobalFontFallback(aCh, aRunScript, aStyle, cmapCount);
+        fontEntry = GlobalFontFallback(aCh, aRunScript, aStyle, cmapCount,
+                                       &fallbackFamily);
     }
     TimeDuration elapsed = TimeStamp::Now() - start;
 
@@ -441,10 +447,10 @@ gfxPlatformFontList::SystemFindFontForChar(const uint32_t aCh,
 
     // no match? add to set of non-matching codepoints
     if (!fontEntry) {
-         mCodepointsWithNoFonts.set(aCh);
-    } else if (aCh == 0xFFFD && fontEntry) {
-        mReplacementCharFallbackFamily = fontEntry->FamilyName();
-     }
+        mCodepointsWithNoFonts.set(aCh);
+    } else if (aCh == 0xFFFD && fontEntry && fallbackFamily) {
+        mReplacementCharFallbackFamily = fallbackFamily;
+    }
  
     // track system fallback time
     static bool first = true;
@@ -467,11 +473,11 @@ gfxPlatformFontList::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr
      void *userArg)
 {
     GlobalFontMatch *data = static_cast<GlobalFontMatch*>(userArg);
- 
-     // evaluate all fonts in this family for a match
-     aFamilyEntry->FindFontForChar(data);
 
-     return PL_DHASH_NEXT;
+    // evaluate all fonts in this family for a match
+    aFamilyEntry->FindFontForChar(data);
+
+    return PL_DHASH_NEXT;
 }
 
 #define NUM_FALLBACK_FONTS        8
@@ -479,7 +485,8 @@ gfxPlatformFontList::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr
 gfxFontEntry*
 gfxPlatformFontList::CommonFontFallback(const uint32_t aCh,
                                         int32_t aRunScript,
-                                        const gfxFontStyle* aMatchStyle)
+                                        const gfxFontStyle* aMatchStyle,
+                                        gfxFontFamily** aMatchedFamily)
 {
     nsAutoTArray<const char*,NUM_FALLBACK_FONTS> defaultFallbacks;
     uint32_t i, numFallbacks;
@@ -503,6 +510,7 @@ gfxPlatformFontList::CommonFontFallback(const uint32_t aCh,
         // use first font in list that supports a given character
         fontEntry = fallback->FindFontForStyle(*aMatchStyle, needsBold);
         if (fontEntry && fontEntry->TestCharacterMap(aCh)) {
+            *aMatchedFamily = fallback;
             return fontEntry;
         }
     }
@@ -514,7 +522,8 @@ gfxFontEntry*
 gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
                                         int32_t aRunScript,
                                         const gfxFontStyle* aMatchStyle,
-                                        uint32_t& aCmapCount)
+                                        uint32_t& aCmapCount,
+                                        gfxFontFamily** aMatchedFamily)
 {
     // otherwise, try to find it among local fonts
     GlobalFontMatch data(aCh, aRunScript, aMatchStyle);
@@ -523,6 +532,7 @@ gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
     mFontFamilies.Enumerate(gfxPlatformFontList::FindFontForCharProc, &data);
 
     aCmapCount = data.mCmapsTested;
+    *aMatchedFamily = data.mMatchedFamily;
 
     return data.mBestMatch;
 }
@@ -846,8 +856,6 @@ gfxPlatformFontList::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 
     aSizes->mFontListSize +=
         mCodepointsWithNoFonts.SizeOfExcludingThis(aMallocSizeOf);
-    aSizes->mFontListSize +=
-        mReplacementCharFallbackFamily.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
     aSizes->mFontListSize +=
         mFontFamiliesToLoad.SizeOfExcludingThis(aMallocSizeOf);
 
