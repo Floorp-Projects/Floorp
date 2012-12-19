@@ -7,7 +7,6 @@
 #include "nsIconDecoder.h"
 #include "nsIInputStream.h"
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 #include "nspr.h"
 #include "nsRect.h"
 
@@ -16,7 +15,7 @@
 namespace mozilla {
 namespace image {
 
-nsIconDecoder::nsIconDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+nsIconDecoder::nsIconDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
  : Decoder(aImage, aObserver),
    mWidth(-1),
    mHeight(-1),

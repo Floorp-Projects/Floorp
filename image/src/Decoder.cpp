@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace image {
 
-Decoder::Decoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+Decoder::Decoder(RasterImage &aImage, imgDecoderObserver* aObserver)
   : mImage(aImage)
   , mObserver(aObserver)
   , mDecodeFlags(0)

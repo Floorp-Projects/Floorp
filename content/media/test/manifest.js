@@ -6,6 +6,8 @@
 // really only need one test file per backend here.
 var gSmallTests = [
   { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
+  { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
+  { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
   { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
@@ -33,6 +35,7 @@ var gPlayedTests = [
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
 ];
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
@@ -152,6 +155,10 @@ var gPlayTests = [
 
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
 
+  { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
+  { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
 ];
@@ -161,7 +168,7 @@ var gSnifferTests = [
   { name:"big.wav", type:"audio/x-wav", duration:9.278981, size:102444 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233, size:28942 },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
-  { name:"short.mp4", type:"video/mp4", duration:0.2, size:29435},
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.56, size:383631 },
   // A mp3 file with id3 tags.
   { name:"id3tags.mp3", type:"audio/mpeg", duration:0.28, size:3530},
   { name:"bogus.duh", type:"bogus/duh" }
@@ -292,6 +299,8 @@ var gSeekTests = [
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208 },
   { name:"split.webm", type:"video/webm", duration:1.967 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
@@ -299,6 +308,8 @@ var gSeekTests = [
 var gAudioTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"sound.ogg", type:"audio/ogg" },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 

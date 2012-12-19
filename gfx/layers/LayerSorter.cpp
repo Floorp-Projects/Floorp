@@ -8,6 +8,7 @@
 #include "limits.h"
 #include "gfxLineSegment.h"
 #include "Layers.h"
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
 namespace layers {
@@ -278,6 +279,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
       uint32_t last = noIncoming.Length() - 1;
 
       Layer* layer = noIncoming.ElementAt(last);
+      MOZ_ASSERT(layer); // don't let null layer pointers sneak into sortedList
 
       noIncoming.RemoveElementAt(last);
       sortedList.AppendElement(layer);
@@ -311,9 +313,11 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
         }
       }
 
-      // Remove all of them!
-      graph.RemoveEdgesTo(minNode);
-      noIncoming.AppendElement(minNode);
+      if (minNode) {
+        // Remove all of them!
+        graph.RemoveEdgesTo(minNode);
+        noIncoming.AppendElement(minNode);
+      }
     }
   } while (!noIncoming.IsEmpty());
   NS_ASSERTION(!graph.GetEdgeCount(), "Cycles detected!");

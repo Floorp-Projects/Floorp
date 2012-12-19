@@ -619,7 +619,7 @@ nsPlacesExpiration.prototype = {
       return;
 
     let row;
-    while (row = aResultSet.getNextRow()) {
+    while ((row = aResultSet.getNextRow())) {
       if (!("_expectedResultsCount" in this))
         this._expectedResultsCount = row.getResultByName("expected_results");
       if (this._expectedResultsCount > 0)

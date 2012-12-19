@@ -126,6 +126,14 @@
         ]]>
         </setter>
       </property>
+
+      <property name="alignmentPosition" readonly="true">
+        <getter>
+        <![CDATA[
+          return this.popupBoxObject.alignmentPosition;
+        ]]>
+        </getter>
+      </property>
       
       <method name="enableKeyboardNavigator">
         <parameter name="aEnableKeyboardNavigator"/>
@@ -322,7 +330,7 @@
       <xul:box anonid="container" class="panel-arrowcontainer" flex="1"
                xbl:inherits="side,panelopen">
         <xul:box anonid="arrowbox" class="panel-arrowbox">
-          <xul:image anonid="arrow" class="panel-arrow"/>
+          <xul:image anonid="arrow" class="panel-arrow" xbl:inherits="side"/>
         </xul:box>
         <xul:box class="panel-arrowcontent" xbl:inherits="side,align,dir,orient,pack" flex="1">
           <children/>
@@ -336,8 +344,6 @@
     <handlers>
       <handler event="popupshowing" phase="target">
       <![CDATA[
-        var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
-        var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
         var arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
 
         var anchor = this.anchorNode;
@@ -346,118 +352,43 @@
           return;
         }
 
-        // Returns whether the first float is smaller than the second float or
-        // equals to it in a range of epsilon.
-        function smallerTo(aFloat1, aFloat2, aEpsilon)
-        {
-          return aFloat1 <= (aFloat2 + aEpsilon);
-        }
+        var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+        var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
 
-        let popupRect = this.getBoundingClientRect();
-        let popupLeft = window.mozInnerScreenX + popupRect.left;
-        let popupTop = window.mozInnerScreenY + popupRect.top;
-        let popupRight = popupLeft + popupRect.width;
-        let popupBottom = popupTop + popupRect.height;
-
-        let anchorRect = anchor.getBoundingClientRect();
-        let anchorLeft = anchor.ownerDocument.defaultView.mozInnerScreenX + anchorRect.left;
-        let anchorTop = anchor.ownerDocument.defaultView.mozInnerScreenY + anchorRect.top;
-        let anchorRight = anchorLeft + anchorRect.width;
-        let anchorBottom = anchorTop + anchorRect.height;
-
-        try {
-          let anchorWindow = anchor.ownerDocument.defaultView;
-          if (anchorWindow != window) {
-            let utils = anchorWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                                     getInterface(Components.interfaces.nsIDOMWindowUtils);
-            let spp = utils.screenPixelsPerCSSPixel;
-            anchorLeft *= spp;
-            anchorRight *= spp;
-            anchorTop *= spp;
-            anchorBottom *= spp;
-          }
-        } catch(ex) { }
-
-        const epsilon = 0.2;
-
-        var horizPos = smallerTo(popupRight, anchorLeft, epsilon) ? -1 : smallerTo(anchorRight, popupLeft, epsilon) ? 1 : 0;
-        var vertPos = smallerTo(popupBottom, anchorTop, epsilon) ? -1 : smallerTo(anchorBottom, popupTop, epsilon) ? 1 : 0;
-
-        var anchorClass = "";
-        var hideAnchor = false;
-        if (horizPos == 0) {
-          container.orient = "vertical";
-          arrowbox.orient = "";
-          if (vertPos == 0) {
-            hideAnchor = true;
-          }
-          else {
-            let pack = "";
-
-            // We have to guess where to position the arrow given that we don't
-            // have access to the parameters passed to |openPopup|.
-
-            // If the popup is on the left of the anchor.
-            if (smallerTo(popupLeft, anchorLeft, epsilon) && smallerTo(popupRight, anchorRight, epsilon)) {
-              pack = "end";
-            // If the popup is on the right of the anchor.
-            } else if (smallerTo(anchorLeft, popupLeft, epsilon) && smallerTo(anchorRight, popupRight, epsilon)) {
-              pack = "start"; //(popupLeft + popupRect.width / 2 > anchorRight) ? "start" : "end";
-            // If the popup is not on the right nor on the left.
-            // Basically, that means one is above the other and one is bigger
-            // than the other.
-            // In that case, we can't easily choose a position for the arrow so
-            // we have to guess depending on which side the popup is more close to.
-            } else {
-              pack = (Math.abs(popupLeft - anchorLeft) < Math.abs(popupRight - anchorRight)) ? "start" : "end";
-            }
-
-            // In RTL, everything should be inverted.
-            if (window.getComputedStyle(this).direction == "rtl") {
-              pack = (pack == "start") ? "end" : "start";
-            }
-
-            arrowbox.pack = pack;
-
-            if (vertPos == 1) {
-              container.dir = "";
-              anchorClass = "top";
-            }
-            else if (vertPos == -1) {
-              container.dir = "reverse"; 
-              anchorClass = "bottom";
-            }
-          }
-        }
-        else if (vertPos == 0) {
+        var position = this.alignmentPosition;
+        if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
           container.orient = "";
           arrowbox.orient = "vertical";
-          if (horizPos == 0) {
-            hideAnchor = true;
+          arrowbox.pack = (position.indexOf("_after") > 0) ? "end" : "start";
+
+          // The assigned side stays the same regardless of direction.
+          var isRTL = (window.getComputedStyle(this).direction == "rtl");
+
+          if (position.indexOf("start_") == 0) {
+            container.dir = "reverse";
+            this.setAttribute("side", isRTL ? "left" : "right");
           }
           else {
-            let dir = "";
-            arrowbox.pack = popupTop + popupRect.height / 2 < anchorTop ? "end" : "start";
-            if (horizPos == 1) {
-              anchorClass = "left";
-            }
-            else if (horizPos == -1) {
-              dir = "reverse";
-              anchorClass = "right";
-            }
-            // In RTL, everything should be inverted.
-            if (window.getComputedStyle(this).direction == "rtl") {
-              dir = (dir == "") ? "reverse" : "";
-            }
-            container.dir = dir;
+            container.dir = "";
+            this.setAttribute("side", isRTL ? "right" : "left");
           }
         }
-        else {
-          hideAnchor = true;
+        else if (position.indexOf("before_") == 0 || position.indexOf("after_") == 0) {
+          container.orient = "vertical";
+          arrowbox.orient = "";
+          arrowbox.pack = (position.indexOf("_end") > 0) ? "end" : "start";
+
+          if (position.indexOf("before_") == 0) {
+            container.dir = "reverse";
+            this.setAttribute("side", "bottom");
+          }
+          else {
+            container.dir = "";
+            this.setAttribute("side", "top");
+          }
         }
-        arrow.hidden = hideAnchor;
-        arrow.setAttribute("side", anchorClass);
-        this.setAttribute("side", anchorClass);
+
+        arrow.hidden = false;
 
         // set fading
         var fade = this.getAttribute("fade");

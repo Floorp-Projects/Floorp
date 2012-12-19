@@ -13,7 +13,6 @@
 #include "nsStyleContext.h"
 
 #include "imgIRequest.h"
-#include "imgIDecoderObserver.h"
 #include "imgINotificationObserver.h"
 
 class imgRequestProxy;
