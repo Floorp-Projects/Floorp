@@ -24,7 +24,6 @@ class nsAString;
 class nsIAtom;
 class nsIDocument;
 template<class E, class A> class nsTArray;
-struct nsTArrayDefaultAllocator;
 class nsStyledElementNotElementCSSInlineStyle;
 struct MiscContainer;
 
@@ -426,7 +425,7 @@ private:
   int32_t EnumTableEntryToValue(const EnumTable* aEnumTable,
                                 const EnumTable* aTableEntry);  
 
-  static nsTArray<const EnumTable*, nsTArrayDefaultAllocator>* sEnumTableArray;
+  static nsTArray<const EnumTable*>* sEnumTableArray;
 
   uintptr_t mBits;
 };
