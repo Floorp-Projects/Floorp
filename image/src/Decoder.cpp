@@ -231,13 +231,24 @@ Decoder::PostFrameStart()
 }
 
 void
-Decoder::PostFrameStop()
+Decoder::PostFrameStop(RasterImage::FrameAlpha aFrameAlpha /* = RasterImage::kFrameHasAlpha */,
+                       RasterImage::FrameDisposalMethod aDisposalMethod /* = RasterImage::kDisposeKeep */,
+                       int32_t aTimeout /* = 0 */,
+                       RasterImage::FrameBlendMethod aBlendMethod /* = RasterImage::kBlendOver */)
 {
   // We should be mid-frame
   NS_ABORT_IF_FALSE(mInFrame, "Stopping frame when we didn't start one!");
 
   // Update our state
   mInFrame = false;
+
+  if (aFrameAlpha == RasterImage::kFrameOpaque) {
+    mImage.SetFrameHasNoAlpha(mFrameCount - 1);
+  }
+
+  mImage.SetFrameDisposalMethod(mFrameCount - 1, aDisposalMethod);
+  mImage.SetFrameTimeout(mFrameCount - 1, aTimeout);
+  mImage.SetFrameBlendMethod(mFrameCount - 1, aBlendMethod);
 
   // Flush any invalidations before we finish the frame
   FlushInvalidations();
@@ -263,7 +274,7 @@ Decoder::PostInvalidation(nsIntRect& aRect)
 }
 
 void
-Decoder::PostDecodeDone()
+Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
 {
   NS_ABORT_IF_FALSE(!IsSizeDecode(), "Can't be done with decoding with size decode!");
   NS_ABORT_IF_FALSE(!mInFrame, "Can't be done decoding if we're mid-frame!");
@@ -276,6 +287,8 @@ Decoder::PostDecodeDone()
   for (int i = 0; i < frames; i++) {
     mImage.SetFrameAsNonPremult(i, isNonPremult);
   }
+
+  mImage.SetLoopCount(aLoopCount);
 
   // Notify
   mImage.DecodingComplete();

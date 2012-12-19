@@ -150,10 +150,19 @@ protected:
   // the image of its size and sends notifications.
   void PostSize(int32_t aWidth, int32_t aHeight);
 
-  // Called by decoders when they begin/end a frame. Informs the image, sends
+  // Called by decoders when they begin a frame. Informs the image, sends
   // notifications, and does internal book-keeping.
   void PostFrameStart();
-  void PostFrameStop();
+
+  // Called by decoders when they end a frame. Informs the image, sends
+  // notifications, and does internal book-keeping.
+  // Specify whether this frame is opaque as an optimization.
+  // For animated images, specify the disposal, blend method and timeout for
+  // this frame.
+  void PostFrameStop(RasterImage::FrameAlpha aFrameAlpha = RasterImage::kFrameHasAlpha,
+                     RasterImage::FrameDisposalMethod aDisposalMethod = RasterImage::kDisposeKeep,
+                     int32_t aTimeout = 0,
+                     RasterImage::FrameBlendMethod aBlendMethod = RasterImage::kBlendOver);
 
   // Called by the decoders when they have a region to invalidate. We may not
   // actually pass these invalidations on right away.
@@ -164,7 +173,10 @@ protected:
   // the stream, or by us calling FinishInternal().
   //
   // May not be called mid-frame.
-  void PostDecodeDone();
+  //
+  // For animated images, specify the loop count. -1 means loop forever, 0
+  // means a single iteration, stopping on the last frame.
+  void PostDecodeDone(int32_t aLoopCount = 0);
 
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();

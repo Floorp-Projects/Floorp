@@ -112,11 +112,9 @@ nsGIFDecoder2::FinishInternal()
   if (!IsSizeDecode() && mGIFOpen) {
     if (mCurrentFrame == mGIFStruct.images_decoded)
       EndImageFrame();
-    PostDecodeDone();
+    PostDecodeDone(mGIFStruct.loop_count - 1);
     mGIFOpen = false;
   }
-
-  mImage.SetLoopCount(mGIFStruct.loop_count - 1);
 }
 
 // Push any new rows according to mCurrentPass/mLastFlushedPass and
@@ -208,9 +206,6 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 
   memset(mImageData, 0, imageDataLength);
 
-  mImage.SetFrameDisposalMethod(mGIFStruct.images_decoded,
-                                mGIFStruct.disposal_method);
-
   // Tell the superclass we're starting a frame
   PostFrameStart();
 
@@ -232,6 +227,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 //******************************************************************************
 void nsGIFDecoder2::EndImageFrame()
 {
+  RasterImage::FrameAlpha alpha = RasterImage::kFrameHasAlpha;
+
   // First flush all pending image data 
   if (!mGIFStruct.images_decoded) {
     // Only need to flush first frame
@@ -249,7 +246,7 @@ void nsGIFDecoder2::EndImageFrame()
     }
     // This transparency check is only valid for first frame
     if (mGIFStruct.is_transparent && !mSawTransparency) {
-      mImage.SetFrameHasNoAlpha(mGIFStruct.images_decoded);
+      alpha = RasterImage::kFrameOpaque;
     }
   }
   mCurrentRow = mLastFlushedRow = -1;
@@ -262,12 +259,6 @@ void nsGIFDecoder2::EndImageFrame()
       uint8_t *rowp = mImageData + ((mGIFStruct.height - mGIFStruct.rows_remaining) * mGIFStruct.width);
       memset(rowp, 0, mGIFStruct.rows_remaining * mGIFStruct.width);
     }
-
-    // We actually have the timeout information before we get the lzw encoded 
-    // image data, at least according to the spec, but we delay in setting the 
-    // timeout for the image until here to help ensure that we have the whole 
-    // image frame decoded before we go off and try to display another frame.
-    mImage.SetFrameTimeout(mGIFStruct.images_decoded, mGIFStruct.delay_time);
   }
 
   // Unconditionally increment images_decoded, because we unconditionally
@@ -277,7 +268,9 @@ void nsGIFDecoder2::EndImageFrame()
   mGIFStruct.images_decoded++;
 
   // Tell the superclass we finished a frame
-  PostFrameStop();
+  PostFrameStop(alpha,
+                RasterImage::FrameDisposalMethod(mGIFStruct.disposal_method),
+                mGIFStruct.delay_time);
 
   // Reset the transparent pixel
   if (mOldColor) {
