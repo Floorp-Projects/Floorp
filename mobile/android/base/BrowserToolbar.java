@@ -690,7 +690,14 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             InputMethodManager imm =
                     (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(mTabs.getWindowToken(), 0);
-            mActivity.showLocalTabs();
+
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                if (!tab.isPrivate())
+                    mActivity.showNormalTabs();
+                else
+                    mActivity.showPrivateTabs();
+            }
         }
     }
 
