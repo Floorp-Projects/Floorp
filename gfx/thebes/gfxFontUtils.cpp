@@ -1541,6 +1541,22 @@ gfxFontUtils::GetFullNameFromTable(FallibleTArray<uint8_t>& aNameTable,
     return NS_ERROR_NOT_AVAILABLE;
 }
 
+nsresult
+gfxFontUtils::GetFamilyNameFromTable(FallibleTArray<uint8_t>& aNameTable,
+                                     nsAString& aFullName)
+{
+    nsAutoString name;
+    nsresult rv =
+        gfxFontUtils::ReadCanonicalName(aNameTable,
+                                        gfxFontUtils::NAME_ID_FAMILY,
+                                        name);
+    if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
+        aFullName = name;
+        return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
 enum {
 #if defined(XP_MACOSX)
     CANONICAL_LANG_ID = gfxFontUtils::LANG_ID_MAC_ENGLISH,
