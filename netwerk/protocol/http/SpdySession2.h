@@ -202,10 +202,6 @@ private:
                                             nsAutoPtr<SpdyStream2> &,
                                             void *);
 
-  static PLDHashOperator GoAwayEnumerator(nsAHttpTransaction *,
-                                          nsAutoPtr<SpdyStream2> &,
-                                          void *);
-
   // This is intended to be nsHttpConnectionMgr:nsHttpConnectionHandle taken
   // from the first transaction on this session. That object contains the
   // pointer to the real network-level nsHttpConnection object.
@@ -339,9 +335,6 @@ private:
   PRIntervalTime       mLastDataReadEpoch; // used for IdleTime()
   PRIntervalTime       mPingSentEpoch;
   uint32_t             mNextPingID;
-
-  // used as a temporary buffer while enumerating the stream hash during GoAway
-  nsDeque  mGoAwayStreamsToRestart;
 };
 
 }} // namespace mozilla::net
