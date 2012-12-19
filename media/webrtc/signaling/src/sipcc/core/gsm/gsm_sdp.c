@@ -1562,7 +1562,7 @@ gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, cha
 }
 
 /*
- * gsmsdp_set_attributes
+ * gsmsdp_set_ice_attribute
  *
  * Description:
  *
@@ -1575,7 +1575,7 @@ gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, cha
  * sdp_p        - Pointer to the SDP to set the ice candidate attribute against.
  * ice_attrib   - ice attribute to set
  */
-static void
+void
 gsmsdp_set_ice_attribute (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, char *ice_attrib)
 {
     uint16_t      a_instance = 0;
@@ -5882,12 +5882,12 @@ gsmsdp_encode_sdp (cc_sdp_t *sdp_p, cc_msgbody_info_t *msg_body)
     cc_msgbody_t   *part;
     uint32_t        body_length;
 
-    if (msg_body == NULL) {
+    if (!msg_body || !sdp_p) {
         return CC_CAUSE_ERROR;
     }
 
     /* Support single SDP encoding for now */
-    sdp_body = sipsdp_write_to_buf(sdp_p, &body_length);
+    sdp_body = sipsdp_write_to_buf(sdp_p->src_sdp, &body_length);
 
     if (sdp_body == NULL) {
         return CC_CAUSE_ERROR;
