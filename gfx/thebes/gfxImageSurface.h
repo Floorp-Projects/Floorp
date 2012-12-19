@@ -98,6 +98,7 @@ public:
         MOZ_OVERRIDE;
     virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
         MOZ_OVERRIDE;
+    virtual bool SizeOfIsMeasured() const MOZ_OVERRIDE;
 
 protected:
     gfxImageSurface();
