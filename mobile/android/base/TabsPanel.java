@@ -185,21 +185,6 @@ public class TabsPanel extends TabHost
             }
         });
 
-        // Set a touch delegate to Add-Tab button, so the touch events on its tail
-        // are passed to the menu button.
-        if (!GeckoApp.mAppContext.isTablet()) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    int height = mAddTab.getHeight();
-                    int width = mAddTab.getWidth();
-                    int tail = (int) (height * 1.125) / 2;
-                    Rect bounds = new Rect(width - tail, 0, width, height);
-                    mAddTab.setTouchDelegate(new TailTouchDelegate(bounds, mMenuButton));
-                }
-            });
-        }
-
         mPopupMenu.setAnchor(mMenuButton);
     }
 
