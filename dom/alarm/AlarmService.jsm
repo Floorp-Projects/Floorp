@@ -238,15 +238,15 @@ this.AlarmService = {
     switch (aMessageName)
     {
       case "Add":
-          json = aSuccess ? 
-            { requestId: aRequestId, id: aData } : 
-            { requestId: aRequestId, errorMsg: aData };
+        json = aSuccess ? 
+          { requestId: aRequestId, id: aData } : 
+          { requestId: aRequestId, errorMsg: aData };
         break;
 
       case "GetAll":
-          json = aSuccess ? 
-            { requestId: aRequestId, alarms: aData } : 
-            { requestId: aRequestId, errorMsg: aData };
+        json = aSuccess ? 
+          { requestId: aRequestId, alarms: aData } : 
+          { requestId: aRequestId, errorMsg: aData };
         break;
 
       default:
@@ -299,7 +299,15 @@ this.AlarmService = {
 
     let manifestURI = Services.io.newURI(aAlarm.manifestURL, null, null);
     let pageURI = Services.io.newURI(aAlarm.pageURL, null, null);
-    messenger.sendMessage("alarm", aAlarm, pageURI, manifestURI);
+
+    // We don't need to expose everything to the web content.
+    let alarm = { "id":              aAlarm.id,
+                  "date":            aAlarm.date,
+                  "respectTimezone": aAlarm.ignoreTimezone ?
+                                       "ignoreTimezone" : "honorTimezone", 
+                  "data":            aAlarm.data };
+
+    messenger.sendMessage("alarm", alarm, pageURI, manifestURI);
   },
 
   _unlockCpuWakeLock: function _unlockCpuWakeLock(aAlarmId) {

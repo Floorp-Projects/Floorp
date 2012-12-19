@@ -9,6 +9,7 @@
 #define LifoAlloc_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 
 /*
  * This data structure supports stacky LIFO allocation (mark/release and

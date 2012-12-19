@@ -1,0 +1,15 @@
+<head dir=auto id=test1><ul id=test2>
+7. If no matching font face is within the "font-family" being processed by steps
+</ul>
+
+<h2 id=test3><p id=test5>* XHB7R%[+z^NvLp5	n$C
+<p id=test4>
+<script>
+var docElement = document.body;
+document.addEventListener("DOMContentLoaded", CFcrash, false);
+function CFcrash() {
+setTimeout('try { test5.appendChild(test4); } catch(e) {}', 50);
+try { test4.parentNode.removeChild(test4); test4 = test1; } catch(e) {}
+try { test4.insertBefore(test2, test4.firstChils); } catch(e) { }
+try { test2.textContent = test3.textContent; } catch(e) {}
+}</script>>

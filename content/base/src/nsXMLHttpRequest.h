@@ -159,7 +159,7 @@ public:
 
     nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
     req->Construct(principal->GetPrincipal(), window);
-    req->InitParameters(aParams.mozAnon, aParams.mozSystem);
+    req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
   }
 

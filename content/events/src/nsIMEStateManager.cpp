@@ -549,8 +549,7 @@ nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 {
   MOZ_ASSERT(aEvent->eventStructType == NS_COMPOSITION_EVENT ||
              aEvent->eventStructType == NS_TEXT_EVENT);
-  if (!NS_IS_TRUSTED_EVENT(aEvent) ||
-      (aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) != 0) {
+  if (!aEvent->mFlags.mIsTrusted || aEvent->mFlags.mPropagationStopped) {
     return;
   }
 
@@ -625,7 +624,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       if (!backup.GetLastData().IsEmpty()) {
         nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
         textEvent.theText = backup.GetLastData();
-        textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+        textEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&textEvent, status);
         if (widget->Destroyed()) {
           return NS_OK;
@@ -635,7 +634,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       status = nsEventStatus_eIgnore;
       nsCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
       endEvent.data = backup.GetLastData();
-      endEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+      endEvent.mFlags.mIsSynthesizedForTests = true;
       widget->DispatchEvent(&endEvent, status);
 
       return NS_OK;
@@ -648,7 +647,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       if (!backup.GetLastData().IsEmpty()) {
         nsCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE, widget);
         updateEvent.data = backup.GetLastData();
-        updateEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+        updateEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&updateEvent, status);
         if (widget->Destroyed()) {
           return NS_OK;
@@ -657,7 +656,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
         status = nsEventStatus_eIgnore;
         nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
         textEvent.theText = backup.GetLastData();
-        textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+        textEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&textEvent, status);
         if (widget->Destroyed()) {
           return NS_OK;
@@ -667,7 +666,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       status = nsEventStatus_eIgnore;
       nsCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
       endEvent.data = backup.GetLastData();
-      endEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+      endEvent.mFlags.mIsSynthesizedForTests = true;
       widget->DispatchEvent(&endEvent, status);
 
       return NS_OK;

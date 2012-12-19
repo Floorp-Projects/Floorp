@@ -19,6 +19,7 @@ LIBXUL_LIBRARY  = 1
 EXPORTS = \
 		nsMIMEInputStream.h \
 		nsURLHelper.h \
+		nsFileStreams.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/net

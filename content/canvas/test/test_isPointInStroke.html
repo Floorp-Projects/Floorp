@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Canvas test: isPointInStroke</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script type="application/javascript">
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+
+ctx.lineWidth = 5;
+
+
+ok(ctx.isPointInStroke(50, 25) === false, 'ctx.isPointInStroke(50, 25) === false');
+
+
+ctx.beginPath();
+ctx.rect(0, 0, 20, 20);
+
+ok(ctx.isPointInStroke(-4, -4) === false, 'ctx.isPointInStroke(-4, -4) === false');
+ok(ctx.isPointInStroke(4, 4) === false, 'ctx.isPointInStroke(4, 4) === false');
+ok(ctx.isPointInStroke(16, 16) === false, 'ctx.isPointInStroke(16, 16) === false');
+ok(ctx.isPointInStroke(24, 24) === false, 'ctx.isPointInStroke(24, 24) === false');
+
+ok(ctx.isPointInStroke(-2, -2) === true, 'ctx.isPointInStroke(-2, -2) === true');
+ok(ctx.isPointInStroke(2, 2) === true, 'ctx.isPointInStroke(2, 2) === true');
+ok(ctx.isPointInStroke(18, 18) === true, 'ctx.isPointInStroke(18, 18) === true');
+ok(ctx.isPointInStroke(22, 22) === true, 'ctx.isPointInStroke(22, 22) === true');
+
+
+ctx.beginPath();
+ctx.rect(25, 25, 20, 20);
+
+ok(ctx.isPointInStroke(21, 21) === false, 'ctx.isPointInStroke(21, 21) === false');
+ok(ctx.isPointInStroke(29, 29) === false, 'ctx.isPointInStroke(29, 29) === false');
+ok(ctx.isPointInStroke(42, 42) === false, 'ctx.isPointInStroke(42, 42) === false');
+ok(ctx.isPointInStroke(50, 50) === false, 'ctx.isPointInStroke(50, 50) === false');
+
+ok(ctx.isPointInStroke(23, 23) === true, 'ctx.isPointInStroke(23, 23) === true');
+ok(ctx.isPointInStroke(27, 27) === true, 'ctx.isPointInStroke(27, 27) === true');
+ok(ctx.isPointInStroke(43, 43) === true, 'ctx.isPointInStroke(43, 43) === true');
+ok(ctx.isPointInStroke(47, 47) === true, 'ctx.isPointInStroke(47, 47) === true');
+
+
+ctx.beginPath();
+ctx.moveTo(25, 25);
+ctx.bezierCurveTo(50, -50, 50, 100, 75, 25);
+
+ok(ctx.isPointInStroke(23, 26) === false, 'ctx.isPointInStroke(23, 26) === false');
+ok(ctx.isPointInStroke(75, 23) === false, 'ctx.isPointInStroke(75, 23) === false');
+ok(ctx.isPointInStroke(37, 8) === false, 'ctx.isPointInStroke(37, 8) === false');
+ok(ctx.isPointInStroke(61, 42) === false, 'ctx.isPointInStroke(61, 42) === false');
+
+ok(ctx.isPointInStroke(24, 24) === true, 'ctx.isPointInStroke(24, 24) === true');
+ok(ctx.isPointInStroke(74, 25) === true, 'ctx.isPointInStroke(74, 25) === true');
+ok(ctx.isPointInStroke(37, 2) === true, 'ctx.isPointInStroke(37, 2) === true');
+ok(ctx.isPointInStroke(61, 47) === true, 'ctx.isPointInStroke(61, 47) === true');
+
+
+ctx.beginPath();
+ctx.arc(50, 25, 10, 0, Math.PI, false);
+
+ok(ctx.isPointInStroke(39, 23) === false, 'ctx.isPointInStroke(39, 23) === false');
+ok(ctx.isPointInStroke(50, 15) === false, 'ctx.isPointInStroke(50, 15) === false');
+ok(ctx.isPointInStroke(60, 23) === false, 'ctx.isPointInStroke(60, 23) === false');
+ok(ctx.isPointInStroke(50, 25) === false, 'ctx.isPointInStroke(50, 25) === false');
+
+ok(ctx.isPointInStroke(39, 26) === true, 'ctx.isPointInStroke(39, 26) === true');
+ok(ctx.isPointInStroke(45, 33) === true, 'ctx.isPointInStroke(45, 33) === true');
+ok(ctx.isPointInStroke(53, 33) === true, 'ctx.isPointInStroke(53, 33) === true');
+ok(ctx.isPointInStroke(59, 26) === true, 'ctx.isPointInStroke(59, 26) === true');
+
+
+ctx.beginPath();
+ctx.arc(50, 25, 10, 0, 2 * Math.PI, false);
+
+ok(ctx.isPointInStroke(34, 25) === false, 'ctx.isPointInStroke(34, 25) === false');
+ok(ctx.isPointInStroke(44, 25) === false, 'ctx.isPointInStroke(44, 25) === false');
+ok(ctx.isPointInStroke(49, 30) === false, 'ctx.isPointInStroke(49, 30) === false');
+ok(ctx.isPointInStroke(49, 40) === false, 'ctx.isPointInStroke(49, 40) === false');
+
+ok(ctx.isPointInStroke(39, 23) === true, 'ctx.isPointInStroke(39, 23) === true');
+ok(ctx.isPointInStroke(50, 15) === true, 'ctx.isPointInStroke(50, 15) === true');
+ok(ctx.isPointInStroke(60, 23) === true, 'ctx.isPointInStroke(60, 23) === true');
+ok(ctx.isPointInStroke(49, 34) === true, 'ctx.isPointInStroke(49, 34) === true');
+
+
+ctx.beginPath();
+ctx.save();
+ctx.translate(20, 20);
+ctx.rect(0, 0, 20, 20);
+
+ok(ctx.isPointInStroke(16, 16) === false, 'ctx.isPointInStroke(16, 16) === false');
+ok(ctx.isPointInStroke(24, 24) === false, 'ctx.isPointInStroke(24, 24) === false');
+ok(ctx.isPointInStroke(36, 36) === false, 'ctx.isPointInStroke(36, 36) === false');
+ok(ctx.isPointInStroke(44, 44) === false, 'ctx.isPointInStroke(44, 44) === false');
+
+ok(ctx.isPointInStroke(18, 18) === true, 'ctx.isPointInStroke(18, 18) === true');
+ok(ctx.isPointInStroke(22, 22) === true, 'ctx.isPointInStroke(22, 22) === true');
+ok(ctx.isPointInStroke(38, 38) === true, 'ctx.isPointInStroke(38, 38) === true');
+ok(ctx.isPointInStroke(42, 42) === true, 'ctx.isPointInStroke(42, 42) === true');
+
+ctx.restore();
+
+
+ctx.beginPath();
+ctx.save();
+ctx.scale(-1, 1);
+ctx.rect(-30, 20, 20, 20);
+
+ok(ctx.isPointInStroke(16, 16) === false, 'ctx.isPointInStroke(16, 16) === false');
+ok(ctx.isPointInStroke(14, 24) === false, 'ctx.isPointInStroke(14, 24) === false');
+ok(ctx.isPointInStroke(26, 36) === false, 'ctx.isPointInStroke(26, 36) === false');
+ok(ctx.isPointInStroke(34, 44) === false, 'ctx.isPointInStroke(34, 44) === false');
+
+ok(ctx.isPointInStroke(8, 18) === true, 'ctx.isPointInStroke(8, 18) === true');
+ok(ctx.isPointInStroke(12, 22) === true, 'ctx.isPointInStroke(12, 22) === true');
+ok(ctx.isPointInStroke(28, 38) === true, 'ctx.isPointInStroke(28, 38) === true');
+ok(ctx.isPointInStroke(32, 42) === true, 'ctx.isPointInStroke(32, 42) === true');
+
+ctx.restore();
+
+
+ctx.beginPath();
+ctx.save();
+ctx.lineWidth = 2;
+ctx.translate(50, 25);
+ctx.rotate(180 * Math.PI / 180);
+ctx.scale(5, 5);
+ctx.arc(0, 0, 2, 0, Math.PI, false);
+
+ok(ctx.isPointInStroke(39, 26) === false, 'ctx.isPointInStroke(39, 26) === false');
+ok(ctx.isPointInStroke(45, 33) === false, 'ctx.isPointInStroke(45, 33) === false');
+ok(ctx.isPointInStroke(53, 33) === false, 'ctx.isPointInStroke(53, 33) === false');
+ok(ctx.isPointInStroke(59, 26) === false, 'ctx.isPointInStroke(59, 26) === false');
+
+ok(ctx.isPointInStroke(39, 23) === true, 'ctx.isPointInStroke(39, 23) === true');
+ok(ctx.isPointInStroke(45, 15) === true, 'ctx.isPointInStroke(50, 15) === true');
+ok(ctx.isPointInStroke(55, 15) === true, 'ctx.isPointInStroke(50, 25) === true');
+ok(ctx.isPointInStroke(60, 23) === true, 'ctx.isPointInStroke(60, 23) === true');
+
+ctx.restore();
+
+
+ctx.beginPath();
+
+ctx.moveTo(10, 10);
+ctx.lineTo(30, 10);
+ctx.save();
+ctx.lineWidth = 2;
+ctx.scale(5, 5);
+ctx.lineTo(6, 6);
+ctx.lineTo(2, 6);
+ctx.restore();
+ctx.closePath();
+
+ok(ctx.isPointInStroke(6, 6) === false, 'ctx.isPointInStroke(6, 6) === false');
+ok(ctx.isPointInStroke(14, 14) === false, 'ctx.isPointInStroke(14, 14) === false');
+ok(ctx.isPointInStroke(26, 26) === false, 'ctx.isPointInStroke(26, 26) === false');
+ok(ctx.isPointInStroke(34, 34) === false, 'ctx.isPointInStroke(34, 34) === false');
+
+ok(ctx.isPointInStroke(8, 8) === true, 'ctx.isPointInStroke(8, 8) === true');
+ok(ctx.isPointInStroke(12, 12) === true, 'ctx.isPointInStroke(12, 12) === true');
+ok(ctx.isPointInStroke(28, 28) === true, 'ctx.isPointInStroke(28, 28) === true');
+ok(ctx.isPointInStroke(32, 32) === true, 'ctx.isPointInStroke(32, 32) === true');
+
+
+ctx.beginPath();
+ctx.rect(-30, -30, 20, 20);
+
+ok(ctx.isPointInStroke(-34, -34) === false, 'ctx.isPointInStroke(-34, -34) === false');
+ok(ctx.isPointInStroke(-26, -26) === false, 'ctx.isPointInStroke(-26, -26) === false');
+ok(ctx.isPointInStroke(-14, -14) === false, 'ctx.isPointInStroke(-14, -14) === false');
+ok(ctx.isPointInStroke(-6, -6) === false, 'ctx.isPointInStroke(-6, -6) === false');
+
+ok(ctx.isPointInStroke(-32, -32) === true, 'ctx.isPointInStroke(-32, -32) === true');
+ok(ctx.isPointInStroke(-28, -28) === true, 'ctx.isPointInStroke(-28, -28) === true');
+ok(ctx.isPointInStroke(-12, -12) === true, 'ctx.isPointInStroke(-12, -12) === true');
+ok(ctx.isPointInStroke(-8, -8) === true, 'ctx.isPointInStroke(-8, -8) === true');
+
+
+ctx.beginPath();
+ctx.moveTo(20, 25);
+ctx.lineTo(80, 25);
+
+ok(ctx.isPointInStroke(19, 25) === false, 'ctx.isPointInStroke(19, 25) === false');
+ok(ctx.isPointInStroke(50, 21) === false, 'ctx.isPointInStroke(50, 21) === false');
+ok(ctx.isPointInStroke(81, 25) === false, 'ctx.isPointInStroke(81, 25) === false');
+ok(ctx.isPointInStroke(50, 29) === false, 'ctx.isPointInStroke(50, 29) === false');
+
+ok(ctx.isPointInStroke(21, 25) === true, 'ctx.isPointInStroke(21, 25) === true');
+ok(ctx.isPointInStroke(50, 23) === true, 'ctx.isPointInStroke(50, 23) === true');
+ok(ctx.isPointInStroke(79, 25) === true, 'ctx.isPointInStroke(79, 25) === true');
+ok(ctx.isPointInStroke(50, 27) === true, 'ctx.isPointInStroke(50, 27) === true');
+
+
+ctx.lineWidth = 15;
+ctx.lineCap = 'round';
+
+
+ctx.beginPath();
+ctx.moveTo(20, 25);
+ctx.lineTo(80, 25);
+
+ok(ctx.isPointInStroke(13, 18) === false, 'ctx.isPointInStroke(13, 18) === false');
+ok(ctx.isPointInStroke(13, 31) === false, 'ctx.isPointInStroke(13, 31) === false');
+ok(ctx.isPointInStroke(86, 18) === false, 'ctx.isPointInStroke(86, 18) === false');
+ok(ctx.isPointInStroke(86, 31) === false, 'ctx.isPointInStroke(86, 31) === false');
+
+ok(ctx.isPointInStroke(13, 25) === true, 'ctx.isPointInStroke(13, 25) === true');
+ok(ctx.isPointInStroke(50, 18) === true, 'ctx.isPointInStroke(50, 18) === true');
+ok(ctx.isPointInStroke(86, 25) === true, 'ctx.isPointInStroke(86, 25) === true');
+ok(ctx.isPointInStroke(50, 31) === true, 'ctx.isPointInStroke(50, 31) === true');
+
+
+ctx.lineJoin = 'round';
+
+
+ctx.beginPath();
+ctx.moveTo(20, 15);
+ctx.lineTo(80, 15);
+ctx.lineTo(80, 35);
+
+ok(ctx.isPointInStroke(86, 8) === false, 'ctx.isPointInStroke(86, 8) === false');
+ok(ctx.isPointInStroke(70, 24) === false, 'ctx.isPointInStroke(70, 24) === false');
+ok(ctx.isPointInStroke(73, 41) === false, 'ctx.isPointInStroke(73, 41) === false');
+ok(ctx.isPointInStroke(86, 41) === false, 'ctx.isPointInStroke(86, 41) === false');
+
+ok(ctx.isPointInStroke(14, 15) === true, 'ctx.isPointInStroke(14, 15) === true');
+ok(ctx.isPointInStroke(81, 15) === true, 'ctx.isPointInStroke(81, 15) === true');
+ok(ctx.isPointInStroke(79, 41) === true, 'ctx.isPointInStroke(79, 41) === true');
+ok(ctx.isPointInStroke(73, 21) === true, 'ctx.isPointInStroke(73, 21) === true');
+
+</script>
+</pre>
+</body>
+</html>
+

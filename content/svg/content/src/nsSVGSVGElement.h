@@ -210,6 +210,8 @@ public:
     return mHasChildrenOnlyTransform;
   }
 
+  void UpdateHasChildrenOnlyTransform();
+
   enum ChildrenOnlyTransformChangedFlags {
     eDuringReflow = 1
   };

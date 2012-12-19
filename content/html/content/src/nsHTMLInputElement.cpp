@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "nsHTMLInputElement.h"
 #include "nsAttrValueInlines.h"
@@ -2151,10 +2151,10 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_ORIGINAL_CHECKED_VALUE;
   }
 
-  // If NS_EVENT_FLAG_NO_CONTENT_DISPATCH is set we will not allow content to handle
+  // If mNoContentDispatch is true we will not allow content to handle
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
-  if (aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) {
+  if (aVisitor.mEvent->mFlags.mNoContentDispatch) {
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if (IsSingleLineTextControl(false) &&
@@ -2162,7 +2162,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
       static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eMiddleButton) {
-    aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+    aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
@@ -2250,7 +2250,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
       !IsSingleLineTextControl(true) &&
       NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
-    nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_UI_ACTIVATE, 1);
+    nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted, NS_UI_ACTIVATE, 1);
 
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
@@ -2282,8 +2282,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   }
 
   // Reset the flag for other content besides this text field
-  aVisitor.mEvent->flags |=
-    noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
+  aVisitor.mEvent->mFlags.mNoContentDispatch = noContentDispatch;
 
   // now check to see if the event was "cancelled"
   if (mCheckedIsToggled && outerActivateEvent) {
@@ -2392,7 +2391,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_SUBMIT:
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               {
-                nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
                                    NS_MOUSE_CLICK, nullptr, nsMouseEvent::eReal);
                 event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
@@ -2429,7 +2428,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                   rv = selectedRadioButton->Focus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
-                    nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                    nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
                                        NS_MOUSE_CLICK, nullptr,
                                        nsMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;

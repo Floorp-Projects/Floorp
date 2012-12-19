@@ -367,21 +367,38 @@ LIRGenerator::visitTest(MTest *test)
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
 
+    // String is converted to length of string in the type analysis phase (see
+    // TestPolicy).
+    JS_ASSERT(opd->type() != MIRType_String);
+
     if (opd->type() == MIRType_Value) {
-        LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse, tempFloat());
+        LDefinition temp0, temp1;
+        if (test->operandMightEmulateUndefined()) {
+            temp0 = temp();
+            temp1 = temp();
+        } else {
+            temp0 = LDefinition::BogusTemp();
+            temp1 = LDefinition::BogusTemp();
+        }
+        LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse, tempFloat(), temp0, temp1);
         if (!useBox(lir, LTestVAndBranch::Input, opd))
             return false;
-        return add(lir);
+        return add(lir, test);
+    }
+
+    if (opd->type() == MIRType_Object) {
+        // If the object might emulate undefined, we have to test for that.
+        if (test->operandMightEmulateUndefined())
+            return add(new LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp()), test);
+
+        // Otherwise we know it's truthy.
+        return add(new LGoto(ifTrue));
     }
 
     // These must be explicitly sniffed out since they are constants and have
     // no payload.
     if (opd->type() == MIRType_Undefined || opd->type() == MIRType_Null)
         return add(new LGoto(ifFalse));
-
-    // Objects are easy, too.
-    if (opd->type() == MIRType_Object)
-        return add(new LGoto(ifTrue));
 
     // Constant Double operand.
     if (opd->type() == MIRType_Double && opd->isConstant()) {
@@ -429,8 +446,27 @@ LIRGenerator::visitTest(MTest *test)
         // The second operand has known null/undefined type, so just test the
         // first operand.
         if (IsNullOrUndefined(comp->specialization())) {
-            LIsNullOrUndefinedAndBranch *lir = new LIsNullOrUndefinedAndBranch(ifTrue, ifFalse);
-            if (!useBox(lir, LIsNullOrUndefinedAndBranch::Value, left))
+            if (left->type() == MIRType_Object) {
+                MOZ_ASSERT(comp->operandMightEmulateUndefined(),
+                           "MCompare::tryFold should handle the never-emulates-undefined case");
+
+                LEmulatesUndefinedAndBranch *lir =
+                    new LEmulatesUndefinedAndBranch(useRegister(left), ifTrue, ifFalse, temp());
+                return add(lir, comp);
+            }
+
+            LDefinition temp0, temp1;
+            if (comp->operandMightEmulateUndefined()) {
+                temp0 = temp();
+                temp1 = temp();
+            } else {
+                temp0 = LDefinition::BogusTemp();
+                temp1 = LDefinition::BogusTemp();
+            }
+
+            LIsNullOrLikeUndefinedAndBranch *lir =
+                new LIsNullOrLikeUndefinedAndBranch(ifTrue, ifFalse, temp0, temp1);
+            if (!useBox(lir, LIsNullOrLikeUndefinedAndBranch::Value, left))
                 return false;
             return add(lir, comp);
         }
@@ -507,7 +543,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         }
 
         // Sniff out if the output of this compare is used only for a branching.
-        // If it is, then we willl emit an LCompare*AndBranch instruction in place
+        // If it is, then we will emit an LCompare*AndBranch instruction in place
         // of this compare and any test that uses this compare. Thus, we can
         // ignore this Compare.
         if (CanEmitCompareAtUses(comp))
@@ -536,8 +572,24 @@ LIRGenerator::visitCompare(MCompare *comp)
 
         JS_ASSERT(IsNullOrUndefined(comp->specialization()));
 
-        LIsNullOrUndefined *lir = new LIsNullOrUndefined();
-        if (!useBox(lir, LIsNullOrUndefined::Value, comp->getOperand(0)))
+        if (left->type() == MIRType_Object) {
+            MOZ_ASSERT(comp->operandMightEmulateUndefined(),
+                       "MCompare::tryFold should have folded this away");
+
+            return define(new LEmulatesUndefined(useRegister(left)), comp);
+        }
+
+        LDefinition temp0, temp1;
+        if (comp->operandMightEmulateUndefined()) {
+            temp0 = temp();
+            temp1 = temp();
+        } else {
+            temp0 = LDefinition::BogusTemp();
+            temp1 = LDefinition::BogusTemp();
+        }
+
+        LIsNullOrLikeUndefined *lir = new LIsNullOrLikeUndefined(temp0, temp1);
+        if (!useBox(lir, LIsNullOrLikeUndefined::Value, left))
             return false;
         return define(lir, comp);
     }
@@ -1391,14 +1443,15 @@ LIRGenerator::visitNot(MNot *ins)
 {
     MDefinition *op = ins->operand();
 
-    // String is converted to length of string in the IonBuilder phase
+    // String is converted to length of string in the type analysis phase (see
+    // TestPolicy).
     JS_ASSERT(op->type() != MIRType_String);
 
     // - boolean: x xor 1
     // - int32: LCompare(x, 0)
     // - double: LCompare(x, 0)
     // - null or undefined: true
-    // - object: false
+    // - object: false if it never emulates undefined, else LNotO(x)
     switch (op->type()) {
       case MIRType_Boolean: {
         MConstant *cons = MConstant::New(Int32Value(1));
@@ -1413,10 +1466,24 @@ LIRGenerator::visitNot(MNot *ins)
       case MIRType_Undefined:
       case MIRType_Null:
         return define(new LInteger(1), ins);
-      case MIRType_Object:
-        return define(new LInteger(0), ins);
+      case MIRType_Object: {
+        // Objects that don't emulate undefined can be constant-folded.
+        if (!ins->operandMightEmulateUndefined())
+            return define(new LInteger(0), ins);
+        // All others require further work.
+        return define(new LNotO(useRegister(op)), ins);
+      }
       case MIRType_Value: {
-          LNotV *lir = new LNotV(tempFloat());
+        LDefinition temp0, temp1;
+        if (ins->operandMightEmulateUndefined()) {
+            temp0 = temp();
+            temp1 = temp();
+        } else {
+            temp0 = LDefinition::BogusTemp();
+            temp1 = LDefinition::BogusTemp();
+        }
+
+        LNotV *lir = new LNotV(tempFloat(), temp0, temp1);
         if (!useBox(lir, LNotV::Input, op))
             return false;
         return define(lir, ins);

@@ -73,6 +73,7 @@
 #include "nsIDOMCharacterData.h"
 #endif
 
+#include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
@@ -146,7 +147,8 @@ Accessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessNodeWrap(aContent, aDoc),
   mParent(nullptr), mIndexInParent(-1), mChildrenFlags(eChildrenUninitialized),
-  mStateFlags(0), mFlags(0), mIndexOfEmbeddedChild(-1), mRoleMapEntry(nullptr)
+  mStateFlags(0), mType(0), mGenericTypes(0), mIndexOfEmbeddedChild(-1),
+  mRoleMapEntry(nullptr)
 {
 #ifdef NS_DEBUG_X
    {
@@ -2162,10 +2164,8 @@ Accessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY)
   if (!frame)
     return NS_ERROR_FAILURE;
 
-  nsIntPoint coords;
-  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
-                                                  this, &coords);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIntPoint coords = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
+                                                        this);
 
   nsIFrame *parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent()))
@@ -3173,6 +3173,19 @@ Accessible::GetLevelInternal()
   }
 
   return level;
+}
+
+void
+Accessible::StaticAsserts() const
+{
+  MOZ_STATIC_ASSERT(eLastChildrenFlag <= (2 << kChildrenFlagsBits) - 1,
+                    "Accessible::mChildrenFlags was oversized by eLastChildrenFlag!");
+  MOZ_STATIC_ASSERT(eLastStateFlag <= (2 << kStateFlagsBits) - 1,
+                    "Accessible::mStateFlags was oversized by eLastStateFlag!");
+  MOZ_STATIC_ASSERT(eLastAccType <= (2 << kTypeBits) - 1,
+                    "Accessible::mType was oversized by eLastAccType!");
+  MOZ_STATIC_ASSERT(eLastAccGenericType <= (2 << kGenericTypesBits) - 1,
+                    "Accessible::mGenericType was oversized by eLastAccGenericType!");
 }
 
 

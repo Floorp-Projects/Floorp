@@ -26,7 +26,7 @@
 
 #downloadsPanel[hasdownloads] > #downloadsFooter {
   border-top: 1px solid ThreeDShadow;
-  background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
+  background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
 
 #downloadsHistory > .button-box {
@@ -136,7 +136,7 @@ richlistitem[type="download"][state="1"]:hover {
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
   background-color: Highlight;
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.1), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.1), hsla(0,0%,100%,0));
   color: HighlightText;
   cursor: pointer;
 }
@@ -300,7 +300,7 @@ toolbar[iconsize="large"] > #downloads-indicator[attention] > #downloads-indicat
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-image: -moz-linear-gradient(#505050, #575757);
+  background-image: linear-gradient(#505050, #575757);
   border: 1px solid;
   border-color: hsla(0,0%,0%,.6) hsla(0,0%,0%,.4) hsla(0,0%,0%,.4);
   -moz-border-start: none;
@@ -312,5 +312,5 @@ toolbar[iconsize="large"] > #downloads-indicator[attention] > #downloads-indicat
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
-  background-image: -moz-linear-gradient(#4b5000, #515700);
+  background-image: linear-gradient(#4b5000, #515700);
 }

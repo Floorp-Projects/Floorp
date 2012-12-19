@@ -16,7 +16,7 @@
     border: 1px solid hsl(213,45%,65%);
     box-shadow: 0 0 0 1px hsla(0,0%,100%,.5) inset,
                 0 1px 0 hsla(0,0%,100%,.3) inset;
-    background-image: -moz-linear-gradient(hsl(212,86%,92%), hsl(212,91%,86%));
+    background-image: linear-gradient(hsl(212,86%,92%), hsl(212,91%,86%));
     color: black;
   }
 }

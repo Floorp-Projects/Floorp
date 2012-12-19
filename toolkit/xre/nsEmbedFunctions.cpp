@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #if defined(MOZ_WIDGET_QT)
 #include "nsQAppInstance.h"
 #endif
@@ -71,8 +73,6 @@
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
-
-#include "mozilla/Util.h" // for DebugOnly
 
 #include "sampler.h"
 
@@ -403,8 +403,7 @@ XRE_InitChildProcess(int aArgc,
   // On Win7+, register the application user model id passed in by
   // parent. This insures windows created by the container properly
   // group with the parent app on the Win7 taskbar.
-  const char* const appModelUserId = aArgv[aArgc-1];
-  --aArgc;
+  const char* const appModelUserId = aArgv[--aArgc];
   if (appModelUserId) {
     // '-' implies no support
     if (*appModelUserId != '-') {
@@ -460,8 +459,18 @@ XRE_InitChildProcess(int aArgc,
         process = new PluginProcessChild(parentHandle);
         break;
 
-      case GeckoProcessType_Content:
-        process = new ContentProcess(parentHandle);
+      case GeckoProcessType_Content: {
+          process = new ContentProcess(parentHandle);
+          // If passed in grab the application path for xpcom init
+          nsCString appDir;
+          for (int idx = aArgc; idx > 0; idx--) {
+            if (aArgv[idx] && !strcmp(aArgv[idx], "-appdir")) {
+              appDir.Assign(nsDependentCString(aArgv[idx+1]));
+              static_cast<ContentProcess*>(process.get())->SetAppDir(appDir);
+              break;
+            }
+          }
+        }
         break;
 
       case GeckoProcessType_IPDLUnitTest:

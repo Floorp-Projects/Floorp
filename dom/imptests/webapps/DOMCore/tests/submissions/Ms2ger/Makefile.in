@@ -40,45 +40,10 @@ MOCHITEST_FILES := \
   test_DOMImplementation-createDocumentType.html \
   test_DOMImplementation-createHTMLDocument.html \
   test_DOMImplementation-hasFeature.html \
-  test_Element-childElementCount-dynamic-add.html \
-  test_Element-childElementCount-dynamic-add.svg \
-  test_Element-childElementCount-dynamic-add.xhtml \
-  test_Element-childElementCount-dynamic-remove.html \
-  test_Element-childElementCount-dynamic-remove.svg \
-  test_Element-childElementCount-dynamic-remove.xhtml \
-  test_Element-childElementCount.html \
-  test_Element-childElementCount-nochild.html \
-  test_Element-childElementCount-nochild.svg \
-  test_Element-childElementCount-nochild.xhtml \
-  test_Element-childElementCount.svg \
-  test_Element-childElementCount.xhtml \
-  test_Element-childElement-null.html \
-  test_Element-childElement-null.svg \
-  test_Element-childElement-null.xhtml \
   test_Element-children.html \
-  test_Element-firstElementChild-entity.svg \
-  test_Element-firstElementChild-entity.xhtml \
-  test_Element-firstElementChild.html \
-  test_Element-firstElementChild-namespace.html \
-  test_Element-firstElementChild-namespace.svg \
-  test_Element-firstElementChild-namespace.xhtml \
-  test_Element-firstElementChild.svg \
-  test_Element-firstElementChild.xhtml \
   test_Element-getElementsByClassName.html \
-  test_Element-lastElementChild.html \
-  test_Element-lastElementChild.svg \
-  test_Element-lastElementChild.xhtml \
-  test_Element-nextElementSibling.html \
-  test_Element-nextElementSibling.svg \
-  test_Element-nextElementSibling.xhtml \
-  test_Element-previousElementSibling.html \
-  test_Element-previousElementSibling.svg \
-  test_Element-previousElementSibling.xhtml \
   test_Element-remove.html \
   test_Element-removeAttributeNS.html \
-  test_Element-siblingElement-null.html \
-  test_Element-siblingElement-null.svg \
-  test_Element-siblingElement-null.xhtml \
   test_Element-tagName.html \
   test_Event-constants.html \
   test_Event-constructors.html \

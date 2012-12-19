@@ -1,0 +1,15 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/* This is a helper for the XML declaration in a document:
+ * <?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+ */
+
+[scriptable, function, uuid(c0e461cb-0e5e-284c-b97d-cffeec467eba)]
+interface nsIMozSAXXMLDeclarationHandler: nsISupports {
+  void handleXMLDeclaration(in AString version, in AString encoding, in boolean standalone);
+};

@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
+
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
+
 #include "base/histogram.h"
 #include "base/pickle.h"
 #include "nsIComponentManager.h"
@@ -31,8 +36,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Likely.h"
 #include "mozilla/mozPoisonWrite.h"
 
 namespace {

@@ -13,6 +13,12 @@ using mozilla::ipc::IOThreadChild;
 namespace mozilla {
 namespace dom {
 
+void
+ContentProcess::SetAppDir(const nsACString& aPath)
+{
+  mXREEmbed.SetAppDir(aPath);
+}
+
 bool
 ContentProcess::Init()
 {

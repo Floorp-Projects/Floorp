@@ -432,7 +432,7 @@ bool GreaterThanOrEqual(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool 
 template<bool Equal>
 bool StringsEqual(JSContext *cx, HandleString left, HandleString right, JSBool *res);
 
-bool ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output);
+JSBool ObjectEmulatesUndefined(RawObject obj);
 
 bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
 

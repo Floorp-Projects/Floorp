@@ -1479,7 +1479,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
           IsNormalCharInputtingEvent(keypressEvent))) {
       if (currentKeyEvent->mKeyDownHandled ||
           currentKeyEvent->mCausedOtherKeyEvents) {
-        keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+        keypressEvent.mFlags.mDefaultPrevented = true;
       }
       currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
       PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1918,7 +1918,7 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     NSEvent* keyEvent = currentKeyEvent->mKeyEvent;
     InitKeyEvent(keyEvent, keypressEvent, &str);
     if (currentKeyEvent->mKeyDownHandled) {
-      keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      keypressEvent.mFlags.mDefaultPrevented = true;
     }
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nullptr));
@@ -1971,7 +1971,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
     InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
     if (currentKeyEvent->mKeyDownHandled ||
         currentKeyEvent->mCausedOtherKeyEvents) {
-      keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      keypressEvent.mFlags.mDefaultPrevented = true;
     }
     currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
     currentKeyEvent->mKeyPressDispatched = true;

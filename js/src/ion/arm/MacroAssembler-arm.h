@@ -8,6 +8,8 @@
 #ifndef jsion_macro_assembler_arm_h__
 #define jsion_macro_assembler_arm_h__
 
+#include "mozilla/DebugOnly.h"
+
 #include "ion/arm/Assembler-arm.h"
 #include "ion/IonCaches.h"
 #include "ion/IonFrames.h"
@@ -1068,6 +1070,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void setStackArg(const Register &reg, uint32_t arg);
 
     void breakpoint();
+    // conditional breakpoint
+    void breakpoint(Condition cc);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
     void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,

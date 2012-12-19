@@ -13,7 +13,6 @@
 #include "nsIInputStream.h"
 
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 
 #include "gfxColor.h"
 #include "nsColor.h"
@@ -58,7 +57,7 @@ GetPNGDecoderAccountingLog()
 const uint8_t 
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-nsPNGDecoder::nsPNGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+nsPNGDecoder::nsPNGDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
  : Decoder(aImage, aObserver),
    mPNG(nullptr), mInfo(nullptr),
    mCMSLine(nullptr), interlacebuf(nullptr),
@@ -105,13 +104,13 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
   mFrameRect.width = width;
   mFrameRect.height = height;
 
+  // Tell the superclass we're starting a frame
+  PostFrameStart();
+
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL))
     SetAnimFrameInfo();
 #endif
-
-  // Tell the superclass we're starting a frame
-  PostFrameStart();
 
   PR_LOG(GetPNGDecoderAccountingLog(), PR_LOG_DEBUG,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
@@ -149,7 +148,7 @@ void nsPNGDecoder::SetAnimFrameInfo()
               (static_cast<double>(delay_num) * 1000 / delay_den);
   }
 
-  uint32_t numFrames = mImage.GetNumFrames();
+  uint32_t numFrames = GetFrameCount();
 
   mImage.SetFrameTimeout(numFrames - 1, timeout);
 
@@ -178,7 +177,7 @@ void nsPNGDecoder::EndImageFrame()
 
   uint32_t numFrames = 1;
 #ifdef PNG_APNG_SUPPORTED
-  numFrames = mImage.GetNumFrames();
+  numFrames = GetFrameCount();
 
   // We can't use mPNG->num_frames_read as it may be one ahead.
   if (numFrames > 1) {
@@ -790,7 +789,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     if (!rowHasNoAlpha)
       decoder->mFrameHasNoAlpha = false;
 
-    uint32_t numFrames = decoder->mImage.GetNumFrames();
+    uint32_t numFrames = decoder->GetFrameCount();
     if (numFrames <= 1) {
       // Only do incremental image display for the first frame
       // XXXbholley - this check should be handled in the superclass

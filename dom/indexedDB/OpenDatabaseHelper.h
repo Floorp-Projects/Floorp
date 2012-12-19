@@ -77,10 +77,16 @@ public:
     return mDatabase;
   }
 
+  const FactoryPrivilege& Privilege() const
+  {
+    return mPrivilege;
+  }
+
   static
-  nsresult CreateDatabaseConnection(const nsAString& aName,
-                                    nsIFile* aDBFile,
-                                    nsIFile* aFileManagerDirectory,
+  nsresult CreateDatabaseConnection(nsIFile* aDBFile,
+                                    nsIFile* aFMDirectory,
+                                    const nsAString& aName,
+                                    const nsACString& aOrigin,
                                     mozIStorageConnection** aConnection);
 
 protected:

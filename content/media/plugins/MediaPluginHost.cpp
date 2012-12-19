@@ -186,8 +186,12 @@ static const char* GetOmxLibraryName()
     // than 2.3.6 and above.
     return "lib/libomxplugingb235.so";
   }
-  else if (version < 9) {
-    // Froyo and below are not supported
+  else if (version == 8) {
+    // Froyo
+    return "lib/libomxpluginfroyo.so";
+  }
+  else if (version < 8) {
+    // Below Froyo not supported
     return nullptr;
   }
 

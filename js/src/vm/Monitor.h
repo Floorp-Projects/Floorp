@@ -9,7 +9,9 @@
 #define Monitor_h__
 
 #include <stdlib.h>
-#include "mozilla/Util.h"
+
+#include "mozilla/DebugOnly.h"
+
 #include "js/Utility.h"
 #include "jslock.h"
 

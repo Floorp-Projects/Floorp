@@ -17,13 +17,14 @@
 #include <pthread.h>
 #include <stdio.h>
 
+#include "mozilla/DebugOnly.h"
+
 #include "base/basictypes.h"
 #include "base/thread.h"
 
 #include "Hal.h"
 #include "HalSensor.h"
 #include "hardware/sensors.h"
-#include "mozilla/Util.h"
 
 #undef LOG
 

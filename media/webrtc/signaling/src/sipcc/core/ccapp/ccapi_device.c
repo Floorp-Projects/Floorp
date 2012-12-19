@@ -48,10 +48,6 @@ cc_deviceinfo_ref_t CCAPI_Device_getDeviceInfo(cc_device_handle_t handle)
 
   if (device_info) {
      *device_info = g_deviceInfo;
-      device_info->name  = strlib_copy(g_deviceInfo.name);
-      if (device_info->name == NULL) {
-          device_info->name  = strlib_empty();
-      }
       device_info->not_prompt  = strlib_copy(g_deviceInfo.not_prompt);
       if (device_info->not_prompt == NULL) {
           device_info->not_prompt = strlib_empty();
@@ -96,7 +92,6 @@ void CCAPI_Device_releaseDeviceInfo(cc_deviceinfo_ref_t ref){
     if (device_info) {
        device_info->ref_count--;
        if ( device_info->ref_count == 0 ) {
-            strlib_free(device_info->name);
             strlib_free(device_info->not_prompt);
             cpr_free(device_info);
         }

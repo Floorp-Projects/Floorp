@@ -117,6 +117,12 @@ MOCHITEST_BROWSER_FILES = \
 	head.js \
 	$(NULL)
 
+ifeq ($(OS_ARCH), Darwin)
+MOCHITEST_BROWSER_FILES += \
+        browser_webconsole_bug_804845_ctrl_key_nav.js \
+        $(NULL)
+endif
+
 ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
         browser_webconsole_bug_618311_private_browsing.js \

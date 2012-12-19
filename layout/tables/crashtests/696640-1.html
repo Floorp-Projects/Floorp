@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="flags" content="paged">
+<title> crash at A4 90% generated content + repeatable tfoot</title>
+<link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696640">
+<style type="text/css">
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; height:100%;
+}
+
+.LayoutBreakAfter:after {
+  clear: both;
+  display: block;
+  height: 0;
+  content: "\0020";
+}
+td { width:0.1in; height:0.1in; }
+div.spacer { width:50%; height:1.7in; }
+</style>
+
+</head>
+<body>
+
+<div class="spacer"></div>
+
+<div class="LayoutBreakAfter">
+ <div style="float:left">
+  <table>
+   <tbody >
+    <tr>
+     <td> 
+	 </td>
+    </tr>
+   </tbody>
+   <tfoot>
+    <tr>
+     <td >
+     </td>
+    </tr>
+   </tfoot>
+  </table>
+ </div>
+</div>
+</body>
+</html>

@@ -25,16 +25,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 
       //////////////////////////////////////////////////////////////////////////
       // setTextContents
-      et.setTextContents("hello");
-      et.setTextContents("olleh", aTrailChar); // due to some reason this reports '\n' in the end
-      et.setTextContents("");
+      et.scheduleTest(et.setTextContents, "hello");
+      et.scheduleTest(et.setTextContents, "olleh", aTrailChar); // due to some reason this reports '\n' in the end
+      et.scheduleTest(et.setTextContents, "");
 
       //////////////////////////////////////////////////////////////////////////
       // insertText
-      et.insertText("hello", 0, "hello");
-      et.insertText("ma ", 0, "ma hello");
-      et.insertText("ma", 2, "mama hello");
-      et.insertText(" hello", 10, "mama hello hello");
+      et.scheduleTest(et.insertText, "hello", 0, "hello");
+      et.scheduleTest(et.insertText, "ma ", 0, "ma hello");
+      et.scheduleTest(et.insertText, "ma", 2, "mama hello");
+      et.scheduleTest(et.insertText, " hello", 10, "mama hello hello");
 
       // XXX: bug 452584
 

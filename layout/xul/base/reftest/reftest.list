@@ -1,5 +1,5 @@
 fails-if(Android) == textbox-multiline-noresize.xul textbox-multiline-ref.xul # reference is blank on Android (due to no native theme support?)
 != textbox-multiline-resize.xul textbox-multiline-ref.xul 
 == popup-explicit-size.xul popup-explicit-size-ref.xul
-== image-size.xul image-size-ref.xul
+random-if(Android) == image-size.xul image-size-ref.xul
 == image-scaling-min-height-1.xul image-scaling-min-height-1-ref.xul

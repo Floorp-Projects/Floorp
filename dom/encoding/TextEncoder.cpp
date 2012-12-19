@@ -77,7 +77,7 @@ TextEncoder::Encode(JSContext* aCx,
 
   // If the internal streaming flag is not set, then reset
   // the encoding algorithm state to the default values for encoding.
-  if (!aOptions.stream) {
+  if (!aOptions.mStream) {
     int32_t finishLen = maxLen - dstLen;
     rv = mEncoder->Finish(buf + dstLen, &finishLen);
     if (NS_SUCCEEDED(rv)) {
@@ -90,6 +90,10 @@ TextEncoder::Encode(JSContext* aCx,
     buf[dstLen] = '\0';
     outView = Uint8Array::Create(aCx, this, dstLen,
                                  reinterpret_cast<uint8_t*>(buf.get()));
+    if (!outView) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
   }
 
   if (NS_FAILED(rv)) {
