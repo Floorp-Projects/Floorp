@@ -24,7 +24,6 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.TabWidget;
@@ -161,8 +160,6 @@ public class TabsPanel extends TabHost
         mToolbar = (TabsPanelToolbar) findViewById(R.id.toolbar);
 
         mTabWidget = (TabWidget) findViewById(android.R.id.tabs);
-        mTabWidget.setDividerDrawable(null);
-        mTabWidget.setStripEnabled(false);
 
         mAddTab = (ImageButton) mToolbar.findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
@@ -347,7 +344,7 @@ public class TabsPanel extends TabHost
     }
 
     // Tabs Panel Toolbar contains the Buttons
-    public static class TabsPanelToolbar extends RelativeLayout 
+    public static class TabsPanelToolbar extends LinearLayout 
                                          implements LightweightTheme.OnChangeListener {
         private BrowserApp mActivity;
 
@@ -358,9 +355,9 @@ public class TabsPanel extends TabHost
             setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
                                                           (int) context.getResources().getDimension(R.dimen.browser_toolbar_height)));
 
+            setOrientation(LinearLayout.HORIZONTAL);
+
             LayoutInflater.from(context).inflate(R.layout.tabs_panel_toolbar_menu, this);
-            TabWidget tabWidget = (TabWidget) findViewById(android.R.id.tabs);
-            tabWidget.setStripEnabled(false);
         }
 
         @Override

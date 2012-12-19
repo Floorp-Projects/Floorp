@@ -84,8 +84,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new TabsButton(context, attrs);
             else if (TextUtils.equals(viewName, "TabsPanel"))
                 return new TabsPanel(context, attrs);
-            else if (TextUtils.equals(viewName, "TabsPanelButton"))
-                return new TabsPanelButton(context, attrs);
             else if (TextUtils.equals(viewName, "TabsTray"))
                 return new TabsTray(context, attrs);
             else if (TextUtils.equals(viewName, "TextSelectionHandle"))
