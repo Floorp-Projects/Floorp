@@ -1856,6 +1856,11 @@ this.DOMApplicationRegistry = {
               let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
                                                                    istream.available()) || ""));
 
+              if (!AppsUtils.compareManifests(manifest,
+                                              aManifest._manifest)) {
+                throw "MANIFEST_MISMATCH";
+              }
+
               if (!AppsUtils.checkManifest(manifest)) {
                 throw "INVALID_MANIFEST";
               }
