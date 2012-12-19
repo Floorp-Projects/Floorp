@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "nsMimeTypes.h"
 #include "nsIMIMEService.h"
 
 #include "nsIStringBundle.h"
@@ -84,7 +85,7 @@ moz_qicon_to_channel(QImage *image, nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_NewInputStreamChannel(aChannel, aURI, stream,
-                                  NS_LITERAL_CSTRING("image/icon"));
+                                  NS_LITERAL_CSTRING(IMAGE_ICON));
 }
 
 nsresult
