@@ -1223,6 +1223,21 @@ BaselineCompiler::emit_JSOP_FUNAPPLY()
     return emitCall();
 }
 
+typedef bool (*ThrowFn)(JSContext *, HandleValue);
+static const VMFunction ThrowInfo = FunctionInfo<ThrowFn>(js::Throw);
+
+bool
+BaselineCompiler::emit_JSOP_THROW()
+{
+    // Keep value to throw in R0.
+    frame.popRegsAndSync(1);
+
+    prepareVMCall();
+    pushArg(R0);
+
+    return callVM(ThrowInfo);
+}
+
 bool
 BaselineCompiler::emit_JSOP_RETURN()
 {
