@@ -6,6 +6,7 @@ var gTestBrowser = null;
 var gNextTest = null;
 var gClickToPlayPluginActualEvents = 0;
 var gClickToPlayPluginExpectedEvents = 5;
+var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -420,7 +421,7 @@ function test12d() {
   var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 12d, Second Test plugin (B) should not be activated");
 
-  Services.perms.removeAll();
+  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   prepareTest(test13a, gHttpTestRoot + "plugin_clickToPlayDeny.html");
 }
 
@@ -510,7 +511,7 @@ function test13e() {
   var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 13e, Second Test plugin (B) should be activated");
 
-  Services.perms.removeAll();
+  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   Services.prefs.setBoolPref("plugins.click_to_play", false);
   prepareTest(test14, gTestRoot + "plugin_test2.html");
 }
@@ -524,7 +525,6 @@ function test14() {
   var plugin = getTestPlugin();
   plugin.disabled = false;
   plugin.blocklisted = false;
-  Services.perms.removeAll();
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   prepareTest(test15, gTestRoot + "plugin_alternate_content.html");
 }
@@ -657,7 +657,7 @@ function test18c() {
   var updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
   ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
 
-  // check that click "Always allow" works with blocklisted plugins (for now)
+  // check that click "Always allow" works with blocklisted plugins
   clickToPlayNotification.secondaryActions[0].callback();
   var condition = function() objLoadingContent.activated;
   waitForCondition(condition, test18d, "Test 18d, Waited too long for plugin to activate");
@@ -682,7 +682,7 @@ function test18e() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
 
-  Services.perms.removeAll();
+  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
   function() {
     resetBlocklist();
@@ -1060,9 +1060,12 @@ function test24d() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 24d, plugin should be activated");
 
-  Services.perms.removeAll();
+  // this resets the vulnerable plugin permission
+  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
   function() {
+    // this resets the normal plugin permission
+    Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
     resetBlocklist();
     prepareTest(test25a, gHttpTestRoot + "plugin_test.html");
   });
@@ -1120,7 +1123,8 @@ function test25c() {
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtest, "class", "mainBox");
   ok(overlay.style.visibility == "hidden", "Test 25c, second test plugin should not have visible overlay");
 
-  Services.perms.removeAll();
+  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
+  Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-second-test"));
 
   finishTest();
 }

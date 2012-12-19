@@ -301,6 +301,10 @@ this.PhoneNumber = (function (dataBase) {
     // Remove formating characters and whitespace.
     number = NormalizeNumber(number);
 
+    // If there is no defaultRegion, we can't parse international access codes.
+    if (!defaultRegion && number[0] !== '+')
+      return null;
+
     // Detect and strip leading '+'.
     if (number[0] === '+')
       return ParseInternationalNumber(number.replace(PLUS_CHARS, ""));

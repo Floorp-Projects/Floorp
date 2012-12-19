@@ -7,8 +7,8 @@
 #define MOZILLA_IMAGELIB_DECODER_H_
 
 #include "RasterImage.h"
-
-#include "imgIDecoderObserver.h"
+#include "imgDecoderObserver.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace image {
@@ -17,7 +17,7 @@ class Decoder
 {
 public:
 
-  Decoder(RasterImage& aImage, imgIDecoderObserver* aObserver);
+  Decoder(RasterImage& aImage, imgDecoderObserver* aObserver);
   virtual ~Decoder();
 
   /**
@@ -175,7 +175,7 @@ protected:
    *
    */
   RasterImage &mImage;
-  nsCOMPtr<imgIDecoderObserver> mObserver;
+  RefPtr<imgDecoderObserver> mObserver;
 
   uint32_t mDecodeFlags;
   bool mDecodeDone;
@@ -192,6 +192,7 @@ private:
   bool mSizeDecode;
   bool mInFrame;
   bool mIsAnimated;
+  bool mFirstWrite;
 };
 
 } // namespace image

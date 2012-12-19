@@ -85,8 +85,7 @@ protected:
 inline RootAccessible*
 Accessible::AsRoot()
 {
-  return mFlags & eRootAccessible ?
-    static_cast<mozilla::a11y::RootAccessible*>(this) : nullptr;
+  return IsRoot() ? static_cast<mozilla::a11y::RootAccessible*>(this) : nullptr;
 }
 
 } // namespace a11y

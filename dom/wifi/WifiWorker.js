@@ -803,6 +803,26 @@ var WifiManager = (function() {
 
   var driverEventMap = { STOPPED: "driverstopped", STARTED: "driverstarted", HANGED: "driverhung" };
 
+  manager.getCurrentNetworkId = function (ssid, callback) {
+    manager.getConfiguredNetworks(function(networks) {
+      if (!networks) {
+        debug("Unable to get configured networks");
+        return callback(null);
+      }
+      for (let net in networks) {
+        let network = networks[net];
+        // Trying to get netId from
+        // 1. CURRENT network.
+        // 2. Trying to associate with SSID 'ssid' event
+        if (network.status === "CURRENT" ||
+            (ssid && ssid === dequote(network.ssid))) {
+          return callback(net);
+        }
+      }
+      callback(null);
+    });
+  }
+
   // handle events sent to us by the event worker
   function handleEvent(event) {
     debug("Event coming in: " + event);
@@ -812,8 +832,8 @@ var WifiManager = (function() {
       if (event.indexOf("Association request to the driver failed") !== -1) {
         notify("passwordmaybeincorrect");
         if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
-          notify("disconnected");
           manager.authenticationFailuresCount = 0;
+          notify("disconnected", {ssid: manager.connectionInfo.ssid});
         }
         return true;
       }
@@ -887,21 +907,27 @@ var WifiManager = (function() {
     if (eventData.indexOf("CTRL-EVENT-DISCONNECTED") === 0) {
       var token = event.split(" ")[1];
       var bssid = token.split("=")[1];
+      if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
+        manager.authenticationFailuresCount = 0;
+        notify("disconnected", {ssid: manager.connectionInfo.ssid});
+      }
       manager.connectionInfo.bssid = null;
       manager.connectionInfo.ssid = null;
       manager.connectionInfo.id = -1;
-      if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
-        notify("disconnected", {BSSID: bssid});
-        manager.authenticationFailuresCount = 0;
-      }
       return true;
     }
     // Association reject is triggered mostly on incorrect WEP key.
     if (eventData.indexOf("CTRL-EVENT-ASSOC-REJECT") === 0) {
       notify("passwordmaybeincorrect");
       if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
-        notify("disconnected");
         manager.authenticationFailuresCount = 0;
+        notify("disconnected", {ssid: manager.connectionInfo.ssid});
+      }
+      return true;
+    }
+    if (eventData.indexOf("CTRL-EVENT-EAP-FAILURE") === 0) {
+      if (event.indexOf("EAP authentication failed") !== -1) {
+        notify("passwordmaybeincorrect");
       }
       return true;
     }
@@ -1339,7 +1365,7 @@ var WifiManager = (function() {
           manager.loopDetectionCount++;
         }
         if (manager.loopDetectionCount > MAX_SUPPLICANT_LOOP_ITERATIONS) {
-          notify("disconnected");
+          notify("disconnected", {ssid: manager.connectionInfo.ssid});
           manager.loopDetectionCount = 0;
         }
       }
@@ -1802,16 +1828,19 @@ function WifiWorker() {
       self._needToEnableNetworks = false;
     }
 
-    var currentNetwork = self.currentNetwork;
-    if (currentNetwork && !isNaN(currentNetwork.netId)) {
-      // Disable the network when password is incorrect.
-      WifiManager.disableNetwork(currentNetwork.netId, function() {});
-    } else {
-      // TODO: We can't get netId when connecting to wep network with
-      // incorrect password, see Bug 813880
-    }
-    self._fireEvent("onconnectingfailed", {network: currentNetwork});
-  };
+    WifiManager.getCurrentNetworkId(this.ssid, function(netId) {
+      // Trying to get netId from current network.
+      if (!netId &&
+          self.currentNetwork &&
+          typeof self.currentNetwork.netId !== "undefined") {
+        netId = self.currentNetwork.netId;
+      }
+      if (netId) {
+        WifiManager.disableNetwork(netId, function() {});
+      }
+    });
+    self._fireEvent("onconnectingfailed", {network: self.currentNetwork});
+  }
 
   WifiManager.onstatechange = function() {
     debug("State change: " + this.prevState + " -> " + this.state);
@@ -2007,6 +2036,10 @@ function WifiWorker() {
               bssid = match[1],
               signalLevel = match[3],
               flags = match[4];
+
+          // Skip ad-hoc networks which aren't supported (bug 811635).
+          if (flags.indexOf("[IBSS]") >= 0)
+            continue;
 
           // If this is the first time that we've seen this SSID in the scan
           // results, add it to the list along with any other information.

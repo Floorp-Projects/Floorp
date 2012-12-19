@@ -449,7 +449,7 @@ AsyncConnectionHelper::OnSuccess()
                mTransaction->IsAborted(),
                "How else can this be closed?!");
 
-  if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
+  if (internalEvent->mFlags.mExceptionHasBeenRisen &&
       mTransaction &&
       mTransaction->IsOpen()) {
     rv = mTransaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
@@ -485,7 +485,7 @@ AsyncConnectionHelper::OnError()
     nsEvent* internalEvent = event->GetInternalNSEvent();
     NS_ASSERTION(internalEvent, "This should never be null!");
 
-    if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
+    if (internalEvent->mFlags.mExceptionHasBeenRisen &&
         mTransaction &&
         mTransaction->IsOpen() &&
         NS_FAILED(mTransaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR))) {

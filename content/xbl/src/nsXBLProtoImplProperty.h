@@ -20,7 +20,8 @@ public:
   nsXBLProtoImplProperty(const PRUnichar* aName,
                          const PRUnichar* aGetter, 
                          const PRUnichar* aSetter,
-                         const PRUnichar* aReadOnly);
+                         const PRUnichar* aReadOnly,
+                         uint32_t aLineNumber);
 
   nsXBLProtoImplProperty(const PRUnichar* aName, const bool aIsReadOnly);
  

@@ -100,12 +100,12 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
 void 
 nsPrintObject::DestroyPresentation()
 {
-  mPresContext = nullptr;
   if (mPresShell) {
     mPresShell->EndObservingDocument();
     nsAutoScriptBlocker scriptBlocker;
     mPresShell->Destroy();
   }
+  mPresContext = nullptr;
   mPresShell   = nullptr;
   mViewManager = nullptr;
 }

@@ -6,6 +6,7 @@
 
 /* A namespace class for static layout utilities. */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 
@@ -168,6 +169,7 @@
 #include "DecoderTraits.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsViewportInfo.h"
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
                                       const char** next, PRUnichar* result);
@@ -239,17 +241,6 @@ nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
 namespace {
-
-/**
- * Default values for the ViewportInfo structure.
- */
-static const double   kViewportMinScale = 0.0;
-static const double   kViewportMaxScale = 10.0;
-static const uint32_t kViewportMinWidth = 200;
-static const uint32_t kViewportMaxWidth = 10000;
-static const uint32_t kViewportMinHeight = 223;
-static const uint32_t kViewportMaxHeight = 10000;
-static const int32_t  kViewportDefaultScreenWidth = 980;
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -5037,32 +5028,11 @@ static void ProcessViewportToken(nsIDocument *aDocument,
                          (c == '\t') || (c == '\n') || (c == '\r'))
 
 /* static */
-void
-nsContentUtils::ConstrainViewportValues(ViewportInfo& aViewInfo)
-{
-  // Constrain the min/max zoom as specified at:
-  // dev.w3.org/csswg/css-device-adapt section 6.2
-  aViewInfo.maxZoom = NS_MAX(aViewInfo.minZoom, aViewInfo.maxZoom);
-
-  aViewInfo.defaultZoom = NS_MIN(aViewInfo.defaultZoom, aViewInfo.maxZoom);
-  aViewInfo.defaultZoom = NS_MAX(aViewInfo.defaultZoom, aViewInfo.minZoom);
-}
-
-/* static */
-ViewportInfo
+nsViewportInfo
 nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
                                 uint32_t aDisplayWidth,
                                 uint32_t aDisplayHeight)
 {
-  ViewportInfo ret;
-  ret.defaultZoom = 1.0;
-  ret.autoSize = true;
-  ret.allowZoom = true;
-  ret.width = aDisplayWidth;
-  ret.height = aDisplayHeight;
-  ret.minZoom = kViewportMinScale;
-  ret.maxZoom = kViewportMaxScale;
-
   nsAutoString viewport;
   aDocument->GetHeaderData(nsGkAtoms::viewport, viewport);
   if (viewport.IsEmpty()) {
@@ -5079,7 +5049,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
             (docId.Find("Mobile") != -1) ||
             (docId.Find("WML") != -1))
         {
-          nsContentUtils::ConstrainViewportValues(ret);
+          nsViewportInfo ret(aDisplayWidth, aDisplayHeight);
           return ret;
         }
       }
@@ -5088,7 +5058,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
     nsAutoString handheldFriendly;
     aDocument->GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
     if (handheldFriendly.EqualsLiteral("true")) {
-      nsContentUtils::ConstrainViewportValues(ret);
+      nsViewportInfo ret(aDisplayWidth, aDisplayHeight);
       return ret;
     }
   }
@@ -5218,15 +5188,8 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
     allowZoom = false;
   }
 
-  ret.allowZoom = allowZoom;
-  ret.width = width;
-  ret.height = height;
-  ret.defaultZoom = scaleFloat;
-  ret.minZoom = scaleMinFloat;
-  ret.maxZoom = scaleMaxFloat;
-  ret.autoSize = autoSize;
-
-  nsContentUtils::ConstrainViewportValues(ret);
+  nsViewportInfo ret(scaleFloat, scaleMinFloat, scaleMaxFloat, width, height,
+                     autoSize, allowZoom);
   return ret;
 }
 
@@ -5338,7 +5301,7 @@ nsContentUtils::GetDragSession()
 nsresult
 nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
 {
-  if (aDragEvent->dataTransfer || !NS_IS_TRUSTED_EVENT(aDragEvent))
+  if (aDragEvent->dataTransfer || !aDragEvent->mFlags.mIsTrusted)
     return NS_OK;
 
   // For draggesture and dragstart events, the data transfer object is
@@ -6582,6 +6545,17 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     return docFactory.forget();
   }
 #endif // MOZ_MEDIA_PLUGINS
+
+#ifdef MOZ_WMF
+  if (DecoderTraits::IsWMFSupportedType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
+    }
+    return docFactory.forget();
+  }
+#endif
+
 #endif // MOZ_MEDIA
 
   return NULL;

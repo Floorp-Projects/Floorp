@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
+
 #include "base/basictypes.h"
 
 #include "Blob.h"
@@ -14,10 +17,8 @@
 #include "nsIRemoteBlob.h"
 #include "nsISeekableStream.h"
 
-#include "mozilla/Assertions.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsDOMFile.h"
 #include "nsThreadUtils.h"

@@ -1,6 +1,10 @@
 #include "gdb-tests.h"
 #include "jsatom.h"
 
+// When JSGC_ANALYSIS is #defined, Rooted<JSFlatString*> needs the definition
+// of JSFlatString in order to figure out its ThingRootKind
+#include "vm/String.h"
+
 FRAGMENT(JSString, simple) {
   js::Rooted<JSString *> empty(cx, JS_NewStringCopyN(cx, NULL, 0));
   js::Rooted<JSString *> x(cx, JS_NewStringCopyN(cx, "x", 1));

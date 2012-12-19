@@ -312,7 +312,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 a11y::AccType
 nsComboboxControlFrame::AccessibleType()
 {
-  return a11y::eHTMLCombobox;
+  return a11y::eHTMLComboboxType;
 }
 #endif
 

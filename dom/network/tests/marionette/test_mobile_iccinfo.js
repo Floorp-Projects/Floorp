@@ -78,5 +78,9 @@ function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
 
 testDisplayConditionChange(testSPN, [
   [123, 456, false, true], // Not in HPLMN.
-  [310, 260, true, true], // inside HPLMN.
+  [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
+  [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
+  [466,  92,  true, true], // Not in HPLMN, but in another PLMN specified in SPDI.
+  [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
+  [310, 260,  true, true], // inside HPLMN.
 ], finalize);

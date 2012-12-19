@@ -42,7 +42,7 @@ nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
                                     getter_AddRefs(frame));
 
     // If the last call failed, it was probably because our call stack originates
-    // in an imgIDecoderObserver event, meaning that we're not allowed request
+    // in an imgINotificationObserver event, meaning that we're not allowed request
     // a sync decode. Presumably the originating event is something sensible like
     // OnStopFrame(), so we can just retry the call without a sync decode.
     if (NS_FAILED(rv))

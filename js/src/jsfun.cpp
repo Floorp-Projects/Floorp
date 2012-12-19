@@ -1478,6 +1478,11 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     clone->nargs = fun->nargs;
     clone->flags = fun->flags & ~JSFunction::EXTENDED;
     if (fun->isInterpreted()) {
+        if (fun->isInterpretedLazy()) {
+            AutoCompartment ac(cx, fun);
+            if (!fun->getOrCreateScript(cx))
+                return NULL;
+        }
         clone->initScript(fun->nonLazyScript());
         clone->initEnvironment(parent);
     } else {

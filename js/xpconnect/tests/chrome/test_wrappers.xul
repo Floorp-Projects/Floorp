@@ -72,6 +72,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    var contentXHR = XPCNativeWrapper(win.wrappedJSObject.xhr);
    try {
      var QIed = contentXHR.QueryInterface(Components.interfaces.nsIClassInfo);
+     ok(false, "Should throw for new binding objects not having classinfo");
+   } catch(e) {
+     ok(true, "Threw while QI-ing on wrapper");
+   }
+
+   var contentScreen = XPCNativeWrapper(win.wrappedJSObject.screen);
+   try {
+     var QIed = contentScreen.QueryInterface(Components.interfaces.nsIClassInfo);
      ok(QIed, "Successfully QI-ed on wrapper");
    } catch(e) {
      ok(false, "Threw while QI-ing on wrapper");

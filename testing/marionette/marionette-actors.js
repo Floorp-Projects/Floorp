@@ -1105,7 +1105,9 @@ MarionetteDriverActor.prototype = {
       let foundFrame = null;
       if ((aRequest.value == null) && (aRequest.element == null)) {
         this.curFrame = null;
-        this.mainFrame.focus();
+        if (aRequest.focus) {
+          this.mainFrame.focus();
+        }
         checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
         return;
       }
@@ -1117,7 +1119,9 @@ MarionetteDriverActor.prototype = {
             if (curWindow.frames[i].frameElement == wantedFrame) {
               curWindow = curWindow.frames[i]; 
               this.curFrame = curWindow;
-              this.curFrame.focus();
+              if (aRequest.focus) {
+                this.curFrame.focus();
+              }
               checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
               return;
           }
@@ -1152,7 +1156,9 @@ MarionetteDriverActor.prototype = {
       if (foundFrame != null) {
         curWindow = curWindow.frames[foundFrame];
         this.curFrame = curWindow;
-        this.curFrame.focus();
+        if (aRequest.focus) {
+          this.curFrame.focus();
+        }
         checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
       } else {
         this.sendError("Unable to locate frame: " + aRequest.value, 8, null,

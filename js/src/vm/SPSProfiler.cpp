@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "jsnum.h"
 #include "jsscript.h"
 
@@ -68,7 +70,7 @@ SPSProfiler::enable(bool enabled)
 
 /* Lookup the string for the function/script, creating one if necessary */
 const char*
-SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::profileString(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun)
 {
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
@@ -85,7 +87,7 @@ SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun
 }
 
 void
-SPSProfiler::onScriptFinalized(JSScript *script)
+SPSProfiler::onScriptFinalized(UnrootedScript script)
 {
     /*
      * This function is called whenever a script is destroyed, regardless of
@@ -104,7 +106,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
 }
 
 bool
-SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::enter(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun)
 {
     const char *str = profileString(cx, script, maybeFun);
     if (str == NULL)
@@ -117,7 +119,7 @@ SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 }
 
 void
-SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::exit(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun)
 {
     pop();
 
@@ -137,7 +139,7 @@ SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 }
 
 void
-SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc)
+SPSProfiler::push(const char *string, void *sp, UnrootedScript script, jsbytecode *pc)
 {
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry *stack = stack_;
@@ -169,7 +171,7 @@ SPSProfiler::pop()
  * AddPtr held while invoking allocProfileString.
  */
 const char*
-SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::allocProfileString(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun)
 {
     DebugOnly<uint64_t> gcBefore = cx->runtime->gcNumber;
     StringBuffer buf(cx);
@@ -222,7 +224,7 @@ JMChunkInfo::JMChunkInfo(mjit::JSActiveFrame *frame,
 {}
 
 jsbytecode*
-SPSProfiler::ipToPC(JSScript *script, size_t ip)
+SPSProfiler::ipToPC(UnrootedScript script, size_t ip)
 {
     if (!jminfo.initialized())
         return NULL;
@@ -250,7 +252,7 @@ SPSProfiler::ipToPC(JSScript *script, size_t ip)
 }
 
 jsbytecode*
-JMChunkInfo::convert(JSScript *script, size_t ip)
+JMChunkInfo::convert(UnrootedScript script, size_t ip)
 {
     if (mainStart <= ip && ip < mainEnd) {
         size_t offset = 0;
@@ -348,7 +350,7 @@ SPSProfiler::registerScript(mjit::JSActiveFrame *frame,
 
 bool
 SPSProfiler::registerICCode(mjit::JITChunk *chunk,
-                            JSScript *script, jsbytecode *pc,
+                            UnrootedScript script, jsbytecode *pc,
                             void *base, size_t size)
 {
     JS_ASSERT(jminfo.initialized());

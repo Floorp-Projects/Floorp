@@ -137,7 +137,6 @@ ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_BROWSER_FILES += \
 	browser_354894_perwindowpb.js \
 	browser_394759_perwindowpb.js \
-	browser_819510_perwindowpb.js \
 	$(NULL)
 else
 MOCHITEST_BROWSER_FILES += \

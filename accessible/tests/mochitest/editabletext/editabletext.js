@@ -34,6 +34,26 @@ function editableTextTestRun()
 function editableTextTest(aID)
 {
   /**
+   * Schedule a test, the given function with its arguments will be executed
+   * when preceding test is complete.
+   */
+  this.scheduleTest = function scheduleTest(aFunc)
+  {
+    // A data container acts like a dummy invoker, it's never invoked but
+    // it's used to generate real invoker when previous invoker was handled.
+    var dataContainer = {
+      func: aFunc,
+      funcArgs: Array.slice(arguments, 1)
+    };
+    this.mEventQueue.push(dataContainer);
+
+    if (!this.mEventQueueReady) {
+      this.unwrapNextTest();
+      this.mEventQueueReady = true;
+    }
+  }
+
+  /**
    * setTextContents test.
    */
   this.setTextContents = function setTextContents(aValue, aTrailChar)
@@ -51,7 +71,7 @@ function editableTextTest(aID)
     var oldValue = getValue(aID);
     var removeTripple = oldValue ? [0, oldValue.length, oldValue] : null;
 
-    this.scheduleTest(aID, removeTripple, insertTripple, setTextContentsInvoke,
+    this.generateTest(aID, removeTripple, insertTripple, setTextContentsInvoke,
                       getValueChecker(aID, aValue), testID);
   }
 
@@ -70,7 +90,7 @@ function editableTextTest(aID)
     }
 
     var resPos = (aResPos != undefined) ? aResPos : aPos;
-    this.scheduleTest(aID, null, [resPos, resPos + aStr.length, aStr],
+    this.generateTest(aID, null, [resPos, resPos + aStr.length, aStr],
                       insertTextInvoke, getValueChecker(aID, aResStr), testID);
   }
 
@@ -88,7 +108,7 @@ function editableTextTest(aID)
       acc.copyText(aStartPos, aEndPos);
     }
 
-    this.scheduleTest(aID, null, null, copyTextInvoke,
+    this.generateTest(aID, null, null, copyTextInvoke,
                       getClipboardChecker(aID, aClipboardStr), testID);
   }
 
@@ -108,7 +128,7 @@ function editableTextTest(aID)
       acc.pasteText(aPos);
     }
 
-    this.scheduleTest(aID, null, [aStartPos, aEndPos, getTextFromClipboard],
+    this.generateTest(aID, null, [aStartPos, aEndPos, getTextFromClipboard],
                       copyNPasteInvoke, getValueChecker(aID, aResStr), testID);
   }
 
@@ -129,7 +149,7 @@ function editableTextTest(aID)
 
     var resStartPos = (aResStartPos != undefined) ? aResStartPos : aStartPos;
     var resEndPos = (aResEndPos != undefined) ? aResEndPos : aEndPos;
-    this.scheduleTest(aID, [resStartPos, resEndPos, getTextFromClipboard], null,
+    this.generateTest(aID, [resStartPos, resEndPos, getTextFromClipboard], null,
                       cutTextInvoke, getValueChecker(aID, aResStr), testID);
   }
 
@@ -149,7 +169,7 @@ function editableTextTest(aID)
       acc.pasteText(aPos);
     }
 
-    this.scheduleTest(aID, [aStartPos, aEndPos, getTextFromClipboard],
+    this.generateTest(aID, [aStartPos, aEndPos, getTextFromClipboard],
                       [aPos, -1, getTextFromClipboard],
                       cutNPasteTextInvoke, getValueChecker(aID, aResStr),
                       testID);
@@ -168,7 +188,7 @@ function editableTextTest(aID)
       acc.pasteText(aPos);
     }
 
-    this.scheduleTest(aID, null, [aPos, -1, getTextFromClipboard],
+    this.generateTest(aID, null, [aPos, -1, getTextFromClipboard],
                       pasteTextInvoke, getValueChecker(aID, aResStr), testID);
   }
 
@@ -177,35 +197,20 @@ function editableTextTest(aID)
    */
   this.deleteText = function deleteText(aStartPos, aEndPos, aResStr)
   {
-    function getRemovedText() { return invoker.removedText; }
+    var testID = "deleteText from " + aStartPos + " to " + aEndPos +
+      " for " + prettyName(aID);
 
-    var invoker = {
-      eventSeq: [
-        new textChangeChecker(aID, aStartPos, aEndPos, getRemovedText, false)
-      ],
+    var oldValue = getValue(aID).substring(aStartPos, aEndPos);
+    var removeTripple = oldValue ? [aStartPos, aEndPos, oldValue] : null;
 
-      invoke: function invoke()
-      {
-        var acc = getAccessible(aID,
-                               [nsIAccessibleText, nsIAccessibleEditableText]);
+    function deleteTextInvoke()
+    {
+      var acc = getAccessible(aID, [nsIAccessibleEditableText]);
+      acc.deleteText(aStartPos, aEndPos);
+    }
 
-        this.removedText = acc.getText(aStartPos, aEndPos);
-
-        acc.deleteText(aStartPos, aEndPos);
-      },
-
-      finalCheck: function finalCheck()
-      {
-        getValueChecker(aID, aResStr).check();
-      },
-
-      getID: function getID()
-      {
-        return "deleteText from " + aStartPos + " to " + aEndPos + " for " +
-          prettyName(aID);
-      }
-    };
-    this.mEventQueue.push(invoker);
+    this.generateTest(aID, removeTripple, null, deleteTextInvoke,
+                      getValueChecker(aID, aResStr), testID);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -265,16 +270,31 @@ function editableTextTest(aID)
   }
 
   /**
-   * Create an invoker for the test and push it into event queue.
+   * Process next scheduled test.
    */
-  this.scheduleTest = function scheduleTest(aID, aRemoveTriple, aInsertTriple,
+  this.unwrapNextTest = function unwrapNextTest()
+  {
+    var data = this.mEventQueue.mInvokers[this.mEventQueue.mIndex + 1];
+    if (data)
+      data.func.apply(this, data.funcArgs);
+  }
+
+  /**
+   * Used to generate an invoker object for the sheduled test.
+   */
+  this.generateTest = function generateTest(aID, aRemoveTriple, aInsertTriple,
                                             aInvokeFunc, aChecker, aInvokerID)
   {
+    var et = this;
     var invoker = {
       eventSeq: [],
 
       invoke: aInvokeFunc,
-      finalCheck: function finalCheck() { aChecker.check(); },
+      finalCheck: function finalCheck()
+      {
+        aChecker.check();
+        et.unwrapNextTest(); // replace dummy invoker on real invoker object.
+      },
       getID: function getID() { return aInvokerID; }
     };
 
@@ -292,7 +312,7 @@ function editableTextTest(aID)
       invoker.eventSeq.push(checker);
     }
 
-    this.mEventQueue.push(invoker);
+    this.mEventQueue.mInvokers[this.mEventQueue.mIndex + 1] = invoker;
   }
 
   /**
@@ -318,5 +338,6 @@ function editableTextTest(aID)
   }
 
   this.mEventQueue = new eventQueue();
+  this.mEventQueueReady = false;
 }
 

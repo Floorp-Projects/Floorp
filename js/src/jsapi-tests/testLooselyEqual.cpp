@@ -10,21 +10,46 @@ using namespace std;
 
 struct LooseEqualityFixture : public JSAPITest
 {
-    jsval qNaN;
-    jsval sNaN;
-    jsval d42;
-    jsval i42;
-    jsval undef;
-    jsval null;
-    jsval obj;
-    jsval poszero;
-    jsval negzero;
-
     virtual ~LooseEqualityFixture() {}
 
-    virtual bool init() {
-        if (!JSAPITest::init())
-            return false;
+    bool leq(jsval x, jsval y) {
+        JSBool equal;
+        CHECK(JS_LooselyEqual(cx, x, y, &equal) && equal);
+        CHECK(JS_LooselyEqual(cx, y, x, &equal) && equal);
+        return true;
+    }
+
+    bool nleq(JS::HandleValue x, JS::HandleValue y) {
+        JSBool equal;
+        CHECK(JS_LooselyEqual(cx, x, y, &equal) && !equal);
+        CHECK(JS_LooselyEqual(cx, y, x, &equal) && !equal);
+        return true;
+    }
+};
+
+struct LooseEqualityData
+{
+    js::RootedValue qNaN;
+    js::RootedValue sNaN;
+    js::RootedValue d42;
+    js::RootedValue i42;
+    js::RootedValue undef;
+    js::RootedValue null;
+    js::RootedValue obj;
+    js::RootedValue poszero;
+    js::RootedValue negzero;
+
+    LooseEqualityData(JSContext *cx)
+      : qNaN(cx),
+        sNaN(cx),
+        d42(cx),
+        i42(cx),
+        undef(cx),
+        null(cx),
+        obj(cx),
+        poszero(cx),
+        negzero(cx)
+    {
         qNaN = DOUBLE_TO_JSVAL(numeric_limits<double>::quiet_NaN());
         sNaN = DOUBLE_TO_JSVAL(numeric_limits<double>::signaling_NaN());
         d42 = DOUBLE_TO_JSVAL(42.0);
@@ -42,28 +67,14 @@ struct LooseEqualityFixture : public JSAPITest
 #ifdef XP_WIN
 # undef copysign
 #endif
-        return true;
-    }
-
-    bool leq(jsval x, jsval y) {
-        JSBool equal;
-        CHECK(JS_LooselyEqual(cx, x, y, &equal) && equal);
-        CHECK(JS_LooselyEqual(cx, y, x, &equal) && equal);
-        return true;
-    }
-
-    bool nleq(jsval x, jsval y) {
-        JSBool equal;
-        CHECK(JS_LooselyEqual(cx, x, y, &equal) && !equal);
-        CHECK(JS_LooselyEqual(cx, y, x, &equal) && !equal);
-        return true;
     }
 };
 
 // 11.9.3 1a
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_undef_leq_undef)
 {
-    CHECK(leq(JSVAL_VOID, JSVAL_VOID));
+    LooseEqualityData d(cx);
+    CHECK(leq(d.undef, d.undef));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_undef_leq_undef)
@@ -71,7 +82,8 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_undef_leq_undef)
 // 11.9.3 1b
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_null_leq_null)
 {
-    CHECK(leq(JSVAL_NULL, JSVAL_NULL));
+    LooseEqualityData d(cx);
+    CHECK(leq(d.null, d.null));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_null_leq_null)
@@ -79,23 +91,25 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_null_leq_null)
 // 11.9.3 1ci
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_nan_nleq_all)
 {
-    CHECK(nleq(qNaN, qNaN));
-    CHECK(nleq(qNaN, sNaN));
+    LooseEqualityData d(cx);
 
-    CHECK(nleq(sNaN, sNaN));
-    CHECK(nleq(sNaN, qNaN));
+    CHECK(nleq(d.qNaN, d.qNaN));
+    CHECK(nleq(d.qNaN, d.sNaN));
 
-    CHECK(nleq(qNaN, d42));
-    CHECK(nleq(qNaN, i42));
-    CHECK(nleq(qNaN, undef));
-    CHECK(nleq(qNaN, null));
-    CHECK(nleq(qNaN, obj));
+    CHECK(nleq(d.sNaN, d.sNaN));
+    CHECK(nleq(d.sNaN, d.qNaN));
 
-    CHECK(nleq(sNaN, d42));
-    CHECK(nleq(sNaN, i42));
-    CHECK(nleq(sNaN, undef));
-    CHECK(nleq(sNaN, null));
-    CHECK(nleq(sNaN, obj));
+    CHECK(nleq(d.qNaN, d.d42));
+    CHECK(nleq(d.qNaN, d.i42));
+    CHECK(nleq(d.qNaN, d.undef));
+    CHECK(nleq(d.qNaN, d.null));
+    CHECK(nleq(d.qNaN, d.obj));
+
+    CHECK(nleq(d.sNaN, d.d42));
+    CHECK(nleq(d.sNaN, d.i42));
+    CHECK(nleq(d.sNaN, d.undef));
+    CHECK(nleq(d.sNaN, d.null));
+    CHECK(nleq(d.sNaN, d.obj));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_nan_nleq_all)
@@ -103,23 +117,25 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_nan_nleq_all)
 // 11.9.3 1cii
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_all_nleq_nan)
 {
-    CHECK(nleq(qNaN, qNaN));
-    CHECK(nleq(qNaN, sNaN));
+    LooseEqualityData d(cx);
 
-    CHECK(nleq(sNaN, sNaN));
-    CHECK(nleq(sNaN, qNaN));
+    CHECK(nleq(d.qNaN, d.qNaN));
+    CHECK(nleq(d.qNaN, d.sNaN));
 
-    CHECK(nleq(d42,   qNaN));
-    CHECK(nleq(i42,   qNaN));
-    CHECK(nleq(undef, qNaN));
-    CHECK(nleq(null,  qNaN));
-    CHECK(nleq(obj,   qNaN));
+    CHECK(nleq(d.sNaN, d.sNaN));
+    CHECK(nleq(d.sNaN, d.qNaN));
 
-    CHECK(nleq(d42,   sNaN));
-    CHECK(nleq(i42,   sNaN));
-    CHECK(nleq(undef, sNaN));
-    CHECK(nleq(null,  sNaN));
-    CHECK(nleq(obj,   sNaN));
+    CHECK(nleq(d.d42,   d.qNaN));
+    CHECK(nleq(d.i42,   d.qNaN));
+    CHECK(nleq(d.undef, d.qNaN));
+    CHECK(nleq(d.null,  d.qNaN));
+    CHECK(nleq(d.obj,   d.qNaN));
+
+    CHECK(nleq(d.d42,   d.sNaN));
+    CHECK(nleq(d.i42,   d.sNaN));
+    CHECK(nleq(d.undef, d.sNaN));
+    CHECK(nleq(d.null,  d.sNaN));
+    CHECK(nleq(d.obj,   d.sNaN));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_all_nleq_nan)
@@ -127,10 +143,12 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_all_nleq_nan)
 // 11.9.3 1ciii
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_leq_same_nums)
 {
-    CHECK(leq(d42, d42));
-    CHECK(leq(i42, i42));
-    CHECK(leq(d42, i42));
-    CHECK(leq(i42, d42));
+    LooseEqualityData d(cx);
+
+    CHECK(leq(d.d42, d.d42));
+    CHECK(leq(d.i42, d.i42));
+    CHECK(leq(d.d42, d.i42));
+    CHECK(leq(d.i42, d.d42));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_leq_same_nums)
@@ -138,7 +156,8 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_leq_same_nums)
 // 11.9.3 1civ
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_pz_leq_nz)
 {
-    CHECK(leq(poszero, negzero));
+    LooseEqualityData d(cx);
+    CHECK(leq(d.poszero, d.negzero));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_pz_leq_nz)
@@ -146,7 +165,8 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_pz_leq_nz)
 // 11.9.3 1cv
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_nz_leq_pz)
 {
-    CHECK(leq(negzero, poszero));
+    LooseEqualityData d(cx);
+    CHECK(leq(d.negzero, d.poszero));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_nz_leq_pz)
@@ -156,7 +176,8 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_nz_leq_pz)
 // 11.9.3 2
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_null_leq_undef)
 {
-    CHECK(leq(null, undef));
+    LooseEqualityData d(cx);
+    CHECK(leq(d.null, d.undef));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_null_leq_undef)
@@ -164,7 +185,8 @@ END_FIXTURE_TEST(LooseEqualityFixture, test_null_leq_undef)
 // 11.9.3 3
 BEGIN_FIXTURE_TEST(LooseEqualityFixture, test_undef_leq_null)
 {
-    CHECK(leq(undef, null));
+    LooseEqualityData d(cx);
+    CHECK(leq(d.undef, d.null));
     return true;
 }
 END_FIXTURE_TEST(LooseEqualityFixture, test_undef_leq_null)

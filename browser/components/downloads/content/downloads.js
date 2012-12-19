@@ -46,6 +46,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
                                   "resource:///modules/DownloadsCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsPanel
@@ -335,7 +339,7 @@ const DownloadsPanel = {
         return;
       }
 
-      let uri = Services.io.newURI(url, null, null);
+      let uri = NetUtil.newURI(url);
       saveURL(uri.spec, name || uri.spec, null, true, true,
               undefined, document);
     } catch (ex) {}
@@ -1188,12 +1192,6 @@ function DownloadsViewItemController(aElement) {
 
 DownloadsViewItemController.prototype = {
   //////////////////////////////////////////////////////////////////////////////
-  //// Constants
-
-  get kPrefBdmAlertOnExeOpen() "browser.download.manager.alertOnEXEOpen",
-  get kPrefBdmScanWhenDone() "browser.download.manager.scanWhenDone",
-
-  //////////////////////////////////////////////////////////////////////////////
   //// Command dispatching
 
   /**
@@ -1244,87 +1242,18 @@ DownloadsViewItemController.prototype = {
   commands: {
     cmd_delete: function DVIC_cmd_delete()
     {
-      this.dataItem.getDownload(function (aDownload) {
-        if (this.dataItem.inProgress) {
-          aDownload.cancel();
-          this._ensureLocalFileRemoved();
-        }
-        aDownload.remove();
-      }.bind(this));
+      this.dataItem.remove();
+      PlacesUtils.bhistory.removePage(NetUtil.newURI(this.dataItem.uri));
     },
 
     downloadsCmd_cancel: function DVIC_downloadsCmd_cancel()
     {
-      if (this.dataItem.inProgress) {
-        this.dataItem.getDownload(function (aDownload) {
-          aDownload.cancel();
-          this._ensureLocalFileRemoved();
-        }.bind(this));
-      }
+      this.dataItem.cancel();
     },
 
     downloadsCmd_open: function DVIC_downloadsCmd_open()
     {
-      // Confirm opening executable files if required.
-      let localFile = this.dataItem.localFile;
-      if (localFile.isExecutable()) {
-        let showAlert = true;
-        try {
-          showAlert = Services.prefs.getBoolPref(this.kPrefBdmAlertOnExeOpen);
-        } catch (ex) { }
-
-        // On Vista and above, we rely on native security prompting for
-        // downloaded content unless it's disabled.
-        if (DownloadsCommon.isWinVistaOrHigher) {
-          try {
-            if (Services.prefs.getBoolPref(this.kPrefBdmScanWhenDone)) {
-              showAlert = false;
-            }
-          } catch (ex) { }
-        }
-
-        if (showAlert) {
-          let name = this.dataItem.target;
-          let message =
-              DownloadsCommon.strings.fileExecutableSecurityWarning(name, name);
-          let title =
-              DownloadsCommon.strings.fileExecutableSecurityWarningTitle;
-          let dontAsk =
-              DownloadsCommon.strings.fileExecutableSecurityWarningDontAsk;
-
-          let checkbox = { value: false };
-          let open = Services.prompt.confirmCheck(window, title, message,
-                                                  dontAsk, checkbox);
-          if (!open) {
-            return;
-          }
-
-          Services.prefs.setBoolPref(this.kPrefBdmAlertOnExeOpen,
-                                     !checkbox.value);
-        }
-      }
-
-      // Actually open the file.
-      this.dataItem.getDownload(function (aDownload) {
-        try {
-          let launched = false;
-          try {
-            let mimeInfo = aDownload.MIMEInfo;
-            if (mimeInfo.preferredAction == mimeInfo.useHelperApp) {
-              mimeInfo.launchWithFile(localFile);
-              launched = true;
-            }
-          } catch (ex) { }
-          if (!launched) {
-            localFile.launch();
-          }
-        } catch (ex) {
-          // If launch fails, try sending it through the system's external "file:"
-          // URL handler.
-          this._openExternal(localFile);
-        }
-      }.bind(this));
-
+      this.dataItem.openLocalFile(window);
       // We explicitly close the panel here to give the user the feedback that
       // their click has been received, and we're handling the action.
       // Otherwise, we'd have to wait for the file-type handler to execute
@@ -1335,26 +1264,7 @@ DownloadsViewItemController.prototype = {
 
     downloadsCmd_show: function DVIC_downloadsCmd_show()
     {
-      let localFile = this.dataItem.localFile;
-
-      try {
-        // Show the directory containing the file and select the file.
-        localFile.reveal();
-      } catch (ex) {
-        // If reveal fails for some reason (e.g., it's not implemented on unix
-        // or the file doesn't exist), try using the parent if we have it.
-        let parent = localFile.parent.QueryInterface(Ci.nsILocalFile);
-        if (parent) {
-          try {
-            // Open the parent directory to show where the file should be.
-            parent.launch();
-          } catch (ex) {
-            // If launch also fails (probably because it's not implemented), let
-            // the OS handler try to open the parent.
-            this._openExternal(parent);
-          }
-        }
-      }
+      this.dataItem.showLocalFile();
 
       // We explicitly close the panel here to give the user the feedback that
       // their click has been received, and we're handling the action.
@@ -1366,20 +1276,12 @@ DownloadsViewItemController.prototype = {
 
     downloadsCmd_pauseResume: function DVIC_downloadsCmd_pauseResume()
     {
-      this.dataItem.getDownload(function (aDownload) {
-        if (this.dataItem.paused) {
-          aDownload.resume();
-        } else {
-          aDownload.pause();
-        }
-      }.bind(this));
+      this.dataItem.togglePauseResume();
     },
 
     downloadsCmd_retry: function DVIC_downloadsCmd_retry()
     {
-      this.dataItem.getDownload(function (aDownload) {
-        aDownload.retry();
-      });
+      this.dataItem.retry();
     },
 
     downloadsCmd_openReferrer: function DVIC_downloadsCmd_openReferrer()
@@ -1418,31 +1320,6 @@ DownloadsViewItemController.prototype = {
       // Invoke the command.
       this.doCommand(defaultCommand);
     }
-  },
-
-  /**
-   * Support function to open the specified nsIFile.
-   */
-  _openExternal: function DVIC_openExternal(aFile)
-  {
-    let protocolSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                      .getService(Ci.nsIExternalProtocolService);
-    protocolSvc.loadUrl(makeFileURI(aFile));
-  },
-
-  /**
-   * Support function that deletes the local file for a download. This is
-   * used in cases where the Download Manager service doesn't delete the file
-   * from disk when cancelling. See bug 732924.
-   */
-  _ensureLocalFileRemoved: function DVIC_ensureLocalFileRemoved()
-  {
-    try {
-      let localFile = this.dataItem.localFile;
-      if (localFile.exists()) {
-        localFile.remove(false);
-      }
-    } catch (ex) { }
   }
 };
 

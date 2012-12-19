@@ -61,6 +61,8 @@
 
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
+
 // Helper classes
 
 /***********************************************************************/
@@ -989,20 +991,20 @@ nsXBLBinding::InstallEventHandlers()
         nsXBLEventHandler* handler = curr->GetEventHandler();
         if (handler) {
           // Figure out if we're using capturing or not.
-          int32_t flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
-            NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+          dom::EventListenerFlags flags;
+          flags.mCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
 
           // If this is a command, add it in the system event group
           if ((curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
                                   NS_HANDLER_TYPE_SYSTEM)) &&
               (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-            flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+            flags.mInSystemGroup = true;
           }
 
           bool hasAllowUntrustedAttr = curr->HasAllowUntrustedAttr();
           if ((hasAllowUntrustedAttr && curr->AllowUntrustedEvents()) ||
               (!hasAllowUntrustedAttr && !isChromeDoc)) {
-            flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+            flags.mAllowUntrustedEvents = true;
           }
 
           manager->AddEventListenerByType(handler,
@@ -1025,19 +1027,19 @@ nsXBLBinding::InstallEventHandlers()
         // add it to the standard event group.
 
         // Figure out if we're using capturing or not.
-        int32_t flags = (handler->GetPhase() == NS_PHASE_CAPTURING) ?
-          NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+        dom::EventListenerFlags flags;
+        flags.mCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
 
         if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
                                    NS_HANDLER_TYPE_SYSTEM)) &&
             (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-          flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+          flags.mInSystemGroup = true;
         }
 
-        // For key handlers we have to set NS_PRIV_EVENT_UNTRUSTED_PERMITTED flag.
+        // For key handlers we have to set mAllowUntrustedEvents flag.
         // Whether the handling of the event is allowed or not is handled in
         // nsXBLKeyEventHandler::HandleEvent
-        flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+        flags.mAllowUntrustedEvents = true;
 
         manager->AddEventListenerByType(handler, type, flags);
       }
@@ -1139,8 +1141,8 @@ nsXBLBinding::UnhookEventHandlers()
         continue;
 
       // Figure out if we're using capturing or not.
-      int32_t flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
-        NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+      dom::EventListenerFlags flags;
+      flags.mCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
 
       // If this is a command, remove it from the system event group,
       // otherwise remove it from the standard event group.
@@ -1148,7 +1150,7 @@ nsXBLBinding::UnhookEventHandlers()
       if ((curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
                               NS_HANDLER_TYPE_SYSTEM)) &&
           (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-        flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+        flags.mInSystemGroup = true;
       }
 
       manager->RemoveEventListenerByType(handler,
@@ -1166,15 +1168,15 @@ nsXBLBinding::UnhookEventHandlers()
       handler->GetEventName(type);
 
       // Figure out if we're using capturing or not.
-      int32_t flags = (handler->GetPhase() == NS_PHASE_CAPTURING) ?
-        NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+      dom::EventListenerFlags flags;
+      flags.mCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
 
       // If this is a command, remove it from the system event group, otherwise 
       // remove it from the standard event group.
 
       if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) &&
           (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-        flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+        flags.mInSystemGroup = true;
       }
 
       manager->RemoveEventListenerByType(handler, type, flags);

@@ -11,7 +11,7 @@
   by Alex Musil
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/DebugOnly.h"
 
 #include "nsPluginsDir.h"
 #include "prlink.h"

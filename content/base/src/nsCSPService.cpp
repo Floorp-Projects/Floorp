@@ -78,6 +78,32 @@ CSPService::ShouldLoad(uint32_t aContentType,
     if (!sCSPEnabled)
         return NS_OK;
 
+    // shortcut for about: chrome: and resource: and javascript: uris since
+    // they're not subject to CSP content policy checks.
+    bool schemeMatch = false;
+    NS_ENSURE_SUCCESS(aContentLocation->SchemeIs("about", &schemeMatch), NS_OK);
+    if (schemeMatch)
+        return NS_OK;
+    NS_ENSURE_SUCCESS(aContentLocation->SchemeIs("chrome", &schemeMatch), NS_OK);
+    if (schemeMatch)
+        return NS_OK;
+    NS_ENSURE_SUCCESS(aContentLocation->SchemeIs("resource", &schemeMatch), NS_OK);
+    if (schemeMatch)
+        return NS_OK;
+    NS_ENSURE_SUCCESS(aContentLocation->SchemeIs("javascript", &schemeMatch), NS_OK);
+    if (schemeMatch)
+        return NS_OK;
+
+
+    // These content types are not subject to CSP content policy checks:
+    // TYPE_CSP_REPORT, TYPE_REFRESH, TYPE_DOCUMENT
+    // (their mappings are null in contentSecurityPolicy.js)
+    if (aContentType == nsIContentPolicy::TYPE_CSP_REPORT ||
+        aContentType == nsIContentPolicy::TYPE_REFRESH ||
+        aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
+        return NS_OK;
+    }
+
     // find the principal of the document that initiated this request and see
     // if it has a CSP policy object
     nsCOMPtr<nsINode> node(do_QueryInterface(aRequestContext));

@@ -171,8 +171,8 @@ for (var largeLength = 0; largeLength < (0x0000FFFF + 2); ++largeLength) {
   large += "A";
 }
 
-const XHR = SpecialPowers.Ci.nsIXMLHttpRequest;
-const UPLOAD = SpecialPowers.Ci.nsIXMLHttpRequestUpload;
+const XHR = XMLHttpRequest;
+const UPLOAD = XMLHttpRequestUpload;
 
 var tests = 
   [

@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace image {
 
-Decoder::Decoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+Decoder::Decoder(RasterImage &aImage, imgDecoderObserver* aObserver)
   : mImage(aImage)
   , mObserver(aObserver)
   , mDecodeFlags(0)
@@ -24,6 +24,7 @@ Decoder::Decoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
   , mSizeDecode(false)
   , mInFrame(false)
   , mIsAnimated(false)
+  , mFirstWrite(true)
 {
 }
 
@@ -42,10 +43,6 @@ Decoder::Init()
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
 
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-      mObserver->OnStartDecode();
-
   // Implementation-specific initialization
   InitInternal();
   mInitialized = true;
@@ -59,6 +56,9 @@ Decoder::InitSharedDecoder()
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
 
+  // Prevent duplicate notifications.
+  mFirstWrite = false;
+
   // Implementation-specific initialization
   InitInternal();
   mInitialized = true;
@@ -70,6 +70,14 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   // We're strict about decoder errors
   NS_ABORT_IF_FALSE(!HasDecoderError(),
                     "Not allowed to make more decoder calls after error!");
+
+  // If this is our first write, fire OnStartDecode to support bug 512435.
+  if (mFirstWrite) {
+    if (!IsSizeDecode() && mObserver)
+      mObserver->OnStartDecode();
+
+    mFirstWrite = false;
+  }
 
   // If a data error occured, just ignore future data
   if (HasDataError())

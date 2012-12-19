@@ -28,9 +28,9 @@ XULComboboxAccessible::
 {
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                             nsGkAtoms::autocomplete, eIgnoreCase))
-    mFlags |= eAutoCompleteAccessible;
+    mGenericTypes |= eAutoComplete;
   else
-    mFlags |= eComboboxAccessible;
+    mGenericTypes |= eCombobox;
 }
 
 role

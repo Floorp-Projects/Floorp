@@ -303,13 +303,6 @@ public:
   static void ScheduleReflowSVG(nsIFrame *aFrame);
 
   /**
-   * Invalidates the area that the frame last painted to, then schedules an
-   * update of the frame's bounds (which will in turn invalidate the new area
-   * that the frame should paint to).
-   */
-  static void InvalidateAndScheduleReflowSVG(nsIFrame *aFrame);
-
-  /**
    * Returns true if the frame or any of its children need ReflowSVG
    * to be called on them.
    */

@@ -752,14 +752,29 @@ SyncEngine.prototype = {
     this._delete = {};
   },
 
-  // Process incoming records
-  _processIncoming: function SyncEngine__processIncoming() {
+  /**
+   * A tiny abstraction to make it easier to test incoming record
+   * application.
+   */
+  _itemSource: function () {
+    return new Collection(this.engineURL, this._recordObj, this.service);
+  },
+
+  /**
+   * Process incoming records.
+   * In the most awful and untestable way possible.
+   * This now accepts something that makes testing vaguely less impossible.
+   */
+  _processIncoming: function (newitems) {
     this._log.trace("Downloading & applying server changes");
 
     // Figure out how many total items to fetch this sync; do less on mobile.
     let batchSize = Infinity;
-    let newitems = new Collection(this.engineURL, this._recordObj, this.service);
     let isMobile = (Svc.Prefs.get("client.type") == "mobile");
+
+    if (!newitems) {
+      newitems = this._itemSource();
+    }
 
     if (isMobile) {
       batchSize = MOBILE_BATCH_SIZE;

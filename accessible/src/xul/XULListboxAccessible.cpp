@@ -108,7 +108,7 @@ XULListboxAccessible::
     nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
       do_QueryInterface(parentContent);
     if (autoCompletePopupElm)
-      mFlags |= eAutoCompletePopupAccessible;
+      mGenericTypes |= eAutoCompletePopup;
   }
 }
 

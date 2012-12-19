@@ -8,7 +8,7 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/ProfilerController.jsm");
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
-Cu.import("resource://gre/modules/devtools/EventEmitter.jsm");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["ProfilerPanel"];
@@ -40,7 +40,7 @@ function ProfileUI(uid, panel) {
   let doc = panel.document;
   let win = panel.window;
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   this.isReady = false;
   this.panel = panel;
@@ -183,7 +183,7 @@ function ProfilerPanel(frame, toolbox) {
   this.profiles = new Map();
   this._uid = 0;
 
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 }
 
 ProfilerPanel.prototype = {

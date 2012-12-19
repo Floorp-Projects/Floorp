@@ -35,6 +35,7 @@ using namespace layers;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
+PRLogModuleInfo* gNesteggLog;
 #define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #ifdef SEEK_LOGGING
 #define SEEK_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
@@ -102,6 +103,46 @@ static int64_t webm_tell(void *aUserData)
   return resource->Tell();
 }
 
+static void webm_log(nestegg * context,
+                     unsigned int severity,
+                     char const * format, ...)
+{
+#ifdef PR_LOGGING
+  va_list args;
+  char msg[256];
+  const char * sevStr;
+
+  switch(severity) {
+    case NESTEGG_LOG_DEBUG:
+      sevStr = "DBG";
+      break;
+    case NESTEGG_LOG_INFO:
+      sevStr = "INF";
+      break;
+    case NESTEGG_LOG_WARNING:
+      sevStr = "WRN";
+      break;
+    case NESTEGG_LOG_ERROR:
+      sevStr = "ERR";
+      break;
+    case NESTEGG_LOG_CRITICAL:
+      sevStr = "CRT";
+      break;
+    default:
+      sevStr = "UNK";
+      break;
+  }
+
+  va_start(args, format);
+
+  PR_snprintf(msg, sizeof(msg), "%p [Nestegg-%s] ", context, sevStr);
+  PR_vsnprintf(msg+strlen(msg), sizeof(msg)-strlen(msg), format, args);
+  PR_LOG(gNesteggLog, PR_LOG_DEBUG, (msg));
+
+  va_end(args);
+#endif
+}
+
 WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
 #ifdef MOZ_DASH
   : DASHRepReader(aDecoder),
@@ -128,6 +169,11 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
 #endif
 {
   MOZ_COUNT_CTOR(WebMReader);
+#ifdef PR_LOGGING
+  if (!gNesteggLog) {
+    gNesteggLog = PR_NewLogModule("Nestegg");
+  }
+#endif
   // Zero these member vars to avoid crashes in VP8 destroy and Vorbis clear
   // functions when destructor is called before |Init|.
   memset(&mVP8, 0, sizeof(vpx_codec_ctx_t));
@@ -232,7 +278,7 @@ nsresult WebMReader::ReadMetadata(VideoInfo* aInfo,
 #else
   int64_t maxOffset = -1;
 #endif
-  int r = nestegg_init(&mContext, io, nullptr, maxOffset);
+  int r = nestegg_init(&mContext, io, &webm_log, maxOffset);
   if (r == -1) {
     return NS_ERROR_FAILURE;
   }

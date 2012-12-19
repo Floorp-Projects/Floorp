@@ -1743,7 +1743,7 @@ DebugScopes::onPopCall(StackFrame *fp, JSContext *cx)
     if (!scopes)
         return;
 
-    DebugScopeObject *debugScope = NULL;
+    Rooted<DebugScopeObject*> debugScope(cx, NULL);
 
     if (fp->fun()->isHeavyweight()) {
         /*
