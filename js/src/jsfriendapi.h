@@ -238,13 +238,14 @@ extern JS_FRIEND_API(bool)
 IsAtomsCompartment(const JSCompartment *c);
 
 /*
- * Check whether it is OK to assign an undeclared property with name
- * propname of the global object in the current script on cx.  Reports
- * an error if one needs to be reported (in particular in all cases
- * when it returns false).
+ * Check whether it is OK to assign an undeclared variable with the name
+ * |propname| at the current location in script.  It is not an error if there is
+ * no current script location, or if that location is not an assignment to an
+ * undeclared variable.  Reports an error if one needs to be reported (and,
+ * particularly, always reports when it returns false).
  */
 extern JS_FRIEND_API(bool)
-CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
+ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname);
 
 struct WeakMapTracer;
 
