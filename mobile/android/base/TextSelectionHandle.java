@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -35,6 +36,8 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     private PointF mGeckoPoint;
     private float mTouchStartX;
     private float mTouchStartY;
+    private int mLayerViewX;
+    private int mLayerViewY;
 
     private RelativeLayout.LayoutParams mLayoutParams;
 
@@ -71,6 +74,11 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
             case MotionEvent.ACTION_DOWN: {
                 mTouchStartX = event.getX();
                 mTouchStartY = event.getY();
+
+                int[] rect = new int[2];
+                mActivity.getLayerView().getLocationOnScreen(rect);
+                mLayerViewX = rect[0];
+                mLayerViewY = rect[1];
                 break;
             }
             case MotionEvent.ACTION_UP: {
@@ -88,7 +96,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
-                move(event.getX(), event.getY());
+                move(event.getRawX(), event.getRawY());
                 break;
             }
         }
@@ -96,8 +104,12 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     }
 
     private void move(float newX, float newY) {
-        mLeft = mLeft + newX - mTouchStartX;
-        mTop = mTop + newY - mTouchStartY;
+        // newX and newY are absolute coordinates, so we need to adjust them to
+        // account for other views on the screen (such as the URL bar). We also
+        // need to include the offset amount of the touch location relative to
+        // the top left of the handle (mTouchStartX and mTouchStartY).
+        mLeft = newX - mLayerViewX - mTouchStartX;
+        mTop = newY - mLayerViewY - mTouchStartY;
 
         LayerView layerView = mActivity.getLayerView();
         if (layerView == null) {
@@ -120,7 +132,13 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         }
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Move", args.toString()));
 
-        setLayoutPosition();
+        // If we're positioning a cursor, don't move the handle here. Gecko
+        // will tell us the position of the caret, so we set the handle
+        // position then. This allows us to lock the handle to wherever the
+        // caret appears.
+        if (!mHandleType.equals(HandleType.MIDDLE)) {
+            setLayoutPosition();
+        }
     }
 
     void positionFromGecko(int left, int top, boolean rtl) {
