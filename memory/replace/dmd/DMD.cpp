@@ -1911,14 +1911,17 @@ Dump(Writer aWriter)
   BlockGroupTable unreportedBlockGroupTable;
   (void)unreportedBlockGroupTable.init(1024);
   size_t unreportedUsableSize = 0;
+  size_t unreportedNumBlocks = 0;
 
   BlockGroupTable onceReportedBlockGroupTable;
   (void)onceReportedBlockGroupTable.init(1024);
   size_t onceReportedUsableSize = 0;
+  size_t onceReportedNumBlocks = 0;
 
   BlockGroupTable twiceReportedBlockGroupTable;
   (void)twiceReportedBlockGroupTable.init(0);
   size_t twiceReportedUsableSize = 0;
+  size_t twiceReportedNumBlocks = 0;
 
   bool anyBlocksSampled = false;
 
@@ -1929,13 +1932,16 @@ Dump(Writer aWriter)
     uint32_t numReports = b.NumReports();
     if (numReports == 0) {
       unreportedUsableSize += b.UsableSize();
+      unreportedNumBlocks++;
       table = &unreportedBlockGroupTable;
     } else if (numReports == 1) {
       onceReportedUsableSize += b.UsableSize();
+      onceReportedNumBlocks++;
       table = &onceReportedBlockGroupTable;
     } else {
       MOZ_ASSERT(numReports == 2);
       twiceReportedUsableSize += b.UsableSize();
+      twiceReportedNumBlocks++;
       table = &twiceReportedBlockGroupTable;
     }
     BlockGroupKey key(b);
@@ -1950,6 +1956,8 @@ Dump(Writer aWriter)
   }
   size_t totalUsableSize =
     unreportedUsableSize + onceReportedUsableSize + twiceReportedUsableSize;
+  size_t totalNumBlocks =
+    unreportedNumBlocks + onceReportedNumBlocks + twiceReportedNumBlocks;
 
   WriteTitle("Invocation\n");
   W("$DMD = '%s'\n", gDMDEnvVar);
@@ -1974,17 +1982,30 @@ Dump(Writer aWriter)
 
   bool showTilde = anyBlocksSampled;
   WriteTitle("Summary\n");
-  W("Total:           %10s bytes\n",
-    Show(totalUsableSize, gBuf1, kBufLen, showTilde));
-  W("Unreported:      %10s bytes (%5.2f%%)\n",
+
+  W("Total:          %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+    Show(totalUsableSize, gBuf1, kBufLen, showTilde),
+    100.0,
+    Show(totalNumBlocks,  gBuf2, kBufLen, showTilde),
+    100.0);
+
+  W("Unreported:     %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(unreportedUsableSize, gBuf1, kBufLen, showTilde),
-    Percent(unreportedUsableSize, totalUsableSize));
-  W("Once-reported:   %10s bytes (%5.2f%%)\n",
+    Percent(unreportedUsableSize, totalUsableSize),
+    Show(unreportedNumBlocks, gBuf2, kBufLen, showTilde),
+    Percent(unreportedNumBlocks, totalNumBlocks));
+
+  W("Once-reported:  %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(onceReportedUsableSize, gBuf1, kBufLen, showTilde),
-    Percent(onceReportedUsableSize, totalUsableSize));
-  W("Twice-reported:  %10s bytes (%5.2f%%)\n",
+    Percent(onceReportedUsableSize, totalUsableSize),
+    Show(onceReportedNumBlocks, gBuf2, kBufLen, showTilde),
+    Percent(onceReportedNumBlocks, totalNumBlocks));
+
+  W("Twice-reported: %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(twiceReportedUsableSize, gBuf1, kBufLen, showTilde),
-    Percent(twiceReportedUsableSize, totalUsableSize));
+    Percent(twiceReportedUsableSize, totalUsableSize),
+    Show(twiceReportedNumBlocks, gBuf2, kBufLen, showTilde),
+    Percent(twiceReportedNumBlocks, totalNumBlocks));
 
   W("\n");
 
