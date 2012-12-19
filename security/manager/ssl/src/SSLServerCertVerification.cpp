@@ -105,8 +105,6 @@
 #include "nsNSSShutDown.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/Telemetry.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
@@ -135,12 +133,6 @@ NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 
 // do not use a nsCOMPtr to avoid static initializer/destructor
 nsIThreadPool * gCertVerificationThreadPool = nullptr;
-
-// We avoid using a mutex for the success case to avoid lock-related
-// performance issues. However, we do use a lock in the error case to simplify
-// the code, since performance in the error case is not important.
-Mutex *gSSLVerificationTelemetryMutex = nullptr;
-
 } // unnamed namespace
 
 // Called when the socket transport thread starts, to initialize the SSL cert
@@ -156,7 +148,6 @@ Mutex *gSSLVerificationTelemetryMutex = nullptr;
 void
 InitializeSSLServerCertVerificationThreads()
 {
-  gSSLVerificationTelemetryMutex = new Mutex("SSLVerificationTelemetryMutex");
   // TODO: tuning, make parameters preferences
   // XXX: instantiate nsThreadPool directly, to make this more bulletproof.
   // Currently, the nsThreadPool.h header isn't exported for us to do so.
@@ -227,9 +218,7 @@ public:
 
   SSLServerCertVerificationResult(TransportSecurityInfo * infoObject,
                                   PRErrorCode errorCode,
-                                  Telemetry::ID telemetryID = Telemetry::HistogramCount,
-                                  uint32_t telemetryValue = -1,
-                                  SSLErrorMessageType errorMessageType =
+                                  SSLErrorMessageType errorMessageType = 
                                       PlainErrorMessage);
 
   void Dispatch();
@@ -238,8 +227,6 @@ private:
 public:
   const PRErrorCode mErrorCode;
   const SSLErrorMessageType mErrorMessageType;
-  const Telemetry::ID mTelemetryID;
-  const uint32_t mTelemetryValue;
 };
 
 class CertErrorRunnable : public SyncRunnableBase
@@ -406,8 +393,6 @@ CertErrorRunnable::CheckCertOverrides()
   SSLServerCertVerificationResult *result = 
     new SSLServerCertVerificationResult(mInfoObject, 
                                         errorCodeToReport,
-                                        Telemetry::HistogramCount,
-                                        -1,
                                         OverridableCertErrorMessage);
 
   LogInvalidCertError(mInfoObject,
@@ -642,7 +627,6 @@ private:
   const RefPtr<TransportSecurityInfo> mInfoObject;
   const ScopedCERTCertificate mCert;
   const uint32_t mProviderFlags;
-  const TimeStamp mJobStartTime;
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
@@ -652,7 +636,6 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert))
   , mProviderFlags(providerFlags)
-  , mJobStartTime(TimeStamp::Now())
 {
 }
 
@@ -1067,38 +1050,13 @@ SSLServerCertVerificationJob::Run()
     PR_SetError(0, 0); 
     SECStatus rv = AuthCertificate(mInfoObject, mCert, mProviderFlags);
     if (rv == SECSuccess) {
-      uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
-      Telemetry::ID telemetryID;
-      if(nsNSSComponent::globalConstFlagUsePKIXVerification){
-        telemetryID = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX;
-      }
-      else{
-        telemetryID = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC;
-      }
       RefPtr<SSLServerCertVerificationResult> restart(
-        new SSLServerCertVerificationResult(mInfoObject, 0,
-                                            telemetryID, interval));
+        new SSLServerCertVerificationResult(mInfoObject, 0));
       restart->Dispatch();
       return NS_OK;
     }
 
-    // Note: the interval is not calculated once as PR_GetError MUST be called
-    // before any other  function call
     error = PR_GetError();
-    {
-      TimeStamp now = TimeStamp::Now();
-      Telemetry::ID telemetryID;
-      if(nsNSSComponent::globalConstFlagUsePKIXVerification){
-        telemetryID = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX;
-      }
-      else{
-        telemetryID = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC;
-      }
-      MutexAutoLock telemetryMutex(*gSSLVerificationTelemetryMutex);
-      Telemetry::AccumulateTimeDelta(telemetryID,
-                                     mJobStartTime,
-                                     now);
-    }
     if (error != 0) {
       RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
         error, mInfoObject, mCert, mFdForLogging, mProviderFlags));
@@ -1316,19 +1274,11 @@ void EnsureServerVerificationInitialized()
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
         TransportSecurityInfo * infoObject, PRErrorCode errorCode,
-        Telemetry::ID telemetryID, uint32_t telemetryValue,
         SSLErrorMessageType errorMessageType)
   : mInfoObject(infoObject)
   , mErrorCode(errorCode)
   , mErrorMessageType(errorMessageType)
-  , mTelemetryID(telemetryID)
-  , mTelemetryValue(telemetryValue)
 {
-// We accumulate telemetry for (only) successful validations on the main thread
-// to avoid adversely affecting performance by acquiring the mutex that we use
-// when accumulating the telemetry for unsuccessful validations. Unsuccessful
-// validations times are accumulated elsewhere.
-MOZ_ASSERT(telemetryID == Telemetry::HistogramCount || errorCode == 0);
 }
 
 void
@@ -1348,9 +1298,6 @@ NS_IMETHODIMP
 SSLServerCertVerificationResult::Run()
 {
   // TODO: Assert that we're on the socket transport thread
-  if (mTelemetryID != Telemetry::HistogramCount) {
-     Telemetry::Accumulate(mTelemetryID, mTelemetryValue);
-  }
   // XXX: This cast will be removed by the next patch
   ((nsNSSSocketInfo *) mInfoObject.get())
     ->SetCertVerificationResult(mErrorCode, mErrorMessageType);
