@@ -24,7 +24,7 @@ namespace image {
 class SVGDocumentWrapper;
 class SVGRootRenderingObserver;
 
-class VectorImage : public Image,
+class VectorImage : public ImageResource,
                     public nsIStreamListener
 {
 public:
