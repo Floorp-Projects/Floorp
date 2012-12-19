@@ -525,7 +525,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nullptr } },
                 { nullptr, { nullptr } },
         };
-        LoadSymbols(&auxSymbols[0], trygl, prefix);
+        bool warnOnFailures = DebugMode();
+        LoadSymbols(&auxSymbols[0], trygl, prefix, warnOnFailures);
     }
 
     if (mInitialized) {
