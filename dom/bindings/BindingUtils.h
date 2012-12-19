@@ -1370,6 +1370,10 @@ public:
     return mImpl.ref();
   }
 
+  // If we ever decide to add conversion operators for optional arrays
+  // like the ones Nullable has, we'll need to ensure that Maybe<> has
+  // the boolean before the actual data.
+
 private:
   // Forbid copy-construction and assignment
   Optional(const Optional& other) MOZ_DELETE;
