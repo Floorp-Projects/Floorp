@@ -9,6 +9,7 @@
 
 #include "nsIHttpChannel.h"
 #include "nsSimpleURI.h"
+#include "nsMimeTypes.h"
 
 #include "RasterImage.h"
 #include "VectorImage.h"
@@ -17,8 +18,6 @@
 
 namespace mozilla {
 namespace image {
-
-const char* SVG_MIMETYPE = "image/svg+xml";
 
 // Global preferences related to image containers.
 static bool gInitializedPrefCaches = false;
@@ -89,7 +88,7 @@ ImageFactory::CreateImage(nsIRequest* aRequest,
   uint32_t imageFlags = ComputeImageFlags(aURI, aIsMultiPart);
 
   // Select the type of image to create based on MIME type.
-  if (aMimeType.Equals(SVG_MIMETYPE)) {
+  if (aMimeType.EqualsLiteral(IMAGE_SVG_XML)) {
     return CreateVectorImage(aRequest, aStatusTracker, aMimeType,
                              aURI, imageFlags, aInnerWindowId);
   } else {

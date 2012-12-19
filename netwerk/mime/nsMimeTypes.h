@@ -16,6 +16,7 @@
    instead, to help catch typos, and make central management of them easier.
  */
 
+#define ANY_WILDCARD                        "*/*"
 #define AUDIO_WILDCARD                      "audio/*"
 #define IMAGE_WILDCARD                      "image/*"
 
@@ -81,9 +82,11 @@
 #define BINARY_OCTET_STREAM                 "binary/octet-stream"
 
 #define IMAGE_GIF                           "image/gif"
-#define IMAGE_JPG                           "image/jpeg"
-#define IMAGE_PJPG                          "image/pjpeg"
+#define IMAGE_JPEG                          "image/jpeg"
+#define IMAGE_JPG                           "image/jpg"
+#define IMAGE_PJPEG                         "image/pjpeg"
 #define IMAGE_PNG                           "image/png"
+#define IMAGE_X_PNG                         "image/x-png"
 #define IMAGE_PPM                           "image/x-portable-pixmap"
 #define IMAGE_XBM                           "image/x-xbitmap"
 #define IMAGE_XBM2                          "image/x-xbm"
@@ -91,7 +94,10 @@
 #define IMAGE_ART                           "image/x-jg"
 #define IMAGE_TIFF                          "image/tiff"
 #define IMAGE_BMP                           "image/bmp"
+#define IMAGE_BMP_MS                        "image/x-ms-bmp"
 #define IMAGE_ICO                           "image/x-icon"
+#define IMAGE_ICO_MS                        "image/vnd.microsoft.icon"
+#define IMAGE_ICON                          "image/icon"
 #define IMAGE_MNG                           "video/x-mng"
 #define IMAGE_JNG                           "image/x-jng"
 #define IMAGE_SVG_XML                       "image/svg+xml"

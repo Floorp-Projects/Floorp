@@ -11,6 +11,7 @@
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
 #include "nsNetUtil.h"
+#include "nsMimeTypes.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsDirectoryServiceDefs.h"
@@ -573,7 +574,7 @@ void ConvertMaskBitMap(uint8_t *inBuf, PBITMAPINFO2 pBMInfo,
 
 NS_IMETHODIMP nsIconChannel::GetContentType(nsACString &aContentType) 
 {
-  aContentType.AssignLiteral("image/icon");
+  aContentType.AssignLiteral(IMAGE_ICON);
   return NS_OK;
 }
 
