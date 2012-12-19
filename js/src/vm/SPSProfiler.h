@@ -234,7 +234,7 @@ class SPSProfiler
                          mjit::JITChunk *chunk, void* address);
     bool registerICCode(mjit::JITChunk *chunk, UnrootedScript script, jsbytecode* pc,
                         void *start, size_t size);
-    jsbytecode *ipToPC(RawScript script, size_t ip);
+    jsbytecode *ipToPC(UnrootedScript script, size_t ip);
 
   private:
     JMChunkInfo *registerScript(mjit::JSActiveFrame *frame,
@@ -243,7 +243,7 @@ class SPSProfiler
     void unregisterScript(UnrootedScript script, mjit::JITChunk *chunk);
   public:
 #else
-    jsbytecode *ipToPC(RawScript script, size_t ip) { return NULL; }
+    jsbytecode *ipToPC(UnrootedScript script, size_t ip) { return NULL; }
 #endif
 
     void setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max);

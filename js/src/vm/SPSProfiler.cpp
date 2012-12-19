@@ -223,10 +223,8 @@ JMChunkInfo::JMChunkInfo(mjit::JSActiveFrame *frame,
     chunk(chunk)
 {}
 
-// Use RawScript instead of UnrootedScript because this may be called from a
-// signal handler
 jsbytecode*
-SPSProfiler::ipToPC(RawScript script, size_t ip)
+SPSProfiler::ipToPC(UnrootedScript script, size_t ip)
 {
     if (!jminfo.initialized())
         return NULL;
