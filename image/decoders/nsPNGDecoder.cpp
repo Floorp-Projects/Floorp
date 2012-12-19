@@ -54,6 +54,61 @@ GetPNGDecoderAccountingLog()
 #define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
 
+struct AnimFrameInfo
+{
+  AnimFrameInfo()
+   : mDispose(RasterImage::kDisposeKeep)
+   , mBlend(RasterImage::kBlendOver)
+   , mTimeout(0)
+  {}
+
+#ifdef PNG_APNG_SUPPORTED
+  AnimFrameInfo(png_structp aPNG, png_infop aInfo)
+   : mDispose(RasterImage::kDisposeKeep)
+   , mBlend(RasterImage::kBlendOver)
+   , mTimeout(0)
+  {
+    png_uint_16 delay_num, delay_den;
+    /* delay, in seconds is delay_num/delay_den */
+    png_byte dispose_op;
+    png_byte blend_op;
+    delay_num = png_get_next_frame_delay_num(aPNG, aInfo);
+    delay_den = png_get_next_frame_delay_den(aPNG, aInfo);
+    dispose_op = png_get_next_frame_dispose_op(aPNG, aInfo);
+    blend_op = png_get_next_frame_blend_op(aPNG, aInfo);
+
+    if (delay_num == 0) {
+      mTimeout = 0; // SetFrameTimeout() will set to a minimum
+    } else {
+      if (delay_den == 0)
+        delay_den = 100; // so says the APNG spec
+
+      // Need to cast delay_num to float to have a proper division and
+      // the result to int to avoid compiler warning
+      mTimeout = static_cast<int32_t>(static_cast<double>(delay_num) * 1000 / delay_den);
+    }
+
+    if (dispose_op == PNG_DISPOSE_OP_PREVIOUS) {
+      mDispose = RasterImage::kDisposeRestorePrevious;
+    } else if (dispose_op == PNG_DISPOSE_OP_BACKGROUND) {
+      mDispose = RasterImage::kDisposeClear;
+    } else {
+      mDispose = RasterImage::kDisposeKeep;
+    }
+
+    if (blend_op == PNG_BLEND_OP_SOURCE) {
+      mBlend = RasterImage::kBlendSource;
+    } else {
+      mBlend = RasterImage::kBlendOver;
+    }
+  }
+#endif
+
+  RasterImage::FrameDisposalMethod mDispose;
+  RasterImage::FrameBlendMethod mBlend;
+  int32_t mTimeout;
+};
+
 // First 8 bytes of a PNG file
 const uint8_t 
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
@@ -108,11 +163,6 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
   // Tell the superclass we're starting a frame
   PostFrameStart();
 
-#ifdef PNG_APNG_SUPPORTED
-  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL))
-    SetAnimFrameInfo();
-#endif
-
   PR_LOG(GetPNGDecoderAccountingLog(), PR_LOG_DEBUG,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
           "image frame with %dx%d pixels in container %p",
@@ -122,78 +172,34 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
   mFrameHasNoAlpha = true;
 }
 
-#ifdef PNG_APNG_SUPPORTED
-// set timeout and frame disposal method for the current frame
-void nsPNGDecoder::SetAnimFrameInfo()
-{
-  png_uint_16 delay_num, delay_den;
-  /* delay, in seconds is delay_num/delay_den */
-  png_byte dispose_op;
-  png_byte blend_op;
-  int32_t timeout; /* in milliseconds */
-
-  delay_num = png_get_next_frame_delay_num(mPNG, mInfo);
-  delay_den = png_get_next_frame_delay_den(mPNG, mInfo);
-  dispose_op = png_get_next_frame_dispose_op(mPNG, mInfo);
-  blend_op = png_get_next_frame_blend_op(mPNG, mInfo);
-
-  if (delay_num == 0) {
-    timeout = 0; // SetFrameTimeout() will set to a minimum
-  } else {
-    if (delay_den == 0)
-      delay_den = 100; // so says the APNG spec
-
-    // Need to cast delay_num to float to have a proper division and
-    // the result to int to avoid compiler warning
-    timeout = static_cast<int32_t>
-              (static_cast<double>(delay_num) * 1000 / delay_den);
-  }
-
-  uint32_t numFrames = GetFrameCount();
-
-  mImage.SetFrameTimeout(numFrames - 1, timeout);
-
-  if (dispose_op == PNG_DISPOSE_OP_PREVIOUS)
-      mImage.SetFrameDisposalMethod(numFrames - 1,
-                                    RasterImage::kDisposeRestorePrevious);
-  else if (dispose_op == PNG_DISPOSE_OP_BACKGROUND)
-      mImage.SetFrameDisposalMethod(numFrames - 1,
-                                    RasterImage::kDisposeClear);
-  else
-      mImage.SetFrameDisposalMethod(numFrames - 1,
-                                    RasterImage::kDisposeKeep);
-
-  if (blend_op == PNG_BLEND_OP_SOURCE)
-      mImage.SetFrameBlendMethod(numFrames - 1, RasterImage::kBlendSource);
-  /*else // 'over' is the default
-      mImage.SetFrameBlendMethod(numFrames - 1, RasterImage::kBlendOver); */
-}
-#endif
-
 // set timeout and frame disposal method for the current frame
 void nsPNGDecoder::EndImageFrame()
 {
   if (mFrameIsHidden)
     return;
 
-  uint32_t numFrames = 1;
+  RasterImage::FrameAlpha alpha;
+  if (mFrameHasNoAlpha)
+    alpha = RasterImage::kFrameOpaque;
+  else
+    alpha = RasterImage::kFrameHasAlpha;
+
+  AnimFrameInfo animInfo;
+
 #ifdef PNG_APNG_SUPPORTED
-  numFrames = GetFrameCount();
+  uint32_t numFrames = GetFrameCount();
 
   // We can't use mPNG->num_frames_read as it may be one ahead.
   if (numFrames > 1) {
-    // Tell the image renderer that the frame is complete
-    if (mFrameHasNoAlpha)
-      mImage.SetFrameHasNoAlpha(numFrames - 1);
-
-    // PNG is always non-premult
-    mImage.SetFrameAsNonPremult(numFrames - 1, true);
-
     PostInvalidation(mFrameRect);
+  }
+
+  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
+    animInfo = AnimFrameInfo(mPNG, mInfo);
   }
 #endif
 
-  PostFrameStop();
+  PostFrameStop(alpha, animInfo.mDispose, animInfo.mTimeout, animInfo.mBlend);
 }
 
 void
@@ -847,16 +853,17 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
   // We shouldn't get here if we've hit an error
   NS_ABORT_IF_FALSE(!decoder->HasError(), "Finishing up PNG but hit error!");
 
+  int32_t loop_count = 0;
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
     int32_t num_plays = png_get_num_plays(png_ptr, info_ptr);
-    decoder->mImage.SetLoopCount(num_plays - 1);
+    loop_count = num_plays - 1;
   }
 #endif
 
   // Send final notifications
   decoder->EndImageFrame();
-  decoder->PostDecodeDone();
+  decoder->PostDecodeDone(loop_count);
 }
 
 
