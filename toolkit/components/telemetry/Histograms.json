@@ -2505,5 +2505,29 @@
     "high": "5000",
     "n_buckets": 10,
     "description": "Time (ms) it takes to run memory reporters when sending a telemetry ping"
+  },
+  "SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX" : {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time spent on a successful cert verification in libpix mode (ms)"
+  },
+  "SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC" : {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time spent on a successful cert  verification in classic mode (ms)"
+  },
+  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX" : {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time spent on an initially failed cert verification in libpix mode (ms)"
+  },
+  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC" : {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
   }
 }
