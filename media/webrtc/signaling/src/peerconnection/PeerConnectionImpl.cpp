@@ -186,6 +186,12 @@ public:
           }
           break;
         }
+
+      case UPDATELOCALDESC:
+      case UPDATEREMOTEDESC:
+        /* No action necessary */
+        break;
+
       default:
         CSFLogDebugS(logTag, ": **** UNHANDLED CALL STATE : " << mStateStr);
         break;
@@ -980,11 +986,15 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
 
   switch (event) {
     case SETLOCALDESC:
-      mLocalSDP = mLocalRequestedSDP;
+    case UPDATELOCALDESC:
+      mLocalSDP = aInfo->getSDP();
       break;
+
     case SETREMOTEDESC:
-      mRemoteSDP = mRemoteRequestedSDP;
+    case UPDATEREMOTEDESC:
+      mRemoteSDP = aInfo->getSDP();
       break;
+
     case CONNECTED:
       CSFLogDebugS(logTag, "Setting PeerConnnection state to kActive");
       ChangeReadyState(kActive);
