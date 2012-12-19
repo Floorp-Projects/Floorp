@@ -39,6 +39,10 @@ ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_FILES += \
 	mochitest/test_bug_461710.html \
 	$(NULL)
+else
+MOCHITEST_CHROME_FILES = \
+	mochitest/test_bug_461710_perwindowpb.html \
+	$(NULL)
 endif
 
 DIRS = \

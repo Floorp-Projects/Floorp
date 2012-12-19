@@ -1,0 +1,232 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=461710
+-->
+<head>
+  <title>Test for Bug 461710</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=461710">Mozilla Bug 461710</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 461710 **/
+
+SimpleTest.waitForExplicitFinish();
+
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
+
+SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm", window);
+var Services = SpecialPowers.Services;
+
+var gIframe;
+
+/**
+ * Helper function which waits until another function returns true, and
+ * then notifies a callback.
+ *
+ * Original function stolen from docshell/test/chrome/docshell_helpers.js.
+ *
+ * Parameters:
+ *
+ *    fn: a function which is evaluated repeatedly, and when it turns true,
+ *        the onWaitComplete callback is notified.
+ *
+ *    onWaitComplete:  a callback which will be notified when fn() returns
+ *        true.
+ */
+function waitForTrue(fn, onWaitComplete) {
+  var start = new Date().valueOf();
+
+  // Loop until the test function returns true, or until a timeout occurs,
+  // if a timeout is defined.
+  var intervalid =
+    setInterval(
+      function() {
+        if (fn.call()) {
+          // Stop calling the test function and notify the callback.
+          clearInterval(intervalid);
+          onWaitComplete.call();
+        }
+      }, 20);
+}
+
+const kRed = "rgb(255, 0, 0)";
+const kBlue = "rgb(0, 0, 255)";
+
+var testpath = "/tests/toolkit/components/places/tests/mochitest/../bug_461710/";
+var prefix = "http://mochi.test:8888" + testpath;
+var subtests = [
+                   "visited_page.html",   // 1
+                   "link_page.html",      // 2
+                   "link_page-2.html",    // 3
+                   "link_page-3.html"     // 4
+               ];
+
+var testNum = 0;
+function loadNextTest() {
+  // run the initialization code for each test
+  switch (++testNum) {
+    case 1:
+      gIframe = normalWindowIframe;
+      break;
+
+    case 2:
+      break;
+
+    case 3:
+      gIframe = privateWindowIframe;
+      break;
+
+    case 4:
+      gIframe = normalWindowIframe;
+      break;
+
+    default:
+      ok(false, "Unexpected call to loadNextTest for test #" + testNum);
+  }
+
+  if (testNum == 1)
+    observer.expectURL(prefix + subtests[0], "uri-visit-saved");
+  else
+    observer.expectURL(prefix + subtests[0]);
+
+  waitForTrue(function() observer.resolved, function() {
+    // And the nodes get notified after the "link-visited" topic, so
+    // we need to execute soon...
+    SimpleTest.executeSoon(handleLoad);
+  });
+
+  gIframe.src = prefix + subtests[testNum-1];
+}
+
+function getColor(doc, win, id) {
+  var elem = doc.getElementById(id);
+  var utils = SpecialPowers.getDOMWindowUtils(win);
+  return utils.getVisitedDependentComputedStyle(elem, "", "color");
+}
+
+function checkTest() {
+  switch (testNum) {
+    case 1:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 2:
+      // run outside of private mode, link should appear as visited
+      var doc = gIframe.contentDocument;
+      var win = doc.defaultView;
+      is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
+      break;
+
+    case 3:
+      // run inside of private mode, link should appear as not visited
+      var doc = gIframe.contentDocument;
+      var win = doc.defaultView;
+      is(getColor(doc, win, "link"), kBlue, "Visited link coloring should not work inside of private mode");
+      break;
+
+    case 4:
+      // run outside of private mode, link should appear as visited
+      var doc = gIframe.contentDocument;
+      var win = doc.defaultView;
+      is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
+      break;
+
+    default:
+      ok(false, "Unexpected call to checkTest for test #" + testNum);
+  }
+}
+
+function handleLoad() {
+  checkTest();
+
+  if (testNum < subtests.length) {
+    loadNextTest();
+  } else {
+    normalWindow.close();
+    privateWindow.close();
+
+    SimpleTest.finish();
+  }
+}
+
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow);
+var contentPage = "http://mochi.test:8888/tests/toolkit/components/places/tests/mochitest/../bug_461710/iframe.html";
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href == "about:privatebrowsing") {
+        win.gBrowser.loadURI(contentPage);
+        return;
+      }
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      win.gBrowser.selectedBrowser.focus();
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+    SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
+  }, true);
+}
+
+const URI_VISITED_RESOLUTION_TOPIC = "visited-status-resolution";
+var observer = {
+  uri: null,
+  resolved: true,
+  observe: function (aSubject, aTopic, aData) {
+
+    if (this.uri.equals(SpecialPowers.wrap(aSubject).QueryInterface(Ci.nsIURI))) {
+      this.resolved = true;
+
+      Services.obs.removeObserver(this, aTopic);
+    }
+  },
+  expectURL: function (url, aOverrideTopic) {
+    ok(this.resolved, "Can't set the expected URL when another is yet to be resolved");
+    this.resolved = false;
+
+    this.uri = SpecialPowers.wrap(NetUtil).newURI(url);
+    var topic = aOverrideTopic || URI_VISITED_RESOLUTION_TOPIC;
+    Services.obs.addObserver(this, topic, false);
+  }
+};
+
+var normalWindow;
+var privateWindow;
+
+var normalWindowIframe;
+var privateWindowIframe;
+
+testOnWindow(false, function(aWin) {
+  var selectedBrowser = aWin.gBrowser.selectedBrowser;
+
+   normalWindow = aWin;
+   normalWindowIframe = selectedBrowser.contentDocument.getElementById("iframe");
+
+  testOnWindow(true, function(aPrivateWin) {
+    selectedBrowser = aPrivateWin.gBrowser.selectedBrowser;
+
+    privateWindow = aPrivateWin;
+    privateWindowIframe = selectedBrowser.contentDocument.getElementById("iframe");
+
+    loadNextTest();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
