@@ -280,12 +280,6 @@ public:
   // Returns the shared state machine thread.
   static nsIThread* GetStateMachineThread();
 
-  // Schedules the shared state machine thread to run the state machine.
-  // If the state machine thread is the currently running the state machine,
-  // we wait until that has completely finished before running the state
-  // machine again.
-  nsresult ScheduleStateMachine();
-
   // Calls ScheduleStateMachine() after taking the decoder lock. Also
   // notifies the decoder thread in case it's waiting on the decoder lock.
   void ScheduleStateMachineWithLockAndWakeDecoder();
@@ -293,7 +287,7 @@ public:
   // Schedules the shared state machine thread to run the state machine
   // in aUsecs microseconds from now, if it's not already scheduled to run
   // earlier, in which case the request is discarded.
-  nsresult ScheduleStateMachine(int64_t aUsecs);
+  nsresult ScheduleStateMachine(int64_t aUsecs = 0);
 
   // Creates and starts a new decode thread. Don't call this directly,
   // request a new decode thread by calling
@@ -797,6 +791,8 @@ private:
   VideoInfo mInfo;
 
   mozilla::MediaMetadataManager mMetadataManager;
+
+  MediaDecoderOwner::NextFrameStatus mLastFrameStatus;
 };
 
 } // namespace mozilla;
