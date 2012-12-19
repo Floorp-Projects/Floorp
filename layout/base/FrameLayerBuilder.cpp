@@ -115,7 +115,7 @@ FrameLayerBuilder::DisplayItemData::UpdateContents(Layer* aLayer, LayerState aSt
     return;
   }
 
-  nsAutoTArray<nsIFrame*, 4> copy = mFrameList;
+  nsAutoTArray<nsIFrame*, 4> copy(mFrameList);
   if (!copy.RemoveElement(aItem->GetUnderlyingFrame())) {
     AddFrame(aItem->GetUnderlyingFrame());
   }
