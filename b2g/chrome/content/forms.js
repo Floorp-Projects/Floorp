@@ -39,7 +39,6 @@ let FormAssistant = {
     addMessageListener("Forms:Select:Choice", this);
     addMessageListener("Forms:Input:Value", this);
     addMessageListener("Forms:Select:Blur", this);
-    Services.obs.addObserver(this, "ime-enabled-state-changed", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
@@ -195,22 +194,7 @@ let FormAssistant = {
 
   observe: function fa_observe(subject, topic, data) {
     switch (topic) {
-      case "ime-enabled-state-changed":
-        let shouldOpen = parseInt(data);
-        let target = Services.fm.focusedElement;
-        if (!target || !this.isTextInputElement(target))
-          return;
-
-        if (shouldOpen) {
-          if (!this.focusedElement && this.isFocusableElement(target))
-            this.showKeyboard(target);
-        } else if (this._focusedElement == target) {
-          this.hideKeyboard();
-        }
-        break;
-
       case "xpcom-shutdown":
-        Services.obs.removeObserver(this, "ime-enabled-state-changed", false);
         Services.obs.removeObserver(this, "xpcom-shutdown");
         removeMessageListener("Forms:Select:Choice", this);
         removeMessageListener("Forms:Input:Value", this);
