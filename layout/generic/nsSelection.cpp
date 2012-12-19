@@ -1109,14 +1109,12 @@ Selection::ToStringWithFormat(const char* aFormatType, uint32_t aFlags,
            do_CreateInstance(formatType.get(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPresShell> shell;
-  rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_FAILED(rv) || !shell) {
+  nsIPresShell* shell = GetPresShell();
+  if (!shell) {
     return NS_ERROR_FAILURE;
   }
 
   nsIDocument *doc = shell->GetDocument();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   NS_ASSERTION(domDoc, "Need a document");
@@ -5079,26 +5077,13 @@ Selection::GetPresContext(nsPresContext** aPresContext)
   return NS_OK;
 }
 
-nsresult
-Selection::GetPresShell(nsIPresShell** aPresShell)
+nsIPresShell*
+Selection::GetPresShell() const
 {
-  if (mPresShellWeak)
-  {
-    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
-    if (presShell)
-      NS_ADDREF(*aPresShell = presShell);
-    return NS_OK;
-  }
-  nsresult rv = NS_OK;
   if (!mFrameSelection)
-    return NS_ERROR_FAILURE;//nothing to do
+    return nullptr;//nothing to do
 
-  nsIPresShell *shell = mFrameSelection->GetShell();
-
-  mPresShellWeak = do_GetWeakReference(shell);    // the presshell owns us, so no addref
-  if (mPresShellWeak)
-    NS_ADDREF(*aPresShell = shell);
-  return rv;
+  return mFrameSelection->GetShell();
 }
 
 nsIFrame *
@@ -5376,11 +5361,13 @@ Selection::NotifySelectionListeners()
   if (cnt != mSelectionListeners.Count()) {
     return NS_ERROR_OUT_OF_MEMORY;  // nsCOMArray is fallible
   }
+
   nsCOMPtr<nsIDOMDocument> domdoc;
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell)
-    domdoc = do_QueryInterface(shell->GetDocument());
+  nsIPresShell* ps = GetPresShell();
+  if (ps) {
+    domdoc = do_QueryInterface(ps->GetDocument());
+  }
+
   short reason = mFrameSelection->PopReason();
   for (int32_t i = 0; i < cnt; i++) {
     selectionListeners[i]->NotifySelectionChanged(domdoc, this, reason);
