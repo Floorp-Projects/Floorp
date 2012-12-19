@@ -8,10 +8,7 @@
 #define mozilla_dom_Nullable_h
 
 #include "mozilla/Assertions.h"
-
-template<typename E, class Allocator> class nsTArray;
-template<typename E> class InfallibleTArray;
-template<typename E> class FallibleTArray;
+#include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 namespace dom {
@@ -69,19 +66,12 @@ public:
 
   // Make it possible to use a const Nullable of an array type with other
   // array types.
-  template<typename U, typename Allocator>
-  operator const Nullable< nsTArray<U, Allocator> >&() const {
-    // Make sure that T is ok to reinterpret to nsTArray<U, Allocator>
-    const nsTArray<U, Allocator>& arr = mValue;
-    (void)arr;
-    return *reinterpret_cast<const Nullable< nsTArray<U, Allocator> >*>(this);
-  }
   template<typename U>
-  operator const Nullable< InfallibleTArray<U> >&() const {
-    // Make sure that T is ok to reinterpret to InfallibleTArray<U>
-    const InfallibleTArray<U>& arr = mValue;
+  operator const Nullable< nsTArray<U> >&() const {
+    // Make sure that T is ok to reinterpret to nsTArray<U>
+    const nsTArray<U>& arr = mValue;
     (void)arr;
-    return *reinterpret_cast<const Nullable< InfallibleTArray<U> >*>(this);
+    return *reinterpret_cast<const Nullable< nsTArray<U> >*>(this);
   }
   template<typename U>
   operator const Nullable< FallibleTArray<U> >&() const {
