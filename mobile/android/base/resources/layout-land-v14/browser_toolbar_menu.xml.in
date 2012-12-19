@@ -16,8 +16,9 @@
                      android:contentDescription="@string/back"
                      style="@style/AddressBar.ImageButton.Unused"/>
 
-        <ImageButton style="@style/AddressBar.ImageButton.Forward"
-                     android:id="@+id/forward"/>
+        <ImageButton android:id="@+id/forward"
+                     android:contentDescription="@string/forward"
+                     style="@style/AddressBar.ImageButton.Unused"/>
 
         <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                     android:layout_width="fill_parent"
@@ -27,8 +28,12 @@
                                                     android:layout_alignParentRight="true"
                                                     android:background="@drawable/address_bar_bg"/>
         
-        <FrameLayout style="@style/AddressBar.Button.Container"
-                     android:id="@+id/addressbar">
+        <FrameLayout style="@style/AddressBar.Button"
+                     android:layout_marginLeft="4dp"
+                     android:layout_marginRight="4dp"
+                     android:layout_alignParentLeft="true"
+                     android:layout_alignParentBottom="true"
+                     android:layout_centerVertical="true">
 
             <Gecko.RelativeLayout android:id="@+id/awesome_bar"
                                   style="@style/AddressBar.Button"
