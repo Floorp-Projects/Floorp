@@ -29,12 +29,12 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     private final int mHeight;
     private final int mShadow;
 
-    private int mLeft;
-    private int mTop;
+    private float mLeft;
+    private float mTop;
     private boolean mIsRTL; 
     private PointF mGeckoPoint;
-    private int mTouchStartX;
-    private int mTouchStartY;
+    private float mTouchStartX;
+    private float mTouchStartY;
 
     private RelativeLayout.LayoutParams mLayoutParams;
 
@@ -69,8 +69,8 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: {
-                mTouchStartX = Math.round(event.getX());
-                mTouchStartY = Math.round(event.getY());
+                mTouchStartX = event.getX();
+                mTouchStartY = event.getY();
                 break;
             }
             case MotionEvent.ACTION_UP: {
@@ -88,14 +88,14 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
-                move(Math.round(event.getX()), Math.round(event.getY()));
+                move(event.getX(), event.getY());
                 break;
             }
         }
         return true;
     }
 
-    private void move(int newX, int newY) {
+    private void move(float newX, float newY) {
         mLeft = mLeft + newX - mTouchStartX;
         mTop = mTop + newY - mTouchStartY;
 
@@ -105,16 +105,16 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
             return;
         }
         // Send x coordinate on the right side of the start handle, left side of the end handle.
-        float left = (float) mLeft + adjustLeftForHandle();
+        float left = mLeft + adjustLeftForHandle();
 
-        PointF geckoPoint = new PointF(left, (float) mTop);
+        PointF geckoPoint = new PointF(left, mTop);
         geckoPoint = layerView.convertViewPointToLayerPoint(geckoPoint);
 
         JSONObject args = new JSONObject();
         try {
             args.put("handleType", mHandleType.toString());
-            args.put("x", Math.round(geckoPoint.x));
-            args.put("y", Math.round(geckoPoint.y));
+            args.put("x", (int) geckoPoint.x);
+            args.put("y", (int) geckoPoint.y);
         } catch (Exception e) {
             Log.e(LOGTAG, "Error building JSON arguments for TextSelection:Move");
         }
@@ -130,7 +130,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
             return;
         }
 
-        mGeckoPoint = new PointF((float) left, (float) top);
+        mGeckoPoint = new PointF(left, top);
         if (mIsRTL != rtl) {
             mIsRTL = rtl;
             setImageLevel(mIsRTL ? IMAGE_LEVEL_RTL : IMAGE_LEVEL_LTR);
@@ -144,8 +144,8 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         PointF viewPoint = new PointF((mGeckoPoint.x * zoom) - x,
                                       (mGeckoPoint.y * zoom) - y);
 
-        mLeft = Math.round(viewPoint.x) - (int) adjustLeftForHandle();
-        mTop = Math.round(viewPoint.y);
+        mLeft = viewPoint.x - adjustLeftForHandle();
+        mTop = viewPoint.y;
 
         setLayoutPosition();
     }
@@ -154,7 +154,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         if (mHandleType.equals(HandleType.START))
             return mIsRTL ? mShadow : mWidth - mShadow;
         else if (mHandleType.equals(HandleType.MIDDLE))
-            return (float) ((mWidth - mShadow) / 2);
+            return (mWidth - mShadow) / 2;
         else
             return mIsRTL ? mWidth - mShadow : mShadow;
     }
@@ -169,8 +169,8 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
             mLayoutParams.bottomMargin = 0 - mHeight;
         }
 
-        mLayoutParams.leftMargin = mLeft;
-        mLayoutParams.topMargin = mTop;
+        mLayoutParams.leftMargin = (int) mLeft;
+        mLayoutParams.topMargin = (int) mTop;
         setLayoutParams(mLayoutParams);
     }
 }
