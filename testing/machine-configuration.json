@@ -1,8 +1,8 @@
 {
     "win7": {
         "screen_resolution": {
-            "x": 1024,
-            "y": 768
+            "x": 1280,
+            "y": 1024 
         },
         "mouse_position": {
             "x": 1010,
