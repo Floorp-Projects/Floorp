@@ -60,7 +60,7 @@ public class testBookmarksTab extends BaseTest {
         list = getBookmarksList();
 
         mSolo.waitForText("Desktop Bookmarks");
-        mAsserter.ok(list != null, "checking that bookmarks list exists", list.toString());
+        mAsserter.isnot(list, null, "checking that bookmarks list exists");
 
         int count = list.getChildCount();
         mAsserter.is(count, 5, "bookmarks list has 5 children (defaults + a folder)");
@@ -207,7 +207,7 @@ public class testBookmarksTab extends BaseTest {
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
                for (ListView view : views) {
-                   if (view.getTag() == "bookmarks") {
+                   if (view.getTag().equals("bookmarks")) {
                        list = view;
                        return true;
                    }
