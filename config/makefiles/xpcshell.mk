@@ -40,6 +40,7 @@ endif #} NO_XPCSHELL_MANIFEST_CHECK
 # See also testsuite-targets.mk 'xpcshell-tests' target for global execution.
 xpcshell-tests:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \
       -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
@@ -56,7 +57,9 @@ xpcshell-tests:
 
 xpcshell-tests-remote: DM_TRANS?=adb
 xpcshell-tests-remote:
-	$(PYTHON) -u $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(DEPTH)/build \
+	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --testing-modules-dir=$(DEPTH)/_tests/modules \
@@ -72,6 +75,7 @@ xpcshell-tests-remote:
 # attach a debugger and then start the test.
 check-interactive:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \
       -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
@@ -88,6 +92,7 @@ check-interactive:
 # Execute a single test, specified in $(SOLO_FILE)
 check-one:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \
       -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
@@ -105,6 +110,7 @@ check-one:
 check-one-remote: DM_TRANS?=adb
 check-one-remote:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \
 	  -I$(topsrcdir)/build/mobile \
 	  -I$(topsrcdir)/testing/mozbase/mozdevice/mozdevice \

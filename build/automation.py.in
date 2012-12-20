@@ -83,13 +83,21 @@ else:
   import errno
 
 
+def getGlobalLog():
+  return _log
+
+def resetGlobalLog(log):
+  while _log.handlers:
+    _log.removeHandler(_log.handlers[0])
+  handler = logging.StreamHandler(log)
+  _log.setLevel(logging.INFO)
+  _log.addHandler(handler)
+
 # We use the logging system here primarily because it'll handle multiple
 # threads, which is needed to process the output of the server and application
 # processes simultaneously.
 _log = logging.getLogger()
-handler = logging.StreamHandler(sys.stdout)
-_log.setLevel(logging.INFO)
-_log.addHandler(handler)
+resetGlobalLog(sys.stdout)
 
 
 #################
@@ -905,10 +913,14 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.log.info("SCREENSHOT: data:image/png;base64,%s", encoded)
 
   def killAndGetStack(self, processPID, utilityPath, debuggerInfo):
-    """Kill the process, preferrably in a way that gets us a stack trace."""
+    """Kill the process, preferrably in a way that gets us a stack trace.
+       Also attempts to obtain a screenshot before killing the process."""
     if not debuggerInfo:
       self.dumpScreen(utilityPath)
+    self.killAndGetStackNoScreenshot(self, processPID, utilityPath, debuggerInfo)
 
+  def killAndGetStackNoScreenshot(self, processPID, utilityPath, debuggerInfo):
+    """Kill the process, preferrably in a way that gets us a stack trace."""
     if self.CRASHREPORTER and not debuggerInfo:
       if self.UNIXISH:
         # ABRT will get picked up by Breakpad's signal handler
