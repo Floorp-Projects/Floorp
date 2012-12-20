@@ -248,7 +248,7 @@ public class testHistoryTab extends PixelTest {
             public boolean test() {
                final ArrayList<ListView> views = mSolo.getCurrentListViews();
                for (ListView view : views) {
-                   if (view.getTag() == "history") {
+                   if (view.getTag().equals("history")) {
                        listview = view;
                        return true;
                    }
