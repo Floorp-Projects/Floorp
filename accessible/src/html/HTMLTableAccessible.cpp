@@ -347,7 +347,7 @@ HTMLTableAccessible::
   HTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
 {
-  mFlags |= eTableAccessible;
+  mGenericTypes |= eTable;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

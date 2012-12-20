@@ -11,7 +11,7 @@
 
 #include "nsCOMPtr.h"
 
-#include "imgIDecoderObserver.h"
+#include "imgDecoderObserver.h"
 
 namespace mozilla {
 namespace image {
@@ -40,7 +40,7 @@ class nsIconDecoder : public Decoder
 {
 public:
 
-  nsIconDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver);
+  nsIconDecoder(RasterImage &aImage, imgDecoderObserver* aObserver);
   virtual ~nsIconDecoder();
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount);

@@ -203,6 +203,13 @@ MediaDevice::GetType(nsAString& aType)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MediaDevice::GetId(nsAString& aID)
+{
+  aID.Assign(mID);
+  return NS_OK;
+}
+
 MediaEngineSource*
 MediaDevice::GetSource()
 {
@@ -255,21 +262,29 @@ public:
 
     // Create a media stream.
     nsRefPtr<nsDOMLocalMediaStream> stream;
+    nsRefPtr<nsDOMLocalMediaStream> trackunion;
     uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
     hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
-    stream = nsDOMLocalMediaStream::CreateSourceStream(hints);
-    if (!stream) {
+    stream     = nsDOMLocalMediaStream::CreateSourceStream(hints);
+    trackunion = nsDOMLocalMediaStream::CreateTrackUnionStream(hints);
+    if (!stream || !trackunion) {
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
       LOG(("Returning error for getUserMedia() - no stream"));
       error->OnError(NS_LITERAL_STRING("NO_STREAM"));
       return NS_OK;
     }
+    // connect the source stream to the track union stream to avoid us blocking
+    trackunion->GetStream()->AsProcessedStream()->SetAutofinish(true);
+    nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
+      AllocateInputPort(stream->GetStream()->AsSourceStream(),
+                        MediaInputPort::FLAG_BLOCK_OUTPUT);
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
     if (window && window->GetExtantDoc()) {
       stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
+      trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
     }
 
     // Ensure there's a thread for gum to proxy to off main thread
@@ -280,6 +295,7 @@ public:
     // when the page is invalidated (on navigation or close).
     GetUserMediaCallbackMediaStreamListener* listener =
       new GetUserMediaCallbackMediaStreamListener(mediaThread, stream,
+                                                  port.forget(),
                                                   mAudioSource,
                                                   mVideoSource);
     stream->GetStream()->AddListener(listener);
@@ -304,7 +320,7 @@ public:
     // This is safe since we're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
     LOG(("Returning success for getUserMedia()"));
-    success->OnSuccess(static_cast<nsIDOMLocalMediaStream*>(stream));
+    success->OnSuccess(static_cast<nsIDOMLocalMediaStream*>(trackunion));
 
     return NS_OK;
   }

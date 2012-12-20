@@ -384,6 +384,16 @@ SpdySession2::SetWriteCallbacks()
 }
 
 void
+SpdySession2::RealignOutputQueue()
+{
+  mOutputQueueUsed -= mOutputQueueSent;
+  memmove(mOutputQueueBuffer.get(),
+          mOutputQueueBuffer.get() + mOutputQueueSent,
+          mOutputQueueUsed);
+  mOutputQueueSent = 0;
+}
+
+void
 SpdySession2::FlushOutputQueue()
 {
   if (!mSegmentReader || !mOutputQueueUsed)
@@ -416,11 +426,7 @@ SpdySession2::FlushOutputQueue()
   
   if ((mOutputQueueSent >= kQueueMinimumCleanup) &&
       ((mOutputQueueSize - mOutputQueueUsed) < kQueueTailRoom)) {
-    mOutputQueueUsed -= mOutputQueueSent;
-    memmove(mOutputQueueBuffer.get(),
-            mOutputQueueBuffer.get() + mOutputQueueSent,
-            mOutputQueueUsed);
-    mOutputQueueSent = 0;
+    RealignOutputQueue();
   }
 }
 
@@ -1918,7 +1924,7 @@ SpdySession2::OnReadSegment(const char *buf,
 }
 
 nsresult
-SpdySession2::CommitToSegmentSize(uint32_t count)
+SpdySession2::CommitToSegmentSize(uint32_t count, bool forceCommitment)
 {
   if (mOutputQueueUsed)
     FlushOutputQueue();
@@ -1926,19 +1932,25 @@ SpdySession2::CommitToSegmentSize(uint32_t count)
   // would there be enough room to buffer this if needed?
   if ((mOutputQueueUsed + count) <= (mOutputQueueSize - kQueueReserved))
     return NS_OK;
-  
-  // if we are using part of our buffers already, try again later
-  if (mOutputQueueUsed)
+
+  // if we are using part of our buffers already, try again later unless
+  // forceCommitment is set.
+  if (mOutputQueueUsed && !forceCommitment)
     return NS_BASE_STREAM_WOULD_BLOCK;
 
-  // not enough room to buffer even with completely empty buffers.
-  // normal frames are max 4kb, so the only case this can really happen
-  // is a SYN_STREAM with technically unbounded headers. That is highly
-  // unlikely, but possible. Create enough room for it because the buffers
-  // will be necessary - SSL does not absorb writes of very large sizes
-  // in single sends.
+  if (mOutputQueueUsed) {
+    // normally we avoid the memmove of RealignOutputQueue, but we'll try
+    // it if forceCommitment is set before growing the buffer.
+    RealignOutputQueue();
 
-  EnsureBuffer(mOutputQueueBuffer, count + kQueueReserved, 0, mOutputQueueSize);
+    // is there enough room now?
+    if ((mOutputQueueUsed + count) <= (mOutputQueueSize - kQueueReserved))
+      return NS_OK;
+  }
+
+  // resize the buffers as needed
+  EnsureBuffer(mOutputQueueBuffer, mOutputQueueUsed + count + kQueueReserved,
+               mOutputQueueUsed, mOutputQueueSize);
 
   NS_ABORT_IF_FALSE((mOutputQueueUsed + count) <=
                     (mOutputQueueSize - kQueueReserved),

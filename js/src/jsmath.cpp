@@ -378,61 +378,37 @@ js::math_log(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 js_math_max(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z = js_NegativeInfinity;
-    Value *argv;
-    unsigned i;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NegativeInfinity);
-        return JS_TRUE;
+    double x;
+    double maxval = MOZ_DOUBLE_NEGATIVE_INFINITY();
+    for (unsigned i = 0; i < args.length(); i++) {
+        if (!ToNumber(cx, args[i], &x))
+            return false;
+        // Math.max(num, NaN) => NaN, Math.max(-0, +0) => +0
+        if (x > maxval || MOZ_DOUBLE_IS_NaN(x) || (x == maxval && MOZ_DOUBLE_IS_NEGATIVE(maxval)))
+            maxval = x;
     }
-    argv = vp + 2;
-    for (i = 0; i < argc; i++) {
-        if (!ToNumber(cx, argv[i], &x))
-            return JS_FALSE;
-        if (MOZ_DOUBLE_IS_NaN(x)) {
-            vp->setDouble(js_NaN);
-            return JS_TRUE;
-        }
-        if (x == 0 && x == z) {
-            if (js_copysign(1.0, z) == -1)
-                z = x;
-        } else {
-            z = (x > z) ? x : z;
-        }
-    }
-    vp->setNumber(z);
-    return JS_TRUE;
+    args.rval().setNumber(maxval);
+    return true;
 }
 
 JSBool
 js_math_min(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, z = js_PositiveInfinity;
-    Value *argv;
-    unsigned i;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_PositiveInfinity);
-        return JS_TRUE;
+    double x;
+    double minval = MOZ_DOUBLE_POSITIVE_INFINITY();
+    for (unsigned i = 0; i < args.length(); i++) {
+        if (!ToNumber(cx, args[i], &x))
+            return false;
+        // Math.min(num, NaN) => NaN, Math.min(-0, +0) => -0
+        if (x < minval || MOZ_DOUBLE_IS_NaN(x) || (x == minval && MOZ_DOUBLE_IS_NEGATIVE_ZERO(x)))
+            minval = x;
     }
-    argv = vp + 2;
-    for (i = 0; i < argc; i++) {
-        if (!ToNumber(cx, argv[i], &x))
-            return JS_FALSE;
-        if (MOZ_DOUBLE_IS_NaN(x)) {
-            vp->setDouble(js_NaN);
-            return JS_TRUE;
-        }
-        if (x == 0 && x == z) {
-            if (js_copysign(1.0, x) == -1)
-                z = x;
-        } else {
-            z = (x < z) ? x : z;
-        }
-    }
-    vp->setNumber(z);
-    return JS_TRUE;
+    args.rval().setNumber(minval);
+    return true;
 }
 
 // Disable PGO for Math.pow() and related functions (see bug 791214).

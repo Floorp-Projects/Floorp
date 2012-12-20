@@ -1209,10 +1209,13 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
 
     // Try to compile the script off thread, if possible. Compilation cannot be
     // performed off thread during an incremental GC, as doing so may trip
-    // incremental read barriers.
+    // incremental read barriers. Also skip off thread compilation if script
+    // execution is being profiled, as CodeGenerator::maybeCreateScriptCounts
+    // will not attach script profiles when running off thread.
     if (js_IonOptions.parallelCompilation &&
         OffThreadCompilationAvailable(cx) &&
-        cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL)
+        cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL &&
+        !cx->runtime->profilingScripts)
     {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 

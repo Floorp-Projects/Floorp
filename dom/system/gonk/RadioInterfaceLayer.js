@@ -1242,6 +1242,14 @@ RadioInterfaceLayer.prototype = {
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
     call.state = nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED;
+    let duration = ("started" in call && typeof call.started == "number") ?
+      new Date().getTime() - call.started : 0;
+    let data = {
+      number: call.number,
+      duration: duration,
+      direction: call.direction
+    };
+    gSystemMessenger.broadcastMessage("telephony-call-ended", data);
     this.updateCallAudioState(call);
     this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },

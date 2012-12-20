@@ -9,7 +9,7 @@
 
 #include "Decoder.h"
 
-#include "imgIDecoderObserver.h"
+#include "imgDecoderObserver.h"
 #include "gfxASurface.h"
 
 #include "nsCOMPtr.h"
@@ -25,7 +25,7 @@ class RasterImage;
 class nsPNGDecoder : public Decoder
 {
 public:
-  nsPNGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver);
+  nsPNGDecoder(RasterImage &aImage, imgDecoderObserver* aObserver);
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal();
