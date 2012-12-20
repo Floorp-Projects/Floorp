@@ -26,18 +26,21 @@
                   android:layout_height="wrap_content">
 
                 <org.mozilla.gecko.TabsTray android:id="@+id/normal_tabs"
+                                            style="@style/TabsList"
                                             android:layout_width="fill_parent"
                                             android:layout_height="fill_parent"
                                             gecko:tabs="tabs_normal"/>
 
                 <org.mozilla.gecko.TabsTray android:id="@+id/private_tabs"
+                                            style="@style/TabsList"
                                             android:layout_width="fill_parent"
-                                            android:layout_height="wrap_content"
+                                            android:layout_height="fill_parent"
                                             gecko:tabs="tabs_private"/>
 
                 <org.mozilla.gecko.RemoteTabs android:id="@+id/synced_tabs"
+                                              style="@style/RemoteTabsList"
                                               android:layout_width="fill_parent"
-                                              android:layout_height="wrap_content"/>
+                                              android:layout_height="fill_parent"/>
 
             </view>
 
