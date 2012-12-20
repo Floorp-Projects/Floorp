@@ -11,13 +11,7 @@
 #include "EndianMacros.h"
 #include "nsICODecoder.h"
 
-#include "nsIInputStream.h"
-#include "nsIComponentManager.h"
 #include "RasterImage.h"
-
-#include "nsIProperties.h"
-#include "nsISupportsPrimitives.h"
-#include <algorithm>
 
 namespace mozilla {
 namespace image {
@@ -211,18 +205,7 @@ nsICODecoder::SetHotSpotIfCursor() {
     return;
   }
 
-  nsCOMPtr<nsISupportsPRUint32> intwrapx = 
-    do_CreateInstance("@mozilla.org/supports-PRUint32;1");
-  nsCOMPtr<nsISupportsPRUint32> intwrapy = 
-    do_CreateInstance("@mozilla.org/supports-PRUint32;1");
-
-  if (intwrapx && intwrapy) {
-    intwrapx->SetData(mDirEntry.mXHotspot);
-    intwrapy->SetData(mDirEntry.mYHotspot);
-
-    mImage.Set("hotspotX", intwrapx);
-    mImage.Set("hotspotY", intwrapy);
-  }
+  mImageMetadata.SetHotspot(mDirEntry.mXHotspot, mDirEntry.mYHotspot);
 }
 
 void

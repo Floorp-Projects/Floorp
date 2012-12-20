@@ -281,14 +281,12 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   NS_ABORT_IF_FALSE(!mDecodeDone, "Decode already done!");
   mDecodeDone = true;
 
-  // Set premult before DecodingComplete(), since DecodingComplete() calls Optimize()
-  int frames = GetFrameCount();
-  bool isNonPremult = GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA;
-  for (int i = 0; i < frames; i++) {
-    mImage.SetFrameAsNonPremult(i, isNonPremult);
-  }
+  // Set metadata before DecodingComplete(), since DecodingComplete() calls Optimize()
+  mImageMetadata.SetLoopCount(aLoopCount);
+  mImageMetadata.SetIsNonPremultiplied(GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA);
 
-  mImage.SetLoopCount(aLoopCount);
+  // Sync metadata to image
+  mImageMetadata.SetOnImage(&mImage);
 
   // Notify
   mImage.DecodingComplete();
