@@ -14,7 +14,7 @@
 interface nsIDOMMozSmsFilter;
 interface nsISmsRequest;
 
-[scriptable, uuid(c2cb2af7-6b96-4915-bcc8-54ad705d6110)]
+[scriptable, uuid(b1311c6d-d863-4da1-8755-2fd59eb0f386)]
 interface nsISmsDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
