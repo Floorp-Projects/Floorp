@@ -13,10 +13,8 @@
 #include "prnetdb.h"
 #include "prio.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/net/DNS.h"
 
 using namespace mozilla;
-using namespace mozilla::net;
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -169,11 +167,9 @@ nsServerSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   }
 
   PRFileDesc *clientFD;
-  PRNetAddr prClientAddr;
-  NetAddr clientAddr;
+  PRNetAddr clientAddr;
 
-  clientFD = PR_Accept(mFD, &prClientAddr, PR_INTERVAL_NO_WAIT);
-  PRNetAddrToNetAddr(&prClientAddr, &clientAddr);
+  clientFD = PR_Accept(mFD, &clientAddr, PR_INTERVAL_NO_WAIT);
   if (!clientFD)
   {
     NS_WARNING("PR_Accept failed");
