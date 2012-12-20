@@ -41,6 +41,8 @@ public:
     mFullyOpen = 1;
   }
 
+  bool HasRegisteredID() { return mStreamID != 0; }
+
   nsAHttpTransaction *Transaction()
   {
     return mTransaction;
@@ -121,7 +123,7 @@ private:
   // The quanta upstream data frames are chopped into
   uint32_t                    mChunkSize;
 
-  // Flag is set when all http request headers have been read
+  // Flag is set when all http request headers have been read and ID is stable
   uint32_t                     mSynFrameComplete     : 1;
 
   // Flag is set when the HTTP processor has more data to send
