@@ -1122,10 +1122,12 @@ this.DOMApplicationRegistry = {
       aData.event = "downloadavailable";
       aData.app = {
         downloadAvailable: true,
-        downloadSize: manifest.size
+        downloadSize: manifest.size,
+        updateManifest: aManifest
       }
       DOMApplicationRegistry._saveApps(function() {
         aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+        delete aData.app.updateManifest;
       });
     }
 
@@ -1174,6 +1176,7 @@ this.DOMApplicationRegistry = {
 
       this._saveApps(function() {
         aData.app = app;
+        app.manifest = aManifest;
         if (!manifest.appcache_path) {
           aData.event = "downloadapplied";
           aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
@@ -1191,6 +1194,7 @@ this.DOMApplicationRegistry = {
           updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
                                    app.localId, false, updateObserver);
         }
+        delete app.manifest;
       });
 
       // Update the permissions for this app.
