@@ -5,6 +5,7 @@
 
 #include "XULAlertAccessible.h"
 
+#include "Accessible-inl.h"
 #include "Role.h"
 #include "States.h"
 
