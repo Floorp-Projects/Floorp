@@ -6,7 +6,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sslsock.c,v 1.98 2012/11/14 01:14:12 wtc%google.com Exp $ */
+/* $Id: sslsock.c,v 1.99 2012/12/20 20:29:36 bsmith%mozilla.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -2904,6 +2904,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 	ssl_ChooseOps(ss);
 	ssl2_InitSocketPolicy(ss);
 	ssl3_InitSocketPolicy(ss);
+	PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
 
 	if (makeLocks) {
 	    status = ssl_MakeLocks(ss);

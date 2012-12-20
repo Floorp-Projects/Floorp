@@ -37,7 +37,7 @@ SECU_EnableWrap(PRBool enable)
 }
 
 PRBool
-SECU_GetWrapEnabled()
+SECU_GetWrapEnabled(void)
 {
     return wrapEnabled;
 }

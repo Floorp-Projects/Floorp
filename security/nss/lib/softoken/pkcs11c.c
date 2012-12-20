@@ -1173,7 +1173,6 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
 	if (context->padDataLength > 0) {
 	    *pulLastPartLen = context->padDataLength;
 	}
-	rv = SECSuccess;
 	goto finish;
     }
 
@@ -1184,13 +1183,26 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
 	     * buffer!!! */
     	    rv = (*context->update)(context->cipherInfo, pLastPart, &outlen,
 		 maxout, context->padBuf, context->blockSize);
-    	    if (rv == SECSuccess) {
+	    if (rv != SECSuccess) {
+		crv = sftk_MapDecryptError(PORT_GetError());
+	    } else {
 		unsigned int padSize = 
 			    (unsigned int) pLastPart[context->blockSize-1];
 		if ((padSize > context->blockSize) || (padSize == 0)) {
-		    rv = SECFailure;
+		    crv = CKR_ENCRYPTED_DATA_INVALID;
 		} else {
-		    *pulLastPartLen = outlen - padSize;
+		    unsigned int i;
+		    unsigned int badPadding = 0;  /* used as a boolean */
+		    for (i = 0; i < padSize; i++) {
+			badPadding |=
+			    (unsigned int) pLastPart[context->blockSize-1-i] ^
+			    padSize;
+		    }
+		    if (badPadding) {
+			crv = CKR_ENCRYPTED_DATA_INVALID;
+		    } else {
+			*pulLastPartLen = outlen - padSize;
+		    }
 		}
 	    }
 	}
@@ -1199,7 +1211,7 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
     sftk_TerminateOp( session, SFTK_DECRYPT, context );
 finish:
     sftk_FreeSession(session);
-    return (rv == SECSuccess) ? CKR_OK : sftk_MapDecryptError(PORT_GetError());
+    return crv;
 }
 
 /* NSC_Decrypt decrypts encrypted data in a single part. */
@@ -1249,11 +1261,21 @@ CK_RV NSC_Decrypt(CK_SESSION_HANDLE hSession,
     /* XXX need to do MUCH better error mapping than this. */
     crv = (rv == SECSuccess) ? CKR_OK : sftk_MapDecryptError(PORT_GetError());
     if (rv == SECSuccess && context->doPad) {
-    	CK_ULONG padding = pData[outlen - 1];
+	unsigned int padding = pData[outlen - 1];
 	if (padding > context->blockSize || !padding) {
 	    crv = CKR_ENCRYPTED_DATA_INVALID;
-	} else
-	    outlen -= padding;
+	} else {
+	    unsigned int i;
+	    unsigned int badPadding = 0;  /* used as a boolean */
+	    for (i = 0; i < padding; i++) {
+		badPadding |= (unsigned int) pData[outlen - 1 - i] ^ padding;
+	    }
+	    if (badPadding) {
+		crv = CKR_ENCRYPTED_DATA_INVALID;
+	    } else {
+		outlen -= padding;
+	    }
+	}
     }
     *pulDataLen = (CK_ULONG) outlen;
     sftk_TerminateOp( session, SFTK_DECRYPT, context );

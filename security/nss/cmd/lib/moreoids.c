@@ -127,6 +127,17 @@ static const SECOidData oids[] = {
 
 static const unsigned int numOids = (sizeof oids) / (sizeof oids[0]);
 
+/* Fetch and register an oid if it hasn't been done already */
+void
+SECU_cert_fetchOID(SECOidTag *data, const SECOidData *src)
+{
+    if (*data == SEC_OID_UNKNOWN) {
+        /* AddEntry does the right thing if someone else has already
+         * added the oid. (that is return that oid tag) */
+        *data = SECOID_AddEntry(src);
+    }
+}
+
 SECStatus
 SECU_RegisterDynamicOids(void)
 {

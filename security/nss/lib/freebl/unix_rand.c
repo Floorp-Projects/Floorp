@@ -193,11 +193,6 @@ GiveSystemInfo(void)
 #if defined(__sun)
 #if defined(__svr4) || defined(SVR4)
 #include <sys/systeminfo.h>
-#include <sys/times.h>
-#include <wait.h>
-
-int gettimeofday(struct timeval *);
-int gethostname(char *, int);
 
 #define getdtablesize() sysconf(_SC_OPEN_MAX)
 
@@ -672,11 +667,7 @@ size_t RNG_GetNoise(void *buf, size_t maxbytes)
     n = GetHighResClock(buf, maxbytes);
     maxbytes -= n;
 
-#if defined(__sun) && (defined(_svr4) || defined(SVR4)) || defined(sony)
-    (void)gettimeofday(&tv);
-#else
     (void)gettimeofday(&tv, 0);
-#endif
     c = CopyLowBits((char*)buf+n, maxbytes, &tv.tv_usec, sizeof(tv.tv_usec));
     n += c;
     maxbytes -= c;

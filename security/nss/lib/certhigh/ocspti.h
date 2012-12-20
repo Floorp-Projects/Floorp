@@ -5,7 +5,7 @@
 /*
  * Private header defining OCSP types.
  *
- * $Id: ocspti.h,v 1.8.2.1 2012/12/12 16:38:39 wtc%google.com Exp $
+ * $Id: ocspti.h,v 1.9 2012/12/12 16:03:44 wtc%google.com Exp $
  */
 
 #ifndef _OCSPTI_H_
