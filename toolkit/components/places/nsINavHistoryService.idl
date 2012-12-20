@@ -650,7 +650,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(c837f6ba-6ad7-4810-a425-8ce29e05d17e)]
+[scriptable, uuid(eb264079-8766-4e66-b9bf-2c8b586c74d3)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -680,10 +680,7 @@ interface nsINavHistoryObserver : nsISupports
    * @param aReferringID    The ID of the visit the user came from. 0 if empty.
    * @param aTransitionType One of nsINavHistory.TRANSITION_*
    * @param aGUID           The unique ID associated with the page.
-   * @param aAdded          Incremented by query nodes when the visited uri
-   *                        belongs to them. If no such query exists, the 
-   *                        history result creates a new query node dynamically.
-   *                        It is used in places views only and can be ignored.
+   * @param aHidden         Whether the visited page is marked as hidden.
    */
   void onVisit(in nsIURI aURI,
                in long long aVisitID,
@@ -692,7 +689,7 @@ interface nsINavHistoryObserver : nsISupports
                in long long aReferringID,
                in unsigned long aTransitionType,
                in ACString aGUID,
-               out unsigned long aAdded);
+               in boolean aHidden);
 
   /**
    * Called whenever either the "real" title or the custom title of the page
