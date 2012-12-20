@@ -2175,14 +2175,14 @@ WifiWorker.prototype = {
 
     var self = this;
     function getConnectionInformation() {
-      WifiManager.getConnectionInfo(function(info) {
+      WifiManager.getConnectionInfo(function(connInfo) {
         // See comments in calculateSignal for information about this.
-        if (!info) {
+        if (!connInfo) {
           self._lastConnectionInfo = null;
           return;
         }
 
-        let { rssi, linkspeed } = info;
+        let { rssi, linkspeed } = connInfo;
         if (rssi > 0)
           rssi -= 256;
         if (rssi <= MIN_RSSI)
