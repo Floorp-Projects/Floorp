@@ -1506,6 +1506,10 @@ FindClassPrototype(JSContext *cx, HandleObject scope, JSProtoKey protoKey,
 JSObject *
 NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind kind);
 
+// Used to optimize calls to (new Object())
+bool
+NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
+
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline JSObject *
 CopyInitializerObject(JSContext *cx, HandleObject baseobj)
