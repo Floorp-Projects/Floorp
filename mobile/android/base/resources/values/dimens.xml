@@ -53,7 +53,6 @@
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="widget_padding">8dp</dimen>
 
-    <dimen name="addressbar_offset_left">84dip</dimen>
     <dimen name="app_defaultsize_w">632.0dip</dimen>
     <dimen name="app_defaultsize_h">598.0dip</dimen>
     <dimen name="app_minimumsize_w">632.0dip</dimen>
