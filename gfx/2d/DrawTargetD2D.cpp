@@ -1561,7 +1561,7 @@ DrawTargetD2D::GetRTForOperation(CompositionOp aOperator, const Pattern &aPatter
 void
 DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aPattern, const Rect &aBounds)
 {
-  if (aOperator == OP_OVER && !IsPatternSupportedByD2D(aPattern)) {
+  if (aOperator == OP_OVER && IsPatternSupportedByD2D(aPattern)) {
     return;
   }
 
@@ -2142,7 +2142,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
 TemporaryRef<ID2D1Brush>
 DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 {
-  if (IsPatternSupportedByD2D(aPattern)) {
+  if (!IsPatternSupportedByD2D(aPattern)) {
     RefPtr<ID2D1SolidColorBrush> colBrush;
     mRT->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), byRef(colBrush));
     return colBrush;
