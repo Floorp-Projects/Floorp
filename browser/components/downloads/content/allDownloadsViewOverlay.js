@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource:///modules/DownloadsCommon.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
