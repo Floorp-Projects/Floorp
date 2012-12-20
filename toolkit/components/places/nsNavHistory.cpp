@@ -3949,9 +3949,10 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   const nsTArray<uint32_t>& transitions = aQuery->Transitions();
   for (uint32_t i = 0; i < transitions.Length(); ++i) {
     nsPrintfCString param(":transition%d_", i);
-    clause.Condition("EXISTS (SELECT 1 FROM moz_historyvisits "
-                             "WHERE place_id = h.id AND visit_type = "
-              ).Param(param.get()).Str(" LIMIT 1)");
+    clause.Condition("h.id IN (SELECT place_id FROM moz_historyvisits "
+                             "WHERE visit_type = ")
+          .Param(param.get())
+          .Str(")");
   }
 
   // folders
