@@ -14,13 +14,13 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="654358494ba601a46ef9838debc95417ae464cc6"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="ccaa5cc73bd7a4b304fc215fe60d13ac88d30b99"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="32106d4ea635ebe17a1610b643b398db639b8b97"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="6ee1f8987ef36d688f97064c003ad57849dfadf2"/>
 
   <!-- Stock Android things -->
   <!-- Information: platform/abi/cpp is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.00.00.19.138 --><project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
-  <project name="platform/bionic" path="bionic" revision="c7bab8cb8483e7869eabdbd4add7c9e5beeecc80"/>
+  <!-- Information: platform/bionic is tagged with android-4.0.4_r2.1 --><project name="platform/bionic" path="bionic" revision="3d11bf0f3f3cf848f6f1e8449bf8736d8d1c78a3"/>
   <!-- Information: platform/bootable/recovery is tagged with android-4.0.4_r2.1 --><project name="platform/bootable/recovery" path="bootable/recovery" revision="fadc5ac81d6400ebdd041f7d4ea64021596d6b7d"/>
   <!-- Information: device/common is tagged with android-sdk-adt_r20 --><project name="device/common" path="device/common" revision="7d4526582f88808a3194e1a3b304abb369d2745c"/>
   <!-- Information: device/sample is tagged with android-4.0.4_r2.1 --><project name="device/sample" path="device/sample" revision="ef228b8b377a9663e94be4b1aeb6c2bf7a07d098"/>
@@ -90,7 +90,7 @@
   <!-- Information: platform/system/vold is tagged with android-4.0.4_r2.1 --><project name="platform/system/vold" path="system/vold" revision="3ad9072a5d6f6bda32123b367545649364e3c11d"/>
 
   <!-- Pandaboard specific things -->
-  <project name="android-device-panda" path="device/ti/panda" remote="b2g" revision="63196b48f479c30787863c8ca89456acd4b03910"/>
+  <project name="android-device-panda" path="device/ti/panda" remote="b2g" revision="ee878354542c8c0d6508657fd2c4c81ba4e5c98d"/>
   <!-- Information: platform/hardware/ti/omap4xxx is tagged with android-4.0.4_r2.1 --><project name="platform/hardware/ti/omap4xxx" path="hardware/ti/omap4xxx" revision="8be8e9a68c96b6cf43c08a58e7ecd7708737c599"/>
   <project name="platform/hardware/ti/wlan" path="hardware/ti/wlan" revision="60dfeb6e4448bfed707946ebca6612980f525e69"/>
   <project name="platform/hardware/ti/wpan" path="hardware/ti/wpan" revision="3ece7d9e08052989401e008bc397dbcd2557cfd0"/>
