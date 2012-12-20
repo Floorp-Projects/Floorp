@@ -2113,6 +2113,12 @@
     "n_buckets": 10,
     "description": "Session restore: Time to read the session data from the file on disk (ms)"
   },
+  "FX_SESSION_RESTORE_SYNC_READ_FILE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Session restore: Time to read the session data from the file on disk, using the synchronous fallback (ms)"
+  },
   "FX_SESSION_RESTORE_WRITE_FILE_MS": {
     "kind": "exponential",
     "high": "3000",
