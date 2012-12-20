@@ -5,7 +5,7 @@
 #include "AccIterator.h"
 
 #include "nsAccessibilityService.h"
-#include "Accessible-inl.h"
+#include "Accessible.h"
 
 #include "mozilla/dom/Element.h"
 #include "nsBindingManager.h"
