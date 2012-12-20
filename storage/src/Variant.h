@@ -315,7 +315,7 @@ template <typename DataType>
 class Variant : public Variant_base
 {
 public:
-  Variant(const typename variant_storage_traits<DataType>::ConstructorType& aData)
+  Variant(const typename variant_storage_traits<DataType>::ConstructorType aData)
   {
     variant_storage_traits<DataType>::storage_conversion(aData, &mData);
   }
