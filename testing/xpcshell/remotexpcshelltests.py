@@ -379,6 +379,11 @@ class RemoteXPCShellOptions(xpcshell.XPCShellOptions):
                         help = "local path to bin directory")
         defaults["localBin"] = None
 
+        self.add_option("--remoteTestRoot", action = "store",
+                    type = "string", dest = "remoteTestRoot",
+                    help = "remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
+        defaults["remoteTestRoot"] = None
+
         self.set_defaults(**defaults)
 
     def verifyRemoteOptions(self, options):
@@ -443,11 +448,11 @@ def main():
 
     if (options.dm_trans == "adb"):
       if (options.deviceIP):
-        dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, packageName=None)
+        dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, packageName=None, deviceRoot=options.remoteTestRoot)
       else:
-        dm = devicemanagerADB.DeviceManagerADB(packageName=None)
+        dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remoteTestRoot)
     else:
-      dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
+      dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
       if (options.deviceIP == None):
         print "Error: you must provide a device IP to connect to via the --device option"
         sys.exit(1)

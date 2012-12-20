@@ -91,7 +91,11 @@ class RemoteOptions(MochitestOptions):
                     help = "name of the file containing the view ID map (fennec_ids.txt)")
         defaults["robocopIds"] = ""
 
+        self.add_option("--remoteTestRoot", action = "store",
+                    type = "string", dest = "remoteTestRoot",
+                    help = "remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
         defaults["remoteTestRoot"] = None
+
         defaults["logFile"] = "mochitest.log"
         defaults["autorun"] = True
         defaults["closeWhenDone"] = True
@@ -101,7 +105,8 @@ class RemoteOptions(MochitestOptions):
         self.set_defaults(**defaults)
 
     def verifyRemoteOptions(self, options, automation):
-        options.remoteTestRoot = automation._devicemanager.getDeviceRoot()
+        if not options.remoteTestRoot:
+            options.remoteTestRoot = automation._devicemanager.getDeviceRoot()
         productRoot = options.remoteTestRoot + "/" + automation._product
 
         if (options.utilityPath == self._automation.DIST_BIN):
@@ -439,11 +444,11 @@ def main():
     options, args = parser.parse_args()
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
-            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
+            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
         else:
-            dm = devicemanagerADB.DeviceManagerADB()
+            dm = devicemanagerADB.DeviceManagerADB(deviceRoot=options.remoteTestRoot)
     else:
-         dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
+         dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):
