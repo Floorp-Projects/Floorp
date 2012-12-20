@@ -143,8 +143,8 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
     return false;
   }
 
-  return JS_DefinePropertyById(cx, expando, id, desc->value, desc->getter, desc->setter,
-                               desc->attrs);
+  JSBool dummy;
+  return js_DefineOwnProperty(cx, expando, id, *desc, &dummy);
 }
 
 bool
