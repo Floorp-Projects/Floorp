@@ -49,6 +49,9 @@ let Type = OS.Shared.Type;
 // The library of promises.
 Components.utils.import("resource://gre/modules/commonjs/promise/core.js", this);
 
+// The implementation of communications
+Components.utils.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
+
 // If profileDir is not available, osfile.jsm has been imported before the
 // profile is setup. In this case, we need to observe "profile-do-change"
 // and set OS.Constants.Path.profileDir as soon as it becomes available.
@@ -67,7 +70,11 @@ if (!("profileDir" in OS.Constants.Path) || !("localProfileDir" in OS.Constants.
 }
 
 /**
- * Return a shallow clone of the enumerable properties of an object
+ * Return a shallow clone of the enumerable properties of an object.
+ *
+ * We use this whenever normalizing options requires making (shallow)
+ * changes to an option object. The copy ensures that we do not modify
+ * a client-provided object by accident.
  */
 let clone = function clone(object) {
   let result = {};
@@ -82,189 +89,24 @@ let clone = function clone(object) {
  */
 const noOptions = {};
 
-/**
- * An implementation of queues (FIFO).
- *
- * The current implementation uses two arrays and runs in O(n * log(n)).
- * It is optimized for the case in which many items are enqueued sequentially.
- */
-let Queue = function Queue() {
-  // The array to which the following |push| operations will add elements.
-  // If |null|, |this._pushing| will receive a new array.
-  // @type {Array|null}
-  this._pushing = null;
 
-  // The array from which the following |pop| operations will remove elements.
-  // If |null|, |this._popping| will receive |this._pushing|
-  // @type {Array|null}
-  this._popping = null;
-
-  // The number of items in |this._popping| that have been popped already
-  this._popindex = 0;
-};
-Queue.prototype = {
-  /**
-   * Push a new element
-   */
-  push: function push(x) {
-    if (!this._pushing) {
-      this._pushing = [];
-    }
-    this._pushing.push({ value: x });
-  },
-  /**
-   * Pop an element.
-   *
-   * If the queue is empty, raise |Error|.
-   */
-  pop: function pop() {
-    if (!this._popping) {
-      if (!this._pushing) {
-        throw new Error("Queue is empty");
-      }
-      this._popping = this._pushing;
-      this._pushing = null;
-      this._popindex = 0;
-    }
-    let result = this._popping[this._popindex];
-    delete this._popping[this._popindex];
-    ++this._popindex;
-    if (this._popindex >= this._popping.length) {
-      this._popping = null;
-    }
-    return result.value;
-  }
-};
-
-
-/**
- * An object responsible for dispatching messages to
- * a worker and routing the responses.
- *
- * In this implementation, the Scheduler uses only
- * one worker.
- */
+let worker = new PromiseWorker(
+  "resource://gre/modules/osfile/osfile_async_worker.js",
+  DEBUG?LOG:null);
 let Scheduler = {
-  /**
-   * Instantiate the worker lazily.
-   */
-  get _worker() {
-    delete this._worker;
-    let worker = new ChromeWorker("osfile_async_worker.js");
-    let self = this;
-    Object.defineProperty(this, "_worker", {value:
-      worker
-    });
-
-    /**
-     * Receive errors that are not instances of OS.File.Error, propagate
-     * them to the listeners.
-     *
-     * The worker knows how to serialize errors that are instances
-     * of |OS.File.Error|. These are treated by |worker.onmessage|.
-     * However, for other errors, we rely on DOM's mechanism for
-     * serializing errors, which transmits these errors through
-     * |worker.onerror|.
-     *
-     * @param {Error} error Some JS error.
-     */
-    worker.onerror = function onerror(error) {
-      if (DEBUG) {
-        LOG("Received uncaught error from worker", JSON.stringify(error.message), error.message);
-      }
-      error.preventDefault();
-      let {deferred} = self._queue.pop();
-      deferred.reject(error);
-    };
-
-    /**
-     * Receive messages from the worker, propagate them to the listeners.
-     *
-     * Messages must have one of the following shapes:
-     * - {ok: some_value} in case of success
-     * - {fail: some_error} in case of error, where
-     *    some_error can be deserialized by
-     *    |OS.File.Error.fromMsg|
-     *
-     * Messages may also contain a field |id| to help
-     * with debugging.
-     *
-     * @param {*} msg The message received from the worker.
-     */
-    worker.onmessage = function onmessage(msg) {
-      if (DEBUG) {
-        LOG("Received message from worker", JSON.stringify(msg.data));
-      }
-      let handler = self._queue.pop();
-      let deferred = handler.deferred;
-      let data = msg.data;
-      if (data.id != handler.id) {
-        throw new Error("Internal error: expecting msg " + handler.id + ", " +
-                        " got " + data.id + ": " + JSON.stringify(msg.data));
-      }
-      if ("ok" in data) {
-        deferred.resolve(data.ok);
-      } else if ("fail" in data) {
-        let error;
-        try {
-          error = OS.File.Error.fromMsg(data.fail);
-        } catch (x) {
-          LOG("Cannot decode OS.File.Error", data.fail, data.id);
-          deferred.reject(x);
-          return;
+  post: function post(...args) {
+    let promise = worker.post.apply(worker, args);
+    return promise.then(
+      null,
+      function onError(error) {
+        // Decode any serialized error
+        if (error instanceof PromiseWorker.WorkerError) {
+          throw OS.File.Error.fromMsg(error.data);
+        } else {
+          throw error;
         }
-        deferred.reject(error);
-      } else {
-        throw new Error("Message does not respect protocol: " +
-          data.toSource());
       }
-    };
-    return worker;
-  },
-
-  /**
-   * The queue of deferred, waiting for the completion of their
-   * respective job by the worker.
-   *
-   * Each item in the list may contain an additional field |closure|,
-   * used to store strong references to value that must not be
-   * garbage-collected before the reply has been received (e.g.
-   * arrays).
-   *
-   * @type {Queue<{deferred:deferred, closure:*=}>}
-   */
-  _queue: new Queue(),
-
-  /**
-   * The number of the current message.
-   *
-   * Used for debugging purposes.
-   */
-  _id: 0,
-
-  /**
-   * Post a message to a worker.
-   *
-   * @param {string} fun The name of the function to call.
-   * @param array The contents of the message.
-   * @param closure An object holding references that should not be
-   * garbage-collected before the message treatment is complete.
-   *
-   * @return {promise}
-   */
-  post: function post(fun, array, closure) {
-    let deferred = Promise.defer();
-    let id = ++this._id;
-    let message = {fun: fun, args: array, id: id};
-    if (DEBUG) {
-      LOG("Posting message", JSON.stringify(message));
-    }
-    this._queue.push({deferred:deferred, closure: closure, id: id});
-    this._worker.postMessage(message);
-    if (DEBUG) {
-      LOG("Message posted");
-    }
-    return deferred.promise;
+    );
   }
 };
 
