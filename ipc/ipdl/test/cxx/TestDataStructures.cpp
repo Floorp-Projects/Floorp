@@ -16,7 +16,7 @@ static const uint32_t nactors = 10;
 
 template<typename T>
 static void
-assert_arrays_equal(InfallibleTArray<T> a, InfallibleTArray<T> b)
+assert_arrays_equal(const InfallibleTArray<T>& a, const InfallibleTArray<T>& b)
 {
     test_assert(a == b, "arrays equal");
 }
@@ -179,13 +179,13 @@ bool TestDataStructuresParent::RecvTest6(
     IntDoubleArrays id1(i1[0]);
     test_assert(42 == id1.get_int(), "wrong value");
 
-    InfallibleTArray<int> i2a = i1[1].get_ArrayOfint();
+    InfallibleTArray<int> i2a(i1[1].get_ArrayOfint());
     test_assert(3 == i2a.Length(), "wrong length");
     test_assert(1 == i2a[0], "wrong value");
     test_assert(2 == i2a[1], "wrong value");
     test_assert(3 == i2a[2], "wrong value");
 
-    InfallibleTArray<double> i3a = i1[2].get_ArrayOfdouble();
+    InfallibleTArray<double> i3a(i1[2].get_ArrayOfdouble());
     test_assert(3 == i3a.Length(), "wrong length");
     test_assert(1.0 == i3a[0], "wrong value");
     test_assert(2.0 == i3a[1], "wrong value");
@@ -618,8 +618,8 @@ TestDataStructuresChild::Test6()
 
     test_assert(3 == o1.Length(), "wrong length");
     IntDoubleArrays od1(o1[0]);
-    InfallibleTArray<int> od2 = o1[1].get_ArrayOfint();
-    InfallibleTArray<double> od3 = o1[2].get_ArrayOfdouble();
+    InfallibleTArray<int> od2(o1[1].get_ArrayOfint());
+    InfallibleTArray<double> od3(o1[2].get_ArrayOfdouble());
 
     test_assert(42 == od1.get_int(), "wrong value");
     assert_arrays_equal(id2, od2);
