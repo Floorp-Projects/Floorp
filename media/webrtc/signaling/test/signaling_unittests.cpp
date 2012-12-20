@@ -77,12 +77,15 @@ enum sdpTestFlags
   SHOULD_RECV_AUDIO     = (1<<1),
   SHOULD_INACTIVE_AUDIO = (1<<2),
   SHOULD_REJECT_AUDIO   = (1<<3),
-  SHOULD_SEND_VIDEO     = (1<<4),
-  SHOULD_RECV_VIDEO     = (1<<5),
-  SHOULD_INACTIVE_VIDEO = (1<<6),
-  SHOULD_REJECT_VIDEO   = (1<<7),
-  DONT_CHECK_AUDIO      = (1<<8),
-  DONT_CHECK_VIDEO      = (1<<9),
+  SHOULD_OMIT_AUDIO     = (1<<4),
+  DONT_CHECK_AUDIO      = (1<<5),
+
+  SHOULD_SEND_VIDEO     = (1<<8),
+  SHOULD_RECV_VIDEO     = (1<<9),
+  SHOULD_INACTIVE_VIDEO = (1<<10),
+  SHOULD_REJECT_VIDEO   = (1<<11),
+  SHOULD_OMIT_VIDEO     = (1<<12),
+  DONT_CHECK_VIDEO      = (1<<13),
 
   SHOULD_SENDRECV_AUDIO = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO,
   SHOULD_SENDRECV_VIDEO = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO,
@@ -90,11 +93,11 @@ enum sdpTestFlags
 
   AUDIO_FLAGS = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO
                 | SHOULD_INACTIVE_AUDIO | SHOULD_REJECT_AUDIO
-                | DONT_CHECK_AUDIO,
+                | DONT_CHECK_AUDIO | SHOULD_OMIT_AUDIO,
 
   VIDEO_FLAGS = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO
                 | SHOULD_INACTIVE_VIDEO | SHOULD_REJECT_VIDEO
-                | DONT_CHECK_VIDEO
+                | DONT_CHECK_VIDEO | SHOULD_OMIT_VIDEO
 };
 
 enum offerAnswerFlags
@@ -712,21 +715,26 @@ private:
     ASSERT_NE(sdp.find("c=IN IP4"), std::string::npos);
     ASSERT_NE(sdp.find("a=fingerprint:sha-256"), std::string::npos);
 
-    cout << "SDPSanityCheck flags = " << std::hex << std::showbase
+    cout << "SDPSanityCheck flags for "
+         << (offer ? "offer" : "answer")
+         << " = " << std::hex << std::showbase
          << flags << std::dec
+
          << ((flags & SHOULD_SEND_AUDIO)?" SHOULD_SEND_AUDIO":"")
          << ((flags & SHOULD_RECV_AUDIO)?" SHOULD_RECV_AUDIO":"")
          << ((flags & SHOULD_INACTIVE_AUDIO)?" SHOULD_INACTIVE_AUDIO":"")
          << ((flags & SHOULD_REJECT_AUDIO)?" SHOULD_REJECT_AUDIO":"")
+         << ((flags & SHOULD_OMIT_AUDIO)?" SHOULD_OMIT_AUDIO":"")
+         << ((flags & DONT_CHECK_AUDIO)?" DONT_CHECK_AUDIO":"")
+
          << ((flags & SHOULD_SEND_VIDEO)?" SHOULD_SEND_VIDEO":"")
          << ((flags & SHOULD_RECV_VIDEO)?" SHOULD_RECV_VIDEO":"")
          << ((flags & SHOULD_INACTIVE_VIDEO)?" SHOULD_INACTIVE_VIDEO":"")
          << ((flags & SHOULD_REJECT_VIDEO)?" SHOULD_REJECT_VIDEO":"")
-         << endl;
+         << ((flags & SHOULD_OMIT_VIDEO)?" SHOULD_OMIT_VIDEO":"")
+         << ((flags & DONT_CHECK_VIDEO)?" DONT_CHECK_VIDEO":"")
 
-    if ((flags & AUDIO_FLAGS) && offer) {
-      ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
-    }
+         << endl;
 
     switch(flags & AUDIO_FLAGS) {
       case 0:
@@ -735,14 +743,23 @@ private:
       case SHOULD_SEND_AUDIO:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=sendonly"), std::string::npos);
+            if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+            }
         break;
       case SHOULD_RECV_AUDIO:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=recvonly"), std::string::npos);
+            if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+            }
         break;
       case SHOULD_SENDRECV_AUDIO:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=sendrecv"), std::string::npos);
+            if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+            }
         break;
       case SHOULD_INACTIVE_AUDIO:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
@@ -751,6 +768,9 @@ private:
       case SHOULD_REJECT_AUDIO:
             ASSERT_EQ(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find("m=audio 0 "), std::string::npos);
+        break;
+      case SHOULD_OMIT_AUDIO:
+            ASSERT_EQ(sdp.find("m=audio"), std::string::npos);
         break;
       case DONT_CHECK_AUDIO:
         break;
@@ -780,6 +800,9 @@ private:
         break;
       case SHOULD_REJECT_VIDEO:
             ASSERT_NE(sdp.find("m=video 0 "), std::string::npos);
+        break;
+      case SHOULD_OMIT_VIDEO:
+            ASSERT_EQ(sdp.find("m=video"), std::string::npos);
         break;
       case DONT_CHECK_VIDEO:
         break;
@@ -934,7 +957,7 @@ TEST_F(SignalingTest, CreateOfferNoVideoStream)
   constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   CreateOffer(constraints, OFFER_AUDIO,
-              SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO);
+              SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
 }
 
 TEST_F(SignalingTest, CreateOfferNoAudioStream)
@@ -943,7 +966,7 @@ TEST_F(SignalingTest, CreateOfferNoAudioStream)
   constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   CreateOffer(constraints, OFFER_VIDEO,
-              SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
+              SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
 
 TEST_F(SignalingTest, CreateOfferDontReceiveAudio)
@@ -1060,8 +1083,8 @@ TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnOffer)
   answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   answerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   OfferAnswer(offerconstraints, answerconstraints, OFFER_VIDEO | ANSWER_AV,
-              false, SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO,
-              SHOULD_SEND_AUDIO | SHOULD_SENDRECV_VIDEO);
+              false, SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO,
+              SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
 
 TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnOffer)
@@ -1073,8 +1096,8 @@ TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnOffer)
   answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   answerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   OfferAnswer(offerconstraints, answerconstraints, OFFER_AUDIO | ANSWER_AV,
-              false, SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO,
-              SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO);
+              false, SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO,
+              SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
 }
 
 TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnAnswer)
@@ -1149,7 +1172,8 @@ TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnOfferDontReceiveVideoOnOffe
   answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   answerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   OfferAnswer(offerconstraints, answerconstraints, OFFER_AUDIO | ANSWER_AV,
-              false, SHOULD_SENDRECV_AUDIO, SHOULD_SENDRECV_AUDIO);
+              false, SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO,
+              SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
 }
 
 TEST_F(SignalingTest, OfferAnswerDontReceiveAudioNoAudioStreamOnOfferDontReceiveVideoOnAnswer)
@@ -1224,16 +1248,6 @@ TEST_F(SignalingTest, OfferAnswerDontAddAudioVideoStreamsOnAnswerNoConstraints)
               SHOULD_RECV_AUDIO | SHOULD_RECV_VIDEO);
 }
 
-TEST_F(SignalingTest, OfferModifiedAnswer)
-{
-  sipcc::MediaConstraints constraints;
-  OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AV,
-                      SHOULD_SENDRECV_AV);
-  PR_Sleep(kDefaultTimeout * 2); // Wait for completion
-  a1_.CloseSendStreams();
-  a2_.CloseReceiveStreams();
-}
-
 TEST_F(SignalingTest, FullCall)
 {
   sipcc::MediaConstraints constraints;
@@ -1249,6 +1263,16 @@ TEST_F(SignalingTest, FullCall)
   //ASSERT_GE(a2_.GetPacketsSent(0), 40);
   //ASSERT_GE(a1_.GetPacketsReceived(0), 40);
   ASSERT_GE(a2_.GetPacketsReceived(0), 40);
+}
+
+TEST_F(SignalingTest, OfferModifiedAnswer)
+{
+  sipcc::MediaConstraints constraints;
+  OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AV,
+                      SHOULD_SENDRECV_AV);
+  PR_Sleep(kDefaultTimeout * 2); // Wait for completion
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
 }
 
 TEST_F(SignalingTest, FullCallTrickle)
