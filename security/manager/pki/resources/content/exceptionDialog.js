@@ -92,7 +92,7 @@ function findRecentBadCert(uri) {
                            .getService(Components.interfaces.nsIX509CertDB);
     if (!certDB)
       return false;
-    var recentCertsSvc = certDB.getRecentBadCertsService(inPrivateBrowsingMode());
+    var recentCertsSvc = certDB.getRecentBadCerts(inPrivateBrowsingMode());
     if (!recentCertsSvc)
       return false;
 
