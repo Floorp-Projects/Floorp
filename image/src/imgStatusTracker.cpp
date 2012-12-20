@@ -48,9 +48,6 @@ public:
     }
 
     if (!mTracker->IsMultipart()) {
-      MOZ_ASSERT(!mTracker->mBlockingOnload);
-      mTracker->mBlockingOnload = true;
-
       mTracker->RecordBlockOnload();
 
       nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
@@ -198,22 +195,19 @@ private:
 
 imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
+    mTrackerObserver(new imgStatusTrackerObserver(this)),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
     mIsMultipart(false),
-    mHadLastPart(false),
-    mBlockingOnload(false)
-{
-  mTrackerObserver = new imgStatusTrackerObserver(this);
-}
+    mHadLastPart(false)
+{}
 
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
     mIsMultipart(aOther.mIsMultipart),
-    mHadLastPart(aOther.mHadLastPart),
-    mBlockingOnload(aOther.mBlockingOnload)
+    mHadLastPart(aOther.mHadLastPart)
     // Note: we explicitly don't copy mRequestRunnable, because it won't be
     // nulled out when the mRequestRunnable's Run function eventually gets
     // called.
@@ -763,11 +757,9 @@ imgStatusTracker::SendUnblockOnload(imgRequestProxy* aProxy)
 void
 imgStatusTracker::MaybeUnblockOnload()
 {
-  if (!mBlockingOnload) {
+  if (!(mState & stateBlockingOnload)) {
     return;
   }
-
-  mBlockingOnload = false;
 
   RecordUnblockOnload();
 

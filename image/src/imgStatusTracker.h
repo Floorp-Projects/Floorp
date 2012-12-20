@@ -200,7 +200,6 @@ private:
   uint32_t mImageStatus;
   bool mIsMultipart    : 1;
   bool mHadLastPart    : 1;
-  bool mBlockingOnload : 1;
 };
 
 #endif
