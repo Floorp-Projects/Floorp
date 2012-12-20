@@ -63,6 +63,12 @@ if (this.Components) {
            LOG("Sending positive reply", JSON.stringify(result), "id is", id);
          }
          self.postMessage({ok: result, id:id});
+       } else if (exn == StopIteration) {
+         // StopIteration cannot be serialized automatically
+         if (DEBUG) {
+           LOG("Sending back StopIteration");
+         }
+         self.postMessage({StopIteration: true, id: id});
        } else if (exn instanceof exports.OS.File.Error) {
          if (DEBUG) {
            LOG("Sending back OS.File error", exn, "id is", id);
