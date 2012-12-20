@@ -142,7 +142,7 @@ else
 MOCHITEST_BROWSER_FILES += \
 	browser_248970_a.js \
 	browser_248970_b.js \
-+	browser_248970_b_perwindowpb.js \
+	browser_248970_b_perwindowpb.js \
 	browser_354894.js \
 	browser_394759_privatebrowsing.js \
 	$(NULL)
