@@ -57,6 +57,15 @@ for (var i = 0; i < longInt8View.length; i++) {
   longInt8View[i] = i % 255;
 }
 
+// arraybufferview test objects
+var longArraySlice = longArray.slice(256, 384);
+var longInt32View1 = new Int32Array(longArraySlice)
+var longInt32View2 = new Int32Array(longArray, 256, 32)
+var longInt16View1 = new Uint16Array(longArraySlice)
+var longInt16View2 = new Uint16Array(longArray, 256, 64)
+var longInt8View1 = new Int8Array(longArraySlice)
+var longInt8View2 = new Int8Array(longArray, 256, 128)
+
 extensions.forEach(
     function (extension) {
       var testFile = createFileWithDataExt(testData, extension);
@@ -167,6 +176,30 @@ tests = [{ body: null,
          },
          { body: longArray,
            resBody: longArray,
+           resType: "arraybuffer"
+         },
+         { body: longInt32View1,
+           resBody: longArraySlice,
+           resType: "arraybuffer"
+         },
+         { body: longInt32View2,
+           resBody: longArraySlice,
+           resType: "arraybuffer"
+         },
+         { body: longInt16View1,
+           resBody: longArraySlice,
+           resType: "arraybuffer"
+         },
+         { body: longInt16View2,
+           resBody: longArraySlice,
+           resType: "arraybuffer"
+         },
+         { body: longInt8View1,
+           resBody: longArraySlice,
+           resType: "arraybuffer"
+         },
+         { body: longInt8View2,
+           resBody: longArraySlice,
            resType: "arraybuffer"
          },
          ];
