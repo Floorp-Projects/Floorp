@@ -73,11 +73,15 @@ SessionStartup.prototype = {
   init: function sss_init() {
     debug("init starting");
     // do not need to initialize anything in auto-started private browsing sessions
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing)
+      return;
+
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     let pbs = Cc["@mozilla.org/privatebrowsing;1"].
               getService(Ci.nsIPrivateBrowsingService);
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing ||
-        pbs.lastChangedByCommandLine)
+    if (pbs.lastChangedByCommandLine)
       return;
+#endif
     // Session state is unknown until we read the file.
     this._sessionType = null;
     _SessionFile.read().then(
