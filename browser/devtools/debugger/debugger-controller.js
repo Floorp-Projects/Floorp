@@ -1166,6 +1166,7 @@ SourceScripts.prototype = {
 
     DebuggerView.Sources.push(label, url, {
       forced: aOptions.forced,
+      tooltip: url,
       attachment: aSource
     });
   },
