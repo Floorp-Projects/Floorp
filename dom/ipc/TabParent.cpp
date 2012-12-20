@@ -431,14 +431,14 @@ bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
   }
 
   nsTouchEvent e(event);
-  // PresShell::HandleEventInternal adds touches on touch end/cancel,
-  // when we're not capturing raw events from the widget backend.
-  // This hack filters those out. Bug 785554
-  if (sEventCapturer != this &&
-      (event.message == NS_TOUCH_END || event.message == NS_TOUCH_CANCEL)) {
+  // PresShell::HandleEventInternal adds touches on touch end/cancel.
+  // This confuses remote content into thinking that the added touches
+  // are part of the touchend/cancel, when actually they're not.
+  if (event.message == NS_TOUCH_END || event.message == NS_TOUCH_CANCEL) {
     for (int i = e.touches.Length() - 1; i >= 0; i--) {
-      if (!e.touches[i]->mChanged)
+      if (!e.touches[i]->mChanged) {
         e.touches.RemoveElementAt(i);
+      }
     }
   }
 
