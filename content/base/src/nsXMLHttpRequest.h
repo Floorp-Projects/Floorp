@@ -276,6 +276,10 @@ private:
     {
       mValue.mArrayBuffer = aArrayBuffer;
     }
+    RequestBody(mozilla::dom::ArrayBufferView* aArrayBufferView) : mType(ArrayBufferView)
+    {
+      mValue.mArrayBufferView = aArrayBufferView;
+    }
     RequestBody(nsIDOMBlob* aBlob) : mType(Blob)
     {
       mValue.mBlob = aBlob;
@@ -300,6 +304,7 @@ private:
     enum Type {
       Uninitialized,
       ArrayBuffer,
+      ArrayBufferView,
       Blob,
       Document,
       DOMString,
@@ -308,6 +313,7 @@ private:
     };
     union Value {
       mozilla::dom::ArrayBuffer* mArrayBuffer;
+      mozilla::dom::ArrayBufferView* mArrayBufferView;
       nsIDOMBlob* mBlob;
       nsIDocument* mDocument;
       const nsAString* mString;
@@ -356,6 +362,10 @@ public:
   void Send(mozilla::dom::ArrayBuffer& aArrayBuffer, ErrorResult& aRv)
   {
     aRv = Send(RequestBody(&aArrayBuffer));
+  }
+  void Send(mozilla::dom::ArrayBufferView& aArrayBufferView, ErrorResult& aRv)
+  {
+    aRv = Send(RequestBody(&aArrayBufferView));
   }
   void Send(nsIDOMBlob* aBlob, ErrorResult& aRv)
   {
