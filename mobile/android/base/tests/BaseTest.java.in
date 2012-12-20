@@ -75,11 +75,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     @Override
     protected void setUp() throws Exception {
-
-        // This is required for us to pass testBookmarklets, otherwise we fail either with
-        // StrictMode or something related to sending the ENTER key
-        int applicationFlags = getActivity().getApplicationInfo().flags;
-
         // Load config file from root path (setup by python script)
         String rootPath = FennecInstrumentationTestRunner.getArguments().getString("deviceroot");
         String configFile = FennecNativeDriver.getFile(rootPath + "/robotium.config");

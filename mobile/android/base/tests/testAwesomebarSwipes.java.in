@@ -34,12 +34,10 @@ public class testAwesomebarSwipes extends BaseTest {
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
         mAsserter.is(pager.getCurrentItem(), 0, "All pages is selected");
 
-        int midx = mDriver.getGeckoWidth() / 2;
-        int midy = mDriver.getGeckoHeight() / 2;
-        mActions.drag(midx, 0, midy, midy);
+        mSolo.scrollToSide(Solo.RIGHT);
         mAsserter.is(pager.getCurrentItem(), 1, "Bookmarks page is selected");
 
-        mActions.drag(0, midx, midy, midy);
+        mSolo.scrollToSide(Solo.LEFT);
         mAsserter.is(pager.getCurrentItem(), 0, "All pages is selected");
 
         // Test tapping on the tab strip changes tabs
