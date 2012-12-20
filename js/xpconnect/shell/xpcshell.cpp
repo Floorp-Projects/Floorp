@@ -945,9 +945,6 @@ env_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
 {
     JSString *idstr, *valstr;
 
-    if (flags & JSRESOLVE_ASSIGNING)
-        return true;
-
     jsval idval;
     if (!JS_IdToValue(cx, id, &idval))
         return false;
