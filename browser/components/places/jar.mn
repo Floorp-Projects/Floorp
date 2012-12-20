@@ -15,7 +15,7 @@ browser.jar:
     content/browser/places/placesOverlay.xul             (content/placesOverlay.xul)
 *   content/browser/places/menu.xml                      (content/menu.xml)
     content/browser/places/tree.xml                      (content/tree.xml)
-    content/browser/places/controller.js                 (content/controller.js)
+*   content/browser/places/controller.js                 (content/controller.js)
     content/browser/places/treeView.js                   (content/treeView.js)
 *   content/browser/places/browserPlacesViews.js         (content/browserPlacesViews.js)
 # keep the Places version of the history sidebar at history/history-panel.xul 
