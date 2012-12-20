@@ -29,6 +29,10 @@
 # include <private/android_filesystem_config.h>
 # define CHILD_UNPRIVILEGED_UID AID_APP
 # define CHILD_UNPRIVILEGED_GID AID_APP
+# define CHILD_CAMERA_UID AID_SYSTEM
+# define CHILD_CAMERA_GID AID_SDCARD_RW
+# define CHILD_VIDEO_UID AID_MEDIA
+# define CHILD_VIDEO_GID AID_AUDIO
 #else
 /*
  * On platforms that are not gonk based, we fall back to an arbitrary
@@ -231,36 +235,44 @@ bool LaunchApp(const std::vector<std::string>& argv,
       argv_cstr[i] = const_cast<char*>(argv[i].c_str());
     argv_cstr[argv.size()] = NULL;
 
-    if (privs == PRIVILEGES_UNPRIVILEGED) {
+    if (privs != PRIVILEGES_INHERIT) {
       gid_t gid = CHILD_UNPRIVILEGED_GID;
       uid_t uid = CHILD_UNPRIVILEGED_UID;
 #ifdef MOZ_WIDGET_GONK
-      static bool checked_pix_max, pix_max_ok;
-      if (!checked_pix_max) {
-        checked_pix_max = true;
-        int fd = open("/proc/sys/kernel/pid_max", O_CLOEXEC | O_RDONLY);
-        if (fd < 0) {
-          DLOG(ERROR) << "Failed to open pid_max";
+      if (privs == PRIVILEGES_UNPRIVILEGED) {
+        static bool checked_pix_max, pix_max_ok;
+        if (!checked_pix_max) {
+          checked_pix_max = true;
+          int fd = open("/proc/sys/kernel/pid_max", O_CLOEXEC | O_RDONLY);
+          if (fd < 0) {
+            DLOG(ERROR) << "Failed to open pid_max";
+            _exit(127);
+          }
+          char buf[PATH_MAX];
+          ssize_t len = read(fd, buf, sizeof(buf) - 1);
+          close(fd);
+          if (len < 0) {
+            DLOG(ERROR) << "Failed to read pid_max";
+            _exit(127);
+          }
+          buf[len] = '\0';
+          int pid_max = atoi(buf);
+          pix_max_ok =
+            (pid_max + CHILD_UNPRIVILEGED_UID > CHILD_UNPRIVILEGED_UID);
+        }
+        if (!pix_max_ok) {
+          DLOG(ERROR) << "Can't safely get unique uid/gid";
           _exit(127);
         }
-        char buf[PATH_MAX];
-        ssize_t len = read(fd, buf, sizeof(buf) - 1);
-        close(fd);
-        if (len < 0) {
-          DLOG(ERROR) << "Failed to read pid_max";
-          _exit(127);
-        }
-        buf[len] = '\0';
-        int pid_max = atoi(buf);
-        pix_max_ok =
-          (pid_max + CHILD_UNPRIVILEGED_UID > CHILD_UNPRIVILEGED_UID);
+        gid += getpid();
+        uid += getpid();
+      } else if (privs == PRIVILEGES_CAMERA) {
+        uid = CHILD_CAMERA_UID;
+        gid = CHILD_CAMERA_GID;
+      } else if (privs == PRIVILEGES_VIDEO) {
+        uid = CHILD_VIDEO_UID;
+        gid = CHILD_VIDEO_GID;
       }
-      if (!pix_max_ok) {
-        DLOG(ERROR) << "Can't safely get unique uid/gid";
-        _exit(127);
-      }
-      gid += getpid();
-      uid += getpid();
 #endif
       if (setgid(gid) != 0) {
         DLOG(ERROR) << "FAILED TO setgid() CHILD PROCESS, path: " << argv_cstr[0];
