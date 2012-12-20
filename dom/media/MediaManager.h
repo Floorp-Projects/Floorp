@@ -89,7 +89,6 @@ public:
     , mStream(aStream)
     {}
 
-  // so we can send Stop without AddRef()ing from the MSG thread
   MediaOperationRunnable(MediaOperation aType,
     SourceMediaStream* aStream,
     MediaEngineSource* aAudioSource,
@@ -162,7 +161,6 @@ public:
           }
           // Do this after stopping all tracks with EndTrack()
           mSourceStream->Finish();
-          // the TrackUnion destination of the port will autofinish
 
           nsRefPtr<GetUserMediaNotificationEvent> event =
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
@@ -192,14 +190,12 @@ class GetUserMediaCallbackMediaStreamListener : public MediaStreamListener
 public:
   GetUserMediaCallbackMediaStreamListener(nsIThread *aThread,
     nsDOMMediaStream* aStream,
-    already_AddRefed<MediaInputPort> aPort,
     MediaEngineSource* aAudioSource,
     MediaEngineSource* aVideoSource)
     : mMediaThread(aThread)
     , mAudioSource(aAudioSource)
     , mVideoSource(aVideoSource)
-    , mStream(aStream)
-    , mPort(aPort) {}
+    , mStream(aStream) {}
 
   void
   Invalidate()
@@ -210,7 +206,7 @@ public:
     // thread.
     // XXX FIX! I'm cheating and passing a raw pointer to the sourcestream
     // which is valid as long as the mStream pointer here is.  Need a better solution.
-    runnable = new MediaOperationRunnable(MEDIA_STOP,
+    runnable = new MediaOperationRunnable(MEDIA_STOP, 
                                           mStream->GetStream()->AsSourceStream(),
                                           mAudioSource, mVideoSource);
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
@@ -243,7 +239,6 @@ private:
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   nsRefPtr<nsDOMMediaStream> mStream;
-  nsRefPtr<MediaInputPort> mPort;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
