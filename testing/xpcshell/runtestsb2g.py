@@ -24,13 +24,13 @@ class B2GXPCShellRemote(XPCShellRemote):
         if self.options.clean:
             # Ensure a fresh directory structure for our tests
             self.clean()
-            self.device.mkDir(DEVICE_TEST_ROOT)
+            self.device.mkDir(self.options.remoteTestRoot)
 
         XPCShellRemote.setupUtilities(self)
 
     def clean(self):
         print >>sys.stderr, "\nCleaning files from previous run.."
-        self.device.removeDir(DEVICE_TEST_ROOT)
+        self.device.removeDir(self.options.remoteTestRoot)
 
     # Overriden
     def setupTestDir(self):
@@ -139,6 +139,7 @@ class B2GOptions(RemoteXPCShellOptions):
                         help="Path to busybox binary to install on device")
         defaults['busybox'] = None
 
+        defaults["remoteTestRoot"] = DEVICE_TEST_ROOT
         defaults['dm_trans'] = 'adb'
         defaults['debugger'] = None
         defaults['debuggerArgs'] = None
@@ -189,10 +190,11 @@ def main():
     if options.deviceIP:
         kwargs['host'] = options.deviceIP
         kwargs['port'] = options.devicePort
-    kwargs['deviceRoot'] = DEVICE_TEST_ROOT
+    kwargs['deviceRoot'] = options.remoteTestRoot
     dm = devicemanagerADB.DeviceManagerADB(**kwargs)
 
-    options.remoteTestRoot = dm.getDeviceRoot()
+    if not options.remoteTestRoot:
+        options.remoteTestRoot = dm.getDeviceRoot()
     xpcsh = B2GXPCShellRemote(dm, options, args)
 
     try:
