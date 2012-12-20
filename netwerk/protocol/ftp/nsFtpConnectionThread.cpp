@@ -42,8 +42,6 @@ extern PRLogModuleInfo* gFTPLog;
 #define LOG(args)         PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
 #define LOG_ALWAYS(args)  PR_LOG(gFTPLog, PR_LOG_ALWAYS, args)
 
-using namespace mozilla::net;
-
 // remove FTP parameters (starting with ";") from the path
 static void
 removeParamsFromPath(nsCString& path)
@@ -1294,9 +1292,7 @@ nsFtpState::S_pasv() {
     if (!mAddressChecked) {
         // Find socket address
         mAddressChecked = true;
-        mServerAddress.raw.family = AF_INET;
-        mServerAddress.inet.ip = htonl(INADDR_ANY);
-        mServerAddress.inet.port = htons(0);
+        PR_InitializeNetAddr(PR_IpAddrAny, 0, &mServerAddress);
 
         nsITransport *controlSocket = mControlConnection->Transport();
         if (!controlSocket)
@@ -1308,9 +1304,9 @@ nsFtpState::S_pasv() {
         if (sTrans) {
             nsresult rv = sTrans->GetPeerAddr(&mServerAddress);
             if (NS_SUCCEEDED(rv)) {
-                if (!IsIPAddrAny(&mServerAddress))
-                    mServerIsIPv6 = (mServerAddress.raw.family == AF_INET6) &&
-                                    !IsIPAddrV4Mapped(&mServerAddress);
+                if (!PR_IsNetAddrType(&mServerAddress, PR_IpAddrAny))
+                    mServerIsIPv6 = mServerAddress.raw.family == PR_AF_INET6 &&
+                        !PR_IsNetAddrType(&mServerAddress, PR_IpAddrV4Mapped);
                 else {
                     /*
                      * In case of SOCKS5 remote DNS resolution, we do
@@ -1319,11 +1315,12 @@ nsFtpState::S_pasv() {
                      * socks server should also be IPv6, and this is the
                      * self address of the transport.
                      */
-                    NetAddr selfAddress;
+                    PRNetAddr selfAddress;
                     rv = sTrans->GetSelfAddr(&selfAddress);
                     if (NS_SUCCEEDED(rv))
-                        mServerIsIPv6 = (selfAddress.raw.family == AF_INET6) &&
-                                        !IsIPAddrV4Mapped(&selfAddress);
+                        mServerIsIPv6 = selfAddress.raw.family == PR_AF_INET6
+                            && !PR_IsNetAddrType(&selfAddress,
+                                                 PR_IpAddrV4Mapped);
                 }
             }
         }
@@ -1449,9 +1446,9 @@ nsFtpState::R_pasv() {
         nsCOMPtr<nsISocketTransport> strans;
 
         nsAutoCString host;
-        if (!IsIPAddrAny(&mServerAddress)) {
-            char buf[kIPv6CStrBufSize];
-            NetAddrToString(&mServerAddress, buf, sizeof(buf));
+        if (!PR_IsNetAddrType(&mServerAddress, PR_IpAddrAny)) {
+            char buf[64];
+            PR_NetAddrToString(&mServerAddress, buf, sizeof(buf));
             host.Assign(buf);
         } else {
             /*

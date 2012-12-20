@@ -6,10 +6,12 @@
 
 #include "nsISupports.idl"
 
+native PRNetAddr(union PRNetAddr);
+
 /**
  * nsINetAddr
  *
- * This interface represents a native NetAddr struct in a readonly
+ * This interface represents a (native) PRNetAddr struct in a readonly
  * interface.
  */
 [scriptable, uuid(c407ab6c-c3ca-4cb2-a99b-a7dfbb88af33)]
@@ -24,7 +26,7 @@ interface nsINetAddr : nsISupports
     /**
      * @return Either the IP address (FAMILY_INET, FAMILY_INET6) or the path
      * (FAMILY_LOCAL) in string form. IP addresses are in the format produced by
-     * mozilla::net::NetAddrToString.
+     * PR_NetAddrToString.
      *
      * Note: Paths for FAMILY_LOCAL may have length limitations which are
      * implementation dependent and not documented as part of this interface.
@@ -59,7 +61,7 @@ interface nsINetAddr : nsISupports
 
     /**
      * Network address families. These correspond to all the network address
-     * families supported by the NetAddr struct.
+     * families supported by the PRNetAddr struct.
      */
     const unsigned long FAMILY_INET = 1;
     const unsigned long FAMILY_INET6 = 2;
