@@ -15,6 +15,7 @@
 #include "nsJSUtils.h"
 #include "prnetdb.h"
 #include "nsITimer.h"
+#include "mozilla/net/DNS.h"
 
 namespace mozilla {
 namespace net {
@@ -313,7 +314,7 @@ PACErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 // timeout of 0 means the normal necko timeout strategy, otherwise the dns request
 // will be canceled after aTimeout milliseconds
 static
-JSBool PACResolve(const nsCString &aHostName, PRNetAddr *aNetAddr,
+JSBool PACResolve(const nsCString &aHostName, NetAddr *aNetAddr,
                   unsigned int aTimeout)
 {
   if (!sRunning) {
@@ -326,7 +327,7 @@ JSBool PACResolve(const nsCString &aHostName, PRNetAddr *aNetAddr,
 
 bool
 ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
-                                PRNetAddr *aNetAddr,
+                                NetAddr *aNetAddr,
                                 unsigned int aTimeout)
 {
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
@@ -366,12 +367,12 @@ bool PACResolveToString(const nsCString &aHostName,
                         nsCString &aDottedDecimal,
                         unsigned int aTimeout)
 {
-  PRNetAddr netAddr;
+  NetAddr netAddr;
   if (!PACResolve(aHostName, &netAddr, aTimeout))
     return false;
 
   char dottedDecimal[128];
-  if (PR_NetAddrToString(&netAddr, dottedDecimal, sizeof(dottedDecimal)) != PR_SUCCESS)
+  if (!NetAddrToString(&netAddr, dottedDecimal, sizeof(dottedDecimal)))
     return false;
 
   aDottedDecimal.Assign(dottedDecimal);
@@ -686,14 +687,16 @@ ProxyAutoConfig::Shutdown()
 }
 
 bool
-ProxyAutoConfig::SrcAddress(const PRNetAddr *remoteAddress, nsCString &localAddress)
+ProxyAutoConfig::SrcAddress(const NetAddr *remoteAddress, nsCString &localAddress)
 {
   PRFileDesc *fd;
   fd = PR_OpenUDPSocket(remoteAddress->raw.family);
   if (!fd)
     return false;
 
-  if (PR_Connect(fd, remoteAddress, 0) != PR_SUCCESS) {
+  PRNetAddr prRemoteAddress;
+  NetAddrToPRNetAddr(remoteAddress, &prRemoteAddress);
+  if (PR_Connect(fd, &prRemoteAddress, 0) != PR_SUCCESS) {
     PR_Close(fd);
     return false;
   }
@@ -724,7 +727,7 @@ ProxyAutoConfig::MyIPAddressTryHost(const nsCString &hostName,
                                     unsigned int timeout,
                                     jsval *vp)
 {
-  PRNetAddr remoteAddress;
+  NetAddr remoteAddress;
   nsAutoCString localDottedDecimal;
   JSContext *cx = mJSRuntime->Context();
 
