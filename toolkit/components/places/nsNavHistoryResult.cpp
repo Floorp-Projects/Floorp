@@ -105,7 +105,8 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
   mDateAdded(0),
   mLastModified(0),
   mIndentLevel(-1),
-  mFrecency(0)
+  mFrecency(0),
+  mHidden(false)
 {
   mTags.SetIsVoid(true);
 }
@@ -2529,8 +2530,12 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
                                      int64_t aReferringId,
                                      uint32_t aTransitionType,
                                      const nsACString& aGUID,
+                                     bool aHidden,
                                      uint32_t* aAdded)
 {
+  if (aHidden && !mOptions->IncludeHidden())
+    return NS_OK;
+
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
   if (result->mBatchInProgress &&
@@ -4719,13 +4724,13 @@ NS_IMETHODIMP
 nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                             int64_t aSessionId, int64_t aReferringId,
                             uint32_t aTransitionType, const nsACString& aGUID,
-                            uint32_t* aAdded)
+                            bool aHidden)
 {
   uint32_t added = 0;
 
   ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aSessionId,
                                       aReferringId, aTransitionType, aGUID,
-                                      &added));
+                                      aHidden, &added));
 
   if (!mRootNode->mExpanded)
     return NS_OK;
