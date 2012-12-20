@@ -333,8 +333,10 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
       nr_ice_candidate_pair_start(pair->pctx,pair); /* Ignore failures */
       NR_ASYNC_TIMER_SET(timer_val,nr_ice_media_stream_check_timer_cb,cb_arg,&stream->timer);
     }
-    /* TODO(ekr@rtfm.com): Report on the special case where there are no checks to
-       run at all */
+    else {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): no pairs for %s",stream->pctx->label,stream->label);
+    }
+
     _status=0;
   abort:
     return;
@@ -344,7 +346,6 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
 /* Start checks for this media stream (aka check list) */
 int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream)
   {
-    assert(stream->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_FROZEN);
     nr_ice_media_stream_set_state(stream,NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE);
     nr_ice_media_stream_check_timer_cb(0,0,stream);
 
@@ -500,17 +501,22 @@ int nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *s
 
 int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state)
   {
-    // removed, per EKR:  assert(state!=str->ice_state);
-      
+    /* Make no-change a no-op */
+    if (state == str->ice_state)
+      return 0;
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): stream %s state %s->%s",
       str->pctx->label,str->label,
       nr_ice_media_stream_states[str->ice_state],
       nr_ice_media_stream_states[state]);
     
-    if(str->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE)
+    if(state == NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE)
       str->pctx->active_streams++;
     if(str->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE)
       str->pctx->active_streams--;
+
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): %d active streams",
+      str->pctx->label, str->pctx->active_streams);
 
     str->ice_state=state;
     

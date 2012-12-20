@@ -247,7 +247,27 @@ int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_
       }
     }
 
-    _status =0;
+    /* Start checks if this stream is not checking yet or if it has checked
+       all the available candidates but not had a completed check for all
+       components.
+
+       Note that this is not compliant with RFC 5245, but consistent with
+       the libjingle trickle ICE behavior. Note that we will not restart
+       checks if either (a) the stream has failed or (b) all components
+       have a successful pair because the switch statement above jumps
+       will in both states.
+
+       TODO(ekr@rtfm.com): restart checks.
+       TODO(ekr@rtfm.com): update when the trickle ICE RFC is published
+    */
+    if (!pstream->timer) {
+      if(r=nr_ice_media_stream_start_checks(pctx, pstream)) {
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s), stream(%s) failed to start checks",pctx->ctx->label,pctx->label,stream->label);
+        ABORT(r);
+      }
+    }
+
+    _status=0;
  abort:
     return(_status);
 
