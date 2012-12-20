@@ -1511,6 +1511,23 @@ public:
         continue;
       }
 
+      // Next check if it's in the process of being bfcached.
+      nsPIDOMWindow* owner = database->GetOwner();
+      if (owner && owner->IsFrozen()) {
+        // We can't kick the document out of the bfcache because it's not yet
+        // fully in the bfcache.  Instead we'll abort everything for the window
+        // and mark it as not-bfcacheable.
+        indexedDB::IndexedDatabaseManager* manager =
+          indexedDB::IndexedDatabaseManager::Get();
+        NS_ASSERTION(manager, "Huh?");
+        manager->AbortCloseDatabasesForWindow(owner);
+
+        NS_ASSERTION(database->IsClosed(),
+                   "AbortCloseDatabasesForWindow should have closed database");
+        ownerDoc->DisallowBFCaching();
+        continue;
+      }
+
       // Otherwise fire a versionchange event.
       nsRefPtr<nsDOMEvent> event = 
         IDBVersionChangeEvent::Create(mOldVersion, mNewVersion);
