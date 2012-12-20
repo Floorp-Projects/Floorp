@@ -66,7 +66,7 @@ class DeviceManager:
         return output
 
     @abstractmethod
-    def pushFile(self, localname, destname):
+    def pushFile(self, localname, destname, retryLimit=1):
         """
         Copies localname from the host to destname on the device
         """
@@ -94,7 +94,7 @@ class DeviceManager:
                     self.mkDir(name) # mkDir will check previous existence
 
     @abstractmethod
-    def pushDir(self, localDir, remoteDir):
+    def pushDir(self, localDir, remoteDir, retryLimit=1):
         """
         Push localDir from host to remoteDir on the device
         """
