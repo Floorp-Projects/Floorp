@@ -213,6 +213,10 @@ private:
                                             nsAutoPtr<SpdyStream3> &,
                                             void *);
 
+  static PLDHashOperator GoAwayEnumerator(nsAHttpTransaction *,
+                                          nsAutoPtr<SpdyStream3> &,
+                                          void *);
+
   static PLDHashOperator UpdateServerRwinEnumerator(nsAHttpTransaction *,
                                                     nsAutoPtr<SpdyStream3> &,
                                                     void *);
@@ -346,6 +350,9 @@ private:
   PRIntervalTime       mLastDataReadEpoch; // used for IdleTime()
   PRIntervalTime       mPingSentEpoch;
   uint32_t             mNextPingID;
+
+  // used as a temporary buffer while enumerating the stream hash during GoAway
+  nsDeque  mGoAwayStreamsToRestart;
 };
 
 }} // namespace mozilla::net
