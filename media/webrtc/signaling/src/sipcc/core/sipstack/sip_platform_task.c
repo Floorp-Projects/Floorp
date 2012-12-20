@@ -22,6 +22,8 @@
 #include "ccsip_task.h"
 #include "sip_socket_api.h"
 #include "platform_api.h"
+#include <sys/stat.h>
+#include "prprf.h"
 
 /*---------------------------------------------------------
  *

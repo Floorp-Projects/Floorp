@@ -82,3 +82,4 @@ skip-if(browserIsRemote) load 786108-2.html # Bug 795534
 load 788836.html
 load 806310-1.html
 load 812824.html
+load 822842.html

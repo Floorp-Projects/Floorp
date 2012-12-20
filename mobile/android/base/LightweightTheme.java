@@ -42,6 +42,7 @@ public class LightweightTheme implements GeckoEventListener {
     private Application mApplication;
     private Bitmap mBitmap;
     private int mColor;
+    private boolean mIsLight;
 
     public static interface OnChangeListener {
         // This is the View's default post.
@@ -97,6 +98,11 @@ public class LightweightTheme implements GeckoEventListener {
                                                           mBitmap.getHeight() - height, 
                                                           maxWidth, height);
             mColor = BitmapUtils.getDominantColor(cropped, false);
+
+            double luminance = (0.2125 * ((mColor & 0x00FF0000) >> 16)) + 
+                               (0.7154 * ((mColor & 0x0000FF00) >> 8)) + 
+                               (0.0721 * (mColor &0x000000FF));
+            mIsLight = (luminance > 110) ? true : false;
 
             notifyListeners();
         } catch(java.net.MalformedURLException e) {
@@ -154,6 +160,10 @@ public class LightweightTheme implements GeckoEventListener {
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    public boolean isLightTheme() {
+        return mIsLight;
     }
 
     /**

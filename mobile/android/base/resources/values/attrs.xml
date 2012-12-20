@@ -61,5 +61,10 @@
         <attr name="state_private" format="boolean"/>
     </declare-styleable>
 
+    <declare-styleable name="LightweightTheme">
+        <attr name="state_light" format="boolean"/>
+        <attr name="state_dark" format="boolean"/>
+    </declare-styleable>
+
 </resources>
 

@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+richlistitem.download {
+  -moz-binding: url('chrome://browser/content/downloads/download.xml#download-full-ui');
+}
+
+.download-state:not(          [state="0"]  /* Downloading        */)
+                                           .downloadPauseMenuItem,
+.download-state:not(          [state="4"]  /* Paused             */)
+                                           .downloadResumeMenuItem,
+.download-state:not(:-moz-any([state="2"], /* Failed             */
+                              [state="4"]) /* Paused             */)
+                                           .downloadCancelMenuItem,
+.download-state:not(:-moz-any([state="1"], /* Finished           */
+                              [state="2"], /* Failed             */
+                              [state="3"], /* Canceled           */
+                              [state="6"], /* Blocked (parental) */
+                              [state="8"], /* Blocked (dirty)    */
+                              [state="9"]) /* Blocked (policy)   */)
+                                           .downloadRemoveFromHistoryMenuItem,
+.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
+                              [state="5"], /* Starting (queued)  */
+                              [state="0"], /* Downloading        */
+                              [state="4"]) /* Paused             */)
+                                           .downloadShowMenuItem,
+
+.download-state[state="7"]                 .downloadCommandsSeparator
+
+{
+  display: none;
+}

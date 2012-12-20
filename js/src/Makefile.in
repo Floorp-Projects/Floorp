@@ -120,6 +120,7 @@ CPPSRCS		= \
 		DateTime.cpp \
 		Debugger.cpp \
 		GlobalObject.cpp \
+		Object.cpp \
 		ObjectImpl.cpp \
 		ScopeObject.cpp \
 		Stack.cpp \
