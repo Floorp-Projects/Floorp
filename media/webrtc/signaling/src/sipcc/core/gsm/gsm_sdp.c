@@ -122,33 +122,15 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
 
     *(dcb_p->media_cap_tbl) = g_media_table;
 
+    /*
+     * Turn off two default streams, this is temporary
+     * until we can handle multiple streams properly
+     */
     if (sdpmode) {
-        /* This needs to change when we handle more than one stream
-           of each media type at a time. */
-
-        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].enabled = FALSE;
-        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].enabled = FALSE;
-
-        /* We initialize as RECVONLY to allow the application to
-           display incoming media streams, even if it doesn't
-           plan to send media for those streams. This will be
-           upgraded to SENDRECV when and if a stream is added. */
-
-        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].support_direction =
-          SDP_DIRECTION_RECVONLY;
-
-        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_direction =
-          SDP_DIRECTION_RECVONLY;
-
-        /*
-         * This really should be set to FALSE unless we have added
-         * a data channel using createDataChannel(). Right now,
-         * though, those operations are not queued (and, in fact,
-         * the W3C hasn't specified the proper behavior here anyway, so
-         * we would only be implementing speculatively) -- so we'll
-         * always offer data channels until the standard is
-         * a bit more set.
-         */
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].enabled = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].enabled = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_RECVONLY;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_RECVONLY;
         dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
     } else {
         dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
