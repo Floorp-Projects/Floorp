@@ -1454,7 +1454,10 @@ nsPermissionManager::Read()
     // convert into int64_t value (milliseconds)
     expireTime = stmt->AsInt64(5);
 
-    MOZ_ASSERT(stmt->AsInt64(6) >= 0);
+    if (stmt->AsInt64(6) < 0) {
+      readError = true;
+      continue;
+    }
     appId = static_cast<uint32_t>(stmt->AsInt64(6));
     isInBrowserElement = static_cast<bool>(stmt->AsInt32(7));
 
