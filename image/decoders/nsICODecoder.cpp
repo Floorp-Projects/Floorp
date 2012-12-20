@@ -14,7 +14,6 @@
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
 #include "RasterImage.h"
-#include "imgIContainerObserver.h"
 
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
@@ -63,7 +62,7 @@ nsICODecoder::GetNumColors()
 }
 
 
-nsICODecoder::nsICODecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
+nsICODecoder::nsICODecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mPos = mImageOffset = mCurrIcon = mNumIcons = mBPP = mRowBytes = 0;

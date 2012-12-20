@@ -63,7 +63,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(91b94446-5d91-4089-bed7-edfab25824a7)]
+[scriptable, uuid(a4503a53-6ab8-4b50-b01e-1c4f393fc980)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -183,6 +183,13 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        the observer to remove.
    */
   void removeObserver(in nsIOfflineCacheUpdateObserver aObserver);
+
+  /**
+   * Cancel the update when still in progress. This stops all running resource
+   * downloads and discards the downloaded cache version. Throws when update
+   * has already finished and made the new cache version active.
+   */
+  void cancel();
 
   /**
    * Return the number of bytes downloaded so far

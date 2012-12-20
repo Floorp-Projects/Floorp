@@ -90,19 +90,18 @@ def addressToSymbol(file, address):
 cxxfilt_proc = None
 def cxxfilt(sym):
     if cxxfilt_proc is None:
+        # --no-strip-underscores because atos already stripped the underscore
         globals()["cxxfilt_proc"] = subprocess.Popen(['c++filt',
                                                       '--no-strip-underscores',
                                                       '--format', 'gnu-v3'],
                                                      stdin=subprocess.PIPE,
                                                      stdout=subprocess.PIPE)
-    # strip underscores ourselves (works better than c++filt's
-    # --strip-underscores)
-    cxxfilt_proc.stdin.write(sym[1:] + "\n")
+    cxxfilt_proc.stdin.write(sym + "\n")
     return cxxfilt_proc.stdout.readline().rstrip("\n")
 
 line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$")
 balance_tree_re = re.compile("^([ \|0-9-]*)")
-atos_sym_re = re.compile("^(\S+) \(in ([^)]+)\) \((.+)\)$")
+atos_name_re = re.compile("^(.+) \(in ([^)]+)\) \((.+)\)$")
 
 def fixSymbols(line):
     result = line_re.match(line)
@@ -120,14 +119,17 @@ def fixSymbols(line):
             #   address
             #   address (in foo.dylib)
             #   symbol (in foo.dylib) (file:line)
-            symresult = atos_sym_re.match(info)
-            if symresult is not None:
+            name_result = atos_name_re.match(info)
+            if name_result is not None:
                 # Print the first two forms as-is, and transform the third
-                (symbol, library, fileline) = symresult.groups()
-                symbol = cxxfilt(symbol)
-                info = "%s (%s, in %s)" % (symbol, fileline, library)
+                (name, library, fileline) = name_result.groups()
+                # atos demangles, but occasionally it fails.  cxxfilt can mop
+                # up the remaining cases(!), which will begin with '_Z'.
+                if (name.startswith("_Z")):
+                    name = cxxfilt(name)
+                info = "%s (%s, in %s)" % (name, fileline, library)
 
-             # throw away the bad symbol, but keep balance tree structure
+            # throw away the bad symbol, but keep balance tree structure
             before = balance_tree_re.match(before).groups()[0]
 
             return before + info + after + "\n"

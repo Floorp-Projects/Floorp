@@ -58,7 +58,7 @@ this.MarkupView = function MarkupView(aInspector, aFrame, aControllerWindow)
   this._onNewSelection();
 
   this._boundKeyDown = this._onKeyDown.bind(this);
-  this._frame.addEventListener("keydown", this._boundKeyDown, false);
+  this._frame.contentWindow.addEventListener("keydown", this._boundKeyDown, false);
 
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
@@ -490,7 +490,7 @@ MarkupView.prototype = {
     this._frame.contentWindow.removeEventListener("underflow", this._boundResizePreview, true);
     delete this._boundUpdatePreview;
 
-    this._frame.removeEventListener("keydown", this._boundKeyDown, true);
+    this._frame.contentWindow.removeEventListener("keydown", this._boundKeyDown, true);
     delete this._boundKeyDown;
 
     this._inspector.selection.off("new-node", this._boundOnNewSelection);

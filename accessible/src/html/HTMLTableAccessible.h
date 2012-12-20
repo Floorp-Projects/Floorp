@@ -93,7 +93,10 @@ class HTMLTableRowAccessible : public AccessibleWrap
 public:
   HTMLTableRowAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     AccessibleWrap(aContent, aDoc)
-    { mFlags |= eTableRowAccessible | eHTMLTableRowAccessible; }
+  {
+    mType = eHTMLTableRowType;
+    mGenericTypes |= eTableRow;
+  }
   virtual ~HTMLTableRowAccessible() { }
 
   NS_DECL_ISUPPORTS_INHERITED

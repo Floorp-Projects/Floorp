@@ -73,7 +73,7 @@ public:
 
     static int32_t AppleWeightToCSSWeight(int32_t aAppleWeight);
 
-    virtual gfxFontEntry* GetDefaultFont(const gfxFontStyle* aStyle, bool& aNeedsBold);
+    virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
     virtual bool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
@@ -103,7 +103,8 @@ private:
     virtual gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
                                              int32_t aRunScript,
                                              const gfxFontStyle* aMatchStyle,
-                                             uint32_t& aCmapCount);
+                                             uint32_t& aCmapCount,
+                                             gfxFontFamily** aMatchedFamily);
 
     virtual bool UsesSystemFallback() { return true; }
 

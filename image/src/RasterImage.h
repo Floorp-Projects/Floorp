@@ -24,7 +24,6 @@
 #include "nsIProperties.h"
 #include "nsITimer.h"
 #include "nsIRequest.h"
-#include "nsWeakReference.h"
 #include "nsTArray.h"
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
@@ -39,8 +38,6 @@
   #include "imgIContainerDebug.h"
 #endif
 
-class imgIDecoder;
-class imgIContainerObserver;
 class nsIInputStream;
 
 #define NS_RASTERIMAGE_CID \
@@ -160,7 +157,7 @@ public:
   virtual nsresult StopAnimation();
 
   // Methods inherited from Image
-  nsresult Init(imgIDecoderObserver* aObserver,
+  nsresult Init(imgDecoderObserver* aObserver,
                 const char* aMimeType,
                 const char* aURIString,
                 uint32_t aFlags);
@@ -642,8 +639,7 @@ private: // data
   //! # loops remaining before animation stops (-1 no stop)
   int32_t                    mLoopCount;
   
-  //! imgIDecoderObserver
-  nsWeakPtr                  mObserver;
+  mozilla::WeakPtr<imgDecoderObserver> mObserver;
 
   // Discard members
   uint32_t                   mLockCount;
