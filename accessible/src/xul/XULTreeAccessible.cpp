@@ -6,7 +6,6 @@
 
 #include "XULTreeAccessible.h"
 
-#include "Accessible-inl.h"
 #include "DocAccessible-inl.h"
 #include "nsAccCache.h"
 #include "nsAccUtils.h"
