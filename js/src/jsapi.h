@@ -3241,6 +3241,9 @@ JS_WrapObject(JSContext *cx, JSObject **objp);
 extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
+extern JS_PUBLIC_API(JSBool)
+JS_WrapId(JSContext *cx, jsid *idp);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target);
 

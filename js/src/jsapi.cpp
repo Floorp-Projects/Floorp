@@ -1536,6 +1536,14 @@ JS_WrapValue(JSContext *cx, jsval *vp)
     return cx->compartment->wrap(cx, vp);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_WrapId(JSContext *cx, jsid *idp)
+{
+  AssertHeapIsIdle(cx);
+  CHECK_REQUEST(cx);
+  return cx->compartment->wrapId(cx, idp);
+}
+
 /*
  * Identity remapping. Not for casual consumers.
  *
