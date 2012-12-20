@@ -109,7 +109,7 @@ var DownloadTaskbarProgressUpdater =
 
     this._dm = Cc["@mozilla.org/download-manager;1"].
                getService(Ci.nsIDownloadManager);
-    this._dm.addListener(this);
+    this._dm.addPrivacyAwareListener(this);
 
     this._os = Cc["@mozilla.org/observer-service;1"].
                getService(Ci.nsIObserverService);
@@ -246,7 +246,7 @@ var DownloadTaskbarProgressUpdater =
    */
   _updateStatus: function DTPU_updateStatus()
   {
-    let numActive = this._dm.activeDownloadCount;
+    let numActive = this._dm.activeDownloadCount + this._dm.activePrivateDownloadCount;
     let totalSize = 0, totalTransferred = 0;
 
     if (numActive == 0) {
@@ -256,21 +256,22 @@ var DownloadTaskbarProgressUpdater =
       let numPaused = 0, numScanning = 0;
 
       // Enumerate all active downloads
-      let downloads = this._dm.activeDownloads;
-      while (downloads.hasMoreElements()) {
-        let download = downloads.getNext().QueryInterface(Ci.nsIDownload);
-        // Only set values if we actually know the download size
-        if (download.percentComplete != -1) {
-          totalSize += download.size;
-          totalTransferred += download.amountTransferred;
+      [this._dm.activeDownloads, this._dm.activePrivateDownloads].forEach(function(downloads) {
+        while (downloads.hasMoreElements()) {
+          let download = downloads.getNext().QueryInterface(Ci.nsIDownload);
+          // Only set values if we actually know the download size
+          if (download.percentComplete != -1) {
+            totalSize += download.size;
+            totalTransferred += download.amountTransferred;
+          }
+          // We might need to display a paused state, so track this
+          if (download.state == this._dm.DOWNLOAD_PAUSED) {
+            numPaused++;
+          } else if (download.state == this._dm.DOWNLOAD_SCANNING) {
+            numScanning++;
+          }
         }
-        // We might need to display a paused state, so track this
-        if (download.state == this._dm.DOWNLOAD_PAUSED) {
-          numPaused++;
-        } else if (download.state == this._dm.DOWNLOAD_SCANNING) {
-          numScanning++;
-        }
-      }
+      }.bind(this));
 
       // If all downloads are paused, show the progress as paused, unless we
       // don't have any information about sizes, in which case we don't
