@@ -1102,18 +1102,9 @@ class ValueArray {
 };
 
 extern JSBool
-js_HasOwnPropertyHelper(JSContext *cx, js::LookupGenericOp lookup, js::HandleObject obj,
-                        js::HandleId id, js::MutableHandleValue rval);
-
-extern JSBool
 js_HasOwnProperty(JSContext *cx, js::LookupGenericOp lookup, js::HandleObject obj, js::HandleId id,
                   js::MutableHandleObject objp, js::MutableHandleShape propp);
 
-extern JSBool
-js_PropertyIsEnumerable(JSContext *cx, js::HandleObject obj, js::HandleId id, js::Value *vp);
-
-extern JSFunctionSpec object_methods[];
-extern JSFunctionSpec object_static_methods[];
 
 namespace js {
 
@@ -1414,9 +1405,6 @@ js_ReportGetterOnlyAssignment(JSContext *cx);
 extern unsigned
 js_InferFlags(JSContext *cx, unsigned defaultFlags);
 
-/* Object constructor native. Exposed only so the JIT can know its address. */
-JSBool
-js_Object(JSContext *cx, unsigned argc, js::Value *vp);
 
 /*
  * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
@@ -1433,9 +1421,6 @@ namespace js {
 
 extern bool
 SetProto(JSContext *cx, HandleObject obj, Handle<TaggedProto> proto, bool checkForCycles);
-
-extern JSString *
-obj_toStringHelper(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);
