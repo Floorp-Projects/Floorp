@@ -85,7 +85,7 @@ function finishUp() {
 * else gives us a place to write documentation.
 */
 function DevToolPanel(iframeWindow, toolbox) {
-  new EventEmitter(this);
+  EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
 

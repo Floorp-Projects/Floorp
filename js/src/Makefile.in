@@ -904,7 +904,8 @@ export:: selfhosting
 selfhosting:: selfhosted.out.h
 
 selfhosting_srcs := \
-  $(srcdir)/builtin/array.js \
+  $(srcdir)/builtin/Utilities.js \
+  $(srcdir)/builtin/Array.js \
   $(NULL)
 
 selfhosted_out_h_deps := \

@@ -128,35 +128,12 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
 
     break;
 
-  case SENDING_SYN_STREAM:
-    // We were trying to send the SYN-STREAM but were blocked from trying
-    // to transmit it the first time(s).
-    mSegmentReader = reader;
-    rv = TransmitFrame(nullptr, nullptr);
-    mSegmentReader = nullptr;
-    *countRead = 0;
-    if (NS_SUCCEEDED(rv)) {
-      NS_ABORT_IF_FALSE(!mTxInlineFrameUsed,
-                        "Transmit Frame should be all or nothing");
-    
-      if (mSentFinOnData) {
-        ChangeState(UPSTREAM_COMPLETE);
-        rv = NS_OK;
-      }
-      else {
-        rv = NS_BASE_STREAM_WOULD_BLOCK;
-        ChangeState(GENERATING_REQUEST_BODY);
-        mSession->TransactionHasDataToWrite(this);
-      }
-    }
-    break;
-
   case SENDING_FIN_STREAM:
     // We were trying to send the FIN-STREAM but were blocked from
     // sending it out - try again.
     if (!mSentFinOnData) {
       mSegmentReader = reader;
-      rv = TransmitFrame(nullptr, nullptr);
+      rv = TransmitFrame(nullptr, nullptr, false);
       mSegmentReader = nullptr;
       NS_ABORT_IF_FALSE(NS_FAILED(rv) || !mTxInlineFrameUsed,
                         "Transmit Frame should be all or nothing");
@@ -503,7 +480,8 @@ SpdyStream2::UpdateTransportSendEvents(uint32_t count)
 
 nsresult
 SpdyStream2::TransmitFrame(const char *buf,
-                          uint32_t *countUsed)
+                           uint32_t *countUsed,
+                           bool forceCommitment)
 {
   // If TransmitFrame returns SUCCESS than all the data is sent (or at least
   // buffered at the session level), if it returns WOULD_BLOCK then none of
@@ -542,10 +520,14 @@ SpdyStream2::TransmitFrame(const char *buf,
     mTxStreamFrameSize = 0;
   }
 
-  rv = mSegmentReader->CommitToSegmentSize(mTxStreamFrameSize +
-                                           mTxInlineFrameUsed);
-  if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+  rv =
+    mSegmentReader->CommitToSegmentSize(mTxStreamFrameSize + mTxInlineFrameUsed,
+                                        forceCommitment);
+
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    NS_ABORT_IF_FALSE(!forceCommitment, "forceCommitment with WOULD_BLOCK");
     mSession->TransactionHasDataToWrite(this);
+  }
   if (NS_FAILED(rv))     // this will include WOULD_BLOCK
     return rv;
 
@@ -810,28 +792,15 @@ SpdyStream2::OnReadSegment(const char *buf,
     if (mSynFrameComplete) {
       NS_ABORT_IF_FALSE(mTxInlineFrameUsed,
                         "OnReadSegment SynFrameComplete 0b");
-      rv = TransmitFrame(nullptr, nullptr);
-      NS_ABORT_IF_FALSE(NS_FAILED(rv) || !mTxInlineFrameUsed,
-                        "Transmit Frame should be all or nothing");
+      rv = TransmitFrame(nullptr, nullptr, true);
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        // this can't happen
+        NS_ABORT_IF_FALSE(false,
+                          "Transmit Frame SYN_FRAME must at least buffer data");
+        rv = NS_ERROR_UNEXPECTED;
+      }
 
-      // normalize a blocked write into an ok one if we have consumed the data
-      // while parsing headers as some code will take WOULD_BLOCK to mean an
-      // error with nothing processed.
-      // (e.g. nsHttpTransaction::ReadRequestSegment())
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK && *countRead)
-        rv = NS_OK;
-
-      // mTxInlineFrameUsed > 0 means the current frame is in progress
-      // of sending.  mTxInlineFrameUsed is dropped to 0 after both the frame
-      // and its payload (if any) are completely sent out.  Here during
-      // GENERATING_SYN_STREAM state we are sending just the http headers.
-      // Only when the frame is completely sent out do we proceed to
-      // GENERATING_REQUEST_BODY state.
-
-      if (mTxInlineFrameUsed)
-        ChangeState(SENDING_SYN_STREAM);
-      else
-        ChangeState(GENERATING_REQUEST_BODY);
+      ChangeState(GENERATING_REQUEST_BODY);
       break;
     }
     NS_ABORT_IF_FALSE(*countRead == count,
@@ -852,7 +821,7 @@ SpdyStream2::OnReadSegment(const char *buf,
 
   case SENDING_REQUEST_BODY:
     NS_ABORT_IF_FALSE(mTxInlineFrameUsed, "OnReadSegment Send Data Header 0b");
-    rv = TransmitFrame(buf, countRead);
+    rv = TransmitFrame(buf, countRead, false);
     NS_ABORT_IF_FALSE(NS_FAILED(rv) || !mTxInlineFrameUsed,
                       "Transmit Frame should be all or nothing");
 
@@ -869,10 +838,6 @@ SpdyStream2::OnReadSegment(const char *buf,
     // If that frame was all sent, look for another one
     if (!mTxInlineFrameUsed)
         ChangeState(GENERATING_REQUEST_BODY);
-    break;
-
-  case SENDING_SYN_STREAM:
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
     break;
 
   case SENDING_FIN_STREAM:

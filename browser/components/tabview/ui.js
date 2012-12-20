@@ -64,6 +64,7 @@ let UI = {
   // the operation interactive.
   _maxInteractiveWait: 250,
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
   // Variable: _privateBrowsing
   // Keeps track of info related to private browsing, including: 
   //   transitionMode - whether we're entering or exiting PB
@@ -72,7 +73,8 @@ let UI = {
     transitionMode: "",
     wasInTabView: false 
   },
-  
+#endif
+
   // Variable: _storageBusy
   // Tells whether the storage is currently busy or not.
   _storageBusy: false,
@@ -595,8 +597,13 @@ let UI = {
 
   // ----------
   // Function: storageBusy
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+  // Pauses the storage activity that conflicts with sessionstore updates.
+  // Calls can be nested.
+#else
   // Pauses the storage activity that conflicts with sessionstore updates and 
   // private browsing mode switches. Calls can be nested. 
+#endif
   storageBusy: function UI_storageBusy() {
     if (this._storageBusy)
       return;
@@ -649,6 +656,7 @@ let UI = {
       gWindow.removeEventListener("SSWindowStateReady", handleSSWindowStateReady, false);
     });
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     // Private Browsing:
     // When transitioning to PB, we exit Panorama if necessary (making note of the
     // fact that we were there so we can return after PB) and make sure we
@@ -689,6 +697,7 @@ let UI = {
       Services.obs.removeObserver(pbObserver, "private-browsing-change-granted");
       Services.obs.removeObserver(pbObserver, "private-browsing-transition-complete");
     });
+#endif
 
     // TabOpen
     this._eventListeners.open = function (event) {
@@ -714,7 +723,11 @@ let UI = {
         if (self._currentTab == tab)
           self._closedSelectedTabInTabView = true;
       } else {
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+        // If we're currently in the process of session store update,
+#else
         // If we're currently in the process of entering private browsing,
+#endif
         // we don't want to go to the Tab View UI. 
         if (self._storageBusy)
           return;
@@ -825,9 +838,14 @@ let UI = {
     if (this.isTabViewVisible()) {
       // We want to zoom in if:
       // 1) we didn't just restore a tab via Ctrl+Shift+T
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      // 2) the currently selected tab is the last created tab and has a tabItem
+      if (!this.restoredClosedTab &&
+#else
       // 2) we're not in the middle of switching from/to private browsing
       // 3) the currently selected tab is the last created tab and has a tabItem
       if (!this.restoredClosedTab && !this._privateBrowsing.transitionMode &&
+#endif
           this._lastOpenedTab == tab && tab._tabViewTabItem) {
         tab._tabViewTabItem.zoomIn(true);
         this._lastOpenedTab = null;
@@ -1012,8 +1030,10 @@ let UI = {
 #ifdef XP_MACOSX
       "fullScreen",
 #endif
-      "closeWindow", "tabview", "undoCloseTab", "undoCloseWindow",
-      "privatebrowsing"
+      "closeWindow", "tabview", "undoCloseTab", "undoCloseWindow"
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      , "privatebrowsing"
+#endif
     ].forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
       let code = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);

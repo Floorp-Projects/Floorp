@@ -517,6 +517,14 @@ class GeckoInputConnection
         mIMEModeHint = (modeHint == null) ? "" : modeHint;
         mIMEActionHint = (actionHint == null) ? "" : actionHint;
 
+        View v = getView();
+        if (v == null || !v.hasFocus()) {
+            // When using Find In Page, we can still receive notifyIMEEnabled calls due to the
+            // selection changing when highlighting. However in this case we don't want to reset/
+            // show/hide the keyboard because the find box has the focus and is taking input from
+            // the keyboard.
+            return;
+        }
         restartInput();
         GeckoApp.mAppContext.mMainHandler.postDelayed(new Runnable() {
             public void run() {

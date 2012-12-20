@@ -12,7 +12,7 @@ class imgRequest;
 class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
-class imgStatusTracker;
+class imgStatusTrackerObserver;
 struct nsIntRect;
 namespace mozilla {
 namespace image {
@@ -26,8 +26,7 @@ class Image;
 #include "nsTObserverArray.h"
 #include "nsIRunnable.h"
 #include "nscore.h"
-#include "nsWeakReference.h"
-#include "imgIDecoderObserver.h"
+#include "imgDecoderObserver.h"
 
 enum {
   stateRequestStarted    = 1u << 0,
@@ -36,27 +35,6 @@ enum {
   stateFrameStopped      = 1u << 4,
   stateRequestStopped    = 1u << 5,
   stateBlockingOnload    = 1u << 6
-};
-
-class imgStatusTrackerObserver : public imgIDecoderObserver,
-                                 public nsSupportsWeakReference
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
-
-  imgStatusTrackerObserver(imgStatusTracker* aTracker)
-  : mTracker(aTracker) {}
-
-  virtual ~imgStatusTrackerObserver() {}
-
-  void SetTracker(imgStatusTracker* aTracker) {
-    mTracker = aTracker;
-  }
-
-private:
-  imgStatusTracker* mTracker;
 };
 
 /*
@@ -78,6 +56,7 @@ public:
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(mozilla::image::Image* aImage, imgRequest* aRequest);
   imgStatusTracker(const imgStatusTracker& aOther);
+  ~imgStatusTracker();
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
   // are created before their Image is created.  This method should only
@@ -147,11 +126,13 @@ public:
   // StartFrame, DataAvailable, StopFrame, StopDecode.
   void RecordDecoded();
 
-  /* non-virtual imgIDecoderObserver methods */
+  /* non-virtual imgDecoderObserver methods */
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
   void RecordDataAvailable();
   void SendDataAvailable(imgRequestProxy* aProxy, const nsIntRect* aRect);
+  void RecordFrameChanged(const nsIntRect* aDirtyRect);
+  void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
   void RecordStopFrame();
   void SendStopFrame(imgRequestProxy* aProxy);
   void RecordStopDecode(nsresult statusg);
@@ -160,10 +141,6 @@ public:
   void SendDiscard(imgRequestProxy* aProxy);
   void RecordImageIsAnimated();
   void SendImageIsAnimated(imgRequestProxy *aProxy);
-
-  /* non-virtual imgIContainerObserver methods */
-  void RecordFrameChanged(const nsIntRect* aDirtyRect);
-  void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void RecordStartRequest();
@@ -193,7 +170,7 @@ public:
   inline mozilla::image::Image* GetImage() const { return mImage; }
   inline imgRequest* GetRequest() const { return mRequest; }
 
-  inline imgIDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
+  inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
 private:
   friend class imgStatusNotifyRunnable;
@@ -215,7 +192,7 @@ private:
   // using the image.
   nsTObserverArray<imgRequestProxy*> mConsumers;
 
-  nsRefPtr<imgStatusTrackerObserver> mTrackerObserver;
+  mozilla::RefPtr<imgDecoderObserver> mTrackerObserver;
 };
 
 #endif

@@ -126,9 +126,9 @@ function getChannelLoadImageStartCallback(streamlistener)
 function getChannelLoadImageStopCallback(streamlistener, next)
 {
   return function channelLoadStop(imglistener, aRequest) {
-    // We absolutely must not get imgIDecoderObserver::onStopRequest after
-    // nsIRequestObserver::onStopRequest has fired. If we do that, we've broken
-    // people's expectations by delaying events from a channel we were given.
+    // We absolutely must not get imgIScriptedNotificationObserver::onStopRequest
+    // after nsIRequestObserver::onStopRequest has fired. If we do that, we've
+    // broken people's expectations by delaying events from a channel we were given.
     do_check_eq(streamlistener.requestStatus & STOP_REQUEST, 0);
 
     next();

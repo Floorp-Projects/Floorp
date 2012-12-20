@@ -421,14 +421,17 @@ nsresult OggReader::DecodeVorbis(ogg_packet* aPacket) {
 nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
   NS_ASSERTION(aPacket->granulepos != -1, "Must know opus granulepos!");
 
-  // Maximum value is 63*2880.
+  // Maximum value is 63*2880, so there's no chance of overflow.
   int32_t frames_number = opus_packet_get_nb_frames(aPacket->packet,
                                                     aPacket->bytes);
+  if (frames_number <= 0)
+    return NS_ERROR_FAILURE; // Invalid packet header.
   int32_t samples = opus_packet_get_samples_per_frame(aPacket->packet,
                                                       (opus_int32) mOpusState->mRate);
   int32_t frames = frames_number*samples;
 
-  if (frames <= 0)
+  // A valid Opus packet must be between 2.5 and 120 ms long.
+  if (frames < 120 || frames > 5760)
     return NS_ERROR_FAILURE;
   uint32_t channels = mOpusState->mChannels;
   nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * channels]);

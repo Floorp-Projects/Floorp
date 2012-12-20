@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
+Cu.import("resource://gre/modules/PermissionsTable.jsm");
 Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
 this.EXPORTED_SYMBOLS = ["SystemMessagePermissionsChecker",
@@ -77,6 +78,9 @@ this.SystemMessagePermissionsTable = {
     "sms": []
   },
   "telephony-new-call": {
+    "telephony": []
+  },
+  "telephony-call-ended": {
     "telephony": []
   },
   "ussd-received": {

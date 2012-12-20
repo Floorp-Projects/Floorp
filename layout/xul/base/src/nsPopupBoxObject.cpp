@@ -307,6 +307,56 @@ nsPopupBoxObject::GetOuterScreenRect(nsIDOMClientRect** aRect)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPopupBoxObject::GetAlignmentPosition(nsAString& positionStr)
+{
+  positionStr.Truncate();
+
+  // This needs to flush layout.
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(true));
+  if (!menuPopupFrame)
+    return NS_OK;
+
+  int8_t position = menuPopupFrame->GetAlignmentPosition();
+  switch (position) {
+    case POPUPPOSITION_AFTERSTART:
+      positionStr.AssignLiteral("after_start");
+      break;
+    case POPUPPOSITION_AFTEREND:
+      positionStr.AssignLiteral("after_end");
+      break;
+    case POPUPPOSITION_BEFORESTART:
+      positionStr.AssignLiteral("before_start");
+      break;
+    case POPUPPOSITION_BEFOREEND:
+      positionStr.AssignLiteral("before_end");
+      break;
+    case POPUPPOSITION_STARTBEFORE:
+      positionStr.AssignLiteral("start_before");
+      break;
+    case POPUPPOSITION_ENDBEFORE:
+      positionStr.AssignLiteral("end_before");
+      break;
+    case POPUPPOSITION_STARTAFTER:
+      positionStr.AssignLiteral("start_after");
+      break;
+    case POPUPPOSITION_ENDAFTER:
+      positionStr.AssignLiteral("end_after");
+      break;
+    case POPUPPOSITION_OVERLAP:
+      positionStr.AssignLiteral("overlap");
+      break;
+    case POPUPPOSITION_AFTERPOINTER:
+      positionStr.AssignLiteral("after_pointer");
+      break;
+    default:
+      // Leave as an empty string.
+      break;
+  }
+
+  return NS_OK;
+}
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult

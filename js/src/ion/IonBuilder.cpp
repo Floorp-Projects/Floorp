@@ -42,7 +42,8 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     inliningDepth(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
-    lazyArguments_(NULL)
+    lazyArguments_(NULL),
+    callee_(NULL)
 {
     script_.init(info->script());
     pc = info->startPC();
@@ -574,6 +575,15 @@ IonBuilder::initScopeChain()
 {
     MInstruction *scope = NULL;
 
+    // Add callee, it will be removed if it is not used by neither the scope
+    // chain nor the function body.
+    JSFunction *fun = info().fun();
+    if (fun) {
+        JS_ASSERT(!callee_);
+        callee_ = MCallee::New();
+        current->add(callee_);
+    }
+
     // If the script doesn't use the scopechain, then it's already initialized
     // from earlier.
     if (!script()->analysis()->usesScopeChain())
@@ -586,22 +596,19 @@ IonBuilder::initScopeChain()
     if (!script()->compileAndGo)
         return abort("non-CNG global scripts are not supported");
 
-    if (JSFunction *fun = info().fun()) {
-        MCallee *callee = MCallee::New();
-        current->add(callee);
-
-        scope = MFunctionEnvironment::New(callee);
+    if (fun) {
+        scope = MFunctionEnvironment::New(callee_);
         current->add(scope);
 
         // This reproduce what is done in CallObject::createForFunction
         if (fun->isHeavyweight()) {
             if (fun->isNamedLambda()) {
-                scope = createDeclEnvObject(callee, scope);
+                scope = createDeclEnvObject(callee_, scope);
                 if (!scope)
                     return false;
             }
 
-            scope = createCallObject(callee, scope);
+            scope = createCallObject(callee_, scope);
             if (!scope)
                 return false;
         }
@@ -1034,12 +1041,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_this();
 
       case JSOP_CALLEE:
-      {
-        MCallee *callee = MCallee::New();
-        current->add(callee);
-        current->push(callee);
-        return callee;
-      }
+        JS_ASSERT(callee_);
+        current->push(callee_);
+        return true;
 
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
@@ -6651,21 +6655,6 @@ IonBuilder::jsop_lambda(JSFunction *fun)
     MLambda *ins = MLambda::New(current->scopeChain(), fun);
     current->add(ins);
     current->push(ins);
-
-    return resumeAfter(ins);
-}
-
-bool
-IonBuilder::jsop_deflocalfun(uint32_t local, JSFunction *fun)
-{
-    JS_ASSERT(script()->analysis()->usesScopeChain());
-
-    MLambda *ins = MLambda::New(current->scopeChain(), fun);
-    current->add(ins);
-    current->push(ins);
-
-    current->setLocal(local);
-    current->pop();
 
     return resumeAfter(ins);
 }

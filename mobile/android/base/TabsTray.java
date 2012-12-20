@@ -258,6 +258,7 @@ public class TabsTray extends LinearLayout
                 convertView.setTag(row);
             } else {
                 row = (TabRow) convertView.getTag();
+                row.close.setVisibility(View.VISIBLE);
             }
 
             Tab tab = mTabs.get(position);
