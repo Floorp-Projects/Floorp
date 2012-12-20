@@ -1517,8 +1517,7 @@ public:
         // We can't kick the document out of the bfcache because it's not yet
         // fully in the bfcache.  Instead we'll abort everything for the window
         // and mark it as not-bfcacheable.
-        indexedDB::IndexedDatabaseManager* manager =
-          indexedDB::IndexedDatabaseManager::Get();
+        IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
         NS_ASSERTION(manager, "Huh?");
         manager->AbortCloseDatabasesForWindow(owner);
 
