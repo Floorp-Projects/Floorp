@@ -1609,7 +1609,6 @@ let Prefs = {
   }
 };
 
-Prefs.map("Int", "height", "devtools.debugger.ui.height");
 Prefs.map("Int", "windowX", "devtools.debugger.ui.win-x");
 Prefs.map("Int", "windowY", "devtools.debugger.ui.win-y");
 Prefs.map("Int", "windowWidth", "devtools.debugger.ui.win-width");
