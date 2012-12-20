@@ -30,7 +30,6 @@
 #include "nsIPrompt.h"
 #include "nsITransport.h"
 #include "nsIProxyInfo.h"
-#include "mozilla/net/DNS.h"
 
 #include "nsFtpControlConnection.h"
 
@@ -259,7 +258,7 @@ private:
     
     static uint32_t         mSessionStartTime;
 
-    mozilla::net::NetAddr   mServerAddress;
+    PRNetAddr               mServerAddress;
 
     // ***** control read gvars
     nsresult                mControlStatus;

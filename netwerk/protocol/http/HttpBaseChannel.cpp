@@ -1274,8 +1274,8 @@ HttpBaseChannel::GetLocalAddress(nsACString& addr)
   if (mSelfAddr.raw.family == PR_AF_UNSPEC)
     return NS_ERROR_NOT_AVAILABLE;
 
-  addr.SetCapacity(kIPv6CStrBufSize);
-  NetAddrToString(&mSelfAddr, addr.BeginWriting(), kIPv6CStrBufSize);
+  addr.SetCapacity(64);
+  PR_NetAddrToString(&mSelfAddr, addr.BeginWriting(), 64);
   addr.SetLength(strlen(addr.BeginReading()));
 
   return NS_OK;
@@ -1287,10 +1287,10 @@ HttpBaseChannel::GetLocalPort(int32_t* port)
   NS_ENSURE_ARG_POINTER(port);
 
   if (mSelfAddr.raw.family == PR_AF_INET) {
-    *port = (int32_t)ntohs(mSelfAddr.inet.port);
+    *port = (int32_t)PR_ntohs(mSelfAddr.inet.port);
   }
   else if (mSelfAddr.raw.family == PR_AF_INET6) {
-    *port = (int32_t)ntohs(mSelfAddr.inet6.port);
+    *port = (int32_t)PR_ntohs(mSelfAddr.ipv6.port);
   }
   else
     return NS_ERROR_NOT_AVAILABLE;
@@ -1304,8 +1304,8 @@ HttpBaseChannel::GetRemoteAddress(nsACString& addr)
   if (mPeerAddr.raw.family == PR_AF_UNSPEC)
     return NS_ERROR_NOT_AVAILABLE;
 
-  addr.SetCapacity(kIPv6CStrBufSize);
-  NetAddrToString(&mPeerAddr, addr.BeginWriting(), kIPv6CStrBufSize);
+  addr.SetCapacity(64);
+  PR_NetAddrToString(&mPeerAddr, addr.BeginWriting(), 64);
   addr.SetLength(strlen(addr.BeginReading()));
 
   return NS_OK;
@@ -1317,10 +1317,10 @@ HttpBaseChannel::GetRemotePort(int32_t* port)
   NS_ENSURE_ARG_POINTER(port);
 
   if (mPeerAddr.raw.family == PR_AF_INET) {
-    *port = (int32_t)ntohs(mPeerAddr.inet.port);
+    *port = (int32_t)PR_ntohs(mPeerAddr.inet.port);
   }
   else if (mPeerAddr.raw.family == PR_AF_INET6) {
-    *port = (int32_t)ntohs(mPeerAddr.inet6.port);
+    *port = (int32_t)PR_ntohs(mPeerAddr.ipv6.port);
   }
   else
     return NS_ERROR_NOT_AVAILABLE;
