@@ -1745,6 +1745,15 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
 void
 ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj);
 
+inline JSObject*
+GetUnforgeableHolder(JSObject* aGlobal, prototypes::ID aId)
+{
+  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  JSObject* interfaceProto = protoAndIfaceArray[aId];
+  return &js::GetReservedSlot(interfaceProto,
+                              DOM_INTERFACE_PROTO_SLOTS_BASE).toObject();
+}
+
 } // namespace dom
 } // namespace mozilla
 
