@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "secoid.h"
+#include "secoidt.h"
 #include "pkcs11t.h"
 #include "secitem.h"
 #include "secerr.h"
@@ -144,6 +145,13 @@ const char __nss_util_sccsid[] = "@(#)NSS " NSSUTIL_VERSION _DEBUG_STRING
 /* { 1.3.6.1.4.1.311 } */
 #define MICROSOFT_OID 0x2b, 0x6, 0x1, 0x4, 0x1, 0x82, 0x37
 #define EV_NAME_ATTRIBUTE 	MICROSOFT_OID, 60, 2, 1
+
+/* Microsoft Crypto 2.0 ID space */
+/* { 1.3.6.1.4.1.311.10 } */
+#define MS_CRYPTO_20            MICROSOFT_OID, 10
+/* Microsoft Crypto 2.0 Extended Key Usage ID space */
+/* { 1.3.6.1.4.1.311.10.3 } */
+#define MS_CRYPTO_EKU           MS_CRYPTO_20, 3
 
 #define CERTICOM_OID            0x2b, 0x81, 0x04
 #define SECG_OID                CERTICOM_OID, 0x00
@@ -448,6 +456,7 @@ CONST_OID pkixExtendedKeyUsageCodeSign[]      	= { PKIX_KEY_USAGE, 3 };
 CONST_OID pkixExtendedKeyUsageEMailProtect[]  	= { PKIX_KEY_USAGE, 4 };
 CONST_OID pkixExtendedKeyUsageTimeStamp[]     	= { PKIX_KEY_USAGE, 8 };
 CONST_OID pkixOCSPResponderExtendedKeyUsage[] 	= { PKIX_KEY_USAGE, 9 };
+CONST_OID msExtendedKeyUsageTrustListSigning[]	= { MS_CRYPTO_EKU, 1 };
 
 /* OIDs for Netscape defined algorithms */
 CONST_OID netscapeSMimeKEA[] 			= { NETSCAPE_ALGS, 0x01 };
@@ -1633,7 +1642,11 @@ const static SECOidData oids[SEC_OID_TOTAL] = {
     OD( nistDSASignaturewithSHA256Digest,
 	SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA256_DIGEST,
 	"DSA with SHA-256 Signature",
-	CKM_INVALID_MECHANISM /* not yet defined */, INVALID_CERT_EXTENSION)
+	CKM_INVALID_MECHANISM /* not yet defined */, INVALID_CERT_EXTENSION),
+    OD( msExtendedKeyUsageTrustListSigning, 
+        SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING,
+        "Microsoft Trust List Signing",
+	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION )
 };
 
 /* PRIVATE EXTENDED SECOID Table

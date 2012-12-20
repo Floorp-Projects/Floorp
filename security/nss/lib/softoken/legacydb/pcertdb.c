@@ -5,7 +5,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.13 2012/04/25 14:50:11 gerv%gerv.net Exp $
+ * $Id: pcertdb.c,v 1.14 2012/12/12 19:25:36 wtc%google.com Exp $
  */
 #include "lowkeyti.h"
 #include "pcert.h"
@@ -4954,7 +4954,7 @@ DestroyCertificate(NSSLOWCERTCertificate *cert, PRBool lockdb)
 	refCount = --cert->referenceCount;
         nsslowcert_UnlockCertRefCount(cert);
 
-	if ( ( refCount == 0 ) ) {
+	if ( refCount == 0 ) {
 	    certDBEntryCert *entry  = cert->dbEntry;
 
 	    if ( entry ) {

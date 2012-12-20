@@ -5,7 +5,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: pwdecrypt.c,v 1.8 2012/03/20 14:47:16 gerv%gerv.net Exp $
+ * $Id: pwdecrypt.c,v 1.9 2012/12/12 19:25:36 wtc%google.com Exp $
  */
 
 #include "nspr.h"
@@ -137,7 +137,6 @@ doDecrypt(char * dataString, FILE *outFile, FILE *logFile, secuPWData *pwdata)
     SECItem   *decoded = NSSBase64_DecodeBuffer(NULL, NULL, dataString, strLen);
     SECStatus  rv;
     int        err;
-    unsigned int i;
     SECItem    result = { siBuffer, NULL, 0 };
 
     if ((decoded == NULL) || (decoded->len == 0)) {
