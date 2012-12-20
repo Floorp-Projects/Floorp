@@ -9,7 +9,6 @@
 #define _nsARIAMap_H_
 
 #include "ARIAStateMap.h"
-#include "mozilla/a11y/AccTypes.h"
 #include "mozilla/a11y/Role.h"
 
 #include "nsIAtom.h"
@@ -149,12 +148,6 @@ struct nsRoleMapEntry
    */
   bool Is(nsIAtom* aARIARole) const
     { return *roleAtom == aARIARole; }
-
-  /**
-   * Return true if ARIA role has the given accessible type.
-   */
-  bool IsOfType(mozilla::a11y::AccGenericType aType) const
-    { return accTypes & aType; }
 
   /**
    * Return ARIA role.
