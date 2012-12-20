@@ -9,6 +9,7 @@
 #include "RasterImage.h"
 #include "imgDecoderObserver.h"
 #include "mozilla/RefPtr.h"
+#include "ImageMetadata.h"
 
 namespace mozilla {
 namespace image {
@@ -188,6 +189,7 @@ protected:
    */
   RasterImage &mImage;
   RefPtr<imgDecoderObserver> mObserver;
+  ImageMetadata mImageMetadata;
 
   uint32_t mDecodeFlags;
   bool mDecodeDone;
