@@ -21,13 +21,14 @@
         <richlistbox id="downloadsRichListBox"/>
         <commandset id="downloadCommands"/>
         <menupopup id="downloadsContextMenu"/>
-    3. Make sure your window also has the editMenuOverlay overlay applied,
+    3. Make sure your window has the editMenuOverlay overlay applied,
        because the view implements cmd_copy and cmd_delete.
-    4. To initialize the view
+    4. Make sure your window has the globalOverlay.js script loaded.
+    5. To initialize the view
         let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"));
         // This is what the Places Library uses. It could be tweaked a bit as long as the
         // transition-type is set correctly
-        view.places = "place:transition=7&sort=4";
+        view.place = "place:transition=7&sort=4";
 -->
 <overlay id="downloadsViewOverlay"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
