@@ -42,9 +42,10 @@ public:
 private:
   friend class BluetoothHfpManagerObserver;
   BluetoothHfpManager();
-  nsresult HandleVolumeChanged(const nsAString& aData);
-  nsresult HandleShutdown();
   nsresult HandleIccInfoChanged();
+  nsresult HandleShutdown();
+  nsresult HandleVolumeChanged(const nsAString& aData);
+  nsresult HandleVoiceConnectionChanged();
 
   bool Init();
   void Cleanup();
