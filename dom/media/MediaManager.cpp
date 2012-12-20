@@ -995,20 +995,35 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     mActiveCallbacks.Remove(key);
 
     if (aSubject) {
-      // A particular device was chosen by the user.
+      // A particular device or devices were chosen by the user.
       // NOTE: does not allow setting a device to null; assumes nullptr
-      nsCOMPtr<nsIMediaDevice> device = do_QueryInterface(aSubject);
-      if (device) {
-        GetUserMediaRunnable* gUMRunnable =
-          static_cast<GetUserMediaRunnable*>(runnable.get());
-        nsString type;
-        device->GetType(type);
-        if (type.EqualsLiteral("video")) {
-          gUMRunnable->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
-        } else if (type.EqualsLiteral("audio")) {
-          gUMRunnable->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
-        } else {
-          NS_WARNING("Unknown device type in getUserMedia");
+      GetUserMediaRunnable* gUMRunnable =
+        static_cast<GetUserMediaRunnable*>(runnable.get());
+
+      nsCOMPtr<nsISupportsArray> array(do_QueryInterface(aSubject));
+      MOZ_ASSERT(array);
+      uint32_t len = 0;
+      array->Count(&len);
+      MOZ_ASSERT(len);
+      if (!len) {
+        gUMRunnable->Denied(); // neither audio nor video were selected
+        return NS_OK;
+      }
+      for (uint32_t i = 0; i < len; i++) {
+        nsCOMPtr<nsISupports> supports;
+        array->GetElementAt(i,getter_AddRefs(supports));
+        nsCOMPtr<nsIMediaDevice> device(do_QueryInterface(supports));
+        MOZ_ASSERT(device); // shouldn't be returning anything else...
+        if (device) {
+          nsString type;
+          device->GetType(type);
+          if (type.EqualsLiteral("video")) {
+            gUMRunnable->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
+          } else if (type.EqualsLiteral("audio")) {
+            gUMRunnable->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
+          } else {
+            NS_WARNING("Unknown device type in getUserMedia");
+          }
         }
       }
     }
