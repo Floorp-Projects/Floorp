@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(a82f9998-02a2-4db2-a0d1-f8353933d7b0)]
+[scriptable, builtinclass, uuid(59fc5ea8-33fe-40ba-890b-b9abaeb5ac26)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   readonly attribute long      id;
