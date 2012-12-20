@@ -10,9 +10,9 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
-<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
 
 <?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
 
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
@@ -29,8 +29,6 @@
 %editMenuOverlayDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
-<!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
-%downloadsDTD;
 ]>
 
 <window id="places"
@@ -46,15 +44,11 @@
         persist="width height screenX screenY sizemode">
 
   <script type="application/javascript"
-          src="chrome://browser/content/places/downloadsView.js"/>
-  <script type="application/javascript"
           src="chrome://browser/content/places/places.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/places/editBookmarkOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/contentAreaUtils.js"/>
 
   <stringbundleset id="placesStringSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
@@ -411,11 +405,7 @@
           </treecols>
           <treechildren flex="1"/>
         </tree>
-        <richlistbox flex="1"
-                     seltype="multiple"
-                     id="downloadsRichListBox" context="downloadsContextMenu"
-                     onkeypress="return this._placesView.onKeyPress(event);"
-                     oncontextmenu="return this._placesView.onContextMenu(event);"/>
+        <richlistbox id="downloadsRichListBox"/>
       </deck>
       <deck id="detailsDeck" style="height: 11em;">
         <vbox id="itemsCountBox" align="center">
@@ -451,60 +441,6 @@
     </vbox>
   </hbox>
 
-  <commandset id="downloadCommands"
-              commandupdater="true"
-              events="focus,select,contextmenu"
-              oncommandupdate="goUpdatePlacesCommands(); goUpdateDownloadCommands();">
-    <command id="downloadsCmd_pauseResume"
-             oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
-    <command id="downloadsCmd_cancel"
-             oncommand="goDoCommand('downloadsCmd_cancel')"/>
-    <command id="downloadsCmd_open"
-             oncommand="goDoCommand('downloadsCmd_open')"/>
-    <command id="downloadsCmd_show"
-             oncommand="goDoCommand('downloadsCmd_show')"/>
-    <command id="downloadsCmd_retry"
-             oncommand="goDoCommand('downloadsCmd_retry')"/>
-    <command id="downloadsCmd_openReferrer"
-             oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
-  </commandset>
-
-  <menupopup id="downloadsContextMenu"
-             class="download-state">
-    <menuitem command="downloadsCmd_pauseResume"
-              class="downloadPauseMenuItem"
-              label="&cmd.pause.label;"
-              accesskey="&cmd.pause.accesskey;"/>
-    <menuitem command="downloadsCmd_pauseResume"
-              class="downloadResumeMenuItem"
-              label="&cmd.resume.label;"
-              accesskey="&cmd.resume.accesskey;"/>
-    <menuitem command="downloadsCmd_cancel"
-              class="downloadCancelMenuItem"
-              label="&cmd.cancel.label;"
-              accesskey="&cmd.cancel.accesskey;"/>
-    <menuitem command="cmd_delete"
-              class="downloadRemoveFromHistoryMenuItem"
-              label="&cmd.removeFromHistory.label;"
-              accesskey="&cmd.removeFromHistory.accesskey;"/>
-    <menuitem command="downloadsCmd_show"
-              class="downloadShowMenuItem"
-#ifdef XP_MACOSX
-              label="&cmd.showMac.label;"
-              accesskey="&cmd.showMac.accesskey;"
-#else
-              label="&cmd.show.label;"
-              accesskey="&cmd.show.accesskey;"
-#endif
-              />
-
-    <menuseparator class="downloadCommandsSeparator"/>
-
-    <menuitem command="downloadsCmd_openReferrer"
-              label="&cmd.goToDownloadPage.label;"
-              accesskey="&cmd.goToDownloadPage.accesskey;"/>
-    <menuitem command="cmd_copy"
-              label="&cmd.copyDownloadLink.label;"
-              accesskey="&cmd.copyDownloadLink.accesskey;"/>
-  </menupopup>
+  <commandset id="downloadCommands"/>
+  <menupopup id="downloadsContextMenu"/>
 </window>
