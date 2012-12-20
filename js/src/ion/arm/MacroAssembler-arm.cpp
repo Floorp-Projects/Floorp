@@ -69,6 +69,12 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
 }
 
 void
+MacroAssemblerARM::negateDouble(FloatRegister reg)
+{
+    ma_vneg(reg, reg);
+}
+
+void
 MacroAssemblerARM::inc64(AbsoluteAddress dest)
 {
 
