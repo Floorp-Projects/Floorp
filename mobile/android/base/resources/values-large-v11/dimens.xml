@@ -10,6 +10,5 @@
     <dimen name="menu_popup_arrow_margin">8dip</dimen>
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="addressbar_offset_left">90dp</dimen>
-    <dimen name="addressbar_offset_left_noforward">50dip</dimen>
 
 </resources>
