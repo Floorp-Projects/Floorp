@@ -271,7 +271,9 @@ GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] xpcshell-tests|.
 xpcshell-tests:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build -I$(DEPTH)/_tests/mozbase/mozinfo \
+	  -I$(DEPTH)/_tests/xpcshell \
+	  -I$(topsrcdir)/build \
+	  -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
@@ -287,6 +289,7 @@ xpcshell-tests:
 B2G_XPCSHELL = \
 	rm -f ./@.log && \
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(DEPTH)/_tests/xpcshell \
 	  -I$(topsrcdir)/build \
 	  $(topsrcdir)/testing/xpcshell/runtestsb2g.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \

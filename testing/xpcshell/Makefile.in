@@ -54,10 +54,13 @@ libs::
 	$(INSTALL) $(srcdir)/xpcshell_android.ini $(DEPTH)/_tests/xpcshell
 	cp $(srcdir)/xpcshell.ini $(DEPTH)/_tests/xpcshell/all-test-dirs.list
 
+libs:: $(DEPTH)/build/automation.py
+	$(INSTALL) $^ $(DEPTH)/_tests/xpcshell
+
 # Run selftests
 check::
 	OBJDIR=$(DEPTH) $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build -I$(topsrcdir)/testing/mozbase/mozinfo/mozinfo $(srcdir)/selftest.py
+	  -I$(DEPTH)/_tests/xpcshell -I$(topsrcdir)/build -I$(topsrcdir)/testing/mozbase/mozinfo/mozinfo $(srcdir)/selftest.py
 
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/xpcshell/tests
@@ -65,6 +68,7 @@ stage-package:
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(topsrcdir)/build && tar $(TAR_CREATE_FLAGS) - $(EXTRA_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/xpcshell
+	@cp $(DEPTH)/build/automation.py $(PKG_STAGE)/xpcshell
 	@(cd $(topsrcdir)/testing/mozbase/mozdevice/mozdevice && tar $(TAR_CREATE_FLAGS) - $(MOZDEVICE_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	(cd $(DEPTH)/_tests/xpcshell/ && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/xpcshell/tests && tar -xf -)
 	@(cd $(DIST)/bin/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
