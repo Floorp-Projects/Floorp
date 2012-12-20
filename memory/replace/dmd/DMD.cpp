@@ -1292,8 +1292,6 @@ public:
 // A group of one or more heap blocks with a common BlockGroupKey.
 class BlockGroup : public BlockGroupKey
 {
-  friend class FrameGroup;      // FrameGroups are created from BlockGroups
-
   // The BlockGroupKey base class serves as the key in BlockGroupTables.  These
   // two fields constitute the value, so it's ok for them to be |mutable|.
   mutable uint32_t  mNumBlocks;     // number of blocks with this BlockGroupKey
@@ -1305,6 +1303,8 @@ public:
       mNumBlocks(0),
       mGroupSize()
   {}
+
+  uint32_t NumBlocks() const { return mNumBlocks; }
 
   const GroupSize& GetGroupSize() const { return mGroupSize; }
 
@@ -1408,9 +1408,9 @@ public:
   // This is |const| thanks to the |mutable| fields above.
   void Add(const BlockGroup& aBg) const
   {
-    mNumBlocks += aBg.mNumBlocks;
+    mNumBlocks += aBg.NumBlocks();
     mNumBlockGroups++;
-    mGroupSize.Add(aBg.mGroupSize);
+    mGroupSize.Add(aBg.GetGroupSize());
   }
 
   void Print(const Writer& aWriter, LocationService* aLocService,
