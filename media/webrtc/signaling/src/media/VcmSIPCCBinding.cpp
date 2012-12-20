@@ -743,7 +743,7 @@ short vcmSetIceCandidate(const char *peerconnection,
  *  @param[in]  peerconnection - the peerconnection in use
  *  @return 0 success, error failure
  */
-static short vcmStartIceChecks_m(const char *peerconnection)
+static short vcmStartIceChecks_m(const char *peerconnection, cc_boolean isControlling)
 {
   CSFLogDebug( logTag, "%s: PC = %s", __FUNCTION__, peerconnection);
 
@@ -751,6 +751,12 @@ static short vcmStartIceChecks_m(const char *peerconnection)
   ENSURE_PC(pc, VCM_ERROR);
 
   nsresult res;
+  res = pc.impl()->media()->ice_ctx()->SetControlling(
+      isControlling ? NrIceCtx::ICE_CONTROLLING : NrIceCtx::ICE_CONTROLLED);
+  if (!NS_SUCCEEDED(res)) {
+    CSFLogError( logTag, "%s: couldn't set controlling", __FUNCTION__ );
+    return VCM_ERROR;
+  }
   nsresult rv = pc.impl()->media()->ice_ctx()->thread()->Dispatch(
     WrapRunnableRet(pc.impl()->media()->ice_ctx(), &NrIceCtx::StartChecks, &res),
       NS_DISPATCH_SYNC);
@@ -759,12 +765,10 @@ static short vcmStartIceChecks_m(const char *peerconnection)
     CSFLogError( logTag, "%s(): Could not dispatch to ICE thread", __FUNCTION__);
     return VCM_ERROR;
   }
-
   if (!NS_SUCCEEDED(res)) {
     CSFLogError( logTag, "%s: couldn't start ICE checks", __FUNCTION__ );
     return VCM_ERROR;
   }
-
   return 0;
 }
 
@@ -776,13 +780,14 @@ static short vcmStartIceChecks_m(const char *peerconnection)
  *  @param[in]  peerconnection - the peerconnection in use
  *  @return 0 success, error failure
  */
-short vcmStartIceChecks(const char *peerconnection)
+short vcmStartIceChecks(const char *peerconnection, cc_boolean isControlling)
 {
   short ret;
 
   VcmSIPCCBinding::getMainThread()->Dispatch(
       WrapRunnableNMRet(&vcmStartIceChecks_m,
                         peerconnection,
+                        isControlling,
                         &ret),
       NS_DISPATCH_SYNC);
 

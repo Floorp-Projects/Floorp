@@ -414,7 +414,7 @@ var BrowserApp = {
         aTarget.pause();
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.showControls"),
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.showControls2"),
       NativeWindow.contextmenus.mediaContext("media-hidingcontrols"),
       function(aTarget) {
         aTarget.setAttribute("controls", true);

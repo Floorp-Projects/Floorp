@@ -58,4 +58,43 @@
       </xul:stack>
     </content>
   </binding>
+
+  <binding id="download-full-ui"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <resources>
+      <stylesheet src="chrome://browser/content/downloads/download.css"/>
+    </resources>
+
+    <content orient="horizontal" align="center">
+      <xul:image class="downloadTypeIcon"
+                 validate="always"
+                 xbl:inherits="src=image"/>
+      <xul:image class="downloadTypeIcon blockedIcon"/>
+      <xul:vbox pack="center" flex="1">
+        <xul:description class="downloadTarget"
+                         crop="center"
+                         xbl:inherits="value=displayName,tooltiptext=displayName"/>
+        <xul:progressmeter anonid="progressmeter"
+                           class="downloadProgress"
+                           min="0"
+                           max="100"
+                           xbl:inherits="mode=progressmode,value=progress"/>
+        <xul:description class="downloadDetails"
+                         style="width: &downloadDetails.width;"
+                         crop="end"
+                         xbl:inherits="value=status,tooltiptext=statusTip"/>
+      </xul:vbox>
+      <xul:stack>
+        <xul:button class="downloadButton downloadCancel"
+                    command="downloadsCmd_cancel"
+                    tooltiptext="&cmd.cancel.label;"/>
+        <xul:button class="downloadButton downloadRetry"
+                    command="downloadsCmd_retry"
+                    tooltiptext="&cmd.retry.label;"/>
+        <xul:button class="downloadButton downloadShow"
+                    command="downloadsCmd_show"
+                    tooltiptext="&cmd.show.label;"/>
+      </xul:stack>
+    </content>
+  </binding>
 </bindings>

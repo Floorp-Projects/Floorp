@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://browser/content/downloads/allDownloadsViewOverlay.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/allDownloadsViewOverlay.css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
+%downloadsDTD;
+]>
+
+<!-- This overlay provides a downloads view that lists both session downloads,
+     using the DownloadsView API, and history downloads, using places queries.
+     The view also implements a command controller and a context menu for
+     managing the downloads list.  In order to use this view:
+     1. Apply this overlay to your window.
+     2. Insert in all the overlay entry-points, namely:
+        <richlistbox id="downloadsRichListBox"/>
+        <commandset id="downloadCommands"/>
+        <menupopup id="downloadsContextMenu"/>
+    3. Make sure your window also has the editMenuOverlay overlay applied,
+       because the view implements cmd_copy and cmd_delete.
+    4. To initialize the view
+        let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"));
+        // This is what the Places Library uses. It could be tweaked a bit as long as the
+        // transition-type is set correctly
+        view.places = "place:transition=7&sort=4";
+-->
+<overlay id="downloadsViewOverlay"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/downloads/allDownloadsViewOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/contentAreaUtils.js"/>
+
+  <richlistbox flex="1"
+               seltype="multiple"
+               id="downloadsRichListBox" context="downloadsContextMenu"
+               onkeypress="return this._placesView.onKeyPress(event);"
+               oncontextmenu="return this._placesView.onContextMenu(event);"/>
+
+  <commandset id="downloadCommands"
+              commandupdater="true"
+              events="focus,select,contextmenu"
+              oncommandupdate="goUpdateDownloadCommands();">
+    <command id="downloadsCmd_pauseResume"
+             oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
+    <command id="downloadsCmd_cancel"
+             oncommand="goDoCommand('downloadsCmd_cancel')"/>
+    <command id="downloadsCmd_open"
+             oncommand="goDoCommand('downloadsCmd_open')"/>
+    <command id="downloadsCmd_show"
+             oncommand="goDoCommand('downloadsCmd_show')"/>
+    <command id="downloadsCmd_retry"
+             oncommand="goDoCommand('downloadsCmd_retry')"/>
+    <command id="downloadsCmd_openReferrer"
+             oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
+  </commandset>
+
+  <menupopup id="downloadsContextMenu" class="download-state">
+    <menuitem command="downloadsCmd_pauseResume"
+              class="downloadPauseMenuItem"
+              label="&cmd.pause.label;"
+              accesskey="&cmd.pause.accesskey;"/>
+    <menuitem command="downloadsCmd_pauseResume"
+              class="downloadResumeMenuItem"
+              label="&cmd.resume.label;"
+              accesskey="&cmd.resume.accesskey;"/>
+    <menuitem command="downloadsCmd_cancel"
+              class="downloadCancelMenuItem"
+              label="&cmd.cancel.label;"
+              accesskey="&cmd.cancel.accesskey;"/>
+    <menuitem command="cmd_delete"
+              class="downloadRemoveFromHistoryMenuItem"
+              label="&cmd.removeFromHistory.label;"
+              accesskey="&cmd.removeFromHistory.accesskey;"/>
+    <menuitem command="downloadsCmd_show"
+              class="downloadShowMenuItem"
+#ifdef XP_MACOSX
+              label="&cmd.showMac.label;"
+              accesskey="&cmd.showMac.accesskey;"
+#else
+              label="&cmd.show.label;"
+              accesskey="&cmd.show.accesskey;"
+#endif
+              />
+
+    <menuseparator class="downloadCommandsSeparator"/>
+
+    <menuitem command="downloadsCmd_openReferrer"
+              label="&cmd.goToDownloadPage.label;"
+              accesskey="&cmd.goToDownloadPage.accesskey;"/>
+    <menuitem command="cmd_copy"
+              label="&cmd.copyDownloadLink.label;"
+              accesskey="&cmd.copyDownloadLink.accesskey;"/>
+  </menupopup>
+</overlay>

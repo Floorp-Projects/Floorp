@@ -759,9 +759,13 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
         if (IS_GC_MARKING_TRACER(trc) && !c->isCollecting())
             continue;
 
-        if ((c->activeAnalysis || c->isPreservingCode()) && IS_GC_MARKING_TRACER(trc)) {
-            gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_TYPES);
-            c->markTypes(trc);
+        if (IS_GC_MARKING_TRACER(trc)) {
+            if ((c->activeAnalysis || c->isPreservingCode())) {
+                gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_TYPES);
+                c->markTypes(trc);
+            } else {
+                c->gcTypesMarked = false;
+            }
         }
 
         /* During a GC, these are treated as weak pointers. */

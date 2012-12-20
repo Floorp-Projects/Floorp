@@ -190,6 +190,11 @@ public:
   }
 
   void
+  Send(ArrayBufferView& aBody, ErrorResult& aRv) {
+    return Send(aBody.Obj(), aRv);
+  }
+
+  void
   SendAsBinary(const nsAString& aBody, ErrorResult& aRv);
 
   void

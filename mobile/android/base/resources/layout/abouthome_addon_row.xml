@@ -7,7 +7,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="47dip"
                 android:gravity="left|center_vertical"
-                android:background="@drawable/action_bar_button">
+                android:background="@drawable/action_bar_button"
+                android:duplicateParentState="true">
 
     <ImageView android:id="@+id/addon_icon"
                android:layout_width="32dp"
@@ -23,7 +24,8 @@
               android:layout_marginLeft="12dip"
               android:gravity="center_vertical"
               android:textSize="15sp"
-              android:textColor="#222222"/>
+              android:textColor="@color/abouthome_section_title"
+              android:duplicateParentState="true"/>
 
     <TextView android:id="@+id/addon_version"
               android:layout_width="wrap_content"
@@ -33,7 +35,8 @@
               android:layout_marginLeft="5dip"
               android:gravity="center_vertical"
               android:textSize="12sp"
-              android:textColor="#666666"/>
+              android:textColor="@color/abouthome_section_subtitle"
+              android:duplicateParentState="true"/>
 
     <View android:layout_width="fill_parent"
           android:layout_height="1dp"

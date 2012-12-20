@@ -319,15 +319,6 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
 }
 
 bool
-CodeGeneratorARM::visitNegD(LNegD *ins)
-{
-    FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.ma_vneg(input, input);
-    return true;
-}
-
-bool
 CodeGeneratorARM::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
