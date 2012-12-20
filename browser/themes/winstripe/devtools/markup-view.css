@@ -54,10 +54,6 @@ li.container {
   background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
-.more-nodes {
-  padding-left: 16px;
-}
-
 .styleinspector-propertyeditor {
   border: 1px solid #CCC;
 }
