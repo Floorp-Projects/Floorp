@@ -3050,7 +3050,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
      * The sdp member of the dcb has local and remote sdp
      * this next function fills in the local part
      */
-    cause = gsmsdp_create_local_sdp(dcb, TRUE, has_audio, has_video, has_data, FALSE);
+    cause = gsmsdp_create_local_sdp(dcb, FALSE, has_audio, has_video, has_data, FALSE);
     if (cause != CC_CAUSE_OK) {
         ui_create_answer(evCreateAnswerError, line, call_id, dcb->caller_id.call_instance_id, NULL);
         FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
@@ -3061,11 +3061,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     /* TODO(ekr@rtfm.com): The second true is because we are acting as if we are
        processing an offer. The first, however, is for an initial offer and we may
        want to set that conditionally. */
-    cause = gsmsdp_negotiate_media_lines(fcb, dcb->sdp,
-            /* initial_offer */       TRUE,
-            /* offer */               TRUE,
-            /* notify_stream_added */ FALSE,
-            /* create_answer */       TRUE);
+    cause = gsmsdp_negotiate_media_lines(fcb, dcb->sdp, TRUE, TRUE, FALSE, TRUE);
 
     if (cause != CC_CAUSE_OK) {
         ui_create_answer(evCreateAnswerError, line, call_id, dcb->caller_id.call_instance_id, NULL);
