@@ -38,14 +38,14 @@ function onNotify(callback) {
 }
 
 /**
- * Asynchronous task that adds a TRANSITION_TYPED visit to the history database.
+ * Asynchronous task that adds a visit to the history database.
  */
-function task_add_visit(uri, timestamp) {
+function task_add_visit(uri, timestamp, transition) {
   uri = uri || NetUtil.newURI("http://firefox.com/");
   timestamp = timestamp || Date.now() * 1000;
   yield promiseAddVisits({
     uri: uri,
-    transition: TRANSITION_TYPED,
+    transition: transition || TRANSITION_TYPED,
     visitDate: timestamp
   });
   throw new Task.Result([uri, timestamp]);
@@ -58,18 +58,40 @@ function run_test() {
 add_task(function test_onVisit() {
   let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
                                                 aSessionID, aReferringID,
-                                                aTransitionType, aGUID) {
+                                                aTransitionType, aGUID,
+                                                aHidden) {
     do_check_true(aURI.equals(testuri));
     do_check_true(aVisitID > 0);
     do_check_eq(aTime, testtime);
     do_check_true(aSessionID > 0);
     do_check_eq(aReferringID, 0);
-    do_check_eq(aTransitionType, Ci.nsINavHistoryService.TRANSITION_TYPED);
+    do_check_eq(aTransitionType, TRANSITION_TYPED);
     do_check_guid_for_uri(aURI, aGUID);
+    do_check_false(aHidden);
   });
   let testuri = NetUtil.newURI("http://firefox.com/");
   let testtime = Date.now() * 1000;
   yield task_add_visit(testuri, testtime);
+  yield promiseNotify;
+});
+
+add_task(function test_onVisit() {
+  let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
+                                                aSessionID, aReferringID,
+                                                aTransitionType, aGUID,
+                                                aHidden) {
+    do_check_true(aURI.equals(testuri));
+    do_check_true(aVisitID > 0);
+    do_check_eq(aTime, testtime);
+    do_check_true(aSessionID > 0);
+    do_check_eq(aReferringID, 0);
+    do_check_eq(aTransitionType, TRANSITION_FRAMED_LINK);
+    do_check_guid_for_uri(aURI, aGUID);
+    do_check_true(aHidden);
+  });
+  let testuri = NetUtil.newURI("http://hidden.firefox.com/");
+  let testtime = Date.now() * 1000;
+  yield task_add_visit(testuri, testtime, TRANSITION_FRAMED_LINK);
   yield promiseNotify;
 });
 
