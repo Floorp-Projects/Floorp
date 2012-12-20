@@ -252,6 +252,14 @@ class MacroAssemblerX86Shared : public Assembler
     void zeroDouble(FloatRegister reg) {
         xorpd(reg, reg);
     }
+    void negateDouble(FloatRegister reg) {
+        // From MacroAssemblerX86Shared::maybeInlineDouble
+        pcmpeqw(ScratchFloatReg, ScratchFloatReg);
+        psllq(Imm32(63), ScratchFloatReg);
+
+        // XOR the float in a float register with -0.0.
+        xorpd(ScratchFloatReg, reg); // s ^ 0x80000000000000
+    }
     void addDouble(FloatRegister src, FloatRegister dest) {
         addsd(src, dest);
     }
