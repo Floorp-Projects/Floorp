@@ -1748,7 +1748,7 @@ var AddonDatabase = {
       self.getAsyncStatement("getAllAddons").executeAsync({
         handleResult: function getAllAddons_handleResult(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let internal_id = row.getResultByName("internal_id");
             addons[internal_id] = self._makeAddonFromAsyncRow(row);
           }
@@ -1773,7 +1773,7 @@ var AddonDatabase = {
       self.getAsyncStatement("getAllDevelopers").executeAsync({
         handleResult: function getAllDevelopers_handleResult(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
               WARN("Found a developer not linked to an add-on in database");
@@ -1807,7 +1807,7 @@ var AddonDatabase = {
       self.getAsyncStatement("getAllScreenshots").executeAsync({
         handleResult: function getAllScreenshots_handleResult(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
               WARN("Found a screenshot not linked to an add-on in database");
@@ -1839,7 +1839,7 @@ var AddonDatabase = {
       self.getAsyncStatement("getAllCompatOverrides").executeAsync({
         handleResult: function getAllCompatOverrides_handleResult(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
               WARN("Found a compatibility override not linked to an add-on in database");
@@ -1871,7 +1871,7 @@ var AddonDatabase = {
       self.getAsyncStatement("getAllIcons").executeAsync({
         handleResult: function getAllIcons_handleResult(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
               WARN("Found an icon not linked to an add-on in database");
