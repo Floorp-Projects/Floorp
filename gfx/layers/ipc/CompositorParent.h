@@ -171,6 +171,10 @@ protected:
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
   void SetEGLSurfaceSize(int width, int height);
+  // If SetPanZoomControllerForLayerTree is not set, Compositor will use
+  // derived class AsyncPanZoomController transformations.
+  // Compositor will not own AsyncPanZoomController here.
+  virtual AsyncPanZoomController* GetDefaultPanZoomController() { return nullptr; }
 
 private:
   void PauseComposition();
