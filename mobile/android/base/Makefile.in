@@ -401,14 +401,12 @@ RES_LAYOUT = \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity_popup.xml \
-  res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel_indicator.xml \
   res/layout/tabs_panel_toolbar_menu.xml \
   res/layout/tabs_row.xml \
-  res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
   res/layout/select_dialog_multichoice.xml \
