@@ -2067,10 +2067,8 @@ Dump(Writer aWriter)
 
     size_t count    = locService->CacheCount();
     size_t capacity = locService->CacheCapacity();
-    double hitRate   = 100 * double(hits) / requests;
-    double occupancy = 100 * double(count) / capacity;
     W("  Location service cache:  %4.1f%% hit rate, %.1f%% occupancy at end\n",
-      hitRate, occupancy);
+      Percent(hits, requests), Percent(count, capacity));
 
     W("\n");
   }
