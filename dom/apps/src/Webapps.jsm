@@ -1874,9 +1874,10 @@ this.DOMApplicationRegistry = {
                             : isSigned  ? Ci.nsIPrincipal.APP_STATUS_PRIVILEGED
                                         : Ci.nsIPrincipal.APP_STATUS_INSTALLED;
 
-              if (AppsUtils.getAppManifestStatus(aManifest) > maxStatus) {
+              if (AppsUtils.getAppManifestStatus(manifest) > maxStatus) {
                 throw "INVALID_SECURITY_LEVEL";
               }
+              aApp.appStatus = AppsUtils.getAppManifestStatus(manifest);
 
               if (aOnSuccess) {
                 aOnSuccess(id, manifest);
