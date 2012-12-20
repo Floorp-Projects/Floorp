@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: nss.h,v 1.100.2.1 2012/12/13 19:11:46 wtc%google.com Exp $ */
+/* $Id: nss.h,v 1.101 2012/12/10 23:39:39 wtc%google.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -34,12 +34,12 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION  "3.14.1.0" _NSS_ECC_STRING _NSS_CUSTOMIZED
+#define NSS_VERSION  "3.14.2.0" _NSS_ECC_STRING _NSS_CUSTOMIZED " Beta"
 #define NSS_VMAJOR   3
 #define NSS_VMINOR   14
-#define NSS_VPATCH   1
+#define NSS_VPATCH   2
 #define NSS_VBUILD   0
-#define NSS_BETA     PR_FALSE
+#define NSS_BETA     PR_TRUE
 
 #ifndef RC_INVOKED
 

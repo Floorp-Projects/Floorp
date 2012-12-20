@@ -5,7 +5,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.23.2.1 2012/12/12 16:38:39 wtc%google.com Exp $
+ * $Id: ocsp.h,v 1.24 2012/12/12 16:03:44 wtc%google.com Exp $
  */
 
 #ifndef _OCSP_H_

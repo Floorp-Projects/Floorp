@@ -42,7 +42,12 @@ lowhash_init()
   fi
   LOWHASHDIR=../lowhash
   mkdir -p ${LOWHASHDIR}
-  html_head "Lowhash Tests"
+  if [ -f /proc/sys/crypto/fips_enabled ]; then
+    FVAL=`cat /proc/sys/crypto/fips_enabled`
+    html_head "Lowhash Tests - /proc/sys/crypto/fips_enabled is ${FVAL}"
+  else
+    html_head "Lowhash Tests"
+  fi
   cd ${LOWHASHDIR}
 }
 
@@ -59,14 +64,14 @@ lowhash_test()
     TESTS="MD5 SHA1 SHA224 SHA256 SHA384 SHA512"
     OLD_MODE=`echo ${NSS_FIPS}`
     for fips_mode in 0 1; do
-      echo "lowhashtest with fips mode=${mode}"
+      echo "lowhashtest with fips mode=${fips_mode}"
       export NSS_FIPS=${fips_mode}
       for TEST in ${TESTS}
       do
         echo "lowhashtest ${TEST}"
         ${BINDIR}/lowhashtest ${TEST} 2>&1
         RESULT=$?
-        html_msg ${RESULT} 0 "lowhashtest with fips mode=${mode} for ${TEST}"
+        html_msg ${RESULT} 0 "lowhashtest with fips mode=${fips_mode} for ${TEST}"
       done
     done
     export NSS_FIPS=${OLD_MODE}
