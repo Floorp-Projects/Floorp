@@ -16,7 +16,6 @@ public class GLController {
     private static final String LOGTAG = "GeckoGLController";
 
     private LayerView mView;
-    private int mGLVersion;
     private boolean mSurfaceValid;
     private int mWidth, mHeight;
 
@@ -37,13 +36,7 @@ public class GLController {
 
     GLController(LayerView view) {
         mView = view;
-        mGLVersion = 2;
         mSurfaceValid = false;
-    }
-
-    /* This function is invoked by JNI */
-    void setGLVersion(int version) {
-        mGLVersion = version;
     }
 
     /* This function is invoked by JNI */
