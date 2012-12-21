@@ -307,6 +307,7 @@ class ICEntry
                                 \
     _(GetProp_Fallback)         \
     _(GetProp_DenseLength)      \
+    _(GetProp_StringLength)     \
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
                                 \
@@ -1716,6 +1717,34 @@ class ICGetProp_DenseLength : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICGetProp_DenseLength::New(space, getStubCode());
+        }
+    };
+};
+
+// Stub for accessing a string's length.
+class ICGetProp_StringLength : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICGetProp_StringLength(IonCode *stubCode)
+      : ICStub(GetProp_StringLength, stubCode)
+    {}
+
+  public:
+    static inline ICGetProp_StringLength *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetProp_StringLength>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetProp_StringLength)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetProp_StringLength::New(space, getStubCode());
         }
     };
 };

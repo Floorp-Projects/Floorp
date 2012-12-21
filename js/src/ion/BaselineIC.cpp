@@ -345,6 +345,12 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, ICStubSpace *space
             // Since we just added the first optimized monitoring stub, any
             // existing main stub's |firstMonitorStub| MUST be pointing to the fallback
             // monitor stub (i.e. this stub).
+
+            // Non-monitored stubs are used if the result has always the same type,
+            // e.g. a StringLength stub will always return int32.
+            if (!mainStub->isMonitored())
+                continue;
+
             JS_ASSERT(mainStub->toMonitoredStub()->firstMonitorStub() == this);
             mainStub->toMonitoredStub()->updateFirstMonitorStub(firstMonitorStub_);
         }
@@ -1362,6 +1368,18 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
 {
     JS_ASSERT(!*attached);
 
+    if (val.isString()) {
+        JS_ASSERT(res.isInt32());
+        ICGetProp_StringLength::Compiler compiler(cx);
+        ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!newStub)
+            return false;
+
+        *attached = true;
+        stub->addNewStub(newStub);
+        return true;
+    }
+
     if (!val.isObject())
         return true;
 
@@ -1550,6 +1568,25 @@ ICGetProp_DenseLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTest32(Assembler::Signed, scratch, scratch, &failure);
 
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICGetProp_StringLength::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+
+    // Unbox string and load its length.
+    Register string = masm.extractString(R0, ExtractTemp0);
+    masm.loadStringLength(string, string);
+
+    masm.tagValue(JSVAL_TYPE_INT32, string, R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub

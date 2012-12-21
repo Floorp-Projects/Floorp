@@ -263,6 +263,11 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeCallResultValue(dest.typedReg());
     }
 
+    template <typename T>
+    Register extractString(const T &source, Register scratch) {
+        return extractObject(source, scratch);
+    }
+
     void PushRegsInMask(RegisterSet set);
     void PushRegsInMask(GeneralRegisterSet set) {
         PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
