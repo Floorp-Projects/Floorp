@@ -21,7 +21,6 @@ MOCHITEST_FILES =	\
 		test_tree_column_reorder.xul \
 		tree_shared.js \
 		test_mousecapture_area.html \
-		test_popupanchor.xul \
 		popup_shared.js \
 		test_videocontrols.html \
 		test_videocontrols_video_direction.html \
