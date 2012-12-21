@@ -40,6 +40,15 @@ class runnable_args_base : public nsRunnable {
 
 // Temporary hack. Really we want to have a template which will do this
 #define RUN_ON_THREAD(t, r, h) ((t && (t != nsRefPtr<nsIThread>(do_GetCurrentThread()))) ? t->Dispatch(r, h) : r->Run())
+#define ASSERT_ON_THREAD(t) do {                \
+    if (t) {                                    \
+      bool on;                                    \
+      nsresult rv;                                \
+      rv = t->IsOnCurrentThread(&on);             \
+      MOZ_ASSERT(NS_SUCCEEDED(rv));               \
+      MOZ_ASSERT(on);                             \
+    }                                           \
+  } while(0)
 }
 
 #endif
