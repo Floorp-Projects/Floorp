@@ -137,8 +137,7 @@ var tests = [
     openPopup("after_end", function() {
       isArrowPositionedOn("right");
       panel.sizeTo(anchor.getBoundingClientRect().left + 50, 50);
-      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
-      // isArrowPositionedOn("left"); // check it flipped and has zero offset.
+      isArrowPositionedOn("left"); // check it flipped and has zero offset.
       next();
     });
   }],
@@ -147,8 +146,7 @@ var tests = [
     openPopup("start_after", function() {
       isArrowPositionedOn("bottom");
       panel.sizeTo(50, anchor.getBoundingClientRect().top + 50);
-      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
-      //isArrowPositionedOn("top"); // check it flipped and has zero offset.
+      isArrowPositionedOn("top"); // check it flipped and has zero offset.
       next();
     });
   }],
@@ -193,8 +191,7 @@ var tests = [
       // on the right, so it must flip (arrow on the left, panel on the right)
       var offset = Math.floor(-anchorRight / 2);
       panel.moveToAnchor(anchor, "after_end", offset, 0);
-      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
-      //isArrowPositionedOn("left", offset); // should have flipped and have the offset.
+      isArrowPositionedOn("left", offset); // should have flipped and have the offset.
       // resize back to original and move to a zero offset - it should flip back.
       panel.sizeTo(anchorRight - 10, 100);
       panel.moveToAnchor(anchor, "after_end", 0, 0);
@@ -213,8 +210,7 @@ var tests = [
       isArrowPositionedOn("bottom");
       var offset = Math.floor(-anchorBottom / 2);
       panel.moveToAnchor(anchor, "start_after", 0, offset);
-      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
-      //isArrowPositionedOn("top", offset);
+      isArrowPositionedOn("top", offset);
       panel.sizeTo(100, anchorBottom - 10);
       panel.moveToAnchor(anchor, "start_after", 0, 0);
       isArrowPositionedOn("bottom");
