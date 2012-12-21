@@ -2990,7 +2990,7 @@ Parser::forStatement()
 
     pn->setOp(JSOP_ITER);
     pn->pn_iflags = 0;
-    if (tokenStream.matchToken(TOK_NAME)) {
+    if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
         if (tokenStream.currentToken().name() == context->names().each)
             pn->pn_iflags = JSITER_FOREACH;
         else
@@ -5119,7 +5119,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
 
         pn2->setOp(JSOP_ITER);
         pn2->pn_iflags = JSITER_ENUMERATE;
-        if (tokenStream.matchToken(TOK_NAME)) {
+        if (allowsForEachIn() && tokenStream.matchToken(TOK_NAME)) {
             if (tokenStream.currentToken().name() == context->names().each)
                 pn2->pn_iflags |= JSITER_FOREACH;
             else

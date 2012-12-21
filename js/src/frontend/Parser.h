@@ -468,6 +468,16 @@ struct Parser : private AutoGCRooter
     ParseNode *propertyQualifiedIdentifier();
 #endif /* JS_HAS_XML_SUPPORT */
 
+    bool allowsForEachIn() {
+#if !JS_HAS_FOR_EACH_IN
+        return false;
+#elif JS_HAS_XML_SUPPORT
+        return allowsXML() || tokenStream.hasMoarXML();
+#else
+        return versionNumber() >= JSVERSION_1_6;
+#endif
+    }
+
     bool setAssignmentLhsOps(ParseNode *pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 };
