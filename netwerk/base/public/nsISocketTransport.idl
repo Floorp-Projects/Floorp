@@ -161,6 +161,12 @@ interface nsISocketTransport : nsITransport
     const unsigned long NO_PERMANENT_STORAGE = (1 << 3);
 
     /**
+     * If set, we will skip all IPv4 addresses the host may have and only
+     * connect to IPv6 ones.
+     */
+    const unsigned long DISABLE_IPV4 = (1 << 4);
+
+    /**
      * Socket QoS/ToS markings. Valid values are IPTOS_DSCP_AFxx or
      * IPTOS_CLASS_CSx (or IPTOS_DSCP_EF, but currently no supported
      * services require expedited-forwarding).

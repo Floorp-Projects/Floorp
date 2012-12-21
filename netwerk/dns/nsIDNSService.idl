@@ -133,4 +133,9 @@ interface nsIDNSService : nsISupports
      * asyncResolve.
      */
     const unsigned long RESOLVE_OFFLINE = (1 << 6);
+
+    /**
+     * If set, only IPv6 addresses will be returned from resolve/asyncResolve.
+     */
+    const unsigned long RESOLVE_DISABLE_IPV4 = (1 << 7);
 };

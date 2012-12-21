@@ -851,6 +851,9 @@ nsDNSService::GetAFForLookup(const nsACString &host, uint32_t flags)
         } while (*end);
     }
 
+    if ((af != PR_AF_INET) && (flags & RESOLVE_DISABLE_IPV4))
+        af = PR_AF_INET6;
+
     return af;
 }
 
