@@ -2,17 +2,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsHTMLUnknownElement_h___
-#define nsHTMLUnknownElement_h___
+#ifndef HTMLUnknownElement_h___
+#define HTMLUnknownElement_h___
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLUnknownElement.h"
 
-class nsHTMLUnknownElement MOZ_FINAL : public nsGenericHTMLElement
-                                     , public nsIDOMHTMLUnknownElement
+namespace mozilla {
+namespace dom {
+
+class HTMLUnknownElement MOZ_FINAL : public nsGenericHTMLElement
+                                   , public nsIDOMHTMLUnknownElement
 {
 public:
-  nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     SetIsDOMBinding();
@@ -44,4 +47,7 @@ protected:
                              bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
-#endif /* nsHTMLUnknownElement_h___ */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* HTMLUnknownElement_h___ */

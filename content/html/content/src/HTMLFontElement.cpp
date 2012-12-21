@@ -5,94 +5,45 @@
 
 #include "mozilla/Util.h"
 
-#include "nsCOMPtr.h"
-#include "nsIDOMHTMLFontElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
+#include "HTMLFontElement.h"
 #include "nsAttrValueInlines.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
-#include "nsAlgorithm.h"
-#include "nsContentUtils.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLFontElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLFontElement
-{
-public:
-  nsHTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLFontElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLFontElement
-  NS_DECL_NSIDOMHTMLFONTELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Font)
+DOMCI_NODE_DATA(HTMLFontElement, mozilla::dom::HTMLFontElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLFontElement::nsHTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLFontElement::~HTMLFontElement()
 {
 }
 
-nsHTMLFontElement::~nsHTMLFontElement()
-{
-}
+NS_IMPL_ADDREF_INHERITED(HTMLFontElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLFontElement, Element)
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFontElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, Element)
-
-DOMCI_NODE_DATA(HTMLFontElement, nsHTMLFontElement)
-
-// QueryInterface implementation for nsHTMLFontElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLFontElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFontElement, nsIDOMHTMLFontElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFontElement,
+// QueryInterface implementation for HTMLFontElement
+NS_INTERFACE_TABLE_HEAD(HTMLFontElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLFontElement, nsIDOMHTMLFontElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLFontElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFontElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLFontElement)
+NS_IMPL_ELEMENT_CLONE(HTMLFontElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLFontElement, Color, color)
-NS_IMPL_STRING_ATTR(nsHTMLFontElement, Face, face)
-NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
+NS_IMPL_STRING_ATTR(HTMLFontElement, Color, color)
+NS_IMPL_STRING_ATTR(HTMLFontElement, Face, face)
+NS_IMPL_STRING_ATTR(HTMLFontElement, Size, size)
 
 
 bool
-nsHTMLFontElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsAttrValue& aResult)
+HTMLFontElement::ParseAttribute(int32_t aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::size) {
@@ -169,7 +120,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::face },
@@ -188,7 +139,10 @@ nsHTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
 
 nsMapRuleToAttributesFunc
-nsHTMLFontElement::GetAttributeMappingFunction() const
+HTMLFontElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla

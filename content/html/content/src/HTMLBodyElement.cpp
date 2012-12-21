@@ -5,10 +5,7 @@
 
 #include "mozilla/Util.h"
 
-#include "nscore.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMHTMLBodyElement.h"
-#include "nsGenericHTMLElement.h"
+#include "HTMLBodyElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -22,92 +19,17 @@
 #include "nsIDocShell.h"
 #include "nsIEditorDocShell.h"
 #include "nsRuleWalker.h"
-#include "jspubtd.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 
-//----------------------------------------------------------------------
+NS_IMPL_NS_NEW_HTML_ELEMENT(Body)
+DOMCI_NODE_DATA(HTMLBodyElement, mozilla::dom::HTMLBodyElement)
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLBodyElement;
-
-class BodyRule: public nsIStyleRule {
-public:
-  BodyRule(nsHTMLBodyElement* aPart);
-  virtual ~BodyRule();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleRule interface
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
-#endif
-
-  nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
-};
+namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
 
-class nsHTMLBodyElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLBodyElement
-{
-public:
-  using Element::GetText;
-  using Element::SetText;
-
-  nsHTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLBodyElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLBodyElement
-  NS_DECL_NSIDOMHTMLBODYELEMENT
-
-  // Event listener stuff; we need to declare only the ones we need to
-  // forward to window that don't come from nsIDOMHTMLBodyElement.
-#define EVENT(name_, id_, type_, struct_) /* nothing; handled by the shim */
-#define FORWARDED_EVENT(name_, id_, type_, struct_)               \
-    NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);            \
-    NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
-#include "nsEventNameList.h"
-#undef FORWARDED_EVENT
-#undef EVENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsAttrValue& aResult);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-private:
-  nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
-
-protected:
-  BodyRule* mContentStyleRule;
-};
-
-//----------------------------------------------------------------------
-
-BodyRule::BodyRule(nsHTMLBodyElement* aPart)
+BodyRule::BodyRule(HTMLBodyElement* aPart)
 {
   mPart = aPart;
 }
@@ -264,17 +186,7 @@ BodyRule::List(FILE* out, int32_t aIndent) const
 
 //----------------------------------------------------------------------
 
-
-NS_IMPL_NS_NEW_HTML_ELEMENT(Body)
-
-
-nsHTMLBodyElement::nsHTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    mContentStyleRule(nullptr)
-{
-}
-
-nsHTMLBodyElement::~nsHTMLBodyElement()
+HTMLBodyElement::~HTMLBodyElement()
 {
   if (mContentStyleRule) {
     mContentStyleRule->mPart = nullptr;
@@ -283,33 +195,31 @@ nsHTMLBodyElement::~nsHTMLBodyElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLBodyElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLBodyElement, Element)
 
-DOMCI_NODE_DATA(HTMLBodyElement, nsHTMLBodyElement)
-
-// QueryInterface implementation for nsHTMLBodyElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLBodyElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLBodyElement, nsIDOMHTMLBodyElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLBodyElement,
+// QueryInterface implementation for HTMLBodyElement
+NS_INTERFACE_TABLE_HEAD(HTMLBodyElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLBodyElement, nsIDOMHTMLBodyElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLBodyElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLBodyElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLBodyElement)
+NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(HTMLBodyElement, Background, background)
+NS_IMPL_STRING_ATTR(HTMLBodyElement, VLink, vlink)
+NS_IMPL_STRING_ATTR(HTMLBodyElement, ALink, alink)
+NS_IMPL_STRING_ATTR(HTMLBodyElement, Link, link)
+NS_IMPL_STRING_ATTR(HTMLBodyElement, Text, text)
+NS_IMPL_STRING_ATTR(HTMLBodyElement, BgColor, bgcolor)
 
 bool
-nsHTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsAttrValue& aResult)
+HTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::bgcolor ||
@@ -337,7 +247,7 @@ nsHTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void
-nsHTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
+HTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (mContentStyleRule) {
     mContentStyleRule->mPart = nullptr;
@@ -398,13 +308,13 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 }
 
 nsMapRuleToAttributesFunc
-nsHTMLBodyElement::GetAttributeMappingFunction() const
+HTMLBodyElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
+HTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
 
@@ -421,7 +331,7 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::link },
@@ -447,7 +357,7 @@ nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 already_AddRefed<nsIEditor>
-nsHTMLBodyElement::GetAssociatedEditor()
+HTMLBodyElement::GetAssociatedEditor()
 {
   nsIEditor* editor = nullptr;
   if (NS_SUCCEEDED(GetEditorInternal(&editor)) && editor) {
@@ -479,55 +389,59 @@ nsHTMLBodyElement::GetAssociatedEditor()
 // nsGenericHTMLElement::GetOnError returns
 // already_AddRefed<EventHandlerNonNull> while other getters return
 // EventHandlerNonNull*, so allow passing in the type to use here.
-#define FORWARDED_EVENT_HELPER(name_, getter_type_)                 \
-  NS_IMETHODIMP nsHTMLBodyElement::GetOn##name_(JSContext *cx,      \
-                                           jsval *vp) {             \
-    getter_type_ h = nsGenericHTMLElement::GetOn##name_();          \
-    vp->setObjectOrNull(h ? h->Callable() : nullptr);               \
-    return NS_OK;                                                   \
-  }                                                                 \
-  NS_IMETHODIMP nsHTMLBodyElement::SetOn##name_(JSContext *cx,      \
-                                           const jsval &v) {        \
-    JSObject *obj = GetWrapper();                                   \
-    if (!obj) {                                                     \
-      /* Just silently do nothing */                                \
-      return NS_OK;                                                 \
-    }                                                               \
-    nsRefPtr<EventHandlerNonNull> handler;                          \
-    JSObject *callable;                                             \
-    if (v.isObject() &&                                             \
-        JS_ObjectIsCallable(cx, callable = &v.toObject())) {        \
-      bool ok;                                                      \
-      handler = new EventHandlerNonNull(cx, obj, callable, &ok);    \
-      if (!ok) {                                                    \
-        return NS_ERROR_OUT_OF_MEMORY;                              \
-      }                                                             \
-    }                                                               \
-    ErrorResult rv;                                                 \
-    nsGenericHTMLElement::SetOn##name_(handler, rv);                \
-    return rv.ErrorCode();                                          \
+#define FORWARDED_EVENT_HELPER(name_, getter_type_)                            \
+  NS_IMETHODIMP                                                                \
+  HTMLBodyElement::GetOn##name_(JSContext *cx, jsval *vp)                      \
+  {                                                                            \
+    getter_type_ h = nsGenericHTMLElement::GetOn##name_();                     \
+    vp->setObjectOrNull(h ? h->Callable() : nullptr);                          \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHODIMP                                                                \
+  HTMLBodyElement::SetOn##name_(JSContext *cx, const jsval &v)                 \
+  {                                                                            \
+    JSObject *obj = GetWrapper();                                              \
+    if (!obj) {                                                                \
+      /* Just silently do nothing */                                           \
+      return NS_OK;                                                            \
+    }                                                                          \
+    nsRefPtr<EventHandlerNonNull> handler;                                     \
+    JSObject *callable;                                                        \
+    if (v.isObject() &&                                                        \
+        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                   \
+      bool ok;                                                                 \
+      handler = new EventHandlerNonNull(cx, obj, callable, &ok);               \
+      if (!ok) {                                                               \
+        return NS_ERROR_OUT_OF_MEMORY;                                         \
+      }                                                                        \
+    }                                                                          \
+    ErrorResult rv;                                                            \
+    nsGenericHTMLElement::SetOn##name_(handler, rv);                           \
+    return rv.ErrorCode();                                                     \
   }
-#define FORWARDED_EVENT(name_, id_, type_, struct_)                 \
+#define FORWARDED_EVENT(name_, id_, type_, struct_)                            \
   FORWARDED_EVENT_HELPER(name_, EventHandlerNonNull*)
-#define ERROR_EVENT(name_, id_, type_, struct_)                     \
+#define ERROR_EVENT(name_, id_, type_, struct_)                                \
   FORWARDED_EVENT_HELPER(name_, nsCOMPtr<EventHandlerNonNull>)
-#define WINDOW_EVENT(name_, id_, type_, struct_)                  \
-  NS_IMETHODIMP nsHTMLBodyElement::GetOn##name_(JSContext *cx,    \
-                                                jsval *vp) {      \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();         \
-    if (win && win->IsInnerWindow()) {                            \
-      return win->GetOn##name_(cx, vp);                           \
-    }                                                             \
-    *vp = JSVAL_NULL;                                             \
-    return NS_OK;                                                 \
-  }                                                               \
-  NS_IMETHODIMP nsHTMLBodyElement::SetOn##name_(JSContext *cx,    \
-                                                const jsval &v) { \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();         \
-    if (win && win->IsInnerWindow()) {                            \
-      return win->SetOn##name_(cx, v);                            \
-    }                                                             \
-    return NS_OK;                                                 \
+#define WINDOW_EVENT(name_, id_, type_, struct_)                               \
+  NS_IMETHODIMP                                                                \
+  HTMLBodyElement::GetOn##name_(JSContext *cx, jsval *vp)                      \
+  {                                                                            \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
+    if (win && win->IsInnerWindow()) {                                         \
+      return win->GetOn##name_(cx, vp);                                        \
+    }                                                                          \
+    *vp = JSVAL_NULL;                                                          \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHODIMP                                                                \
+  HTMLBodyElement::SetOn##name_(JSContext *cx, const jsval &v)                 \
+  {                                                                            \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
+    if (win && win->IsInnerWindow()) {                                         \
+      return win->SetOn##name_(cx, v);                                         \
+    }                                                                          \
+    return NS_OK;                                                              \
   }
 #include "nsEventNameList.h"
 #undef WINDOW_EVENT
@@ -535,3 +449,6 @@ nsHTMLBodyElement::GetAssociatedEditor()
 #undef FORWARDED_EVENT
 #undef FORWARDED_EVENT_HELPER
 #undef EVENT
+
+} // namespace dom
+} // namespace mozilla

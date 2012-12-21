@@ -3,32 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLUnknownElement.h"
+#include "HTMLUnknownElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 
-using namespace mozilla::dom;
+NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
+DOMCI_NODE_DATA(HTMLUnknownElement, mozilla::dom::HTMLUnknownElement)
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLUnknownElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLUnknownElement, Element)
+namespace mozilla {
+namespace dom {
+
+NS_IMPL_ADDREF_INHERITED(HTMLUnknownElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLUnknownElement, Element)
 
 JSObject*
-nsHTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope,
+HTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope,
                                bool *aTriedToWrap)
 {
   return HTMLUnknownElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
-
-DOMCI_NODE_DATA(HTMLUnknownElement, nsHTMLUnknownElement)
-
-// QueryInterface implementation for nsHTMLUnknownElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLUnknownElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLUnknownElement,
+// QueryInterface implementation for HTMLUnknownElement
+NS_INTERFACE_TABLE_HEAD(HTMLUnknownElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLUnknownElement,
                                    nsIDOMHTMLUnknownElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLUnknownElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLUnknownElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLUnknownElement)
 
+NS_IMPL_ELEMENT_CLONE(HTMLUnknownElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLUnknownElement)
+} // namespace dom
+} // namespace mozilla

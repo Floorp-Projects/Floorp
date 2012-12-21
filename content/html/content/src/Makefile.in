@@ -25,6 +25,17 @@ EXPORTS		= \
 		nsTimeRanges.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+		HTMLBodyElement.h \
+		HTMLDataListElement.h \
+		HTMLDivElement.h \
+		HTMLFontElement.h \
+		HTMLFrameSetElement.h \
+		HTMLLabelElement.h \
+		HTMLUnknownElement.h
+
 CPPSRCS		= \
 		HTMLPropertiesCollection.cpp \
 		nsClientRect.cpp \
@@ -33,27 +44,27 @@ CPPSRCS		= \
 		nsGenericHTMLFrameElement.cpp \
 		nsFormSubmission.cpp \
 		nsTextEditorState.cpp \
-		nsHTMLElement.cpp \
+		HTMLElement.cpp \
 		nsHTMLAnchorElement.cpp \
 		nsHTMLAreaElement.cpp \
 		nsHTMLBRElement.cpp \
-		nsHTMLBodyElement.cpp \
+		HTMLBodyElement.cpp \
 		nsHTMLButtonElement.cpp \
 		nsHTMLCanvasElement.cpp \
-		nsHTMLDataListElement.cpp \
-		nsHTMLDivElement.cpp \
+		HTMLDataListElement.cpp \
+		HTMLDivElement.cpp \
 		nsHTMLFieldSetElement.cpp \
-		nsHTMLFontElement.cpp \
+		HTMLFontElement.cpp \
 		nsHTMLFormElement.cpp \
 		nsHTMLFrameElement.cpp \
-		nsHTMLFrameSetElement.cpp \
+		HTMLFrameSetElement.cpp \
 		nsHTMLHRElement.cpp \
 		nsHTMLHeadingElement.cpp \
 		nsHTMLIFrameElement.cpp \
 		nsHTMLImageElement.cpp \
 		nsHTMLInputElement.cpp \
 		nsHTMLLIElement.cpp \
-		nsHTMLLabelElement.cpp \
+		HTMLLabelElement.cpp \
 		nsHTMLLegendElement.cpp \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
@@ -84,7 +95,7 @@ CPPSRCS		= \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
 		nsHTMLTitleElement.cpp \
-		nsHTMLUnknownElement.cpp \
+		HTMLUnknownElement.cpp \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
 		nsRadioVisitor.cpp \

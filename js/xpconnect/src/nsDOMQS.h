@@ -8,7 +8,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLCanvasElement.h"
-#include "nsHTMLDivElement.h"
 #include "nsHTMLFormElement.h"
 #include "nsHTMLImageElement.h"
 #include "nsHTMLOptionElement.h"
@@ -165,7 +164,6 @@ xpc_qsUnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,               \
 }
 
 DEFINE_UNWRAP_CAST_HTML(canvas, nsHTMLCanvasElement)
-DEFINE_UNWRAP_CAST_HTML(div, nsHTMLDivElement)
 DEFINE_UNWRAP_CAST_HTML(form, nsHTMLFormElement)
 DEFINE_UNWRAP_CAST_HTML(img, nsHTMLImageElement)
 DEFINE_UNWRAP_CAST_HTML(optgroup, nsHTMLOptGroupElement)

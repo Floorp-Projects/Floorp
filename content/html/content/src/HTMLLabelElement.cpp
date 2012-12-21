@@ -6,72 +6,49 @@
 /**
  * Implementation of HTML <label> elements.
  */
-#include "nsHTMLLabelElement.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsPresContext.h"
-#include "nsIFormControl.h"
-#include "nsIForm.h"
-#include "nsIDocument.h"
-#include "nsGUIEvent.h"
+#include "HTMLLabelElement.h"
 #include "nsEventDispatcher.h"
-#include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
-#include "mozilla/ErrorResult.h"
 
 // construction, destruction
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
+DOMCI_NODE_DATA(HTMLLabelElement, mozilla::dom::HTMLLabelElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLLabelElement::nsHTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo)
-  , mHandlingEvent(false)
-{
-}
-
-nsHTMLLabelElement::~nsHTMLLabelElement()
+HTMLLabelElement::~HTMLLabelElement()
 {
 }
 
 // nsISupports 
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLLabelElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLLabelElement, Element)
 
-
-DOMCI_NODE_DATA(HTMLLabelElement, nsHTMLLabelElement)
-
-// QueryInterface implementation for nsHTMLLabelElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLLabelElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLabelElement,
+// QueryInterface implementation for HTMLLabelElement
+NS_INTERFACE_TABLE_HEAD(HTMLLabelElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLLabelElement,
                                    nsIDOMHTMLLabelElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLabelElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLabelElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLabelElement)
 
 
 // nsIDOMHTMLLabelElement
 
-
-NS_IMPL_ELEMENT_CLONE(nsHTMLLabelElement)
-
+NS_IMPL_ELEMENT_CLONE(HTMLLabelElement)
 
 NS_IMETHODIMP
-nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
+HTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 NS_IMETHODIMP
-nsHTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
+HTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
 {
   nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(GetLabeledElement());
   element.forget(aElement);
@@ -79,10 +56,10 @@ nsHTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
+NS_IMPL_STRING_ATTR(HTMLLabelElement, HtmlFor, _for)
 
 void
-nsHTMLLabelElement::Focus(ErrorResult& aError)
+HTMLLabelElement::Focus(ErrorResult& aError)
 {
   // retarget the focus method at the for content
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -91,22 +68,6 @@ nsHTMLLabelElement::Focus(ErrorResult& aError)
     if (elem)
       fm->SetFocus(elem, 0);
   }
-}
-
-nsresult
-nsHTMLLabelElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                               nsIContent* aBindingParent,
-                               bool aCompileEventHandlers)
-{
-  return nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                              aBindingParent,
-                                              aCompileEventHandlers);
-}
-
-void
-nsHTMLLabelElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
-  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 static bool
@@ -139,7 +100,7 @@ DestroyMouseDownPoint(void *    /*aObject*/,
 }
 
 nsresult
-nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   if (mHandlingEvent ||
       (!NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
@@ -238,35 +199,20 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-nsHTMLLabelElement::Reset()
+HTMLLabelElement::Reset()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLLabelElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLLabelElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   return NS_OK;
 }
 
-nsresult
-nsHTMLLabelElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                            const nsAString& aValue, bool aNotify)
-{
-  return nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                           aNotify);
-}
-
-nsresult
-nsHTMLLabelElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                              bool aNotify)
-{
-  return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
-}
-
 void
-nsHTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
-                                     bool aIsTrustedEvent)
+HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
+                                   bool aIsTrustedEvent)
 {
   if (!aKeyCausesActivation) {
     nsRefPtr<Element> element = GetLabeledElement();
@@ -291,7 +237,7 @@ nsHTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
 }
 
 Element*
-nsHTMLLabelElement::GetLabeledElement()
+HTMLLabelElement::GetLabeledElement()
 {
   nsAutoString elementId;
 
@@ -317,7 +263,7 @@ nsHTMLLabelElement::GetLabeledElement()
 }
 
 Element*
-nsHTMLLabelElement::GetFirstLabelableDescendant()
+HTMLLabelElement::GetFirstLabelableDescendant()
 {
   for (nsIContent* cur = nsINode::GetFirstChild(); cur;
        cur = cur->GetNextNode(this)) {
@@ -330,3 +276,5 @@ nsHTMLLabelElement::GetFirstLabelableDescendant()
   return nullptr;
 }
 
+} // namespace dom
+} // namespace mozilla
