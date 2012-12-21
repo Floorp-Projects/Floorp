@@ -181,6 +181,10 @@
 #include "nsSandboxFlags.h"
 #include "nsIAppsService.h"
 
+#include "nsFrame.h"
+#include "nsDOMCaretPosition.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -8648,6 +8652,64 @@ ResetFullScreen(nsIDocument* aDocument, void* aData)
     aDocument->EnumerateSubDocuments(ResetFullScreen, aData);
   }
   return true;
+}
+
+NS_IMETHODIMP
+nsDocument::MozCaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
+{
+  NS_ENSURE_ARG_POINTER(aCaretPos);
+  *aCaretPos = nullptr;
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
+  nsPoint pt(x, y);
+
+  nsIPresShell *ps = GetShell();
+  if (!ps) {
+    return NS_OK;
+  }
+
+  nsIFrame *rootFrame = ps->GetRootFrame();
+
+  // XUL docs, unlike HTML, have no frame tree until everything's done loading
+  if (!rootFrame) {
+    return NS_OK; // return null to premature XUL callers as a reminder to wait
+  }
+
+  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, true,
+                                                      false);
+  if (!ptFrame) {
+    return NS_OK;
+  }
+
+  // GetContentOffsetsFromPoint requires frame-relative coordinates, so we need
+  // to adjust to frame-relative coordinates before we can perform this call.
+  // It should also not take into account the padding of the frame.
+  nsPoint adjustedPoint = pt - ptFrame->GetOffsetTo(rootFrame);
+
+  nsFrame::ContentOffsets offsets =
+    ptFrame->GetContentOffsetsFromPoint(adjustedPoint);
+
+  nsCOMPtr<nsIContent> node = offsets.content;
+  uint32_t offset = offsets.offset;
+  if (node && node->IsInNativeAnonymousSubtree()) {
+    nsIContent* nonanon = node->FindFirstNonChromeOnlyAccessContent();
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nonanon);
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(nonanon);
+    bool isText;
+    if (textArea || (input &&
+                     NS_SUCCEEDED(input->MozIsTextField(false, &isText)) &&
+                     isText)) {
+      node = nonanon;
+    } else {
+      node = nullptr;
+      offset = 0;
+    }
+  }
+
+  *aCaretPos = new nsDOMCaretPosition(node, offset);
+  NS_ADDREF(*aCaretPos);
+  return NS_OK;
 }
 
 /* static */
