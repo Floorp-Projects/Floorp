@@ -70,7 +70,6 @@ private:
     nsDiskCacheDevice *         mDevice;
     nsDiskCacheOutputStream *   mOutStream;     // not an owning reference
     int32_t                     mInStreamCount;
-    nsCOMPtr<nsIFile>           mLocalFile;
     PRFileDesc *                mFD;
 
     uint32_t                    mStreamPos;     // for Output Streams
