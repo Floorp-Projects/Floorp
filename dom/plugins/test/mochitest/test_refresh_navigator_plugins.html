@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- bug 820708 -->
+<html>
+  <head>
+    <meta><charset="utf-8"/>
+    <title>Test Refreshing navigator.plugins (bug 820708)</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  </head>
+  <body>
+    <script class="testbody" type="application/javascript">
+      SimpleTest.waitForExplicitFinish();
+      var pluginHost = Components.classes["@mozilla.org/plugin/host;1"]
+                       .getService(Components.interfaces.nsIPluginHost);
+      var pluginTags = pluginHost.getPluginTags();
+      var nextTest = null;
+      var obsService = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+      var observer = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic == "plugin-info-updated") {
+            SimpleTest.executeSoon(nextTest);
+          }
+        }
+      };
+      obsService.addObserver(observer, "plugin-info-updated", false);
+
+      var navTestPlugin = navigator.plugins.namedItem("Test Plug-in");
+      ok(navTestPlugin, "navigator.plugins should have Test Plug-in");
+      var tagTestPlugin = null;
+      for (var plugin of pluginTags) {
+        if (plugin.name == navTestPlugin.name) {
+          tagTestPlugin = plugin;
+          break;
+        }
+      }
+      ok(tagTestPlugin, "plugin tags should have Test Plug-in");
+      var mimeType = tagTestPlugin.getMimeTypes()[0];
+      ok(mimeType, "should have a MIME type for Test Plug-in");
+      ok(navigator.mimeTypes[mimeType.type], "navigator.mimeTypes should have an entry for '" + mimeType.type + "'");
+
+      nextTest = testPart2;
+      tagTestPlugin.disabled = true;
+
+      function testPart2() {
+        var navTestPlugin = navigator.plugins.namedItem("Test Plug-in");
+        ok(!navTestPlugin, "now navigator.plugins should not have Test Plug-in");
+        ok(!navigator.mimeTypes[mimeType.type], "now navigator.mimeTypes should not have an entry for '" + mimeType.type + "'");
+
+        nextTest = testPart3;
+        tagTestPlugin.disabled = false;
+      }
+
+      function testPart3() {
+        ok(navTestPlugin, "now navigator.plugins should have Test Plug-in again");
+        ok(navigator.mimeTypes[mimeType.type], "now navigator.mimeTypes should have an entry for '" + mimeType.type + "' again");
+        obsService.removeObserver(observer, "plugin-info-updated");
+        SimpleTest.finish();
+      }
+    </script>
+  </body>
+</html>
