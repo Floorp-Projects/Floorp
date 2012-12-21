@@ -16,7 +16,7 @@ namespace ion {
 class BaselineCompilerX64 : public BaselineCompilerX86Shared
 {
   protected:
-    BaselineCompilerX64(JSContext *cx, JSScript *script);
+    BaselineCompilerX64(JSContext *cx, HandleScript script);
 };
 
 typedef BaselineCompilerX64 BaselineCompilerSpecific;

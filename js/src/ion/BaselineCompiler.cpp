@@ -18,7 +18,7 @@
 using namespace js;
 using namespace js::ion;
 
-BaselineCompiler::BaselineCompiler(JSContext *cx, JSScript *script)
+BaselineCompiler::BaselineCompiler(JSContext *cx, HandleScript script)
   : BaselineCompilerSpecific(cx, script),
     return_(new HeapLabel()),
     autoRooter_(cx, this)

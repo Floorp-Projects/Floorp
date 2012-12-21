@@ -10,7 +10,7 @@
 using namespace js;
 using namespace js::ion;
 
-BaselineCompilerARM::BaselineCompilerARM(JSContext *cx, JSScript *script)
+BaselineCompilerARM::BaselineCompilerARM(JSContext *cx, HandleScript script)
   : BaselineCompilerShared(cx, script)
 {
 }
