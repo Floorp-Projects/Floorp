@@ -1011,6 +1011,13 @@ nsSVGElement::sLightingEffectsMap[] = {
   { nullptr }
 };
 
+// PresentationAttributes-mask
+/* static */ const Element::MappedAttributeEntry
+nsSVGElement::sMaskMap[] = {
+  { &nsGkAtoms::mask_type },
+  { nullptr }
+};
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 

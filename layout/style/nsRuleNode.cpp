@@ -7617,6 +7617,13 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
     svgReset->mMask = parentSVGReset->mMask;
   }
 
+  // mask-type: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForMaskType(),
+              svgReset->mMaskType,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentSVGReset->mMaskType,
+              NS_STYLE_MASK_TYPE_LUMINANCE, 0, 0, 0, 0);
+
   COMPUTE_END_RESET(SVGReset, svgReset)
 }
 
