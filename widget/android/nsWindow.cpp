@@ -229,6 +229,10 @@ nsWindow::Create(nsIWidget *aParent,
         mParent = parent;
     }
 
+#ifdef DEBUG_ANDROID_WIDGET
+    DumpWindows();
+#endif
+
     return NS_OK;
 }
 
@@ -249,6 +253,10 @@ nsWindow::Destroy(void)
     SetParent(nullptr);
 
     nsBaseWidget::OnDestroy();
+
+#ifdef DEBUG_ANDROID_WIDGET
+    DumpWindows();
+#endif
 
     return NS_OK;
 }
@@ -677,12 +685,10 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         return mLayerManager;
     }
 
-    nsWindow *topWindow = TopWindow();
-
-    if (!topWindow) {
-        printf_stderr(" -- no topwindow\n");
-        mLayerManager = CreateBasicLayerManager();
-        return mLayerManager;
+    nsWindow *topLevelWindow = FindTopLevel();
+    if (!topLevelWindow || topLevelWindow->mWindowType == eWindowType_invisible) {
+        // don't create a layer manager for an invisible top-level window
+        return nullptr;
     }
 
     mUseLayersAcceleration = ComputeShouldAccelerate(mUseLayersAcceleration);
