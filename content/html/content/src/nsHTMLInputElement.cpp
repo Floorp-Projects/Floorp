@@ -1335,8 +1335,8 @@ nsHTMLInputElement::GetMinAsDouble() const
 double
 nsHTMLInputElement::GetMaxAsDouble() const
 {
-  // Should only be used for <input type='number'> for the moment.
-  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
+  // Should only be used for <input type='number'/'date'> for the moment.
+  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE);
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::max)) {
     return MOZ_DOUBLE_NaN();
@@ -1345,9 +1345,8 @@ nsHTMLInputElement::GetMaxAsDouble() const
   nsAutoString maxStr;
   GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
 
-  nsresult ec;
-  double max = maxStr.ToDouble(&ec);
-  return NS_SUCCEEDED(ec) ? max : MOZ_DOUBLE_NaN();
+  double max;
+  return ConvertStringToNumber(maxStr, max) ? max : MOZ_DOUBLE_NaN();
 }
 
 double
@@ -4420,8 +4419,7 @@ nsHTMLInputElement::HasPatternMismatch() const
 bool
 nsHTMLInputElement::IsRangeOverflow() const
 {
-  // Ignore <input type=date> until bug 769355 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATE) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -4699,11 +4697,18 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     {
       nsXPIDLString message;
 
-      double max = GetMaxAsDouble();
-      MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(max));
-
       nsAutoString maxStr;
-      maxStr.AppendFloat(max);
+      if (mType == NS_FORM_INPUT_NUMBER) {
+        //We want to show the value as parsed when it's a number
+        double max = GetMaxAsDouble();
+        MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(max));
+
+        maxStr.AppendFloat(max);
+      } else if (mType == NS_FORM_INPUT_DATE) {
+        GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+      } else {
+        NS_NOTREACHED("Unexpected input type");
+      }
 
       const PRUnichar* params[] = { maxStr.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
@@ -5196,7 +5201,7 @@ nsHTMLInputElement::UpdateHasRange()
 {
   mHasRange = false;
 
-  if (mType != NS_FORM_INPUT_NUMBER) {
+  if (mType != NS_FORM_INPUT_NUMBER && mType != NS_FORM_INPUT_DATE) {
     return;
   }
 
