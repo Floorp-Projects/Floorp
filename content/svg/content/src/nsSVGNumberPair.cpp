@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGNumberPair.h"
+#include "nsSVGAttrTearoffTable.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "prdtoa.h"
 #include "nsError.h"
@@ -28,6 +29,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGNumberPair::DOMAnimatedNumber)
 NS_INTERFACE_MAP_END
 
 /* Implementation */
+
+static nsSVGAttrTearoffTable<nsSVGNumberPair, nsSVGNumberPair::DOMAnimatedNumber>
+  sSVGFirstAnimatedNumberTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGNumberPair, nsSVGNumberPair::DOMAnimatedNumber>
+  sSVGSecondAnimatedNumberTearoffTable;
 
 static nsresult
 ParseNumberOptionalNumber(const nsAString& aValue,
@@ -165,9 +171,29 @@ nsSVGNumberPair::ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
                                      PairIndex aIndex,
                                      nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMAnimatedNumber(this, aIndex, aSVGElement);
-  NS_ADDREF(*aResult);
+  nsRefPtr<DOMAnimatedNumber> domAnimatedNumber =
+    aIndex == eFirst ? sSVGFirstAnimatedNumberTearoffTable.GetTearoff(this) :
+                       sSVGSecondAnimatedNumberTearoffTable.GetTearoff(this);
+  if (!domAnimatedNumber) {
+    domAnimatedNumber = new DOMAnimatedNumber(this, aIndex, aSVGElement);
+    if (aIndex == eFirst) {
+      sSVGFirstAnimatedNumberTearoffTable.AddTearoff(this, domAnimatedNumber);
+    } else {
+      sSVGSecondAnimatedNumberTearoffTable.AddTearoff(this, domAnimatedNumber);
+    }
+  }
+
+  domAnimatedNumber.forget(aResult);
   return NS_OK;
+}
+
+nsSVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber()
+{
+  if (mIndex == eFirst) {
+    sSVGFirstAnimatedNumberTearoffTable.RemoveTearoff(mVal);
+  } else {
+    sSVGSecondAnimatedNumberTearoffTable.RemoveTearoff(mVal);
+  }
 }
 
 nsISMILAttr*

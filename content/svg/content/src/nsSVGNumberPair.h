@@ -77,6 +77,7 @@ public:
 
     DOMAnimatedNumber(nsSVGNumberPair* aVal, PairIndex aIndex, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement), mIndex(aIndex) {}
+    virtual ~DOMAnimatedNumber();
 
     nsSVGNumberPair* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;

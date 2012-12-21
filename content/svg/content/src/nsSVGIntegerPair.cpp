@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGIntegerPair.h"
+#include "nsSVGAttrTearoffTable.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
@@ -25,6 +26,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGIntegerPair::DOMAnimatedInteger)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedInteger)
 NS_INTERFACE_MAP_END
+
+static nsSVGAttrTearoffTable<nsSVGIntegerPair, nsSVGIntegerPair::DOMAnimatedInteger>
+  sSVGFirstAnimatedIntegerTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGIntegerPair, nsSVGIntegerPair::DOMAnimatedInteger>
+  sSVGSecondAnimatedIntegerTearoffTable;
 
 /* Implementation */
 
@@ -167,9 +173,29 @@ nsSVGIntegerPair::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
                                        PairIndex aIndex,
                                        nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMAnimatedInteger(this, aIndex, aSVGElement);
-  NS_ADDREF(*aResult);
+  nsRefPtr<DOMAnimatedInteger> domAnimatedInteger =
+    aIndex == eFirst ? sSVGFirstAnimatedIntegerTearoffTable.GetTearoff(this) :
+                       sSVGSecondAnimatedIntegerTearoffTable.GetTearoff(this);
+  if (!domAnimatedInteger) {
+    domAnimatedInteger = new DOMAnimatedInteger(this, aIndex, aSVGElement);
+    if (aIndex == eFirst) {
+      sSVGFirstAnimatedIntegerTearoffTable.AddTearoff(this, domAnimatedInteger);
+    } else {
+      sSVGSecondAnimatedIntegerTearoffTable.AddTearoff(this, domAnimatedInteger);
+    }
+  }
+
+  domAnimatedInteger.forget(aResult);
   return NS_OK;
+}
+
+nsSVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger()
+{
+  if (mIndex == eFirst) {
+    sSVGFirstAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
+  } else {
+    sSVGSecondAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
+  }
 }
 
 nsISMILAttr*
