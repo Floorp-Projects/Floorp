@@ -2383,6 +2383,11 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
     RegisterWithCategoryManager(aPluginTag->mMimeTypes[i], shouldRegister);
   }
 
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
+  if (obsService)
+    obsService->NotifyObservers(nullptr, "plugin-info-updated", nullptr);
+
   // Reload instances if needed
   if (aPluginTag->IsEnabled()) {
     return NS_OK;
