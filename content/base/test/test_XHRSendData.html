@@ -213,7 +213,7 @@ for (var i = 0; i < testDOMFiles.length; i++) {
 }
 
 try {
-  for each(test in tests) {
+  for (test of tests) {
     xhr = new XMLHttpRequest;
     xhr.open("POST", "file_XHRSendData.sjs", !!test.resType);
     if (test.contentType)

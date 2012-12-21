@@ -39,7 +39,7 @@ var tests = [
 
 var element = null;
 
-for each (var test in tests) {
+for (var test of tests) {
   appendHTML(content, test[1]);
   element = content.getElementsByTagName(test[0])[0];
   is(element.disabled, false, "element shouldn't be disabled");

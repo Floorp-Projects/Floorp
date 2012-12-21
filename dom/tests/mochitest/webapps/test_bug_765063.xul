@@ -32,7 +32,7 @@ var observer = {
        "the install origin didn't change");
 
     navigator.mozApps.mgmt.getAll().onsuccess = function onGetAll() {
-      var app = [a for each (a in this.result) if (a.manifestURL == url)][0];
+      var app = [a for (a of this.result) if (a.manifestURL == url)][0];
       app.uninstall().onsuccess = function onUninstall() {
         SimpleTest.finish();
       }

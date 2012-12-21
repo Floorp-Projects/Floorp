@@ -55,7 +55,7 @@ var inputs = [
 
 function doSubmit()
 {
-  for each(e in inputs) {
+  for (e of inputs) {
     e.focus();
     synthesizeKey("VK_RETURN", {});
   }

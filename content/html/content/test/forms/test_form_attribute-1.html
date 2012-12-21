@@ -407,7 +407,7 @@ var todoElements = [
   ['keygen', 'Keygen'],
 ];
 
-for each(var e in todoElements) {
+for (var e of todoElements) {
   var node = document.createElement(e[0]);
   var nodeString = HTMLElement.prototype.toString.apply(node);
   nodeString = nodeString.replace(/Element[\] ].*/, "Element");
@@ -415,22 +415,22 @@ for each(var e in todoElements) {
           e[0] + " should not be implemented");
 }
 
-for each(var name in elementNames) {
+for (var name of elementNames) {
   var elements = [
     document.createElement(name),
     document.createElement(name),
   ];
 
-  for each(var func in functions) {
+  for (var func of functions) {
     // Clean-up.
     while (content.firstChild) {
       content.removeChild(content.firstChild);
     }
-    for each(form in forms) {
+    for (form of forms) {
       content.appendChild(form);
       form.removeAttribute('id');
     }
-    for each(e in elements) {
+    for (e of elements) {
       content.appendChild(e);
       e.removeAttribute('form');
       is(e.form, null, "The element should not have a form owner");
@@ -459,7 +459,7 @@ for each(var name in elementNames) {
   }
 
   // Cleaning-up.
-  for each(e in elements) {
+  for (e of elements) {
     e.parentNode.removeChild(e);
     e = null;
   }

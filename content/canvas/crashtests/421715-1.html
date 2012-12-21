@@ -12,7 +12,7 @@
 
       function test_method(context, method, arity) {
         function testParams(existingParams, depth) {
-          for each (var arg in stringArgs) {
+          for (var arg of stringArgs) {
             var code = "context[method](" + existingParams + arg + ")";
             try {
               eval(code);

@@ -53,7 +53,7 @@ for (var char in chars) {
   var mapent = wsmap[is_whitespace];
   div.setAttribute("class", "classvalue" + String.fromCharCode(char) + "b")
   div.setAttribute("title", "a" + String.fromCharCode(char) + "titlevalue")
-  for each (var prop in ["text-decoration", "visibility"]) {
+  for (var prop of ["text-decoration", "visibility"]) {
     is(cs.getPropertyValue(prop), mapent[prop],
        "Character " + char + " should" + mapent.str +
        " be treated as whitespace ("

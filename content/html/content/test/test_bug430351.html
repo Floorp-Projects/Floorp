@@ -433,7 +433,7 @@ function testElements(parent, tags, shouldBeFocusable)
         focusable = focusableInContentEditable;
     }
 
-    for each (var tag in tags) {
+    for (var tag of tags) {
         parent.ownerDocument.body.focus();
 
         if (focusableElementsTODO.indexOf(tag) > -1) {

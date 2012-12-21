@@ -18,7 +18,7 @@ var b = new B;
 b.y = 1;
 
 var arr = [a, b];       // same shape prior to bug 497789 fix
-for each (var obj in arr)
+for (var obj of arr)
     obj.x = 2;          // should call b's setter but doesn't
 
 reportCompare(expect, actual, summary);

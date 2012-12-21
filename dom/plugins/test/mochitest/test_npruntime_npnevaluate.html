@@ -55,7 +55,7 @@
     var plugin = document.getElementById("plugin1");
 
     // Test calling NPN_Evaluate from within plugin code.
-    for each (var test in tests) {
+    for (var test of tests) {
       var expected = test[1];
       var result = plugin.npnEvaluateTest(test[0]);
       // serialize the two values for easy comparison

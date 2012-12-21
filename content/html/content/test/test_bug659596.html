@@ -23,7 +23,7 @@ function checkReflection(option, attribute) {
 
   // When attribute isn't present.
   var tests = [ "", "foo" ];
-  for each (var test in tests) {
+  for (var test of tests) {
     option.removeAttribute(attribute);
     option.textContent = test;
     is(option.getAttribute(attribute), null,
@@ -39,7 +39,7 @@ function checkReflection(option, attribute) {
     [ "foo", "bar" ],
     [ "foo", "" ],
   ];
-  for each (var test in tests) {
+  for (var test of tests) {
     option.setAttribute(attribute, test[0]);
     option.textContent = test[1];
     is(option[attribute], option.getAttribute(attribute),
@@ -55,7 +55,7 @@ function checkReflection(option, attribute) {
     [ "", "new" ],
     [ "foo", "new" ],
   ];
-  for each (var test in tests) {
+  for (var test of tests) {
     option.removeAttribute(attribute);
     option.textContent = test[0];
     option[attribute] = test[1]
@@ -73,7 +73,7 @@ function checkReflection(option, attribute) {
     [ "foo", "bar", "new" ],
     [ "foo", "", "new" ],
   ];
-  for each (var test in tests) {
+  for (var test of tests) {
     option.setAttribute(attribute, test[0]);
     option.textContent = test[1];
     option[attribute] = test[2];

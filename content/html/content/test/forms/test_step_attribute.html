@@ -76,7 +76,7 @@ function checkValidity(aElement, aValidity, aApply, aData)
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
-for each (var data in types) {
+for (var data of types) {
   var input = getFreshElement(data[0]);
   var apply = data[1];
 
