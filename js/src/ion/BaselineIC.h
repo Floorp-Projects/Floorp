@@ -307,6 +307,8 @@ class ICEntry
                                 \
     _(GetProp_Fallback)         \
     _(GetProp_DenseLength)      \
+    _(GetProp_Native)           \
+    _(GetProp_NativePrototype)  \
                                 \
     _(SetProp_Fallback)
 
@@ -1716,6 +1718,142 @@ class ICGetProp_DenseLength : public ICStub
             return ICGetProp_DenseLength::New(space, getStubCode());
         }
     };
+};
+
+// Base class for GetProp_Native and GetProp_NativePrototype stubs.
+class ICGetPropNativeStub : public ICMonitoredStub
+{
+    // Object shape (lastProperty).
+    HeapPtrShape shape_;
+
+    // Fixed or dynamic slot offset.
+    uint32_t offset_;
+
+  protected:
+    ICGetPropNativeStub(ICStub::Kind kind, IonCode *stubCode, ICStub *firstMonitorStub,
+                        HandleShape shape, uint32_t offset)
+      : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+        shape_(shape),
+        offset_(offset)
+    {}
+
+  public:
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    uint32_t offset() const {
+        return offset_;
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICGetPropNativeStub, shape_);
+    }
+    static size_t offsetOfOffset() {
+        return offsetof(ICGetPropNativeStub, offset_);
+    }
+};
+
+// Stub for accessing an own property on a native object.
+class ICGetProp_Native : public ICGetPropNativeStub
+{
+    friend class ICStubSpace;
+
+    ICGetProp_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+                     uint32_t offset)
+      : ICGetPropNativeStub(GetProp_Native, stubCode, firstMonitorStub, shape, offset)
+    {}
+
+  public:
+    static inline ICGetProp_Native *New(ICStubSpace *space, IonCode *code,
+                                        ICStub *firstMonitorStub, HandleShape shape,
+                                        uint32_t offset)
+    {
+        return space->allocate<ICGetProp_Native>(code, firstMonitorStub, shape, offset);
+    }
+};
+
+// Stub for accessing a property on a native object's prototype. Note that due to
+// the shape teleporting optimization, we only have to guard on the object's shape
+// and the holder's shape.
+class ICGetProp_NativePrototype : public ICGetPropNativeStub
+{
+    friend class ICStubSpace;
+
+    // Holder and its shape.
+    HeapPtrObject holder_;
+    HeapPtrShape holderShape_;
+
+    ICGetProp_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+                              uint32_t offset, HandleObject holder, HandleShape holderShape)
+      : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, shape, offset),
+        holder_(holder),
+        holderShape_(holderShape)
+    {}
+
+  public:
+    static inline ICGetProp_NativePrototype *New(ICStubSpace *space, IonCode *code,
+                                                 ICStub *firstMonitorStub, HandleShape shape,
+                                                 uint32_t offset, HandleObject holder,
+                                                 HandleShape holderShape)
+    {
+        return space->allocate<ICGetProp_NativePrototype>(code, firstMonitorStub, shape, offset,
+                                                          holder, holderShape);
+    }
+
+  public:
+    HeapPtrObject &holder() {
+        return holder_;
+    }
+    HeapPtrShape &holderShape() {
+        return holderShape_;
+    }
+    static size_t offsetOfHolder() {
+        return offsetof(ICGetProp_NativePrototype, holder_);
+    }
+    static size_t offsetOfHolderShape() {
+        return offsetof(ICGetProp_NativePrototype, holderShape_);
+    }
+};
+
+// Compiler for GetProp_Native and GetProp_NativePrototype stubs.
+class ICGetPropNativeCompiler : public ICStubCompiler
+{
+    ICStub *firstMonitorStub_;
+    HandleObject obj_;
+    HandleObject holder_;
+    bool isFixedSlot_;
+    uint32_t offset_;
+
+    bool generateStubCode(MacroAssembler &masm);
+
+    virtual int32_t getKey() const {
+        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+    }
+
+  public:
+    ICGetPropNativeCompiler(JSContext *cx, ICStub::Kind kind, ICStub *firstMonitorStub,
+                            HandleObject obj, HandleObject holder, bool isFixedSlot,
+                            uint32_t offset)
+      : ICStubCompiler(cx, kind),
+        firstMonitorStub_(firstMonitorStub),
+        obj_(obj),
+        holder_(holder),
+        isFixedSlot_(isFixedSlot),
+        offset_(offset)
+    {}
+
+    ICStub *getStub(ICStubSpace *space) {
+        RootedShape shape(cx, obj_->lastProperty());
+        if (kind == ICStub::GetProp_Native) {
+            JS_ASSERT(obj_ == holder_);
+            return ICGetProp_Native::New(space, getStubCode(), firstMonitorStub_, shape, offset_);
+        }
+
+        JS_ASSERT(obj_ != holder_);
+        JS_ASSERT(kind == ICStub::GetProp_NativePrototype);
+        RootedShape holderShape(cx, holder_->lastProperty());
+        return ICGetProp_NativePrototype::New(space, getStubCode(), firstMonitorStub_, shape,
+                                              offset_, holder_, holderShape);
+    }
 };
 
 // SetProp
