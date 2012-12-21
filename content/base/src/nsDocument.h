@@ -1005,18 +1005,6 @@ public:
   // DocSizeOfIncludingThis is inherited from nsIDocument.
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
-
-  static nsIDOMElement* CurrentUpgradeElement()
-  {
-    return sCurrentUpgradeElement;
-  }
-
-  JSObject* GetCustomPrototype(const nsAString& aElementName)
-  {
-    JSObject* prototype = nullptr;
-    mCustomPrototypes.Get(aElementName, &prototype);
-    return prototype;
-  }
 protected:
   friend class nsNodeUtils;
 
@@ -1173,14 +1161,6 @@ protected:
   // full-screen element onto this stack, and when we cancel full-screen we
   // pop one off this stack, restoring the previous full-screen state
   nsTArray<nsWeakPtr> mFullScreenStack;
-
-  // Weak reference to the current upgraded element in document.register.
-  // This member is used for function |this| translation when calling a
-  // callback interface in document.register.
-  static nsIDOMElement* sCurrentUpgradeElement;
-
-  // Hashtable for custom element prototypes in web components.
-  nsDataHashtable<nsStringHashKey, JSObject*> mCustomPrototypes;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;

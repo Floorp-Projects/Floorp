@@ -816,8 +816,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
   if (aEventType.LowerCaseEqualsLiteral("commandevent") ||
       aEventType.LowerCaseEqualsLiteral("commandevents"))
     return NS_NewDOMCommandEvent(aDOMEvent, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("elementreplace"))
-    return NS_NewDOMElementReplaceEvent(aDOMEvent, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("datacontainerevent") ||
       aEventType.LowerCaseEqualsLiteral("datacontainerevents"))
     return NS_NewDOMDataContainerEvent(aDOMEvent, aPresContext, nullptr);
