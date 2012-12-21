@@ -7,6 +7,7 @@ var Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var loginManager = {
 
@@ -17,30 +18,6 @@ var loginManager = {
         return this._formFillService =
                         Cc["@mozilla.org/satchel/form-fill-controller;1"].
                         getService(Ci.nsIFormFillController);
-    },
-
-    // Private Browsing Service
-    // If the service is not available, null will be returned.
-    __privateBrowsingService : undefined,
-    get _privateBrowsingService() {
-        if (this.__privateBrowsingService == undefined) {
-            if ("@mozilla.org/privatebrowsing;1" in Cc)
-                this.__privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
-                                                getService(Ci.nsIPrivateBrowsingService);
-            else
-                this.__privateBrowsingService = null;
-        }
-        return this.__privateBrowsingService;
-    },
-
-
-    // Whether we are in private browsing mode
-    get _inPrivateBrowsing() {
-        var pbSvc = this._privateBrowsingService;
-        if (pbSvc)
-            return pbSvc.privateBrowsingEnabled;
-        else
-            return false;
     },
 
     _nsLoginInfo : null, // Constructor for nsILoginInfo implementation
@@ -532,7 +509,7 @@ var loginManager = {
         this.log("_fillDocument processing " + forms.length +
                  " forms on " + doc.documentURI);
 
-        var autofillForm = !this._inPrivateBrowsing &&
+        var autofillForm = !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) &&
                            Services.prefs.getBoolPref("signon.autofillForms");
 
         // actionOrigins is a list of each form's action origins for this
@@ -609,14 +586,15 @@ var loginManager = {
      * our stored password.
      */
     _onFormSubmit : function (form) {
-        if (this._inPrivateBrowsing) {
+        var doc = form.ownerDocument;
+        var win = doc.defaultView;
+
+        if (PrivateBrowsingUtils.isWindowPrivate(win)) {
             // We won't do anything in private browsing mode anyway,
             // so there's no need to perform further checks.
             this.log("(form submission ignored in private browsing mode)");
             return;
         }
-
-        var doc = form.ownerDocument;
 
         // If password saving is disabled (globally or for host), bail out now.
         if (!this._remember)
