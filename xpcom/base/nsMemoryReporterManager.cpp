@@ -1118,7 +1118,7 @@ NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
     return mgr->UnregisterMultiReporter(reporter);
 }
 
-#if defined(MOZ_DMDV) || defined(MOZ_DMD)
+#if defined(MOZ_DMD)
 
 namespace mozilla {
 namespace dmd {
@@ -1133,7 +1133,7 @@ public:
                         const nsACString &aDescription,
                         nsISupports *aData)
     {
-        // Do nothing;  the reporter has already reported to DMDV.
+        // Do nothing;  the reporter has already reported to DMD.
         return NS_OK;
     }
 };
@@ -1176,7 +1176,7 @@ RunReporters()
             path.Find("explicit") == 0)
         {
             // Just getting the amount is enough for the reporter to report to
-            // DMDV.
+            // DMD.
             int64_t amount;
             (void)r->GetAmount(&amount);
         }
@@ -1196,20 +1196,5 @@ RunReporters()
 } // namespace dmd
 } // namespace mozilla
 
-#endif  // defined(MOZ_DMDV) || defined(MOZ_DMD)
-
-#ifdef MOZ_DMDV
-namespace mozilla {
-namespace dmdv {
-
-void
-Dump()
-{
-    VALGRIND_DMDV_CHECK_REPORTING;
-}
-
-} // namespace dmdv
-} // namespace mozilla
-
-#endif  /* defined(MOZ_DMDV) */
+#endif  // defined(MOZ_DMD)
 
