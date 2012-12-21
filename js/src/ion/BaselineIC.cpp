@@ -82,6 +82,18 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &globalStub->shape(), "baseline-global-stub-shape");
         break;
       }
+      case ICStub::GetProp_Native: {
+        ICGetProp_Native *propStub = toGetProp_Native();
+        MarkShape(trc, &propStub->shape(), "baseline-getprop-stub-shape");
+        break;
+      }
+      case ICStub::GetProp_NativePrototype: {
+        ICGetProp_NativePrototype *propStub = toGetProp_NativePrototype();
+        MarkShape(trc, &propStub->shape(), "baseline-getprop-stub-shape");
+        MarkObject(trc, &propStub->holder(), "baseline-getprop-stub-holder");
+        MarkShape(trc, &propStub->holderShape(), "baseline-getprop-stub-holdershape");
+        break;
+      }
       default:
         break;
     }
@@ -1346,8 +1358,10 @@ ICGetName_Global::Compiler::generateStubCode(MacroAssembler &masm)
 
 static bool
 TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub, HandleValue val,
-                    HandleValue res)
+                    HandleValue res, bool *attached)
 {
+    JS_ASSERT(!*attached);
+
     if (!val.isObject())
         return true;
 
@@ -1359,10 +1373,84 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         if (!newStub)
             return false;
 
+        *attached = true;
         stub->addNewStub(newStub);
         return true;
     }
 
+    return true;
+}
+
+static bool
+IsCacheableProtoChain(JSObject *obj, JSObject *holder)
+{
+    while (obj != holder) {
+        // We cannot assume that we find the holder object on the prototype
+        // chain and must check for null proto. The prototype chain can be
+        // altered during the lookupProperty call.
+        JSObject *proto = obj->getProto();
+        if (!proto || !proto->isNative())
+            return false;
+
+        // Don't handle objects which require a prototype guard. This should
+        // be uncommon so handling it is likely not worth the complexity.
+        if (proto->hasUncacheableProto())
+            return false;
+
+        obj = proto;
+    }
+    return true;
+}
+
+static bool
+IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (!shape->hasSlot() || !shape->hasDefaultGetter())
+        return false;
+
+    return true;
+}
+
+static bool
+TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub,
+                           HandlePropertyName name, HandleValue val, HandleValue res,
+                           bool *attached)
+{
+    JS_ASSERT(!*attached);
+
+    if (!val.isObject())
+        return true;
+
+    RootedObject obj(cx, &val.toObject());
+    if (!obj->isNative() && !obj->isDenseArray())
+        return true;
+
+    RootedShape shape(cx);
+    RootedObject holder(cx);
+    if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
+        return false;
+
+    if (!IsCacheableGetPropReadSlot(obj, holder, shape))
+        return true;
+
+    bool isFixedSlot = holder->isFixedSlot(shape->slot());
+    uint32_t offset = isFixedSlot
+                      ? JSObject::getFixedSlotOffset(shape->slot())
+                      : holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+
+    ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+    ICStub::Kind kind = (obj == holder) ? ICStub::GetProp_Native : ICStub::GetProp_NativePrototype;
+
+    ICGetPropNativeCompiler compiler(cx, kind, monitorStub, obj, holder, isFixedSlot, offset);
+    ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    *attached = true;
     return true;
 }
 
@@ -1406,10 +1494,19 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
         return true;
     }
 
+    bool attached = false;
+
     if (JSOp(*pc) == JSOP_LENGTH) {
-        if (!TryAttachLengthStub(cx, script, stub, val, res))
+        if (!TryAttachLengthStub(cx, script, stub, val, res, &attached))
             return false;
+        if (attached)
+            return true;
     }
+
+    if (!TryAttachNativeGetPropStub(cx, script, stub, name, val, res, &attached))
+        return false;
+    if (attached)
+        return true;
 
     return true;
 }
@@ -1454,6 +1551,50 @@ ICGetProp_DenseLength::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
     EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+
+    // Guard input is an object.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    Register scratch = regs.takeAny();
+
+    // Unbox and shape guard.
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfShape()), scratch);
+    masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
+
+    Register holderReg;
+    if (obj_ == holder_) {
+        holderReg = objReg;
+    } else {
+        // Shape guard holder.
+        holderReg = regs.takeAny();
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_NativePrototype::offsetOfHolder()),
+                     holderReg);
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_NativePrototype::offsetOfHolderShape()),
+                     scratch);
+        masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
+    }
+
+    if (!isFixedSlot_)
+        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), holderReg);
+
+    masm.load32(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfOffset()), scratch);
+    masm.loadValue(BaseIndex(holderReg, scratch, TimesOne), R0);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
