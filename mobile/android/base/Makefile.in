@@ -227,8 +227,12 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
+  res/color/abouthome_section_more_text.xml \
+  res/color/abouthome_section_subtitle.xml \
+  res/color/abouthome_section_title.xml \
   res/color/awesome_bar_title.xml \
   res/color/awesome_bar_title_hint.xml \
+  res/drawable/abouthome_logo.xml \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
@@ -497,7 +501,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/favicon.png \
   res/drawable/folder.png \
   res/drawable/abouthome_icon.png \
-  res/drawable/abouthome_logo.png \
+  res/drawable/abouthome_logo_dark.png \
+  res/drawable/abouthome_logo_light.png \
   res/drawable/abouthome_promo_box_bg.9.png \
   res/drawable/abouthome_promo_box_pressed_bg.9.png \
   res/drawable/abouthome_promo_logo_apps.png \
@@ -586,7 +591,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/home_bg.png \
   res/drawable-hdpi/home_star.png \
   res/drawable-hdpi/abouthome_icon.png \
-  res/drawable-hdpi/abouthome_logo.png \
+  res/drawable-hdpi/abouthome_logo_dark.png \
+  res/drawable-hdpi/abouthome_logo_light.png \
   res/drawable-hdpi/abouthome_promo_box_bg.9.png \
   res/drawable-hdpi/abouthome_promo_box_pressed_bg.9.png \
   res/drawable-hdpi/abouthome_promo_logo_apps.png \
@@ -665,7 +671,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/favicon.png \
   res/drawable-xhdpi/folder.png \
   res/drawable-xhdpi/abouthome_icon.png \
-  res/drawable-xhdpi/abouthome_logo.png \
+  res/drawable-xhdpi/abouthome_logo_dark.png \
+  res/drawable-xhdpi/abouthome_logo_light.png \
   res/drawable-xhdpi/abouthome_promo_box_bg.9.png \
   res/drawable-xhdpi/abouthome_promo_box_pressed_bg.9.png \
   res/drawable-xhdpi/abouthome_promo_logo_apps.png \

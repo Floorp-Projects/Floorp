@@ -321,10 +321,10 @@ private:
   Mutex mHangReportsMutex;
   nsIMemoryReporter *mMemoryReporter;
 
-  bool mCachedShutdownTime;
+  bool mCachedTelemetryData;
   uint32_t mLastShutdownTime;
-  std::vector<nsCOMPtr<nsIReadShutdownTimeCallback> > mCallbacks;
-  friend class nsReadShutdownTime;
+  std::vector<nsCOMPtr<nsIFetchTelemetryDataCallback> > mCallbacks;
+  friend class nsFetchTelemetryData;
 };
 
 TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
@@ -709,10 +709,10 @@ ReadLastShutdownDuration(const char *filename) {
   return shutdownTime;
 }
 
-class nsReadShutdownTime : public nsRunnable
+class nsFetchTelemetryData : public nsRunnable
 {
 public:
-  nsReadShutdownTime(const char *aFilename) :
+  nsFetchTelemetryData(const char *aFilename) :
     mFilename(aFilename), mTelemetry(TelemetryImpl::sTelemetry) {
   }
 
@@ -722,7 +722,7 @@ private:
 
 public:
   void MainThread() {
-    mTelemetry->mCachedShutdownTime = true;
+    mTelemetry->mCachedTelemetryData = true;
     for (unsigned int i = 0, n = mTelemetry->mCallbacks.size(); i < n; ++i) {
       mTelemetry->mCallbacks[i]->Complete();
     }
@@ -732,7 +732,7 @@ public:
   NS_IMETHOD Run() {
     mTelemetry->mLastShutdownTime = ReadLastShutdownDuration(mFilename);
     nsCOMPtr<nsIRunnable> e =
-      NS_NewRunnableMethod(this, &nsReadShutdownTime::MainThread);
+      NS_NewRunnableMethod(this, &nsFetchTelemetryData::MainThread);
     NS_ENSURE_STATE(e);
     NS_DispatchToMainThread(e, NS_DISPATCH_NORMAL);
     return NS_OK;
@@ -771,10 +771,10 @@ GetShutdownTimeFileName()
 NS_IMETHODIMP
 TelemetryImpl::GetLastShutdownDuration(uint32_t *aResult)
 {
-  // The user must call ReadShutdownTime first. We return zero instead of
+  // The user must call AsyncFetchTelemetryData first. We return zero instead of
   // reporting a failure so that the rest of telemetry can uniformly handle
   // the read not being available yet.
-  if (!mCachedShutdownTime) {
+  if (!mCachedTelemetryData) {
     *aResult = 0;
     return NS_OK;
   }
@@ -784,10 +784,10 @@ TelemetryImpl::GetLastShutdownDuration(uint32_t *aResult)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::AsyncReadShutdownTime(nsIReadShutdownTimeCallback *aCallback)
+TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
 {
   // We have finished reading the data already, just call the callback.
-  if (mCachedShutdownTime) {
+  if (mCachedTelemetryData) {
     aCallback->Complete();
     return NS_OK;
   }
@@ -802,7 +802,7 @@ TelemetryImpl::AsyncReadShutdownTime(nsIReadShutdownTimeCallback *aCallback)
   // called; calling that function without telemetry enabled violates
   // assumptions that the write-the-shutdown-timestamp machinery makes.
   if (!Telemetry::CanRecord()) {
-    mCachedShutdownTime = true;
+    mCachedTelemetryData = true;
     aCallback->Complete();
     return NS_OK;
   }
@@ -812,7 +812,7 @@ TelemetryImpl::AsyncReadShutdownTime(nsIReadShutdownTimeCallback *aCallback)
   nsCOMPtr<nsIEventTarget> targetThread =
     do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   if (!targetThread) {
-    mCachedShutdownTime = true;
+    mCachedTelemetryData = true;
     aCallback->Complete();
     return NS_OK;
   }
@@ -820,13 +820,13 @@ TelemetryImpl::AsyncReadShutdownTime(nsIReadShutdownTimeCallback *aCallback)
   // We have to get the filename from the main thread.
   const char *filename = GetShutdownTimeFileName();
   if (!filename) {
-    mCachedShutdownTime = true;
+    mCachedTelemetryData = true;
     aCallback->Complete();
     return NS_OK;
   }
 
   mCallbacks.push_back(aCallback);
-  nsCOMPtr<nsIRunnable> event = new nsReadShutdownTime(filename);
+  nsCOMPtr<nsIRunnable> event = new nsFetchTelemetryData(filename);
 
   targetThread->Dispatch(event, NS_DISPATCH_NORMAL);
   return NS_OK;
@@ -837,7 +837,7 @@ mHistogramMap(Telemetry::HistogramCount),
 mCanRecord(XRE_GetProcessType() == GeckoProcessType_Default),
 mHashMutex("Telemetry::mHashMutex"),
 mHangReportsMutex("Telemetry::mHangReportsMutex"),
-mCachedShutdownTime(false),
+mCachedTelemetryData(false),
 mLastShutdownTime(0)
 {
   // A whitelist to prevent Telemetry reporting on Addon & Thunderbird DBs

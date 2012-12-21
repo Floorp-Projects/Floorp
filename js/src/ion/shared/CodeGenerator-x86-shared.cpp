@@ -421,21 +421,6 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitNegD(LNegD *ins)
-{
-    // XOR the float in a float register with -0.0.
-    FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
-
-    // From MacroAssemblerX86Shared::maybeInlineDouble
-    masm.pcmpeqw(ScratchFloatReg, ScratchFloatReg);
-    masm.psllq(Imm32(63), ScratchFloatReg);
-
-    masm.xorpd(ScratchFloatReg, input); // s ^ 0x80000000000000
-    return true;
-}
-
-bool
 CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

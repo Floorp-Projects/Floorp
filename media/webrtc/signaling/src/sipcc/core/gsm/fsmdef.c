@@ -2888,8 +2888,9 @@ fsmdef_ev_createoffer (sm_event_t *event) {
       FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
       return SM_RC_CLEANUP;
     }
+    dcb->inbound = FALSE;
 
-   if (msg->data.session.has_constraints) {
+    if (msg->data.session.has_constraints) {
         sess_data_p = (session_data_t *)findhash(msg->data.session.sessionid);
         if (sess_data_p) {
             gsmsdp_process_cap_constraints(dcb, sess_data_p->cc_constraints);
@@ -2994,6 +2995,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
         return SM_RC_CLEANUP;
     }
+    dcb->inbound = TRUE;
 
     if (msg->data.session.has_constraints) {
         sess_data_p = (session_data_t *)findhash(msg->data.session.sessionid);

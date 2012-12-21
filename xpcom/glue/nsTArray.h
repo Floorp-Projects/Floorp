@@ -7,6 +7,7 @@
 #ifndef nsTArray_h__
 #define nsTArray_h__
 
+#include "nsTArrayForwardDeclare.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Util.h"
 
@@ -21,17 +22,60 @@
 #include NEW_H
 
 //
-// NB: nsTArray assumes that your "T" can be memmove()d.  This is in
-// contrast to STL containers, which follow C++
-// construction/destruction rules.
+// nsTArray is a resizable array class, like std::vector.
 //
-// Don't use nsTArray if your "T" can't be memmove()d correctly.
+// Unlike std::vector, which follows C++'s construction/destruction rules,
+// nsTArray assumes that your "T" can be memmoved()'ed safely.
+//
+// The public classes defined in this header are
+//
+//   nsTArray<T>,
+//   FallibleTArray<T>,
+//   nsAutoTArray<T, N>, and
+//   AutoFallibleTArray<T, N>.
+//
+// nsTArray and nsAutoTArray are infallible; if one tries to make an allocation
+// which fails, it crashes the program.  In contrast, FallibleTArray and
+// AutoFallibleTArray are fallible; if you use one of these classes, you must
+// check the return values of methods such as Append() which may allocate.  If
+// in doubt, choose an infallible type.
+//
+// InfallibleTArray and AutoInfallibleTArray are aliases for nsTArray and
+// nsAutoTArray.
+//
+// If you just want to declare the nsTArray types (e.g., if you're in a header
+// file and don't need the full nsTArray definitions) consider including
+// nsTArrayForwardDeclare.h instead of nsTArray.h.
+//
+// The template parameter (i.e., T in nsTArray<T>) specifies the type of the
+// elements and has the following requirements:
+//
+//   T MUST be safely memmove()'able.
+//   T MUST define a copy-constructor.
+//   T MAY define operator< for sorting.
+//   T MAY define operator== for searching.
+//
+// For methods taking a Comparator instance, the Comparator must be a class
+// defining the following methods:
+//
+//   class Comparator {
+//     public:
+//       /** @return True if the elements are equals; false otherwise. */
+//       bool Equals(const elem_type& a, const Item& b) const;
+//
+//       /** @return True if (a < b); false otherwise. */
+//       bool LessThan(const elem_type& a, const Item& b) const;
+//   };
+//
+// The Equals method is used for searching, and the LessThan method is used for
+// searching and sorting.  The |Item| type above can be arbitrary, but must
+// match the Item type passed to the sort or search function.
 //
 
+
 //
-// nsTArray*Allocators must all use the same |free()|, to allow
-// swapping between fallible and infallible variants.  (NS_Free() and
-// moz_free() end up calling the same underlying free()).
+// nsTArray*Allocators must all use the same |free()|, to allow swap()'ing
+// between fallible and infallible variants.
 //
 
 #if defined(MOZALLOC_HAVE_XMALLOC)
@@ -75,8 +119,8 @@ struct nsTArrayInfallibleAllocator
 };
 
 #else
-
 #include <stdlib.h>
+
 struct nsTArrayFallibleAllocator
 {
   static void* Malloc(size_t size) {
@@ -95,12 +139,40 @@ struct nsTArrayFallibleAllocator
   }
 };
 
-#endif
+struct nsTArrayInfallibleAllocator
+{
+  static void* Malloc(size_t size) {
+    void* ptr = malloc(size);
+    if (MOZ_UNLIKELY(!ptr)) {
+      HandleOOM();
+    }
+    return ptr;
+  }
 
-#if defined(MOZALLOC_HAVE_XMALLOC)
-struct nsTArrayDefaultAllocator : public nsTArrayInfallibleAllocator { };
-#else
-struct nsTArrayDefaultAllocator : public nsTArrayFallibleAllocator { };
+  static void* Realloc(void* ptr, size_t size) {
+    void* newptr = realloc(ptr, size);
+    if (MOZ_UNLIKELY(!ptr && size)) {
+      HandleOOM();
+    }
+    return newptr;
+  }
+
+  static void Free(void* ptr) {
+    free(ptr);
+  }
+
+  static void SizeTooBig() {
+    HandleOOM();
+  }
+
+private:
+  static void HandleOOM() {
+    fputs("Out of memory allocating nsTArray buffer.\n", stderr);
+    MOZ_CRASH();
+    MOZ_NOT_REACHED();
+  }
+};
+
 #endif
 
 // nsTArray_base stores elements into the space allocated beyond
@@ -374,53 +446,31 @@ public:
   }
 };
 
+template <class E> class InfallibleTArray;
+template <class E> class FallibleTArray;
+
 //
-// The templatized array class that dynamically resizes its storage as
-// elements are added.  This class is designed to behave a bit like
-// std::vector, though note that unlike std::vector, nsTArray doesn't
-// follow C++ construction/destruction rules.
+// nsTArray_Impl contains most of the guts supporting nsTArray, FallibleTArray,
+// nsAutoTArray, and AutoFallibleTArray.
 //
-// The template parameter specifies the type of the elements (elem_type), and
-// has the following requirements:
+// The only situation in which you might need to use nsTArray_Impl in your code
+// is if you're writing code which mutates a TArray which may or may not be
+// infallible.
 //
-//   elem_type MUST define a copy-constructor.
-//   elem_type MAY define operator< for sorting.
-//   elem_type MAY define operator== for searching.
+// Code which merely reads from a TArray which may or may not be infallible can
+// simply cast the TArray to |const nsTArray&|; both fallible and infallible
+// TArrays can be cast to |const nsTArray&|.
 //
-// For methods taking a Comparator instance, the Comparator must be a class
-// defining the following methods:
-//
-//   class Comparator {
-//     public:
-//       /** @return True if the elements are equals; false otherwise. */
-//       bool Equals(const elem_type& a, const Item& b) const;
-//
-//       /** @return True if (a < b); false otherwise. */
-//       bool LessThan(const elem_type& a, const Item& b) const;
-//   };
-//
-// The Equals method is used for searching, and the LessThan method is used
-// for sorting.  The |Item| type above can be arbitrary, but must match the
-// Item type passed to the sort or search function.
-//
-// The Alloc template parameter can be used to choose between
-// "fallible" and "infallible" nsTArray (if available), defaulting to
-// fallible.  If the *fallible* allocator is used, the return value of
-// methods that might allocate needs to be checked; Append() is
-// one such method.  These return values don't need to be checked if
-// the *in*fallible allocator is chosen.  When in doubt, choose the
-// infallible allocator.
-//
-template<class E, class Alloc=nsTArrayDefaultAllocator>
-class nsTArray : public nsTArray_base<Alloc>,
-                 public nsTArray_SafeElementAtHelper<E, nsTArray<E, Alloc> >
+template<class E, class Alloc>
+class nsTArray_Impl : public nsTArray_base<Alloc>,
+                      public nsTArray_SafeElementAtHelper<E, nsTArray_Impl<E, Alloc> >
 {
 public:
   typedef nsTArray_base<Alloc>           base_type;
   typedef typename base_type::size_type  size_type;
   typedef typename base_type::index_type index_type;
   typedef E                              elem_type;
-  typedef nsTArray<E, Alloc>             self_type;
+  typedef nsTArray_Impl<E, Alloc>        self_type;
   typedef nsTArrayElementTraits<E>       elem_traits;
   typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
 
@@ -439,34 +489,56 @@ public:
   // Finalization method
   //
 
-  ~nsTArray() { Clear(); }
+  ~nsTArray_Impl() { Clear(); }
 
   //
   // Initialization methods
   //
 
-  nsTArray() {}
+  nsTArray_Impl() {}
 
   // Initialize this array and pre-allocate some number of elements.
-  explicit nsTArray(size_type capacity) {
+  explicit nsTArray_Impl(size_type capacity) {
     SetCapacity(capacity);
   }
 
   // The array's copy-constructor performs a 'deep' copy of the given array.
   // @param other  The array object to copy.
-  explicit nsTArray(const self_type& other) {
+  //
+  // It's very important that we declare this method as taking |const
+  // self_type&| as opposed to taking |const nsTArray_Impl<E, OtherAlloc>| for
+  // an arbitrary OtherAlloc.
+  //
+  // If we don't declare a constructor taking |const self_type&|, C++ generates
+  // a copy-constructor for this class which merely copies the object's
+  // members, which is obviously wrong.
+  //
+  // You can pass an nsTArray_Impl<E, OtherAlloc> to this method because
+  // nsTArray_Impl<E, X> can be cast to const nsTArray_Impl<E, Y>&.  So the
+  // effect on the API is the same as if we'd declared this method as taking
+  // |const nsTArray_Impl<E, OtherAlloc>&|.
+  explicit nsTArray_Impl(const self_type& other) {
     AppendElements(other);
   }
 
+  // Allow converting to a const array with a different kind of allocator,
+  // Since the allocator doesn't matter for const arrays
   template<typename Allocator>
-  explicit nsTArray(const nsTArray<E, Allocator>& other) {
-    AppendElements(other);
+  operator const nsTArray_Impl<E, Allocator>&() const {
+    return *reinterpret_cast<const nsTArray_Impl<E, Allocator>*>(this);
+  }
+  // And we have to do this for our subclasses too
+  operator const nsTArray<E>&() const {
+    return *reinterpret_cast<const InfallibleTArray<E>*>(this);
+  }
+  operator const FallibleTArray<E>&() const {
+    return *reinterpret_cast<const FallibleTArray<E>*>(this);
   }
 
   // The array's assignment operator performs a 'deep' copy of the given
   // array.  It is optimized to reuse existing storage if possible.
   // @param other  The array object to copy.
-  nsTArray& operator=(const self_type& other) {
+  self_type& operator=(const self_type& other) {
     ReplaceElementsAt(0, Length(), other.Elements(), other.Length());
     return *this;
   }
@@ -474,7 +546,7 @@ public:
   // Return true if this array has the same length and the same
   // elements as |other|.
   template<typename Allocator>
-  bool operator==(const nsTArray<E, Allocator>& other) const {
+  bool operator==(const nsTArray_Impl<E, Allocator>& other) const {
     size_type len = Length();
     if (len != other.Length())
       return false;
@@ -494,12 +566,12 @@ public:
   }
 
   template<typename Allocator>
-  nsTArray& operator=(const nsTArray<E, Allocator>& other) {
+  self_type& operator=(const nsTArray_Impl<E, Allocator>& other) {
     ReplaceElementsAt(0, Length(), other.Elements(), other.Length());
     return *this;
   }
 
-  // @return The amount of memory used by this nsTArray, excluding
+  // @return The amount of memory used by this nsTArray_Impl, excluding
   // sizeof(*this).
   size_t SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) const {
     if (this->UsesAutoArrayBuffer() || Hdr() == EmptyHdr())
@@ -507,7 +579,7 @@ public:
     return mallocSizeOf(this->Hdr());
   }
 
-  // @return The amount of memory used by this nsTArray, including
+  // @return The amount of memory used by this nsTArray_Impl, including
   // sizeof(*this).
   size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf) const {
     return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
@@ -765,8 +837,8 @@ public:
   }
 
   // A variation on the ReplaceElementsAt method defined above.
-  template<class Item>
-  elem_type *InsertElementsAt(index_type index, const nsTArray<Item>& array) {
+  template<class Item, class Allocator>
+  elem_type *InsertElementsAt(index_type index, const nsTArray_Impl<Item, Allocator>& array) {
     return ReplaceElementsAt(index, 0, array.Elements(), array.Length());
   }
 
@@ -886,7 +958,7 @@ public:
 
   // A variation on the AppendElements method defined above.
   template<class Item, class Allocator>
-  elem_type *AppendElements(const nsTArray<Item, Allocator>& array) {
+  elem_type *AppendElements(const nsTArray_Impl<Item, Allocator>& array) {
     return AppendElements(array.Elements(), array.Length());
   }
 
@@ -922,7 +994,7 @@ public:
   // calling copy constructors or destructors.
   // @return A pointer to the newly appended elements, or null on OOM.
   template<class Item, class Allocator>
-  elem_type *MoveElementsFrom(nsTArray<Item, Allocator>& array) {
+  elem_type *MoveElementsFrom(nsTArray_Impl<Item, Allocator>& array) {
     MOZ_ASSERT(&array != this, "argument must be different array");
     index_type len = Length();
     index_type otherLen = array.Length();
@@ -1002,7 +1074,7 @@ public:
   // This method causes the elements contained in this array and the given
   // array to be swapped.
   template<class Allocator>
-  bool SwapElements(nsTArray<E, Allocator>& other) {
+  bool SwapElements(nsTArray_Impl<E, Allocator>& other) {
     return this->SwapArrayElements(other, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
@@ -1118,7 +1190,7 @@ public:
  
   // This function is meant to be used with the NS_QuickSort function.  It
   // maps the callback API expected by NS_QuickSort to the Comparator API
-  // used by nsTArray.  See nsTArray::Sort.
+  // used by nsTArray_Impl.  See nsTArray_Impl::Sort.
   template<class Comparator>
   static int Compare(const void* e1, const void* e2, void *data) {
     const Comparator* c = reinterpret_cast<const Comparator*>(data);
@@ -1272,7 +1344,7 @@ protected:
 
 template <typename E, typename Alloc>
 inline void
-ImplCycleCollectionUnlink(nsTArray<E, Alloc>& aField)
+ImplCycleCollectionUnlink(nsTArray_Impl<E, Alloc>& aField)
 {
   aField.Clear();
 }
@@ -1280,7 +1352,7 @@ ImplCycleCollectionUnlink(nsTArray<E, Alloc>& aField)
 template <typename E, typename Alloc>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsTArray<E, Alloc>& aField,
+                            nsTArray_Impl<E, Alloc>& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
@@ -1292,84 +1364,62 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 //
-// Convenience subtypes of nsTArray.
+// nsTArray is an infallible vector class.  See the comment at the top of this
+// file for more details.
 //
 template <class E>
-class FallibleTArray : public nsTArray<E, nsTArrayFallibleAllocator>
+class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator>
 {
 public:
-  typedef nsTArray<E, nsTArrayFallibleAllocator>   base_type;
-  typedef typename base_type::size_type            size_type;
+  typedef nsTArray_Impl<E, nsTArrayInfallibleAllocator> base_type;
+  typedef nsTArray<E>                                   self_type;
+  typedef typename base_type::size_type                 size_type;
+
+  nsTArray() {}
+  explicit nsTArray(size_type capacity) : base_type(capacity) {}
+  explicit nsTArray(const nsTArray& other) : base_type(other) {}
+
+  template<class Allocator>
+  explicit nsTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
+};
+
+//
+// FallibleTArray is a fallible vector class.
+//
+template <class E>
+class FallibleTArray : public nsTArray_Impl<E, nsTArrayFallibleAllocator>
+{
+public:
+  typedef nsTArray_Impl<E, nsTArrayFallibleAllocator>   base_type;
+  typedef FallibleTArray<E>                             self_type;
+  typedef typename base_type::size_type                 size_type;
 
   FallibleTArray() {}
   explicit FallibleTArray(size_type capacity) : base_type(capacity) {}
-  FallibleTArray(const FallibleTArray& other) : base_type(other) {}
+  explicit FallibleTArray(const FallibleTArray<E>& other) : base_type(other) {}
+
+  template<class Allocator>
+  explicit FallibleTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
 };
 
-template <typename E>
-inline void
-ImplCycleCollectionUnlink(FallibleTArray<E>& aField)
-{
-  aField.Clear();
-}
-
-template <typename E>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            FallibleTArray<E>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  aFlags |= CycleCollectionEdgeNameArrayFlag;
-  size_t length = aField.Length();
-  for (size_t i = 0; i < length; ++i) {
-    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
-  }
-}
-
-
-#ifdef MOZALLOC_HAVE_XMALLOC
-template <class E>
-class InfallibleTArray : public nsTArray<E, nsTArrayInfallibleAllocator>
-{
-public:
-  typedef nsTArray<E, nsTArrayInfallibleAllocator> base_type;
-  typedef typename base_type::size_type            size_type;
- 
-  InfallibleTArray() {}
-  explicit InfallibleTArray(size_type capacity) : base_type(capacity) {}
-  InfallibleTArray(const InfallibleTArray& other) : base_type(other) {}
-};
-
-template <typename E>
-inline void ImplCycleCollectionUnlink(InfallibleTArray<E>& aField)
-{
-  aField.Clear();
-}
-
-template <typename E>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            InfallibleTArray<E>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  aFlags |= CycleCollectionEdgeNameArrayFlag;
-  size_t length = aField.Length();
-  for (size_t i = 0; i < length; ++i) {
-    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
-  }
-}
-
-#endif
-
+//
+// nsAutoArrayBase is a base class for AutoFallibleTArray and nsAutoTArray.
+// You shouldn't use this class directly.
+//
 template <class TArrayBase, uint32_t N>
 class nsAutoArrayBase : public TArrayBase
 {
 public:
+  typedef nsAutoArrayBase<TArrayBase, N> self_type;
   typedef TArrayBase base_type;
   typedef typename base_type::Header Header;
   typedef typename base_type::elem_type elem_type;
+
+  template<typename Allocator>
+  self_type& operator=(const nsTArray_Impl<elem_type, Allocator>& other) {
+    base_type::operator=(other);
+    return *this;
+  }
 
 protected:
   nsAutoArrayBase() {
@@ -1419,17 +1469,53 @@ private:
   };
 };
 
-template<class E, uint32_t N, class Alloc=nsTArrayDefaultAllocator>
-class nsAutoTArray : public nsAutoArrayBase<nsTArray<E, Alloc>, N>
+//
+// nsAutoTArray<E, N> is an infallible vector class with N elements of inline
+// storage.  If you try to store more than N elements inside an
+// nsAutoTArray<E, N>, we'll call malloc() and store them all on the heap.
+//
+// Note that you can cast an nsAutoTArray<E, N> to
+// |const AutoFallibleTArray<E, N>&|.
+//
+template<class E, uint32_t N>
+class nsAutoTArray : public nsAutoArrayBase<nsTArray<E>, N>
 {
-  typedef nsAutoArrayBase<nsTArray<E, Alloc>, N> Base;
+  typedef nsAutoTArray<E, N> self_type;
+  typedef nsAutoArrayBase<nsTArray<E>, N> Base;
 
 public:
   nsAutoTArray() {}
 
   template<typename Allocator>
-  nsAutoTArray(const nsTArray<E, Allocator>& other) {
+  explicit nsAutoTArray(const nsTArray_Impl<E, Allocator>& other) {
     Base::AppendElements(other);
+  }
+
+  operator const AutoFallibleTArray<E, N>&() const {
+    return *reinterpret_cast<const AutoFallibleTArray<E, N>*>(this);
+  }
+};
+
+//
+// AutoFallibleTArray<E, N> is a fallible vector class with N elements of
+// inline storage.
+//
+template<class E, uint32_t N>
+class AutoFallibleTArray : public nsAutoArrayBase<FallibleTArray<E>, N>
+{
+  typedef AutoFallibleTArray<E, N> self_type;
+  typedef nsAutoArrayBase<FallibleTArray<E>, N> Base;
+
+public:
+  AutoFallibleTArray() {}
+
+  template<typename Allocator>
+  explicit AutoFallibleTArray(const nsTArray_Impl<E, Allocator>& other) {
+    Base::AppendElements(other);
+  }
+
+  operator const nsAutoTArray<E, N>&() const {
+    return *reinterpret_cast<const nsAutoTArray<E, N>*>(this);
   }
 };
 
@@ -1451,65 +1537,7 @@ MOZ_STATIC_ASSERT(sizeof(nsAutoTArray<uint32_t, 2>) ==
                   "nsAutoTArray shouldn't contain any extra padding, "
                   "see the comment");
 
-template<class E, uint32_t N>
-class AutoFallibleTArray : public nsAutoArrayBase<FallibleTArray<E>, N>
-{
-  typedef nsAutoArrayBase<FallibleTArray<E>, N> Base;
-
-public:
-  AutoFallibleTArray() {}
-
-  template<typename Allocator>
-  AutoFallibleTArray(const nsTArray<E, Allocator>& other) {
-    Base::AppendElements(other);
-  }
-};
-
-#if defined(MOZALLOC_HAVE_XMALLOC)
-template<class E, uint32_t N>
-class AutoInfallibleTArray : public nsAutoArrayBase<InfallibleTArray<E>, N>
-{
-  typedef nsAutoArrayBase<InfallibleTArray<E>, N> Base;
-
-public:
-  AutoInfallibleTArray() {}
-
-  template<typename Allocator>
-  AutoInfallibleTArray(const nsTArray<E, Allocator>& other) {
-    Base::AppendElements(other);
-  }
-};
-#endif
-
-// specializations for N = 0. this makes the inheritance model easier for
-// templated users of nsAutoTArray.
-template<class E>
-class nsAutoTArray<E, 0, nsTArrayDefaultAllocator> :
-  public nsAutoArrayBase< nsTArray<E, nsTArrayDefaultAllocator>, 0>
-{
-public:
-  nsAutoTArray() {}
-};
-
-template<class E>
-class AutoFallibleTArray<E, 0> :
-  public nsAutoArrayBase< FallibleTArray<E>, 0>
-{
-public:
-  AutoFallibleTArray() {}
-};
-
-#if defined(MOZALLOC_HAVE_XMALLOC)
-template<class E>
-class AutoInfallibleTArray<E, 0> :
-  public nsAutoArrayBase< InfallibleTArray<E>, 0>
-{
-public:
-  AutoInfallibleTArray() {}
-};
-#endif
- 
-// Definitions of nsTArray methods
+// Definitions of nsTArray_Impl methods
 #include "nsTArray-inl.h"
 
 #endif  // nsTArray_h__

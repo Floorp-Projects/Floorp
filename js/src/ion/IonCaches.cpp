@@ -730,6 +730,143 @@ IonCacheGetProperty::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *o
     return true;
 }
 
+bool
+IonCacheGetProperty::attachDenseArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
+{
+    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(!idempotent());
+
+    Label failures;
+    MacroAssembler masm;
+
+    // Guard object is a dense array.
+    RootedObject globalObj(cx, &script->global());
+    RootedShape shape(cx, GetDenseArrayShape(cx, globalObj));
+    if (!shape)
+        return false;
+    masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);
+
+    // Load length.
+    Register outReg;
+    if (output().hasValue()) {
+        outReg = output().valueReg().scratchReg();
+    } else {
+        JS_ASSERT(output().type() == MIRType_Int32);
+        outReg = output().typedReg().gpr();
+    }
+
+    masm.loadPtr(Address(object(), JSObject::offsetOfElements()), outReg);
+    masm.load32(Address(outReg, ObjectElements::offsetOfLength()), outReg);
+
+    // The length is an unsigned int, but the value encodes a signed int.
+    JS_ASSERT(object() != outReg);
+    masm.branchTest32(Assembler::Signed, outReg, outReg, &failures);
+
+    if (output().hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, outReg, output().valueReg());
+
+    u.getprop.hasDenseArrayLengthStub = true;
+    incrementStubCount();
+
+    /* Success. */
+    RepatchLabel rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    /* Failure. */
+    masm.bind(&failures);
+    RepatchLabel exit_;
+    CodeOffsetJump exitOffset = masm.jumpWithPatch(&exit_);
+    masm.bind(&exit_);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    rejoinOffset.fixup(&masm);
+    exitOffset.fixup(&masm);
+
+    if (ion->invalidated())
+        return true;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+    CodeLocationJump lastJump_ = lastJump();
+    PatchJump(lastJump_, CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated GETPROP dense array length stub at %p", code->raw());
+
+    return true;
+}
+
+bool
+IonCacheGetProperty::attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
+{
+    JS_ASSERT(obj->isTypedArray());
+    JS_ASSERT(!idempotent());
+
+    Label failures;
+    MacroAssembler masm;
+
+    Register tmpReg;
+    if (output().hasValue()) {
+        tmpReg = output().valueReg().scratchReg();
+    } else {
+        JS_ASSERT(output().type() == MIRType_Int32);
+        tmpReg = output().typedReg().gpr();
+    }
+    JS_ASSERT(object() != tmpReg);
+
+    // Implement the negated version of JSObject::isTypedArray predicate.
+    masm.loadObjClass(object(), tmpReg);
+    masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArray::classes[0]), &failures);
+    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArray::classes[TypedArray::TYPE_MAX]), &failures);
+
+    // Load length.
+    masm.loadTypedOrValue(Address(object(), TypedArray::lengthOffset()), output());
+
+    u.getprop.hasTypedArrayLengthStub = true;
+    incrementStubCount();
+
+    /* Success. */
+    RepatchLabel rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    /* Failure. */
+    masm.bind(&failures);
+    RepatchLabel exit_;
+    CodeOffsetJump exitOffset = masm.jumpWithPatch(&exit_);
+    masm.bind(&exit_);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    rejoinOffset.fixup(&masm);
+    exitOffset.fixup(&masm);
+
+    if (ion->invalidated())
+        return true;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+    CodeLocationJump lastJump_ = lastJump();
+    PatchJump(lastJump_, CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated GETPROP typed array length stub at %p", code->raw());
+
+    return true;
+}
+
 static bool
 TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
                            IonCacheGetProperty &cache, HandleObject obj,
@@ -847,6 +984,22 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Mu
                                     &isCacheable))
     {
         return false;
+    }
+
+    if (!isCacheable && !cache.idempotent() && cx->names().length == name) {
+        if (cache.output().type() != MIRType_Value && cache.output().type() != MIRType_Int32) {
+            // The next execution should cause an invalidation because the type
+            // does not fit.
+            isCacheable = false;
+        } else if (obj->isDenseArray() && !cache.hasDenseArrayLengthStub()) {
+            isCacheable = true;
+            if (!cache.attachDenseArrayLength(cx, ion, obj))
+                return false;
+        } else if (obj->isTypedArray() && !cache.hasTypedArrayLengthStub()) {
+            isCacheable = true;
+            if (!cache.attachTypedArrayLength(cx, ion, obj))
+                return false;
+        }
     }
 
     if (cache.idempotent() && !isCacheable) {
@@ -1412,9 +1565,10 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     if (!SetProperty(cx, obj, name, value, cache.strict(), isSetName))
         return false;
 
-    // The property did not exists before, now we can try again to inline the
-    // procedure which is adding the property.
-    if (inlinable && !addedSetterStub && IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape)) {
+    // The property did not exist before, now we can try to inline the propery add.
+    if (inlinable && !addedSetterStub && obj->lastProperty() != oldShape &&
+        IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape))
+    {
         RootedShape newShape(cx, obj->lastProperty());
         cache.incrementStubCount();
         if (!cache.attachNativeAdding(cx, ion, obj, oldShape, newShape, shape))

@@ -968,7 +968,7 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
   nsCOMArray<nsIContentViewer> safeViewers;
   nsCOMPtr<nsISHTransaction> trans;
   GetTransactionAtIndex(startSafeIndex, getter_AddRefs(trans));
-  for (uint32_t i = startSafeIndex; trans && i <= endSafeIndex; i++) {
+  for (int32_t i = startSafeIndex; trans && i <= endSafeIndex; i++) {
     nsCOMPtr<nsIContentViewer> viewer = GetContentViewerForTransaction(trans);
     safeViewers.AppendObject(viewer);
     nsISHTransaction *temp = trans;

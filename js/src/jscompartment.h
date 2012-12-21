@@ -378,6 +378,12 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     /* This compartment's gray roots. */
     js::Vector<js::GrayRoot, 0, js::SystemAllocPolicy> gcGrayRoots;
 
+    /*
+     * Whether type objects have been marked by markTypes().  This is used to
+     * determine whether they need to be swept.
+     */
+    bool                         gcTypesMarked;
+
   private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs from

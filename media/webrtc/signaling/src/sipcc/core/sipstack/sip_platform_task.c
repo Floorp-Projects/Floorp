@@ -22,6 +22,8 @@
 #include "ccsip_task.h"
 #include "sip_socket_api.h"
 #include "platform_api.h"
+#include <sys/stat.h>
+#include "prprf.h"
 
 /*---------------------------------------------------------
  *
@@ -37,16 +39,15 @@
 
 /* SIP Message queue waiting thread and the main thread IPC names */
 #ifdef __ANDROID__
-#define SIP_MSG_IPC_PATH  "/data/data/com.cisco.telephony.provider/"
+#define SIP_IPC_TEMP_PATH "/data/data/com.cisco.telephony.provider/SIP-%d"
 #else
-#define SIP_MSG_IPC_PATH  "/tmp/"
+#define SIP_IPC_TEMP_PATH "/tmp/SIP-%d"
 #endif
-#define SIP_MSG_SERV_NAME "SIP-Main-%d"
-#define SIP_MSG_CLNT_NAME "SIP-MsgQ-%d"
+#define SIP_MSG_SERV_NAME "Main"
+#define SIP_MSG_CLNT_NAME "MsgQ"
 
 #define SIP_PAUSE_WAIT_IPC_LISTEN_READY_TIME   50  /* 50ms. */
 #define SIP_MAX_WAIT_FOR_IPC_LISTEN_READY    1200  /* 50 * 1200 = 1 minutes */
-
 
 /*---------------------------------------------------------
  *
@@ -74,9 +75,6 @@ typedef struct sip_int_msg_t_ {
 /* Internal message queue (array) */
 static sip_int_msg_t sip_int_msgq_buf[MAX_SIP_MESSAGES] = {{0,0},{0,0}};
 
-/* Main thread and message queue waiting thread IPC names */
-static const char *sip_IPC_serv_name = SIP_MSG_IPC_PATH SIP_MSG_SERV_NAME;
-static const char *sip_IPC_clnt_name = SIP_MSG_IPC_PATH SIP_MSG_CLNT_NAME;
 static cpr_sockaddr_un_t sip_serv_sock_addr;
 static cpr_sockaddr_un_t sip_clnt_sock_addr;
 
@@ -163,7 +161,7 @@ static cpr_socket_t sip_create_IPC_sock (const char *name)
     cpr_set_sockun_addr(&addr, name, getpid());
 
     /* make sure file doesn't already exist */
-    unlink( (char *)addr.sun_path);
+    unlink(addr.sun_path);
 
     /* do the bind */
     if (cprBind(sock, (cpr_sockaddr_t *)&addr,
@@ -240,20 +238,16 @@ void sip_platform_task_msgqwait (void *arg)
     /*
      * Adjust relative priority of SIP thread.
      */
-#ifndef WIN32
     (void) cprAdjustRelativeThreadPriority(SIP_THREAD_RELATIVE_PRIORITY);
-#else
-    /* Use default priority */
-    (void) cprAdjustRelativeThreadPriority(0);
-#endif
 
     /*
      * The main thread is ready. set global client socket address
      * so that the server can send back response.
      */
-    cpr_set_sockun_addr(&sip_clnt_sock_addr, sip_IPC_clnt_name, getpid());
+    cpr_set_sockun_addr(&sip_clnt_sock_addr,
+                        SIP_IPC_TEMP_PATH "/" SIP_MSG_CLNT_NAME, getpid());
 
-    sip_ipc_clnt_socket = sip_create_IPC_sock(sip_IPC_clnt_name);
+    sip_ipc_clnt_socket = sip_create_IPC_sock(sip_clnt_sock_addr.sun_path);
 
     if (sip_ipc_clnt_socket == INVALID_SOCKET) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_create_IPC_sock() failed,"
@@ -323,6 +317,8 @@ void sip_platform_task_msgqwait (void *arg)
             }
         }
     }
+    cprCloseSocket(sip_ipc_clnt_socket);
+    unlink(sip_clnt_sock_addr.sun_path); // removes tmp file
 }
 
 /**
@@ -370,6 +366,21 @@ static void sip_process_int_msg (void)
         msg    = int_msg->msg;
         syshdr = int_msg->syshdr;
         if (msg != NULL && syshdr != NULL) {
+            if (syshdr->Cmd == THREAD_UNLOAD) {
+                /*
+                 * Cleanup here, as SIPTaskProcessListEvent wont return.
+                 * - Remove last tmp file and tmp dir.
+                 */
+                cprCloseSocket(sip_ipc_serv_socket);
+                unlink(sip_serv_sock_addr.sun_path);
+
+                char stmpdir[sizeof(sip_serv_sock_addr.sun_path)];
+                PR_snprintf(stmpdir, sizeof(stmpdir), SIP_IPC_TEMP_PATH, getpid());
+                if (rmdir(stmpdir) != 0) {
+                    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to remove temp dir\n",
+                                      fname);
+                }
+            }
             SIPTaskProcessListEvent(syshdr->Cmd, msg, syshdr->Usr.UsrPtr,
                 syshdr->Len);
             cprReleaseSysHeader(syshdr);
@@ -435,23 +446,28 @@ sip_platform_task_loop (void *arg)
     /*
      * Adjust relative priority of SIP thread.
      */
-#ifndef WIN32
     (void) cprAdjustRelativeThreadPriority(SIP_THREAD_RELATIVE_PRIORITY);
-#else
-    /* Use default priority */
-    (void) cprAdjustRelativeThreadPriority(0);
-#endif
 
     /*
      * Setup IPC socket addresses for main thread (server)
      */
-    cpr_set_sockun_addr(&sip_serv_sock_addr, sip_IPC_serv_name, getpid());
+    {
+      char stmpdir[sizeof(sip_serv_sock_addr.sun_path)];
+      PR_snprintf(stmpdir, sizeof(stmpdir), SIP_IPC_TEMP_PATH, getpid());
+
+      if (mkdir(stmpdir, 0700) != 0) {
+          CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to create temp dir\n", fname);
+          return;
+      }
+    }
+    cpr_set_sockun_addr(&sip_serv_sock_addr,
+                        SIP_IPC_TEMP_PATH "/" SIP_MSG_SERV_NAME, getpid());
 
     /*
      * Create IPC between the message queue thread and this main
      * thread.
      */
-    sip_ipc_serv_socket = sip_create_IPC_sock(sip_IPC_serv_name);
+    sip_ipc_serv_socket = sip_create_IPC_sock(sip_serv_sock_addr.sun_path);
 
     if (sip_ipc_serv_socket == INVALID_SOCKET) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_create_IPC_sock() failed:"
@@ -480,6 +496,7 @@ sip_platform_task_loop (void *arg)
 
     /*
      * Main Event Loop
+     * - Forever-loop exits in sip_process_int_msg()::THREAD_UNLOAD
      */
     while (TRUE) {
         /*

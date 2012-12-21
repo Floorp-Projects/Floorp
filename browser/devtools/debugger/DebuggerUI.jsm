@@ -174,12 +174,6 @@ DebuggerUI.prototype = {
   },
 
   /**
-   * Get the preferences associated with the debugger frontend.
-   * @return object
-   */
-  get preferences() Prefs,
-
-  /**
    * Currently, there can only be one debugger per tab.
    * Show an asynchronous notification which asks the user to switch the
    * script debugger to the current tab if it's already open in another one.
@@ -279,7 +273,6 @@ DebuggerPane.prototype = {
     this._splitter.setAttribute("class", "devtools-horizontal-splitter");
 
     this._frame = ownerDocument.createElement("iframe");
-    this._frame.height = Prefs.height;
 
     this._nbox = gBrowser.getNotificationBox(this._tab.linkedBrowser);
     this._nbox.appendChild(this._splitter);
@@ -326,7 +319,6 @@ DebuggerPane.prototype = {
       }, true)
     }
 
-    Prefs.height = this._frame.height;
     this._frame.removeEventListener("Debugger:Unloaded", this.close, true);
     this._nbox.removeChild(this._splitter);
     this._nbox.removeChild(this._frame);
@@ -599,21 +591,7 @@ XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
 /**
  * Shortcuts for accessing various debugger preferences.
  */
-let Prefs = {
-  /**
-   * Gets the preferred height of the debugger pane.
-   * @return number
-   */
-  get height()
-    Services.prefs.getIntPref("devtools.debugger.ui.height"),
-
-  /**
-   * Sets the preferred height of the debugger pane.
-   * @param number aValue
-   */
-  set height(aValue)
-    Services.prefs.setIntPref("devtools.debugger.ui.height", aValue)
-};
+let Prefs = {};
 
 /**
  * Gets the preferred default remote debugging host.

@@ -3018,6 +3018,9 @@ html|*#gcli-output-frame {
 }
 
 /* Social toolbar item */
+#social-provider-button {
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {
   display: none;

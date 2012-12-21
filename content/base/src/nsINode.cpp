@@ -2179,7 +2179,12 @@ ParseSelectorList(nsINode* aNode,
                                            doc->GetDocumentURI(),
                                            0, // XXXbz get the line number!
                                            &selectorList);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    // We hit this for syntax errors, which are quite common, so don't
+    // use NS_ENSURE_SUCCESS.  (For example, jQuery has an extended set
+    // of selectors, but it sees if we can parse them first.)
+    return rv;
+  }
 
   // Filter out pseudo-element selectors from selectorList
   nsCSSSelectorList** slot = &selectorList;
@@ -2218,7 +2223,12 @@ FindMatchingElements(nsINode* aRoot, const nsAString& aSelector, T &aList)
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsresult rv = ParseSelectorList(aRoot, aSelector,
                                   getter_Transfers(selectorList));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    // We hit this for syntax errors, which are quite common, so don't
+    // use NS_ENSURE_SUCCESS.  (For example, jQuery has an extended set
+    // of selectors, but it sees if we can parse them first.)
+    return rv;
+  }
   NS_ENSURE_TRUE(selectorList, NS_OK);
 
   NS_ASSERTION(selectorList->mSelectors,
