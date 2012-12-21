@@ -1742,6 +1742,7 @@ this.DOMApplicationRegistry = {
                               manifestURL:  aApp.manifestURL,
                               error: aError,
                               app: app });
+      self._saveApps();
       AppDownloadManager.remove(aApp.manifestURL);
     }
 
@@ -1750,6 +1751,10 @@ this.DOMApplicationRegistry = {
 
       let requestChannel = NetUtil.newChannel(aManifest.fullPackagePath())
                                   .QueryInterface(Ci.nsIHttpChannel);
+      if (app.packageEtag) {
+        requestChannel.setRequestHeader("If-None-Match", app.packageEtag);
+      }
+
       AppDownloadManager.add(aApp.manifestURL,
         {
           channel: requestChannel,
@@ -1827,6 +1832,31 @@ this.DOMApplicationRegistry = {
           debug("onStopRequest " + aStatusCode);
           bufferedOutputStream.close();
           outputStream.close();
+
+          if (requestChannel.responseStatus == 304) {
+            // The package's Etag has not changed.
+            // We send a "applied" event right away.
+            app.downloading = false;
+            app.downloadAvailable = false;
+            app.downloadSize = 0;
+            app.installState = "installed";
+            app.readyToApplyDownload = false;
+            self.broadcastMessage("Webapps:PackageEvent", {
+                                    type: "applied",
+                                    manifestURL: aApp.manifestURL,
+                                    app: app });
+            // Save the updated registry, and cleanup the tmp directory.
+            self._saveApps();
+            let file = FileUtils.getFile("TmpD", ["webapps", id], false);
+            if (file && file.exists()) {
+              file.remove(true);
+            }
+            return;
+          }
+
+          // Save the new Etag for the package.
+          app.packageEtag = requestChannel.getResponseHeader("Etag");
+          debug("Package etag=" + app.packageEtag);
 
           if (!Components.isSuccessCode(aStatusCode)) {
             cleanup("NETWORK_ERROR");
