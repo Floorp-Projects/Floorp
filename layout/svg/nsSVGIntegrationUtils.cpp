@@ -477,7 +477,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
     complexEffects = true;
     gfx->Save();
-    aCtx->IntersectClip(aFrame->GetVisualOverflowRect() + svgGeomFramePos);
+    aCtx->IntersectClip(aFrame->GetVisualOverflowRectRelativeToSelf() +
+                        svgGeomFramePos);
     gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 
