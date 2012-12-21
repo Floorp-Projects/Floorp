@@ -147,8 +147,9 @@
           </menupopup>
       </splitmenu>
       <menuseparator class="appmenu-menuseparator"/>
-      <menu id="appmenu_webDeveloper"
-            label="&appMenuWebDeveloper.label;">
+      <splitmenu id="appmenu_webDeveloper"
+                 command="Tools:DevToolbox"
+                 label="&appMenuWebDeveloper.label;">
         <menupopup id="appmenu_webDeveloper_popup">
           <menuitem id="appmenu_devToolbox"
                     observes="devtoolsMenuBroadcaster_DevToolbox"/>
@@ -165,7 +166,6 @@
                     observes="devtoolsMenuBroadcaster_PageSource"/>
           <menuitem id="appmenu_errorConsole"
                     observes="devtoolsMenuBroadcaster_ErrorConsole"/>
-          <menuseparator id="appmenu_devToolsConnectSeparator"/>
           <menuitem id="appmenu_devtools_connect"
                     observes="devtoolsMenuBroadcaster_connect"/>
           <menuseparator id="appmenu_devToolsEndSeparator"/>
@@ -182,7 +182,7 @@
                     observes="workOfflineMenuitemState"
                     oncommand="BrowserOffline.toggleOfflineStatus();"/>
         </menupopup>
-      </menu>
+      </splitmenu>
       <menuseparator class="appmenu-menuseparator"/>
 #define ID_PREFIX appmenu_
 #define OMIT_ACCESSKEYS

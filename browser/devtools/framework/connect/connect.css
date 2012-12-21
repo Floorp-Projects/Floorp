@@ -1,14 +1,25 @@
 html {
-  background: url("chrome://browser/skin/newtab/noise.png");
+  background-color: #111;
+  background-image: url("chrome://browser/skin/newtab/noise.png");
 }
 
 body {
-  font-family: Arial;
-  padding: 20px;
-  border-radius: 3px;
+  font-family: Arial, sans-serif;
+  color: white;
   max-width: 600px;
-  min-height: 400px;
-  margin: 10px auto 0;
+  margin: 30px auto 0;
+  box-shadow: 0 2px 3px black;
+  background-color: #3C3E40;
+}
+
+h1 {
+  margin: 0;
+  padding: 20px;
+  background-color: rgba(0,0,0,0.12);
+  background-image: radial-gradient(ellipse farthest-corner at center top , rgb(159, 223, 255), rgba(101, 203, 255, 0.3)), radial-gradient(ellipse farthest-side at center top , rgba(101, 203, 255, 0.4), rgba(101, 203, 255, 0));
+  background-size: 100% 2px, 100% 5px;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
 label {
@@ -29,18 +40,21 @@ label > span {
   margin-left: 160px;
 }
 
-
-#actors, #connection-form {
-  margin: 20px;
+input:invalid {
+  box-shadow: 0 0 2px 2px #F06;
 }
 
-input {
-  border: 1px solid grey;
+section {
+  min-height: 160px;
+  margin: 60px 20px;
+  display: none; /* By default, hidden */
 }
 
-#connection-form,
-#connecting,
-#actors-list {
+.error-message {
+  color: red;
+}
+
+.error-message:not(.active) {
   display: none;
 }
 
@@ -60,20 +74,9 @@ body.connecting > #connecting {
   text-align: center;
 }
 
-#throbber {
-  height: 7px; width: 7px;
-  border-radius: 50%;
-  background: black;
-  display: inline-block;
-  animation-duration: 0.6s;
-  animation-name: anim;
-  animation-direction: alternate;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
+#connecting > p > img {
+  vertical-align: top;
 }
-@keyframes anim {to {
-    transform: scale(0.5) rotate(0.1deg);
-}}
 
 #actors {
   padding-left: 0;
@@ -84,4 +87,22 @@ body.connecting > #connecting {
   display: block;
   margin: 5px;
   padding: 5px;
+  color: white;
+}
+
+.remote-process {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+footer {
+  padding: 10px;
+  background-color: rgba(0,0,0,0.12);
+  border-top: 1px solid rgba(0,0,0,0.1);
+  font-size: small;
+}
+
+footer > a,
+footer > a:visited {
+  color: white;
 }

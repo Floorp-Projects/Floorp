@@ -12,34 +12,37 @@
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
     <title>&title;</title>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/common.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://browser/content/devtools/connect.css" type="text/css"/>
     <script type="application/javascript;version=1.8" src="connect.js"></script>
   </head>
   <body>
-    <p>
-    </p>
+    <h1>&header;</h1>
     <section id="connection-form">
-      <form onsubmit="window.submit()" action="#">
+      <form validate="validate" onsubmit="window.submit()" action="#">
         <label>
           <span>&host;</span>
-          <input id="host" type="text" placeholder="localhost"></input>
+          <input required="required" class="devtools-textinput" id="host" type="text"></input>
         </label>
         <label>
           <span>&port;</span>
-          <input id="port" type="number" placeholder="6000"></input>
+          <input required="required" class="devtools-textinput" id="port" type="number" pattern="\d+"></input>
         </label>
         <label>
-          <input id="submit" type="submit" value="&connect;"></input>
+          <input class="devtools-toolbarbutton" id="submit" type="submit" value="&connect;"></input>
         </label>
       </form>
+      <p class="error-message error-timeout">&errorTimeout;</p>
+      <p class="error-message error-refused">&errorRefused;</p>
+      <p class="error-message error-unexpected">&errorUnexpected;</p>
     </section>
     <section id="actors-list">
       <p>&availability;</p>
       <ul id="actors"></ul>
     </section>
     <section id="connecting">
-      <p>&connecting;</p>
-      <div id="throbber"></div>
+      <p><img src="chrome://browser/skin/tabbrowser/loading.png"></img> &connecting;</p>
     </section>
+    <footer>&help;</footer>
   </body>
 </html>
