@@ -28,22 +28,6 @@ static const char* logTag = "PeerConnectionMedia";
 static const mozilla::TrackID TRACK_AUDIO = 0;
 static const mozilla::TrackID TRACK_VIDEO = 1;
 
-/* We get this callback in order to find out which tracks are audio and which
- * are video. We should get this callback right away for existing streams after
- * we add this class as a listener.
- */
-void
-LocalSourceStreamInfo::NotifyQueuedTrackChanges(
-  mozilla::MediaStreamGraph* aGraph,
-  mozilla::TrackID aID,
-  mozilla::TrackRate aTrackRate,
-  mozilla::TrackTicks aTrackOffset,
-  uint32_t aTrackEvents,
-  const mozilla::MediaSegment& aQueuedMedia)
-{
-  /* TODO: use this callback to keep track of changes to the MediaStream */
-}
-
 /* If the ExpectAudio hint is on we will add a track at the default first
  * audio track ID (0)
  * FIX - Do we need to iterate over the tracks instead of taking these hints?
@@ -195,13 +179,6 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
 
   if (hints & nsDOMMediaStream::HINT_CONTENTS_VIDEO) {
     localSourceStream->ExpectVideo(TRACK_VIDEO);
-  }
-
-  // Make it the listener for info from the MediaStream and add it to the list
-  mozilla::MediaStream *plainMediaStream = stream->GetStream();
-
-  if (plainMediaStream) {
-    plainMediaStream->AddListener(localSourceStream);
   }
 
   mLocalSourceStreams.AppendElement(localSourceStream);
