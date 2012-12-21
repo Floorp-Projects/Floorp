@@ -642,14 +642,16 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
   NS_PRECONDITION(aItem, "Must have item");
 
   aItem->SetTreeOwner(aOwner);
-  nsCOMPtr<nsIDocShell> shell(do_QueryInterface(aItem));
-  shell->SetChromeEventHandler(aHandler);
 
   int32_t childCount = 0;
   aItem->GetChildCount(&childCount);
   for (int32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> item;
     aItem->GetChildAt(i, getter_AddRefs(item));
+    if (aHandler) {
+      nsCOMPtr<nsIDocShell> shell(do_QueryInterface(item));
+      shell->SetChromeEventHandler(aHandler);
+    }
     SetTreeOwnerAndChromeEventHandlerOnDocshellTree(item, aOwner, aHandler);
   }
 }
@@ -1056,7 +1058,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   }
 
   // Also make sure that the two docshells are the same type. Otherwise
-  // swapping is certainly not safe.
+  // swapping is certainly not safe. If this needs to be changed then
+  // the code below needs to be audited as it assumes identical types.
   int32_t ourType = nsIDocShellTreeItem::typeChrome;
   int32_t otherType = nsIDocShellTreeItem::typeChrome;
   ourTreeItem->GetItemType(&ourType);
@@ -1205,11 +1208,15 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   ourParentItem->AddChild(otherTreeItem);
   otherParentItem->AddChild(ourTreeItem);
 
+  // Restore the correct chrome event handlers.
+  ourDocshell->SetChromeEventHandler(otherChromeEventHandler);
+  otherDocshell->SetChromeEventHandler(ourChromeEventHandler);
   // Restore the correct treeowners
+  // (and also chrome event handlers for content frames only).
   SetTreeOwnerAndChromeEventHandlerOnDocshellTree(ourTreeItem, otherOwner,
-                                                  otherChromeEventHandler);
+    ourType == nsIDocShellTreeItem::typeContent ? otherChromeEventHandler : nullptr);
   SetTreeOwnerAndChromeEventHandlerOnDocshellTree(otherTreeItem, ourOwner,
-                                                  ourChromeEventHandler);
+    ourType == nsIDocShellTreeItem::typeContent ? ourChromeEventHandler : nullptr);
 
   // Switch the owner content before we start calling AddTreeItemToTreeOwner.
   // Note that we rely on this to deal with setting mObservingOwnerContent to
