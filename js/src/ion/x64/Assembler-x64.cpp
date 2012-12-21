@@ -75,7 +75,7 @@ Assembler::PatchJumpEntry(uint8_t *entry, uint8_t *target)
 }
 
 void
-Assembler::flush()
+Assembler::finish()
 {
     if (!jumps_.length() || oom())
         return;
