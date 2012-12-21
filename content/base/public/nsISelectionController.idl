@@ -224,7 +224,7 @@ interface nsISelectionController : nsISelectionDisplay
    */
     void scrollPage(in boolean forward);
 
-  /** ScrolLine will scroll line up or down dependent on the boolean
+  /** ScrollLine will scroll line up or down dependent on the boolean
    *  @param aForward scroll forward or backwards in selection
    */
 	  void scrollLine(in boolean forward);

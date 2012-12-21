@@ -199,7 +199,7 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
                                     aReflowState, aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check whether we need to suppress scrolbar updates.  We want to do that if
+  // Check whether we need to suppress scrollbar updates.  We want to do that if
   // we're in a possible first pass and our height of a row has changed.
   if (list->MightNeedSecondPass()) {
     nscoord newHeightOfARow = list->CalcHeightOfARow();
