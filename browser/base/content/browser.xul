@@ -44,7 +44,6 @@
         windowtype="navigator:browser"
         macanimationtype="document"
         screenX="4" screenY="4"
-        browsingmode="normal"
         fullscreenbutton="true"
         persist="screenX screenY width height sizemode">
 
