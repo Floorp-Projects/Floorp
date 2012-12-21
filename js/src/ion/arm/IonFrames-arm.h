@@ -457,6 +457,7 @@ class InvalidationBailoutStack
 //        stack values
 class BaselineFrame
 {
+  protected: // Silence Clang warning about unused private fields.
     // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loScratchValue;

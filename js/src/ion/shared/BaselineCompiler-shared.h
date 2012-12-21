@@ -43,7 +43,7 @@ class BaselineCompilerShared
     uint32_t pushedBeforeCall_;
     mozilla::DebugOnly<bool> inCall_;
 
-    BaselineCompilerShared(JSContext *cx, JSScript *script);
+    BaselineCompilerShared(JSContext *cx, HandleScript script);
 
     ICEntry *allocateICEntry(ICStub *stub) {
         if (!stub)

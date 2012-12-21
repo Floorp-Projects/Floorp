@@ -16,7 +16,7 @@ namespace ion {
 class BaselineCompilerARM : public BaselineCompilerShared
 {
   protected:
-    BaselineCompilerARM(JSContext *cx, JSScript *script);
+    BaselineCompilerARM(JSContext *cx, HandleScript script);
 };
 
 typedef BaselineCompilerARM BaselineCompilerSpecific;
