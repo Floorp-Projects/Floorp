@@ -1317,8 +1317,8 @@ nsHTMLInputElement::SetValueAsNumber(double aValueAsNumber)
 double
 nsHTMLInputElement::GetMinAsDouble() const
 {
-  // Should only be used for <input type='number'> for the moment.
-  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
+  // Should only be used for <input type='number'/'date'> for the moment.
+  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE);
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::min)) {
     return MOZ_DOUBLE_NaN();
@@ -1327,9 +1327,8 @@ nsHTMLInputElement::GetMinAsDouble() const
   nsAutoString minStr;
   GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
 
-  nsresult ec;
-  double min = minStr.ToDouble(&ec);
-  return NS_SUCCEEDED(ec) ? min : MOZ_DOUBLE_NaN();
+  double min;
+  return ConvertStringToNumber(minStr, min) ? min : MOZ_DOUBLE_NaN();
 }
 
 double
@@ -4439,8 +4438,7 @@ nsHTMLInputElement::IsRangeOverflow() const
 bool
 nsHTMLInputElement::IsRangeUnderflow() const
 {
-  // Ignore <input type=date> until bug 769357 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATE) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -4721,11 +4719,17 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     {
       nsXPIDLString message;
 
-      double min = GetMinAsDouble();
-      MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(min));
-
       nsAutoString minStr;
-      minStr.AppendFloat(min);
+      if (mType == NS_FORM_INPUT_NUMBER) {
+        double min = GetMinAsDouble();
+        MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(min));
+
+        minStr.AppendFloat(min);
+      } else if (mType == NS_FORM_INPUT_DATE) {
+        GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+      } else {
+        NS_NOTREACHED("Unexpected input type");
+      }
 
       const PRUnichar* params[] = { minStr.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
