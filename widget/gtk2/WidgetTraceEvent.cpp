@@ -69,9 +69,10 @@ void SignalTracerThread()
   if (!sMutex || !sCondVar)
     return;
   MutexAutoLock lock(*sMutex);
-  NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
-  sTracerProcessed = true;
-  sCondVar->Notify();
+  if (!sTracerProcessed) {
+    sTracerProcessed = true;
+    sCondVar->Notify();
+  }
 }
 
 }  // namespace mozilla
