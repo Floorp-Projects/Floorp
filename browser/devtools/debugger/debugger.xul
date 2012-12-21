@@ -238,6 +238,7 @@
     </toolbar>
 
     <panel id="searchbox-panel"
+           level="top"
            type="arrow"
            noautofocus="true"
            position="before_start">
@@ -267,6 +268,7 @@
     </panel>
 
     <panel id="conditional-breakpoint-panel"
+           level="top"
            type="arrow"
            noautofocus="true"
            position="after_start">
