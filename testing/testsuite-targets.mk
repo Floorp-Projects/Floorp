@@ -270,7 +270,7 @@ REMOTE_XPCSHELL = \
 	  -I$(topsrcdir)/build \
 	  -I$(topsrcdir)/testing/mozbase/mozdevice/mozdevice \
 	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
-	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
+	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell_android.ini \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --no-logfiles \
 	  --testing-modules-dir=$(call core_abspath,_tests/modules) \
