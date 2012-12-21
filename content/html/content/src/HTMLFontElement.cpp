@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "HTMLFontElement.h"
+#include "mozilla/dom/HTMLFontElementBinding.h"
 #include "nsAttrValueInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
@@ -18,6 +19,12 @@ namespace dom {
 
 HTMLFontElement::~HTMLFontElement()
 {
+}
+
+JSObject*
+HTMLFontElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLFontElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLFontElement, Element)
@@ -33,11 +40,56 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFontElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFontElement)
 
+NS_IMETHODIMP
+HTMLFontElement::GetColor(nsAString& aColor)
+{
+  nsString color;
+  GetColor(color);
+  aColor = color;
+  return NS_OK;
+}
 
-NS_IMPL_STRING_ATTR(HTMLFontElement, Color, color)
-NS_IMPL_STRING_ATTR(HTMLFontElement, Face, face)
-NS_IMPL_STRING_ATTR(HTMLFontElement, Size, size)
+NS_IMETHODIMP 
+HTMLFontElement::SetColor(const nsAString& aColor)
+{
+  ErrorResult rv;
+  SetColor(aColor, rv);
+  return rv.ErrorCode();
+}
 
+NS_IMETHODIMP
+HTMLFontElement::GetFace(nsAString& aFace)
+{
+  nsString face;
+  GetFace(face);
+  aFace = face;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLFontElement::SetFace(const nsAString& aFace)
+{
+  ErrorResult rv;
+  SetFace(aFace, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLFontElement::GetSize(nsAString& aSize)
+{
+  nsString size;
+  GetSize(size);
+  aSize = size;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLFontElement::SetSize(const nsAString& aSize)
+{
+  ErrorResult rv;
+  SetSize(aSize, rv);
+  return rv.ErrorCode();
+}
 
 bool
 HTMLFontElement::ParseAttribute(int32_t aNamespaceID,

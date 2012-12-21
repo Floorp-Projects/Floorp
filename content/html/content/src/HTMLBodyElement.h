@@ -40,9 +40,9 @@ public:
   using Element::SetText;
 
   HTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo),
-      mContentStyleRule(nullptr)
+    : nsGenericHTMLElement(aNodeInfo)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLBodyElement();
 
@@ -67,9 +67,68 @@ public:
 #define FORWARDED_EVENT(name_, id_, type_, struct_)                     \
   NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);                    \
   NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+#define WINDOW_EVENT_HELPER(name_, type_)                               \
+  type_* GetOn##name_();                                                \
+  void SetOn##name_(type_* handler, ErrorResult& error);
+#define WINDOW_EVENT(name_, id_, type_, struct_)                        \
+  WINDOW_EVENT_HELPER(name_, EventHandlerNonNull)
+#define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                  \
+  WINDOW_EVENT_HELPER(name_, BeforeUnloadEventHandlerNonNull)
 #include "nsEventNameList.h"
+#undef BEFOREUNLOAD_EVENT
+#undef WINDOW_EVENT
+#undef WINDOW_EVENT_HELPER
 #undef FORWARDED_EVENT
 #undef EVENT
+
+  void GetText(nsString& aText)
+  {
+    GetHTMLAttr(nsGkAtoms::text, aText);
+  }
+  void SetText(const nsAString& aText, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::text, aText, aError);
+  }
+  void GetLink(nsString& aLink)
+  {
+    GetHTMLAttr(nsGkAtoms::link, aLink);
+  }
+  void SetLink(const nsAString& aLink, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::link, aLink, aError);
+  }
+  void GetVLink(nsString& aVLink)
+  {
+    GetHTMLAttr(nsGkAtoms::vlink, aVLink);
+  }
+  void SetVLink(const nsAString& aVLink, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::vlink, aVLink, aError);
+  }
+  void GetALink(nsString& aALink)
+  {
+    GetHTMLAttr(nsGkAtoms::alink, aALink);
+  }
+  void SetALink(const nsAString& aALink, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::alink, aALink, aError);
+  }
+  void GetBgColor(nsString& aBgColor)
+  {
+    GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
+  }
+  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
+  }
+  void GetBackground(nsString& aBackground)
+  {
+    GetHTMLAttr(nsGkAtoms::background, aBackground);
+  }
+  void SetBackground(const nsAString& aBackground, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::background, aBackground, aError);
+  }
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
@@ -88,7 +147,10 @@ private:
   nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
 
 protected:
-  BodyRule* mContentStyleRule;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+
+  nsRefPtr<BodyRule> mContentStyleRule;
 };
 
 } // namespace dom
