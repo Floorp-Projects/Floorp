@@ -910,9 +910,9 @@ var Browser = {
         let sslExceptions = new SSLExceptions();
 
         if (json.action == "permanent")
-          sslExceptions.addPermanentException(uri);
+          sslExceptions.addPermanentException(uri, errorDoc.defaultView);
         else
-          sslExceptions.addTemporaryException(uri);
+          sslExceptions.addTemporaryException(uri, errorDoc.defaultView);
       } catch (e) {
         dump("EXCEPTION handle content command: " + e + "\n" );
       }
