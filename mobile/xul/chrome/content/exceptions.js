@@ -4,6 +4,9 @@
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
+let Cu = Components.utils;
+
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 /**
   A class to add exceptions to override SSL certificate problems. The functionality
@@ -40,19 +43,6 @@ SSLExceptions.prototype = {
   },
 
   /**
-    Returns true if the private browsing mode is currently active
-   */
-  _inPrivateBrowsingMode: function SSLE_inPrivateBrowsingMode() {
-    try {
-      var pb = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
-      return pb.privateBrowsingEnabled;
-    } catch (ex) {
-      Components.utils.reportError("Could not get the Private Browsing service");
-    }
-    return false;
-  },
-
-  /**
     Attempt to download the certificate for the location specified to get the SSLState
     for the certificate and the errors.
    */
@@ -81,14 +71,14 @@ SSLExceptions.prototype = {
   /**
     Internal method to create an override.
   */
-  _addOverride: function SSLE_addOverride(aURI, temporary) {
+  _addOverride: function SSLE_addOverride(aURI, aWindow, temporary) {
     var SSLStatus = this._checkCert(aURI);
     var certificate = SSLStatus.serverCert;
 
     var flags = 0;
 
     // in private browsing do not store exceptions permanently ever
-    if (this._inPrivateBrowsingMode()) {
+    if (PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
       temporary = true;
     }
 
@@ -111,15 +101,15 @@ SSLExceptions.prototype = {
     Creates a permanent exception to override all overridable errors for
     the given URL.
   */
-  addPermanentException: function SSLE_addPermanentException(aURI) {
-    this._addOverride(aURI, false);
+  addPermanentException: function SSLE_addPermanentException(aURI, aWindow) {
+    this._addOverride(aURI, aWindow, false);
   },
 
   /**
     Creates a temporary exception to override all overridable errors for
     the given URL.
   */
-  addTemporaryException: function SSLE_addTemporaryException(aURI) {
-    this._addOverride(aURI, true);
+  addTemporaryException: function SSLE_addTemporaryException(aURI, aWindow) {
+    this._addOverride(aURI, aWindow, true);
   }
 };
