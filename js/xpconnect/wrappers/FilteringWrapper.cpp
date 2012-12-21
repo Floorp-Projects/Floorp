@@ -115,6 +115,16 @@ FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, unsign
 
 template <typename Base, typename Policy>
 bool
+FilteringWrapper<Base, Policy>::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
+                                           JS::NativeImpl impl, JS::CallArgs args)
+{
+    if (Policy::allowNativeCall(cx, test, impl))
+        return Base::Permissive::nativeCall(cx, test, impl, args);
+    return Base::Restrictive::nativeCall(cx, test, impl, args);
+}
+
+template <typename Base, typename Policy>
+bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
                                       Wrapper::Action act, bool *bp)
 {

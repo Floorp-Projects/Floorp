@@ -25,6 +25,8 @@ class FilteringWrapper : public Base {
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, js::Value *vp) MOZ_OVERRIDE;
+    virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl,
+                            JS::CallArgs args) MOZ_OVERRIDE;
 
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
 

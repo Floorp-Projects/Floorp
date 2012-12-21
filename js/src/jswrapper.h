@@ -187,6 +187,13 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
+
+    /*
+     * Allow our subclasses to select the superclass behavior they want without
+     * needing to specify an exact superclass.
+     */
+    typedef Base Permissive;
+    typedef SecurityWrapper<Base> Restrictive;
 };
 
 typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
