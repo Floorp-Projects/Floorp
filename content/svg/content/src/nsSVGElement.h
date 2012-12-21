@@ -103,6 +103,7 @@ public:
   static const MappedAttributeEntry sFiltersMap[];
   static const MappedAttributeEntry sFEFloodMap[];
   static const MappedAttributeEntry sLightingEffectsMap[];
+  static const MappedAttributeEntry sMaskMap[];
 
   // nsIDOMNode
   NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion,

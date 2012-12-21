@@ -177,6 +177,10 @@ fuzzy-if(Android,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
 == mask-extref-dataURI-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-01.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-02.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-03.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 

@@ -1638,6 +1638,13 @@ pref("layout.css.dpi", -1);
 // of a CSS "px". This is only used for windows on the screen, not for printing.
 pref("layout.css.devPixelsPerPx", "-1.0");
 
+// Is support for CSS Masking features enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.masking.enabled", false);
+#else
+pref("layout.css.masking.enabled", true);
+#endif
+
 // Is support for the the @supports rule enabled?
 #ifdef RELEASE_BUILD
 pref("layout.css.supports-rule.enabled", false);
