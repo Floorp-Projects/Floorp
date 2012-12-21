@@ -298,8 +298,10 @@ GCThingTraceKind(void *thing);
 extern JS_FRIEND_API(void)
 IterateGrayObjects(JSCompartment *compartment, GCThingCallback cellCallback, void *data);
 
+#ifdef JS_HAS_CTYPES
 extern JS_FRIEND_API(size_t)
 SizeOfDataIfCDataObject(JSMallocSizeOfFun mallocSizeOf, JSObject *obj);
+#endif
 
 /*
  * Shadow declarations of JS internal structures, for access by inline access
