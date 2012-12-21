@@ -914,7 +914,7 @@ stack_callback(void *pc, void *sp, void *closure)
  * without doing anything (such as acquiring locks).
  */
 static callsite *
-backtrace(tm_thread *t, int skip, int *immediate_abort)
+backtrace(tm_thread *t, int skipFrames, int *immediate_abort)
 {
     callsite *site;
     stack_buffer_info *info = &t->backtrace_buf;
@@ -929,7 +929,8 @@ backtrace(tm_thread *t, int skip, int *immediate_abort)
         /* Walk the stack, even if stacks_enabled is false. We do this to
            check if we must set immediate_abort. */
         info->entries = 0;
-        rv = NS_StackWalk(stack_callback, skip, info, 0, NULL);
+        rv = NS_StackWalk(stack_callback, skipFrames, /* maxFrames */ 0, info,
+                          0, NULL);
         *immediate_abort = rv == NS_ERROR_UNEXPECTED;
         if (rv == NS_ERROR_UNEXPECTED || info->entries == 0) {
             t->suppress_tracing--;
@@ -961,10 +962,14 @@ backtrace(tm_thread *t, int skip, int *immediate_abort)
          * https://bugzilla.mozilla.org/show_bug.cgi?id=374829#c8
          */
 
-        /* skip == 0 means |backtrace| should show up, so don't use skip + 1 */
-        /* NB: this call is repeated below if the buffer is too small */
+        /*
+         * skipFrames == 0 means |backtrace| should show up, so don't use
+         * skipFrames + 1.
+         * NB: this call is repeated below if the buffer is too small.
+         */
         info->entries = 0;
-        rv = NS_StackWalk(stack_callback, skip, info, 0, NULL);
+        rv = NS_StackWalk(stack_callback, skipFrames, /* maxFrames */ 0, info,
+                          0, NULL);
         *immediate_abort = rv == NS_ERROR_UNEXPECTED;
         if (rv == NS_ERROR_UNEXPECTED || info->entries == 0) {
             t->suppress_tracing--;
@@ -988,7 +993,8 @@ backtrace(tm_thread *t, int skip, int *immediate_abort)
 
             /* and call NS_StackWalk again */
             info->entries = 0;
-            NS_StackWalk(stack_callback, skip, info, 0, NULL);
+            NS_StackWalk(stack_callback, skipFrames, /* maxFrames */ 0, info,
+                         0, NULL);
 
             /* same stack */
             PR_ASSERT(info->entries * 2 == new_stack_buffer_size);
