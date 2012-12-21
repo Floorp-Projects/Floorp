@@ -661,6 +661,9 @@ public:
   void
   StopSyncLoop(uint32_t aSyncLoopKey, bool aSyncResult);
 
+  void
+  DestroySyncLoop(uint32_t aSyncLoopKey);
+
   bool
   PostMessageToParent(JSContext* aCx, jsval aMessage,
                       jsval transferable);
@@ -847,6 +850,42 @@ WorkerStructuredCloneCallbacks(bool aMainRuntime);
 
 JSStructuredCloneCallbacks*
 ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime);
+
+class AutoSyncLoopHolder
+{
+public:
+  AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate), mSyncLoopKey(UINT32_MAX)
+  {
+    mSyncLoopKey = mWorkerPrivate->CreateNewSyncLoop();
+  }
+
+  ~AutoSyncLoopHolder()
+  {
+    if (mWorkerPrivate) {
+      mWorkerPrivate->StopSyncLoop(mSyncLoopKey, false);
+      mWorkerPrivate->DestroySyncLoop(mSyncLoopKey);
+    }
+  }
+
+  bool
+  RunAndForget(JSContext* aCx)
+  {
+    WorkerPrivate* workerPrivate = mWorkerPrivate;
+    mWorkerPrivate = nullptr;
+    return workerPrivate->RunSyncLoop(aCx, mSyncLoopKey);
+  }
+
+  uint32_t
+  SyncQueueKey() const
+  {
+    return mSyncLoopKey;
+  }
+
+private:
+  WorkerPrivate* mWorkerPrivate;
+  uint32_t mSyncLoopKey;
+};
 
 END_WORKERS_NAMESPACE
 
