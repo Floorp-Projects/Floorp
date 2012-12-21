@@ -31,6 +31,7 @@ typedef void
  * @param aSkipFrames  Number of initial frames to skip.  0 means that
  *                     the first callback will be for the caller of
  *                     NS_StackWalk.
+ * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
  * @param aClosure     Caller-supplied data passed through to aCallback.
  * @param aThread      The thread for which the stack is to be retrieved.
  *                     Passing null causes us to walk the stack of the
@@ -42,18 +43,26 @@ typedef void
  *                      CONTEXT on Windows and should not be passed on other
  *                      platforms.
  *
- * Returns NS_ERROR_NOT_IMPLEMENTED on platforms where it is
- * unimplemented.
- * Returns NS_ERROR_UNEXPECTED when the stack indicates that the thread
- * is in a very dangerous situation (e.g., holding sem_pool_lock in 
- * Mac OS X pthreads code). Callers should then bail out immediately.
+ * Return values:
+ * - NS_ERROR_NOT_IMPLEMENTED.  Occurs on platforms where it is unimplemented.
+ *
+ * - NS_ERROR_UNEXPECTED.  Occurs when the stack indicates that the thread
+ *   is in a very dangerous situation (e.g., holding sem_pool_lock in Mac OS X
+ *   pthreads code).  Callers should then bail out immediately.
+ *
+ * - NS_ERROR_FAILURE.  Occurs when stack walking completely failed, i.e.
+ *   aCallback was never called.
+ *
+ * - NS_OK.  Occurs when stack walking succeeded, i.e. aCallback was called at
+ *   least once (and there was no need to exit with NS_ERROR_UNEXPECTED).
  *
  * May skip some stack frames due to compiler optimizations or code
  * generation.
  */
 XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             void *aClosure, uintptr_t aThread, void *aPlatformData);
+             uint32_t aMaxFrames, void *aClosure, uintptr_t aThread,
+             void *aPlatformData);
 
 typedef struct {
     /*
