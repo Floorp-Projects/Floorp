@@ -97,6 +97,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
+using mozilla::net::nsMediaFragmentURIParser;
 
 // Number of milliseconds between timeupdate events as defined by spec
 #define TIMEUPDATE_MS 250
@@ -2484,24 +2485,15 @@ nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIU
 
 void nsHTMLMediaElement::ProcessMediaFragmentURI()
 {
-  nsAutoCString ref;
-  GetCurrentSpec(ref);
-  nsMediaFragmentURIParser parser(ref);
-  parser.Parse();
-  double start = parser.GetStartTime();
-  if (mDecoder) {
-    double end = parser.GetEndTime();
-    if (end < 0.0 || end > start) {
-      mFragmentEnd = end;
-    }
-    else {
-      start = -1.0;
-      end = -1.0;
-    }
+  nsMediaFragmentURIParser parser(mLoadingSrc);
+
+  if (mDecoder && parser.HasEndTime()) {
+    mFragmentEnd = parser.GetEndTime();
   }
-  if (start > 0.0) {
-    SetCurrentTime(start);
-    mFragmentStart = start;
+
+  if (parser.HasStartTime()) {
+    SetCurrentTime(parser.GetStartTime());
+    mFragmentStart = parser.GetStartTime();
   }
 }
 
