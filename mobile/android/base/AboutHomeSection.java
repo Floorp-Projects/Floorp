@@ -13,7 +13,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class AboutHomeSection extends LinearLayout {
+public class AboutHomeSection extends GeckoLinearLayout {
     private static final String LOGTAG = "GeckoAboutHomeSection";
 
     private TextView mTitle;

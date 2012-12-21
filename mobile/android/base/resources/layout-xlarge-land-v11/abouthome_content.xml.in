@@ -18,23 +18,24 @@
                       android:layout_marginLeft="@dimen/abouthome_gutter_large"
                       android:layout_marginRight="@dimen/abouthome_gutter_small">
 
-            <ImageView android:src="@drawable/abouthome_logo"
-                       android:layout_width="wrap_content"
-                       android:layout_height="24dip"
-                       android:layout_marginTop="16dip"
-                       android:layout_marginBottom="10dip"
-                       android:layout_marginLeft="12dip"/>
+            <Gecko.ImageView android:id="@+id/abouthome_logo"
+                             android:src="@drawable/abouthome_logo"
+                             android:layout_width="wrap_content"
+                             android:layout_height="24dip"
+                             android:layout_marginTop="16dip"
+                             android:layout_marginBottom="10dip"
+                             android:layout_marginLeft="12dip"/>
 
-            <TextView android:id="@+id/top_sites_title"
-                      android:text="@string/abouthome_top_sites_title"
-                      android:layout_width="fill_parent"
-                      android:layout_height="26dip"
-                      android:background="#34FFFFFF"
-                      android:paddingLeft="12dip"
-                      android:textSize="12sp"
-                      android:textColor="#000000"
-                      android:textStyle="bold"
-                      android:gravity="left|center_vertical"/>
+            <Gecko.TextView android:id="@+id/top_sites_title"
+                            android:text="@string/abouthome_top_sites_title"
+                            android:layout_width="fill_parent"
+                            android:layout_height="26dip"
+                            android:background="#34FFFFFF"
+                            android:paddingLeft="12dip"
+                            android:textSize="12sp"
+                            android:textColor="@color/abouthome_section_title"
+                            android:textStyle="bold"
+                            android:gravity="left|center_vertical"/>
 
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"

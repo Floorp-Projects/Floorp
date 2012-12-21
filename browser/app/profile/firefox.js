@@ -1035,7 +1035,6 @@ pref("devtools.debugger.remote-connection-retries", 3);
 pref("devtools.debugger.remote-timeout", 20000);
 
 // The default Debugger UI settings
-pref("devtools.debugger.ui.height", 250);
 pref("devtools.debugger.ui.win-x", 0);
 pref("devtools.debugger.ui.win-y", 0);
 pref("devtools.debugger.ui.win-width", 900);

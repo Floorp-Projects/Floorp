@@ -52,6 +52,7 @@
  */
 
 #include "cpr.h"
+#include "cpr_assert.h"
 #include "cpr_socket.h"
 #include "cpr_stdlib.h"
 #include "cpr_stdio.h"
@@ -226,13 +227,9 @@ cprSleep (uint32_t duration)
 static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data)
 {
     // TODO(ekr@rtfm.com): Put this back in when you figure out why it causes crashes
-    return CPR_SUCCESS;
-
-#if 0
-    static const char fname[] = "addTimerToList";
+#ifdef CPR_TIMERS_ENABLED
     timer_ipc_t tmr_cmd = {0};
     timer_ipc_t tmr_rsp={0};
-
 
     API_ENTER();
 
@@ -254,7 +251,7 @@ static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void
         }
 
     } else {
-        CPR_ERROR("can not make IPC connection, client_sock is invalid %s\n", fname);
+        CPR_ERROR("can not make IPC connection, client_sock is invalid %s\n", __FUNCTION__);
         API_RETURN(CPR_FAILURE);
     }
 
@@ -270,6 +267,10 @@ static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void
         //CPR_INFO("received response from the timer result=%d\n", tmr_rsp.u.result);
         API_RETURN(tmr_rsp.u.result);
     }
+#else
+    cprAssert(FALSE, CPR_FAILURE);
+    CPR_ERROR("CPR Timers are disabled! %s\n", __FUNCTION__);
+    return CPR_SUCCESS;
 #endif
 }
 

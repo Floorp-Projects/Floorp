@@ -111,7 +111,9 @@ class IonCache
             Register object;
             PropertyName *name;
             TypedOrValueRegisterSpace output;
-            bool allowGetters;
+            bool allowGetters : 1;
+            bool hasDenseArrayLengthStub : 1;
+            bool hasTypedArrayLengthStub : 1;
         } getprop;
         struct {
             Register object;
@@ -265,18 +267,24 @@ class IonCacheGetProperty : public IonCache
         u.getprop.name = name;
         u.getprop.output.data() = output;
         u.getprop.allowGetters = allowGetters;
+        u.getprop.hasDenseArrayLengthStub = false;
+        u.getprop.hasTypedArrayLengthStub = false;
     }
 
     Register object() const { return u.getprop.object; }
     PropertyName *name() const { return u.getprop.name; }
     TypedOrValueRegister output() const { return u.getprop.output.data(); }
     bool allowGetters() const { return u.getprop.allowGetters; }
+    bool hasDenseArrayLengthStub() const { return u.getprop.hasDenseArrayLengthStub; }
+    bool hasTypedArrayLengthStub() const { return u.getprop.hasTypedArrayLengthStub; }
 
     bool attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         HandleShape shape);
     bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                           HandleShape shape,
                           const SafepointIndex *safepointIndex, void *returnAddr);
+    bool attachDenseArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
+    bool attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
 };
 
 class IonCacheSetProperty : public IonCache

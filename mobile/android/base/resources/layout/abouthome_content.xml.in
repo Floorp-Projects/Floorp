@@ -12,27 +12,27 @@
                     android:paddingLeft="@dimen/abouthome_gutter_large"
                     android:paddingRight="@dimen/abouthome_gutter_large">
 
-        <ImageView android:id="@+id/abouthome_logo"
-                   android:src="@drawable/abouthome_logo"
-                   android:layout_width="wrap_content"
-                   android:layout_height="24dip"
-                   android:layout_marginTop="16dip"
-                   android:layout_marginBottom="10dip"
-                   android:layout_marginLeft="12dip"
-                   android:layout_alignParentTop="true"
-                   android:layout_alignParentLeft="true"/>
+        <Gecko.ImageView android:id="@+id/abouthome_logo"
+                         android:src="@drawable/abouthome_logo"
+                         android:layout_width="wrap_content"
+                         android:layout_height="24dip"
+                         android:layout_marginTop="16dip"
+                         android:layout_marginBottom="10dip"
+                         android:layout_marginLeft="12dip"
+                         android:layout_alignParentTop="true"
+                         android:layout_alignParentLeft="true"/>
 
-        <TextView android:id="@+id/top_sites_title"
-                  android:text="@string/abouthome_top_sites_title"
-                  android:layout_width="fill_parent"
-                  android:layout_height="26dip"
-                  android:background="#34FFFFFF"
-                  android:paddingLeft="12dip"
-                  android:textSize="12sp"
-                  android:textColor="#000000"
-                  android:textStyle="bold"
-                  android:gravity="left|center_vertical"
-                  android:layout_below="@id/abouthome_logo"/>
+        <Gecko.TextView android:id="@+id/top_sites_title"
+                        android:text="@string/abouthome_top_sites_title"
+                        android:layout_width="fill_parent"
+                        android:layout_height="26dip"
+                        android:background="#34FFFFFF"
+                        android:paddingLeft="12dip"
+                        android:textSize="12sp"
+                        android:textColor="@color/abouthome_section_title"
+                        android:textStyle="bold"
+                        android:gravity="left|center_vertical"
+                        android:layout_below="@id/abouthome_logo"/>
 
         <ImageView android:src="@drawable/abouthome_icon"
                    android:layout_width="180dp"

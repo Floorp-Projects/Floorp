@@ -118,6 +118,12 @@ DownloadElementShell.prototype = {
     throw new Error("Unexpected download element state");
   },
 
+  get _downloadURIObj() {
+    if (!("__downloadURIObj" in this))
+      this.__downloadURIObj = NetUtil.newURI(this.downloadURI);
+    return this.__downloadURIObj;
+  },
+
   get _icon() {
     if (this._targetFileURI)
       return "moz-icon://" + this._targetFileURI + "?size=32";
@@ -136,7 +142,7 @@ DownloadElementShell.prototype = {
     let value;
     try {
       value = PlacesUtils.annotations.getPageAnnotation(
-        NetUtil.newURI(this.downloadURI), aAnnotation);
+        this._downloadURIObj, aAnnotation);
     }
     catch(ex) {
       if (aDefaultValue === undefined) {
@@ -466,7 +472,7 @@ DownloadElementShell.prototype = {
         if (this._dataItem)
           this._dataItem.remove();
         if (this._placesNode)
-          PlacesUtils.bhistory.removePage(NetUtil.newURI(this.downloadURI));
+          PlacesUtils.bhistory.removePage(this._downloadURIObj);
         break;
        }
       case "downloadsCmd_retry": {
@@ -577,18 +583,35 @@ DownloadsPlacesView.prototype = {
     }
   },
 
-  // Given a data item for a session download, or a places node for a past
-  // download, updates the view as necessary.
-  // 1. If the given data is a places node, we check whether there are any
-  //    element for the same download url. If there are, then we just reset
-  //    their places node. Otherwise we add a new download element.
-  // 2. If the given data is a data item, we first check if there's an history
-  //    download in the list that is not associated with a data item. If we found
-  //    one, we use it for the data item as well and reposition it alongside the
-  //    other session downloads. If we don't, then we go ahead and create a new
-  //    element for the download.
+  /**
+   * Given a data item for a session download, or a places node for a past
+   * download, updates the view as necessary.
+   *  1. If the given data is a places node, we check whether there are any
+   *     elements for the same download url. If there are, then we just reset
+   *     their places node. Otherwise we add a new download element.
+   *  2. If the given data is a data item, we first check if there's a history
+   *     download in the list that is not associated with a data item. If we
+   *     found one, we use it for the data item as well and reposition it
+   *     alongside the other session downloads. If we don't, then we go ahead
+   *     and create a new element for the download.
+   *
+   * @param aDataItem
+   *        The data item of a session download. Set to null for history
+   *        downloads data.
+   * @param [optional] aPlacesNode
+   *        The places node for a history download. Required if there's no data
+   *        item.
+   * @param [optional] aNewest
+   *        @see onDataItemAdded. Ignored for history downlods.
+   * @param [optional] aDocumentFragment
+   *        To speed up the appending of multiple elements to the end of the
+   *        list which are coming in a single batch (i.e. invalidateContainer),
+   *        a document fragment may be passed to which the new elements would
+   *        be appended. It's the caller's job to ensure the fragment is merged
+   *        to the richlistbox at the end.
+   */
   _addDownloadData:
-  function DPV_addDownload(aDataItem, aPlacesNode, aNewest) {
+  function DPV_addDownload(aDataItem, aPlacesNode, aNewest = false, aDocumentFragment = null) {
     let downloadURI = aPlacesNode ? aPlacesNode.uri : aDataItem.uri;
     let shellsForURI = this._downloadElementsShellsForURI.get(downloadURI, null);
     if (!shellsForURI) {
@@ -658,12 +681,13 @@ DownloadsPlacesView.prototype = {
       }
       else if (aDataItem) {
         let before = this._lastSessionDownloadElement ?
-          this._lastSessionDownloadElement.nextSibling : this._richlistbox.firstChild
-        this._richlistbox.insertBefore(newOrUpdatedShell.element, before)
+          this._lastSessionDownloadElement.nextSibling : this._richlistbox.firstChild;
+        this._richlistbox.insertBefore(newOrUpdatedShell.element, before);
         this._lastSessionDownloadElement = newOrUpdatedShell.element;
       }
       else {
-        this._richlistbox.appendChild(newOrUpdatedShell.element);
+        let appendTo = aDocumentFragment || this._richlistbox;
+        appendTo.appendChild(newOrUpdatedShell.element);
       }
 
       if (this.searchTerm) {
@@ -821,18 +845,22 @@ DownloadsPlacesView.prototype = {
         this._removeHistoryDownloadFromView(element._shell.placesNode);
     }
 
+    let elementsToAppendFragment = document.createDocumentFragment();
     for (let i = 0; i < aContainer.childCount; i++) {
       try {
-        this._addDownloadData(null, aContainer.getChild(i), false)
+        this._addDownloadData(null, aContainer.getChild(i), false,
+                              elementsToAppendFragment);
       }
       catch(ex) {
         Cu.reportError(ex);
       }
     }
+
+    this._richlistbox.appendChild(elementsToAppendFragment);
   },
 
   nodeInserted: function DPV_nodeInserted(aParent, aPlacesNode) {
-    this._addDownloadData(null, aPlacesNode, false);
+    this._addDownloadData(null, aPlacesNode);
   },
 
   nodeRemoved: function DPV_nodeRemoved(aParent, aPlacesNode, aOldIndex) {
@@ -895,7 +923,7 @@ DownloadsPlacesView.prototype = {
   },
 
   onDataItemRemoved: function DPV_onDataItemRemoved(aDataItem) {
-    this._removeSessionDownloadFromView(aDataItem)
+    this._removeSessionDownloadFromView(aDataItem);
   },
 
   getViewItem: function(aDataItem)
@@ -939,7 +967,7 @@ DownloadsPlacesView.prototype = {
 
     Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
 
-    // Getting the data or creating the nsIURI might fail
+    // Getting the data or creating the nsIURI might fail.
     try {
       let data = {};
       trans.getAnyTransferData({}, data, {});

@@ -6547,8 +6547,8 @@ JSCompartment::sizeOfTypeInferenceData(TypeInferenceSizes *sizes, JSMallocSizeOf
     }
 }
 
-void
-TypeObject::sizeOfExcludingThis(TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf)
+size_t
+TypeObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
     if (singleton) {
         /*
@@ -6557,8 +6557,8 @@ TypeObject::sizeOfExcludingThis(TypeInferenceSizes *sizes, JSMallocSizeOfFun mal
          * charge this to 'temporary' as this is not for GC heap values.
          */
         JS_ASSERT(!newScript);
-        return;
+        return 0;
     }
 
-    sizes->typeObjects += mallocSizeOf(newScript);
+    return mallocSizeOf(newScript);
 }

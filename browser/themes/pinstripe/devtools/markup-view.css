@@ -52,6 +52,10 @@ li.container {
   -moz-appearance: treetwistyopen;
 }
 
+.more-nodes {
+  padding-left: 16px;
+}
+
 .styleinspector-propertyeditor {
   border: 1px solid #CCC;
 }

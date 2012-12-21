@@ -16,6 +16,10 @@ include $(DEPTH)/config/autoconf.mk
 # browser_580512.js is disabled for leaking browser windows (bug 752467)
 # browser_586068-reload.js is disabled due to generally being broken (bug 809123, 797263)
 
+XPCSHELL_TESTS = \
+	unit \
+	$(NULL)
+
 MOCHITEST_BROWSER_FILES = \
 	head.js \
 	browser_form_restore_events.js \
@@ -142,6 +146,7 @@ else
 MOCHITEST_BROWSER_FILES += \
 	browser_248970_a.js \
 	browser_248970_b.js \
+	browser_248970_b_perwindowpb.js \
 	browser_354894.js \
 	browser_394759_privatebrowsing.js \
 	$(NULL)

@@ -59,12 +59,12 @@ public class testBookmarksTab extends BaseTest {
         View child;
         list = getBookmarksList();
 
-        mSolo.waitForText(url);
-        mAsserter.ok(list != null, "checking that bookmarks list exists", list.toString());
-
-        mAsserter.is(list.getChildCount(), 5, "bookmarks list has 5 children (defaults + a folder)");
+        mSolo.waitForText("Desktop Bookmarks");
+        mAsserter.isnot(list, null, "checking that bookmarks list exists");
 
         int count = list.getChildCount();
+        mAsserter.is(count, 5, "bookmarks list has 5 children (defaults + a folder)");
+ 
         for (int i = count - 1; i >= 0; i--) {
             child = list.getChildAt(i);
             compareRow(child, i == 0 ? 1 : 2, 1);
@@ -207,7 +207,7 @@ public class testBookmarksTab extends BaseTest {
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
                for (ListView view : views) {
-                   if (view.getTag() == "bookmarks") {
+                   if (view.getTag().equals("bookmarks")) {
                        list = view;
                        return true;
                    }
