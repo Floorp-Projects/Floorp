@@ -181,6 +181,8 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
   public:
     SecurityWrapper(unsigned flags);
 
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act,
+                       bool *bp) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;

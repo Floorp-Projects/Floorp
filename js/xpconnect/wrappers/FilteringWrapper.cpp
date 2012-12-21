@@ -128,7 +128,7 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
         return false;
     }
     *bp = true;
-    return Base::enter(cx, wrapper, id, act, bp);
+    return true;
 }
 
 #define SOW FilteringWrapper<CrossCompartmentSecurityWrapper, OnlyIfSubjectIsSystem>
