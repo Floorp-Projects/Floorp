@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(aef0cd6f-27cc-40a4-90dc-764c0aabeb75)]
+[scriptable, uuid(9D98A42F-ABAA-48a0-BB53-CE09A29E6876)]
 
 interface nsIMetroUIUtils : nsISupports {
   /**
@@ -15,10 +15,23 @@ interface nsIMetroUIUtils : nsISupports {
   void showPanel(in AString aPanelId);
 
   /**
-   * Obtains the current page information
-   * @param aURI The current page URI
-   * @param aTitle The current page title
+   * Obtains the current page URI
   */
-  void getCurrentPageInfo(out AString aURI, out AString aTitle);
+  attribute AString currentPageURI;
+
+  /**
+   * Obtains the current page title
+  */
+  attribute AString currentPageTitle;
+
+  /**
+   * Determines if the browser has selected content
+  */
+  attribute boolean hasSelectedContent;
+
+  /**
+   * Determines the text that should be shared
+  */
+  attribute AString shareText;
 };
 
