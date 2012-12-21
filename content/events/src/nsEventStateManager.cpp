@@ -92,7 +92,7 @@
 #include "nsICommandParams.h"
 #include "mozilla/Services.h"
 #include "mozAutoDocUpdate.h"
-#include "nsHTMLLabelElement.h"
+#include "mozilla/dom/HTMLLabelElement.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -4613,7 +4613,8 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent)
 static Element*
 GetLabelTarget(nsIContent* aPossibleLabel)
 {
-  nsHTMLLabelElement* label = nsHTMLLabelElement::FromContent(aPossibleLabel);
+  mozilla::dom::HTMLLabelElement* label =
+    mozilla::dom::HTMLLabelElement::FromContent(aPossibleLabel);
   if (!label)
     return nullptr;
 
