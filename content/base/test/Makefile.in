@@ -503,6 +503,8 @@ MOCHITEST_FILES_B = \
 		file_html_in_xhr3.html \
 		file_html_in_xhr.sjs \
 		test_bug647518.html \
+		test_bug654352.html \
+		test_bug654352-2.html \
 		test_bug664916.html \
 		test_bug666604.html \
 		test_bug675121.html \
