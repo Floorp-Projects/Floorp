@@ -260,19 +260,7 @@ PeerConnectionImpl::MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
 }
 
 nsresult
-PeerConnectionImpl::MakeRemoteSource(nsDOMMediaStream* aStream, RemoteSourceStreamInfo** aInfo)
-{
-  MOZ_ASSERT(aInfo);
-  MOZ_ASSERT(aStream);
-
-  // TODO(ekr@rtfm.com): Add the track info with the first segment
-  nsRefPtr<RemoteSourceStreamInfo> remote = new RemoteSourceStreamInfo(aStream);
-  NS_ADDREF(*aInfo = remote);
-  return NS_OK;
-}
-
-nsresult
-PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, RemoteSourceStreamInfo** aInfo)
+PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, nsRefPtr<RemoteSourceStreamInfo>* aInfo)
 {
   MOZ_ASSERT(aInfo);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -288,19 +276,8 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, RemoteSourceStr
   static_cast<mozilla::SourceMediaStream*>(comstream->GetStream())->SetPullEnabled(true);
 
   nsRefPtr<RemoteSourceStreamInfo> remote;
-  if (!mThread || NS_IsMainThread()) {
-    remote = new RemoteSourceStreamInfo(comstream);
-    NS_ADDREF(*aInfo = remote);
-    return NS_OK;
-  }
-
-  mThread->Dispatch(WrapRunnableNMRet(
-    &PeerConnectionImpl::MakeRemoteSource, comstream, aInfo, &res
-  ), NS_DISPATCH_SYNC);
-
-  if (NS_FAILED(res)) {
-    return res;
-  }
+  remote = new RemoteSourceStreamInfo(comstream);
+  *aInfo = remote;
 
   return NS_OK;
 }
