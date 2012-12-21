@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=600155
 var subjectForConstraintValidation = [ "input", "select", "textarea" ];
 var content = document.getElementById('content');
 
-for each (var eName in subjectForConstraintValidation) {
+for (var eName of subjectForConstraintValidation) {
   var e = document.createElement(eName);
   content.appendChild(e);
   e.setAttribute("x-moz-errormessage", "foo");

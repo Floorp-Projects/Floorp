@@ -91,7 +91,7 @@
     var plugin = document.getElementById("plugin1");
 
     // Test calling NPN_InvokeDefault from within plugin code.
-    for each (var test in tests) {
+    for (var test of tests) {
       var result;
       var expected = test[test.length - 1];
       switch (test.length) {

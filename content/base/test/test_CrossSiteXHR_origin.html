@@ -64,7 +64,7 @@ function runTest() {
   basePath = "/tests/content/base/test/file_CrossSiteXHR_server.sjs?"
   baseURL = "http://mochi.test:8888" + basePath;
 
-  for each(originEntry in origins) {
+  for (originEntry of origins) {
     origin = originEntry.origin || originEntry.server;
 
     loader.src = originEntry.file ||
@@ -113,7 +113,7 @@ function runTest() {
       failTests = failTests.filter(function(v) { return v != origin });
     }
     
-    for each(allowOrigin in passTests) {
+    for (allowOrigin of passTests) {
       req = {
         url: baseURL +
              "allowOrigin=" + escape(allowOrigin) +
@@ -136,7 +136,7 @@ function runTest() {
          "wrong responseText in test for " + allowOrigin);
     }
 
-    for each(allowOrigin in failTests) {
+    for (allowOrigin of failTests) {
       req = {
         url: baseURL + "allowOrigin=" + escape(allowOrigin),
         method: "GET",

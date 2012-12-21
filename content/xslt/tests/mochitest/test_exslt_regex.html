@@ -28,7 +28,7 @@ http://www.exslt.org/regexp/index.html
       expResult: "XSLT is great" }
   ];
 
-  for each(test in tests) {
+  for (test of tests) {
     var style =
       '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" ' +
                       'xmlns:regexp="http://exslt.org/regular-expressions" '+

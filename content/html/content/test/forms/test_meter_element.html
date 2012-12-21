@@ -86,7 +86,7 @@ function checkValueAttribute()
 
   var element = document.createElement('meter');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     if (test[2]) {
       element.setAttribute('max', test[2]);
     }
@@ -118,7 +118,7 @@ function checkMinAttribute()
 
   var element = document.createElement('meter');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     checkAttribute(element, 'min', test[0], test[1]);
   }
 }
@@ -144,7 +144,7 @@ function checkMaxAttribute()
 
   var element = document.createElement('meter');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     if (test[2]) {
       element.setAttribute('min', test[2]);
     }
@@ -181,7 +181,7 @@ function checkLowAttribute()
 
   var element = document.createElement('meter');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     if (test[2]) {
       element.setAttribute('min', test[2]);
     }
@@ -222,7 +222,7 @@ function checkHighAttribute()
 
   var element = document.createElement('meter');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     if (test[2]) {
       element.setAttribute('min', test[2]);
     }
@@ -263,7 +263,7 @@ function checkOptimumAttribute()
 
   var element = document.createElement('meter');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     if (test[2]) {
       element.setAttribute('min', test[2]);
     }

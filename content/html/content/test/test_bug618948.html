@@ -35,7 +35,7 @@ function eventHandler(event)
 
 function beginTest()
 {
-  for each (var e in events) {
+  for (var e of events) {
     handled[e] = false;
   }
 
@@ -44,7 +44,7 @@ function beginTest()
 
 function endTest()
 {
-  for each (var e in events) {
+  for (var e of events) {
     ok(handled[e], "on" + e + " should have been called");
   }
 

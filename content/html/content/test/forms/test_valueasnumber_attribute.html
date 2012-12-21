@@ -60,7 +60,7 @@ function checkAvailability()
   ];
 
 
-  for each (data in testData) {
+  for (data of testData) {
     var exceptionCatched = false;
     element.type = data[0];
     try {
@@ -81,7 +81,7 @@ function checkAvailability()
                                    " availability is not correct");
   }
 
-  for each (data in todoList) {
+  for (data of todoList) {
     var exceptionCatched = false;
     element.type = data[0];
     try {
@@ -124,7 +124,7 @@ function checkGet()
   ];
 
   element.type = "number";
-  for each (data in testData) {
+  for (data of testData) {
     element.value = data[0];
     if (data[1] != null) {
       is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
@@ -153,7 +153,7 @@ function checkSet()
   ];
 
   element.type = "number";
-  for each (data in testData) {
+  for (data of testData) {
     element.valueAsNumber = data[0];
     if (data[1] != null) {
       is(element.value, data[1],
