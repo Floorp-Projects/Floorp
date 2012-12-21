@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="-moz-columns: 2 auto;" class="reftest-wait">
+  <head>
+    <script>
+
+function test() { 
+  var r = document.documentElement; 
+  document.removeChild(r); 
+  document.appendChild(r); 
+  document.documentElement.removeAttribute("class");
+}
+
+    </script>
+  </head>
+  <body style="filter:url(#f);" onload="setTimeout(test, 0);">
+    <div>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <filter id="f"/>
+    </svg>
+  </body>
+</html>
+
