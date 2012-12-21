@@ -7,6 +7,7 @@
 
 #import "mozHTMLAccessible.h"
 
+#import "Accessible-inl.h"
 #import "HyperTextAccessible.h"
 
 #import "nsCocoaUtils.h"
