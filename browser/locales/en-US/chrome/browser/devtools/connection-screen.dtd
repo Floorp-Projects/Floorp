@@ -2,14 +2,21 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- LOCALIZATION NOTE : FILE This file contains the Remove Connection strings.
-  - The Remote Connection window can be start by running the command:
-  - `devtools connect`
+<!-- LOCALIZATION NOTE : FILE This file contains the Remote Connection strings.
+  - The Remote Connection window can reached from the "connect…" menuitem
+  - in the Web Developer menu.
   - -->
 
 <!ENTITY title      "Connect">
+<!ENTITY header     "Connect to remote device">
 <!ENTITY host       "Host:">
 <!ENTITY port       "Port:">
 <!ENTITY connect    "Connect">
 <!ENTITY connecting "Connecting…">
 <!ENTITY availability "Available remote objects:">
+<!ENTITY remoteProcess "remote process">
+<!ENTITY connectionError "Error:">
+<!ENTITY errorTimeout "Error: connection timeout.">
+<!ENTITY errorRefused "Error: connection refused.">
+<!ENTITY errorUnexpected "Unexpected error.">
+<!ENTITY help "Firefox Developer Tools can debug remote devices (Firefox for Android and Firefox OS for example). Make sure that you have turned on the 'Debugger Server' option on the remote device. See <a target='_' href='https://developer.mozilla.org/en-US/docs/Tools/Debugger#Remote_Debugging'>documentation</a>.">

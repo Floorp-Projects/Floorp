@@ -1260,6 +1260,7 @@ function GlobalSearchView() {
   MenuContainer.call(this);
   this._startSearch = this._startSearch.bind(this);
   this._onFetchSourceFinished = this._onFetchSourceFinished.bind(this);
+  this._onFetchSourceTimeout = this._onFetchSourceTimeout.bind(this);
   this._onFetchSourcesFinished = this._onFetchSourcesFinished.bind(this);
   this._createItemView = this._createItemView.bind(this);
   this._onScroll = this._onScroll.bind(this);
@@ -1402,25 +1403,29 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
     this._sourcesCount = locations.length;
     this._searchedToken = aQuery;
 
-    this._fetchSources(
-      this._onFetchSourceFinished,
-      this._onFetchSourcesFinished, locations);
+    this._fetchSources(locations, {
+      onFetch: this._onFetchSourceFinished,
+      onTimeout: this._onFetchSourceTimeout,
+      onFinished: this._onFetchSourcesFinished
+    });
   },
 
   /**
    * Starts fetching all the sources, silently.
    *
-   * @param function aFetchCallback
-   *        Called after each source is fetched.
-   * @param function aFetchedCallback
-   *        Called if all the sources were already fetched.
    * @param array aLocations
    *        The locations for the sources to fetch.
+   * @param object aCallbacks
+   *        An object containing the callback functions to invoke:
+   *          - onFetch: called after each source is fetched
+   *          - onTimeout: called when a source's text takes too long to fetch
+   *          - onFinished: called if all the sources were already fetched
    */
-  _fetchSources: function DVGS__fetchSources(aFetchCallback, aFetchedCallback, aLocations) {
+  _fetchSources:
+  function DVGS__fetchSources(aLocations, { onFetch, onTimeout, onFinished }) {
     // If all the sources were already fetched, then don't do anything.
     if (this._cache.size == aLocations.length) {
-      aFetchedCallback();
+      onFinished();
       return;
     }
 
@@ -1430,7 +1435,8 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
         continue;
       }
       let sourceItem = DebuggerView.Sources.getItemByValue(location);
-      DebuggerController.SourceScripts.getText(sourceItem.attachment, aFetchCallback);
+      let sourceObject = sourceItem.attachment;
+      DebuggerController.SourceScripts.getText(sourceObject, onFetch, onTimeout);
     }
   },
 
@@ -1453,9 +1459,23 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Called when a source's text takes too long to fetch.
+   */
+  _onFetchSourceTimeout: function DVGS__onFetchSourceTimeout() {
+    // Remove the source from the load queue.
+    this._sourcesCount--;
+
+    // Check if the remaining sources were fetched and stored in the cache.
+    if (this._cache.size == this._sourcesCount) {
+      this._onFetchSourcesFinished();
+    }
+  },
+
+  /**
    * Called when all the sources have been fetched.
    */
   _onFetchSourcesFinished: function DVGS__onFetchSourcesFinished() {
+    // At least one source needs to be present to perform a global search.
     if (!this._sourcesCount) {
       return;
     }

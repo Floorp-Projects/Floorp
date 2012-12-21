@@ -104,7 +104,7 @@ function test() {
     is(para.textContent, "test2", "paragraph content is correct");
 
     let root = content.document.documentElement;
-    ok(inspector.selection.node, root, "Selection is the root of the new page.");
+    is(inspector.selection.node, root, "Selection is the root of the new page.");
 
     ok(alertActive1_called, "first notification box has been showed");
     ok(alertActive2_called, "second notification box has been showed");

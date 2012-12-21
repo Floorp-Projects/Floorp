@@ -295,9 +295,10 @@ TabWebProgressListener.prototype = {
   onSecurityChange: function() {},
   onStatusChange: function() {},
 
-  onLocationChange: function TwPL_onLocationChange(webProgress) {
-    let window = webProgress.DOMWindow;
-    if (this.target) {
+  onLocationChange: function TwPL_onLocationChange(webProgress, request, URI, flags) {
+    if (this.target &&
+        !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
+      let window = webProgress.DOMWindow;
       this.target.emit("navigate", window);
     }
   },
