@@ -42,7 +42,6 @@
                   style="@style/AboutHome.Thumbnail.Grid"/>
 
             <org.mozilla.gecko.AboutHomePromoBox android:id="@+id/promo_box"
-                                                 android:orientation="horizontal"
                                                  android:background="@drawable/abouthome_promo_box"
                                                  android:layout_width="fill_parent"
                                                  android:layout_height="wrap_content"
@@ -50,8 +49,11 @@
                                                  android:layout_marginRight="12dp"
                                                  android:layout_marginTop="17dp"
                                                  android:layout_marginBottom="14dp"
+                                                 android:drawablePadding="7dp"
                                                  android:gravity="center"
                                                  android:clickable="true"
+                                                 android:textSize="15sp"
+                                                 android:textColor="#FFFFFF"
                                                  android:visibility="gone"/>
 
         </LinearLayout>
