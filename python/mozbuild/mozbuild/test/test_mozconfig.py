@@ -12,8 +12,9 @@ from shutil import rmtree
 from tempfile import (
     gettempdir,
     mkdtemp,
-    NamedTemporaryFile,
 )
+
+from mozfile.mozfile import NamedTemporaryFile
 
 from mozbuild.mozconfig import (
     MozconfigFindException,

@@ -5,7 +5,7 @@
 import os
 import unittest
 
-from tempfile import NamedTemporaryFile
+from mozfile.mozfile import NamedTemporaryFile
 
 from mozbuild.compilation.warnings import CompilerWarning
 from mozbuild.compilation.warnings import WarningsCollector
@@ -221,12 +221,13 @@ class TestWarningsDatabase(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0]['column'], w['column'])
 
-        # If we delete the source file, calling prune should call the warnings
+        # If we delete the source file, calling prune should cause the warnings
         # to go away.
         old_filename = source_files[0].name
-        source_files[0].close()
+        del source_files[0]
 
         self.assertFalse(os.path.exists(old_filename))
 
         db.prune()
         self.assertEqual(len(db), 19)
+

@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import hashlib
 import unittest
 
-from tempfile import NamedTemporaryFile
+from mozfile.mozfile import NamedTemporaryFile
 
 from mozbuild.util import hash_file
 
