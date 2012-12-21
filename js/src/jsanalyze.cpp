@@ -75,7 +75,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
 
     if (offset < *currentOffset) {
         /* Scripts containing loops are never inlined. */
-        isInlineable = false;
+        isJaegerInlineable = isIonInlineable = false;
         hasLoops_ = true;
 
         if (code->analyzed) {
@@ -163,9 +163,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     isJaegerCompileable = true;
 
-    isInlineable = true;
-    if (heavyweight || script_->argumentsHasVarBinding() || cx->compartment->debugMode())
-        isInlineable = false;
+    isJaegerInlineable = isIonInlineable = true;
+    if (heavyweight || cx->compartment->debugMode())
+        isJaegerInlineable = isIonInlineable = false;
+    if (script_->argumentsHasVarBinding())
+        isJaegerInlineable = false;
 
     modifiesArguments_ = false;
     if (heavyweight)
@@ -257,7 +259,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
         if (script_->hasBreakpointsAt(pc)) {
             code->safePoint = true;
-            isInlineable = canTrackVars = false;
+            canTrackVars = false;
+            isJaegerInlineable = isIonInlineable = false;
         }
 
         unsigned stackDepth = code->stackDepth;
@@ -304,7 +307,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETRVAL:
           case JSOP_POPV:
             usesReturnValue_ = true;
-            isInlineable = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_QNAMEPART:
@@ -321,7 +324,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETALIASEDVAR:
           case JSOP_LAMBDA:
             usesScopeChain_ = true;
-            isInlineable = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_DEFFUN:
@@ -329,22 +332,25 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
             usesScopeChain_ = true; // Requires access to VarObj via ScopeChain.
-            isInlineable = canTrackVars = false;
+            canTrackVars = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_EVAL:
-            isInlineable = canTrackVars = false;
+            canTrackVars = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_ENTERWITH:
-            isJaegerCompileable = isInlineable = canTrackVars = false;
+            isJaegerCompileable = canTrackVars = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_ENTERLET0:
           case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:
           case JSOP_LEAVEBLOCK:
-            isInlineable = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
 
           case JSOP_THIS:
@@ -358,7 +364,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           case JSOP_TABLESWITCH: {
-            isInlineable = false;
+            isJaegerInlineable = isIonInlineable = false;
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
@@ -385,7 +391,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           }
 
           case JSOP_LOOKUPSWITCH: {
-            isInlineable = false;
+            isJaegerInlineable = isIonInlineable = false;
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             unsigned npairs = GET_UINT16(pc2);
@@ -416,7 +422,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
-            isInlineable = false;
+            isJaegerInlineable = isIonInlineable = false;
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -468,7 +474,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_SETARG:
             modifiesArguments_ = true;
-            isInlineable = false;
+            isIonInlineable = isJaegerInlineable = false;
             break;
 
           case JSOP_GETPROP:
@@ -481,12 +487,14 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           /* Additional opcodes which can be compiled but which can't be inlined. */
           case JSOP_ARGUMENTS:
+          case JSOP_FUNAPPLY:
+            isJaegerInlineable = false;
+            break;
           case JSOP_THROW:
           case JSOP_EXCEPTION:
           case JSOP_DEBUGGER:
           case JSOP_FUNCALL:
-          case JSOP_FUNAPPLY:
-            isInlineable = false;
+            isIonInlineable = isJaegerInlineable = false;
             break;
 
           /* Additional opcodes which can be both compiled both normally and inline. */
@@ -586,7 +594,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           default:
             if (!(js_CodeSpec[op].format & JOF_DECOMPOSE))
-                isJaegerCompileable = isInlineable = false;
+                isJaegerCompileable = false;
+                isJaegerInlineable = isIonInlineable = false;
             break;
         }
 

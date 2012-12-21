@@ -275,6 +275,7 @@ class InlineFrameIterator
   public:
     InlineFrameIterator(const IonFrameIterator *iter);
     InlineFrameIterator(const IonBailoutIterator *iter);
+    InlineFrameIterator(const InlineFrameIterator *iter);
 
     bool more() const {
         return frame_ && framesRead_ < start_.frameCount();

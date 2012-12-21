@@ -299,8 +299,6 @@ class IonBuilder : public MIRGenerator
     MInstruction *createDeclEnvObject(MDefinition *callee, MDefinition *scopeObj);
     MInstruction *createCallObject(MDefinition *callee, MDefinition *scopeObj);
 
-    bool makeCall(HandleFunction target, uint32_t argc, bool constructing);
-
     MDefinition *walkScopeChain(unsigned hops);
 
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
@@ -339,6 +337,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_notearg();
     bool jsop_funcall(uint32_t argc);
     bool jsop_funapply(uint32_t argc);
+    bool jsop_funapplyarguments(uint32_t argc);
     bool jsop_call(uint32_t argc, bool constructing);
     bool jsop_ifeq(JSOp op);
     bool jsop_condswitch();
@@ -440,9 +439,19 @@ class IonBuilder : public MIRGenerator
                             types::StackTypeSet *types, types::StackTypeSet *barrier);
     bool makeInliningDecision(AutoObjectVector &targets, uint32_t argc);
 
+    void popFormals(uint32_t argc, MDefinition **fun, MPassArg **thisArg,
+                    Vector<MPassArg *> *args);
+    MCall *makeCallHelper(HandleFunction target, bool constructing,
+                          MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args);
     MCall *makeCallHelper(HandleFunction target, uint32_t argc, bool constructing);
     bool makeCallBarrier(HandleFunction target, uint32_t argc, bool constructing,
                          types::StackTypeSet *types, types::StackTypeSet *barrier);
+    bool makeCallBarrier(HandleFunction target, bool constructing,
+                         MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args,
+                         types::StackTypeSet *types, types::StackTypeSet *barrier);
+    bool makeCall(HandleFunction target, uint32_t argc, bool constructing);
+    bool makeCall(HandleFunction target, bool constructing,
+                  MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args);
 
     inline bool TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types,
                                    HandleId id, JSFunction **funcp,
@@ -501,7 +510,9 @@ class IonBuilder : public MIRGenerator
     Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
     Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
     TypeOracle *oracle;
+
     size_t inliningDepth;
+    Vector<MDefinition *, 0, IonAllocPolicy> inlinedArguments_;
 
     // True if script->failedBoundsCheck is set for the current script or
     // an outer script.
