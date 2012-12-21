@@ -140,7 +140,7 @@ fh.addEntry("searchbar-history", "blacklist test");
 var todoTypes = [ "datetime", "date", "month", "week", "time", "datetime-local",
                   "range", "color" ];
 var todoInput = document.createElement("input");
-for each (var type in todoTypes) {
+for (var type of todoTypes) {
   todoInput.type = type;
   todo_is(todoInput.type, type, type + " type shouldn't be implemented");
 }

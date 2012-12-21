@@ -107,7 +107,7 @@ addLoadEvent(function () {
   SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
     input.type = "number";
 
-    for each (data in validData) {
+    for (data of validData) {
       input.value = "";
       SpecialPowers.focus(input);
       sendString(data);
@@ -115,7 +115,7 @@ addLoadEvent(function () {
       is(input.value, data, "valid user input should not be sanitized");
     }
 
-    for each (data in invalidData) {
+    for (data of invalidData) {
       input.value = "";
       SpecialPowers.focus(input);
       sendString(data);

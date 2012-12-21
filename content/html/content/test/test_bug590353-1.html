@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=590353
 
 var testData = ['checkbox', 'radio'];
 
-for each(var data in testData) {
+for (var data of testData) {
   var e = document.createElement('input');
   e.type = data;
   e.checked = true;

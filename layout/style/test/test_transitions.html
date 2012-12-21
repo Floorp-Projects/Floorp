@@ -151,7 +151,7 @@ for (var tf in timingFunctions) {
 // Check that the timing function continues even when we restyle in the
 // middle.
 var interrupt_tests = [];
-for each (var restyleParent in [true, false]) {
+for (var restyleParent of [true, false]) {
     for (var itime = 2; itime < 8; itime += 2) {
         var p = document.createElement("p");
         var t = document.createTextNode("interrupt on " +

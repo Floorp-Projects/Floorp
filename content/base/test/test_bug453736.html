@@ -25,7 +25,7 @@ addLoadEvent(function() {
 
   const scriptContainers = ["div", "iframe", "noframes", "noembed"];
   for (var i = 0; i < scriptContainers.length; ++i) {
-    for each (var func in scriptCreationFuncs) {
+    for (var func of scriptCreationFuncs) {
       var cont = scriptContainers[i];
       var node = document.createElement(cont);
       document.body.appendChild(node);

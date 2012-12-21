@@ -268,18 +268,18 @@ var invalidTypes = Array('checkbox', 'radio', 'file', 'number');
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
-for each (type in validTypes) {
+for (type of validTypes) {
   input.type = type;
   completeValidityCheck(input, false);
   checkPatternValidity(input);
 }
 
-for each (type in barredTypes) {
+for (type of barredTypes) {
   input.type = type;
   completeValidityCheck(input, true, true);
 }
 
-for each (type in invalidTypes) {
+for (type of invalidTypes) {
   input.type = type;
   completeValidityCheck(input, true);
 }

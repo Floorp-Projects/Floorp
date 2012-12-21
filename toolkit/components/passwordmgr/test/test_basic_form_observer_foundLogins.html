@@ -103,7 +103,7 @@ var TestObserver = {
 };
 
 // Initialize the object that stores the results of notifications.
-for each (var formID in ["form1", "form2", "form3", "form4", "form5"])
+for (var formID of ["form1", "form2", "form3", "form4", "form5"])
   TestObserver.results[formID] = { receivedNotification: false, data: null };
 
 // Add the observer

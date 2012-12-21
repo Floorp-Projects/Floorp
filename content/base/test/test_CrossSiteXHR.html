@@ -572,7 +572,7 @@ function runTest() {
     tests = [];
   }
 
-  for each(test in tests) {
+  for (test of tests) {
     var req = {
       url: baseURL + "allowOrigin=" + escape(test.origin || origin),
       method: test.method,
@@ -787,7 +787,7 @@ function runTest() {
     tests = [];
   }
 
-  for each(test in tests) {
+  for (test of tests) {
     req = {
       url: baseURL + "allowOrigin=" + escape(test.origin || origin),
       method: test.method,
@@ -1112,7 +1112,7 @@ function runTest() {
     tests = [];
   }
 
-  for each(test in tests) {
+  for (test of tests) {
     req = {
       url: test.hops[0].server + basePath + "hop=1&hops=" +
            escape(test.hops.toSource()),

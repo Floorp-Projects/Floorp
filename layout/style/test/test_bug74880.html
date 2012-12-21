@@ -54,9 +54,9 @@ var e = document.getElementById("display");
 var s = e.style;
 var c = window.getComputedStyle(e, "");
 
-for each (var set in gProps) {
+for (var set of gProps) {
   var values = values_for(set);
-  for each (var val in values) {
+  for (var val of values) {
     function check(dir, plogical, pvisual) {
       var v0 = c.getPropertyValue(pvisual);
       s.setProperty("direction", dir, "");

@@ -14,7 +14,7 @@ window.addEventListener("message", function(e) {\n\
   };\n\
   \n\
   var xhr = new XMLHttpRequest();\n\
-  for each(type in ["load", "abort", "error", "loadstart", "loadend"]) {\n\
+  for (type of ["load", "abort", "error", "loadstart", "loadend"]) {\n\
     xhr.addEventListener(type, function(e) {\n\
       res.events.push(e.type);\n\
     }, false);\n\

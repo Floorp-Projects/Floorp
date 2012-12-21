@@ -83,7 +83,7 @@ var testData = [
   [ "<button></button><fieldset></fieldset><input><keygen><object><output></output><select></select><textarea></textarea>", 8, [ HTMLButtonElement, HTMLFieldSetElement, HTMLInputElement, HTMLSelectElement, HTMLObjectElement, HTMLOutputElement, HTMLSelectElement, HTMLTextAreaElement ] ],
 ];
 
-for each(var data in testData) {
+for (var data of testData) {
   fieldset.innerHTML = data[0];
   is(fieldset.elements.length, data[1],
      "fieldset.elements should contain " + data[1] + " elements");
