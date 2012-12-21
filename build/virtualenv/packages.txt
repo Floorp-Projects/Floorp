@@ -12,6 +12,7 @@ mozprofile.pth:testing/mozbase/mozprofile
 mozrunner.pth:testing/mozbase/mozrunner
 marionette.pth:testing/marionette/client
 blessings.pth:python/blessings
+mach.pth:python/mach
 mozbuild.pth:python/mozbuild
 pymake.pth:build/pymake
 optional:setup.py:python/psutil:build_ext:--inplace

@@ -9,12 +9,15 @@ import unittest
 
 from mozfile.mozfile import NamedTemporaryFile
 
+from mozunit import main
+
 from mach.logging import LoggingManager
 
 from mozbuild.base import (
     BuildConfig,
     MozbuildObject,
 )
+
 
 
 curdir = os.path.dirname(__file__)
@@ -47,3 +50,6 @@ class TestMozbuildObject(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertGreater(len(result), 0)
 
+
+if __name__ == '__main__':
+    main()
