@@ -6,6 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
+#include "Accessible-inl.h"
 #include "AccessibleWrap.h"
 #include "DocAccessible.h"
 #include "nsMai.h"
