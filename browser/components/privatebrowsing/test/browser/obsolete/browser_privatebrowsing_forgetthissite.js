@@ -54,7 +54,7 @@ function test() {
           PO._places.selectNode(histContainer.getChild(0));
           // Select the first history entry.
           let doc = organizer.document;
-          let tree = PO._content;
+          let tree = organizer.ContentTree.view;
           let selection = tree.view.selection;
           selection.clearSelection();
           selection.rangedSelect(0, 0, true);
