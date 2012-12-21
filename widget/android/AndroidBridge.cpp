@@ -1198,7 +1198,6 @@ AndroidBridge::RegisterCompositor(JNIEnv *env, bool resetting)
         sController.Reacquire(env, glController);
     } else {
         sController.Acquire(env, glController);
-        sController.SetGLVersion(2);
     }
 }
 
