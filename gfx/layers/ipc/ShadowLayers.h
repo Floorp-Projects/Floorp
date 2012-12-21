@@ -14,7 +14,6 @@
 #include "ImageLayers.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/WidgetUtils.h"
-#include "mozilla/dom/ScreenOrientation.h"
 
 class gfxSharedImageSurface;
 
@@ -117,9 +116,7 @@ public:
    * ShadowLayerManager.
    */
   void BeginTransaction(const nsIntRect& aTargetBounds,
-                        ScreenRotation aRotation,
-                        const nsIntRect& aClientBounds,
-                        mozilla::dom::ScreenOrientation aOrientation);
+                        ScreenRotation aRotation);
 
   /**
    * The following methods may only be called after BeginTransaction()
