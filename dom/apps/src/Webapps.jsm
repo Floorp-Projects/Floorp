@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
+Cu.import("resource://gre/modules/AppDownloadManager.jsm");
 
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
@@ -68,7 +69,6 @@ this.DOMApplicationRegistry = {
   webapps: { },
   children: [ ],
   allAppsLaunchable: false,
-  downloads: { },
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
@@ -91,6 +91,8 @@ this.DOMApplicationRegistry = {
     cpmm.addMessageListener("Activities:Register:OK", this);
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+
+    AppDownloadManager.registerCancelFunction(this.cancelDownload.bind(this));
 
     this.appsFile = FileUtils.getFile(DIRECTORY_NAME,
                                       ["webapps", "webapps.json"], true);
@@ -867,9 +869,10 @@ this.DOMApplicationRegistry = {
     Services.obs.notifyObservers(aMm, "webapps-launch", JSON.stringify(aData));
   },
 
-  cancelDownload: function cancelDownload(aManifestURL) {
+  cancelDownload: function cancelDownload(aManifestURL, aError) {
     debug("cancelDownload " + aManifestURL);
-    let download = this.downloads[aManifestURL];
+    let error = aError || "DOWNLOAD_CANCELED";
+    let download = AppDownloadManager.get(aManifestURL);
     if (!download) {
       debug("Could not find a download for " + aManifestURL);
       return;
@@ -898,8 +901,9 @@ this.DOMApplicationRegistry = {
                              { type: "canceled",
                                manifestURL:  app.manifestURL,
                                app: app,
-                               error: "DOWNLOAD_CANCELED" });
+                               error: error });
     }).bind(this));
+    AppDownloadManager.remove(aManifestURL);
   },
 
   startDownload: function startDownload(aManifestURL) {
@@ -1080,7 +1084,7 @@ this.DOMApplicationRegistry = {
       appId: this._appIdForManifestURL(aApp.manifestURL),
       previousState: aIsUpdate ? "installed" : "pending"
     };
-    this.downloads[aApp.manifestURL] = download;
+    AppDownloadManager.add(aApp.manifestURL, download);
 
     cacheUpdate.addObserver(new AppcacheObserver(aApp), false);
     if (aOfflineCacheObserver) {
@@ -1163,7 +1167,7 @@ this.DOMApplicationRegistry = {
 
       app.installState = "installed";
       app.downloading = false;
-      app.downloadsize = 0;
+      app.downloadSize = 0;
       app.readyToApplyDownload = false;
       app.downloadAvailable = !!manifest.appcache_path;
 
@@ -1727,7 +1731,7 @@ this.DOMApplicationRegistry = {
         return;
       }
 
-      let download = self.downloads[aApp.manifestURL];
+      let download = AppDownloadManager.get(aApp.manifestURL);
       app.downloading = false;
       // If there were not enough storage to download the packaged app we
       // won't have a record of the download details, so we just set the
@@ -1738,6 +1742,7 @@ this.DOMApplicationRegistry = {
                               manifestURL:  aApp.manifestURL,
                               error: aError,
                               app: app });
+      AppDownloadManager.remove(aApp.manifestURL);
     }
 
     function download() {
@@ -1745,11 +1750,13 @@ this.DOMApplicationRegistry = {
 
       let requestChannel = NetUtil.newChannel(aManifest.fullPackagePath())
                                   .QueryInterface(Ci.nsIHttpChannel);
-      self.downloads[aApp.manifestURL] = {
-        channel: requestChannel,
-        appId: id,
-        previousState: aIsUpdate ? "installed" : "pending"
-      };
+      AppDownloadManager.add(aApp.manifestURL,
+        {
+          channel: requestChannel,
+          appId: id,
+          previousState: aIsUpdate ? "installed" : "pending"
+        }
+      );
 
       let lastProgressTime = 0;
       requestChannel.notificationCallbacks = {
@@ -1821,6 +1828,11 @@ this.DOMApplicationRegistry = {
           bufferedOutputStream.close();
           outputStream.close();
 
+          if (!Components.isSuccessCode(aStatusCode)) {
+            cleanup("NETWORK_ERROR");
+            return;
+          }
+
           let certdb;
           try {
             certdb = Cc["@mozilla.org/security/x509certdb;1"]
@@ -1886,7 +1898,6 @@ this.DOMApplicationRegistry = {
               if (aOnSuccess) {
                 aOnSuccess(id, manifest);
               }
-              delete self.downloads[aApp.manifestURL];
             } catch (e) {
               // Something bad happened when reading the package.
               if (typeof e == 'object') {
@@ -1896,7 +1907,9 @@ this.DOMApplicationRegistry = {
                 cleanup(e);
               }
             } finally {
-              zipReader.close();
+              AppDownloadManager.remove(aApp.manifestURL);
+              if (zipReader)
+                zipReader.close();
             }
           });
         }
@@ -1920,7 +1933,8 @@ this.DOMApplicationRegistry = {
       if (freeBytes) {
         debug("Free storage: " + freeBytes + ". Download size: " +
               aApp.downloadSize);
-        if (freeBytes <= aApp.downloadSize) {
+        if (freeBytes <=
+            aApp.downloadSize + AppDownloadManager.MIN_REMAINING_FREESPACE) {
           cleanup("INSUFFICIENT_STORAGE");
           return;
         }
