@@ -20,7 +20,6 @@ include "gfxMatrix.h";
 include "FrameMetrics.h";
 include "IPC/nsGUIEventIPC.h";
 include "mozilla/dom/TabMessageUtils.h";
-include "mozilla/dom/ScreenOrientation.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/layout/RenderFrameUtils.h";
 
@@ -48,7 +47,6 @@ using nsSelectionEvent;
 using nsTextEvent;
 using nsTouchEvent;
 using RemoteDOMEvent;
-using mozilla::dom::ScreenOrientation;
 
 namespace mozilla {
 namespace dom {
@@ -290,7 +288,7 @@ child:
 
     LoadURL(nsCString uri);
 
-    UpdateDimensions(nsRect rect, nsIntSize size, ScreenOrientation orientation) compress;
+    UpdateDimensions(nsRect rect, nsIntSize size) compress;
 
     UpdateFrame(FrameMetrics frame) compress;
 
