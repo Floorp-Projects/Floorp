@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15,6 +14,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMGlue.h"
 
+#include "mozilla/RefPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIIOService.h"
@@ -36,6 +36,20 @@ using namespace mozilla;
 MtransportTestUtils *test_utils;
 
 namespace {
+
+class Destructor {
+ public:
+  Destructor(bool* destroyed) : destroyed_(destroyed) {}
+  ~Destructor() {
+    std::cerr << "Destructor called" << std::endl;
+    *destroyed_ = true;
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Destructor);
+
+ private:
+  bool *destroyed_;
+};
 
 class TargetClass {
  public:
@@ -59,9 +73,15 @@ class TargetClass {
     std::cerr << __FUNCTION__ << std::endl;
     return x;
   }
+  void destructor_target(Destructor*) {
+  }
+
+  void destructor_target_ref(RefPtr<Destructor> destructor) {
+  }
 
   int *ran_;
 };
+
 
 class RunnableArgsTest : public ::testing::Test {
  public:
@@ -83,7 +103,6 @@ class RunnableArgsTest : public ::testing::Test {
   int ran_;
   TargetClass cl_;
 };
-
 
 class DispatchTest : public ::testing::Test {
  public:
@@ -126,8 +145,6 @@ class DispatchTest : public ::testing::Test {
  protected:
   int ran_;
   TargetClass cl_;
-
- private:
   nsCOMPtr<nsIEventTarget> target_;
 };
 
@@ -183,6 +200,27 @@ TEST_F(DispatchTest, TestNonMethodRet) {
   ASSERT_EQ(10, z);
 }
 
+TEST_F(DispatchTest, TestDestructor) {
+  bool destroyed = false;
+  RefPtr<Destructor> destructor = new Destructor(&destroyed);
+  target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target,
+                                 destructor),
+                    NS_DISPATCH_SYNC);
+  ASSERT_FALSE(destroyed);
+  destructor = nullptr;
+  ASSERT_TRUE(destroyed);
+}
+
+TEST_F(DispatchTest, TestDestructorRef) {
+  bool destroyed = false;
+  RefPtr<Destructor> destructor = new Destructor(&destroyed);
+  target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target_ref,
+                                 destructor),
+                    NS_DISPATCH_SYNC);
+  ASSERT_FALSE(destroyed);
+  destructor = nullptr;
+  ASSERT_TRUE(destroyed);
+}
 
 
 } // end of namespace
