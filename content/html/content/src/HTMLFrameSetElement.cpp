@@ -3,53 +3,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLFrameSetElement.h"
-#include "jsapi.h"
+#include "HTMLFrameSetElement.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
+DOMCI_NODE_DATA(HTMLFrameSetElement, mozilla::dom::HTMLFrameSetElement)
 
-nsHTMLFrameSetElement::nsHTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo), mNumRows(0), mNumCols(0),
-    mCurrentRowColHint(NS_STYLE_HINT_REFLOW)
+namespace mozilla {
+namespace dom {
+
+HTMLFrameSetElement::~HTMLFrameSetElement()
 {
 }
 
-nsHTMLFrameSetElement::~nsHTMLFrameSetElement()
-{
-}
 
+NS_IMPL_ADDREF_INHERITED(HTMLFrameSetElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLFrameSetElement, Element)
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFrameSetElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLFrameSetElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLFrameSetElement, nsHTMLFrameSetElement)
-
-// QueryInterface implementation for nsHTMLFrameSetElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLFrameSetElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFrameSetElement,
+// QueryInterface implementation for HTMLFrameSetElement
+NS_INTERFACE_TABLE_HEAD(HTMLFrameSetElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLFrameSetElement,
                                    nsIDOMHTMLFrameSetElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFrameSetElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLFrameSetElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFrameSetElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLFrameSetElement)
+NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Cols, cols)
-NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)
+NS_IMPL_STRING_ATTR(HTMLFrameSetElement, Cols, cols)
+NS_IMPL_STRING_ATTR(HTMLFrameSetElement, Rows, rows)
 
 nsresult
-nsHTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               nsIAtom* aPrefix,
-                               const nsAString& aValue,
-                               bool aNotify)
+HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
+                             nsIAtom* aAttribute,
+                             nsIAtom* aPrefix,
+                             const nsAString& aValue,
+                             bool aNotify)
 {
   nsresult rv;
   /* The main goal here is to see whether the _number_ of rows or
@@ -85,8 +76,8 @@ nsHTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
 }
 
 nsresult
-nsHTMLFrameSetElement::GetRowSpec(int32_t *aNumValues,
-                                  const nsFramesetSpec** aSpecs)
+HTMLFrameSetElement::GetRowSpec(int32_t *aNumValues,
+                                const nsFramesetSpec** aSpecs)
 {
   NS_PRECONDITION(aNumValues, "Must have a pointer to an integer here!");
   NS_PRECONDITION(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
@@ -119,8 +110,8 @@ nsHTMLFrameSetElement::GetRowSpec(int32_t *aNumValues,
 }
 
 nsresult
-nsHTMLFrameSetElement::GetColSpec(int32_t *aNumValues,
-                                  const nsFramesetSpec** aSpecs)
+HTMLFrameSetElement::GetColSpec(int32_t *aNumValues,
+                                const nsFramesetSpec** aSpecs)
 {
   NS_PRECONDITION(aNumValues, "Must have a pointer to an integer here!");
   NS_PRECONDITION(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
@@ -154,10 +145,10 @@ nsHTMLFrameSetElement::GetColSpec(int32_t *aNumValues,
 
 
 bool
-nsHTMLFrameSetElement::ParseAttribute(int32_t aNamespaceID,
-                                      nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsAttrValue& aResult)
+HTMLFrameSetElement::ParseAttribute(int32_t aNamespaceID,
+                                    nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::bordercolor) {
@@ -176,8 +167,8 @@ nsHTMLFrameSetElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsChangeHint
-nsHTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const
+HTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                            int32_t aModType) const
 {
   nsChangeHint retval =
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
@@ -192,9 +183,9 @@ nsHTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
  * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
  */
 nsresult
-nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
-                                   int32_t& aNumSpecs,
-                                   nsFramesetSpec** aSpecs) 
+HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
+                                 int32_t& aNumSpecs,
+                                 nsFramesetSpec** aSpecs) 
 {
   if (aValue.IsEmpty()) {
     aNumSpecs = 0;
@@ -324,56 +315,60 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 // nsGenericHTMLElement::GetOnError returns
 // already_AddRefed<EventHandlerNonNull> while other getters return
 // EventHandlerNonNull*, so allow passing in the type to use here.
-#define FORWARDED_EVENT_HELPER(name_, getter_type_)                   \
-  NS_IMETHODIMP nsHTMLFrameSetElement::GetOn##name_(JSContext *cx,    \
-                                               jsval *vp) {           \
-    getter_type_ h = nsGenericHTMLElement::GetOn##name_();            \
-    vp->setObjectOrNull(h ? h->Callable() : nullptr);                 \
-    return NS_OK;                                                     \
-  }                                                                   \
-  NS_IMETHODIMP nsHTMLFrameSetElement::SetOn##name_(JSContext *cx,    \
-                                               const jsval &v) {      \
-    JSObject *obj = GetWrapper();                                     \
-    if (!obj) {                                                       \
-      /* Just silently do nothing */                                  \
-      return NS_OK;                                                   \
-    }                                                                 \
-    nsRefPtr<EventHandlerNonNull> handler;                            \
-    JSObject *callable;                                               \
-    if (v.isObject() &&                                               \
-        JS_ObjectIsCallable(cx, callable = &v.toObject())) {          \
-      bool ok;                                                        \
-      handler = new EventHandlerNonNull(cx, obj, callable, &ok);      \
-      if (!ok) {                                                      \
-        return NS_ERROR_OUT_OF_MEMORY;                                \
-      }                                                               \
-    }                                                                 \
-    ErrorResult rv;                                                   \
-    nsGenericHTMLElement::SetOn##name_(handler, rv);                  \
-    return rv.ErrorCode();                                            \
+#define FORWARDED_EVENT_HELPER(name_, getter_type_)                            \
+  NS_IMETHODIMP                                                                \
+  HTMLFrameSetElement::GetOn##name_(JSContext *cx, jsval *vp)                  \
+  {                                                                            \
+    getter_type_ h = nsGenericHTMLElement::GetOn##name_();                     \
+    vp->setObjectOrNull(h ? h->Callable() : nullptr);                          \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHODIMP                                                                \
+  HTMLFrameSetElement::SetOn##name_(JSContext *cx, const jsval &v)             \
+  {                                                                            \
+    JSObject *obj = GetWrapper();                                              \
+    if (!obj) {                                                                \
+      /* Just silently do nothing */                                           \
+      return NS_OK;                                                            \
+    }                                                                          \
+    nsRefPtr<EventHandlerNonNull> handler;                                     \
+    JSObject *callable;                                                        \
+    if (v.isObject() &&                                                        \
+        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                   \
+      bool ok;                                                                 \
+      handler = new EventHandlerNonNull(cx, obj, callable, &ok);               \
+      if (!ok) {                                                               \
+        return NS_ERROR_OUT_OF_MEMORY;                                         \
+      }                                                                        \
+    }                                                                          \
+    ErrorResult rv;                                                            \
+    nsGenericHTMLElement::SetOn##name_(handler, rv);                           \
+    return rv.ErrorCode();                                                     \
   }
-#define FORWARDED_EVENT(name_, id_, type_, struct_)                   \
+#define FORWARDED_EVENT(name_, id_, type_, struct_)                            \
   FORWARDED_EVENT_HELPER(name_, EventHandlerNonNull*)
-#define ERROR_EVENT(name_, id_, type_, struct_)                       \
+#define ERROR_EVENT(name_, id_, type_, struct_)                                \
   FORWARDED_EVENT_HELPER(name_, nsCOMPtr<EventHandlerNonNull>)
-#define WINDOW_EVENT(name_, id_, type_, struct_)                      \
-  NS_IMETHODIMP nsHTMLFrameSetElement::GetOn##name_(JSContext *cx,    \
-                                                    jsval *vp) {      \
-    /* XXXbz note to self: add tests for this! */                     \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();             \
-    if (win && win->IsInnerWindow()) {                                \
-      return win->GetOn##name_(cx, vp);                               \
-    }                                                                 \
-    *vp = JSVAL_NULL;                                                 \
-    return NS_OK;                                                     \
-  }                                                                   \
-  NS_IMETHODIMP nsHTMLFrameSetElement::SetOn##name_(JSContext *cx,    \
-                                                    const jsval &v) { \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();             \
-    if (win && win->IsInnerWindow()) {                                \
-      return win->SetOn##name_(cx, v);                                \
-    }                                                                 \
-    return NS_OK;                                                     \
+#define WINDOW_EVENT(name_, id_, type_, struct_)                               \
+  NS_IMETHODIMP                                                                \
+  HTMLFrameSetElement::GetOn##name_(JSContext *cx, jsval *vp)                  \
+  {                                                                            \
+    /* XXXbz note to self: add tests for this! */                              \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
+    if (win && win->IsInnerWindow()) {                                         \
+      return win->GetOn##name_(cx, vp);                                        \
+    }                                                                          \
+    *vp = JSVAL_NULL;                                                          \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHODIMP                                                                \
+  HTMLFrameSetElement::SetOn##name_(JSContext *cx, const jsval &v)             \
+  {                                                                            \
+    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
+    if (win && win->IsInnerWindow()) {                                         \
+      return win->SetOn##name_(cx, v);                                         \
+    }                                                                          \
+    return NS_OK;                                                              \
   }
 #include "nsEventNameList.h"
 #undef WINDOW_EVENT
@@ -381,3 +376,6 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 #undef FORWARDED_EVENT
 #undef FORWARDED_EVENT_HELPER
 #undef EVENT
+
+} // namespace dom
+} // namespace mozilla

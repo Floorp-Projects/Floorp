@@ -5,54 +5,45 @@
 
 #include "mozilla/Util.h"
 
-#include "nsHTMLDivElement.h"
+#include "HTMLDivElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 #include "mozilla/dom/HTMLDivElementBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
+DOMCI_NODE_DATA(HTMLDivElement, mozilla::dom::HTMLDivElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLDivElement::nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
-{
-  SetIsDOMBinding();
-}
-
-nsHTMLDivElement::~nsHTMLDivElement()
+HTMLDivElement::~HTMLDivElement()
 {
 }
 
+NS_IMPL_ADDREF_INHERITED(HTMLDivElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLDivElement, Element)
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDivElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, Element)
-
-DOMCI_NODE_DATA(HTMLDivElement, nsHTMLDivElement)
-
-// QueryInterface implementation for nsHTMLDivElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLDivElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLDivElement, nsIDOMHTMLDivElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLDivElement,
+// QueryInterface implementation for HTMLDivElement
+NS_INTERFACE_TABLE_HEAD(HTMLDivElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLDivElement, nsIDOMHTMLDivElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLDivElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLDivElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLDivElement)
+NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 
 JSObject*
-nsHTMLDivElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLDivElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 {
   return dom::HTMLDivElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 bool
-nsHTMLDivElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
-                                 const nsAString& aValue,
-                                 nsAttrValue& aResult)
+HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
+                               nsIAtom* aAttribute,
+                               const nsAString& aValue,
+                               nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
@@ -96,7 +87,7 @@ MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* 
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::div)) {
     static const MappedAttributeEntry* const map[] = {
@@ -118,7 +109,7 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 nsMapRuleToAttributesFunc
-nsHTMLDivElement::GetAttributeMappingFunction() const
+HTMLDivElement::GetAttributeMappingFunction() const
 {
   if (mNodeInfo->Equals(nsGkAtoms::div)) {
     return &MapAttributesIntoRule;
@@ -129,3 +120,5 @@ nsHTMLDivElement::GetAttributeMappingFunction() const
   return nsGenericHTMLElement::GetAttributeMappingFunction();
 }
 
+} // namespace dom
+} // namespace mozilla

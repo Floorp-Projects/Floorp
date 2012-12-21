@@ -4,20 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLElement.h"
-
-#include "nsContentUtils.h"
 #include "mozilla/dom/HTMLElementBinding.h"
+#include "nsContentUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-class nsHTMLElement : public nsGenericHTMLElement,
-                      public nsIDOMHTMLElement
+class HTMLElement : public nsGenericHTMLElement,
+                    public nsIDOMHTMLElement
 {
 public:
-  nsHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLElement();
+  HTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -34,7 +32,8 @@ public:
   virtual void GetInnerHTML(nsAString& aInnerHTML,
                             mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
-  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo,
+                         nsINode** aResult) const MOZ_OVERRIDE;
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -45,40 +44,29 @@ protected:
                              bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
-// Here, we expand 'NS_IMPL_NS_NEW_HTML_ELEMENT()' by hand.
-// (Calling the macro directly (with no args) produces compiler warnings.)
-nsGenericHTMLElement*
-NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                  FromParser aFromParser)
-{
-  return new nsHTMLElement(aNodeInfo);
-}
-
-nsHTMLElement::nsHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLElement::HTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   SetIsDOMBinding();
 }
 
-nsHTMLElement::~nsHTMLElement()
+HTMLElement::~HTMLElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLElement, Element)
 
-DOMCI_NODE_DATA(HTMLElement, nsHTMLElement)
-
-NS_INTERFACE_TABLE_HEAD(nsHTMLElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE0(nsHTMLElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLElement,
+NS_INTERFACE_TABLE_HEAD(HTMLElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE0(HTMLElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLElement)
+NS_IMPL_ELEMENT_CLONE(HTMLElement)
 
 void
-nsHTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
+HTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
 {
   /**
    * nsGenericHTMLElement::GetInnerHTML escapes < and > characters (at least).
@@ -97,7 +85,21 @@ nsHTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
 }
 
 JSObject*
-nsHTMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 {
   return dom::HTMLElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
+
+} // namespace dom
+} // namespace mozilla
+
+// Here, we expand 'NS_IMPL_NS_NEW_HTML_ELEMENT()' by hand.
+// (Calling the macro directly (with no args) produces compiler warnings.)
+nsGenericHTMLElement*
+NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                  mozilla::dom::FromParser aFromParser)
+{
+  return new mozilla::dom::HTMLElement(aNodeInfo);
+}
+
+DOMCI_NODE_DATA(HTMLElement, mozilla::dom::HTMLElement)

@@ -6,20 +6,27 @@
 /**
  * Declaration of HTML <label> elements.
  */
-#ifndef nsHTMLLabelElement_h
-#define nsHTMLLabelElement_h
+#ifndef HTMLLabelElement_h
+#define HTMLLabelElement_h
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLLabelElement.h"
 
-class nsHTMLLabelElement : public nsGenericHTMLFormElement,
-                           public nsIDOMHTMLLabelElement
+namespace mozilla {
+namespace dom {
+
+class HTMLLabelElement : public nsGenericHTMLFormElement,
+                         public nsIDOMHTMLLabelElement
 {
 public:
-  nsHTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLLabelElement();
+  HTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsGenericHTMLFormElement(aNodeInfo),
+      mHandlingEvent(false)
+  {
+  }
+  virtual ~HTMLLabelElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLLabelElement, label)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLLabelElement, label)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -46,24 +53,7 @@ public:
   virtual bool IsDisabled() const { return false; }
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-
-  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
   virtual void PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -80,4 +70,7 @@ protected:
   bool mHandlingEvent;
 };
 
-#endif /* nsHTMLLabelElement_h */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* HTMLLabelElement_h */

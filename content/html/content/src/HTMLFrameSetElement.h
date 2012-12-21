@@ -3,15 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLFrameSetElement_h
-#define nsHTMLFrameSetElement_h
+#ifndef HTMLFrameSetElement_h
+#define HTMLFrameSetElement_h
 
-#include "nsISupports.h"
 #include "nsIDOMHTMLFrameSetElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
 
 /**
  * The nsFramesetUnit enum is used to denote the type of each entry
@@ -40,14 +36,23 @@ struct nsFramesetSpec {
 
 //----------------------------------------------------------------------
 
-class nsHTMLFrameSetElement : public nsGenericHTMLElement,
-                              public nsIDOMHTMLFrameSetElement
+namespace mozilla {
+namespace dom {
+
+class HTMLFrameSetElement : public nsGenericHTMLElement,
+                            public nsIDOMHTMLFrameSetElement
 {
 public:
-  nsHTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLFrameSetElement();
+  HTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsGenericHTMLElement(aNodeInfo),
+      mNumRows(0),
+      mNumCols(0),
+      mCurrentRowColHint(NS_STYLE_HINT_REFLOW)
+  {
+  }
+  virtual ~HTMLFrameSetElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLFrameSetElement, frameset)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLFrameSetElement, frameset)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -68,8 +73,8 @@ public:
   // forward to window that don't come from nsIDOMHTMLFrameSetElement.
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */
 #define FORWARDED_EVENT(name_, id_, type_, struct_)                     \
-    NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);            \
-    NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+  NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);                    \
+  NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
 #include "nsEventNameList.h"
 #undef FORWARDED_EVENT
 #undef EVENT
@@ -142,4 +147,7 @@ private:
   nsAutoArrayPtr<nsFramesetSpec>  mColSpecs; // parsed, non-computed dimensions
 };
 
-#endif // nsHTMLFrameSetElement_h
+} // namespace dom
+} // namespace mozilla
+
+#endif // HTMLFrameSetElement_h

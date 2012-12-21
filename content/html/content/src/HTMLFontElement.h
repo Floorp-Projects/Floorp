@@ -2,18 +2,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsHTMLDivElement_h___
-#define nsHTMLDivElement_h___
+#ifndef HTMLFontElement_h___
+#define HTMLFontElement_h___
 
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLDivElement.h"
+#include "nsIDOMHTMLFontElement.h"
 
-class nsHTMLDivElement MOZ_FINAL : public nsGenericHTMLElement,
-                                   public nsIDOMHTMLDivElement
+namespace mozilla {
+namespace dom {
+
+class HTMLFontElement : public nsGenericHTMLElement,
+                        public nsIDOMHTMLFontElement
 {
 public:
-  nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLDivElement();
+  HTMLFontElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsGenericHTMLElement(aNodeInfo)
+  {
+  }
+  virtual ~HTMLFontElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -27,29 +33,8 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
-  // nsIDOMHTMLDivElement
-  NS_IMETHOD GetAlign(nsAString& aAlign)
-  {
-    nsString align;
-    GetAlign(align);
-    aAlign = align;
-    return NS_OK;
-  }
-  NS_IMETHOD SetAlign(const nsAString& aAlign)
-  {
-    mozilla::ErrorResult rv;
-    SetAlign(aAlign, rv);
-    return rv.ErrorCode();
-  }
-
-  void GetAlign(nsString& aAlign)
-  {
-    GetHTMLAttr(nsGkAtoms::align, aAlign);
-  }
-  void SetAlign(const nsAString& aAlign, mozilla::ErrorResult& aError)
-  {
-    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
-  }
+  // nsIDOMHTMLFontElement
+  NS_DECL_NSIDOMHTMLFONTELEMENT
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -58,13 +43,11 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
-
-protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
-#endif /* nsHTMLDivElement_h___ */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* HTMLFontElement_h___ */
