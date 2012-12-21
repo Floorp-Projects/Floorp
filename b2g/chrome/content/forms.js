@@ -64,14 +64,10 @@ let FormAssistant = {
   },
 
   setFocusedElement: function fa_setFocusedElement(element) {
-    if (element instanceof HTMLOptionElement)
-      element = element.parentNode;
-
     if (element === this.focusedElement)
       return;
 
     if (this.focusedElement) {
-      this.focusedElement.removeEventListener('click', this);
       this.focusedElement.removeEventListener('mousedown', this);
       this.focusedElement.removeEventListener('mouseup', this);
       if (!element) {
@@ -80,7 +76,6 @@ let FormAssistant = {
     }
 
     if (element) {
-      element.addEventListener('click', this);
       element.addEventListener('mousedown', this);
       element.addEventListener('mouseup', this);
     }
@@ -97,17 +92,13 @@ let FormAssistant = {
         if (this.isTextInputElement(target) && this.isIMEDisabled())
           return;
 
-        // We got input focus, but don't open the virtual keyboard unless we
-        // get a 'click' event, i.e. the user is tapping the input element.
-        if (target && this.isFocusableElement(target)) {
-          this.setFocusedElement(target);
-        }
+        if (target && this.isFocusableElement(target))
+          this.showKeyboard(target);
         break;
 
       case "blur":
         if (this.focusedElement)
           this.hideKeyboard();
-        this.setFocusedElement(null);
         break;
 
       case 'mousedown':
@@ -126,14 +117,6 @@ let FormAssistant = {
             this.focusedElement.selectionEnd !== this.selectionEnd) {
           this.sendKeyboardState(this.focusedElement);
         }
-        break;
-
-      case 'click':
-        // We only listen for click events on the currently focused element.
-        // Gecko fires a click event if the user "taps" an input element
-        // without dragging. This is how we differentiate tap gestures to set
-        // input focus (and open the keyboard) from simply panning the page.
-        this.showKeyboard();
         break;
 
       case "resize":
@@ -228,19 +211,24 @@ let FormAssistant = {
     return disabled;
   },
 
-  showKeyboard: function fa_showKeyboard() {
+  showKeyboard: function fa_showKeyboard(target) {
     if (this.isKeyboardOpened)
       return;
 
-    let target = this.focusedElement;
+    if (target instanceof HTMLOptionElement)
+      target = target.parentNode;
+
     let kbOpened = this.sendKeyboardState(target);
     if (this.isTextInputElement(target))
       this.isKeyboardOpened = kbOpened;
+
+    this.setFocusedElement(target);
   },
 
   hideKeyboard: function fa_hideKeyboard() {
     sendAsyncMessage("Forms:Input", { "type": "blur" });
     this.isKeyboardOpened = false;
+    this.setFocusedElement(null);
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
