@@ -465,9 +465,15 @@ this.EFSMS_STATUS_READ       = 0x01;
 this.EFSMS_STATUS_TO_BE_READ = 0x03;
 this.EFSMS_STATUS_TO_BE_SENT = 0x07;
 
-// For retrieving MSISDN, TS 151.011 clause 10.5.5
-this.MSISDN_FOOTER_SIZE_BYTES = 14;
-this.MSISDN_MAX_NUMBER_SIZE_BYTES = 10;
+// Total size of ADN footer(the size of Alpha identifier excluded).
+// See TS 151.011 clause 10.5.1 EF_ADN.
+this.ADN_FOOTER_SIZE_BYTES = 14;
+// Maximum size of BCD numbers in ADN.
+// See TS 151.011 clause 10.5.1 EF_ADN, 'Length of BCD number/SSC contents'.
+this.ADN_MAX_BCD_NUMBER_BYTES = 11;
+// Maximum digits of the Dialling Number in ADN.
+// See TS 151.011 clause 10.5.1 EF_ADN, 'Dialling Number'.
+this.ADN_MAX_NUMBER_DIGITS = 20;
 
 // READ_RECORD mode,  TS 102.221
 this.READ_RECORD_ABSOLUTE_MODE = 4;
