@@ -2812,6 +2812,7 @@ Tab.prototype = {
       this.browser.docShellIsActive = true;
     } else {
       this.browser.setAttribute("type", "content-targetable");
+      this.browser.blur();
       this.browser.docShellIsActive = false;
     }
   },
