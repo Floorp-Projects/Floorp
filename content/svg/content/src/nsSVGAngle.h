@@ -84,6 +84,7 @@ public:
 
     DOMBaseVal(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
+    virtual ~DOMBaseVal();
     
     nsSVGAngle* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
@@ -123,6 +124,7 @@ public:
 
     DOMAnimVal(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
+    virtual ~DOMAnimVal();
     
     nsSVGAngle* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
@@ -160,6 +162,7 @@ public:
 
     DOMAnimatedAngle(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
+    virtual ~DOMAnimatedAngle();
     
     nsSVGAngle* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
