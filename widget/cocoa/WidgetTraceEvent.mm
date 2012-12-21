@@ -44,10 +44,9 @@ void SignalTracerThread()
   if (!sMutex || !sCondVar)
     return;
   MutexAutoLock lock(*sMutex);
-  if (!sTracerProcessed) {
-    sTracerProcessed = true;
-    sCondVar->Notify();
-  }
+  NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
+  sTracerProcessed = true;
+  sCondVar->Notify();
 }
 
 // This function is called from the background tracer thread.
