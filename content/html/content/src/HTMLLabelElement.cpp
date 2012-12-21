@@ -7,6 +7,7 @@
  * Implementation of HTML <label> elements.
  */
 #include "HTMLLabelElement.h"
+#include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "nsEventDispatcher.h"
 #include "nsFocusManager.h"
 
@@ -20,6 +21,12 @@ namespace dom {
 
 HTMLLabelElement::~HTMLLabelElement()
 {
+}
+
+JSObject*
+HTMLLabelElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLLabelElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 // nsISupports 
@@ -55,8 +62,22 @@ HTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLLabelElement::SetHtmlFor(const nsAString& aHtmlFor)
+{
+  ErrorResult rv;
+  SetHtmlFor(aHtmlFor, rv);
+  return rv.ErrorCode();
+}
 
-NS_IMPL_STRING_ATTR(HTMLLabelElement, HtmlFor, _for)
+NS_IMETHODIMP
+HTMLLabelElement::GetHtmlFor(nsAString& aHtmlFor)
+{
+  nsString htmlFor;
+  GetHtmlFor(htmlFor);
+  aHtmlFor = htmlFor;
+  return NS_OK;
+}
 
 void
 HTMLLabelElement::Focus(ErrorResult& aError)
@@ -236,8 +257,8 @@ HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
   }
 }
 
-Element*
-HTMLLabelElement::GetLabeledElement()
+nsGenericHTMLElement*
+HTMLLabelElement::GetLabeledElement() const
 {
   nsAutoString elementId;
 
@@ -256,20 +277,20 @@ HTMLLabelElement::GetLabeledElement()
 
   Element* element = doc->GetElementById(elementId);
   if (element && element->IsLabelable()) {
-    return element;
+    return static_cast<nsGenericHTMLElement*>(element);
   }
 
   return nullptr;
 }
 
-Element*
-HTMLLabelElement::GetFirstLabelableDescendant()
+nsGenericHTMLElement*
+HTMLLabelElement::GetFirstLabelableDescendant() const
 {
   for (nsIContent* cur = nsINode::GetFirstChild(); cur;
        cur = cur->GetNextNode(this)) {
     Element* element = cur->IsElement() ? cur->AsElement() : nullptr;
     if (element && element->IsLabelable()) {
-      return element;
+      return static_cast<nsGenericHTMLElement*>(element);
     }
   }
 

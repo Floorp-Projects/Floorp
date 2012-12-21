@@ -41,7 +41,7 @@ function runTest() {
       t.step(fails ? function() {
         assert_equals(ifr.document.body, null, ifr.name + " should NOT load.");
       } : function() {
-        assert_true(ifr.document.body instanceof HTMLBodyElement, ifr.name + " should load.");
+        assert_true(ifr.document.body instanceof ifr.HTMLBodyElement, ifr.name + " should load.");
       });
       t.done();
     };

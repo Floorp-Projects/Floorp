@@ -44,9 +44,14 @@ webidl_files = \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
+  HTMLBodyElement.webidl \
   HTMLCollection.webidl \
+  HTMLDataListElement.webidl \
   HTMLDivElement.webidl \
   HTMLElement.webidl \
+  HTMLFontElement.webidl \
+  HTMLFrameSetElement.webidl \
+  HTMLLabelElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
   ImageData.webidl \

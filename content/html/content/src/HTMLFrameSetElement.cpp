@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLFrameSetElement.h"
+#include "mozilla/dom/HTMLFrameSetElementBinding.h"
 #include "mozilla/dom/EventHandlerBinding.h"
+#include "nsGlobalWindow.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 DOMCI_NODE_DATA(HTMLFrameSetElement, mozilla::dom::HTMLFrameSetElement)
@@ -16,6 +18,12 @@ HTMLFrameSetElement::~HTMLFrameSetElement()
 {
 }
 
+JSObject*
+HTMLFrameSetElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                              bool *aTriedToWrap)
+{
+  return HTMLFrameSetElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMPL_ADDREF_INHERITED(HTMLFrameSetElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLFrameSetElement, Element)
@@ -31,9 +39,39 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFrameSetElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 
+NS_IMETHODIMP 
+HTMLFrameSetElement::SetCols(const nsAString& aCols)
+{
+  ErrorResult rv;
+  SetCols(aCols, rv);
+  return rv.ErrorCode();
+}
 
-NS_IMPL_STRING_ATTR(HTMLFrameSetElement, Cols, cols)
-NS_IMPL_STRING_ATTR(HTMLFrameSetElement, Rows, rows)
+NS_IMETHODIMP
+HTMLFrameSetElement::GetCols(nsAString& aCols)
+{
+  nsString cols;
+  GetCols(cols);
+  aCols = cols;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLFrameSetElement::SetRows(const nsAString& aRows)
+{
+  ErrorResult rv;
+  SetRows(aRows, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLFrameSetElement::GetRows(nsAString& aRows)
+{
+  nsString rows;
+  GetRows(rows);
+  aRows = rows;
+  return NS_OK;
+}
 
 nsresult
 HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
@@ -315,11 +353,11 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 // nsGenericHTMLElement::GetOnError returns
 // already_AddRefed<EventHandlerNonNull> while other getters return
 // EventHandlerNonNull*, so allow passing in the type to use here.
-#define FORWARDED_EVENT_HELPER(name_, getter_type_)                            \
+#define FORWARDED_EVENT_HELPER(name_, forwardto_, type_, getter_type_)         \
   NS_IMETHODIMP                                                                \
   HTMLFrameSetElement::GetOn##name_(JSContext *cx, jsval *vp)                  \
   {                                                                            \
-    getter_type_ h = nsGenericHTMLElement::GetOn##name_();                     \
+    getter_type_ h = forwardto_::GetOn##name_();                               \
     vp->setObjectOrNull(h ? h->Callable() : nullptr);                          \
     return NS_OK;                                                              \
   }                                                                            \
@@ -331,47 +369,59 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
       /* Just silently do nothing */                                           \
       return NS_OK;                                                            \
     }                                                                          \
-    nsRefPtr<EventHandlerNonNull> handler;                                     \
+    nsRefPtr<type_> handler;                                                   \
     JSObject *callable;                                                        \
     if (v.isObject() &&                                                        \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                   \
       bool ok;                                                                 \
-      handler = new EventHandlerNonNull(cx, obj, callable, &ok);               \
+      handler = new type_(cx, obj, callable, &ok);                             \
       if (!ok) {                                                               \
         return NS_ERROR_OUT_OF_MEMORY;                                         \
       }                                                                        \
     }                                                                          \
     ErrorResult rv;                                                            \
-    nsGenericHTMLElement::SetOn##name_(handler, rv);                           \
+    forwardto_::SetOn##name_(handler, rv);                                     \
     return rv.ErrorCode();                                                     \
   }
 #define FORWARDED_EVENT(name_, id_, type_, struct_)                            \
-  FORWARDED_EVENT_HELPER(name_, EventHandlerNonNull*)
+  FORWARDED_EVENT_HELPER(name_, nsGenericHTMLElement, EventHandlerNonNull,     \
+                         EventHandlerNonNull*)
 #define ERROR_EVENT(name_, id_, type_, struct_)                                \
-  FORWARDED_EVENT_HELPER(name_, nsCOMPtr<EventHandlerNonNull>)
-#define WINDOW_EVENT(name_, id_, type_, struct_)                               \
-  NS_IMETHODIMP                                                                \
-  HTMLFrameSetElement::GetOn##name_(JSContext *cx, jsval *vp)                  \
+  FORWARDED_EVENT_HELPER(name_, nsGenericHTMLElement,                          \
+                         EventHandlerNonNull, nsCOMPtr<EventHandlerNonNull>)
+#define WINDOW_EVENT_HELPER(name_, type_)                                      \
+  type_*                                                                       \
+  HTMLFrameSetElement::GetOn##name_()                                          \
   {                                                                            \
-    /* XXXbz note to self: add tests for this! */                              \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
     if (win && win->IsInnerWindow()) {                                         \
-      return win->GetOn##name_(cx, vp);                                        \
+      nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                 \
+      nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);      \
+      return globalWin->GetOn##name_();                                        \
     }                                                                          \
-    *vp = JSVAL_NULL;                                                          \
-    return NS_OK;                                                              \
+    return nullptr;                                                            \
   }                                                                            \
-  NS_IMETHODIMP                                                                \
-  HTMLFrameSetElement::SetOn##name_(JSContext *cx, const jsval &v)             \
+  void                                                                         \
+  HTMLFrameSetElement::SetOn##name_(type_* handler, ErrorResult& error)        \
   {                                                                            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
-    if (win && win->IsInnerWindow()) {                                         \
-      return win->SetOn##name_(cx, v);                                         \
+    if (!win || !win->IsInnerWindow()) {                                       \
+      return;                                                                  \
     }                                                                          \
-    return NS_OK;                                                              \
-  }
+                                                                               \
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                   \
+    nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);        \
+    return globalWin->SetOn##name_(handler, error);                            \
+  }                                                                            \
+  FORWARDED_EVENT_HELPER(name_, HTMLFrameSetElement, type_, type_*)
+#define WINDOW_EVENT(name_, id_, type_, struct_)                               \
+  WINDOW_EVENT_HELPER(name_, EventHandlerNonNull)
+#define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                         \
+  WINDOW_EVENT_HELPER(name_, BeforeUnloadEventHandlerNonNull)
 #include "nsEventNameList.h"
+#undef BEFOREUNLOAD_EVENT
 #undef WINDOW_EVENT
+#undef WINDOW_EVENT_HELPER
 #undef ERROR_EVENT
 #undef FORWARDED_EVENT
 #undef FORWARDED_EVENT_HELPER
