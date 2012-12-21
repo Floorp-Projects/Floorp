@@ -39,6 +39,7 @@
     locale/browser/devtools/layoutview.dtd            (%chrome/browser/devtools/layoutview.dtd)
     locale/browser/devtools/responsiveUI.properties   (%chrome/browser/devtools/responsiveUI.properties)
     locale/browser/devtools/toolbox.dtd            (%chrome/browser/devtools/toolbox.dtd)
+    locale/browser/devtools/toolbox.properties     (%chrome/browser/devtools/toolbox.properties)
     locale/browser/devtools/inspector.dtd          (%chrome/browser/devtools/inspector.dtd)
     locale/browser/devtools/connection-screen.dtd  (%chrome/browser/devtools/connection-screen.dtd)
     locale/browser/devtools/connection-screen.properties (%chrome/browser/devtools/connection-screen.properties)
