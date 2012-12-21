@@ -2046,9 +2046,9 @@ function WifiWorker() {
           // results, add it to the list along with any other information.
           // Also, we use the highest signal strength that we see.
           let network = new ScanResult(ssid, bssid, flags, signalLevel);
-          self.networksArray.push(network);
 
           let networkKey = getNetworkKey(network);
+          let eapIndex = -1;
           if (networkKey in self.configuredNetworks) {
             let known = self.configuredNetworks[networkKey];
             network.known = true;
@@ -2063,8 +2063,20 @@ function WifiWorker() {
                 ("wep_key0" in known && known.wep_key0)) {
               network.password = "*";
             }
+          } else if ((eapIndex = network.capabilities.indexOf("WPA-EAP")) >= 0) {
+            // Don't offer to connect to WPA-EAP networks unless one has been
+            // configured through other means (e.g. it was added directly to
+            // wpa_supplicant.conf). Here, we have an unknown WPA-EAP network,
+            // so we ignore it entirely if it only supports WPA-EAP, otherwise
+            // we take EAP out of the list and offer the rest of the
+            // capabilities.
+            if (network.capabilities.length === 1)
+              continue;
+
+            network.capabilities.splice(eapIndex, 1);
           }
 
+          self.networksArray.push(network);
           if (network.bssid === WifiManager.connectionInfo.bssid)
             network.connected = true;
 
