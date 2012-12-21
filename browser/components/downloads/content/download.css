@@ -41,5 +41,5 @@ richlistitem.download button {
 .download-state:not(          [state="1"]  /* Finished           */)
                                            .downloadShow
 {
-  visibility: hidden;
+  display: none;
 }
