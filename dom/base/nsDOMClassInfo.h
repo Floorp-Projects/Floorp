@@ -1208,24 +1208,6 @@ public:
   NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
 };
 
-class nsLifecycleCallbacksThisTranslator : public nsIXPCFunctionThisTranslator
-{
-public:
-  nsLifecycleCallbacksThisTranslator()
-  {
-  }
-
-  virtual ~nsLifecycleCallbacksThisTranslator()
-  {
-  }
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIXPCFunctionThisTranslator
-  NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
-};
-
 class nsDOMConstructorSH : public nsDOMGenericSH
 {
 protected:

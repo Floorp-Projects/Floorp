@@ -2360,9 +2360,6 @@ nsDOMClassInfo::Init()
   nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
 
-  nsCOMPtr<nsIXPCFunctionThisTranslator> lct = new nsLifecycleCallbacksThisTranslator();
-  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsILifecycleCallback), lct);
-
   nsCOMPtr<nsIScriptSecurityManager> sm =
     do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -7944,13 +7941,6 @@ nsElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 #endif
 
-  nsAutoString elementName;
-  nsContentUtils::ASCIIToLower(element->NodeName(), elementName);
-  if (StringBeginsWith(elementName, NS_LITERAL_STRING("x-"))) {
-    // Don't allow slim wrappers for custom elements.
-    return rv == NS_SUCCESS_ALLOW_SLIM_WRAPPERS ? NS_OK : rv;
-  }
-
   nsIDocument *doc = element->HasFlag(NODE_FORCE_XBL_BINDINGS) ?
                      element->OwnerDoc() :
                      element->GetCurrentDoc();
@@ -7995,17 +7985,6 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ABORT_IF_FALSE(content_qi == element, "Uh, fix QI!");
   }
 #endif
-
-  // If we have a registered x-tag then we fix the prototype.
-  nsAutoString elementName;
-  nsContentUtils::ASCIIToLower(element->NodeName(), elementName);
-  if (StringBeginsWith(elementName, NS_LITERAL_STRING("x-"))) {
-    nsDocument* document = static_cast<nsDocument*>(element->OwnerDoc());
-    JSObject* prototype = document->GetCustomPrototype(elementName);
-    if (prototype) {
-      return JS_SetPrototype(cx, obj, prototype) ? NS_OK : NS_ERROR_UNEXPECTED;
-    }
-  }
 
   nsIDocument* doc;
   if (element->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
@@ -10215,24 +10194,6 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   nsCOMPtr<nsIDOMEventTarget> target;
   event->GetCurrentTarget(getter_AddRefs(target));
   target.forget(_retval);
-  return NS_OK;
-}
-
-NS_INTERFACE_MAP_BEGIN(nsLifecycleCallbacksThisTranslator)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCFunctionThisTranslator)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsLifecycleCallbacksThisTranslator)
-NS_IMPL_RELEASE(nsLifecycleCallbacksThisTranslator)
-
-
-NS_IMETHODIMP
-nsLifecycleCallbacksThisTranslator::TranslateThis(nsISupports *aInitialThis,
-                                                  nsISupports **_retval)
-{
-  NS_IF_ADDREF(*_retval = nsDocument::CurrentUpgradeElement());
   return NS_OK;
 }
 
