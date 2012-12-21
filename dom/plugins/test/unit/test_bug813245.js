@@ -6,7 +6,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-// v0.9 registry field meanings are different on Mac OS X
+// v0.9+ registry field meanings are different on Mac OS X
 const CWD = do_get_cwd();
 function checkOS(os) {
   const nsILocalFile_ = "nsILocalFile" + os;
@@ -20,15 +20,19 @@ var DELIM = ":";
 if ("@mozilla.org/windows-registry-key;1" in Components.classes)
   DELIM = "|";
 
-var gProfD = do_get_profile();
+var gProfD = do_get_profile_startup();
 var gDirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
 
 // Writes out some plugin registry to the profile
 function write_registry(version, info) {
+  let runtime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
+
   var header = "Generated File. Do not edit.\n\n";
   header += "[HEADER]\n";
-  header += "Version" + DELIM + version + DELIM + "$\n\n";
+  header += "Version" + DELIM + version + DELIM + "$\n";
+  header += "Arch" + DELIM + runtime.XPCOMABI + DELIM + "$\n";
+  header += "\n";
   header += "[PLUGINS]\n";
 
   var registry = gProfD.clone();
@@ -49,12 +53,17 @@ function write_registry(version, info) {
 }
 
 function run_test() {
-  var file = get_test_plugin();
-  if (!file)
-    do_throw("Plugin library not found");
+  var plugin = get_test_plugintag();
+  do_check_true(plugin == null);
 
-  // Write out a 0.9 version registry that marks the test plugin as disabled
-  var registry = "";
+  var file = get_test_plugin();
+  if (!file) {
+    do_throw("Plugin library not found");
+  }
+
+  // write plugin registry data
+  let registry = "";
+
   if (isMac) {
     registry += file.leafName + DELIM + "$\n";
     registry += file.path + DELIM + "$\n";
@@ -62,30 +71,27 @@ function run_test() {
     registry += file.path + DELIM + "$\n";
     registry += DELIM + "$\n";
   }
-  registry += file.lastModifiedTime + DELIM + "0" + DELIM + "0" + DELIM + "$\n";
-  registry += "Plug-in for testing purposes.\u2122 " + 
-                "(\u0939\u093f\u0928\u094d\u0926\u0940 " + 
-                "\u4e2d\u6587 " +
-                "\u0627\u0644\u0639\u0631\u0628\u064a\u0629)" +
-                DELIM + "$\n";
+  registry += "0.0.0.0" + DELIM + "$\n";
+  registry += "16725225600" + DELIM + "0" + DELIM + "5" + DELIM + "$\n";
+  registry += "Plug-in for testing purposes." + DELIM + "$\n";
   registry += "Test Plug-in" + DELIM + "$\n";
-  registry += "1\n";
+  registry += "999999999999999999999999999999999999999999999999|0|5|$\n";
   registry += "0" + DELIM + "application/x-test" + DELIM + "Test mimetype" +
               DELIM + "tst" + DELIM + "$\n";
-  write_registry("0.9", registry);
+
+  registry += "\n";
+  registry += "[INVALID]\n";
+  registry += "\n";
+  write_registry("0.15", registry);
+
+  // Initialise profile folder
+  do_get_profile();
 
   var plugin = get_test_plugintag();
   if (!plugin)
     do_throw("Plugin tag not found");
 
-  // If the plugin was not rescanned then this version will not be correct
+  // The plugin registry should have been rejected.
+  // If not, the test plugin version would be 0.0.0.0
   do_check_eq(plugin.version, "1.0.0.0");
-  do_check_eq(plugin.description,
-              "Plug-in for testing purposes.\u2122 " + 
-                "(\u0939\u093f\u0928\u094d\u0926\u0940 " + 
-                "\u4e2d\u6587 " +
-                "\u0627\u0644\u0639\u0631\u0628\u064a\u0629)");
-  // If the plugin registry was not read then the plugin will not be disabled
-  do_check_true(plugin.disabled);
-  do_check_false(plugin.blocklisted);
 }
