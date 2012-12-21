@@ -1926,6 +1926,40 @@ this.DOMApplicationRegistry = {
                 zipReader.open(zipFile);
               }
 
+              // XXX Security: You CANNOT safely add a new app store for
+              // installing privileged apps just by modifying this pref and
+              // adding the signing cert for that store to the cert trust
+              // database. *Any* origin listed can install apps signed with
+              // *any* certificate trusted; we don't try to maintain a strong
+              // association between certificate with installOrign. The
+              // expectation here is that in production builds the pref will
+              // contain exactly one origin. However, in custom development
+              // builds it may contain more than one origin so we can test
+              // different stages (dev, staging, prod) of the same app store.
+              //
+              // Only allow signed apps to be installed from a whitelist of
+              // domains, and require all packages installed from any of the
+              // domains on the whitelist to be signed. This is a stopgap until
+              // we have a real story for handling multiple app stores signing
+              // apps.
+              let signedAppOriginsStr =
+                Services.prefs.getCharPref(
+                  "dom.mozApps.signed_apps_installable_from");
+              let isSignedAppOrigin
+                = signedAppOriginsStr.split(",").indexOf(aApp.installOrigin) > -1;
+              if (!isSigned && isSignedAppOrigin) {
+                // Packaged apps installed from these origins must be signed;
+                // if not, assume somebody stripped the signature.
+                throw "INVALID_SIGNATURE";
+              } else if (isSigned && !isSignedAppOrigin) {
+                // Other origins are *prohibited* from installing signed apps.
+                // One reason is that our app revociation mechanism requires
+                // strong cooperation from the host of the mini-manifest, which
+                // we assume to be under the control of the install origin,
+                // even if it has a different origin.
+                throw "INSTALL_FROM_DENIED";
+              }
+
               if (!zipReader.hasEntry("manifest.webapp")) {
                 throw "MISSING_MANIFEST";
               }
