@@ -56,11 +56,7 @@ xpcshell-tests:
 
 xpcshell-tests-remote: DM_TRANS?=adb
 xpcshell-tests-remote:
-	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build \
-	  -I$(topsrcdir)/build/mobile \
-	  -I$(topsrcdir)/testing/mozbase/mozdevice/mozdevice \
-	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
+	$(PYTHON) -u $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --testing-modules-dir=$(DEPTH)/_tests/modules \
