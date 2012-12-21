@@ -3564,7 +3564,7 @@ Tab.prototype = {
   },
 
   /** Update viewport when the metadata changes. */
-  updateViewportMetadata: function updateViewportMetadata(aMetadata) {
+  updateViewportMetadata: function updateViewportMetadata(aMetadata, aInitialLoad) {
     if (Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
       aMetadata.allowZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
@@ -3580,12 +3580,12 @@ Tab.prototype = {
       aMetadata.maxZoom *= scaleRatio;
 
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this.updateViewportSize(gScreenWidth);
+    this.updateViewportSize(gScreenWidth, aInitialLoad);
     this.sendViewportMetadata();
   },
 
   /** Update viewport when the metadata or the window size changes. */
-  updateViewportSize: function updateViewportSize(aOldScreenWidth) {
+  updateViewportSize: function updateViewportSize(aOldScreenWidth, aInitialLoad) {
     // When this function gets called on window resize, we must execute
     // this.sendViewportUpdate() so that refreshDisplayPort is called.
     // Ensure that when making changes to this function that code path
@@ -3677,7 +3677,7 @@ Tab.prototype = {
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
     let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
-    let zoom = this.clampZoom(this._zoom * zoomScale);
+    let zoom = (aInitialLoad && metadata.defaultZoom) ? metadata.defaultZoom : this.clampZoom(this._zoom * zoomScale);
     this.setResolution(zoom, false);
     this.setScrollClampingSize(zoom);
     this.sendViewportUpdate();
@@ -3734,7 +3734,7 @@ Tab.prototype = {
           // things here before calling updateMetadata.
           this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
           this.setResolution(gScreenWidth / this.browserWidth, false);
-          ViewportHandler.updateMetadata(this);
+          ViewportHandler.updateMetadata(this, true);
 
           // Note that if we draw without a display-port, things can go wrong. By the
           // time we execute this, it's almost certain a display-port has been set via
@@ -3757,7 +3757,7 @@ Tab.prototype = {
         break;
       case "nsPref:changed":
         if (aData == "browser.ui.zoom.force-user-scalable")
-          ViewportHandler.updateMetadata(this);
+          ViewportHandler.updateMetadata(this, false);
         break;
     }
   },
@@ -5171,7 +5171,7 @@ var ViewportHandler = {
         let browser = BrowserApp.getBrowserForDocument(document);
         let tab = BrowserApp.getTabForBrowser(browser);
         if (tab)
-          this.updateMetadata(tab);
+          this.updateMetadata(tab, false);
         break;
     }
   },
@@ -5194,9 +5194,9 @@ var ViewportHandler = {
     }
   },
 
-  updateMetadata: function updateMetadata(tab) {
+  updateMetadata: function updateMetadata(tab, aInitialLoad) {
     let metadata = this.getViewportMetadata(tab.browser.contentWindow);
-    tab.updateViewportMetadata(metadata);
+    tab.updateViewportMetadata(metadata, aInitialLoad);
   },
 
   /**
