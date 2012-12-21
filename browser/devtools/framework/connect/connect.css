@@ -78,12 +78,12 @@ body.connecting > #connecting {
   vertical-align: top;
 }
 
-#actors {
+.actors {
   padding-left: 0;
   font-size: 0.9rem;
 }
 
-#actors > a {
+.actors > a {
   display: block;
   margin: 5px;
   padding: 5px;
