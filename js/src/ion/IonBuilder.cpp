@@ -441,10 +441,14 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     if (!current->addPredecessorWithoutPhis(predecessor))
         return false;
 
+    // Save the actual arguments the caller used to call this inlined call,
+    // to shortcut operations on "arguments" in the inlined call.
+    // Discard first argument, because it is |this|
+    inlinedArguments_.append(argv.begin() + 1, argv.end());
+
     // Explicitly pass Undefined for missing arguments.
     const size_t numActualArgs = argv.length() - 1;
     const size_t nargs = info().nargs();
-
     if (numActualArgs < nargs) {
         const size_t missing = nargs - numActualArgs;
 
@@ -489,6 +493,11 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     // +2 for the scope chain and |this|.
     JS_ASSERT(current->entryResumePoint()->numOperands() == nargs + info().nlocals() + 2);
+
+    if (script_->argumentsHasVarBinding()) {
+        lazyArguments_ = MConstant::New(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+        current->add(lazyArguments_);
+    }
 
     return traverseBytecode();
 }
@@ -883,6 +892,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_SETARG:
+        JS_ASSERT(inliningDepth == 0);
         // To handle this case, we should spill the arguments to the space where
         // actual arguments are stored. The tricky part is that if we add a MIR
         // to wrap the spilling action, we don't want the spilling to be
@@ -3233,11 +3243,6 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32_t argc)
         targetScript = target->nonLazyScript();
         uint32_t calleeUses = targetScript->getUseCount();
 
-        if (target->nargs < argc) {
-            IonSpew(IonSpew_Inlining, "Not inlining, overflow of arguments.");
-            return false;
-        }
-
         totalSize += targetScript->length;
         if (totalSize > js_IonOptions.inlineMaxTotalBytecodeLength)
             return false;
@@ -3529,7 +3534,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool co
     MGetPropertyCache *getPropCache = NULL;
     if (!constructing) {
         getPropCache = checkInlineableGetPropertyCache(argc);
-        if(getPropCache) {
+        if (getPropCache) {
             InlinePropertyTable *inlinePropTable = getPropCache->inlinePropertyTable();
             // checkInlineableGetPropertyCache should have verified this.
             JS_ASSERT(inlinePropTable != NULL);
@@ -4027,6 +4032,13 @@ IonBuilder::jsop_funapply(uint32_t argc)
         return abort("fun.apply speculation failed");
     }
 
+    // Use funapply that definitely uses |arguments|
+    return jsop_funapplyarguments(argc);
+}
+
+bool
+IonBuilder::jsop_funapplyarguments(uint32_t argc)
+{
     // Stack for JSOP_FUNAPPLY:
     // 1:      MPassArg(Vp)
     // 2:      MPassArg(This)
@@ -4043,11 +4055,53 @@ IonBuilder::jsop_funapply(uint32_t argc)
     passVp->replaceAllUsesWith(passVp->getArgument());
     passVp->block()->discard(passVp);
 
+    // When this script isn't inlined, use MApplyArgs,
+    // to copy the arguments from the stack and call the function
+    if (inliningDepth == 0) {
+        // This
+        MPassArg *passThis = current->pop()->toPassArg();
+        MDefinition *argThis = passThis->getArgument();
+        passThis->replaceAllUsesWith(argThis);
+        passThis->block()->discard(passThis);
+
+        // Unwrap the (JSFunction *) parameter.
+        MPassArg *passFunc = current->pop()->toPassArg();
+        MDefinition *argFunc = passFunc->getArgument();
+        passFunc->replaceAllUsesWith(argFunc);
+        passFunc->block()->discard(passFunc);
+
+        // Pop apply function.
+        current->pop();
+
+        MArgumentsLength *numArgs = MArgumentsLength::New();
+        current->add(numArgs);
+
+        MApplyArgs *apply = MApplyArgs::New(target, argFunc, numArgs, argThis);
+        current->add(apply);
+        current->push(apply);
+        if (!resumeAfter(apply))
+            return false;
+
+        types::StackTypeSet *barrier;
+        types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
+        return pushTypeBarrier(apply, types, barrier);
+    }
+
+    // When inlining we have the arguments the function gets called with
+    // and can optimize even more, by just calling the functions with the args.
+    JS_ASSERT(inliningDepth > 0);
+
+    // Arguments
+    Vector<MPassArg *> args(cx);
+    args.reserve(inlinedArguments_.length());
+    for (size_t i = 0; i < inlinedArguments_.length(); i++) {
+        MPassArg *pass = MPassArg::New(inlinedArguments_[i]);
+        current->add(pass);
+        args.append(pass);
+    }
+
     // This
-    MPassArg *passThis = current->pop()->toPassArg();
-    MDefinition *argThis = passThis->getArgument();
-    passThis->replaceAllUsesWith(argThis);
-    passThis->block()->discard(passThis);
+    MPassArg *thisArg = current->pop()->toPassArg();
 
     // Unwrap the (JSFunction *) parameter.
     MPassArg *passFunc = current->pop()->toPassArg();
@@ -4058,18 +4112,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
     // Pop apply function.
     current->pop();
 
-    MArgumentsLength *numArgs = MArgumentsLength::New();
-    current->add(numArgs);
-
-    MApplyArgs *apply = MApplyArgs::New(target, argFunc, numArgs, argThis);
-    current->add(apply);
-    current->push(apply);
-    if (!resumeAfter(apply))
-        return false;
-
-    types::StackTypeSet *barrier;
-    types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
-    return pushTypeBarrier(apply, types, barrier);
+    return makeCall(target, false, argFunc, thisArg, args);
 }
 
 bool
@@ -4206,12 +4249,42 @@ FreezeDOMTypes(JSContext *cx, types::StackTypeSet *inTypes)
     }
 }
 
+void
+IonBuilder::popFormals(uint32_t argc, MDefinition **fun, MPassArg **thisArg,
+                       Vector<MPassArg *> *args)
+{
+    // Get the arguments in the right order
+    (*args).reserve(argc);
+    for (int32_t i = argc; i > 0; i--)
+        (*args).append(current->peek(-i)->toPassArg());
+
+    // Pop all arguments
+    for (int32_t i = argc; i > 0; i--)
+        current->pop();
+
+    *thisArg = current->pop()->toPassArg();
+    *fun = current->pop();
+}
+
 MCall *
 IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructing)
+{
+    Vector<MPassArg *> args(cx);
+    MPassArg *thisArg;
+    MDefinition *fun;
+
+    popFormals(argc, &fun, &thisArg, &args);
+    return makeCallHelper(target, constructing, fun, thisArg, args);
+}
+
+MCall *
+IonBuilder::makeCallHelper(HandleFunction target, bool constructing,
+                           MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
 
+    uint32_t argc = args.length();
     uint32_t targetArgs = argc;
 
     // Collect number of missing arguments provided that the target is
@@ -4235,23 +4308,19 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructi
     }
 
     // Add explicit arguments.
-    // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
-    for (int32_t i = argc; i > 0; i--)
-        call->addArg(i, current->pop()->toPassArg());
+    // Skip addArg(0) because it is reserved for this
+    for (int32_t i = argc - 1; i >= 0; i--)
+        call->addArg(i + 1, args[i]);
 
     // Place an MPrepareCall before the first passed argument, before we
     // potentially perform rearrangement.
     MPrepareCall *start = new MPrepareCall;
-    MPassArg *firstArg = current->peek(-1)->toPassArg();
-    firstArg->block()->insertBefore(firstArg, start);
+    thisArg->block()->insertBefore(thisArg, start);
     call->initPrepareCall(start);
-
-    MPassArg *thisArg = current->pop()->toPassArg();
 
     // Inline the constructor on the caller-side.
     if (constructing) {
-        MDefinition *callee = current->peek(-1);
-        MDefinition *create = createThis(target, callee);
+        MDefinition *create = createThis(target, fun);
         if (!create) {
             abort("Failure inlining constructor for call.");
             return NULL;
@@ -4280,7 +4349,6 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructi
             call->setDOMFunction();
         }
     }
-    MDefinition *fun = current->pop();
     call->initFunction(fun);
 
     current->add(call);
@@ -4293,7 +4361,22 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32_t argc,
                             types::StackTypeSet *types,
                             types::StackTypeSet *barrier)
 {
-    MCall *call = makeCallHelper(target, argc, constructing);
+    Vector<MPassArg *> args(cx);
+    MPassArg *thisArg;
+    MDefinition *fun;
+
+    popFormals(argc, &fun, &thisArg, &args);
+    return makeCallBarrier(target, constructing, fun, thisArg, args, types, barrier);
+}
+
+bool
+IonBuilder::makeCallBarrier(HandleFunction target, bool constructing,
+                            MDefinition *fun, MPassArg *thisArg,
+                            Vector<MPassArg *> &args,
+                            types::StackTypeSet *types,
+                            types::StackTypeSet *barrier)
+{
+    MCall *call = makeCallHelper(target, constructing, fun, thisArg, args);
     if (!call)
         return false;
 
@@ -4307,9 +4390,22 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32_t argc,
 bool
 IonBuilder::makeCall(HandleFunction target, uint32_t argc, bool constructing)
 {
+    Vector<MPassArg *> args(cx);
+    MPassArg *thisArg;
+    MDefinition *fun;
+
+    popFormals(argc, &fun, &thisArg, &args);
+    return makeCall(target, constructing, fun, thisArg, args);
+}
+
+bool
+IonBuilder::makeCall(HandleFunction target, bool constructing,
+                     MDefinition *fun, MPassArg *thisArg,
+                     Vector<MPassArg*> &args)
+{
     types::StackTypeSet *barrier;
     types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
-    return makeCallBarrier(target, argc, constructing, types, barrier);
+    return makeCallBarrier(target, constructing, fun, thisArg, args, types, barrier);
 }
 
 bool
@@ -5770,15 +5866,24 @@ IonBuilder::jsop_arguments_length()
     MDefinition *args = current->pop();
     args->setFoldedUnchecked();
 
-    MInstruction *ins = MArgumentsLength::New();
-    current->add(ins);
-    current->push(ins);
-    return true;
+    // We don't know anything from the callee
+    if (inliningDepth == 0) {
+        MInstruction *ins = MArgumentsLength::New();
+        current->add(ins);
+        current->push(ins);
+        return true;
+    }
+
+    // We are inlining and know the number of arguments the callee pushed
+    return pushConstant(Int32Value(inlinedArguments_.length()));
 }
 
 bool
 IonBuilder::jsop_arguments_getelem()
 {
+    if (inliningDepth != 0)
+        return abort("NYI inlined get argument element");
+
     RootedScript scriptRoot(cx, script());
     types::StackTypeSet *barrier = oracle->propertyReadBarrier(scriptRoot, pc);
     types::StackTypeSet *types = oracle->propertyRead(script(), pc);
