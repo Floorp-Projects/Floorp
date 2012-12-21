@@ -8,7 +8,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="47dip"
                 android:gravity="left|center_vertical"
-                android:background="@drawable/action_bar_button">
+                android:background="@drawable/action_bar_button"
+                android:duplicateParentState="true">
 
     <ImageView android:id="@+id/last_tab_favicon"
                android:layout_width="32dip"
@@ -26,7 +27,8 @@
               android:layout_marginRight="12dip"
               android:textSize="15sp"
               android:singleLine="true"
-              android:textColor="#222222"/>
+              android:textColor="@color/abouthome_section_title"
+              android:duplicateParentState="true"/>
 
     <TextView android:id="@+id/last_tab_url"
               android:layout_width="wrap_content"
@@ -37,7 +39,8 @@
               android:layout_below="@id/last_tab_title"
               android:textSize="12sp"
               android:singleLine="true"
-              android:textColor="#666666"/>
+              android:textColor="@color/abouthome_section_subtitle"
+              android:duplicateParentState="true"/>
 
     <View android:layout_width="fill_parent"
           android:layout_height="1dp"

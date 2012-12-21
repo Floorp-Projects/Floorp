@@ -2220,6 +2220,16 @@ CodeGenerator::visitPowD(LPowD *ins)
 }
 
 bool
+CodeGenerator::visitNegD(LNegD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+
+    masm.negateDouble(input);
+    return true;
+}
+
+bool
 CodeGenerator::visitRandom(LRandom *ins)
 {
     Register temp = ToRegister(ins->temp());

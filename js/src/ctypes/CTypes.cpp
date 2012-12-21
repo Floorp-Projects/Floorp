@@ -1330,6 +1330,28 @@ JS_SetCTypesCallbacks(JSRawObject ctypesObj, JSCTypesCallbacks* callbacks)
 }
 
 namespace js {
+
+JS_FRIEND_API(size_t)
+SizeOfDataIfCDataObject(JSMallocSizeOfFun mallocSizeOf, JSObject *obj)
+{
+    if (!CData::IsCData(obj))
+        return 0;
+
+    size_t n = 0;
+    jsval slot = JS_GetReservedSlot(obj, ctypes::SLOT_OWNS);
+    if (!JSVAL_IS_VOID(slot)) {
+        JSBool owns = JSVAL_TO_BOOLEAN(slot);
+        slot = JS_GetReservedSlot(obj, ctypes::SLOT_DATA);
+        if (!JSVAL_IS_VOID(slot)) {
+            char** buffer = static_cast<char**>(JSVAL_TO_PRIVATE(slot));
+            n += mallocSizeOf(buffer);
+            if (owns)
+                n += mallocSizeOf(*buffer);
+        }
+    }
+    return n;
+}
+
 namespace ctypes {
 
 /*******************************************************************************

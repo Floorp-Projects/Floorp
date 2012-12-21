@@ -44,7 +44,7 @@ nsDefaultCLH.prototype = {
 
   handle : function clh_handle(cmdLine) {
     var printDir;
-    while (printDir = cmdLine.handleFlagWithParam("print-xpcom-dir", false)) {
+    while ((printDir = cmdLine.handleFlagWithParam("print-xpcom-dir", false))) {
       var out = "print-xpcom-dir(\"" + printDir + "\"): ";
       try {
         out += getDirectoryService().get(printDir, nsIFile).path;
@@ -58,8 +58,8 @@ nsDefaultCLH.prototype = {
     }
 
     var printDirList;
-    while (printDirList = cmdLine.handleFlagWithParam("print-xpcom-dirlist",
-                                                      false)) {
+    while ((printDirList = cmdLine.handleFlagWithParam("print-xpcom-dirlist",
+                                                       false))) {
       out = "print-xpcom-dirlist(\"" + printDirList + "\"): ";
       try {
         var list = getDirectoryService().get(printDirList,

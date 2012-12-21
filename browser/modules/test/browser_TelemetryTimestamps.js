@@ -11,7 +11,7 @@ function getSimpleMeasurementsFromTelemetryPing() {
 function test() {
   waitForExplicitFinish()
   const Telemetry = Services.telemetry;
-  Telemetry.asyncReadShutdownTime(function () {
+  Telemetry.asyncFetchTelemetryData(function () {
     actualTest();
     finish();
   });

@@ -47,6 +47,16 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace android;
 
+/**
+ * See bug 783682.  Most camera implementations, despite claiming they
+ * support 'yuv420p' as a preview format, actually ignore this setting
+ * and return 'yuv420sp' data anyway.  We have come across a new implementation
+ * that, while reporting that 'yuv420p' is supported *and* has been accepted,
+ * still returns the frame data in 'yuv420sp' anyway.  So for now, since
+ * everyone seems to return this format, we just force it.
+ */
+#define FORCE_PREVIEW_FORMAT_YUV420SP   1
+
 static const char* getKeyText(uint32_t aKey)
 {
   switch (aKey) {
@@ -189,7 +199,11 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraT
   , mHeight(0)
   , mLastPictureWidth(0)
   , mLastPictureHeight(0)
+#if !FORCE_PREVIEW_FORMAT_YUV420SP
   , mFormat(PREVIEW_FORMAT_UNKNOWN)
+#else
+  , mFormat(PREVIEW_FORMAT_YUV420SP)
+#endif
   , mFps(30)
   , mDiscardedFrameCount(0)
   , mMediaProfiles(nullptr)
@@ -217,15 +231,21 @@ nsGonkCameraControl::Init()
   PullParametersImpl();
 
   // Try to set preferred image format and frame rate
+#if !FORCE_PREVIEW_FORMAT_YUV420SP
   DOM_CAMERA_LOGI("Camera preview formats: %s\n", mParams.get(mParams.KEY_SUPPORTED_PREVIEW_FORMATS));
   const char* const PREVIEW_FORMAT = "yuv420p";
   const char* const BAD_PREVIEW_FORMAT = "yuv420sp";
   mParams.setPreviewFormat(PREVIEW_FORMAT);
   mParams.setPreviewFrameRate(mFps);
+#else
+  mParams.setPreviewFormat("yuv420sp");
+  mParams.setPreviewFrameRate(mFps);
+#endif
   PushParametersImpl();
 
   // Check that our settings stuck
   PullParametersImpl();
+#if !FORCE_PREVIEW_FORMAT_YUV420SP
   const char* format = mParams.getPreviewFormat();
   if (strcmp(format, PREVIEW_FORMAT) == 0) {
     mFormat = PREVIEW_FORMAT_YUV420P;  /* \o/ */
@@ -236,6 +256,7 @@ nsGonkCameraControl::Init()
     mFormat = PREVIEW_FORMAT_UNKNOWN;
     DOM_CAMERA_LOGE("Camera ignored our request for '%s' preview, returned UNSUPPORTED format '%s'\n", PREVIEW_FORMAT, format);
   }
+#endif
 
   // Check the frame rate and log if the camera ignored our setting
   uint32_t fps = mParams.getPreviewFrameRate();

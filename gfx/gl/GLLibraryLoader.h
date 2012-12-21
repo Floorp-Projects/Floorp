@@ -37,8 +37,9 @@ public:
     } SymLoadStruct;
 
     bool LoadSymbols(SymLoadStruct *firstStruct,
-                       bool tryplatform = false,
-                       const char *prefix = nullptr);
+                     bool tryplatform = false,
+                     const char *prefix = nullptr,
+                     bool warnOnFailure = true);
 
     /*
      * Static version of the functions in this class
@@ -47,9 +48,10 @@ public:
                                   const char *symname,
                                   PlatformLookupFunction lookupFunction = nullptr);
     static bool LoadSymbols(PRLibrary *lib,
-                              SymLoadStruct *firstStruct,
-                              PlatformLookupFunction lookupFunction = nullptr,
-                              const char *prefix = nullptr);
+                            SymLoadStruct *firstStruct,
+                            PlatformLookupFunction lookupFunction = nullptr,
+                            const char *prefix = nullptr,
+                            bool warnOnFailure = true);
 protected:
     GLLibraryLoader() {
         mLibrary = nullptr;

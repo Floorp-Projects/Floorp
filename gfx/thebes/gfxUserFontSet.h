@@ -79,7 +79,6 @@ public:
     void AddFontEntry(gfxFontEntry *aFontEntry) {
         nsRefPtr<gfxFontEntry> fe = aFontEntry;
         mAvailableFonts.AppendElement(fe);
-        aFontEntry->SetFamily(this);
         ResetCharacterMap();
     }
 
@@ -89,11 +88,9 @@ public:
         for (uint32_t i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe == aOldFontEntry) {
-                aOldFontEntry->SetFamily(nullptr);
                 // note that this may delete aOldFontEntry, if there's no
                 // other reference to it except from its family
                 mAvailableFonts[i] = aNewFontEntry;
-                aNewFontEntry->SetFamily(this);
                 break;
             }
         }
@@ -105,7 +102,6 @@ public:
         for (uint32_t i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe == aFontEntry) {
-                aFontEntry->SetFamily(nullptr);
                 mAvailableFonts.RemoveElementAt(i);
                 break;
             }
@@ -113,17 +109,8 @@ public:
         ResetCharacterMap();
     }
 
-    // clear family pointer for all entries and remove them from the family;
-    // we need to do this explicitly before inserting the entries into a new
-    // family, in case the old one is not actually deleted until later
+    // remove entries from the family
     void DetachFontEntries() {
-        uint32_t i = mAvailableFonts.Length();
-        while (i--) {
-            gfxFontEntry *fe = mAvailableFonts[i];
-            if (fe) {
-                fe->SetFamily(nullptr);
-            }
-        }
         mAvailableFonts.Clear();
     }
 
@@ -197,10 +184,12 @@ public:
         return GetFamily(aFamilyName) != nullptr;
     }
 
-    // lookup a font entry for a given style, returns null if not loaded
-    gfxFontEntry *FindFontEntry(const nsAString& aName,
+    gfxFontFamily *GetFamily(const nsAString& aName) const;
+
+    // Lookup a font entry for a given style, returns null if not loaded.
+    // aFamily must be a family returned by our GetFamily method.
+    gfxFontEntry *FindFontEntry(gfxFontFamily *aFamily,
                                 const gfxFontStyle& aFontStyle,
-                                bool& aFoundFamily,
                                 bool& aNeedsBold,
                                 bool& aWaitForUserFont);
 
@@ -210,7 +199,8 @@ public:
 
     // initialize the process that loads external font data, which upon 
     // completion will call OnLoadComplete method
-    virtual nsresult StartLoad(gfxProxyFontEntry *aProxy,
+    virtual nsresult StartLoad(gfxMixedFontFamily *aFamily,
+                               gfxProxyFontEntry *aProxy,
                                const gfxFontFaceSrc *aFontFaceSrc) = 0;
 
     // when download has been completed, pass back data here
@@ -219,14 +209,16 @@ public:
     // reference was next in line)
     // Ownership of aFontData is passed in here; the font set must
     // ensure that it is eventually deleted with NS_Free().
-    bool OnLoadComplete(gfxProxyFontEntry *aProxy,
-                          const uint8_t *aFontData, uint32_t aLength,
-                          nsresult aDownloadStatus);
+    bool OnLoadComplete(gfxMixedFontFamily *aFamily,
+                        gfxProxyFontEntry *aProxy,
+                        const uint8_t *aFontData, uint32_t aLength,
+                        nsresult aDownloadStatus);
 
     // Replace a proxy with a real fontEntry; this is implemented in
     // nsUserFontSet in order to keep track of the entry corresponding
     // to each @font-face rule.
-    virtual void ReplaceFontEntry(gfxProxyFontEntry *aProxy,
+    virtual void ReplaceFontEntry(gfxMixedFontFamily *aFamily,
+                                  gfxProxyFontEntry *aProxy,
                                   gfxFontEntry *aFontEntry) = 0;
 
     // generation - each time a face is loaded, generation is
@@ -305,7 +297,7 @@ public:
                 return mozilla::HashGeneric(principalHash,
                                             nsURIHashKey::HashKey(aKey->mURI),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
-                                            ( aKey->mFontEntry->mItalic |
+                                            ((uint32_t)aKey->mFontEntry->mItalic |
                                              (aKey->mFontEntry->mWeight << 1) |
                                              (aKey->mFontEntry->mStretch << 10) ) ^
                                              aKey->mFontEntry->mLanguageOverride);
@@ -337,13 +329,15 @@ public:
 protected:
     // for a given proxy font entry, attempt to load the next resource
     // in the src list
-    LoadStatus LoadNext(gfxProxyFontEntry *aProxyEntry);
+    LoadStatus LoadNext(gfxMixedFontFamily *aFamily,
+                        gfxProxyFontEntry *aProxyEntry);
 
     // helper method for creating a platform font
     // returns font entry if platform font creation successful
     // Ownership of aFontData is passed in here; the font set must
     // ensure that it is eventually deleted with NS_Free().
-    gfxFontEntry* LoadFont(gfxProxyFontEntry *aProxy,
+    gfxFontEntry* LoadFont(gfxMixedFontFamily *aFamily,
+                           gfxProxyFontEntry *aProxy,
                            const uint8_t *aFontData, uint32_t &aLength);
 
     // parse data for a data URL
@@ -352,15 +346,15 @@ protected:
                                       uint8_t* &aBuffer,
                                       uint32_t &aBufferLength) = 0;
 
-    gfxMixedFontFamily *GetFamily(const nsAString& aName) const;
-
     // report a problem of some kind (implemented in nsUserFontSet)
-    virtual nsresult LogMessage(gfxProxyFontEntry *aProxy,
+    virtual nsresult LogMessage(gfxMixedFontFamily *aFamily,
+                                gfxProxyFontEntry *aProxy,
                                 const char *aMessage,
                                 uint32_t aFlags = nsIScriptError::errorFlag,
                                 nsresult aStatus = NS_OK) = 0;
 
-    const uint8_t* SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
+    const uint8_t* SanitizeOpenTypeData(gfxMixedFontFamily *aFamily,
+                                        gfxProxyFontEntry *aProxy,
                                         const uint8_t* aData,
                                         uint32_t aLength,
                                         uint32_t& aSaneLength,

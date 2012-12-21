@@ -81,12 +81,6 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
   // XXX nothing here yet since we don't support windowed plugins
 }
 
-static void
-pluginDrawWindow(InstanceData* instanceData, void* event)
-{
-  return;
-}
-
 int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {

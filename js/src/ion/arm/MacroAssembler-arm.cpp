@@ -93,6 +93,12 @@ MacroAssemblerARM::divDouble(FloatRegister src, FloatRegister dest)
 }
 
 void
+MacroAssemblerARM::negateDouble(FloatRegister reg)
+{
+    ma_vneg(reg, reg);
+}
+
+void
 MacroAssemblerARM::inc64(AbsoluteAddress dest)
 {
 

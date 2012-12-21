@@ -2,6 +2,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd" >
+ %toolboxDTD;
+]>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/shared/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/framework/toolbox.css" type="text/css"?>
@@ -15,7 +19,9 @@
     <toolbar class="devtools-tabbar">
 #ifdef XP_MACOSX
       <hbox id="toolbox-controls">
-        <toolbarbutton id="toolbox-close" class="devtools-closebutton"></toolbarbutton>
+        <toolbarbutton id="toolbox-close"
+                       class="devtools-closebutton"
+                       tooltiptext="&toolboxCloseButton.tooltip;"/>
         <hbox id="toolbox-dock-buttons"/>
       </hbox>
 #endif
@@ -25,7 +31,9 @@
 #ifndef XP_MACOSX
       <hbox id="toolbox-controls">
         <hbox id="toolbox-dock-buttons"/>
-        <toolbarbutton id="toolbox-close" class="devtools-closebutton"></toolbarbutton>
+        <toolbarbutton id="toolbox-close"
+                       class="devtools-closebutton"
+                       tooltiptext="&toolboxCloseButton.tooltip;"/>
       </hbox>
 #endif
     </toolbar>

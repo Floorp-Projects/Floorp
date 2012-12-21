@@ -31,6 +31,7 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Root.h"
+#include "js/MemoryMetrics.h"
 #include "js/TemplateLib.h"
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
@@ -999,30 +1000,25 @@ JSObject::computedSizeOfThisSlotsElements() const
 }
 
 inline void
-JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *slotsSize,
-                              size_t *elementsSize, size_t *argumentsDataSize,
-                              size_t *regExpStaticsSize, size_t *propertyIteratorDataSize) const
+JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSizes *sizes)
 {
-    *slotsSize = 0;
-    if (hasDynamicSlots()) {
-        *slotsSize += mallocSizeOf(slots);
-    }
+    if (hasDynamicSlots())
+        sizes->slots = mallocSizeOf(slots);
 
-    *elementsSize = 0;
-    if (hasDynamicElements()) {
-        *elementsSize += mallocSizeOf(getElementsHeader());
-    }
+    if (hasDynamicElements())
+        sizes->elements = mallocSizeOf(getElementsHeader());
 
-    /* Other things may be measured in the future if DMD indicates it is worthwhile. */
-    *argumentsDataSize = 0;
-    *regExpStaticsSize = 0;
-    *propertyIteratorDataSize = 0;
+    // Other things may be measured in the future if DMD indicates it is worthwhile.
+    // Note that sizes->private_ is measured elsewhere.
     if (isArguments()) {
-        *argumentsDataSize += asArguments().sizeOfMisc(mallocSizeOf);
+        sizes->argumentsData = asArguments().sizeOfMisc(mallocSizeOf);
     } else if (isRegExpStatics()) {
-        *regExpStaticsSize += js::SizeOfRegExpStaticsData(this, mallocSizeOf);
+        sizes->regExpStatics = js::SizeOfRegExpStaticsData(this, mallocSizeOf);
     } else if (isPropertyIterator()) {
-        *propertyIteratorDataSize += asPropertyIterator().sizeOfMisc(mallocSizeOf);
+        sizes->propertyIteratorData = asPropertyIterator().sizeOfMisc(mallocSizeOf);
+    } else {
+        // This must be the last case.
+        sizes->ctypesData = js::SizeOfDataIfCDataObject(mallocSizeOf, const_cast<JSObject *>(this));
     }
 }
 
@@ -1509,6 +1505,10 @@ FindClassPrototype(JSContext *cx, HandleObject scope, JSProtoKey protoKey,
  */
 JSObject *
 NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind kind);
+
+// Used to optimize calls to (new Object())
+bool
+NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline JSObject *

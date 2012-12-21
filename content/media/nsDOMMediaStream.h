@@ -70,7 +70,7 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<nsDOMMediaStream> CreateTrackUnionStream();
+  static already_AddRefed<nsDOMMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
 
 protected:
   // MediaStream is owned by the graph, but we tell it when to die, and it won't
@@ -106,7 +106,7 @@ public:
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateTrackUnionStream();
+  static already_AddRefed<nsDOMLocalMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
 };
 
 #endif /* NSDOMMEDIASTREAM_H_ */

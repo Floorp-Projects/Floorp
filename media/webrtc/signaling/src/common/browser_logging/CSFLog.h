@@ -6,6 +6,7 @@
 #define CSFLOG_H
 
 #include <stdarg.h>
+#include "prlog.h"
 
 typedef enum{
 	CSF_LOG_CRITICAL =1,
@@ -33,6 +34,11 @@ extern "C"
 #endif
 void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, ...);
 void CSFLogV( CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args);
+
+PRLogModuleInfo *GetSignalingLogInfo();
+PRLogModuleInfo *GetWebRTCLogInfo();
+extern int gWebrtcTraceLoggingOn;
+
 #ifdef __cplusplus
 }
 #endif

@@ -55,6 +55,7 @@ class MacroAssemblerARM : public Assembler
     void mulDouble(FloatRegister src, FloatRegister dest);
     void divDouble(FloatRegister src, FloatRegister dest);
 
+    void negateDouble(FloatRegister reg);
     void inc64(AbsoluteAddress dest);
 
     // somewhat direct wrappers for the low-level assembler funcitons

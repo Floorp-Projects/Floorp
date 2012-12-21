@@ -39,7 +39,6 @@ let FormAssistant = {
     addMessageListener("Forms:Select:Choice", this);
     addMessageListener("Forms:Input:Value", this);
     addMessageListener("Forms:Select:Blur", this);
-    Services.obs.addObserver(this, "ime-enabled-state-changed", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
@@ -65,10 +64,14 @@ let FormAssistant = {
   },
 
   setFocusedElement: function fa_setFocusedElement(element) {
+    if (element instanceof HTMLOptionElement)
+      element = element.parentNode;
+
     if (element === this.focusedElement)
       return;
 
     if (this.focusedElement) {
+      this.focusedElement.removeEventListener('click', this);
       this.focusedElement.removeEventListener('mousedown', this);
       this.focusedElement.removeEventListener('mouseup', this);
       if (!element) {
@@ -77,6 +80,7 @@ let FormAssistant = {
     }
 
     if (element) {
+      element.addEventListener('click', this);
       element.addEventListener('mousedown', this);
       element.addEventListener('mouseup', this);
     }
@@ -93,13 +97,17 @@ let FormAssistant = {
         if (this.isTextInputElement(target) && this.isIMEDisabled())
           return;
 
-        if (target && this.isFocusableElement(target))
-          this.handleIMEStateEnabled(target);
+        // We got input focus, but don't open the virtual keyboard unless we
+        // get a 'click' event, i.e. the user is tapping the input element.
+        if (target && this.isFocusableElement(target)) {
+          this.setFocusedElement(target);
+        }
         break;
 
       case "blur":
         if (this.focusedElement)
-          this.handleIMEStateDisabled();
+          this.hideKeyboard();
+        this.setFocusedElement(null);
         break;
 
       case 'mousedown':
@@ -116,8 +124,16 @@ let FormAssistant = {
         // need to tell the keyboard about it
         if (this.focusedElement.selectionStart !== this.selectionStart ||
             this.focusedElement.selectionEnd !== this.selectionEnd) {
-          this.tryShowIme(this.focusedElement);
+          this.sendKeyboardState(this.focusedElement);
         }
+        break;
+
+      case 'click':
+        // We only listen for click events on the currently focused element.
+        // Gecko fires a click event if the user "taps" an input element
+        // without dragging. This is how we differentiate tap gestures to set
+        // input focus (and open the keyboard) from simply panning the page.
+        this.showKeyboard();
         break;
 
       case "resize":
@@ -195,22 +211,7 @@ let FormAssistant = {
 
   observe: function fa_observe(subject, topic, data) {
     switch (topic) {
-      case "ime-enabled-state-changed":
-        let shouldOpen = parseInt(data);
-        let target = Services.fm.focusedElement;
-        if (!target || !this.isTextInputElement(target))
-          return;
-
-        if (shouldOpen) {
-          if (!this.focusedElement && this.isFocusableElement(target))
-            this.handleIMEStateEnabled(target);
-        } else if (this._focusedElement == target) {
-          this.handleIMEStateDisabled();
-        }
-        break;
-
       case "xpcom-shutdown":
-        Services.obs.removeObserver(this, "ime-enabled-state-changed", false);
         Services.obs.removeObserver(this, "xpcom-shutdown");
         removeMessageListener("Forms:Select:Choice", this);
         removeMessageListener("Forms:Input:Value", this);
@@ -227,24 +228,19 @@ let FormAssistant = {
     return disabled;
   },
 
-  handleIMEStateEnabled: function fa_handleIMEStateEnabled(target) {
+  showKeyboard: function fa_showKeyboard() {
     if (this.isKeyboardOpened)
       return;
 
-    if (target instanceof HTMLOptionElement)
-      target = target.parentNode;
-
-    let kbOpened = this.tryShowIme(target);
+    let target = this.focusedElement;
+    let kbOpened = this.sendKeyboardState(target);
     if (this.isTextInputElement(target))
       this.isKeyboardOpened = kbOpened;
-
-    this.setFocusedElement(target);
   },
 
-  handleIMEStateDisabled: function fa_handleIMEStateDisabled() {
+  hideKeyboard: function fa_hideKeyboard() {
     sendAsyncMessage("Forms:Input", { "type": "blur" });
     this.isKeyboardOpened = false;
-    this.setFocusedElement(null);
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
@@ -270,7 +266,7 @@ let FormAssistant = {
            (element.contentEditable && element.contentEditable == "true");
   },
 
-  tryShowIme: function(element) {
+  sendKeyboardState: function(element) {
     // FIXME/bug 729623: work around apparent bug in the IME manager
     // in gecko.
     let readonly = element.getAttribute("readonly");
