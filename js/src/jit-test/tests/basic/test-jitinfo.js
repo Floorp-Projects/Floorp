@@ -12,6 +12,10 @@ function f() {
 	d.x = 10;
 	d.x = undefined;
 
+	d.x = FakeDOMObject.prototype.x;
+	FakeDOMObject.prototype.x = d.x;
+	FakeDOMObject.prototype.doFoo();
+
 	assertEq(d.doFoo(), 0);
 	assertEq(d.doFoo(1), 1);
 	assertEq(d.doFoo(1, 2), 2);
