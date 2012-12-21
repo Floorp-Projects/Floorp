@@ -518,8 +518,7 @@ Parser::reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream.reportStrictWarningErrorNumberVA(pn, pc->sc->strict,
-                                                               errorNumber, args);
+    bool result = tokenStream.reportStrictWarningErrorNumberVA(pn, errorNumber, args);
     va_end(args);
     return result;
 }
