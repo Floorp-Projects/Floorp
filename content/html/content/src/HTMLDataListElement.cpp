@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLDataListElement.h"
+#include "mozilla/dom/HTMLDataListElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(DataList)
 DOMCI_NODE_DATA(HTMLDataListElement, mozilla::dom::HTMLDataListElement)
@@ -15,6 +16,12 @@ HTMLDataListElement::~HTMLDataListElement()
 {
 }
 
+JSObject*
+HTMLDataListElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                              bool *aTriedToWrap)
+{
+  return HTMLDataListElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLDataListElement,
                                                 nsGenericHTMLElement)
@@ -51,11 +58,7 @@ HTMLDataListElement::MatchOptions(nsIContent* aContent, int32_t aNamespaceID,
 NS_IMETHODIMP
 HTMLDataListElement::GetOptions(nsIDOMHTMLCollection** aOptions)
 {
-  if (!mOptions) {
-    mOptions = new nsContentList(this, MatchOptions, nullptr, nullptr, true);
-  }
-
-  NS_ADDREF(*aOptions = mOptions);
+  NS_ADDREF(*aOptions = Options());
 
   return NS_OK;
 }

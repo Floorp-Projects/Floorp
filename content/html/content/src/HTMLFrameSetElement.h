@@ -39,6 +39,8 @@ struct nsFramesetSpec {
 namespace mozilla {
 namespace dom {
 
+class BeforeUnloadEventHandlerNonNull;
+
 class HTMLFrameSetElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLFrameSetElement
 {
@@ -49,6 +51,7 @@ public:
       mNumCols(0),
       mCurrentRowColHint(NS_STYLE_HINT_REFLOW)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLFrameSetElement();
 
@@ -69,13 +72,40 @@ public:
   // nsIDOMHTMLFrameSetElement
   NS_DECL_NSIDOMHTMLFRAMESETELEMENT
 
+  void GetCols(nsString& aCols)
+  {
+    GetHTMLAttr(nsGkAtoms::cols, aCols);
+  }
+  void SetCols(const nsAString& aCols, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::cols, aCols, aError);
+  }
+  void GetRows(nsString& aRows)
+  {
+    GetHTMLAttr(nsGkAtoms::rows, aRows);
+  }
+  void SetRows(const nsAString& aRows, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::rows, aRows, aError);
+  }
+
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLFrameSetElement.
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */
 #define FORWARDED_EVENT(name_, id_, type_, struct_)                     \
   NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);                    \
   NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+#define WINDOW_EVENT_HELPER(name_, type_)                               \
+  type_* GetOn##name_();                                                \
+  void SetOn##name_(type_* handler, ErrorResult& error);
+#define WINDOW_EVENT(name_, id_, type_, struct_)                        \
+  WINDOW_EVENT_HELPER(name_, EventHandlerNonNull)
+#define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                  \
+  WINDOW_EVENT_HELPER(name_, BeforeUnloadEventHandlerNonNull)
 #include "nsEventNameList.h"
+#undef BEFOREUNLOAD_EVENT
+#undef WINDOW_EVENT
+#undef WINDOW_EVENT_HELPER
 #undef FORWARDED_EVENT
 #undef EVENT
 
@@ -118,6 +148,10 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 
 private:
   nsresult ParseRowCol(const nsAString& aValue,

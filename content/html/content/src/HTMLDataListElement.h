@@ -19,6 +19,7 @@ public:
   HTMLDataListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLDataListElement();
 
@@ -37,6 +38,16 @@ public:
   // nsIDOMHTMLDataListElement
   NS_DECL_NSIDOMHTMLDATALISTELEMENT
 
+  nsContentList* Options()
+  {
+    if (!mOptions) {
+      mOptions = new nsContentList(this, MatchOptions, nullptr, nullptr, true);
+    }
+
+    return mOptions;
+  }
+
+
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // This function is used to generate the nsContentList (option elements).
@@ -49,6 +60,8 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 
   // <option>'s list inside the datalist element.
   nsRefPtr<nsContentList> mOptions;

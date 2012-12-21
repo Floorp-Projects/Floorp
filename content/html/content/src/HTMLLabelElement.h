@@ -23,6 +23,7 @@ public:
     : nsGenericHTMLFormElement(aNodeInfo),
       mHandlingEvent(false)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLLabelElement();
 
@@ -43,6 +44,20 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
+  using nsGenericHTMLFormElement::GetForm;
+  void GetHtmlFor(nsString& aHtmlFor)
+  {
+    GetHTMLAttr(nsGkAtoms::_for, aHtmlFor);
+  }
+  void SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::_for, aHtmlFor, aError);
+  }
+  nsGenericHTMLElement* GetControl() const
+  {
+    return GetLabeledElement();
+  }
+
   virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIFormControl
@@ -62,9 +77,12 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
-  mozilla::dom::Element* GetLabeledElement();
+  nsGenericHTMLElement* GetLabeledElement() const;
 protected:
-  mozilla::dom::Element* GetFirstLabelableDescendant();
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+
+  nsGenericHTMLElement* GetFirstLabelableDescendant() const;
 
   // XXX It would be nice if we could use an event flag instead.
   bool mHandlingEvent;
