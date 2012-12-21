@@ -11,6 +11,7 @@ from mozbuild.compilation.warnings import CompilerWarning
 from mozbuild.compilation.warnings import WarningsCollector
 from mozbuild.compilation.warnings import WarningsDatabase
 
+from mozunit import main
 
 CLANG_TESTS = [
     ('foobar.cpp:123:10: warning: you messed up [-Wfoo]',
@@ -138,7 +139,7 @@ class TestWarningsParsing(unittest.TestCase):
 
             self.assertIsNotNone(warning)
 
-            self.assertEqual(warning['filename'], filename)
+            self.assertEqual(warning['filename'], os.path.normpath(filename))
             self.assertEqual(warning['line'], line)
             self.assertEqual(warning['flag'], flag)
             self.assertEqual(warning['message'], message)
@@ -231,3 +232,6 @@ class TestWarningsDatabase(unittest.TestCase):
         db.prune()
         self.assertEqual(len(db), 19)
 
+
+if __name__ == '__main__':
+    main()
