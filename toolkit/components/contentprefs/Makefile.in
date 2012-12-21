@@ -11,9 +11,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = contentprefs
 
-EXTRA_COMPONENTS = nsContentPrefService.js nsContentPrefService.manifest
+EXTRA_COMPONENTS = \
+  nsContentPrefService.js \
+  nsContentPrefService.manifest \
+  $(NULL)
 
-EXTRA_JS_MODULES = ContentPrefInstance.jsm
+EXTRA_JS_MODULES = \
+  ContentPrefInstance.jsm \
+  ContentPrefService2.jsm \
+  ContentPrefStore.jsm \
+  $(NULL)
 
 TEST_DIRS += tests
 
