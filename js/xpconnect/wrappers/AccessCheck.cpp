@@ -447,6 +447,13 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 }
 
 bool
+ExposedPropertiesOnly::allowNativeCall(JSContext *cx, JS::IsAcceptableThis test,
+                                       JS::NativeImpl impl)
+{
+    return js::IsReadOnlyDateMethod(test, impl) || js::IsTypedArrayThisCheck(test);
+}
+
+bool
 ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act)
 {
     JSAutoCompartment ac(cx, wrapper);
