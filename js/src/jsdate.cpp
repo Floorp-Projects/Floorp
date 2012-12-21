@@ -3241,3 +3241,50 @@ js_DateGetMsecSinceEpoch(RawObject obj)
     return obj->isDate() ? obj->getDateUTCTime().toNumber() : 0;
 }
 
+
+static const NativeImpl sReadOnlyDateMethods[] = {
+    date_getTime_impl,
+    date_getYear_impl,
+    date_getFullYear_impl,
+    date_getUTCFullYear_impl,
+    date_getMonth_impl,
+    date_getUTCMonth_impl,
+    date_getDate_impl,
+    date_getUTCDate_impl,
+    date_getDay_impl,
+    date_getUTCDay_impl,
+    date_getHours_impl,
+    date_getUTCHours_impl,
+    date_getMinutes_impl,
+    date_getUTCMinutes_impl,
+    date_getUTCSeconds_impl,
+    date_getUTCMilliseconds_impl,
+    date_getTimezoneOffset_impl,
+    date_toGMTString_impl,
+    date_toISOString_impl,
+    date_toLocaleString_impl,
+    date_toLocaleDateString_impl,
+    date_toLocaleTimeString_impl,
+    date_toLocaleFormat_impl,
+    date_toTimeString_impl,
+    date_toDateString_impl,
+    date_toSource_impl,
+    date_toString_impl,
+    date_valueOf_impl
+};
+
+JS_FRIEND_API(bool)
+js::IsReadOnlyDateMethod(IsAcceptableThis test, NativeImpl method)
+{
+    /* Avoid a linear search in the common case by checking the |this| test. */
+    if (test != IsDate)
+        return false;
+
+    /* Linear search, comparing function pointers. */
+    unsigned max = sizeof(sReadOnlyDateMethods) / sizeof(sReadOnlyDateMethods[0]);
+    for (unsigned i = 0; i < max; ++i) {
+        if (method == sReadOnlyDateMethods[i])
+            return true;
+    }
+    return false;
+}
