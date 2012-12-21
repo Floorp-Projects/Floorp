@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import os
 import unittest
 
-from tempfile import NamedTemporaryFile
+from mozfile.mozfile import NamedTemporaryFile
 
 from mach.logging import LoggingManager
 
