@@ -133,7 +133,6 @@ Highlighter.prototype = {
 
     this.selection.on("new-node", this.highlight);
     this.selection.on("new-node", this.updateInfobar);
-    this.selection.on("detached", this.highlight);
     this.selection.on("pseudoclass", this.updateInfobar);
     this.selection.on("attribute-changed", this.updateInfobar);
 
@@ -168,7 +167,6 @@ Highlighter.prototype = {
 
     this.selection.off("new-node", this.highlight);
     this.selection.off("new-node", this.updateInfobar);
-    this.selection.off("detached", this.highlight);
     this.selection.off("pseudoclass", this.updateInfobar);
     this.selection.off("attribute-changed", this.updateInfobar);
 

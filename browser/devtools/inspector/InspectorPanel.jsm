@@ -68,6 +68,8 @@ InspectorPanel.prototype = {
     this._selection = new Selection();
     this.onNewSelection = this.onNewSelection.bind(this);
     this.selection.on("new-node", this.onNewSelection);
+    this.onDetached = this.onDetached.bind(this);
+    this.selection.on("detached", this.onDetached);
 
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
@@ -170,6 +172,7 @@ InspectorPanel.prototype = {
     }.bind(this);
 
     this.sidebar.on("select", this._setDefaultSidebar);
+    this.toggleHighlighter = this.toggleHighlighter.bind(this);
 
     this.sidebar.addTab("ruleview",
                         "chrome://browser/content/devtools/cssruleview.xul",
@@ -182,6 +185,10 @@ InspectorPanel.prototype = {
     this.sidebar.addTab("layoutview",
                         "chrome://browser/content/devtools/layoutview/view.xhtml",
                         "layoutview" == defaultTab);
+
+    let ruleViewTab = this.sidebar.getTab("ruleview");
+    ruleViewTab.addEventListener("mouseover", this.toggleHighlighter, false);
+    ruleViewTab.addEventListener("mouseout", this.toggleHighlighter, false);
 
     this.sidebar.show();
   },
@@ -276,6 +283,15 @@ InspectorPanel.prototype = {
   },
 
   /**
+   * When a node is deleted, select its parent node.
+   */
+  onDetached: function InspectorPanel_onDetached(event, parentNode) {
+    this.cancelLayoutChange();
+    this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
+    this.selection.setNode(parentNode, "detached");
+  },
+
+  /**
    * Destroy the inspector.
    */
   destroy: function InspectorPanel__destroy() {
@@ -310,6 +326,7 @@ InspectorPanel.prototype = {
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
     this.breadcrumbs.destroy();
     this.selection.off("new-node", this.onNewSelection);
+    this.selection.off("detached", this.onDetached);
     this._destroyMarkup();
     this._selection.destroy();
     this._selection = null;
@@ -445,6 +462,19 @@ InspectorPanel.prototype = {
       }
     }
     this.selection.emit("pseudoclass");
+  },
+
+  /**
+   * Toggle the highlighter when ruleview is hovered.
+   */
+  toggleHighlighter: function InspectorPanel_toggleHighlighter(event)
+  {
+    if (event.type == "mouseover") {
+      this.highlighter.hide();
+    }
+    else if (event.type == "mouseout") {
+      this.highlighter.show();
+    }
   },
 
   /**

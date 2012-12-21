@@ -1402,6 +1402,8 @@ RuleEditor.prototype = {
     }.bind(this), false);
 
     this.element.addEventListener("mousedown", function() {
+      this.doc.defaultView.focus();
+
       let editorNodes =
         this.doc.querySelectorAll(".styleinspector-propertyeditor");
 
