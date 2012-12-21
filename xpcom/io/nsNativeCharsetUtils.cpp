@@ -296,6 +296,12 @@ bool    nsNativeCharsetConverter::gIsNativeUTF8    = false;
 void
 nsNativeCharsetConverter::LazyInit()
 {
+    // LazyInit may be called before NS_StartupNativeCharsetUtils, but
+    // the setlocale it does has to be called before nl_langinfo. Like in
+    // NS_StartupNativeCharsetUtils, assume we are called early enough that
+    // we are the first to care about the locale's charset.
+    if (!gLock)
+      setlocale(LC_CTYPE, "");
     const char  *blank_list[] = { "", NULL };
     const char **native_charset_list = blank_list;
     const char  *native_charset = nl_langinfo(CODESET);
