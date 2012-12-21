@@ -7,9 +7,11 @@
 this.EXPORTED_SYMBOLS = ["webrtcUI"];
 
 const Cu = Components.utils;
+const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 this.webrtcUI = {
   init: function () {
@@ -72,47 +74,58 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
     return;
 
   let host = aBrowser.contentDocument.documentURIObject.asciiHost;
-  let chromeWin = aBrowser.ownerDocument.defaultView;
+  let chromeDoc = aBrowser.ownerDocument;
+  let chromeWin = chromeDoc.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
   let message = stringBundle.getFormattedString("getUserMedia." + requestType + ".message",
                                                 [ host ]);
 
+  function listDevices(menupopup, devices) {
+    while (menupopup.lastChild)
+      menupopup.removeChild(menupopup.lastChild);
+
+    let deviceIndex = 0;
+    for (let device of devices) {
+      let menuitem = chromeDoc.createElement("menuitem");
+      menuitem.setAttribute("value", deviceIndex);
+      menuitem.setAttribute("label", device.name);
+      menuitem.setAttribute("tooltiptext", device.name);
+      menupopup.appendChild(menuitem);
+      deviceIndex++;
+    }
+  }
+
+  chromeDoc.getElementById("webRTC-selectCamera").hidden = !videoDevices.length;
+  chromeDoc.getElementById("webRTC-selectMicrophone").hidden = !audioDevices.length;
+  listDevices(chromeDoc.getElementById("webRTC-selectCamera-menupopup"), videoDevices);
+  listDevices(chromeDoc.getElementById("webRTC-selectMicrophone-menupopup"), audioDevices);
+
   let mainAction = {
-    label: stringBundle.getString("getUserMedia." + requestType + ".label"),
-    accessKey: stringBundle.getString("getUserMedia." + requestType + ".accesskey"),
+    label: PluralForm.get(requestType == "shareCameraAndMicrophone" ? 2 : 1,
+                          stringBundle.getString("getUserMedia.shareSelectedDevices.label")),
+    accessKey: stringBundle.getString("getUserMedia.shareSelectedDevices.accesskey"),
     callback: function () {
-      Services.obs.notifyObservers(null, "getUserMedia:response:allow", aCallID);
+      let allowedDevices = Cc["@mozilla.org/supports-array;1"]
+                             .createInstance(Ci.nsISupportsArray);
+      if (videoDevices.length) {
+        let videoDeviceIndex = chromeDoc.getElementById("webRTC-selectCamera-menulist").value;
+        allowedDevices.AppendElement(videoDevices[videoDeviceIndex]);
+      }
+      if (audioDevices.length) {
+        let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
+        allowedDevices.AppendElement(audioDevices[audioDeviceIndex]);
+      }
+      Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
     }
   };
 
-  let secondaryActions = [];
-  let selectableDevices = videoDevices.length ? videoDevices : audioDevices;
-  if (selectableDevices.length > 1) {
-    let selectableDeviceNumber = 0;
-    for (let device of selectableDevices) {
-      // See bug 449811 for why we do this
-      let actual_device = device;
-      selectableDeviceNumber++;
-      secondaryActions.push({
-        label: stringBundle.getFormattedString(
-                 device.type == "audio" ?
-                   "getUserMedia.shareSpecificMicrophone.label" :
-                   "getUserMedia.shareSpecificCamera.label",
-                 [ device.name ]),
-        accessKey: selectableDeviceNumber,
-        callback: function () {
-          Services.obs.notifyObservers(actual_device, "getUserMedia:response:allow", aCallID);
-        }
-      });
-    }
-  }
-  secondaryActions.push({
+  let secondaryActions = [{
     label: stringBundle.getString("getUserMedia.denyRequest.label"),
     accessKey: stringBundle.getString("getUserMedia.denyRequest.accesskey"),
     callback: function () {
       Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
     }
-  });
+  }];
 
   let options = {
   };
