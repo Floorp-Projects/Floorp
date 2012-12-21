@@ -157,16 +157,6 @@ public:
   }
 
   /**
-   * Clones aNode, its attributes and, if aDeep is true, its descendant nodes
-   */
-  static nsresult Clone(nsINode *aNode, bool aDeep, nsINode **aResult)
-  {
-    nsCOMArray<nsINode> dummyNodeWithProperties;
-    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr, nullptr,
-                         dummyNodeWithProperties, aNode->GetParent(), aResult);
-  }
-
-  /**
    * Walks aNode, its attributes and descendant nodes. If aNewNodeInfoManager is
    * not null, it is used to create new nodeinfos for the nodes. Also reparents
    * the XPConnect wrappers for the nodes in aNewScope if aCx is not null.

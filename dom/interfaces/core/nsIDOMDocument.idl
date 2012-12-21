@@ -47,11 +47,6 @@ interface nsIDOMDocument : nsIDOMNode
                                   raises(DOMException);
   nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
 
-  [optional_argc,
-   implicit_jscontext] jsval    register(in DOMString name,
-                                         [optional] in jsval options)
-                                  raises(DOMException);
-
   // Introduced in DOM Level 2:
   [optional_argc] nsIDOMNode    importNode(in nsIDOMNode importedNode,
                                            [optional] in boolean deep)
@@ -412,24 +407,3 @@ interface nsIDOMDocument : nsIDOMNode
    */
   readonly attribute DOMString compatMode;
 };
-
-/**
- * Interface for lifecycle callbacks in document.register.
- */
-
-[scriptable, function, uuid(bfcd6299-081e-45d8-99f6-cb06fe2e70de)]
-interface nsILifecycleCallback : nsISupports
-{
-  void created(in nsIDOMElement dummy);
-};
-
-dictionary LifecycleCallbacks {
-  nsILifecycleCallback created;
-};
-
-dictionary DocumentRegisterOptions {
-  nsIVariant prototype;
-  nsIDOMDocumentFragment customTemplate;
-  nsIVariant lifecycle;
-};
-

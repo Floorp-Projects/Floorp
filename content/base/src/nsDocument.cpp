@@ -61,7 +61,6 @@
 #include "nsTreeWalker.h"
 
 #include "nsIServiceManager.h"
-#include "nsDOMClassInfo.h"
 
 #include "nsContentCID.h"
 #include "nsError.h"
@@ -136,12 +135,10 @@
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
 #include "nsIDOMPageTransitionEvent.h"
-#include "nsJSUtils.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
 #include "nsObjectLoadingContent.h"
 #include "nsHtml5TreeOpExecutor.h"
-#include "nsIDOMElementReplaceEvent.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
@@ -171,7 +168,6 @@
 #include "mozilla/dom/Link.h"
 #include "nsXULAppAPI.h"
 #include "nsDOMTouchEvent.h"
-#include "DictionaryHelpers.h"
 
 #include "mozilla/Preferences.h"
 
@@ -196,8 +192,6 @@ nsWeakPtr nsDocument::sFullScreenDoc = nullptr;
 // Reference to the root document of the branch containing the document
 // which requested DOM full-screen mode.
 nsWeakPtr nsDocument::sFullScreenRootDoc = nullptr;
-
-nsIDOMElement* nsDocument::sCurrentUpgradeElement = nullptr;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDocumentLeakPRLog;
@@ -1379,11 +1373,6 @@ nsDocument::~nsDocument()
   mInDestructor = true;
   mInUnlinkOrDeletion = true;
 
-  nsISupports* supports;
-  QueryInterface(NS_GET_IID(nsCycleCollectionISupports), reinterpret_cast<void**>(&supports));
-  NS_ASSERTION(supports, "Failed to QI to nsCycleCollectionISupports?!");
-  nsContentUtils::DropJSObjects(supports);
-
   // Clear mObservers to keep it in sync with the mutationobserver list
   mObservers.Clear();
 
@@ -1709,25 +1698,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
-struct CustomPrototypeTraceArgs {
-  TraceCallback callback;
-  void* closure;
-};
-
-
-static PLDHashOperator
-CustomPrototypeTrace(const nsAString& aName, JSObject* aObject, void *aArg)
-{
-  CustomPrototypeTraceArgs* traceArgs = static_cast<CustomPrototypeTraceArgs*>(aArg);
-  MOZ_ASSERT(aObject, "Protocol object value must not be null");
-  traceArgs->callback(aObject, "mCustomPrototypes entry", traceArgs->closure);
-  return PL_DHASH_NEXT;
-}
-
-
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
-  CustomPrototypeTraceArgs customPrototypeArgs = { aCallback, aClosure };
-  tmp->mCustomPrototypes.EnumerateRead(CustomPrototypeTrace, &customPrototypeArgs);
   nsINode::Trace(tmp, aCallback, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -1791,8 +1762,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   tmp->mIdentifierMap.Clear();
 
-  tmp->mCustomPrototypes.Clear();
-
   if (tmp->mAnimationController) {
     tmp->mAnimationController->Unlink();
   }
@@ -1817,7 +1786,6 @@ nsDocument::Init()
   mIdentifierMap.Init();
   mStyledLinks.Init();
   mRadioGroups.Init();
-  mCustomPrototypes.Init();
 
   // Force initialization.
   nsINode::nsSlots* slots = Slots();
@@ -1853,15 +1821,6 @@ nsDocument::Init()
 
   mImageTracker.Init();
   mPlugins.Init();
-
-  nsXPCOMCycleCollectionParticipant* participant;
-  CallQueryInterface(this, &participant);
-  NS_ASSERTION(participant, "Failed to QI to nsXPCOMCycleCollectionParticipant!");
-
-  nsISupports* thisSupports;
-  QueryInterface(NS_GET_IID(nsCycleCollectionISupports), reinterpret_cast<void**>(&thisSupports));
-  NS_ASSERTION(thisSupports, "Failed to QI to nsCycleCollectionISupports!");
-  nsContentUtils::HoldJSObjects(thisSupports, participant);
 
   return NS_OK;
 }
@@ -4624,218 +4583,6 @@ nsDocument::GetElementsByTagName(const nsAString& aTagname,
 
   // transfer ref to aReturn
   *aReturn = list.forget().get();
-  return NS_OK;
-}
-
-static JSBool
-CustomElementConstructor(JSContext *aCx, unsigned aArgc, JS::Value* aVp)
-{
-  JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
-
-  JSObject* global = JS_GetGlobalForObject(aCx, &args.callee());
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryWrapper(aCx, global);
-  MOZ_ASSERT(window, "Should have a non-null window");
-
-  nsIDocument* document = window->GetDoc();
-
-  // Function name is the type of the custom element.
-  JSString* jsFunName = JS_GetFunctionId(JS_ValueToFunction(aCx,
-                                                            args.calleev()));
-  nsDependentJSString elemName;
-  if (!elemName.init(aCx, jsFunName)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIContent> newElement;
-  nsresult rv = document->CreateElem(elemName, nullptr, kNameSpaceID_XHTML,
-                                     getter_AddRefs(newElement));
-  JS::Value v;
-  rv = nsContentUtils::WrapNative(aCx, global, newElement,
-                                  (nsWrapperCache*) nullptr, &v);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  JS_SET_RVAL(aCx, aVp, v);
-  return true;
-}
-
-static nsresult
-GetPrototypeFromClassInfoId(JSContext* aCx, JSObject* aScope,
-                            nsDOMClassInfoID aClassInfoId,
-                            JSObject** aPrototype)
-{
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-
-  nsIClassInfo* classInfo = NS_GetDOMClassInfoInstance(aClassInfoId);
-  NS_ENSURE_TRUE(classInfo, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = xpc->GetWrappedNativePrototype(aCx, aScope, classInfo,
-                                               getter_AddRefs(holder));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject* interface;
-  rv = holder->GetJSObject(&interface);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aPrototype = interface;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
-                     JSContext* aCx, uint8_t aArgc,
-                     jsval* aConstructor /* out param */)
-{
-  nsAutoString lcName;
-  nsContentUtils::ASCIIToLower(aName, lcName);
-
-  NS_ENSURE_TRUE(StringBeginsWith(lcName, NS_LITERAL_STRING("x-")),
-                 NS_ERROR_DOM_INVALID_CHARACTER_ERR);
-
-  nsresult rv = nsContentUtils::CheckQName(lcName, false);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INVALID_CHARACTER_ERR);
-
-  DocumentRegisterOptions options;
-  nsCOMPtr<nsILifecycleCallback> lifecycleCallback;
-
-  if (aArgc > 0) {
-    rv = options.Init(aCx, &aOptions);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (options.lifecycle) {
-      JS::Value callbacksValue;
-      rv = options.lifecycle->GetAsJSVal(&callbacksValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      LifecycleCallbacks callbacks;
-      rv = callbacks.Init(aCx, &callbacksValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      lifecycleCallback = callbacks.created;
-    }
-  }
-
-  // TODO(wchen): Templates are not currently supported. Bug 818976.
-  if (options.customTemplate) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  nsIScriptGlobalObject* sgo = GetScopeObject();
-  NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
-  JSObject* global = sgo->GetGlobalJSObject();
-
-  JSObject* protoObject;
-  if (!options.prototype) {
-    // If a prototype is not provided, we use the interface prototype for
-    // HTMLSpanElement.
-    rv = GetPrototypeFromClassInfoId(aCx, global,
-                                     eDOMClassInfo_HTMLSpanElement_id,
-                                     &protoObject);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    JS::Value customProto;
-    rv = options.prototype->GetAsJSVal(&customProto);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(!customProto.isPrimitive(), NS_ERROR_TYPE_ERR);
-
-    protoObject = &customProto.toObject();
-
-    // If a prototype is provided, we must check to ensure that it inherits
-    // from HTMLElement.
-    JSObject* htmlProto;
-    rv = GetPrototypeFromClassInfoId(aCx, global,
-                                     eDOMClassInfo_HTMLElement_id,
-                                     &htmlProto);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Check the proto chain for HTMLElement prototype.
-    JSObject* protoProto;
-    NS_ENSURE_TRUE(JS_GetPrototype(aCx, protoObject, &protoProto),
-                   NS_ERROR_UNEXPECTED);
-    while (protoProto) {
-      if (protoProto == htmlProto) {
-        break;
-      }
-      NS_ENSURE_TRUE(JS_GetPrototype(aCx, protoProto, &protoProto),
-                     NS_ERROR_UNEXPECTED);
-    }
-
-    NS_ENSURE_TRUE(protoProto, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
-  }
-
-  // Associate the prototype with the custom element.
-  mCustomPrototypes.Put(lcName, protoObject);
-
-  // Do element upgrade.
-  nsRefPtr<nsContentList> list = GetElementsByTagName(lcName);
-  for (int32_t i = 0; i < list->Length(false); i++) {
-    nsINode* oldNode = list->Item(i, false);
-
-    // TODO(wchen): Perform upgrade on Shadow DOM when implemented.
-    // Bug 806506.
-    nsCOMPtr<nsINode> newNode;
-    rv = nsNodeUtils::Clone(oldNode, true, getter_AddRefs(newNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsINode* parentNode = oldNode->GetParentNode();
-    MOZ_ASSERT(parentNode, "Node obtained by GetElementsByTagName.");
-    nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newNode);
-    MOZ_ASSERT(newElement, "Cloned of node obtained by GetElementsByTagName.");
-
-    ErrorResult error;
-    parentNode->ReplaceChild(*newNode, *oldNode, error);
-    rv = error.ErrorCode();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Dispatch elementreplaced to replaced elements.
-    nsCOMPtr<nsIDOMEvent> event;
-    rv = CreateEvent(NS_LITERAL_STRING("elementreplace"), getter_AddRefs(event));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (lifecycleCallback) {
-      // Update static member used for "this" translation
-      // when calling callback.
-      sCurrentUpgradeElement = newElement.get();
-      lifecycleCallback->Created(nullptr);
-      sCurrentUpgradeElement = nullptr;
-    }
-
-    nsCOMPtr<nsIDOMElementReplaceEvent> ptEvent = do_QueryInterface(event);
-    MOZ_ASSERT(ptEvent);
-
-    rv = ptEvent->InitElementReplaceEvent(NS_LITERAL_STRING("elementreplace"),
-                                          false, false, newElement);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    event->SetTrusted(true);
-    event->SetTarget(oldNode);
-    nsEventDispatcher::DispatchDOMEvent(oldNode, nullptr, event,
-                                        nullptr, nullptr);
-  }
-
-  nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
-                                       NS_LITERAL_STRING("elementupgrade"),
-                                       true, true);
-
-  // Create constructor to return. Store the name of the custom element as the
-  // name of the function.
-  JSFunction* constructor = JS_NewFunction(aCx, CustomElementConstructor, 0,
-                                           JSFUN_CONSTRUCTOR, nullptr,
-                                           NS_ConvertUTF16toUTF8(lcName).get());
-  JSObject* constructorObject = JS_GetFunctionObject(constructor);
-
-  JS::Value protoVal = OBJECT_TO_JSVAL(protoObject);
-  NS_ENSURE_TRUE(JS_SetProperty(aCx, constructorObject, "prototype",
-                                &protoVal), NS_ERROR_UNEXPECTED);
-
-  JS::Value constructorVal = OBJECT_TO_JSVAL(constructorObject);
-  NS_ENSURE_TRUE(JS_SetProperty(aCx, protoObject, "constructor",
-                                &constructorVal), NS_ERROR_UNEXPECTED);
-
-  // Return the constructor.
-  *aConstructor = OBJECT_TO_JSVAL(constructorObject);
-
   return NS_OK;
 }
 

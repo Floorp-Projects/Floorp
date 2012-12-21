@@ -32,7 +32,6 @@ simple_events = [
     'MozWifiConnectionInfoEvent',
     'MozCellBroadcastEvent',
 #endif
-    'ElementReplaceEvent',
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent'
   ]
