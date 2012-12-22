@@ -860,8 +860,7 @@ WebSocket::CreateAndDispatchSimpleEvent(const nsString& aName)
   rv = event->InitEvent(aName, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  event->SetTrusted(true);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
@@ -929,8 +928,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
                                       EmptyString(), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  event->SetTrusted(true);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
@@ -960,8 +958,7 @@ WebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
                                   aWasClean, aCode, aReason);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  event->SetTrusted(true);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
