@@ -101,6 +101,7 @@ public:
     virtual bool DoSendAsyncMessage(const nsAString& aMessage,
                                     const mozilla::dom::StructuredCloneData& aData);
     virtual bool CheckPermission(const nsAString& aPermission);
+    virtual bool CheckManifestURL(const nsAString& aManifestURL);
 
     /** Notify that a tab was destroyed during normal operation. */
     void NotifyTabDestroyed(PBrowserParent* aTab);
