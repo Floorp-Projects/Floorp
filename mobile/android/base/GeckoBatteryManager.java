@@ -21,14 +21,14 @@ public class GeckoBatteryManager extends BroadcastReceiver {
     // dom/battery/Constants.h
     private final static double  kDefaultLevel         = 1.0;
     private final static boolean kDefaultCharging      = true;
-    private final static double  kDefaultRemainingTime = -1.0;
+    private final static double  kDefaultRemainingTime = 0.0;
     private final static double  kUnknownRemainingTime = -1.0;
 
     private static long    sLastLevelChange            = 0;
     private static boolean sNotificationsEnabled       = false;
     private static double  sLevel                      = kDefaultLevel;
     private static boolean sCharging                   = kDefaultCharging;
-    private static double  sRemainingTime              = kDefaultRemainingTime;;
+    private static double  sRemainingTime              = kDefaultRemainingTime;
 
     private static GeckoBatteryManager sInstance = new GeckoBatteryManager();
 
@@ -113,7 +113,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
             }
 
             if (sLevel == 1.0 && sCharging) {
-                sRemainingTime = 0.0;
+                sRemainingTime = kDefaultRemainingTime;
             } else if (sLevel != previousLevel) {
                 // Estimate remaining time.
                 if (sLastLevelChange != 0) {
@@ -147,7 +147,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
         } else {
             sLevel = kDefaultLevel;
             sCharging = kDefaultCharging;
-            sRemainingTime = 0;
+            sRemainingTime = kDefaultRemainingTime;
         }
 
         /*
