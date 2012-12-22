@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
-include protocol PBrowser;
 include URIParams;
 
 include "SerializedLoadContext.h";
@@ -24,8 +23,7 @@ parent:
   Init(URIParams uri);
   AsyncOpen(URIParams             originalURI,
             uint32_t              loadFlags,
-            SerializedLoadContext loadContext,
-            PBrowser browser);
+            SerializedLoadContext loadContext);
 
   // methods corresponding to those of nsIWyciwygChannel
   WriteToCacheEntry(nsString data);

@@ -7,6 +7,7 @@
 #include "WebSocketLog.h"
 #include "WebSocketChannelParent.h"
 #include "nsIAuthPromptProvider.h"
+#include "mozilla/LoadContext.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 
@@ -19,15 +20,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(WebSocketChannelParent,
                               nsIWebSocketListener,
                               nsIInterfaceRequestor)
 
-WebSocketChannelParent::WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider,
-                                               nsILoadContext* aLoadContext,
-                                               PBOverrideStatus aOverrideStatus)
+WebSocketChannelParent::WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider)
   : mAuthProvider(aAuthProvider)
-  , mLoadContext(aLoadContext)
   , mIPCOpen(true)
 {
-  // Websocket channels can't have a private browsing override
-  MOZ_ASSERT_IF(!aLoadContext, aOverrideStatus == kPBOverride_Unset);
 #if defined(PR_LOGGING)
   if (!webSocketLog)
     webSocketLog = PR_NewLogModule("nsWebSocket");
@@ -51,7 +47,8 @@ bool
 WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                       const nsCString& aOrigin,
                                       const nsCString& aProtocol,
-                                      const bool& aSecure)
+                                      const bool& aSecure,
+                                      const IPC::SerializedLoadContext& loadContext)
 {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
 
@@ -67,6 +64,14 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
   }
   if (NS_FAILED(rv))
     goto fail;
+
+  if (loadContext.IsNotNull())
+    mLoadContext = new LoadContext(loadContext);
+#ifdef DEBUG
+  else
+    // websocket channels cannot have a private bit override
+    MOZ_ASSERT(!loadContext.IsPrivateBitValid());
+#endif
 
   rv = mChannel->SetNotificationCallbacks(this);
   if (NS_FAILED(rv))

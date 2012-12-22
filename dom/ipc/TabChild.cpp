@@ -1576,6 +1576,8 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 POfflineCacheUpdateChild*
 TabChild::AllocPOfflineCacheUpdate(const URIParams& manifestURI,
                                    const URIParams& documentURI,
+                                   const bool& isInBrowserElement,
+                                   const uint32_t& appId,
                                    const bool& stickDocument)
 {
   NS_RUNTIMEABORT("unused");
