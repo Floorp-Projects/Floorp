@@ -1136,11 +1136,16 @@ class PropertyDefiner:
         return arrays
 
 
-# The length of a method is the maximum of the lengths of the
+# The length of a method is the minimum of the lengths of the
 # argument lists of all its overloads.
+def overloadLength(arguments):
+    i = len(arguments)
+    while i > 0 and arguments[i - 1].optional:
+        i -= 1
+    return i
 def methodLength(method):
     signatures = method.signatures()
-    return max([len(arguments) for (retType, arguments) in signatures])
+    return min(overloadLength(arguments) for (retType, arguments) in signatures)
 
 class MethodDefiner(PropertyDefiner):
     """
