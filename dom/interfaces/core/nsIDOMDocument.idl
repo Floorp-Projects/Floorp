@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d19897dc-948a-42e7-8ac6-d8a0bd141b85)]
+[scriptable, uuid(31ce7ae7-15d5-4fc8-912b-ae0e23e93146)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -325,7 +325,7 @@ interface nsIDOMDocument : nsIDOMNode
    */
   void mozSetImageElement(in DOMString aImageElementId,
                           in nsIDOMElement aImageElement);
-
+  
   /**
    * Element which is currently the full-screen element as per the DOM
    * full-screen api.
@@ -366,17 +366,6 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
    */
   readonly attribute nsIDOMElement mozPointerLockElement;
-
-  /**
-   * Retrieve the location of the caret position (DOM node and character
-   * offset within that node), given a point.
-   *
-   * @param x Horizontal point at which to determine the caret position, in
-   *          page coordinates.
-   * @param y Vertical point at which to determine the caret position, in
-   *          page coordinates.
-   */
-  nsISupports /* CaretPosition */ mozCaretPositionFromPoint(in float x, in float y);
 
   /**
    * Exit pointer is lock if locked, as per the DOM pointer lock api.
