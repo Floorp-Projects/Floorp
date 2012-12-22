@@ -1063,6 +1063,27 @@ nsZipReaderCache::~nsZipReaderCache()
 }
 
 NS_IMETHODIMP
+nsZipReaderCache::IsCached(nsIFile* zipFile, bool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(zipFile);
+  nsresult rv;
+  nsCOMPtr<nsIZipReader> antiLockZipGrip;
+  MutexAutoLock lock(mLock);
+
+  nsAutoCString uri;
+  rv = zipFile->GetNativePath(uri);
+  if (NS_FAILED(rv))
+    return rv;
+
+  uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+
+  nsCStringKey key(uri);
+
+  *aResult = mZips.Exists(&key);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
 {
   NS_ENSURE_ARG_POINTER(zipFile);

@@ -12,6 +12,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStreamListener.h"
+#include "nsIRemoteOpenFileListener.h"
 #include "nsIZipReader.h"
 #include "nsIDownloader.h"
 #include "nsILoadGroup.h"
@@ -29,6 +30,7 @@ class nsJARInputThunk;
 class nsJARChannel : public nsIJARChannel
                    , public nsIDownloadObserver
                    , public nsIStreamListener
+                   , public nsIRemoteOpenFileListener
                    , public nsHashPropertyBag
 {
 public:
@@ -39,6 +41,7 @@ public:
     NS_DECL_NSIDOWNLOADOBSERVER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREMOTEOPENFILELISTENER
 
     nsJARChannel();
     virtual ~nsJARChannel();
@@ -76,6 +79,7 @@ private:
     nsresult                        mStatus;
     bool                            mIsPending;
     bool                            mIsUnsafe;
+    bool                            mOpeningRemote;
 
     nsCOMPtr<nsIStreamListener>     mDownloader;
     nsCOMPtr<nsIInputStreamPump>    mPump;
