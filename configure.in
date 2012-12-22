@@ -3995,7 +3995,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.14.1, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.14.2, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -8713,14 +8713,12 @@ AC_SUBST(MOZ_TELEMETRY_DISPLAY_REV)
 
 if test "$MOZ_TELEMETRY_REPORTING"; then
     AC_DEFINE(MOZ_TELEMETRY_REPORTING)
-    # Those lines will remain commented until we are ready to enable
-    # telemetry by default on Nightly & Aurora channels.
-    #
+
     # Enable Telemetry by default for nightly and aurora channels
-    # if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
-    #     "$MOZ_UPDATE_CHANNEL" = "aurora"; then
-    #     AC_DEFINE(MOZ_TELEMETRY_ON_BY_DEFAULT)
-    # fi
+    if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
+        "$MOZ_UPDATE_CHANNEL" = "aurora"; then
+        AC_DEFINE(MOZ_TELEMETRY_ON_BY_DEFAULT)
+    fi
 fi
 
 dnl win32 options

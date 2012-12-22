@@ -271,7 +271,7 @@ class WithObject;
 struct JSObject : public js::ObjectImpl
 {
   private:
-    friend struct js::Shape;
+    friend class js::Shape;
     friend struct js::GCMarker;
     friend class  js::NewObjectCache;
 
@@ -657,7 +657,7 @@ struct JSObject : public js::ObjectImpl
      * Function-specific getters and setters.
      */
 
-    friend struct JSFunction;
+    friend class JSFunction;
 
     inline JSFunction *toFunction();
     inline const JSFunction *toFunction() const;

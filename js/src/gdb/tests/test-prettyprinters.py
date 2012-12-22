@@ -16,3 +16,7 @@ assert_eq(implemented_type_names('e'), ['E', 'C', 'D'])
 assert_eq(implemented_type_names('e_'), ['E_', 'E', 'C', 'D'])
 assert_eq(implemented_type_names('f'), ['F', 'C', 'D'])
 assert_eq(implemented_type_names('h'), ['H', 'F', 'G', 'C', 'D'])
+
+# Check that our pretty-printers aren't interfering with printing other types.
+assert_pretty('10', '10')
+assert_pretty('(void*) 0', '') # Because of 'set print address off'

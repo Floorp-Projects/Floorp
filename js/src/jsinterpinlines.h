@@ -476,7 +476,6 @@ inline bool
 DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn, unsigned attrs)
 {
     JS_ASSERT(varobj->isVarObj());
-    JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());
 
     RootedShape prop(cx);
     RootedObject obj2(cx);

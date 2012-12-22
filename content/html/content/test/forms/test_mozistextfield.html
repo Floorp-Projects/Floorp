@@ -105,19 +105,19 @@ function checkMozIsTextFieldValueTodo(aInput, aResult)
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 // Check if the method is defined for the correct elements.
-for each (data in gElementTestData) {
+for (data of gElementTestData) {
   checkMozIsTextFieldDefined(data[0], data[1]);
 }
 
 // Check if the method returns the correct value.
 var input = document.createElement('input');
-for each (data in gInputTestData) {
+for (data of gInputTestData) {
   input.type = data[0];
   checkMozIsTextFieldValue(input, data[1]);
 }
 
 // Check for the todo's.
-for each (data in gInputTodoData) {
+for (data of gInputTodoData) {
   input.type = data[0];
   checkMozIsTextFieldValueTodo(input, data[1]);
 }

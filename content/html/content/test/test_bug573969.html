@@ -26,7 +26,7 @@ var testData = [
 
 var x = document.getElementById('x');
 
-for each (v in testData) {
+for (v of testData) {
   x.innerHTML = v;
   is(x.innerHTML, v, "innerHTML value should not be escaped");
 }

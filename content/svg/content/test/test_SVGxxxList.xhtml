@@ -455,7 +455,7 @@ function run_baseVal_API_tests()
   var res, threw, items;
   var eventChecker = new MutationEventChecker;
 
-  for each (var t in tests) {
+  for (var t of tests) {
 
     // Test .clear():
 
@@ -850,7 +850,7 @@ function run_animVal_API_tests()
 {
   var threw, item;
 
-  for each (var t in tests) {
+  for (var t of tests) {
     if (!t.animVal)
       continue; // SVGStringList isn't animatable
 
@@ -949,7 +949,7 @@ function run_animVal_API_tests()
  */
 function run_basic_setAttribute_tests()
 {
-  for each (var t in tests) {
+  for (var t of tests) {
 
     // Since the t.prop, t.baseVal and t.animVal objects should never ever
     // change, we leave testing of them to our caller so that it can check
@@ -1046,7 +1046,7 @@ function run_basic_setAttribute_tests()
  */
 function run_list_mutation_tests()
 {
-  for each (var t in tests) {
+  for (var t of tests) {
     if (t.animVal) {
       // Test removeItem()
       // =================
@@ -1142,7 +1142,7 @@ function run_animation_timeline_tests()
 {
   var svg = document.getElementById('svg');
 
-  for each (var t in tests) {
+  for (var t of tests) {
     // Skip if there is no animVal for this test or if it is a transform list
     // since these are handled specially
     if (!t.animVal || is_transform_attr(t.attr_name))
@@ -1368,7 +1368,7 @@ function run_tests()
 {
   // Initialize each test object with some useful properties, and create their
   // 'animate' elements. Note that 'prop' and 'animVal' may be null.
-  for each (var t in tests) {
+  for (var t of tests) {
     t.element = document.getElementById(t.target_element_id);
     t.prop = t.prop_name ? t.element[t.prop_name] : null;
     t.baseVal = ( t.prop || t.element )[t.bv_name];
@@ -1409,7 +1409,7 @@ function run_tests()
   // After all the other test manipulations, we check that the following
   // objects have still not changed, since they never should:
 
-  for each (var t in tests) {
+  for (var t of tests) {
     if (t.prop) {
       ok(t.prop === t.element[t.prop_name],
          'The same '+t.prop_type+' object should ALWAYS be returned for '+

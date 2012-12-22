@@ -5,6 +5,7 @@
 
 #include "OuterDocAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "DocAccessible.h"
 #include "Role.h"

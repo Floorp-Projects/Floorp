@@ -398,8 +398,6 @@ Usage(char *progName)
 
 int main(int argc, char **argv)
 {
-    PLOptState *optstate;
-    PLOptStatus status;
     NSSLOWInitContext *initCtx;
     int rv = 0; /* counts the number of failures */
 

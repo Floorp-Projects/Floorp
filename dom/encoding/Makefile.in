@@ -24,7 +24,9 @@ EXPORTS_NAMESPACES = mozilla/dom
 EXPORTS_mozilla/dom = \
   EncodingUtils.h \
   TextDecoder.h \
+  TextDecoderBase.h \
   TextEncoder.h \
+  TextEncoderBase.h \
   $(NULL)
 
 CPPSRCS = \

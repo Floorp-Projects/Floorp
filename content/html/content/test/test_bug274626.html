@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=274626
     "textarea_enabled", "textarea_disabled", "select_enabled", 
     "select_disabled", "fieldset_enabled", "fieldset_disabled"];
 
-  for each(id in controls) {
+  for (id of controls) {
     var ctrl = document.getElementById(id);
     ctrl.addEventListener('mousemove', HandlesMouseMove, false);
     ctrl.handlesMouseMove = false;

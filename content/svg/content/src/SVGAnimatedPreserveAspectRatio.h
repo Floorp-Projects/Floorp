@@ -155,6 +155,7 @@ public:
 
     DOMBaseVal(SVGAnimatedPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
+    virtual ~DOMBaseVal();
     
     SVGAnimatedPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
@@ -177,6 +178,7 @@ public:
 
     DOMAnimVal(SVGAnimatedPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
+    virtual ~DOMAnimVal();
     
     SVGAnimatedPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
@@ -210,6 +212,7 @@ public:
     DOMAnimPAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
                         nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
+    virtual ~DOMAnimPAspectRatio();
 
     // kept alive because it belongs to content:
     SVGAnimatedPreserveAspectRatio* mVal;
