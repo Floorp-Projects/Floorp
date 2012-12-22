@@ -31,7 +31,9 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread) {
     gMainThread = mainThread;
     CSF::VcmSIPCCBinding::setMainThread(gMainThread);
   } else {
+#ifdef MOZILLA_INTERNAL_API
     MOZ_ASSERT(gMainThread == mainThread);
+#endif
   }
 
   nsresult res;

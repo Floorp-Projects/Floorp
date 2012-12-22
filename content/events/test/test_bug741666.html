@@ -72,7 +72,7 @@ function sendTouchEvent(windowUtils, aType, aEvent, aModifiers) {
   var ids = [], xs=[], ys=[], rxs = [], rys = [],
       rotations = [], forces = [];
 
-  for each (var touchType in ["touches", "changedTouches", "targetTouches"]) {
+  for (var touchType of ["touches", "changedTouches", "targetTouches"]) {
     for (var i = 0; i < aEvent[touchType].length; i++) {
       if (ids.indexOf(aEvent[touchType][i].identifier) == -1) {
         ids.push(aEvent[touchType][i].identifier);

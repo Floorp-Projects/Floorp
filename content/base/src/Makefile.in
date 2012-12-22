@@ -201,6 +201,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/layout/svg \
   -I$(topsrcdir)/layout/xul/base/src \
   -I$(topsrcdir)/netwerk/base/src \
+  -I$(topsrcdir)/js/xpconnect/wrappers \
   $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

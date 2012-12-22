@@ -59,9 +59,11 @@
 #include "nsDOMClassInfo.h"
 #include "nsJSUtils.h"
 
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Helper classes
 
@@ -112,6 +114,11 @@ ValueHasISupportsPrivate(const JS::Value &v)
     return false;
   }
 
+  const DOMClass* domClass = GetDOMClass(&v.toObject());
+  if (domClass) {
+    return domClass->mDOMObjectIsISupports;
+  }
+
   JSClass* clasp = ::JS_GetClass(&v.toObject());
   const uint32_t HAS_PRIVATE_NSISUPPORTS =
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS;
@@ -138,9 +145,9 @@ InstallXBLField(JSContext* cx,
   // But there are some cases where we must accept |thisObj| but not install a
   // property on it, or otherwise touch it.  Hence this split of |this|-vetting
   // duties.
-  nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
-    do_QueryInterface(static_cast<nsISupports*>(::JS_GetPrivate(thisObj)));
-  if (!xpcWrapper) {
+  nsISupports* native =
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, thisObj);
+  if (!native) {
     // Looks like whatever |thisObj| is it's not our nsIContent.  It might well
     // be the proto our binding installed, however, where the private is the
     // nsXBLDocumentInfo, so just baul out quietly.  Do NOT throw an exception
@@ -150,7 +157,7 @@ InstallXBLField(JSContext* cx,
     return true;
   }
 
-  nsCOMPtr<nsIContent> xblNode = do_QueryWrappedNative(xpcWrapper);
+  nsCOMPtr<nsIContent> xblNode = do_QueryInterface(native);
   if (!xblNode) {
     xpc::Throw(cx, NS_ERROR_UNEXPECTED);
     return false;
@@ -1208,21 +1215,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             nsCxPusher pusher;
             pusher.Push(cx);
 
-            nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-            nsIXPConnect *xpc = nsContentUtils::XPConnect();
-            nsresult rv =
-              xpc->GetWrappedNativeOfNativeObject(cx, scope, mBoundElement,
-                                                  NS_GET_IID(nsISupports),
-                                                  getter_AddRefs(wrapper));
-            if (NS_FAILED(rv))
-              return;
-
-            JSObject* scriptObject;
-            if (wrapper)
-                wrapper->GetJSObject(&scriptObject);
-            else
-                scriptObject = nullptr;
-
+            JSObject* scriptObject = mBoundElement->GetWrapper();
             if (scriptObject) {
               // XXX Stay in sync! What if a layered binding has an
               // <interface>?!

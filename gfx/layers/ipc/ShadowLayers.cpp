@@ -25,6 +25,7 @@
 
 using namespace mozilla::ipc;
 using namespace mozilla::gl;
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace layers {
@@ -42,7 +43,8 @@ public:
     , mRotationChanged(false)
   {}
 
-  void Begin(const nsIntRect& aTargetBounds, ScreenRotation aRotation)
+  void Begin(const nsIntRect& aTargetBounds, ScreenRotation aRotation,
+             const nsIntRect& aClientBounds, ScreenOrientation aOrientation)
   {
     mOpen = true;
     mTargetBounds = aTargetBounds;
@@ -50,6 +52,8 @@ public:
         mRotationChanged = true;
     }
     mTargetRotation = aRotation;
+    mClientBounds = aClientBounds;
+    mTargetOrientation = aOrientation;
   }
 
   void AddEdit(const Edit& aEdit)
@@ -107,6 +111,8 @@ public:
   ShadowableLayerSet mMutants;
   nsIntRect mTargetBounds;
   ScreenRotation mTargetRotation;
+  nsIntRect mClientBounds;
+  ScreenOrientation mTargetOrientation;
   bool mSwapRequired;
 
 private:
@@ -140,11 +146,13 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
 
 void
 ShadowLayerForwarder::BeginTransaction(const nsIntRect& aTargetBounds,
-                                       ScreenRotation aRotation)
+                                       ScreenRotation aRotation,
+                                       const nsIntRect& aClientBounds,
+                                       ScreenOrientation aOrientation)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   NS_ABORT_IF_FALSE(mTxn->Finished(), "uncommitted txn?");
-  mTxn->Begin(aTargetBounds, aRotation);
+  mTxn->Begin(aTargetBounds, aRotation, aClientBounds, aOrientation);
 }
 
 static PLayerChild*
@@ -358,7 +366,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     cset.AppendElements(&mTxn->mPaints.front(), mTxn->mPaints.size());
   }
 
-  TargetConfig targetConfig(mTxn->mTargetBounds, mTxn->mTargetRotation);
+  TargetConfig targetConfig(mTxn->mTargetBounds, mTxn->mTargetRotation, mTxn->mClientBounds, mTxn->mTargetOrientation);
 
   MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
   PlatformSyncBeforeUpdate();

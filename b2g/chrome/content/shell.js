@@ -741,10 +741,16 @@ var AlertsHelper = {
                           uid, name, null);
   },
 
-  receiveMessage: function alert_receiveMessage(message) {
-    let data = message.data;
+  receiveMessage: function alert_receiveMessage(aMessage) {
+    if (!aMessage.target.assertPermission("desktop-notification")) {
+      Cu.reportError("Desktop-notification message " + aMessage.name +
+                     " from a content process with no desktop-notification privileges.");
+      return null;
+    }
+
+    let data = aMessage.data;
     let listener = {
-      mm: message.target,
+      mm: aMessage.target,
       title: data.title,
       text: data.text,
       manifestURL: data.manifestURL,

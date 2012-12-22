@@ -5,7 +5,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-3.
  *
- * $Id: pqg.c,v 1.25 2012/10/11 00:18:23 rrelyea%redhat.com Exp $
+ * $Id: pqg.c,v 1.26 2012/12/13 22:47:15 wtc%google.com Exp $
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -260,7 +260,7 @@ PQG_GetHashType(const PQGParams *params)
 
     if (params == NULL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+	return HASH_AlgNULL;
     }
 
     L = PQG_GetLength(&params->prime)*BITS_PER_BYTE;

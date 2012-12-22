@@ -142,6 +142,9 @@
   <string name="new_private_tab">&new_private_tab;</string>
   <string name="synced_tabs">&synced_tabs;</string>
   <string name="close_all_tabs">&close_all_tabs;</string>
+  <string name="tabs_normal">&tabs_normal;</string>
+  <string name="tabs_private">&tabs_private;</string>
+  <string name="tabs_synced">&tabs_synced;</string>
   <!-- This string only appears in developer builds, which
        is why it is not localizable. -->
   <string name="toggle_profiling">Toggle Profiling</string>
@@ -254,5 +257,10 @@
 
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt2;</string>
+
+  <!-- Wallpaper Notifications -->
+  <string name="wallpaper_success">&wallpaper_success;</string>
+  <string name="wallpaper_progress">&wallpaper_progress;</string>
+  <string name="wallpaper_fail">&wallpaper_fail;</string>
 
 </resources>

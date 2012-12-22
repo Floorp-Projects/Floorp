@@ -475,6 +475,67 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
   return aCache->IsDOMBinding();
 }
 
+// The DOM_OBJECT_SLOT_SOW slot contains a JS::ObjectValue which points to the
+// cached system object wrapper (SOW) or JS::UndefinedValue if this class
+// doesn't need SOWs.
+
+inline const JS::Value&
+GetSystemOnlyWrapperSlot(JSObject* obj)
+{
+  MOZ_ASSERT(IsDOMClass(js::GetObjectJSClass(obj)) &&
+             !(js::GetObjectJSClass(obj)->flags & JSCLASS_DOM_GLOBAL));
+  return js::GetReservedSlot(obj, DOM_OBJECT_SLOT_SOW);
+}
+inline void
+SetSystemOnlyWrapperSlot(JSObject* obj, const JS::Value& v)
+{
+  MOZ_ASSERT(IsDOMClass(js::GetObjectJSClass(obj)) &&
+             !(js::GetObjectJSClass(obj)->flags & JSCLASS_DOM_GLOBAL));
+  js::SetReservedSlot(obj, DOM_OBJECT_SLOT_SOW, v);
+}
+
+inline bool
+GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
+{
+  js::Class* clasp = js::GetObjectClass(obj);
+  if (dom::IsDOMClass(clasp)) {
+    if (!(clasp->flags & JSCLASS_DOM_GLOBAL)) {
+      JS::Value v = GetSystemOnlyWrapperSlot(obj);
+      if (v.isObject()) {
+        obj = &v.toObject();
+      }
+    }
+    return true;
+  }
+  return IsDOMProxy(obj, clasp);
+}
+
+inline void
+SetSystemOnlyWrapper(JSObject* obj, nsWrapperCache* cache, JSObject& wrapper)
+{
+  SetSystemOnlyWrapperSlot(obj, JS::ObjectValue(wrapper));
+  cache->SetHasSystemOnlyWrapper();
+}
+
+static inline void
+WrapNewBindingForSameCompartment(JSContext* cx, JSObject* obj, void* value,
+                                 JS::Value* vp)
+{
+  *vp = JS::ObjectValue(*obj);
+}
+
+static inline void
+WrapNewBindingForSameCompartment(JSContext* cx, JSObject* obj,
+                                 nsWrapperCache* value, JS::Value* vp)
+{
+  if (value->HasSystemOnlyWrapper()) {
+    *vp = GetSystemOnlyWrapperSlot(obj);
+    MOZ_ASSERT(vp->isObject());
+  } else {
+    *vp = JS::ObjectValue(*obj);
+  }
+}
+
 // Create a JSObject wrapping "value", if there isn't one already, and store it
 // in *vp.  "value" must be a concrete class that implements a
 // GetWrapperPreserveColor() which can return its existing wrapper, if any, and
@@ -485,15 +546,12 @@ MOZ_ALWAYS_INLINE bool
 WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
 {
   JSObject* obj = value->GetWrapperPreserveColor();
+  bool couldBeDOMBinding = CouldBeDOMBinding(value);
   if (obj) {
     xpc_UnmarkNonNullGrayObject(obj);
-    if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
-      *vp = JS::ObjectValue(*obj);
-      return true;
-    }
   } else {
     // Inline this here while we have non-dom objects in wrapper caches.
-    if (!CouldBeDOMBinding(value)) {
+    if (!couldBeDOMBinding) {
       return false;
     }
 
@@ -523,7 +581,6 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
     MOZ_ASSERT_IF(clasp->mDOMObjectIsISupports, IsISupports<T>::Value);
     MOZ_ASSERT(CheckWrapperCacheCast<T>::Check());
   }
-#endif
 
   // When called via XrayWrapper, we end up here while running in the
   // chrome compartment.  But the obj we have would be created in
@@ -531,8 +588,17 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
   // make sure it's correctly wrapped for the compartment of |scope|.
   // cx should already be in the compartment of |scope| here.
   MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
+#endif
+
+  bool sameCompartment =
+    js::GetObjectCompartment(obj) == js::GetContextCompartment(cx);
+  if (sameCompartment && couldBeDOMBinding) {
+    WrapNewBindingForSameCompartment(cx, obj, value, vp);
+    return true;
+  }
+
   *vp = JS::ObjectValue(*obj);
-  return JS_WrapValue(cx, vp);
+  return (sameCompartment && IS_SLIM_WRAPPER(obj)) || JS_WrapValue(cx, vp);
 }
 
 // Create a JSObject wrapping "value", for cases when "value" is a
@@ -983,6 +1049,28 @@ WrapNativeParent(JSContext* cx, JSObject* scope, const T& p)
 {
   return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p));
 }
+
+HAS_MEMBER(GetParentObject)
+
+template<typename T, bool WrapperCached=HasGetParentObjectMember<T>::Value>
+struct GetParentObject
+{
+  static JSObject* Get(JSContext* cx, JSObject* obj)
+  {
+    T* native = UnwrapDOMObject<T>(obj);
+    return WrapNativeParent(cx, obj, native->GetParentObject());
+  }
+};
+
+template<typename T>
+struct GetParentObject<T, false>
+{
+  static JSObject* Get(JSContext* cx, JSObject* obj)
+  {
+    MOZ_CRASH();
+    return nullptr;
+  }
+};
 
 template<typename T>
 static inline JSObject*
@@ -1590,6 +1678,9 @@ protected:
 bool
 NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
                const char* post, JS::Value* v);
+
+nsresult
+ReparentWrapper(JSContext* aCx, JSObject* aObj);
 
 } // namespace dom
 } // namespace mozilla
