@@ -2314,6 +2314,13 @@ nsFrameLoader::CheckPermission(const nsAString& aPermission)
                                     NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
+bool
+nsFrameLoader::CheckManifestURL(const nsAString& aManifestURL)
+{
+  return AssertAppProcessManifestURL(GetRemoteBrowser(),
+                                     NS_ConvertUTF16toUTF8(aManifestURL).get());
+}
+
 NS_IMETHODIMP
 nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
 {
