@@ -161,7 +161,6 @@
 
 #include "nsIDOMLSProgressEvent.h"
 #include "nsXMLHttpRequest.h"
-#include "nsEventSource.h"
 #include "nsIDOMSettingsManager.h"
 #include "nsIDOMContactManager.h"
 #include "nsIDOMPermissionSettings.h"
@@ -509,39 +508,36 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #endif
 
 #include "nsIDOMNavigatorSystemMessages.h"
-
-#ifdef MOZ_SYS_MSG
-#include "mozilla/dom/Activity.h"
-#endif
-#ifdef MOZ_TIME_MANAGER
-#include "TimeManager.h"
-#endif
-
 #include "DOMCameraManager.h"
 #include "DOMCameraControl.h"
 #include "DOMCameraCapabilities.h"
-
 #include "DOMError.h"
 #include "DOMRequest.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
-
 #include "nsIDOMCanvasRenderingContext2D.h"
-
 #include "DOMFileHandle.h"
 #include "FileRequest.h"
 #include "LockedFile.h"
 #include "GeneratedEvents.h"
-#include "mozilla/Likely.h"
 #include "nsDebug.h"
+
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/EventSource.h"
+#include "mozilla/dom/HTMLCollectionBinding.h"
+#include "mozilla/Likely.h"
+
+#ifdef MOZ_SYS_MSG
+#include "mozilla/dom/Activity.h"
+#endif
+
+#ifdef MOZ_TIME_MANAGER
+#include "TimeManager.h"
+#endif
 
 #ifdef MOZ_WEBRTC
 #include "nsIDOMDataChannel.h"
 #endif
-
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/HTMLCollectionBinding.h"
-#include "mozilla/Likely.h"
 
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
 #include "nsIAudioChannelManager.h"
@@ -6560,7 +6556,7 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
 
   // For now don't expose server events unless user has explicitly enabled them
   if (aStruct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
-    if (!nsEventSource::PrefEnabled()) {
+    if (!EventSource::PrefEnabled()) {
       return false;
     }
   }
