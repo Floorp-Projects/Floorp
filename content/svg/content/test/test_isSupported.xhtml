@@ -136,7 +136,7 @@ var features = [
 ];
 
 function testIsSupported(elem) {
-  for each (var [feature, version, accepted_result] in features) {
+  for (var [feature, version, accepted_result] of features) {
     if (accepted_result) {
       ok(elem.isSupported(feature, version), "isSupported(" + feature + ", " + version + ") returned wrong value, Was it changed to unsupported feature?");
     } else {

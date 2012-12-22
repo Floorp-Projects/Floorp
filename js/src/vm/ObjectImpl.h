@@ -916,7 +916,7 @@ extern HeapSlot *emptyObjectElements;
 struct Class;
 struct GCMarker;
 struct ObjectOps;
-struct Shape;
+class Shape;
 
 class NewObjectCache;
 
@@ -1060,7 +1060,7 @@ class ObjectImpl : public gc::Cell
 
   protected:
     friend struct GCMarker;
-    friend struct Shape;
+    friend class Shape;
     friend class NewObjectCache;
 
     inline void invalidateSlotRange(uint32_t start, uint32_t count);

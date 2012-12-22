@@ -14,15 +14,12 @@ String(const char* const str)
     return NS_ConvertUTF8toUTF16(str);
 }
 
-static InfallibleTArray<JSONVariant>
-Array123()
+static void
+Array123(InfallibleTArray<JSONVariant>& a123)
 {
-    InfallibleTArray<JSONVariant> a123;
     a123.AppendElement(1);  a123.AppendElement(2);  a123.AppendElement(3);
 
     test_assert(a123 == a123, "operator== is broken");
-
-    return a123;
 }
 
 template<class HandleT>
@@ -55,7 +52,9 @@ MakeTestVariant(HandleT* handle)
 
     outer.AppendElement(handle);
 
-    outer.AppendElement(Array123());
+    InfallibleTArray<JSONVariant> tmp;
+    Array123(tmp);
+    outer.AppendElement(tmp);
 
     InfallibleTArray<KeyValue> obj;
     obj.AppendElement(KeyValue(String("undefined"), void_t()));
@@ -64,7 +63,9 @@ MakeTestVariant(HandleT* handle)
     obj.AppendElement(KeyValue(String("1.25"), 1.25));
     obj.AppendElement(KeyValue(String("string"), String("value")));
     obj.AppendElement(KeyValue(String("handle"), handle));
-    obj.AppendElement(KeyValue(String("array"), Array123()));
+    InfallibleTArray<JSONVariant> tmp2;
+    Array123(tmp2);
+    obj.AppendElement(KeyValue(String("array"), tmp2));
 
     outer.AppendElement(obj);
 

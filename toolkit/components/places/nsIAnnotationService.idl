@@ -7,6 +7,7 @@
 
 interface nsIURI;
 interface nsIVariant;
+interface mozIAnnotatedResult;
 
 [scriptable, uuid(63fe98e0-6889-4c2c-ac9f-703e4bc25027)]
 interface nsIAnnotationObserver : nsISupports
@@ -31,7 +32,7 @@ interface nsIAnnotationObserver : nsISupports
                                  in AUTF8String aName);
 };
 
-[scriptable, uuid(ba249b58-346f-42a9-a393-203ae34ec6c4)]
+[scriptable, uuid(c7f425cc-a063-49ef-9f4c-b08eb2f1730a)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -325,6 +326,19 @@ interface nsIAnnotationService : nsISupports
       [retval, array, size_is(resultCount)] out long long results);
 
     /**
+     * Returns a list of mozIAnnotation(s), having a given annotation name.
+     *
+     * @param name
+     *        The annotation to search for.
+     * @return list of mozIAnnotation objects.
+     * @note binary annotations are not supported and thus skipped.
+     */
+    void getAnnotationsWithName(
+        in AUTF8String name,
+        [optional] out unsigned long count,
+        [retval, array, size_is(count)] out mozIAnnotatedResult results);
+
+    /**
      * Get the names of all annotations for this URI.
      *
      * example JS:
@@ -401,4 +415,45 @@ interface nsIAnnotationService : nsISupports
      */
     nsIURI getAnnotationURI(in nsIURI aURI,
                             in AUTF8String aName);
+};
+
+/**
+ * Represents a place annotated with a given annotation.  If a place has
+ * multiple annotations, it can be represented by multiple
+ * mozIAnnotatedResult(s).
+ */
+[scriptable, uuid(81fd0188-db6a-492e-80b6-f6414913b396)]
+interface mozIAnnotatedResult : nsISupports
+{
+    /**
+     * The globally unique identifier of the place with this annotation.
+     *
+     * @note if itemId is valid this is the guid of the bookmark, otherwise
+     *       of the page.
+     */
+    readonly attribute AUTF8String guid;
+
+    /**
+     * The URI of the place with this annotation, if available, null otherwise.
+     */
+    readonly attribute nsIURI uri;
+
+    /**
+     * The bookmark id of the place with this annotation, if available,
+     * -1 otherwise.
+     *
+     * @note if itemId is -1, it doesn't mean the page is not bookmarked, just
+     *       that this annotation is relative to the page, not to the bookmark.
+     */
+    readonly attribute long long itemId;
+
+    /**
+     * Name of the annotation.
+     */
+    readonly attribute AUTF8String annotationName;
+
+    /**
+     * Value of the annotation.
+     */
+    readonly attribute nsIVariant annotationValue;
 };

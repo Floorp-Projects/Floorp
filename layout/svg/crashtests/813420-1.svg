@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <svg id="i" style="mask: url(&quot;#none&quot;);">
+    <marker id="markerEnd"/><polygon marker-end="url(#markerEnd)" points="250,150 200,150"/>
+  </svg>
+  <script>
+
+window.addEventListener("MozReftestInvalidate", function() {
+  document.getElementById("i").style.mask = "url(#none)";
+  document.documentElement.removeAttribute("class");
+}, false);
+
+  </script>
+</svg>
+

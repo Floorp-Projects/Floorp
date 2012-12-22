@@ -10,6 +10,9 @@ FRAGMENT(JSObject, simple) {
   js::Rooted<JSFunction *> funcPtr(cx, JS_NewFunction(cx, (JSNative) 1, 0, 0,
                                                       JS_GetGlobalObject(cx), "formFollows"));
 
+  JSObject &plainRef = *plain;
+  JSFunction &funcRef = *funcPtr;
+
   breakpoint();
 
   (void) glob;
@@ -17,6 +20,8 @@ FRAGMENT(JSObject, simple) {
   (void) func;
   (void) anon;
   (void) funcPtr;
+  (void) &plainRef;
+  (void) &funcRef;
 }
 
 FRAGMENT(JSObject, null) {
@@ -26,4 +31,3 @@ FRAGMENT(JSObject, null) {
 
   (void) null;
 }
-

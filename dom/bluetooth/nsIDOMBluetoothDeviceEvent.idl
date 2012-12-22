@@ -8,7 +8,7 @@
 
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(819b4683-23a9-4af9-96b9-2c40a14ecb0b)]
+[scriptable, builtinclass, uuid(e53dd06e-acd7-444a-914a-5fb60df0ad5b)]
 interface nsIDOMBluetoothDeviceEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMBluetoothDevice device;

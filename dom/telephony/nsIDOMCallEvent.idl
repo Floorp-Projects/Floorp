@@ -8,7 +8,7 @@
 
 interface nsIDOMTelephonyCall;
 
-[scriptable, builtinclass, uuid(d836f0e6-7305-4fdd-966e-ee261fa44001)]
+[scriptable, builtinclass, uuid(21c233f9-721b-4985-bb2b-585f978ceee5)]
 interface nsIDOMCallEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMTelephonyCall call;

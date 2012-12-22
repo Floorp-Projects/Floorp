@@ -1572,6 +1572,13 @@ public:
   static bool IsAnimationLoggingEnabled();
 
   /**
+   * Find the maximum scale for an element (aContent) over the course of any
+   * animations and transitions on the element. Will return 1,1 if there is no
+   * animated scaling.
+   */
+  static gfxSize GetMaximumAnimatedScale(nsIContent* aContent);
+
+  /**
    * Checks if we should forcibly use nearest pixel filtering for the
    * background.
    */
