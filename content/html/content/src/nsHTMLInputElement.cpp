@@ -88,6 +88,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Util.h" // DebugOnly
 #include "mozilla/Preferences.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "nsIIDNService.h"
 
@@ -176,6 +177,8 @@ static const nsAttrValue::EnumTable kInputInputmodeTable[] = {
 // Default inputmode value is "auto".
 static const nsAttrValue::EnumTable* kInputDefaultInputmode = &kInputInputmodeTable[0];
 
+const double nsHTMLInputElement::kStepScaleFactorDate = 86400000;
+const double nsHTMLInputElement::kStepScaleFactorNumber = 1;
 const double nsHTMLInputElement::kDefaultStepBase = 0;
 const double nsHTMLInputElement::kStepAny = 0;
 
@@ -1201,43 +1204,54 @@ void
 nsHTMLInputElement::SetValue(double aValue)
 {
   nsAutoString value;
+  ConvertNumberToString(aValue, value);
+  SetValue(value);
+}
+
+bool
+nsHTMLInputElement::ConvertNumberToString(double aValue,
+                                          nsAString& aResultString) const
+{
+  MOZ_ASSERT(mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_NUMBER,
+             "ConvertNumberToString is only implemented for type='{number,date}'");
+
+  aResultString.Truncate();
+
   switch (mType) {
     case NS_FORM_INPUT_NUMBER:
-      value.AppendFloat(aValue);
-      break;
+      aResultString.AppendFloat(aValue);
+      return true;
     case NS_FORM_INPUT_DATE:
-    {
-      value.Truncate();
-      JSContext* ctx = nsContentUtils::GetContextFromDocument(OwnerDoc());
-      if (!ctx) {
-        break;
-      }
+      {
+        JSContext* ctx = nsContentUtils::GetContextFromDocument(OwnerDoc());
+        if (!ctx) {
+          return false;
+        }
 
-      JSObject* date = JS_NewDateObjectMsec(ctx, aValue);
-      if (!date) {
-        break;
-      }
+        // The specs require |aValue| to be truncated.
+        aValue = floor(aValue);
 
-      jsval year, month, day;
-      if(!JS::Call(ctx, date, "getUTCFullYear", 0, nullptr, &year)) {
-        break;
-      }
+        JSObject* date = JS_NewDateObjectMsec(ctx, aValue);
+        if (!date) {
+          return false;
+        }
 
-      if(!JS::Call(ctx, date, "getUTCMonth", 0, nullptr, &month)) {
-        break;
-      }
+        jsval year, month, day;
+        if (!JS::Call(ctx, date, "getUTCFullYear", 0, nullptr, &year) ||
+            !JS::Call(ctx, date, "getUTCMonth", 0, nullptr, &month) ||
+            !JS::Call(ctx, date, "getUTCDate", 0, nullptr, &day)) {
+          return false;
+        }
 
-      if(!JS::Call(ctx, date, "getUTCDate", 0, nullptr, &day)) {
-        break;
-      }
+        aResultString.AppendPrintf("%04.0f-%02.0f-%02.0f", year.toNumber(),
+                                   month.toNumber() + 1, day.toNumber());
 
-      value.AppendPrintf("%04.0f-%02.0f-%02.0f", year.toNumber(),
-                         month.toNumber() + 1, day.toNumber());
-    }
-    break;
+	return true;
+      }
+    default:
+      MOZ_NOT_REACHED();
+      return false;
   }
-
-  SetValue(value);
 }
 
 NS_IMETHODIMP
@@ -1414,6 +1428,21 @@ nsHTMLInputElement::ApplyStep(int32_t aStep)
   }
 
   value += aStep * step;
+
+  // For date inputs, the value can hold a string that is not a day. We do not
+  // want to round it, as it might result in a step mismatch. Instead we want to
+  // clamp to the next valid value.
+  if (mType == NS_FORM_INPUT_DATE &&
+      NS_floorModulo(value - GetStepBase(), GetStepScaleFactor()) != 0) {
+    double validStep = EuclidLCM<uint64_t>(static_cast<uint64_t>(step),
+                                           static_cast<uint64_t>(GetStepScaleFactor()));
+    if (aStep > 0) {
+      value -= NS_floorModulo(value - GetStepBase(), validStep);
+      value += validStep;
+    } else if (aStep < 0) {
+      value -= NS_floorModulo(value - GetStepBase(), validStep);
+    }
+  }
 
   // When stepUp() is called and the value is below min, we should clamp on
   // min unless stepUp() moves us higher than min.
@@ -4255,11 +4284,10 @@ nsHTMLInputElement::DoesMinMaxApply() const
 double
 nsHTMLInputElement::GetStep() const
 {
-  NS_ASSERTION(mType == NS_FORM_INPUT_NUMBER,
-               "We can't be there if type!=number!");
+  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE,
+             "We can't be there if type!=number or date!");
 
-  // NOTE: should be defaultStep * defaultStepScaleFactor,
-  // which is 1 for type=number.
+  // NOTE: should be defaultStep, which is 1 for type=number and date.
   double step = 1;
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::step)) {
@@ -4272,17 +4300,16 @@ nsHTMLInputElement::GetStep() const
     }
 
     nsresult ec;
-    // NOTE: should be multiplied by defaultStepScaleFactor,
-    // which is 1 for type=number.
     step = stepStr.ToDouble(&ec);
     if (NS_FAILED(ec) || step <= 0) {
-      // NOTE: we should use defaultStep * defaultStepScaleFactor,
-      // which is 1 for type=number.
+      // NOTE: we should use defaultStep, which is 1 for type=number and date.
       step = 1;
     }
   }
 
-  return step;
+  // TODO: This multiplication can lead to inexact results, we should use a
+  // type that supports a better precision than double. Bug 783607.
+  return step * GetStepScaleFactor();
 }
 
 // nsIConstraintValidation
@@ -4471,6 +4498,15 @@ nsHTMLInputElement::HasStepMismatch() const
   double step = GetStep();
   if (step == kStepAny) {
     return false;
+  }
+
+  if (mType == NS_FORM_INPUT_DATE) {
+    // The multiplication by the stepScaleFactor for date can easily lead
+    // to precision loss, since in most use cases this value should be
+    // an integer (millisecond precision), we can get rid of the precision
+    // loss by rounding step. This will however lead to erroneous results
+    // when step was intented to have a precision superior to a millisecond.
+    step = NS_round(step);
   }
 
   // Value has to be an integral multiple of step.
@@ -4748,6 +4784,16 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       double step = GetStep();
       MOZ_ASSERT(step != kStepAny);
 
+      // In case this is a date and the step is not an integer, we don't want to
+      // display the dates corresponding to the truncated timestamps of valueLow
+      // and valueHigh because they might suffer from a step mismatch as well.
+      // Instead we want the timestamps to correspond to a rounded day. That is,
+      // we want a multiple of the step scale factor (1 day) as well as of step.
+      if (mType == NS_FORM_INPUT_DATE) {
+        step = EuclidLCM<uint64_t>(static_cast<uint64_t>(step),
+                                   static_cast<uint64_t>(GetStepScaleFactor()));
+      }
+
       double stepBase = GetStepBase();
 
       double valueLow = value - NS_floorModulo(value - stepBase, step);
@@ -4757,8 +4803,8 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
 
       if (MOZ_DOUBLE_IS_NaN(max) || valueHigh <= max) {
         nsAutoString valueLowStr, valueHighStr;
-        valueLowStr.AppendFloat(valueLow);
-        valueHighStr.AppendFloat(valueHigh);
+        ConvertNumberToString(valueLow, valueLowStr);
+        ConvertNumberToString(valueHigh, valueHighStr);
 
         const PRUnichar* params[] = { valueLowStr.get(), valueHighStr.get() };
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
@@ -4766,7 +4812,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
                                                    params, message);
       } else {
         nsAutoString valueLowStr;
-        valueLowStr.AppendFloat(valueLow);
+        ConvertNumberToString(valueLow, valueLowStr);
 
         const PRUnichar* params[] = { valueLowStr.get() };
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
@@ -5181,6 +5227,22 @@ nsHTMLInputElement::GetFilterFromAccept()
   }
 
   return filter;
+}
+
+double
+nsHTMLInputElement::GetStepScaleFactor() const
+{
+  MOZ_ASSERT(DoesStepApply());
+
+  switch (mType) {
+    case NS_FORM_INPUT_DATE:
+      return kStepScaleFactorDate;
+    case NS_FORM_INPUT_NUMBER:
+      return kStepScaleFactorNumber;
+    default:
+      MOZ_NOT_REACHED();
+      return MOZ_DOUBLE_NaN();
+  }
 }
 
 void
