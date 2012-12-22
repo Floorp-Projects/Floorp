@@ -122,8 +122,8 @@ MatchPairs::initArray(size_t pairCount)
 
     /* Initialize all MatchPair objects to invalid locations. */
     for (size_t i = 0; i < pairCount; i++) {
-        pairs_[i].start = -1;
-        pairs_[i].limit = -1;
+        pairs_[i].start = size_t(-1);
+        pairs_[i].limit = size_t(-1);
     }
 
     return true;
@@ -645,18 +645,6 @@ RegExpCompartment::RegExpCompartment(JSRuntime *rt)
 RegExpCompartment::~RegExpCompartment()
 {
     JS_ASSERT(map_.empty());
-
-    /*
-     * RegExpStatics may have prevented a single RegExpShared from
-     * being collected during RegExpCompartment::sweep().
-     */
-    if (!inUse_.empty()) {
-        PendingSet::Enum e(inUse_);
-        RegExpShared *shared = e.front();
-        JS_ASSERT(shared->activeUseCount == 0);
-        js_delete(shared);
-        e.removeFront();
-    }
     JS_ASSERT(inUse_.empty());
 }
 
