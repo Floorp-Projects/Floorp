@@ -134,14 +134,24 @@
   border: 0;
 }
 
-/* Search input */
+/* Text input */
 
+.devtools-textinput,
 .devtools-searchinput {
   -moz-appearance: none;
   margin: 0 3px;
   background-color: transparent;
   border: 1px solid hsla(210,8%,5%,.6);
   border-radius: 20px;
+  background-image: -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
+  padding: 3px;
+  box-shadow: 0 1px 1px hsla(210,8%,5%,.3) inset,
+              0 0 0 1px hsla(210,16%,76%,.1) inset,
+              0 1px 0 hsla(210,16%,76%,.15);
+  color: inherit;
+}
+
+.devtools-searchinput {
   background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   background-repeat: no-repeat;
   background-position: 4px center, top left, top left;
@@ -149,10 +159,6 @@
   padding-bottom: 0;
   -moz-padding-start: 18px;
   -moz-padding-end: 12px;
-  box-shadow: 0 1px 1px hsla(210,8%,5%,.3) inset,
-              0 0 0 1px hsla(210,16%,76%,.1) inset,
-              0 1px 0 hsla(210,16%,76%,.15);
-  color: inherit;
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl) {

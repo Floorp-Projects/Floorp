@@ -182,8 +182,8 @@ protected:
   nsresult EstablishConnection();
 
   // These methods when called can release the WebSocket object
-  nsresult FailConnection(uint16_t reasonCode,
-                          const nsACString& aReasonString = EmptyCString());
+  void FailConnection(uint16_t reasonCode,
+                      const nsACString& aReasonString = EmptyCString());
   nsresult CloseConnection(uint16_t reasonCode,
                            const nsACString& aReasonString = EmptyCString());
   nsresult Disconnect();

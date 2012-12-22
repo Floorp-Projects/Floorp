@@ -2,16 +2,18 @@
 <html>
 <head>
   <meta charset=utf-8>
-  <title>Test for Bug 764234</title>
+  <title>Test for TextDecoder</title>
   <script type="text/javascript" src="/resources/testharness.js"></script>
   <script type="text/javascript" src="/resources/testharnessreport.js"></script>
   <script type="text/javascript" src="test_TextDecoder.js"></script>
   <script type="text/javascript" src="test_BOMEncoding.js"></script>
+  <script type="text/javascript" src="worker_helper.js"></script>
 </head>
 <body>
 <div id="log"></div>
 <script>
 
+setup({explicit_done: true});
 runTest();
 
 function runTest()
@@ -19,6 +21,8 @@ function runTest()
   runTextDecoderOptions();
   runTextDecoderBOMEnoding();
 }
+
+runTestInWorker(["test_TextDecoder.js", "test_BOMEncoding.js"]);
 
 </script>
 </body>

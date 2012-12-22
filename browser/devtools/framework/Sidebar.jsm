@@ -115,6 +115,16 @@ ToolSidebar.prototype = {
   },
 
   /**
+   * Returns the requested tab based on the id.
+   *
+   * @param String id
+   *        unique id of the requested tab.
+   */
+  getTab: function ToolSidebar_getTab(id) {
+    return this._tabbox.tabpanels.querySelector("#sidebar-panel-" + id);
+  },
+
+  /**
    * Event handler.
    */
   handleEvent: function ToolSidebar_eventHandler(event) {
@@ -176,7 +186,7 @@ ToolSidebar.prototype = {
     }
     this._destroyed = true;
 
-    this._tabbox.removeEventListener("select", this, true);
+    this._tabbox.tabpanels.removeEventListener("select", this, true);
 
     while (this._tabbox.tabpanels.hasChildNodes()) {
       this._tabbox.tabpanels.removeChild(this._tabbox.tabpanels.firstChild);

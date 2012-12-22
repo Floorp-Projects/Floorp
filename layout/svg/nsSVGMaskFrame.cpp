@@ -119,20 +119,31 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
     nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
   }
 
-  for (int32_t y = 0; y < surfaceSize.height; y++)
-    for (int32_t x = 0; x < surfaceSize.width; x++) {
-      uint8_t *pixel = data + stride * y + 4 * x;
+  if (GetStyleSVGReset()->mMaskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+    for (int32_t y = 0; y < surfaceSize.height; y++) {
+      for (int32_t x = 0; x < surfaceSize.width; x++) {
+        uint8_t *pixel = data + stride * y + 4 * x;
 
-      /* linearRGB -> intensity */
-      uint8_t alpha =
-        static_cast<uint8_t>
-                   ((pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
-                        pixel[GFX_ARGB32_OFFSET_G] * 0.7154 +
-                        pixel[GFX_ARGB32_OFFSET_B] * 0.0721) *
-                       (pixel[GFX_ARGB32_OFFSET_A] / 255.0) * aOpacity);
+        /* linearRGB -> intensity */
+        uint8_t alpha =
+          static_cast<uint8_t>
+                     ((pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
+                          pixel[GFX_ARGB32_OFFSET_G] * 0.7154 +
+                          pixel[GFX_ARGB32_OFFSET_B] * 0.0721) *
+                         (pixel[GFX_ARGB32_OFFSET_A] / 255.0) * aOpacity);
 
-      memset(pixel, alpha, 4);
+        memset(pixel, alpha, 4);
+      }
     }
+  } else {
+    for (int32_t y = 0; y < surfaceSize.height; y++) {
+      for (int32_t x = 0; x < surfaceSize.width; x++) {
+        uint8_t *pixel = data + stride * y + 4 * x;
+        uint8_t alpha = pixel[GFX_ARGB32_OFFSET_A] * aOpacity;
+        memset(pixel, alpha, 4);
+      }
+    }
+  }
 
   gfxPattern *retval = new gfxPattern(image);
   retval->SetMatrix(matrix);

@@ -103,7 +103,7 @@
  * from a signal handler when the JIT code is executing.
  */
 
-struct JSFunction;
+class JSFunction;
 
 namespace js {
 

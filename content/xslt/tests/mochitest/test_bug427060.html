@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=427060
 /** Test for Bug 427060 **/
 
 var xmldoc, xsltdoc;
-[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for each (xml in [ 
+[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for (xml of [ 
 
     '<opml version="1.0"><body></body></opml>' ,
 

@@ -10,13 +10,13 @@
 #define runnable_utils_h__
 
 #include "nsThreadUtils.h"
+#include "mozilla/RefPtr.h"
 
 // Abstract base class for all of our templates
 namespace mozilla {
 
 class runnable_args_base : public nsRunnable {
  public:
-
   NS_IMETHOD Run() = 0;
 };
 
@@ -39,7 +39,25 @@ class runnable_args_base : public nsRunnable {
 #include "runnable_utils_generated.h"
 
 // Temporary hack. Really we want to have a template which will do this
-#define RUN_ON_THREAD(t, r, h) ((t && (t != nsRefPtr<nsIThread>(do_GetCurrentThread()))) ? t->Dispatch(r, h) : r->Run())
+static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, nsIRunnable *runnable, uint32_t flags) {
+  RefPtr<nsIRunnable> runnable_ref(runnable);
+  
+  if (thread && (thread != nsRefPtr<nsIThread>(do_GetCurrentThread()))) {
+    return thread->Dispatch(runnable_ref, flags);
+  }
+
+  return runnable_ref->Run();
+}
+
+#define ASSERT_ON_THREAD(t) do {                \
+    if (t) {                                    \
+      bool on;                                    \
+      nsresult rv;                                \
+      rv = t->IsOnCurrentThread(&on);             \
+      MOZ_ASSERT(NS_SUCCEEDED(rv));               \
+      MOZ_ASSERT(on);                             \
+    }                                           \
+  } while(0)
 }
 
 #endif

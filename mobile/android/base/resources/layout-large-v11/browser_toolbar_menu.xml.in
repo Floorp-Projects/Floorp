@@ -69,16 +69,8 @@
 
             </Gecko.RelativeLayout>
 
-            <org.mozilla.gecko.ForwardButton android:id="@+id/forward"
-                                             style="@style/AddressBar.ImageButton"
-                                             android:layout_width="64dip"
-                                             android:layout_height="42dip"
-                                             android:layout_marginLeft="21dp"
-                                             android:paddingLeft="21dp"
-                                             android:layout_gravity="center_vertical"
-                                             android:src="@drawable/ic_menu_forward"
-                                             android:contentDescription="@string/forward"
-                                             android:background="@drawable/address_bar_nav_button"/>
+            <org.mozilla.gecko.ForwardButton style="@style/AddressBar.ImageButton.Forward"
+                                             android:id="@+id/forward"/>
 
             <org.mozilla.gecko.BackButton android:id="@+id/back"
                                           style="@style/AddressBar.ImageButton"
@@ -90,12 +82,8 @@
                                           android:contentDescription="@string/back"
                                           android:background="@drawable/address_bar_nav_button"/>
 
-            <LinearLayout style="@style/AddressBar.Button"
-                          android:layout_marginLeft="90dp"
-                          android:layout_marginTop="6dp"
-                          android:layout_marginBottom="6dp"
-                          android:layout_marginRight="0dp"
-                          android:orientation="horizontal">
+            <LinearLayout style="@style/AddressBar.Button.Container"
+                          android:id="@+id/addressbar">
 
                 <ImageButton android:id="@+id/favicon"
                              style="@style/AddressBar.ImageButton"

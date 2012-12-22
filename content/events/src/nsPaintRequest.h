@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,15 +11,37 @@
 #include "nsPresContext.h"
 #include "nsIDOMEvent.h"
 #include "mozilla/Attributes.h"
+#include "nsClientRect.h"
 #include "nsWrapperCache.h"
 
 class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
+                               , public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
+  nsPaintRequest(nsIDOMEvent* aParent)
+    : mParent(aParent)
+  {
+    mRequest.mFlags = 0;
+    SetIsDOMBinding();
+  }
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequest)
   NS_DECL_NSIDOMPAINTREQUEST
 
-  nsPaintRequest() { mRequest.mFlags = 0; }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap) MOZ_OVERRIDE;
+
+  nsIDOMEvent* GetParentObject() const
+  {
+    return mParent;
+  }
+
+  already_AddRefed<nsClientRect> ClientRect();
+  void GetReason(nsAString& aResult) const
+  {
+    aResult.AssignLiteral("repaint");
+  }
 
   void SetRequest(const nsInvalidateRequestList::Request& aRequest)
   { mRequest = aRequest; }
@@ -27,6 +49,7 @@ public:
 private:
   ~nsPaintRequest() {}
 
+  nsCOMPtr<nsIDOMEvent> mParent;
   nsInvalidateRequestList::Request mRequest;
 };
 
@@ -50,7 +73,10 @@ public:
     return mParent;
   }
 
-  void Append(nsIDOMPaintRequest* aElement) { mArray.AppendObject(aElement); }
+  void Append(nsPaintRequest* aElement)
+  {
+    mArray.AppendElement(aElement);
+  }
 
   static nsPaintRequestList* FromSupports(nsISupports* aSupports)
   {
@@ -71,23 +97,23 @@ public:
 
   uint32_t Length()
   {
-    return mArray.Count();
+    return mArray.Length();
   }
 
-  nsIDOMPaintRequest* Item(uint32_t aIndex)
+  nsPaintRequest* Item(uint32_t aIndex)
   {
-    return mArray.SafeObjectAt(aIndex);
+    return mArray.SafeElementAt(aIndex);
   }
-  nsIDOMPaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
+  nsPaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
-    aFound = aIndex < static_cast<uint32_t>(mArray.Count());
-    return aFound ? mArray.ObjectAt(aIndex) : nullptr;
+    aFound = aIndex < mArray.Length();
+    return aFound ? mArray.ElementAt(aIndex) : nullptr;
   }
 
 private:
   ~nsPaintRequestList() {}
 
-  nsCOMArray<nsIDOMPaintRequest> mArray;
+  nsTArray< nsRefPtr<nsPaintRequest> > mArray;
   nsCOMPtr<nsIDOMEvent> mParent;
 };
 

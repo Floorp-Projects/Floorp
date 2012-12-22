@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: loader.c,v 1.57 2012/06/28 17:55:05 rrelyea%redhat.com Exp $ */
+/* $Id: loader.c,v 1.58 2012/12/13 22:47:15 wtc%google.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1851,10 +1851,10 @@ PQG_ParamGenV2( unsigned int L, unsigned int N, unsigned int seedBytes,
   return (vector->p_PQG_ParamGenV2)(L, N, seedBytes, pParams, pVfy); 
 }
 
-PRBool
+SECStatus
 PRNGTEST_RunHealthTests(void)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-      return PR_FALSE;
+      return SECFailure;
   return vector->p_PRNGTEST_RunHealthTests();
 }

@@ -1635,8 +1635,19 @@ pref("layout.css.dpi", -1);
 // of a CSS "px". This is only used for windows on the screen, not for printing.
 pref("layout.css.devPixelsPerPx", "-1.0");
 
+// Is support for CSS Masking features enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.masking.enabled", false);
+#else
+pref("layout.css.masking.enabled", true);
+#endif
+
 // Is support for the the @supports rule enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.supports-rule.enabled", false);
+#else
 pref("layout.css.supports-rule.enabled", true);
+#endif
 
 // Is support for CSS Flexbox enabled?
 pref("layout.css.flexbox.enabled", true);
@@ -1741,9 +1752,11 @@ pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
 pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 #endif
 
-// Disable oopp for standard java. They run their own process isolation (which
-// conflicts with our implementation, at least on Windows).
+#ifdef XP_WIN
+// Disable oopp for java on windows. They run their own
+// process isolation which conflicts with our implementation.
 pref("dom.ipc.plugins.java.enabled", false);
+#endif
 
 pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
 

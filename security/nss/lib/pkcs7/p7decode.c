@@ -5,7 +5,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.30 2012/11/27 22:48:08 bsmith%mozilla.com Exp $
+ * $Id: p7decode.c,v 1.31 2012/12/12 19:25:36 wtc%google.com Exp $
  */
 
 #include "p7local.h"
@@ -407,7 +407,6 @@ sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
     PK11SymKey *bulkkey = NULL;
     SECOidTag keyalgtag, bulkalgtag, encalgtag;
     PK11SlotInfo *slot = NULL;
-    int bulkLength = 0;
 
     if (recipientinfos == NULL || recipientinfos[0] == NULL) {
 	p7dcx->error = SEC_ERROR_NOT_A_RECIPIENT;

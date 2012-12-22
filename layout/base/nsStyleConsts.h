@@ -859,6 +859,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY  2
 #define NS_STYLE_IMAGE_RENDERING_CRISPEDGES       3
 
+// mask-type
+#define NS_STYLE_MASK_TYPE_LUMINANCE            0
+#define NS_STYLE_MASK_TYPE_ALPHA                1
+
 // shape-rendering
 #define NS_STYLE_SHAPE_RENDERING_AUTO               0
 #define NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED      1

@@ -320,7 +320,7 @@ BarrieredSetPair(JSCompartment *comp,
     v2.post();
 }
 
-struct Shape;
+class Shape;
 class BaseShape;
 namespace types { struct TypeObject; }
 

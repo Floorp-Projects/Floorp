@@ -120,7 +120,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 //   b) let its fn_onmessage, fn_event_listener_message, and fn_other_event_name functions listeners be hit four times each
 //   c) the close method (we expect readyState == CLOSED)
 //   d) the close method (we expect no message events anymore)
-//   e) if the ctor throws an exception when the second parameter is null
+//   e) use the default for withCredentials when passing dictionary arguments that don't explicitly set it
 
   function doTest1(test_id) {
     gEventSourceObj1 = new EventSource("eventsource.resource");
@@ -170,11 +170,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest1_e(test_id) {
     try {
-      gEventSourceObj1_e = new EventSource("eventsource.resource", null);
-      ok(false, "Test 1.e failed");
-      gEventSourceObj1_e.close();
+      for (var options of [null, undefined, {}]) {
+        gEventSourceObj1_e = new EventSource("eventsource.resource", options);
+        is(gEventSourceObj1_e.withCredentials, false, "withCredentials should default to false");
+        gEventSourceObj1_e.close();
+      }
     } catch (e) {
-      ok(true, "Test 1.e failed");
+      ok(false, "Test 1.e failed");
     }
     setTestHasFinished(test_id);
   }
