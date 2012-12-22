@@ -30,6 +30,7 @@ include svg-integration/reftest.list
 == clip-02b.svg clip-02-ref.svg
 == clipPath-advanced-01.svg pass.svg
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,2) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
+== clipPath-and-transform-01.svg pass.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
 == clipPath-basic-03.svg pass.svg
@@ -177,6 +178,11 @@ fuzzy-if(Android,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
 == mask-extref-dataURI-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
+== mask-transformed-02.svg pass.svg
+pref(layout.css.masking.enabled,true) == mask-type-01.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-02.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-03.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
@@ -195,6 +201,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
+== opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
 == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg

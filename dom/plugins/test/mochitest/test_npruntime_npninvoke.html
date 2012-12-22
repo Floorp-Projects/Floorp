@@ -115,7 +115,7 @@
     var plugin = document.getElementById("plugin1");
     
     var result;
-    for each (var test in tests) {
+    for (var test of tests) {
       switch (test[0].length) {
         case 2:
           result = plugin.npnInvokeTest(test[0][0], test[0][1]);

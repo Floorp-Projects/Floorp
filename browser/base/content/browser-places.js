@@ -440,7 +440,7 @@ var PlacesCommandHook = {
    * @param   aLeftPaneRoot
    *          The query to select in the organizer window - options
    *          are: History, AllBookmarks, BookmarksMenu, BookmarksToolbar,
-   *          UnfiledBookmarks and Tags.
+   *          UnfiledBookmarks, Tags and Downloads.
    */
   showPlacesOrganizer: function PCH_showPlacesOrganizer(aLeftPaneRoot) {
     var organizer = Services.wm.getMostRecentWindow("Places:Organizer");

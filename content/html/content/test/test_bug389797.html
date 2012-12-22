@@ -41,8 +41,7 @@ function HTML_TAG(aTagName, aImplClass) {
   // inherit from them do.
   interfacesNonClassinfo[aTagName] =
     [ "nsIDOMNode",
-      "nsIDOMElement",
-      "nsISupportsWeakReference" ];
+      "nsIDOMElement" ];
 
   var interfaceName = "nsIDOM" + getClassName(aTagName);
   if (interfaceName in SpecialPowers.Ci) {  // no nsIDOMHTMLSpanElement
@@ -78,7 +77,7 @@ const objectIfaces = [
   ];
 
 var objectIfaces2 = [];
-for each (var iface in objectIfaces) {
+for (var iface of objectIfaces) {
   objectIfaces2.push(iface);
 }
 objectIfaces2.push("nsIImageLoadingContent");
@@ -227,7 +226,7 @@ function tagName(aTag) {
   return "<" + aTag + ">";
 }
 
-for each (var tag in allTags) {
+for (var tag of allTags) {
   var node = document.createElement(tag);
 
   // Have to use the proto's toString(), since HTMLAnchorElement and company
@@ -249,7 +248,7 @@ for each (var tag in allTags) {
      tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
 
   // Check that each node QIs to all the things we expect it to QI to
-  for each (var iface in interfaces[tag].concat(interfacesNonClassinfo[tag])) {
+  for (var iface of interfaces[tag].concat(interfacesNonClassinfo[tag])) {
     is(iface in SpecialPowers.Ci, true,
        iface + " not in Components.interfaces");
     is(node instanceof SpecialPowers.Ci[iface], true,
@@ -265,14 +264,14 @@ for each (var tag in allTags) {
     map(function(id) { return SpecialPowers.Components.interfacesByID[id].toString(); });
 
   // Make sure that we know about all the things classinfo claims
-  for each (var classInfoInterface in classInfoInterfaces) {
+  for (var classInfoInterface of classInfoInterfaces) {
     isnot(interfaces[tag].indexOf(classInfoInterface), -1,
           "Should know about " + tagName(tag) + " implementing " +
           classInfoInterface);
   }
 
   // And make sure classinfo claims all the things we know about
-  for each (iface in interfaces[tag]) {
+  for (iface of interfaces[tag]) {
     isnot(classInfoInterfaces.indexOf(iface), -1,
           "Classinfo for " + tagName(tag) + " should claim to implement " +
           iface);

@@ -1772,7 +1772,10 @@ _convertpoint(NPP instance,
               double *destX, double *destY, NPCoordinateSpace destSpace)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
+    if (!IsPluginThread()) {
+        NS_WARNING("Not running on the plugin's main thread!");
+        return false;
+    }
 
     double rDestX = 0;
     bool ignoreDestX = !destX;

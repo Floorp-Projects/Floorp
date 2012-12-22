@@ -5,7 +5,7 @@
 /*
  * CMS ASN.1 templates
  *
- * $Id: cmsasn1.c,v 1.11 2012/04/25 14:50:08 gerv%gerv.net Exp $
+ * $Id: cmsasn1.c,v 1.12 2012/12/13 22:46:04 wtc%google.com Exp $
  */
 
 #include "cmslocal.h"
@@ -453,13 +453,13 @@ const SEC_ASN1Template NSSCMSGenericWrapperDataTemplate[] = {
 	  NSSCMSEncapsulatedContentInfoTemplate },
 };
 
-SEC_ASN1_CHOOSER_IMPLEMENT(NSSCMSGenericWrapperDataTemplate);
+SEC_ASN1_CHOOSER_IMPLEMENT(NSSCMSGenericWrapperDataTemplate)
 
 const SEC_ASN1Template NSS_PointerToCMSGenericWrapperDataTemplate[] = {
     { SEC_ASN1_POINTER, 0, NSSCMSGenericWrapperDataTemplate }
 };
 
-SEC_ASN1_CHOOSER_IMPLEMENT(NSS_PointerToCMSGenericWrapperDataTemplate);
+SEC_ASN1_CHOOSER_IMPLEMENT(NSS_PointerToCMSGenericWrapperDataTemplate)
 
 /* -----------------------------------------------------------------------------
  *

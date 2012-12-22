@@ -217,6 +217,7 @@ public:
   static const int32_t kGetInfoIndex_ItemParentId;
   static const int32_t kGetInfoIndex_ItemTags;
   static const int32_t kGetInfoIndex_Frecency;
+  static const int32_t kGetInfoIndex_Hidden;
 
   int64_t GetTagsFolder();
 
@@ -411,7 +412,8 @@ public:
                      int64_t aSessionID,
                      int64_t referringVisitID,
                      int32_t aTransitionType,
-                     const nsACString& aGUID);
+                     const nsACString& aGUID,
+                     bool aHidden);
 
   /**
    * Fires onTitleChanged event to nsINavHistoryService observers

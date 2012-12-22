@@ -1114,7 +1114,7 @@ struct TypeCallsite
 /* Persistent type information for a script, retained across GCs. */
 class TypeScript
 {
-    friend struct ::JSScript;
+    friend class ::JSScript;
 
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;
