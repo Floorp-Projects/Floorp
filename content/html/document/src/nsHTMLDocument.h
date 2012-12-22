@@ -86,6 +86,14 @@ public:
   // nsIDOMDocument interface
   NS_FORWARD_NSIDOMDOCUMENT(nsDocument::)
 
+  // And explicitly import the things from nsDocument that we just shadowed
+  using nsDocument::GetImplementation;
+  using nsDocument::GetTitle;
+  using nsDocument::SetTitle;
+  using nsDocument::GetLastStyleSheetSet;
+  using nsDocument::MozSetImageElement;
+  using nsDocument::GetMozFullScreenElement;
+
   // nsIDOMNode interface
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
@@ -101,7 +109,7 @@ public:
                                     nsWrapperCache **aCache,
                                     nsresult *aResult);
 
-  nsIContent *GetBody();
+  Element *GetBody();
   Element *GetHead() { return GetHeadElement(); }
   already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
   {

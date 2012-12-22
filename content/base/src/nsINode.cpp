@@ -103,6 +103,7 @@
 #include "nsHTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
+#include "nsDOMDocumentType.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1443,7 +1444,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return true;
       }
 
-      nsIContent* docTypeContent = parentDocument->GetDocumentType();
+      nsIContent* docTypeContent = parentDocument->GetDoctype();
       if (!docTypeContent) {
         // It's all good.
         return true;
@@ -1466,7 +1467,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       }
 
       nsIDocument* parentDocument = static_cast<nsIDocument*>(aParent);
-      nsIContent* docTypeContent = parentDocument->GetDocumentType();
+      nsIContent* docTypeContent = parentDocument->GetDoctype();
       if (docTypeContent) {
         // Already have a doctype, so this is only OK if we're replacing it
         return aIsReplace && docTypeContent == aRefChild;

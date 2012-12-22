@@ -523,18 +523,20 @@ customMethodCalls = {
     'nsIDOMDocument_GetElementsByTagNameNS': {
         'thisType': 'nsDocument',
         'code': '    nsRefPtr<nsContentList> result ='
-                'self->GetElementsByTagNameNS(arg0, arg1);',
+                'self->nsIDocument::GetElementsByTagNameNS(arg0, arg1);',
         'canFail': False
         },
     'nsIDOMDocument_CreateElement': {
         'thisType': 'nsDocument',
-        'code': '    nsCOMPtr<nsIContent> result;\n'
-                '    rv = self->CreateElement(arg0, getter_AddRefs(result));'
+        'code': '    mozilla::ErrorResult error;\n'
+                '    nsCOMPtr<mozilla::dom::Element> result = self->nsIDocument::CreateElement(arg0, error);\n'
+                '    rv = error.ErrorCode();'
     },
     'nsIDOMDocument_CreateElementNS': {
         'thisType': 'nsDocument',
-        'code': '    nsCOMPtr<nsIContent> result;\n'
-                '    rv = self->CreateElementNS(arg0, arg1, getter_AddRefs(result));'
+        'code': '    mozilla::ErrorResult error;\n'
+                '    nsCOMPtr<mozilla::dom::Element> result = self->nsIDocument::CreateElementNS(arg0, arg1, error);\n'
+                '    rv = error.ErrorCode();'
     },
     'nsIDOMDocument_CreateTextNode': {
         'thisType': 'nsDocument',
@@ -564,6 +566,12 @@ customMethodCalls = {
     'nsIDOMDocument_SetOnmouseleave' : {
         'thisType' : 'nsDocument',
         'unwrapThisFailureFatal' : False
+        },
+    'nsIDOMDocument_GetTitle' : {
+        'thisType' : 'nsDocument',
+        'code': '    nsString result;\n'
+                '    self->GetTitle(result);',
+        'canFail': False
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',

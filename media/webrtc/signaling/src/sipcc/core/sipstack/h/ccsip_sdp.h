@@ -142,7 +142,7 @@ PMH_EXTERN void sipsdp_free(cc_sdp_t **sip_sdp);
  * Memory is allocated and should be freed by the user when done
  * Returns NULL on failure.
  */
-PMH_EXTERN char *sipsdp_write_to_buf(cc_sdp_t *, uint32_t *);
+PMH_EXTERN char *sipsdp_write_to_buf(sdp_t *, uint32_t *);
 
 #define SIPSDP_FREE(x) \
 if (x) \

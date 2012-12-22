@@ -134,6 +134,13 @@ function runTest()
   is(text2aBounds.left, text1aBounds.left + 100 - 3, "text2a.getBoundingClientRect().left");
   is(text2aBounds.width, text1aBounds.width + 6, "text2a.getBoundingClientRect().width");
 
+  var i = doc.getElementById("i");
+  var iBounds = i.getBoundingClientRect();
+  is(iBounds.left, 20, "i.getBoundingClientRect().left");
+  is(iBounds.top, 20, "i.getBoundingClientRect().top");
+  is(iBounds.width, 200, "i.getBoundingClientRect().width");
+  is(iBounds.height, 200, "i.getBoundingClientRect().height");
+
   SimpleTest.finish();
 }
 

@@ -140,6 +140,13 @@ public:
 
     // nsIDOMDocument interface
     NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
+    // And explicitly import the things from nsDocument that we just shadowed
+    using nsDocument::GetImplementation;
+    using nsDocument::GetTitle;
+    using nsDocument::SetTitle;
+    using nsDocument::GetLastStyleSheetSet;
+    using nsDocument::MozSetImageElement;
+    using nsDocument::GetMozFullScreenElement;
 
     // nsDocument interface overrides
     virtual mozilla::dom::Element* GetElementById(const nsAString & elementId);
