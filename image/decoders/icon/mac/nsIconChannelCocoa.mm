@@ -233,7 +233,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
 
   // if we don't have an icon yet try to get one by extension
   if (!iconImage && !fileExt.IsEmpty()) {
-    NSString* fileExtension = [NSString stringWithUTF8String:PromiseFlatCString(fileExt).get()];
+    NSString* fileExtension = [NSString stringWithUTF8String:fileExt.get()];
     iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:fileExtension];
   }
 
