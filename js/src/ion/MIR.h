@@ -1470,7 +1470,7 @@ class MCompare
             return AliasSet::None();
         if (compareType_ == Compare_Unknown)
             return AliasSet::Store(AliasSet::Any);
-        JS_ASSERT(compareType_ <= Compare_Object);
+        JS_ASSERT(compareType_ <= Compare_Value);
         return AliasSet::None();
     }
 
