@@ -208,8 +208,7 @@ nsresult nsProfileLock::LockWithFcntl(nsIFile *aLockFile)
 
     aLockFile->GetLastModifiedTime(&mReplacedLockTime);
 
-    mLockFileDesc = open(PromiseFlatCString(lockFilePath).get(),
-                          O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    mLockFileDesc = open(lockFilePath.get(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (mLockFileDesc != -1)
     {
         struct flock lock;
@@ -336,8 +335,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
     char *signature =
         PR_smprintf("%s:%s%lu", inet_ntoa(inaddr), aHaveFcntlLock ? "+" : "",
                     (unsigned long)getpid());
-    const nsPromiseFlatCString& flat = PromiseFlatCString(lockFilePath);
-    const char *fileName = flat.get();
+    const char *fileName = lockFilePath.get();
     int symlink_rv, symlink_errno = 0, tries = 0;
 
     // use ns4.x-compatible symlinks if the FS supports them

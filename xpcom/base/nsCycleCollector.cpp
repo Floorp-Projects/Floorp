@@ -1615,10 +1615,11 @@ private:
             // On android the default system umask is 0077 which makes these files
             // unreadable to the shell user. In order to pull the dumps off a non-rooted
             // device we need to chmod them to something world-readable.
+            // XXX why not logFile->SetPermissions(0644);
             nsAutoCString path;
             rv = logFile->GetNativePath(path);
             if (NS_SUCCEEDED(rv)) {
-                chmod(PromiseFlatCString(path).get(), 0644);
+                chmod(path.get(), 0644);
             }
         }
 #endif
