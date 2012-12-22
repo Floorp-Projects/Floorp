@@ -168,6 +168,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     unicodeMsg.AssignWithConversion(msg);
     JSAutoRequest ar(cx);
     JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, (jschar*) unicodeMsg.get());
+    NS_ENSURE_TRUE(jsMsgStr, NS_ERROR_OUT_OF_MEMORY);
 
     params[0] = BOOLEAN_TO_JSVAL(server);
     params[1] = STRING_TO_JSVAL(jsMsgStr);
