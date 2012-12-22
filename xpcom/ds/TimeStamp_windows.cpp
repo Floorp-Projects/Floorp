@@ -133,6 +133,9 @@ static const ULONGLONG kOverflowLimit = 100;
 // which is the most usual increment.
 static const DWORD kDefaultTimeIncrement = 156001;
 
+// Time since GTC fallback after we forbid recalibration on wake up [ms]
+static const DWORD kForbidRecalibrationTime = 2000;
+
 // ----------------------------------------------------------------------------
 // Global variables, not changing at runtime
 // ----------------------------------------------------------------------------
@@ -167,6 +170,12 @@ static LONGLONG sFrequencyPerSec = 0;
 // Kept in [mt]
 static LONGLONG sUnderrunThreshold;
 static LONGLONG sOverrunThreshold;
+
+// QPC may be reset after wake up.  But because we may return GTC + sSkew
+// for a short time before we reclibrate after wakeup, result of 
+// CalibratedPerformanceCounter may go radically backwrads.  We have
+// to compensate this jump.
+static LONGLONG sWakeupAdjust = 0;
 
 // ----------------------------------------------------------------------------
 // Global lock
@@ -206,6 +215,11 @@ static ULONGLONG sLastResult = 0;
 //
 // Kept in [ms]
 static ULONGLONG sLastCalibrated;
+
+// Time of fallback to GTC
+//
+// Kept in [ms] and filled only with value of GTC
+static ULONGLONG sFallbackTime = 0;
 
 // The following variable stores two booleans, both initialized to false.
 //
@@ -327,11 +341,19 @@ StandbyObserver::Observe(nsISupports *subject,
 {
   AutoCriticalSection lock(&sTimeStampLock);
 
+  CalibrationFlags value;
+  value.dwordValue = sCalibrationFlags.dwordValue;
+
+  if (value.flags.fallBackToGTC &&
+      ((sGetTickCount64() - sFallbackTime) > kForbidRecalibrationTime)) {
+    LOG(("Disallowing recalibration since the time from fallback is too long"));
+    return NS_OK;
+  }
+
   // Clear the potentiall fallback flag now and try using
   // QPC again after wake up.
-  CalibrationFlags value;
+  value.flags.forceRecalibrate = value.flags.fallBackToGTC;
   value.flags.fallBackToGTC = false;
-  value.flags.forceRecalibrate = true;
   sCalibrationFlags.dwordValue = value.dwordValue; // aligned 32-bit writes are atomic
 
   LOG(("TimeStamp: system has woken up, reset GTC fallback"));
@@ -465,11 +487,12 @@ PerformanceCounter()
 
 // Called when we detect a larger deviation of QPC to disable it.
 static inline void
-RecordFlaw()
+RecordFlaw(ULONGLONG gtc)
 {
   sCalibrationFlags.flags.fallBackToGTC = true;
+  sFallbackTime = gtc;
 
-  LOG(("TimeStamp: falling back to GTC :("));
+  LOG(("TimeStamp: falling back to GTC at %llu :(", gtc));
 
 #if 0
   // This code has been disabled, because we:
@@ -526,7 +549,7 @@ CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
       // This sets fallBackToGTC, we have detected
       // an unreliability of QPC, stop using it.
       AutoCriticalSection lock(&sTimeStampLock);
-      RecordFlaw();
+      RecordFlaw(gtc);
       return false;
     }
   }
@@ -534,10 +557,19 @@ CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
   if (sinceLastCalibration > kCalibrationInterval || value.flags.forceRecalibrate) {
     // Recalculate the skew now
     AutoCriticalSection lock(&sTimeStampLock);
+
+    // If this is forced recalibration after wakeup, we have to take care of any large
+    // QPC jumps from GTC + current skew.  It can happen that QPC after waking up is
+    // reset or jumps a lot to the past.  When we would start using QPC again
+    // the result of CalibratedPerformanceCounter would go radically back - actually
+    // stop increasing since there is a simple MAX(last, now) protection.
+    if (value.flags.forceRecalibrate)
+      sWakeupAdjust += sSkew - (qpc - ms2mt(gtc));
+
     sSkew = qpc - ms2mt(gtc);
     sLastCalibrated = gtc;
-    LOG(("TimeStamp: new skew is %1.2fms (force:%d)",
-      mt2ms_d(sSkew), value.flags.forceRecalibrate));
+    LOG(("TimeStamp: new skew is %1.2fms, wakeup adjust is %1.2fms (force:%d)",
+      mt2ms_d(sSkew), mt2ms_d(sWakeupAdjust), value.flags.forceRecalibrate));
 
     sCalibrationFlags.flags.forceRecalibrate = false;
   }
@@ -588,7 +620,7 @@ CalibratedPerformanceCounter()
   // the largest bottleneck, let threads read the value concurently to have
   // possibly a better performance.
 
-  ULONGLONG qpc = PerformanceCounter();
+  ULONGLONG qpc = PerformanceCounter() + sWakeupAdjust;
 
   // Rollover protection
   ULONGLONG gtc = sGetTickCount64();
@@ -707,7 +739,7 @@ TimeStamp::Startup()
 
   sHasStableTSC = HasStableTSC();
 
-  LOG(("TimeStamp: initial skew is %1.2fms", mt2ms_d(sSkew)));
+  LOG(("TimeStamp: initial skew is %1.2fms, sHasStableTSC=%d", mt2ms_d(sSkew), sHasStableTSC));
 
   return NS_OK;
 }
