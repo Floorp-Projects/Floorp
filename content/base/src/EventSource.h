@@ -10,8 +10,8 @@
  * and "Accept".
  */
 
-#ifndef nsEventSource_h__
-#define nsEventSource_h__
+#ifndef mozilla_dom_EventSource_h
+#define mozilla_dom_EventSource_h
 
 #include "nsIEventSource.h"
 #include "nsIJSNativeInitializer.h"
@@ -33,25 +33,27 @@
 
 #define NS_EVENTSOURCE_CONTRACTID "@mozilla.org/eventsource;1"
 
-class AsyncVerifyRedirectCallbackFwr;
-class nsAutoClearFields;
+namespace mozilla {
+namespace dom {
 
-class nsEventSource: public nsDOMEventTargetHelper,
-                     public nsIEventSource,
-                     public nsIJSNativeInitializer,
-                     public nsIObserver,
-                     public nsIStreamListener,
-                     public nsIChannelEventSink,
-                     public nsIInterfaceRequestor,
-                     public nsSupportsWeakReference
+class AsyncVerifyRedirectCallbackFwr;
+
+class EventSource : public nsDOMEventTargetHelper
+                  , public nsIEventSource
+                  , public nsIJSNativeInitializer
+                  , public nsIObserver
+                  , public nsIStreamListener
+                  , public nsIChannelEventSink
+                  , public nsIInterfaceRequestor
+                  , public nsSupportsWeakReference
 {
 friend class AsyncVerifyRedirectCallbackFwr;
 
 public:
-  nsEventSource();
-  virtual ~nsEventSource();
+  EventSource();
+  virtual ~EventSource();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(nsEventSource,
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(EventSource,
                                                                    nsDOMEventTargetHelper)
 
   NS_DECL_NSIEVENTSOURCE
@@ -226,8 +228,11 @@ protected:
   uint64_t mInnerWindowID;
 
 private:
-  nsEventSource(const nsEventSource& x);   // prevent bad usage
-  nsEventSource& operator=(const nsEventSource& x);
+  EventSource(const EventSource& x);   // prevent bad usage
+  EventSource& operator=(const EventSource& x);
 };
 
-#endif // nsEventSource_h__
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_EventSource_h
