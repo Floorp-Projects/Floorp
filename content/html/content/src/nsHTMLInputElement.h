@@ -572,6 +572,19 @@ protected:
   bool ConvertStringToNumber(nsAString& aValue, double& aResultValue) const;
 
   /**
+   * Convert a double to a string in a type specific way, ie convert a timestamp
+   * to a date string if type=date or append the number string representing the
+   * value if type=number.
+   *
+   * @param aValue the double to be converted
+   * @param aResultString [out] the string representing the double
+   * @return whether the function succeded, it will fail if the current input's
+   *         type is not supported or the number can't be converted to a string
+   *         as expected by the type.
+   */
+  bool ConvertNumberToString(double aValue, nsAString& aResultString) const;
+
+  /**
    * Parse a date string of the form yyyy-mm-dd
    * @param the string to be parsed.
    * @return whether the string is a valid date.
@@ -618,6 +631,13 @@ protected:
    * Returns NaN if the max attribute isn't a valid floating point number.
    */
   double GetMaxAsDouble() const;
+
+   /**
+    * Get the step scale value for the current type.
+    * See:
+    * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#concept-input-step-scale
+    */
+  double GetStepScaleFactor() const;
 
   /**
    * Returns the current step value.
@@ -687,6 +707,10 @@ protected:
    * where type= "text", "email", "search", "tel", "url" or "password".
    */
   nsString mFocusedValue;  
+
+  // Step scale factor values, for input types that have one.
+  static const double kStepScaleFactorDate;
+  static const double kStepScaleFactorNumber;
 
   // Default step base value when a type do not have specific one.
   static const double kDefaultStepBase;
