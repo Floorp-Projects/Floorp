@@ -320,7 +320,8 @@ struct BaseShape {
     JSObject    *parent;
 };
 
-struct Shape {
+class Shape {
+public:
     shadow::BaseShape *base;
     jsid              _1;
     uint32_t          slotInfo;
