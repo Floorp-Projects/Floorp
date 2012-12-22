@@ -20,6 +20,14 @@ public:
 
   NS_DECL_NSIDOMSVGDOCUMENT
   NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
+  // And explicitly import the things from nsDocument that we just shadowed
+  using nsDocument::GetImplementation;
+  using nsDocument::GetTitle;
+  using nsDocument::SetTitle;
+  using nsDocument::GetLastStyleSheetSet;
+  using nsDocument::MozSetImageElement;
+  using nsDocument::GetMozFullScreenElement;
+
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_DECL_ISUPPORTS_INHERITED
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;

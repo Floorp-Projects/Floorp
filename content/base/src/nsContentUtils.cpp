@@ -1506,7 +1506,7 @@ nsContentUtils::Shutdown()
  */
 // static
 nsresult
-nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
+nsContentUtils::CheckSameOrigin(const nsINode *aTrustedNode,
                                 nsIDOMNode *aUnTrustedNode)
 {
   MOZ_ASSERT(aTrustedNode);
@@ -1518,8 +1518,8 @@ nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
 }
 
 nsresult
-nsContentUtils::CheckSameOrigin(nsINode* aTrustedNode,
-                                nsINode* unTrustedNode)
+nsContentUtils::CheckSameOrigin(const nsINode* aTrustedNode,
+                                const nsINode* unTrustedNode)
 {
   MOZ_ASSERT(aTrustedNode);
   MOZ_ASSERT(unTrustedNode);
