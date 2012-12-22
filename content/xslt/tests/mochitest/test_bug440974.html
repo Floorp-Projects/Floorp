@@ -26,7 +26,7 @@ function isTxResult(node)
 }
 
 var xmldoc, xsltdoc;
-[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for each (xml in [ 
+[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for (xml of [ 
 
     '<items><item><id>1</id></item><item><id>2</id></item><item><id>3</id></item></items>' ,
 

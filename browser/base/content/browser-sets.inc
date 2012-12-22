@@ -351,12 +351,10 @@
     <key id="sharePage" key="&sharePageCmd.commandkey;" command="Social:SharePage" modifiers="accel,shift"/>
     <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Social:FocusChat" modifiers="accel,shift"/>
 
-# don't use |command="Browser:Stop"|, ESC is being used to freeze animated gifs,
-# even if the stop button and menuitem are disabled (see Bug 284140)
-    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+    <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 
 #ifdef XP_MACOSX
-    <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
+    <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" command="Browser:Stop"/>
 #endif
 
     <key id="key_gotoHistory"

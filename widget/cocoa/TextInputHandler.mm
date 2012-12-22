@@ -1609,6 +1609,8 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
       // is caused by pressing or releasing a modifier key.
       bool isKeyDown = ([aNativeEvent modifierFlags] & diff) != 0;
       DispatchKeyEventForFlagsChanged(aNativeEvent, isKeyDown);
+      // XXX Some applications might send the event with incorrect device-
+      //     dependent flags.
       if (isKeyDown && ((diff & ~NSDeviceIndependentModifierFlagsMask) != 0)) {
         unsigned short keyCode = [aNativeEvent keyCode];
         ModifierKey* modifierKey = GetModifierKeyForDeviceDependentFlags(diff);
@@ -1642,41 +1644,65 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
           continue;
         }
 
+        // Given correct information from the application, a flag change here
+        // will normally be a deactivation (except for some lockable modifiers
+        // such as CapsLock).  But some applications (like VNC) can send an
+        // activating event with a zero keyCode.  So we need to check for that
+        // here.
+        bool dispatchKeyDown = ((flag & [aNativeEvent modifierFlags]) != 0);
+
         unsigned short keyCode = 0;
-        bool dispatchKeyDown = false;
         if (flag & NSDeviceIndependentModifierFlagsMask) {
           switch (flag) {
             case NSAlphaShiftKeyMask:
               keyCode = kVK_CapsLock;
               dispatchKeyDown = true;
               break;
+
             case NSNumericPadKeyMask:
-              keyCode = kVK_ANSI_KeypadClear;
-              dispatchKeyDown = true;
-              break;
+              // NSNumericPadKeyMask is fired by VNC a lot. But not all of
+              // these events can really be Clear key events, so we just ignore
+              // them.
+              continue;
+
             case NSHelpKeyMask:
-              // NSHelpKeyMask change here must be a deactivation.
-              MOZ_ASSERT(!(flag & [aNativeEvent modifierFlags]));
               keyCode = kVK_Help;
               break;
+
             case NSFunctionKeyMask:
-              // NSFunctionKeyMask change here must be a deactivation.
-              MOZ_ASSERT(!(flag & [aNativeEvent modifierFlags]));
-              // We don't dispatch function key event for now.
+              // An NSFunctionKeyMask change here will normally be a
+              // deactivation.  But sometimes it will be an activation send (by
+              // VNC for example) with a zero keyCode.
               continue;
+
+            // These cases (NSShiftKeyMask, NSControlKeyMask, NSAlternateKeyMask
+            // and NSCommandKeyMask) should be handled by the other branch of
+            // the if statement, below (which handles device dependent flags).
+            // However, some applications (like VNC) can send key events without
+            // any device dependent flags, so we handle them here instead.
+            case NSShiftKeyMask:
+              keyCode = (modifiers & 0x0004) ? kVK_RightShift : kVK_Shift;
+              break;
+            case NSControlKeyMask:
+              keyCode = (modifiers & 0x2000) ? kVK_RightControl : kVK_Control;
+              break;
+            case NSAlternateKeyMask:
+              keyCode = (modifiers & 0x0040) ? kVK_RightOption : kVK_Option;
+              break;
+            case NSCommandKeyMask:
+              keyCode = (modifiers & 0x0010) ? kVK_RightCommand : kVK_Command;
+              break;
+
             default:
-              // The other cases (NSShiftKeyMask, NSControlKeyMask,
-              // NSAlternateKeyMask and NSCommandKeyMask) are handled by the
-              // other branch of the if statement, below (which handles device
-              // dependent flags).
               continue;
           }
         } else {
-          // Any modifier change here must be a deactivation.
-          MOZ_ASSERT(!(flag & [aNativeEvent modifierFlags]));
           ModifierKey* modifierKey =
             GetModifierKeyForDeviceDependentFlags(flag);
           if (!modifierKey) {
+            // See the note above (in the other branch of the if statement)
+            // about the NSShiftKeyMask, NSControlKeyMask, NSAlternateKeyMask
+            // and NSCommandKeyMask cases.
             continue;
           }
           keyCode = modifierKey->keyCode;

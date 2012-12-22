@@ -78,12 +78,14 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new FindInPageBar(context, attrs);
             else if (TextUtils.equals(viewName, "MenuButton"))
                 return new MenuButton(context, attrs);
+            else if (TextUtils.equals(viewName, "RemoteTabs"))
+                return new RemoteTabs(context, attrs);
             else if (TextUtils.equals(viewName, "TabsButton"))
                 return new TabsButton(context, attrs);
             else if (TextUtils.equals(viewName, "TabsPanel"))
                 return new TabsPanel(context, attrs);
-            else if (TextUtils.equals(viewName, "TabsPanelButton"))
-                return new TabsPanelButton(context, attrs);
+            else if (TextUtils.equals(viewName, "TabsTray"))
+                return new TabsTray(context, attrs);
             else if (TextUtils.equals(viewName, "TextSelectionHandle"))
                 return new TextSelectionHandle(context, attrs);
             else if (TextUtils.equals(viewName, "gfx.LayerView"))

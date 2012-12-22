@@ -819,6 +819,11 @@ AddExtKeyUsage(void *extHandle, Pair *data)
     if( SECSuccess != rv ) goto loser;
   }
 
+  if( find_field_bool(data, "extKeyUsage-msTrustListSign", PR_TRUE) ) {
+    rv = AddOidToSequence(os, SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING);
+    if( SECSuccess != rv ) goto loser;
+  }
+
   if( find_field_bool(data, "extKeyUsage-clientAuth", PR_TRUE) ) {
     rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH);
     if( SECSuccess != rv ) goto loser;

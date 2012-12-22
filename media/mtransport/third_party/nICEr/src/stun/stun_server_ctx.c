@@ -193,7 +193,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     char string[256];
     nr_stun_message *req = 0;
     nr_stun_message *res = 0;
-    nr_stun_server_client *clnt;
+    nr_stun_server_client *clnt = 0;
     nr_stun_server_request info;
     int error;
 

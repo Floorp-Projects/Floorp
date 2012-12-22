@@ -69,9 +69,6 @@ this.TouchAdapter = {
     target.addEventListener('mousemove', this, true, true);
     target.addEventListener('mouseenter', this, true, true);
     target.addEventListener('mouseleave', this, true, true);
-    target.addEventListener('mousedown', this, true, true);
-    target.addEventListener('mouseup', this, true, true);
-    target.addEventListener('click', this, true, true);
 
     target.addEventListener('touchend', this, true, true);
     target.addEventListener('touchmove', this, true, true);
@@ -97,9 +94,6 @@ this.TouchAdapter = {
     target.removeEventListener('mousemove', this, true, true);
     target.removeEventListener('mouseenter', this, true, true);
     target.removeEventListener('mouseleave', this, true, true);
-    target.removeEventListener('mousedown', this, true, true);
-    target.removeEventListener('mouseup', this, true, true);
-    target.removeEventListener('click', this, true, true);
 
     target.removeEventListener('touchend', this, true, true);
     target.removeEventListener('touchmove', this, true, true);
@@ -128,7 +122,9 @@ this.TouchAdapter = {
         for (var i = 0; i < changedTouches.length; i++) {
           let touch = changedTouches[i];
           let touchPoint = new TouchPoint(touch, timeStamp, this._dpi);
-          this._touchPoints[touch.identifier || this.HOVER_ID] = touchPoint;
+          let identifier = (touch.identifier == undefined) ?
+            this.HOVER_ID : touch.identifier;
+          this._touchPoints[identifier] = touchPoint;
           this._lastExploreTime = timeStamp + this.SWIPE_MAX_DURATION;
         }
         this._dwellTimeout = this.chromeWin.setTimeout(
@@ -140,7 +136,9 @@ this.TouchAdapter = {
       case 'touchmove':
         for (var i = 0; i < changedTouches.length; i++) {
           let touch = changedTouches[i];
-          let touchPoint = this._touchPoints[touch.identifier || this.HOVER_ID];
+          let identifier = (touch.identifier == undefined) ?
+            this.HOVER_ID : touch.identifier;
+          let touchPoint = this._touchPoints[identifier];
           if (touchPoint)
             touchPoint.update(touch, timeStamp);
         }
@@ -153,7 +151,9 @@ this.TouchAdapter = {
       case 'touchend':
         for (var i = 0; i < changedTouches.length; i++) {
           let touch = changedTouches[i];
-          let touchPoint = this._touchPoints[touch.identifier || this.HOVER_ID];
+          let identifier = (touch.identifier == undefined) ?
+            this.HOVER_ID : touch.identifier;
+          let touchPoint = this._touchPoints[identifier];
           if (touchPoint) {
             touchPoint.update(touch, timeStamp);
             touchPoint.finish();

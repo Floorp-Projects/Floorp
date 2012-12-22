@@ -38,7 +38,7 @@ function checkDisabledPseudoClass(aElement, aDisabled)
   var disabledElements = document.querySelectorAll(":disabled");
   var found = false;
 
-  for each(var e in disabledElements) {
+  for (var e of disabledElements) {
     if (aElement == e) {
       found = true;
       break;
@@ -55,7 +55,7 @@ function checkEnabledPseudoClass(aElement, aEnabled)
   var enabledElements = document.querySelectorAll(":enabled");
   var found = false;
 
-  for each(var e in enabledElements) {
+  for (var e of enabledElements) {
     if (aElement == e) {
       found = true;
       break;
@@ -141,7 +141,7 @@ content.appendChild(fieldset1);
 fieldset1.appendChild(fieldset2);
 fieldset2.disabled = true;
 
-for each(var data in elements) {
+for (var data of elements) {
   var element = document.createElement(data);
 
   if (data[4]) {
