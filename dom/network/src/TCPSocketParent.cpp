@@ -8,7 +8,7 @@
 #include "nsJSUtils.h"
 #include "nsIDOMTCPSocket.h"
 #include "mozilla/unused.h"
-#include "mozilla/AppProcessPermissions.h"
+#include "mozilla/AppProcessChecker.h"
 
 namespace IPC {
 

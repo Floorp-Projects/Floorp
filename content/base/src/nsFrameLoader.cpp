@@ -77,7 +77,7 @@
 
 #include "Layers.h"
 
-#include "AppProcessPermissions.h"
+#include "AppProcessChecker.h"
 #include "ContentParent.h"
 #include "TabParent.h"
 #include "mozilla/GuardObjects.h"
