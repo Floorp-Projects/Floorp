@@ -361,3 +361,34 @@ CodeGeneratorX64::visitCompareBAndBranch(LCompareBAndBranch *lir)
     emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
     return true;
 }
+bool
+CodeGeneratorX64::visitCompareV(LCompareV *lir)
+{
+    MCompare *mir = lir->mir();
+    const ValueOperand lhs = ToValue(lir, LCompareV::LhsInput);
+    const ValueOperand rhs = ToValue(lir, LCompareV::RhsInput);
+    const Register output = ToRegister(lir->output());
+
+    JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+              mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+
+    masm.cmpq(lhs.valueReg(), rhs.valueReg());
+    emitSet(JSOpToCondition(mir->jsop()), output);
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitCompareVAndBranch(LCompareVAndBranch *lir)
+{
+    MCompare *mir = lir->mir();
+
+    const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
+    const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
+
+    JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+              mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+
+    masm.cmpq(lhs.valueReg(), rhs.valueReg());
+    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
+    return true;
+}

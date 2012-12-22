@@ -370,3 +370,57 @@ CodeGeneratorX86::visitCompareBAndBranch(LCompareBAndBranch *lir)
     emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
     return true;
 }
+
+bool
+CodeGeneratorX86::visitCompareV(LCompareV *lir)
+{
+    MCompare *mir = lir->mir();
+    Assembler::Condition cond = JSOpToCondition(mir->jsop());
+    const ValueOperand lhs = ToValue(lir, LCompareV::LhsInput);
+    const ValueOperand rhs = ToValue(lir, LCompareV::RhsInput);
+    const Register output = ToRegister(lir->output());
+
+    JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+              mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+
+    Label notEqual, done;
+    masm.cmp32(lhs.typeReg(), rhs.typeReg());
+    masm.j(Assembler::NotEqual, &notEqual);
+    {
+        masm.cmp32(lhs.payloadReg(), rhs.payloadReg());
+        emitSet(cond, output);
+        masm.jump(&done);
+    }
+    masm.bind(&notEqual);
+    {
+        masm.move32(Imm32(cond == Assembler::NotEqual), output);
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
+{
+    MCompare *mir = lir->mir();
+    Assembler::Condition cond = JSOpToCondition(mir->jsop());
+    const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
+    const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
+
+    JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+              mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+
+    Label *notEqual;
+    if (cond == Assembler::Equal)
+        notEqual = lir->ifFalse()->lir()->label();
+    else
+        notEqual = lir->ifTrue()->lir()->label();
+
+    masm.cmp32(lhs.typeReg(), rhs.typeReg());
+    masm.j(Assembler::NotEqual, notEqual);
+    masm.cmp32(lhs.payloadReg(), rhs.payloadReg());
+    emitBranch(cond, lir->ifTrue(), lir->ifFalse());
+
+    return true;
+}
