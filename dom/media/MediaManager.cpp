@@ -10,6 +10,7 @@
 #include "nsIUUIDGenerator.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPopupWindowManager.h"
+#include "nsISupportsArray.h"
 
 // For PR_snprintf
 #include "prprf.h"
@@ -690,9 +691,17 @@ private:
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
 };
 
-nsRefPtr<MediaManager> MediaManager::sSingleton;
+NS_IMPL_THREADSAFE_ISUPPORTS2(MediaManager, nsIMediaManagerService, nsIObserver)
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(MediaManager, nsIObserver)
+/* static */ StaticRefPtr<MediaManager> MediaManager::sSingleton;
+
+/* static */ already_AddRefed<MediaManager>
+MediaManager::GetInstance()
+{
+  // so we can have non-refcounted getters
+  nsRefPtr<MediaManager> service = MediaManager::Get();
+  return service.forget();
+}
 
 /**
  * The entry point for this file. A call from Navigator::mozGetUserMedia
@@ -1047,6 +1056,40 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+  return NS_OK;
+}
+
+static PLDHashOperator
+WindowsHashToArrayFunc (const uint64_t& aId,
+                        StreamListeners* aData,
+                        void *userArg)
+{
+    nsISupportsArray *array =
+        static_cast<nsISupportsArray *>(userArg);
+    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetInnerWindowWithId(aId));
+    (void) aData;
+
+    MOZ_ASSERT(window);
+    if (window) {
+      array->AppendElement(window);
+    }
+    return PL_DHASH_NEXT;
+}
+
+
+nsresult
+MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray **aArray)
+{
+  MOZ_ASSERT(aArray);
+  nsISupportsArray *array;
+  nsresult rv = NS_NewISupportsArray(&array); // AddRefs
+  if (NS_FAILED(rv))
+    return rv;
+
+  mActiveWindows.EnumerateRead(WindowsHashToArrayFunc, array);
+
+  *aArray = array;
   return NS_OK;
 }
 

@@ -186,6 +186,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/caps/include \
   -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/content/html/content/src \
+  -I$(topsrcdir)/content/html/document/src \
   -I$(topsrcdir)/content/xbl/src \
   -I$(topsrcdir)/content/xml/content/src \
   -I$(topsrcdir)/content/xml/document/src \

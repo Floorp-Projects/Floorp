@@ -25,6 +25,7 @@
 #include "platform_api.h"
 #include "vcm.h"
 #include "ccapp_task.h"
+#include "peer_connection_types.h"
 
 /*
  * Note: Do not include "msprovider.h" here unless the dependencies on
@@ -95,6 +96,7 @@ void
 ui_call_state (call_events event, line_t nLine, callid_t nCallID, cc_causes_t cause)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"event=%d \n", DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__),
               event);
@@ -131,6 +133,7 @@ ui_new_call (call_events event, line_t nLine, callid_t nCallID,
              int call_attr, uint16_t call_instance_id, boolean dialed_digits)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d attr=%d call_instance=%d, dialed_digits=%s\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_attr, call_instance_id, (dialed_digits)? "true" : "false");
@@ -172,6 +175,7 @@ void
 ui_set_call_attr (line_t line_id, callid_t call_id, call_attr_t attr)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"attr=%d\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line_id, call_id, __FUNCTION__), attr);
 
@@ -202,6 +206,7 @@ void
 ui_update_callref (line_t line, callid_t call_id, unsigned int callref)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"callref = %d\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__), callref);
 
@@ -237,6 +242,7 @@ void
 ui_update_gcid (line_t line, callid_t call_id, char *gcid)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"gcid = %s\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__), gcid);
 
@@ -270,6 +276,7 @@ void
 ui_update_video_avail (line_t line, callid_t call_id, int avail)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__));
 
@@ -291,6 +298,7 @@ ui_update_video_avail (line_t line, callid_t call_id, int avail)
 
 void ui_update_media_interface_change(line_t line, callid_t call_id, group_call_event_t event) {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     if (event != MEDIA_INTERFACE_UPDATE_BEGIN &&
         event != MEDIA_INTERFACE_UPDATE_SUCCESSFUL &&
@@ -324,6 +332,7 @@ void
 ui_call_stop_ringer (line_t line, callid_t call_id)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__));
 
@@ -348,6 +357,7 @@ void
 ui_call_start_ringer (vcm_ring_mode_t ringMode, short once, line_t line, callid_t call_id)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__));
 
@@ -381,6 +391,7 @@ void
 ui_update_video_offered (line_t line, callid_t call_id, int avail)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__));
 
@@ -446,6 +457,8 @@ ui_call_info (string_t pCallingPartyNameStr,
     int inbound;
     char       lineName[MAX_LINE_NAME_SIZE];
     char       lineNumber[MAX_LINE_NAME_SIZE];
+
+    memset( &msg, 0, sizeof(session_update_t));
 
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"call instance=%d callednum=%s calledname=%s clngnum=%s clngname = %s\n",
@@ -531,6 +544,7 @@ void
 ui_cc_capability (line_t line, callid_t call_id, string_t recv_info_list)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"recv_info_list:%s\n",
         DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__),
@@ -592,6 +606,7 @@ static void
 ui_set_call_status_display (string_t status, line_t line, callid_t callID, int timeout, char priority)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"the stat string =%s, timeout= %d, priority=%d\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line, callID, __FUNCTION__),
               status,
@@ -1036,6 +1051,7 @@ ui_update_placed_call_info (line_t line, callid_t call_id, string_t cldName,
                             string_t cldNumber)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"calledName:calledNumber %s:%s\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__), cldName, cldNumber);
@@ -1077,6 +1093,7 @@ void
 ui_delete_last_digit (line_t line_id, callid_t call_id)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"called\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line_id, call_id, __FUNCTION__));
 
@@ -1106,6 +1123,7 @@ void
 ui_control_featurekey_bksp (line_t line_id, callid_t call_id, boolean enable)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"enable=%d\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line_id, call_id, __FUNCTION__),
               enable);
@@ -1134,6 +1152,7 @@ void
 ui_call_selected (line_t line_id, callid_t call_id, int selected)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"selected=%d\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, line_id, call_id, __FUNCTION__), selected);
@@ -1221,6 +1240,7 @@ ui_select_feature_key_set (line_t line_id, callid_t call_id, char *set_name,
 {
     int i;
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"called\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line_id, call_id, __FUNCTION__));
 
@@ -1233,8 +1253,6 @@ ui_select_feature_key_set (line_t line_id, callid_t call_id, char *set_name,
         TNP_DEBUG(DEB_F_PREFIX"Incorrect softkey array length passed in : %d\n", DEB_F_PREFIX_ARGS(UI_API, __FUNCTION__), len);
         return;
     }
-
-    memset( &msg, 0, sizeof(session_update_t));
 
     msg.sessionID = createSessionId(line_id, call_id);
     msg.eventID = CALL_SELECT_FEATURE_SET;
@@ -1299,6 +1317,7 @@ ui_update_call_security (line_t line, callid_t call_id,
                         cc_security_e call_security)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"security=%d\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__),
               call_security);
@@ -1338,6 +1357,7 @@ ui_terminate_feature (line_t line, callid_t call_id,
                         callid_t target_call_id)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     TNP_DEBUG(DEB_L_C_F_PREFIX"target_call_id=%d\n", DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__),
               target_call_id);
@@ -1486,6 +1506,7 @@ void ui_log_disposition (callid_t call_id, int logdisp)
 {
     session_update_t msg;
     fsmdef_dcb_t *dcb = fsmdef_get_dcb_by_call_id(call_id);
+    memset( &msg, 0, sizeof(session_update_t));
 
 
     if (call_id == CC_NO_CALL_ID || dcb == NULL) {
@@ -1532,10 +1553,11 @@ static void post_message_helper(
     line_t nLine,
     callid_t nCallId,
     uint16_t call_instance_id,
-    char *sdp,
+    string_t sdp,
     cc_int32_t status)
 {
     session_update_t msg;
+    memset( &msg, 0, sizeof(session_update_t));
 
     if (nCallId == CC_NO_CALL_ID) {
         /* no operation when no call ID */
@@ -1567,7 +1589,7 @@ static void post_message_helper(
  *  @return none
  */
 void ui_create_offer(call_events event, line_t nLine, callid_t nCallID,
-                 	 uint16_t call_instance_id, char* sdp)
+                 	 uint16_t call_instance_id, string_t sdp)
 {
     TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d attr=%d call_instance=%d\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_instance_id);
@@ -1584,7 +1606,7 @@ void ui_create_offer(call_events event, line_t nLine, callid_t nCallID,
  *  @return none
  */
 void ui_create_answer(call_events event, line_t nLine, callid_t nCallID,
-                 	 uint16_t call_instance_id, char* sdp)
+                 	 uint16_t call_instance_id, string_t sdp)
 {
     TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_instance_id);
@@ -1601,7 +1623,7 @@ void ui_create_answer(call_events event, line_t nLine, callid_t nCallID,
  */
 
 void ui_set_local_description(call_events event, line_t nLine, callid_t nCallID,
-                 	 uint16_t call_instance_id, char* sdp, cc_int32_t status)
+                 	 uint16_t call_instance_id, string_t sdp, cc_int32_t status)
 {
     TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_instance_id);
@@ -1618,12 +1640,50 @@ void ui_set_local_description(call_events event, line_t nLine, callid_t nCallID,
  */
 
 void ui_set_remote_description(call_events event, line_t nLine, callid_t nCallID,
-                 	 uint16_t call_instance_id, char* sdp, cc_int32_t status)
+                 	 uint16_t call_instance_id, string_t sdp, cc_int32_t status)
 {
     TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d\n",
               DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_instance_id);
 
     post_message_helper(SET_REMOTE_DESC, event, nLine, nCallID, call_instance_id, sdp, status);
+
+    return;
+}
+
+/**
+ *  Let PeerConnection know about an updated local session description
+ *
+ *  @return none
+ */
+
+void ui_update_local_description(call_events event, line_t nLine, callid_t nCallID,
+                 	 uint16_t call_instance_id, string_t sdp)
+{
+    TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d\n",
+              DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__),
+              event, call_instance_id);
+
+    post_message_helper(UPDATE_LOCAL_DESC, event, nLine, nCallID, call_instance_id,
+                        sdp, PC_OK);
+
+    return;
+}
+
+/**
+ *  Let PeerConnection know about an updated remote session description
+ *
+ *  @return none
+ */
+
+void ui_update_remote_description(call_events event, line_t nLine, callid_t nCallID,
+                 	 uint16_t call_instance_id, string_t sdp)
+{
+    TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d\n",
+              DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__),
+              event, call_instance_id);
+
+    post_message_helper(UPDATE_REMOTE_DESC, event, nLine, nCallID,
+                        call_instance_id, sdp, PC_OK);
 
     return;
 }
@@ -1639,6 +1699,7 @@ void ui_on_remote_stream_added(call_events event, line_t nLine, callid_t nCallID
 {
     session_update_t msg;
     fsmdef_dcb_t *dcb = fsmdef_get_dcb_by_call_id(nCallID);
+    memset( &msg, 0, sizeof(session_update_t));
 
     if (nCallID == CC_NO_CALL_ID || dcb == NULL) {
         /* no operation when no call ID */

@@ -3946,6 +3946,15 @@ else
     fi
 fi
 
+dnl set GRE_MILESTONE
+dnl ========================================================
+if test -n "$LIBXUL_SDK"; then
+    GRE_MILESTONE=`$PYTHON "$_topsrcdir"/config/printconfigsetting.py "$LIBXUL_DIST"/bin/platform.ini Build Milestone`
+else
+    GRE_MILESTONE=`tail -n 1 "$_topsrcdir"/config/milestone.txt 2>/dev/null || tail -1 "$_topsrcdir"/config/milestone.txt`
+fi
+AC_SUBST(GRE_MILESTONE)
+
 dnl system libevent Support
 dnl ========================================================
 MOZ_ARG_WITH_STRING(system-libevent,

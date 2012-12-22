@@ -26,6 +26,9 @@
 #include "nsLayoutUtils.h"
 #include "nsIMEStateManager.h"
 #include "nsIObjectFrame.h"
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla::dom;
 
 /******************************************************************/
 /* nsContentEventHandler                                          */
@@ -870,10 +873,8 @@ nsContentEventHandler::OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent)
   eventLoc.x -= docFrameRect.x;
   eventLoc.y -= docFrameRect.y;
 
-  nsCOMPtr<nsIDOMElement> elementUnderMouse;
-  doc->ElementFromPointHelper(eventLoc.x, eventLoc.y, false, false,
-                              getter_AddRefs(elementUnderMouse));
-  nsCOMPtr<nsIContent> contentUnderMouse = do_QueryInterface(elementUnderMouse);
+  Element* contentUnderMouse =
+    doc->ElementFromPointHelper(eventLoc.x, eventLoc.y, false, false);
   if (contentUnderMouse) {
     nsIWidget* targetWidget = nullptr;
     nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
