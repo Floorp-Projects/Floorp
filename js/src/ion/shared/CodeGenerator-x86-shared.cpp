@@ -180,10 +180,10 @@ CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
 }
 
 void
-CodeGeneratorX86Shared::emitCompare(MIRType type, const LAllocation *left, const LAllocation *right)
+CodeGeneratorX86Shared::emitCompare(MCompare::CompareType type, const LAllocation *left, const LAllocation *right)
 {
 #ifdef JS_CPU_X64
-    if (type == MIRType_Object) {
+    if (type == MCompare::Compare_Object) {
         masm.cmpq(ToRegister(left), ToOperand(right));
         return;
     }
@@ -198,7 +198,7 @@ CodeGeneratorX86Shared::emitCompare(MIRType type, const LAllocation *left, const
 bool
 CodeGeneratorX86Shared::visitCompare(LCompare *comp)
 {
-    emitCompare(comp->mir()->specialization(), comp->left(), comp->right());
+    emitCompare(comp->mir()->compareType(), comp->left(), comp->right());
     emitSet(JSOpToCondition(comp->jsop()), ToRegister(comp->output()));
     return true;
 }
@@ -206,7 +206,7 @@ CodeGeneratorX86Shared::visitCompare(LCompare *comp)
 bool
 CodeGeneratorX86Shared::visitCompareAndBranch(LCompareAndBranch *comp)
 {
-    emitCompare(comp->mir()->specialization(), comp->left(), comp->right());
+    emitCompare(comp->mir()->compareType(), comp->left(), comp->right());
     Assembler::Condition cond = JSOpToCondition(comp->jsop());
     emitBranch(cond, comp->ifTrue(), comp->ifFalse());
     return true;

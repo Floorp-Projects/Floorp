@@ -609,6 +609,16 @@ class StackTypeSet : public TypeSet
      * null/undefined/int/double, or some combination of those.
      */
     bool knownNonStringPrimitive();
+
+    bool knownPrimitiveOrObject() {
+        TypeFlags flags = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_DOUBLE |
+                          TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN | TYPE_FLAG_STRING |
+                          TYPE_FLAG_ANYOBJECT;
+        if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK))
+            return false;
+
+        return true;
+    }
 };
 
 /*
