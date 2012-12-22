@@ -3578,6 +3578,14 @@ var gCSSProperties = {
 		other_values: [ "url(#mymask)" ],
 		invalid_values: []
 	},
+	"mask-type": {
+		domProp: "maskType",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "luminance" ],
+		other_values: [ "alpha" ],
+		invalid_values: []
+	},
 	"shape-rendering": {
 		domProp: "shapeRendering",
 		inherited: true,

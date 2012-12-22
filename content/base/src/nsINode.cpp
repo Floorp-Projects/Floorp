@@ -102,6 +102,7 @@
 #include "nsCSSParser.h"
 #include "nsHTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
+#include "WrapperFactory.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2352,7 +2353,18 @@ nsINode::WrapObject(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
     return nullptr;
   }
 
-  return WrapNode(aCx, aScope, aTriedToWrap);
+  JSObject* obj = WrapNode(aCx, aScope, aTriedToWrap);
+  if (obj && ChromeOnlyAccess()) {
+    // Create a new wrapper and cache it.
+    JSAutoCompartment ac(aCx, obj);
+    JSObject* wrapper = xpc::WrapperFactory::WrapSOWObject(aCx, obj);
+    if (!wrapper) {
+      ClearWrapper();
+      return nullptr;
+    }
+    dom::SetSystemOnlyWrapper(obj, this, *wrapper);
+  }
+  return obj;
 }
 
 bool

@@ -96,6 +96,10 @@ class TestAgent {
     audio_->GetStream()->Stop();
     audio_flow_ = NULL;
     video_flow_ = NULL;
+    if (audio_pipeline_)
+      audio_pipeline_->Shutdown();
+    if (video_pipeline_)
+      video_pipeline_->Shutdown();
     audio_pipeline_ = NULL;
     video_pipeline_ = NULL;
   }
@@ -137,9 +141,15 @@ class TestAgentSend : public TestAgent {
         ConfigureSendMediaCodec(&audio_config_);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
-    audio_pipeline_ = new mozilla::MediaPipelineTransmit(NULL,
-      test_utils->sts_target(),
-      audio_, audio_conduit_, audio_flow_, NULL);
+    std::string test_pc("PC");
+
+    audio_pipeline_ = new mozilla::MediaPipelineTransmit(
+        test_pc,
+        NULL,
+        test_utils->sts_target(),
+        audio_->GetStream(), audio_conduit_, audio_flow_, NULL);
+
+    audio_pipeline_->Init();
 
 //    video_ = new Fake_nsDOMMediaStream(new Fake_VideoStreamSource());
 //    video_pipeline_ = new mozilla::MediaPipelineTransmit(video_, video_conduit_, &video_flow_, &video_flow_);
@@ -170,11 +180,16 @@ class TestAgentReceive : public TestAgent {
         ConfigureRecvMediaCodecs(codecs);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
-    audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(NULL,
-      test_utils->sts_target(),
-      audio_,
-      static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
-      audio_flow_, NULL);
+    std::string test_pc("PC");
+    audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
+        test_pc,
+        NULL,
+        test_utils->sts_target(),
+        audio_->GetStream(),
+        static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
+        audio_flow_, NULL);
+
+    audio_pipeline_->Init();
   }
 
  private:

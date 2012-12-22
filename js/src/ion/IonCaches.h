@@ -12,8 +12,8 @@
 #include "TypeOracle.h"
 #include "Registers.h"
 
-struct JSFunction;
-struct JSScript;
+class JSFunction;
+class JSScript;
 
 namespace js {
 namespace ion {

@@ -316,7 +316,7 @@ MSG_DEF(JSMSG_SC_RECURSION,           262, 0, JSEXN_INTERNALERR, "recursive obje
 MSG_DEF(JSMSG_CANT_WRAP_XML_OBJECT,   263, 0, JSEXN_TYPEERR, "can't wrap XML objects")
 MSG_DEF(JSMSG_BAD_CLONE_VERSION,      264, 0, JSEXN_ERR, "unsupported structured clone version")
 MSG_DEF(JSMSG_CANT_CLONE_OBJECT,      265, 0, JSEXN_TYPEERR, "can't clone object")
-MSG_DEF(JSMSG_NON_NATIVE_SCOPE,       266, 0, JSEXN_TYPEERR, "non-native scope object")
+MSG_DEF(JSMSG_UNUSED266,              266, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_STRICT_FUNCTION_STATEMENT, 267, 0, JSEXN_SYNTAXERR, "in strict mode code, functions may be declared only at top level or immediately within another function")
 MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,    268, 0, JSEXN_SYNTAXERR, "for-in loop let declaration may not have an initializer")
 MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run compile-and-go script on a cleared scope")
@@ -376,3 +376,4 @@ MSG_DEF(JSMSG_CANT_SET_NW_NC,         322, 0, JSEXN_TYPEERR, "proxy can't succes
 MSG_DEF(JSMSG_CANT_SET_WO_SETTER,     323, 0, JSEXN_TYPEERR, "proxy can't succesfully set an accessor property without a setter")
 MSG_DEF(JSMSG_DEBUG_BAD_REFERENT,     324, 2, JSEXN_TYPEERR, "{0} does not refer to {1}")
 MSG_DEF(JSMSG_DEBUG_WRAPPER_IN_WAY,   325, 2, JSEXN_TYPEERR, "{0} is a wrapper around {1}, but a direct reference is required")
+MSG_DEF(JSMSG_UNWRAP_DENIED,          326, 0, JSEXN_ERR, "permission denied to unwrap object")

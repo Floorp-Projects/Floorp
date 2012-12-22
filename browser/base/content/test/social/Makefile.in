@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 _BROWSER_FILES = \
                  head.js \
-                 browser_social.js \
                  browser_social_toolbar.js \
                  browser_social_shareButton.js \
                  browser_social_sidebar.js \
@@ -29,6 +28,12 @@ _BROWSER_FILES = \
                  social_window.html \
                  social_worker.js \
                  $(NULL)
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+_BROWSER_FILES += \
+                browser_social.js \
+                $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

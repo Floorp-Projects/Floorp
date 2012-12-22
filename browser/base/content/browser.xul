@@ -44,7 +44,6 @@
         windowtype="navigator:browser"
         macanimationtype="document"
         screenX="4" screenY="4"
-        browsingmode="normal"
         fullscreenbutton="true"
         persist="screenX screenY width height sizemode">
 
@@ -444,6 +443,27 @@
       <label class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
 #endif
     </tooltip>
+
+    <popupnotification id="webRTC-shareDevices-notification" hidden="true">
+      <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
+        <separator class="thin"/>
+        <label value="&getUserMedia.selectCamera.label;"
+               accesskey="&getUserMedia.selectCamera.accesskey;"
+               control="webRTC-selectCamera-menulist"/>
+        <menulist id="webRTC-selectCamera-menulist">
+          <menupopup id="webRTC-selectCamera-menupopup"/>
+        </menulist>
+      </popupnotificationcontent>
+      <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
+        <separator class="thin"/>
+        <label value="&getUserMedia.selectMicrophone.label;"
+               accesskey="&getUserMedia.selectMicrophone.accesskey;"
+               control="webRTC-selectMicrophone-menulist"/>
+        <menulist id="webRTC-selectMicrophone-menulist">
+          <menupopup id="webRTC-selectMicrophone-menupopup"/>
+        </menulist>
+      </popupnotificationcontent>
+    </popupnotification>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR

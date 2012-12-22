@@ -136,7 +136,7 @@ SECU_GetClientAuthData(void *arg, PRFileDesc *fd,
 		       struct CERTCertificateStr **pRetCert,
 		       struct SECKEYPrivateKeyStr **pRetKey);
 
-extern PRBool SECU_GetWrapEnabled();
+extern PRBool SECU_GetWrapEnabled(void);
 extern void SECU_EnableWrap(PRBool enable);
 
 /* revalidate the cert and print information about cert verification
@@ -292,6 +292,9 @@ extern char *SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 extern SECStatus DER_PrettyPrint(FILE *out, SECItem *it, PRBool raw);
 
 extern char *SECU_SECModDBName(void);
+
+/* Fetch and register an oid if it hasn't been done already */
+extern void SECU_cert_fetchOID(SECOidTag *data, const SECOidData *src);
 
 extern SECStatus SECU_RegisterDynamicOids(void);
 

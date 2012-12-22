@@ -23,11 +23,11 @@ class DeviceManagerADB(DeviceManager):
     _tempDir = None
     default_timeout = 300
 
-    def __init__(self, host=None, port=20701, retrylimit=5, packageName='fennec',
+    def __init__(self, host=None, port=20701, retryLimit=5, packageName='fennec',
                  adbPath='adb', deviceSerial=None, deviceRoot=None, **kwargs):
         self.host = host
         self.port = port
-        self.retrylimit = retrylimit
+        self.retryLimit = retryLimit
         self.deviceRoot = deviceRoot
 
         # the path to adb, or 'adb' to assume that it's on the PATH
@@ -164,7 +164,7 @@ class DeviceManagerADB(DeviceManager):
     def _disconnectRemoteADB(self):
         self._checkCmd(["disconnect", self.host + ":" + str(self.port)])
 
-    def pushFile(self, localname, destname):
+    def pushFile(self, localname, destname, retryLimit=None):
         """
         Copies localname from the host to destname on the device
         """
@@ -172,20 +172,23 @@ class DeviceManagerADB(DeviceManager):
         # but that would be different behaviour from devicemanagerSUT. Throw
         # an exception so we have the same behaviour between the two
         # implementations
+        retryLimit = retryLimit or self.retryLimit
         if self.dirExists(destname):
             raise DMError("Attempted to push a file (%s) to a directory (%s)!" %
                           (localname, destname))
 
         if self._useRunAs:
             remoteTmpFile = self.getTempDir() + "/" + os.path.basename(localname)
-            self._checkCmd(["push", os.path.realpath(localname), remoteTmpFile])
+            self._checkCmd(["push", os.path.realpath(localname), remoteTmpFile],
+                    retryLimit=retryLimit)
             if self._useDDCopy:
                 self.shellCheckOutput(["dd", "if=" + remoteTmpFile, "of=" + destname])
             else:
                 self.shellCheckOutput(["cp", remoteTmpFile, destname])
             self.shellCheckOutput(["rm", remoteTmpFile])
         else:
-            self._checkCmd(["push", os.path.realpath(localname), destname])
+            self._checkCmd(["push", os.path.realpath(localname), destname],
+                    retryLimit=retryLimit)
 
     def mkDir(self, name):
         """
@@ -195,7 +198,7 @@ class DeviceManagerADB(DeviceManager):
         if 'read-only file system' in result.lower():
             raise DMError("Error creating directory: read only file system")
 
-    def pushDir(self, localDir, remoteDir):
+    def pushDir(self, localDir, remoteDir, retryLimit=None):
         """
         Push localDir from host to remoteDir on the device
         """
@@ -203,6 +206,7 @@ class DeviceManagerADB(DeviceManager):
         # contains symbolic links, the links are pushed, rather than the linked
         # files; we either zip/unzip or re-copy the directory into a temporary
         # one to get around this limitation
+        retryLimit = retryLimit or self.retryLimit
         if not self.dirExists(remoteDir):
             self.mkDirs(remoteDir+"/x")
         if self._useZip:
@@ -211,22 +215,23 @@ class DeviceManagerADB(DeviceManager):
                 remoteZip = remoteDir + "/adbdmtmp.zip"
                 subprocess.Popen(["zip", "-r", localZip, '.'], cwd=localDir,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-                self.pushFile(localZip, remoteZip)
+                self.pushFile(localZip, remoteZip, retryLimit=retryLimit)
                 os.remove(localZip)
-                data = self._runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()
-                self._checkCmdAs(["shell", "rm", remoteZip])
+                data = self._runCmdAs(["shell", "unzip", "-o", remoteZip,
+                                       "-d", remoteDir]).stdout.read()
+                self._checkCmdAs(["shell", "rm", remoteZip], retryLimit=retryLimit)
                 if re.search("unzip: exiting", data) or re.search("Operation not permitted", data):
                     raise Exception("unzip failed, or permissions error")
             except:
                 print "zip/unzip failure: falling back to normal push"
                 self._useZip = False
-                self.pushDir(localDir, remoteDir)
+                self.pushDir(localDir, remoteDir, retryLimit=retryLimit)
         else:
             tmpDir = tempfile.mkdtemp()
             # copytree's target dir must not already exist, so create a subdir
             tmpDirTarget = os.path.join(tmpDir, "tmp")
             shutil.copytree(localDir, tmpDirTarget)
-            self._checkCmd(["push", tmpDirTarget, remoteDir])
+            self._checkCmd(["push", tmpDirTarget, remoteDir], retryLimit=retryLimit)
             shutil.rmtree(tmpDir)
 
     def dirExists(self, remotePath):
@@ -260,18 +265,12 @@ class DeviceManagerADB(DeviceManager):
         if self.fileExists(filename):
             self._runCmd(["shell", "rm", filename])
 
-    def _removeSingleDir(self, remoteDir):
-        """
-        Deletes a single empty directory
-        """
-        return self._runCmd(["shell", "rmdir", remoteDir]).stdout.read()
-
     def removeDir(self, remoteDir):
         """
         Does a recursive delete of directory on the device: rm -Rf remoteDir
         """
         if (self.dirExists(remoteDir)):
-            self._runCmd(["shell", "rm", "-r", remoteDir])
+            self._runCmd(["shell", "rm", "-r", remoteDir]).wait()
         else:
             self.removeFile(remoteDir.strip())
 
@@ -698,13 +697,14 @@ class DeviceManagerADB(DeviceManager):
 
     # timeout is specified in seconds, and if no timeout is given,
     # we will run until we hit the default_timeout specified in the __init__
-    def _checkCmd(self, args, timeout=None):
+    def _checkCmd(self, args, timeout=None, retryLimit=None):
         """
         Runs a command using adb and waits for the command to finish.
         If timeout is specified, the process is killed after <timeout> seconds.
 
         returns: returncode from subprocess.Popen
         """
+        retryLimit = retryLimit or self.retryLimit
         # use run-as to execute commands as the package we're testing if
         # possible
         finalArgs = [self._adbPath]
@@ -720,18 +720,22 @@ class DeviceManagerADB(DeviceManager):
             timeout = self.default_timeout
 
         timeout = int(timeout)
-        proc = subprocess.Popen(finalArgs)
-        start_time = time.time()
-        ret_code = proc.poll()
-        while ((time.time() - start_time) <= timeout) and ret_code == None:
-            time.sleep(self._pollingInterval)
+        retries = 0
+        while retries < retryLimit:
+            proc = subprocess.Popen(finalArgs)
+            start_time = time.time()
             ret_code = proc.poll()
-        if ret_code == None:
-            proc.kill()
-            raise DMError("Timeout exceeded for _checkCmd call")
-        return ret_code
+            while ((time.time() - start_time) <= timeout) and ret_code == None:
+                time.sleep(self._pollingInterval)
+                ret_code = proc.poll()
+            if ret_code == None:
+                proc.kill()
+                retries += 1
+                continue
+            return ret_code
+        raise DMError("Timeout exceeded for _checkCmd call after %d retries." % retries)
 
-    def _checkCmdAs(self, args, timeout=None):
+    def _checkCmdAs(self, args, timeout=None, retryLimit=None):
         """
         Runs a command using adb and waits for command to finish
         If self._useRunAs is True, the command is run-as user specified in self._packageName
@@ -739,10 +743,11 @@ class DeviceManagerADB(DeviceManager):
 
         returns: returncode from subprocess.Popen
         """
+        retryLimit = retryLimit or self.retryLimit
         if (self._useRunAs):
             args.insert(1, "run-as")
             args.insert(2, self._packageName)
-        return self._checkCmd(args, timeout)
+        return self._checkCmd(args, timeout, retryLimit=retryLimit)
 
     def chmodDir(self, remoteDir, mask="777"):
         """

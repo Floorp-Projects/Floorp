@@ -230,7 +230,7 @@ struct StackBaseShape;
 class BaseShape : public js::gc::Cell
 {
   public:
-    friend struct Shape;
+    friend class Shape;
     friend struct StackBaseShape;
     friend struct StackShape;
 
@@ -438,10 +438,10 @@ typedef HashSet<ReadBarriered<UnownedBaseShape>,
                 StackBaseShape,
                 SystemAllocPolicy> BaseShapeSet;
 
-struct Shape : public js::gc::Cell
+class Shape : public js::gc::Cell
 {
     friend struct ::JSObject;
-    friend struct ::JSFunction;
+    friend class ::JSFunction;
     friend class js::Bindings;
     friend class js::ObjectImpl;
     friend class js::PropertyTree;
@@ -549,7 +549,7 @@ struct Shape : public js::gc::Cell
 
     class Range {
       protected:
-        friend struct Shape;
+        friend class Shape;
 
         /* |cursor| is rooted manually when necessary using Range::AutoRooter. */
         RawShape cursor;

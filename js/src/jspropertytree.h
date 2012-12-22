@@ -67,7 +67,7 @@ class KidsPointer {
 
 class PropertyTree
 {
-    friend struct ::JSFunction;
+    friend class ::JSFunction;
 
     JSCompartment *compartment;
 

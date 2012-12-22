@@ -13,8 +13,9 @@ include $(topsrcdir)/config/config.mk
 EXTRA_COMPONENTS = \
   nsSessionStore.manifest \
   nsSessionStore.js \
-  nsSessionStartup.js \
   $(NULL)
+
+EXTRA_PP_COMPONENTS := nsSessionStartup.js
 
 JS_MODULES_PATH := $(FINAL_TARGET)/modules/sessionstore
 
