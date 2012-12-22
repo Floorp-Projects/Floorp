@@ -151,10 +151,40 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                       EventArray& aEventsToDispatch,
                                       bool aIsThrottled)
 {
-  if (!mNeedsRefreshes ||
-      aIsThrottled) {
-    // All of our animations are paused or completed or this animation is being
-    // handled on the compositor thread, so we shouldn't interpolate here.
+  if (!mNeedsRefreshes) {
+    mStyleRuleRefreshTime = aRefreshTime;
+    return;
+  }
+
+  // If we're performing animations on the compositor thread, then we can skip
+  // most of the work in this method. But even if we are throttled, then we
+  // have to do the work if an animation is ending in order to get correct end
+  // of animation behaviour (the styles of the animation disappear, or the fill
+  // mode behaviour). This loop checks for any finishing animations and forces
+  // the style recalculation if we find any.
+  if (aIsThrottled) {
+    for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+      ElementAnimation &anim = mAnimations[animIdx];
+
+      if (anim.mProperties.Length() == 0 ||
+          anim.mIterationDuration.ToMilliseconds() <= 0.0 ||
+          anim.IsPaused()) {
+        continue;
+      }
+
+      // XXX We shouldn't really be using mLastNotification as a general
+      // indicator that the animation has finished, it should be reserved for
+      // events. If we use it differently in the future this use might need
+      // changing.
+      if ((aRefreshTime - anim.mStartTime) / anim.mIterationDuration >= anim.mIterationCount && 
+          anim.mLastNotification != ElementAnimation::LAST_NOTIFICATION_END) {
+        aIsThrottled = false;
+        break;
+      }
+    }
+  }
+
+  if (aIsThrottled) {
     mStyleRuleRefreshTime = aRefreshTime;
     return;
   }

@@ -618,6 +618,7 @@ MenuContainer.prototype = {
    *          - unsorted: true if the items should not always remain sorted
    *          - relaxed: true if this container should allow dupes & degenerates
    *          - description: an optional description of the item
+   *          - tooltip: an optional tooltip for the item
    *          - attachment: some attached primitive/object
    * @return MenuItem
    *         The item associated with the displayed element if a forced push,
@@ -629,7 +630,7 @@ MenuContainer.prototype = {
 
     // Batch the item to be added later.
     if (!aOptions.forced) {
-      this._stagedItems.push(item);
+      this._stagedItems.push({ item: item, options: aOptions });
     }
     // Immediately insert the item at the specified index.
     else if (aOptions.forced && aOptions.forced.atIndex !== undefined) {
@@ -657,11 +658,12 @@ MenuContainer.prototype = {
 
     // By default, sort the items before adding them to this container.
     if (!aOptions.unsorted) {
-      stagedItems.sort(function(a, b) a.label.toLowerCase() > b.label.toLowerCase());
+      stagedItems.sort(function(a, b) a.item.label.toLowerCase() >
+                                      b.item.label.toLowerCase());
     }
     // Append the prepared items to this container.
-    for (let item of stagedItems) {
-      this._appendItem(item, aOptions);
+    for (let { item, options } of stagedItems) {
+      this._appendItem(item, options);
     }
     // Recreate the temporary items list for ulterior pushes.
     this._stagedItems = [];
@@ -750,7 +752,7 @@ MenuContainer.prototype = {
    */
   containsLabel: function DVMC_containsLabel(aLabel) {
     return this._itemsByLabel.has(aLabel) ||
-           this._stagedItems.some(function(o) o.label == aLabel);
+           this._stagedItems.some(function({item}) item.label == aLabel);
   },
 
   /**
@@ -764,7 +766,7 @@ MenuContainer.prototype = {
    */
   containsValue: function DVMC_containsValue(aValue) {
     return this._itemsByValue.has(aValue) ||
-           this._stagedItems.some(function(o) o.value == aValue);
+           this._stagedItems.some(function({item}) item.value == aValue);
   },
 
   /**
@@ -788,7 +790,7 @@ MenuContainer.prototype = {
         return true;
       }
     }
-    return this._stagedItems.some(function(o) aTrim(o.value) == trimmedValue);
+    return this._stagedItems.some(function({item}) aTrim(item.value) == trimmedValue);
   },
 
   /**
@@ -1046,8 +1048,15 @@ MenuContainer.prototype = {
       return null;
     }
 
-    return this._entangleItem(aItem, this._container.appendItem(
+    this._entangleItem(aItem, this._container.appendItem(
       aItem.label, aItem.value, "", aOptions.attachment));
+
+    // Handle any additional options after entangling the item.
+    if (aOptions.tooltip) {
+      aItem._target.setAttribute("tooltiptext", aOptions.tooltip);
+    }
+
+    return aItem;
   },
 
   /**
@@ -1068,8 +1077,15 @@ MenuContainer.prototype = {
       return null;
     }
 
-    return this._entangleItem(aItem, this._container.insertItemAt(
+    this._entangleItem(aItem, this._container.insertItemAt(
       aIndex, aItem.label, aItem.value, "", aOptions.attachment));
+
+    // Handle any additional options after entangling the item.
+    if (aOptions.tooltip) {
+      aItem._target.setAttribute("tooltiptext", aOptions.tooltip);
+    }
+
+    return aItem;
   },
 
   /**

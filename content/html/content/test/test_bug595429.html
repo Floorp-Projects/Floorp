@@ -32,7 +32,7 @@ is(fieldset.getAttribute("name"), null,
 is(fieldset.name, "",
    "By default, name IDL attribute should be the empty string");
 
-for each(var data in testData) {
+for (var data of testData) {
   fieldset.setAttribute("name", data);
   is(fieldset.getAttribute("name"), data,
      "name content attribute should be " + data);

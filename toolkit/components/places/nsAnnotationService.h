@@ -17,6 +17,30 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
+namespace mozilla {
+namespace places {
+
+class AnnotatedResult MOZ_FINAL : public mozIAnnotatedResult
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZIANNOTATEDRESULT
+
+  AnnotatedResult(const nsCString& aGUID, nsIURI* aURI, int64_t aItemd,
+                  const nsACString& aAnnotationName,
+                  nsIVariant* aAnnotationValue);
+
+private:
+  const nsCString mGUID;
+  nsCOMPtr<nsIURI> mURI;
+  const int64_t mItemId;
+  const nsCString mAnnotationName;
+  nsCOMPtr<nsIVariant> mAnnotationValue;
+};
+
+} // namespace places
+} // namespace mozilla
+
 class nsAnnotationService MOZ_FINAL : public nsIAnnotationService
                                     , public nsIObserver
                                     , public nsSupportsWeakReference

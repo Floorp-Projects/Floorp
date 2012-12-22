@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsXMLElement.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "nsContentUtils.h" // nsAutoScriptBlocker
 
 using namespace mozilla::dom;
@@ -30,6 +31,12 @@ NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(nsXMLElement, Element)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, Element)
+
+JSObject*
+nsXMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return ElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMPL_ELEMENT_CLONE(nsXMLElement)
 

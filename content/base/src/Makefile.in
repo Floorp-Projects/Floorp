@@ -48,6 +48,7 @@ EXPORTS_mozilla/dom = \
   Comment.h \
   DocumentFragment.h \
   DOMImplementation.h \
+  EventSource.h \
   Link.h \
   $(NULL)
 
@@ -55,6 +56,8 @@ CPPSRCS		= \
 		Comment.cpp \
 		DirectionalityUtils.cpp \
 		DOMImplementation.cpp \
+		EventSource.cpp \
+		FileIOObject.cpp \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
@@ -133,8 +136,6 @@ CPPSRCS		= \
 		nsFrameMessageManager.cpp \
 		nsInProcessTabChildGlobal.cpp \
 		ThirdPartyUtil.cpp \
-		nsEventSource.cpp \
-		FileIOObject.cpp \
 		nsDOMMutationObserver.cpp \
 		nsMixedContentBlocker.cpp \
 		$(NULL)
@@ -200,6 +201,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/layout/svg \
   -I$(topsrcdir)/layout/xul/base/src \
   -I$(topsrcdir)/netwerk/base/src \
+  -I$(topsrcdir)/js/xpconnect/wrappers \
   $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

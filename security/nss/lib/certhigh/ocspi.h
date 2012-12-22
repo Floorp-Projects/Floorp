@@ -4,7 +4,7 @@
 /*
  * ocspi.h - NSS internal interfaces to OCSP code
  *
- * $Id: ocspi.h,v 1.12 2012/04/25 14:49:27 gerv%gerv.net Exp $
+ * $Id: ocspi.h,v 1.13 2012/12/12 19:29:40 wtc%google.com Exp $
  */
 
 #ifndef _OCSPI_H_
@@ -135,6 +135,6 @@ ocsp_GetResponderLocation(CERTCertDBHandle *handle,
  *   revoked cert status.
  */
 PRBool
-ocsp_FetchingFailureIsVerificationFailure();
+ocsp_FetchingFailureIsVerificationFailure(void);
 
 #endif /* _OCSPI_H_ */

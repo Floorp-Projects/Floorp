@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 823283</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=823283">Mozilla Bug 823283</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 823283 **/
+
+function createTest(prop, typeStr, valCode)
+{
+  var code =
+    'is(typeof ' + prop + ', "' + typeStr + '", "' + prop + ': bad unqualified before-state");\n' +
+    'is(typeof window.' + prop + ', "' + typeStr + '", "' + prop + ': bad qualified before-state");\n' +
+    '\n' +
+    prop + ' = ' + valCode + ';\n' +
+    '\n' +
+    'is(typeof ' + prop + ', "' + typeStr + '", "' + prop + ': bad unqualified after-state");\n' +
+    'is(typeof window.' + prop + ', "' + typeStr + '", "' + prop + ': bad qualified after-state");';
+
+  return Function(code);
+}
+
+[
+  ["innerHeight", "number", '"123"'],
+  ["innerWidth", "number", '"456"'],
+  ["outerHeight", "number", '"654"'],
+  ["outerWidth", "number", '"321"'],
+  ["screenX", "number", '"17"'],
+  ["screenY", "number", '"42"'],
+  ["status", "string", '{}'],
+  ["name", "string", '{}'],
+].forEach(function(args)
+{
+  createTest.apply(null, args)();
+});
+
+</script>
+</pre>
+</body>
+</html>

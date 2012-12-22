@@ -6,6 +6,7 @@
 <resources>
 
     <dimen name="browser_toolbar_height">40dp</dimen>
+    <dimen name="browser_toolbar_button_padding">10dp</dimen>
     <dimen name="browser_toolbar_icon_width">46dp</dimen>
     <dimen name="tabs_counter_size">18sp</dimen>
 

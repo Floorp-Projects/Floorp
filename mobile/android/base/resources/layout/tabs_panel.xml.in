@@ -1,0 +1,56 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="vertical">
+
+        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+              android:id="@+id/toolbar"
+              android:layout_width="fill_parent"
+              android:layout_height="@dimen/browser_toolbar_height"/>
+
+        <RelativeLayout android:layout_width="fill_parent"
+                        android:layout_height="0dip"
+                        android:layout_weight="1.0">
+
+            <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
+                  android:id="@android:id/tabcontent"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content">
+
+                <org.mozilla.gecko.TabsTray android:id="@+id/normal_tabs"
+                                            style="@style/TabsList"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="fill_parent"
+                                            gecko:tabs="tabs_normal"/>
+
+                <org.mozilla.gecko.TabsTray android:id="@+id/private_tabs"
+                                            style="@style/TabsList"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="fill_parent"
+                                            gecko:tabs="tabs_private"/>
+
+                <org.mozilla.gecko.RemoteTabs android:id="@+id/synced_tabs"
+                                              style="@style/RemoteTabsList"
+                                              android:layout_width="fill_parent"
+                                              android:layout_height="fill_parent"/>
+
+            </view>
+
+            <View android:layout_width="fill_parent"
+                  android:layout_height="3dp"
+                  android:layout_alignParentTop="true"
+                  android:background="@drawable/tabs_shadow"/>
+
+       </RelativeLayout>
+
+   </LinearLayout>
+
+</merge>
