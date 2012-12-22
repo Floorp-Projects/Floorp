@@ -363,9 +363,8 @@ AnimationThread(void *)
     ANativeWindow const * const window = gNativeWindow.get();
     window->query(window, NATIVE_WINDOW_FORMAT, &format);
 
-    EGLConfig config = NULL;
-    CreateConfig(&config, display, format);
-    if (!config) {
+    EGLConfig config;
+    if (!CreateConfig(&config, display, format)) {
         LOGW("Could not find config for pixel format");
         return nullptr;
     }
