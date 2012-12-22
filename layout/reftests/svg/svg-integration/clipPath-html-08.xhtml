@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=822014 -->
+  <head>
+    <title>Test clip-path on &lt;div&gt; with border</title>
+    <style>
+
+html, body {
+  border: 0; margin: 0;
+}
+
+    </style>
+  </head>
+  <body>
+    <div style="clip-path: url(#cp); width: 200px; height: 200px; background: yellow; border: solid 100px black; margin: 50px;"></div>
+    <svg xmlns="http://www.w3.org/2000/svg" height="0">
+      <clipPath id="cp">
+        <path d="M50,50 150,50 150,150 50,150 z"/>
+      </clipPath>
+    </svg>
+  </body>
+</html>
