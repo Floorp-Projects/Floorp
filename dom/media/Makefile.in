@@ -28,6 +28,7 @@ XPIDLSRCS = \
   nsIDOMMediaStream.idl \
   nsIDOMRTCPeerConnection.idl \
   nsIDOMNavigatorUserMedia.idl \
+  nsIMediaManager.idl \
   $(NULL)
 
 EXPORTS_NAMESPACE = mozilla

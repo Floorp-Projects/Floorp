@@ -517,6 +517,8 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     /* END */
     /* Once we move to RFC compliant video codec implementations, the above
     *  patch should be removed */
+
+    src_ptr = temp_ptr;
     while (!done) {
       fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "= \t", &result1);
       if (result1 == SDP_SUCCESS) {
@@ -1026,7 +1028,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
             fmtp_p->level = (short) strtoul_result;
 	    codec_info_found = TRUE;
-        } if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[16].name,
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[16].name,
                                sdp_fmtp_codec_param[16].strlen) == 0) {
 	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
             fmtp_p->is_interlace = TRUE;
