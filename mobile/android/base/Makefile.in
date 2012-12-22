@@ -134,7 +134,6 @@ FENNEC_JAVA_FILES = \
   Tabs.java \
   TabsButton.java \
   TabsPanel.java \
-  TabsPanelButton.java \
   TabsTray.java \
   TabsAccessor.java \
   TailTouchDelegate.java \
@@ -227,8 +226,12 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
+  res/color/abouthome_section_more_text.xml \
+  res/color/abouthome_section_subtitle.xml \
+  res/color/abouthome_section_title.xml \
   res/color/awesome_bar_title.xml \
   res/color/awesome_bar_title_hint.xml \
+  res/drawable/abouthome_logo.xml \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
@@ -245,6 +248,7 @@ FENNEC_PP_XML_FILES = \
   res/layout-large-v11/browser_toolbar_menu.xml \
   res/layout-xlarge-v11/browser_toolbar_menu.xml \
   res/layout/gecko_app.xml \
+  res/layout/tabs_panel.xml \
   res/layout/text_selection_handles.xml \
   res/layout-xlarge-land-v11/abouthome_content.xml \
   res/layout-xlarge-v11/awesomebar_search.xml \
@@ -397,34 +401,26 @@ RES_LAYOUT = \
   res/layout/setup_screen.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity_popup.xml \
-  res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
-  res/layout/tabs_panel.xml \
+  res/layout/tabs_panel_indicator.xml \
   res/layout/tabs_panel_toolbar_menu.xml \
   res/layout/tabs_row.xml \
-  res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
   res/layout/select_dialog_multichoice.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
-  res/layout/abouthome_promo_box.xml \
   res/layout/abouthome_section.xml \
   res/layout/abouthome_remote_tab_row.xml \
   res/layout/abouthome_topsite_item.xml \
   res/layout/validation_message.xml \
   $(NULL)
- 
-RES_LAYOUT_LAND_V14 = \
-  res/layout-land-v14/tabs_panel_toolbar_menu.xml \
-  $(NULL)
 
 RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/doorhangerpopup.xml \
   res/layout-large-v11/site_identity_popup.xml \
-  res/layout-large-v11/tabs_panel_toolbar_menu.xml \
   $(NULL)
 
 RES_LAYOUT_XLARGE_V11 = \
@@ -497,7 +493,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/favicon.png \
   res/drawable/folder.png \
   res/drawable/abouthome_icon.png \
-  res/drawable/abouthome_logo.png \
+  res/drawable/abouthome_logo_dark.png \
+  res/drawable/abouthome_logo_light.png \
   res/drawable/abouthome_promo_box_bg.9.png \
   res/drawable/abouthome_promo_box_pressed_bg.9.png \
   res/drawable/abouthome_promo_logo_apps.png \
@@ -564,6 +561,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/menu_item_uncheck.png \
   res/drawable/site_security_identified.png \
   res/drawable/site_security_verified.png \
+  res/drawable/tabs_menu.png \
   res/drawable/urlbar_stop.png \
   res/drawable/reader.png \
   res/drawable/reading_list.png \
@@ -586,7 +584,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/home_bg.png \
   res/drawable-hdpi/home_star.png \
   res/drawable-hdpi/abouthome_icon.png \
-  res/drawable-hdpi/abouthome_logo.png \
+  res/drawable-hdpi/abouthome_logo_dark.png \
+  res/drawable-hdpi/abouthome_logo_light.png \
   res/drawable-hdpi/abouthome_promo_box_bg.9.png \
   res/drawable-hdpi/abouthome_promo_box_pressed_bg.9.png \
   res/drawable-hdpi/abouthome_promo_logo_apps.png \
@@ -649,6 +648,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_item_uncheck.png \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
+  res/drawable-hdpi/tabs_menu.png \
   res/drawable-hdpi/urlbar_stop.png \
   res/drawable-hdpi/reader.png \
   res/drawable-hdpi/reading_list.png \
@@ -665,7 +665,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/favicon.png \
   res/drawable-xhdpi/folder.png \
   res/drawable-xhdpi/abouthome_icon.png \
-  res/drawable-xhdpi/abouthome_logo.png \
+  res/drawable-xhdpi/abouthome_logo_dark.png \
+  res/drawable-xhdpi/abouthome_logo_light.png \
   res/drawable-xhdpi/abouthome_promo_box_bg.9.png \
   res/drawable-xhdpi/abouthome_promo_box_pressed_bg.9.png \
   res/drawable-xhdpi/abouthome_promo_logo_apps.png \
@@ -731,6 +732,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/remote_tabs_on.png \
   res/drawable-xhdpi/site_security_identified.png \
   res/drawable-xhdpi/site_security_verified.png \
+  res/drawable-xhdpi/tabs_menu.png \
   res/drawable-xhdpi/validation_arrow.png \
   res/drawable-xhdpi/validation_arrow_inverted.png \
   res/drawable-xhdpi/validation_bg.9.png \
@@ -838,6 +840,7 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/reader.png \
   res/drawable-land-mdpi-v14/site_security_identified.png \
   res/drawable-land-mdpi-v14/site_security_verified.png \
+  res/drawable-land-mdpi-v14/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_HDPI_V14 = \
@@ -859,6 +862,7 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/reader.png \
   res/drawable-land-hdpi-v14/site_security_identified.png \
   res/drawable-land-hdpi-v14/site_security_verified.png \
+  res/drawable-land-hdpi-v14/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_XHDPI_V14 = \
@@ -880,6 +884,7 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/reader.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
+  res/drawable-land-xhdpi-v14/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
@@ -907,6 +912,7 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/menu.png \
   res/drawable-large-mdpi-v11/menu_pb.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
+  res/drawable-large-mdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -932,6 +938,7 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/menu.png \
   res/drawable-large-hdpi-v11/menu_pb.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
+  res/drawable-large-hdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -957,6 +964,7 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/menu.png \
   res/drawable-large-xhdpi-v11/menu_pb.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
+  res/drawable-large-xhdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -969,7 +977,6 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/tabs_level.xml \
   res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-mdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_HDPI_V11 = \
@@ -980,7 +987,6 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/menu_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-hdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_XHDPI_V11 = \
@@ -991,7 +997,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/menu_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_COLOR = \
@@ -1004,6 +1009,7 @@ RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
   res/menu/gecko_app_menu.xml \
   res/menu/tabs_menu.xml \
+  res/menu/tabs_switcher_menu.xml \
   res/menu/titlebar_contextmenu.xml \
   res/menu-v11/tabs_menu.xml \
   $(NULL)
@@ -1053,9 +1059,9 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
-  mobile/android/base/resources/drawable/tab_new_button.xml                     \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
+  mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
@@ -1071,7 +1077,7 @@ MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRE
 MOZ_BRANDING_DRAWABLE_HDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn | tr '\n' ' ';  fi)
 MOZ_BRANDING_DRAWABLE_XHDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \

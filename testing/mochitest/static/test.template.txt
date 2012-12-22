@@ -8,23 +8,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}
   <title>Test for Bug {BUGNUMBER}</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug {BUGNUMBER} **/
+
+
+
+
+
+  </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}">Mozilla Bug {BUGNUMBER}</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
-<script type="application/javascript">
-
-/** Test for Bug {BUGNUMBER} **/
-
-
-
-
-
-</script>
 </pre>
 </body>
 </html>

@@ -36,7 +36,7 @@ function setFileInputs () {
   SpecialPowers.wrap(singleFileInput).mozSetFileNameArray([f.path], 1);
 
   var input2FileNames = [];
-  for each (file in input2Files) {
+  for (file of input2Files) {
     f = createFileWithData(file.name, file.body);
     input2FileNames.push(f.path);
   }

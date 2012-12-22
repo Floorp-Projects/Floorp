@@ -30,6 +30,8 @@ CPPSRCS = \
   Principal.cpp \
   RuntimeService.cpp \
   ScriptLoader.cpp \
+  TextDecoder.cpp \
+  TextEncoder.cpp \
   Worker.cpp \
   WorkerPrivate.cpp \
   WorkerScope.cpp \
@@ -52,6 +54,8 @@ EXPORTS_mozilla/dom/workers/bindings = \
   EventListenerManager.h \
   EventTarget.h \
   FileReaderSync.h \
+  TextDecoder.h \
+  TextEncoder.h \
   WorkerFeature.h \
   XMLHttpRequestEventTarget.h \
   XMLHttpRequestUpload.h \

@@ -421,6 +421,7 @@ private:
   mozilla::dom::CSSValue* DoGetClipPath();
   mozilla::dom::CSSValue* DoGetFilter();
   mozilla::dom::CSSValue* DoGetMask();
+  mozilla::dom::CSSValue* DoGetMaskType();
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited);

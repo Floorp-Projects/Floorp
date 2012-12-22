@@ -10,7 +10,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.36 2012/06/25 21:48:41 rrelyea%redhat.com Exp $
+ * $Id: secoidt.h,v 1.37 2012/12/19 02:10:42 emaldona%redhat.com Exp $
  */
 
 #include "secitem.h"
@@ -435,6 +435,12 @@ typedef enum {
 
     SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA224_DIGEST     = 314,
     SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA256_DIGEST     = 315,
+
+    /* Microsoft Trust List Signing
+     * szOID_KP_CTL_USAGE_SIGNING 
+     * where KP stands for Key Purpose
+     */
+    SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING    = 316,
 
     SEC_OID_TOTAL
 } SECOidTag;

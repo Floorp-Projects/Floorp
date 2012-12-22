@@ -52,14 +52,14 @@ function reflectURL(aElement, aAttr)
     [ "http://a b/", "http://a b/" ], // TODO: doesn't follow the specs, should be "".
   ];
 
-  for each (var value in values) {
+  for (var value of values) {
     aElement[idl] = value[0];
     is(aElement[idl], value[1], "." + idl + " value should be " + value[1]);
     is(aElement.getAttribute(attr), value[0],
        "@" + attr + " value should be " + value[0]);
   }
 
-  for each (var value in values) {
+  for (var value of values) {
     aElement.setAttribute(attr, value[0]);
     is(aElement[idl], value[1], "." + idl + " value should be " + value[1]);
     is(aElement.getAttribute(attr), value[0],

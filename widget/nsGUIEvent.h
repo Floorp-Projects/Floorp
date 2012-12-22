@@ -564,13 +564,17 @@ public:
   }
 
 private:
-  inline void SetRawFlags(uint32_t aRawFlags)
+  typedef uint32_t RawFlags;
+
+  inline void SetRawFlags(RawFlags aRawFlags)
   {
+    MOZ_STATIC_ASSERT(sizeof(EventFlags) <= sizeof(RawFlags),
+      "mozilla::widget::EventFlags must not be bigger than the RawFlags");
     memcpy(this, &aRawFlags, sizeof(EventFlags));
   }
-  inline uint32_t GetRawFlags() const
+  inline RawFlags GetRawFlags() const
   {
-    uint32_t result = 0;
+    RawFlags result = 0;
     memcpy(&result, this, sizeof(EventFlags));
     return result;
   }

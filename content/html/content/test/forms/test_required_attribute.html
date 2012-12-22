@@ -358,14 +358,14 @@ checkTextareaRequiredValidity();
 // First of all, checks for types that make the element barred from
 // constraint validation.
 var typeBarredFromConstraintValidation = ["hidden", "button", "reset", "submit", "image"];
-for each (type in typeRequireNotApply) {
+for (type of typeBarredFromConstraintValidation) {
   checkInputRequiredNotApply(type, true);
 }
 
 // Then, checks for the types which do not use the required attribute.
 // TODO: check 'color' and 'range' when they will be implemented.
 var typeRequireNotApply = [];
-for each (type in typeRequireNotApply) {
+for (type of typeRequireNotApply) {
   checkInputRequiredNotApply(type, false);
 }
 
@@ -375,7 +375,7 @@ for each (type in typeRequireNotApply) {
 var typeRequireApply = ["text", "password", "search", "tel", "email", "url",
                         "number"];
 
-for each (type in typeRequireApply) {
+for (type of typeRequireApply) {
   checkInputRequiredValidity(type);
 }
 

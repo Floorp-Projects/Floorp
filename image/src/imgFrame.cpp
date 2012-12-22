@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -813,7 +813,6 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxASurface::MemoryLocat
     n += n2;
   }
 
-  // XXX: should pass aMallocSizeOf here.  See bug 723827.
 #ifdef USE_WIN_SURFACE
   if (mWinSurface && aLocation == mWinSurface->GetMemoryLocation()) {
     n += mWinSurface->KnownMemoryUsed();
@@ -836,7 +835,16 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxASurface::MemoryLocat
   }
 
   if (mOptSurface && aLocation == mOptSurface->GetMemoryLocation()) {
-    n += mOptSurface->KnownMemoryUsed();
+    size_t n2 = 0;
+    if (aLocation == gfxASurface::MEMORY_IN_PROCESS_HEAP &&
+        mOptSurface->SizeOfIsMeasured()) {
+      // HEAP: measure (but only if the sub-class is capable of measuring)
+      n2 = mOptSurface->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (n2 == 0) {  // non-HEAP or computed fallback for HEAP
+      n2 = mOptSurface->KnownMemoryUsed();
+    }
+    n += n2;
   }
 
   return n;

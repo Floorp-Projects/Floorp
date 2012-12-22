@@ -10,7 +10,7 @@
  * ProgressEvent can be used for measuring progress.
  */
 
-[scriptable, builtinclass, uuid(c5b7ec31-b846-4a9f-b81e-859e76a74f6b)]
+[scriptable, builtinclass, uuid(e0682338-4c3f-4d3a-9487-d7492ea76335)]
 interface nsIDOMProgressEvent : nsIDOMEvent
 {
   readonly attribute boolean lengthComputable;

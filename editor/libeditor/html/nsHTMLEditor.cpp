@@ -4062,34 +4062,42 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPt
 // GetPriorHTMLNode: returns the previous editable leaf node, if there is
 //                   one within the <body>
 //
-nsresult
-nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
+nsIContent*
+nsHTMLEditor::GetPriorHTMLNode(nsINode* aNode, bool aNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aNode);
 
-  nsIContent* activeEditingHost = GetActiveEditingHost();
-  if (!activeEditingHost) {
-    *outNode = nullptr;
-    return NS_OK;
+  if (!GetActiveEditingHost()) {
+    return nullptr;
   }
 
-  nsresult res = GetPriorNode(inNode, true, address_of(*outNode),
-                              bNoBlockCrossing);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  NS_ASSERTION(!*outNode || IsDescendantOfEditorRoot(*outNode),
-               "GetPriorNode screwed up");
-  return res;
+  return GetPriorNode(aNode, true, aNoBlockCrossing);
+}
+
+nsresult
+nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode* aNode,
+                               nsCOMPtr<nsIDOMNode>* aResultNode,
+                               bool aNoBlockCrossing)
+{
+  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+
+  *aResultNode = do_QueryInterface(GetPriorHTMLNode(node, aNoBlockCrossing));
+  return NS_OK;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // GetPriorHTMLNode: same as above but takes {parent,offset} instead of node
-//                       
+//
 nsIContent*
 nsHTMLEditor::GetPriorHTMLNode(nsINode* aParent, int32_t aOffset,
                                bool aNoBlockCrossing)
 {
+  MOZ_ASSERT(aParent);
+
   if (!GetActiveEditingHost()) {
     return nullptr;
   }
@@ -4098,23 +4106,18 @@ nsHTMLEditor::GetPriorHTMLNode(nsINode* aParent, int32_t aOffset,
 }
 
 nsresult
-nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
+nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode* aNode, int32_t aOffset,
+                               nsCOMPtr<nsIDOMNode>* aResultNode,
+                               bool aNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
 
-  nsIContent* activeEditingHost = GetActiveEditingHost();
-  if (!activeEditingHost) {
-    *outNode = nullptr;
-    return NS_OK;
-  }
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode),
-                              bNoBlockCrossing);
-  NS_ENSURE_SUCCESS(res, res);
-
-  NS_ASSERTION(!*outNode || IsDescendantOfEditorRoot(*outNode),
-               "GetPriorNode screwed up");
-  return res;
+  *aResultNode = do_QueryInterface(GetPriorHTMLNode(node, aOffset,
+                                                    aNoBlockCrossing));
+  return NS_OK;
 }
 
 
@@ -4122,23 +4125,37 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<
 // GetNextHTMLNode: returns the next editable leaf node, if there is
 //                   one within the <body>
 //                       
-nsresult
-nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
+nsIContent*
+nsHTMLEditor::GetNextHTMLNode(nsINode* aNode, bool aNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  nsresult res = GetNextNode(inNode, true, address_of(*outNode), bNoBlockCrossing);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  // if it's not in the body, then zero it out
-  if (*outNode && !IsDescendantOfEditorRoot(*outNode)) {
-    *outNode = nullptr;
+  MOZ_ASSERT(aNode);
+
+  nsIContent* result = GetNextNode(aNode, true, aNoBlockCrossing);
+
+  if (result && !IsDescendantOfEditorRoot(result)) {
+    return nullptr;
   }
-  return res;
+
+  return result;
+}
+
+nsresult
+nsHTMLEditor::GetNextHTMLNode(nsIDOMNode* aNode,
+                              nsCOMPtr<nsIDOMNode>* aResultNode,
+                              bool aNoBlockCrossing)
+{
+  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+
+  *aResultNode = do_QueryInterface(GetNextHTMLNode(node, aNoBlockCrossing));
+  return NS_OK;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// GetNHTMLextNode: same as above but takes {parent,offset} instead of node
+// GetNextHTMLNode: same as above but takes {parent,offset} instead of node
 //                       
 nsIContent*
 nsHTMLEditor::GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
@@ -4152,17 +4169,18 @@ nsHTMLEditor::GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
 }
 
 nsresult
-nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
+nsHTMLEditor::GetNextHTMLNode(nsIDOMNode* aNode, int32_t aOffset,
+                              nsCOMPtr<nsIDOMNode>* aResultNode,
+                              bool aNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  nsresult res = GetNextNode(inParent, inOffset, true, address_of(*outNode), bNoBlockCrossing);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  // if it's not in the body, then zero it out
-  if (*outNode && !IsDescendantOfEditorRoot(*outNode)) {
-    *outNode = nullptr;
-  }
-  return res;
+  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+
+  *aResultNode = do_QueryInterface(GetNextHTMLNode(node, aOffset,
+                                                   aNoBlockCrossing));
+  return NS_OK;
 }
 
 

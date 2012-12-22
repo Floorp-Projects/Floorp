@@ -125,13 +125,12 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
             return false;
 
 #ifdef JS_ION
-        // If this script hasn't been compiled yet, make sure it will never
-        // be compiled. IonMonkey does not guarantee |f.arguments| can be
+        // Disabling compiling of this script in IonMonkey.
+        // IonMonkey does not guarantee |f.arguments| can be
         // fully recovered, so we try to mitigate observing this behavior by
         // detecting its use early.
         UnrootedScript script = iter.script();
-        if (!script->hasAnyIonScript())
-            ion::ForbidCompilation(cx, script);
+        ion::ForbidCompilation(cx, script);
 #endif
 
         vp.setObject(*argsobj);

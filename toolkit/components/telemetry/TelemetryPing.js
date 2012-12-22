@@ -744,7 +744,7 @@ TelemetryPing.prototype = {
       this.attachObservers();
       this.gatherMemory();
 
-      Telemetry.asyncReadShutdownTime(function () {
+      Telemetry.asyncFetchTelemetryData(function () {
       });
       delete this._timer;
     }
