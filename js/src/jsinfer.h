@@ -22,10 +22,6 @@
 
 ForwardDeclareJS(Script);
 
-namespace JS {
-struct TypeInferenceSizes;
-}
-
 namespace js {
 
 class TaggedProto
@@ -1036,7 +1032,7 @@ struct TypeObject : gc::Cell
     inline void clearProperties();
     inline void sweep(FreeOp *fop);
 
-    void sizeOfExcludingThis(TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -1118,7 +1114,7 @@ struct TypeCallsite
 /* Persistent type information for a script, retained across GCs. */
 class TypeScript
 {
-    friend struct ::JSScript;
+    friend class ::JSScript;
 
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;

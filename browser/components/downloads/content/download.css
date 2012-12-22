@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+richlistitem.download button {
+  /* These buttons should never get focus, as that would "disable"
+     the downloads view controller (it's only used when the richlistbox
+     is focused). */
+  -moz-user-focus: none;
+}
+
+/*** Visibility of controls inside download items ***/
+
+.download-state:-moz-any(     [state="6"], /* Blocked (parental) */
+                              [state="8"], /* Blocked (dirty)    */
+                              [state="9"]) /* Blocked (policy)   */
+                                           .downloadTypeIcon:not(.blockedIcon),
+
+.download-state:not(:-moz-any([state="6"], /* Blocked (parental) */
+                              [state="8"], /* Blocked (dirty)    */
+                              [state="9"]) /* Blocked (policy)   */)
+                                           .downloadTypeIcon.blockedIcon,
+
+.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
+                              [state="5"], /* Starting (queued)  */
+                              [state="0"], /* Downloading        */
+                              [state="4"], /* Paused             */
+                              [state="7"]) /* Scanning           */)
+                                           .downloadProgress,
+
+.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
+                              [state="5"], /* Starting (queued)  */
+                              [state="0"], /* Downloading        */
+                              [state="4"]) /* Paused             */)
+                                           .downloadCancel,
+
+.download-state:not(:-moz-any([state="2"], /* Failed             */
+                              [state="3"]) /* Canceled           */)
+                                           .downloadRetry,
+
+.download-state:not(          [state="1"]  /* Finished           */)
+                                           .downloadShow
+{
+  display: none;
+}

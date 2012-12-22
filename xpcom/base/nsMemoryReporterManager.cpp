@@ -604,13 +604,9 @@ public:
            sizes.mStackTraceTable,
            "Memory used by DMD's stack trace table.");
 
-    REPORT("explicit/dmd/live-block-table",
-           sizes.mLiveBlockTable,
+    REPORT("explicit/dmd/block-table",
+           sizes.mBlockTable,
            "Memory used by DMD's live block table.");
-
-    REPORT("explicit/dmd/double-report-table",
-           sizes.mDoubleReportTable,
-           "Memory used by DMD's double-report table.");
 
 #undef REPORT
 

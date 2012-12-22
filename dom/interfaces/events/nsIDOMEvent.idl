@@ -38,7 +38,7 @@ class WheelEvent;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, builtinclass, uuid(270c945b-8a65-4170-bc0b-4ec1443cd39f)]
+[scriptable, builtinclass, uuid(c939eab8-1345-4344-875b-e0f2d8d89171)]
 interface nsIDOMEvent : nsISupports
 {
   // PhaseType
@@ -247,7 +247,7 @@ interface nsIDOMEvent : nsISupports
   [noscript] void setTarget(in nsIDOMEventTarget aTarget);
   [notxpcom] boolean IsDispatchStopped();
   [notxpcom] nsEventPtr GetInternalNSEvent();
-  [noscript] void SetTrusted(in boolean aTrusted);
+  [noscript,notxpcom] void SetTrusted(in boolean aTrusted);
   [notxpcom] void Serialize(in IPCMessagePtr aMsg,
                             in boolean aSerializeInterfaceType);
   [notxpcom] boolean Deserialize(in ConstIPCMessagePtr aMsg, out voidPtr aIter);

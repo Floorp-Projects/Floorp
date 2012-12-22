@@ -575,16 +575,6 @@ protected:
   static void StyleColorToString(const nscolor& aColor, nsAString& aStr);
 
   /**
-    * Creates the unpremultiply lookup table, if it doesn't exist.
-    */
-  void EnsureUnpremultiplyTable();
-
-  /**
-    * Creates the premultiply lookup table, if it doesn't exist.
-    */
-  void EnsurePremultiplyTable();
-
-  /**
    * Creates the error target, if it doesn't exist
    */
   static void EnsureErrorTarget();

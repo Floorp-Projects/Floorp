@@ -101,7 +101,7 @@ using namespace mozilla::places;
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
 #define RENEW_CACHED_NOW_TIMEOUT ((int32_t)3 * PR_MSEC_PER_SEC)
 
-static const int64_t USECS_PER_DAY = PR_USEC_PER_SEC * 60 * 60 * 24;
+static const int64_t USECS_PER_DAY = (int64_t)PR_USEC_PER_SEC * 60 * 60 * 24;
 
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
@@ -251,6 +251,7 @@ const int32_t nsNavHistory::kGetInfoIndex_ItemLastModified = 10;
 const int32_t nsNavHistory::kGetInfoIndex_ItemParentId = 11;
 const int32_t nsNavHistory::kGetInfoIndex_ItemTags = 12;
 const int32_t nsNavHistory::kGetInfoIndex_Frecency = 13;
+const int32_t nsNavHistory::kGetInfoIndex_Hidden = 14;
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
@@ -731,15 +732,15 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
                           int64_t aSessionID,
                           int64_t referringVisitID,
                           int32_t aTransitionType,
-                          const nsACString& aGUID)
+                          const nsACString& aGUID,
+                          bool aHidden)
 {
-  uint32_t added = 0;
   MOZ_ASSERT(!aGUID.IsEmpty());
   mHasHistoryEntries = 1;
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
                    OnVisit(aURI, aVisitID, aTime, aSessionID,
-                           referringVisitID, aTransitionType, aGUID, &added));
+                           referringVisitID, aTransitionType, aGUID, aHidden));
 }
 
 void
@@ -961,6 +962,10 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
 {
   // lazily created from the node's string when we need to match URIs
   nsCOMPtr<nsIURI> nodeUri;
+
+  // --- hidden ---
+  if (aNode->mHidden && !aOptions->IncludeHidden())
+    return false;
 
   for (int32_t i = 0; i < aQueries.Count(); i ++) {
     bool hasIt;
@@ -1392,11 +1397,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     scoper.Abandon();
 
     // Hide only embedded links and redirects
-    // See the hidden computation code above for a little more explanation.
-    hidden = (int32_t)(aTransitionType == TRANSITION_EMBED ||
-                       aTransitionType == TRANSITION_FRAMED_LINK ||
-                       aIsRedirect);
-
+    hidden = (int32_t)GetHiddenState(aIsRedirect, aTransitionType);
     typed = (int32_t)(aTransitionType == TRANSITION_TYPED);
 
     // set as visited once, no title
@@ -1433,13 +1434,10 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // important to notify the observers below.
   (void)UpdateFrecency(pageID);
 
-  // Notify observers: The hidden detection code must match that in
-  // GetQueryResults to maintain consistency.
-  // FIXME bug 325241: make a way to observe hidden URLs
-  if (!hidden) {
-    NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
-                  aTransitionType, guid);
-  }
+  // Notify the visit.  Note that TRANSITION_EMBED visits are never added
+  // to the database, thus cannot be queried and we don't notify them.
+  NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
+                aTransitionType, guid, hidden);
 
   // Normally docshell sends the link visited observer notification for us (this
   // will tell all the documents to update their visited link coloring).
@@ -1804,7 +1802,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
       mQueryString = NS_LITERAL_CSTRING(
         "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, "
         "h.last_visit_date, f.url, null, null, null, null, null, ") +
-        tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency "
+        tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
         "FROM moz_places h "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
         // WHERE 1 is a no-op since additonal conditions will start with AND.
@@ -1830,7 +1828,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
           "SELECT b2.fk, h.url, COALESCE(b2.title, h.title) AS page_title, "
             "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b2.id, "
             "b2.dateAdded, b2.lastModified, b2.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency "
+            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
           "FROM moz_bookmarks b2 "
           "JOIN (SELECT b.fk "
                 "FROM moz_bookmarks b "
@@ -1854,7 +1852,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
           "SELECT b.fk, h.url, COALESCE(b.title, h.title) AS page_title, "
             "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
             "b.dateAdded, b.lastModified, b.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency "
+            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
           "FROM moz_bookmarks b "
           "JOIN moz_places h ON b.fk = h.id "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -1886,7 +1884,7 @@ PlacesSQLQueryBuilder::SelectAsVisit()
   mQueryString = NS_LITERAL_CSTRING(
     "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, "
       "v.visit_date, f.url, v.session, null, null, null, null, ") +
-      tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency "
+      tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
     "FROM moz_places h "
     "JOIN moz_historyvisits v ON h.id = v.place_id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -1921,7 +1919,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
   mQueryString = nsPrintfCString(
      "SELECT null, "
        "'place:type=%ld&sort=%ld&beginTime='||beginTime||'&endTime='||endTime, "
-      "dayTitle, null, null, beginTime, null, null, null, null, null, null "
+      "dayTitle, null, null, beginTime, null, null, null, null, null, null, null "
      "FROM (", // TOUTER BEGIN
      resultType,
      sortingMode);
@@ -2124,7 +2122,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
 
   mQueryString = nsPrintfCString(
     "SELECT null, 'place:type=%ld&sort=%ld&domain=&domainIsHost=true'%s, "
-           ":localhost, :localhost, null, null, null, null, null, null, null "
+           ":localhost, :localhost, null, null, null, null, null, null, null, null "
     "WHERE EXISTS ( "
       "SELECT h.id FROM moz_places h "
       "%s "
@@ -2137,7 +2135,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
     "UNION ALL "
     "SELECT null, "
            "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true'%s, "
-           "host, host, null, null, null, null, null, null, null "
+           "host, host, null, null, null, null, null, null, null, null "
     "FROM ( "
       "SELECT get_unreversed_host(h.rev_host) AS host "
       "FROM moz_places h "
@@ -2177,7 +2175,7 @@ PlacesSQLQueryBuilder::SelectAsTag()
   mQueryString = nsPrintfCString(
     "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%ld', "
            "title, null, null, null, null, null, null, dateAdded, "
-           "lastModified, null, null "
+           "lastModified, null, null, null "
     "FROM moz_bookmarks "
     "WHERE parent = %lld",
     nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
@@ -2411,7 +2409,7 @@ nsNavHistory::ConstructQueryString(
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, h.last_visit_date, "
           "f.url, null, null, null, null, null, ") +
-          tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency "
+          tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
         "FROM moz_places h "
         "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
         "WHERE h.hidden = 0 "
@@ -3949,9 +3947,10 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   const nsTArray<uint32_t>& transitions = aQuery->Transitions();
   for (uint32_t i = 0; i < transitions.Length(); ++i) {
     nsPrintfCString param(":transition%d_", i);
-    clause.Condition("EXISTS (SELECT 1 FROM moz_historyvisits "
-                             "WHERE place_id = h.id AND visit_type = "
-              ).Param(param.get()).Str(" LIMIT 1)");
+    clause.Condition("h.id IN (SELECT place_id FROM moz_historyvisits "
+                             "WHERE visit_type = ")
+          .Param(param.get())
+          .Str(")");
   }
 
   // folders
@@ -4477,6 +4476,9 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
       (*aResult)->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
     }
 
+    (*aResult)->mFrecency = aRow->AsInt32(kGetInfoIndex_Frecency);
+    (*aResult)->mHidden = !!aRow->AsInt32(kGetInfoIndex_Hidden);
+
     nsAutoString tags;
     rv = aRow->GetString(kGetInfoIndex_ItemTags, tags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -4599,7 +4601,7 @@ nsNavHistory::VisitIdToResultNode(int64_t visitId,
       statement = mDB->GetStatement(NS_LITERAL_CSTRING(
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
                "v.visit_date, f.url, v.session, null, null, null, null, "
-               ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency "
+               ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
         "FROM moz_places h "
         "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -4613,7 +4615,7 @@ nsNavHistory::VisitIdToResultNode(int64_t visitId,
       statement = mDB->GetStatement(NS_LITERAL_CSTRING(
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
                "h.last_visit_date, f.url, null, null, null, null, null, "
-               ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency "
+               ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
         "FROM moz_places h "
         "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -4659,7 +4661,7 @@ nsNavHistory::BookmarkIdToResultNode(int64_t aBookmarkId, nsNavHistoryQueryOptio
       "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
              "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
              "b.dateAdded, b.lastModified, b.parent, "
-             ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency "
+             ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
       "FROM moz_bookmarks b "
       "JOIN moz_places h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -4698,7 +4700,7 @@ nsNavHistory::URIToResultNode(nsIURI* aURI,
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
     "SELECT h.id, :page_url, h.title, h.rev_host, h.visit_count, "
            "h.last_visit_date, f.url, null, null, null, null, null, "
-           ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency "
+           ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden "
     "FROM moz_places h "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE h.url = :page_url ")

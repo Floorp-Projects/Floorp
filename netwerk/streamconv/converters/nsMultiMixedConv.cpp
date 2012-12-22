@@ -987,9 +987,12 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
                 // pass the bytes-unit and the SP
                 char *range = (char *) strchr(colon + 2, ' ');
-
                 if (!range)
                     return NS_ERROR_FAILURE;
+
+                do {
+                    range++;
+                } while (*range == ' ');
 
                 if (range[0] == '*'){
                     mByteRangeStart = mByteRangeEnd = 0;

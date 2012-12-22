@@ -91,6 +91,8 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws]
   void send(ArrayBuffer data);
   [Throws]
+  void send(ArrayBufferView data);
+  [Throws]
   void send(Blob data);
   [Throws]
   void send(Document data);

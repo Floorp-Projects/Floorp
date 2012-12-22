@@ -197,7 +197,7 @@ public:
 
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvShow(const nsIntSize& size);
-    virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size);
+    virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation);
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
     virtual bool RecvHandleDoubleTap(const nsIntPoint& aPoint);
     virtual bool RecvHandleSingleTap(const nsIntPoint& aPoint);
@@ -292,6 +292,8 @@ public:
     void GetDPI(float* aDPI);
 
     gfxSize GetZoom() { return mLastMetrics.mZoom; }
+
+    ScreenOrientation GetOrientation() { return mOrientation; }
 
     void SetBackgroundColor(const nscolor& aColor);
 
@@ -419,6 +421,7 @@ private:
     bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;
     nsString mAppType;
+    ScreenOrientation mOrientation;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

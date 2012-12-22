@@ -85,7 +85,7 @@ function checkValueAttribute()
 
   var element = document.createElement('progress');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     if (test[2]) {
       element.setAttribute('max', test[2]);
     }
@@ -114,7 +114,7 @@ function checkMaxAttribute()
 
   var element = document.createElement('progress');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     checkAttribute(element, 'max', test[0], test[1]);
   }
 }
@@ -165,7 +165,7 @@ function checkPositionAttribute()
 
   var element = document.createElement('progress');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     checkPositionValue(element, test[0], test[1], test[2], test[3]);
   }
 }
@@ -206,7 +206,7 @@ function checkIndeterminatePseudoClass()
 
   var element = document.createElement('progress');
 
-  for each(var test in tests) {
+  for (var test of tests) {
     checkIndeterminate(element, test[0], test[1], test[2]);
   }
 }

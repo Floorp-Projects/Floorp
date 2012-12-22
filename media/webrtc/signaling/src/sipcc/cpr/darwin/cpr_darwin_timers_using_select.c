@@ -270,8 +270,8 @@ static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void
 #else
     cprAssert(FALSE, CPR_FAILURE);
     CPR_ERROR("CPR Timers are disabled! %s\n", __FUNCTION__);
-#endif
     return CPR_SUCCESS;
+#endif
 }
 
 

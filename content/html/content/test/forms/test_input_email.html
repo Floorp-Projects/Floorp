@@ -144,7 +144,7 @@ legalCharacters += "0123456789";
 legalCharacters += "!#$%&'*+-/=?^_`{|}~.";
 
 // Add all username legal characters individually to the list.
-for each (c in legalCharacters) {
+for (c of legalCharacters) {
   values.push([c + "@bar.com", true]);
 }
 // Add the concatenation of all legal characters too.
@@ -152,7 +152,7 @@ values.push([legalCharacters + "@bar.com", true]);
 
 // Add username illegal characters, the same way.
 var illegalCharacters = "()<>[]:;@\\, \t";
-for each (c in illegalCharacters) {
+for (c of illegalCharacters) {
   values.push([illegalCharacters + "@bar.com", false]);
 }
 
@@ -164,7 +164,7 @@ legalCharacters += "0123456789";
 legalCharacters += "-";
 
 // Add domain legal characters (except '.' because it's special).
-for each (c in legalCharacters) {
+for (c of legalCharacters) {
   values.push(["foo@foo.bar" + c, true]);
 }
 // Add the concatenation of all legal characters too.
@@ -172,7 +172,7 @@ values.push(["foo@bar.com" + legalCharacters, true]);
 
 // Add domain illegal characters.
 illegalCharacters = "()<>[]:;@\\,!#$%&'*+/=?^_`{|}~ \t";
-for each (c in illegalCharacters) {
+for (c of illegalCharacters) {
   values.push(['foo@foo.ba' + c + 'r', false]);
 }
 

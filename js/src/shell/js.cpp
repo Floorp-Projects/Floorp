@@ -4617,6 +4617,225 @@ static JSClass env_class = {
 };
 
 /*
+ * Define a FakeDOMObject constructor. It returns an object with a getter,
+ * setter and method with attached JitInfo. This object can be used to test
+ * IonMonkey DOM optimizations in the shell.
+ */
+static uint32_t DOM_OBJECT_SLOT = 0;
+
+static JSBool
+dom_genericGetter(JSContext* cx, unsigned argc, JS::Value *vp);
+
+static JSBool
+dom_genericSetter(JSContext* cx, unsigned argc, JS::Value *vp);
+
+static JSBool
+dom_genericMethod(JSContext *cx, unsigned argc, JS::Value *vp);
+
+#ifdef DEBUG
+static JSClass *GetDomClass();
+#endif
+
+static bool
+dom_get_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *vp)
+{
+    JS_ASSERT(JS_GetClass(obj) == GetDomClass());
+    JS_ASSERT(self == (void *)0x1234);
+    *vp = JS_NumberValue(double(3.14));
+    return true;
+}
+
+static bool
+dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *argv)
+{
+    JS_ASSERT(JS_GetClass(obj) == GetDomClass());
+    JS_ASSERT(self == (void *)0x1234);
+    return true;
+}
+
+static bool
+dom_doFoo(JSContext* cx, JSHandleObject obj, void *self, unsigned argc, JS::Value *vp)
+{
+    JS_ASSERT(JS_GetClass(obj) == GetDomClass());
+    JS_ASSERT(self == (void *)0x1234);
+
+    /* Just return argc. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setInt32(argc);
+    return true;
+}
+
+const JSJitInfo dom_x_getterinfo = {
+    (JSJitPropertyOp)dom_get_x,
+    0,        /* protoID */
+    0,        /* depth */
+    JSJitInfo::Getter,
+    true,     /* isInfallible. False in setters. */
+    true      /* isConstant. Only relevant for getters. */
+};
+
+const JSJitInfo dom_x_setterinfo = {
+    (JSJitPropertyOp)dom_set_x,
+    0,        /* protoID */
+    0,        /* depth */
+    JSJitInfo::Setter,
+    false,    /* isInfallible. False in setters. */
+    false     /* isConstant. Only relevant for getters. */
+};
+
+const JSJitInfo doFoo_methodinfo = {
+    (JSJitPropertyOp)dom_doFoo,
+    0,        /* protoID */
+    0,        /* depth */
+    JSJitInfo::Method,
+    false,    /* isInfallible. False in setters. */
+    false     /* isConstant. Only relevant for getters. */
+};
+
+static JSPropertySpec dom_props[] = {
+    {"x", 0,
+     JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS,
+     { (JSPropertyOp)dom_genericGetter, &dom_x_getterinfo },
+     { (JSStrictPropertyOp)dom_genericSetter, &dom_x_setterinfo }
+    },
+    {NULL,0,0,JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
+};
+
+static JSFunctionSpec dom_methods[] = {
+    JS_FNINFO("doFoo", dom_genericMethod, &doFoo_methodinfo, 3, JSPROP_ENUMERATE),
+    JS_FS_END
+};
+
+static JSClass dom_class = {
+    "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
+    JS_PropertyStub,       /* addProperty */
+    JS_PropertyStub,       /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                  /* finalize */
+    NULL,                  /* checkAccess */
+    NULL,                  /* call */
+    NULL,                  /* hasInstance */
+    NULL,                  /* construct */
+    NULL,                  /* trace */
+    JSCLASS_NO_INTERNAL_MEMBERS
+};
+
+#ifdef DEBUG
+static JSClass *GetDomClass() {
+    return &dom_class;
+}
+#endif
+
+static JSBool
+dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    if (!obj)
+        return false;
+
+    if (JS_GetClass(obj) != &dom_class) {
+        *vp = JSVAL_VOID;
+        return true;
+    }
+
+    JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+
+    const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
+    MOZ_ASSERT(info->type == JSJitInfo::Getter);
+    JSJitPropertyOp getter = info->op;
+    return getter(cx, obj, val.toPrivate(), vp);
+}
+
+static JSBool
+dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+    js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    if (!obj)
+        return false;
+
+    JS_ASSERT(argc == 1);
+
+    if (JS_GetClass(obj) != &dom_class) {
+        *vp = JSVAL_VOID;
+        return true;
+    }
+
+    JS::Value* argv = JS_ARGV(cx, vp);
+    JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+
+    const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
+    MOZ_ASSERT(info->type == JSJitInfo::Setter);
+    JSJitPropertyOp setter = info->op;
+    if (!setter(cx, obj, val.toPrivate(), argv))
+        return false;
+    *vp = JSVAL_VOID;
+    return true;
+}
+
+static JSBool
+dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
+{
+    js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    if (!obj)
+        return false;
+
+    if (JS_GetClass(obj) != &dom_class) {
+        *vp = JSVAL_VOID;
+        return true;
+    }
+
+    JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+
+    const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
+    MOZ_ASSERT(info->type == JSJitInfo::Method);
+    JSJitMethodOp method = (JSJitMethodOp)info->op;
+    return method(cx, obj, val.toPrivate(), argc, vp);
+}
+
+static void
+InitDOMObject(HandleObject obj)
+{
+    /* Fow now just initialize to a constant we can check. */
+    SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL((void *)0x1234));
+}
+
+static JSBool
+dom_constructor(JSContext* cx, unsigned argc, JS::Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject callee(cx, &args.callee());
+    RootedValue protov(cx);
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
+        return false;
+
+    if (!protov.isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE, "FakeDOMObject");
+        return false;
+    }
+
+    RootedObject domObj(cx, JS_NewObject(cx, &dom_class, &protov.toObject(), NULL));
+    if (!domObj)
+        return false;
+
+    InitDOMObject(domObj);
+
+    args.rval().setObject(*domObj);
+    return true;
+}
+
+static JSBool
+InstanceClassHasProtoAtDepth(JSHandleObject protoObject, uint32_t protoID, uint32_t depth)
+{
+    /* There's only a single (fake) DOM object in the shell, so just return true. */
+    return true;
+}
+
+/*
  * Avoid a reentrancy hazard.
  *
  * The non-JS_THREADSAFE shell uses a signal handler to implement timeout().
@@ -4716,6 +4935,20 @@ NewGlobalObject(JSContext *cx)
         if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
                                its_setter, JSPROP_READONLY))
             return NULL;
+
+        /* Initialize FakeDOMObject. */
+        static js::DOMCallbacks DOMcallbacks = {
+            InstanceClassHasProtoAtDepth
+        };
+        SetDOMCallbacks(cx->runtime, &DOMcallbacks);
+
+        RootedObject domProto(cx, JS_InitClass(cx, glob, NULL, &dom_class, dom_constructor, 0,
+                                               dom_props, dom_methods, NULL, NULL));
+        if (!domProto)
+            return NULL;
+
+        /* Initialize FakeDOMObject.prototype */
+        InitDOMObject(domProto);
     }
 
     return glob;

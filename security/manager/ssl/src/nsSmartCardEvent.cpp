@@ -36,7 +36,8 @@ NS_IMETHODIMP nsSmartCardEvent::Init(nsIDOMEvent * aInner)
 {
   NS_ASSERTION(aInner, "SmartCardEvent initialized with a null Event");
   mInner = aInner;
-  return mInner->SetTrusted(true);
+  mInner->SetTrusted(true);
+  return NS_OK;
 }
 
 // nsSmartCard Specific methods
@@ -71,10 +72,10 @@ NS_IMETHODIMP_(nsEvent*) nsSmartCardEvent::GetInternalNSEvent()
   return mInner->GetInternalNSEvent();
 }
 
-NS_IMETHODIMP nsSmartCardEvent::SetTrusted(bool aResult)
+NS_IMETHODIMP_(void) nsSmartCardEvent::SetTrusted(bool aResult)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->SetTrusted(aResult);
+  mInner->SetTrusted(aResult);
 }
 
 void

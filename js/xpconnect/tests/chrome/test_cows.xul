@@ -235,8 +235,6 @@ function COWTests() {
         var props = [name for (name in getCOW(readable))];
         is(props.length, 1, "COW w/ one exposed prop should enumerate once");
         is(props[0], 'foo', "COW w/ one exposed prop should enumerate it");
-        props = [value for each (value in getCOW(readable))];
-        is(props[0], 5, "for-each over COWs works");
     } catch (e) {
         ok(false, "COW w/ a readable prop should not raise exc " +
                   "on enumeration: " + e);

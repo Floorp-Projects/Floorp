@@ -4,11 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHTMLUnknownElement.h"
+#include "mozilla/dom/HTMLElementBinding.h"
 
 using namespace mozilla::dom;
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLUnknownElement, Element)
 NS_IMPL_RELEASE_INHERITED(nsHTMLUnknownElement, Element)
+
+JSObject*
+nsHTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                               bool *aTriedToWrap)
+{
+  return HTMLUnknownElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 

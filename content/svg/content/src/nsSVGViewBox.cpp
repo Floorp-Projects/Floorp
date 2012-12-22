@@ -9,6 +9,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMathUtils.h"
 #include "nsSMILValue.h"
+#include "nsSVGAttrTearoffTable.h"
 #include "SVGContentUtils.h"
 #include "SVGViewBoxSMILType.h"
 #include "nsAttrValueInlines.h"
@@ -64,6 +65,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGViewBox::DOMAnimatedRect)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedRect)
 NS_INTERFACE_MAP_END
+
+static nsSVGAttrTearoffTable<nsSVGViewBox, nsSVGViewBox::DOMAnimatedRect>
+  sSVGAnimatedRectTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGViewBox, nsSVGViewBox::DOMBaseVal>
+  sBaseSVGViewBoxTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGViewBox, nsSVGViewBox::DOMAnimVal>
+  sAnimSVGViewBoxTearoffTable;
+
 
 /* Implementation of nsSVGViewBox methods */
 
@@ -187,31 +196,58 @@ nsresult
 nsSVGViewBox::ToDOMAnimatedRect(nsIDOMSVGAnimatedRect **aResult,
                                 nsSVGElement* aSVGElement)
 {
-  *aResult = new DOMAnimatedRect(this, aSVGElement);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<DOMAnimatedRect> domAnimatedRect =
+    sSVGAnimatedRectTearoffTable.GetTearoff(this);
+  if (!domAnimatedRect) {
+    domAnimatedRect = new DOMAnimatedRect(this, aSVGElement);
+    sSVGAnimatedRectTearoffTable.AddTearoff(this, domAnimatedRect);
+  }
 
-  NS_ADDREF(*aResult);
+  domAnimatedRect.forget(aResult);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGViewBox::DOMAnimatedRect::GetBaseVal(nsIDOMSVGRect **aResult)
+nsSVGViewBox::DOMAnimatedRect::~DOMAnimatedRect()
 {
-  *aResult = new nsSVGViewBox::DOMBaseVal(mVal, mSVGElement);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+  sSVGAnimatedRectTearoffTable.RemoveTearoff(mVal);
+}
 
-  NS_ADDREF(*aResult);
+nsresult
+nsSVGViewBox::ToDOMBaseVal(nsIDOMSVGRect **aResult, nsSVGElement *aSVGElement)
+{
+  nsRefPtr<DOMBaseVal> domBaseVal =
+    sBaseSVGViewBoxTearoffTable.GetTearoff(this);
+  if (!domBaseVal) {
+    domBaseVal = new DOMBaseVal(this, aSVGElement);
+    sBaseSVGViewBoxTearoffTable.AddTearoff(this, domBaseVal);
+  }
+
+  domBaseVal.forget(aResult);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGViewBox::DOMAnimatedRect::GetAnimVal(nsIDOMSVGRect **aResult)
+nsSVGViewBox::DOMBaseVal::~DOMBaseVal()
 {
-  *aResult = new nsSVGViewBox::DOMAnimVal(mVal, mSVGElement);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+  sBaseSVGViewBoxTearoffTable.RemoveTearoff(mVal);
+}
 
-  NS_ADDREF(*aResult);
+nsresult
+nsSVGViewBox::ToDOMAnimVal(nsIDOMSVGRect **aResult, nsSVGElement *aSVGElement)
+{
+  nsRefPtr<DOMAnimVal> domAnimVal =
+    sAnimSVGViewBoxTearoffTable.GetTearoff(this);
+  if (!domAnimVal) {
+    domAnimVal = new DOMAnimVal(this, aSVGElement);
+    sAnimSVGViewBoxTearoffTable.AddTearoff(this, domAnimVal);
+  }
+
+  domAnimVal.forget(aResult);
   return NS_OK;
+}
+
+nsSVGViewBox::DOMAnimVal::~DOMAnimVal()
+{
+  sAnimSVGViewBoxTearoffTable.RemoveTearoff(mVal);
 }
 
 NS_IMETHODIMP

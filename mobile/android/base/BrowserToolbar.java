@@ -55,6 +55,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private int mAwesomeBarEntryRightMargin;
     private GeckoFrameLayout mAwesomeBarRightEdge;
     private BrowserToolbarBackground mAddressBarBg;
+    private View mAddressBarView;
     private BrowserToolbarBackground.CurveTowards mAddressBarBgCurveTowards;
     private int mAddressBarBgRightMargin;
     private GeckoTextView mTitle;
@@ -97,11 +98,17 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private TranslateAnimation mTitleSlideLeft;
     private TranslateAnimation mTitleSlideRight;
 
+    private int mAddressBarViewOffset;
+    private int mAddressBarViewOffsetNoForward;
+    private PropertyAnimator mForwardAnim = null;
+
     private int mCount;
     private int mFaviconSize;
 
     private static final int TABS_CONTRACTED = 1;
     private static final int TABS_EXPANDED = 2;
+
+    private static final int FORWARD_ANIMATION_DURATION = 450;
 
     public BrowserToolbar(BrowserApp activity) {
         // BrowserToolbar is attached to BrowserApp only.
@@ -124,6 +131,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mShowReader = false;
 
         mAddressBarBg = (BrowserToolbarBackground) mLayout.findViewById(R.id.address_bar_bg);
+        mAddressBarView = mLayout.findViewById(R.id.addressbar);
+        mAddressBarViewOffset = mActivity.getResources().getDimensionPixelSize(R.dimen.addressbar_offset_left);
+        mAddressBarViewOffsetNoForward = mActivity.getResources().getDimensionPixelSize(R.dimen.addressbar_offset_left_noforward);
         mAwesomeBarRightEdge = (GeckoFrameLayout) mLayout.findViewById(R.id.awesome_bar_right_edge);
         mAwesomeBarEntry = mLayout.findViewById(R.id.awesome_bar_entry);
 
@@ -204,6 +214,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         });
 
         mForward = (ImageButton) mLayout.findViewById(R.id.forward);
+        mForward.setEnabled(false); // initialize the forward button to not be enabled
         mForward.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View view) {
                 Tabs.getInstance().getSelectedTab().doForward();
@@ -403,6 +414,15 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         if (animation.equals(mLockFadeIn)) {
             if (mSiteSecurityVisible)
                 mSiteSecurity.setVisibility(View.VISIBLE);
+        } else if (animation.equals(mTitleSlideLeft)) {
+            // These two animations may be scheduled to start while the forward
+            // animation is occurring. If we're showing the site security icon, make
+            // sure it doesn't take any space during the forward transition.
+            mSiteSecurity.setVisibility(View.GONE);
+        } else if (animation.equals(mTitleSlideRight)) {
+            // If we're hiding the icon, make sure that we keep its padding
+            // in place during the forward transition
+            mSiteSecurity.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -412,9 +432,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     @Override
     public void onAnimationEnd(Animation animation) {
-        if (animation.equals(mTitleSlideLeft)) {
-            mSiteSecurity.setVisibility(View.GONE);
-        } else if (animation.equals(mTitleSlideRight)) {
+        if (animation.equals(mTitleSlideRight)) {
             mSiteSecurity.startAnimation(mLockFadeIn);
         }
     }
@@ -511,7 +529,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         proxy = AnimatorProxy.create(mTitle);
         proxy.setAlpha(1);
         proxy = AnimatorProxy.create(mForward);
-        proxy.setAlpha(1);
+        proxy.setAlpha(mForward.isEnabled() ? 1 : 0);
         proxy = AnimatorProxy.create(mBack);
         proxy.setAlpha(1);
 
@@ -672,7 +690,14 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             InputMethodManager imm =
                     (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(mTabs.getWindowToken(), 0);
-            mActivity.showLocalTabs();
+
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                if (!tab.isPrivate())
+                    mActivity.showNormalTabs();
+                else
+                    mActivity.showPrivateTabs();
+            }
         }
     }
 
@@ -866,10 +891,14 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mTitleSlideLeft.reset();
         mTitleSlideRight.reset();
 
-        if (visible)
-            mSiteSecurity.setVisibility(View.INVISIBLE);
-        else
-            mSiteSecurity.setVisibility(View.GONE);
+        if (mForwardAnim != null) {
+            long delay = mForwardAnim.getRemainingTime();
+            mTitleSlideRight.setStartOffset(delay);
+            mTitleSlideLeft.setStartOffset(delay);
+        } else {
+            mTitleSlideRight.setStartOffset(0);
+            mTitleSlideLeft.setStartOffset(0);
+        }
 
         mTitle.startAnimation(visible ? mTitleSlideRight : mTitleSlideLeft);
     }
@@ -963,9 +992,104 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
          mBack.setEnabled(enabled);
     }
 
-    public void updateForwardButton(boolean enabled) {
-         mForward.setColorFilter(enabled ? 0 : 0xFF999999);
-         mForward.setEnabled(enabled);
+    public void updateForwardButton(final boolean enabled) {
+        if (mForward.isEnabled() == enabled)
+            return;
+
+        // Save the state on the forward button so that we can skip animations
+        // when there's nothing to change
+        mForward.setEnabled(enabled);
+
+        if (mForward.getVisibility() != View.VISIBLE)
+            return;
+
+        mForwardAnim = new PropertyAnimator(FORWARD_ANIMATION_DURATION);
+        final int width = enabled ? mForward.getWidth()/2 : 0;
+
+        mForwardAnim.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                if (!enabled) {
+                    // Set the margin before the transition when hiding the forward button. We
+                    // have to do this so that the favicon isn't clipped during the transition
+                    ViewGroup.MarginLayoutParams layoutParams =
+                        (ViewGroup.MarginLayoutParams)mAddressBarView.getLayoutParams();
+                    layoutParams.leftMargin = mAddressBarViewOffsetNoForward;
+                    mAddressBarView.requestLayout();
+                    // Note, we already translated the favicon, site security, and text field
+                    // in prepareForwardAnimation, so they should appear to have not moved at
+                    // all at this point.
+                }
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                if (enabled) {
+                    ViewGroup.MarginLayoutParams layoutParams =
+                        (ViewGroup.MarginLayoutParams)mAddressBarView.getLayoutParams();
+                    layoutParams.leftMargin = mAddressBarViewOffset;
+
+                    AnimatorProxy proxy = AnimatorProxy.create(mTitle);
+                    proxy.setTranslationX(0);
+                    proxy = AnimatorProxy.create(mFavicon);
+                    proxy.setTranslationX(0);
+                    proxy = AnimatorProxy.create(mSiteSecurity);
+                    proxy.setTranslationX(0);
+
+                    mAddressBarView.requestLayout();
+                }
+                mForwardAnim = null;
+            }
+        });
+        prepareForwardAnimation(mForwardAnim, width);
+        mForwardAnim.start();
+    }
+
+    private void prepareForwardAnimation(PropertyAnimator anim, int width) {
+        if (width == 0) {
+            anim.attach(mForward,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      0);
+            anim.attach(mForward,
+                      PropertyAnimator.Property.ALPHA,
+                      0);
+            anim.attach(mTitle,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      0);
+            anim.attach(mFavicon,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      0);
+            anim.attach(mSiteSecurity,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      0);
+
+            // We're hiding the forward button. We're going to reset the margin before
+            // the animation starts, so we shift these items to the right so that they don't
+            // appear to move initially.
+            int startTrans = mAddressBarViewOffset - mAddressBarViewOffsetNoForward;
+            AnimatorProxy proxy = AnimatorProxy.create(mTitle);
+            proxy.setTranslationX(startTrans);
+            proxy = AnimatorProxy.create(mFavicon);
+            proxy.setTranslationX(startTrans);
+            proxy = AnimatorProxy.create(mSiteSecurity);
+            proxy.setTranslationX(startTrans);
+        } else {
+            anim.attach(mForward,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      width);
+            anim.attach(mForward,
+                      PropertyAnimator.Property.ALPHA,
+                      1);
+            anim.attach(mTitle,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      mAddressBarViewOffset - mAddressBarViewOffsetNoForward);
+            anim.attach(mFavicon,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      mAddressBarViewOffset - mAddressBarViewOffsetNoForward);
+            anim.attach(mSiteSecurity,
+                      PropertyAnimator.Property.TRANSLATION_X,
+                      mAddressBarViewOffset - mAddressBarViewOffsetNoForward);
+        }
     }
 
     @Override

@@ -11,9 +11,10 @@
               android:background="#34FFFFFF"
               android:paddingLeft="12dip"
               android:textSize="12sp"
-              android:textColor="#000000"
+              android:textColor="@color/abouthome_section_title"
               android:textStyle="bold"
-              android:gravity="left|center_vertical"/>
+              android:gravity="left|center_vertical"
+              android:duplicateParentState="true"/>
 
     <TextView android:id="@+id/subtitle"
               android:layout_width="fill_parent"
@@ -22,20 +23,23 @@
               android:background="#34FFFFFF"
               android:paddingLeft="12dip"
               android:textSize="12sp"
-              android:textColor="#666666"
-              android:gravity="left|center_vertical"/>
+              android:textColor="@color/abouthome_section_subtitle"
+              android:gravity="left|center_vertical"
+              android:duplicateParentState="true"/>
 
     <LinearLayout android:id="@+id/items_container"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:orientation="vertical"
-                  android:isScrollContainer="false"/>
+                  android:isScrollContainer="false"
+                  android:duplicateParentState="true"/>
 
     <org.mozilla.gecko.LinkTextView android:id="@+id/more_text"
                                     android:layout_width="fill_parent"
                                     android:layout_height="47dip"
-                                    android:textColor="#22629e"
+                                    android:textColor="@color/abouthome_section_more_text"
                                     android:textSize="12sp"
-                                    android:gravity="center"/>
+                                    android:gravity="center"
+                                    android:duplicateParentState="true"/>
 
 </merge>
