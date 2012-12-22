@@ -536,10 +536,11 @@ nsHostResolver::ResolveHost(const char            *host,
                 result = he->rec;
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_HIT);
 
-                // For entries that are in the grace period, or all cached
-                // negative entries, use the cache but start a new lookup in
+                // For entries that are in the grace period with a failed connect,
+                // or all cached negative entries, use the cache but start a new lookup in
                 // the background
-                if (((NowInMinutes() > he->rec->expiration) ||
+                if ((((NowInMinutes() > he->rec->expiration) &&
+                      he->rec->mBlacklistedItems.Length()) ||
                      he->rec->negative) && !he->rec->resolving) {
                     LOG(("Using %s cache entry for host [%s] but starting async renewal.",
                          he->rec->negative ? "negative" :"positive", host));

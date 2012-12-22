@@ -157,31 +157,13 @@ class Fake_VideoGenerator {
 };
 #endif
 
-class LocalSourceStreamInfo : public mozilla::MediaStreamListener {
+class LocalSourceStreamInfo {
 public:
   LocalSourceStreamInfo(nsDOMMediaStream* aMediaStream)
     : mMediaStream(aMediaStream) {}
   ~LocalSourceStreamInfo() {
     mMediaStream = NULL;
   }
-
-  /**
-   * Notify that changes to one of the stream tracks have been queued.
-   * aTrackEvents can be any combination of TRACK_EVENT_CREATED and
-   * TRACK_EVENT_ENDED. aQueuedMedia is the data being added to the track
-   * at aTrackOffset (relative to the start of the stream).
-   */
-  virtual void NotifyQueuedTrackChanges(
-    mozilla::MediaStreamGraph* aGraph,
-    mozilla::TrackID aID,
-    mozilla::TrackRate aTrackRate,
-    mozilla::TrackTicks aTrackOffset,
-    uint32_t aTrackEvents,
-    const mozilla::MediaSegment& aQueuedMedia
-  );
-
-  virtual void NotifyPull(mozilla::MediaStreamGraph* aGraph,
-    mozilla::StreamTime aDesiredTime) {}
 
   nsDOMMediaStream* GetMediaStream() {
     return mMediaStream;
@@ -194,18 +176,16 @@ public:
   unsigned VideoTrackCount();
 
   void Detach() {
-    // Disconnect my own listener
-    GetMediaStream()->GetStream()->RemoveListener(this);
-
     // walk through all the MediaPipelines and disconnect them.
     for (std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
            mPipelines.begin(); it != mPipelines.end();
          ++it) {
-      it->second->DetachMediaStream();
+      it->second->Shutdown();
     }
     mMediaStream = NULL;
   }
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalSourceStreamInfo)
 private:
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
   nsRefPtr<nsDOMMediaStream> mMediaStream;
@@ -229,7 +209,7 @@ class RemoteSourceStreamInfo {
     for (std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
            mPipelines.begin(); it != mPipelines.end();
          ++it) {
-      it->second->DetachMediaStream();
+      it->second->Shutdown();
     }
     mMediaStream = NULL;
   }

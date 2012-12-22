@@ -302,7 +302,9 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             case UPDATE:
                 // Keep the old viewport size
                 metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
-                abortPanZoomAnimation();
+                if (!oldMetrics.fuzzyEquals(metrics)) {
+                    abortPanZoomAnimation();
+                }
                 break;
             case PAGE_SIZE:
                 // adjust the page dimensions to account for differences in zoom

@@ -4363,6 +4363,16 @@ nsComputedDOMStyle::DoGetMask()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetMaskType()
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleSVGReset()->mMaskType,
+                                   nsCSSProps::kMaskTypeKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetTransitionDelay()
 {
   const nsStyleDisplay* display = GetStyleDisplay();
@@ -4929,6 +4939,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),
     COMPUTED_STYLE_MAP_ENTRY(marker_start,                  MarkerStart),
     COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
+    COMPUTED_STYLE_MAP_ENTRY(mask_type,                     MaskType),
     COMPUTED_STYLE_MAP_ENTRY(shape_rendering,               ShapeRendering),
     COMPUTED_STYLE_MAP_ENTRY(stop_color,                    StopColor),
     COMPUTED_STYLE_MAP_ENTRY(stop_opacity,                  StopOpacity),

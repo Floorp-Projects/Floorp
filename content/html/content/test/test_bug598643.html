@@ -60,7 +60,7 @@ input.maxLength = 1;
 input.value = "foo";
 
 // Too long types.
-for each (type in types[0]) {
+for (type of types[0]) {
   input.type = type
   if (type == 'email') {
     input.value = "foo@bar.com";
@@ -78,7 +78,7 @@ for each (type in types[0]) {
 }
 
 // Not too long types.
-for each (type in types[1]) {
+for (type of types[1]) {
   input.type = type
   ok(input.validity.valid, "the element should be valid [type=" + type + "]");
   ok(!input.validity.tooLong,
@@ -86,7 +86,7 @@ for each (type in types[1]) {
 }
 
 // Not too long types but TODO.
-for each (type in types[2]) {
+for (type of types[2]) {
   input.type = type
   ok(input.validity.valid, "the element should be valid [type=" + type + "]");
   ok(!input.validity.tooLong,

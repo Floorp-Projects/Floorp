@@ -406,6 +406,7 @@ public:
   static const int32_t kLineHeightKTable[];
   static const int32_t kListStylePositionKTable[];
   static const int32_t kListStyleKTable[];
+  static const int32_t kMaskTypeKTable[];
   static const int32_t kObjectOpacityKTable[];
   static const int32_t kObjectPatternKTable[];
   static const int32_t kOrientKTable[];

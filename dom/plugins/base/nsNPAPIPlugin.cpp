@@ -2771,12 +2771,16 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
   bool authPrivate = false;
   GetPrivacyFromNPP(instance, &authPrivate);
 
+  nsIDocument *doc = GetDocumentFromNPP(instance);
+  NS_ENSURE_TRUE(doc, NPERR_GENERIC_ERROR);
+  nsIPrincipal *principal = doc->NodePrincipal();
+
   nsAutoString unused, uname16, pwd16;
   if (NS_FAILED(authManager->GetAuthIdentity(proto, nsDependentCString(host),
                                              port, nsDependentCString(scheme),
                                              nsDependentCString(realm),
                                              EmptyCString(), unused, uname16,
-                                             pwd16, authPrivate))) {
+                                             pwd16, authPrivate, principal))) {
     return NPERR_GENERIC_ERROR;
   }
 

@@ -141,6 +141,7 @@ nsSVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
     sGradientStopMap,
     sGraphicsMap,
     sMarkersMap,
+    sMaskMap,
     sTextContentElementsMap,
     sViewportsMap
   };

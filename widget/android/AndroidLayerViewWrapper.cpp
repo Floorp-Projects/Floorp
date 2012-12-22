@@ -21,7 +21,6 @@ void AndroidEGLObject::Init(JNIEnv* aJEnv) {
     jEGLSurfacePointerField = aJEnv->GetFieldID(jClass, "mEGLSurface", "I");
 }
 
-jmethodID AndroidGLController::jSetGLVersionMethod = 0;
 jmethodID AndroidGLController::jWaitForValidSurfaceMethod = 0;
 jmethodID AndroidGLController::jProvideEGLSurfaceMethod = 0;
 jmethodID AndroidGLController::jResumeCompositorIfValidMethod = 0;
@@ -31,7 +30,6 @@ AndroidGLController::Init(JNIEnv* aJEnv)
 {
     jclass jClass = reinterpret_cast<jclass>(aJEnv->NewGlobalRef(aJEnv->FindClass("org/mozilla/gecko/gfx/GLController")));
 
-    jSetGLVersionMethod = aJEnv->GetMethodID(jClass, "setGLVersion", "(I)V");
     jProvideEGLSurfaceMethod = aJEnv->GetMethodID(jClass, "provideEGLSurface",
                                                   "()Ljavax/microedition/khronos/egl/EGLSurface;");
     jResumeCompositorIfValidMethod = aJEnv->GetMethodID(jClass, "resumeCompositorIfValid", "()V");
@@ -44,14 +42,6 @@ AndroidGLController::Acquire(JNIEnv* aJEnv, jobject aJObj)
     mJEnv = aJEnv;
     mThread = pthread_self();
     mJObj = aJEnv->NewGlobalRef(aJObj);
-}
-
-void
-AndroidGLController::SetGLVersion(int aVersion)
-{
-    ASSERT_THREAD();
-    AutoLocalJNIFrame jniFrame(mJEnv, 0);
-    mJEnv->CallVoidMethod(mJObj, jSetGLVersionMethod, aVersion);
 }
 
 void

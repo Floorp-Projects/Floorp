@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+
+  <title>Testcase for opacity on elements that are transformed</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=806432 -->
+
+  <filter id="f">
+    <feOffset dx="0.0001"/>
+  </filter>
+
+  <!-- The filter is purely to force the element to be rendered via the
+       nsSVGIntegrationUtils code path. (A mask or non-trivial clipPath that
+       have no effect would do just as well.)
+  -->
+
+  <rect width="100" height="100" transform="translate(10,10)" fill="blue" opacity="0.5" filter="url(#f)"/>
+
+</svg>

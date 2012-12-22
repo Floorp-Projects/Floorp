@@ -31,12 +31,11 @@ Accessible::ARIARole()
   return ARIATransformRole(mRoleMapEntry->role);
 }
 
-inline void
-Accessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
+inline bool
+Accessible::HasGenericType(AccGenericType aType) const
 {
-  mRoleMapEntry = aRoleMapEntry;
-  if (mRoleMapEntry)
-    mGenericTypes |= mRoleMapEntry->accTypes;
+  return (mGenericTypes & aType) ||
+    (mRoleMapEntry && mRoleMapEntry->IsOfType(aType));
 }
 
 inline bool
