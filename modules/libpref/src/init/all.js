@@ -1383,6 +1383,7 @@ pref("security.dialog_enable_delay", 2000);
 
 pref("security.csp.enable", true);
 pref("security.csp.debug", false);
+pref("security.csp.reports.enable", true);
 
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);
