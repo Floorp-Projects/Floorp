@@ -74,7 +74,6 @@ CPPSRCS		= \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMBlobBuilder.cpp \
-		nsDOMCaretPosition.cpp \
 		nsDOMDocumentType.cpp \
 		nsDOMFile.cpp \
 		nsDOMFileReader.cpp \
