@@ -981,14 +981,27 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
         return true;
     }
 
-    if (!val.isInt32() || !res.isInt32())
+    if (val.isInt32() && res.isInt32()) {
+        ICUnaryArith_Int32::Compiler compiler(cx, op);
+        ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!int32Stub)
+            return false;
+        stub->addNewStub(int32Stub);
         return true;
+    }
 
-    ICUnaryArith_Int32::Compiler compiler(cx, op);
-    ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
-    if (!int32Stub)
-        return false;
-    stub->addNewStub(int32Stub);
+    if (val.isNumber() && res.isNumber() && op == JSOP_NEG) {
+        // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
+        stub->unlinkStubsWithKind(ICStub::UnaryArith_Int32);
+
+        ICUnaryArith_Double::Compiler compiler(cx, op);
+        ICStub *doubleStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!doubleStub)
+            return false;
+        stub->addNewStub(doubleStub);
+        return true;
+    }
+
     return true;
 }
 
@@ -1009,6 +1022,24 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoUnaryArithFallbackInfo, masm);
+}
+
+bool
+ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.ensureDouble(R0, FloatReg0, &failure);
+
+    JS_ASSERT(op == JSOP_NEG);
+    masm.negateDouble(FloatReg0);
+    masm.boxDouble(FloatReg0, R0);
+
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
