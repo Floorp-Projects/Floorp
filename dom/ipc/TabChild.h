@@ -277,6 +277,8 @@ public:
     virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(
             const URIParams& manifestURI,
             const URIParams& documentURI,
+            const bool& isInBrowserElement,
+            const uint32_t& appId,
             const bool& stickDocument);
     virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* offlineCacheUpdate);
 

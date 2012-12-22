@@ -33,10 +33,9 @@ protected:
   virtual bool DeallocPCookieService(PCookieServiceChild*);
   virtual PWyciwygChannelChild* AllocPWyciwygChannel();
   virtual bool DeallocPWyciwygChannel(PWyciwygChannelChild*);
-  virtual PFTPChannelChild* AllocPFTPChannel(PBrowserChild* aBrowser,
-                                             const SerializedLoadContext& aSerialized);
+  virtual PFTPChannelChild* AllocPFTPChannel();
   virtual bool DeallocPFTPChannel(PFTPChannelChild*);
-  virtual PWebSocketChild* AllocPWebSocket(PBrowserChild*, const SerializedLoadContext&);
+  virtual PWebSocketChild* AllocPWebSocket(PBrowserChild*);
   virtual bool DeallocPWebSocket(PWebSocketChild*);
   virtual PTCPSocketChild* AllocPTCPSocket(const nsString& aHost,
                                            const uint16_t& aPort,
