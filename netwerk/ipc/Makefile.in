@@ -16,6 +16,11 @@ LIBRARY_NAME = neckoipc_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
+XPIDL_MODULE   = necko_ipc
+
+XPIDLSRCS = \
+  nsIRemoteOpenFileListener.idl \
+  $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/net
 
@@ -25,12 +30,16 @@ EXPORTS_mozilla/net = \
   NeckoCommon.h       \
   NeckoMessageUtils.h \
   ChannelEventQueue.h \
+  RemoteOpenFileParent.h \
+  RemoteOpenFileChild.h \
   $(NULL)
 
 CPPSRCS =               \
   NeckoChild.cpp        \
   NeckoParent.cpp       \
   ChannelEventQueue.cpp \
+  RemoteOpenFileParent.cpp \
+  RemoteOpenFileChild.cpp  \
   $(NULL)
 
 LOCAL_INCLUDES +=                  \

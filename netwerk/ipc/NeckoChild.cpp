@@ -13,6 +13,7 @@
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
+#include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/Preferences.h"
 
@@ -168,6 +169,23 @@ bool
 NeckoChild::DeallocPTCPSocket(PTCPSocketChild* child)
 {
   TCPSocketChild* p = static_cast<TCPSocketChild*>(child);
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PRemoteOpenFileChild*
+NeckoChild::AllocPRemoteOpenFile(const URIParams&, PBrowserChild*)
+{
+  // We don't allocate here: instead we always use IPDL constructor that takes
+  // an existing RemoteOpenFileChild
+  NS_NOTREACHED("AllocPRemoteOpenFile should not be called on child");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPRemoteOpenFile(PRemoteOpenFileChild* aChild)
+{
+  RemoteOpenFileChild *p = static_cast<RemoteOpenFileChild*>(aChild);
   p->ReleaseIPDLReference();
   return true;
 }

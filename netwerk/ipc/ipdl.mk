@@ -4,5 +4,6 @@
 
 IPDLSRCS =          \
   PNecko.ipdl       \
+  PRemoteOpenFile.ipdl \
   $(NULL)
 

@@ -16,7 +16,7 @@ interface mozIApplication;
  * This service allows accessing some DOMApplicationRegistry methods from
  * non-javascript code.
  */
-[scriptable, uuid(4a182c18-dbdf-4f9c-93a0-0f0cffb88ed0)]
+[scriptable, uuid(e65f9397-e191-4273-aa5f-f13c185ce63b)]
 interface nsIAppsService : nsISupports
 {
   mozIDOMApplication getAppByManifestURL(in DOMString manifestURL);
@@ -50,4 +50,14 @@ interface nsIAppsService : nsISupports
    * Returns the CSP associated to this localId.
    */
   DOMString getCSPByLocalId(in unsigned long localId);
+
+  /**
+   * Returns the basepath for core apps
+   */
+  DOMString getCoreAppsBasePath();
+
+  /**
+   * Returns the basepath for regular packaged apps
+   */
+  DOMString getWebAppsBasePath();
 };
