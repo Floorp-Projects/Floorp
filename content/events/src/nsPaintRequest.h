@@ -14,10 +14,15 @@
 #include "nsWrapperCache.h"
 
 class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
+                               , public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequest)
   NS_DECL_NSIDOMPAINTREQUEST
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap) MOZ_OVERRIDE;
 
   nsPaintRequest() { mRequest.mFlags = 0; }
 
