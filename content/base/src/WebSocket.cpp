@@ -191,7 +191,7 @@ WebSocket::ConsoleError()
 }
 
 
-nsresult
+void
 WebSocket::FailConnection(uint16_t aReasonCode,
                           const nsACString& aReasonString)
 {
@@ -200,8 +200,6 @@ WebSocket::FailConnection(uint16_t aReasonCode,
   ConsoleError();
   mFailed = true;
   CloseConnection(aReasonCode, aReasonString);
-
-  return NS_OK;
 }
 
 nsresult
