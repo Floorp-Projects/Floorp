@@ -367,8 +367,6 @@ pref("security.fileuri.strict_origin_policy", false);
 pref("security.apps.privileged.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'");
 pref("security.apps.certified.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self'");
 
-pref("security.csp.reports.enable", false);
-
 // Temporarily force-enable GL compositing.  This is default-disabled
 // deep within the bowels of the widgetry system.  Remove me when GL
 // compositing isn't default disabled in widget/android.

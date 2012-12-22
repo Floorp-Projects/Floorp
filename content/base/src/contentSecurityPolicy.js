@@ -235,9 +235,6 @@ ContentSecurityPolicy.prototype = {
   sendReports:
   function(blockedUri, originalUri, violatedDirective,
            aSourceFile, aScriptSample, aLineNum) {
-    if (!Services.prefs.getBoolPref('security.csp.reports.enable')) {
-      return;
-    }
     var uriString = this._policy.getReportURIs();
     var uris = uriString.split(/\s+/);
     if (uris.length > 0) {
