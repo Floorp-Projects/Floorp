@@ -52,6 +52,7 @@ webidl_files = \
   Node.webidl \
   NodeFilter.webidl \
   NodeList.webidl \
+  PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
   Performance.webidl \
