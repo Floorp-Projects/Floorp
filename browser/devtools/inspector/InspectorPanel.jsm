@@ -259,9 +259,7 @@ InspectorPanel.prototype = {
           if (request) {
             request.resume();
             request = null;
-            return true;
           }
-          return false;
         }.bind(this),
       },
       {
