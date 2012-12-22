@@ -432,7 +432,7 @@ function runTest() {
   setStateURL = baseURL + "setState=";
 
   var unique = Date.now();
-  for each (test in tests) {
+  for (test of tests) {
     if (test.newTest) {
       unique++;
       continue;

@@ -5,21 +5,14 @@
 #ifndef mozilla_dom_textencoder_h_
 #define mozilla_dom_textencoder_h_
 
-#include "jsapi.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/TextEncoderBase.h"
 #include "mozilla/dom/TextEncoderBinding.h"
-#include "mozilla/dom/TypedArray.h"
-#include "mozilla/ErrorResult.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsString.h"
-
-#include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace dom {
 
-class TextEncoder : public nsISupports, public nsWrapperCache
+class TextEncoder MOZ_FINAL
+  : public nsISupports, public nsWrapperCache, public TextEncoderBase
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -51,7 +44,7 @@ public:
   {}
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+  WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE
   {
     return TextEncoderBinding::Wrap(aCx, aScope, this, aTriedToWrap);
   }
@@ -62,44 +55,23 @@ public:
     return mGlobal;
   }
 
-  /**
-   * Return the encoding name.
-   *
-   * @param aEncoding, current encoding.
-   */
-  void GetEncoding(nsAString& aEncoding);
-
-  /**
-   * Encodes incoming utf-16 code units/ DOM string to the requested encoding.
-   *
-   * @param aCx        Javascript context.
-   * @param aString    utf-16 code units to be encoded.
-   * @param aOptions   Streaming option. Initialised by default to false.
-   *                   If the streaming option is false, then the encoding
-   *                   algorithm state will get reset. If set to true then
-   *                   the previous encoding is reused/continued.
-   * @return JSObject* The Uint8Array wrapped in a JS object.
-   */
   JSObject* Encode(JSContext* aCx,
                    const nsAString& aString,
                    const TextEncodeOptions& aOptions,
-                   ErrorResult& aRv);
-private:
-  nsCString mEncoding;
-  nsCOMPtr<nsIUnicodeEncoder> mEncoder;
-  nsCOMPtr<nsISupports> mGlobal;
+                   ErrorResult& aRv) {
+    return TextEncoderBase::Encode(aCx, aString, aOptions.mStream, aRv);
+  }
 
-  /**
-   * Validates provided encoding and throws an exception if invalid encoding.
-   * If no encoding is provided then mEncoding is default initialised to "utf-8".
-   *
-   * @param aEncoding    Optional encoding (case insensitive) provided.
-   *                     (valid values are "utf-8", "utf-16", "utf-16be")
-   *                     Default value is "utf-8" if no encoding is provided.
-   * @return aRv         EncodingError exception else null.
-   */
-  void Init(const nsAString& aEncoding,
-            ErrorResult& aRv);
+protected:
+  virtual JSObject*
+  CreateUint8Array(JSContext* aCx, char* aBuf, uint32_t aLen) MOZ_OVERRIDE
+  {
+    return Uint8Array::Create(aCx, this, aLen,
+                              reinterpret_cast<uint8_t*>(aBuf));
+  }
+
+private:
+  nsCOMPtr<nsISupports> mGlobal;
 };
 
 } // dom

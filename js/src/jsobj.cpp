@@ -3474,8 +3474,8 @@ js::GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, Mut
     return op(cx, obj, obj, id, vp);
 }
 
-JS_FRIEND_API(bool)
-js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
+static bool
+MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
     {
         UnrootedScript script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
@@ -3492,6 +3492,56 @@ js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
            JS_ReportErrorFlagsAndNumber(cx,
                                         (JSREPORT_WARNING | JSREPORT_STRICT
                                          | JSREPORT_STRICT_MODE_ERROR),
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_UNDECLARED_VAR, bytes.ptr());
+}
+
+bool
+js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
+{
+    {
+        jsbytecode *pc;
+        UnrootedScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        if (!script)
+            return true;
+
+        /* If neither cx nor the code is strict, then no check is needed. */
+        if (!script->strict && !cx->hasStrictOption())
+            return true;
+
+        /*
+         * We only need to check for bare name mutations: we shouldn't be
+         * warning, or throwing, or whatever, if we're not doing a variable
+         * access.
+         *
+         * TryConvertToGname in frontend/BytecodeEmitter.cpp checks for rather
+         * more opcodes when it does, in the normal course of events, what this
+         * method does in the abnormal course of events.  Because we're called
+         * in narrower circumstances, we only need check two.  We don't need to
+         * check for the increment/decrement opcodes because they're no-ops:
+         * the actual semantics are implemented by desugaring.  And we don't
+         * need to check name-access because this method is only supposed to be
+         * called in assignment contexts.
+         */
+        MOZ_ASSERT(*pc != JSOP_INCNAME);
+        MOZ_ASSERT(*pc != JSOP_INCGNAME);
+        MOZ_ASSERT(*pc != JSOP_NAMEINC);
+        MOZ_ASSERT(*pc != JSOP_GNAMEINC);
+        MOZ_ASSERT(*pc != JSOP_DECNAME);
+        MOZ_ASSERT(*pc != JSOP_DECGNAME);
+        MOZ_ASSERT(*pc != JSOP_NAMEDEC);
+        MOZ_ASSERT(*pc != JSOP_GNAMEDEC);
+        MOZ_ASSERT(*pc != JSOP_NAME);
+        MOZ_ASSERT(*pc != JSOP_GETGNAME);
+        if (*pc != JSOP_SETNAME && *pc != JSOP_SETGNAME)
+            return true;
+    }
+
+    JSAutoByteString bytes(cx, propname);
+    return !!bytes &&
+           JS_ReportErrorFlagsAndNumber(cx,
+                                        JSREPORT_WARNING | JSREPORT_STRICT |
+                                        JSREPORT_STRICT_MODE_ERROR,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
@@ -3586,8 +3636,9 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
 
         if (obj->isGlobal() &&
             (defineHow & DNP_UNQUALIFIED) &&
-            !js::CheckUndeclaredVarAssignment(cx, JSID_TO_STRING(id))) {
-            return JS_FALSE;
+            !MaybeReportUndeclaredVarAssignment(cx, JSID_TO_STRING(id)))
+        {
+            return false;
         }
     }
 

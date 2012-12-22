@@ -5,7 +5,8 @@ import unittest
 class PushTest(unittest.TestCase):
 
     def test_mkdirs(self):
-        subTests = [ { 'cmds': [ ("isdir /mnt", "TRUE"),
+        subTests = [ { 'cmds': [ ("isdir /mnt/sdcard/baz/boop", "FALSE"),
+                                 ("isdir /mnt", "TRUE"),
                                  ("isdir /mnt/sdcard", "TRUE"),
                                  ("isdir /mnt/sdcard/baz", "FALSE"),
                                  ("mkdr /mnt/sdcard/baz",
@@ -14,7 +15,8 @@ class PushTest(unittest.TestCase):
                                  ("mkdr /mnt/sdcard/baz/boop",
                                   "/mnt/sdcard/baz/boop successfully created") ],
                        'expectException': False },
-                     { 'cmds': [ ("isdir /mnt", "TRUE"),
+                     { 'cmds': [ ("isdir /mnt/sdcard/baz/boop", "FALSE"),
+                                 ("isdir /mnt", "TRUE"),
                                  ("isdir /mnt/sdcard", "TRUE"),
                                  ("isdir /mnt/sdcard/baz", "FALSE"),
                                  ("mkdr /mnt/sdcard/baz",

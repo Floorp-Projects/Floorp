@@ -84,17 +84,17 @@
                          crop="end"
                          xbl:inherits="value=status,tooltiptext=statusTip"/>
       </xul:vbox>
-      <xul:stack>
-        <xul:button class="downloadButton downloadCancel"
-                    command="downloadsCmd_cancel"
-                    tooltiptext="&cmd.cancel.label;"/>
-        <xul:button class="downloadButton downloadRetry"
-                    command="downloadsCmd_retry"
-                    tooltiptext="&cmd.retry.label;"/>
-        <xul:button class="downloadButton downloadShow"
-                    command="downloadsCmd_show"
-                    tooltiptext="&cmd.show.label;"/>
-      </xul:stack>
+
+      <xul:button class="downloadButton downloadCancel"
+                  oncommand="goDoCommand('downloadsCmd_cancel')"
+                  tooltiptext="&cmd.cancel.label;"/>
+      <xul:button class="downloadButton downloadRetry"
+                  oncommand="goDoCommand('downloadsCmd_retry')"
+                  tooltiptext="&cmd.retry.label;"/>
+      <xul:button class="downloadButton downloadShow"
+                  oncommand="goDoCommand('downloadsCmd_show')"
+                  tooltiptext="&cmd.show.label;"/>
+
     </content>
   </binding>
 </bindings>

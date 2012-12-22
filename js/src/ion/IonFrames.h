@@ -17,8 +17,8 @@
 #include "IonCode.h"
 #include "IonFrameIterator.h"
 
-struct JSFunction;
-struct JSScript;
+class JSFunction;
+class JSScript;
 
 namespace js {
 namespace ion {

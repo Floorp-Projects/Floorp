@@ -1086,7 +1086,7 @@ typedef struct secuPBEParamsStr {
     SECAlgorithmID kdfAlg;
 } secuPBEParams;
 
-SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate);
+SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
 /* SECOID_PKCS5_PBKDF2 */
 const SEC_ASN1Template secuKDF2Params[] =
@@ -3614,8 +3614,8 @@ SECU_ParseSSLVersionRangeString(const char *input,
 
     colonPos = strchr(input, ':');
     if (!colonPos) {
-        return SECFailure;
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
     colonIndex = colonPos - input;

@@ -7,7 +7,7 @@
       var body = document.body;
 
       var elements = ["input", "textarea", "select", "button"];
-      for each (var e in elements) {
+      for (var e of elements) {
         var el = document.createElement(e);
         el.autofocus = true;
         body.appendChild(el);

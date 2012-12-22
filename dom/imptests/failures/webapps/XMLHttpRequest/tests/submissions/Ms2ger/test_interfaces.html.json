@@ -1,6 +1,0 @@
-{
-  "XMLHttpRequest interface constructor": true,
-  "XMLHttpRequest interface: operation open(DOMString,DOMString,boolean,DOMString,DOMString)": true,
-  "XMLHttpRequest interface: operation send(union)": true,
-  "FormData interface constructor": true
-}

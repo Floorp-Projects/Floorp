@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(1cfc45ba-c5d4-11e1-b4c3-00265511db39)]
+[scriptable, builtinclass, uuid(494cf68f-0ca8-4cf9-924b-84cf379c9631)]
 interface nsIDOMDataErrorEvent : nsIDOMEvent
 {
   readonly attribute DOMString message;

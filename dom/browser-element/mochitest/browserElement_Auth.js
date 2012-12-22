@@ -40,7 +40,7 @@ function testHttpAuthCancel(e) {
   iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
     iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
-    is(e.detail, 'http auth failed');
+    is(e.detail, 'http auth failed', 'expected authentication to fail');
     iframe.addEventListener('mozbrowserusernameandpasswordrequired', testHttpAuth);
     SimpleTest.executeSoon(function() {
       // Use absolute path because we need to specify host.
@@ -48,8 +48,8 @@ function testHttpAuthCancel(e) {
     });
   });
 
-  is(e.detail.realm, 'http_realm');
-  is(e.detail.host, 'http://test');
+  is(e.detail.realm, 'http_realm', 'expected realm matches');
+  is(e.detail.host, 'http://test', 'expected host matches');
   e.preventDefault();
 
   SimpleTest.executeSoon(function() {
@@ -66,12 +66,12 @@ function testHttpAuth(e) {
   iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
     iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
-    is(e.detail, 'http auth success');
-    SimpleTest.executeSoon(testFinish);
+    is(e.detail, 'http auth success', 'expect authentication to succeed');
+    SimpleTest.executeSoon(testAuthJarNoInterfere);
   });
 
-  is(e.detail.realm, 'http_realm');
-  is(e.detail.host, 'http://test');
+  is(e.detail.realm, 'http_realm', 'expected realm matches');
+  is(e.detail.host, 'http://test', 'expected host matches');
   e.preventDefault();
 
   SimpleTest.executeSoon(function() {
@@ -79,7 +79,77 @@ function testHttpAuth(e) {
   });
 }
 
+function testAuthJarNoInterfere(e) {
+  var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
+    .getService(SpecialPowers.Ci.nsIHttpAuthManager);
+  var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
+               .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
+  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                  .getService(SpecialPowers.Ci.nsIIOService);
+  var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs", null, null);
+
+  // Set a bunch of auth data that should not conflict with the correct auth data already
+  // stored in the cache.
+  var principal = secMan.getAppCodebasePrincipal(uri, 1, false);
+  authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
+                          'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
+                          '', 'httpuser', 'wrongpass', false, principal);
+  principal = secMan.getAppCodebasePrincipal(uri, 1, true);
+  authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
+                          'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
+                          '', 'httpuser', 'wrongpass', false, principal);
+  principal = secMan.getAppCodebasePrincipal(uri, secMan.NO_APP_ID, false);
+  authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
+                          'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
+                          '', 'httpuser', 'wrongpass', false, principal);
+
+  // Will authenticate with correct password, prompt should not be
+  // called again.
+  iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
+  iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
+    iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+    iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
+    is(e.detail, 'http auth success', 'expected authentication success');
+    SimpleTest.executeSoon(testAuthJarInterfere);
+  });
+
+  // Once more with feeling. Ensure that our new auth data doesn't interfere with this mozbrowser's
+  // auth data.
+  iframe.src = 'http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs';
+}
+
+function testAuthJarInterfere(e) {
+  var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
+    .getService(SpecialPowers.Ci.nsIHttpAuthManager);
+  var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
+               .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
+  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                  .getService(SpecialPowers.Ci.nsIIOService);
+  var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs", null, null);
+
+  // Set some auth data that should overwrite the successful stored details.
+  var principal = secMan.getAppCodebasePrincipal(uri, secMan.NO_APP_ID, true);
+  authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
+                          'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
+                          '', 'httpuser', 'wrongpass', false, principal);
+
+  // Will authenticate with correct password, prompt should not be
+  // called again.
+  iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFinish);
+  iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
+    iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+    iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFinish);
+    SimpleTest.execute(testFail);
+  });
+
+  // Once more with feeling. Ensure that our new auth data interferes with this mozbrowser's
+  // auth data.
+  iframe.src = 'http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs';
+}
+
 function testFinish() {
+  iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFinish);
+
   // Clear login information stored in password manager.
   var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
     .getService(SpecialPowers.Ci.nsIHttpAuthManager);

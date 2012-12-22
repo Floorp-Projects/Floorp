@@ -33,7 +33,7 @@ namespace ion {
 
 # define BASELINE_DISABLED_SCRIPT ((js::ion::BaselineScript *)0x1)
 
-struct Shape;
+class Shape;
 
 class BindingIter;
 
@@ -219,7 +219,7 @@ struct RootMethods<Bindings> {
 
 class ScriptCounts
 {
-    friend struct ::JSScript;
+    friend class ::JSScript;
     friend struct ScriptAndCounts;
 
     /*
@@ -250,7 +250,7 @@ typedef HashMap<RawScript,
 
 class DebugScript
 {
-    friend struct ::JSScript;
+    friend class ::JSScript;
 
     /*
      * When non-zero, compile script in single-step mode. The top bit is set and
@@ -280,9 +280,8 @@ struct ScriptSource;
 
 } /* namespace js */
 
-struct JSScript : public js::gc::Cell
+class JSScript : public js::gc::Cell
 {
-  private:
     static const uint32_t stepFlagMask = 0x80000000U;
     static const uint32_t stepCountMask = 0x7fffffffU;
 

@@ -9,6 +9,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
+#include "mozilla/dom/HTMLDivElementBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -19,6 +20,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 nsHTMLDivElement::nsHTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 nsHTMLDivElement::~nsHTMLDivElement()
@@ -40,6 +42,11 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLDivElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLDivElement)
 
+JSObject*
+nsHTMLDivElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return dom::HTMLDivElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 bool
 nsHTMLDivElement::ParseAttribute(int32_t aNamespaceID,

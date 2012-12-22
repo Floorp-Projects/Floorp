@@ -161,7 +161,6 @@
 
 #include "nsIDOMLSProgressEvent.h"
 #include "nsXMLHttpRequest.h"
-#include "nsEventSource.h"
 #include "nsIDOMSettingsManager.h"
 #include "nsIDOMContactManager.h"
 #include "nsIDOMPermissionSettings.h"
@@ -509,39 +508,35 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #endif
 
 #include "nsIDOMNavigatorSystemMessages.h"
-
-#ifdef MOZ_SYS_MSG
-#include "mozilla/dom/Activity.h"
-#endif
-#ifdef MOZ_TIME_MANAGER
-#include "TimeManager.h"
-#endif
-
 #include "DOMCameraManager.h"
 #include "DOMCameraControl.h"
 #include "DOMCameraCapabilities.h"
-
 #include "DOMError.h"
 #include "DOMRequest.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
-
 #include "nsIDOMCanvasRenderingContext2D.h"
-
 #include "DOMFileHandle.h"
 #include "FileRequest.h"
 #include "LockedFile.h"
 #include "GeneratedEvents.h"
-#include "mozilla/Likely.h"
 #include "nsDebug.h"
-
-#ifdef MOZ_WEBRTC
-#include "nsIDOMDataChannel.h"
-#endif
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/Likely.h"
+
+#ifdef MOZ_SYS_MSG
+#include "mozilla/dom/Activity.h"
+#endif
+
+#ifdef MOZ_TIME_MANAGER
+#include "TimeManager.h"
+#endif
+
+#ifdef MOZ_WEBRTC
+#include "nsIDOMDataChannel.h"
+#endif
 
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
 #include "nsIAudioChannelManager.h"
@@ -1377,9 +1372,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(EventSource, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(ClientRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ClientRectList, nsDOMGenericSH,
@@ -1682,7 +1674,6 @@ NS_DEFINE_CONTRACT_CTOR(FileReader, NS_FILEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(ArchiveReader, NS_ARCHIVEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
-NS_DEFINE_CONTRACT_CTOR(EventSource, NS_EVENTSOURCE_CONTRACTID)
 #ifdef MOZ_SYS_MSG
 NS_DEFINE_CONTRACT_CTOR(MozActivity, NS_DOMACTIVITY_CONTRACTID)
 #endif
@@ -1743,7 +1734,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FileReader, FileReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ArchiveReader, ArchiveReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(EventSource, EventSourceCtor)
 #ifdef MOZ_SYS_MSG
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozActivity, MozActivityCtor)
 #endif
@@ -1772,14 +1762,6 @@ jsid nsDOMClassInfo::sStatusbar_id       = JSID_VOID;
 jsid nsDOMClassInfo::sDialogArguments_id = JSID_VOID;
 jsid nsDOMClassInfo::sControllers_id     = JSID_VOID;
 jsid nsDOMClassInfo::sLength_id          = JSID_VOID;
-jsid nsDOMClassInfo::sInnerHeight_id     = JSID_VOID;
-jsid nsDOMClassInfo::sInnerWidth_id      = JSID_VOID;
-jsid nsDOMClassInfo::sOuterHeight_id     = JSID_VOID;
-jsid nsDOMClassInfo::sOuterWidth_id      = JSID_VOID;
-jsid nsDOMClassInfo::sScreenX_id         = JSID_VOID;
-jsid nsDOMClassInfo::sScreenY_id         = JSID_VOID;
-jsid nsDOMClassInfo::sStatus_id          = JSID_VOID;
-jsid nsDOMClassInfo::sName_id            = JSID_VOID;
 jsid nsDOMClassInfo::sScrollX_id         = JSID_VOID;
 jsid nsDOMClassInfo::sScrollY_id         = JSID_VOID;
 jsid nsDOMClassInfo::sScrollMaxX_id      = JSID_VOID;
@@ -1792,7 +1774,6 @@ jsid nsDOMClassInfo::sTop_id             = JSID_VOID;
 jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
 jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
 jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
-jsid nsDOMClassInfo::sOpener_id          = JSID_VOID;
 jsid nsDOMClassInfo::sAll_id             = JSID_VOID;
 jsid nsDOMClassInfo::sTags_id            = JSID_VOID;
 jsid nsDOMClassInfo::sDocumentURIObject_id=JSID_VOID;
@@ -2042,14 +2023,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sDialogArguments_id, cx, "dialogArguments");
   SET_JSID_TO_STRING(sControllers_id,     cx, "controllers");
   SET_JSID_TO_STRING(sLength_id,          cx, "length");
-  SET_JSID_TO_STRING(sInnerHeight_id,     cx, "innerHeight");
-  SET_JSID_TO_STRING(sInnerWidth_id,      cx, "innerWidth");
-  SET_JSID_TO_STRING(sOuterHeight_id,     cx, "outerHeight");
-  SET_JSID_TO_STRING(sOuterWidth_id,      cx, "outerWidth");
-  SET_JSID_TO_STRING(sScreenX_id,         cx, "screenX");
-  SET_JSID_TO_STRING(sScreenY_id,         cx, "screenY");
-  SET_JSID_TO_STRING(sStatus_id,          cx, "status");
-  SET_JSID_TO_STRING(sName_id,            cx, "name");
   SET_JSID_TO_STRING(sScrollX_id,         cx, "scrollX");
   SET_JSID_TO_STRING(sScrollY_id,         cx, "scrollY");
   SET_JSID_TO_STRING(sScrollMaxX_id,      cx, "scrollMaxX");
@@ -2062,7 +2035,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sDocument_id,        cx, "document");
   SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSID_TO_STRING(sSelf_id,            cx, "self");
-  SET_JSID_TO_STRING(sOpener_id,          cx, "opener");
   SET_JSID_TO_STRING(sAll_id,             cx, "all");
   SET_JSID_TO_STRING(sTags_id,            cx, "tags");
   SET_JSID_TO_STRING(sDocumentURIObject_id,cx,"documentURIObject");
@@ -3845,11 +3817,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(EventSource, nsIEventSource)
-    DOM_CLASSINFO_MAP_ENTRY(nsIEventSource)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(XULCommandEvent, nsIDOMXULCommandEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
@@ -5074,14 +5041,6 @@ nsDOMClassInfo::ShutDown()
   sDialogArguments_id = JSID_VOID;
   sControllers_id     = JSID_VOID;
   sLength_id          = JSID_VOID;
-  sInnerHeight_id     = JSID_VOID;
-  sInnerWidth_id      = JSID_VOID;
-  sOuterHeight_id     = JSID_VOID;
-  sOuterWidth_id      = JSID_VOID;
-  sScreenX_id         = JSID_VOID;
-  sScreenY_id         = JSID_VOID;
-  sStatus_id          = JSID_VOID;
-  sName_id            = JSID_VOID;
   sScrollX_id         = JSID_VOID;
   sScrollY_id         = JSID_VOID;
   sScrollMaxX_id      = JSID_VOID;
@@ -5093,7 +5052,6 @@ nsDOMClassInfo::ShutDown()
   sDocument_id        = JSID_VOID;
   sFrames_id          = JSID_VOID;
   sSelf_id            = JSID_VOID;
-  sOpener_id          = JSID_VOID;
   sAll_id             = JSID_VOID;
   sTags_id            = JSID_VOID;
   sDocumentURIObject_id=JSID_VOID;
@@ -5220,9 +5178,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
                                           JSMutableHandleObject objp)
 {
   if ((flags & JSRESOLVE_ASSIGNING) || !JSID_IS_STRING(id)) {
-    // Nothing to do here if we're assigning or resolving a non-string
-    // property.
-
+    // Nothing to do if we're assigning or resolving a non-string property.
     return JS_TRUE;
   }
 
@@ -6558,13 +6514,6 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
     return false;
   }
 
-  // For now don't expose server events unless user has explicitly enabled them
-  if (aStruct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
-    if (!nsEventSource::PrefEnabled()) {
-      return false;
-    }
-  }
-
   // Don't expose CSSSupportsRule unless @supports processing is enabled.
   if (aStruct->mDOMClassInfoID == eDOMClassInfo_CSSSupportsRule_id) {
     if (!CSSSupportsRule::PrefEnabled()) {
@@ -7241,13 +7190,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (flags & JSRESOLVE_ASSIGNING) {
-    if (IsReadonlyReplaceable(id) ||
-        (!(flags & JSRESOLVE_QUALIFIED) && IsWritableReplaceable(id))) {
-      // A readonly "replaceable" property is being set, or a
-      // readwrite "replaceable" property is being set w/o being
-      // fully qualified. Define the property on obj with the value
-      // undefined to override the predefined property. This is done
-      // for compatibility with other browsers.
+    if (IsReadonlyReplaceable(id)) {
+      // A readonly "replaceable" property is being set.  Define the property
+      // on obj with the value undefined to override the predefined property.
+      // This isn't quite what WebIDL requires for [Replaceable] properties,
+      // but it'll do until we move Window over to the new DOM bindings.
       JSAutoRequest ar(cx);
 
       if (!::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
@@ -7370,20 +7317,18 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         }
       }
 
-      // Define a fast expando, the key here is to use JS_PropertyStub
-      // as the getter/setter, which makes us stay out of XPConnect
-      // when using this property.
+      // Define a fast expando.  The key here is to use JS_PropertyStub as the
+      // getter/setter, which makes us stay out of XPConnect when using this
+      // property.
       //
-      // We don't need to worry about property attributes here as we
-      // know here we're dealing with an undefined property set, so
-      // we're not declaring readonly or permanent properties.
+      // We're adding a new property here, so we don't need to worry about
+      // conflicting with any existing ones.
       //
-      // Since we always create the undeclared property here without given a
-      // chance for the interpreter to report applicable strict mode warnings,
-      // we must take care to check those warnings here.
-      JSString *str = JSID_TO_STRING(id);
-      if ((!(flags & JSRESOLVE_QUALIFIED) &&
-           !js::CheckUndeclaredVarAssignment(cx, str)) ||
+      // Since we always create the undeclared property here, shortcutting the
+      // normal process, we go out of our way to tell the JS engine to report
+      // strict warnings/errors using js::ReportIfUndeclaredVarAssignment.
+      js::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
+      if (!js::ReportIfUndeclaredVarAssignment(cx, str) ||
           !::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
                                    JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
         *_retval = JS_FALSE;
@@ -9027,10 +8972,9 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           ::JS_SetPrototype(cx, tmp, proto);
         }
 
-        // If we don't already have a helper, and we're resolving
-        // document.all qualified, and "all" isn't already defined
-        // on our prototype, create a helper.
-        if (!helper && (flags & JSRESOLVE_QUALIFIED) && !hasAll) {
+        // If we don't already have a helper and "all" isn't already defined on
+        // our prototype, create a helper.
+        if (!helper && !hasAll) {
           // Print a warning so developers can stop using document.all
           PrintWarningOnConsole(cx, "DocumentAllUsed");
 

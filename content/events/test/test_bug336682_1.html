@@ -36,7 +36,7 @@ addLoadEvent(function() {
   /** @see test_bug336682.js */
   MAX_STATE = 4;
 
-  for each(var event in ["online", "offline"]) {
+  for (var event of ["online", "offline"]) {
     document.body.addEventListener(
       event,
       makeHandler("document.body.addEventListener('%1', ..., false)",

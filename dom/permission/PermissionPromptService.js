@@ -68,9 +68,11 @@ PermissionPromptService.prototype = {
                       + "2nd argument must be type 'nsIContentPermissionRequest'");
     }
 
+    let type = aRequest.access !== "unused" ? aRequest.type + "-" + aRequest.access
+                                            : aRequest.type;
     let perm =
-      permissionManager.testExactPermissionFromPrincipal(aRequest.principal,
-                                                         aRequest.type);
+      permissionManager.testExactPermissionFromPrincipal(aRequest.principal, type);
+
     switch (perm) {
       case Ci.nsIPermissionManager.ALLOW_ACTION:
         aRequest.allow();
