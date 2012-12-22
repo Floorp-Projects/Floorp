@@ -53,7 +53,7 @@ var content = document.getElementById('content');
 var form = document.createElement('form');
 content.appendChild(form);
 
-for each (var data in testData) {
+for (var data of testData) {
   var e = document.createElement('input');
   e.type = data[0];
 

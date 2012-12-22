@@ -50,9 +50,7 @@
 #include "nsStyleSheetService.h"
 #include "nsFocusManager.h"
 #include "ThirdPartyUtil.h"
-#include "mozilla/Services.h"
 #include "nsStructuredCloneContainer.h"
-#include "mozilla/Attributes.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
@@ -66,7 +64,6 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
-#include "nsEventSource.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -90,12 +87,15 @@
 #include "nsDOMScriptObjectFactory.h"
 #include "nsDOMStorage.h"
 #include "nsJSON.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozIApplicationClearPrivateDataParams.h"
-#include "mozilla/dom/DOMRequest.h"
-#include "mozilla/OSFileConstants.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/Activity.h"
+#include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/EventSource.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
+#include "mozilla/OSFileConstants.h"
+#include "mozilla/Services.h"
 
 #ifdef MOZ_B2G_RIL
 #include "SystemWorkerManager.h"
@@ -269,7 +269,7 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEventSource)
+NS_GENERIC_FACTORY_CONSTRUCTOR(EventSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(Activity)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ArchiveReader)
@@ -1052,7 +1052,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_MEDIASTREAMPROTOCOLHANDLER_CID, false, NULL, nsMediaStreamProtocolHandlerConstructor },
   { &kNS_HOSTOBJECTURI_CID, false, NULL, nsHostObjectURIConstructor },
   { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
-  { &kNS_EVENTSOURCE_CID, false, NULL, nsEventSourceConstructor },
+  { &kNS_EVENTSOURCE_CID, false, NULL, EventSourceConstructor },
   { &kNS_DOMACTIVITY_CID, false, NULL, ActivityConstructor },
   { &kNS_DOMPARSER_CID, false, NULL, nsDOMParserConstructor },
   { &kNS_DOMSTORAGE2_CID, false, NULL, NS_NewDOMStorage2 },

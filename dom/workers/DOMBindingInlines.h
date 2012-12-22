@@ -7,12 +7,16 @@
 #define mozilla_dom_workers_dombindinginlines_h__
 
 #include "mozilla/dom/FileReaderSyncBinding.h"
+#include "mozilla/dom/TextDecoderBinding.h"
+#include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
 
 class FileReaderSync;
+class TextDecoder;
+class TextEncoder;
 class XMLHttpRequest;
 class XMLHttpRequestUpload;
 
@@ -44,6 +48,8 @@ struct WrapPrototypeTraits
   };
 
 SPECIALIZE_PROTO_TRAITS(FileReaderSync)
+SPECIALIZE_PROTO_TRAITS(TextDecoder)
+SPECIALIZE_PROTO_TRAITS(TextEncoder)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequest)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequestUpload)
 

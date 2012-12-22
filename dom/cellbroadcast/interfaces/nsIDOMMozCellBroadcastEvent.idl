@@ -6,7 +6,7 @@
 
 interface nsIDOMMozCellBroadcastMessage;
 
-[scriptable, builtinclass, uuid(0be33bb9-930f-410b-8d61-a0fc5f4dcf7d)]
+[scriptable, builtinclass, uuid(f955095f-01e4-4520-b299-7124ec7c63aa)]
 interface nsIDOMMozCellBroadcastEvent : nsIDOMEvent
 {
   //[binaryname(MessageMoz)]

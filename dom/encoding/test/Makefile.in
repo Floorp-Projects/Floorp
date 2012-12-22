@@ -30,6 +30,7 @@ MOCHITEST_FILES = \
   test_stringencoding.html \
   test_submit_euckr.html \
   test_utf16_files.html \
+  worker_helper.js \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

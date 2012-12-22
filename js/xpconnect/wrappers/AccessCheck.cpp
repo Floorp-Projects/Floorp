@@ -20,6 +20,7 @@
 #include "FilteringWrapper.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace js;
@@ -237,6 +238,10 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
 bool
 AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
 {
+    JSObject* wrapper = obj;
+    if (dom::GetSameCompartmentWrapperForDOMBinding(wrapper))
+        return wrapper != obj;
+
     if (!IS_WN_WRAPPER(obj))
         return false;
 
@@ -439,6 +444,13 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     }
 
     return true;
+}
+
+bool
+ExposedPropertiesOnly::allowNativeCall(JSContext *cx, JS::IsAcceptableThis test,
+                                       JS::NativeImpl impl)
+{
+    return js::IsReadOnlyDateMethod(test, impl) || js::IsTypedArrayThisCheck(test);
 }
 
 bool

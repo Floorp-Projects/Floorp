@@ -49,8 +49,7 @@ mozilla::dom::indexedDB::CreateGenericEvent(const nsAString& aType,
                                  aCancelable == eCancelable ? true : false);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  event->SetTrusted(true);
 
   return event.forget();
 }
@@ -66,15 +65,12 @@ IDBVersionChangeEvent::CreateInternal(const nsAString& aType,
   nsresult rv = event->InitEvent(aType, false, false);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  event->SetTrusted(true);
 
   event->mOldVersion = aOldVersion;
   event->mNewVersion = aNewVersion;
 
-  nsDOMEvent* result;
-  event.forget(&result);
-  return result;
+  return event.forget();
 }
 
 // static

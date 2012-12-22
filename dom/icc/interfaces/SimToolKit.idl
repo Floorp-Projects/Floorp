@@ -457,7 +457,7 @@ dictionary MozStkCommand
   jsval options;
 };
 
-[scriptable, builtinclass, uuid(06bbc6fa-9b59-4db6-b66b-3b26f9c379df)]
+[scriptable, builtinclass, uuid(21cd2f25-ebea-43f8-8255-eaa4e1182858)]
 interface nsIDOMMozStkCommandEvent : nsIDOMEvent
 {
   /**

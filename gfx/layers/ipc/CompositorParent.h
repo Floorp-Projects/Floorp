@@ -58,6 +58,7 @@ class CompositorParent : public PCompositorParent,
                          public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
+
 public:
   CompositorParent(nsIWidget* aWidget,
                    bool aRenderToEGLSurface = false,
@@ -171,11 +172,16 @@ protected:
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
   void SetEGLSurfaceSize(int width, int height);
+  // If SetPanZoomControllerForLayerTree is not set, Compositor will use
+  // derived class AsyncPanZoomController transformations.
+  // Compositor will not own AsyncPanZoomController here.
+  virtual AsyncPanZoomController* GetDefaultPanZoomController() { return nullptr; }
 
 private:
   void PauseComposition();
   void ResumeComposition();
   void ResumeCompositionAndResize(int width, int height);
+  void ForceComposition();
 
   // Sample transforms for layer trees.  Return true to request
   // another animation frame.
@@ -286,6 +292,9 @@ private:
   mozilla::Monitor mResumeCompositionMonitor;
 
   uint64_t mCompositorID;
+
+  bool mOverrideComposeReadiness;
+  CancelableTask* mForceCompositionTask;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

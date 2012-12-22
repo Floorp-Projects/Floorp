@@ -201,7 +201,6 @@ interface HTMLElement : Element {
   // FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 
-  /* Commented out for now because our quickstub setup doesn't handle calling PreEnabled() on our interface, which is what sets up the .expose pref here
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchstart;
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
@@ -213,7 +212,7 @@ interface HTMLElement : Element {
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchleave;
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchcancel;*/
+           attribute EventHandler ontouchcancel;
 
   [SetterThrows]
            attribute EventHandler oncopy;

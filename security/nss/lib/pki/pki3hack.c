@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.109 $ $Date: 2012/07/27 21:41:52 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.110 $ $Date: 2012/12/12 19:22:40 $";
 #endif /* DEBUG */
 
 /*
@@ -1092,7 +1092,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     nssPKIObject *pkiob;
 
     if (c == NULL) {
-        return SECFailure;
+        return PR_FAILURE;
     }
     oldTrust = nssTrust_GetCERTCertTrustForCert(c, cc);
     if (oldTrust) {

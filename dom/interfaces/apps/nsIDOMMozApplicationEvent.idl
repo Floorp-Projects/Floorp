@@ -6,7 +6,7 @@
 
 interface mozIDOMApplication;
 
-[scriptable, builtinclass, uuid(dae640fb-0a14-42d8-88d3-541c6f077820)]
+[scriptable, builtinclass, uuid(453ae38a-8d8d-465f-a718-3f01240f8f75)]
 interface nsIDOMMozApplicationEvent : nsIDOMEvent
 {
   readonly attribute mozIDOMApplication application;

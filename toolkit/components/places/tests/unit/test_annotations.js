@@ -357,3 +357,57 @@ add_task(function test_execute()
 
   annosvc.removeObserver(annoObserver);
 });
+
+add_test(function test_getAnnotationsHavingName() {
+  let uri = NetUtil.newURI("http://cat.mozilla.org");
+  let id = PlacesUtils.bookmarks.insertBookmark(
+    PlacesUtils.unfiledBookmarksFolderId, uri,
+    PlacesUtils.bookmarks.DEFAULT_INDEX, "cat");
+  let fid = PlacesUtils.bookmarks.createFolder(
+    PlacesUtils.unfiledBookmarksFolderId, "pillow",
+    PlacesUtils.bookmarks.DEFAULT_INDEX);
+
+  const ANNOS = {
+    "int": 7,
+    "double": 7.7,
+    "string": "seven"
+  };
+  for (let name in ANNOS) {
+    PlacesUtils.annotations.setPageAnnotation(
+      uri, name, ANNOS[name], 0,
+      PlacesUtils.annotations.EXPIRE_SESSION);
+    PlacesUtils.annotations.setItemAnnotation(
+      id, name, ANNOS[name], 0,
+      PlacesUtils.annotations.EXPIRE_SESSION);
+    PlacesUtils.annotations.setItemAnnotation(
+      fid, name, ANNOS[name], 0,
+      PlacesUtils.annotations.EXPIRE_SESSION);
+  }
+
+  for (let name in ANNOS) {
+    let results = PlacesUtils.annotations.getAnnotationsWithName(name);
+    do_check_eq(results.length, 3);
+
+    for (let result of results) {
+      do_check_eq(result.annotationName, name);
+      do_check_eq(result.annotationValue, ANNOS[name]);
+      if (result.uri)
+        do_check_true(result.uri.equals(uri));
+      else
+        do_check_true(result.itemId > 0);
+
+      if (result.itemId != -1) {
+        if (result.uri)
+          do_check_eq(result.itemId, id);
+        else
+          do_check_eq(result.itemId, fid);
+        do_check_guid_for_bookmark(result.itemId, result.guid);
+      }
+      else {
+        do_check_guid_for_uri(result.uri, result.guid);
+      }
+    }
+  }
+
+  run_next_test();
+});

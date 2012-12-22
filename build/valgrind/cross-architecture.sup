@@ -262,3 +262,18 @@
    fun:_ZN2js6ctypes7LibraryL7DeclareEP9JSContextjPN2JS5ValueE
    ...
 }
+{
+   Bug 823782
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN2js6ctypes5CData6CreateEP9JSContextN2JS6HandleIP8JSObjectEES8_Pvb
+   ...
+}
+{
+   Bug 823782
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_ZN2js6ctypes10StructTypeL6CreateEP9JSContextjPN2JS5ValueE
+   ...
+}

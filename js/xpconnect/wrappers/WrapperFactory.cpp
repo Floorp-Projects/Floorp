@@ -19,6 +19,7 @@
 #include "mozilla/Likely.h"
 
 using namespace js;
+using namespace mozilla;
 
 namespace xpc {
 
@@ -466,11 +467,16 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 JSObject *
 WrapperFactory::WrapForSameCompartment(JSContext *cx, JSObject *obj)
 {
-    // Only WNs have same-compartment wrappers.
-    //
     // NB: The contract of WrapForSameCompartment says that |obj| may or may not
-    // be a security wrapper. This check implicitly handles the security wrapper
-    // case.
+    // be a security wrapper. These checks implicitly handle the security
+    // wrapper case.
+
+    if (dom::GetSameCompartmentWrapperForDOMBinding(obj)) {
+        return obj;
+    }
+
+    MOZ_ASSERT(!dom::IsDOMObject(obj));
+
     if (!IS_WN_WRAPPER(obj))
         return obj;
 
