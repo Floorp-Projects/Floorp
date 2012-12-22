@@ -50,7 +50,10 @@ public:
     return mParent;
   }
 
-  void Append(nsIDOMPaintRequest* aElement) { mArray.AppendObject(aElement); }
+  void Append(nsPaintRequest* aElement)
+  {
+    mArray.AppendElement(aElement);
+  }
 
   static nsPaintRequestList* FromSupports(nsISupports* aSupports)
   {
@@ -71,23 +74,23 @@ public:
 
   uint32_t Length()
   {
-    return mArray.Count();
+    return mArray.Length();
   }
 
-  nsIDOMPaintRequest* Item(uint32_t aIndex)
+  nsPaintRequest* Item(uint32_t aIndex)
   {
-    return mArray.SafeObjectAt(aIndex);
+    return mArray.SafeElementAt(aIndex);
   }
-  nsIDOMPaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
+  nsPaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
-    aFound = aIndex < static_cast<uint32_t>(mArray.Count());
-    return aFound ? mArray.ObjectAt(aIndex) : nullptr;
+    aFound = aIndex < mArray.Length();
+    return aFound ? mArray.ElementAt(aIndex) : nullptr;
   }
 
 private:
   ~nsPaintRequestList() {}
 
-  nsCOMArray<nsIDOMPaintRequest> mArray;
+  nsTArray< nsRefPtr<nsPaintRequest> > mArray;
   nsCOMPtr<nsIDOMEvent> mParent;
 };
 
