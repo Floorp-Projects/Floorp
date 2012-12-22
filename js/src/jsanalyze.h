@@ -19,7 +19,7 @@
 #include "js/TemplateLib.h"
 #include "vm/ScopeObject.h"
 
-struct JSScript;
+class JSScript;
 
 /* Forward declaration of downstream register allocations computed for join points. */
 namespace js { namespace mjit { struct RegisterAllocation; } }

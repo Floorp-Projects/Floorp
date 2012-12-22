@@ -13,7 +13,7 @@
 #include "gc/Root.h"
 #include "jsscript.h"
 
-struct JSScript;
+class JSScript;
 
 namespace js {
 namespace ion {
