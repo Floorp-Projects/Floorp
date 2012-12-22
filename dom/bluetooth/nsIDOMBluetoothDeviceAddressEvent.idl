@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(afcb832f-bbb5-45fa-b703-f8185bd2d26d)]
+[scriptable, builtinclass, uuid(90c55b1c-2da5-4a30-bf09-0c70369a8d89)]
 interface nsIDOMBluetoothDeviceAddressEvent : nsIDOMEvent
 {
   readonly attribute DOMString  deviceAddress;
