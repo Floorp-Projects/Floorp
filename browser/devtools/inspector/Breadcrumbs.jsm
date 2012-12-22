@@ -83,7 +83,6 @@ HTMLBreadcrumbs.prototype = {
     this.update = this.update.bind(this);
     this.updateSelectors = this.updateSelectors.bind(this);
     this.selection.on("new-node", this.update);
-    this.selection.on("detached", this.update);
     this.selection.on("pseudoclass", this.updateSelectors);
     this.selection.on("attribute-changed", this.updateSelectors);
     this.update();
@@ -296,7 +295,6 @@ HTMLBreadcrumbs.prototype = {
     });
 
     this.selection.off("new-node", this.update);
-    this.selection.off("detached", this.update);
     this.selection.off("pseudoclass", this.updateSelectors);
     this.selection.off("attribute-changed", this.updateSelectors);
 

@@ -11,6 +11,7 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+  test_document.all_unqualified.html \
   test_domrequest.html \
   test_gsp-standards.html \
   test_gsp-quirks.html \
@@ -18,6 +19,7 @@ MOCHITEST_FILES = \
   test_nondomexception.html \
   test_screen_orientation.html \
   test_window_enumeration.html \
+  test_writable-replaceable.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

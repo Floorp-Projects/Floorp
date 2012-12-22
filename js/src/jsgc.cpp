@@ -3821,8 +3821,19 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
       }
 
       case SWEEP:
-        for (CompartmentsIter c(rt); !c.done(); c.next())
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
             c->scheduledForDestruction = false;
+
+            if (c->activeAnalysis && !c->gcTypesMarked) {
+                AutoCopyFreeListToArenas copy(rt);
+                gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP);
+                gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_MARK);
+                gcstats::AutoPhase ap3(rt->gcStats, gcstats::PHASE_SWEEP_MARK_TYPES);
+                rt->gcIncrementalState = MARK_ROOTS;
+                c->markTypes(&rt->gcMarker);
+                rt->gcIncrementalState = SWEEP;
+            }
+        }
 
         /* If we had started sweeping then sweep to completion here. */
         IncrementalCollectSlice(rt, SliceBudget::Unlimited, gcreason::RESET, GC_NORMAL);

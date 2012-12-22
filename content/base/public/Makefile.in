@@ -84,7 +84,6 @@ XPIDLSRCS	= \
 		nsIXMLHttpRequest.idl \
 		nsIContentSecurityPolicy.idl \
 		nsIMessageManager.idl \
-		nsIEventSource.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

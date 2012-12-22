@@ -111,6 +111,7 @@
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
+using base::ChildPrivileges;
 using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
@@ -289,28 +290,35 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
     return p;
 }
 
-static bool
-AppNeedsInheritedOSPrivileges(mozIApplication* aApp)
+namespace {
+struct SpecialPermission {
+    const char* perm;           // an app permission
+    ChildPrivileges privs;      // the OS privilege it requires
+};
+}
+
+static ChildPrivileges
+PrivilegesForApp(mozIApplication* aApp)
 {
-    const char* const needInheritPermissions[] = {
+    const SpecialPermission specialPermissions[] = {
         // FIXME/bug 785592: implement a CameraBridge so we don't have
         // to hack around with OS permissions
-        "camera",
+        { "camera", base::PRIVILEGES_INHERIT },
         // FIXME/bug 793034: change our video architecture so that we
         // can stream video from remote processes
-        "deprecated-hwvideo",
+        { "deprecated-hwvideo", base::PRIVILEGES_VIDEO }
     };
-    for (size_t i = 0; i < ArrayLength(needInheritPermissions); ++i) {
-        const char* const permission = needInheritPermissions[i];
-        bool needsInherit = false;
-        if (NS_FAILED(aApp->HasPermission(permission, &needsInherit))) {
+    for (size_t i = 0; i < ArrayLength(specialPermissions); ++i) {
+        const char* const permission = specialPermissions[i].perm;
+        bool hasPermission = false;
+        if (NS_FAILED(aApp->HasPermission(permission, &hasPermission))) {
             NS_WARNING("Unable to check permissions.  Breakage may follow.");
-            return false;
-        } else if (needsInherit) {
-            return true;
+            break;
+        } else if (hasPermission) {
+            return specialPermissions[i].privs;
         }
     }
-    return false;
+    return base::PRIVILEGES_DEFAULT;
 }
 
 /*static*/ TabParent*
@@ -348,9 +356,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext)
 
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
     if (!p) {
-        if (AppNeedsInheritedOSPrivileges(ownApp)) {
+        ChildPrivileges privs = PrivilegesForApp(ownApp);
+        if (privs != base::PRIVILEGES_DEFAULT) {
             p = new ContentParent(manifestURL, /* isBrowserElement = */ false,
-                                  base::PRIVILEGES_INHERIT);
+                                  privs);
             p->Init();
         } else {
             p = MaybeTakePreallocatedAppProcess();
@@ -1801,6 +1810,9 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
                                          const nsString& aText, const bool& aTextClickable,
                                          const nsString& aCookie, const nsString& aName)
 {
+    if (!AssertAppProcessPermission(this, "desktop-notification")) {
+        return false;
+    }
     nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));
     if (sysAlerts) {
         sysAlerts->ShowAlertNotification(aImageUrl, aTitle, aText, aTextClickable,

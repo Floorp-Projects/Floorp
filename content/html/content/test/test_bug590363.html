@@ -64,7 +64,7 @@ for (var i=0; i<length; ++i) {
 
 // For type='file' .value doesn't behave the same way.
 // We are just going to check that we do not loose the value.
-for each (var data in testData) {
+for (var data of testData) {
   var e = document.createElement('input');
   e.type = data[0];
   e.value = 'foo';
@@ -81,7 +81,7 @@ for each (var data in testData) {
 }
 
 // TODO checks
-for each (var type in todoTypes) {
+for (var type of todoTypes) {
   var e = document.createElement('input');
   e.type = type;
   todo_is(e.type, type, type + " type isn't supported yet");

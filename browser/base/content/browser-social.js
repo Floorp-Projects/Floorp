@@ -718,7 +718,7 @@ var SocialToolbar = {
   updateProvider: function () {
     if (!Social.provider)
       return;
-    this.button.setAttribute("image", Social.provider.iconURL);
+    this.button.style.listStyleImage = "url(" + Social.provider.iconURL + ")";
     this.updateButton();
     this.updateProfile();
     this.populateProviderMenus();

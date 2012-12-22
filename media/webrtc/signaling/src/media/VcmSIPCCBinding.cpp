@@ -743,7 +743,7 @@ short vcmSetIceCandidate(const char *peerconnection,
  *  @param[in]  peerconnection - the peerconnection in use
  *  @return 0 success, error failure
  */
-static short vcmStartIceChecks_m(const char *peerconnection)
+static short vcmStartIceChecks_m(const char *peerconnection, cc_boolean isControlling)
 {
   CSFLogDebug( logTag, "%s: PC = %s", __FUNCTION__, peerconnection);
 
@@ -751,6 +751,12 @@ static short vcmStartIceChecks_m(const char *peerconnection)
   ENSURE_PC(pc, VCM_ERROR);
 
   nsresult res;
+  res = pc.impl()->media()->ice_ctx()->SetControlling(
+      isControlling ? NrIceCtx::ICE_CONTROLLING : NrIceCtx::ICE_CONTROLLED);
+  if (!NS_SUCCEEDED(res)) {
+    CSFLogError( logTag, "%s: couldn't set controlling", __FUNCTION__ );
+    return VCM_ERROR;
+  }
   nsresult rv = pc.impl()->media()->ice_ctx()->thread()->Dispatch(
     WrapRunnableRet(pc.impl()->media()->ice_ctx(), &NrIceCtx::StartChecks, &res),
       NS_DISPATCH_SYNC);
@@ -759,12 +765,10 @@ static short vcmStartIceChecks_m(const char *peerconnection)
     CSFLogError( logTag, "%s(): Could not dispatch to ICE thread", __FUNCTION__);
     return VCM_ERROR;
   }
-
   if (!NS_SUCCEEDED(res)) {
     CSFLogError( logTag, "%s: couldn't start ICE checks", __FUNCTION__ );
     return VCM_ERROR;
   }
-
   return 0;
 }
 
@@ -776,13 +780,14 @@ static short vcmStartIceChecks_m(const char *peerconnection)
  *  @param[in]  peerconnection - the peerconnection in use
  *  @return 0 success, error failure
  */
-short vcmStartIceChecks(const char *peerconnection)
+short vcmStartIceChecks(const char *peerconnection, cc_boolean isControlling)
 {
   short ret;
 
   VcmSIPCCBinding::getMainThread()->Dispatch(
       WrapRunnableNMRet(&vcmStartIceChecks_m,
                         peerconnection,
+                        isControlling,
                         &ret),
       NS_DISPATCH_SYNC);
 
@@ -904,7 +909,7 @@ static short vcmCreateRemoteStream_m(
     hints |= nsDOMMediaStream::HINT_CONTENTS_VIDEO;
   }
 
-  sipcc::RemoteSourceStreamInfo* info;
+  nsRefPtr<sipcc::RemoteSourceStreamInfo> info;
   res = pc.impl()->CreateRemoteSourceStreamInfo(hints, &info);
   if (NS_FAILED(res)) {
     return VCM_ERROR;
@@ -1324,14 +1329,26 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     if (conduit->ConfigureRecvMediaCodecs(configs))
       return VCM_ERROR;
 
+
     // Now we have all the pieces, create the pipeline
-    stream->StorePipeline(pc_track_id,
+    mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
       new mozilla::MediaPipelineReceiveAudio(
+        pc.impl()->GetHandle(),
         pc.impl()->GetMainThread().get(),
         pc.impl()->GetSTSThread(),
-        stream->GetMediaStream(),
-        conduit, rtp_flow, rtcp_flow));
+        stream->GetMediaStream()->GetStream(),
+        conduit, rtp_flow, rtcp_flow);
 
+    nsresult res = pipeline->Init();
+    if (NS_FAILED(res)) {
+      CSFLogError(logTag, "Failure initializing audio pipeline");
+      return VCM_ERROR;
+    }
+
+    CSFLogDebug(logTag, "Created audio pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
+                pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
+
+    stream->StorePipeline(pc_track_id, pipeline);
   } else if (CC_IS_VIDEO(mcap_id)) {
 
     std::vector<mozilla::VideoCodecConfig *> configs;
@@ -1357,13 +1374,24 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
       return VCM_ERROR;
 
     // Now we have all the pieces, create the pipeline
-    stream->StorePipeline(pc_track_id,
-      new mozilla::MediaPipelineReceiveVideo(
-        pc.impl()->GetMainThread().get(),
-        pc.impl()->GetSTSThread(),
-        stream->GetMediaStream(),
-        conduit, rtp_flow, rtcp_flow));
+    mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
+        new mozilla::MediaPipelineReceiveVideo(
+            pc.impl()->GetHandle(),
+            pc.impl()->GetMainThread().get(),
+            pc.impl()->GetSTSThread(),
+            stream->GetMediaStream()->GetStream(),
+            conduit, rtp_flow, rtcp_flow);
 
+    nsresult res = pipeline->Init();
+    if (NS_FAILED(res)) {
+      CSFLogError(logTag, "Failure initializing video pipeline");
+      return VCM_ERROR;
+    }
+
+    CSFLogDebug(logTag, "Created video pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
+                pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
+
+    stream->StorePipeline(pc_track_id, pipeline);
   } else {
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);
     return VCM_ERROR;
@@ -1931,15 +1959,22 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
 
-    mozilla::RefPtr<mozilla::MediaPipelineTransmit> pipeline =
-      new mozilla::MediaPipelineTransmit(
-        pc.impl()->GetMainThread().get(),
-        pc.impl()->GetSTSThread(),
-        stream->GetMediaStream(),
-        conduit, rtp_flow, rtcp_flow);
+    mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
+        new mozilla::MediaPipelineTransmit(
+            pc.impl()->GetHandle(),
+            pc.impl()->GetMainThread().get(),
+            pc.impl()->GetSTSThread(),
+            stream->GetMediaStream()->GetStream(),
+            conduit, rtp_flow, rtcp_flow);
 
+    nsresult res = pipeline->Init();
+    if (NS_FAILED(res)) {
+      CSFLogError(logTag, "Failure initializing audio pipeline");
+      return VCM_ERROR;
+    }
     CSFLogDebug(logTag, "Created audio pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
                 pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
+
 
     // Now we have all the pieces, create the pipeline
     stream->StorePipeline(pc_track_id, pipeline);
@@ -1963,18 +1998,24 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
 
-    // Create the pipeline
+    // Now we have all the pieces, create the pipeline
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
         new mozilla::MediaPipelineTransmit(
-          pc.impl()->GetMainThread().get(),
-          pc.impl()->GetSTSThread(),
-          stream->GetMediaStream(),
-          conduit, rtp_flow, rtcp_flow);
+            pc.impl()->GetHandle(),
+            pc.impl()->GetMainThread().get(),
+            pc.impl()->GetSTSThread(),
+            stream->GetMediaStream()->GetStream(),
+            conduit, rtp_flow, rtcp_flow);
+
+    nsresult res = pipeline->Init();
+    if (NS_FAILED(res)) {
+      CSFLogError(logTag, "Failure initializing video pipeline");
+      return VCM_ERROR;
+    }
 
     CSFLogDebug(logTag, "Created video pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
                 pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
 
-    // Now we have all the pieces, create the pipeline
     stream->StorePipeline(pc_track_id, pipeline);
   } else {
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);

@@ -29,6 +29,8 @@ EXTRA_JS_MODULES += \
   OfflineCacheInstaller.jsm \
   PermissionsInstaller.jsm \
   PermissionsTable.jsm \
+  FreeSpaceWatcher.jsm \
+  AppDownloadManager.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

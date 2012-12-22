@@ -731,13 +731,23 @@ void nsCARenderer::SetBounds(int aWidth, int aHeight) {
     affineTransform.ty = ((double)aHeight)/mContentsScaleFactor;
     [layer setAffineTransform:affineTransform];
     if ([layer respondsToSelector:@selector(setContentsScale:)]) {
-      // For reasons that aren't clear (perhaps one or more OS bugs), OOP
-      // Core Graphics plugins (ones that use CGBridgeLayer) can only use
-      // HiDPI mode if the tree is built with the 10.7 SDK or up.
+      // For reasons that aren't clear (perhaps one or more OS bugs), if layer
+      // belongs to a subclass of CALayer we can only use full HiDPI resolution
+      // here if the tree is built with the 10.7 SDK or up:  If we change
+      // layer.contentsScale (even to the same value), layer simply stops
+      // working (goes blank).  And even if we're building with the 10.7 SDK,
+      // we can't use full HiDPI resolution if layer belongs to CAOpenGLLayer
+      // or a subclass:  Changing layer.contentsScale to values higher than
+      // 1.0 makes it display only in the lower left part of its "box".
+      // We use CGBridgeLayer (a subclass of CALayer) to implement CoreGraphics
+      // mode for OOP plugins.  Shockwave uses a subclass of CAOpenGLLayer
+      // (SWRenderer) to implement CoreAnimation mode.  The SlingPlayer plugin
+      // uses another subclass of CAOpenGLLayer (CoreAnimationLayer).
 #if !defined(MAC_OS_X_VERSION_10_7) || \
     MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-      Class CGBridgeLayerClass = ::NSClassFromString(@"CGBridgeLayer");
-      if (!CGBridgeLayerClass || ![layer isKindOfClass:CGBridgeLayerClass])
+      if ([layer isMemberOfClass:[CALayer class]])
+#else
+      if (![layer isKindOfClass:[CAOpenGLLayer class]])
 #endif
       {
         layer.contentsScale = mContentsScaleFactor;
@@ -751,8 +761,9 @@ void nsCARenderer::SetBounds(int aWidth, int aHeight) {
     if ([layer respondsToSelector:@selector(setContentsScale:)]) {
 #if !defined(MAC_OS_X_VERSION_10_7) || \
     MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-      Class CGBridgeLayerClass = ::NSClassFromString(@"CGBridgeLayer");
-      if (!CGBridgeLayerClass || ![layer isKindOfClass:CGBridgeLayerClass])
+      if ([layer isMemberOfClass:[CALayer class]])
+#else
+      if (![layer isKindOfClass:[CAOpenGLLayer class]])
 #endif
       {
         layer.contentsScale = 1.0;

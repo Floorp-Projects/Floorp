@@ -49,6 +49,13 @@
         <attr name="sidebar" format="boolean"/>
     </declare-styleable>
 
+    <declare-styleable name="TabsTray">
+        <attr name="tabs">
+            <flag name="tabs_normal" value="0x00" />
+            <flag name="tabs_private" value ="0x01" />
+        </attr>
+    </declare-styleable>
+
     <declare-styleable name="TextSelectionHandle">
         <attr name="handleType">
             <flag name="start" value="0x01" />
@@ -59,6 +66,11 @@
 
     <declare-styleable name="PrivateBrowsing">
         <attr name="state_private" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="LightweightTheme">
+        <attr name="state_light" format="boolean"/>
+        <attr name="state_dark" format="boolean"/>
     </declare-styleable>
 
 </resources>

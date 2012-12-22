@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+
+  <title>Testcase for clip-path on elements that are transformed</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=806432 -->
+
+  <clipPath id="cp" clipPathUnits="userSpaceOnUse">
+    <!-- Two duplicate rects are used to make us take the non-trivial-clipPath
+         code path when painting this SVG file.
+    -->
+    <rect x="0" y="0" width="100" height="100"/>
+    <rect x="0" y="0" width="100" height="100"/>
+  </clipPath>
+
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect x="10" y="10" width="100" height="100" fill="red"/>
+  <rect width="100" height="100" transform="translate(10,10)" fill="lime" clip-path="url(#cp)"/>
+
+</svg>

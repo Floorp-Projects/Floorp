@@ -638,7 +638,7 @@ void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
   DocAccessible* document = aEvent->GetDocAccessible();
-  Accessible* container = document->GetContainerAccessible(aEvent->mNode);
+  Accessible* container = aEvent->mAccessible->Parent();
   if (!container)
     return;
 

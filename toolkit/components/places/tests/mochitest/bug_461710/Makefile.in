@@ -16,6 +16,7 @@ MOCHITEST_FILES	= \
 		link_page.html \
 		link_page-2.html \
 		link_page-3.html \
+		iframe.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

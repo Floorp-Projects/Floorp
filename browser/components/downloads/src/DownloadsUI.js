@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
 XPCOMUtils.defineLazyServiceGetter(this, "gBrowserGlue",
                                    "@mozilla.org/browser/browserglue;1",
                                    "nsIBrowserGlue");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsUI
@@ -72,31 +74,83 @@ DownloadsUI.prototype = {
       let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
 
       if (!browserWin || browserWin.windowState == kMinimized) {
-        this._toolkitUI.show(aWindowContext, aID, aReason);
+        this._showDownloadManagerUI(aWindowContext, aID, aReason);
       }
       else {
         // If the indicator is visible, then new download notifications are
         // already handled by the panel service.
         browserWin.DownloadsButton.checkIsVisible(function(isVisible) {
           if (!isVisible) {
-            this._toolkitUI.show(aWindowContext, aID, aReason);
+            this._showDownloadManagerUI(aWindowContext, aID, aReason);
           }
         }.bind(this));
       }
     } else {
-      this._toolkitUI.show(aWindowContext, aID, aReason);
+      this._showDownloadManagerUI(aWindowContext, aID, aReason);
     }
   },
 
   get visible()
   {
-    return this._toolkitUI.visible;
+    // If we're still using the toolkit downloads manager, delegate the call
+    // to it. Otherwise, return true for now, until we decide on how we want
+    // to indicate that a new download has started if a browser window is
+    // not available or minimized.
+    return DownloadsCommon.useToolkitUI ? this._toolkitUI.visible : true;
   },
 
   getAttention: function DUI_getAttention()
   {
     if (DownloadsCommon.useToolkitUI) {
       this._toolkitUI.getAttention();
+    }
+  },
+
+  /**
+   * Helper function that opens the right download manager UI. Either the
+   * new Downloads View in Places, or the toolkit download window if the
+   * Places Downloads View is not enabled.
+   */
+  _showDownloadManagerUI:
+  function DUI_showDownloadManagerUI(aWindowContext, aID, aReason)
+  {
+    // First, determine if the Places Downloads view is preffed on.
+    let usePlacesView = false;
+    try {
+      usePlacesView =
+        Services.prefs.getBoolPref("browser.library.useNewDownloadsView");
+    } catch(e) {}
+
+    if (!usePlacesView) {
+      // If we got here, then the browser.library.useNewDownloadsView pref
+      // either didn't exist or was false, so just show the toolkit downloads
+      // manager.
+      this._toolkitUI.show(aWindowContext, aID, aReason);
+      return;
+    }
+
+    let organizer = Services.wm.getMostRecentWindow("Places:Organizer");
+    if (!organizer) {
+      let parentWindow = aWindowContext;
+      // If we weren't given a window context, try to find a browser window
+      // to use as our parent - and if that doesn't work, error out and give
+      // up.
+      if (!parentWindow) {
+        parentWindow = RecentWindow.getMostRecentBrowserWindow();
+        if (!parentWindow) {
+          Components.utils
+                    .reportError("Couldn't find a browser window to open " +
+                                 "the Places Downloads View from.");
+          return;
+        }
+      }
+      parentWindow.openDialog("chrome://browser/content/places/places.xul",
+                              "", "chrome,toolbar=yes,dialog=no,resizable",
+                              "Downloads");
+    }
+    else {
+      organizer.PlacesOrganizer.selectLeftPaneQuery("Downloads");
+      organizer.focus();
     }
   }
 };

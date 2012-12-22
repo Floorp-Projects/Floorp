@@ -4578,6 +4578,13 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_FONTCHANGE:
     {
+      // We only handle this message for the hidden window,
+      // as we only need to update the (global) font list once
+      // for any given change, not once per window!
+      if (mWindowType != eWindowType_invisible) {
+        break;
+      }
+
       nsresult rv;
       bool didChange = false;
 
@@ -4585,10 +4592,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       nsCOMPtr<nsIFontEnumerator> fontEnum = do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
       if (NS_SUCCEEDED(rv)) {
         fontEnum->UpdateFontList(&didChange);
-        //didChange is TRUE only if new font langGroup is added to the list.
-        if (didChange)  {
-          ForceFontUpdate();
-        }
+        ForceFontUpdate();
       } //if (NS_SUCCEEDED(rv))
     }
     break;
