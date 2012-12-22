@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,12 +11,20 @@
 #include "nsPresContext.h"
 #include "nsIDOMEvent.h"
 #include "mozilla/Attributes.h"
+#include "nsClientRect.h"
 #include "nsWrapperCache.h"
 
 class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
                                , public nsWrapperCache
 {
 public:
+  nsPaintRequest(nsIDOMEvent* aParent)
+    : mParent(aParent)
+  {
+    mRequest.mFlags = 0;
+    SetIsDOMBinding();
+  }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequest)
   NS_DECL_NSIDOMPAINTREQUEST
@@ -24,7 +32,16 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
                                bool* aTriedToWrap) MOZ_OVERRIDE;
 
-  nsPaintRequest() { mRequest.mFlags = 0; }
+  nsIDOMEvent* GetParentObject() const
+  {
+    return mParent;
+  }
+
+  already_AddRefed<nsClientRect> ClientRect();
+  void GetReason(nsAString& aResult) const
+  {
+    aResult.AssignLiteral("repaint");
+  }
 
   void SetRequest(const nsInvalidateRequestList::Request& aRequest)
   { mRequest = aRequest; }
@@ -32,6 +49,7 @@ public:
 private:
   ~nsPaintRequest() {}
 
+  nsCOMPtr<nsIDOMEvent> mParent;
   nsInvalidateRequestList::Request mRequest;
 };
 
