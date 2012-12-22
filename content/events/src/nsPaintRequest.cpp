@@ -13,14 +13,24 @@
 
 DOMCI_DATA(PaintRequest, nsPaintRequest)
 
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPaintRequest, mParent)
+
 NS_INTERFACE_TABLE_HEAD(nsPaintRequest)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_TABLE1(nsPaintRequest, nsIDOMPaintRequest)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsPaintRequest)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PaintRequest)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsPaintRequest)
-NS_IMPL_RELEASE(nsPaintRequest)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaintRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaintRequest)
+
+/* virtual */ JSObject*
+nsPaintRequest::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  *aTriedToWrap = false;
+  return nullptr;
+}
 
 NS_IMETHODIMP
 nsPaintRequest::GetClientRect(nsIDOMClientRect** aResult)
