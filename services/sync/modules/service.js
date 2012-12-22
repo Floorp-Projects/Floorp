@@ -122,10 +122,6 @@ Sync11Service.prototype = {
     return this.serverURL + "weave-password-reset";
   },
 
-  get updatedURL() {
-    return WEAVE_CHANNEL == "dev" ? UPDATED_DEV_URL : UPDATED_REL_URL;
-  },
-
   get syncID() {
     // Generate a random syncID id we don't have one
     let syncID = Svc.Prefs.get("client.syncID", "");
