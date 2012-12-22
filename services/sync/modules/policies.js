@@ -173,10 +173,12 @@ SyncScheduler.prototype = {
         break;
       case "weave:service:backoff:interval":
         let requested_interval = subject * 1000;
+        this._log.debug("Got backoff notification: " + requested_interval + "ms");
         // Leave up to 25% more time for the back off.
         let interval = requested_interval * (1 + Math.random() * 0.25);
         Status.backoffInterval = interval;
         Status.minimumNextSync = Date.now() + requested_interval;
+        this._log.debug("Fuzzed minimum next sync: " + Status.minimumNextSync);
         break;
       case "weave:service:ready":
         // Applications can specify this preference if they want autoconnect
@@ -805,13 +807,15 @@ ErrorHandler.prototype = {
       case 504:
         Status.enforceBackoff = true;
         if (resp.status == 503 && resp.headers["retry-after"]) {
+          let retryAfter = resp.headers["retry-after"];
+          this._log.debug("Got Retry-After: " + retryAfter);
           if (this.service.isLoggedIn) {
             Status.sync = SERVER_MAINTENANCE;
           } else {
             Status.login = SERVER_MAINTENANCE;
           }
           Svc.Obs.notify("weave:service:backoff:interval",
-                         parseInt(resp.headers["retry-after"], 10));
+                         parseInt(retryAfter, 10));
         }
         break;
     }
