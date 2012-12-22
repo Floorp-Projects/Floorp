@@ -3387,30 +3387,32 @@ let RIL = {
       }
     }
 
-    // 1 octets = 2 chars.
-    let size = (TLV_COMMAND_DETAILS_SIZE +
-                TLV_DEVICE_ID_SIZE +
-                TLV_RESULT_SIZE +
-                (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
-                (textLen ? textLen + 3 : 0)) * 2;
+    let berLen = TLV_COMMAND_DETAILS_SIZE +
+                 TLV_DEVICE_ID_SIZE +
+                 TLV_RESULT_SIZE +
+                 (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
+                 (textLen ? textLen + 3 : 0);
+
     if (response.localInfo) {
       let localInfo = response.localInfo;
-      size = size +
-             (((localInfo.locationInfo ?
-               (localInfo.locationInfo.gsmCellId > 0xffff ?
-                 TLV_LOCATION_INFO_UMTS_SIZE :
-                 TLV_LOCATION_INFO_GSM_SIZE) :
-               0) +
-             (localInfo.imei ? TLV_IMEI_SIZE : 0) +
-             (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
-             (localInfo.language ? TLV_LANGUAGE_SIZE : 0)) * 2);
+      berLen += ((localInfo.locationInfo ?
+                 (localInfo.locationInfo.gsmCellId > 0xffff ?
+                   TLV_LOCATION_INFO_UMTS_SIZE :
+                   TLV_LOCATION_INFO_GSM_SIZE) :
+                  0) +
+                 (localInfo.imei ? TLV_IMEI_SIZE : 0) +
+                 (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
+                 (localInfo.language ? TLV_LANGUAGE_SIZE : 0));
     }
+
     if (response.timer) {
       let timer = response.timer;
-      size = size +
-             ((timer.timerId ? TLV_TIMER_IDENTIFIER : 0) +
-              (timer.timerValue ? TLV_TIMER_VALUE : 0)) * 2;
+      berLen += TLV_TIMER_IDENTIFIER +
+                (timer.timerValue ? TLV_TIMER_VALUE : 0);
     }
+
+    // 1 octets = 2 chars.
+    let size = berLen * 2;
     Buf.writeUint32(size);
 
     // Command Details
