@@ -291,6 +291,7 @@ class ICEntry
                                 \
     _(UnaryArith_Fallback)      \
     _(UnaryArith_Int32)         \
+    _(UnaryArith_Double)        \
                                 \
     _(Call_Fallback)            \
     _(Call_Scripted)            \
@@ -1332,6 +1333,34 @@ class ICBinaryArith_Int32 : public ICStub
     };
 };
 
+class ICBinaryArith_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICBinaryArith_Double(IonCode *stubCode)
+      : ICStub(BinaryArith_Double, stubCode)
+    {}
+
+  public:
+    static inline ICBinaryArith_Double *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICBinaryArith_Double>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Double, op)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_Double::New(space, getStubCode());
+        }
+    };
+};
+
 // UnaryArith
 //     JSOP_BITNOT
 //     JSOP_NEG
@@ -1366,34 +1395,6 @@ class ICUnaryArith_Fallback : public ICFallbackStub
     };
 };
 
-class ICBinaryArith_Double : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICBinaryArith_Double(IonCode *stubCode)
-      : ICStub(BinaryArith_Double, stubCode)
-    {}
-
-  public:
-    static inline ICBinaryArith_Double *New(ICStubSpace *space, IonCode *code) {
-        return space->allocate<ICBinaryArith_Double>(code);
-    }
-
-    class Compiler : public ICMultiStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::BinaryArith_Double, op)
-        {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICBinaryArith_Double::New(space, getStubCode());
-        }
-    };
-};
-
 class ICUnaryArith_Int32 : public ICStub
 {
     friend class ICStubSpace;
@@ -1418,6 +1419,34 @@ class ICUnaryArith_Int32 : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICUnaryArith_Int32::New(space, getStubCode());
+        }
+    };
+};
+
+class ICUnaryArith_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICUnaryArith_Double(IonCode *stubCode)
+      : ICStub(UnaryArith_Int32, stubCode)
+    {}
+
+  public:
+    static inline ICUnaryArith_Double *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICUnaryArith_Double>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICUnaryArith_Double::New(space, getStubCode());
         }
     };
 };
