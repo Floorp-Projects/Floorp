@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1354916891000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1356125617000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -46,7 +46,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i236" id="{EEE6C361-6118-11DC-9C72-001320C79847}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="1.7.999" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i64" id="royal@facebook.com">
@@ -555,32 +555,16 @@
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p152">
-                  <match name="filename" exp="npctrl\.dll" />                                    <versionRange  minVersion="0" maxVersion="4.1.10328.0" severity="0" vulnerabilitystatus="1">
-                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="4.0" maxVersion="16.*" />
-                          </targetApplication>
-                  </versionRange>
+                  <match name="filename" exp="npctrl\.dll" />                      <versionRange  minVersion="0" maxVersion="4.1.10328.0" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p154">
-                  <match name="filename" exp="npctrl\.dll" />                                    <versionRange  minVersion="5.0" maxVersion="5.1.10410.0" severity="0" vulnerabilitystatus="1">
-                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="4.0" maxVersion="16.*" />
-                          </targetApplication>
-                  </versionRange>
+                  <match name="filename" exp="npctrl\.dll" />                      <versionRange  minVersion="5.0" maxVersion="5.1.10410.0" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p156">
-                  <match name="filename" exp="nppdf32\.dll" />                                    <versionRange  minVersion="0" maxVersion="9.5.1" severity="0" vulnerabilitystatus="1">
-                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="4.0" maxVersion="16.*" />
-                          </targetApplication>
-                  </versionRange>
+                  <match name="filename" exp="nppdf32\.dll" />                      <versionRange  minVersion="0" maxVersion="9.5.1" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p158">
-                  <match name="filename" exp="nppdf32\.dll" />                                    <versionRange  minVersion="10.0" maxVersion="10.1.3" severity="0" vulnerabilitystatus="1">
-                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="4.0" maxVersion="16.*" />
-                          </targetApplication>
-                  </versionRange>
+                  <match name="filename" exp="nppdf32\.dll" />                      <versionRange  minVersion="10.0" maxVersion="10.1.3" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p160">
                   <match name="filename" exp="NPSWF32\.dll" />                                    <versionRange  minVersion="0" maxVersion="10.2.9999" severity="0" vulnerabilitystatus="1">
@@ -606,42 +590,42 @@
       <pluginItem  blockID="p180">
                   <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 07" maxVersion="Java 7 Update 08" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p182">
       <match name="name" exp="Java\(TM\) Platform SE 7 U[7-8](\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p184">
       <match name="name" exp="Java\(TM\) Plug-in 1\.7\.0(_0?([7-8]))?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p186">
       <match name="name" exp="Java\(TM\) Platform SE 6 U3[3-6](\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p188">
                   <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 6 Update 0" maxVersion="Java 6 Update 36" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p190">
       <match name="name" exp="Java\(TM\) Plug-in 1\.6\.0_3[3-6]([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
@@ -663,6 +647,16 @@
       <match name="name" exp="Java\(TM\) Platform SE 7 U7(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="0.1" maxVersion="17.*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p240">
+                  <match name="filename" exp="DivXBrowserPlugin\.plugin" />                      <versionRange  minVersion="0" maxVersion="1.4" severity="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  os="Darwin" blockID="p242">
+            <match name="description" exp="Flip4Mac" />                                          <versionRange  minVersion="0" maxVersion="2.4.3.999" severity="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="18.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
