@@ -35,6 +35,7 @@ webidl_files = \
   Element.webidl \
   EventHandler.webidl \
   EventListener.webidl \
+  EventSource.webidl \
   EventTarget.webidl \
   File.webidl \
   FileHandle.webidl \
