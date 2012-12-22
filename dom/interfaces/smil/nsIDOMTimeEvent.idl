@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/SVG/animate.html#InterfaceTimeEvent
  */
 
-[scriptable, builtinclass, uuid(a7ddd388-5fdf-4af8-b3ee-7e1baa636b66)]
+[scriptable, builtinclass, uuid(4a5a5fa6-2783-4171-b8bb-cae4ab06e6ff)]
 interface nsIDOMTimeEvent : nsIDOMEvent
 {
   readonly attribute long detail;

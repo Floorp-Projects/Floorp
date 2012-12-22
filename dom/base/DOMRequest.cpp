@@ -162,10 +162,7 @@ DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
     return;
   }
 
-  rv = event->SetTrusted(true);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  event->SetTrusted(true);
 
   bool dummy;
   DispatchEvent(event, &dummy);

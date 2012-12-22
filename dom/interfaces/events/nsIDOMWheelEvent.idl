@@ -6,7 +6,7 @@
 
 #include "nsIDOMMouseEvent.idl"
 
-[scriptable, builtinclass, uuid(5b689c9c-ce82-4836-bb7b-f2fa0c3d2f32)]
+[scriptable, builtinclass, uuid(86e2b577-7e61-4ed5-8ddd-c1533bf07137)]
 interface nsIDOMWheelEvent : nsIDOMMouseEvent
 {
   const unsigned long DOM_DELTA_PIXEL = 0x00;

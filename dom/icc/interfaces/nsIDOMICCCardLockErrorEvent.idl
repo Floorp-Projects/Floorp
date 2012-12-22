@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(109c1117-1199-47aa-aad2-ea9f456220fa)]
+[scriptable, builtinclass, uuid(05d269bc-7049-4df8-b72f-4318aaee54de)]
 interface nsIDOMICCCardLockErrorEvent : nsIDOMEvent
 {
   readonly attribute DOMString lockType;
