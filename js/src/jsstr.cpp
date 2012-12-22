@@ -2308,113 +2308,6 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
     return true;
 }
 
-struct StringRange
-{
-    size_t start;
-    size_t length;
-
-    StringRange(size_t s, size_t l)
-      : start(s), length(l)
-    { }
-};
-
-static JSString *
-AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
-                 const StringRange *ranges, size_t rangesLen)
-{
-    JS_ASSERT(rangesLen);
-
-    /* For single substrings, construct a dependent string. */
-    if (rangesLen == 1)
-        return js_NewDependentString(cx, stableStr, ranges[0].start, ranges[0].length);
-
-    /* Collect substrings into a rope. */
-    RopeBuilder rope(cx);
-    for (size_t i = 0; i < rangesLen; i++) {
-        const StringRange &sr = ranges[i];
-
-        RootedString substr(cx, js_NewDependentString(cx, stableStr, sr.start, sr.length));
-        if (!substr)
-            return NULL;
-
-        /* Appending to the rope permanently roots the substring. */
-        rope.append(substr);
-    }
-
-    return rope.result();
-}
-
-static bool
-str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExpShared &re)
-{
-    Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
-    if (!stableStr)
-        return false;
-
-    Vector<StringRange, 16, SystemAllocPolicy> ranges;
-
-    StableCharPtr chars = stableStr->chars();
-    size_t charsLen = stableStr->length();
-
-    MatchPair match;
-    size_t lastIndex = 0;
-
-    /* Accumulate StringRanges for unmatched substrings. */
-    while (lastIndex <= charsLen) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
-            return false;
-
-        size_t startIndex = lastIndex;
-
-        RegExpRunStatus status = re.executeMatchOnly(cx, chars, charsLen, &lastIndex, match);
-        if (status == RegExpRunStatus_Error)
-            return false;
-        if (status == RegExpRunStatus_Success_NotFound)
-            break;
-
-        /* Include the latest unmatched substring. */
-        if (size_t(match.start) > startIndex) {
-            if (!ranges.append(StringRange(startIndex, match.start - startIndex)))
-                return false;
-        }
-
-        if (match.isEmpty())
-            lastIndex++;
-
-        /* Non-global removal executes at most once. */
-        if (!re.global())
-            break;
-    }
-
-    /* If unmatched, return the input string. */
-    if (!lastIndex) {
-        args.rval().setString(str);
-        return true;
-    }
-
-    /* The last successful match updates the RegExpStatics. */
-    cx->regExpStatics()->updateLazily(cx, stableStr, &re, lastIndex);
-
-    /* Include any remaining part of the string. */
-    if (lastIndex < charsLen) {
-        if (!ranges.append(StringRange(lastIndex, charsLen - lastIndex)))
-            return false;
-    }
-
-    /* Handle the empty string before calling .begin(). */
-    if (ranges.empty()) {
-        args.rval().setString(cx->runtime->emptyString);
-        return true;
-    }
-
-    JSString *result = AppendSubstrings(cx, stableStr, ranges.begin(), ranges.length());
-    if (!result)
-        return false;
-
-    args.rval().setString(result);
-    return true;
-}
-
 static inline bool
 str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
 {
@@ -2426,12 +2319,6 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
 
     RegExpStatics *res = cx->regExpStatics();
     RegExpShared &re = rdata.g.regExp();
-
-    /* Optimize removal. */
-    if (rdata.repstr && rdata.repstr->length() == 0 && !rdata.dollar) {
-        JS_ASSERT(!rdata.lambda && !rdata.elembase);
-        return str_replace_regexp_remove(cx, args, rdata.str, re);
-    }
 
     Value tmp;
     if (!DoMatch(cx, res, rdata.str, re, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
