@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -18,10 +18,14 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsIFileURL.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/net/RemoteOpenFileChild.h"
+#include "nsITabChild.h"
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -188,6 +192,7 @@ nsJARChannel::nsJARChannel()
     , mStatus(NS_OK)
     , mIsPending(false)
     , mIsUnsafe(true)
+    , mOpeningRemote(false)
 {
 #if defined(PR_LOGGING)
     if (!gJarProtocolLog)
@@ -205,13 +210,14 @@ nsJARChannel::~nsJARChannel()
     NS_RELEASE(handler); // NULL parameter
 }
 
-NS_IMPL_ISUPPORTS_INHERITED6(nsJARChannel,
+NS_IMPL_ISUPPORTS_INHERITED7(nsJARChannel,
                              nsHashPropertyBag,
                              nsIRequest,
                              nsIChannel,
                              nsIStreamListener,
                              nsIRequestObserver,
                              nsIDownloadObserver,
+                             nsIRemoteOpenFileListener,
                              nsIJARChannel)
 
 nsresult 
@@ -263,9 +269,9 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache, nsJARInputThunk **resu
     nsCOMPtr<nsIZipReader> reader;
     if (jarCache) {
         if (mInnerJarEntry.IsEmpty())
-            rv = jarCache->GetZip(mJarFile, getter_AddRefs(reader));
+            rv = jarCache->GetZip(clonedFile, getter_AddRefs(reader));
         else
-            rv = jarCache->GetInnerZip(mJarFile, mInnerJarEntry,
+            rv = jarCache->GetInnerZip(clonedFile, mInnerJarEntry,
                                        getter_AddRefs(reader));
     } else {
         // create an uncached jar reader
@@ -273,7 +279,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache, nsJARInputThunk **resu
         if (NS_FAILED(rv))
             return rv;
 
-        rv = outerReader->Open(mJarFile);
+        rv = outerReader->Open(clonedFile);
         if (NS_FAILED(rv))
             return rv;
 
@@ -333,6 +339,37 @@ nsJARChannel::LookupFile()
         nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mJarBaseURI);
         if (fileURL)
             fileURL->GetFile(getter_AddRefs(mJarFile));
+    }
+    // if we're in child process and have special "remoteopenfile:://" scheme,
+    // create special nsIFile that gets file handle from parent when opened.
+    if (!mJarFile && XRE_GetProcessType() != GeckoProcessType_Default) {
+        nsAutoCString scheme;
+        nsresult rv = mJarBaseURI->GetScheme(scheme);
+        if (NS_SUCCEEDED(rv) && scheme.EqualsLiteral("remoteopenfile")) {
+            nsRefPtr<RemoteOpenFileChild> remoteFile = new RemoteOpenFileChild();
+            rv = remoteFile->Init(mJarBaseURI);
+            NS_ENSURE_SUCCESS(rv, rv);
+            mJarFile = remoteFile;
+
+            nsIZipReaderCache *jarCache = gJarHandler->JarCache();
+            if (jarCache) {
+                bool cached = false;
+                rv = jarCache->IsCached(mJarFile, &cached);
+                if (NS_SUCCEEDED(rv) && cached) {
+                    // zipcache already has file mmapped: don't open on parent,
+                    // just return and proceed to cache hit in CreateJarInput()
+                    return NS_OK;
+                }
+            }
+
+            // Open file on parent: OnRemoteFileOpenComplete called when done
+            nsCOMPtr<nsITabChild> tabChild;
+            NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, tabChild);
+            rv = remoteFile->AsyncRemoteFileOpen(PR_RDONLY, this, tabChild.get());
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            mOpeningRemote = true;
+        }
     }
     // try to handle a nested jar
     if (!mJarFile) {
@@ -655,7 +692,7 @@ nsJARChannel::Open(nsIInputStream **stream)
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    nsCOMPtr<nsJARInputThunk> input;
+    nsRefPtr<nsJARInputThunk> input;
     rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
     if (NS_FAILED(rv))
         return rv;
@@ -702,12 +739,13 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
             rv = NS_OpenURI(mDownloader, nullptr, mJarBaseURI, nullptr,
                             mLoadGroup, mCallbacks,
                             mLoadFlags & ~(LOAD_DOCUMENT_URI | LOAD_CALL_CONTENT_SNIFFERS));
-    }
-    else {
+    } else if (mOpeningRemote) {
+        // nothing to do: already asked parent to open file.
+    } else {
         // local files are always considered safe
         mIsUnsafe = false;
 
-        nsCOMPtr<nsJARInputThunk> input;
+        nsRefPtr<nsJARInputThunk> input;
         rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
         if (NS_SUCCEEDED(rv)) {
             // create input stream pump and call AsyncRead as a block
@@ -845,7 +883,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
     if (NS_SUCCEEDED(status)) {
         mJarFile = file;
 
-        nsCOMPtr<nsJARInputThunk> input;
+        nsRefPtr<nsJARInputThunk> input;
         rv = CreateJarInput(nullptr, getter_AddRefs(input));
         if (NS_SUCCEEDED(rv)) {
             // create input stream pump
@@ -864,6 +902,38 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
 
     return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+// nsIRemoteOpenFileListener
+//-----------------------------------------------------------------------------
+nsresult
+nsJARChannel::OnRemoteFileOpenComplete(nsresult aOpenStatus)
+{
+    nsresult rv = aOpenStatus;
+
+    if (NS_SUCCEEDED(rv)) {
+        // files on parent are always considered safe
+        mIsUnsafe = false;
+
+        nsRefPtr<nsJARInputThunk> input;
+        rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
+        if (NS_SUCCEEDED(rv)) {
+            // create input stream pump and call AsyncRead as a block
+            rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
+            if (NS_SUCCEEDED(rv))
+                rv = mPump->AsyncRead(this, nullptr);
+        }
+    }
+
+    if (NS_FAILED(rv)) {
+        mStatus = rv;
+        OnStartRequest(nullptr, nullptr);
+        OnStopRequest(nullptr, nullptr, mStatus);
+    }
+
+    return NS_OK;
+}
+
 
 //-----------------------------------------------------------------------------
 // nsIStreamListener

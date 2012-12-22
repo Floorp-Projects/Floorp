@@ -75,7 +75,7 @@ this.DOMApplicationRegistry = {
                      "Webapps:GetSelf", "Webapps:CheckInstalled",
                      "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                      "Webapps:Launch", "Webapps:GetAll",
-                     "Webapps:InstallPackage", "Webapps:GetBasePath",
+                     "Webapps:InstallPackage", "Webapps:GetAppInfo",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages",
                      "Webapps:CancelDownload", "Webapps:CheckForUpdate",
@@ -110,6 +110,9 @@ this.DOMApplicationRegistry = {
           this.webapps = aData;
           let appDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], false);
           for (let id in this.webapps) {
+
+            this.webapps[id].id = id;
+
             // Make sure we have a localId
             if (this.webapps[id].localId === undefined) {
               this.webapps[id].localId = this._nextLocalId();
@@ -215,7 +218,7 @@ this.DOMApplicationRegistry = {
     let app = this.webapps[aId];
     let baseDir;
     try {
-      baseDir = FileUtils.getDir("coreAppsDir", ["webapps", aId], true, true);
+      baseDir = FileUtils.getDir("coreAppsDir", ["webapps", aId], false);
     } catch(e) {
       // In ENG builds, we don't have apps in coreAppsDir.
       return;
@@ -319,6 +322,8 @@ this.DOMApplicationRegistry = {
           if (!(id in this.webapps)) {
             this.webapps[id] = aData[id];
             this.webapps[id].basePath = appDir.path;
+
+            this.webapps[id].id = id;
 
             // Create a new localId.
             this.webapps[id].localId = this._nextLocalId();
@@ -779,12 +784,13 @@ this.DOMApplicationRegistry = {
       case "Webapps:InstallPackage":
         this.doInstallPackage(msg, mm);
         break;
-      case "Webapps:GetBasePath":
+      case "Webapps:GetAppInfo":
         if (!this.webapps[msg.id]) {
           debug("No webapp for " + msg.id);
           return null;
         }
-        return this.webapps[msg.id].basePath;
+        return { "basePath":  this.webapps[msg.id].basePath + "/",
+                 "isCoreApp": !this.webapps[msg.id].removable };
         break;
       case "Webapps:RegisterForMessages":
         this.addMessageListener(msg, mm);
@@ -1479,9 +1485,9 @@ this.DOMApplicationRegistry = {
       }
     } else {
       id = this.makeAppId();
-      app.id = id;
       localId = this._nextLocalId();
     }
+    app.id = id;
 
     let manifestName = "manifest.webapp";
     if (aData.isPackage) {
@@ -1506,6 +1512,7 @@ this.DOMApplicationRegistry = {
     let appNote = JSON.stringify(appObject);
     appNote.id = id;
 
+    appObject.id = id;
     appObject.localId = localId;
     appObject.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true).path;
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
@@ -2187,6 +2194,14 @@ this.DOMApplicationRegistry = {
 
   getAppFromObserverMessage: function(aMessage) {
     return AppsUtils.getAppFromObserverMessage(this.webapps, aMessage);
+  },
+
+  getCoreAppsBasePath: function() {
+    return FileUtils.getDir("coreAppsDir", ["webapps"], false).path;
+  },
+
+  getWebAppsBasePath: function getWebAppsBasePath() {
+    return FileUtils.getDir(DIRECTORY_NAME, ["webapps"], false).path;
   },
 
   getAllWithoutManifests: function(aCallback) {

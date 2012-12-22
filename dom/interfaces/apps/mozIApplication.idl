@@ -11,7 +11,7 @@
  * We expose Gecko-internal helpers related to "web apps" through this
  * sub-interface.
  */
-[scriptable, uuid(8ac7827f-f982-40fb-be11-ba16dd665635)]
+[scriptable, uuid(cfa75628-4d31-481f-b51e-fe0ce18fa98f)]
 interface mozIApplication: mozIDOMApplication
 {
   /* Return true if this app has |permission|. */
@@ -20,8 +20,14 @@ interface mozIApplication: mozIDOMApplication
   /* Application status as defined in nsIPrincipal. */
   readonly attribute unsigned short appStatus;
 
-  /* Returns the local id of the app (not the uuid used for sync). */
+  /* Returns the uuid of the app. */
+  readonly attribute DOMString id;
+
+  /* Returns the local id of the app. */
   readonly attribute unsigned long localId;
+
+  /* Returns the base directory for the app */
+  readonly attribute DOMString basePath;
 
   /* Name copied from the manifest */
   readonly attribute DOMString name;

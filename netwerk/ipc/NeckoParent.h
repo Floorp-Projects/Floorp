@@ -39,6 +39,11 @@ protected:
                                             const bool& useSSL,
                                             const nsString& aBinaryType,
                                             PBrowserParent* aBrowser);
+  virtual PRemoteOpenFileParent* AllocPRemoteOpenFile(
+                                            const URIParams& fileuri,
+                                            PBrowserParent* browser);
+  virtual bool DeallocPRemoteOpenFile(PRemoteOpenFileParent* actor);
+
   virtual bool RecvPTCPSocketConstructor(PTCPSocketParent*,
                                          const nsString& aHost,
                                          const uint16_t& aPort,
@@ -52,6 +57,9 @@ protected:
                                          const uint16_t& flags,
                                          const nsresult& reason);
 
+private:
+  nsCString mCoreAppsBasePath;
+  nsCString mWebAppsBasePath;
 };
 
 } // namespace net

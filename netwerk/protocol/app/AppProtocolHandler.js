@@ -16,7 +16,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsISyncMessageSender");
 
 function AppProtocolHandler() {
-  this._basePath = [];
+  this._appInfo = [];
+  this._runningInParent = Cc["@mozilla.org/xre/runtime;1"]
+                            .getService(Ci.nsIXULRuntime)
+                            .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 AppProtocolHandler.prototype = {
@@ -30,14 +33,13 @@ AppProtocolHandler.prototype = {
                  Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD |
                  Ci.nsIProtocolHandler.URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM,
 
-  getBasePath: function app_phGetBasePath(aId) {
+  getAppInfo: function app_phGetAppInfo(aId) {
 
-    if (!this._basePath[aId]) {
-      this._basePath[aId] = cpmm.sendSyncMessage("Webapps:GetBasePath",
-                                                 { id: aId })[0] + "/";
+    if (!this._appInfo[aId]) {
+      let reply = cpmm.sendSyncMessage("Webapps:GetAppInfo", { id: aId });
+      this._appInfo[aId] = reply[0];
     }
-
-    return this._basePath[aId];
+    return this._appInfo[aId];
   },
 
   newURI: function app_phNewURI(aSpec, aOriginCharset, aBaseURI) {
@@ -62,7 +64,15 @@ AppProtocolHandler.prototype = {
     }
 
     // Build a jar channel and masquerade as an app:// URI.
-    let uri = "jar:file://" + this.getBasePath(appId) + appId + "/application.zip!" + fileSpec;
+    let appInfo = this.getAppInfo(appId);
+    let uri;
+    if (this._runningInParent || appInfo.isCoreApp) {
+      // In-parent and CoreApps can directly access files, so use jar:file://
+      uri = "jar:file://" + appInfo.basePath + appId + "/application.zip!" + fileSpec;
+    } else {
+      // non-CoreApps in child need to ask parent for file handle, use jar:ipcfile://
+      uri = "jar:remoteopenfile://" + appInfo.basePath + appId + "/application.zip!" + fileSpec;
+    }
     let channel = Services.io.newChannel(uri, null, null);
     channel.QueryInterface(Ci.nsIJARChannel).setAppURI(aURI);
     channel.QueryInterface(Ci.nsIChannel).originalURI = aURI;
