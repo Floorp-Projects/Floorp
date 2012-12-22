@@ -753,9 +753,14 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
                                         args)
 
     def definition_body_prologue(self):
-        return """
+        if self.descriptor.nativeOwnership == 'nsisupports':
+            assertion = ('  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value), '
+                         '"Must be an nsISupports class");') % self.descriptor.nativeType
+        else:
+            assertion = ''
+        return """%s
   %s* self = UnwrapDOMObject<%s>(obj);
-""" % (self.descriptor.nativeType, self.descriptor.nativeType)
+""" % (assertion, self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):
         return self.definition_body_prologue() + self.generate_code()
