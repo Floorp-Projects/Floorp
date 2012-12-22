@@ -2579,7 +2579,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
     JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
 
     Assembler::Condition cond = JSOpToCondition(op);
-    if (compareType == MCompare::MCompare::Compare_Null)
+    if (compareType == MCompare::Compare_Null)
         cond = masm.testNull(cond, value);
     else
         cond = masm.testUndefined(cond, value);
