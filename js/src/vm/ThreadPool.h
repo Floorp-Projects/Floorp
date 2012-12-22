@@ -22,7 +22,7 @@
 struct JSContext;
 struct JSRuntime;
 struct JSCompartment;
-struct JSScript;
+class JSScript;
 
 namespace js {
 

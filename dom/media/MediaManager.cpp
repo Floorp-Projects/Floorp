@@ -262,29 +262,21 @@ public:
 
     // Create a media stream.
     nsRefPtr<nsDOMLocalMediaStream> stream;
-    nsRefPtr<nsDOMLocalMediaStream> trackunion;
     uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
     hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
-    stream     = nsDOMLocalMediaStream::CreateSourceStream(hints);
-    trackunion = nsDOMLocalMediaStream::CreateTrackUnionStream(hints);
-    if (!stream || !trackunion) {
+    stream = nsDOMLocalMediaStream::CreateSourceStream(hints);
+    if (!stream) {
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
       LOG(("Returning error for getUserMedia() - no stream"));
       error->OnError(NS_LITERAL_STRING("NO_STREAM"));
       return NS_OK;
     }
-    // connect the source stream to the track union stream to avoid us blocking
-    trackunion->GetStream()->AsProcessedStream()->SetAutofinish(true);
-    nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
-      AllocateInputPort(stream->GetStream()->AsSourceStream(),
-                        MediaInputPort::FLAG_BLOCK_OUTPUT);
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
     if (window && window->GetExtantDoc()) {
       stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
-      trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
     }
 
     // Ensure there's a thread for gum to proxy to off main thread
@@ -295,7 +287,6 @@ public:
     // when the page is invalidated (on navigation or close).
     GetUserMediaCallbackMediaStreamListener* listener =
       new GetUserMediaCallbackMediaStreamListener(mediaThread, stream,
-                                                  port.forget(),
                                                   mAudioSource,
                                                   mVideoSource);
     stream->GetStream()->AddListener(listener);
@@ -320,7 +311,7 @@ public:
     // This is safe since we're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
     LOG(("Returning success for getUserMedia()"));
-    success->OnSuccess(static_cast<nsIDOMLocalMediaStream*>(trackunion));
+    success->OnSuccess(static_cast<nsIDOMLocalMediaStream*>(stream));
 
     return NS_OK;
   }
@@ -1004,20 +995,35 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     mActiveCallbacks.Remove(key);
 
     if (aSubject) {
-      // A particular device was chosen by the user.
+      // A particular device or devices were chosen by the user.
       // NOTE: does not allow setting a device to null; assumes nullptr
-      nsCOMPtr<nsIMediaDevice> device = do_QueryInterface(aSubject);
-      if (device) {
-        GetUserMediaRunnable* gUMRunnable =
-          static_cast<GetUserMediaRunnable*>(runnable.get());
-        nsString type;
-        device->GetType(type);
-        if (type.EqualsLiteral("video")) {
-          gUMRunnable->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
-        } else if (type.EqualsLiteral("audio")) {
-          gUMRunnable->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
-        } else {
-          NS_WARNING("Unknown device type in getUserMedia");
+      GetUserMediaRunnable* gUMRunnable =
+        static_cast<GetUserMediaRunnable*>(runnable.get());
+
+      nsCOMPtr<nsISupportsArray> array(do_QueryInterface(aSubject));
+      MOZ_ASSERT(array);
+      uint32_t len = 0;
+      array->Count(&len);
+      MOZ_ASSERT(len);
+      if (!len) {
+        gUMRunnable->Denied(); // neither audio nor video were selected
+        return NS_OK;
+      }
+      for (uint32_t i = 0; i < len; i++) {
+        nsCOMPtr<nsISupports> supports;
+        array->GetElementAt(i,getter_AddRefs(supports));
+        nsCOMPtr<nsIMediaDevice> device(do_QueryInterface(supports));
+        MOZ_ASSERT(device); // shouldn't be returning anything else...
+        if (device) {
+          nsString type;
+          device->GetType(type);
+          if (type.EqualsLiteral("video")) {
+            gUMRunnable->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
+          } else if (type.EqualsLiteral("audio")) {
+            gUMRunnable->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
+          } else {
+            NS_WARNING("Unknown device type in getUserMedia");
+          }
         }
       }
     }

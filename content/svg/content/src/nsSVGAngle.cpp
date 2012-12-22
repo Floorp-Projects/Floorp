@@ -8,6 +8,7 @@
 #include "nsSVGAngle.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
+#include "nsSVGAttrTearoffTable.h"
 #include "nsSVGMarkerElement.h"
 #include "nsMathUtils.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
@@ -126,6 +127,13 @@ static nsIAtom** const unitMap[] =
   &nsGkAtoms::rad,
   &nsGkAtoms::grad
 };
+
+static nsSVGAttrTearoffTable<nsSVGAngle, nsSVGAngle::DOMAnimatedAngle>
+  sSVGAnimatedAngleTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAngle, nsSVGAngle::DOMBaseVal>
+  sBaseSVGAngleTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAngle, nsSVGAngle::DOMAnimVal>
+  sAnimSVGAngleTearoffTable;
 
 /* Helper functions */
 
@@ -309,23 +317,39 @@ nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
 nsresult
 nsSVGAngle::ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMBaseVal(this, aSVGElement);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<DOMBaseVal> domBaseVal =
+    sBaseSVGAngleTearoffTable.GetTearoff(this);
+  if (!domBaseVal) {
+    domBaseVal = new DOMBaseVal(this, aSVGElement);
+    sBaseSVGAngleTearoffTable.AddTearoff(this, domBaseVal);
+  }
 
-  NS_ADDREF(*aResult);
+  domBaseVal.forget(aResult);
   return NS_OK;
+}
+
+nsSVGAngle::DOMBaseVal::~DOMBaseVal()
+{
+  sBaseSVGAngleTearoffTable.RemoveTearoff(mVal);
 }
 
 nsresult
 nsSVGAngle::ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMAnimVal(this, aSVGElement);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<DOMAnimVal> domAnimVal =
+    sAnimSVGAngleTearoffTable.GetTearoff(this);
+  if (!domAnimVal) {
+    domAnimVal = new DOMAnimVal(this, aSVGElement);
+    sAnimSVGAngleTearoffTable.AddTearoff(this, domAnimVal);
+  }
 
-  NS_ADDREF(*aResult);
+  domAnimVal.forget(aResult);
   return NS_OK;
+}
+
+nsSVGAngle::DOMAnimVal::~DOMAnimVal()
+{
+  sAnimSVGAngleTearoffTable.RemoveTearoff(mVal);
 }
 
 /* Implementation */
@@ -418,12 +442,20 @@ nsresult
 nsSVGAngle::ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
                                nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMAnimatedAngle(this, aSVGElement);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<DOMAnimatedAngle> domAnimatedAngle =
+    sSVGAnimatedAngleTearoffTable.GetTearoff(this);
+  if (!domAnimatedAngle) {
+    domAnimatedAngle = new DOMAnimatedAngle(this, aSVGElement);
+    sSVGAnimatedAngleTearoffTable.AddTearoff(this, domAnimatedAngle);
+  }
 
-  NS_ADDREF(*aResult);
+  domAnimatedAngle.forget(aResult);
   return NS_OK;
+}
+
+nsSVGAngle::DOMAnimatedAngle::~DOMAnimatedAngle()
+{
+  sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 
 nsresult

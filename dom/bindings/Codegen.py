@@ -131,13 +131,17 @@ def DOMClass(descriptor):
             participant = "nullptr"
         else:
             participant = "NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % descriptor.nativeType
+        getParentObject = "GetParentObject<%s>::Get" % descriptor.nativeType
         return """{
   { %s },
   %s,
   %s,
+  %s,
+  GetProtoObject,
   %s
 }""" % (prototypeChainString, toStringBool(descriptor.nativeOwnership == 'nsisupports'),
         NativePropertyHooks(descriptor),
+        getParentObject,
         participant)
 
 class CGDOMJSClass(CGThing):
@@ -156,7 +160,7 @@ class CGDOMJSClass(CGThing):
         return """
 DOMJSClass Class = {
   { "%s",
-    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
+    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(3),
     %s, /* addProperty */
     JS_PropertyStub,       /* delProperty */
     JS_PropertyStub,       /* getProperty */
@@ -753,9 +757,14 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
                                         args)
 
     def definition_body_prologue(self):
-        return """
+        if self.descriptor.nativeOwnership == 'nsisupports':
+            assertion = ('  MOZ_STATIC_ASSERT((IsBaseOf<nsISupports, %s>::value), '
+                         '"Must be an nsISupports class");') % self.descriptor.nativeType
+        else:
+            assertion = ''
+        return """%s
   %s* self = UnwrapDOMObject<%s>(obj);
-""" % (self.descriptor.nativeType, self.descriptor.nativeType)
+""" % (assertion, self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):
         return self.definition_body_prologue() + self.generate_code()
@@ -832,22 +841,21 @@ class CGDeferredFinalize(CGAbstractStaticMethod):
 
 def finalizeHook(descriptor, hookName, context):
     if descriptor.customFinalize:
-        return """if (self) {
-  self->%s(%s);
-}""" % (hookName, context)
-    clearWrapper = "ClearWrapper(self, self);\n" if descriptor.wrapperCache else ""
-    if descriptor.workers:
-        release = "self->Release();"
-    elif descriptor.nativeOwnership == 'nsisupports':
-        release = """XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+        finalize = "self->%s(%s);" % (hookName, context)
+    else:
+        finalize = "ClearWrapper(self, self);\n" if descriptor.wrapperCache else ""
+        if descriptor.workers:
+            finalize += "self->Release();"
+        elif descriptor.nativeOwnership == 'nsisupports':
+            finalize += """XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
 if (rt) {
   rt->DeferredRelease(reinterpret_cast<nsISupports*>(self));
 } else {
   NS_RELEASE(self);
 }"""
-    else:
-        smartPtr = DeferredFinalizeSmartPtr(descriptor)
-        release = """static bool registered = false;
+        else:
+            smartPtr = DeferredFinalizeSmartPtr(descriptor)
+            finalize += """static bool registered = false;
 if (!registered) {
   XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
   if (!rt) {
@@ -868,7 +876,7 @@ if (!defer) {
   return;
 }
 Take(*defer, self);""" % { 'smartPtr': smartPtr }
-    return clearWrapper + release
+    return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
     """
@@ -880,7 +888,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
                                      'void', args)
 
     def generate_code(self):
-        return CGIndenter(CGGeneric(finalizeHook(self.descriptor, self.name, self.args[0].name))).define()
+        return CGIndenter(finalizeHook(self.descriptor, self.name, self.args[0].name)).define()
 
 class CGClassTraceHook(CGAbstractClassHook):
     """
@@ -1136,11 +1144,16 @@ class PropertyDefiner:
         return arrays
 
 
-# The length of a method is the maximum of the lengths of the
+# The length of a method is the minimum of the lengths of the
 # argument lists of all its overloads.
+def overloadLength(arguments):
+    i = len(arguments)
+    while i > 0 and arguments[i - 1].optional:
+        i -= 1
+    return i
 def methodLength(method):
     signatures = method.signatures()
-    return max([len(arguments) for (retType, arguments) in signatures])
+    return min(overloadLength(arguments) for (retType, arguments) in signatures)
 
 class MethodDefiner(PropertyDefiner):
     """
@@ -6112,7 +6125,7 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
         self.descriptor = descriptor
     def getBody(self):
         return ("%s self = UnwrapProxy(proxy);\n\n" % (self.descriptor.nativeType + "*") +
-                finalizeHook(self.descriptor, FINALIZE_HOOK_NAME, self.args[0].name))
+                finalizeHook(self.descriptor, FINALIZE_HOOK_NAME, self.args[0].name).define())
 
 class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
     def __init__(self, descriptor):

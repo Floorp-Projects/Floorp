@@ -9,11 +9,11 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent">
 
-   <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
-                                android:layout_width="fill_parent"
-                                android:layout_height="fill_parent"
-                                android:background="@drawable/tabs_tray_bg_repeat"
-                                gecko:sidebar="false"/>
+    <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
+                                 android:layout_width="fill_parent"
+                                 android:layout_height="fill_parent"
+                                 android:background="@drawable/tabs_tray_bg_repeat"
+                                 gecko:sidebar="false"/>
 
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
          android:id="@+id/main_layout"

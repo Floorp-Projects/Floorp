@@ -168,6 +168,7 @@ TabChild::TabChild(const TabContext& aContext, uint32_t aChromeFlags)
   , mNotified(false)
   , mContentDocumentIsDisplayed(false)
   , mTriedBrowserInit(false)
+  , mOrientation(eScreenOrientation_PortraitPrimary)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -1119,7 +1120,7 @@ TabChild::RecvShow(const nsIntSize& size)
 }
 
 bool
-TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
+TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation)
 {
     if (!mRemoteFrame) {
         return true;
@@ -1130,6 +1131,7 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
     mOuterRect.width = rect.width;
     mOuterRect.height = rect.height;
 
+    mOrientation = orientation;
     mInnerSize = size;
     mWidget->Resize(0, 0, size.width, size.height,
                     true);

@@ -65,6 +65,15 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
+    <style name="AddressBar.Button.Container">
+        <item name="android:layout_marginLeft">4dp</item>
+        <item name="android:layout_marginRight">4dp</item>
+        <item name="android:layout_toLeftOf">@id/menu_items</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_centerVertical">true</item>
+    </style>
+
     <!-- Address bar - Image Button -->
     <style name="AddressBar.ImageButton" parent="AddressBar.Button">
         <item name="android:scaleType">center</item>
@@ -77,6 +86,10 @@
         <item name="android:layout_width">0dip</item>
         <item name="android:layout_height">0dip</item>
         <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="AddressBar.ImageButton.Forward" parent="AddressBar.ImageButton.Unused">
+        <item name="android:contentDescription">@string/forward</item>
     </style>
 
     <!-- Address bar - Image Button - Icon -->
@@ -122,11 +135,18 @@
          <item name="android:layout_width">20dp</item>
     </style>
 
-    <!-- Lists in TabsTray -->
+    <!-- TabsTray List -->
     <style name="TabsList" parent="android:style/Widget.ListView">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
-        <item name="android:layout_weight">1</item>
+         <item name="android:background">@android:color/transparent</item>
+         <item name="android:cacheColorHint">@android:color/transparent</item>
+         <item name="android:divider">@drawable/tabs_tray_list_divider</item>
+         <item name="android:dividerHeight">2dip</item>
+    </style>
+
+    <!-- RemoteTabsList -->
+    <style name="RemoteTabsList" parent="TabsList">
+         <item name="android:childDivider">@drawable/tabs_tray_list_divider</item>
+         <item name="android:groupIndicator">@android:color/transparent</item>
     </style>
 
     <!-- TabsTray Row -->

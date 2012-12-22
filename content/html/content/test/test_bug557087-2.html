@@ -162,7 +162,7 @@ function test1()
   gHandled = 0;
 
   // Initialize children without click expected.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldNotHappenHandler, false);
@@ -170,7 +170,7 @@ function test1()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler, false);
@@ -185,7 +185,7 @@ function test2()
   fieldset2.disabled = true;
 
   // Initialize children without click expected.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldNotHappenHandler2, false);
@@ -193,7 +193,7 @@ function test2()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler2, false);
@@ -208,7 +208,7 @@ function test3()
   fieldset2.disabled = false;
 
   // All elements should accept the click.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler3, false);
@@ -216,7 +216,7 @@ function test3()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler3, false);
@@ -233,7 +233,7 @@ function test4()
   fieldset2.appendChild(legendA);
 
   // All elements should accept the click.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler4, false);
@@ -241,7 +241,7 @@ function test4()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler4, false);
@@ -255,7 +255,7 @@ function test5()
   fieldset2.insertBefore(legendB, legendA);
 
   // Initialize children without click expected.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
     element.addEventListener("click", clickShouldNotHappenHandler5, false);
@@ -263,7 +263,7 @@ function test5()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler5, false);
@@ -282,7 +282,7 @@ function test6()
   legendA.appendChild(fieldset2);
 
   // All elements should accept the click.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler6, false);
@@ -290,7 +290,7 @@ function test6()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler6, false);
@@ -308,7 +308,7 @@ function test7()
   fieldset2.appendChild(legendA);
 
   // All elements should accept the click.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
     element.addEventListener("click", clickShouldNotHappenHandler7, false);
@@ -316,7 +316,7 @@ function test7()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler7, false);
@@ -335,7 +335,7 @@ function test8()
   fieldset2.appendChild(legendB);
 
   // All elements should accept the click.
-  for each(var name in elementsPreventingClick) {
+  for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendB.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler8, false);
@@ -343,7 +343,7 @@ function test8()
   }
 
   // Initialize children with click expected.
-  for each(var name in elementsWithClick) {
+  for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendB.appendChild(element);
     element.addEventListener("click", clickShouldHappenHandler8, false);

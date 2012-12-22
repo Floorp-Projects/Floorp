@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 
 #include "nsCycleCollectionNoteChild.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsISupports.h"
 

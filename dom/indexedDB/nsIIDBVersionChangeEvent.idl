@@ -6,7 +6,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(bb9797ae-6959-47cb-893e-73d3a7018d6d)]
+[scriptable, builtinclass, uuid(08a6b8b1-92fa-4f80-98cc-370143b11ff3)]
 interface nsIIDBVersionChangeEvent : nsIDOMEvent
 {
   readonly attribute unsigned long long oldVersion;

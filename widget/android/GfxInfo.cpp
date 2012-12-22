@@ -8,6 +8,7 @@
 #include "prenv.h"
 #include "prprf.h"
 #include "nsHashKeys.h"
+#include "nsVersionComparator.h"
 
 #include "AndroidBridge.h"
 
@@ -134,15 +135,31 @@ GfxInfo::EnsureInitializedFromGfxInfoData()
       mAdapterDescription.AppendPrintf(", Manufacturer: %s", NS_LossyConvertUTF16toASCII(mManufacturer).get());
     }
 
-    int32_t signedVersion;
-    if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &signedVersion))
-      signedVersion = 0;
-    mOSVersion = signedVersion;
+    int32_t sdkVersion;
+    if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &sdkVersion))
+      sdkVersion = 0;
 
     // the HARDWARE field isn't available on Android SDK < 8
-    if (mOSVersion >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", mHardware)) {
+    if (sdkVersion >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", mHardware)) {
       mAdapterDescription.AppendPrintf(", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
     }
+
+    nsString release;
+    mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION", "RELEASE", release);
+    mOSVersion = NS_LossyConvertUTF16toASCII(release);
+
+    mOSVersionInteger = 0;
+    char a[5], b[5], c[5], d[5];
+    SplitDriverVersion(mOSVersion.get(), a, b, c, d);
+    uint8_t na = atoi(a);
+    uint8_t nb = atoi(b);
+    uint8_t nc = atoi(c);
+    uint8_t nd = atoi(d);
+
+    mOSVersionInteger = (uint32_t(na) << 24) |
+                        (uint32_t(nb) << 16) |
+                        (uint32_t(nc) << 8)  |
+                        uint32_t(nd);
   }
 
   AddCrashReportAnnotations();
@@ -333,12 +350,12 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
     if (aFeature == FEATURE_STAGEFRIGHT) {
       NS_LossyConvertUTF16toASCII cManufacturer(mManufacturer);
       NS_LossyConvertUTF16toASCII cModel(mModel);
-      if (mOSVersion < 14 /* Before version 4.0 */ )
+      if (CompareVersions(mOSVersion.get(), "4.0.0") < 0)
       {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
         return NS_OK;
       }
-      else if (mOSVersion < 16 /* Before version 4.1 */ )
+      else if (CompareVersions(mOSVersion.get(), "4.1.0") < 0)
       {
         bool isWhitelisted =
           cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator()) ||
@@ -411,4 +428,9 @@ nsString GfxInfo::Product() const
 nsString GfxInfo::Manufacturer() const
 {
   return mManufacturer;
+}
+
+uint32_t GfxInfo::OperatingSystemVersion() const
+{
+  return mOSVersionInteger;
 }
