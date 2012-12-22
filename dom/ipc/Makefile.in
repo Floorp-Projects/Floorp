@@ -31,7 +31,7 @@ EXPORTS_NAMESPACES = \
   $(NULL)
 
 EXPORTS_mozilla = \
-  AppProcessPermissions.h \
+  AppProcessChecker.h \
   $(NULL)
 
 EXPORTS_mozilla/dom = \
@@ -55,7 +55,7 @@ EXPORTS_mozilla/dom/ipc = \
   $(NULL)
 
 CPPSRCS = \
-  AppProcessPermissions.cpp \
+  AppProcessChecker.cpp \
   Blob.cpp \
   ContentProcess.cpp \
   ContentParent.cpp \
