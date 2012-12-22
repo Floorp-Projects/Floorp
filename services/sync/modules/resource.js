@@ -285,13 +285,17 @@ AsyncResource.prototype = {
 
       // This is a server-side safety valve to allow slowing down
       // clients without hurting performance.
-      if (headers["x-weave-backoff"])
+      if (headers["x-weave-backoff"]) {
+        let backoff = headers["x-weave-backoff"];
+        this._log.debug("Got X-Weave-Backoff: " + backoff);
         Observers.notify("weave:service:backoff:interval",
-                         parseInt(headers["x-weave-backoff"], 10));
+                         parseInt(backoff, 10));
+      }
 
-      if (success && headers["x-weave-quota-remaining"])
+      if (success && headers["x-weave-quota-remaining"]) {
         Observers.notify("weave:service:quota:remaining",
                          parseInt(headers["x-weave-quota-remaining"], 10));
+      }
     } catch (ex) {
       this._log.debug("Caught exception " + CommonUtils.exceptionStr(ex) +
                       " visiting headers in _onComplete.");
