@@ -315,7 +315,6 @@
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGAnimatedLengthList.h"
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGAnimatedPoints.h"
@@ -345,7 +344,6 @@
 #include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGLengthList.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGMarkerElement.h"
@@ -1219,8 +1217,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLength, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLengthList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedNumber, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)    
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedRect, nsDOMGenericSH,
@@ -1230,8 +1226,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGLengthList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGNumber, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3480,10 +3474,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedLength)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedLengthList, nsIDOMSVGAnimatedLengthList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedLengthList)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedNumber, nsIDOMSVGAnimatedNumber)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedNumber)
   DOM_CLASSINFO_MAP_END
@@ -3503,10 +3493,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGLength, nsIDOMSVGLength)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLength)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGLengthList, nsIDOMSVGLengthList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLengthList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGNumber, nsIDOMSVGNumber)
