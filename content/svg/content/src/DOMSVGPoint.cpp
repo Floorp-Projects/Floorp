@@ -10,7 +10,6 @@
 #include "nsSVGElement.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsError.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
 #include "DOMSVGMatrix.h"
 #include "mozilla/dom/SVGPointBinding.h"
@@ -159,7 +158,7 @@ DOMSVGPoint::SetY(float aY, ErrorResult& rv)
 }
 
 NS_IMETHODIMP
-DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix,
+DOMSVGPoint::MatrixTransform(nsISupports *matrix,
                              nsIDOMSVGPoint **_retval)
 {
   nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);

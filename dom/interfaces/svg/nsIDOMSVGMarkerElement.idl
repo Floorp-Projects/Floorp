@@ -8,7 +8,6 @@
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedRect;
-interface nsIDOMSVGMatrix;
 
 /**
  * The nsIDOMSVGMarker interface is the interface to an SVG marker element.
