@@ -15,6 +15,7 @@
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -51,7 +52,6 @@
 #include "nsThreadUtils.h"
 #include "StructuredCloneUtils.h"
 #include "TabChild.h"
-#include "Hal.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
