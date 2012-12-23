@@ -16,23 +16,11 @@
 #include "SVGOrientSMILType.h"
 #include "nsAttrValueInlines.h"
 #include "SVGAngle.h"
+#include "SVGAnimatedAngle.h"
 #include "mozilla/Attributes.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGAngle::DOMAnimatedAngle, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGAngle::DOMAnimatedAngle)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGAngle::DOMAnimatedAngle)
-
-DOMCI_DATA(SVGAnimatedAngle, nsSVGAngle::DOMAnimatedAngle)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGAngle::DOMAnimatedAngle)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedAngle)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedAngle)
-NS_INTERFACE_MAP_END
 
 static nsIAtom** const unitMap[] =
 {
@@ -43,7 +31,7 @@ static nsIAtom** const unitMap[] =
   &nsGkAtoms::grad
 };
 
-static nsSVGAttrTearoffTable<nsSVGAngle, nsSVGAngle::DOMAnimatedAngle>
+static nsSVGAttrTearoffTable<nsSVGAngle, SVGAnimatedAngle>
   sSVGAnimatedAngleTearoffTable;
 static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle>
   sBaseSVGAngleTearoffTable;
@@ -230,7 +218,7 @@ nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
 }
 
 nsresult
-nsSVGAngle::ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
+nsSVGAngle::ToDOMBaseVal(SVGAngle **aResult, nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAngle> domBaseVal =
     sBaseSVGAngleTearoffTable.GetTearoff(this);
@@ -244,7 +232,7 @@ nsSVGAngle::ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
 }
 
 nsresult
-nsSVGAngle::ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
+nsSVGAngle::ToDOMAnimVal(SVGAngle **aResult, nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAngle> domAnimVal =
     sAnimSVGAngleTearoffTable.GetTearoff(this);
@@ -358,10 +346,10 @@ nsresult
 nsSVGAngle::ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
                                nsSVGElement *aSVGElement)
 {
-  nsRefPtr<DOMAnimatedAngle> domAnimatedAngle =
+  nsRefPtr<SVGAnimatedAngle> domAnimatedAngle =
     sSVGAnimatedAngleTearoffTable.GetTearoff(this);
   if (!domAnimatedAngle) {
-    domAnimatedAngle = new DOMAnimatedAngle(this, aSVGElement);
+    domAnimatedAngle = new SVGAnimatedAngle(this, aSVGElement);
     sSVGAnimatedAngleTearoffTable.AddTearoff(this, domAnimatedAngle);
   }
 
@@ -369,7 +357,7 @@ nsSVGAngle::ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
   return NS_OK;
 }
 
-nsSVGAngle::DOMAnimatedAngle::~DOMAnimatedAngle()
+SVGAnimatedAngle::~SVGAnimatedAngle()
 {
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
