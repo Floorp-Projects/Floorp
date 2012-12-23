@@ -7,7 +7,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMSVGPoint.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/SVGPointBinding.h"
 
@@ -28,7 +27,7 @@ class DOMSVGMatrix;
  * This class creates the DOM objects that wrap internal SVGPoint objects.
  * An nsISVGPoint can be either a DOMSVGPoint or a nsSVGTranslatePoint::DOMVal.
  */
-class nsISVGPoint : public nsIDOMSVGPoint,
+class nsISVGPoint : public nsISupports,
                     public nsWrapperCache
 {
 public:
@@ -41,10 +40,6 @@ public:
   {
     SetIsDOMBinding();
   }
-
-  using nsIDOMSVGPoint::SetX;
-  using nsIDOMSVGPoint::SetY;
-  using nsIDOMSVGPoint::MatrixTransform;
 
   // WebIDL
   virtual float X() = 0;

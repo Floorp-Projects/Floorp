@@ -37,7 +37,6 @@ class nsIDOMSVGLength;
 class nsIDOMSVGLengthList;
 class nsIDOMSVGNumber;
 class nsIDOMSVGNumberList;
-class nsIDOMSVGPoint;
 class nsIDOMSVGStringList;
 class nsIDOMSVGTests;
 class nsIDOMWindow;

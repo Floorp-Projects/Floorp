@@ -60,8 +60,8 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
-  nsresult GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval);
-  nsresult GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval);
+  nsresult GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
+  nsresult GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);
   nsresult GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval);
   nsresult GetRotationOfChar(uint32_t charnum, float *_retval);
   /**
@@ -173,7 +173,7 @@ public:
   virtual uint32_t GetNumberOfChars();
   virtual float GetComputedTextLength() MOZ_OVERRIDE;
   virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars) MOZ_OVERRIDE;
-  virtual int32_t GetCharNumAtPosition(nsIDOMSVGPoint *point) MOZ_OVERRIDE;
+  virtual int32_t GetCharNumAtPosition(mozilla::DOMSVGPoint *point) MOZ_OVERRIDE;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame() MOZ_OVERRIDE;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame() MOZ_OVERRIDE;
   NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace) MOZ_OVERRIDE {

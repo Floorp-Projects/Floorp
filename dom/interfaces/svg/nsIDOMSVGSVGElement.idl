@@ -8,7 +8,6 @@
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGRect;
 interface nsIDOMSVGViewSpec;
-interface nsIDOMSVGPoint;
 interface nsIDOMSVGNumber;
 interface nsIDOMSVGLength;
 
@@ -53,7 +52,8 @@ interface nsIDOMSVGSVGElement
   readonly attribute nsIDOMSVGViewSpec currentView;
   attribute float currentScale;
       // raises DOMException on setting
-  readonly attribute nsIDOMSVGPoint currentTranslate;
+  //  SVGPoint
+  readonly attribute nsISupports currentTranslate;
 
   unsigned long suspendRedraw(in unsigned long max_wait_milliseconds);
   void          unsuspendRedraw(in unsigned long suspend_handle_id);
@@ -75,7 +75,8 @@ interface nsIDOMSVGSVGElement
   nsIDOMSVGLength       createSVGLength();
   // SVGAngle
   nsISupports           createSVGAngle();
-  nsIDOMSVGPoint        createSVGPoint();
+  // SVGPoint
+  nsISupports           createSVGPoint();
   // SVGMatrix
   nsISupports           createSVGMatrix();
   nsIDOMSVGRect         createSVGRect();

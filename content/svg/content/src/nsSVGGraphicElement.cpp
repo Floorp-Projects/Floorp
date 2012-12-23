@@ -14,7 +14,6 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsIDOMSVGPoint.h"
 #include "nsSVGUtils.h"
 #include "nsError.h"
 #include "nsSVGRect.h"
