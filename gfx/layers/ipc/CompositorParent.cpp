@@ -657,7 +657,7 @@ Translate2D(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
 void
 CompositorParent::TransformFixedLayers(Layer* aLayer,
                                        const gfxPoint& aTranslation,
-                                       const gfxPoint& aScaleDiff)
+                                       const gfxSize& aScaleDiff)
 {
   if (aLayer->GetIsFixedPosition() &&
       !aLayer->GetParent()->GetIsFixedPosition()) {
@@ -665,8 +665,7 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
     // The anchor position is used here as a scale focus point (assuming that
     // aScaleDiff has already been applied) to re-focus the scale.
     const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
-    gfxPoint translation(aTranslation.x - (anchor.x - anchor.x / aScaleDiff.x),
-                         aTranslation.y - (anchor.y - anchor.y / aScaleDiff.y));
+    gfxPoint translation(aTranslation - (anchor - anchor / aScaleDiff));
 
     // The transform already takes the resolution scale into account.  Since we
     // will apply the resolution scale again when computing the effective
@@ -875,9 +874,8 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
 
     TransformFixedLayers(
       aLayer,
-      -gfxPoint(treeTransform.mTranslation.x / treeTransform.mXScale,
-                treeTransform.mTranslation.y / treeTransform.mYScale),
-      gfxPoint(treeTransform.mXScale, treeTransform.mYScale));
+      -gfxPoint(treeTransform.mTranslation) / treeTransform.mScale,
+      treeTransform.mScale);
 
     appliedTransform = true;
   }
@@ -921,7 +919,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // Translate fixed position layers so that they stay in the correct position
     // when mScrollOffset and metricsScrollOffset differ.
     gfxPoint offset;
-    gfxPoint scaleDiff;
+    gfxSize scaleDiff;
 
     float rootScaleX = rootTransform.GetXScale(),
           rootScaleY = rootTransform.GetYScale();
@@ -931,7 +929,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // as a FrameMetrics helper because it's a deprecated conversion.
     float devPixelRatioX = 1 / rootScaleX, devPixelRatioY = 1 / rootScaleY;
 
-    gfx::Point scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
+    gfxPoint scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
     nsIntPoint scrollOffsetDevPixels(
       NS_lround(scrollOffsetLayersPixels.x * devPixelRatioX),
       NS_lround(scrollOffsetLayersPixels.y * devPixelRatioY));
@@ -983,29 +981,30 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     nsIntPoint scrollCompensation(
       (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
       (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
-    treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation, mXScale, mYScale));
+    treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
+                                              gfxSize(mXScale, mYScale)));
 
     // If the contents can fit entirely within the widget area on a particular
     // dimenson, we need to translate and scale so that the fixed layers remain
     // within the page boundaries.
     if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
       offset.x = -metricsScrollOffset.x;
-      scaleDiff.x = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
+      scaleDiff.height = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
     } else {
       offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
                          mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX) -
                  metricsScrollOffset.x;
-      scaleDiff.x = tempScaleDiffX;
+      scaleDiff.height = tempScaleDiffX;
     }
 
     if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
       offset.y = -metricsScrollOffset.y;
-      scaleDiff.y = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
+      scaleDiff.width = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
     } else {
       offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
                          mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY) -
                  metricsScrollOffset.y;
-      scaleDiff.y = tempScaleDiffY;
+      scaleDiff.width = tempScaleDiffY;
     }
 
     // The transform already takes the resolution scale into account.  Since we
