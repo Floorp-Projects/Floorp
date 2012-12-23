@@ -76,6 +76,7 @@ protected:
   nsresult PushParametersImpl();
   nsresult PullParametersImpl();
   nsresult GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask* aGetPreviewStreamVideoMode);
+  nsresult ReleaseHardwareImpl(ReleaseHardwareTask* aReleaseHardware);
   already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl();
   already_AddRefed<GonkRecorderProfileManager> GetGonkRecorderProfileManager();
 
