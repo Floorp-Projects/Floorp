@@ -18,22 +18,7 @@ using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////
 // SVGAnimatedPreserveAspectRatio class
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGAnimatedPreserveAspectRatio)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGAnimatedPreserveAspectRatio)
-// No unlinking mElement, we'd need to null out the value pointer (the object it
-// points to is held by the element) and null-check it everywhere.
-NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGAnimatedPreserveAspectRatio)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSVGElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGAnimatedPreserveAspectRatio)
-NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedPreserveAspectRatio, mSVGElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedPreserveAspectRatio)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedPreserveAspectRatio)
