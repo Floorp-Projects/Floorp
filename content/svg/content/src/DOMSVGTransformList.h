@@ -96,34 +96,34 @@ public:
     return LengthNoFlush();
   }
   void Clear(ErrorResult& error);
-  already_AddRefed<nsIDOMSVGTransform> Initialize(nsIDOMSVGTransform *newItem,
-                                                  ErrorResult& error);
-  nsIDOMSVGTransform* GetItem(uint32_t index, ErrorResult& error)
+  already_AddRefed<DOMSVGTransform> Initialize(DOMSVGTransform& newItem,
+                                               ErrorResult& error);
+  DOMSVGTransform* GetItem(uint32_t index, ErrorResult& error)
   {
     bool found;
-    nsIDOMSVGTransform* item = IndexedGetter(index, found, error);
+    DOMSVGTransform* item = IndexedGetter(index, found, error);
     if (!found) {
       error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     }
     return item;
   }
-  nsIDOMSVGTransform* IndexedGetter(uint32_t index, bool& found,
-                                    ErrorResult& error);
-  already_AddRefed<nsIDOMSVGTransform> InsertItemBefore(nsIDOMSVGTransform *newItem,
-                                                        uint32_t index,
-                                                        ErrorResult& error);
-  already_AddRefed<nsIDOMSVGTransform> ReplaceItem(nsIDOMSVGTransform *newItem,
-                                                   uint32_t index,
-                                                   ErrorResult& error);
-  already_AddRefed<nsIDOMSVGTransform> RemoveItem(uint32_t index,
-                                                  ErrorResult& error);
-  already_AddRefed<nsIDOMSVGTransform> AppendItem(nsIDOMSVGTransform *newItem,
-                                                  ErrorResult& error)
+  DOMSVGTransform* IndexedGetter(uint32_t index, bool& found,
+                                 ErrorResult& error);
+  already_AddRefed<DOMSVGTransform> InsertItemBefore(DOMSVGTransform& newItem,
+                                                     uint32_t index,
+                                                     ErrorResult& error);
+  already_AddRefed<DOMSVGTransform> ReplaceItem(DOMSVGTransform& newItem,
+                                                uint32_t index,
+                                                ErrorResult& error);
+  already_AddRefed<DOMSVGTransform> RemoveItem(uint32_t index,
+                                               ErrorResult& error);
+  already_AddRefed<DOMSVGTransform> AppendItem(DOMSVGTransform& newItem,
+                                               ErrorResult& error)
   {
     return InsertItemBefore(newItem, LengthNoFlush(), error);
   }
-  already_AddRefed<nsIDOMSVGTransform> CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix);
-  already_AddRefed<nsIDOMSVGTransform> Consolidate(ErrorResult& error);
+  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix);
+  already_AddRefed<DOMSVGTransform> Consolidate(ErrorResult& error);
   uint32_t Length() const
   {
     return NumberOfItems();

@@ -11,6 +11,7 @@
 #include <math.h>
 #include "nsContentUtils.h"
 #include "nsAttrValueInlines.h"
+#include "mozilla/dom/SVGTransformBinding.h"
 
 namespace mozilla {
 
@@ -28,10 +29,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGTransform)
     tmp->mList->mItems[tmp->mListIndex] = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK(mList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGTransform)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGTransform)
+NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGTransform)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGTransform)
@@ -41,12 +49,19 @@ DOMCI_DATA(SVGTransform, mozilla::DOMSVGTransform)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTransform)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(mozilla::DOMSVGTransform)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransform)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMSVGTransform)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTransform)
 NS_INTERFACE_MAP_END
 
+
+JSObject*
+DOMSVGTransform::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return mozilla::dom::SVGTransformBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // Ctors:
@@ -60,6 +75,7 @@ DOMSVGTransform::DOMSVGTransform(DOMSVGTransformList *aList,
   , mTransform(nullptr)
   , mMatrixTearoff(nullptr)
 {
+  SetIsDOMBinding();
   // These shifts are in sync with the members in the header.
   NS_ABORT_IF_FALSE(aList &&
                     aListIndex <= MaxListIndex(), "bad arg");
@@ -76,6 +92,7 @@ DOMSVGTransform::DOMSVGTransform()
                                    // matrix
   , mMatrixTearoff(nullptr)
 {
+  SetIsDOMBinding();
 }
 
 DOMSVGTransform::DOMSVGTransform(const gfxMatrix &aMatrix)
@@ -85,6 +102,7 @@ DOMSVGTransform::DOMSVGTransform(const gfxMatrix &aMatrix)
   , mTransform(new SVGTransform(aMatrix))
   , mMatrixTearoff(nullptr)
 {
+  SetIsDOMBinding();
 }
 
 DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
@@ -94,6 +112,7 @@ DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
   , mTransform(new SVGTransform(aTransform))
   , mMatrixTearoff(nullptr)
 {
+  SetIsDOMBinding();
 }
 
 
@@ -101,158 +120,222 @@ DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
 // nsIDOMSVGTransform methods:
 
 /* readonly attribute unsigned short type; */
+uint16_t
+DOMSVGTransform::Type() const
+{
+  return Transform().Type();
+}
+
 NS_IMETHODIMP
 DOMSVGTransform::GetType(uint16_t *aType)
 {
-  *aType = Transform().Type();
+  *aType = Type();
   return NS_OK;
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGTransform::Matrix()
+{
+  if (!mMatrixTearoff) {
+    mMatrixTearoff = new DOMSVGMatrix(*this);
+  }
+  nsRefPtr<DOMSVGMatrix> matrix = mMatrixTearoff;
+  return matrix.forget();
 }
 
 /* readonly attribute nsIDOMSVGMatrix matrix; */
 NS_IMETHODIMP
 DOMSVGTransform::GetMatrix(nsIDOMSVGMatrix * *aMatrix)
 {
-  if (!mMatrixTearoff) {
-    mMatrixTearoff = new DOMSVGMatrix(*this);
-  }
-
-  NS_ADDREF(*aMatrix = mMatrixTearoff);
+  *aMatrix = Matrix().get();
   return NS_OK;
 }
 
 /* readonly attribute float angle; */
+float
+DOMSVGTransform::Angle() const
+{
+  return Transform().Angle();
+}
+
 NS_IMETHODIMP
 DOMSVGTransform::GetAngle(float *aAngle)
 {
-  *aAngle = Transform().Angle();
+  *aAngle = Angle();
   return NS_OK;
+}
+
+void
+DOMSVGTransform::SetMatrix(DOMSVGMatrix& aMatrix, ErrorResult& rv)
+{
+  if (mIsAnimValItem) {
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
+  SetMatrix(aMatrix.Matrix());
 }
 
 /* void setMatrix (in nsIDOMSVGMatrix matrix); */
 NS_IMETHODIMP
 DOMSVGTransform::SetMatrix(nsIDOMSVGMatrix *matrix)
 {
-  if (mIsAnimValItem)
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-
   nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);
   if (!domMatrix)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  SetMatrix(domMatrix->Matrix());
-  return NS_OK;
+  ErrorResult rv;
+  SetMatrix(*domMatrix, rv);
+  return rv.ErrorCode();
+}
+
+void
+DOMSVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv)
+{
+  if (mIsAnimValItem) {
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
+
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE &&
+      Matrixgfx().x0 == tx && Matrixgfx().y0 == ty) {
+    return;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
+  Transform().SetTranslate(tx, ty);
+  NotifyElementDidChange(emptyOrOldValue);
 }
 
 /* void setTranslate (in float tx, in float ty); */
 NS_IMETHODIMP
 DOMSVGTransform::SetTranslate(float tx, float ty)
 {
-  if (mIsAnimValItem) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-  }
   NS_ENSURE_FINITE2(tx, ty, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetTranslate(tx, ty, rv);
+  return rv.ErrorCode();
+}
 
-  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE &&
-      Matrix().x0 == tx && Matrix().y0 == ty) {
-    return NS_OK;
+void
+DOMSVGTransform::SetScale(float sx, float sy, ErrorResult& rv)
+{
+  if (mIsAnimValItem) {
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
 
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SCALE &&
+      Matrixgfx().xx == sx && Matrixgfx().yy == sy) {
+    return;
+  }
   nsAttrValue emptyOrOldValue = NotifyElementWillChange();
-  Transform().SetTranslate(tx, ty);
+  Transform().SetScale(sx, sy);
   NotifyElementDidChange(emptyOrOldValue);
-
-  return NS_OK;
 }
 
 /* void setScale (in float sx, in float sy); */
 NS_IMETHODIMP
 DOMSVGTransform::SetScale(float sx, float sy)
 {
-  if (mIsAnimValItem) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-  }
   NS_ENSURE_FINITE2(sx, sy, NS_ERROR_ILLEGAL_VALUE);
-
-  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SCALE &&
-      Matrix().xx == sx && Matrix().yy == sy) {
-    return NS_OK;
-  }
-
-  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
-  Transform().SetScale(sx, sy);
-  NotifyElementDidChange(emptyOrOldValue);
-
-  return NS_OK;
+  ErrorResult rv;
+  SetScale(sx, sy, rv);
+  return rv.ErrorCode();
 }
 
-/* void setRotate (in float angle, in float cx, in float cy); */
-NS_IMETHODIMP
-DOMSVGTransform::SetRotate(float angle, float cx, float cy)
+void
+DOMSVGTransform::SetRotate(float angle, float cx, float cy, ErrorResult& rv)
 {
   if (mIsAnimValItem) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE3(angle, cx, cy, NS_ERROR_ILLEGAL_VALUE);
 
   if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE) {
     float currentCx, currentCy;
     Transform().GetRotationOrigin(currentCx, currentCy);
     if (Transform().Angle() == angle && currentCx == cx && currentCy == cy) {
-      return NS_OK;
+      return;
     }
   }
 
   nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   Transform().SetRotate(angle, cx, cy);
   NotifyElementDidChange(emptyOrOldValue);
+}
 
-  return NS_OK;
+/* void setRotate (in float angle, in float cx, in float cy); */
+NS_IMETHODIMP
+DOMSVGTransform::SetRotate(float angle, float cx, float cy)
+{
+  NS_ENSURE_FINITE3(angle, cx, cy, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetRotate(angle, cx, cy, rv);
+  return rv.ErrorCode();
+}
+
+void
+DOMSVGTransform::SetSkewX(float angle, ErrorResult& rv)
+{
+  if (mIsAnimValItem) {
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
+
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX &&
+      Transform().Angle() == angle) {
+    return;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
+  nsresult result = Transform().SetSkewX(angle);
+  if (NS_FAILED(result)) {
+    rv.Throw(result);
+    return;
+  }
+  NotifyElementDidChange(emptyOrOldValue);
 }
 
 /* void setSkewX (in float angle); */
 NS_IMETHODIMP
 DOMSVGTransform::SetSkewX(float angle)
 {
-  if (mIsAnimValItem) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-  }
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetSkewX(angle, rv);
+  return rv.ErrorCode();
+}
 
-  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX &&
+void
+DOMSVGTransform::SetSkewY(float angle, ErrorResult& rv)
+{
+  if (mIsAnimValItem) {
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
+
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY &&
       Transform().Angle() == angle) {
-    return NS_OK;
+    return;
   }
 
   nsAttrValue emptyOrOldValue = NotifyElementWillChange();
-  nsresult rv = Transform().SetSkewX(angle);
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult result = Transform().SetSkewY(angle);
+  if (NS_FAILED(result)) {
+    rv.Throw(result);
+    return;
+  }
   NotifyElementDidChange(emptyOrOldValue);
-
-  return NS_OK;
 }
 
 /* void setSkewY (in float angle); */
 NS_IMETHODIMP
 DOMSVGTransform::SetSkewY(float angle)
 {
-  if (mIsAnimValItem) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-  }
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
-
-  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY &&
-      Transform().Angle() == angle) {
-    return NS_OK;
-  }
-
-  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
-  nsresult rv = Transform().SetSkewY(angle);
-  if (NS_FAILED(rv))
-    return rv;
-  NotifyElementDidChange(emptyOrOldValue);
-
-  return NS_OK;
+  ErrorResult rv;
+  SetSkewY(angle, rv);
+  return rv.ErrorCode();
 }
 
 
@@ -323,7 +406,7 @@ DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
       "Attempting to modify read-only transform");
 
   if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX &&
-      SVGTransform::MatricesEqual(Matrix(), aMatrix)) {
+      SVGTransform::MatricesEqual(Matrixgfx(), aMatrix)) {
     return;
   }
 
