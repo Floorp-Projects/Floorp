@@ -425,6 +425,8 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
 
       AddAnimationsForProperty(frame, aProperty, &anim,
                                aLayer, data);
+
+      pt->mIsRunningOnCompositor = true;
     }
     aLayer->SetAnimationGeneration(et->mAnimationGeneration);
   }
