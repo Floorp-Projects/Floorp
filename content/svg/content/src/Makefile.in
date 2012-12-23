@@ -92,6 +92,7 @@ CPPSRCS		= \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
 		nsSVGViewElement.cpp \
+		SVGAnimatedBoolean.cpp \
 		SVGAnimatedLengthList.cpp \
 		SVGAnimatedNumberList.cpp \
 		SVGAnimatedPathSegList.cpp \
@@ -142,6 +143,12 @@ EXPORTS =  			\
 	nsSVGFeatures.h            \
 	nsSVGRect.h                \
 	SVGAttrValueWrapper.h      \
+	$(NULL)
+
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+	SVGAnimatedBoolean.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
