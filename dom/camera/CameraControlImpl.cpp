@@ -367,6 +367,13 @@ CameraControlImpl::GetPreviewStreamVideoMode(CameraRecorderOptions* aOptions, ns
   return mCameraThread->Dispatch(getPreviewStreamVideoModeTask, NS_DISPATCH_NORMAL);
 }
 
+nsresult
+CameraControlImpl::ReleaseHardware(nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError)
+{
+  nsCOMPtr<nsIRunnable> releaseHardwareTask = new ReleaseHardwareTask(this, onSuccess, onError);
+  return mCameraThread->Dispatch(releaseHardwareTask, NS_DISPATCH_NORMAL);
+}
+
 bool
 CameraControlImpl::ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder)
 {

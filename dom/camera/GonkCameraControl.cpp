@@ -282,7 +282,7 @@ nsGonkCameraControl::Init()
 nsGonkCameraControl::~nsGonkCameraControl()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, mHwHandle = %d\n", __func__, __LINE__, this, mHwHandle);
-  GonkCameraHardware::ReleaseHandle(mHwHandle);
+  ReleaseHardwareImpl(nullptr);
   if (mRwLock) {
     PRRWLock* lock = mRwLock;
     mRwLock = nullptr;
@@ -1304,6 +1304,32 @@ nsGonkCameraControl::GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch GetPreviewStreamVideoMode() onSuccess callback to main thread!");
     return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsGonkCameraControl::ReleaseHardwareImpl(ReleaseHardwareTask* aReleaseHardware)
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+
+  // if we're recording, stop recording
+  if (mRecorder) {
+    DOM_CAMERA_LOGI("shutting down existing video recorder\n");
+    mRecorder->stop();
+    mRecorder = nullptr;
+  }
+
+  // stop the preview
+  StopPreviewInternal(true /* forced */);
+
+  // release the hardware handle
+  GonkCameraHardware::ReleaseHandle(mHwHandle);
+
+  if (aReleaseHardware && aReleaseHardware->mOnSuccessCb) {
+    nsCOMPtr<nsIRunnable> releaseHardwareResult = new ReleaseHardwareResult(aReleaseHardware->mOnSuccessCb, mWindowId);
+    return NS_DispatchToMainThread(releaseHardwareResult);
   }
 
   return NS_OK;
