@@ -535,6 +535,12 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
 
   int32_t index, searchIndex, rowIndex;
   popup->GetSelectedIndex(&index);
+  if (index == -1) {
+    // No row is selected in the list
+    HandleText();
+    return NS_OK;
+  }
+
   RowIndexToSearch(index, &searchIndex, &rowIndex);
   NS_ENSURE_TRUE(searchIndex >= 0 && rowIndex >= 0, NS_ERROR_FAILURE);
 
