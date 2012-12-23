@@ -5,17 +5,26 @@
 
 #pragma once
 
-#include "nsIDOMSVGAngle.h"
 #include "nsWrapperCache.h"
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
 
 class nsSVGAngle;
 
+// We make SVGAngle a pseudo-interface to allow us to QI to it in order
+// to check that the objects that scripts pass in are our our *native*
+// transform objects.
+
+// {da9670f6-6d3d-4fb3-974c-9d6bad8dcd53}
+#define MOZILLA_SVGANGLE_IID \
+{0x2cd27ef5, 0x81d8, 0x4720, \
+  {0x81, 0x42, 0x66, 0xc6, 0xa9, 0xbe, 0xc3, 0xeb } }
+
+
 namespace mozilla {
 namespace dom {
 
-class SVGAngle MOZ_FINAL : public nsIDOMSVGAngle,
+class SVGAngle MOZ_FINAL : public nsISupports,
                            public nsWrapperCache
 {
 public:
@@ -25,6 +34,7 @@ public:
     CreatedValue
   } AngleType;
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_SVGANGLE_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGAngle)
 
@@ -36,29 +46,12 @@ public:
 
   ~SVGAngle();
 
-  NS_IMETHOD GetUnitType(uint16_t* aResult)
-    { *aResult = UnitType(); return NS_OK; }
-
-  NS_IMETHOD GetValue(float* aResult)
-    { *aResult = Value(); return NS_OK; }
-  NS_IMETHOD SetValue(float aValue)
-    { ErrorResult rv; SetValue(aValue, rv); return rv.ErrorCode(); }
-  NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
-    { *aResult = ValueInSpecifiedUnits(); return NS_OK; }
-  NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
-    { ErrorResult rv; SetValueInSpecifiedUnits(aValue, rv); return rv.ErrorCode(); }
-  NS_IMETHOD SetValueAsString(const nsAString& aValue)
-    { ErrorResult rv; SetValueAsString(aValue, rv); return rv.ErrorCode(); }
-  NS_IMETHOD GetValueAsString(nsAString& aValue);
-  NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
-                                    float valueInSpecifiedUnits);
-  NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType);
-
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
   uint16_t UnitType() const;
   float Value() const;
+  void GetValueAsString(nsAString& aValue);
   void SetValue(float aValue, ErrorResult& rv);
   float ValueInSpecifiedUnits() const;
   void SetValueInSpecifiedUnits(float aValue, ErrorResult& rv);
@@ -71,6 +64,8 @@ protected:
   nsRefPtr<nsSVGElement> mSVGElement;
   AngleType mType;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGAngle, MOZILLA_SVGANGLE_IID)
 
 } //namespace dom
 } //namespace mozilla

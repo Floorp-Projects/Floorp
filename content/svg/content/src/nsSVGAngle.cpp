@@ -43,8 +43,8 @@ static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle>
 static bool
 IsValidUnitType(uint16_t unit)
 {
-  if (unit > nsIDOMSVGAngle::SVG_ANGLETYPE_UNKNOWN &&
-      unit <= nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD)
+  if (unit > SVG_ANGLETYPE_UNKNOWN &&
+      unit <= SVG_ANGLETYPE_GRAD)
     return true;
 
   return false;
@@ -68,7 +68,7 @@ static uint16_t
 GetUnitTypeForString(const nsAString& unitStr)
 {
   if (unitStr.IsEmpty()) 
-    return nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED;
+    return SVG_ANGLETYPE_UNSPECIFIED;
                    
   nsIAtom *unitAtom = NS_GetStaticAtom(unitStr);
 
@@ -80,7 +80,7 @@ GetUnitTypeForString(const nsAString& unitStr)
     }
   }
 
-  return nsIDOMSVGAngle::SVG_ANGLETYPE_UNKNOWN;
+  return SVG_ANGLETYPE_UNKNOWN;
 }
 
 static void
@@ -125,12 +125,12 @@ GetValueFromString(const nsAString &aValueAsString,
 nsSVGAngle::GetDegreesPerUnit(uint8_t aUnit)
 {
   switch (aUnit) {
-  case nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED:
-  case nsIDOMSVGAngle::SVG_ANGLETYPE_DEG:
+  case SVG_ANGLETYPE_UNSPECIFIED:
+  case SVG_ANGLETYPE_DEG:
     return 1;
-  case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
+  case SVG_ANGLETYPE_RAD:
     return static_cast<float>(180.0 / M_PI);
-  case nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD:
+  case SVG_ANGLETYPE_GRAD:
     return 90.0f / 100.0f;
   default:
     NS_NOTREACHED("Unknown unit type");
@@ -343,7 +343,7 @@ nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement)
 }
 
 nsresult
-nsSVGAngle::ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
+nsSVGAngle::ToDOMAnimatedAngle(nsISupports **aResult,
                                nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAnimatedAngle> domAnimatedAngle =
@@ -432,7 +432,7 @@ nsSVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue)
   if (aValue.mType == &SVGOrientSMILType::sSingleton) {
     mOrientType->SetAnimValue(aValue.mU.mOrient.mOrientType);
     if (aValue.mU.mOrient.mOrientType == nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO) {
-      mAngle->SetAnimValue(0.0f, nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED, mSVGElement);
+      mAngle->SetAnimValue(0.0f, SVG_ANGLETYPE_UNSPECIFIED, mSVGElement);
     } else {
       mAngle->SetAnimValue(aValue.mU.mOrient.mAngle, aValue.mU.mOrient.mUnit, mSVGElement);
     }
