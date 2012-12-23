@@ -15,7 +15,6 @@
 #include "nsIObserver.h"
 #include "nsIContentViewer.h"
 #include "nsWeakReference.h"
-#include "nsMimeTypes.h"
 
 class nsIAtom;
 class nsIPresShell;
@@ -25,6 +24,7 @@ class nsIFrame;
 struct nsIntSize;
 class nsSVGSVGElement;
 
+#define SVG_MIMETYPE     "image/svg+xml"
 #define OBSERVER_SVC_CID "@mozilla.org/observer-service;1"
 
 

@@ -25,7 +25,6 @@ extern "C" {
 
 #include <gtk/gtk.h>
 
-#include "nsMimeTypes.h"
 #include "nsIMIMEService.h"
 
 #include "nsIStringBundle.h"
@@ -126,7 +125,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewInputStreamChannel(aChannel, aURI, stream,
-                                NS_LITERAL_CSTRING(IMAGE_ICON));
+                                NS_LITERAL_CSTRING("image/icon"));
   return rv;
 }
 
