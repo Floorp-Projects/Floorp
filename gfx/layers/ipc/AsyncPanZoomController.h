@@ -25,6 +25,7 @@ namespace layers {
 class CompositorParent;
 class GestureEventListener;
 class ContainerLayer;
+class ViewTransform;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -159,7 +160,7 @@ public:
    */
   bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
                                       ContainerLayer* aLayer,
-                                      gfx3DMatrix* aNewTransform);
+                                      ViewTransform* aTransform);
 
   /**
    * A shadow layer update has arrived. |aViewportFrame| is the new FrameMetrics
