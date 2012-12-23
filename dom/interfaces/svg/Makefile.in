@@ -69,7 +69,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGPathSegList.idl \
 		nsIDOMSVGPatternElement.idl \
 		nsIDOMSVGPoint.idl \
-		nsIDOMSVGPointList.idl \
 		nsIDOMSVGPolygonElement.idl \
 		nsIDOMSVGPolylineElement.idl \
 		nsIDOMSVGPresAspectRatio.idl \

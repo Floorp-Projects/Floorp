@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsIDOMSVGPointList.h"
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "SVGPointList.h" // IWYU pragma: keep
@@ -50,7 +49,7 @@ class SVGAnimatedPointList;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGPointList MOZ_FINAL : public nsIDOMSVGPointList,
+class DOMSVGPointList MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache
 {
   friend class DOMSVGPoint;
@@ -58,7 +57,6 @@ class DOMSVGPointList MOZ_FINAL : public nsIDOMSVGPointList,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGPointList)
-  NS_DECL_NSIDOMSVGPOINTLIST
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
