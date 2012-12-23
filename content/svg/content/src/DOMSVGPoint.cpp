@@ -162,19 +162,22 @@ NS_IMETHODIMP
 DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix,
                              nsIDOMSVGPoint **_retval)
 {
-  *_retval = MatrixTransform(matrix).get();
+  nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);
+  if (!domMatrix) {
+    *_retval = nullptr;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
+  *_retval = MatrixTransform(*domMatrix).get();
   return NS_OK;
 }
 
 already_AddRefed<nsISVGPoint>
-DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix* matrix)
+DOMSVGPoint::MatrixTransform(DOMSVGMatrix& matrix)
 {
-  nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);
-
   float x = HasOwner() ? InternalItem().mX : mPt.mX;
   float y = HasOwner() ? InternalItem().mY : mPt.mY;
 
-  gfxPoint pt = domMatrix->Matrix().Transform(gfxPoint(x, y));
+  gfxPoint pt = matrix.Matrix().Transform(gfxPoint(x, y));
   nsCOMPtr<nsISVGPoint> newPoint = new DOMSVGPoint(pt);
   return newPoint.forget();
 }

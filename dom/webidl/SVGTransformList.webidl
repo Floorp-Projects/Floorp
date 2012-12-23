@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGMatrix;
 interface SVGTransform;
 
 interface SVGTransformList {
@@ -29,7 +28,6 @@ interface SVGTransformList {
   SVGTransform removeItem(unsigned long index);
   [Throws]
   SVGTransform appendItem(SVGTransform newItem);
-  [Throws]
   SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
   [Throws]
   SVGTransform consolidate();

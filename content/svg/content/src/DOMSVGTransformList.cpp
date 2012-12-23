@@ -422,16 +422,9 @@ DOMSVGTransformList::AppendItem(nsIDOMSVGTransform *newItem,
 }
 
 already_AddRefed<nsIDOMSVGTransform>
-DOMSVGTransformList::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
-                                                  ErrorResult& error)
+DOMSVGTransformList::CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix)
 {
-  nsCOMPtr<DOMSVGMatrix> domItem = do_QueryInterface(matrix);
-  if (!domItem) {
-    error.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMSVGTransform> result = new DOMSVGTransform(domItem->Matrix());
+  nsCOMPtr<nsIDOMSVGTransform> result = new DOMSVGTransform(matrix.Matrix());
   return result.forget();
 }
 
@@ -441,9 +434,13 @@ NS_IMETHODIMP
 DOMSVGTransformList::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
                                                   nsIDOMSVGTransform **_retval)
 {
-  ErrorResult rv;
-  *_retval = CreateSVGTransformFromMatrix(matrix, rv).get();
-  return rv.ErrorCode();
+  nsCOMPtr<DOMSVGMatrix> domItem = do_QueryInterface(matrix);
+  if (!domItem) {
+    *_retval = nullptr;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
+  *_retval = CreateSVGTransformFromMatrix(*domItem).get();
+  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGTransform>

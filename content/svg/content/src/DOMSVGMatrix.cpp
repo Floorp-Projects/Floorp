@@ -8,6 +8,7 @@
 #include "nsError.h"
 #include <math.h>
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGMatrixBinding.h"
 
 const double radPerDegree = 2.0 * M_PI / 360.0;
 
@@ -24,10 +25,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGMatrix)
     tmp->mTransform->ClearMatrixTearoff(tmp);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransform)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGMatrix)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransform)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGMatrix)
+NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGMatrix)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGMatrix)
@@ -37,11 +45,24 @@ DOMCI_DATA(SVGMatrix, mozilla::DOMSVGMatrix)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGMatrix)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(mozilla::DOMSVGMatrix) // pseudo-interface
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGMatrix)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGMatrix)
 NS_INTERFACE_MAP_END
+
+DOMSVGTransform*
+DOMSVGMatrix::GetParentObject() const
+{
+  return mTransform;
+}
+
+JSObject*
+DOMSVGMatrix::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return mozilla::dom::SVGMatrixBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGMatrix methods:
@@ -49,115 +70,176 @@ NS_INTERFACE_MAP_END
 /* attribute float a; */
 NS_IMETHODIMP DOMSVGMatrix::GetA(float *aA)
 {
-  *aA = static_cast<float>(Matrix().xx);
+  *aA = A();
   return NS_OK;
 }
-NS_IMETHODIMP DOMSVGMatrix::SetA(float aA)
+
+void
+DOMSVGMatrix::SetA(float aA, ErrorResult& rv)
 {
   if (IsAnimVal()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE(aA, NS_ERROR_ILLEGAL_VALUE);
 
   gfxMatrix mx = Matrix();
   mx.xx = aA;
   SetMatrix(mx);
-  return NS_OK;
+}
+
+NS_IMETHODIMP DOMSVGMatrix::SetA(float aA)
+{
+  NS_ENSURE_FINITE(aA, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetA(aA, rv);
+  return rv.ErrorCode();
 }
 
 /* attribute float b; */
 NS_IMETHODIMP DOMSVGMatrix::GetB(float *aB)
 {
-  *aB = static_cast<float>(Matrix().yx);
+  *aB = B();
   return NS_OK;
 }
-NS_IMETHODIMP DOMSVGMatrix::SetB(float aB)
+
+void
+DOMSVGMatrix::SetB(float aB, ErrorResult& rv)
 {
   if (IsAnimVal()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE(aB, NS_ERROR_ILLEGAL_VALUE);
 
   gfxMatrix mx = Matrix();
   mx.yx = aB;
   SetMatrix(mx);
-  return NS_OK;
+}
+
+NS_IMETHODIMP DOMSVGMatrix::SetB(float aB)
+{
+  NS_ENSURE_FINITE(aB, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetB(aB, rv);
+  return rv.ErrorCode();
 }
 
 /* attribute float c; */
 NS_IMETHODIMP DOMSVGMatrix::GetC(float *aC)
 {
-  *aC = static_cast<float>(Matrix().xy);
+  *aC = C();
   return NS_OK;
 }
-NS_IMETHODIMP DOMSVGMatrix::SetC(float aC)
+
+void
+DOMSVGMatrix::SetC(float aC, ErrorResult& rv)
 {
   if (IsAnimVal()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE(aC, NS_ERROR_ILLEGAL_VALUE);
 
   gfxMatrix mx = Matrix();
   mx.xy = aC;
   SetMatrix(mx);
-  return NS_OK;
+}
+
+NS_IMETHODIMP DOMSVGMatrix::SetC(float aC)
+{
+  NS_ENSURE_FINITE(aC, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetC(aC, rv);
+  return rv.ErrorCode();
 }
 
 /* attribute float d; */
 NS_IMETHODIMP DOMSVGMatrix::GetD(float *aD)
 {
-  *aD = static_cast<float>(Matrix().yy);
+  *aD = D();
   return NS_OK;
 }
-NS_IMETHODIMP DOMSVGMatrix::SetD(float aD)
+
+void
+DOMSVGMatrix::SetD(float aD, ErrorResult& rv)
 {
   if (IsAnimVal()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE(aD, NS_ERROR_ILLEGAL_VALUE);
 
   gfxMatrix mx = Matrix();
   mx.yy = aD;
   SetMatrix(mx);
-  return NS_OK;
+}
+
+NS_IMETHODIMP DOMSVGMatrix::SetD(float aD)
+{
+  NS_ENSURE_FINITE(aD, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetD(aD, rv);
+  return rv.ErrorCode();
 }
 
 /* attribute float e; */
 NS_IMETHODIMP DOMSVGMatrix::GetE(float *aE)
 {
-  *aE = static_cast<float>(Matrix().x0);
+  *aE = E();
   return NS_OK;
 }
-NS_IMETHODIMP DOMSVGMatrix::SetE(float aE)
+
+void
+DOMSVGMatrix::SetE(float aE, ErrorResult& rv)
 {
   if (IsAnimVal()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE(aE, NS_ERROR_ILLEGAL_VALUE);
 
   gfxMatrix mx = Matrix();
   mx.x0 = aE;
   SetMatrix(mx);
-  return NS_OK;
+}
+
+NS_IMETHODIMP DOMSVGMatrix::SetE(float aE)
+{
+  NS_ENSURE_FINITE(aE, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetE(aE, rv);
+  return rv.ErrorCode();
 }
 
 /* attribute float f; */
 NS_IMETHODIMP DOMSVGMatrix::GetF(float *aF)
 {
-  *aF = static_cast<float>(Matrix().y0);
+  *aF = F();
   return NS_OK;
 }
-NS_IMETHODIMP DOMSVGMatrix::SetF(float aF)
+
+void
+DOMSVGMatrix::SetF(float aF, ErrorResult& rv)
 {
   if (IsAnimVal()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
-  NS_ENSURE_FINITE(aF, NS_ERROR_ILLEGAL_VALUE);
 
   gfxMatrix mx = Matrix();
   mx.y0 = aF;
   SetMatrix(mx);
-  return NS_OK;
+}
+
+NS_IMETHODIMP DOMSVGMatrix::SetF(float aF)
+{
+  NS_ENSURE_FINITE(aF, NS_ERROR_ILLEGAL_VALUE);
+  ErrorResult rv;
+  SetF(aF, rv);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::Multiply(DOMSVGMatrix& aMatrix)
+{
+  nsCOMPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(aMatrix.Matrix() * Matrix());
+  return matrix.forget();
 }
 
 /* nsIDOMSVGMatrix multiply (in nsIDOMSVGMatrix secondMatrix); */
@@ -169,131 +251,224 @@ NS_IMETHODIMP DOMSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix,
   if (!domMatrix)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_ADDREF(*_retval = new DOMSVGMatrix(domMatrix->Matrix() * Matrix()));
+  *_retval = Multiply(*domMatrix).get();
   return NS_OK;
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::Inverse(ErrorResult& rv)
+{
+  if (Matrix().IsSingular()) {
+    rv.Throw(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE);
+    return nullptr;
+  }
+  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(gfxMatrix(Matrix()).Invert());
+  return matrix.forget();
 }
 
 /* nsIDOMSVGMatrix inverse (); */
 NS_IMETHODIMP DOMSVGMatrix::Inverse(nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nullptr;
-  if (Matrix().IsSingular())
-    return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
-
-  NS_ADDREF(*_retval = new DOMSVGMatrix(gfxMatrix(Matrix()).Invert()));
-  return NS_OK;
+  ErrorResult rv;
+  *_retval = Inverse(rv).get();
+  return rv.ErrorCode();
 }
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::Translate(float x, float y)
+{
+  nsRefPtr<DOMSVGMatrix> matrix =
+    new DOMSVGMatrix(gfxMatrix(Matrix()).Translate(gfxPoint(x, y)));
+  return matrix.forget();
+}
+
 
 /* nsIDOMSVGMatrix translate (in float x, in float y); */
 NS_IMETHODIMP DOMSVGMatrix::Translate(float x, float y,
                                       nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nullptr;
-  NS_ENSURE_FINITE2(x, y, NS_ERROR_ILLEGAL_VALUE);
-
-  NS_ADDREF(*_retval =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Translate(gfxPoint(x, y))));
+  if (!NS_finite(x) || !NS_finite(y)) {
+    *_retval = nullptr;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  *_retval = Translate(x, y).get();
   return NS_OK;
 }
 
-/* nsIDOMSVGMatrix scale (in float scaleFactor); */
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::Scale(float scaleFactor)
+{
+  return ScaleNonUniform(scaleFactor, scaleFactor);
+}
+
+ /* nsIDOMSVGMatrix scale (in float scaleFactor); */
 NS_IMETHODIMP DOMSVGMatrix::Scale(float scaleFactor, nsIDOMSVGMatrix **_retval)
 {
   return ScaleNonUniform(scaleFactor, scaleFactor, _retval);
 }
 
-/* nsIDOMSVGMatrix scaleNonUniform (in float scaleFactorX,
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::ScaleNonUniform(float scaleFactorX,
+                              float scaleFactorY)
+{
+  nsRefPtr<DOMSVGMatrix> matrix =
+    new DOMSVGMatrix(gfxMatrix(Matrix()).Scale(scaleFactorX, scaleFactorY));
+  return matrix.forget();
+}
+
+
+ /* nsIDOMSVGMatrix scaleNonUniform (in float scaleFactorX,
  *                                  in float scaleFactorY); */
 NS_IMETHODIMP DOMSVGMatrix::ScaleNonUniform(float scaleFactorX,
                                             float scaleFactorY,
                                             nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nullptr;
-  NS_ENSURE_FINITE2(scaleFactorX, scaleFactorY, NS_ERROR_ILLEGAL_VALUE);
-
-  NS_ADDREF(*_retval =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Scale(scaleFactorX, scaleFactorY)));
+  if (!NS_finite(scaleFactorX) || !NS_finite(scaleFactorY)) {
+    *_retval = nullptr;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  *_retval = ScaleNonUniform(scaleFactorX, scaleFactorY).get();
   return NS_OK;
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::Rotate(float angle)
+{
+  nsRefPtr<DOMSVGMatrix> matrix =
+    new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(angle*radPerDegree));
+  return matrix.forget();
 }
 
 /* nsIDOMSVGMatrix rotate (in float angle); */
 NS_IMETHODIMP DOMSVGMatrix::Rotate(float angle, nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nullptr;
-  NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
-
-  NS_ADDREF(*_retval =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(angle*radPerDegree)));
+  if (!NS_finite(angle)) {
+    *_retval = nullptr;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  *_retval = Rotate(angle).get();
   return NS_OK;
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
+{
+  if (x == 0.0 || y == 0.0) {
+    rv.Throw(NS_ERROR_RANGE_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMSVGMatrix> matrix =
+    new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(atan2(y, x)));
+  return matrix.forget();
 }
 
 /* nsIDOMSVGMatrix rotateFromVector (in float x, in float y); */
 NS_IMETHODIMP DOMSVGMatrix::RotateFromVector(float x, float y,
                                              nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nullptr;
-  NS_ENSURE_FINITE2(x, y, NS_ERROR_ILLEGAL_VALUE);
+  if (!NS_finite(x) || !NS_finite(y)) {
+    *_retval = nullptr;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
-  if (x == 0.0 || y == 0.0)
-    return NS_ERROR_RANGE_ERR;
+  ErrorResult rv;
+  *_retval = RotateFromVector(x, y, rv).get();
+  return rv.ErrorCode();
+}
 
-  NS_ADDREF(*_retval =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(atan2(y, x))));
-  return NS_OK;
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::FlipX()
+{
+  const gfxMatrix& mx = Matrix();
+  nsRefPtr<DOMSVGMatrix> matrix =
+    new DOMSVGMatrix(gfxMatrix(-mx.xx, -mx.yx, mx.xy, mx.yy, mx.x0, mx.y0));
+  return matrix.forget();
 }
 
 /* nsIDOMSVGMatrix flipX (); */
 NS_IMETHODIMP DOMSVGMatrix::FlipX(nsIDOMSVGMatrix **_retval)
 {
-  const gfxMatrix& mx = Matrix();
-  NS_ADDREF(*_retval = new DOMSVGMatrix(gfxMatrix(-mx.xx, -mx.yx,
-                                                  mx.xy, mx.yy,
-                                                  mx.x0, mx.y0)));
+  *_retval = FlipX().get();
   return NS_OK;
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::FlipY()
+{
+  const gfxMatrix& mx = Matrix();
+  nsRefPtr<DOMSVGMatrix> matrix =
+    new DOMSVGMatrix(gfxMatrix(mx.xx, mx.yx, -mx.xy, -mx.yy, mx.x0, mx.y0));
+  return matrix.forget();
 }
 
 /* nsIDOMSVGMatrix flipY (); */
 NS_IMETHODIMP DOMSVGMatrix::FlipY(nsIDOMSVGMatrix **_retval)
 {
-  const gfxMatrix& mx = Matrix();
-  NS_ADDREF(*_retval = new DOMSVGMatrix(gfxMatrix(mx.xx, mx.yx,
-                                                  -mx.xy, -mx.yy,
-                                                  mx.x0, mx.y0)));
+  *_retval = FlipY().get();
   return NS_OK;
 }
 
-/* nsIDOMSVGMatrix skewX (in float angle); */
-NS_IMETHODIMP DOMSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::SkewX(float angle, ErrorResult& rv)
 {
-  *_retval = nullptr;
-  NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
-
   double ta = tan( angle*radPerDegree );
-  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
+  if (!NS_finite(ta)) {
+    rv.Throw(NS_ERROR_RANGE_ERR);
+    return nullptr;
+  }
 
   const gfxMatrix& mx = Matrix();
   gfxMatrix skewMx(mx.xx, mx.yx,
                    (float) (mx.xy + mx.xx*ta), (float) (mx.yy + mx.yx*ta),
                    mx.x0, mx.y0);
-  NS_ADDREF(*_retval = new DOMSVGMatrix(skewMx));
-  return NS_OK;
+  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(skewMx);
+  return matrix.forget();
 }
 
-/* nsIDOMSVGMatrix skewY (in float angle); */
-NS_IMETHODIMP DOMSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
+/* nsIDOMSVGMatrix skewX (in float angle); */
+NS_IMETHODIMP DOMSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nullptr;
-  NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
+  if (!NS_finite(angle)) {
+    *_retval = nullptr;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
+  ErrorResult rv;
+  *_retval = SkewX(angle, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMSVGMatrix>
+DOMSVGMatrix::SkewY(float angle, ErrorResult& rv)
+{
   double ta = tan( angle*radPerDegree );
-  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
+  if (!NS_finite(ta)) {
+    rv.Throw(NS_ERROR_RANGE_ERR);
+    return nullptr;
+  }
 
   const gfxMatrix& mx = Matrix();
   gfxMatrix skewMx((float) (mx.xx + mx.xy*ta), (float) (mx.yx + mx.yy*ta),
                    mx.xy, mx.yy,
                    mx.x0, mx.y0);
-  NS_ADDREF(*_retval = new DOMSVGMatrix(skewMx));
-  return NS_OK;
+
+  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(skewMx);
+  return matrix.forget();
 }
+
+/* nsIDOMSVGMatrix skewY (in float angle); */
+NS_IMETHODIMP DOMSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
+{
+  if (!NS_finite(angle)) {
+    *_retval = nullptr;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  ErrorResult rv;
+  *_retval = SkewY(angle, rv).get();
+  return rv.ErrorCode();
+}
+
 
 } // namespace mozilla
