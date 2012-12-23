@@ -92,6 +92,7 @@ CPPSRCS		= \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
 		nsSVGViewElement.cpp \
+		SVGAngle.cpp \
 		SVGAnimatedBoolean.cpp \
 		SVGAnimatedLengthList.cpp \
 		SVGAnimatedNumberList.cpp \
@@ -148,6 +149,7 @@ EXPORTS =  			\
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+	SVGAngle.h \
 	SVGAnimatedBoolean.h \
 	$(NULL)
 
