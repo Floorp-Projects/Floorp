@@ -318,22 +318,22 @@ nsSVGPathElement::GetNumberInfo()
 //----------------------------------------------------------------------
 // nsIDOMSVGAnimatedPathData methods:
 
-/* readonly attribute nsIDOMSVGPathSegList pathSegList; */
-NS_IMETHODIMP nsSVGPathElement::GetPathSegList(nsIDOMSVGPathSegList * *aPathSegList)
+/* readonly attribute DOMSVGPathSegList pathSegList; */
+NS_IMETHODIMP nsSVGPathElement::GetPathSegList(nsISupports * *aPathSegList)
 {
   void *key = mD.GetBaseValKey();
   *aPathSegList = DOMSVGPathSegList::GetDOMWrapper(key, this, false).get();
   return *aPathSegList ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* readonly attribute nsIDOMSVGPathSegList normalizedPathSegList; */
-NS_IMETHODIMP nsSVGPathElement::GetNormalizedPathSegList(nsIDOMSVGPathSegList * *aNormalizedPathSegList)
+/* readonly attribute DOMSVGPathSegList normalizedPathSegList; */
+NS_IMETHODIMP nsSVGPathElement::GetNormalizedPathSegList(nsISupports * *aNormalizedPathSegList)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute nsIDOMSVGPathSegList animatedPathSegList; */
-NS_IMETHODIMP nsSVGPathElement::GetAnimatedPathSegList(nsIDOMSVGPathSegList * *aAnimatedPathSegList)
+/* readonly attribute DOMSVGPathSegList animatedPathSegList; */
+NS_IMETHODIMP nsSVGPathElement::GetAnimatedPathSegList(nsISupports * *aAnimatedPathSegList)
 {
   void *key = mD.GetAnimValKey();
   *aAnimatedPathSegList =
@@ -341,8 +341,8 @@ NS_IMETHODIMP nsSVGPathElement::GetAnimatedPathSegList(nsIDOMSVGPathSegList * *a
   return *aAnimatedPathSegList ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* readonly attribute nsIDOMSVGPathSegList animatedNormalizedPathSegList; */
-NS_IMETHODIMP nsSVGPathElement::GetAnimatedNormalizedPathSegList(nsIDOMSVGPathSegList * *aAnimatedNormalizedPathSegList)
+/* readonly attribute DOMSVGPathSegList animatedNormalizedPathSegList; */
+NS_IMETHODIMP nsSVGPathElement::GetAnimatedNormalizedPathSegList(nsISupports * *aAnimatedNormalizedPathSegList)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

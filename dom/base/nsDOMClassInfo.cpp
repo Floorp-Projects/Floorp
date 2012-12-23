@@ -359,7 +359,6 @@
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGNumberList.h"
 #include "nsIDOMSVGPathElement.h"
-#include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGPatternElement.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGPolygonElement.h"
@@ -1256,8 +1255,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGNumber, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGNumberList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGPathSegList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPoint, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3566,10 +3563,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGNumberList, nsIDOMSVGNumberList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGNumberList)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegList, nsIDOMSVGPathSegList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGPoint, nsIDOMSVGPoint)
