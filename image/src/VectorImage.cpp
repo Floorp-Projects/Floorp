@@ -14,7 +14,6 @@
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
-#include "nsMimeTypes.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSVGUtils.h"  // for nsSVGUtils::ConvertToSurfaceSize
@@ -205,7 +204,7 @@ VectorImage::Init(imgDecoderObserver* aObserver,
   if (aObserver) {
     mObserver = aObserver->asWeakPtr();
   }
-  NS_ABORT_IF_FALSE(!strcmp(aMimeType, IMAGE_SVG_XML), "Unexpected mimetype");
+  NS_ABORT_IF_FALSE(!strcmp(aMimeType, SVG_MIMETYPE), "Unexpected mimetype");
 
   mIsInitialized = true;
 
