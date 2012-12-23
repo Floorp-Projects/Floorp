@@ -38,15 +38,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGPathSegList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGPathSegList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGPathSegList, mozilla::DOMSVGPathSegList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPathSegList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPathSegList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPathSegList)
 NS_INTERFACE_MAP_END
 
 
@@ -194,7 +188,9 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
       }
       if (!mItems.AppendElement(ItemProxy(nullptr, dataIndex))) {
         // OOM
-        Clear();
+        ErrorResult rv;
+        Clear(rv);
+        MOZ_ASSERT(!rv.Failed());
         return;
       }
       dataIndex += 1 + SVGPathSegUtils::ArgCountForType(SVGPathSegUtils::DecodeType(aNewValue.mData[dataIndex]));
@@ -227,13 +223,6 @@ DOMSVGPathSegList::InternalAList() const
 
 // ----------------------------------------------------------------------------
 // nsIDOMSVGPathSegList implementation:
-
-NS_IMETHODIMP
-DOMSVGPathSegList::GetNumberOfItems(uint32_t *aNumberOfItems)
-{
-  *aNumberOfItems = NumberOfItems();
-  return NS_OK;
-}
 
 void
 DOMSVGPathSegList::Clear(ErrorResult& aError)
@@ -268,14 +257,6 @@ DOMSVGPathSegList::Clear(ErrorResult& aError)
   }
 }
 
-NS_IMETHODIMP
-DOMSVGPathSegList::Clear()
-{
-  ErrorResult rv;
-  Clear(rv);
-  return rv.ErrorCode();
-}
-
 already_AddRefed<DOMSVGPathSeg>
 DOMSVGPathSegList::Initialize(DOMSVGPathSeg& aNewItem, ErrorResult& aError)
 {
@@ -302,20 +283,6 @@ DOMSVGPathSegList::Initialize(DOMSVGPathSeg& aNewItem, ErrorResult& aError)
   return InsertItemBefore(*domItem, 0, aError);
 }
 
-NS_IMETHODIMP
-DOMSVGPathSegList::Initialize(nsIDOMSVGPathSeg *newItem,
-                              nsIDOMSVGPathSeg **_retval)
-{
-  nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(newItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-   ErrorResult rv;
-  *_retval = Initialize(*domItem, rv).get();
-  return rv.ErrorCode();
-}
-
 DOMSVGPathSeg*
 DOMSVGPathSegList::IndexedGetter(uint32_t aIndex, bool& aFound,
                                  ErrorResult& aError)
@@ -329,15 +296,6 @@ DOMSVGPathSegList::IndexedGetter(uint32_t aIndex, bool& aFound,
     return ItemAt(aIndex);
   }
   return nullptr;
-}
-
-NS_IMETHODIMP
-DOMSVGPathSegList::GetItem(uint32_t aIndex,
-                           nsIDOMSVGPathSeg **_retval)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*_retval = GetItem(aIndex, rv));
-  return rv.ErrorCode();
 }
 
 already_AddRefed<DOMSVGPathSeg>
@@ -398,21 +356,6 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
     Element()->AnimationNeedsResample();
   }
   return domItem.forget();
-}
-
-NS_IMETHODIMP
-DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
-                                    uint32_t aIndex,
-                                    nsIDOMSVGPathSeg **_retval)
-{
-  nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-   ErrorResult rv;
-  *_retval = InsertItemBefore(*domItem, aIndex, rv).get();
-  return rv.ErrorCode();
 }
 
 already_AddRefed<DOMSVGPathSeg>
@@ -479,21 +422,6 @@ DOMSVGPathSegList::ReplaceItem(DOMSVGPathSeg& aNewItem,
   return domItem.forget();
 }
 
-NS_IMETHODIMP
-DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
-                               uint32_t aIndex,
-                               nsIDOMSVGPathSeg **_retval)
-{
-  nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = ReplaceItem(*domItem, aIndex, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<DOMSVGPathSeg>
 DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
                               ErrorResult& aError)
@@ -535,35 +463,6 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
     Element()->AnimationNeedsResample();
   }
   return result.forget();
-}
-
-NS_IMETHODIMP
-DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
-                              nsIDOMSVGPathSeg **_retval)
-{
-  ErrorResult rv;
-  *_retval = RemoveItem(aIndex, rv).get();
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-DOMSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *aNewItem,
-                              nsIDOMSVGPathSeg **_retval)
-{
-  nsCOMPtr<DOMSVGPathSeg> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = AppendItem(*domItem, rv).get();
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-DOMSVGPathSegList::GetLength(uint32_t *aNumberOfItems)
-{
-  return GetNumberOfItems(aNumberOfItems);
 }
 
 void
