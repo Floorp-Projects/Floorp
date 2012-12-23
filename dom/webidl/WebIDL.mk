@@ -75,6 +75,7 @@ webidl_files = \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
   SVGNumberList.webidl \
+  SVGPathSeg.webidl \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \

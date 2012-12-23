@@ -17,8 +17,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
-class nsIDOMSVGPathSeg;
-
 namespace mozilla {
 
 class DOMSVGPathSeg;
@@ -140,29 +138,29 @@ public:
     return LengthNoFlush();
   }
   void Clear(ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPathSeg> Initialize(nsIDOMSVGPathSeg *aNewItem,
-                                                ErrorResult& aError);
-  nsIDOMSVGPathSeg* GetItem(uint32_t aIndex, ErrorResult& aError)
+  already_AddRefed<DOMSVGPathSeg> Initialize(DOMSVGPathSeg& aNewItem,
+                                             ErrorResult& aError);
+  DOMSVGPathSeg* GetItem(uint32_t aIndex, ErrorResult& aError)
   {
     bool found;
-    nsIDOMSVGPathSeg* item = IndexedGetter(aIndex, found, aError);
+    DOMSVGPathSeg* item = IndexedGetter(aIndex, found, aError);
     if (!found) {
       aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     }
     return item;
   }
-  nsIDOMSVGPathSeg* IndexedGetter(uint32_t aIndex, bool& found,
-                                  ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPathSeg> InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
-                                                      uint32_t aIndex,
-                                                      ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPathSeg> ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
-                                                 uint32_t aIndex,
-                                                 ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPathSeg> RemoveItem(uint32_t aIndex,
-                                                ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPathSeg> AppendItem(nsIDOMSVGPathSeg *aNewItem,
-                                                ErrorResult& aError)
+  DOMSVGPathSeg* IndexedGetter(uint32_t aIndex, bool& found,
+                               ErrorResult& aError);
+  already_AddRefed<DOMSVGPathSeg> InsertItemBefore(DOMSVGPathSeg& aNewItem,
+                                                   uint32_t aIndex,
+                                                   ErrorResult& aError);
+  already_AddRefed<DOMSVGPathSeg> ReplaceItem(DOMSVGPathSeg& aNewItem,
+                                              uint32_t aIndex,
+                                              ErrorResult& aError);
+  already_AddRefed<DOMSVGPathSeg> RemoveItem(uint32_t aIndex,
+                                             ErrorResult& aError);
+  already_AddRefed<DOMSVGPathSeg> AppendItem(DOMSVGPathSeg& aNewItem,
+                                             ErrorResult& aError)
   {
     return InsertItemBefore(aNewItem, LengthNoFlush(), aError);
   }

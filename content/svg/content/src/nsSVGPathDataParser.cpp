@@ -7,7 +7,7 @@
 #include "nsSVGDataParser.h"
 #include "nsSVGPathElement.h"
 #include "prdtoa.h"
-#include "nsIDOMSVGPathSeg.h"
+#include "DOMSVGPathSeg.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -251,10 +251,6 @@ nsresult nsSVGPathDataParser::MatchMoveto()
   
   return NS_OK;
 }
-
-//  typedef nsresult MovetoSegCreationFunc(nsIDOMSVGPathSeg** res, float x, float y);
-//  MovetoSegCreationFunc *creationFunc;
-
 
 nsresult nsSVGPathDataParser::MatchMovetoArgSeq(bool absCoords)
 {
@@ -964,62 +960,31 @@ nsSVGPathDataParserToInternal::Parse(const nsAString &aValue)
 nsresult
 nsSVGPathDataParserToInternal::StoreMoveTo(bool absCoords, float x, float y)
 {
-  // Because our IDL compiler doesn't know any better, each seg type constant
-  // in nsIDOMSVGPathSeg is in a separate enum. This results in "warning:
-  // enumeral mismatch in conditional expression" under GCC if two bare
-  // nsIDOMSVGPathSeg constants are used as operands of the ?: operator below.
-  // In newer versions of GCC we would be able to turn off this warning using:
-  //
-  //#pragma GCC diagnostic push
-  //#pragma GCC diagnostic ignored "-Wenum-compare"
-  //...
-  //#pragma GCC diagnostic pop
-  //
-  // Unfortunately we need to support older versions of GCC. Instead, to
-  // eliminate this warning noise being sent to the console, we wrap the
-  // operands with uint32_t(...).
-
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL);
-
-  return mPathSegList->AppendSeg(type, x, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_MOVETO_ABS : PATHSEG_MOVETO_REL, x, y);
 }
 
 nsresult
 nsSVGPathDataParserToInternal::StoreClosePath()
 {
-  return mPathSegList->AppendSeg(nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH);
+  return mPathSegList->AppendSeg(PATHSEG_CLOSEPATH);
 }
 
 nsresult
 nsSVGPathDataParserToInternal::StoreLineTo(bool absCoords, float x, float y)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_REL);
-
-  return mPathSegList->AppendSeg(type, x, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_LINETO_ABS : PATHSEG_LINETO_REL, x, y);
 }
 
 nsresult
 nsSVGPathDataParserToInternal::StoreHLineTo(bool absCoords, float x)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL);
-
-  return mPathSegList->AppendSeg(type, x);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_LINETO_HORIZONTAL_ABS : PATHSEG_LINETO_HORIZONTAL_REL, x);
 }
 
 nsresult
 nsSVGPathDataParserToInternal::StoreVLineTo(bool absCoords, float y)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL);
-
-  return mPathSegList->AppendSeg(type, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_LINETO_VERTICAL_ABS : PATHSEG_LINETO_VERTICAL_REL, y);
 }
 
 nsresult
@@ -1028,11 +993,8 @@ nsSVGPathDataParserToInternal::StoreCurveTo(bool absCoords,
                                             float x1, float y1,
                                             float x2, float y2)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL);
-
-  return mPathSegList->AppendSeg(type, x1, y1, x2, y2, x, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_CUBIC_ABS : PATHSEG_CURVETO_CUBIC_REL,
+                                 x1, y1, x2, y2, x, y);
 }
 
 nsresult
@@ -1040,11 +1002,8 @@ nsSVGPathDataParserToInternal::StoreSmoothCurveTo(bool absCoords,
                                                   float x, float y,
                                                   float x2, float y2)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL);
-
-  return mPathSegList->AppendSeg(type, x2, y2, x, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_CUBIC_SMOOTH_ABS : PATHSEG_CURVETO_CUBIC_SMOOTH_REL,
+                                 x2, y2, x, y);
 }
 
 nsresult
@@ -1052,22 +1011,15 @@ nsSVGPathDataParserToInternal::StoreQuadCurveTo(bool absCoords,
                                                 float x, float y,
                                                 float x1, float y1)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL);
-
-  return mPathSegList->AppendSeg(type, x1, y1, x, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_QUADRATIC_ABS : PATHSEG_CURVETO_QUADRATIC_REL,
+                                 x1, y1, x, y);
 }
 
 nsresult
 nsSVGPathDataParserToInternal::StoreSmoothQuadCurveTo(bool absCoords,
                                                       float x, float y)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
-
-  return mPathSegList->AppendSeg(type, x, y);
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS : PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, x, y);
 }
 
 nsresult
@@ -1078,13 +1030,10 @@ nsSVGPathDataParserToInternal::StoreEllipticalArc(bool absCoords,
                                                   bool largeArcFlag,
                                                   bool sweepFlag)
 {
-  uint32_t type = absCoords ?
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_ARC_ABS) :
-    uint32_t(nsIDOMSVGPathSeg::PATHSEG_ARC_REL);
-
   // We can only pass floats after 'type', and per the SVG spec for arc,
   // non-zero args are treated at 'true'.
-  return mPathSegList->AppendSeg(type, r1, r2, angle,
+  return mPathSegList->AppendSeg(absCoords ? PATHSEG_ARC_ABS : PATHSEG_ARC_REL,
+                                 r1, r2, angle,
                                  largeArcFlag ? 1.0f : 0.0f,
                                  sweepFlag ? 1.0f : 0.0f,
                                  x, y);
