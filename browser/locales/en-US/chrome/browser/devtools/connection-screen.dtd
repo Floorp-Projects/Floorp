@@ -13,10 +13,10 @@
 <!ENTITY port       "Port:">
 <!ENTITY connect    "Connect">
 <!ENTITY connecting "Connecting…">
-<!ENTITY availability "Available remote objects:">
-<!ENTITY remoteProcess "remote process">
+<!ENTITY availableTabs "Available remote tabs:">
+<!ENTITY availableProcesses "Available remote processes:">
 <!ENTITY connectionError "Error:">
 <!ENTITY errorTimeout "Error: connection timeout.">
 <!ENTITY errorRefused "Error: connection refused.">
 <!ENTITY errorUnexpected "Unexpected error.">
-<!ENTITY help "Firefox Developer Tools can debug remote devices (Firefox for Android and Firefox OS for example). Make sure that you have turned on the 'Debugger Server' option on the remote device. See <a target='_' href='https://developer.mozilla.org/en-US/docs/Tools/Debugger#Remote_Debugging'>documentation</a>.">
+<!ENTITY help "Firefox Developer Tools can debug remote devices (Firefox for Android and Firefox OS, for example). Make sure that you have turned on the 'Remote debugging' option in the remote device. See the <a target='_' href='https://developer.mozilla.org/docs/Tools/Debugger#Remote_Debugging'>documentation</a> for more.">
