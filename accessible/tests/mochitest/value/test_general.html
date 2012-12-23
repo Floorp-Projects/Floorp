@@ -50,6 +50,21 @@
       testValue("aria_main_link", href);
       testValue("aria_navigation_link", href);
 
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA comboboxes
+
+      // aria-activedescendant defines a current item the value is computed from
+      testValue("aria_combobox1", kDiscBulletText + "Zoom");
+
+      // aria-selected defines a selected item the value is computed from,
+      // list control is pointed by aria-owns relation.
+      testValue("aria_combobox2", kDiscBulletText + "Zoom");
+
+      // aria-selected defines a selected item the value is computed from,
+      // list control is a child of combobox.
+      testValue("aria_combobox3", kDiscBulletText + "2");
+
+      //////////////////////////////////////////////////////////////////////////
       // HTML controls
       testValue("combobox1", "item1");
       testValue("combobox2", "item2");
@@ -69,7 +84,12 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=494807"
      title="Do not expose a11y info specific to hyperlinks when role is overridden using ARIA">
     Mozilla Bug 494807
-  </a><br />
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=819273"
+     title=" ARIA combobox should have accessible value">
+    Mozilla Bug 819273
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none">
   </div>
@@ -87,6 +107,32 @@
 
   <!-- strange edge case: please don't do this in the wild -->
   <a id="aria_link_link" role="link" href="foo">link</a>
+
+  <div id="aria_combobox1" role="combobox"
+       aria-owns="aria_combobox1_owned_listbox"
+       aria-activedescendant="aria_combobox1_selected_option">
+  </div>
+  <ul role="listbox" id="aria_combobox1_owned_listbox">
+    <li role="option">Zebra</li>
+    <li role="option" id="aria_combobox1_selected_option">Zoom</li>
+  </ul>
+
+  <div id="aria_combobox2" role="combobox"
+       aria-owns="aria_combobox2_owned_listbox">
+  </div>
+  <ul role="listbox" id="aria_combobox2_owned_listbox">
+    <li role="option">Zebra</li>
+    <li role="option" aria-selected="true">Zoom</li>
+  </ul>
+
+  <div id="aria_combobox3" role="combobox">
+    <div role="textbox"></div>
+    <ul role="listbox">
+      <li role="option">1</li>
+      <li role="option" aria-selected="true">2</li>
+      <li role="option">3</li>
+    </ul>
+  </div>
 
   <select id="combobox1">
     <option id="cb1_item1">item1</option>

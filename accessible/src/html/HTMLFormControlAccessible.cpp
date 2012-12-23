@@ -358,7 +358,7 @@ HTMLTextFieldAccessible::Value(nsString& aValue)
     textArea->GetValue(aValue);
     return;
   }
-  
+
   nsHTMLInputElement* input = nsHTMLInputElement::FromContent(mContent);
   if (input)
     input->GetValue(aValue);
