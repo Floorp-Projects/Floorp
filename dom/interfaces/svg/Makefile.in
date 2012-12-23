@@ -19,8 +19,6 @@ XPIDLSRCS	= \
 		nsIDOMGetSVGDocument.idl \
 		nsIDOMSVGAElement.idl \
 		nsIDOMSVGAltGlyphElement.idl \
-		nsIDOMSVGAngle.idl \
-		nsIDOMSVGAnimatedAngle.idl \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedInteger.idl \
 		nsIDOMSVGAnimatedLength.idl \

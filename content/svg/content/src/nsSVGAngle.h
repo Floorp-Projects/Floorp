@@ -9,8 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsIDOMSVGAngle.h"
-#include "nsIDOMSVGAnimatedAngle.h"
 #include "nsISMILAttr.h"
 #include "nsSVGElement.h"
 #include "nsWrapperCache.h"
@@ -21,6 +19,14 @@ class nsSMILValue;
 class nsSVGOrientType;
 
 namespace mozilla {
+
+// Angle Unit Types
+static const unsigned short SVG_ANGLETYPE_UNKNOWN     = 0;
+static const unsigned short SVG_ANGLETYPE_UNSPECIFIED = 1;
+static const unsigned short SVG_ANGLETYPE_DEG         = 2;
+static const unsigned short SVG_ANGLETYPE_RAD         = 3;
+static const unsigned short SVG_ANGLETYPE_GRAD        = 4;
+
 namespace dom {
 class SVGAngle;
 class SVGAnimatedAngle;
@@ -35,7 +41,7 @@ class nsSVGAngle
 public:
   void Init(uint8_t aAttrEnum = 0xff,
             float aValue = 0,
-            uint8_t aUnitType = nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED) {
+            uint8_t aUnitType = mozilla::SVG_ANGLETYPE_UNSPECIFIED) {
     mAnimVal = mBaseVal = aValue;
     mAnimValUnit = mBaseValUnit = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -61,8 +67,8 @@ public:
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
-  static nsresult ToDOMSVGAngle(nsIDOMSVGAngle **aResult);
-  nsresult ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
+  static nsresult ToDOMSVGAngle(nsISupports **aResult);
+  nsresult ToDOMAnimatedAngle(nsISupports **aResult,
                               nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);

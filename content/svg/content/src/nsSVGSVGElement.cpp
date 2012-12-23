@@ -562,9 +562,9 @@ nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
   return NS_OK;
 }
 
-/* nsIDOMSVGAngle createSVGAngle (); */
+/* SVGAngle createSVGAngle (); */
 NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
+nsSVGSVGElement::CreateSVGAngle(nsISupports **_retval)
 {
   nsSVGAngle* angle = new nsSVGAngle();
   angle->Init();
