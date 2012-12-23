@@ -94,7 +94,7 @@ public:
   }
 
   const gfxMatrix& Matrix() const {
-    return mTransform ? mTransform->Matrix() : mMatrix;
+    return mTransform ? mTransform->Matrixgfx() : mMatrix;
   }
 
   // WebIDL

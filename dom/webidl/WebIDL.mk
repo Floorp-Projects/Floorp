@@ -74,6 +74,7 @@ webidl_files = \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
+  SVGTransform.webidl \
   SVGTransformList.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \

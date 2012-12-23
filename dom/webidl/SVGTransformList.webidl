@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGTransform;
-
 interface SVGTransformList {
   readonly attribute unsigned long numberOfItems;
   [Throws]
@@ -30,7 +28,7 @@ interface SVGTransformList {
   SVGTransform appendItem(SVGTransform newItem);
   SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
   [Throws]
-  SVGTransform consolidate();
+  SVGTransform? consolidate();
 
   // Mozilla-specific stuff
   readonly attribute unsigned long length; // synonym for numberOfItems
