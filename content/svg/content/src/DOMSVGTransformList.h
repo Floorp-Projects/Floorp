@@ -11,7 +11,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsIDOMSVGTransformList.h"
 #include "nsTArray.h"
 #include "SVGTransformList.h"
 #include "mozilla/Attributes.h"
@@ -33,7 +32,7 @@ class DOMSVGTransform;
  *
  * See the architecture comment in DOMSVGAnimatedTransformList.h.
  */
-class DOMSVGTransformList MOZ_FINAL : public nsIDOMSVGTransformList,
+class DOMSVGTransformList MOZ_FINAL : public nsISupports,
                                       public nsWrapperCache
 {
   friend class DOMSVGTransform;
@@ -41,7 +40,6 @@ class DOMSVGTransformList MOZ_FINAL : public nsIDOMSVGTransformList,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTransformList)
-  NS_DECL_NSIDOMSVGTRANSFORMLIST
 
   DOMSVGTransformList(DOMSVGAnimatedTransformList *aAList,
                       const SVGTransformList &aInternalList)
