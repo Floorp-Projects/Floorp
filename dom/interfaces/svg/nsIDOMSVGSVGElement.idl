@@ -11,7 +11,6 @@ interface nsIDOMSVGViewSpec;
 interface nsIDOMSVGPoint;
 interface nsIDOMSVGNumber;
 interface nsIDOMSVGLength;
-interface nsIDOMSVGAngle;
 interface nsIDOMSVGMatrix;
 interface nsIDOMSVGTransform;
 
@@ -76,7 +75,8 @@ interface nsIDOMSVGSVGElement
   void          deSelectAll();
   nsIDOMSVGNumber       createSVGNumber();
   nsIDOMSVGLength       createSVGLength();
-  nsIDOMSVGAngle        createSVGAngle();
+  // SVGAngle
+  nsISupports           createSVGAngle();
   nsIDOMSVGPoint        createSVGPoint();
   nsIDOMSVGMatrix       createSVGMatrix();
   nsIDOMSVGRect         createSVGRect();

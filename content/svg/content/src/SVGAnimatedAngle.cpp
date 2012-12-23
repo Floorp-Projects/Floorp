@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAnimatedAngle.h"
+#include "SVGAngle.h"
 #include "nsSVGAngle.h"
 #include "mozilla/dom/SVGAnimatedAngleBinding.h"
 
@@ -15,13 +16,9 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedAngle, mSVGElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedAngle)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedAngle)
 
-DOMCI_DATA(SVGAnimatedAngle, SVGAnimatedAngle)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedAngle)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedAngle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedAngle)
 NS_INTERFACE_MAP_END
 
 JSObject*

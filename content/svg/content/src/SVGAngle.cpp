@@ -15,13 +15,10 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAngle, mSVGElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAngle)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAngle)
 
-DOMCI_DATA(SVGAngle, SVGAngle)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAngle)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAngle)
+  NS_INTERFACE_MAP_ENTRY(SVGAngle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAngle)
 NS_INTERFACE_MAP_END
 
 JSObject*
@@ -81,15 +78,6 @@ SVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv)
   }
 }
 
-NS_IMETHODIMP
-SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
-                                 float valueInSpecifiedUnits)
-{
-  ErrorResult rv;
-  NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, rv);
-  return rv.ErrorCode();
-}
-
 void
 SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
                                  float valueInSpecifiedUnits,
@@ -101,14 +89,6 @@ SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
   }
   rv = mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
                                     mType == BaseValue ? mSVGElement : nullptr);
-}
-
-NS_IMETHODIMP
-SVGAngle::ConvertToSpecifiedUnits(uint16_t unitType)
-{
-  ErrorResult rv;
-  ConvertToSpecifiedUnits(unitType, rv);
-  return rv.ErrorCode();
 }
 
 void
@@ -132,7 +112,7 @@ SVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv)
   rv = mVal->SetBaseValueString(aValue, isBaseVal ? mSVGElement : nullptr, isBaseVal);
 }
 
-NS_IMETHODIMP
+void
 SVGAngle::GetValueAsString(nsAString& aValue)
 {
   if (mType == AnimValue) {
@@ -140,6 +120,5 @@ SVGAngle::GetValueAsString(nsAString& aValue)
   } else {
     mVal->GetBaseValueString(aValue);
   }
-  return NS_OK;
 }
 

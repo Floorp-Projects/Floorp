@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "nsIDOMSVGAnimatedAngle.h"
 #include "nsWrapperCache.h"
 #include "nsSVGElement.h"
 #include "SVGAngle.h"
@@ -16,7 +15,7 @@ class nsSVGAngle;
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedAngle MOZ_FINAL : public nsIDOMSVGAnimatedAngle,
+class SVGAnimatedAngle MOZ_FINAL : public nsISupports,
                                    public nsWrapperCache
 {
 public:
@@ -30,10 +29,10 @@ public:
   }
   ~SVGAnimatedAngle();
 
-  NS_IMETHOD GetBaseVal(nsIDOMSVGAngle **aBaseVal)
+  NS_IMETHOD GetBaseVal(nsISupports **aBaseVal)
     { *aBaseVal = BaseVal().get(); return NS_OK; }
 
-  NS_IMETHOD GetAnimVal(nsIDOMSVGAngle **aAnimVal)
+  NS_IMETHOD GetAnimVal(nsISupports **aAnimVal)
     { *aAnimVal = AnimVal().get(); return NS_OK; }
 
   // WebIDL
