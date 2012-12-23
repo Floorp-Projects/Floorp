@@ -277,3 +277,11 @@
    fun:_ZN2js6ctypes10StructTypeL6CreateEP9JSContextjPN2JS5ValueE
    ...
 }
+{
+   Bug 824323
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_ZN7mozilla3dom7workers13WorkerPrivate9DoRunLoopEP9JSContext
+   ...
+}
