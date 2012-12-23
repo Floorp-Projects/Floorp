@@ -40,7 +40,6 @@ class nsIDOMSVGNumberList;
 class nsIDOMSVGPathSeg;
 class nsIDOMSVGPathSegList;
 class nsIDOMSVGPoint;
-class nsIDOMSVGPointList;
 class nsIDOMSVGStringList;
 class nsIDOMSVGTests;
 class nsIDOMSVGTransform;

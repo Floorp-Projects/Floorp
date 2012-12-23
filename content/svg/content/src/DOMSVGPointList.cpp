@@ -57,15 +57,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGPointList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGPointList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGPointList, mozilla::DOMSVGPointList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPointList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPointList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPointList)
 NS_INTERFACE_MAP_END
 
 
@@ -171,13 +165,6 @@ DOMSVGPointList::InternalAList() const
 // ----------------------------------------------------------------------------
 // nsIDOMSVGPointList implementation:
 
-NS_IMETHODIMP
-DOMSVGPointList::GetNumberOfItems(uint32_t *aNumberOfItems)
-{
-  *aNumberOfItems = NumberOfItems();
-  return NS_OK;
-}
-
 void
 DOMSVGPointList::Clear(ErrorResult& aError)
 {
@@ -211,14 +198,6 @@ DOMSVGPointList::Clear(ErrorResult& aError)
   }
 }
 
-NS_IMETHODIMP
-DOMSVGPointList::Clear()
-{
-  ErrorResult rv;
-  Clear(rv);
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsISVGPoint>
 DOMSVGPointList::Initialize(nsISVGPoint& aNewItem, ErrorResult& aError)
 {
@@ -244,22 +223,10 @@ DOMSVGPointList::Initialize(nsISVGPoint& aNewItem, ErrorResult& aError)
     domItem = domItem->Clone(); // must do this before changing anything!
   }
 
-  Clear();
-  return InsertItemBefore(*domItem, 0, aError);
-}
-
-NS_IMETHODIMP
-DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem,
-                            nsIDOMSVGPoint **_retval)
-{
-  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
   ErrorResult rv;
-  *_retval = Initialize(*domItem, rv).get();
-  return rv.ErrorCode();
+  Clear(rv);
+  MOZ_ASSERT(!rv.Failed());
+  return InsertItemBefore(*domItem, 0, aError);
 }
 
 nsISVGPoint*
@@ -275,15 +242,6 @@ DOMSVGPointList::IndexedGetter(uint32_t aIndex, bool& aFound,
     return mItems[aIndex];
   }
   return nullptr;
-}
-
-NS_IMETHODIMP
-DOMSVGPointList::GetItem(uint32_t aIndex,
-                         nsIDOMSVGPoint **_retval)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*_retval = GetItem(aIndex, rv));
-  return rv.ErrorCode();
 }
 
 already_AddRefed<nsISVGPoint>
@@ -338,21 +296,6 @@ DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
   return domItem.forget();
 }
 
-NS_IMETHODIMP
-DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
-                                  uint32_t aIndex,
-                                  nsIDOMSVGPoint **_retval)
-{
-  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = InsertItemBefore(*domItem, aIndex, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsISVGPoint>
 DOMSVGPointList::ReplaceItem(nsISVGPoint& aNewItem, uint32_t aIndex,
                              ErrorResult& aError)
@@ -397,21 +340,6 @@ DOMSVGPointList::ReplaceItem(nsISVGPoint& aNewItem, uint32_t aIndex,
   return domItem.forget();
 }
 
-NS_IMETHODIMP
-DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
-                             uint32_t aIndex,
-                             nsIDOMSVGPoint **_retval)
-{
-  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = ReplaceItem(*domItem, aIndex, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsISVGPoint>
 DOMSVGPointList::RemoveItem(uint32_t aIndex, ErrorResult& aError)
 {
@@ -449,36 +377,6 @@ DOMSVGPointList::RemoveItem(uint32_t aIndex, ErrorResult& aError)
     Element()->AnimationNeedsResample();
   }
   return result.forget();
-}
-
-NS_IMETHODIMP
-DOMSVGPointList::RemoveItem(uint32_t aIndex,
-                            nsIDOMSVGPoint **_retval)
-{
-  ErrorResult rv;
-  *_retval = RemoveItem(aIndex, rv).get();
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-DOMSVGPointList::AppendItem(nsIDOMSVGPoint *aNewItem,
-                            nsIDOMSVGPoint **_retval)
-{
-  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = AppendItem(*domItem, rv).get();
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-DOMSVGPointList::GetLength(uint32_t *aLength)
-{
-  *aLength = LengthNoFlush();
-  return NS_OK;
 }
 
 void
