@@ -140,29 +140,29 @@ public:
     return LengthNoFlush();
   }
   void Clear(ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPoint> Initialize(nsIDOMSVGPoint *aNewItem,
-                                              ErrorResult& aError);
-  nsIDOMSVGPoint* GetItem(uint32_t aIndex, ErrorResult& aError)
+  already_AddRefed<DOMSVGPoint> Initialize(DOMSVGPoint& aNewItem,
+                                           ErrorResult& aError);
+  DOMSVGPoint* GetItem(uint32_t aIndex, ErrorResult& aError)
   {
     bool found;
-    nsIDOMSVGPoint* item = IndexedGetter(aIndex, found, aError);
+    DOMSVGPoint* item = IndexedGetter(aIndex, found, aError);
     if (!found) {
       aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     }
     return item;
   }
-  nsIDOMSVGPoint* IndexedGetter(uint32_t aIndex, bool& aFound,
-                                ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPoint> InsertItemBefore(nsIDOMSVGPoint *aNewItem,
-                                                     uint32_t aIndex,
-                                                     ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPoint> ReplaceItem(nsIDOMSVGPoint *aNewItem,
-                                               uint32_t aIndex,
-                                               ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPoint> RemoveItem(uint32_t aIndex,
-                                              ErrorResult& aError);
-  already_AddRefed<nsIDOMSVGPoint> AppendItem(nsIDOMSVGPoint *aNewItem,
-                                              ErrorResult& aError)
+  DOMSVGPoint* IndexedGetter(uint32_t aIndex, bool& aFound,
+                             ErrorResult& aError);
+  already_AddRefed<DOMSVGPoint> InsertItemBefore(DOMSVGPoint& aNewItem,
+                                                 uint32_t aIndex,
+                                                 ErrorResult& aError);
+  already_AddRefed<DOMSVGPoint> ReplaceItem(DOMSVGPoint& aNewItem,
+                                            uint32_t aIndex,
+                                            ErrorResult& aError);
+  already_AddRefed<DOMSVGPoint> RemoveItem(uint32_t aIndex,
+                                           ErrorResult& aError);
+  already_AddRefed<DOMSVGPoint> AppendItem(DOMSVGPoint& aNewItem,
+                                           ErrorResult& aError)
   {
     return InsertItemBefore(aNewItem, LengthNoFlush(), aError);
   }
