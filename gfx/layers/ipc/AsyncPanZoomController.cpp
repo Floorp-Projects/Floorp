@@ -992,12 +992,12 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   const gfx3DMatrix& currentTransform = aLayer->GetTransform();
 
   // Scales on the root layer, on what's currently painted.
-  float rootScaleX = currentTransform.GetXScale(),
-        rootScaleY = currentTransform.GetYScale();
+  gfxSize rootScale(currentTransform.GetXScale(),
+                    currentTransform.GetYScale());
 
-  gfx::Point metricsScrollOffset(0, 0);
-  gfx::Point scrollOffset;
-  float localScaleX, localScaleY;
+  gfxPoint metricsScrollOffset(0, 0);
+  gfxPoint scrollOffset;
+  gfxSize localScale;
   const FrameMetrics& frame = aLayer->GetFrameMetrics();
   {
     MonitorAutoLock mon(mMonitor);
@@ -1049,22 +1049,19 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     // what PZC has transformed due to touches like panning or
     // pinching. Eventually, the root layer transform will become this
     // during runtime, but we must wait for Gecko to repaint.
-    gfxSize localScale = CalculateResolution(mFrameMetrics);
-    localScaleX = localScale.width;
-    localScaleY = localScale.height;
+    localScale = CalculateResolution(mFrameMetrics);
 
     if (frame.IsScrollable()) {
       metricsScrollOffset = frame.GetScrollOffsetInLayerPixels();
     }
 
-    scrollOffset = mFrameMetrics.mScrollOffset;
+    scrollOffset = gfxPoint(mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y);
   }
 
   nsIntPoint scrollCompensation(
-    NS_lround((scrollOffset.x / rootScaleX - metricsScrollOffset.x) * localScaleX),
-    NS_lround((scrollOffset.y / rootScaleY - metricsScrollOffset.y) * localScaleY));
-
-  *aNewTransform = ViewTransform(-scrollCompensation, localScaleX, localScaleY);
+    ((scrollOffset / rootScale - metricsScrollOffset) * localScale)
+    .RoundedAwayFromZero());
+  *aNewTransform = ViewTransform(-scrollCompensation, localScale);
 
   mLastSampleTime = aSampleTime;
 
