@@ -257,7 +257,6 @@ DOMCI_CLASS(SVGViewElement)
 // other SVG classes
 DOMCI_CLASS(SVGAngle)
 DOMCI_CLASS(SVGAnimatedAngle)
-DOMCI_CLASS(SVGAnimatedBoolean)
 DOMCI_CLASS(SVGAnimatedEnumeration)
 DOMCI_CLASS(SVGAnimatedInteger)
 DOMCI_CLASS(SVGAnimatedLength)
