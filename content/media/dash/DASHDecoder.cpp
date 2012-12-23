@@ -393,12 +393,12 @@ DASHDecoder::CreateRepDecoders()
 
   // For each audio/video stream, create a |ChannelMediaResource| object.
 
-  for (int i = 0; i < mMPDManager->GetNumAdaptationSets(); i++) {
+  for (uint32_t i = 0; i < mMPDManager->GetNumAdaptationSets(); i++) {
     IMPDManager::AdaptationSetType asType = mMPDManager->GetAdaptationSetType(i);
     if (asType == IMPDManager::DASH_VIDEO_STREAM) {
       mVideoAdaptSetIdx = i;
     }
-    for (int j = 0; j < mMPDManager->GetNumRepresentations(i); j++) {
+    for (uint32_t j = 0; j < mMPDManager->GetNumRepresentations(i); j++) {
       // Get URL string.
       nsAutoString segmentUrl;
       nsresult rv = mMPDManager->GetFirstSegmentUrl(i, j, segmentUrl);
@@ -704,7 +704,7 @@ DASHDecoder::NotifyDownloadEnded(DASHRepDecoder* aRepDecoder,
       // Do Stream Switching here before loading next bytes.
       // Audio stream switching not supported.
       if (aRepDecoder == VideoRepDecoder() &&
-          mVideoSubsegmentIdx < VideoRepDecoder()->GetNumDataByteRanges()) {
+          (uint32_t)mVideoSubsegmentIdx < VideoRepDecoder()->GetNumDataByteRanges()) {
         nsresult rv = PossiblySwitchDecoder(aRepDecoder);
         if (NS_FAILED(rv)) {
           LOG("Failed possibly switching decoder rv[0x%x]", rv);
@@ -961,7 +961,7 @@ DASHDecoder::PossiblySwitchDecoder(DASHRepDecoder* aRepDecoder)
                  NS_ERROR_ILLEGAL_VALUE);
 
   // Notify reader and sub decoders and do the switch.
-  if (toDecoderIdx != mVideoRepDecoderIdx) {
+  if (toDecoderIdx != (uint32_t)mVideoRepDecoderIdx) {
     LOG("*** Switching video decoder from [%d] [%p] to [%d] [%p] at "
         "subsegment [%d]", mVideoRepDecoderIdx, VideoRepDecoder(),
         toDecoderIdx, mVideoRepDecoders[toDecoderIdx].get(),
