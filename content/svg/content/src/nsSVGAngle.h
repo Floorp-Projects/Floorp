@@ -23,12 +23,14 @@ class nsSVGOrientType;
 namespace mozilla {
 namespace dom {
 class SVGAngle;
+class SVGAnimatedAngle;
 }
 }
 
 class nsSVGAngle
 {
   friend class mozilla::dom::SVGAngle;
+  friend class mozilla::dom::SVGAnimatedAngle;
 
 public:
   void Init(uint8_t aAttrEnum = 0xff,
@@ -68,41 +70,22 @@ public:
   static float GetDegreesPerUnit(uint8_t aUnit);
 
 private:
-  
+
   float mAnimVal;
   float mBaseVal;
   uint8_t mAnimValUnit;
   uint8_t mBaseValUnit;
   uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
-  
+
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
-  nsresult ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
+  nsresult ToDOMBaseVal(mozilla::dom::SVGAngle **aResult, nsSVGElement* aSVGElement);
+  nsresult ToDOMAnimVal(mozilla::dom::SVGAngle **aResult, nsSVGElement* aSVGElement);
 
 public:
-  struct DOMAnimatedAngle MOZ_FINAL : public nsIDOMSVGAnimatedAngle
-  {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedAngle)
-
-    DOMAnimatedAngle(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
-    virtual ~DOMAnimatedAngle();
-    
-    nsSVGAngle* mVal; // kept alive because it belongs to content
-    nsRefPtr<nsSVGElement> mSVGElement;
-
-    NS_IMETHOD GetBaseVal(nsIDOMSVGAngle **aBaseVal)
-      { return mVal->ToDOMBaseVal(aBaseVal, mSVGElement); }
-
-    NS_IMETHOD GetAnimVal(nsIDOMSVGAngle **aAnimVal)
-      { return mVal->ToDOMAnimVal(aAnimVal, mSVGElement); }
-  };
-
   // We do not currently implemente a SMILAngle struct because in SVG 1.1 the
   // only *animatable* attribute that takes an <angle> is 'orient', on the
   // 'marker' element, and 'orient' must be special cased since it can also
