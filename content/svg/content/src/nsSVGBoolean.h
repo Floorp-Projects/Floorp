@@ -9,7 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsIDOMSVGAnimatedBoolean.h"
 #include "nsISMILAttr.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGElement.h"
@@ -39,7 +38,7 @@ public:
   bool GetAnimValue() const
     { return mAnimVal; }
 
-  nsresult ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
+  nsresult ToDOMAnimatedBoolean(nsISupports **aResult,
                                 nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);

@@ -107,7 +107,7 @@ nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement *aSVGElement)
 }
 
 nsresult
-nsSVGBoolean::ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
+nsSVGBoolean::ToDOMAnimatedBoolean(nsISupports **aResult,
                                    nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
