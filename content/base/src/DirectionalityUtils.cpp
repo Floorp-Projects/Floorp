@@ -363,6 +363,9 @@ WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
                                        nsINode* aStartAfterNode = nullptr)
 {
   MOZ_ASSERT(aElement, "aElement is null");
+  if (DoesNotParticipateInAutoDirection(aElement)) {
+    return nullptr;
+  }
 
   nsIContent* child;
   if (aStartAfterNode &&
