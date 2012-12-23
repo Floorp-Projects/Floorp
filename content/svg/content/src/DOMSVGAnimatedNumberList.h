@@ -9,7 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsSVGElement.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
@@ -35,7 +34,7 @@ class SVGNumberList;
  * out our pointers to them when they die (making our pointers to them true
  * weak refs).
  */
-class DOMSVGAnimatedNumberList MOZ_FINAL : public nsIDOMSVGAnimatedNumberList,
+class DOMSVGAnimatedNumberList MOZ_FINAL : public nsISupports,
                                            public nsWrapperCache
 {
   friend class DOMSVGNumberList;
@@ -43,7 +42,6 @@ class DOMSVGAnimatedNumberList MOZ_FINAL : public nsIDOMSVGAnimatedNumberList,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedNumberList)
-  NS_DECL_NSIDOMSVGANIMATEDNUMBERLIST
 
   /**
    * Factory method to create and return a DOMSVGAnimatedNumberList wrapper
@@ -108,7 +106,9 @@ private:
     , mAnimVal(nullptr)
     , mElement(aElement)
     , mAttrEnum(aAttrEnum)
-  {}
+  {
+    SetIsDOMBinding();
+  }
 
   ~DOMSVGAnimatedNumberList();
 
