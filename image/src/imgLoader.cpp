@@ -25,7 +25,6 @@
 #include "nsContentUtils.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsNetUtil.h"
-#include "nsMimeTypes.h"
 #include "nsStreamUtils.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
@@ -958,7 +957,7 @@ void imgLoader::ReadAcceptHeaderPref()
   if (accept)
     mAcceptHeader = accept;
   else
-    mAcceptHeader = IMAGE_PNG "," IMAGE_WILDCARD ";q=0.8," ANY_WILDCARD ";q=0.5";
+    mAcceptHeader = "image/png,image/*;q=0.8,*/*;q=0.5";
 }
 
 /* void clearCache (in boolean chrome); */
@@ -1992,7 +1991,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
   if (aLength >= 6 && (!nsCRT::strncmp(aContents, "GIF87a", 6) ||
                        !nsCRT::strncmp(aContents, "GIF89a", 6)))
   {
-    aContentType.AssignLiteral(IMAGE_GIF);
+    aContentType.AssignLiteral("image/gif");
   }
 
   /* or a PNG? */
@@ -2005,7 +2004,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
                    (unsigned char)aContents[6]==0x1A &&
                    (unsigned char)aContents[7]==0x0A))
   { 
-    aContentType.AssignLiteral(IMAGE_PNG);
+    aContentType.AssignLiteral("image/png");
   }
 
   /* maybe a JPEG (JFIF)? */
@@ -2020,7 +2019,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
      ((unsigned char)aContents[1])==0xD8 &&
      ((unsigned char)aContents[2])==0xFF)
   {
-    aContentType.AssignLiteral(IMAGE_JPEG);
+    aContentType.AssignLiteral("image/jpeg");
   }
 
   /* or how about ART? */
@@ -2032,18 +2031,18 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
    ((unsigned char) aContents[1])==0x47 &&
    ((unsigned char) aContents[4])==0x00 )
   {
-    aContentType.AssignLiteral(IMAGE_ART);
+    aContentType.AssignLiteral("image/x-jg");
   }
 
   else if (aLength >= 2 && !nsCRT::strncmp(aContents, "BM", 2)) {
-    aContentType.AssignLiteral(IMAGE_BMP);
+    aContentType.AssignLiteral("image/bmp");
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
   // CURs begin with 2-byte 0 followed by 2-byte 2.
   else if (aLength >= 4 && (!memcmp(aContents, "\000\000\001\000", 4) ||
                             !memcmp(aContents, "\000\000\002\000", 4))) {
-    aContentType.AssignLiteral(IMAGE_ICO);
+    aContentType.AssignLiteral("image/x-icon");
   }
 
   else {
