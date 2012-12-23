@@ -22,6 +22,7 @@ class nsIDOMSVGPoint;
 namespace mozilla {
 
 class DOMSVGPoint;
+class nsISVGPoint;
 class SVGAnimatedPointList;
 
 /**
@@ -140,28 +141,28 @@ public:
     return LengthNoFlush();
   }
   void Clear(ErrorResult& aError);
-  already_AddRefed<DOMSVGPoint> Initialize(DOMSVGPoint& aNewItem,
+  already_AddRefed<nsISVGPoint> Initialize(nsISVGPoint& aNewItem,
                                            ErrorResult& aError);
-  DOMSVGPoint* GetItem(uint32_t aIndex, ErrorResult& aError)
+  nsISVGPoint* GetItem(uint32_t aIndex, ErrorResult& aError)
   {
     bool found;
-    DOMSVGPoint* item = IndexedGetter(aIndex, found, aError);
+    nsISVGPoint* item = IndexedGetter(aIndex, found, aError);
     if (!found) {
       aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     }
     return item;
   }
-  DOMSVGPoint* IndexedGetter(uint32_t aIndex, bool& aFound,
+  nsISVGPoint* IndexedGetter(uint32_t aIndex, bool& aFound,
                              ErrorResult& aError);
-  already_AddRefed<DOMSVGPoint> InsertItemBefore(DOMSVGPoint& aNewItem,
+  already_AddRefed<nsISVGPoint> InsertItemBefore(nsISVGPoint& aNewItem,
                                                  uint32_t aIndex,
                                                  ErrorResult& aError);
-  already_AddRefed<DOMSVGPoint> ReplaceItem(DOMSVGPoint& aNewItem,
+  already_AddRefed<nsISVGPoint> ReplaceItem(nsISVGPoint& aNewItem,
                                             uint32_t aIndex,
                                             ErrorResult& aError);
-  already_AddRefed<DOMSVGPoint> RemoveItem(uint32_t aIndex,
+  already_AddRefed<nsISVGPoint> RemoveItem(uint32_t aIndex,
                                            ErrorResult& aError);
-  already_AddRefed<DOMSVGPoint> AppendItem(DOMSVGPoint& aNewItem,
+  already_AddRefed<nsISVGPoint> AppendItem(nsISVGPoint& aNewItem,
                                            ErrorResult& aError)
   {
     return InsertItemBefore(aNewItem, LengthNoFlush(), aError);

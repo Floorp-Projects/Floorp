@@ -219,8 +219,8 @@ DOMSVGPointList::Clear()
   return rv.ErrorCode();
 }
 
-already_AddRefed<DOMSVGPoint>
-DOMSVGPointList::Initialize(DOMSVGPoint& aNewItem, ErrorResult& aError)
+already_AddRefed<nsISVGPoint>
+DOMSVGPointList::Initialize(nsISVGPoint& aNewItem, ErrorResult& aError)
 {
   if (IsAnimValList()) {
     aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -235,13 +235,17 @@ DOMSVGPointList::Initialize(DOMSVGPoint& aNewItem, ErrorResult& aError)
   // clone of aNewItem, it would actually insert aNewItem. To prevent that
   // from happening we have to do the clone here, if necessary.
 
-  nsRefPtr<DOMSVGPoint> newItem = &aNewItem;
-  if (aNewItem.HasOwner() || aNewItem.IsReadonly()) {
-    newItem = aNewItem.Clone();
+  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(&aNewItem);
+  if (!domItem) {
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
+  }
+  if (domItem->HasOwner() || domItem->IsReadonly()) {
+    domItem = domItem->Clone(); // must do this before changing anything!
   }
 
   Clear();
-  return InsertItemBefore(*newItem, 0, aError);
+  return InsertItemBefore(*domItem, 0, aError);
 }
 
 NS_IMETHODIMP
@@ -258,7 +262,7 @@ DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem,
   return rv.ErrorCode();
 }
 
-DOMSVGPoint*
+nsISVGPoint*
 DOMSVGPointList::IndexedGetter(uint32_t aIndex, bool& aFound,
                                ErrorResult& aError)
 {
@@ -282,8 +286,8 @@ DOMSVGPointList::GetItem(uint32_t aIndex,
   return rv.ErrorCode();
 }
 
-already_AddRefed<DOMSVGPoint>
-DOMSVGPointList::InsertItemBefore(DOMSVGPoint& aNewItem, uint32_t aIndex,
+already_AddRefed<nsISVGPoint>
+DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
                                   ErrorResult& aError)
 {
   if (IsAnimValList()) {
@@ -297,9 +301,13 @@ DOMSVGPointList::InsertItemBefore(DOMSVGPoint& aNewItem, uint32_t aIndex,
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGPoint> domItem = &aNewItem;
-  if (aNewItem.HasOwner() || aNewItem.IsReadonly()) {
-    domItem = aNewItem.Clone(); // must do this before changing anything!
+  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(&aNewItem);
+  if (!domItem) {
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
+  }
+  if (domItem->HasOwner() || domItem->IsReadonly()) {
+    domItem = domItem->Clone(); // must do this before changing anything!
   }
 
   // Ensure we have enough memory so we can avoid complex error handling below:
@@ -345,8 +353,8 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
   return rv.ErrorCode();
 }
 
-already_AddRefed<DOMSVGPoint>
-DOMSVGPointList::ReplaceItem(DOMSVGPoint& aNewItem, uint32_t aIndex,
+already_AddRefed<nsISVGPoint>
+DOMSVGPointList::ReplaceItem(nsISVGPoint& aNewItem, uint32_t aIndex,
                              ErrorResult& aError)
 {
   if (IsAnimValList()) {
@@ -359,9 +367,13 @@ DOMSVGPointList::ReplaceItem(DOMSVGPoint& aNewItem, uint32_t aIndex,
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGPoint> domItem = &aNewItem;
-  if (aNewItem.HasOwner() || aNewItem.IsReadonly()) {
-    domItem = aNewItem.Clone(); // must do this before changing anything!
+  nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(&aNewItem);
+  if (!domItem) {
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
+  }
+  if (domItem->HasOwner() || domItem->IsReadonly()) {
+    domItem = domItem->Clone(); // must do this before changing anything!
   }
 
   nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
@@ -400,7 +412,7 @@ DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
   return rv.ErrorCode();
 }
 
-already_AddRefed<DOMSVGPoint>
+already_AddRefed<nsISVGPoint>
 DOMSVGPointList::RemoveItem(uint32_t aIndex, ErrorResult& aError)
 {
   if (IsAnimValList()) {

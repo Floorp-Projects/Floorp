@@ -41,13 +41,27 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal, mElement)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGTranslatePoint::DOMVal)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGTranslatePoint::DOMVal)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGTranslatePoint::DOMVal)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsSVGTranslatePoint::DOMVal)
+NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGTranslatePoint::DOMVal)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGTranslatePoint::DOMVal)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPoint)
+  NS_INTERFACE_MAP_ENTRY(nsISVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPoint)
 NS_INTERFACE_MAP_END
@@ -56,36 +70,78 @@ nsresult
 nsSVGTranslatePoint::ToDOMVal(nsSVGSVGElement *aElement,
                               nsIDOMSVGPoint **aResult)
 {
-  *aResult = new DOMVal(this, aElement);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(*aResult);
+  NS_ADDREF(*aResult = new DOMVal(this, aElement));
+  return NS_OK;
+}
+
+nsISupports*
+nsSVGTranslatePoint::DOMVal::GetParentObject()
+{
+  return static_cast<nsIDOMSVGSVGElement*>(mElement);
+}
+
+NS_IMETHODIMP
+nsSVGTranslatePoint::DOMVal::GetX(float* aX)
+{
+  *aX = X();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::SetX(float aValue)
+nsSVGTranslatePoint::DOMVal::GetY(float* aY)
 {
-  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
-  return mElement->SetCurrentTranslate(aValue, mVal->GetY());
+  *aY = Y();
+  return NS_OK;
+}
+
+void
+nsSVGTranslatePoint::DOMVal::SetX(float aValue, ErrorResult& rv)
+{
+  rv = mElement->SetCurrentTranslate(aValue, mVal->GetY());
 }
 
 NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::SetY(float aValue)
+nsSVGTranslatePoint::DOMVal::SetX(float aX)
 {
-  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
-  return mElement->SetCurrentTranslate(mVal->GetX(), aValue);
+  if (!NS_finite(aX)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  ErrorResult rv;
+  SetX(aX, rv);
+  return rv.ErrorCode();
 }
 
-/* nsIDOMSVGPoint matrixTransform (in nsIDOMSVGMatrix matrix); */
+void
+nsSVGTranslatePoint::DOMVal::SetY(float aValue, ErrorResult& rv)
+{
+  rv = mElement->SetCurrentTranslate(mVal->GetX(), aValue);
+}
+
+NS_IMETHODIMP
+nsSVGTranslatePoint::DOMVal::SetY(float aY)
+{
+  if (!NS_finite(aY)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  ErrorResult rv;
+  SetY(aY, rv);
+  return rv.ErrorCode();
+}
+
 NS_IMETHODIMP
 nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix,
                                              nsIDOMSVGPoint **_retval)
 {
-  if (!matrix)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  *_retval = MatrixTransform(matrix).get();
+  return NS_OK;
+}
 
+/* nsIDOMSVGPoint matrixTransform (in nsIDOMSVGMatrix matrix); */
+already_AddRefed<nsISVGPoint>
+nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix)
+{
   float a, b, c, d, e, f;
   matrix->GetA(&a);
   matrix->GetB(&b);
@@ -97,8 +153,8 @@ nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix,
   float x = mVal->GetX();
   float y = mVal->GetY();
 
-  NS_ADDREF(*_retval = new DOMSVGPoint(a*x + c*y + e, b*x + d*y + f));
-  return NS_OK;
+  nsCOMPtr<nsISVGPoint> point = new DOMSVGPoint(a*x + c*y + e, b*x + d*y + f);
+  return point.forget();
 }
 
 nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
