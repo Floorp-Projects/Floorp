@@ -6,11 +6,9 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMSVGPointList;
-
 [scriptable, uuid(ebf334b3-86ef-4bf3-8a92-d775c72defa4)]
 interface nsIDOMSVGAnimatedPoints : nsISupports
 {
-  readonly attribute nsIDOMSVGPointList   points;
-  readonly attribute nsIDOMSVGPointList   animatedPoints;
+  readonly attribute nsISupports points;
+  readonly attribute nsISupports animatedPoints;
 };
