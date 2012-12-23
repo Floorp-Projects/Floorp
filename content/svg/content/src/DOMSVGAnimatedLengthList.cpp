@@ -23,15 +23,9 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedLengthList, mElemen
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedLengthList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGAnimatedLengthList, mozilla::DOMSVGAnimatedLengthList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedLengthList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedLengthList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedLengthList)
 NS_INTERFACE_MAP_END
 
 JSObject*
@@ -58,20 +52,6 @@ DOMSVGAnimatedLengthList::AnimVal()
   }
   nsRefPtr<DOMSVGLengthList> animVal = mAnimVal;
   return animVal.forget();
-}
-
-NS_IMETHODIMP
-DOMSVGAnimatedLengthList::GetBaseVal(nsIDOMSVGLengthList **_retval)
-{
-  *_retval = BaseVal().get();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMSVGAnimatedLengthList::GetAnimVal(nsIDOMSVGLengthList **_retval)
-{
-  *_retval = AnimVal().get();
-  return NS_OK;
 }
 
 /* static */ already_AddRefed<DOMSVGAnimatedLengthList>
