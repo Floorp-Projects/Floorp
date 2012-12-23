@@ -244,9 +244,9 @@ nsSVGTextElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, float *_
   return NS_OK;
 }
 
-/* nsIDOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
+/* DOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
 NS_IMETHODIMP
-nsSVGTextElement::GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
+nsSVGTextElement::GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -256,9 +256,9 @@ nsSVGTextElement::GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_ret
   return metrics->GetStartPositionOfChar(charnum, _retval);
 }
 
-/* nsIDOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
+/* DOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
 NS_IMETHODIMP
-nsSVGTextElement::GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
+nsSVGTextElement::GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -293,19 +293,20 @@ nsSVGTextElement::GetRotationOfChar(uint32_t charnum, float *_retval)
   return metrics->GetRotationOfChar(charnum, _retval);
 }
 
-/* long getCharNumAtPosition (in nsIDOMSVGPoint point); */
+/* long getCharNumAtPosition (in DOMSVGPoint point); */
 NS_IMETHODIMP
-nsSVGTextElement::GetCharNumAtPosition(nsIDOMSVGPoint *point, int32_t *_retval)
+nsSVGTextElement::GetCharNumAtPosition(nsISupports *point, int32_t *_retval)
 {
-  nsCOMPtr<DOMSVGPoint> p = do_QueryInterface(point);
-  if (!p)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
   *_retval = -1;
+
+  nsCOMPtr<DOMSVGPoint> domPoint = do_QueryInterface(point);
+  if (!domPoint) {
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
 
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
   if (metrics)
-    *_retval = metrics->GetCharNumAtPosition(point);
+    *_retval = metrics->GetCharNumAtPosition(domPoint);
 
   return NS_OK;
 }

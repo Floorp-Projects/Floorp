@@ -6,7 +6,6 @@
 #include "nsIDOMSVGElement.idl"
 
 interface nsIDOMSVGAnimatedNumber;
-interface nsIDOMSVGPoint;
 
 [scriptable, uuid(89AF3EAE-1703-461A-A2E0-86D2131C11AC)]
 interface nsIDOMSVGPathElement
@@ -31,7 +30,8 @@ interface nsIDOMSVGPathElement
   readonly attribute nsIDOMSVGAnimatedNumber pathLength;
   
   float          getTotalLength();
-  nsIDOMSVGPoint getPointAtLength(in float distance);
+  // SVGPoint
+  nsISupports getPointAtLength(in float distance);
   unsigned long  getPathSegAtLength(in float distance);
 
   // SVGPathSegClosePath

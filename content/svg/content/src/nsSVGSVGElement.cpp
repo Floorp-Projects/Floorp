@@ -49,15 +49,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGTranslatePoint::DOMVal)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPoint)
 NS_INTERFACE_MAP_END
 
 nsresult
 nsSVGTranslatePoint::ToDOMVal(nsSVGSVGElement *aElement,
-                              nsIDOMSVGPoint **aResult)
+                              nsISupports **aResult)
 {
   NS_ADDREF(*aResult = new DOMVal(this, aElement));
   return NS_OK;
@@ -69,68 +67,16 @@ nsSVGTranslatePoint::DOMVal::GetParentObject()
   return static_cast<nsIDOMSVGSVGElement*>(mElement);
 }
 
-NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::GetX(float* aX)
-{
-  *aX = X();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::GetY(float* aY)
-{
-  *aY = Y();
-  return NS_OK;
-}
-
 void
 nsSVGTranslatePoint::DOMVal::SetX(float aValue, ErrorResult& rv)
 {
   rv = mElement->SetCurrentTranslate(aValue, mVal->GetY());
 }
 
-NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::SetX(float aX)
-{
-  if (!NS_finite(aX)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  ErrorResult rv;
-  SetX(aX, rv);
-  return rv.ErrorCode();
-}
-
 void
 nsSVGTranslatePoint::DOMVal::SetY(float aValue, ErrorResult& rv)
 {
   rv = mElement->SetCurrentTranslate(mVal->GetX(), aValue);
-}
-
-NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::SetY(float aY)
-{
-  if (!NS_finite(aY)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  ErrorResult rv;
-  SetY(aY, rv);
-  return rv.ErrorCode();
-}
-
-/* nsIDOMSVGPoint matrixTransform (in DOMSVGMatrix matrix); */
-NS_IMETHODIMP
-nsSVGTranslatePoint::DOMVal::MatrixTransform(nsISupports *matrix,
-                                             nsIDOMSVGPoint **_retval)
-{
-  nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);
-  if (!domMatrix) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  *_retval = MatrixTransform(*domMatrix).get();
-  return NS_OK;
 }
 
 already_AddRefed<nsISVGPoint>
@@ -347,9 +293,9 @@ nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
     mCurrentTranslate.GetX(), mCurrentTranslate.GetY());
 }
 
-/* readonly attribute nsIDOMSVGPoint currentTranslate; */
+/* readonly attribute DOMSVGPoint currentTranslate; */
 NS_IMETHODIMP
-nsSVGSVGElement::GetCurrentTranslate(nsIDOMSVGPoint * *aCurrentTranslate)
+nsSVGSVGElement::GetCurrentTranslate(nsISupports * *aCurrentTranslate)
 {
   return mCurrentTranslate.ToDOMVal(this, aCurrentTranslate);
 }
@@ -572,9 +518,9 @@ nsSVGSVGElement::CreateSVGAngle(nsISupports **_retval)
   return NS_OK;
 }
 
-/* nsIDOMSVGPoint createSVGPoint (); */
+/* DOMSVGPoint createSVGPoint (); */
 NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGPoint(nsIDOMSVGPoint **_retval)
+nsSVGSVGElement::CreateSVGPoint(nsISupports **_retval)
 {
   NS_ADDREF(*_retval = new DOMSVGPoint(0, 0));
   return NS_OK;

@@ -53,7 +53,7 @@ public:
   float GetY() const
     { return mY; }
 
-  nsresult ToDOMVal(nsSVGSVGElement *aElement, nsIDOMSVGPoint **aResult);
+  nsresult ToDOMVal(nsSVGSVGElement *aElement, nsISupports **aResult);
 
   bool operator!=(const nsSVGTranslatePoint &rhs) const {
     return mX != rhs.mX || mY != rhs.mY;
@@ -67,7 +67,6 @@ private:
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMVal)
-    NS_DECL_NSIDOMSVGPOINT
 
     // WebIDL
     virtual float X() { return mVal->GetX(); }
