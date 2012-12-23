@@ -41,7 +41,6 @@
 #include "gfxMatrix.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
@@ -59,14 +58,13 @@ namespace mozilla {
 /**
  * DOM wrapper for an SVG matrix.
  */
-class DOMSVGMatrix MOZ_FINAL : public nsIDOMSVGMatrix,
+class DOMSVGMatrix MOZ_FINAL : public nsISupports,
                                public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGMATRIX_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGMatrix)
-  NS_DECL_NSIDOMSVGMATRIX
 
   /**
    * Ctor for DOMSVGMatrix objects that belong to a DOMSVGTransform.

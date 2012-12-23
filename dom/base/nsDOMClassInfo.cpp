@@ -351,7 +351,6 @@
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGMarkerElement.h"
 #include "nsIDOMSVGMaskElement.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGMetadataElement.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGNumberList.h"
@@ -1238,8 +1237,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLengthList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGMatrix, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGNumber, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3523,10 +3520,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGLengthList, nsIDOMSVGLengthList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLengthList)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGMatrix, nsIDOMSVGMatrix)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGMatrix)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGNumber, nsIDOMSVGNumber)

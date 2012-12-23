@@ -5,7 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMSVGMatrix;
 
 [scriptable, uuid(45f18f8f-1315-4447-a7d5-8aeca77bdcaf)]
 interface nsIDOMSVGPoint : nsISupports
@@ -15,5 +14,6 @@ interface nsIDOMSVGPoint : nsISupports
   attribute float y;
       // raises DOMException on setting
 
-  nsIDOMSVGPoint matrixTransform(in nsIDOMSVGMatrix matrix);
+  //                                SVGMatrix
+  nsIDOMSVGPoint matrixTransform(in nsISupports matrix);
 };
