@@ -71,6 +71,7 @@ webidl_files = \
   SVGAngle.webidl \
   SVGAnimatedAngle.webidl \
   SVGAnimatedBoolean.webidl \
+  SVGAnimatedLengthList.webidl \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
