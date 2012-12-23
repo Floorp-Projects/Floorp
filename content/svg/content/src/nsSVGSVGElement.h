@@ -17,6 +17,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
+#include "SVGPreserveAspectRatio.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
 

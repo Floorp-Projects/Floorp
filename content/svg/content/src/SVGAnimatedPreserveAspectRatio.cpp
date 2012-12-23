@@ -13,45 +13,21 @@
 #include "nsAttrValueInlines.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////
 // SVGAnimatedPreserveAspectRatio class
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
-  SVGAnimatedPreserveAspectRatio::DOMBaseVal, mSVGElement)
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
-  SVGAnimatedPreserveAspectRatio::DOMAnimVal, mSVGElement)
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
   SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedPreserveAspectRatio::DOMBaseVal)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedPreserveAspectRatio::DOMBaseVal)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedPreserveAspectRatio::DOMAnimVal)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedPreserveAspectRatio::DOMAnimVal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(
   SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(
   SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
 
-DOMCI_DATA(SVGPreserveAspectRatio, SVGAnimatedPreserveAspectRatio::DOMBaseVal)
 DOMCI_DATA(SVGAnimatedPreserveAspectRatio,
            SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
-  SVGAnimatedPreserveAspectRatio::DOMBaseVal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPreserveAspectRatio)
-NS_INTERFACE_MAP_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
-  SVGAnimatedPreserveAspectRatio::DOMAnimVal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPreserveAspectRatio)
-NS_INTERFACE_MAP_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
   SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
@@ -70,9 +46,9 @@ static const char *sMeetOrSliceStrings[] = { "meet", "slice" };
 
 static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio>
   sSVGAnimatedPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, SVGAnimatedPreserveAspectRatio::DOMBaseVal>
+static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, DOMSVGPreserveAspectRatio>
   sBaseSVGPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, SVGAnimatedPreserveAspectRatio::DOMAnimVal>
+static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio, DOMSVGPreserveAspectRatio>
   sAnimSVGPAspectRatioTearoffTable;
 
 static uint16_t
@@ -125,23 +101,15 @@ GetMeetOrSliceString(nsAString& aMeetOrSliceString, uint16_t aMeetOrSlice)
                         nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET]);
 }
 
-bool
-SVGPreserveAspectRatio::operator==(const SVGPreserveAspectRatio& aOther) const
-{
-  return mAlign == aOther.mAlign &&
-    mMeetOrSlice == aOther.mMeetOrSlice &&
-    mDefer == aOther.mDefer;
-}
-
 nsresult
 SVGAnimatedPreserveAspectRatio::ToDOMBaseVal(
   nsIDOMSVGPreserveAspectRatio **aResult,
   nsSVGElement *aSVGElement)
 {
-  nsRefPtr<DOMBaseVal> domBaseVal =
+  nsRefPtr<DOMSVGPreserveAspectRatio> domBaseVal =
     sBaseSVGPAspectRatioTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
-    domBaseVal = new DOMBaseVal(this, aSVGElement);
+    domBaseVal = new DOMSVGPreserveAspectRatio(this, aSVGElement, true);
     sBaseSVGPAspectRatioTearoffTable.AddTearoff(this, domBaseVal);
   }
 
@@ -149,9 +117,13 @@ SVGAnimatedPreserveAspectRatio::ToDOMBaseVal(
   return NS_OK;
 }
 
-SVGAnimatedPreserveAspectRatio::DOMBaseVal::~DOMBaseVal()
+DOMSVGPreserveAspectRatio::~DOMSVGPreserveAspectRatio()
 {
-  sBaseSVGPAspectRatioTearoffTable.RemoveTearoff(mVal);
+  if (mIsBaseValue) {
+    sBaseSVGPAspectRatioTearoffTable.RemoveTearoff(mVal);
+  } else {
+    sAnimSVGPAspectRatioTearoffTable.RemoveTearoff(mVal);
+  }
 }
 
 nsresult
@@ -159,20 +131,15 @@ SVGAnimatedPreserveAspectRatio::ToDOMAnimVal(
   nsIDOMSVGPreserveAspectRatio **aResult,
   nsSVGElement *aSVGElement)
 {
-  nsRefPtr<DOMAnimVal> domAnimVal =
+  nsRefPtr<DOMSVGPreserveAspectRatio> domAnimVal =
     sAnimSVGPAspectRatioTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
-    domAnimVal = new DOMAnimVal(this, aSVGElement);
+    domAnimVal = new DOMSVGPreserveAspectRatio(this, aSVGElement, true);
     sAnimSVGPAspectRatioTearoffTable.AddTearoff(this, domAnimVal);
   }
 
   domAnimVal.forget(aResult);
   return NS_OK;
-}
-
-SVGAnimatedPreserveAspectRatio::DOMAnimVal::~DOMAnimVal()
-{
-  sAnimSVGPAspectRatioTearoffTable.RemoveTearoff(mVal);
 }
 
 static nsresult
