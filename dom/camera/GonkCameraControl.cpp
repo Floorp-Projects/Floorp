@@ -616,6 +616,9 @@ nsGonkCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStrea
   // stop any currently running preview
   StopPreviewInternal(true /* forced */);
 
+  // remove any existing recorder profile
+  mRecorderProfile = nullptr;
+
   SetPreviewSize(aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height);
   DOM_CAMERA_LOGI("picture preview: wanted %d x %d, got %d x %d (%d fps, format %d)\n", aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height, mWidth, mHeight, mFps, mFormat);
 
@@ -851,8 +854,8 @@ nsGonkCameraControl::PullParametersImpl()
 nsresult
 nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
 {
-  mStartRecordingOnSuccessCb = aStartRecording->mOnSuccessCb;
-  mStartRecordingOnErrorCb = aStartRecording->mOnErrorCb;
+  NS_ENSURE_TRUE(mRecorderProfile, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_FALSE(mRecorder, NS_ERROR_FAILURE);
 
   /**
    * Get the base path from device storage and append the app-specified
@@ -921,6 +924,9 @@ private:
 nsresult
 nsGonkCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
 {
+  // nothing to do if we have no mRecorder
+  NS_ENSURE_TRUE(mRecorder, NS_OK);
+
   mRecorder->stop();
   delete mRecorder;
   mRecorder = nullptr;
