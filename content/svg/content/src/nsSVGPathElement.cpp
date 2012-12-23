@@ -75,9 +75,9 @@ nsSVGPathElement::GetTotalLength(float *_retval)
   return NS_OK;
 }
 
-/* nsIDOMSVGPoint getPointAtLength (in float distance); */
+/* DOMSVGPoint getPointAtLength (in float distance); */
 NS_IMETHODIMP
-nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
+nsSVGPathElement::GetPointAtLength(float distance, nsISupports **_retval)
 {
   NS_ENSURE_FINITE(distance, NS_ERROR_ILLEGAL_VALUE);
 
