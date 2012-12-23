@@ -15,7 +15,6 @@
  */
 
 interface nsIDOMSVGAnimatedEnumeration;
-interface nsIDOMSVGAnimatedTransformList;
 
 [scriptable, uuid(5056512E-2ACE-4B68-8F52-124E24CF0F55)]
 interface nsIDOMSVGGradientElement
@@ -38,7 +37,8 @@ interface nsIDOMSVGGradientElement
   const unsigned short SVG_SPREADMETHOD_REPEAT  = 3;
 
   readonly attribute nsIDOMSVGAnimatedEnumeration gradientUnits;
-  readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform;
+  // SVGAnimatedTransformList
+  readonly attribute nsISupports                  gradientTransform;
   readonly attribute nsIDOMSVGAnimatedEnumeration spreadMethod;
 };
 

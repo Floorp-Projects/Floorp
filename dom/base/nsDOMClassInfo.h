@@ -41,7 +41,6 @@ class nsIDOMSVGPoint;
 class nsIDOMSVGStringList;
 class nsIDOMSVGTests;
 class nsIDOMSVGTransform;
-class nsIDOMSVGTransformList;
 class nsIDOMWindow;
 class nsIForm;
 class nsIHTMLDocument;
