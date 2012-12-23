@@ -9,6 +9,7 @@
 #include "nsSVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
+#include "mozilla/dom/SVGAnimatedNumberListBinding.h"
 
 // See the architecture comment in this file's header.
 
@@ -17,7 +18,21 @@ namespace mozilla {
 static nsSVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>
   sSVGAnimatedNumberListTearoffTable;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGAnimatedNumberList, mElement)
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGAnimatedNumberList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGAnimatedNumberList)
+// No unlinking mElement, we'd need to null out the value pointer (the object it
+// points to is held by the element) and null-check it everywhere.
+NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGAnimatedNumberList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGAnimatedNumberList)
+NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedNumberList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedNumberList)
@@ -27,28 +42,51 @@ DOMCI_DATA(SVGAnimatedNumberList, mozilla::DOMSVGAnimatedNumberList)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedNumberList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedNumberList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedNumberList)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-DOMSVGAnimatedNumberList::GetBaseVal(nsIDOMSVGNumberList **_retval)
+JSObject*
+DOMSVGAnimatedNumberList::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return mozilla::dom::SVGAnimatedNumberListBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+already_AddRefed<DOMSVGNumberList>
+DOMSVGAnimatedNumberList::BaseVal()
 {
   if (!mBaseVal) {
     mBaseVal = new DOMSVGNumberList(this, InternalAList().GetBaseValue());
   }
-  NS_ADDREF(*_retval = mBaseVal);
+  nsRefPtr<DOMSVGNumberList> baseVal = mBaseVal;
+  return baseVal.forget();
+}
+
+/* readonly attribute nsIDOMSVGNumberList baseVal; */
+NS_IMETHODIMP
+DOMSVGAnimatedNumberList::GetBaseVal(nsIDOMSVGNumberList** aBaseVal)
+{
+  *aBaseVal = BaseVal().get();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DOMSVGAnimatedNumberList::GetAnimVal(nsIDOMSVGNumberList **_retval)
+already_AddRefed<DOMSVGNumberList>
+DOMSVGAnimatedNumberList::AnimVal()
 {
   if (!mAnimVal) {
     mAnimVal = new DOMSVGNumberList(this, InternalAList().GetAnimValue());
   }
-  NS_ADDREF(*_retval = mAnimVal);
+  nsRefPtr<DOMSVGNumberList> animVal = mAnimVal;
+  return animVal.forget();
+}
+
+/* readonly attribute nsIDOMSVGNumberList animVal; */
+NS_IMETHODIMP
+DOMSVGAnimatedNumberList::GetAnimVal(nsIDOMSVGNumberList** aAnimVal)
+{
+  *aAnimVal = AnimVal().get();
   return NS_OK;
 }
 
