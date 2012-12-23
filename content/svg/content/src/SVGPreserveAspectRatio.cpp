@@ -12,6 +12,8 @@ using namespace dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPreserveAspectRatio)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPreserveAspectRatio)
+// No unlinking mElement, we'd need to null out the value pointer (the object it
+// points to is held by the element) and null-check it everywhere.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
