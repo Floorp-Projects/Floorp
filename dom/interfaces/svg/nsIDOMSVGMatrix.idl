@@ -5,9 +5,9 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(ec2da3ef-5a99-49ed-aaef-b5af916c14ac)]
+[scriptable, builtinclass, uuid(ec2da3ef-5a99-49ed-aaef-b5af916c14ac)]
 interface nsIDOMSVGMatrix : nsISupports
-{ 
+{
   attribute float a;
       // raises DOMException on setting
   attribute float b;
