@@ -37,6 +37,10 @@ class nsSVGSVGElement;
 class nsSVGViewBox;
 
 namespace mozilla {
+namespace dom {
+class CSSValue;
+}
+
 class SVGAnimatedNumberList;
 class SVGNumberList;
 class SVGAnimatedLengthList;
@@ -294,7 +298,15 @@ public:
     return nullptr;
   }
 
+  // WebIDL
+  nsSVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
+  already_AddRefed<nsSVGElement> GetViewportElement();
+  already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
+  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& rv);
+  already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
 protected:
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
 #ifdef DEBUG
   // We define BeforeSetAttr here and mark it MOZ_FINAL to ensure it is NOT used
   // by SVG elements.

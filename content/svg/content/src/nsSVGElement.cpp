@@ -59,6 +59,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsSMILAnimationController.h"
 #include "nsDOMCSSDeclaration.h"
+#include "mozilla/dom/SVGElementBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -81,26 +82,42 @@ nsSVGElement::nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
 }
 
+JSObject*
+nsSVGElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
 //----------------------------------------------------------------------
 
 /* readonly attribute nsIDOMSVGAnimatedString className; */
 NS_IMETHODIMP
 nsSVGElement::GetClassName(nsIDOMSVGAnimatedString** aClassName)
 {
-  return mClassAttribute.ToDOMAnimatedString(aClassName, this);
+  *aClassName = ClassName().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMCSSStyleDeclaration style; */
 NS_IMETHODIMP
 nsSVGElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  nsresult rv;
-  *aStyle = nsSVGElementBase::GetStyle(&rv);
-  if (NS_FAILED(rv)) {
-    return rv;
+  ErrorResult rv;
+  NS_ADDREF(*aStyle = GetStyle(rv));
+  return rv.ErrorCode();
+}
+
+nsICSSDeclaration*
+nsSVGElement::GetStyle(ErrorResult& rv)
+{
+  nsresult res;
+  nsICSSDeclaration* style = nsSVGElementBase::GetStyle(&res);
+  if (NS_FAILED(res)) {
+    rv.Throw(res);
+    return nullptr;
   }
-  NS_ADDREF(*aStyle);
-  return NS_OK;
+
+  return style;
 }
 
 /* nsIDOMCSSValue getPresentationAttribute (in DOMString name); */
@@ -113,6 +130,13 @@ nsSVGElement::GetPresentationAttribute(const nsAString& aName,
   // http://lists.w3.org/Archives/Public/www-style/2003Oct/0347.html
 
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+already_AddRefed<CSSValue>
+nsSVGElement::GetPresentationAttribute(const nsAString& aName, ErrorResult& rv)
+{
+  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
 }
 
 //----------------------------------------------------------------------
@@ -1127,22 +1151,50 @@ NS_IMETHODIMP nsSVGElement::SetId(const nsAString & aId)
 NS_IMETHODIMP
 nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 {
-  NS_IF_ADDREF(*aOwnerSVGElement = GetCtx());
+  ErrorResult rv;
+  NS_IF_ADDREF(*aOwnerSVGElement = GetOwnerSVGElement(rv));
+  return rv.ErrorCode();
+}
 
-  if (*aOwnerSVGElement || Tag() == nsGkAtoms::svg) {
-    // If we found something or we're the outermost SVG element, that's OK.
-    return NS_OK;
+nsSVGSVGElement*
+nsSVGElement::GetOwnerSVGElement(ErrorResult& rv)
+{
+  nsSVGSVGElement* ownerSVGElement = GetCtx();
+
+  // If we didn't find anything and we're not the outermost SVG element,
+  // we've got an invalid structure
+  if (!ownerSVGElement && Tag() != nsGkAtoms::svg) {
+    rv.Throw(NS_ERROR_FAILURE);
   }
-  // Otherwise, we've got an invalid structure
-  return NS_ERROR_FAILURE;
+
+  return ownerSVGElement;
 }
 
 /* readonly attribute nsIDOMSVGElement viewportElement; */
 NS_IMETHODIMP
 nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 {
-  *aViewportElement = SVGContentUtils::GetNearestViewportElement(this).get();
+  nsCOMPtr<nsSVGElement> elem = GetViewportElement();
+  nsCOMPtr<nsIDOMSVGElement> svgElem = do_QueryInterface(elem);
+  svgElem.forget(aViewportElement);
   return NS_OK;
+}
+
+already_AddRefed<nsSVGElement>
+nsSVGElement::GetViewportElement()
+{
+  nsCOMPtr<nsIDOMSVGElement> elem =
+    SVGContentUtils::GetNearestViewportElement(this);
+  nsCOMPtr<nsSVGElement> svgElem = do_QueryInterface(elem);
+  return svgElem.forget();
+}
+
+already_AddRefed<nsIDOMSVGAnimatedString>
+nsSVGElement::ClassName()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> className;
+  mClassAttribute.ToDOMAnimatedString(getter_AddRefs(className), this);
+  return className.forget();
 }
 
 //------------------------------------------------------------------------
