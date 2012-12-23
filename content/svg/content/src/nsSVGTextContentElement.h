@@ -8,10 +8,10 @@
 
 #include "DOMSVGTests.h"
 #include "nsIDOMSVGTextContentElement.h"
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGTextContainerFrame.h"
 
-typedef nsSVGElement nsSVGTextContentElementBase;
+typedef nsSVGStylableElement nsSVGTextContentElementBase;
 
 /**
  * Note that nsSVGTextElement does not inherit nsSVGTextPositioningElement, or

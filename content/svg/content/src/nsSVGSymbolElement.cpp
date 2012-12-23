@@ -7,14 +7,14 @@
 
 #include "nsIDOMSVGSymbolElement.h"
 #include "DOMSVGTests.h"
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsGkAtoms.h"
 
 using namespace mozilla;
-typedef nsSVGElement nsSVGSymbolElementBase;
+typedef nsSVGStylableElement nsSVGSymbolElementBase;
 
 class nsSVGSymbolElement : public nsSVGSymbolElementBase,
                            public nsIDOMSVGSymbolElement,

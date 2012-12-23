@@ -10,7 +10,7 @@
 #include "nsIDOMSVGGradientElement.h"
 #include "DOMSVGTests.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
@@ -18,7 +18,7 @@
 
 //--------------------- Gradients------------------------
 
-typedef nsSVGElement nsSVGGradientElementBase;
+typedef nsSVGStylableElement nsSVGGradientElementBase;
 
 class nsSVGGradientElement : public nsSVGGradientElementBase,
                              public DOMSVGTests,
