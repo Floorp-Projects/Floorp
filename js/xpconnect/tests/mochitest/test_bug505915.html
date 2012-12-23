@@ -26,8 +26,10 @@ function go() {
         document.createTreeWalker(ifr.contentDocument, 0, null, false);
         ok(false, "should have thrown a security exception");
     } catch (e) {
-        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
-           "threw a security exception instead of an invalid child exception");
+        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e) ||
+           /TypeError: Value does not implement interface Node/.test(e),
+           "threw a security exception or binding exception instead of an " +
+           "invalid child exception");
     }
 
     SimpleTest.finish();

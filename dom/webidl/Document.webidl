@@ -411,6 +411,8 @@ partial interface Document {
   // nsIDOMDocumentTouch
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
+  // XXXbz commented out for now because quickstubs can't do pref-ability
+  /*
   [SetterThrows, Pref="dom.w3c_touch_events.expose"]
   attribute EventHandler ontouchstart;
   [SetterThrows, Pref="dom.w3c_touch_events.expose"]
@@ -445,6 +447,7 @@ partial interface Document {
   TouchList createTouchList(Touch touch);
   [Creator, Pref="dom.w3c_touch_events.expose"]
   TouchList createTouchList(sequence<Touch> touches);
+  */
 };
 
 Document implements XPathEvaluator;
