@@ -40,7 +40,6 @@ class nsIDOMSVGNumberList;
 class nsIDOMSVGPoint;
 class nsIDOMSVGStringList;
 class nsIDOMSVGTests;
-class nsIDOMSVGTransform;
 class nsIDOMWindow;
 class nsIForm;
 class nsIHTMLDocument;

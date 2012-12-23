@@ -9,9 +9,17 @@
 
 #include "gfxMatrix.h"
 #include "nsDebug.h"
-#include "nsIDOMSVGTransform.h"
 
 namespace mozilla {
+
+// Transform Types
+static const unsigned short SVG_TRANSFORM_UNKNOWN = 0;
+static const unsigned short SVG_TRANSFORM_MATRIX = 1;
+static const unsigned short SVG_TRANSFORM_TRANSLATE = 2;
+static const unsigned short SVG_TRANSFORM_SCALE = 3;
+static const unsigned short SVG_TRANSFORM_ROTATE = 4;
+static const unsigned short SVG_TRANSFORM_SKEWX = 5;
+static const unsigned short SVG_TRANSFORM_SKEWY = 6;
 
 /*
  * The DOM wrapper class for this class is DOMSVGTransformMatrix.
@@ -25,7 +33,7 @@ public:
     , mAngle(0.f)
     , mOriginX(0.f)
     , mOriginY(0.f)
-    , mType(nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX)
+    , mType(SVG_TRANSFORM_MATRIX)
   { }
 
   SVGTransform(const gfxMatrix& aMatrix)
@@ -33,7 +41,7 @@ public:
     , mAngle(0.f)
     , mOriginX(0.f)
     , mOriginY(0.f)
-    , mType(nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX)
+    , mType(SVG_TRANSFORM_MATRIX)
   { }
 
   bool operator==(const SVGTransform& rhs) const {
@@ -118,8 +126,8 @@ public:
   explicit SVGTransformSMILData(uint16_t aType)
   : mTransformType(aType)
   {
-    NS_ABORT_IF_FALSE(aType >= nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX &&
-                      aType <= nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY,
+    NS_ABORT_IF_FALSE(aType >= SVG_TRANSFORM_MATRIX &&
+                      aType <= SVG_TRANSFORM_SKEWY,
                       "Unexpected transform type");
     for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
       mParams[i] = 0.f;
@@ -129,8 +137,8 @@ public:
   SVGTransformSMILData(uint16_t aType, float (&aParams)[NUM_SIMPLE_PARAMS])
   : mTransformType(aType)
   {
-    NS_ABORT_IF_FALSE(aType >= nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE &&
-                      aType <= nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY,
+    NS_ABORT_IF_FALSE(aType >= SVG_TRANSFORM_TRANSLATE &&
+                      aType <= SVG_TRANSFORM_SKEWY,
                       "Expected 'simple' transform type");
     for (uint32_t i = 0; i < NUM_SIMPLE_PARAMS; ++i) {
       mParams[i] = aParams[i];

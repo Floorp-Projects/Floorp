@@ -595,18 +595,18 @@ nsSVGSVGElement::CreateSVGRect(nsIDOMSVGRect **_retval)
   return NS_NewSVGRect(_retval);
 }
 
-/* nsIDOMSVGTransform createSVGTransform (); */
+/* DOMSVGTransform createSVGTransform (); */
 NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGTransform(nsIDOMSVGTransform **_retval)
+nsSVGSVGElement::CreateSVGTransform(nsISupports **_retval)
 {
   NS_ADDREF(*_retval = new DOMSVGTransform());
   return NS_OK;
 }
 
-/* nsIDOMSVGTransform createSVGTransformFromMatrix (in nsIDOMSVGMatrix matrix); */
+/* DOMSVGTransform createSVGTransformFromMatrix (in nsIDOMSVGMatrix matrix); */
 NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix, 
-                                              nsIDOMSVGTransform **_retval)
+nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
+                                              nsISupports **_retval)
 {
   nsCOMPtr<DOMSVGMatrix> domItem = do_QueryInterface(matrix);
   if (!domItem) {

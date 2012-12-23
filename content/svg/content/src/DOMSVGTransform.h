@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsID.h"
-#include "nsIDOMSVGTransform.h"
 #include "nsTArray.h"
 #include "SVGTransform.h"
 #include "nsWrapperCache.h"
@@ -40,14 +39,13 @@ class DOMSVGMatrix;
 /**
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
-class DOMSVGTransform MOZ_FINAL : public nsIDOMSVGTransform,
+class DOMSVGTransform MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGTRANSFORM_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTransform)
-  NS_DECL_NSIDOMSVGTRANSFORM
 
   /**
    * Generic ctor for DOMSVGTransform objects that are created for an attribute.
