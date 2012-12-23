@@ -22,7 +22,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedInteger.idl \
 		nsIDOMSVGAnimatedLength.idl \
-		nsIDOMSVGAnimatedLengthList.idl \
 		nsIDOMSVGAnimatedNumber.idl \
 		nsIDOMSVGAnimatedPathData.idl \
 		nsIDOMSVGAnimatedPoints.idl \
@@ -48,7 +47,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGGradientElement.idl \
 		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \
-		nsIDOMSVGLengthList.idl \
 		nsIDOMSVGLineElement.idl \
 		nsIDOMSVGLocatable.idl \
 		nsIDOMSVGMarkerElement.idl \

@@ -21,7 +21,6 @@
 #endif
 
 namespace mozilla {
-class DOMSVGLengthList;
 class DOMSVGNumberList;
 class DOMSVGPathSegList;
 class DOMSVGPointList;
@@ -34,7 +33,6 @@ class nsGlobalWindow;
 class nsICanvasRenderingContextInternal;
 class nsIDOMHTMLOptionsCollection;
 class nsIDOMSVGLength;
-class nsIDOMSVGLengthList;
 class nsIDOMSVGNumber;
 class nsIDOMSVGNumberList;
 class nsIDOMSVGStringList;

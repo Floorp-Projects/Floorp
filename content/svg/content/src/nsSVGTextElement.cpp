@@ -133,36 +133,36 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTextElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGTextPositioningElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedLengthList x; */
+/* readonly attribute DOMSVGAnimatedLengthList x; */
 NS_IMETHODIMP
-nsSVGTextElement::GetX(nsIDOMSVGAnimatedLengthList * *aX)
+nsSVGTextElement::GetX(nsISupports * *aX)
 {
   *aX = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[X],
                                                 this, X, SVGContentUtils::X).get();
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLengthList y; */
+/* readonly attribute DOMSVGAnimatedLengthList y; */
 NS_IMETHODIMP
-nsSVGTextElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
+nsSVGTextElement::GetY(nsISupports * *aY)
 {
   *aY = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[Y],
                                                 this, Y, SVGContentUtils::Y).get();
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLengthList dx; */
+/* readonly attribute DOMSVGAnimatedLengthList dx; */
 NS_IMETHODIMP
-nsSVGTextElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
+nsSVGTextElement::GetDx(nsISupports * *aDx)
 {
   *aDx = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DX],
                                                  this, DX, SVGContentUtils::X).get();
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLengthList dy; */
+/* readonly attribute DOMSVGAnimatedLengthList dy; */
 NS_IMETHODIMP
-nsSVGTextElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
+nsSVGTextElement::GetDy(nsISupports * *aDy)
 {
   *aDy = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DY],
                                                  this, DY, SVGContentUtils::Y).get();
