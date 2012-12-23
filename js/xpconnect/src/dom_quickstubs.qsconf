@@ -420,7 +420,8 @@ customIncludes = [
     'nsICSSDeclaration.h',
     'mozilla/dom/NodeBinding.h',
     'mozilla/dom/ElementBinding.h',
-    'mozilla/dom/HTMLElementBinding.h'
+    'mozilla/dom/HTMLElementBinding.h',
+    'mozilla/dom/SVGElementBinding.h'
     ]
 
 customReturnInterfaces = [
@@ -595,5 +596,6 @@ customMethodCalls = {
 newBindingProperties = {
     'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular'
+    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular'
     }
