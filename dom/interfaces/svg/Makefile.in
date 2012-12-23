@@ -36,7 +36,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimateMotionElement.idl \
 		nsIDOMSVGAnimateTransformElement.idl \
 		nsIDOMSVGAnimationElement.idl \
-		nsIDOMSVGAnimPresAspRatio.idl \
 		nsIDOMSVGAnimTransformList.idl \
 		nsIDOMSVGCircleElement.idl \
 		nsIDOMSVGClipPathElement.idl \
@@ -71,7 +70,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGPoint.idl \
 		nsIDOMSVGPolygonElement.idl \
 		nsIDOMSVGPolylineElement.idl \
-		nsIDOMSVGPresAspectRatio.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGRectElement.idl \
 		nsIDOMSVGScriptElement.idl \

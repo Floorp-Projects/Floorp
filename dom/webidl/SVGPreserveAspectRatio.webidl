@@ -30,7 +30,9 @@ interface SVGPreserveAspectRatio {
   const unsigned short SVG_MEETORSLICE_MEET = 1;
   const unsigned short SVG_MEETORSLICE_SLICE = 2;
 
+  [SetterThrows]
   attribute unsigned short align;
+  [SetterThrows]
   attribute unsigned short meetOrSlice;
 };
 

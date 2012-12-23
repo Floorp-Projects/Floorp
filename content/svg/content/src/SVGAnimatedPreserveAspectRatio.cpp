@@ -38,13 +38,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedPreserveAspectRatio)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedPreserveAspectRatio)
 
-DOMCI_DATA(SVGAnimatedPreserveAspectRatio, DOMSVGAnimatedPreserveAspectRatio)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedPreserveAspectRatio)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedPreserveAspectRatio)
 NS_INTERFACE_MAP_END
 
 JSObject*
@@ -73,24 +69,23 @@ GetAlignForString(const nsAString &aAlignString)
 {
   for (uint32_t i = 0 ; i < ArrayLength(sAlignStrings) ; i++) {
     if (aAlignString.EqualsASCII(sAlignStrings[i])) {
-      return (i + nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE);
+      return (i + SVG_PRESERVEASPECTRATIO_NONE);
     }
   }
 
-  return nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN;
+  return SVG_PRESERVEASPECTRATIO_UNKNOWN;
 }
 
 static void
 GetAlignString(nsAString& aAlignString, uint16_t aAlign)
 {
   NS_ASSERTION(
-    aAlign >= nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
-    aAlign <= nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX,
+    aAlign >= SVG_PRESERVEASPECTRATIO_NONE &&
+    aAlign <= SVG_PRESERVEASPECTRATIO_XMAXYMAX,
     "Unknown align");
 
   aAlignString.AssignASCII(
-    sAlignStrings[aAlign -
-                  nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE]);
+    sAlignStrings[aAlign - SVG_PRESERVEASPECTRATIO_NONE]);
 }
 
 static uint16_t
@@ -98,24 +93,23 @@ GetMeetOrSliceForString(const nsAString &aMeetOrSlice)
 {
   for (uint32_t i = 0 ; i < ArrayLength(sMeetOrSliceStrings) ; i++) {
     if (aMeetOrSlice.EqualsASCII(sMeetOrSliceStrings[i])) {
-      return (i + nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
+      return (i + SVG_MEETORSLICE_MEET);
     }
   }
 
-  return nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN;
+  return SVG_MEETORSLICE_UNKNOWN;
 }
 
 static void
 GetMeetOrSliceString(nsAString& aMeetOrSliceString, uint16_t aMeetOrSlice)
 {
   NS_ASSERTION(
-    aMeetOrSlice >= nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-    aMeetOrSlice <= nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE,
+    aMeetOrSlice >= SVG_MEETORSLICE_MEET &&
+    aMeetOrSlice <= SVG_MEETORSLICE_SLICE,
     "Unknown meetOrSlice");
 
   aMeetOrSliceString.AssignASCII(
-    sMeetOrSliceStrings[aMeetOrSlice -
-                        nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET]);
+    sMeetOrSliceStrings[aMeetOrSlice - SVG_MEETORSLICE_MEET]);
 }
 
 already_AddRefed<DOMSVGPreserveAspectRatio>
@@ -191,7 +185,7 @@ ToPreserveAspectRatio(const nsAString &aString,
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
   } else {
-    val.SetMeetOrSlice(nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
+    val.SetMeetOrSlice(SVG_MEETORSLICE_MEET);
   }
 
   if (tokenizer.hasMoreTokens()) {
@@ -247,8 +241,7 @@ SVGAnimatedPreserveAspectRatio::GetBaseValueString(
   GetAlignString(tmpString, mBaseVal.mAlign);
   aValueAsString.Append(tmpString);
 
-  if (mBaseVal.mAlign !=
-      nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE) {
+  if (mBaseVal.mAlign != SVG_PRESERVEASPECTRATIO_NONE) {
 
     aValueAsString.AppendLiteral(" ");
     GetMeetOrSliceString(tmpString, mBaseVal.mMeetOrSlice);
@@ -305,7 +298,7 @@ SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
 
 nsresult
 SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
-  nsIDOMSVGAnimatedPreserveAspectRatio **aResult,
+  nsISupports **aResult,
   nsSVGElement *aSVGElement)
 {
   nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> domAnimatedPAspectRatio =

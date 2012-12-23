@@ -325,7 +325,6 @@
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimatedString.h"
-#include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGAnimateElement.h"
 #include "nsIDOMSVGAnimateTransformElement.h"
 #include "nsIDOMSVGAnimateMotionElement.h"
@@ -367,7 +366,6 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGPolygonElement.h"
 #include "nsIDOMSVGPolylineElement.h"
-#include "nsIDOMSVGPresAspectRatio.h"
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsIDOMSVGScriptElement.h"
@@ -1245,8 +1243,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)    
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedNumberList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)    
-  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedPreserveAspectRatio, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedString, nsDOMGenericSH,
@@ -1306,8 +1302,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGPathSegMovetoRel, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPoint, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGPreserveAspectRatio, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3583,10 +3577,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedNumberList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedPreserveAspectRatio, nsIDOMSVGAnimatedPreserveAspectRatio)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPreserveAspectRatio)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedRect, nsIDOMSVGAnimatedRect)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedRect)
   DOM_CLASSINFO_MAP_END
@@ -3725,10 +3715,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGPoint, nsIDOMSVGPoint)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPoint)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGPreserveAspectRatio, nsIDOMSVGPreserveAspectRatio)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGRect, nsIDOMSVGRect)
