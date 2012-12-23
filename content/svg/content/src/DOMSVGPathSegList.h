@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsIDOMSVGPathSegList.h"
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "SVGPathData.h" // IWYU pragma: keep
@@ -47,7 +46,7 @@ class SVGAnimatedPathSegList;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGPathSegList MOZ_FINAL : public nsIDOMSVGPathSegList,
+class DOMSVGPathSegList MOZ_FINAL : public nsISupports,
                                     public nsWrapperCache
 {
   friend class DOMSVGPathSeg;
@@ -55,7 +54,6 @@ class DOMSVGPathSegList MOZ_FINAL : public nsIDOMSVGPathSegList,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGPathSegList)
-  NS_DECL_NSIDOMSVGPATHSEGLIST
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
