@@ -12,7 +12,6 @@ interface nsIDOMSVGAnimatedNumber;
 interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedNumberList;
 interface nsIDOMSVGAnimatedInteger;
-interface nsIDOMSVGAnimatedBoolean;
 
 [scriptable, uuid(117CFA4C-B0EB-4C0F-A590-F77FBF42E76D)]
 interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
@@ -218,7 +217,7 @@ interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAtt
     readonly attribute nsIDOMSVGAnimatedEnumeration edgeMode;
     readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthX;
     readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthY;
-    readonly attribute nsIDOMSVGAnimatedBoolean     preserveAlpha;
+    readonly attribute nsISupports                  preserveAlpha;
 };
 
 [scriptable, uuid(43662657-4DA9-4B64-8891-033B08DBD11B)]

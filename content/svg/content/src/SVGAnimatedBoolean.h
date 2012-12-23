@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "nsIDOMSVGAnimatedBoolean.h"
 #include "nsWrapperCache.h"
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
@@ -14,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedBoolean MOZ_FINAL : public nsIDOMSVGAnimatedBoolean,
+class SVGAnimatedBoolean MOZ_FINAL : public nsISupports,
                                      public nsWrapperCache
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -27,23 +26,11 @@ class SVGAnimatedBoolean MOZ_FINAL : public nsIDOMSVGAnimatedBoolean,
   }
   ~SVGAnimatedBoolean();
 
-  NS_IMETHOD GetBaseVal(bool* aResult)
-    { *aResult = BaseVal(); return NS_OK; }
-  NS_IMETHOD SetBaseVal(bool aValue)
-    { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
-
-  // Script may have modified animation parameters or timeline -- DOM getters
-  // need to flush any resample requests to reflect these modifications.
-  NS_IMETHOD GetAnimVal(bool* aResult)
-  {
-    *aResult = AnimVal();
-    return NS_OK;
-  }
-
-  // WebIDL
+ // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
   bool BaseVal() const { return mVal->GetBaseValue(); }
+  void SetBaseVal(bool aValue) { mVal->SetBaseValue(aValue, mSVGElement); }
   bool AnimVal() const { mSVGElement->FlushAnimations(); return mVal->GetAnimValue(); }
 
 protected:
