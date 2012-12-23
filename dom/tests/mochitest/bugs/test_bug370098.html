@@ -34,8 +34,8 @@ function test_constructor(dom_proto, shouldthrow) {
     }
     is(threw, shouldthrow, "Calling |new " + dom_proto + "()| should" + (shouldthrow ? " " : " not ") + "throw");
 }
-var dom_protos = [ "Document", "Element" ];
-var dom_constructors = [ "Image", "DOMParser", "XMLSerializer",
+var dom_protos = [ "Element" ];
+var dom_constructors = [ "Document", "Image", "DOMParser", "XMLSerializer",
   "XMLHttpRequest", "XPathEvaluator", "XSLTProcessor" ];
 dom_protos.forEach(
   function(p) { test_constructor(p, true); });
