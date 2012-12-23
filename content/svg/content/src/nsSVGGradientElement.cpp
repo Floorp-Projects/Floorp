@@ -11,7 +11,7 @@
 #include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsCOMPtr.h"
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGGradientElement.h"
 

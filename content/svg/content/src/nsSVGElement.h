@@ -20,7 +20,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
-#include "nsSVGClass.h"
 
 class nsIDOMSVGElement;
 class nsIDOMSVGSVGElement;
@@ -37,10 +36,6 @@ class nsSVGSVGElement;
 class nsSVGViewBox;
 
 namespace mozilla {
-namespace dom {
-class CSSValue;
-}
-
 class SVGAnimatedNumberList;
 class SVGNumberList;
 class SVGAnimatedLengthList;
@@ -78,9 +73,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  virtual const nsAttrValue* DoGetClasses() const;
-  void DidAnimateClass();
 
   // nsIContent interface methods
 
@@ -122,9 +114,6 @@ public:
   NS_IMETHOD SetId(const nsAString & aId);
   NS_IMETHOD GetOwnerSVGElement(nsIDOMSVGSVGElement** aOwnerSVGElement);
   NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
-  NS_IMETHOD GetClassName(nsIDOMSVGAnimatedString** aClassName);
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  NS_IMETHOD GetPresentationAttribute(const nsAString& aName, nsIDOMCSSValue** aReturn);
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
@@ -298,15 +287,7 @@ public:
     return nullptr;
   }
 
-  // WebIDL
-  nsSVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
-  already_AddRefed<nsSVGElement> GetViewportElement();
-  already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
-  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& rv);
-  already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
 protected:
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap);
-
 #ifdef DEBUG
   // We define BeforeSetAttr here and mark it MOZ_FINAL to ensure it is NOT used
   // by SVG elements.
@@ -616,8 +597,6 @@ private:
   void UnsetAttrInternal(int32_t aNameSpaceID, nsIAtom* aAttribute,
                          bool aNotify);
 
-  nsSVGClass mClassAttribute;
-  nsAutoPtr<nsAttrValue> mClassAnimAttr;
   nsRefPtr<mozilla::css::StyleRule> mContentStyleRule;
 };
 
