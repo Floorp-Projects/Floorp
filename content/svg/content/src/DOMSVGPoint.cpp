@@ -51,6 +51,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPoint)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(DOMSVGPoint) // pseudo-interface
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPoint)
+  NS_INTERFACE_MAP_ENTRY(nsISVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPoint)
 NS_INTERFACE_MAP_END
@@ -165,7 +166,7 @@ DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix,
   return NS_OK;
 }
 
-already_AddRefed<DOMSVGPoint>
+already_AddRefed<nsISVGPoint>
 DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix* matrix)
 {
   nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);
@@ -174,14 +175,8 @@ DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix* matrix)
   float y = HasOwner() ? InternalItem().mY : mPt.mY;
 
   gfxPoint pt = domMatrix->Matrix().Transform(gfxPoint(x, y));
-  nsRefPtr<DOMSVGPoint> newPoint = new DOMSVGPoint(pt);
+  nsCOMPtr<nsISVGPoint> newPoint = new DOMSVGPoint(pt);
   return newPoint.forget();
-}
-
-JSObject*
-DOMSVGPoint::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
-{
-  return mozilla::dom::SVGPointBinding::Wrap(cx, scope, this, triedToWrap);
 }
 
 void
