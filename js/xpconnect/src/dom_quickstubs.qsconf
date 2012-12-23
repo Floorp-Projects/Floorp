@@ -277,7 +277,8 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
-    'nsIDOMSVGStylable.*',
+    'nsIDOMSVGElement.className',
+    'nsIDOMSVGElement.style',
 
     # dom/interfaces/traversal
     'nsIDOMNodeIterator.nextNode',
@@ -377,7 +378,7 @@ customIncludes = [
     'nsGenericDOMDataNode.h',
     'mozilla/dom/Element.h',
     'nsGenericHTMLElement.h',
-    'nsSVGStylableElement.h',
+    'nsSVGElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
     'nsDOMStringMap.h',
@@ -469,10 +470,10 @@ customMethodCalls = {
                 '    nsIDOMCSSStyleDeclaration* result = '
                 'self->GetStyle(&rv);'
         },
-    'nsIDOMSVGStylable_GetStyle': {
-        'thisType': 'nsSVGStylableElement',
+    'nsIDOMSVGElement_GetStyle': {
+        'thisType': 'nsSVGElement',
         'code': '    nsICSSDeclaration* result = '
-                'self->GetStyle(&rv);'
+                'self->nsSVGElementBase::GetStyle(&rv);'
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',
