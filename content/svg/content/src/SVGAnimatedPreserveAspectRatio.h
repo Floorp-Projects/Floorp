@@ -9,8 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsIDOMSVGAnimPresAspRatio.h"
-#include "nsIDOMSVGPresAspectRatio.h"
 #include "nsISMILAttr.h"
 #include "nsSVGElement.h"
 #include "SVGPreserveAspectRatio.h"
@@ -25,8 +23,8 @@ class SVGAnimatedPreserveAspectRatio
 {
 public:
   void Init() {
-    mBaseVal.mAlign = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    mBaseVal.mMeetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
+    mBaseVal.mAlign = SVG_PRESERVEASPECTRATIO_XMIDYMID;
+    mBaseVal.mMeetOrSlice = SVG_MEETORSLICE_MEET;
     mBaseVal.mDefer = false;
     mAnimVal = mBaseVal;
     mIsAnimated = false;
@@ -41,8 +39,8 @@ public:
   void SetBaseValue(const SVGPreserveAspectRatio &aValue,
                     nsSVGElement *aSVGElement);
   nsresult SetBaseAlign(uint16_t aAlign, nsSVGElement *aSVGElement) {
-    if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
-        aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX) {
+    if (aAlign < SVG_PRESERVEASPECTRATIO_NONE ||
+        aAlign > SVG_PRESERVEASPECTRATIO_XMAXYMAX) {
       return NS_ERROR_FAILURE;
     }
     SetBaseValue(SVGPreserveAspectRatio(
@@ -51,8 +49,8 @@ public:
     return NS_OK;
   }
   nsresult SetBaseMeetOrSlice(uint16_t aMeetOrSlice, nsSVGElement *aSVGElement) {
-    if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
-        aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE) {
+    if (aMeetOrSlice < SVG_MEETORSLICE_MEET ||
+        aMeetOrSlice > SVG_MEETORSLICE_SLICE) {
       return NS_ERROR_FAILURE;
     }
     SetBaseValue(SVGPreserveAspectRatio(
@@ -72,7 +70,7 @@ public:
     { return mIsAnimated || mIsBaseSet; }
 
   nsresult ToDOMAnimatedPreserveAspectRatio(
-    nsIDOMSVGAnimatedPreserveAspectRatio **aResult,
+    nsISupports **aResult,
     nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
@@ -110,7 +108,7 @@ public:
 };
 
 namespace dom {
-class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsIDOMSVGAnimatedPreserveAspectRatio,
+class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
                                                     public nsWrapperCache
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -123,12 +121,6 @@ class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsIDOMSVGAnimatedPres
     SetIsDOMBinding();
   }
   ~DOMSVGAnimatedPreserveAspectRatio();
-
-  NS_IMETHOD GetBaseVal(nsIDOMSVGPreserveAspectRatio **aBaseVal)
-    { *aBaseVal = BaseVal().get(); return NS_OK; }
-
-  NS_IMETHOD GetAnimVal(nsIDOMSVGPreserveAspectRatio **aAnimVal)
-    { *aAnimVal = AnimVal().get(); return NS_OK; }
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }
