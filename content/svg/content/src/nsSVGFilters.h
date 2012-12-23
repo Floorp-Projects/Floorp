@@ -14,7 +14,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 class nsSVGFilterInstance;
@@ -30,7 +30,7 @@ struct nsSVGStringInfo {
   nsSVGElement* mElement;
 };
 
-typedef nsSVGStylableElement nsSVGFEBase;
+typedef nsSVGElement nsSVGFEBase;
 
 #define NS_SVG_FE_CID \
 { 0x60483958, 0xd229, 0x4a77, \

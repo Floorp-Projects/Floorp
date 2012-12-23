@@ -15,7 +15,7 @@
 #include "nsHTMLVideoElement.h"
 #include "nsHTMLDocument.h"
 #include "nsICSSDeclaration.h"
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/ElementBinding.h"
