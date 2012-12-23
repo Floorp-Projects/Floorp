@@ -37,6 +37,7 @@
 #include "nsSMILAnimationController.h"
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
+#include "SVGAngle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -565,7 +566,10 @@ nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 {
-  return NS_NewDOMSVGAngle(_retval);
+  nsSVGAngle* angle = new nsSVGAngle();
+  angle->Init();
+  NS_ADDREF(*_retval = new SVGAngle(angle, this, SVGAngle::CreatedValue));
+  return NS_OK;
 }
 
 /* nsIDOMSVGPoint createSVGPoint (); */

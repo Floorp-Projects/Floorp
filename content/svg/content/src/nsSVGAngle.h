@@ -13,15 +13,22 @@
 #include "nsIDOMSVGAnimatedAngle.h"
 #include "nsISMILAttr.h"
 #include "nsSVGElement.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
 class nsISMILAnimationElement;
 class nsSMILValue;
 class nsSVGOrientType;
 
+namespace mozilla {
+namespace dom {
+class SVGAngle;
+}
+}
+
 class nsSVGAngle
 {
-  friend class DOMSVGAngle;
+  friend class mozilla::dom::SVGAngle;
 
 public:
   void Init(uint8_t aAttrEnum = 0xff,
@@ -77,84 +84,6 @@ private:
   nsresult ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
 
 public:
-  struct DOMBaseVal MOZ_FINAL : public nsIDOMSVGAngle
-  {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
-
-    DOMBaseVal(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
-    virtual ~DOMBaseVal();
-    
-    nsSVGAngle* mVal; // kept alive because it belongs to mSVGElement
-    nsRefPtr<nsSVGElement> mSVGElement;
-    
-    NS_IMETHOD GetUnitType(uint16_t* aResult)
-      { *aResult = mVal->mBaseValUnit; return NS_OK; }
-
-    NS_IMETHOD GetValue(float* aResult)
-      { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetValue(float aValue)
-      { mVal->SetBaseValue(aValue, mSVGElement, true); return NS_OK; }
-
-    NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
-      { *aResult = mVal->mBaseVal; return NS_OK; }
-    NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
-      { mVal->SetBaseValueInSpecifiedUnits(aValue, mSVGElement);
-        return NS_OK; }
-
-    NS_IMETHOD SetValueAsString(const nsAString& aValue)
-      { return mVal->SetBaseValueString(aValue, mSVGElement, true); }
-    NS_IMETHOD GetValueAsString(nsAString& aValue)
-      { mVal->GetBaseValueString(aValue); return NS_OK; }
-
-    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
-                                      float valueInSpecifiedUnits)
-      { return mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
-                                     mSVGElement); }
-
-    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType)
-      { return mVal->ConvertToSpecifiedUnits(unitType, mSVGElement); }
-  };
-
-  struct DOMAnimVal MOZ_FINAL : public nsIDOMSVGAngle
-  {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
-
-    DOMAnimVal(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
-    virtual ~DOMAnimVal();
-    
-    nsSVGAngle* mVal; // kept alive because it belongs to mSVGElement
-    nsRefPtr<nsSVGElement> mSVGElement;
-    
-    NS_IMETHOD GetUnitType(uint16_t* aResult)
-      { *aResult = mVal->mAnimValUnit; return NS_OK; }
-
-    NS_IMETHOD GetValue(float* aResult)
-      { *aResult = mVal->GetAnimValue(); return NS_OK; }
-    NS_IMETHOD SetValue(float aValue)
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-
-    NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
-      { *aResult = mVal->mAnimVal; return NS_OK; }
-    NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-
-    NS_IMETHOD SetValueAsString(const nsAString& aValue)
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-    NS_IMETHOD GetValueAsString(nsAString& aValue)
-      { mVal->GetAnimValueString(aValue); return NS_OK; }
-
-    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
-                                      float valueInSpecifiedUnits)
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-
-    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType)
-      { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
-  };
-
   struct DOMAnimatedAngle MOZ_FINAL : public nsIDOMSVGAnimatedAngle
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -207,8 +136,5 @@ public:
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);
   };
 };
-
-nsresult
-NS_NewDOMSVGAngle(nsIDOMSVGAngle** result);
 
 #endif //__NS_SVGANGLE_H__
