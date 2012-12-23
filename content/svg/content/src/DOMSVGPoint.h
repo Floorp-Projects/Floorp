@@ -14,6 +14,7 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsTArray.h"
 #include "SVGPoint.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
 class nsSVGElement;
@@ -45,12 +46,13 @@ namespace mozilla {
  * See the architecture comment in DOMSVGLength.h (yes, LENGTH) for an overview
  * of the important points regarding how this specific class works.
  */
-class DOMSVGPoint MOZ_FINAL : public nsIDOMSVGPoint
+class DOMSVGPoint MOZ_FINAL : public nsIDOMSVGPoint,
+                              public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGPOINT_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGPoint)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGPoint)
   NS_DECL_NSIDOMSVGPOINT
 
   /**
@@ -64,6 +66,7 @@ public:
     , mIsReadonly(false)
     , mIsAnimValItem(aIsAnimValItem)
   {
+    SetIsDOMBinding();
     // These shifts are in sync with the members.
     NS_ABORT_IF_FALSE(aList &&
                       aListIndex <= MaxListIndex(), "bad arg");
@@ -71,12 +74,13 @@ public:
     NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGPoint!");
   }
 
-  DOMSVGPoint(const DOMSVGPoint *aPt = nullptr)
+  explicit DOMSVGPoint(const DOMSVGPoint *aPt = nullptr)
     : mList(nullptr)
     , mListIndex(0)
     , mIsReadonly(false)
     , mIsAnimValItem(false)
   {
+    SetIsDOMBinding();
     if (aPt) {
       mPt = aPt->ToSVGPoint();
     }
@@ -88,16 +92,18 @@ public:
     , mIsReadonly(false)
     , mIsAnimValItem(false)
   {
+    SetIsDOMBinding();
     mPt.mX = aX;
     mPt.mY = aY;
   }
 
-  DOMSVGPoint(const gfxPoint &aPt)
+  explicit DOMSVGPoint(const gfxPoint &aPt)
     : mList(nullptr)
     , mListIndex(0)
     , mIsReadonly(false)
     , mIsAnimValItem(false)
   {
+    SetIsDOMBinding();
     mPt.mX = float(aPt.x);
     mPt.mY = float(aPt.y);
     NS_ASSERTION(NS_finite(mPt.mX) && NS_finite(mPt.mX),
@@ -112,6 +118,19 @@ public:
     if (mList) {
       mList->mItems[mListIndex] = nullptr;
     }
+  }
+
+  // WebIDL
+  float X();
+  void SetX(float aX, ErrorResult& rv);
+  float Y();
+  void SetY(float aY, ErrorResult& rv);
+  already_AddRefed<DOMSVGPoint> MatrixTransform(nsIDOMSVGMatrix* matrix);
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap);
+
+  nsISupports* GetParentObject() {
+    return mList;
   }
 
   /**
