@@ -55,9 +55,6 @@ public:
   nsresult GetVideoSizes(nsTArray<dom::CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
-  nsresult SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs);
-  nsresult SetupVideoMode(const nsAString& aProfile);
-
   void AutoFocusComplete(bool aSuccess);
   void TakePictureComplete(uint8_t* aData, uint32_t aLength);
   void HandleRecorderEvent(int msg, int ext1, int ext2);
@@ -80,6 +77,8 @@ protected:
   already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl();
   already_AddRefed<GonkRecorderProfileManager> GetGonkRecorderProfileManager();
 
+  nsresult SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs);
+  nsresult SetupVideoMode(const nsAString& aProfile);
   void SetPreviewSize(uint32_t aWidth, uint32_t aHeight);
   void SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHeight, uint32_t aPercentQuality);
 

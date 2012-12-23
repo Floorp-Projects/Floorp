@@ -147,8 +147,6 @@ protected:
   nsCOMPtr<nsICameraErrorCallback>          mAutoFocusOnErrorCb;
   nsCOMPtr<nsICameraTakePictureCallback>    mTakePictureOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback>          mTakePictureOnErrorCb;
-  nsCOMPtr<nsICameraStartRecordingCallback> mStartRecordingOnSuccessCb;
-  nsCOMPtr<nsICameraErrorCallback>          mStartRecordingOnErrorCb;
   nsCOMPtr<nsICameraShutterCallback>        mOnShutterCb;
   nsCOMPtr<nsICameraClosedCallback>         mOnClosedCb;
   nsCOMPtr<nsICameraRecorderStateChange>    mOnRecorderStateChangeCb;
