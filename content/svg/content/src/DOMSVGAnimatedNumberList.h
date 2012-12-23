@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsSVGElement.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
@@ -34,13 +35,14 @@ class SVGNumberList;
  * out our pointers to them when they die (making our pointers to them true
  * weak refs).
  */
-class DOMSVGAnimatedNumberList MOZ_FINAL : public nsIDOMSVGAnimatedNumberList
+class DOMSVGAnimatedNumberList MOZ_FINAL : public nsIDOMSVGAnimatedNumberList,
+                                           public nsWrapperCache
 {
   friend class DOMSVGNumberList;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGAnimatedNumberList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedNumberList)
   NS_DECL_NSIDOMSVGANIMATEDNUMBERLIST
 
   /**
@@ -87,6 +89,13 @@ public:
    * not simply a mirror of our baseVal).
    */
   bool IsAnimating() const;
+
+  // WebIDL
+  nsSVGElement* GetParentObject() const { return mElement; }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  // These aren't weak refs because mBaseVal and mAnimVal are weak
+  already_AddRefed<DOMSVGNumberList> BaseVal();
+  already_AddRefed<DOMSVGNumberList> AnimVal();
 
 private:
 
