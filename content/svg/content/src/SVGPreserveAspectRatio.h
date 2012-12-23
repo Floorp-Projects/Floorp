@@ -5,13 +5,30 @@
 
 #pragma once
 
-#include "nsIDOMSVGPresAspectRatio.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/ErrorResult.h"
 
 class nsSVGElement;
+
+// Alignment Types
+static const unsigned short SVG_PRESERVEASPECTRATIO_UNKNOWN = 0;
+static const unsigned short SVG_PRESERVEASPECTRATIO_NONE = 1;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMINYMIN = 2;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMIDYMIN = 3;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMAXYMIN = 4;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMINYMID = 5;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMIDYMID = 6;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMAXYMID = 7;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMINYMAX = 8;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMIDYMAX = 9;
+static const unsigned short SVG_PRESERVEASPECTRATIO_XMAXYMAX = 10;
+
+// Meet-or-slice Types
+static const unsigned short SVG_MEETORSLICE_UNKNOWN = 0;
+static const unsigned short SVG_MEETORSLICE_MEET = 1;
+static const unsigned short SVG_MEETORSLICE_SLICE = 2;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
@@ -35,8 +52,8 @@ public:
   {}
 
   nsresult SetAlign(uint16_t aAlign) {
-    if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
-        aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX)
+    if (aAlign < SVG_PRESERVEASPECTRATIO_NONE ||
+        aAlign > SVG_PRESERVEASPECTRATIO_XMAXYMAX)
       return NS_ERROR_FAILURE;
     mAlign = static_cast<uint8_t>(aAlign);
     return NS_OK;
@@ -47,8 +64,8 @@ public:
   }
 
   nsresult SetMeetOrSlice(uint16_t aMeetOrSlice) {
-    if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
-        aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE)
+    if (aMeetOrSlice < SVG_MEETORSLICE_MEET ||
+        aMeetOrSlice > SVG_MEETORSLICE_SLICE)
       return NS_ERROR_FAILURE;
     mMeetOrSlice = static_cast<uint8_t>(aMeetOrSlice);
     return NS_OK;
@@ -74,7 +91,7 @@ private:
 
 namespace dom {
 
-class DOMSVGPreserveAspectRatio MOZ_FINAL : public nsIDOMSVGPreserveAspectRatio,
+class DOMSVGPreserveAspectRatio MOZ_FINAL : public nsISupports,
                                             public nsWrapperCache
 {
 public:
@@ -89,16 +106,6 @@ public:
     SetIsDOMBinding();
   }
   ~DOMSVGPreserveAspectRatio();
-
-  NS_IMETHOD GetAlign(uint16_t* aAlign)
-    { *aAlign = Align(); return NS_OK; }
-  NS_IMETHOD SetAlign(uint16_t aAlign)
-    { ErrorResult rv;  SetAlign(aAlign, rv); return rv.ErrorCode(); }
-
-  NS_IMETHOD GetMeetOrSlice(uint16_t* aMeetOrSlice)
-    { *aMeetOrSlice = MeetOrSlice(); return NS_OK; }
-  NS_IMETHOD SetMeetOrSlice(uint16_t aMeetOrSlice)
-    { ErrorResult rv; SetMeetOrSlice(aMeetOrSlice, rv); return rv.ErrorCode(); }
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }
