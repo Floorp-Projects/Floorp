@@ -990,8 +990,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
   nsTArray<TransitionEventInfo> events;
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   bool didThrottle = false;
-  // Trim transitions that have completed, and post restyle events for
-  // frames that are still transitioning.
+  // Trim transitions that have completed, post restyle events for frames that
+  // are still transitioning, and start transitions with delays.
   {
     PRCList *next = PR_LIST_HEAD(&mElementData);
     while (next != &mElementData) {
@@ -1010,7 +1010,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
 
       uint32_t i = et->mPropertyTransitions.Length();
       NS_ABORT_IF_FALSE(i != 0, "empty transitions list?");
-      bool transitionEnded = false;
+      bool transitionStartedOrEnded = false;
       do {
         --i;
         ElementPropertyTransition &pt = et->mPropertyTransitions[i];
@@ -1046,7 +1046,13 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           // from the almost-completed value to the final value.
           pt.SetRemovedSentinel();
           et->UpdateAnimationGeneration(mPresContext);
-          transitionEnded = true;
+          transitionStartedOrEnded = true;
+        } else if (pt.mStartTime <= now && canThrottleTick &&
+                   !pt.mIsRunningOnCompositor) {
+          // Start a transition with a delay where we should start the
+          // transition proper.
+          et->UpdateAnimationGeneration(mPresContext);
+          transitionStartedOrEnded = true;
         }
       } while (i != 0);
 
@@ -1056,7 +1062,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
                    et->mElementProperty == nsGkAtoms::transitionsOfBeforeProperty ||
                    et->mElementProperty == nsGkAtoms::transitionsOfAfterProperty,
                    "Unexpected element property; might restyle too much");
-      if (!canThrottleTick || transitionEnded) {
+      if (!canThrottleTick || transitionStartedOrEnded) {
         nsRestyleHint hint = et->mElementProperty == nsGkAtoms::transitionsProperty ?
           eRestyle_Self : eRestyle_Subtree;
         mPresContext->PresShell()->RestyleForAnimation(et->mElement, hint);
