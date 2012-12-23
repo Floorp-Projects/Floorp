@@ -11,6 +11,7 @@
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
+#include "mozilla/net/DNS.h"
 
 #include "nsIServiceManager.h"
 
@@ -2717,7 +2718,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     LOG(("nsHalfOpenSocket::OnOutputStreamReady "
          "Created new nshttpconnection %p\n", conn.get()));
 
-    PRNetAddr peeraddr;
+    NetAddr peeraddr;
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
     if (out == mStreamOut) {
@@ -2850,11 +2851,11 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
         !mEnt->mConnInfo->UsingProxy() &&
         mEnt->mCoalescingKey.IsEmpty()) {
 
-        PRNetAddr addr;
+        NetAddr addr;
         nsresult rv = mSocketTransport->GetPeerAddr(&addr);
         if (NS_SUCCEEDED(rv)) {
-            mEnt->mCoalescingKey.SetCapacity(72);
-            PR_NetAddrToString(&addr, mEnt->mCoalescingKey.BeginWriting(), 64);
+            mEnt->mCoalescingKey.SetCapacity(kIPv6CStrBufSize + 26);
+            NetAddrToString(&addr, mEnt->mCoalescingKey.BeginWriting(), kIPv6CStrBufSize);
             mEnt->mCoalescingKey.SetLength(
                 strlen(mEnt->mCoalescingKey.BeginReading()));
 
