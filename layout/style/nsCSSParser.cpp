@@ -342,8 +342,11 @@ protected:
   bool ExpectEndProperty();
   bool CheckEndProperty();
   nsSubstring* NextIdent();
-  void SkipUntil(PRUnichar aStopSymbol);
+
+  // returns true when the stop symbol is found, and false for EOF
+  bool SkipUntil(PRUnichar aStopSymbol);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
+
   void SkipRuleSet(bool aInsideBraces);
   bool SkipAtRule(bool aInsideBlock);
   bool SkipDeclaration(bool aCheckForBraces);
@@ -1505,7 +1508,7 @@ CSSParserImpl::SkipAtRule(bool aInsideBlock)
 {
   for (;;) {
     if (!GetToken(true)) {
-      REPORT_UNEXPECTED_EOF(PESkipAtRuleEOF);
+      REPORT_UNEXPECTED_EOF(PESkipAtRuleEOF2);
       return false;
     }
     if (eCSSToken_Symbol == mToken.mType) {
@@ -2460,13 +2463,16 @@ bool
 CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
 {
   if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PESupportsConditionStartEOF);
+    REPORT_UNEXPECTED_EOF(PESupportsConditionStartEOF2);
     return false;
   }
 
   UngetToken();
 
-  if (mToken.IsSymbol('(')) {
+  if (mToken.IsSymbol('(') ||
+      mToken.mType == eCSSToken_Function ||
+      mToken.mType == eCSSToken_URL ||
+      mToken.mType == eCSSToken_Bad_URL) {
     return ParseSupportsConditionInParens(aConditionMet) &&
            ParseSupportsConditionTerms(aConditionMet);
   }
@@ -2507,18 +2513,44 @@ CSSParserImpl::ParseSupportsConditionNegation(bool& aConditionMet)
 
 // supports_condition_in_parens
 //   : '(' S* supports_condition_in_parens_inside_parens ')' S*
+//   | general_enclosed
 //   ;
 bool
 CSSParserImpl::ParseSupportsConditionInParens(bool& aConditionMet)
 {
-  if (!ExpectSymbol('(', true)) {
-    REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedOpenParen);
+  if (!GetToken(true)) {
+    REPORT_UNEXPECTED_EOF(PESupportsConditionInParensStartEOF);
+    return false;
+  }
+
+  if (mToken.mType == eCSSToken_URL) {
+    aConditionMet = false;
+    return true;
+  }
+
+  if (mToken.mType == eCSSToken_Function ||
+      mToken.mType == eCSSToken_Bad_URL) {
+    if (!SkipUntil(')')) {
+      REPORT_UNEXPECTED_EOF(PESupportsConditionInParensEOF);
+      return false;
+    }
+    aConditionMet = false;
+    return true;
+  }
+
+  if (!mToken.IsSymbol('(')) {
+    REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedOpenParenOrFunction);
+    UngetToken();
     return false;
   }
 
   if (!ParseSupportsConditionInParensInsideParens(aConditionMet)) {
-    SkipUntil(')');
-    return false;
+    if (!SkipUntil(')')) {
+      REPORT_UNEXPECTED_EOF(PESupportsConditionInParensEOF);
+      return false;
+    }
+    aConditionMet = false;
+    return true;
   }
 
   if (!(ExpectSymbol(')', true))) {
@@ -2539,7 +2571,6 @@ bool
 CSSParserImpl::ParseSupportsConditionInParensInsideParens(bool& aConditionMet)
 {
   if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PESupportsConditionInParensStartEOF);
     return false;
   }
 
@@ -2547,12 +2578,10 @@ CSSParserImpl::ParseSupportsConditionInParensInsideParens(bool& aConditionMet)
     if (!mToken.mIdent.LowerCaseEqualsLiteral("not")) {
       nsAutoString propertyName = mToken.mIdent;
       if (!ExpectSymbol(':', true)) {
-        REPORT_UNEXPECTED_TOKEN(PEParseDeclarationNoColon);
         return false;
       }
 
       if (ExpectSymbol(')', true)) {
-        REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
         UngetToken();
         return false;
       }
@@ -2643,7 +2672,7 @@ CSSParserImpl::ParseSupportsConditionTermsAfterOperator(
   }
 }
 
-void
+bool
 CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
 {
   nsCSSToken* tk = &mToken;
@@ -2651,7 +2680,7 @@ CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
   stack.AppendElement(aStopSymbol);
   for (;;) {
     if (!GetToken(true)) {
-      break;
+      return false;
     }
     if (eCSSToken_Symbol == tk->mType) {
       PRUnichar symbol = tk->mSymbol;
@@ -2659,7 +2688,7 @@ CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
       if (symbol == stack.ElementAt(stackTopIndex)) {
         stack.RemoveElementAt(stackTopIndex);
         if (stackTopIndex == 0) {
-          break;
+          return true;
         }
 
       // Just handle out-of-memory by parsing incorrectly.  It's
