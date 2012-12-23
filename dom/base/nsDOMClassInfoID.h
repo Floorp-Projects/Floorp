@@ -54,6 +54,7 @@ DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::Element,  mozilla::dom::Element,\
 /* If this is ever removed, the IID for EventTarget can go away */            \
 DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::EventTarget,                    \
                                 mozilla::dom::EventTarget, 2, _extra)         \
+DOMCI_CASTABLE_INTERFACE(nsIDocument, nsIDocument, 4, _extra)                 \
 DOMCI_CASTABLE_INTERFACE(nsDocument, nsIDocument, 5, _extra)                  \
 DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsGenericHTMLElement, 6,       \
                          _extra)                                              \

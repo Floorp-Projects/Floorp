@@ -28,6 +28,7 @@ interface Touch;
 interface TouchList;
 interface TreeWalker;
 interface WindowProxy;
+interface nsISupports;
 
 /* http://dom.spec.whatwg.org/#interface-document */
 [Constructor]

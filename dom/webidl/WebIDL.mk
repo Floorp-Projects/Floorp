@@ -26,6 +26,7 @@ webidl_files = \
   CSSValue.webidl \
   CSSValueList.webidl \
   DelayNode.webidl \
+  Document.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
   DOMSettableTokenList.webidl \
