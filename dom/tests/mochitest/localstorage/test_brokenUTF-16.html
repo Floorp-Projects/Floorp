@@ -40,7 +40,7 @@ function startTest()
   v = "\uD800"; // broken UTF-16
 
   localStorage.setItem(k, v);
-  todo_is(localStorage.getItem(k), v, "broken value results from getItem");
+  is(localStorage.getItem(k), v, "broken value results from getItem");
 
   localStorage.setItem(v, "a value");
   is(localStorage.getItem(v), "a value", "value result using broken key from getItem");
@@ -48,7 +48,7 @@ function startTest()
   localStorage.clear();
 
   localStorage[k] = v;
-  todo_is(localStorage[k], v, "broken value results from []");
+  is(localStorage[k], v, "broken value results from []");
 
   localStorage[v] = "a value";
   is(localStorage[v], "a value", "value result using broken key from []");
@@ -56,7 +56,7 @@ function startTest()
   localStorage.clear();
 
   localStorage.aKey = v;
-  todo_is(localStorage.aKey, v, "broken value results from a dynamic property");
+  is(localStorage.aKey, v, "broken value results from a dynamic property");
 
   localStorage.clear();
 
