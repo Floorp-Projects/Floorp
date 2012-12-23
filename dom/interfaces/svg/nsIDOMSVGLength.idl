@@ -5,8 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMSVGMatrix;
-
 [scriptable, uuid(2596325c-aed0-487e-96a1-0a6d589b9c6b)]
 interface nsIDOMSVGLength : nsISupports
 { 

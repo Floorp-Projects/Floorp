@@ -6,7 +6,6 @@
 #include "domstubs.idl"
 
 interface nsIDOMSVGRect;
-interface nsIDOMSVGMatrix;
 interface nsIDOMSVGElement;
 
 [scriptable, uuid(9cf4fc9c-90b2-4d66-88f5-35049b558aee)]
@@ -16,8 +15,11 @@ interface nsIDOMSVGLocatable : nsISupports
   readonly attribute nsIDOMSVGElement  farthestViewportElement;
   
   nsIDOMSVGRect   getBBox();
-  nsIDOMSVGMatrix getCTM();
-  nsIDOMSVGMatrix getScreenCTM();
-  nsIDOMSVGMatrix getTransformToElement(in nsIDOMSVGElement element);
+  // SVGMatrix
+  nsISupports     getCTM();
+  // SVGMatrix
+  nsISupports     getScreenCTM();
+  // SVGMatrix
+  nsISupports     getTransformToElement(in nsIDOMSVGElement element);
       // raises( SVGException );
 };

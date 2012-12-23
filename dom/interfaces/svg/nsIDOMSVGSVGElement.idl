@@ -11,7 +11,6 @@ interface nsIDOMSVGViewSpec;
 interface nsIDOMSVGPoint;
 interface nsIDOMSVGNumber;
 interface nsIDOMSVGLength;
-interface nsIDOMSVGMatrix;
 
 // undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
 %{C++
@@ -77,11 +76,12 @@ interface nsIDOMSVGSVGElement
   // SVGAngle
   nsISupports           createSVGAngle();
   nsIDOMSVGPoint        createSVGPoint();
-  nsIDOMSVGMatrix       createSVGMatrix();
+  // SVGMatrix
+  nsISupports           createSVGMatrix();
   nsIDOMSVGRect         createSVGRect();
   // SVGTransform
   nsISupports           createSVGTransform();
-  // SVGTransform
-  nsISupports           createSVGTransformFromMatrix(in nsIDOMSVGMatrix matrix);
+  // SVGTransform                                       SVGMatrix
+  nsISupports           createSVGTransformFromMatrix(in nsISupports matrix);
   nsIDOMElement         getElementById(in DOMString elementId);
 };
