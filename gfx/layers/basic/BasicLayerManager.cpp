@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/Hal.h"
 #include "mozilla/layers/PLayerChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layers/PLayersParent.h"
@@ -15,7 +16,6 @@
 #include "nsXULAppAPI.h"
 #include "RenderTrace.h"
 #include "sampler.h"
-#include "Hal.h"
 
 #define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
