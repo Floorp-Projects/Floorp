@@ -105,6 +105,7 @@ CPPSRCS		= \
 		SVGPathData.cpp \
 		SVGPathSegUtils.cpp \
 		SVGPointList.cpp \
+		SVGPreserveAspectRatio.cpp \
 		SVGStringList.cpp \
 		SVGTransform.cpp \
 		SVGTransformList.cpp \
