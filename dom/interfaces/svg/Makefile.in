@@ -33,7 +33,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimateMotionElement.idl \
 		nsIDOMSVGAnimateTransformElement.idl \
 		nsIDOMSVGAnimationElement.idl \
-		nsIDOMSVGAnimTransformList.idl \
 		nsIDOMSVGCircleElement.idl \
 		nsIDOMSVGClipPathElement.idl \
 		nsIDOMSVGDefsElement.idl \
@@ -83,7 +82,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGTextPositionElem.idl \
 		nsIDOMSVGTitleElement.idl \
 		nsIDOMSVGTransform.idl \
-		nsIDOMSVGTransformList.idl \
 		nsIDOMSVGTransformable.idl \
 		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \

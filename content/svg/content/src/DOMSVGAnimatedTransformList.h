@@ -10,7 +10,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMSVGAnimTransformList.h"
 #include "nsSVGElement.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
@@ -36,7 +35,7 @@ class SVGAnimatedTransformList;
  * nulling out our pointers to them when they die (making our pointers to them
  * true weak refs).
  */
-class DOMSVGAnimatedTransformList MOZ_FINAL : public nsIDOMSVGAnimatedTransformList,
+class DOMSVGAnimatedTransformList MOZ_FINAL : public nsISupports,
                                               public nsWrapperCache
 {
   friend class DOMSVGTransformList;
@@ -44,7 +43,6 @@ class DOMSVGAnimatedTransformList MOZ_FINAL : public nsIDOMSVGAnimatedTransformL
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedTransformList)
-  NS_DECL_NSIDOMSVGANIMATEDTRANSFORMLIST
 
   /**
    * Factory method to create and return a DOMSVGAnimatedTransformList wrapper

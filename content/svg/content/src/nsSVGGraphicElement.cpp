@@ -119,10 +119,9 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *eleme
 
 //----------------------------------------------------------------------
 // nsIDOMSVGTransformable methods
-/* readonly attribute nsIDOMSVGAnimatedTransformList transform; */
+/* readonly attribute nsISupports transform; */
 
-NS_IMETHODIMP nsSVGGraphicElement::GetTransform(
-    nsIDOMSVGAnimatedTransformList **aTransform)
+NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsISupports **aTransform)
 {
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
   // to allocate the SVGAnimatedTransformList if it hasn't already done so:

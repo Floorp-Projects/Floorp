@@ -59,15 +59,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGTransformList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGTransformList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGTransformList, mozilla::DOMSVGTransformList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTransformList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransformList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTransformList)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
@@ -129,24 +123,6 @@ DOMSVGTransformList::InternalList() const
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGTransformList methods:
-
-/* readonly attribute unsigned long numberOfItems; */
-NS_IMETHODIMP
-DOMSVGTransformList::GetNumberOfItems(uint32_t *aNumberOfItems)
-{
-  *aNumberOfItems = NumberOfItems();
-  return NS_OK;
-}
-
-/* readonly attribute unsigned long length; */
-NS_IMETHODIMP
-DOMSVGTransformList::GetLength(uint32_t *aLength)
-{
-  *aLength = Length();
-  return NS_OK;
-}
-
 void
 DOMSVGTransformList::Clear(ErrorResult& error)
 {
@@ -169,15 +145,6 @@ DOMSVGTransformList::Clear(ErrorResult& error)
       Element()->AnimationNeedsResample();
     }
   }
-}
-
-/* void clear (); */
-NS_IMETHODIMP
-DOMSVGTransformList::Clear()
-{
-  ErrorResult rv;
-  Clear(rv);
-  return rv.ErrorCode();
 }
 
 already_AddRefed<DOMSVGTransform>
@@ -206,21 +173,6 @@ DOMSVGTransformList::Initialize(DOMSVGTransform& newItem, ErrorResult& error)
   return InsertItemBefore(*domItem, 0, error);
 }
 
-/* nsIDOMSVGTransform initialize (in nsIDOMSVGTransform newItem); */
-NS_IMETHODIMP
-DOMSVGTransformList::Initialize(nsIDOMSVGTransform *newItem,
-                                nsIDOMSVGTransform **_retval)
-{
-  nsCOMPtr<DOMSVGTransform> domItem = do_QueryInterface(newItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = Initialize(*domItem, rv).get();
-  return rv.ErrorCode();
-}
-
 DOMSVGTransform*
 DOMSVGTransformList::IndexedGetter(uint32_t index, bool& found,
                                    ErrorResult& error)
@@ -234,15 +186,6 @@ DOMSVGTransformList::IndexedGetter(uint32_t index, bool& found,
     return mItems[index];
   }
   return nullptr;
-}
-
-/* nsIDOMSVGTransform getItem (in unsigned long index); */
-NS_IMETHODIMP
-DOMSVGTransformList::GetItem(uint32_t index, nsIDOMSVGTransform **_retval)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*_retval = GetItem(index, rv));
-  return rv.ErrorCode();
 }
 
 already_AddRefed<DOMSVGTransform>
@@ -293,23 +236,6 @@ DOMSVGTransformList::InsertItemBefore(DOMSVGTransform& newItem,
   return domItem.forget();
 }
 
-/* nsIDOMSVGTransform insertItemBefore (in nsIDOMSVGTransform newItem,
- *                                      in unsigned long index); */
-NS_IMETHODIMP
-DOMSVGTransformList::InsertItemBefore(nsIDOMSVGTransform *newItem,
-                                      uint32_t index,
-                                      nsIDOMSVGTransform **_retval)
-{
-  nsCOMPtr<DOMSVGTransform> domItem = do_QueryInterface(newItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = InsertItemBefore(*domItem, index, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<DOMSVGTransform>
 DOMSVGTransformList::ReplaceItem(DOMSVGTransform& newItem,
                                  uint32_t index, ErrorResult& error)
@@ -348,23 +274,6 @@ DOMSVGTransformList::ReplaceItem(DOMSVGTransform& newItem,
     Element()->AnimationNeedsResample();
   }
   return domItem.forget();
-}
-
-/* nsIDOMSVGTransform replaceItem (in nsIDOMSVGTransform newItem,
- *                                 in unsigned long index); */
-NS_IMETHODIMP
-DOMSVGTransformList::ReplaceItem(nsIDOMSVGTransform *newItem,
-                                 uint32_t index,
-                                 nsIDOMSVGTransform **_retval)
-{
-  nsCOMPtr<DOMSVGTransform> domItem = do_QueryInterface(newItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = ReplaceItem(*domItem, index, rv).get();
-  return rv.ErrorCode();
 }
 
 already_AddRefed<DOMSVGTransform>
@@ -406,50 +315,11 @@ DOMSVGTransformList::RemoveItem(uint32_t index, ErrorResult& error)
   return result.forget();
 }
 
-/* nsIDOMSVGTransform removeItem (in unsigned long index); */
-NS_IMETHODIMP
-DOMSVGTransformList::RemoveItem(uint32_t index, nsIDOMSVGTransform **_retval)
-{
-  ErrorResult rv;
-  *_retval = RemoveItem(index, rv).get();
-  return rv.ErrorCode();
-}
-
-/* nsIDOMSVGTransform appendItem (in nsIDOMSVGTransform newItem); */
-NS_IMETHODIMP
-DOMSVGTransformList::AppendItem(nsIDOMSVGTransform *newItem,
-                                nsIDOMSVGTransform **_retval)
-{
-  nsCOMPtr<DOMSVGTransform> domItem = do_QueryInterface(newItem);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  ErrorResult rv;
-  *_retval = AppendItem(*domItem, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<DOMSVGTransform>
 DOMSVGTransformList::CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix)
 {
   nsCOMPtr<DOMSVGTransform> result = new DOMSVGTransform(matrix.Matrix());
   return result.forget();
-}
-
-/* nsIDOMSVGTransform createSVGTransformFromMatrix (in nsIDOMSVGMatrix matrix);
- */
-NS_IMETHODIMP
-DOMSVGTransformList::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
-                                                  nsIDOMSVGTransform **_retval)
-{
-  nsCOMPtr<DOMSVGMatrix> domItem = do_QueryInterface(matrix);
-  if (!domItem) {
-    *_retval = nullptr;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-  *_retval = CreateSVGTransformFromMatrix(*domItem).get();
-  return NS_OK;
 }
 
 already_AddRefed<DOMSVGTransform>
@@ -479,15 +349,6 @@ DOMSVGTransformList::Consolidate(ErrorResult& error)
   // And append the new transform
   nsRefPtr<DOMSVGTransform> transform = new DOMSVGTransform(mx);
   return InsertItemBefore(*transform, LengthNoFlush(), error);
-}
-
-/* nsIDOMSVGTransform consolidate (); */
-NS_IMETHODIMP
-DOMSVGTransformList::Consolidate(nsIDOMSVGTransform **_retval)
-{
-  ErrorResult rv;
-  *_retval = Consolidate(rv).get();
-  return rv.ErrorCode();
 }
 
 //----------------------------------------------------------------------
