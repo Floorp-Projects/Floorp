@@ -21,7 +21,7 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
   PRUnichar buf[256];
 
   switch (mType) {
-    case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE:
+    case SVG_TRANSFORM_TRANSLATE:
       // The spec say that if Y is not provided, it is assumed to be zero.
       if (mMatrix.y0 != 0)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
@@ -32,7 +32,7 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
             NS_LITERAL_STRING("translate(%g)").get(),
             mMatrix.x0);
       break;
-    case nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE:
+    case SVG_TRANSFORM_ROTATE:
       if (mOriginX != 0.0f || mOriginY != 0.0f)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
             NS_LITERAL_STRING("rotate(%g, %g, %g)").get(),
@@ -41,7 +41,7 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
             NS_LITERAL_STRING("rotate(%g)").get(), mAngle);
       break;
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SCALE:
+    case SVG_TRANSFORM_SCALE:
       if (mMatrix.xx != mMatrix.yy)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
             NS_LITERAL_STRING("scale(%g, %g)").get(), mMatrix.xx, mMatrix.yy);
@@ -49,15 +49,15 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
             NS_LITERAL_STRING("scale(%g)").get(), mMatrix.xx);
       break;
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX:
+    case SVG_TRANSFORM_SKEWX:
       nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
                                 NS_LITERAL_STRING("skewX(%g)").get(), mAngle);
       break;
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY:
+    case SVG_TRANSFORM_SKEWY:
       nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
                                 NS_LITERAL_STRING("skewY(%g)").get(), mAngle);
       break;
-    case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX:
+    case SVG_TRANSFORM_MATRIX:
       nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
           NS_LITERAL_STRING("matrix(%g, %g, %g, %g, %g, %g)").get(),
                             mMatrix.xx, mMatrix.yx,
@@ -76,7 +76,7 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
 void
 SVGTransform::SetMatrix(const gfxMatrix& aMatrix)
 {
-  mType    = nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX;
+  mType    = SVG_TRANSFORM_MATRIX;
   mMatrix  = aMatrix;
   // We set the other members here too, since operator== requires it and
   // the DOM requires it for mAngle.
@@ -88,7 +88,7 @@ SVGTransform::SetMatrix(const gfxMatrix& aMatrix)
 void
 SVGTransform::SetTranslate(float aTx, float aTy)
 {
-  mType    = nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE;
+  mType    = SVG_TRANSFORM_TRANSLATE;
   mMatrix.Reset();
   mMatrix.x0 = aTx;
   mMatrix.y0 = aTy;
@@ -100,7 +100,7 @@ SVGTransform::SetTranslate(float aTx, float aTy)
 void
 SVGTransform::SetScale(float aSx, float aSy)
 {
-  mType    = nsIDOMSVGTransform::SVG_TRANSFORM_SCALE;
+  mType    = SVG_TRANSFORM_SCALE;
   mMatrix.Reset();
   mMatrix.xx = aSx;
   mMatrix.yy = aSy;
@@ -112,7 +112,7 @@ SVGTransform::SetScale(float aSx, float aSy)
 void
 SVGTransform::SetRotate(float aAngle, float aCx, float aCy)
 {
-  mType    = nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE;
+  mType    = SVG_TRANSFORM_ROTATE;
   mMatrix.Reset();
   mMatrix.Translate(gfxPoint(aCx, aCy));
   mMatrix.Rotate(aAngle*radPerDegree);
@@ -128,7 +128,7 @@ SVGTransform::SetSkewX(float aAngle)
   double ta = tan(aAngle*radPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
-  mType    = nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX;
+  mType    = SVG_TRANSFORM_SKEWX;
   mMatrix.Reset();
   mMatrix.xy = ta;
   mAngle   = aAngle;
@@ -143,7 +143,7 @@ SVGTransform::SetSkewY(float aAngle)
   double ta = tan(aAngle*radPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
-  mType    = nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY;
+  mType    = SVG_TRANSFORM_SKEWY;
   mMatrix.Reset();
   mMatrix.yx = ta;
   mAngle   = aAngle;
@@ -156,8 +156,8 @@ SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
   : mTransformType(aTransform.Type())
 {
   NS_ABORT_IF_FALSE(
-    mTransformType >= nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX &&
-    mTransformType <= nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY,
+    mTransformType >= SVG_TRANSFORM_MATRIX &&
+    mTransformType <= SVG_TRANSFORM_SKEWY,
     "Unexpected transform type");
 
   for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
@@ -165,7 +165,7 @@ SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
   }
 
   switch (mTransformType) {
-    case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX: {
+    case SVG_TRANSFORM_MATRIX: {
       const gfxMatrix& mx = aTransform.Matrix();
       mParams[0] = static_cast<float>(mx.xx);
       mParams[1] = static_cast<float>(mx.yx);
@@ -175,25 +175,25 @@ SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
       mParams[5] = static_cast<float>(mx.y0);
       break;
     }
-    case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE: {
+    case SVG_TRANSFORM_TRANSLATE: {
       const gfxMatrix& mx = aTransform.Matrix();
       mParams[0] = static_cast<float>(mx.x0);
       mParams[1] = static_cast<float>(mx.y0);
       break;
     }
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SCALE: {
+    case SVG_TRANSFORM_SCALE: {
       const gfxMatrix& mx = aTransform.Matrix();
       mParams[0] = static_cast<float>(mx.xx);
       mParams[1] = static_cast<float>(mx.yy);
       break;
     }
-    case nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE:
+    case SVG_TRANSFORM_ROTATE:
       mParams[0] = aTransform.Angle();
       aTransform.GetRotationOrigin(mParams[1], mParams[2]);
       break;
 
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX:
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY:
+    case SVG_TRANSFORM_SKEWX:
+    case SVG_TRANSFORM_SKEWY:
       mParams[0] = aTransform.Angle();
       break;
 
@@ -209,29 +209,29 @@ SVGTransformSMILData::ToSVGTransform() const
   SVGTransform result;
 
   switch (mTransformType) {
-    case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX:
+    case SVG_TRANSFORM_MATRIX:
       result.SetMatrix(gfxMatrix(mParams[0], mParams[1],
                                  mParams[2], mParams[3],
                                  mParams[4], mParams[5]));
       break;
 
-    case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE:
+    case SVG_TRANSFORM_TRANSLATE:
       result.SetTranslate(mParams[0], mParams[1]);
       break;
 
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SCALE:
+    case SVG_TRANSFORM_SCALE:
       result.SetScale(mParams[0], mParams[1]);
       break;
 
-    case nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE:
+    case SVG_TRANSFORM_ROTATE:
       result.SetRotate(mParams[0], mParams[1], mParams[2]);
       break;
 
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX:
+    case SVG_TRANSFORM_SKEWX:
       result.SetSkewX(mParams[0]);
       break;
 
-    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY:
+    case SVG_TRANSFORM_SKEWY:
       result.SetSkewY(mParams[0]);
       break;
 
