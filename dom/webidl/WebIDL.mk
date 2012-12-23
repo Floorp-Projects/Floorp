@@ -68,6 +68,7 @@ webidl_files = \
   PerformanceTiming.webidl \
   RGBColor.webidl \
   Screen.webidl \
+  SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
