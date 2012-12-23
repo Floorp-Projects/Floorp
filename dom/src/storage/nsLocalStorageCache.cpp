@@ -99,7 +99,6 @@ GetChangedKeysEnum(const nsAString& aKey,
     static_cast<nsLocalStorageCache::FlushData::ChangeSet*>(aParams);
 
   changeSet->mDirtyKeys.AppendElement(aKey);
-  //TODO: changeSet->mDirtyKeys.AppendElement(nsString(aKey));
   changeSet->mDirtyValues.AppendElement(aEntry.get());
 
   return PL_DHASH_NEXT;
@@ -191,7 +190,7 @@ nsLocalStorageCache::GetDirtyDataEnum(const nsACString& aScopeName,
 
   aScopeCache->mTable.Enumerate(GetChangedKeysEnum, &changeSet);
 
-  flushData->mScopeNames.AppendElement(nsCString(aScopeName));
+  flushData->mScopeNames.AppendElement(aScopeName);
   flushData->mChanged.AppendElement(changeSet);
 
   return PL_DHASH_NEXT;
@@ -275,7 +274,7 @@ nsLocalStorageCache::EvictEnum(const nsACString& aScopeName,
   bool evict = (PR_IntervalNow() - aScopeCache->mAccessTime) > kMaxIdleTime;
 
   if (evict) {
-    data->mEvicted.AppendElement(nsCString(aScopeName));
+    data->mEvicted.AppendElement(aScopeName);
     data->mEvictedSize.AppendElement(aScopeCache->GetQuotaUsage());
     return PL_DHASH_REMOVE;
   }
