@@ -20,6 +20,7 @@
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
+#include "mozilla/dom/SVGElementBinding.h"
 
 template<class T>
 struct ProtoIDAndDepth
@@ -45,6 +46,7 @@ NEW_BINDING(mozilla::dom::EventTarget, EventTarget);
 NEW_BINDING(nsINode, Node);
 NEW_BINDING(mozilla::dom::Element, Element);
 NEW_BINDING(nsGenericHTMLElement, HTMLElement);
+NEW_BINDING(nsSVGElement, SVGElement);
 
 #define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
 template <>                                                                   \
