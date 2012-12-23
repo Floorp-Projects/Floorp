@@ -81,7 +81,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGTextPathElement.idl \
 		nsIDOMSVGTextPositionElem.idl \
 		nsIDOMSVGTitleElement.idl \
-		nsIDOMSVGTransform.idl \
 		nsIDOMSVGTransformable.idl \
 		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
