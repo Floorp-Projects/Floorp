@@ -20,10 +20,10 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
 
-class nsIDOMSVGMatrix;
 class nsSMILTimeContainer;
 class nsSVGViewElement;
 namespace mozilla {
+  class DOMSVGMatrix;
   class SVGFragmentIdentifier;
 }
 
@@ -73,7 +73,7 @@ private:
     virtual float Y() { return mVal->GetY(); }
     virtual void SetX(float aValue, mozilla::ErrorResult& rv);
     virtual void SetY(float aValue, mozilla::ErrorResult& rv);
-    virtual already_AddRefed<mozilla::nsISVGPoint> MatrixTransform(nsIDOMSVGMatrix* matrix);
+    virtual already_AddRefed<mozilla::nsISVGPoint> MatrixTransform(mozilla::DOMSVGMatrix& matrix);
 
     virtual nsISupports* GetParentObject() MOZ_OVERRIDE;
 
