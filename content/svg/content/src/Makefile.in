@@ -74,7 +74,6 @@ CPPSRCS		= \
 		nsSVGPolylineElement.cpp \
 		nsSVGScriptElement.cpp \
 		nsSVGString.cpp \
-		nsSVGStylableElement.cpp \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \

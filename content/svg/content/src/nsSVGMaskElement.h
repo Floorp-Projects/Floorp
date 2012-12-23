@@ -11,11 +11,11 @@
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 
 //--------------------- Masks ------------------------
 
-typedef nsSVGStylableElement nsSVGMaskElementBase;
+typedef nsSVGElement nsSVGMaskElementBase;
 
 class nsSVGMaskElement : public nsSVGMaskElementBase,
                          public nsIDOMSVGMaskElement,
