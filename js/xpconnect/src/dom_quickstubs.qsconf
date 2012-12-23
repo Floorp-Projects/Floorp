@@ -307,8 +307,7 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
-    'nsIDOMSVGElement.className',
-    'nsIDOMSVGElement.style',
+    'nsIDOMSVGStylable.*',
 
     # dom/interfaces/traversal
     'nsIDOMNodeIterator.nextNode',
@@ -411,7 +410,7 @@ customIncludes = [
     'nsGenericDOMDataNode.h',
     'mozilla/dom/Element.h',
     'nsGenericHTMLElement.h',
-    'nsSVGElement.h',
+    'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
     'nsDOMStringMap.h',
@@ -420,8 +419,7 @@ customIncludes = [
     'nsICSSDeclaration.h',
     'mozilla/dom/NodeBinding.h',
     'mozilla/dom/ElementBinding.h',
-    'mozilla/dom/HTMLElementBinding.h',
-    'mozilla/dom/SVGElementBinding.h'
+    'mozilla/dom/HTMLElementBinding.h'
     ]
 
 customReturnInterfaces = [
@@ -503,10 +501,10 @@ customMethodCalls = {
                 '    nsIDOMCSSStyleDeclaration* result = '
                 'self->GetStyle(&rv);'
         },
-    'nsIDOMSVGElement_GetStyle': {
-        'thisType': 'nsSVGElement',
+    'nsIDOMSVGStylable_GetStyle': {
+        'thisType': 'nsSVGStylableElement',
         'code': '    nsICSSDeclaration* result = '
-                'self->nsSVGElementBase::GetStyle(&rv);'
+                'self->GetStyle(&rv);'
         },
     'nsIDOMDocument_': {
         'thisType': 'nsDocument'
@@ -596,6 +594,5 @@ customMethodCalls = {
 newBindingProperties = {
     'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular'
+    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular'
     }

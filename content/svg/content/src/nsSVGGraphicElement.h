@@ -9,10 +9,10 @@
 #include "gfxMatrix.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGTransformable.h"
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "SVGAnimatedTransformList.h"
 
-typedef nsSVGElement nsSVGGraphicElementBase;
+typedef nsSVGStylableElement nsSVGGraphicElementBase;
 
 class nsSVGGraphicElement : public nsSVGGraphicElementBase,
                             public nsIDOMSVGTransformable // : nsIDOMSVGLocatable
