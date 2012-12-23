@@ -50,16 +50,9 @@ LIRGenerator::visitParameter(MParameter *param)
 }
 
 bool
-LIRGenerator::visitCallee(MCallee *callee)
+LIRGenerator::visitCallee(MCallee *ins)
 {
-    LCallee *ins = new LCallee;
-    if (!define(ins, callee, LDefinition::PRESET))
-        return false;
-
-    ins->getDef(0)->setOutput(LArgument(-int32_t(sizeof(IonJSFrameLayout))
-                                        + IonJSFrameLayout::offsetOfCalleeToken()));
-
-    return true;
+    return define(new LCallee(), ins);
 }
 
 bool

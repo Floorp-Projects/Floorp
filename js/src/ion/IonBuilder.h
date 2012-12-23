@@ -526,10 +526,6 @@ class IonBuilder : public MIRGenerator
     // If this script can use a lazy arguments object, it will be pre-created
     // here.
     MInstruction *lazyArguments_;
-
-    // If the script use a callee, it will be retrieved in the first basic
-    // block.
-    MCallee *callee_;
 };
 
 } // namespace ion
