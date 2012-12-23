@@ -134,22 +134,21 @@ NS_IMETHODIMP
 nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix,
                                              nsIDOMSVGPoint **_retval)
 {
-  *_retval = MatrixTransform(matrix).get();
+  nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(matrix);
+  if (!domMatrix) {
+    *_retval = nullptr;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
+  *_retval = MatrixTransform(*domMatrix).get();
   return NS_OK;
 }
 
 /* nsIDOMSVGPoint matrixTransform (in nsIDOMSVGMatrix matrix); */
 already_AddRefed<nsISVGPoint>
-nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix)
+nsSVGTranslatePoint::DOMVal::MatrixTransform(DOMSVGMatrix& matrix)
 {
-  float a, b, c, d, e, f;
-  matrix->GetA(&a);
-  matrix->GetB(&b);
-  matrix->GetC(&c);
-  matrix->GetD(&d);
-  matrix->GetE(&e);
-  matrix->GetF(&f);
-
+  float a = matrix.A(), b = matrix.B(), c = matrix.C();
+  float d = matrix.D(), e = matrix.E(), f = matrix.F();
   float x = mVal->GetX();
   float y = mVal->GetY();
 

@@ -69,6 +69,7 @@ webidl_files = \
   RGBColor.webidl \
   Screen.webidl \
   SVGLengthList.webidl \
+  SVGMatrix.webidl \
   SVGNumberList.webidl \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
