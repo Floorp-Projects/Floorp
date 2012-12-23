@@ -69,6 +69,7 @@ webidl_files = \
   RGBColor.webidl \
   Screen.webidl \
   SVGAngle.webidl \
+  SVGAnimatedAngle.webidl \
   SVGAnimatedBoolean.webidl \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
