@@ -10,7 +10,6 @@ interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedString;
 interface nsIDOMSVGAnimatedNumber;
 interface nsIDOMSVGAnimatedEnumeration;
-interface nsIDOMSVGAnimatedNumberList;
 interface nsIDOMSVGAnimatedInteger;
 
 [scriptable, uuid(117CFA4C-B0EB-4C0F-A590-F77FBF42E76D)]
@@ -50,7 +49,8 @@ interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttrib
 
     readonly attribute nsIDOMSVGAnimatedString in1;
     readonly attribute nsIDOMSVGAnimatedEnumeration type;
-    readonly attribute nsIDOMSVGAnimatedNumberList  values;
+    // SVGAnimatedNumberList
+    readonly attribute nsISupports  values;
 };
 
 [scriptable, uuid(539000B3-2272-4F1A-BF24-23340DD408AF)]
@@ -71,7 +71,8 @@ interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
     const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_GAMMA    = 5;
 
     readonly attribute nsIDOMSVGAnimatedEnumeration type;
-    readonly attribute nsIDOMSVGAnimatedNumberList  tableValues;
+    // SVGAnimatedNumberList
+    readonly attribute nsISupports                  tableValues;
     readonly attribute nsIDOMSVGAnimatedNumber      slope;
     readonly attribute nsIDOMSVGAnimatedNumber      intercept;
     readonly attribute nsIDOMSVGAnimatedNumber      amplitude;
@@ -209,7 +210,8 @@ interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAtt
     readonly attribute nsIDOMSVGAnimatedString      in1;
     readonly attribute nsIDOMSVGAnimatedInteger     orderX;
     readonly attribute nsIDOMSVGAnimatedInteger     orderY;
-    readonly attribute nsIDOMSVGAnimatedNumberList  kernelMatrix;
+    // SVGAnimatedNumberList
+    readonly attribute nsISupports                  kernelMatrix;
     readonly attribute nsIDOMSVGAnimatedNumber      divisor;
     readonly attribute nsIDOMSVGAnimatedNumber      bias;
     readonly attribute nsIDOMSVGAnimatedInteger     targetX;

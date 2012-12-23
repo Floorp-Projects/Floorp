@@ -24,7 +24,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedLengthList.idl \
 		nsIDOMSVGAnimatedNumber.idl \
-		nsIDOMSVGAnimatedNumberList.idl \
 		nsIDOMSVGAnimatedPathData.idl \
 		nsIDOMSVGAnimatedPoints.idl \
 		nsIDOMSVGAnimatedRect.idl \
@@ -57,7 +56,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGMetadataElement.idl \
 		nsIDOMSVGMpathElement.idl \
 		nsIDOMSVGNumber.idl \
-		nsIDOMSVGNumberList.idl \
 		nsIDOMSVGPathElement.idl \
 		nsIDOMSVGPatternElement.idl \
 		nsIDOMSVGPolygonElement.idl \
