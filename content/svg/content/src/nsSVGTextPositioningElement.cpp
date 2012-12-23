@@ -78,8 +78,8 @@ NS_IMETHODIMP nsSVGTextPositioningElement::GetDy(nsIDOMSVGAnimatedLengthList * *
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumberList rotate; */
-NS_IMETHODIMP nsSVGTextPositioningElement::GetRotate(nsIDOMSVGAnimatedNumberList * *aRotate)
+/* readonly attribute DOMSVGAnimatedNumberList rotate; */
+NS_IMETHODIMP nsSVGTextPositioningElement::GetRotate(nsISupports * *aRotate)
 {
   *aRotate = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[ROTATE],
                                                      this, ROTATE).get();

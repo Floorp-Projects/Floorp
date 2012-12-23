@@ -23,15 +23,9 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedNumberList, mElemen
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedNumberList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedNumberList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGAnimatedNumberList, mozilla::DOMSVGAnimatedNumberList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedNumberList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedNumberList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedNumberList)
 NS_INTERFACE_MAP_END
 
 JSObject*
@@ -50,14 +44,6 @@ DOMSVGAnimatedNumberList::BaseVal()
   return baseVal.forget();
 }
 
-/* readonly attribute nsIDOMSVGNumberList baseVal; */
-NS_IMETHODIMP
-DOMSVGAnimatedNumberList::GetBaseVal(nsIDOMSVGNumberList** aBaseVal)
-{
-  *aBaseVal = BaseVal().get();
-  return NS_OK;
-}
-
 already_AddRefed<DOMSVGNumberList>
 DOMSVGAnimatedNumberList::AnimVal()
 {
@@ -66,14 +52,6 @@ DOMSVGAnimatedNumberList::AnimVal()
   }
   nsRefPtr<DOMSVGNumberList> animVal = mAnimVal;
   return animVal.forget();
-}
-
-/* readonly attribute nsIDOMSVGNumberList animVal; */
-NS_IMETHODIMP
-DOMSVGAnimatedNumberList::GetAnimVal(nsIDOMSVGNumberList** aAnimVal)
-{
-  *aAnimVal = AnimVal().get();
-  return NS_OK;
 }
 
 /* static */ already_AddRefed<DOMSVGAnimatedNumberList>
