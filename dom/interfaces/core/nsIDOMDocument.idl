@@ -53,7 +53,7 @@ interface nsIDOMDocument : nsIDOMNode
                                   raises(DOMException);
   // Introduced in DOM Level 2:
   nsIDOMElement                 createElementNS(in DOMString namespaceURI,
-                                                in DOMString qualifiedName)
+                                                [Null(Stringify)] in DOMString qualifiedName)
                                   raises(DOMException);
   // Introduced in DOM Level 2:
   nsIDOMAttr                    createAttributeNS(in DOMString namespaceURI,
