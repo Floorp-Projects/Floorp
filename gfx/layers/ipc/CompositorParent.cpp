@@ -855,13 +855,29 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
   if (controller) {
     ShadowLayer* shadow = aLayer->AsShadowLayer();
 
-    gfx3DMatrix newTransform;
+    ViewTransform treeTransform;
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
                                                  container,
-                                                 &newTransform);
+                                                 &treeTransform);
 
-    shadow->SetShadowTransform(newTransform);
+    gfx3DMatrix transform(gfx3DMatrix(treeTransform) * aLayer->GetTransform());
+    // The transform already takes the resolution scale into account.  Since we
+    // will apply the resolution scale again when computing the effective
+    // transform, we must apply the inverse resolution scale here.
+    transform.Scale(1.0f/container->GetPreXScale(),
+                    1.0f/container->GetPreYScale(),
+                    1);
+    transform.ScalePost(1.0f/aLayer->GetPostXScale(),
+                        1.0f/aLayer->GetPostYScale(),
+                        1);
+    shadow->SetShadowTransform(transform);
+
+    TransformFixedLayers(
+      aLayer,
+      -gfxPoint(treeTransform.mTranslation.x / treeTransform.mXScale,
+                treeTransform.mTranslation.y / treeTransform.mYScale),
+      gfxPoint(treeTransform.mXScale, treeTransform.mYScale));
 
     appliedTransform = true;
   }
