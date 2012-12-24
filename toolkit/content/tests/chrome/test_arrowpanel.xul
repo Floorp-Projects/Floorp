@@ -25,7 +25,7 @@
   <label id="panellabel" value="This is some text." height="65"/>
 </panel>
 
-<panel id="bigpanel" type="arrow" onpopupshown="checkBigPanel(this)" onpopuphidden="runNextTest.next()">
+<panel id="bigpanel" type="arrow" onpopupshown="checkBigPanel(this)" onpopuphidden="SimpleTest.finish()">
   <button label="This is some text." height="3000"/>
 </panel>
 
@@ -35,7 +35,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var expectedAnchor = null;
-var expectedSide = "", expectedAnchorEdge = "", expectedPack = "", expectedAlignment = "";
+var expectedSide = "", expectedAnchorEdge = "", expectedPack = "";
 var zoomFactor = 1;
 var runNextTest;
 
@@ -49,122 +49,108 @@ function nextTest()
 {
   var panel = $("panel");
 
-  function openPopup(position, anchor, expected, anchorEdge, pack, alignment)
+  function openPopup(position, anchor, expected, anchorEdge, pack)
   {
     expectedAnchor = anchor instanceof Node ? anchor : $(anchor);
     expectedSide = expected;
     expectedAnchorEdge = anchorEdge;
     expectedPack = pack;
-    expectedAlignment = alignment == undefined ? position : alignment;
 
     panel.removeAttribute("side");
     panel.openPopup(expectedAnchor, position, 0, 0, false, false, null);
   }
 
-  for (var iter = 0; iter < 2; iter++) {
-    openPopup("after_start", "topleft", "top", "left", "start");
-    yield;
-    openPopup("after_start", "bottomleft", "bottom", "left", "start", "before_start");
-    yield;
-    openPopup("before_start", "topleft", "top", "left", "start", "after_start");
-    yield;
-    openPopup("before_start", "bottomleft", "bottom", "left", "start");
-    yield;
-    openPopup("after_start", "middle", "top", "left", "start");
-    yield;
-    openPopup("before_start", "middle", "bottom", "left", "start");
-    yield;
+  openPopup("after_start", "topleft", "top", "left", "start");
+  yield;
+  openPopup("after_start", "bottomleft", "bottom", "left", "start");
+  yield;
+  openPopup("before_start", "topleft", "top", "left", "start");
+  yield;
+  openPopup("before_start", "bottomleft", "bottom", "left", "start");
+  yield;
+  openPopup("after_start", "middle", "top", "left", "start");
+  yield;
+  openPopup("before_start", "middle", "bottom", "left", "start");
+  yield;
 
-    openPopup("after_start", "topright", "top", "right", "end", "after_end");
-    yield;
-    openPopup("after_start", "bottomright", "bottom", "right", "end", "before_end");
-    yield;
-    openPopup("before_start", "topright", "top", "right", "end", "after_end");
-    yield;
-    openPopup("before_start", "bottomright", "bottom", "right", "end", "before_end");
-    yield;
+  openPopup("after_start", "topright", "top", "right", "end");
+  yield;
+  openPopup("after_start", "bottomright", "bottom", "right", "end");
+  yield;
+  openPopup("before_start", "topright", "top", "right", "end");
+  yield;
+  openPopup("before_start", "bottomright", "bottom", "right", "end");
+  yield;
 
-    openPopup("after_end", "middle", "top", "right", "end");
-    yield;
-    openPopup("before_end", "middle", "bottom", "right", "end");
-    yield;
+  openPopup("after_end", "middle", "top", "right", "end");
+  yield;
+  openPopup("before_end", "middle", "bottom", "right", "end");
+  yield;
 
-    openPopup("start_before", "topleft", "left", "top", "start", "end_before");
-    yield;
-    openPopup("start_before", "topright", "right", "top", "start");
-    yield;
-    openPopup("end_before", "topleft", "left", "top", "start");
-    yield;
-    openPopup("end_before", "topright", "right", "top", "start", "start_before");
-    yield;
-    openPopup("start_before", "middle", "right", "top", "start");
-    yield;
-    openPopup("end_before", "middle", "left", "top", "start");
-    yield;
+  openPopup("start_before", "topleft", "left", "top", "start");
+  yield;
+  openPopup("start_before", "topright", "right", "top", "start");
+  yield;
+  openPopup("end_before", "topleft", "left", "top", "start");
+  yield;
+  openPopup("end_before", "topright", "right", "top", "start");
+  yield;
+  openPopup("start_before", "middle", "right", "top", "start");
+  yield;
+  openPopup("end_before", "middle", "left", "top", "start");
+  yield;
 
-    openPopup("start_before", "bottomleft", "left", "bottom", "end", "end_after");
-    yield;
-    openPopup("start_before", "bottomright", "right", "bottom", "end", "start_after");
-    yield;
-    openPopup("end_before", "bottomleft", "left", "bottom", "end", "end_after");
-    yield;
-    openPopup("end_before", "bottomright", "right", "bottom", "end", "start_after");
-    yield;
+  openPopup("start_before", "bottomleft", "left", "bottom", "end");
+  yield;
+  openPopup("start_before", "bottomright", "right", "bottom", "end");
+  yield;
+  openPopup("end_before", "bottomleft", "left", "bottom", "end");
+  yield;
+  openPopup("end_before", "bottomright", "right", "bottom", "end");
+  yield;
 
-    openPopup("start_after", "middle", "right", "bottom", "end");
-    yield;
-    openPopup("end_after", "middle", "left", "bottom", "end");
-    yield;
+  openPopup("start_after", "middle", "right", "bottom", "end");
+  yield;
+  openPopup("end_after", "middle", "left", "bottom", "end");
+  yield;
 
-    openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left", "start", "before_start");
-    yield;
-    openPopup("bottomcenter topleft", "topleft", "top", "center left", "start", "after_start");
-    yield;
-    openPopup("topcenter bottomright", "bottomright", "bottom", "center right", "end", "before_end");
-    yield;
-    openPopup("bottomcenter topright", "topright", "top", "center right", "end", "after_end");
-    yield;
-    openPopup("topcenter bottomleft", "middle", "bottom", "center left", "start", "before_start");
-    yield;
-    openPopup("bottomcenter topleft", "middle", "top", "center left", "start", "after_start");
-    yield;
+  openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left", "start");
+  yield;
+  openPopup("bottomcenter topleft", "topleft", "top", "center left", "start");
+  yield;
+  openPopup("topcenter bottomright", "bottomright", "bottom", "center right", "end");
+  yield;
+  openPopup("bottomcenter topright", "topright", "top", "center right", "end");
+  yield;
+  openPopup("topcenter bottomleft", "middle", "bottom", "center left", "start");
+  yield;
+  openPopup("bottomcenter topleft", "middle", "top", "center left", "start");
+  yield;
 
-    openPopup("leftcenter topright", "middle", "right", "center top", "start", "start_before");
-    yield;
-    openPopup("rightcenter bottomleft", "middle", "left", "center bottom", "end", "end_after");
-    yield;
+  openPopup("leftcenter topright", "middle", "right", "center top", "start");
+  yield;
+  openPopup("rightcenter bottomleft", "middle", "left", "center bottom", "end");
+  yield;
 
 /*
-    XXXndeakin disable these parts of the test which often cause problems, see bug 626563
+  XXXndeakin disable these parts of the test which often cause problems, see bug 626563
 
-    openPopup("after_start", frames[0].document.getElementById("input"), "top", "left", "start");
-    yield;
+  openPopup("after_start", frames[0].document.getElementById("input"), "top", "left", "start");
+  yield;
 
-    setScale(frames[0], 1.5);
-    openPopup("after_start", frames[0].document.getElementById("input"), "top", "left", "start");
-    yield;
+  setScale(frames[0], 1.5);
+  openPopup("after_start", frames[0].document.getElementById("input"), "top", "left", "start");
+  yield;
 
-    setScale(frames[0], 2.5);
-    openPopup("before_start", frames[0].document.getElementById("input"), "bottom", "left", "start");
-    yield;
+  setScale(frames[0], 2.5);
+  openPopup("before_start", frames[0].document.getElementById("input"), "bottom", "left", "start");
+  yield;
 
-    setScale(frames[0], 1);
+  setScale(frames[0], 1);
 */
 
-    $("bigpanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
-    yield;
-
-    // switch to rtl mode
-    document.documentElement.style.direction = "rtl";
-    $("topleft").setAttribute("right", "15");
-    $("topright").setAttribute("left", "15");
-    $("bottomleft").setAttribute("right", "15");
-    $("bottomright").setAttribute("left", "15");
-    $("topleft").removeAttribute("left");
-    $("topright").removeAttribute("right");
-    $("bottomleft").removeAttribute("left");
-    $("bottomright").removeAttribute("right");
-  }
+  $("bigpanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
+  yield;
 
   SimpleTest.finish();
   yield;
@@ -188,15 +174,6 @@ function checkPanelPosition(panel)
     var framerect = anchor.ownerDocument.defaultView.frameElement.getBoundingClientRect();
     hwinpos = framerect.left;
     vwinpos = framerect.top;
-  }
-
-  // Positions are reversed in rtl yet the coordinates used in the computations
-  // are not, so flip the expected label side and anchor edge.
-  var isRTL = (window.getComputedStyle(panel).direction == "rtl");
-  if (isRTL) {
-    var flipLeftRight = function (val) val == "left" ? "right" : "left";
-    expectedAnchorEdge = expectedAnchorEdge.replace(/(left|right)/, flipLeftRight);
-    expectedSide = expectedSide.replace(/(left|right)/, flipLeftRight);
   }
 
   var panelRect = panel.getBoundingClientRect();
@@ -260,7 +237,6 @@ function checkPanelPosition(panel)
   is(arrow.getAttribute("side"), expectedSide, "panel arrow side");
   is(arrow.hidden, false, "panel hidden");
   is(arrow.parentNode.pack, expectedPack, "panel arrow pack");
-  is(panel.alignmentPosition, expectedAlignment, "panel alignmentPosition");
 
   panel.hidePopup();
 }
