@@ -1791,6 +1791,10 @@ ContentPermissionPrompt.prototype = {
       }
     }
 
+    var link = chromeWin.document.getElementById("geolocation-learnmore-link");
+    link.value = browserBundle.GetStringFromName("geolocation.learnMore");
+    link.href = Services.urlFormatter.formatURLPref("browser.geolocation.warning.infoURL");
+
     var browser = chromeWin.gBrowser.getBrowserForDocument(requestingWindow.document);
 
     secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST);
