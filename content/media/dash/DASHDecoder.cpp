@@ -235,7 +235,7 @@ DASHDecoder::NotifyDownloadEnded(nsresult aStatus)
     // Create reader thread for |ChannelMediaResource|::|Read|.
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(this, &DASHDecoder::ReadMPDBuffer);
-    NS_ENSURE_TRUE(event, );
+    NS_ENSURE_TRUE_VOID(event);
 
     nsresult rv = NS_NewNamedThread("DASH MPD Reader",
                                     getter_AddRefs(mMPDReaderThread),
@@ -792,12 +792,12 @@ DASHDecoder::Shutdown()
 
   // Call parent class shutdown.
   MediaDecoder::Shutdown();
-  NS_ENSURE_TRUE(mShuttingDown, );
+  NS_ENSURE_TRUE_VOID(mShuttingDown);
 
   // Shutdown reader thread if not already done.
   if (mMPDReaderThread) {
     nsresult rv = mMPDReaderThread->Shutdown();
-    NS_ENSURE_SUCCESS(rv, );
+    NS_ENSURE_SUCCESS_VOID(rv);
     mMPDReaderThread = nullptr;
   }
 
