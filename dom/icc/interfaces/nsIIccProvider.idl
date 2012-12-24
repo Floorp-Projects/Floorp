@@ -6,6 +6,7 @@
 
 interface nsIDOMWindow;
 interface nsIDOMDOMRequest;
+interface nsIDOMContact;
 
 [scriptable, uuid(f383a42b-0961-4bb0-b45e-dbc345d59237)]
 interface nsIIccListener : nsISupports
@@ -17,7 +18,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(1bfb62cf-544c-4adb-b91c-c75e5d0dce29)]
+[scriptable, uuid(c74b434a-fb2a-4e22-a6cd-1ac353e3f4ce)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -38,6 +39,11 @@ interface nsIIccProvider : nsISupports
                               in jsval        timer);
   void sendStkEventDownload(in nsIDOMWindow window,
                             in jsval        event);
+
+  nsIDOMDOMRequest updateContact(in nsIDOMWindow window,
+                                 in DOMString contactType,
+                                 in nsIDOMContact contact,
+                                 in DOMString pin2);
 
   /**
    * Secure Card Icc communication channel
