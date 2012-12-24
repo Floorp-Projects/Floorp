@@ -59,7 +59,7 @@ function test() {
     pressCtrlTab(true);
     pressCtrlTab(true);
     releaseCtrl();
-    ok(gBrowser.selectedTab == selectedTab,
+    ok(selectedTab.selected,
        "Ctrl+Tab*2 -> Ctrl+W -> Ctrl+Shift+Tab*2 keeps the selected tab");
   }
   gBrowser.removeTab(gBrowser.tabContainer.lastChild);

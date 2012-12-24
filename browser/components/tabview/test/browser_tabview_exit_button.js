@@ -34,7 +34,7 @@ function onTabViewLoadedAndShown() {
   gBrowser.pinTab(appTab);
 
   // verify that the normal tab is selected
-  ok(gBrowser.selectedTab == originalTab, "the normal tab is selected");
+  ok(originalTab.selected, "the normal tab is selected");
 
   // hit the exit button for the first time
   exitButton = contentWindow.document.getElementById("exit-button");
@@ -50,11 +50,11 @@ function onTabViewHiddenForNormalTab() {
   ok(!TabView.isVisible(), "Tab View is not visible");
 
   // verify that the normal tab is still selected
-  ok(gBrowser.selectedTab == originalTab, "the normal tab is still selected");
+  ok(originalTab.selected, "the normal tab is still selected");
 
   // select the app tab
   gBrowser.selectedTab = appTab;
-  ok(gBrowser.selectedTab == appTab, "the app tab is now selected");
+  ok(appTab.selected, "the app tab is now selected");
 
   // go back to tabview
   window.addEventListener("tabviewshown", onTabViewShown, false);
@@ -77,14 +77,14 @@ function onTabViewHiddenForAppTab() {
   ok(!TabView.isVisible(), "Tab View is not visible");
 
   // verify that the app tab is still selected
-  ok(gBrowser.selectedTab == appTab, "the app tab is still selected");
+  ok(appTab.selected, "the app tab is still selected");
 
   // clean up
-  gBrowser.selectedTab = originalTab; 
+  gBrowser.selectedTab = originalTab;
   gBrowser.removeTab(appTab);
 
   is(gBrowser.tabs.length, 1, "we finish with one tab");
-  ok(gBrowser.selectedTab == originalTab,
+  ok(originalTab.selected,
       "we finish with the normal tab selected");
   ok(!TabView.isVisible(), "we finish with Tab View not visible");
 

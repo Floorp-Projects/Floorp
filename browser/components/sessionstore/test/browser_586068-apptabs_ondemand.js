@@ -37,7 +37,7 @@ function test() {
     }
 
     // Check that the load only comes from the selected tab.
-    ok(gBrowser.selectedTab == tab, "load came from selected tab");
+    ok(tab.selected, "load came from selected tab");
     is(aNeedRestore, 6, "six tabs left to restore");
     is(aRestoring, 1, "one tab is restoring");
     is(aRestored, 0, "no tabs have been restored, yet");

@@ -56,11 +56,11 @@ function test() {
     let canvas = createThumbnailSurface(preview);
     let ctx = canvas.getContext("2d");
     preview.controller.drawThumbnail(ctx, canvas.width, canvas.height);
-    ok(currentSelectedTab == gBrowser.selectedTab, "Drawing thumbnail does not change selection");
+    ok(currentSelectedTab.selected, "Drawing thumbnail does not change selection");
     canvas = getCanvas(preview.controller.width, preview.controller.height);
     ctx = canvas.getContext("2d");
     preview.controller.drawPreview(ctx);
-    ok(currentSelectedTab == gBrowser.selectedTab, "Drawing preview does not change selection");
+    ok(currentSelectedTab.selected, "Drawing preview does not change selection");
   }
 
   // Close #4
@@ -70,7 +70,7 @@ function test() {
 
   // Select #1
   ok(getPreviewForTab(gBrowser.tabs[0]).controller.onActivate(), "Activation was accepted");
-  ok(gBrowser.tabs[0] == gBrowser.selectedTab, "Correct tab was selected");
+  ok(gBrowser.tabs[0].selected, "Correct tab was selected");
   checkSelectedTab();
 
   // Remove #3 (non active)
@@ -113,7 +113,7 @@ function test() {
     getPreviewForTab(gBrowser.selectedTab).active;
 
   function isTabSelected(idx)
-    gBrowser.selectedTab == gBrowser.tabs[idx];
+    gBrowser.tabs[idx].selected;
 
   function createThumbnailSurface(p) {
     let thumbnailWidth = 200,
