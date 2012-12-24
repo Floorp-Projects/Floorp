@@ -75,11 +75,20 @@ add_test(function test_read_icc_ucs2_string() {
 add_test(function test_read_8bit_unpacked_to_string() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
-  let buf = worker.Buf;
   const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
 
-  // Only write characters before PDU_NL_EXTENDED_ESCAPE to simplify test.
+  // Test 1: Read GSM alphabets.
+  // Write alphabets before ESCAPE.
   for (let i = 0; i < PDU_NL_EXTENDED_ESCAPE; i++) {
+    helper.writeHexOctet(i);
+  }
+
+  // Write two ESCAPEs to make it become ' '.
+  helper.writeHexOctet(PDU_NL_EXTENDED_ESCAPE);
+  helper.writeHexOctet(PDU_NL_EXTENDED_ESCAPE);
+
+  for (let i = PDU_NL_EXTENDED_ESCAPE + 1; i < langTable.length; i++) {
     helper.writeHexOctet(i);
   }
 
@@ -89,8 +98,228 @@ add_test(function test_read_8bit_unpacked_to_string() {
     helper.writeHexOctet(0xff);
   }
 
-  do_check_eq(helper.read8BitUnpackedToString(PDU_NL_EXTENDED_ESCAPE + ffLen),
+  do_check_eq(helper.read8BitUnpackedToString(PDU_NL_EXTENDED_ESCAPE),
               langTable.substring(0, PDU_NL_EXTENDED_ESCAPE));
+  do_check_eq(helper.read8BitUnpackedToString(2), " ");
+  do_check_eq(helper.read8BitUnpackedToString(langTable.length -
+                                              PDU_NL_EXTENDED_ESCAPE - 1 + ffLen),
+              langTable.substring(PDU_NL_EXTENDED_ESCAPE + 1));
+
+  // Test 2: Read GSM extended alphabets.
+  for (let i = 0; i < langShiftTable.length; i++) {
+    helper.writeHexOctet(PDU_NL_EXTENDED_ESCAPE);
+    helper.writeHexOctet(i);
+  }
+
+  // Read string before RESERVED_CONTROL.
+  do_check_eq(helper.read8BitUnpackedToString(PDU_NL_RESERVED_CONTROL  * 2),
+              langShiftTable.substring(0, PDU_NL_RESERVED_CONTROL));
+  // ESCAPE + RESERVED_CONTROL will become ' '.
+  do_check_eq(helper.read8BitUnpackedToString(2), " ");
+  // Read string between RESERVED_CONTROL and EXTENDED_ESCAPE.
+  do_check_eq(helper.read8BitUnpackedToString(
+                (PDU_NL_EXTENDED_ESCAPE - PDU_NL_RESERVED_CONTROL - 1)  * 2),
+              langShiftTable.substring(PDU_NL_RESERVED_CONTROL + 1,
+                                       PDU_NL_EXTENDED_ESCAPE));
+  // ESCAPE + ESCAPE will become ' '.
+  do_check_eq(helper.read8BitUnpackedToString(2), " ");
+  // Read remaining string.
+  do_check_eq(helper.read8BitUnpackedToString(
+                (langShiftTable.length - PDU_NL_EXTENDED_ESCAPE - 1)  * 2),
+              langShiftTable.substring(PDU_NL_EXTENDED_ESCAPE + 1));
+
+  run_next_test();
+});
+
+/**
+ * Verify GsmPDUHelper#writeStringTo8BitUnpacked.
+ *
+ * Test writing GSM 8 bit alphabets.
+ */
+add_test(function test_write_string_to_8bit_unpacked() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  // Length of trailing 0xff.
+  let ffLen = 2;
+  let str;
+
+  // Test 1, write GSM alphabets.
+  helper.writeStringTo8BitUnpacked(langTable.length + ffLen, langTable);
+
+  for (let i = 0; i < langTable.length; i++) {
+    do_check_eq(helper.readHexOctet(), i);
+  }
+
+  for (let i = 0; i < ffLen; i++) {
+    do_check_eq(helper.readHexOctet(), 0xff);
+  }
+
+  // Test 2, write GSM extended alphabets.
+  str = "\u000c\u20ac";
+  helper.writeStringTo8BitUnpacked(4, str);
+
+  do_check_eq(helper.read8BitUnpackedToString(4), str);
+
+  // Test 3, write GSM and GSM extended alphabets.
+  // \u000c, \u20ac are from gsm extended alphabets.
+  // \u00a3 is from gsm alphabet.
+  str = "\u000c\u20ac\u00a3";
+
+  // 2 octets * 2 = 4 octets for 2 gsm extended alphabets,
+  // 1 octet for 1 gsm alphabet,
+  // 2 octes for trailing 0xff.
+  // "Totally 7 octets are to be written."
+  helper.writeStringTo8BitUnpacked(7, str);
+
+  do_check_eq(helper.read8BitUnpackedToString(7), str);
+
+  run_next_test();
+});
+
+/**
+ * Verify GsmPDUHelper#writeStringTo8BitUnpacked with maximum octets written.
+ */
+add_test(function test_write_string_to_8bit_unpacked_with_max_octets_written() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+
+  // The maximum of the number of octets that can be written is 3.
+  // Only 3 characters shall be written even the length of the string is 4.
+  helper.writeStringTo8BitUnpacked(3, langTable.substring(0, 4));
+  helper.writeHexOctet(0xff); // dummy octet.
+  for (let i = 0; i < 3; i++) {
+    do_check_eq(helper.readHexOctet(), i);
+  }
+  do_check_false(helper.readHexOctet() == 4);
+
+  // \u000c is GSM extended alphabet, 2 octets.
+  // \u00a3 is GSM alphabet, 1 octet.
+  let str = "\u000c\u00a3";
+  helper.writeStringTo8BitUnpacked(3, str);
+  do_check_eq(helper.read8BitUnpackedToString(3), str);
+
+  str = "\u00a3\u000c";
+  helper.writeStringTo8BitUnpacked(3, str);
+  do_check_eq(helper.read8BitUnpackedToString(3), str);
+
+  // 2 GSM extended alphabets cost 4 octets, but maximum is 3, so only the 1st
+  // alphabet can be written.
+  str = "\u000c\u000c";
+  helper.writeStringTo8BitUnpacked(3, str);
+  helper.writeHexOctet(0xff); // dummy octet.
+  do_check_eq(helper.read8BitUnpackedToString(4), str.substring(0, 1));
+
+  run_next_test();
+});
+
+/**
+ * Verify GsmPDUHelper.writeAlphaIdentifier
+ */
+add_test(function test_write_alpha_identifier() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  // Length of trailing 0xff.
+  let ffLen = 2;
+
+  // Removal
+  helper.writeAlphaIdentifier(10, null);
+  do_check_eq(helper.readAlphaIdentifier(10), "");
+
+  // GSM 8 bit
+  let str = "Mozilla";
+  helper.writeAlphaIdentifier(str.length + ffLen, str);
+  do_check_eq(helper.readAlphaIdentifier(str.length + ffLen), str);
+
+  // UCS2
+  str = "Mozilla\u694a";
+  helper.writeAlphaIdentifier(str.length * 2 + ffLen, str);
+  // * 2 for each character will be encoded to UCS2 alphabets.
+  do_check_eq(helper.readAlphaIdentifier(str.length * 2 + ffLen), str);
+
+  // Test with maximum octets written.
+  // 1 coding scheme (0x80) and 1 UCS2 character, total 3 octets.
+  str = "\u694a";
+  helper.writeAlphaIdentifier(3, str);
+  do_check_eq(helper.readAlphaIdentifier(3), str);
+
+  // 1 coding scheme (0x80) and 2 UCS2 characters, total 5 octets.
+  // numOctets is limited to 4, so only 1 UCS2 character can be written.
+  str = "\u694a\u694a";
+  helper.writeAlphaIdentifier(4, str);
+  helper.writeHexOctet(0xff); // dummy octet.
+  do_check_eq(helper.readAlphaIdentifier(5), str.substring(0, 1));
+
+  // Write 0 octet.
+  helper.writeAlphaIdentifier(0, "1");
+  helper.writeHexOctet(0xff); // dummy octet.
+  do_check_eq(helper.readAlphaIdentifier(1), "");
+
+  run_next_test();
+});
+
+/**
+ * Verify GsmPDUHelper.writeAlphaIdDiallingNumber
+ */
+add_test(function test_write_alpha_id_dialling_number() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  const recordSize = 32;
+
+  // Write a normal contact.
+  let contactW = {
+    alphaId: "Mozilla",
+    number: "1234567890"
+  };
+  helper.writeAlphaIdDiallingNumber(recordSize, contactW.alphaId,
+                                    contactW.number);
+
+  let contactR = helper.readAlphaIdDiallingNumber(recordSize);
+  do_check_eq(contactW.alphaId, contactR.alphaId);
+  do_check_eq(contactW.number, contactR.number);
+
+  // Write a contact with alphaId encoded in UCS2 and number has '+'.
+  let contactUCS2 = {
+    alphaId: "火狐",
+    number: "+1234567890"
+  };
+  helper.writeAlphaIdDiallingNumber(recordSize, contactUCS2.alphaId,
+                                    contactUCS2.number);
+  contactR = helper.readAlphaIdDiallingNumber(recordSize);
+  do_check_eq(contactUCS2.alphaId, contactR.alphaId);
+  do_check_eq(contactUCS2.number, contactR.number);
+
+  // Write a null contact (Removal).
+  helper.writeAlphaIdDiallingNumber(recordSize);
+  contactR = helper.readAlphaIdDiallingNumber(recordSize);
+  do_check_eq(contactR, null);
+
+  // Write a longer alphaId/dialling number
+  // Dialling Number : Maximum 20 digits(10 octets).
+  // Alpha Identifier: 32(recordSize) - 14 (10 octets for Dialling Number, 1
+  //                   octet for TON/NPI, 1 for number length octet, and 2 for
+  //                   Ext) = Maximum 18 octets.
+  let longContact = {
+    alphaId: "AAAAAAAAABBBBBBBBBCCCCCCCCC",
+    number: "123456789012345678901234567890",
+  };
+  helper.writeAlphaIdDiallingNumber(recordSize, longContact.alphaId,
+                                    longContact.number);
+  contactR = helper.readAlphaIdDiallingNumber(recordSize);
+  do_check_eq(contactR.alphaId, "AAAAAAAAABBBBBBBBB");
+  do_check_eq(contactR.number, "12345678901234567890");
+
+  // Add '+' to number and test again.
+  longContact.number = "+123456789012345678901234567890";
+  helper.writeAlphaIdDiallingNumber(recordSize, longContact.alphaId,
+                                    longContact.number);
+  contactR = helper.readAlphaIdDiallingNumber(recordSize);
+  do_check_eq(contactR.alphaId, "AAAAAAAAABBBBBBBBB");
+  do_check_eq(contactR.number, "+12345678901234567890");
+
   run_next_test();
 });
 
@@ -208,6 +437,22 @@ add_test(function test_is_icc_service_available() {
   test_table([0x08], "ADN", true, false);
   test_table([0x08], "FDN", false, false);
   test_table([0x08], "SDN", false, true);
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCUtilsHelper.isGsm8BitAlphabet
+ */
+add_test(function test_is_gsm_8bit_alphabet() {
+  let worker = newUint8Worker();
+  let ICCUtilsHelper = worker.ICCUtilsHelper;
+  const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+
+  do_check_eq(ICCUtilsHelper.isGsm8BitAlphabet(langTable), true);
+  do_check_eq(ICCUtilsHelper.isGsm8BitAlphabet(langShiftTable), true);
+  do_check_eq(ICCUtilsHelper.isGsm8BitAlphabet("\uaaaa"), false);
 
   run_next_test();
 });
