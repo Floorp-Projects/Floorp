@@ -1442,8 +1442,8 @@ nsCookieService::Observe(nsISupports     *aSubject,
   if (!strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
-    if (mDBState && mDBState->dbConn &&
-        !nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+    if (mDBState && mDBState->dbConn && aData &&
+        !NS_strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       // Clear the cookie db if we're in the default DBState.
       RemoveAll();
     }

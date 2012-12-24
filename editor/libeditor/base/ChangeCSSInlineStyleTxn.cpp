@@ -67,7 +67,7 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAStr
 
     if (start < end) {
       if (aCaseSensitive) {
-        if (!nsCRT::strcmp(value, start)) {
+        if (value && !NS_strcmp(value, start)) {
           result = true;
           break;
         }
