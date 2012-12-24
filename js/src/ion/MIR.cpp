@@ -1721,3 +1721,19 @@ MBeta::computeRange()
         setRange(range);
     }
 }
+
+bool
+MLoadFixedSlot::mightAlias(MDefinition *store)
+{
+    if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
+        return false;
+    return true;
+}
+
+bool
+MLoadSlot::mightAlias(MDefinition *store)
+{
+    if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
+        return false;
+    return true;
+}
