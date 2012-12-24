@@ -1859,26 +1859,63 @@ PrintSortedTraceAndFrameRecords(const Writer& aWriter,
 // |nsMallocSizeOfFun| argument.  That's because those arguments are primarily
 // to aid DMD track heap blocks... but DMD deliberately doesn't track heap
 // blocks it allocated for itself!
-MOZ_EXPORT void
-SizeOf(Sizes* aSizes)
+//
+// SizeOfInternal should be called while you're holding the state lock and while
+// intercepts are blocked; SizeOf acquires the lock and blocks intercepts.
+
+static void
+SizeOfInternal(Sizes* aSizes)
 {
+  MOZ_ASSERT(gStateLock->IsLocked());
+  MOZ_ASSERT(Thread::Fetch()->InterceptsAreBlocked());
+
+  aSizes->Clear();
+
   if (!gIsDMDRunning) {
-    aSizes->Clear();
     return;
   }
 
-  aSizes->mStackTraces = 0;
+  js::HashSet<const StackTrace*, js::DefaultHasher<const StackTrace*>,
+              InfallibleAllocPolicy> usedStackTraces;
+  usedStackTraces.init(1024);
+
+  for(BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
+    const Block& b = r.front();
+    usedStackTraces.put(b.AllocStackTrace());
+    usedStackTraces.put(b.ReportStackTrace1());
+    usedStackTraces.put(b.ReportStackTrace2());
+  }
+
   for (StackTraceTable::Range r = gStackTraceTable->all();
        !r.empty();
        r.popFront()) {
     StackTrace* const& st = r.front();
-    aSizes->mStackTraces += MallocSizeOf(st);
+
+    if (usedStackTraces.has(st)) {
+      aSizes->mStackTracesUsed += MallocSizeOf(st);
+    } else {
+      aSizes->mStackTracesUnused += MallocSizeOf(st);
+    }
   }
 
   aSizes->mStackTraceTable =
     gStackTraceTable->sizeOfIncludingThis(MallocSizeOf);
 
   aSizes->mBlockTable = gBlockTable->sizeOfIncludingThis(MallocSizeOf);
+}
+
+MOZ_EXPORT void
+SizeOf(Sizes* aSizes)
+{
+  aSizes->Clear();
+
+  if (!gIsDMDRunning) {
+    return;
+  }
+
+  AutoBlockIntercepts block(Thread::Fetch());
+  AutoLockState lock;
+  SizeOfInternal(aSizes);
 }
 
 static void
@@ -2013,14 +2050,17 @@ Dump(Writer aWriter)
   // Stats are non-deterministic, so don't show them in test mode.
   if (gMode != Test) {
     Sizes sizes;
-    SizeOf(&sizes);
+    SizeOfInternal(&sizes);
 
     WriteTitle("Execution measurements\n");
 
     W("Data structures that persist after Dump() ends:\n");
 
-    W("  Stack traces:         %10s bytes\n",
-      Show(sizes.mStackTraces, gBuf1, kBufLen));
+    W("  Used stack traces:    %10s bytes\n",
+      Show(sizes.mStackTracesUsed, gBuf1, kBufLen));
+
+    W("  Unused stack traces:  %10s bytes\n",
+      Show(sizes.mStackTracesUnused, gBuf1, kBufLen));
 
     W("  Stack trace table:    %10s bytes (%s entries, %s used)\n",
       Show(sizes.mStackTraceTable,       gBuf1, kBufLen),
