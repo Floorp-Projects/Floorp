@@ -220,15 +220,6 @@ interface HTMLElement : Element {
            attribute EventHandler oncut;
   [SetterThrows]
            attribute EventHandler onpaste;
-
-  // FIXME Bug 811701 Move innerHTML/outerHTML/insertAdjacentHTML from
-  //                  HTMLElement to Element
-  [Throws,TreatNullAs=EmptyString]
-  attribute DOMString innerHTML;
-  [Throws,TreatNullAs=EmptyString]
-  attribute DOMString outerHTML;
-  [Throws]
-  void insertAdjacentHTML(DOMString position, DOMString text);
 /*
 };
 
