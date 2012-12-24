@@ -21,8 +21,7 @@
 #include "nsLayoutStatics.h"
 #include "nsIMemoryReporter.h"
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutStyleSheetServiceMallocSizeOf,
-                                     "layout/style-sheet-service")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutStyleSheetServiceMallocSizeOf)
 
 static int64_t
 GetStyleSheetServiceSize()
