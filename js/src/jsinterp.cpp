@@ -2795,96 +2795,8 @@ BEGIN_CASE(JSOP_DEFFUN)
     RootedFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
-    /*
-     * If static link is not current scope, clone fun's object to link to the
-     * current scope via parent. We do this to enable sharing of compiled
-     * functions among multiple equivalent scopes, amortizing the cost of
-     * compilation over a number of executions.  Examples include XUL scripts
-     * and event handlers shared among Firefox or other Mozilla app chrome
-     * windows, and user-defined JS functions precompiled and then shared among
-     * requests in server-side JS.
-     */
-    HandleObject scopeChain = regs.fp()->scopeChain();
-    if (fun->environment() != scopeChain) {
-        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
-        if (!fun)
-            goto error;
-    } else {
-        JS_ASSERT(script->compileAndGo);
-        JS_ASSERT(regs.fp()->isGlobalFrame() || regs.fp()->isEvalInFunction());
-    }
-
-    /*
-     * ECMA requires functions defined when entering Eval code to be
-     * impermanent.
-     */
-    unsigned attrs = regs.fp()->isEvalFrame()
-                  ? JSPROP_ENUMERATE
-                  : JSPROP_ENUMERATE | JSPROP_PERMANENT;
-
-    /*
-     * We define the function as a property of the variable object and not the
-     * current scope chain even for the case of function expression statements
-     * and functions defined by eval inside let or with blocks.
-     */
-    RootedObject &parent = rootObject0;
-    parent = &regs.fp()->varObj();
-
-    /* ES5 10.5 (NB: with subsequent errata). */
-    RootedPropertyName &name = rootName0;
-    name = fun->atom()->asPropertyName();
-    RootedShape &shape = rootShape0;
-    RootedObject &pobj = rootObject1;
-    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
+    if (!DefFunOperation(cx, script, regs.fp()->scopeChain(), fun))
         goto error;
-
-    RootedValue &rval = rootValue0;
-    rval = ObjectValue(*fun);
-
-    do {
-        /* Steps 5d, 5f. */
-        if (!shape || pobj != parent) {
-            if (!JSObject::defineProperty(cx, parent, name, rval,
-                                          JS_PropertyStub, JS_StrictPropertyStub, attrs))
-            {
-                goto error;
-            }
-            break;
-        }
-
-        /* Step 5e. */
-        JS_ASSERT(parent->isNative());
-        if (parent->isGlobal()) {
-            if (shape->configurable()) {
-                if (!JSObject::defineProperty(cx, parent, name, rval,
-                                              JS_PropertyStub, JS_StrictPropertyStub, attrs))
-                {
-                    goto error;
-                }
-                break;
-            }
-
-            if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
-                JSAutoByteString bytes;
-                if (js_AtomToPrintableString(cx, name, &bytes)) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_CANT_REDEFINE_PROP, bytes.ptr());
-                }
-                goto error;
-            }
-        }
-
-        /*
-         * Non-global properties, and global properties which we aren't simply
-         * redefining, must be set.  First, this preserves their attributes.
-         * Second, this will produce warnings and/or errors as necessary if the
-         * specified Call object property is not writable (const).
-         */
-
-        /* Step 5f. */
-        if (!JSObject::setProperty(cx, parent, parent, name, &rval, script->strict))
-            goto error;
-    } while (false);
 }
 END_CASE(JSOP_DEFFUN)
 
@@ -3909,6 +3821,93 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
 
     JS_ASSERT(clone->global() == clone->global());
     return clone;
+}
+
+bool
+js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
+                    HandleFunction funArg)
+{
+    /*
+     * If static link is not current scope, clone fun's object to link to the
+     * current scope via parent. We do this to enable sharing of compiled
+     * functions among multiple equivalent scopes, amortizing the cost of
+     * compilation over a number of executions.  Examples include XUL scripts
+     * and event handlers shared among Firefox or other Mozilla app chrome
+     * windows, and user-defined JS functions precompiled and then shared among
+     * requests in server-side JS.
+     */
+    RootedFunction fun(cx, funArg);
+    if (fun->environment() != scopeChain) {
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
+        if (!fun)
+            return false;
+    } else {
+        JS_ASSERT(script->compileAndGo);
+        JS_ASSERT_IF(!cx->fp()->beginsIonActivation(),
+                     cx->fp()->isGlobalFrame() || cx->fp()->isEvalInFunction());
+    }
+
+    /*
+     * We define the function as a property of the variable object and not the
+     * current scope chain even for the case of function expression statements
+     * and functions defined by eval inside let or with blocks.
+     */
+    RootedObject parent(cx, scopeChain);
+    while (!parent->isVarObj())
+        parent = parent->enclosingScope();
+
+    /* ES5 10.5 (NB: with subsequent errata). */
+    RootedPropertyName name(cx, fun->atom()->asPropertyName());
+
+    RootedShape shape(cx);
+    RootedObject pobj(cx);
+    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
+        return false;
+
+    RootedValue rval(cx, ObjectValue(*fun));
+
+    /*
+     * ECMA requires functions defined when entering Eval code to be
+     * impermanent.
+     */
+    unsigned attrs = script->isActiveEval
+                     ? JSPROP_ENUMERATE
+                     : JSPROP_ENUMERATE | JSPROP_PERMANENT;
+
+    /* Steps 5d, 5f. */
+    if (!shape || pobj != parent) {
+        return JSObject::defineProperty(cx, parent, name, rval, JS_PropertyStub,
+                                        JS_StrictPropertyStub, attrs);
+    }
+
+    /* Step 5e. */
+    JS_ASSERT(parent->isNative());
+    if (parent->isGlobal()) {
+        if (shape->configurable()) {
+            return JSObject::defineProperty(cx, parent, name, rval, JS_PropertyStub,
+                                            JS_StrictPropertyStub, attrs);
+        }
+
+        if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
+            JSAutoByteString bytes;
+            if (js_AtomToPrintableString(cx, name, &bytes)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REDEFINE_PROP,
+                                     bytes.ptr());
+            }
+
+            return false;
+        }
+    }
+
+    /*
+     * Non-global properties, and global properties which we aren't simply
+     * redefining, must be set.  First, this preserves their attributes.
+     * Second, this will produce warnings and/or errors as necessary if the
+     * specified Call object property is not writable (const).
+     */
+
+    /* Step 5f. */
+    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict);
 }
 
 template <bool strict>
