@@ -794,11 +794,11 @@ StackTrace::Get(Thread* aT)
   // loading a shared library).  So we can't be in gStateLock during the call
   // to NS_StackWalk.  For details, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=374829#c8
+  // On Linux, something similar can happen;  see bug 824340.
+  // So let's just release it on all platforms.
   StackTrace tmp;
   {
-#ifdef XP_WIN
     AutoUnlockState unlock;
-#endif
     // In normal operation, skip=3 gets us past various malloc wrappers into
     // more interesting stuff.  But in test mode we need to skip a bit less to
     // sufficiently differentiate some similar stacks.
