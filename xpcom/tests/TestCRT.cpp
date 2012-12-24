@@ -46,9 +46,9 @@ static void Check(const char* s1, const char* s2, int n)
   const PRUnichar* us2 = t2.get();
 
 #ifdef DEBUG
-  int u2 =
+  int u2 = us1 && us2 &&
 #endif
-    nsCRT::strcmp(us1, us2);
+    NS_strcmp(us1, us2);
 
 #ifdef DEBUG
   int u2_n =

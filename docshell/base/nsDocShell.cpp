@@ -11572,8 +11572,8 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
 {
     nsresult rv = NS_OK;
     if (mObserveErrorPages &&
-        !nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
-        !nsCRT::strcmp(aData,
+        !nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData &&
+        !NS_strcmp(aData,
           NS_LITERAL_STRING("browser.xul.error_pages.enabled").get())) {
 
         bool tmpbool;

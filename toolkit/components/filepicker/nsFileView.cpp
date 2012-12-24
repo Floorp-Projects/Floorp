@@ -856,7 +856,7 @@ nsFileView::FilterFiles()
     if (!isHidden) {
       for (uint32_t j = 0; j < filterCount; ++j) {
         bool matched = false;
-        if (!nsCRT::strcmp(mCurrentFilters.ElementAt(j),
+        if (!NS_strcmp(mCurrentFilters.ElementAt(j),
                            NS_LITERAL_STRING("..apps").get()))
         {
           file->IsExecutable(&matched);

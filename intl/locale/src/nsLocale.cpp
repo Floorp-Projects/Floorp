@@ -98,7 +98,16 @@ nsLocale::Hash_HashFunction(const void* key)
 int
 nsLocale::Hash_CompareNSString(const void* s1, const void* s2)
 {
-  return !nsCRT::strcmp((const PRUnichar *) s1, (const PRUnichar *) s2);
+  if (s1 && s2) {
+    return !NS_strcmp((const PRUnichar *) s1, (const PRUnichar *) s2);
+  }
+  if (s1) {        //s2 must have been null
+    return -1;
+  }
+  if (s2) {        //s1 must have been null
+      return 1;
+  }
+  return 0;
 }
 
 

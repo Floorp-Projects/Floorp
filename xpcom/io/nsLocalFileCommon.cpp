@@ -224,7 +224,7 @@ nsLocalFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
       if (_wcsicmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
         break;
 #else
-      if (nsCRT::strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
+      if (NS_strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
         break;
 #endif
     }
