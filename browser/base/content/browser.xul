@@ -1050,6 +1050,8 @@
     </toolbarpalette>
   </toolbox>
 
+  <hbox id="fullscr-toggler" collapsed="true"/>
+
   <hbox flex="1" id="browser">
     <vbox id="browser-border-start" hidden="true" layer="true"/>
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
