@@ -122,26 +122,18 @@ NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(bool aProcessCanceledByU
 /* void RegisterListener (in nsIWebProgressListener listener); */
 NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listener)
 {
-  nsresult rv = NS_OK;
-  
   if (!listener) //Nothing to do with a null listener!
     return NS_OK;
   
-  if (!m_listenerList)
-    rv = NS_NewISupportsArray(getter_AddRefs(m_listenerList));
-  
-  if (NS_SUCCEEDED(rv) && m_listenerList)
+  m_listenerList.AppendObject(listener);
+  if (m_closeProgress || m_processCanceled)
+    listener->OnStateChange(nullptr, nullptr,
+                            nsIWebProgressListener::STATE_STOP, NS_OK);
+  else
   {
-    m_listenerList->AppendElement(listener);
-    if (m_closeProgress || m_processCanceled)
-      listener->OnStateChange(nullptr, nullptr,
-                              nsIWebProgressListener::STATE_STOP, NS_OK);
-    else
-    {
-      listener->OnStatusChange(nullptr, nullptr, NS_OK, m_pendingStatus.get());
-      if (m_pendingStateFlags != -1)
-        listener->OnStateChange(nullptr, nullptr, m_pendingStateFlags, m_pendingStateValue);
-    }
+    listener->OnStatusChange(nullptr, nullptr, NS_OK, m_pendingStatus.get());
+    if (m_pendingStateFlags != -1)
+      listener->OnStateChange(nullptr, nullptr, m_pendingStateFlags, m_pendingStateValue);
   }
     
   return NS_OK;
@@ -150,8 +142,8 @@ NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listene
 /* void UnregisterListener (in nsIWebProgressListener listener); */
 NS_IMETHODIMP nsPrintProgress::UnregisterListener(nsIWebProgressListener *listener)
 {
-  if (m_listenerList && listener)
-    m_listenerList->RemoveElement(listener);
+  if (listener)
+    m_listenerList.RemoveObject(listener);
   
   return NS_OK;
 }
@@ -168,62 +160,32 @@ NS_IMETHODIMP nsPrintProgress::DoneIniting()
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in nsresult aStatus); */
 NS_IMETHODIMP nsPrintProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aStateFlags, nsresult aStatus)
 {
-  nsresult rv = NS_OK;
-
   m_pendingStateFlags = aStateFlags;
   m_pendingStateValue = aStatus;
   
-  if (m_listenerList)
+  uint32_t count = m_listenerList.Count();
+  for (uint32_t i = count - 1; i < count; i --)
   {
-    uint32_t count;
-    int32_t i;
-
-    rv = m_listenerList->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_FAILED(rv))
-      return rv;
-  
-    nsCOMPtr<nsISupports> aSupports;
-    nsCOMPtr<nsIWebProgressListener> aProgressListener;
-    for (i = count - 1; i >= 0; i --)
-    {
-      m_listenerList->GetElementAt(i, getter_AddRefs(aSupports));
-      aProgressListener = do_QueryInterface(aSupports);
-      if (aProgressListener)
-        aProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-    }
+    nsCOMPtr<nsIWebProgressListener> progressListener = m_listenerList.SafeObjectAt(i);
+    if (progressListener)
+      progressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
   }
   
-  return rv;
+  return NS_OK;
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP nsPrintProgress::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, int32_t aCurSelfProgress, int32_t aMaxSelfProgress, int32_t aCurTotalProgress, int32_t aMaxTotalProgress)
 {
-  nsresult rv = NS_OK;
-
-  if (m_listenerList)
+  uint32_t count = m_listenerList.Count();
+  for (uint32_t i = count - 1; i < count; i --)
   {
-    uint32_t count;
-    int32_t i;
-
-    rv = m_listenerList->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_FAILED(rv))
-      return rv;
-  
-    nsCOMPtr<nsISupports> aSupports;
-    nsCOMPtr<nsIWebProgressListener> aProgressListener;
-    for (i = count - 1; i >= 0; i --)
-    {
-      m_listenerList->GetElementAt(i, getter_AddRefs(aSupports));
-      aProgressListener = do_QueryInterface(aSupports);
-      if (aProgressListener)
-        aProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
-    }
+    nsCOMPtr<nsIWebProgressListener> progressListener = m_listenerList.SafeObjectAt(i);
+    if (progressListener)
+      progressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
   }
   
-  return rv;
+  return NS_OK;
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location, in unsigned long aFlags); */
@@ -235,32 +197,18 @@ NS_IMETHODIMP nsPrintProgress::OnLocationChange(nsIWebProgress *aWebProgress, ns
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP nsPrintProgress::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
-  nsresult rv = NS_OK;
-
   if (aMessage && *aMessage)
   m_pendingStatus = aMessage;
-  if (m_listenerList)
-  {
-    uint32_t count;
-    int32_t i;
 
-    rv = m_listenerList->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_FAILED(rv))
-      return rv;
-  
-    nsCOMPtr<nsISupports> aSupports;
-    nsCOMPtr<nsIWebProgressListener> aProgressListener;
-    for (i = count - 1; i >= 0; i --)
-    {
-      m_listenerList->GetElementAt(i, getter_AddRefs(aSupports));
-      aProgressListener = do_QueryInterface(aSupports);
-      if (aProgressListener)
-        aProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
-    }
+  uint32_t count = m_listenerList.Count();
+  for (uint32_t i = count - 1; i < count; i --)
+  {
+    nsCOMPtr<nsIWebProgressListener> progressListener = m_listenerList.SafeObjectAt(i);
+    if (progressListener)
+      progressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
   
-  return rv;
+  return NS_OK;
 }
 
 /* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
@@ -271,21 +219,8 @@ NS_IMETHODIMP nsPrintProgress::OnSecurityChange(nsIWebProgress *aWebProgress, ns
 
 nsresult nsPrintProgress::ReleaseListeners()
 {
-  nsresult rv = NS_OK;
-
-  if (m_listenerList)
-  {
-    uint32_t count;
-    int32_t i;
-
-    rv = m_listenerList->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_SUCCEEDED(rv))    
-      for (i = count - 1; i >= 0; i --)
-        m_listenerList->RemoveElementAt(i);
-  }
-  
-  return rv;
+  m_listenerList.Clear();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPrintProgress::ShowStatusString(const PRUnichar *status)
