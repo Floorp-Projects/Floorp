@@ -14,6 +14,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsHTMLStyleSheet.h"
+#include "nsIEditor.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
@@ -458,9 +459,9 @@ HTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 already_AddRefed<nsIEditor>
 HTMLBodyElement::GetAssociatedEditor()
 {
-  nsIEditor* editor = nullptr;
-  if (NS_SUCCEEDED(GetEditorInternal(&editor)) && editor) {
-    return editor;
+  nsCOMPtr<nsIEditor> editor = GetEditorInternal();
+  if (editor) {
+    return editor.forget();
   }
 
   // Make sure this is the actual body of the document
@@ -480,8 +481,8 @@ HTMLBodyElement::GetAssociatedEditor()
     return nullptr;
   }
 
-  editorDocShell->GetEditor(&editor);
-  return editor;
+  editorDocShell->GetEditor(getter_AddRefs(editor));
+  return editor.forget();
 }
 
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */

@@ -166,21 +166,16 @@ partial interface Element {
 /*
 };
 
-enum insertAdjacentHTMLPosition {
-  "beforebegin",
-  "afterbegin",
-  "beforeend",
-  "afterend"
-};
-
 // http://domparsing.spec.whatwg.org/#extensions-to-the-element-interface
 partial interface Element {
-  [Throws]
+*/
+  [Throws,TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
-  [Throws]
+  [Throws,TreatNullAs=EmptyString]
   attribute DOMString outerHTML;
   [Throws]
-  void insertAdjacentHTML(insertAdjacentHTMLPosition position, DOMString text);
+  void insertAdjacentHTML(DOMString position, DOMString text);
+/*
 };
 
 // http://www.w3.org/TR/selectors-api/#interface-definitions
