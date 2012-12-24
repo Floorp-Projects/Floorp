@@ -615,8 +615,7 @@ nsDOMMemoryFile::DataOwner::sDataOwners;
 /* static */ bool
 nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerSizeOf,
-                                     "memory-file-data");
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerMallocSizeOf)
 
 class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
   : public nsIMemoryMultiReporter
@@ -651,7 +650,7 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
     for (DataOwner *owner = DataOwner::sDataOwners->getFirst();
          owner; owner = owner->getNext()) {
 
-      size_t size = DOMMemoryFileDataOwnerSizeOf(owner->mData);
+      size_t size = DOMMemoryFileDataOwnerMallocSizeOf(owner->mData);
 
       if (size < LARGE_OBJECT_MIN_SIZE) {
         smallObjectsTotal += size;

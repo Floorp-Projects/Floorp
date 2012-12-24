@@ -401,8 +401,7 @@ CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aN
 
 NS_IMPL_QUERY_INTERFACE1(nsCategoryManager, nsICategoryManager)
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(CategoryManagerMallocSizeOf,
-                                     "category-manager")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(CategoryManagerMallocSizeOf)
 
 NS_MEMORY_REPORTER_IMPLEMENT(CategoryManager,
     "explicit/xpcom/category-manager",

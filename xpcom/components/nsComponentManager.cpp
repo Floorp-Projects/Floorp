@@ -232,8 +232,7 @@ CloneAndAppend(nsIFile* aBase, const nsACString& append)
 // nsComponentManagerImpl
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ComponentManagerMallocSizeOf,
-                                     "component-manager")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ComponentManagerMallocSizeOf)
 
 static int64_t
 GetComponentManagerSize()

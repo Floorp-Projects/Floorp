@@ -543,7 +543,7 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Explicit,
     "different results.")
 #endif  // HAVE_JEMALLOC_STATS
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(AtomTableMallocSizeOf, "atom-table")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(AtomTableMallocSizeOf)
 
 static int64_t GetAtomTableSize() {
   return NS_SizeOfAtomTablesIncludingThis(AtomTableMallocSizeOf);

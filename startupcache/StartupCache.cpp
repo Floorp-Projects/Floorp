@@ -66,7 +66,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(StartupCacheMapping,
     "Memory used to hold the mapping of the startup cache from file.  This "
     "memory is likely to be swapped out shortly after start-up.")
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(StartupCacheDataMallocSizeOf, "startup-cache/data")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(StartupCacheDataMallocSizeOf)
 
 static int64_t
 GetStartupCacheDataSize()
