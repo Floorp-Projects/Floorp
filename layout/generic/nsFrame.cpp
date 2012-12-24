@@ -2411,7 +2411,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
                      nsEventStatus*  aEventStatus)
 {
 
-  if (aEvent->message == NS_MOUSE_MOVE || aEvent->message == NS_TOUCH_MOVE) {
+  if (aEvent->message == NS_MOUSE_MOVE) {
     return HandleDrag(aPresContext, aEvent, aEventStatus);
   }
 
@@ -3012,6 +3012,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
 {
+  MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT, "HandleDrag can only handle mouse event");
+
   bool    selectable;
   uint8_t selectStyle;
   IsSelectable(&selectable, &selectStyle);
@@ -3031,14 +3033,6 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     return NS_OK;
 
   frameselection->StopAutoScrollTimer();
-
-#ifdef MOZ_B2G
-  // We only check touch move event since mouse move event is not cancelable.
-  if (aEvent->message == NS_TOUCH_MOVE &&
-      nsEventStatus_eConsumeNoDefault == *aEventStatus) {
-    return NS_OK;
-  }
-#endif // MOZ_B2G
 
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
