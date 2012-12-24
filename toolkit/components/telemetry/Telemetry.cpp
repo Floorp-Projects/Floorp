@@ -329,7 +329,7 @@ private:
 
 TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(TelemetryMallocSizeOf, "telemetry")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(TelemetryMallocSizeOf)
 
 size_t
 TelemetryImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)

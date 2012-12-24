@@ -140,7 +140,7 @@ WebGLMemoryMultiReporterWrapper::~WebGLMemoryMultiReporterWrapper()
     NS_UnregisterMemoryMultiReporter(mReporter);
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLBufferMallocSizeOfFun, "webgl-buffer")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLBufferMallocSizeOf)
 
 int64_t 
 WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed() {
@@ -152,13 +152,13 @@ WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed() {
              buffer = buffer->getNext())
         {
             if (buffer->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
-                result += buffer->SizeOfIncludingThis(WebGLBufferMallocSizeOfFun);
+                result += buffer->SizeOfIncludingThis(WebGLBufferMallocSizeOf);
         }
     }
     return result;
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLShaderMallocSizeOfFun, "webgl-shader")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLShaderMallocSizeOf)
 
 int64_t 
 WebGLMemoryMultiReporterWrapper::GetShaderSize() {
@@ -169,7 +169,7 @@ WebGLMemoryMultiReporterWrapper::GetShaderSize() {
              shader;
              shader = shader->getNext())
         {
-            result += shader->SizeOfIncludingThis(WebGLShaderMallocSizeOfFun);
+            result += shader->SizeOfIncludingThis(WebGLShaderMallocSizeOf);
         }
     }
     return result;
