@@ -1106,7 +1106,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     // The profile is about to change,
     // or is going away because the application is shutting down.
     mIsShuttingDown = true;
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+    if (someData && !NS_strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       // Clear the permissions file and close the db asynchronously
       RemoveAllInternal(false);
     } else {
