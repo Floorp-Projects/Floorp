@@ -198,7 +198,7 @@ private:
   // The principal of this image.
   nsCOMPtr<nsIPrincipal> mPrincipal;
   // Status-tracker -- transferred to mImage, when it gets instantiated
-  nsAutoPtr<imgStatusTracker> mStatusTracker;
+  nsRefPtr<imgStatusTracker> mStatusTracker;
   nsRefPtr<mozilla::image::Image> mImage;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;

@@ -282,7 +282,7 @@ nsGonkCameraControl::Init()
 nsGonkCameraControl::~nsGonkCameraControl()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, mHwHandle = %d\n", __func__, __LINE__, this, mHwHandle);
-  GonkCameraHardware::ReleaseHandle(mHwHandle);
+  ReleaseHardwareImpl(nullptr);
   if (mRwLock) {
     PRRWLock* lock = mRwLock;
     mRwLock = nullptr;
@@ -616,6 +616,9 @@ nsGonkCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStrea
   // stop any currently running preview
   StopPreviewInternal(true /* forced */);
 
+  // remove any existing recorder profile
+  mRecorderProfile = nullptr;
+
   SetPreviewSize(aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height);
   DOM_CAMERA_LOGI("picture preview: wanted %d x %d, got %d x %d (%d fps, format %d)\n", aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height, mWidth, mHeight, mFps, mFormat);
 
@@ -851,8 +854,8 @@ nsGonkCameraControl::PullParametersImpl()
 nsresult
 nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
 {
-  mStartRecordingOnSuccessCb = aStartRecording->mOnSuccessCb;
-  mStartRecordingOnErrorCb = aStartRecording->mOnErrorCb;
+  NS_ENSURE_TRUE(mRecorderProfile, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_FALSE(mRecorder, NS_ERROR_FAILURE);
 
   /**
    * Get the base path from device storage and append the app-specified
@@ -921,6 +924,9 @@ private:
 nsresult
 nsGonkCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
 {
+  // nothing to do if we have no mRecorder
+  NS_ENSURE_TRUE(mRecorder, NS_OK);
+
   mRecorder->stop();
   delete mRecorder;
   mRecorder = nullptr;
@@ -1304,6 +1310,32 @@ nsGonkCameraControl::GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch GetPreviewStreamVideoMode() onSuccess callback to main thread!");
     return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsGonkCameraControl::ReleaseHardwareImpl(ReleaseHardwareTask* aReleaseHardware)
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+
+  // if we're recording, stop recording
+  if (mRecorder) {
+    DOM_CAMERA_LOGI("shutting down existing video recorder\n");
+    mRecorder->stop();
+    mRecorder = nullptr;
+  }
+
+  // stop the preview
+  StopPreviewInternal(true /* forced */);
+
+  // release the hardware handle
+  GonkCameraHardware::ReleaseHandle(mHwHandle);
+
+  if (aReleaseHardware && aReleaseHardware->mOnSuccessCb) {
+    nsCOMPtr<nsIRunnable> releaseHardwareResult = new ReleaseHardwareResult(aReleaseHardware->mOnSuccessCb, mWindowId);
+    return NS_DispatchToMainThread(releaseHardwareResult);
   }
 
   return NS_OK;

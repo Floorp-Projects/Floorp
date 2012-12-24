@@ -9,13 +9,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796888
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=796888">Basic video-only peer connection</a>
 <p id="display"></p>
-<div id="content" style="">
+<div id="content" style="display: none">
   <video id="videoPCLocal" width="160" height="120" controls></video>
   <video id="videoPCRemote" width="160" height="120" controls></video>
   <video id="videoLocal" width="160" height="120" controls></video>
@@ -75,20 +74,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796888
           is(pcRemote.localStreams.length, 1,
              "A single local stream has been attached to the remote peer");
 
-          // Bug 816780 - onaddstream() gets called twice even if only video or audio is requested
           is(test_data.pcLocal.video.length, 1,
-             "A remote audio stream has been attached to the local peer");
-          todo_is(test_data.pcLocal.audio.length, 0,
-                  "No remote video stream has been attached to the local peer");
+             "A remote video stream has been attached to the local peer");
+          is(test_data.pcLocal.audio.length, 0,
+             "A temporary remote audio stream has been attached to the local peer");
           is(test_data.pcRemote.video.length, 1,
-             "A remote audio stream has been attached to the remote peer");
-          todo_is(test_data.pcRemote.audio.length, 0,
-                  "No remote video stream has been attached to the remote peer");
+             "A remote video stream has been attached to the remote peer");
+          is(test_data.pcRemote.audio.length, 0,
+             "A temporary remote audio stream has been attached to the remote peer");
 
-          todo_is(test_data.pcLocal.video[0], pcLocal.remoteStreams[0],
-                  "Remote stream for local peer is accessible");
-          todo_is(test_data.pcRemote.video[0], pcRemote.remoteStreams[0],
-                  "Remote stream for remote peer is accessible");
+          ok(PeerConnection.findStream(pcLocal.remoteStreams, test_data.pcLocal.video[0]) !== -1,
+             "Remote video stream for local peer is accessible");
+          ok(PeerConnection.findStream(pcRemote.remoteStreams, test_data.pcRemote.video[0]) !== -1,
+             "Remote video stream for remote peer is accessible");
 
           info("For now simply disconnect. We will add checks for media in a follow-up bug");
           disconnect();

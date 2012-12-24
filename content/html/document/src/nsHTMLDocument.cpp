@@ -1025,7 +1025,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   return NodePrincipal()->SetDomain(newURI);
 }
 
-nsIContent*
+Element*
 nsHTMLDocument::GetBody()
 {
   Element* body = GetBodyElement();
@@ -1040,7 +1040,7 @@ nsHTMLDocument::GetBody()
   nsRefPtr<nsContentList> nodeList =
     NS_GetContentList(this, kNameSpaceID_XHTML, NS_LITERAL_STRING("frameset"));
 
-  return nodeList->Item(0);
+  return nodeList->GetElementAt(0);
 }
 
 NS_IMETHODIMP

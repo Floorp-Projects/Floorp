@@ -9,6 +9,7 @@
 #include "nsSVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
+#include "mozilla/dom/SVGAnimatedNumberListBinding.h"
 
 // See the architecture comment in this file's header.
 
@@ -17,39 +18,40 @@ namespace mozilla {
 static nsSVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>
   sSVGAnimatedNumberListTearoffTable;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGAnimatedNumberList, mElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedNumberList, mElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedNumberList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedNumberList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGAnimatedNumberList, mozilla::DOMSVGAnimatedNumberList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedNumberList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedNumberList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedNumberList)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-DOMSVGAnimatedNumberList::GetBaseVal(nsIDOMSVGNumberList **_retval)
+JSObject*
+DOMSVGAnimatedNumberList::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return mozilla::dom::SVGAnimatedNumberListBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+already_AddRefed<DOMSVGNumberList>
+DOMSVGAnimatedNumberList::BaseVal()
 {
   if (!mBaseVal) {
     mBaseVal = new DOMSVGNumberList(this, InternalAList().GetBaseValue());
   }
-  NS_ADDREF(*_retval = mBaseVal);
-  return NS_OK;
+  nsRefPtr<DOMSVGNumberList> baseVal = mBaseVal;
+  return baseVal.forget();
 }
 
-NS_IMETHODIMP
-DOMSVGAnimatedNumberList::GetAnimVal(nsIDOMSVGNumberList **_retval)
+already_AddRefed<DOMSVGNumberList>
+DOMSVGAnimatedNumberList::AnimVal()
 {
   if (!mAnimVal) {
     mAnimVal = new DOMSVGNumberList(this, InternalAList().GetAnimValue());
   }
-  NS_ADDREF(*_retval = mAnimVal);
-  return NS_OK;
+  nsRefPtr<DOMSVGNumberList> animVal = mAnimVal;
+  return animVal.forget();
 }
 
 /* static */ already_AddRefed<DOMSVGAnimatedNumberList>

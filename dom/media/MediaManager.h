@@ -4,6 +4,7 @@
 
 #include "MediaEngine.h"
 #include "mozilla/Services.h"
+#include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"
 #include "nsGlobalWindow.h"
@@ -14,6 +15,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPtr.h"
 #include "prlog.h"
 
 namespace mozilla {
@@ -272,9 +274,12 @@ private:
   nsRefPtr<MediaEngineSource> mSource;
 };
 
-class MediaManager MOZ_FINAL : public nsIObserver
+class MediaManager MOZ_FINAL : public nsIMediaManagerService,
+                               public nsIObserver
 {
 public:
+  static already_AddRefed<MediaManager> GetInstance();
+
   static MediaManager* Get() {
     if (!sSingleton) {
       sSingleton = new MediaManager();
@@ -296,6 +301,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEDIAMANAGERSERVICE
 
   MediaEngine* GetBackend();
   StreamListeners *GetWindowListeners(uint64_t aWindowId) {
@@ -345,7 +351,7 @@ private:
   // protected with mMutex:
   MediaEngine* mBackend;
 
-  static nsRefPtr<MediaManager> sSingleton;
+  static StaticRefPtr<MediaManager> sSingleton;
 };
 
 } // namespace mozilla

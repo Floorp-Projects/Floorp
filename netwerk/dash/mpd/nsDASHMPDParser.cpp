@@ -136,29 +136,29 @@ nsDASHMPDParser::PrintDOMElement(nsIDOMElement* aElem, int32_t offset)
     ss.Append(NS_LITERAL_STRING(" "));
   // Tag name.
   nsAutoString tagName;
-  NS_ENSURE_SUCCESS(aElem->GetTagName(tagName),);
+  NS_ENSURE_SUCCESS_VOID(aElem->GetTagName(tagName));
   ss += NS_LITERAL_STRING("<");
   ss += tagName;
 
   // Attributes.
   nsCOMPtr<nsIDOMNamedNodeMap> attributes;
-  NS_ENSURE_SUCCESS(aElem->GetAttributes(getter_AddRefs(attributes)),);
+  NS_ENSURE_SUCCESS_VOID(aElem->GetAttributes(getter_AddRefs(attributes)));
 
   uint32_t count;
-  NS_ENSURE_SUCCESS(attributes->GetLength(&count),);
+  NS_ENSURE_SUCCESS_VOID(attributes->GetLength(&count));
 
   for(uint32_t i = 0; i < count; i++)
   {
     ss += NS_LITERAL_STRING(" ");
     nsCOMPtr<nsIDOMNode> node;
-    NS_ENSURE_SUCCESS(attributes->Item(i, getter_AddRefs(node)), );
+    NS_ENSURE_SUCCESS_VOID(attributes->Item(i, getter_AddRefs(node)));
 
     nsAutoString nodeName;
-    NS_ENSURE_SUCCESS(node->GetNodeName(nodeName),);
+    NS_ENSURE_SUCCESS_VOID(node->GetNodeName(nodeName));
     ss += nodeName;
 
     nsAutoString nodeValue;
-    NS_ENSURE_SUCCESS(node->GetNodeValue(nodeValue),);
+    NS_ENSURE_SUCCESS_VOID(node->GetNodeValue(nodeValue));
     if(!nodeValue.IsEmpty()) {
       ss += NS_LITERAL_STRING("=");
       ss += nodeValue;
@@ -171,12 +171,12 @@ nsDASHMPDParser::PrintDOMElement(nsIDOMElement* aElem, int32_t offset)
 
   // Print for each child.
   nsCOMPtr<nsIDOMElement> child;
-  NS_ENSURE_SUCCESS(aElem->GetFirstElementChild(getter_AddRefs(child)),);
+  NS_ENSURE_SUCCESS_VOID(aElem->GetFirstElementChild(getter_AddRefs(child)));
 
   while(child)
   {
     PrintDOMElement(child, offset);
-    NS_ENSURE_SUCCESS(child->GetNextElementSibling(getter_AddRefs(child)),);
+    NS_ENSURE_SUCCESS_VOID(child->GetNextElementSibling(getter_AddRefs(child)));
   }
 }
 
@@ -184,10 +184,10 @@ nsDASHMPDParser::PrintDOMElement(nsIDOMElement* aElem, int32_t offset)
 void
 nsDASHMPDParser::PrintDOMElements(nsIDOMElement* aRoot)
 {
-  NS_ENSURE_TRUE(aRoot, );
+  NS_ENSURE_TRUE_VOID(aRoot);
 
   DASHMPDProfile profile;
-  NS_ENSURE_SUCCESS(GetProfile(aRoot, profile), );
+  NS_ENSURE_SUCCESS_VOID(GetProfile(aRoot, profile));
   LOG("Profile Is %d",(int32_t)profile);
   PrintDOMElement(aRoot, 0);
 }

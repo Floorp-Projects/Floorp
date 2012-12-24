@@ -1203,6 +1203,12 @@ PP_TARGETS += PREF_JS_EXPORTS
 endif
 endif
 
+# Set a flag that can be used in pref files to disable features if
+# we are not building for Aurora or Nightly.
+ifeq (,$(findstring a,$(GRE_MILESTONE)))
+PREF_PPFLAGS += -DRELEASE_BUILD
+endif
+
 ################################################################################
 # Copy each element of AUTOCFG_JS_EXPORTS to $(FINAL_TARGET)/defaults/autoconfig
 

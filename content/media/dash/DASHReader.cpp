@@ -97,7 +97,7 @@ void
 DASHReader::AddAudioReader(DASHRepReader* aAudioReader)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  NS_ENSURE_TRUE(aAudioReader, );
+  NS_ENSURE_TRUE_VOID(aAudioReader);
 
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
@@ -111,7 +111,7 @@ void
 DASHReader::AddVideoReader(DASHRepReader* aVideoReader)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  NS_ENSURE_TRUE(aVideoReader, );
+  NS_ENSURE_TRUE_VOID(aVideoReader);
 
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
@@ -504,8 +504,8 @@ DASHReader::PossiblySwitchVideoReaders()
   }
 
   // Only switch if we reached a switch access point.
-  NS_ENSURE_TRUE(0 <= mSwitchCount, );
-  NS_ENSURE_TRUE((uint32_t)mSwitchCount < mSwitchToVideoSubsegmentIndexes.Length(), );
+  NS_ENSURE_TRUE_VOID(0 <= mSwitchCount);
+  NS_ENSURE_TRUE_VOID((uint32_t)mSwitchCount < mSwitchToVideoSubsegmentIndexes.Length());
   uint32_t switchIdx = mSwitchToVideoSubsegmentIndexes[mSwitchCount];
   if (!mVideoReader->HasReachedSubsegment(switchIdx)) {
     return;
@@ -514,12 +514,12 @@ DASHReader::PossiblySwitchVideoReaders()
   // Get Representation index to switch to.
   DASHDecoder* dashDecoder = static_cast<DASHDecoder*>(mDecoder);
   int32_t toReaderIdx = dashDecoder->GetRepIdxForVideoSubsegmentLoad(switchIdx);
-  NS_ENSURE_TRUE(0 <= toReaderIdx, );
-  NS_ENSURE_TRUE((uint32_t)toReaderIdx < mVideoReaders.Length(), );
+  NS_ENSURE_TRUE_VOID(0 <= toReaderIdx);
+  NS_ENSURE_TRUE_VOID((uint32_t)toReaderIdx < mVideoReaders.Length());
 
   DASHRepReader* fromReader = mVideoReader;
   DASHRepReader* toReader = mVideoReaders[toReaderIdx];
-  NS_ENSURE_TRUE(fromReader != toReader, );
+  NS_ENSURE_TRUE_VOID(fromReader != toReader);
 
   LOG("Switching video readers now from [%p] to [%p] at subsegment [%d]: "
       "mSwitchCount [%d].",
@@ -538,8 +538,8 @@ DASHReader::PossiblySwitchVideoReaders()
     fromReader = toReader;
     toReaderIdx = dashDecoder->GetRepIdxForVideoSubsegmentLoad(switchIdx);
     toReader = mVideoReaders[toReaderIdx];
-    NS_ENSURE_TRUE((uint32_t)toReaderIdx < mVideoReaders.Length(), );
-    NS_ENSURE_TRUE(fromReader != toReader, );
+    NS_ENSURE_TRUE_VOID((uint32_t)toReaderIdx < mVideoReaders.Length());
+    NS_ENSURE_TRUE_VOID(fromReader != toReader);
 
     // Tell the SWITCH FROM reader when it should stop reading.
     fromReader->RequestSwitchAtSubsegment(switchIdx, toReader);

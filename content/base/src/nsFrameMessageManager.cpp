@@ -231,7 +231,7 @@ GetParamsForMessage(JSContext* aCx,
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
   jsval val = JSVAL_NULL;
-  NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const jschar*>(PromiseFlatString(json).get()),
+  NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const jschar*>(json.get()),
                               json.Length(), &val), false);
 
   return WriteStructuredClone(aCx, val, aBuffer, aClosure);
@@ -535,7 +535,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         }
         JSString* jsMessage =
           JS_NewUCStringCopyN(ctx,
-                              static_cast<const jschar*>(PromiseFlatString(aMessage).get()),
+                              static_cast<const jschar*>(aMessage.BeginReading()),
                               aMessage.Length());
         NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
         JS_DefineProperty(ctx, param, "target", targetv, NULL, NULL, JSPROP_ENUMERATE);

@@ -1087,7 +1087,7 @@ ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
     MDefinition *lhs = compare->getOperand(0);
     MDefinition *rhs = compare->getOperand(1);
 
-    if (compare->specialization() != MIRType_Int32)
+    if (compare->compareType() != MCompare::Compare_Int32)
         return false;
 
     JS_ASSERT(lhs->type() == MIRType_Int32);

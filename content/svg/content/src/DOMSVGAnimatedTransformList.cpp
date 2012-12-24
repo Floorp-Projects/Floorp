@@ -7,6 +7,7 @@
 #include "DOMSVGTransformList.h"
 #include "SVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
+#include "mozilla/dom/SVGAnimatedTransformListBinding.h"
 
 namespace mozilla {
 
@@ -14,44 +15,41 @@ static
   nsSVGAttrTearoffTable<SVGAnimatedTransformList,DOMSVGAnimatedTransformList>
   sSVGAnimatedTransformListTearoffTable;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGAnimatedTransformList, mElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedTransformList, mElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedTransformList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedTransformList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGAnimatedTransformList, mozilla::DOMSVGAnimatedTransformList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedTransformList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedTransformList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedTransformList)
 NS_INTERFACE_MAP_END
 
-//----------------------------------------------------------------------
-// nsIDOMSVGAnimatedTransformList methods:
+JSObject*
+DOMSVGAnimatedTransformList::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return mozilla::dom::SVGAnimatedTransformListBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
-/* readonly attribute nsIDOMSVGTransformList baseVal; */
-NS_IMETHODIMP
-DOMSVGAnimatedTransformList::GetBaseVal(nsIDOMSVGTransformList** aBaseVal)
+//----------------------------------------------------------------------
+already_AddRefed<DOMSVGTransformList>
+DOMSVGAnimatedTransformList::BaseVal()
 {
   if (!mBaseVal) {
     mBaseVal = new DOMSVGTransformList(this, InternalAList().GetBaseValue());
   }
-  NS_ADDREF(*aBaseVal = mBaseVal);
-  return NS_OK;
+  nsRefPtr<DOMSVGTransformList> baseVal = mBaseVal;
+  return baseVal.forget();
 }
 
-/* readonly attribute nsIDOMSVGTransformList animVal; */
-NS_IMETHODIMP
-DOMSVGAnimatedTransformList::GetAnimVal(nsIDOMSVGTransformList** aAnimVal)
+already_AddRefed<DOMSVGTransformList>
+DOMSVGAnimatedTransformList::AnimVal()
 {
   if (!mAnimVal) {
     mAnimVal = new DOMSVGTransformList(this, InternalAList().GetAnimValue());
   }
-  NS_ADDREF(*aAnimVal = mAnimVal);
-  return NS_OK;
+  nsRefPtr<DOMSVGTransformList> animVal = mAnimVal;
+  return animVal.forget();
 }
 
 /* static */ already_AddRefed<DOMSVGAnimatedTransformList>

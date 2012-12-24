@@ -43,6 +43,9 @@ protected:
                                            const nsString& aBinaryType,
                                            PBrowserChild* aBrowser);
   virtual bool DeallocPTCPSocket(PTCPSocketChild*);
+  virtual PRemoteOpenFileChild* AllocPRemoteOpenFile(const URIParams&,
+                                                     PBrowserChild*);
+  virtual bool DeallocPRemoteOpenFile(PRemoteOpenFileChild*);
 };
 
 /**

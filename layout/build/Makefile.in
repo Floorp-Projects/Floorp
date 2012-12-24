@@ -302,6 +302,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/settings \
 		   -I$(topsrcdir)/dom/permission \
 		   -I$(topsrcdir)/dom/telephony \
+		   -I$(topsrcdir)/dom/media \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \

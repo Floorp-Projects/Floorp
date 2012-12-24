@@ -10,7 +10,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsIDOMSVGLengthList.h"
 #include "nsTArray.h"
 #include "SVGLengthList.h"
 #include "mozilla/Attributes.h"
@@ -40,7 +39,7 @@ class DOMSVGLength;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGLengthList MOZ_FINAL : public nsIDOMSVGLengthList,
+class DOMSVGLengthList MOZ_FINAL : public nsISupports,
                                    public nsWrapperCache
 {
   friend class DOMSVGLength;
@@ -48,7 +47,6 @@ class DOMSVGLengthList MOZ_FINAL : public nsIDOMSVGLengthList,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGLengthList)
-  NS_DECL_NSIDOMSVGLENGTHLIST
 
   DOMSVGLengthList(DOMSVGAnimatedLengthList *aAList,
                    const SVGLengthList &aInternalList)

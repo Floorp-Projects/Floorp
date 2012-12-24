@@ -70,7 +70,7 @@ PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 
 #define GETHASH_TABLES_PREF     "urlclassifier.gethashtables"
 
-#define CONFIRM_AGE_PREF        "urlclassifier.confirm-age"
+#define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
 #define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
 
 class nsUrlClassifierDBServiceWorker;

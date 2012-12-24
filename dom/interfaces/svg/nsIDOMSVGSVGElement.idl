@@ -8,12 +8,8 @@
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGRect;
 interface nsIDOMSVGViewSpec;
-interface nsIDOMSVGPoint;
 interface nsIDOMSVGNumber;
 interface nsIDOMSVGLength;
-interface nsIDOMSVGAngle;
-interface nsIDOMSVGMatrix;
-interface nsIDOMSVGTransform;
 
 // undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
 %{C++
@@ -56,7 +52,8 @@ interface nsIDOMSVGSVGElement
   readonly attribute nsIDOMSVGViewSpec currentView;
   attribute float currentScale;
       // raises DOMException on setting
-  readonly attribute nsIDOMSVGPoint currentTranslate;
+  //  SVGPoint
+  readonly attribute nsISupports currentTranslate;
 
   unsigned long suspendRedraw(in unsigned long max_wait_milliseconds);
   void          unsuspendRedraw(in unsigned long suspend_handle_id);
@@ -76,11 +73,16 @@ interface nsIDOMSVGSVGElement
   void          deSelectAll();
   nsIDOMSVGNumber       createSVGNumber();
   nsIDOMSVGLength       createSVGLength();
-  nsIDOMSVGAngle        createSVGAngle();
-  nsIDOMSVGPoint        createSVGPoint();
-  nsIDOMSVGMatrix       createSVGMatrix();
+  // SVGAngle
+  nsISupports           createSVGAngle();
+  // SVGPoint
+  nsISupports           createSVGPoint();
+  // SVGMatrix
+  nsISupports           createSVGMatrix();
   nsIDOMSVGRect         createSVGRect();
-  nsIDOMSVGTransform    createSVGTransform();
-  nsIDOMSVGTransform    createSVGTransformFromMatrix(in nsIDOMSVGMatrix matrix);
+  // SVGTransform
+  nsISupports           createSVGTransform();
+  // SVGTransform                                       SVGMatrix
+  nsISupports           createSVGTransformFromMatrix(in nsISupports matrix);
   nsIDOMElement         getElementById(in DOMString elementId);
 };

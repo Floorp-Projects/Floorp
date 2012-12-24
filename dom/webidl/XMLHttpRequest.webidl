@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface Document;
 interface Blob;
 interface InputStream;
 interface MozChannel;
