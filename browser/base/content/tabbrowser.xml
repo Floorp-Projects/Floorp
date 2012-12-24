@@ -2239,9 +2239,12 @@
       <method name="moveTabForward">
         <body>
           <![CDATA[
-            var tabPos = this.mCurrentTab._tPos;
-            if (tabPos < this.browsers.length - 1)
-              this.moveTabTo(this.mCurrentTab, tabPos + 1);
+            let nextTab = this.mCurrentTab.nextSibling;
+            while (nextTab && nextTab.hidden)
+              nextTab = nextTab.nextSibling;
+
+            if (nextTab)
+              this.moveTabTo(this.mCurrentTab, nextTab._tPos);
             else if (this.arrowKeysShouldWrap)
               this.moveTabToStart();
           ]]>
@@ -2251,9 +2254,12 @@
       <method name="moveTabBackward">
         <body>
           <![CDATA[
-            var tabPos = this.mCurrentTab._tPos;
-            if (tabPos > 0)
-              this.moveTabTo(this.mCurrentTab, tabPos - 1);
+            let previousTab = this.mCurrentTab.previousSibling;
+            while (previousTab && previousTab.hidden)
+              previousTab = previousTab.previousSibling;
+
+            if (previousTab)
+              this.moveTabTo(this.mCurrentTab, previousTab._tPos);
             else if (this.arrowKeysShouldWrap)
               this.moveTabToEnd();
           ]]>
