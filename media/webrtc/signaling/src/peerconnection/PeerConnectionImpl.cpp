@@ -914,7 +914,7 @@ NS_IMETHODIMP
 PeerConnectionImpl::Close(bool aIsSynchronous)
 {
   CSFLogDebugS(logTag, __FUNCTION__);
-  PC_AUTO_ENTER_API_CALL(false);
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt(aIsSynchronous);
 }
