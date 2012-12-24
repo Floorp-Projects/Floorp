@@ -1671,7 +1671,7 @@
             const filter = this.mTabFilters[aTab._tPos];
 #ifdef MOZ_E10S_COMPAT
             // Bug 666801 - WebProgress support for e10s
-#else 
+#else
             browser.webProgress.removeProgressListener(filter);
 #endif
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
@@ -2203,6 +2203,8 @@
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
+          let wasFocused = (document.activeElement == this.mCurrentTab);
+
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
           this.mCurrentTab._selected = false;
 
@@ -2219,6 +2221,10 @@
             this.tabs[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
+
+          if (wasFocused)
+            this.mCurrentTab.focus();
+
           this.tabContainer._handleTabSelect(false);
 
           if (aTab.pinned)
@@ -2235,10 +2241,8 @@
         <body>
           <![CDATA[
             var tabPos = this.mCurrentTab._tPos;
-            if (tabPos < this.browsers.length - 1) {
+            if (tabPos < this.browsers.length - 1)
               this.moveTabTo(this.mCurrentTab, tabPos + 1);
-              this.mCurrentTab.focus();
-            }
             else if (this.arrowKeysShouldWrap)
               this.moveTabToStart();
           ]]>
@@ -2249,10 +2253,8 @@
         <body>
           <![CDATA[
             var tabPos = this.mCurrentTab._tPos;
-            if (tabPos > 0) {
+            if (tabPos > 0)
               this.moveTabTo(this.mCurrentTab, tabPos - 1);
-              this.mCurrentTab.focus();
-            }
             else if (this.arrowKeysShouldWrap)
               this.moveTabToEnd();
           ]]>
@@ -2263,10 +2265,8 @@
         <body>
           <![CDATA[
             var tabPos = this.mCurrentTab._tPos;
-            if (tabPos > 0) {
+            if (tabPos > 0)
               this.moveTabTo(this.mCurrentTab, 0);
-              this.mCurrentTab.focus();
-            }
           ]]>
         </body>
       </method>
@@ -2275,11 +2275,8 @@
         <body>
           <![CDATA[
             var tabPos = this.mCurrentTab._tPos;
-            if (tabPos < this.browsers.length - 1) {
-              this.moveTabTo(this.mCurrentTab,
-                             this.browsers.length - 1);
-              this.mCurrentTab.focus();
-            }
+            if (tabPos < this.browsers.length - 1)
+              this.moveTabTo(this.mCurrentTab, this.browsers.length - 1);
           ]]>
         </body>
       </method>
