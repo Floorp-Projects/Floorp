@@ -49,8 +49,8 @@ namespace net {
 void
 SegmentBase::GetIndexRange(int64_t* aStartBytes, int64_t* aEndBytes) const
 {
-  NS_ENSURE_TRUE(aStartBytes, );
-  NS_ENSURE_TRUE(aEndBytes, );
+  NS_ENSURE_TRUE_VOID(aStartBytes);
+  NS_ENSURE_TRUE_VOID(aEndBytes);
   *aStartBytes = mIndexRangeStart;
   *aEndBytes = mIndexRangeEnd;
 }
@@ -58,8 +58,8 @@ SegmentBase::GetIndexRange(int64_t* aStartBytes, int64_t* aEndBytes) const
 void
 SegmentBase::GetInitRange(int64_t* aStartBytes, int64_t* aEndBytes) const
 {
-  NS_ENSURE_TRUE(aStartBytes, );
-  NS_ENSURE_TRUE(aEndBytes, );
+  NS_ENSURE_TRUE_VOID(aStartBytes);
+  NS_ENSURE_TRUE_VOID(aEndBytes);
   *aStartBytes = mInitRangeStart;
   *aEndBytes = mInitRangeEnd;
 }
@@ -81,7 +81,7 @@ SegmentBase::SetRange(nsAString const &aRangeStr,
                       int64_t &aStart,
                       int64_t &aEnd)
 {
-  NS_ENSURE_TRUE(!aRangeStr.IsEmpty(), );
+  NS_ENSURE_TRUE_VOID(!aRangeStr.IsEmpty());
 
   nsAString::const_iterator start, end, dashStart, dashEnd;
 
@@ -94,11 +94,11 @@ SegmentBase::SetRange(nsAString const &aRangeStr,
     nsAutoString temp(Substring(start, dashStart));
     nsresult rv;
     aStart = temp.ToInteger64(&rv);
-    NS_ENSURE_SUCCESS(rv, );
+    NS_ENSURE_SUCCESS_VOID(rv);
 
     temp = Substring(dashEnd, end);
     aEnd = temp.ToInteger64(&rv);
-    NS_ENSURE_SUCCESS(rv, );
+    NS_ENSURE_SUCCESS_VOID(rv);
   }
 }
 

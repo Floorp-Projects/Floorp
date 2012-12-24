@@ -65,7 +65,7 @@ WMFReader::OnDecodeThreadStart()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), );
+  NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
 }
 
 void
