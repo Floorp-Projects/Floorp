@@ -223,9 +223,8 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
         !node->AsElement()->IsHTML())
       continue;
 
-    nsCOMPtr<nsIEditor> editor;
-    static_cast<nsGenericHTMLElement*>(node)->
-        GetEditorInternal(getter_AddRefs(editor));
+    nsCOMPtr<nsIEditor> editor =
+      static_cast<nsGenericHTMLElement*>(node)->GetEditorInternal();
     if (!editor)
       continue;
 
