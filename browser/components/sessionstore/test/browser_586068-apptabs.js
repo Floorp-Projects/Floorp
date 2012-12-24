@@ -38,7 +38,7 @@ function test() {
         tab = window.gBrowser.tabs[i];
     }
 
-    ok(tab.pinned || gBrowser.selectedTab == tab,
+    ok(tab.pinned || tab.selected,
        "load came from pinned or selected tab");
 
     // We should get 4 loads: 3 app tabs + 1 normal selected tab
