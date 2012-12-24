@@ -695,6 +695,14 @@ public:
            nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().XMost()) :
            0;
   }
+  virtual void GetInnerHTML(nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError);
+  virtual void SetInnerHTML(const nsAString& aInnerHTML,
+                            mozilla::ErrorResult& aError);
+  void GetOuterHTML(nsAString& aOuterHTML, mozilla::ErrorResult& aError);
+  void SetOuterHTML(const nsAString& aOuterHTML, mozilla::ErrorResult& aError);
+  void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
+                          mozilla::ErrorResult& aError);
 
   //----------------------------------------
 
@@ -843,6 +851,11 @@ public:
 
   virtual JSObject* WrapObject(JSContext *aCx, JSObject *aScope,
                                bool *aTriedToWrap) MOZ_FINAL;
+
+  /**
+   * Locate an nsIEditor rooted at this content node, if there is one.
+   */
+  nsIEditor* GetEditorInternal();
 
 protected:
   /*
@@ -1081,6 +1094,8 @@ private:
   nsRect GetClientAreaRect();
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
+
+  nsresult GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
 
   // Data members
   nsEventStates mState;

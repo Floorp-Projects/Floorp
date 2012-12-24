@@ -275,15 +275,14 @@ nsSupportsArray::Equals(const nsISupportsArray* aOther)
   return false;
 }
 
-NS_IMETHODIMP_(nsISupports*)
-nsSupportsArray::ElementAt(uint32_t aIndex)
+NS_IMETHODIMP
+nsSupportsArray::GetElementAt(uint32_t aIndex, nsISupports **aOutPtr)
 {
+  *aOutPtr = nullptr;
   if (aIndex < mCount) {
-    nsISupports*  element = mArray[aIndex];
-    NS_IF_ADDREF(element);
-    return element;
+    NS_IF_ADDREF(*aOutPtr = mArray[aIndex]);
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(int32_t)
@@ -608,90 +607,4 @@ NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
   rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
                                (void**)aInstancePtrResult);
   return rv;
-}
-
-class nsArrayEnumerator MOZ_FINAL : public nsISimpleEnumerator
-{
-public:
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(bool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
-
-    // nsArrayEnumerator methods
-    nsArrayEnumerator(nsISupportsArray* aValueArray);
-
-private:
-    ~nsArrayEnumerator(void);
-
-protected:
-    nsISupportsArray* mValueArray;
-    int32_t mIndex;
-};
-
-nsArrayEnumerator::nsArrayEnumerator(nsISupportsArray* aValueArray)
-    : mValueArray(aValueArray),
-      mIndex(0)
-{
-    NS_IF_ADDREF(mValueArray);
-}
-
-nsArrayEnumerator::~nsArrayEnumerator(void)
-{
-    NS_IF_RELEASE(mValueArray);
-}
-
-NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
-
-NS_IMETHODIMP
-nsArrayEnumerator::HasMoreElements(bool* aResult)
-{
-    NS_PRECONDITION(aResult != 0, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (!mValueArray) {
-        *aResult = false;
-        return NS_OK;
-    }
-
-    uint32_t cnt;
-    nsresult rv = mValueArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    *aResult = (mIndex < (int32_t) cnt);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsArrayEnumerator::GetNext(nsISupports** aResult)
-{
-    NS_PRECONDITION(aResult != 0, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (!mValueArray) {
-        *aResult = nullptr;
-        return NS_OK;
-    }
-
-    uint32_t cnt;
-    nsresult rv = mValueArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    if (mIndex >= (int32_t) cnt)
-        return NS_ERROR_UNEXPECTED;
-
-    *aResult = mValueArray->ElementAt(mIndex++);
-    return NS_OK;
-}
-
-nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
-                      nsISupportsArray* array)
-{
-    nsArrayEnumerator* enumer = new nsArrayEnumerator(array);
-    *result = enumer; 
-    NS_ADDREF(*result);
-    return NS_OK;
 }

@@ -14,7 +14,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
-class nsSVGStylableElement;
+class nsSVGElement;
 
 class nsSVGClass
 {
@@ -25,19 +25,19 @@ public:
   }
 
   void SetBaseValue(const nsAString& aValue,
-                    nsSVGStylableElement *aSVGElement,
+                    nsSVGElement *aSVGElement,
                     bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, const nsSVGStylableElement *aSVGElement) const;
+  void GetBaseValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
 
-  void SetAnimValue(const nsAString& aValue, nsSVGStylableElement *aSVGElement);
-  void GetAnimValue(nsAString& aValue, const nsSVGStylableElement *aSVGElement) const;
+  void SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement);
+  void GetAnimValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
   bool IsAnimated() const
     { return !!mAnimVal; }
 
   nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                               nsSVGStylableElement *aSVGElement);
+                               nsSVGElement *aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGStylableElement *aSVGElement);
+  nsISMILAttr* ToSMILAttr(nsSVGElement *aSVGElement);
 
 private:
 
@@ -49,11 +49,11 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedString)
 
-    DOMAnimatedString(nsSVGClass *aVal, nsSVGStylableElement *aSVGElement)
+    DOMAnimatedString(nsSVGClass *aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
     nsSVGClass* mVal; // kept alive because it belongs to content
-    nsRefPtr<nsSVGStylableElement> mSVGElement;
+    nsRefPtr<nsSVGElement> mSVGElement;
 
     NS_IMETHOD GetBaseVal(nsAString& aResult)
       { mVal->GetBaseValue(aResult, mSVGElement); return NS_OK; }
@@ -65,14 +65,14 @@ public:
   struct SMILString : public nsISMILAttr
   {
   public:
-    SMILString(nsSVGClass *aVal, nsSVGStylableElement *aSVGElement)
+    SMILString(nsSVGClass *aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGClass* mVal;
-    nsSVGStylableElement* mSVGElement;
+    nsSVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(const nsAString& aStr,

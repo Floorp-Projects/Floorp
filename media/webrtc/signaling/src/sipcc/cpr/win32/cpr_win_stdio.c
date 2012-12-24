@@ -67,3 +67,14 @@ buginf (const char *_format, ...)
   return (0);
 }
 
+int
+cpr_win_snprintf(char *buffer, size_t n, const char *format, ...)
+{
+  va_list argp;
+  int ret;
+  va_start(argp, format);
+  ret = _vscprintf(format, argp);
+  vsnprintf_s(buffer, n, _TRUNCATE, format, argp);
+  va_end(argp);
+  return ret;
+}

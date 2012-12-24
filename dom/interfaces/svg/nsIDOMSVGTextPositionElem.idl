@@ -5,15 +5,17 @@
 
 #include "nsIDOMSVGTextContentElement.idl"
 
-interface nsIDOMSVGAnimatedLengthList;
-interface nsIDOMSVGAnimatedNumberList;
-
 [scriptable, uuid(5D04C053-DB94-468E-BFD6-588569851A6B)]
 interface nsIDOMSVGTextPositioningElement : nsIDOMSVGTextContentElement
-{ 
-  readonly attribute nsIDOMSVGAnimatedLengthList x;
-  readonly attribute nsIDOMSVGAnimatedLengthList y;
-  readonly attribute nsIDOMSVGAnimatedLengthList dx;
-  readonly attribute nsIDOMSVGAnimatedLengthList dy;
-  readonly attribute nsIDOMSVGAnimatedNumberList rotate;
+{
+  // SVGAnimatedLengthList
+  readonly attribute nsISupports x;
+  // SVGAnimatedLengthList
+  readonly attribute nsISupports y;
+  // SVGAnimatedLengthList
+  readonly attribute nsISupports dx;
+  // SVGAnimatedLengthList
+  readonly attribute nsISupports dy;
+  // SVGAnimatedNumberList
+  readonly attribute nsISupports rotate;
 };

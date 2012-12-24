@@ -1382,11 +1382,51 @@ class MCompare
   : public MBinaryInstruction,
     public ComparePolicy
 {
+  public:
+    enum CompareType {
+
+        // Anything compared to Undefined
+        Compare_Undefined,
+
+        // Anything compared to Null
+        Compare_Null,
+
+        // Undefined compared to Boolean
+        // Null      compared to Boolean
+        // Double    compared to Boolean
+        // String    compared to Boolean
+        // Object    compared to Boolean
+        // Value     compared to Boolean
+        Compare_Boolean,
+
+        // Int32   compared to Int32
+        // Boolean compared to Boolean
+        Compare_Int32,
+
+        // Double compared to Double
+        Compare_Double,
+
+        // String compared to String
+        Compare_String,
+
+        // Object compared to Object
+        Compare_Object,
+
+        // Compare 2 values bitwise
+        Compare_Value,
+
+        // All other possible compares
+        Compare_Unknown
+    };
+
+  private:
+    CompareType compareType_;
     JSOp jsop_;
     bool operandMightEmulateUndefined_;
 
     MCompare(MDefinition *left, MDefinition *right, JSOp jsop)
       : MBinaryInstruction(left, right),
+        compareType_(Compare_Unknown),
         jsop_(jsop),
         operandMightEmulateUndefined_(true)
     {
@@ -1396,6 +1436,7 @@ class MCompare
 
   public:
     INSTRUCTION_HEADER(Compare)
+
     static MCompare *New(MDefinition *left, MDefinition *right, JSOp op);
 
     bool tryFold(bool *result);
@@ -1403,9 +1444,13 @@ class MCompare
     MDefinition *foldsTo(bool useValueNumbers);
 
     void infer(const TypeOracle::BinaryTypes &b, JSContext *cx);
-    MIRType specialization() const {
-        return specialization_;
+    CompareType compareType() const {
+        return compareType_;
     }
+    void setCompareType(CompareType type) {
+        compareType_ = type;
+    }
+    MIRType inputType();
 
     JSOp jsop() const {
         return jsop_;
@@ -1423,9 +1468,9 @@ class MCompare
         // Strict equality is never effectful.
         if (jsop_ == JSOP_STRICTEQ || jsop_ == JSOP_STRICTNE)
             return AliasSet::None();
-        if (specialization_ == MIRType_None)
+        if (compareType_ == Compare_Unknown)
             return AliasSet::Store(AliasSet::Any);
-        JS_ASSERT(specialization_ <= MIRType_Object);
+        JS_ASSERT(compareType_ <= Compare_Value);
         return AliasSet::None();
     }
 

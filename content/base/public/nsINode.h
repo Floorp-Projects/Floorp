@@ -277,11 +277,11 @@ public:
   // worthwhile:
   // - nsGenericHTMLElement:  mForm, mFieldSet
   // - nsGenericHTMLFrameElement: mFrameLoader (bug 672539), mTitleChangedListener
-  // - nsHTMLBodyElement:     mContentStyleRule
-  // - nsHTMLDataListElement: mOptions
+  // - HTMLBodyElement:       mContentStyleRule
+  // - HTMLDataListElement:   mOptions
   // - nsHTMLFieldSetElement: mElements, mDependentElements, mFirstLegend
   // - nsHTMLFormElement:     many!
-  // - nsHTMLFrameSetElement: mRowSpecs, mColSpecs
+  // - HTMLFrameSetElement:   mRowSpecs, mColSpecs
   // - nsHTMLInputElement:    mInputData, mFiles, mFileList, mStaticDocfileList
   // - nsHTMLMapElement:      mAreas
   // - nsHTMLMediaElement:    many!

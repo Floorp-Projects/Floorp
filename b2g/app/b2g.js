@@ -333,7 +333,7 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // If an urlclassifier table has not been updated in this number of seconds,
 // a gethash request will be forced to check that the result is still in
 // the database.
-pref("urlclassifier.confirm-age", 2700);
+pref("urlclassifier.max-complete-age", 2700);
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");

@@ -34,18 +34,18 @@ nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMSGAnimatedPoints methods:
 
-/* readonly attribute nsIDOMSVGPointList points; */
+/* readonly attribute DOMSVGPointList points; */
 NS_IMETHODIMP 
-nsSVGPolyElement::GetPoints(nsIDOMSVGPointList * *aPoints)
+nsSVGPolyElement::GetPoints(nsISupports * *aPoints)
 {
   void *key = mPoints.GetBaseValKey();
   *aPoints = DOMSVGPointList::GetDOMWrapper(key, this, false).get();
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGPointList animatedPoints; */
+/* readonly attribute DOMSVGPointList animatedPoints; */
 NS_IMETHODIMP 
-nsSVGPolyElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAnimatedPoints)
+nsSVGPolyElement::GetAnimatedPoints(nsISupports * *aAnimatedPoints)
 {
   void *key = mPoints.GetAnimValKey();
   *aAnimatedPoints = DOMSVGPointList::GetDOMWrapper(key, this, true).get();

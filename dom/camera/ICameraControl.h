@@ -30,6 +30,7 @@ public:
   virtual nsresult StartRecording(dom::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
   virtual nsresult StopRecording() = 0;
   virtual nsresult GetPreviewStreamVideoMode(dom::CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
+  virtual nsresult ReleaseHardware(nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
 
   virtual nsresult Set(uint32_t aKey, const nsAString& aValue) = 0;
   virtual nsresult Get(uint32_t aKey, nsAString& aValue) = 0;

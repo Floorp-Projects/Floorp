@@ -637,7 +637,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
   NPWindow *window;
   mInstanceOwner->GetWindow(window);
 
-  NS_ENSURE_TRUE(window, /**/);
+  NS_ENSURE_TRUE_VOID(window);
 
 #ifdef XP_MACOSX
   nsWeakFrame weakFrame(this);

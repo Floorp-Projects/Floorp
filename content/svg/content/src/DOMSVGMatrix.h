@@ -41,7 +41,7 @@
 #include "gfxMatrix.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMSVGMatrix.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
 // We make DOMSVGMatrix a pseudo-interface to allow us to QI to it in order
@@ -58,24 +58,33 @@ namespace mozilla {
 /**
  * DOM wrapper for an SVG matrix.
  */
-class DOMSVGMatrix MOZ_FINAL : public nsIDOMSVGMatrix
+class DOMSVGMatrix MOZ_FINAL : public nsISupports,
+                               public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGMATRIX_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGMatrix)
-  NS_DECL_NSIDOMSVGMATRIX
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGMatrix)
 
   /**
    * Ctor for DOMSVGMatrix objects that belong to a DOMSVGTransform.
    */
-  DOMSVGMatrix(DOMSVGTransform& aTransform) : mTransform(&aTransform) { }
+  DOMSVGMatrix(DOMSVGTransform& aTransform) : mTransform(&aTransform) {
+    SetIsDOMBinding();
+  }
 
   /**
    * Ctors for DOMSVGMatrix objects created independently of a DOMSVGTransform.
    */
-  DOMSVGMatrix() { } // Default ctor for gfxMatrix will produce identity mx
-  DOMSVGMatrix(const gfxMatrix &aMatrix) : mMatrix(aMatrix) { }
+  // Default ctor for gfxMatrix will produce identity mx
+  DOMSVGMatrix() {
+    SetIsDOMBinding();
+  }
+
+  DOMSVGMatrix(const gfxMatrix &aMatrix) : mMatrix(aMatrix) {
+    SetIsDOMBinding();
+  }
+
   ~DOMSVGMatrix() {
     if (mTransform) {
       mTransform->ClearMatrixTearoff(this);
@@ -83,8 +92,39 @@ public:
   }
 
   const gfxMatrix& Matrix() const {
-    return mTransform ? mTransform->Matrix() : mMatrix;
+    return mTransform ? mTransform->Matrixgfx() : mMatrix;
   }
+
+  // WebIDL
+  DOMSVGTransform* GetParentObject() const;
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+
+  float A() const { return static_cast<float>(Matrix().xx); }
+  void SetA(float aA, ErrorResult& rv);
+  float B() const { return static_cast<float>(Matrix().yx); }
+  void SetB(float aB, ErrorResult& rv);
+  float C() const { return static_cast<float>(Matrix().xy); }
+  void SetC(float aC, ErrorResult& rv);
+  float D() const { return static_cast<float>(Matrix().yy); }
+  void SetD(float aD, ErrorResult& rv);
+  float E() const { return static_cast<float>(Matrix().x0); }
+  void SetE(float aE, ErrorResult& rv);
+  float F() const { return static_cast<float>(Matrix().y0); }
+  void SetF(float aF, ErrorResult& rv);
+  already_AddRefed<DOMSVGMatrix> Multiply(DOMSVGMatrix& aMatrix);
+  already_AddRefed<DOMSVGMatrix> Inverse(ErrorResult& aRv);
+  already_AddRefed<DOMSVGMatrix> Translate(float x, float y);
+  already_AddRefed<DOMSVGMatrix> Scale(float scaleFactor);
+  already_AddRefed<DOMSVGMatrix> ScaleNonUniform(float scaleFactorX,
+                                                 float scaleFactorY);
+  already_AddRefed<DOMSVGMatrix> Rotate(float angle);
+  already_AddRefed<DOMSVGMatrix> RotateFromVector(float x,
+                                                  float y,
+                                                  ErrorResult& aRv);
+  already_AddRefed<DOMSVGMatrix> FlipX();
+  already_AddRefed<DOMSVGMatrix> FlipY();
+  already_AddRefed<DOMSVGMatrix> SkewX(float angle, ErrorResult& rv);
+  already_AddRefed<DOMSVGMatrix> SkewY(float angle, ErrorResult& rv);
 
 private:
   void SetMatrix(const gfxMatrix& aMatrix) {

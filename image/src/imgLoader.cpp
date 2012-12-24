@@ -708,7 +708,7 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
   aRequest->GetURI(getter_AddRefs(uri));
 
   // init adds itself to imgRequest's list of observers
-  nsresult rv = proxyRequest->Init(&aRequest->GetStatusTracker(), aLoadGroup, uri, aObserver);
+  nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, uri, aObserver);
   if (NS_FAILED(rv)) {
     NS_RELEASE(proxyRequest);
     return rv;

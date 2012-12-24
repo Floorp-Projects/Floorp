@@ -363,21 +363,40 @@ WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
                                        nsINode* aStartAfterNode = nullptr)
 {
   MOZ_ASSERT(aElement, "aElement is null");
+  if (DoesNotParticipateInAutoDirection(aElement)) {
+    return nullptr;
+  }
 
   nsIContent* child;
   if (aStartAfterNode &&
       nsContentUtils::ContentIsDescendantOf(aStartAfterNode, aElement)) {
+    nsIContent* firstNode = aStartAfterNode->GetNextNode(aElement);
+
 #ifdef DEBUG
+    // In debug builds, assert that aStartAfterNode is correctly set by checking
+    // that text node descendants of elements up to aStartAfterNode don't have
+    // any strong directional characters
     child = aElement->GetFirstChild();
-    while (child && child != aStartAfterNode) {
+    while (child && child != firstNode) {
+      // Skip over nodes whose text node descendants don't affect directionality
+      // of their ancestors
+      if (child->IsElement() &&
+          (DoesNotParticipateInAutoDirection(child->AsElement()) ||
+           child->NodeInfo()->Equals(nsGkAtoms::bdi) ||
+           child->HasFixedDir())) {
+        child = child->GetNextNonChildNode(aElement);
+        continue;
+      }
+
       if (child->NodeType() == nsIDOMNode::TEXT_NODE) {
         MOZ_ASSERT(GetDirectionFromText(child->GetText()) == eDir_NotSet,
                    "Strong directional characters before aStartAfterNode");
       }
       child = child->GetNextNode(aElement);
     }
+#else
+    child = firstNode;
 #endif
-    child = aStartAfterNode->GetNextNode(aElement);
   } else {
     child = aElement->GetFirstChild();
   }

@@ -354,10 +354,10 @@ public:
   /**
    * Checks whether two nodes come from the same origin.
    */
-  static nsresult CheckSameOrigin(nsINode* aTrustedNode,
+  static nsresult CheckSameOrigin(const nsINode* aTrustedNode,
                                   nsIDOMNode* aUnTrustedNode);
-  static nsresult CheckSameOrigin(nsINode* aTrustedNode,
-                                  nsINode* unTrustedNode);
+  static nsresult CheckSameOrigin(const nsINode* aTrustedNode,
+                                  const nsINode* unTrustedNode);
 
   // Check if the (JS) caller can access aNode.
   static bool CanCallerAccess(nsIDOMNode *aNode);

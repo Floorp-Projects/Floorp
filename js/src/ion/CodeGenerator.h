@@ -128,7 +128,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitMinMaxI(LMinMaxI *lir);
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareS(LCompareS *lir);
-    bool visitCompareV(LCompareV *lir);
+    bool visitCompareVM(LCompareVM *lir);
     bool visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir);
     bool visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
     bool visitEmulatesUndefined(LEmulatesUndefined *lir);

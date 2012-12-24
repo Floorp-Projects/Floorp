@@ -6,7 +6,6 @@
 #include "nsSVGAnimationElement.h"
 #include "nsIDOMSVGAnimateTransformElement.h"
 #include "nsSVGEnum.h"
-#include "nsIDOMSVGTransform.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsSMILAnimationFunction.h"
 

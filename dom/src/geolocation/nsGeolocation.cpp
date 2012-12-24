@@ -196,6 +196,23 @@ private:
   nsRefPtr<nsGeolocation>        mLocator;
 };
 
+class RequestRestartTimerEvent : public nsRunnable
+{
+public:
+  RequestRestartTimerEvent(nsGeolocationRequest* aRequest)
+    : mRequest(aRequest)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    mRequest->SetTimeoutTimer();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsGeolocationRequest> mRequest;
+};
+
 ////////////////////////////////////////////////////
 // nsDOMGeoPositionError
 ////////////////////////////////////////////////////
@@ -530,13 +547,16 @@ nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition, bool aIsBetter)
   // in the case when newly detected positions are all less accurate than the cached one.
   //
   // Fixes bug 596481
+  nsCOMPtr<nsIRunnable> ev;
   if (mIsFirstUpdate || aIsBetter) {
     mIsFirstUpdate = false;
-    nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aPosition,
-                                                             this,
-                                                             mIsWatchPositionRequest ? nullptr : mLocator);
-    NS_DispatchToMainThread(ev);
+    ev  = new RequestSendLocationEvent(aPosition,
+                                       this,
+                                       mIsWatchPositionRequest ? nullptr : mLocator);
+  } else {
+    ev = new RequestRestartTimerEvent(this);
   }
+  NS_DispatchToMainThread(ev);
   return true;
 }
 
@@ -828,7 +848,11 @@ nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
   if (!aSomewhere) {
     return false;
   }
-  
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return true;
+  }
+
   if (mProviders.Count() == 1 || !mLastPosition) {
     return true;
   }
