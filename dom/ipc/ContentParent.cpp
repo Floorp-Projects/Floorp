@@ -80,6 +80,7 @@
 #include "StructuredCloneUtils.h"
 #include "TabParent.h"
 #include "URIUtils.h"
+#include "nsGeolocation.h"
 
 #ifdef ANDROID
 # include "gfxAndroidPlatform.h"
@@ -1908,6 +1909,15 @@ ContentParent::RecvRemoveGeolocationListener()
     mGeolocationWatchID = -1;
   }
   return true;
+}
+
+bool
+ContentParent::RecvSetGeolocationHigherAccuracy(const bool& aEnable)
+{
+    nsRefPtr<nsGeolocationService> geoSvc =
+        nsGeolocationService::GetGeolocationService();
+    geoSvc->SetHigherAccuracy(aEnable);
+    return true;
 }
 
 NS_IMETHODIMP
