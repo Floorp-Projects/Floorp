@@ -1215,8 +1215,11 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
   NS_ENSURE_STATE(doc);
 
-  return doc->ElementFromPointHelper(aX, aY, aIgnoreRootScrollFrame, aFlushLayout,
-                                     aReturn);
+  Element* el =
+    doc->ElementFromPointHelper(aX, aY, aIgnoreRootScrollFrame, aFlushLayout);
+  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
+  retval.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

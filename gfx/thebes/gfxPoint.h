@@ -34,17 +34,37 @@ struct THEBES_API gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> 
     // Round() is *not* rounding to nearest integer if the values are negative.
     // They are always rounding as floor(n + 0.5).
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
-    // And if you need similar method which is using NS_round(), you should
-    // create new |RoundAwayFromZero()| method.
     gfxPoint& Round() {
         x = floor(x + 0.5);
         y = floor(y + 0.5);
         return *this;
     }
 
+    nsIntPoint RoundedAwayFromZero() const {
+        return nsIntPoint(NS_lround(x), NS_lround(y));
+    }
+
     bool WithinEpsilonOf(const gfxPoint& aPoint, gfxFloat aEpsilon) {
         return fabs(aPoint.x - x) < aEpsilon && fabs(aPoint.y - y) < aEpsilon;
     }
 };
+
+inline gfxPoint
+operator*(const gfxPoint& aPoint, const gfxSize& aSize)
+{
+  return gfxPoint(aPoint.x * aSize.width, aPoint.y * aSize.height);
+}
+
+inline gfxPoint
+operator/(const gfxPoint& aPoint, const gfxSize& aSize)
+{
+  return gfxPoint(aPoint.x / aSize.width, aPoint.y / aSize.height);
+}
+
+inline gfxSize
+operator/(gfxFloat aValue, const gfxSize& aSize)
+{
+  return gfxSize(aValue / aSize.width, aValue / aSize.height);
+}
 
 #endif /* GFX_POINT_H */

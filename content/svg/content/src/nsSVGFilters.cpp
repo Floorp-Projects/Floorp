@@ -1148,8 +1148,8 @@ NS_IMETHODIMP nsSVGFEColorMatrixElement::GetType(nsIDOMSVGAnimatedEnumeration * 
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumberList values; */
-NS_IMETHODIMP nsSVGFEColorMatrixElement::GetValues(nsIDOMSVGAnimatedNumberList * *aValues)
+/* readonly attribute DOMSVGAnimatedNumberList values; */
+NS_IMETHODIMP nsSVGFEColorMatrixElement::GetValues(nsISupports * *aValues)
 {
   *aValues = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[VALUES],
                                                      this, VALUES).get();
@@ -1935,8 +1935,8 @@ NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetType(nsIDOMSVGAnimatedEn
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumberList tableValues; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetTableValues(nsIDOMSVGAnimatedNumberList * *aTableValues)
+/* readonly attribute DOMSVGAnimatedNumberList tableValues; */
+NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetTableValues(nsISupports * *aTableValues)
 {
   *aTableValues = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[TABLEVALUES],
                                                           this, TABLEVALUES).get();
@@ -4092,7 +4092,7 @@ NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderY(nsIDOMSVGAnimatedInteger *
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(aOrderY, nsSVGIntegerPair::eSecond, this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetKernelMatrix(nsIDOMSVGAnimatedNumberList * *aKernelMatrix)
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetKernelMatrix(nsISupports * *aKernelMatrix)
 {
   *aKernelMatrix = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[KERNELMATRIX],
                                                            this, KERNELMATRIX).get();
@@ -4114,7 +4114,7 @@ NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetEdgeMode(nsIDOMSVGAnimatedEnumera
   return mEnumAttributes[EDGEMODE].ToDOMAnimatedEnum(aEdgeMode, this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetPreserveAlpha(nsIDOMSVGAnimatedBoolean * *aPreserveAlpha)
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetPreserveAlpha(nsISupports * *aPreserveAlpha)
 {
   return mBooleanAttributes[PRESERVEALPHA].ToDOMAnimatedBoolean(aPreserveAlpha, this);
 }

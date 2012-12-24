@@ -217,8 +217,8 @@ private:
   void ShutdownMedia(bool isSynchronous);
 
   // ICE callbacks run on the right thread.
-  void IceGatheringCompleted_m(NrIceCtx *aCtx);
-  void IceCompleted_m(NrIceCtx *aCtx);
+  nsresult IceGatheringCompleted_m(NrIceCtx *aCtx);
+  nsresult IceCompleted_m(NrIceCtx *aCtx);
 
   // The role we are adopting
   Role mRole;

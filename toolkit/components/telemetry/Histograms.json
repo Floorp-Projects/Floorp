@@ -2259,12 +2259,6 @@
     "n_buckets": 10,
     "description": "Time to flush dirty entries from the cache (ms)"
   },
-  "LOCALDOMSTORAGE_PERCENT_FLUSHED": {
-    "kind": "linear",
-    "high": "100",
-    "n_buckets": 12,
-    "description": "Percentage of dirty entries during a flush"
-  },
   "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
     "kind": "exponential",
     "low": 1024,

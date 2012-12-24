@@ -75,7 +75,6 @@ interface nsIDOMCSSStyleSheet;
 interface nsIDOMCSSStyleDeclaration;
 interface nsIDOMCounter;
 interface nsIDOMRect;
-interface nsIDOMRGBColor;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMCSSStyleRuleCollection;
 interface nsIDOMHTMLTableCaptionElement;

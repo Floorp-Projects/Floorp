@@ -102,6 +102,16 @@ extern const cpr_ip_addr_t ip_addr_invalid;
 
 #define CPR_IP_ADDR_INIT(a) a.type = CPR_IP_ADDR_INVALID;
 
+/*
+ * !!! NOTE !!!
+ *
+ * The strings of type string_t are actually very special blocks
+ * of memory that have a "hidden" header block immediately preceding
+ * the pointer. You MUST use the functions in string_lib.c to
+ * create, manipulate, destroy, copy, or otherwise work with these
+ * strings.
+ */
+
 typedef const char *string_t;
 
 __END_DECLS

@@ -485,8 +485,10 @@ nsSVGImageFrame::ReflowSVG()
   gfxMatrix scaling;
   if (applyScaling) {
     scaling.Scale(scaleFactors.width, scaleFactors.height);
-  } 
+  }
+  tmpCtx.Save();
   GeneratePath(&tmpCtx, scaling);
+  tmpCtx.Restore();
   gfxRect extent = tmpCtx.GetUserPathExtent();
   if (applyScaling) {
     extent.Scale(1 / scaleFactors.width, 1 / scaleFactors.height);

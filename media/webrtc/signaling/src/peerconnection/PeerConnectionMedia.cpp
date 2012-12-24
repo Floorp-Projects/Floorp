@@ -245,6 +245,8 @@ PeerConnectionMedia::DisconnectMediaStreams()
 void
 PeerConnectionMedia::ShutdownMediaTransport()
 {
+  mIceCtx->SignalCompleted.disconnect(this);
+  mIceCtx->SignalGatheringCompleted.disconnect(this);
   mTransportFlows.clear();
   mIceStreams.clear();
   mIceCtx = NULL;

@@ -1018,7 +1018,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   if (charset.EqualsLiteral("us-ascii")) {
     *result = PL_strdup("US_ASCII");
   } else if (charset.EqualsLiteral("ISO-8859-1") ||
-      !nsCRT::strncmp(PromiseFlatCString(charset).get(), "UTF", 3)) {
+      !nsCRT::strncmp(charset.get(), "UTF", 3)) {
     *result = ToNewCString(charset);
   } else {
     if (!gCharsetMap) {

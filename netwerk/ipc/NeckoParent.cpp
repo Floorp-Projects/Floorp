@@ -12,10 +12,15 @@
 #include "mozilla/net/WyciwygChannelParent.h"
 #include "mozilla/net/FTPChannelParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
+#include "mozilla/net/RemoteOpenFileParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
+#include "mozilla/ipc/URIUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "nsHTMLDNSPrefetch.h"
+#include "nsIAppsService.h"
+#include "nsEscape.h"
 
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
@@ -24,9 +29,28 @@ using mozilla::dom::TCPSocketParent;
 namespace mozilla {
 namespace net {
 
+static bool gDisableIPCSecurity = false;
+static const char kPrefDisableIPCSecurity[] = "network.disable.ipc.security";
+
 // C++ file contents
 NeckoParent::NeckoParent()
 {
+  Preferences::AddBoolVarCache(&gDisableIPCSecurity, kPrefDisableIPCSecurity);
+
+  if (!gDisableIPCSecurity) {
+    // cache values for core/packaged apps basepaths
+    nsAutoString corePath, webPath;
+    nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+    if (appsService) {
+      appsService->GetCoreAppsBasePath(corePath);
+      appsService->GetWebAppsBasePath(webPath);
+    }
+    // corePath may be empty: we don't use it for all build types
+    MOZ_ASSERT(!webPath.IsEmpty());
+
+    LossyCopyUTF16toASCII(corePath, mCoreAppsBasePath);
+    LossyCopyUTF16toASCII(webPath, mWebAppsBasePath);
+  }
 }
 
 NeckoParent::~NeckoParent()
@@ -141,6 +165,116 @@ NeckoParent::DeallocPTCPSocket(PTCPSocketParent* actor)
 {
   TCPSocketParent* p = static_cast<TCPSocketParent*>(actor);
   p->Release();
+  return true;
+}
+
+PRemoteOpenFileParent*
+NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
+                                  PBrowserParent* aBrowser)
+{
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri);
+  if (!fileURL) {
+    return nullptr;
+  }
+
+  // security checks
+  if (!gDisableIPCSecurity) {
+    if (!aBrowser) {
+      NS_WARNING("NeckoParent::AllocPRemoteOpenFile: "
+                 "FATAL error: missing TabParent: KILLING CHILD PROCESS\n");
+      return nullptr;
+    }
+    nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(aBrowser);
+    uint32_t appId = tabParent->OwnOrContainingAppId();
+    nsCOMPtr<nsIAppsService> appsService =
+      do_GetService(APPS_SERVICE_CONTRACTID);
+    if (!appsService) {
+      return nullptr;
+    }
+    nsCOMPtr<mozIDOMApplication> domApp;
+    nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
+    if (!domApp) {
+      return nullptr;
+    }
+    nsCOMPtr<mozIApplication> mozApp = do_QueryInterface(domApp);
+    if (!mozApp) {
+      return nullptr;
+    }
+    bool hasManage = false;
+    rv = mozApp->HasPermission("webapps-manage", &hasManage);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    nsAutoCString requestedPath;
+    fileURL->GetPath(requestedPath);
+    NS_UnescapeURL(requestedPath);
+
+    if (hasManage) {
+      // webapps-manage permission means allow reading any application.zip file
+      // in either the regular webapps directory, or the core apps directory (if
+      // we're using one).
+      NS_NAMED_LITERAL_CSTRING(appzip, "/application.zip");
+      nsAutoCString pathEnd;
+      requestedPath.Right(pathEnd, appzip.Length());
+      if (!pathEnd.Equals(appzip)) {
+        return nullptr;
+      }
+      nsAutoCString pathStart;
+      requestedPath.Left(pathStart, mWebAppsBasePath.Length());
+      if (!pathStart.Equals(mWebAppsBasePath)) {
+        if (mCoreAppsBasePath.IsEmpty()) {
+          return nullptr;
+        }
+        requestedPath.Left(pathStart, mCoreAppsBasePath.Length());
+        if (!pathStart.Equals(mCoreAppsBasePath)) {
+          return nullptr;
+        }
+      }
+      // Finally: make sure there are no "../" in URI.
+      // Note: not checking for symlinks (would cause I/O for each path
+      // component).  So it's up to us to avoid creating symlinks that could
+      // provide attack vectors.
+      if (PL_strnstr(requestedPath.BeginReading(), "/../",
+                     requestedPath.Length())) {
+        NS_WARNING("NeckoParent::AllocPRemoteOpenFile: "
+                   "FATAL error: requested file URI contains '/../' "
+                   "KILLING CHILD PROCESS\n");
+        return nullptr;
+      }
+    } else {
+      // regular packaged apps can only access their own application.zip file
+      nsAutoString basePath;
+      rv = mozApp->GetBasePath(basePath);
+      if (NS_FAILED(rv)) {
+        return nullptr;
+      }
+      nsAutoString uuid;
+      rv = mozApp->GetId(uuid);
+      if (NS_FAILED(rv)) {
+        return nullptr;
+      }
+      nsPrintfCString mustMatch("%s/%s/application.zip",
+                                NS_LossyConvertUTF16toASCII(basePath).get(),
+                                NS_LossyConvertUTF16toASCII(uuid).get());
+      if (!requestedPath.Equals(mustMatch)) {
+        NS_WARNING("NeckoParent::AllocPRemoteOpenFile: "
+                   "FATAL error: requesting file other than application.zip: "
+                   "KILLING CHILD PROCESS\n");
+        return nullptr;
+      }
+    }
+  }
+
+  RemoteOpenFileParent* parent = new RemoteOpenFileParent(fileURL);
+  return parent;
+}
+
+bool
+NeckoParent::DeallocPRemoteOpenFile(PRemoteOpenFileParent* actor)
+{
+  delete actor;
   return true;
 }
 
