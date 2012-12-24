@@ -3006,7 +3006,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-decoration: none;
 }
 
-#geolocation-learnmore-link {
+.geolocation-text-link {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
