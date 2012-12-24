@@ -318,8 +318,9 @@ class MutexBase
 
 public:
   MutexBase()
-    : mMutex(PTHREAD_MUTEX_INITIALIZER)
-  {}
+  {
+    pthread_mutex_init(&mMutex, NULL);
+  }
 
   void Lock()
   {
