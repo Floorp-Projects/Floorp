@@ -1299,8 +1299,6 @@ BaselineCompiler::emit_JSOP_RETURN()
 {
     JS_ASSERT(frame.stackDepth() == 1);
 
-    JS_GC(cx->runtime);
-
     frame.popValue(JSReturnOperand);
     masm.jump(return_);
     return true;
