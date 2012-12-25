@@ -367,7 +367,7 @@ MConstantElements::printOpcode(FILE *fp)
 }
 
 MParameter *
-MParameter::New(int32_t index, const types::TypeSet *types)
+MParameter::New(int32_t index, const types::StackTypeSet *types)
 {
     return new MParameter(index, types);
 }
