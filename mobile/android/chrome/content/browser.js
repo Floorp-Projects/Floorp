@@ -1544,8 +1544,8 @@ var NativeWindow = {
         this._target = null;
         BrowserEventHandler._cancelTapHighlight();
 
-        if (SelectionHandler.canSelect(rootElement))
-          SelectionHandler.startSelection(rootElement, aX, aY);
+        if (SelectionHandler.canSelect(target))
+          SelectionHandler.startSelection(target, aX, aY);
       }
     },
 
