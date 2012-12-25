@@ -6,11 +6,14 @@
 #ifndef mozilla_dom_HTMLTITLEElement_h_
 #define mozilla_dom_HTMLTITLEElement_h_
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class HTMLTitleElement : public nsGenericHTMLElement,
@@ -39,6 +42,13 @@ public:
   // nsIDOMHTMLTitleElement
   NS_DECL_NSIDOMHTMLTITLEELEMENT
 
+  //HTMLTitleElement
+  //The xpcom GetTextContent() never fails so we just use that.
+  void SetText(const nsAString& aText, ErrorResult& aError)
+  {
+    aError = SetText(aText);
+  }
+
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -59,6 +69,12 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+
+  virtual JSObject* WrapNode(JSContext* cx, JSObject* scope, bool* triedToWrap)
+    MOZ_OVERRIDE MOZ_FINAL;
+
 private:
   void SendTitleChangeEvent(bool aBound);
 };

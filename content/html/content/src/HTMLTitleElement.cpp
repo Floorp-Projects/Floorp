@@ -5,6 +5,8 @@
 
 #include "mozilla/dom/HTMLTitleElement.h"
 
+#include "mozilla/dom/HTMLTitleElementBinding.h"
+#include "mozilla/ErrorResult.h"
 #include "nsStyleConsts.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
@@ -18,6 +20,7 @@ namespace dom {
 HTMLTitleElement::HTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetIsDOMBinding();
   AddMutationObserver(this);
 }
 
@@ -48,6 +51,12 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTitleElement)
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
+
+JSObject*
+HTMLTitleElement::WrapNode(JSContext* cx, JSObject* scope, bool* triedToWrap)
+{
+  return HTMLTitleElementBinding::Wrap(cx, scope, this, triedToWrap);
+}
 
 
 NS_IMETHODIMP 
