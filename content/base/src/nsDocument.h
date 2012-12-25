@@ -1253,7 +1253,7 @@ protected:
 private:
   friend class nsUnblockOnloadEvent;
   // Recomputes the visibility state but doesn't set the new value.
-  VisibilityState GetVisibilityState() const;
+  mozilla::dom::VisibilityState GetVisibilityState() const;
 
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();

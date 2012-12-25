@@ -13,7 +13,6 @@
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 
@@ -23,6 +22,7 @@
 #include "nsTraceRefcnt.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 // nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
 // try to use it without fixing that first.
@@ -691,11 +691,6 @@ HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
 {
   return HandleNewBindingWrappingFailure(cx, scope, value.get(), vp);
 }
-
-struct EnumEntry {
-  const char* value;
-  size_t length;
-};
 
 template<bool Fatal>
 inline bool
@@ -1651,15 +1646,6 @@ MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 // For Paris Bindings only. See the relevant infrastructure in XrayWrapper.cpp.
 JSObject* GetXrayExpandoChain(JSObject *obj);
 void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
-
-struct MainThreadDictionaryBase
-{
-protected:
-  JSContext* ParseJSON(const nsAString& aJSON,
-                       mozilla::Maybe<JSAutoRequest>& aAr,
-                       mozilla::Maybe<JSAutoCompartment>& aAc,
-                       JS::Value& aVal);
-};
 
 /**
  * This creates a JSString containing the value that the toString function for
