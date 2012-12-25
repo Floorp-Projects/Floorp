@@ -371,25 +371,39 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
     }
 };
 
-class LDefVar : public LCallInstructionHelper<0, 1, 1>
+class LDefVar : public LCallInstructionHelper<0, 1, 0>
 {
   public:
     LIR_HEADER(DefVar)
 
-    LDefVar(const LAllocation &scopeChain, const LDefinition &namereg)
+    LDefVar(const LAllocation &scopeChain)
     {
         setOperand(0, scopeChain);
-        setTemp(0, namereg);
     }
 
-    const LAllocation *getScopeChain() {
+    const LAllocation *scopeChain() {
         return getOperand(0);
-    }
-    const LAllocation *nameTemp() {
-        return getTemp(0)->output();
     }
     MDefVar *mir() const {
         return mir_->toDefVar();
+    }
+};
+
+class LDefFun : public LCallInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(DefFun)
+
+    LDefFun(const LAllocation &scopeChain)
+    {
+        setOperand(0, scopeChain);
+    }
+
+    const LAllocation *scopeChain() {
+        return getOperand(0);
+    }
+    MDefFun *mir() const {
+        return mir_->toDefFun();
     }
 };
 

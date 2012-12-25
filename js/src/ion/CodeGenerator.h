@@ -54,6 +54,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStart(LStart *lir);
     bool visitReturn(LReturn *ret);
     bool visitDefVar(LDefVar *lir);
+    bool visitDefFun(LDefFun *lir);
     bool visitOsrEntry(LOsrEntry *lir);
     bool visitOsrScopeChain(LOsrScopeChain *lir);
     bool visitStackArgT(LStackArgT *lir);
