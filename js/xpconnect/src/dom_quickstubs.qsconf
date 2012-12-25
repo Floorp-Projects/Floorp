@@ -67,8 +67,6 @@ members = [
     'nsIDOMCharacterData.length',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMNodeSelector.querySelector',
-    'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
@@ -448,19 +446,6 @@ customMethodCalls = {
         },
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
-        },
-    'nsIDOMNodeSelector_QuerySelector': {
-        'thisType': 'nsINode',
-        'code': '    mozilla::ErrorResult error;\n'
-                '    nsIContent* result = '
-                'self->QuerySelector(arg0, error);\n'
-                '    rv = error.ErrorCode();'
-        },
-    'nsIDOMNodeSelector_QuerySelectorAll': {
-        'thisType': 'nsINode',
-        'code': '    mozilla::ErrorResult error;\n'
-                '    nsCOMPtr<nsINodeList> result = self->QuerySelectorAll(arg0, error);\n'
-                '    rv = error.ErrorCode();'
         },
     'nsIDOMElementCSSInlineStyle_GetStyle': {
         'thisType': 'nsStyledElement',

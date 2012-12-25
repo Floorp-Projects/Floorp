@@ -17,7 +17,6 @@
 
 interface Attr;
 interface CDATASection;
-interface DocumentFragment;
 interface Comment;
 interface NodeIterator;
 interface ProcessingInstruction;
