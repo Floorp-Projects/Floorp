@@ -326,9 +326,9 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
   // An array of the states that are relevant for various pseudoclasses.
   // XXXbz this duplicates code in nsCSSRuleProcessor
   static const nsEventStates sPseudoClassStates[] = {
-#define CSS_PSEUDO_CLASS(_name, _value) \
+#define CSS_PSEUDO_CLASS(_name, _value, _pref)	\
     nsEventStates(),
-#define CSS_STATE_PSEUDO_CLASS(_name, _value, _states) \
+#define CSS_STATE_PSEUDO_CLASS(_name, _value, _pref, _states)	\
     _states,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_STATE_PSEUDO_CLASS

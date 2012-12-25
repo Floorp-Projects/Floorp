@@ -1661,6 +1661,13 @@ pref("layout.css.prefixes.transforms", true);
 pref("layout.css.prefixes.transitions", true);
 pref("layout.css.prefixes.animations", true);
 
+// Is support for the :scope selector enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.scope-pseudo.enabled", false);
+#else
+pref("layout.css.scope-pseudo.enabled", true);
+#endif
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction

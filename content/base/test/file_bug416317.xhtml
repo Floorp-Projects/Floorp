@@ -100,8 +100,8 @@
     /* :root tests */
     :root { background-color: green; }
 
-    /* :-moz-scope tests */
-    :-moz-scope { background-color: green; }
+    /* :scope tests */
+    :scope { background-color: green; }
 
     /* :nth-child(n) tests */
     .nthchild1 > :nth-last-child(odd) { background-color: lime; }
@@ -226,7 +226,17 @@
     .bar. { background: red; color: yellow; }
   </span>
   <script><![CDATA[
-  window.onload = function(){
+  window.onload = function() {
+    if (window.parent && window.parent.SpecialPowers) {
+      window.parent.SpecialPowers.pushPrefEnv(
+        { 'set': [[ "layout.css.scope-pseudo.enabled", true]] },
+        doTest);
+    } else {
+      doTest();
+    }
+  }
+
+  function doTest(){
     if ( window.location.hash.indexOf("target") == -1 )
       window.location.hash = "#target";
 
@@ -544,7 +554,7 @@
         var namespaced = /\|[^=]/.test( q );
         var prepend = namespaced ? "xHTML|*#root3 " : "#root3 ";
         q = (restrict === false || restrict === ":root" ||
-             restrict === ":-moz-scope" ? "" : prepend) +
+             restrict === ":scope" ? "" : prepend) +
             q.replace(/,/g, ", " + prepend);
         var nq = q.replace(/>/g, "&gt;").replace(/</g, "&lt;");
 
@@ -576,9 +586,9 @@
             (pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
 
           // For now, don't use checkMatchesSelector when
-          // restrict === ":-moz-scope" because we have no way to hand the
+          // restrict === ":scope" because we have no way to hand the
           // right scope to it yet.
-          if (results && restrict !== ":-moz-scope")
+          if (results && restrict !== ":scope")
             checkMatchesSelector( results, q );
         }
 
@@ -641,15 +651,15 @@
 
       if ( root == document ) {
         t( ":root Selector", ":root", ["html"], false );
-        t( ":-moz-scope Selector", ":-moz-scope", ["html"], ":-moz-scope" );
+        t( ":scope Selector", ":scope", ["html"], ":scope" );
       } else {
         t( ":root Selector", ":root", [], ":root" );
         if (root.localName != "nosuchtag") {
-          t( ":-moz-scope Selector", ":-moz-scope > nosuchtag",
-             [ "outerbogustag" ], ":-moz-scope");
+          t( ":scope Selector", ":scope > nosuchtag",
+             [ "outerbogustag" ], ":scope");
         }
-        t( ":-moz-scope Selector", ":-moz-scope nosuchtag nosuchtag",
-           [ "innerbogustag" ], ":-moz-scope");
+        t( ":scope Selector", ":scope nosuchtag nosuchtag",
+           [ "innerbogustag" ], ":scope");
 
         if ( !root.parentNode ) {
           t( ":root All Selector", ":root *", [], ":root" );
@@ -659,7 +669,7 @@
       if ( root.parentNode || root == document ) {
         assert( query(":root *").length == query("*").length - (root == document ? 1 : 0), type + ": :root All Selector" );
       }
-      assert( query(":-moz-scope *").length == query("*").length - (root == document ? 1 : 0), type + ": :-moz-scope All Selector" );
+      assert( query(":scope *").length == query("*").length - (root == document ? 1 : 0), type + ": :scope All Selector" );
 
       t( "Element Selector", "p", ["firstp","ap","sndp","en","sap","first"] );
       t( "Element Selector", "body", ["body"], false );
