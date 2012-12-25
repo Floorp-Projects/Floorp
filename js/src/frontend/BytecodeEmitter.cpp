@@ -1185,7 +1185,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
         !bce->sc->strict)
     {
         // If you change anything here, you might also need to change
-        // js::CheckUndeclaredVarAssignment.
+        // js::ReportIfUndeclaredVarAssignment.
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
           case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
