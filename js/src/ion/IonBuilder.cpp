@@ -5103,6 +5103,11 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
             current->pop();
             current->add(replace);
             current->push(replace);
+            if (replace->acceptsTypeSet())
+                replace->setTypeSet(cloneTypeSet(actual));
+        } else {
+            if (ins->acceptsTypeSet())
+                ins->setTypeSet(cloneTypeSet(actual));
         }
         return true;
     }
@@ -5151,7 +5156,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
 // Test the type of values returned by a VM call. This is an optimized version
 // of calling TypeScript::Monitor inside such stubs.
 void
-IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::TypeSet *types)
+IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::StackTypeSet *types)
 {
     // MonitorTypes is redundant if we will also add a type barrier.
     if (barrier)
@@ -7081,8 +7086,8 @@ IonBuilder::addShapeGuard(MDefinition *obj, const UnrootedShape shape, BailoutKi
     return guard;
 }
 
-const types::TypeSet *
-IonBuilder::cloneTypeSet(const types::TypeSet *types)
+const types::StackTypeSet *
+IonBuilder::cloneTypeSet(const types::StackTypeSet *types)
 {
     if (!js_IonOptions.parallelCompilation)
         return types;

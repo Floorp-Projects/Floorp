@@ -470,7 +470,7 @@ class TypeSet
      * Clone a type set into an arbitrary allocator. The result should not be
      * modified further.
      */
-    const TypeSet *clone(LifoAlloc *alloc) const;
+    const StackTypeSet *clone(LifoAlloc *alloc) const;
 
     /*
      * Add a type to this set, calling any constraint handlers if this is a new
@@ -603,6 +603,12 @@ class StackTypeSet : public TypeSet
 
     /* Whether any objects in the type set needs a barrier on id. */
     bool propertyNeedsBarrier(JSContext *cx, jsid id);
+
+    /*
+     * Whether this set contains all types in other, except (possibly) the
+     * specified type.
+     */
+    bool filtersType(const StackTypeSet *other, Type type) const;
 
     /*
      * Get whether this type only contains non-string primitives:
