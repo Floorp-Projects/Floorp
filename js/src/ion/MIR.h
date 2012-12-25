@@ -3062,8 +3062,8 @@ class MInterruptCheck : public MNullaryInstruction
 // If not defined, set a global variable to |undefined|.
 class MDefVar : public MUnaryInstruction
 {
-  PropertyName *name_; // Target name to be defined.
-  unsigned attrs_; // Attributes to be set.
+    CompilerRootPropertyName name_; // Target name to be defined.
+    unsigned attrs_; // Attributes to be set.
 
   private:
     MDefVar(PropertyName *name, unsigned attrs, MDefinition *scopeChain)
@@ -3090,6 +3090,31 @@ class MDefVar : public MUnaryInstruction
         return getOperand(0);
     }
 
+};
+
+class MDefFun : public MUnaryInstruction
+{
+    CompilerRootFunction fun_;
+
+  private:
+    MDefFun(HandleFunction fun, MDefinition *scopeChain)
+      : MUnaryInstruction(scopeChain),
+        fun_(fun)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(DefFun)
+
+    static MDefFun *New(HandleFunction fun, MDefinition *scopeChain) {
+        return new MDefFun(fun, scopeChain);
+    }
+
+    JSFunction *fun() const {
+        return fun_;
+    }
+    MDefinition *scopeChain() const {
+        return getOperand(0);
+    }
 };
 
 class MRegExp : public MNullaryInstruction
