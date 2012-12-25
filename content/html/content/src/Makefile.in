@@ -35,6 +35,7 @@ EXPORTS_mozilla/dom = \
 		HTMLFrameSetElement.h \
 		HTMLHeadingElement.h \
 		HTMLLabelElement.h \
+		HTMLTitleElement.h \
 		HTMLUnknownElement.h
 
 CPPSRCS		= \
@@ -95,7 +96,7 @@ CPPSRCS		= \
 		nsHTMLTableRowElement.cpp \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
-		nsHTMLTitleElement.cpp \
+		HTMLTitleElement.cpp \
 		HTMLUnknownElement.cpp \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
