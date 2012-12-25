@@ -1298,7 +1298,7 @@ nsIDocument::nsIDocument()
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNodeInfoManager(nullptr),
     mCompatMode(eCompatibility_FullStandards),
-    mVisibilityState(eHidden),
+    mVisibilityState(VisibilityStateValues::Hidden),
     mIsInitialDocumentInWindow(false),
     mMayStartLayout(true),
     mVisible(true),
@@ -9934,7 +9934,7 @@ nsIDocument::GetMozPointerLockElement()
 void
 nsDocument::UpdateVisibilityState()
 {
-  VisibilityState oldState = mVisibilityState;
+  dom::VisibilityState oldState = mVisibilityState;
   mVisibilityState = GetVisibilityState();
   if (oldState != mVisibilityState) {
     nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
@@ -9950,7 +9950,7 @@ nsDocument::UpdateVisibilityState()
   }
 }
 
-nsDocument::VisibilityState
+VisibilityState
 nsDocument::GetVisibilityState() const
 {
   // We have to check a few pieces of information here:
@@ -9962,10 +9962,10 @@ nsDocument::GetVisibilityState() const
   // Otherwise, we're visible.
   if (!IsVisible() || !mWindow || !mWindow->GetOuterWindow() ||
       mWindow->GetOuterWindow()->IsBackground()) {
-    return eHidden;
+    return VisibilityStateValues::Hidden;
   }
 
-  return eVisible;
+  return VisibilityStateValues::Visible;
 }
 
 /* virtual */ void
@@ -9993,13 +9993,6 @@ nsDocument::GetHidden(bool* aHidden)
 NS_IMETHODIMP
 nsDocument::GetMozVisibilityState(nsAString& aState)
 {
-  nsIDocument::GetMozVisibilityState(aState);
-  return NS_OK;
-}
-
-void
-nsIDocument::GetMozVisibilityState(nsAString& aState)
-{
   WarnOnceAbout(ePrefixedVisibilityAPI);
   return GetVisibilityState(aState);
 }
@@ -10007,20 +10000,9 @@ nsIDocument::GetMozVisibilityState(nsAString& aState)
 NS_IMETHODIMP
 nsDocument::GetVisibilityState(nsAString& aState)
 {
-  nsIDocument::GetVisibilityState(aState);
+  const EnumEntry& entry = VisibilityStateValues::strings[mVisibilityState];
+  aState.AssignASCII(entry.value, entry.length);
   return NS_OK;
-}
-
-void
-nsIDocument::GetVisibilityState(nsAString& aState)
-{
-  // This needs to stay in sync with the VisibilityState enum.
-  static const char states[][8] = {
-    "hidden",
-    "visible"
-  };
-  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(states) == eVisibilityStateCount);
-  aState.AssignASCII(states[mVisibilityState]);
 }
 
 /* virtual */ void

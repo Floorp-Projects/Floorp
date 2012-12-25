@@ -57,6 +57,7 @@ EXPORTS_mozilla = \
   $(NULL)
 
 EXPORTS_$(binding_include_path) = \
+  BindingDeclarations.h \
   BindingUtils.h \
   CallbackFunction.h \
   DOMJSClass.h \
