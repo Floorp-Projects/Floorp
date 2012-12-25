@@ -275,8 +275,6 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
-    'nsIDOMSVGElement.className',
-    'nsIDOMSVGElement.style',
 
     # dom/interfaces/traversal
     'nsIDOMNodeIterator.nextNode',
@@ -455,11 +453,6 @@ customMethodCalls = {
                 '      return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n'
                 '    nsIDOMCSSStyleDeclaration* result = '
                 'self->GetStyle(&rv);'
-        },
-    'nsIDOMSVGElement_GetStyle': {
-        'thisType': 'nsSVGElement',
-        'code': '    nsICSSDeclaration* result = '
-                'self->nsSVGElementBase::GetStyle(&rv);'
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',
