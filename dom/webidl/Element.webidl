@@ -25,6 +25,7 @@ interface Element : Node {
   readonly attribute DOMString? prefix;
   readonly attribute DOMString localName;
 */
+  // Not [Constant] because it depends on which document we're in
   readonly attribute DOMString tagName;
 
            attribute DOMString id;
@@ -32,6 +33,7 @@ interface Element : Node {
   FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 */
+  [Constant]
   readonly attribute DOMTokenList? classList;
 
   //readonly attribute Attr[] attributes;
@@ -53,6 +55,7 @@ interface Element : Node {
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   HTMLCollection getElementsByClassName(DOMString classNames);
 
+  [Constant]
   readonly attribute HTMLCollection children;
   readonly attribute Element? firstElementChild;
   readonly attribute Element? lastElementChild;
