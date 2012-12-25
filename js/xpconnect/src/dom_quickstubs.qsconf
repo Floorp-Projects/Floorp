@@ -44,6 +44,7 @@ members = [
     'nsIDOMWindow.localStorage',
     'nsIDOMWindow.onmouseenter',
     'nsIDOMWindow.onmouseleave',
+    'nsIDOMWindowPerformance.performance',
     'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
@@ -362,6 +363,8 @@ irregularFilenames = {
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
 
     'nsITelephoneCallback': 'nsITelephone',
+
+    'nsIDOMWindowPerformance': 'nsIDOMWindow',
     }
 
 customIncludes = [
@@ -385,7 +388,8 @@ customIncludes = [
     'mozilla/dom/ElementBinding.h',
     'mozilla/dom/HTMLElementBinding.h',
     'mozilla/dom/DocumentBinding.h',
-    'mozilla/dom/SVGElementBinding.h'
+    'mozilla/dom/SVGElementBinding.h',
+    'nsPerformance.h',
     ]
 
 customReturnInterfaces = [
@@ -469,7 +473,12 @@ customMethodCalls = {
     'nsIDOMWindow_SetOnmouseleave' : {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
-        }
+        },
+    'nsIDOMWindowPerformance_GetPerformance' : {
+        'thisType': 'nsPIDOMWindow',
+        'code' : '    nsPerformance* result = self->GetPerformance();\n',
+        'canFail': False,
+        },
     }
 
 newBindingProperties = {
