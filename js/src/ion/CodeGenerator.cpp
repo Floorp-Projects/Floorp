@@ -1504,19 +1504,31 @@ static const VMFunction DefVarOrConstInfo =
 bool
 CodeGenerator::visitDefVar(LDefVar *lir)
 {
-    Register scopeChain = ToRegister(lir->getScopeChain());
-    Register nameTemp   = ToRegister(lir->nameTemp());
-
-    masm.movePtr(ImmGCPtr(lir->mir()->name()), nameTemp);
+    Register scopeChain = ToRegister(lir->scopeChain());
 
     pushArg(scopeChain); // JSObject *
     pushArg(Imm32(lir->mir()->attrs())); // unsigned
-    pushArg(nameTemp); // PropertyName *
+    pushArg(ImmGCPtr(lir->mir()->name())); // PropertyName *
 
     if (!callVM(DefVarOrConstInfo, lir))
         return false;
 
     return true;
+}
+
+typedef bool (*DefFunOperationFn)(JSContext *, HandleScript, HandleObject, HandleFunction);
+static const VMFunction DefFunOperationInfo = FunctionInfo<DefFunOperationFn>(DefFunOperation);
+
+bool
+CodeGenerator::visitDefFun(LDefFun *lir)
+{
+    Register scopeChain = ToRegister(lir->scopeChain());
+
+    pushArg(ImmGCPtr(lir->mir()->fun()));
+    pushArg(scopeChain);
+    pushArg(ImmGCPtr(current->mir()->info().script()));
+
+    return callVM(DefFunOperationInfo, lir);
 }
 
 typedef bool (*ReportOverRecursedFn)(JSContext *);

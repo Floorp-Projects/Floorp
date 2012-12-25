@@ -122,15 +122,20 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 bool
 LIRGenerator::visitDefVar(MDefVar *ins)
 {
-    LDefVar *lir = new LDefVar(useFixed(ins->scopeChain(), CallTempReg0),
-                               tempFixed(CallTempReg1));
-
+    LDefVar *lir = new LDefVar(useRegisterAtStart(ins->scopeChain()));
     if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;
 
     return true;
+}
+
+bool
+LIRGenerator::visitDefFun(MDefFun *ins)
+{
+    LDefFun *lir = new LDefFun(useRegisterAtStart(ins->scopeChain()));
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
