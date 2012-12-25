@@ -2902,17 +2902,23 @@ nsGlobalWindow::GetPerformance(nsISupports** aPerformance)
 {
   FORWARD_TO_INNER(GetPerformance, (aPerformance), NS_ERROR_NOT_INITIALIZED);
 
-  *aPerformance = nullptr;
-
-  if (nsGlobalWindow::HasPerformanceSupport()) {
-    CreatePerformanceObjectIfNeeded();
-    NS_IF_ADDREF(*aPerformance = mPerformance);
-  }
+  NS_IF_ADDREF(*aPerformance = nsPIDOMWindow::GetPerformance());
   return NS_OK;
 }
 
+nsPerformance*
+nsPIDOMWindow::GetPerformance()
+{
+  MOZ_ASSERT(IsInnerWindow());
+  if (HasPerformanceSupport()) {
+    CreatePerformanceObjectIfNeeded();
+    return mPerformance;
+  }
+  return nullptr;
+}
+
 void
-nsGlobalWindow::CreatePerformanceObjectIfNeeded()
+nsPIDOMWindow::CreatePerformanceObjectIfNeeded()
 {
   if (mPerformance || !mDoc) {
     return;
@@ -10765,7 +10771,7 @@ nsGlobalWindow::HasIndexedDBSupport()
 
 // static
 bool
-nsGlobalWindow::HasPerformanceSupport() 
+nsPIDOMWindow::HasPerformanceSupport()
 {
   return Preferences::GetBool("dom.enable_performance", false);
 }
