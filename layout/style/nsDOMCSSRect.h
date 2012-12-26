@@ -11,24 +11,25 @@
 #include "nsISupports.h"
 #include "nsIDOMRect.h"
 #include "nsCOMPtr.h"
-class nsIDOMCSSPrimitiveValue;
+
+class nsROCSSPrimitiveValue;
 
 class nsDOMCSSRect : public nsIDOMRect {
 public:
-  nsDOMCSSRect(nsIDOMCSSPrimitiveValue* aTop,
-               nsIDOMCSSPrimitiveValue* aRight,
-               nsIDOMCSSPrimitiveValue* aBottom,
-               nsIDOMCSSPrimitiveValue* aLeft);
+  nsDOMCSSRect(nsROCSSPrimitiveValue* aTop,
+               nsROCSSPrimitiveValue* aRight,
+               nsROCSSPrimitiveValue* aBottom,
+               nsROCSSPrimitiveValue* aLeft);
   virtual ~nsDOMCSSRect(void);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMRECT
 
 private:
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mTop;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mRight;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mBottom;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mLeft;
+  nsRefPtr<nsROCSSPrimitiveValue> mTop;
+  nsRefPtr<nsROCSSPrimitiveValue> mRight;
+  nsRefPtr<nsROCSSPrimitiveValue> mBottom;
+  nsRefPtr<nsROCSSPrimitiveValue> mLeft;
 };
 
 #endif /* nsDOMCSSRect_h_ */
