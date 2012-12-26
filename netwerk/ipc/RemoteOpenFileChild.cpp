@@ -108,13 +108,11 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
-  // we do nothing on these platforms: we'll just open file locally when asked
-  // for NSPR handle
-  mListener->OnRemoteFileOpenComplete(NS_OK);
-  mListener = nullptr;
+  // Windows/OSX desktop builds skip remoting, and just open file in child
+  // process when asked for NSPR handle
+  aListener->OnRemoteFileOpenComplete(NS_OK);
   mAsyncOpenCalled = true;
   return NS_OK;
-
 #else
   URIParams uri;
   SerializeURI(mURI, uri);
