@@ -620,14 +620,9 @@ nsFlexContainerFrame::AppendFlexItemForChild(
                  "We gave flex item unconstrained available height, so it "
                  "should be complete");
 
-      // Call DidReflow to clear NS_FRAME_IN_REFLOW and any other state on the
-      // child before our next ReflowChild call.
-      // NOTE: We're intentionally calling DidReflow() instead of the wrapper
-      // FinishReflowChild() because we don't want the rest of the stuff in
-      // FinishReflowChild() (e.g. moving the frame's rect) to happen until we
-      // do our "real" reflow of the child.
-      rv = aChildFrame->DidReflow(aPresContext, &childRSForMeasuringHeight,
-                                  nsDidReflowStatus::FINISHED);
+      rv = FinishReflowChild(aChildFrame, aPresContext,
+                             &childRSForMeasuringHeight, childDesiredSize,
+                             0, 0, 0);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Subtract border/padding in vertical axis, to get _just_
