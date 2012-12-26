@@ -12,7 +12,7 @@
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
 #include "nsDOMCSSRGBColor.h"
-#include "nsIDOMRect.h"
+#include "nsDOMCSSRect.h"
 #include "nsIURI.h"
 #include "nsError.h"
 
@@ -601,7 +601,7 @@ nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
 }
 
 void
-nsROCSSPrimitiveValue::SetRect(nsIDOMRect* aRect)
+nsROCSSPrimitiveValue::SetRect(nsDOMCSSRect* aRect)
 {
   NS_PRECONDITION(aRect, "Null rect being set!");
   Reset();
