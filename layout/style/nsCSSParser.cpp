@@ -233,8 +233,8 @@ protected:
   class nsAutoParseCompoundProperty;
   friend class nsAutoParseCompoundProperty;
 
-  class nsAutoParseCompoundProperty;
-  friend class nsAutoParseCompoundProperty;
+  class nsAutoFailingSupportsRule;
+  friend class nsAutoFailingSupportsRule;
 
   class nsAutoSuppressErrors;
   friend class nsAutoSuppressErrors;
