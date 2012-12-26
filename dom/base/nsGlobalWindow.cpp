@@ -1101,8 +1101,10 @@ nsGlobalWindow::FreeInnerObjects()
   if (mDocument) {
     NS_ASSERTION(mDoc, "Why is mDoc null?");
 
-    // Remember the document's principal.
+    // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
+    mDocumentURI = mDoc->GetDocumentURI();
+    mDocBaseURI = mDoc->GetDocBaseURI();
   }
 
 #ifdef DEBUG
@@ -2277,8 +2279,10 @@ nsGlobalWindow::DetachFromDocShell()
   if (currentInner) {
     NS_ASSERTION(mDoc, "Must have doc!");
     
-    // Remember the document's principal.
+    // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
+    mDocumentURI = mDoc->GetDocumentURI();
+    mDocBaseURI = mDoc->GetDocBaseURI();
 
     // Release our document reference
     mDocument = nullptr;
@@ -2797,6 +2801,18 @@ nsGlobalWindow::GetPrincipal()
 //*****************************************************************************
 // nsGlobalWindow::nsIDOMWindow
 //*****************************************************************************
+
+nsIURI*
+nsPIDOMWindow::GetDocumentURI() const
+{
+  return mDoc ? mDoc->GetDocumentURI() : mDocumentURI.get();
+}
+
+nsIURI*
+nsPIDOMWindow::GetDocBaseURI() const
+{
+  return mDoc ? mDoc->GetDocBaseURI() : mDocBaseURI.get();
+}
 
 void
 nsPIDOMWindow::MaybeCreateDoc()
