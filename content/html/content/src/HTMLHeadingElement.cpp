@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLHeadingElement.h"
+#include "mozilla/dom/HTMLHeadingElementBinding.h"
 
 #include "mozilla/Util.h"
 #include "nsGkAtoms.h"
@@ -36,6 +37,11 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLHeadingElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 
+JSObject*
+HTMLHeadingElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLHeadingElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMPL_STRING_ATTR(HTMLHeadingElement, Align, align)
 
