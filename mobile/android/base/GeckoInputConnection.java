@@ -360,9 +360,9 @@ class GeckoInputConnection
             }
         }
 
-        // We don't know the selection
-        outAttrs.initialSelStart = -1;
-        outAttrs.initialSelEnd = -1;
+        Editable editable = getEditable();
+        outAttrs.initialSelStart = Selection.getSelectionStart(editable);
+        outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
         return this;
     }
 
