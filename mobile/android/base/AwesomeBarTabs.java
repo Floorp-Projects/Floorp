@@ -363,7 +363,7 @@ public class AwesomeBarTabs extends TabHost
             drawable.setAlpha(255, 0);
 
             StateListDrawable stateList = new StateListDrawable();
-            stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
+            stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.abouthome_bg_pb_repeat));
             stateList.addState(new int[] {}, drawable);
 
             int[] padding =  new int[] { getPaddingLeft(),
