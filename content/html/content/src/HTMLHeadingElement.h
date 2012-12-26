@@ -48,6 +48,9 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // The XPCOM versions of GetAlign and SetAlign are fine for us for
+  // use from WebIDL.
+
 protected:
   virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
                              bool *aTriedToWrap) MOZ_OVERRIDE;
