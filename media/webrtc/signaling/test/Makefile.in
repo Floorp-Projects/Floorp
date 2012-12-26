@@ -47,10 +47,21 @@ DEFINES += \
    $(NULL)
 endif
 
+ifdef MOZ_NATIVE_JPEG
+LIBS += \
+  $(MOZ_JPEG_LIBS) \
+  $(NULL)
+endif
 
 ifdef MOZ_NATIVE_LIBVPX
 LIBS += \
   $(MOZ_LIBVPX_LIBS) \
+  $(NULL)
+endif
+
+ifndef MOZ_TREE_PIXMAN
+LIBS += \
+  $(MOZ_PIXMAN_LIBS) \
   $(NULL)
 endif
 
