@@ -62,9 +62,7 @@ richlistitem[type="download"] {
 }
 
 #downloadsSummary > .downloadTypeIcon {
-  height: 24px;
-  width: 24px;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
+  list-style-image: url("chrome://browser/skin/downloads/download-summary.png");
 }
 
 #downloadsSummaryDescription {

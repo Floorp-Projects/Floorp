@@ -50,6 +50,7 @@ browser.jar:
   skin/classic/browser/downloads/download-glow.png    (downloads/download-glow.png)
   skin/classic/browser/downloads/download-glow-small.png (downloads/download-glow-small.png)
   skin/classic/browser/downloads/download-notification.png (downloads/download-notification.png)
+  skin/classic/browser/downloads/download-summary.png (downloads/download-summary.png)
   skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
   skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
