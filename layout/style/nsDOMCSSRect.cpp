@@ -7,15 +7,15 @@
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMCSSPrimitiveValue.h"
+#include "nsROCSSPrimitiveValue.h"
 #include "nsDOMCSSRect.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMCSSRect::nsDOMCSSRect(nsIDOMCSSPrimitiveValue* aTop,
-                           nsIDOMCSSPrimitiveValue* aRight,
-                           nsIDOMCSSPrimitiveValue* aBottom,
-                           nsIDOMCSSPrimitiveValue* aLeft)
+nsDOMCSSRect::nsDOMCSSRect(nsROCSSPrimitiveValue* aTop,
+                           nsROCSSPrimitiveValue* aRight,
+                           nsROCSSPrimitiveValue* aBottom,
+                           nsROCSSPrimitiveValue* aLeft)
   : mTop(aTop), mRight(aRight), mBottom(aBottom), mLeft(aLeft)
 {
 }
