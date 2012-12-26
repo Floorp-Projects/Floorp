@@ -55,7 +55,7 @@ public:
   void SetStringValue(uint16_t aUnitType, const nsAString& aString,
                       mozilla::ErrorResult& aRv);
   already_AddRefed<nsIDOMCounter> GetCounterValue(mozilla::ErrorResult& aRv);
-  already_AddRefed<nsIDOMRect> GetRectValue(mozilla::ErrorResult& aRv);
+  already_AddRefed<nsDOMCSSRect> GetRectValue(mozilla::ErrorResult& aRv);
   nsDOMCSSRGBColor *GetRGBColorValue(mozilla::ErrorResult& aRv);
 
   // nsROCSSPrimitiveValue

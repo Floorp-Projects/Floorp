@@ -5,6 +5,7 @@
 
 /* DOM object representing rectangle values in DOM computed style */
 
+#include "mozilla/dom/RectBinding.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsROCSSPrimitiveValue.h"
@@ -12,12 +13,15 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 
+using namespace mozilla;
+
 nsDOMCSSRect::nsDOMCSSRect(nsROCSSPrimitiveValue* aTop,
                            nsROCSSPrimitiveValue* aRight,
                            nsROCSSPrimitiveValue* aBottom,
                            nsROCSSPrimitiveValue* aLeft)
   : mTop(aTop), mRight(aRight), mBottom(aBottom), mLeft(aLeft)
 {
+  SetIsDOMBinding();
 }
 
 nsDOMCSSRect::~nsDOMCSSRect(void)
@@ -38,7 +42,13 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSRect)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSRect)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(nsDOMCSSRect, mTop, mBottom, mLeft, mRight)
-  
+ 
+JSObject*
+nsDOMCSSRect::WrapObject(JSContext* cx, JSObject* scope, bool* tried)
+{
+ return dom::RectBinding::Wrap(cx, scope, this, tried);
+}
+
 NS_IMETHODIMP
 nsDOMCSSRect::GetTop(nsIDOMCSSPrimitiveValue** aTop)
 {

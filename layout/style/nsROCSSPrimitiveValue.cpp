@@ -458,7 +458,7 @@ nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
   return nullptr;
 }
 
-already_AddRefed<nsIDOMRect>
+already_AddRefed<nsDOMCSSRect>
 nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
 {
   if (mType != CSS_RECT) {
