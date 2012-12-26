@@ -285,3 +285,12 @@
    fun:_ZN7mozilla3dom7workers13WorkerPrivate9DoRunLoopEP9JSContext
    ...
 }
+{
+   Bug 824647
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_ZN12_GLOBAL__N_112HistogramGetEPKcjjjjPPN4base9HistogramE
+   fun:_ZN12_GLOBAL__N_113TelemetryImpl13HistogramFromERK19nsACString_internalS3_P9JSContextPN2JS5ValueE
+   ...
+}
