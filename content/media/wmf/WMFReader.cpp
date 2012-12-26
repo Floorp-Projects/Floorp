@@ -52,10 +52,10 @@ WMFReader::~WMFReader()
   // Note: We must shutdown the byte stream before calling MFShutdown, else we
   // get assertion failures when unlocking the byte stream's work queue.
   if (mByteStream) {
-    nsresult rv = mByteStream->Shutdown();
+    DebugOnly<nsresult> rv = mByteStream->Shutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to shutdown WMFByteStream");
   }
-  HRESULT hr = wmf::MFShutdown();
+  DebugOnly<HRESULT> hr = wmf::MFShutdown();
   NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
   MOZ_COUNT_DTOR(WMFReader);
 }

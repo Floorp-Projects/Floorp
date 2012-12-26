@@ -35,9 +35,9 @@ DoGetInterface(IUnknown* aUnknown, void** aInterface)
 
 WMFByteStream::WMFByteStream(MediaResource* aResource)
   : mWorkQueueId(MFASYNC_CALLBACK_QUEUE_UNDEFINED),
+    mResource(aResource),
     mReentrantMonitor("WMFByteStream"),
-    mOffset(0),
-    mResource(aResource)
+    mOffset(0)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
   NS_ASSERTION(mResource, "Must have a valid media resource");
@@ -104,11 +104,11 @@ WMFByteStream::QueryInterface(REFIID aIId, void **aInterface)
   return E_NOINTERFACE;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(WMFByteStream);
-NS_IMPL_THREADSAFE_RELEASE(WMFByteStream);
+NS_IMPL_THREADSAFE_ADDREF(WMFByteStream)
+NS_IMPL_THREADSAFE_RELEASE(WMFByteStream)
 
-NS_IMPL_THREADSAFE_ADDREF(WMFByteStream::AsyncReadRequestState);
-NS_IMPL_THREADSAFE_RELEASE(WMFByteStream::AsyncReadRequestState);
+NS_IMPL_THREADSAFE_ADDREF(WMFByteStream::AsyncReadRequestState)
+NS_IMPL_THREADSAFE_RELEASE(WMFByteStream::AsyncReadRequestState)
 
 // IUnknown Methods
 STDMETHODIMP
