@@ -384,6 +384,9 @@ DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool 
 bool
 DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain, HandleFunction funArg);
 
+bool
+GetAndClearException(JSContext *cx, MutableHandleValue res);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
