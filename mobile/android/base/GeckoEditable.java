@@ -532,8 +532,6 @@ final class GeckoEditable
                         mFocused = false;
                     } else {
                         mFocused = true;
-                        LayerView v = GeckoApp.mAppContext.getLayerView();
-                        v.setInputConnectionHandler((InputConnectionHandler)mListener);
                         // Unmask events on the Gecko side
                         GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
                                 GeckoEvent.IME_ACKNOWLEDGE_FOCUS));
@@ -555,6 +553,13 @@ final class GeckoEditable
             public void run() {
                 // Make sure there are no other things going on
                 mActionQueue.syncWithGecko();
+                // Set InputConnectionHandler in notifyIMEEnabled because
+                // GeckoInputConnection.notifyIMEEnabled calls restartInput() which will invoke
+                // InputConnectionHandler.onCreateInputConnection
+                LayerView v = GeckoApp.mAppContext.getLayerView();
+                if (v != null) {
+                    v.setInputConnectionHandler((InputConnectionHandler)mListener);
+                }
                 mListener.notifyIMEEnabled(state, typeHint,
                                            modeHint, actionHint);
             }
