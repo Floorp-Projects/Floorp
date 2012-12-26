@@ -203,8 +203,6 @@ namespace wmf {
 static bool sDLLsLoaded = false;
 static bool sFailedToLoadDlls = false;
 
-static HMODULE sMfPlatMod = NULL;
-
 struct WMFModule {
   const char* name;
   HMODULE handle;
