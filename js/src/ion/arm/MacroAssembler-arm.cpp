@@ -2783,7 +2783,7 @@ void MacroAssemblerARMCompat::checkStackAlignment()
 {
 #ifdef DEBUG
     ma_tst(sp, Imm32(StackAlignment - 1));
-    breakpoint(Equal);
+    breakpoint(NonZero);
 #endif
 }
 
