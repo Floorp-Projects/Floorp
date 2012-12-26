@@ -55,6 +55,7 @@ webidl_files = \
   HTMLElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
+  HTMLHeadingElement.webidl \
   HTMLLabelElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
