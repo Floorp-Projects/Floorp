@@ -400,7 +400,7 @@ StyleEditorChrome.prototype = {
         onEditorAdded: function SEC_selectSheet_onEditorAdded(aChrome, aEditor) {
           let sheet = self._styleSheetToSelect.sheet;
           if ((sheet && aEditor.styleSheet == sheet) ||
-              aEditor.styleSheetIndex == 0) {
+              (aEditor.styleSheetIndex == 0 && sheet == null)) {
             aChrome.removeChromeListener(this);
             select(aEditor);
           }
