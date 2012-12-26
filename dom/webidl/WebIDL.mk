@@ -51,6 +51,7 @@ webidl_files = \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDivElement.webidl \
+  HTMLDocument.webidl \
   HTMLElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
