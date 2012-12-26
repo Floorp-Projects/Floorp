@@ -166,17 +166,22 @@ class AliasSet {
         None_             = 0,
         ObjectFields      = 1 << 0, // shape, class, slots, length etc.
         Element           = 1 << 1, // A member of obj->elements.
-        Slot              = 1 << 2, // A member of obj->slots.
-        TypedArrayElement = 1 << 3, // A typed array element.
+        DynamicSlot       = 1 << 2, // A member of obj->slots.
+        FixedSlot         = 1 << 3, // A member of obj->fixedSlots().
+        TypedArrayElement = 1 << 4, // A typed array element.
         Last              = TypedArrayElement,
         Any               = Last | (Last - 1),
+
+        NumCategories     = 5,
 
         // Indicates load or store.
         Store_            = 1 << 31
     };
     AliasSet(uint32_t flags)
       : flags_(flags)
-    { }
+    {
+        JS_STATIC_ASSERT((1 << NumCategories) - 1 == Any);
+    }
 
   public:
     inline bool isNone() const {
@@ -209,8 +214,6 @@ class AliasSet {
         return AliasSet(flags | Store_);
     }
 };
-
-static const unsigned NUM_ALIAS_SETS = sizeof(AliasSet) * 8;
 
 // An MDefinition is an SSA name.
 class MDefinition : public MNode
@@ -440,6 +443,15 @@ class MDefinition : public MNode
         resultType_ = type;
     }
 
+    virtual bool acceptsTypeSet() const {
+        return false;
+    }
+    virtual void setTypeSet(const types::StackTypeSet *types) {
+    }
+    virtual const types::StackTypeSet *typeSet() const {
+        return NULL;
+    }
+
     MDefinition *dependency() const {
         return dependency_;
     }
@@ -452,6 +464,14 @@ class MDefinition : public MNode
     }
     bool isEffectful() const {
         return getAliasSet().isStore();
+    }
+    virtual bool mightAlias(MDefinition *store) {
+        // Return whether this load may depend on the specified store, given
+        // that the alias sets intersect. This may be refined to exclude
+        // possible aliasing in cases where alias set flags are too imprecise.
+        JS_ASSERT(!isEffectful() && store->isEffectful());
+        JS_ASSERT(getAliasSet().flags() & store->getAliasSet().flags());
+        return true;
     }
 };
 
@@ -652,12 +672,12 @@ class MConstant : public MNullaryInstruction
 class MParameter : public MNullaryInstruction
 {
     int32_t index_;
-    const types::TypeSet *typeSet_;
+    const types::StackTypeSet *typeSet_;
 
   public:
     static const int32_t THIS_SLOT = -1;
 
-    MParameter(int32_t index, const types::TypeSet *types)
+    MParameter(int32_t index, const types::StackTypeSet *types)
       : index_(index),
         typeSet_(types)
     {
@@ -666,12 +686,12 @@ class MParameter : public MNullaryInstruction
 
   public:
     INSTRUCTION_HEADER(Parameter)
-    static MParameter *New(int32_t index, const types::TypeSet *types);
+    static MParameter *New(int32_t index, const types::StackTypeSet *types);
 
     int32_t index() const {
         return index_;
     }
-    const types::TypeSet *typeSet() const {
+    const types::StackTypeSet *typeSet() const {
         return typeSet_;
     }
     void printOpcode(FILE *fp);
@@ -3042,8 +3062,8 @@ class MInterruptCheck : public MNullaryInstruction
 // If not defined, set a global variable to |undefined|.
 class MDefVar : public MUnaryInstruction
 {
-  PropertyName *name_; // Target name to be defined.
-  unsigned attrs_; // Attributes to be set.
+    CompilerRootPropertyName name_; // Target name to be defined.
+    unsigned attrs_; // Attributes to be set.
 
   private:
     MDefVar(PropertyName *name, unsigned attrs, MDefinition *scopeChain)
@@ -3070,6 +3090,31 @@ class MDefVar : public MUnaryInstruction
         return getOperand(0);
     }
 
+};
+
+class MDefFun : public MUnaryInstruction
+{
+    CompilerRootFunction fun_;
+
+  private:
+    MDefFun(HandleFunction fun, MDefinition *scopeChain)
+      : MUnaryInstruction(scopeChain),
+        fun_(fun)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(DefFun)
+
+    static MDefFun *New(HandleFunction fun, MDefinition *scopeChain) {
+        return new MDefFun(fun, scopeChain);
+    }
+
+    JSFunction *fun() const {
+        return fun_;
+    }
+    MDefinition *scopeChain() const {
+        return getOperand(0);
+    }
 };
 
 class MRegExp : public MNullaryInstruction
@@ -4106,10 +4151,11 @@ class MLoadFixedSlot
     public SingleObjectPolicy
 {
     size_t slot_;
+    const types::StackTypeSet *types_;
 
   protected:
     MLoadFixedSlot(MDefinition *obj, size_t slot)
-      : MUnaryInstruction(obj), slot_(slot)
+      : MUnaryInstruction(obj), slot_(slot), types_(NULL)
     {
         setResultType(MIRType_Value);
         setMovable();
@@ -4124,6 +4170,16 @@ class MLoadFixedSlot
 
     TypePolicy *typePolicy() {
         return this;
+    }
+
+    virtual bool acceptsTypeSet() const {
+        return true;
+    }
+    virtual void setTypeSet(const types::StackTypeSet *types) {
+        types_ = types;
+    }
+    virtual const types::StackTypeSet *typeSet() const {
+        return types_;
     }
 
     MDefinition *object() const {
@@ -4141,8 +4197,10 @@ class MLoadFixedSlot
     }
 
     AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::Slot);
+        return AliasSet::Load(AliasSet::FixedSlot);
     }
+
+    bool mightAlias(MDefinition *store);
 };
 
 class MStoreFixedSlot
@@ -4183,7 +4241,7 @@ class MStoreFixedSlot
     }
 
     AliasSet getAliasSet() const {
-        return AliasSet::Store(AliasSet::Slot);
+        return AliasSet::Store(AliasSet::FixedSlot);
     }
     bool needsBarrier() const {
         return needsBarrier_;
@@ -4344,8 +4402,11 @@ class MGetPropertyCache
     }
 
     AliasSet getAliasSet() const {
-        if (idempotent_)
-            return AliasSet::Load(AliasSet::ObjectFields | AliasSet::Slot);
+        if (idempotent_) {
+            return AliasSet::Load(AliasSet::ObjectFields |
+                                  AliasSet::FixedSlot |
+                                  AliasSet::DynamicSlot);
+        }
         return AliasSet::Store(AliasSet::Any);
     }
 
@@ -4681,10 +4742,12 @@ class MLoadSlot
     public SingleObjectPolicy
 {
     uint32_t slot_;
+    const types::StackTypeSet *types_;
 
     MLoadSlot(MDefinition *slots, uint32_t slot)
       : MUnaryInstruction(slots),
-        slot_(slot)
+        slot_(slot),
+        types_(NULL)
     {
         setResultType(MIRType_Value);
         setMovable();
@@ -4707,6 +4770,17 @@ class MLoadSlot
     uint32_t slot() const {
         return slot_;
     }
+
+    virtual bool acceptsTypeSet() const {
+        return true;
+    }
+    virtual void setTypeSet(const types::StackTypeSet *types) {
+        types_ = types;
+    }
+    virtual const types::StackTypeSet *typeSet() const {
+        return types_;
+    }
+
     bool congruentTo(MDefinition * const &ins) const {
         if (!ins->isLoadSlot())
             return false;
@@ -4716,8 +4790,9 @@ class MLoadSlot
     }
     AliasSet getAliasSet() const {
         JS_ASSERT(slots()->type() == MIRType_Slots);
-        return AliasSet::Load(AliasSet::Slot);
+        return AliasSet::Load(AliasSet::DynamicSlot);
     }
+    bool mightAlias(MDefinition *store);
 };
 
 // Inline call to access a function's environment (scope chain).
@@ -4797,7 +4872,7 @@ class MStoreSlot
         needsBarrier_ = true;
     }
     AliasSet getAliasSet() const {
-        return AliasSet::Store(AliasSet::Slot);
+        return AliasSet::Store(AliasSet::DynamicSlot);
     }
 };
 
@@ -5547,9 +5622,9 @@ class MGetArgument
 class MTypeBarrier : public MUnaryInstruction
 {
     BailoutKind bailoutKind_;
-    const types::TypeSet *typeSet_;
+    const types::StackTypeSet *typeSet_;
 
-    MTypeBarrier(MDefinition *def, const types::TypeSet *types)
+    MTypeBarrier(MDefinition *def, const types::StackTypeSet *types)
       : MUnaryInstruction(def),
         typeSet_(types)
     {
@@ -5564,7 +5639,7 @@ class MTypeBarrier : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
-    static MTypeBarrier *New(MDefinition *def, const types::TypeSet *types) {
+    static MTypeBarrier *New(MDefinition *def, const types::StackTypeSet *types) {
         return new MTypeBarrier(def, types);
     }
     bool congruentTo(MDefinition * const &def) const {
@@ -5576,7 +5651,7 @@ class MTypeBarrier : public MUnaryInstruction
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
-    const types::TypeSet *typeSet() const {
+    const types::StackTypeSet *typeSet() const {
         return typeSet_;
     }
     AliasSet getAliasSet() const {
@@ -5593,9 +5668,9 @@ class MTypeBarrier : public MUnaryInstruction
 // TypeScript::Monitor inside these stubs.
 class MMonitorTypes : public MUnaryInstruction
 {
-    const types::TypeSet *typeSet_;
+    const types::StackTypeSet *typeSet_;
 
-    MMonitorTypes(MDefinition *def, const types::TypeSet *types)
+    MMonitorTypes(MDefinition *def, const types::StackTypeSet *types)
       : MUnaryInstruction(def),
         typeSet_(types)
     {
@@ -5607,13 +5682,13 @@ class MMonitorTypes : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(MonitorTypes)
 
-    static MMonitorTypes *New(MDefinition *def, const types::TypeSet *types) {
+    static MMonitorTypes *New(MDefinition *def, const types::StackTypeSet *types) {
         return new MMonitorTypes(def, types);
     }
     MDefinition *input() const {
         return getOperand(0);
     }
-    const types::TypeSet *typeSet() const {
+    const types::StackTypeSet *typeSet() const {
         return typeSet_;
     }
     AliasSet getAliasSet() const {

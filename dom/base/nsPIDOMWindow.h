@@ -26,6 +26,7 @@
 
 class nsIIdleObserver;
 class nsIPrincipal;
+class nsPerformance;
 
 // Popup control state enum. The values in this enum must go from most
 // permissive to least permissive so that it's safe to push state in
@@ -638,6 +639,10 @@ public:
 
   void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
 
+  // WebIDL-ish APIs
+  static bool HasPerformanceSupport();
+  nsPerformance* GetPerformance();
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -655,6 +660,9 @@ protected:
 
   virtual void UpdateParentTarget() = 0;
 
+  // Helper for creating performance objects.
+  void CreatePerformanceObjectIfNeeded();
+
   // These two variables are special in that they're set to the same
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
@@ -667,6 +675,9 @@ protected:
   // These members are only used on outer windows.
   nsCOMPtr<nsIDOMElement> mFrameElement;
   nsIDocShell           *mDocShell;  // Weak Reference
+
+  // mPerformance is only used on inner windows.
+  nsRefPtr<nsPerformance>       mPerformance;
 
   uint32_t               mModalStateDepth;
 
