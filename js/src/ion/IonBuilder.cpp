@@ -842,6 +842,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DEFCONST:
         return jsop_defvar(GET_UINT32_INDEX(pc));
 
+      case JSOP_DEFFUN:
+        return jsop_deffun(GET_UINT32_INDEX(pc));
+
       case JSOP_EQ:
       case JSOP_NE:
       case JSOP_STRICTEQ:
@@ -5103,6 +5106,11 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
             current->pop();
             current->add(replace);
             current->push(replace);
+            if (replace->acceptsTypeSet())
+                replace->setTypeSet(cloneTypeSet(actual));
+        } else {
+            if (ins->acceptsTypeSet())
+                ins->setTypeSet(cloneTypeSet(actual));
         }
         return true;
     }
@@ -5151,7 +5159,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
 // Test the type of values returned by a VM call. This is an optimized version
 // of calling TypeScript::Monitor inside such stubs.
 void
-IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::TypeSet *types)
+IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::StackTypeSet *types)
 {
     // MonitorTypes is redundant if we will also add a type barrier.
     if (barrier)
@@ -6770,7 +6778,7 @@ IonBuilder::jsop_defvar(uint32_t index)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
 
-    PropertyName *name = script()->getName(index);
+    RootedPropertyName name(cx, script()->getName(index));
 
     // Bake in attrs.
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
@@ -6785,6 +6793,19 @@ IonBuilder::jsop_defvar(uint32_t index)
     current->add(defvar);
 
     return resumeAfter(defvar);
+}
+
+bool
+IonBuilder::jsop_deffun(uint32_t index)
+{
+    RootedFunction fun(cx, script()->getFunction(index));
+
+    JS_ASSERT(script()->analysis()->usesScopeChain());
+
+    MDefFun *deffun = MDefFun::New(fun, current->scopeChain());
+    current->add(deffun);
+
+    return resumeAfter(deffun);
 }
 
 bool
@@ -7081,8 +7102,8 @@ IonBuilder::addShapeGuard(MDefinition *obj, const UnrootedShape shape, BailoutKi
     return guard;
 }
 
-const types::TypeSet *
-IonBuilder::cloneTypeSet(const types::TypeSet *types)
+const types::StackTypeSet *
+IonBuilder::cloneTypeSet(const types::StackTypeSet *types)
 {
     if (!js_IonOptions.parallelCompilation)
         return types;

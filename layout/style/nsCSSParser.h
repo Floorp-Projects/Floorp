@@ -180,6 +180,25 @@ public:
                                    uint32_t           aLineNumber,
                                    InfallibleTArray<float>& aSelectorList);
 
+  /**
+   * Parse a property and value and return whether the property/value pair
+   * is supported.
+   */
+  bool EvaluateSupportsDeclaration(const nsAString& aProperty,
+                                   const nsAString& aValue,
+                                   nsIURI* aDocURL,
+                                   nsIURI* aBaseURL,
+                                   nsIPrincipal* aDocPrincipal);
+
+  /**
+   * Parse an @supports condition and returns the result of evaluating the
+   * condition.
+   */
+  bool EvaluateSupportsCondition(const nsAString& aCondition,
+                                 nsIURI* aDocURL,
+                                 nsIURI* aBaseURL,
+                                 nsIPrincipal* aDocPrincipal);
+
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this
   // header, we can't put the type definition (in nsCSSParser.cpp) in

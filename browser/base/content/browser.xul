@@ -464,6 +464,13 @@
         </menulist>
       </popupnotificationcontent>
     </popupnotification>
+
+    <popupnotification id="geolocation-notification" hidden="true">
+      <popupnotificationcontent orient="vertical" align="start">
+        <separator class="thin"/>
+        <label id="geolocation-learnmore-link" class="text-link"/>
+      </popupnotificationcontent>
+    </popupnotification>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -1049,6 +1056,8 @@
                      observes="tabviewGroupsNumber"/>
     </toolbarpalette>
   </toolbox>
+
+  <hbox id="fullscr-toggler" collapsed="true"/>
 
   <hbox flex="1" id="browser">
     <vbox id="browser-border-start" hidden="true" layer="true"/>

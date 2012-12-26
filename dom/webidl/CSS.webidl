@@ -4,19 +4,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/hr-time/
+ * http://dev.w3.org/csswg/css3-conditional/
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-typedef double DOMHighResTimeStamp;
+[PrefControlled]
+interface CSS {
+  [Throws, Pref="layout.css.supports-rule.enabled"]
+  static boolean supports(DOMString property, DOMString value);
 
-interface Performance {
-  DOMHighResTimeStamp now();
-
-  [Constant]
-  readonly attribute PerformanceTiming timing;
-  [Constant]
-  readonly attribute PerformanceNavigation navigation;
+  [Throws, Pref="layout.css.supports-rule.enabled"]
+  static boolean supports(DOMString conditionText);
 };
