@@ -8,6 +8,7 @@
 #ifndef nsDOMCSSRect_h_
 #define nsDOMCSSRect_h_
 
+#include "mozilla/Attributes.h"
 #include "nsISupports.h"
 #include "nsIDOMRect.h"
 #include "nsAutoPtr.h"
@@ -35,6 +36,11 @@ public:
   nsROCSSPrimitiveValue* Right() const { return mRight; }
   nsROCSSPrimitiveValue* Bottom() const { return mBottom; }
   nsROCSSPrimitiveValue* Left() const { return mLeft; }
+
+  nsISupports* GetParentObject() const { return nullptr; }
+
+  virtual JSObject* WrapObject(JSContext* cx, JSObject* scope, bool* tried)
+    MOZ_OVERRIDE MOZ_FINAL;
 
 private:
   nsRefPtr<nsROCSSPrimitiveValue> mTop;
