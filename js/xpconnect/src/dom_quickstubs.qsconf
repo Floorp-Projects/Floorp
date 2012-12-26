@@ -44,6 +44,7 @@ members = [
     'nsIDOMWindow.localStorage',
     'nsIDOMWindow.onmouseenter',
     'nsIDOMWindow.onmouseleave',
+    'nsIDOMWindowPerformance.performance',
     'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
@@ -67,8 +68,6 @@ members = [
     'nsIDOMCharacterData.length',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMNodeSelector.querySelector',
-    'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
@@ -277,8 +276,6 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
-    'nsIDOMSVGElement.className',
-    'nsIDOMSVGElement.style',
 
     # dom/interfaces/traversal
     'nsIDOMNodeIterator.nextNode',
@@ -366,6 +363,8 @@ irregularFilenames = {
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
 
     'nsITelephoneCallback': 'nsITelephone',
+
+    'nsIDOMWindowPerformance': 'nsIDOMWindow',
     }
 
 customIncludes = [
@@ -389,7 +388,8 @@ customIncludes = [
     'mozilla/dom/ElementBinding.h',
     'mozilla/dom/HTMLElementBinding.h',
     'mozilla/dom/DocumentBinding.h',
-    'mozilla/dom/SVGElementBinding.h'
+    'mozilla/dom/SVGElementBinding.h',
+    'nsPerformance.h',
     ]
 
 customReturnInterfaces = [
@@ -449,19 +449,6 @@ customMethodCalls = {
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
         },
-    'nsIDOMNodeSelector_QuerySelector': {
-        'thisType': 'nsINode',
-        'code': '    mozilla::ErrorResult error;\n'
-                '    nsIContent* result = '
-                'self->QuerySelector(arg0, error);\n'
-                '    rv = error.ErrorCode();'
-        },
-    'nsIDOMNodeSelector_QuerySelectorAll': {
-        'thisType': 'nsINode',
-        'code': '    mozilla::ErrorResult error;\n'
-                '    nsCOMPtr<nsINodeList> result = self->QuerySelectorAll(arg0, error);\n'
-                '    rv = error.ErrorCode();'
-        },
     'nsIDOMElementCSSInlineStyle_GetStyle': {
         'thisType': 'nsStyledElement',
         'code': '    /* XXXbz MathML elements inherit from nsStyledElement but\n'
@@ -470,11 +457,6 @@ customMethodCalls = {
                 '      return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n'
                 '    nsIDOMCSSStyleDeclaration* result = '
                 'self->GetStyle(&rv);'
-        },
-    'nsIDOMSVGElement_GetStyle': {
-        'thisType': 'nsSVGElement',
-        'code': '    nsICSSDeclaration* result = '
-                'self->nsSVGElementBase::GetStyle(&rv);'
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',
@@ -491,7 +473,12 @@ customMethodCalls = {
     'nsIDOMWindow_SetOnmouseleave' : {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
-        }
+        },
+    'nsIDOMWindowPerformance_GetPerformance' : {
+        'thisType': 'nsPIDOMWindow',
+        'code' : '    nsPerformance* result = self->GetPerformance();\n',
+        'canFail': False,
+        },
     }
 
 newBindingProperties = {

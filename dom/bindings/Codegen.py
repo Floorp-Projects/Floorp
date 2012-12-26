@@ -530,6 +530,8 @@ class CGHeaders(CGWrapper):
         if len(callbacks) != 0:
             # We need CallbackFunction to serve as our parent class
             declareIncludes.add("mozilla/dom/CallbackFunction.h")
+            # And we need BindingUtils.h so we can wrap "this" objects
+            declareIncludes.add("mozilla/dom/BindingUtils.h")
 
         # Let the machinery do its thing.
         def _includeString(includes):
@@ -6920,10 +6922,12 @@ class CGBindingRoot(CGThing):
         curr = CGHeaders(descriptors,
                          dictionaries,
                          callbacks,
-                         ['mozilla/dom/BindingUtils.h',
+                         ['mozilla/dom/BindingDeclarations.h',
+                          'mozilla/ErrorResult.h',
                           'mozilla/dom/DOMJSClass.h',
                           'mozilla/dom/DOMJSProxyHandler.h'],
-                         ['mozilla/dom/NonRefcountedDOMObject.h',
+                         ['mozilla/dom/BindingUtils.h',
+                          'mozilla/dom/NonRefcountedDOMObject.h',
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',

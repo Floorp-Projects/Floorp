@@ -229,12 +229,23 @@ public:
                                    uint32_t aLineNumber, // for error reporting
                                    InfallibleTArray<float>& aSelectorList);
 
+  bool EvaluateSupportsDeclaration(const nsAString& aProperty,
+                                   const nsAString& aValue,
+                                   nsIURI* aDocURL,
+                                   nsIURI* aBaseURL,
+                                   nsIPrincipal* aDocPrincipal);
+
+  bool EvaluateSupportsCondition(const nsAString& aCondition,
+                                 nsIURI* aDocURL,
+                                 nsIURI* aBaseURL,
+                                 nsIPrincipal* aDocPrincipal);
+
 protected:
   class nsAutoParseCompoundProperty;
   friend class nsAutoParseCompoundProperty;
 
-  class nsAutoParseCompoundProperty;
-  friend class nsAutoParseCompoundProperty;
+  class nsAutoFailingSupportsRule;
+  friend class nsAutoFailingSupportsRule;
 
   class nsAutoSuppressErrors;
   friend class nsAutoSuppressErrors;
@@ -299,7 +310,7 @@ protected:
   class nsAutoSuppressErrors {
     public:
       nsAutoSuppressErrors(CSSParserImpl* aParser,
-                           bool aSuppressErrors)
+                           bool aSuppressErrors = true)
         : mParser(aParser),
           mOriginalValue(aParser->mSuppressErrors)
       {
@@ -1348,6 +1359,55 @@ CSSParserImpl::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
   }
 
   return success;
+}
+
+bool
+CSSParserImpl::EvaluateSupportsDeclaration(const nsAString& aProperty,
+                                           const nsAString& aValue,
+                                           nsIURI* aDocURL,
+                                           nsIURI* aBaseURL,
+                                           nsIPrincipal* aDocPrincipal)
+{
+  nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty,
+                                                    nsCSSProps::eEnabled);
+  if (propID == eCSSProperty_UNKNOWN) {
+    return false;
+  }
+
+  nsCSSScanner scanner(aValue, 0);
+  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
+  InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
+  nsAutoSuppressErrors suppressErrors(this);
+
+  bool parsedOK = ParseProperty(propID) && !GetToken(true);
+
+  CLEAR_ERROR();
+  ReleaseScanner();
+
+  mTempData.ClearProperty(propID);
+  mTempData.AssertInitialState();
+
+  return parsedOK;
+}
+
+bool
+CSSParserImpl::EvaluateSupportsCondition(const nsAString& aDeclaration,
+                                         nsIURI* aDocURL,
+                                         nsIURI* aBaseURL,
+                                         nsIPrincipal* aDocPrincipal)
+{
+  nsCSSScanner scanner(aDeclaration, 0);
+  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
+  InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
+  nsAutoSuppressErrors suppressErrors(this);
+
+  bool conditionMet;
+  bool parsedOK = ParseSupportsCondition(conditionMet) && !GetToken(true);
+
+  CLEAR_ERROR();
+  ReleaseScanner();
+
+  return parsedOK && conditionMet;
 }
 
 //----------------------------------------------------------------------
@@ -10213,4 +10273,26 @@ nsCSSParser::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseKeyframeSelectorString(aSelectorString, aURI, aLineNumber,
                                 aSelectorList);
+}
+
+bool
+nsCSSParser::EvaluateSupportsDeclaration(const nsAString& aProperty,
+                                         const nsAString& aValue,
+                                         nsIURI* aDocURL,
+                                         nsIURI* aBaseURL,
+                                         nsIPrincipal* aDocPrincipal)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    EvaluateSupportsDeclaration(aProperty, aValue, aDocURL, aBaseURL,
+                                aDocPrincipal);
+}
+
+bool
+nsCSSParser::EvaluateSupportsCondition(const nsAString& aCondition,
+                                       nsIURI* aDocURL,
+                                       nsIURI* aBaseURL,
+                                       nsIPrincipal* aDocPrincipal)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    EvaluateSupportsCondition(aCondition, aDocURL, aBaseURL, aDocPrincipal);
 }

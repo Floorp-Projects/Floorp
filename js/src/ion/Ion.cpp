@@ -956,11 +956,11 @@ CompileBackEnd(MIRGenerator *mir)
             return NULL;
     }
 
-    // Note: bounds check elimination has to run after all other passes that
-    // move instructions. Since bounds check uses are replaced with the actual
-    // index, code motion after this pass could incorrectly move a load or
-    // store before its bounds check.
-    if (!EliminateRedundantBoundsChecks(graph))
+    // Note: check elimination has to run after all other passes that move
+    // instructions. Since check uses are replaced with the actual index, code
+    // motion after this pass could incorrectly move a load or store before its
+    // bounds check.
+    if (!EliminateRedundantChecks(graph))
         return NULL;
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);

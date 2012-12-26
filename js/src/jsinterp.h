@@ -381,6 +381,9 @@ template <bool strict>
 bool
 DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool *bv);
 
+bool
+DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain, HandleFunction funArg);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */

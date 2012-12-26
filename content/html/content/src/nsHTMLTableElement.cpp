@@ -26,6 +26,7 @@
 #include "nsIHTMLCollection.h"
 #include "nsHTMLStyleSheet.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

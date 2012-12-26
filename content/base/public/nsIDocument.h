@@ -24,6 +24,7 @@
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
 #include "mozilla/dom/DirectionalityUtils.h"
+#include "mozilla/dom/DocumentBinding.h"
 
 class imgIRequest;
 class nsAString;
@@ -1888,15 +1889,22 @@ public:
   }
   bool Hidden() const
   {
-    return mVisibilityState != eVisible;
+    return mVisibilityState != mozilla::dom::VisibilityStateValues::Visible;
   }
   bool MozHidden() // Not const because of WarnOnceAbout
   {
     WarnOnceAbout(ePrefixedVisibilityAPI);
     return Hidden();
   }
-  void GetVisibilityState(nsAString& aState);
-  void GetMozVisibilityState(nsAString& aState);
+  mozilla::dom::VisibilityState VisibilityState()
+  {
+    return mVisibilityState;
+  }
+  mozilla::dom::VisibilityState MozVisibilityState()
+  {
+    WarnOnceAbout(ePrefixedVisibilityAPI);
+    return VisibilityState();
+  }
   virtual nsIDOMStyleSheetList* StyleSheets() = 0;
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
@@ -1988,14 +1996,6 @@ protected:
     mDirectionality = aDir;
   }
 
-  // This needs to stay in sync with the list in GetVisibilityState.
-  // XXXbz visibilityState needs to be an IDL enum.
-  enum VisibilityState {
-    eHidden = 0,
-    eVisible,
-    eVisibilityStateCount
-  };
-
   nsCString mReferrer;
   nsString mLastModified;
 
@@ -2047,7 +2047,7 @@ protected:
   ReadyState mReadyState;
 
   // Our visibility state
-  VisibilityState mVisibilityState;
+  mozilla::dom::VisibilityState mVisibilityState;
 
   // True if BIDI is enabled.
   bool mBidiEnabled;

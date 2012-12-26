@@ -23,16 +23,18 @@ interface HTMLElement : Element {
   //         attribute boolean translate;
   [SetterThrows]
            attribute DOMString dir;
+  [Constant]
   readonly attribute DOMStringMap dataset;
 
   // microdata 
   [SetterThrows]
            attribute boolean itemScope;
-  [PutForwards=value] readonly attribute DOMSettableTokenList itemType;
+  [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemType;
   [SetterThrows]
            attribute DOMString itemId;
-  [PutForwards=value] readonly attribute DOMSettableTokenList itemRef;
-  [PutForwards=value] readonly attribute DOMSettableTokenList itemProp;
+  [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemRef;
+  [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemProp;
+  [Constant]
   readonly attribute HTMLPropertiesCollection properties;
   [Throws]
            attribute any itemValue;
@@ -71,7 +73,7 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandChecked;
 
   // styling
-  [Throws]
+  [Throws, Constant]
   readonly attribute CSSStyleDeclaration style;
 
   // event handler IDL attributes

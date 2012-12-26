@@ -288,7 +288,7 @@ class IonBuilder : public MIRGenerator
     bool initScopeChain();
     bool pushConstant(const Value &v);
     bool pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual, types::StackTypeSet *observed);
-    void monitorResult(MInstruction *ins, types::TypeSet *barrier, types::TypeSet *types);
+    void monitorResult(MInstruction *ins, types::TypeSet *barrier, types::StackTypeSet *types);
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
@@ -334,6 +334,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_pos();
     bool jsop_neg();
     bool jsop_defvar(uint32_t index);
+    bool jsop_deffun(uint32_t index);
     bool jsop_notearg();
     bool jsop_funcall(uint32_t argc);
     bool jsop_funapply(uint32_t argc);
@@ -470,7 +471,7 @@ class IonBuilder : public MIRGenerator
                            MBasicBlock *bottom,
                            Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
 
-    const types::TypeSet *cloneTypeSet(const types::TypeSet *types);
+    const types::StackTypeSet *cloneTypeSet(const types::StackTypeSet *types);
 
     // A builder is inextricably tied to a particular script.
     HeapPtrScript script_;
