@@ -458,7 +458,7 @@ nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
   return nullptr;
 }
 
-already_AddRefed<nsDOMCSSRect>
+nsDOMCSSRect*
 nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
 {
   if (mType != CSS_RECT) {
@@ -467,7 +467,6 @@ nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
   }
 
   NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
-  NS_ADDREF(mValue.mRect);
   return mValue.mRect;
 }
 
@@ -475,7 +474,7 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aRect)
 {
   ErrorResult error;
-  *aRect = GetRectValue(error).get();
+  NS_IF_ADDREF(*aRect = GetRectValue(error));
   return error.ErrorCode();
 }
 
