@@ -3109,9 +3109,12 @@ END_VARLEN_CASE
 }
 
 BEGIN_CASE(JSOP_EXCEPTION)
-    PUSH_COPY(cx->getPendingException());
-    cx->clearPendingException();
-    CHECK_BRANCH();
+{
+    PUSH_NULL();
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GetAndClearException(cx, res))
+        goto error;
+}
 END_CASE(JSOP_EXCEPTION)
 
 BEGIN_CASE(JSOP_FINALLY)
@@ -3908,6 +3911,19 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     /* Step 5f. */
     return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict);
+}
+
+bool
+js::GetAndClearException(JSContext *cx, MutableHandleValue res)
+{
+    // Check the interrupt flag to allow interrupting deeply nested exception
+    // handling.
+    if (cx->runtime->interrupt && !js_HandleExecutionInterrupt(cx))
+        return false;
+
+    res.set(cx->getPendingException());
+    cx->clearPendingException();
+    return true;
 }
 
 template <bool strict>
