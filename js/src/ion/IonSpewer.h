@@ -79,7 +79,6 @@ class IonSpewer
     JSONSpewer jsonSpewer;
     bool inited_;
 
-
   public:
     IonSpewer()
       : graph(NULL), function(NullPtr()), inited_(false)
@@ -90,6 +89,7 @@ class IonSpewer
 
     bool init();
     void beginFunction(MIRGraph *graph, HandleScript);
+    bool isSpewingFunction() const;
     void spewPass(const char *pass);
     void spewPass(const char *pass, LinearScanAllocator *ra);
     void endFunction();
