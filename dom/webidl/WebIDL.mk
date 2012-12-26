@@ -73,6 +73,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  Rect.webidl \
   RGBColor.webidl \
   Screen.webidl \
   SVGAngle.webidl \
