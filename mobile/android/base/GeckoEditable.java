@@ -460,7 +460,7 @@ final class GeckoEditable
 
     // GeckoEditableListener interface
 
-    void geckoActionReply() {
+    private void geckoActionReply() {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             GeckoApp.assertOnGeckoThread();
@@ -501,7 +501,6 @@ final class GeckoEditable
         if (action.mShouldUpdate) {
             geckoUpdateGecko(false);
         }
-        mActionQueue.poll();
     }
 
     @Override
@@ -511,7 +510,17 @@ final class GeckoEditable
             GeckoApp.assertOnGeckoThread();
         }
         if (type == NOTIFY_IME_REPLY_EVENT) {
-            geckoActionReply();
+            try {
+                if (mFocused) {
+                    // When mFocused is false, the reply is for a stale action,
+                    // and we should not do anything
+                    geckoActionReply();
+                }
+            } finally {
+                // Ensure action is always removed from queue
+                // even if stale action results in exception in geckoActionReply
+                mActionQueue.poll();
+            }
             return;
         }
         geckoPostToUI(new Runnable() {
