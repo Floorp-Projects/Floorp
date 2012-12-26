@@ -18,6 +18,7 @@
 
 class nsIURI;
 class nsComputedDOMStyle;
+class nsDOMCSSRect;
 class nsDOMCSSRGBColor;
 
 /**
@@ -74,7 +75,7 @@ public:
   void SetString(const nsAString& aString, uint16_t aType = CSS_STRING);
   void SetURI(nsIURI *aURI);
   void SetColor(nsDOMCSSRGBColor* aColor);
-  void SetRect(nsIDOMRect* aRect);
+  void SetRect(nsDOMCSSRect* aRect);
   void SetTime(float aValue);
   void Reset();
 
@@ -92,7 +93,7 @@ private:
     nscoord         mAppUnits;
     float           mFloat;
     nsDOMCSSRGBColor* mColor;
-    nsIDOMRect*     mRect;
+    nsDOMCSSRect*     mRect;
     PRUnichar*      mString;
     nsIURI*         mURI;
     nsCSSKeyword    mKeyword;
