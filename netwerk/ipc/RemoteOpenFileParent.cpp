@@ -11,6 +11,7 @@
 
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_COCOA)
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 
 namespace mozilla {
