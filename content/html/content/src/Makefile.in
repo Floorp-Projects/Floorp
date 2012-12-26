@@ -33,6 +33,7 @@ EXPORTS_mozilla/dom = \
 		HTMLDivElement.h \
 		HTMLFontElement.h \
 		HTMLFrameSetElement.h \
+		HTMLHeadingElement.h \
 		HTMLLabelElement.h \
 		HTMLUnknownElement.h
 
@@ -59,7 +60,7 @@ CPPSRCS		= \
 		nsHTMLFrameElement.cpp \
 		HTMLFrameSetElement.cpp \
 		nsHTMLHRElement.cpp \
-		nsHTMLHeadingElement.cpp \
+		HTMLHeadingElement.cpp \
 		nsHTMLIFrameElement.cpp \
 		nsHTMLImageElement.cpp \
 		nsHTMLInputElement.cpp \
