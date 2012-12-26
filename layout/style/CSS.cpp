@@ -28,6 +28,10 @@ static nsresult
 GetParsingInfo(nsISupports* aGlobal,
                SupportsParsingInfo& aInfo)
 {
+  if (!aGlobal) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsGlobalWindow* win = nsGlobalWindow::FromSupports(aGlobal);
   nsCOMPtr<nsIDocument> doc = win->GetDoc();
   if (!doc) {
