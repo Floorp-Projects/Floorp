@@ -49,6 +49,7 @@ MOCHITEST_FILES = \
 		test_valueasnumber_attribute.html \
 		test_experimental_forms_pref.html \
 		test_input_number_value.html \
+		test_input_sanitization.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
