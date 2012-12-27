@@ -210,10 +210,10 @@ struct WMFModule {
 };
 
 static WMFModule sDLLs[] = {
-  { "C:\\Windows\\system32\\mfplat.dll", NULL },
-  { "C:\\Windows\\system32\\mfreadwrite.dll", NULL },
-  { "C:\\Windows\\system32\\propsys.dll", NULL },
-  { "C:\\Windows\\system32\\mf.dll", NULL },
+  { "mfplat.dll", NULL },
+  { "mfreadwrite.dll", NULL },
+  { "propsys.dll", NULL },
+  { "mf.dll", NULL }
 };
 
 HRESULT
