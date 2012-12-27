@@ -218,8 +218,8 @@ reflectString({
 // .value doesn't reflect a content attribute.
 
 // .valueAsDate
-todo("valueAsDate" in document.createElement("input"),
-     "valueAsDate isn't implemented yet");
+is("valueAsDate" in document.createElement("input"), true,
+   "valueAsDate should be available");
 
 // Deeper check will be done with bug 763305.
 is('valueAsNumber' in document.createElement("input"), true,
