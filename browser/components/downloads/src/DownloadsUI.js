@@ -107,28 +107,11 @@ DownloadsUI.prototype = {
   },
 
   /**
-   * Helper function that opens the right download manager UI. Either the
-   * new Downloads View in Places, or the toolkit download window if the
-   * Places Downloads View is not enabled.
+   * Helper function that opens the download manager UI.
    */
   _showDownloadManagerUI:
   function DUI_showDownloadManagerUI(aWindowContext, aID, aReason)
   {
-    // First, determine if the Places Downloads view is preffed on.
-    let usePlacesView = false;
-    try {
-      usePlacesView =
-        Services.prefs.getBoolPref("browser.library.useNewDownloadsView");
-    } catch(e) {}
-
-    if (!usePlacesView) {
-      // If we got here, then the browser.library.useNewDownloadsView pref
-      // either didn't exist or was false, so just show the toolkit downloads
-      // manager.
-      this._toolkitUI.show(aWindowContext, aID, aReason);
-      return;
-    }
-
     let organizer = Services.wm.getMostRecentWindow("Places:Organizer");
     if (!organizer) {
       let parentWindow = aWindowContext;
