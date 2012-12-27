@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+% overlay chrome://browser/content/places/places.xul chrome://browser/content/places/downloadsViewOverlay.xul
 # Provide another URI for the bookmarkProperties dialog so we can persist the
 # attributes separately
     content/browser/places/bookmarkProperties2.xul       (content/bookmarkProperties.xul)
@@ -30,3 +31,4 @@ browser.jar:
     content/browser/places/moveBookmarks.js              (content/moveBookmarks.js)
     content/browser/places/editBookmarkOverlay.xul       (content/editBookmarkOverlay.xul)
     content/browser/places/editBookmarkOverlay.js        (content/editBookmarkOverlay.js)
+    content/browser/places/downloadsViewOverlay.xul      (content/downloadsViewOverlay.xul)
