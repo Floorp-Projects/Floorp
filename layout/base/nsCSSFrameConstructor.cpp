@@ -8112,6 +8112,11 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
                  (hint & nsChangeHint_NeedReflow),
                  "Reflow hint bits set without actually asking for a reflow");
 
+    // skip any frame that has been destroyed due to a ripple effect
+    if (frame && !propTable->Get(frame, ChangeListProperty())) {
+      continue;
+    }
+
     if (frame && frame->GetContent() != content) {
       // XXXbz this is due to image maps messing with the primary frame of
       // <area>s.  See bug 135040.  Remove this block once that's fixed.
@@ -8119,12 +8124,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       if (!(hint & nsChangeHint_ReconstructFrame)) {
         continue;
       }
-    }
-
-    // skip any frame that has been destroyed due to a ripple effect
-    if (frame) {
-      if (!propTable->Get(frame, ChangeListProperty()))
-        continue;
     }
 
     if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
