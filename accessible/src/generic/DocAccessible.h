@@ -333,8 +333,11 @@ protected:
    */
   void ProcessLoad();
 
-    void AddScrollListener();
-    void RemoveScrollListener();
+  /**
+   * Add/remove scroll listeners, @see nsIScrollPositionListener interface.
+   */
+  void AddScrollListener();
+  void RemoveScrollListener();
 
   /**
    * Append the given document accessible to this document's child document
@@ -483,6 +486,17 @@ protected:
 protected:
 
   /**
+   * State and property flags, kept by mDocFlags.
+   */
+  enum {
+    // Whether scroll listeners were added.
+    eScrollInitialized = 1 << 0,
+
+    // Whether we support nsIAccessibleCursorable.
+    eCursorable = 1 << 1
+  };
+
+  /**
    * Cache of accessibles within this document accessible.
    */
   AccessibleHashtable mAccessibleCache;
@@ -496,7 +510,12 @@ protected:
   /**
    * Bit mask of document load states (@see LoadState).
    */
-  uint32_t mLoadState;
+  uint32_t mLoadState : 3;
+
+  /**
+   * Bit mask of other states and props.
+   */
+  uint32_t mDocFlags : 28;
 
   /**
    * Type of document load event fired after the document is loaded completely.
@@ -515,11 +534,6 @@ protected:
   nsIAtom* mARIAAttrOldValue;
 
   nsTArray<nsRefPtr<DocAccessible> > mChildDocuments;
-
-  /**
-   * Whether we support nsIAccessibleCursorable, used when querying the interface.
-   */
-  bool mIsCursorable;
 
   /**
    * The virtual cursor of the document when it supports nsIAccessibleCursorable.
