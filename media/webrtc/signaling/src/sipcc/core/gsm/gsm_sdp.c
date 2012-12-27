@@ -208,7 +208,7 @@ void gsmsdp_process_cap_constraint(cc_media_cap_t *cap,
  * OfferToReceiveAudio, OfferToReceiveVideo
  */
 void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb,
-                                    const cc_media_constraints_t* constraints) {
+                                    cc_media_constraints_t* constraints) {
   int i = 0;
 
   for (i=0; i<constraints->constraint_count; i++) {
