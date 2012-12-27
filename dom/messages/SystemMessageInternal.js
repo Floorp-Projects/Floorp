@@ -168,6 +168,20 @@ SystemMessageInternal.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     let msg = aMessage.json;
+
+    // To prevent the hacked child process from sending commands to parent
+    // to manage system messages, we need to check its manifest URL.
+    if (["SystemMessageManager:Register",
+         "SystemMessageManager:Unregister",
+         "SystemMessageManager:GetPendingMessages",
+         "SystemMessageManager:HasPendingMessages",
+         "SystemMessageManager:Message:Return:OK"].indexOf(aMessage.name) != -1) {
+      if (!aMessage.target.assertContainApp(msg.manifest)) {
+        debug("Got message from a child process containing illegal manifest URL.");
+        return null;
+      }
+    }
+
     switch(aMessage.name) {
       case "SystemMessageManager:AskReadyToRegister":
         return true;
