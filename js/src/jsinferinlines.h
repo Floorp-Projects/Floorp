@@ -441,15 +441,13 @@ struct AutoEnterCompilation
             }
         }
 
-        info.outputIndex = types.constrainedOutputs->length();
+        info.outputIndex = cx->compartment->types.constrainedOutputs->length();
         // I hope we GC before we reach 64k of compilation attempts.
         if (info.outputIndex >= RecompileInfo::NoCompilerRunning)
             return false;
 
-        if (!types.constrainedOutputs->append(co)) {
-            info.outputIndex = RecompileInfo::NoCompilerRunning;
+        if (!cx->compartment->types.constrainedOutputs->append(co))
             return false;
-        }
         return true;
     }
 
@@ -462,11 +460,6 @@ struct AutoEnterCompilation
 
     ~AutoEnterCompilation()
     {
-        // Handle failure cases of init.
-        if (info.outputIndex >= RecompileInfo::NoCompilerRunning)
-            return;
-
-        JS_ASSERT(info.outputIndex + 1 == cx->compartment->types.constrainedOutputs->length());
         CompilerOutput *co = info.compilerOutput(cx);
         co->pendingRecompilation = false;
         if (!co->isValid())
