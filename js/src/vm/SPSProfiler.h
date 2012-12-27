@@ -11,6 +11,7 @@
 #include <stddef.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/HashFunctions.h"
 
 #include "js/Utility.h"
@@ -262,12 +263,15 @@ class SPSProfiler
  */
 class SPSEntryMarker
 {
+  public:
+    SPSEntryMarker(JSRuntime *rt
+                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~SPSEntryMarker();
+
+  private:
     SPSProfiler *profiler;
     mozilla::DebugOnly<uint32_t> size_before;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-  public:
-    SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~SPSEntryMarker();
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /*
