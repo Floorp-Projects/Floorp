@@ -1855,6 +1855,7 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
                                  mInfo.mAudioChannels,
                                  mInfo.mAudioRate,
                                  HasAudio(),
+                                 HasVideo(),
                                  tags);
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
@@ -2780,7 +2781,12 @@ bool MediaDecoderStateMachine::IsShutdown()
   return GetState() == DECODER_STATE_SHUTDOWN;
 }
 
-void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
+                                             int aChannels,
+                                             int aRate,
+                                             bool aHasAudio,
+                                             bool aHasVideo,
+                                             MetadataTags* aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
