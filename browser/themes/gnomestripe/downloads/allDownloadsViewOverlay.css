@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #downloadsRichListBox {
+  /** The default listbox appearance comes with an unwanted margin. **/
   -moz-appearance: none;
   margin: 0;
 }
