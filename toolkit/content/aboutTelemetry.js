@@ -714,13 +714,17 @@ function onLoad() {
   }
 
   // Show addon histogram data
-  histograms = Telemetry.addonHistogramSnapshots;
-  if (Object.keys(histograms).length) {
-    let addonDiv = document.getElementById("addon-histograms");
+  let addonDiv = document.getElementById("addon-histograms");
+  let addonHistogramsRendered = false;
+  let addonData = Telemetry.addonHistogramSnapshots;
+  for (let [addon, histograms] of Iterator(addonData)) {
     for (let [name, hgram] of Iterator(histograms)) {
-      Histogram.render(addonDiv, "ADDON_" + name, hgram);
+      addonHistogramsRendered = true;
+      Histogram.render(addonDiv, addon + ": " + name, hgram);
     }
-  } else {
+  }
+
+  if (!addonHistogramsRendered) {
     showEmptySectionMessage("addon-histograms-section");
   }
 
