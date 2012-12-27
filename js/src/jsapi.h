@@ -5545,19 +5545,21 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str);
 JS_PUBLIC_API(size_t)
 JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length);
 
-class JSAutoByteString {
+class JSAutoByteString
+{
   public:
     JSAutoByteString(JSContext *cx, JSString *str
-                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mBytes(JS_EncodeString(cx, str))
     {
         JS_ASSERT(cx);
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    JSAutoByteString(JS_GUARD_OBJECT_NOTIFIER_PARAM0)
-      : mBytes(NULL) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    JSAutoByteString(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+      : mBytes(NULL)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~JSAutoByteString() {
@@ -5592,7 +5594,7 @@ class JSAutoByteString {
 
   private:
     char        *mBytes;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     /* Copy and assignment are not supported. */
     JSAutoByteString(const JSAutoByteString &another);
