@@ -270,10 +270,10 @@ nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
       break;
     }
 
-    nsStyleSet::RuleAndLevel* curRule = rules.AppendElement();
-    curRule->mLevel = ruleNode->GetLevel();
+    nsStyleSet::RuleAndLevel curRule;
+    curRule.mLevel = ruleNode->GetLevel();
 
-    if (curRule->mLevel == nsStyleSet::eAnimationSheet) {
+    if (curRule.mLevel == nsStyleSet::eAnimationSheet) {
       ElementAnimations* ea = 
         mPresContext->AnimationManager()->GetElementAnimations(aElement,
                                                                oldStyle->GetPseudoType(),
@@ -281,20 +281,24 @@ nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
       NS_ASSERTION(ea, "Rule has level eAnimationSheet without animation on manager");
 
       mPresContext->AnimationManager()->EnsureStyleRuleFor(ea);
-      curRule->mRule = ea->mStyleRule;
+      curRule.mRule = ea->mStyleRule;
 
       ForceLayerRerendering(primaryFrame, ea);
-    } else if (curRule->mLevel == nsStyleSet::eTransitionSheet) {
+    } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
       ElementTransitions *et =
         GetElementTransitions(aElement, oldStyle->GetPseudoType(), false);
       NS_ASSERTION(et, "Rule has level eTransitionSheet without transition on manager");
       
       et->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh());
-      curRule->mRule = et->mStyleRule;
+      curRule.mRule = et->mStyleRule;
 
       ForceLayerRerendering(primaryFrame, et);
     } else {
-      curRule->mRule = ruleNode->GetRule();
+      curRule.mRule = ruleNode->GetRule();
+    }
+
+    if (curRule.mRule) {
+      rules.AppendElement(curRule);
     }
   } while ((ruleNode = ruleNode->GetParent()));
 
@@ -329,7 +333,6 @@ nsTransitionManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
     newStyle = UpdateThrottledStyle(element, aParentStyle);
     // remove the current transition from the working set
     et->mFlushGeneration = mPresContext->RefreshDriver()->MostRecentRefresh();
-;
   } else {
     // reparent the element's style
     nsStyleSet* styleSet = mPresContext->PresShell()->StyleSet();

@@ -263,6 +263,14 @@ interface nsIICCRecords : nsISupports
   readonly attribute jsval fdn;
 };
 
+[scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
+interface nsIVoicemailInfo : nsISupports
+{
+  readonly attribute DOMString number;
+
+  readonly attribute DOMString displayName;
+};
+
 [scriptable, uuid(e6dc89f2-0d4e-46fc-902c-cfeeaee15e40)]
 interface nsIRilContext : nsISupports
 {
@@ -277,7 +285,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(a90fef2c-44aa-4f2b-a0ee-a590e9dd345e)]
+[scriptable, uuid(f9c586ee-71ce-4172-9b2e-d89f0ff9c6d9)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -299,6 +307,8 @@ interface nsIRadioInterfaceLayer : nsISupports
   void setRadioEnabled(in bool value);
 
   readonly attribute nsIRilContext rilContext;
+
+  readonly attribute nsIVoicemailInfo voicemailInfo;
 
   /**
    * PDP APIs

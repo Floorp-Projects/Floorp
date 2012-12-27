@@ -58,7 +58,11 @@ fails == flexbox-basic-img-vert-2.xhtml flexbox-basic-img-vert-2-ref.xhtml # bug
 == flexbox-basic-video-vert-1.xhtml     flexbox-basic-video-vert-1-ref.xhtml
 fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml # bug 794660
 
-# Tests for dynamic modifications to flexboxes
+# Tests for dynamic modifications of content inside a flex container
+== flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
+== flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
+
+# Tests for dynamic insertions of content into a flex container
 # (with existing [div | span | text] inside the flexbox, and new content
 # inserted adjacent to that existing content.)
 == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
@@ -97,6 +101,7 @@ fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml #
 
 # Tests for the order in which we paint flex items
 == flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
+== flexbox-paint-ordering-2.xhtml flexbox-paint-ordering-2-ref.xhtml
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml

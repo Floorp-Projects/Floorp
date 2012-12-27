@@ -13,6 +13,7 @@
 #ifdef MOZ_ENABLE_D3D9_LAYER
 # include "LayerManagerD3D9.h"
 #endif //MOZ_ENABLE_D3D9_LAYER
+#include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -549,6 +550,24 @@ public:
   }
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
+
+  virtual void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect,
+                                       const gfx::Size& aContentSize) MOZ_OVERRIDE
+  {
+    if (MessageLoop::current() != mUILoop) {
+      mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this,
+                          &RemoteContentController::SendAsyncScrollDOMEvent,
+                          aContentRect, aContentSize));
+      return;
+    }
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      BrowserElementParent::DispatchAsyncScrollEvent(browser, aContentRect,
+                                                     aContentSize);
+    }
+  }
 
 private:
   void DoRequestContentRepaint(const FrameMetrics& aFrameMetrics)

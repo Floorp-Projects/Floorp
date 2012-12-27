@@ -133,19 +133,6 @@ members = [
     'nsIDOMHTMLButtonElement.value',
     'nsIDOMHTMLButtonElement.disabled',
     'nsIDOMHTMLCommandElement.*',
-    'nsIDOMHTMLDocument.body',
-    'nsIDOMHTMLDocument.getElementsByName',
-    'nsIDOMHTMLDocument.anchors',
-    'nsIDOMHTMLDocument.links',
-    'nsIDOMHTMLDocument.forms',
-    'nsIDOMHTMLDocument.cookie',
-    'nsIDOMHTMLDocument.images',
-    'nsIDOMHTMLDocument.write',
-    'nsIDOMHTMLDocument.writeln',
-    'nsIDOMHTMLDocument.domain',
-    'nsIDOMHTMLDocument.getSelection',
-    'nsIDOMHTMLDocument.designMode',
-    'nsIDOMHTMLDocument.head',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
     'nsIDOMHTMLFormElement.submit',
@@ -372,13 +359,11 @@ customIncludes = [
     'nsIContent.h',
     'nsIDocument.h',
     'nsCSSPropertiesQS.h',
-    'nsDocument.h',
     'nsDOMTokenList.h',
     'nsGenericDOMDataNode.h',
     'mozilla/dom/Element.h',
     'nsGenericHTMLElement.h',
     'nsSVGElement.h',
-    'nsHTMLDocument.h',
     'nsDOMQS.h',
     'nsDOMStringMap.h',
     'HTMLPropertiesCollection.h',
@@ -390,27 +375,13 @@ customIncludes = [
     'mozilla/dom/DocumentBinding.h',
     'mozilla/dom/SVGElementBinding.h',
     'nsPerformance.h',
+    'mozilla/dom/HTMLDocumentBinding.h',
     ]
 
 customReturnInterfaces = [
     'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
     ]
-
-nsIDOMHTMLDocument_Write_customMethodCallCode = """
-    nsAString &str = arg0;
-    for (unsigned i = 1; i < argc; ++i) {
-      xpc_qsDOMString next_arg(cx, argv[i], &argv[i],
-                               xpc_qsDOMString::eStringify,
-                               xpc_qsDOMString::eStringify);
-      if (!next_arg.IsValid())
-        return JS_FALSE;
-
-      str.Append(next_arg);
-    }
-
-    rv = self->%s(arg0, cx);
-"""
 
 nsIDOMStorage_Clear_customMethodCallCode = """
     rv = self->Clear();
@@ -419,33 +390,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
 """
 
 customMethodCalls = {
-    'nsIDOMHTMLDocument_': {
-        'thisType': 'nsHTMLDocument'
-        },
-    'nsIDOMHTMLDocument_Write': {
-        'thisType': 'nsHTMLDocument',
-        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write'
-        },
-    'nsIDOMHTMLDocument_Writeln': {
-        'thisType': 'nsHTMLDocument',
-        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln'
-        },
-    'nsIDOMHTMLDocument_GetBody': {
-        'thisType': 'nsHTMLDocument',
-        'code': '    nsIContent *result = self->GetBody();',
-        'canFail': False
-        },
-    'nsIDOMHTMLDocument_GetHead': {
-        'thisType': 'nsHTMLDocument',
-        'code': '    nsIContent *result = self->GetHead();',
-        'canFail': False
-        },
-    'nsIDOMHTMLDocument_GetElementsByName': {
-        'thisType': 'nsHTMLDocument',
-        'code': '    nsRefPtr<nsContentList> result = '
-                'self->GetElementsByName(arg0);',
-        'canFail': False
-        },
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
         },
@@ -486,5 +430,6 @@ newBindingProperties = {
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMDocument': 'mozilla::dom::DocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular'
+    'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMHTMLDocument': 'mozilla::dom::HTMLDocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     }
