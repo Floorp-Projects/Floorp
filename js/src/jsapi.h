@@ -3862,6 +3862,13 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
         JS_CALL_TRACER((trc), str_, JSTRACE_STRING, name);                    \
     JS_END_MACRO
 
+#define JS_CALL_SCRIPT_TRACER(trc, script, name)                              \
+    JS_BEGIN_MACRO                                                            \
+        JSScript *script_ = (script);                                         \
+        JS_ASSERT(script_);                                                   \
+        JS_CALL_TRACER((trc), script_, JSTRACE_SCRIPT, name);                 \
+    JS_END_MACRO
+
 /*
  * API for JSTraceCallback implementations.
  */
