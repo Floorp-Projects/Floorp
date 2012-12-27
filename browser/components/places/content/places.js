@@ -82,7 +82,7 @@ var PlacesOrganizer = {
     // Select the first item in the content area view.
     let view = ContentArea.currentView;
     let root = view.result ? view.result.root : null;
-    if (root && root.containerOpen && root.childCount >= 0)
+    if (root && root.containerOpen && root.childCount > 0)
       view.selectNode(root.getChild(0));
     ContentArea.focus();
   },
