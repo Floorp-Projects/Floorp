@@ -266,6 +266,7 @@ SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
       parser->CancelParsingEvents();
       parser->ContinueInterruptedParsing();
     }
+    // XXX flushing is wasteful if embedding frame hasn't had initial reflow
     FlushLayout();
     mListener = nullptr;
 
