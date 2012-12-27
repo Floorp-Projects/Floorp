@@ -13,6 +13,8 @@
 #include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
 
 eMathMLFrameType
 nsMathMLFrame::GetMathMLFrameType()
@@ -355,7 +357,8 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
 {
   nsCSSValue cssValue;
 
-  if (!nsMathMLElement::ParseNumericValue(aString, cssValue, aFlags)) {
+  if (!nsMathMLElement::ParseNumericValue(aString, cssValue, aFlags,
+                                          aPresContext->Document())) {
     // Invalid attribute value. aLengthValue remains unchanged, so the default
     // length value is used.
     return;
