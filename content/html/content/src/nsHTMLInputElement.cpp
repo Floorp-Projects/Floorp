@@ -2757,9 +2757,144 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
         }
       }
       break;
+    case NS_FORM_INPUT_DATE:
+      {
+        if (!aValue.IsEmpty() && !IsValidDate(aValue)) {
+          aValue.Truncate();
+        }
+      }
+      break;
   }
 }
 
+bool
+nsHTMLInputElement::IsValidDate(nsAString& aValue) const
+{
+/*
+ * Parse the year, month, day values out a date string formatted as 'yyy-mm-dd'.
+ * -The year must be 4 or more digits long, and year > 0
+ * -The month must be exactly 2 digits long, and 01 <= month <= 12
+ * -The day must be exactly 2 digit long, and 01 <= day <= maxday
+ *  Where maxday is the number of days in the month 'month' and year 'year'
+ */
+
+  if (aValue.IsEmpty()) {
+    return false;
+  }
+
+  uint32_t year = 0;
+  uint32_t month = 0;
+  uint32_t day = 0;
+  int32_t fieldMaxSize = 0;
+  int32_t fieldMinSize = 4;
+  enum {
+    YEAR, MONTH, DAY, NONE
+  } field;
+  int32_t fieldSize = 0;
+  nsresult ec;
+
+  field = YEAR;
+  for (uint32_t offset = 0; offset < aValue.Length(); ++offset) {
+    // Test if the fied size is superior to its maximum size.
+    if (fieldMaxSize && fieldSize > fieldMaxSize) {
+      return false;
+    }
+
+    // Illegal char.
+    if (aValue[offset] != '-' && !NS_IsAsciiDigit(aValue[offset])) {
+      return false;
+    }
+
+    // There are more characters in this field.
+    if (aValue[offset] != '-' && offset != aValue.Length()-1) {
+      fieldSize++;
+      continue;
+    }
+
+    // Parse the field.
+    if (fieldSize < fieldMinSize) {
+      return false;
+    }
+
+    switch(field) {
+      case YEAR:
+        year = PromiseFlatString(StringHead(aValue, offset)).ToInteger(&ec);
+        NS_ENSURE_SUCCESS(ec, false);
+
+        if (year <= 0) {
+          return false;
+        }
+
+        // The field after year is month, which have a fixed size of 2 char.
+        field = MONTH;
+        fieldMaxSize = 2;
+        fieldMinSize = 2;
+        break;
+      case MONTH:
+        month = PromiseFlatString(Substring(aValue,
+                                            offset-fieldSize,
+                                            offset)).ToInteger(&ec);
+        NS_ENSURE_SUCCESS(ec, false);
+
+        if (month < 1 || month > 12) {
+          return false;
+        }
+
+        // The next field is the last one, we won't parse a '-',
+        // so the field size will be one char smaller.
+        field = DAY;
+        fieldMinSize = 1;
+        fieldMaxSize = 1;
+        break;
+      case DAY:
+        day = PromiseFlatString(Substring(aValue,
+                                          offset-fieldSize,
+                                          offset + 1)).ToInteger(&ec);
+        NS_ENSURE_SUCCESS(ec, false);
+
+        if (day <  1 || day > NumberOfDaysInMonth(month, year)) {
+          return false;
+        }
+
+        field = NONE;
+        break;
+      default:
+        return false;
+    }
+
+    fieldSize = 0;
+  }
+
+  return field == NONE;
+}
+
+uint32_t
+nsHTMLInputElement::NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const
+{
+/*
+ * Returns the number of days in a month.
+ * Months that are |longMonths| always have 31 days.
+ * Months that are not |longMonths| have 30 days except February (month 2).
+ * February has 29 days during leap years which are years that are divisible by 400.
+ * or divisible by 100 and 4. February has 28 days otherwise.
+ */
+
+  static const bool longMonths[] = { true, false, true, false, true, false,
+                                     true, true, false, true, false, true };
+  MOZ_ASSERT(aMonth <= 12 && aMonth > 0);
+
+  if (longMonths[aMonth-1]) {
+    return 31;
+  }
+
+  if (aMonth != 2) {
+    return 30;
+  }
+
+  return (aYear % 400 == 0 || (aYear % 100 != 0 && aYear % 4 == 0))
+          ? 29 : 28;
+}
+ 
 bool
 nsHTMLInputElement::ParseAttribute(int32_t aNamespaceID,
                                    nsIAtom* aAttribute,
