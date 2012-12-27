@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os, tempfile, unittest, shutil, struct, platform, subprocess
+import os, tempfile, unittest, shutil, struct, platform, subprocess, multiprocessing.dummy
 import mock
 from mock import patch
 import symbolstore
@@ -66,15 +66,17 @@ class TestExclude(HelperMixin, unittest.TestCase):
         Test that using an exclude list with a wildcard pattern works.
         """
         processed = []
-        def mock_process_file(filename):
-            processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
+        def mock_process_file(filenames):
+            for filename in filenames:
+                processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
             return True
         self.add_test_files(add_extension(["foo", "bar", "abc/xyz", "abc/fooxyz", "def/asdf", "def/xyzfoo"]))
         d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
                                                   symbol_path="symbol_path",
                                                   exclude=["*foo*"])
-        d.ProcessFile = mock_process_file
-        self.assertTrue(d.Process(self.test_dir))
+        d.ProcessFiles = mock_process_file
+        d.Process(self.test_dir)
+        d.Finish(stop_pool=False)
         processed.sort()
         expected = add_extension(["bar", "abc/xyz", "def/asdf"])
         expected.sort()
@@ -85,15 +87,17 @@ class TestExclude(HelperMixin, unittest.TestCase):
         Test that excluding a filename without a wildcard works.
         """
         processed = []
-        def mock_process_file(filename):
-            processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
+        def mock_process_file(filenames):
+            for filename in filenames:
+                processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
             return True
         self.add_test_files(add_extension(["foo", "bar", "abc/foo", "abc/bar", "def/foo", "def/bar"]))
         d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
                                                   symbol_path="symbol_path",
                                                   exclude=add_extension(["foo"]))
-        d.ProcessFile = mock_process_file
-        self.assertTrue(d.Process(self.test_dir))
+        d.ProcessFiles = mock_process_file
+        d.Process(self.test_dir)
+        d.Finish(stop_pool=False)
         processed.sort()
         expected = add_extension(["bar", "abc/bar", "def/bar"])
         expected.sort()
@@ -129,12 +133,18 @@ class TestCopyDebugUniversal(HelperMixin, unittest.TestCase):
         self._subprocess_popen = subprocess.Popen
         subprocess.Popen = popen_factory(self.next_mock_stdout())
         self.stdouts = []
+        self._shutil_rmtree = shutil.rmtree
+        shutil.rmtree = self.mock_rmtree
 
     def tearDown(self):
         HelperMixin.tearDown(self)
+        shutil.rmtree = self._shutil_rmtree
         shutil.rmtree(self.symbol_dir)
         subprocess.call = self._subprocess_call
         subprocess.Popen = self._subprocess_popen
+
+    def mock_rmtree(self, path):
+        pass
 
     def mock_call(self, args, **kwargs):
         if args[0].endswith("dsymutil"):
@@ -164,7 +174,8 @@ class TestCopyDebugUniversal(HelperMixin, unittest.TestCase):
                                                   copy_debug=True,
                                                   archs="abc xyz")
         d.CopyDebug = mock_copy_debug
-        self.assertTrue(d.Process(self.test_dir))
+        d.Process(self.test_dir)
+        d.Finish(stop_pool=False)
         self.assertEqual(1, len(copied))
 
 class TestGetVCSFilename(HelperMixin, unittest.TestCase):
@@ -231,4 +242,11 @@ class TestRepoManifest(HelperMixin, unittest.TestCase):
                          symbolstore.GetVCSFilename(file3, d.srcdirs)[0])
 
 if __name__ == '__main__':
-  unittest.main()
+    # use the multiprocessing.dummy module to use threading wrappers so
+    # that our mocking/module-patching works
+    symbolstore.Dumper.GlobalInit(module=multiprocessing.dummy)
+
+    unittest.main()
+
+    symbolstore.Dumper.pool.close()
+    symbolstore.Dumper.pool.join()
