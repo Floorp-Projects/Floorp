@@ -358,7 +358,7 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 
   // Ignore documents without presshell and not having root frame.
   nsIPresShell* presShell = aDocument->GetShell();
-  if (!presShell || !presShell->GetRootFrame() || presShell->IsDestroying())
+  if (!presShell || presShell->IsDestroying())
     return nullptr;
 
   bool isRootDoc = nsCoreUtils::IsRootDocument(aDocument);
