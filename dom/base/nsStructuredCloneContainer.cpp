@@ -116,7 +116,7 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
 
   // Deserialize to a jsval.
   jsval jsStateObj;
-  JSBool hasTransferable;
+  JSBool hasTransferable = false;
   bool success = JS_ReadStructuredClone(aCx, mData, mSize, mVersion,
                                           &jsStateObj, nullptr, nullptr) &&
                  JS_StructuredCloneHasTransferables(mData, mSize,
