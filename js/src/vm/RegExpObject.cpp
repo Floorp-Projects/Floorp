@@ -122,8 +122,8 @@ MatchPairs::initArray(size_t pairCount)
 
     /* Initialize all MatchPair objects to invalid locations. */
     for (size_t i = 0; i < pairCount; i++) {
-        pairs_[i].start = size_t(-1);
-        pairs_[i].limit = size_t(-1);
+        pairs_[i].start = -1;
+        pairs_[i].limit = -1;
     }
 
     return true;
