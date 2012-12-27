@@ -649,8 +649,10 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             CrashReporterParent* crashReporter =
                     static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
 
+            crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("AppManifestURL"),
+                                               NS_ConvertUTF16toUTF8(mAppManifestURL));
             crashReporter->GenerateCrashReport(this, NULL);
- 
+
             nsAutoString dumpID(crashReporter->ChildDumpID());
             props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
 #endif

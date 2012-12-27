@@ -99,7 +99,8 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
-  "RIL:RegisterVoicemailMsg"
+  "RIL:RegisterVoicemailMsg",
+  "RIL:GetVoicemailInfo"
 ];
 
 const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
@@ -204,8 +205,6 @@ function RadioInterfaceLayer() {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     icc:            null,
-    voicemail:      {number: null,
-                     displayName: null},
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
     // although the actual implementation lives in the content process. So are
@@ -227,6 +226,11 @@ function RadioInterfaceLayer() {
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
+  };
+
+  this.voicemailInfo = {
+    number: null,
+    displayName: null
   };
 
   this.callWaitingStatus = null;
@@ -479,6 +483,9 @@ RadioInterfaceLayer.prototype = {
       case "RIL:RegisterCellBroadcastMsg":
         this.registerMessageTarget("cellbroadcast", msg.target);
         break;
+      case "RIL:GetVoicemailInfo":
+        // This message is sync.
+        return this.voicemailInfo;
     }
   },
 
@@ -1576,12 +1583,12 @@ RadioInterfaceLayer.prototype = {
   },
 
   handleICCMbdn: function handleICCMbdn(message) {
-    let voicemail = this.rilContext.voicemail;
+    let voicemailInfo = this.voicemailInfo;
 
-    voicemail.number = message.number;
-    voicemail.displayName = message.alphaId;
+    voicemailInfo.number = message.number;
+    voicemailInfo.displayName = message.alphaId;
 
-    this._sendTargetMessage("voicemail", "RIL:VoicemailInfoChanged", voicemail);
+    this._sendTargetMessage("voicemail", "RIL:VoicemailInfoChanged", voicemailInfo);
   },
 
   handleICCInfoChange: function handleICCInfoChange(message) {

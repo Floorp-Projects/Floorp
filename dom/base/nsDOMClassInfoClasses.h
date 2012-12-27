@@ -453,6 +453,7 @@ DOMCI_CLASS(CameraCapabilities)
 DOMCI_CLASS(DOMError)
 DOMCI_CLASS(DOMRequest)
 DOMCI_CLASS(OpenWindowEventDetail)
+DOMCI_CLASS(AsyncScrollEventDetail)
 
 DOMCI_CLASS(DOMFileHandle)
 DOMCI_CLASS(FileRequest)

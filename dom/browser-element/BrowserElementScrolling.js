@@ -1,3 +1,6 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 sts=2 et: */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -184,6 +187,7 @@ const ContentPanning = {
     let target;
     let isScrolling = false;
     let oldX, oldY, newX, newY;
+    let win, doc, htmlNode, bodyNode;
 
     function doScroll(node, delta) {
       if (node instanceof Ci.nsIDOMHTMLElement) {
@@ -192,12 +196,32 @@ const ContentPanning = {
         node.scrollTop += delta.y;
         newX = node.scrollLeft, newY = node.scrollTop;
         return (newX != oldX || newY != oldY);
-      } else {
+      } else if (node instanceof Ci.nsIDOMWindow) {
+        win = node;
+        doc = win.document;
+
+        // "overflow:hidden" on either the <html> or the <body> node should
+        // prevent the user from scrolling the root viewport.
+        if (doc instanceof Ci.nsIDOMHTMLDocument) {
+          htmlNode = doc.documentElement;
+          bodyNode = doc.body;
+          if (win.getComputedStyle(htmlNode, null).overflowX == "hidden" ||
+              win.getComputedStyle(bodyNode, null).overflowX == "hidden") {
+            delta.x = 0;
+          }
+          if (win.getComputedStyle(htmlNode, null).overflowY == "hidden" ||
+              win.getComputedStyle(bodyNode, null).overflowY == "hidden") {
+            delta.y = 0;
+          }
+        }
         oldX = node.scrollX, oldY = node.scrollY;
         node.scrollBy(delta.x, delta.y);
         newX = node.scrollX, newY = node.scrollY;
         return (newX != oldX || newY != oldY);
       }
+      // If we get here, |node| isn't an HTML element and it's not a window,
+      // but findPannable apparently thought it was scrollable... What is it?
+      return false;
     };
 
     function scroll(delta) {
