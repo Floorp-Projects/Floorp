@@ -102,18 +102,19 @@ WorkerAPI.prototype = {
             case "link":
               // if there is a url, make it open a tab
               if (actionArgs.toURL) {
-                let uriToOpen = provider.resolveUri(actionArgs.toURL);
-                // Bug 815970 - facebook gives us http:// links even though
-                // the origin is https:// - so we perform a fixup here.
-                let pUri = Services.io.newURI(provider.origin, null, null);
-                if (uriToOpen.scheme != pUri.scheme)
-                  uriToOpen.scheme = pUri.scheme;
-                if (provider.isSameOrigin(uriToOpen)) {
-                  let xulWindow = Services.wm.getMostRecentWindow("navigator:browser");
-                  xulWindow.openUILinkIn(uriToOpen.spec, "tab");
-                } else {
-                  Cu.reportError("Not opening notification link " + actionArgs.toURL
-                                 + " as not in provider origin");
+                try {
+                  let pUri = Services.io.newURI(provider.origin, null, null);
+                  let nUri = Services.io.newURI(pUri.resolve(actionArgs.toURL),
+                                                null, null);
+                  // fixup
+                  if (nUri.scheme != pUri.scheme)
+                    nUri.scheme = pUri.scheme;
+                  if (nUri.prePath == provider.origin) {
+                    let xulWindow = Services.wm.getMostRecentWindow("navigator:browser");
+                    xulWindow.openUILinkIn(nUri.spec, "tab");
+                  }
+                } catch(e) {
+                  Cu.reportError("social.notification-create error: "+e);
                 }
               }
               break;
