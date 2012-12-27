@@ -40,40 +40,114 @@ var valueModeValue =
   "month", "week", "time", "datetime-local", "number", "range", "color",
 ];
 
+function checkDateSanitizing(element) {
+  var invalidData =
+  [
+    "1234",
+    "1234-",
+    "12345",
+    "1234-01",
+    "1234-012",
+    "1234-01-",
+    "12-12",
+    "999-01-01",
+    "1234-56-78-91",
+    "1234-567-78",
+    "1234--7-78",
+    "abcd-12-12",
+    "thisinotadate",
+    "2012-13-01",
+    "1234-12-42",
+    " 2012-13-01",
+    " 123-01-01",
+    "2012- 3-01",
+    "12- 10- 01",
+    "  12-0-1",
+    "2012-3-001",
+    "2012-12-00",
+    "2012-12-1r",
+    "2012-11-31",
+    "2011-02-29",
+    "2100-02-29",
+    "a2000-01-01",
+    "2000a-01-0'",
+    "20aa00-01-01",
+    "2000a2000-01-01",
+    "2000-1-1",
+    "2000-1-01",
+    "2000-01-1",
+    "2000-01-01 ",
+    "2000- 01-01",
+    "-1970-01-01",
+    "0000-00-00",
+    "0001-00-00",
+    "0000-01-01",
+    "1234-12 12",
+    "1234 12-12",
+    "1234 12 12",
+  ];
+
+  var validData =
+  [
+    "1970-01-01",
+    "1234-12-12",
+    "1234567890-01-02",
+    "2012-12-31",
+    "2012-02-29",
+    "2000-02-29",
+  ];
+
+  for (data of validData) {
+    element.value = data;
+    is(element.value, data, "valid date should not be sanitized");
+  }
+
+  for (data of invalidData) {
+    element.value = data;
+    is(element.value, "", "invalid date should be sanitized");
+  }
+}
+
 function sanitizeValue(aType, aValue)
 {
-  switch (aType) {
-    case "text":
-    case "password":
-    case "search":
-    case "tel":
-      return aValue.replace(/[\n\r]/g, "");
-    case "url":
-    case "email":
-      return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
-    case "date":
-    case "month":
-    case "week":
-    case "time":
-    case "datetime":
-    case "datetime-local":
-      // TODO: write the sanitize algorithm.
-      return "";
-    case "number":
-      return (parseFloat(aValue) + "" === aValue) ? aValue : "";
-    case "range":
-      // TODO: write the sanitize algorithm.
-      return "";
-    case "color":
-      // TODO: write the sanitize algorithm.
-      return "";
-    default:
-      return aValue;
-  }
+	switch (aType) {
+		case "text":
+		case "password":
+		case "search":
+		case "tel":
+			return aValue.replace(/[\n\r]/g, "");
+		case "url":
+		case "email":
+			return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
+		case "date":
+			return "";
+		case "month":
+		case "week":
+		case "time":
+		case "datetime":
+		case "datetime-local":
+			// TODO: write the sanitize algorithm.
+			return "";
+		case "number":
+			return (parseFloat(aValue) + "" === aValue) ? aValue : "";
+		case "range":
+			// TODO: write the sanitize algorithm.
+			return "";
+		case "color":
+			// TODO: write the sanitize algorithm.
+			return "";
+		default:
+			return aValue;
+	}
 }
 
 function checkSanitizing(element)
 {
+  if (element.type == 'date') {
+    checkDateSanitizing(element);
+    return;
+  }
+
   var testData =
   [
     // For text, password, search, tel, email:

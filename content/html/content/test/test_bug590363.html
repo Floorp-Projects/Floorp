@@ -43,6 +43,9 @@ var todoTypes = [
   "datetime", "month", "week", "time", "datetime-local", "range", "color"
 ];
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+
 var length = testData.length;
 for (var i=0; i<length; ++i) {
   for (var j=0; j<length; ++j) {
@@ -50,8 +53,13 @@ for (var i=0; i<length; ++i) {
     e.type = testData[i][0];
 
     var expectedValue;
-    if (testData[i][0] == 'number' || testData[j][0] == 'number') {
+    if ((testData[i][0] == 'number' && testData[j][0] == 'date') ||
+        (testData[i][0] == 'date' && testData[j][0] == 'number')) {
+      expectedValue = '';
+    } else if (testData[i][0] == 'number' || testData[j][0] == 'number') {
       expectedValue = '42';
+    } else if (testData[i][0] == 'date' || testData[j][0] == 'date') {
+      expectedValue = '2012-12-21';
     } else {
       expectedValue = "foo";
     }
@@ -87,6 +95,9 @@ for (var type of todoTypes) {
   e.type = type;
   todo_is(e.type, type, type + " type isn't supported yet");
 }
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>

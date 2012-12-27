@@ -561,6 +561,19 @@ protected:
   double GetValueAsDouble() const;
 
   /**
+   * Parse a date string of the form yyyy-mm-dd
+   * @param the string to be parsed.
+   * @return whether the string is a valid date.
+   * Note : this function does not consider the empty string as valid.
+   */
+  bool IsValidDate(nsAString& aValue) const;
+
+  /**
+   * This methods returns the number of days in a given month, for a given year.
+   */
+  uint32_t NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const;
+
+  /**
    * Sets the value of the element to the string representation of the double.
    *
    * @param aValue The double that will be used to set the value.
