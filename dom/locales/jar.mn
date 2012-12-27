@@ -32,3 +32,4 @@
   locale/@AB_CD@/global-platform/mac/accessible.properties     (%chrome/accessibility/mac/accessible.properties)
   locale/@AB_CD@/global-platform/unix/accessible.properties    (%chrome/accessibility/unix/accessible.properties)
   locale/@AB_CD@/global/AccessFu.properties                    (%chrome/accessibility/AccessFu.properties)
+  locale/@AB_CD@/global/mathml/mathml.properties               (%chrome/mathml/mathml.properties)

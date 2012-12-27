@@ -1,0 +1,124 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.view.View;
+
+/* A simple test for TabsTray menu, to check if all its options are working as expected.
+First, the test opens a new private tab from the Tabs Drawer Menu,
+then it opens a new general tab from the Tabs Drawer Menu
+and finally it closes all tabs through the Close All Tabs option in the Tabs Drawer Menu.
+*/
+public class testTabsTrayMenu extends BaseTest {
+    private Element tabCount = null;
+    private Element tabs = null;
+    private Element addTab = null;
+    private Element Menu = null;
+    private Element addPrivateTab = null;
+    private Element closeTab = null;
+    private int tabCountInt = 0;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testTabsTrayMenu() {
+        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
+
+        blockForGeckoReady();
+
+        Activity activity = getActivity();
+        tabCount = mDriver.findElement(activity, "tabs_count");
+        tabs = mDriver.findElement(activity, "tabs");
+        Menu = mDriver.findElement(activity, "menu");
+        closeTab = mDriver.findElement(activity, "close");
+        mAsserter.ok(tabCount != null &&
+                     tabs != null &&
+                     Menu != null &&
+                     closeTab != null,
+                     "Checking elements", "all elements present");
+
+        int expectedTabCount = 1;
+        String tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Initial number of tabs correct");
+
+        addPrivateTab(url2);
+        expectedTabCount++;
+        tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Number of tabs increased");
+
+        addNewTab(url);
+        expectedTabCount++;
+        tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Number of tabs increased");
+
+        // Verifying if the private data is not listed in Awesomescreen
+        clickOnAwesomeBar();
+        mSolo.clickOnText("History");
+        mAsserter.ok(mSolo.waitForText("Browser Blank Page 01"), "Looking in History for the page loaded in the normal tab", "Fount it");
+        mAsserter.ok(mSolo.waitForText("Browser Blank Page 02") == false, "Looking in History for the page loaded in the private tab", "Page is not present in History");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
+        // Cleanup: close all opened tabs
+        expectedTabCount = 1;
+        closeTabs();
+        tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Number of tabs is 1");
+    }
+
+    private void addNewTab(String url) {
+        
+        // Open TabsTray Menu
+        boolean clicked = Menu.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that tabs clicked", "tabs element clicked");
+        }
+        mSolo.clickOnText("New Tab");
+
+        /* Must pause before sending keys, until awesome bar is displayed; waiting for
+        known text is simple
+        */
+        mSolo.waitForText("History");
+
+        // Cannot use loadUrl(): getText fails because we are using a different urlbar
+        mActions.sendKeys(url);
+        hitEnterAndWait();
+    }
+
+    private void addPrivateTab(String url) {
+
+        // Open TabsTray Menu
+        boolean clicked = Menu.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that tabs menu clicked", "tabs menu element clicked");
+        }
+        mSolo.clickOnText("New Private Tab");
+
+        // Waiting for about:home opened in Private Mode
+        mSolo.waitForText("Enter Search or Address");
+
+        loadUrl(url);
+    }
+
+    private void closeTabs() {
+        String tabCountText = null;
+
+        // Open TabsTray Menu
+        boolean clicked = Menu.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that tabs menu clicked", "tabs menu element clicked");
+        }
+        mSolo.clickOnText("Close All Tabs");
+
+        // Waiting for about:home
+        mSolo.waitForText("Enter Search or Address");
+    }
+}
+
