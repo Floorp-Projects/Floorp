@@ -502,7 +502,7 @@ protected:
   /**
    * Returns whether the placeholder attribute applies for the current type.
    */
-  bool PlaceholderApplies() const { return IsSingleLineTextControl(false, mType); }
+  bool PlaceholderApplies() const;
 
   /**
    * Set the current default value to the value of the input element.
