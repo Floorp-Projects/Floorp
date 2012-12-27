@@ -26,19 +26,11 @@ which makes Windows Media Foundation unavailable.
 #include <mfobjects.h>
 #include <stdio.h>
 #include <mferror.h>
-#include <comdef.h>
 #include <propvarutil.h>
 #include <wmcodecdsp.h>
 
 #pragma comment(lib,"uuid.lib")
 #pragma comment(lib,"mfuuid.lib")
-
-_COM_SMARTPTR_TYPEDEF(IMFSourceReader, IID_IMFSourceReader);
-_COM_SMARTPTR_TYPEDEF(IMFMediaType, IID_IMFMediaType);
-_COM_SMARTPTR_TYPEDEF(IMFSample, IID_IMFSample);
-_COM_SMARTPTR_TYPEDEF(IMFMediaBuffer, IID_IMFMediaBuffer);
-_COM_SMARTPTR_TYPEDEF(IMFAsyncResult, IID_IMFAsyncResult);
-_COM_SMARTPTR_TYPEDEF(IMF2DBuffer, IID_IMF2DBuffer);
 
 namespace mozilla {
 namespace wmf {

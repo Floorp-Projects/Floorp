@@ -6,6 +6,7 @@
 
 #include "WMFUtils.h"
 #include "mozilla/StandardInteger.h"
+#include "mozilla/RefPtr.h"
 #include "prlog.h"
 #include "nsThreadUtils.h"
 
@@ -193,8 +194,8 @@ nsCString GetGUIDName(const GUID& guid)
 bool
 SourceReaderHasStream(IMFSourceReader* aReader, const DWORD aIndex)
 {
-  IMFMediaTypePtr nativeType;
-  HRESULT hr = aReader->GetNativeMediaType(aIndex, 0, &nativeType);
+  RefPtr<IMFMediaType> nativeType;
+  HRESULT hr = aReader->GetNativeMediaType(aIndex, 0, byRef(nativeType));
   return FAILED(hr) ? false : true;
 }
 
