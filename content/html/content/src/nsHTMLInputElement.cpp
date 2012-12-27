@@ -93,6 +93,9 @@
 
 #include <limits>
 
+// input type=date
+#include "jsapi.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1057,17 +1060,72 @@ nsHTMLInputElement::IsValueEmpty() const
   return value.IsEmpty();
 }
 
+bool
+nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
+                                          double& aResultValue) const
+{
+  switch (mType) {
+    case NS_FORM_INPUT_NUMBER:
+      {
+        nsresult ec;
+        aResultValue = PromiseFlatString(aValue).ToDouble(&ec);
+        if (NS_FAILED(ec)) {
+          return false;
+        }
+
+        break;
+      }
+    case NS_FORM_INPUT_DATE:
+      {
+        JSContext* ctx = nsContentUtils::GetContextFromDocument(OwnerDoc());
+        if (!ctx) {
+          return false;
+        }
+
+        uint32_t year, month, day;
+        if (!GetValueAsDate(aValue, year, month, day)) {
+          return false;
+        }
+
+        JSObject* date = JS_NewDateObjectMsec(ctx, 0);
+        jsval rval;
+        jsval fullYear[3];
+        fullYear[0].setInt32(year);
+        fullYear[1].setInt32(month-1);
+        fullYear[2].setInt32(day);
+        if (!JS::Call(ctx, date, "setUTCFullYear", 3, fullYear, &rval)) {
+          return false;
+        }
+
+        jsval timestamp;
+        if (!JS::Call(ctx, date, "getTime", 0, nullptr, &timestamp)) {
+          return false;
+        }
+
+        if (!timestamp.isNumber()) {
+          return false;
+        }
+
+        aResultValue = timestamp.toNumber();
+      }
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+}
+
 double
 nsHTMLInputElement::GetValueAsDouble() const
 {
   double doubleValue;
   nsAutoString stringValue;
-  nsresult ec;
 
   GetValueInternal(stringValue);
-  doubleValue = stringValue.ToDouble(&ec);
 
-  return NS_SUCCEEDED(ec) ? doubleValue : MOZ_DOUBLE_NaN();
+  return !ConvertStringToNumber(stringValue, doubleValue) ? MOZ_DOUBLE_NaN()
+                                                          : doubleValue;
 }
 
 NS_IMETHODIMP 
@@ -1143,8 +1201,98 @@ void
 nsHTMLInputElement::SetValue(double aValue)
 {
   nsAutoString value;
-  value.AppendFloat(aValue);
+  switch (mType) {
+    case NS_FORM_INPUT_NUMBER:
+      value.AppendFloat(aValue);
+      break;
+    case NS_FORM_INPUT_DATE:
+    {
+      value.Truncate();
+      JSContext* ctx = nsContentUtils::GetContextFromDocument(OwnerDoc());
+      if (!ctx) {
+        break;
+      }
+
+      JSObject* date = JS_NewDateObjectMsec(ctx, aValue);
+      if (!date) {
+        break;
+      }
+
+      jsval year, month, day;
+      if(!JS::Call(ctx, date, "getUTCFullYear", 0, nullptr, &year)) {
+        break;
+      }
+
+      if(!JS::Call(ctx, date, "getUTCMonth", 0, nullptr, &month)) {
+        break;
+      }
+
+      if(!JS::Call(ctx, date, "getUTCDate", 0, nullptr, &day)) {
+        break;
+      }
+
+      value.AppendPrintf("%04.0f-%02.0f-%02.0f", year.toNumber(),
+                         month.toNumber() + 1, day.toNumber());
+    }
+    break;
+  }
+
   SetValue(value);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
+{
+  if (mType != NS_FORM_INPUT_DATE) {
+    aDate->setNull();
+    return NS_OK;
+  }
+
+  uint32_t year, month, day;
+  nsAutoString value;
+  GetValueInternal(value);
+  if (!GetValueAsDate(value, year, month, day)) {
+    aDate->setNull();
+    return NS_OK;
+  }
+
+  JSObject* date = JS_NewDateObjectMsec(aCtx, 0);
+  jsval rval;
+  jsval fullYear[3];
+  fullYear[0].setInt32(year);
+  fullYear[1].setInt32(month-1);
+  fullYear[2].setInt32(day);
+  if(!JS::Call(aCtx, date, "setUTCFullYear", 3, fullYear, &rval)) {
+    aDate->setNull();
+    return NS_OK;
+  }
+
+  aDate->setObjectOrNull(date);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
+{
+  if (mType != NS_FORM_INPUT_DATE) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (!aDate.isObject() || !JS_ObjectIsDate(aCtx, &aDate.toObject())) {
+    SetValue(EmptyString());
+    return NS_OK;
+  }
+
+  JSObject& date = aDate.toObject();
+  jsval timestamp;
+  bool ret = JS::Call(aCtx, &date, "getTime", 0, nullptr, &timestamp);
+  if (!ret || !timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
+    SetValue(EmptyString());
+    return NS_OK;
+  }
+
+  SetValue(timestamp.toNumber());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2770,6 +2918,17 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
 bool
 nsHTMLInputElement::IsValidDate(nsAString& aValue) const
 {
+  uint32_t year, month, day;
+  return GetValueAsDate(aValue, year, month, day);
+}
+
+bool
+nsHTMLInputElement::GetValueAsDate(nsAString& aValue,
+                                   uint32_t& aYear,
+                                   uint32_t& aMonth,
+                                   uint32_t& aDay) const
+{
+
 /*
  * Parse the year, month, day values out a date string formatted as 'yyy-mm-dd'.
  * -The year must be 4 or more digits long, and year > 0
@@ -2782,9 +2941,6 @@ nsHTMLInputElement::IsValidDate(nsAString& aValue) const
     return false;
   }
 
-  uint32_t year = 0;
-  uint32_t month = 0;
-  uint32_t day = 0;
   int32_t fieldMaxSize = 0;
   int32_t fieldMinSize = 4;
   enum {
@@ -2818,10 +2974,10 @@ nsHTMLInputElement::IsValidDate(nsAString& aValue) const
 
     switch(field) {
       case YEAR:
-        year = PromiseFlatString(StringHead(aValue, offset)).ToInteger(&ec);
+        aYear = PromiseFlatString(StringHead(aValue, offset)).ToInteger(&ec);
         NS_ENSURE_SUCCESS(ec, false);
 
-        if (year <= 0) {
+        if (aYear <= 0) {
           return false;
         }
 
@@ -2831,12 +2987,12 @@ nsHTMLInputElement::IsValidDate(nsAString& aValue) const
         fieldMinSize = 2;
         break;
       case MONTH:
-        month = PromiseFlatString(Substring(aValue,
+        aMonth = PromiseFlatString(Substring(aValue,
                                             offset-fieldSize,
                                             offset)).ToInteger(&ec);
         NS_ENSURE_SUCCESS(ec, false);
 
-        if (month < 1 || month > 12) {
+        if (aMonth < 1 || aMonth > 12) {
           return false;
         }
 
@@ -2847,12 +3003,12 @@ nsHTMLInputElement::IsValidDate(nsAString& aValue) const
         fieldMaxSize = 1;
         break;
       case DAY:
-        day = PromiseFlatString(Substring(aValue,
+        aDay = PromiseFlatString(Substring(aValue,
                                           offset-fieldSize,
                                           offset + 1)).ToInteger(&ec);
         NS_ENSURE_SUCCESS(ec, false);
 
-        if (day <  1 || day > NumberOfDaysInMonth(month, year)) {
+        if (aDay <  1 || aDay > NumberOfDaysInMonth(aMonth, aYear)) {
           return false;
         }
 
