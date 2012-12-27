@@ -11,6 +11,7 @@
 #define jscntxt_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 
 #include <string.h>
@@ -65,14 +66,14 @@ class AutoCycleDetector
     bool cyclic;
     uint32_t hashsetGenerationAtInit;
     ObjectSet::AddPtr hashsetAddPointer;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     AutoCycleDetector(JSContext *cx, JSObject *obj
-                      JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx), obj(obj), cyclic(true)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~AutoCycleDetector();
@@ -1702,10 +1703,10 @@ struct AutoResolving {
     };
 
     AutoResolving(JSContext *cx, HandleObject obj, HandleId id, Kind kind = LOOKUP
-                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : context(cx), object(obj), id(id), kind(kind), link(cx->resolvingList)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
         cx->resolvingList = this;
     }
@@ -1727,17 +1728,17 @@ struct AutoResolving {
     HandleId            id;
     Kind                const kind;
     AutoResolving       *const link;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #if JS_HAS_XML_SUPPORT
 class AutoXMLRooter : private AutoGCRooter {
   public:
     AutoXMLRooter(JSContext *cx, JSXML *xml
-                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, XML), xml(xml)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(xml);
     }
 
@@ -1745,7 +1746,7 @@ class AutoXMLRooter : private AutoGCRooter {
 
   private:
     JSXML * const xml;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 #endif /* JS_HAS_XML_SUPPORT */
 
@@ -1792,36 +1793,38 @@ class AutoLockGC
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoUnlockGC {
+class AutoUnlockGC
+{
   private:
 #ifdef JS_THREADSAFE
     JSRuntime *rt;
 #endif
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     explicit AutoUnlockGC(JSRuntime *rt
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
 #ifdef JS_THREADSAFE
       : rt(rt)
 #endif
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         JS_UNLOCK_GC(rt);
     }
     ~AutoUnlockGC() { JS_LOCK_GC(rt); }
 };
 
-class AutoKeepAtoms {
+class AutoKeepAtoms
+{
     JSRuntime *rt;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     explicit AutoKeepAtoms(JSRuntime *rt
-                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : rt(rt)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         JS_KEEP_ATOMS(rt);
     }
     ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
@@ -1833,10 +1836,10 @@ class JSAutoResolveFlags
 {
   public:
     JSAutoResolveFlags(JSContext *cx, unsigned flags
-                       JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mContext(cx), mSaved(cx->resolveFlags)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         cx->resolveFlags = flags;
     }
 
@@ -1845,7 +1848,7 @@ class JSAutoResolveFlags
   private:
     JSContext *mContext;
     unsigned mSaved;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 namespace js {
@@ -2101,39 +2104,39 @@ class AutoObjectVector : public AutoVectorRooter<RawObject>
 {
   public:
     explicit AutoObjectVector(JSContext *cx
-                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoVectorRooter<RawObject>(cx, OBJVECTOR)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AutoStringVector : public AutoVectorRooter<RawString>
 {
   public:
     explicit AutoStringVector(JSContext *cx
-                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoVectorRooter<RawString>(cx, STRINGVECTOR)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AutoShapeVector : public AutoVectorRooter<RawShape>
 {
   public:
     explicit AutoShapeVector(JSContext *cx
-                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoVectorRooter<RawShape>(cx, SHAPEVECTOR)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AutoValueArray : public AutoGCRooter
@@ -2144,29 +2147,29 @@ class AutoValueArray : public AutoGCRooter
 
   public:
     AutoValueArray(JSContext *cx, RawValue *start, unsigned length
-                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, VALARRAY), start_(start), length_(length), skip(cx, start, length)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     RawValue *start() { return start_; }
     unsigned length() const { return length_; }
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AutoObjectObjectHashMap : public AutoHashMapRooter<RawObject, RawObject>
 {
   public:
     explicit AutoObjectObjectHashMap(JSContext *cx
-                                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoHashMapRooter<RawObject, RawObject>(cx, OBJOBJHASHMAP)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /*

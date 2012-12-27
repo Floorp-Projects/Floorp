@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/GuardObjects.h"
 
 #include "jsfriendapi.h"
 #include "jspubtd.h"
@@ -172,39 +173,56 @@ struct Statistics {
     double computeMMU(int64_t resolution);
 };
 
-struct AutoGCSlice {
+struct AutoGCSlice
+{
     AutoGCSlice(Statistics &stats, int collectedCount, int compartmentCount, gcreason::Reason reason
-                JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : stats(stats)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         stats.beginSlice(collectedCount, compartmentCount, reason);
     }
     ~AutoGCSlice() { stats.endSlice(); }
 
     Statistics &stats;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-struct AutoPhase {
-    AutoPhase(Statistics &stats, Phase phase JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : stats(stats), phase(phase) { JS_GUARD_OBJECT_NOTIFIER_INIT; stats.beginPhase(phase); }
-    ~AutoPhase() { stats.endPhase(phase); }
+struct AutoPhase
+{
+    AutoPhase(Statistics &stats, Phase phase
+              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : stats(stats), phase(phase)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        stats.beginPhase(phase);
+    }
+    ~AutoPhase() {
+        stats.endPhase(phase);
+    }
 
     Statistics &stats;
     Phase phase;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-struct AutoSCC {
-    AutoSCC(Statistics &stats, unsigned scc JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : stats(stats), scc(scc) { JS_GUARD_OBJECT_NOTIFIER_INIT; start = stats.beginSCC(); }
-    ~AutoSCC() { stats.endSCC(scc, start); }
+struct AutoSCC
+{
+    AutoSCC(Statistics &stats, unsigned scc
+            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : stats(stats), scc(scc)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        start = stats.beginSCC();
+    }
+    ~AutoSCC() {
+        stats.endSCC(scc, start);
+    }
 
     Statistics &stats;
     unsigned scc;
     int64_t start;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } /* namespace gcstats */
