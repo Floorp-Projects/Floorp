@@ -198,22 +198,31 @@ class RegExpShared
 class RegExpGuard
 {
     RegExpShared *re_;
+
+  private:
     RegExpGuard(const RegExpGuard &) MOZ_DELETE;
     void operator=(const RegExpGuard &) MOZ_DELETE;
+
   public:
     RegExpGuard() : re_(NULL) {}
     RegExpGuard(RegExpShared &re) : re_(&re) {
         re_->incRef();
     }
+    ~RegExpGuard() { release(); }
+
+  public:
     void init(RegExpShared &re) {
-        JS_ASSERT(!re_);
+        JS_ASSERT(!initialized());
         re_ = &re;
         re_->incRef();
     }
-    ~RegExpGuard() {
-        if (re_)
+    void release() {
+        if (re_) {
             re_->decRef();
+            re_ = NULL;
+        }
     }
+
     bool initialized() const { return !!re_; }
     RegExpShared *re() const { JS_ASSERT(initialized()); return re_; }
     RegExpShared *operator->() { return re(); }
@@ -225,9 +234,12 @@ class RegExpCompartment
     struct Key {
         JSAtom *atom;
         uint16_t flag;
+
         Key() {}
         Key(JSAtom *atom, RegExpFlag flag)
-          : atom(atom), flag(flag) {}
+          : atom(atom), flag(flag)
+        { }
+
         typedef Key Lookup;
         static HashNumber hash(const Lookup &l) {
             return DefaultHasher<JSAtom *>::hash(l.atom) ^ (l.flag << 1);
