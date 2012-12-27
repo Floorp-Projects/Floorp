@@ -10,6 +10,7 @@
  */
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <ctype.h>
@@ -3370,19 +3371,21 @@ JS_GetObjectId(JSContext *cx, JSRawObject obj, jsid *idp)
 
 class AutoHoldCompartment {
   public:
-    explicit AutoHoldCompartment(JSCompartment *compartment JS_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoHoldCompartment(JSCompartment *compartment
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : holdp(&compartment->hold)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         *holdp = true;
     }
 
     ~AutoHoldCompartment() {
         *holdp = false;
     }
+
   private:
     bool *holdp;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 JS_PUBLIC_API(JSObject *)
@@ -5119,11 +5122,14 @@ JS_DefineFunctionById(JSContext *cx, JSObject *objArg, jsid id_, JSNative call,
     return js_DefineFunction(cx, obj, id, call, nargs, attrs);
 }
 
-struct AutoLastFrameCheck {
-    AutoLastFrameCheck(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx) {
+struct AutoLastFrameCheck
+{
+    AutoLastFrameCheck(JSContext *cx
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx)
+    {
         JS_ASSERT(cx);
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~AutoLastFrameCheck() {
@@ -5135,8 +5141,8 @@ struct AutoLastFrameCheck {
     }
 
   private:
-    JSContext       *cx;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    JSContext *cx;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* Use the fastest available getc. */
