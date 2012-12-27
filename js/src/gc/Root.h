@@ -8,10 +8,8 @@
 #ifndef jsgc_root_h__
 #define jsgc_root_h__
 
-#ifdef __cplusplus
-
-#include "mozilla/TypeTraits.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/TypeTraits.h"
 
 #include "js/Utility.h"
 #include "js/TemplateLib.h"
@@ -809,10 +807,10 @@ class SkipRoot
   public:
     template <typename T>
     SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
-             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         init(ContextFriendFields::get(cx), ptr, count);
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~SkipRoot() {
@@ -831,14 +829,14 @@ class SkipRoot
   public:
     template <typename T>
     SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
-              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
 #endif /* DEBUG && JSGC_ROOT_ANALYSIS */
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } /* namespace js */
@@ -958,7 +956,5 @@ class CompilerRootNode
 
 ForwardDeclareJS(Script);
 ForwardDeclareJS(Function);
-
-#endif  /* __cplusplus */
 
 #endif  /* jsgc_root_h___ */
