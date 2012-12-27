@@ -58,7 +58,7 @@ const unsigned char kRemoteVersion[] = "5.1";
 #endif
 
 // Minimize the roundtrips to the X server by getting all the atoms at once
-static char *XAtomNames[] = {
+static const char *XAtomNames[] = {
   MOZILLA_VERSION_PROP,
   MOZILLA_LOCK_PROP,
   MOZILLA_COMMAND_PROP,
@@ -277,8 +277,9 @@ nsXRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
                                     cmd, '\n',
                                     &desktopStartupID);
 
-    char* argv[3] = {"dummyappname", "-remote", aCommand};
-    rv = cmdline->Init(3, argv, nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
+    const char* argv[3] = {"dummyappname", "-remote", aCommand};
+    rv = cmdline->Init(3, const_cast<char**>(argv), nullptr,
+                       nsICommandLine::STATE_REMOTE_EXPLICIT);
     if (NS_FAILED(rv))
       return "509 internal error";
 
@@ -372,8 +373,8 @@ nsXRemoteService::EnsureAtoms(void)
   if (sMozVersionAtom)
     return;
 
-  XInternAtoms(mozilla::DefaultXDisplay(), XAtomNames, ArrayLength(XAtomNames),
-               False, XAtoms);
+  XInternAtoms(mozilla::DefaultXDisplay(), const_cast<char**>(XAtomNames),
+               ArrayLength(XAtomNames), False, XAtoms);
 
   int i = 0;
   sMozVersionAtom     = XAtoms[i++];
