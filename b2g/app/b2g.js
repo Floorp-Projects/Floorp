@@ -356,13 +356,6 @@ pref("content.ime.strict_policy", true);
 // $ adb shell start
 pref("browser.dom.window.dump.enabled", false);
 
-
-
-// Temporarily relax file:// origin checks so that we can use <img>s
-// from other dirs as webgl textures and more.  Remove me when we have
-// installable apps or wifi support.
-pref("security.fileuri.strict_origin_policy", false);
-
 // Default Content Security Policy to apply to privileged and certified apps
 pref("security.apps.privileged.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'");
 pref("security.apps.certified.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self'");
