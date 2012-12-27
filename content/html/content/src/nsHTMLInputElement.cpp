@@ -117,6 +117,7 @@ UploadLastDir* nsHTMLInputElement::gUploadLastDir;
 static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
+  { "date", NS_FORM_INPUT_DATE },
   { "email", NS_FORM_INPUT_EMAIL },
   { "file", NS_FORM_INPUT_FILE },
   { "hidden", NS_FORM_INPUT_HIDDEN },
@@ -134,7 +135,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[13];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[14];
 
 static const uint8_t NS_INPUT_AUTOCOMPLETE_OFF     = 0;
 static const uint8_t NS_INPUT_AUTOCOMPLETE_ON      = 1;
@@ -696,6 +697,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
       if (mValueChanged) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
@@ -1373,8 +1375,8 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, uint32_t a
 NS_IMETHODIMP
 nsHTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 {
-  // TODO: temporary until bug 635240 is fixed.
-  if (mType == NS_FORM_INPUT_NUMBER) {
+  // TODO: temporary until bug 635240 and 773205 are fixed.
+  if (mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE) {
     *aResult = false;
     return NS_OK;
   }
@@ -2460,7 +2462,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
                (IsSingleLineTextControl(false, mType) ||
-                mType == NS_FORM_INPUT_NUMBER)) {
+                mType == NS_FORM_INPUT_NUMBER ||
+                mType == NS_FORM_INPUT_DATE)) {
             FireChangeEventIfNeeded();   
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -2771,8 +2774,9 @@ nsHTMLInputElement::ParseAttribute(int32_t aNamespaceID,
       bool success = aResult.ParseEnumValue(aValue, kInputTypeTable, false);
       if (success) {
         newType = aResult.GetEnumValue();
-        if (newType == NS_FORM_INPUT_NUMBER && 
-          !Preferences::GetBool("dom.experimental_forms", false)) {
+        if ((newType == NS_FORM_INPUT_NUMBER ||
+             newType == NS_FORM_INPUT_DATE) && 
+            !Preferences::GetBool("dom.experimental_forms", false)) {
           newType = kInputDefaultType->value;
           aResult.SetTo(newType, &aValue);
         }
@@ -3397,6 +3401,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_HIDDEN:
     case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
       {
         if (mValueChanged) {
           inputState = new nsHTMLInputElementState();
@@ -3581,6 +3586,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       case NS_FORM_INPUT_URL:
       case NS_FORM_INPUT_HIDDEN:
       case NS_FORM_INPUT_NUMBER:
+      case NS_FORM_INPUT_DATE:
         {
           SetValueInternal(inputState->GetValue(), false, true);
           break;
@@ -3805,6 +3811,7 @@ nsHTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -3849,6 +3856,7 @@ nsHTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -3885,6 +3893,7 @@ nsHTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -3897,10 +3906,20 @@ nsHTMLInputElement::DoesRequiredApply() const
 }
 
 bool
+nsHTMLInputElement::PlaceholderApplies() const
+{
+  if (mType == NS_FORM_INPUT_DATE) {
+    return false;
+  }
+
+  return IsSingleLineTextControl(false);
+}
+
+bool
 nsHTMLInputElement::DoesPatternApply() const
 {
   // TODO: temporary until bug 635240 is fixed.
-  if (mType == NS_FORM_INPUT_NUMBER) {
+  if (mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE) {
     return false;
   }
 
@@ -3913,6 +3932,7 @@ nsHTMLInputElement::DoesMinMaxApply() const
   switch (mType)
   {
     case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
     // TODO:
     // case NS_FORM_INPUT_RANGE:
     // All date/time types.
@@ -4109,7 +4129,8 @@ nsHTMLInputElement::HasPatternMismatch() const
 bool
 nsHTMLInputElement::IsRangeOverflow() const
 {
-  if (!DoesMinMaxApply()) {
+  // Ignore <input type=date> until bug 769355 is fixed.
+  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATE) {
     return false;
   }
 
@@ -4129,7 +4150,8 @@ nsHTMLInputElement::IsRangeOverflow() const
 bool
 nsHTMLInputElement::IsRangeUnderflow() const
 {
-  if (!DoesMinMaxApply()) {
+  // Ignore <input type=date> until bug 769357 is fixed.
+  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATE) {
     return false;
   }
 
