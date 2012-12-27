@@ -561,12 +561,34 @@ protected:
   double GetValueAsDouble() const;
 
   /**
+   * Convert a string to a number in a type specific way,
+   * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#concept-input-value-string-number
+   * ie parse a date string to a timestamp if type=date,
+   * or parse a number string to its value if type=number.
+   * @param aValue the string to be parsed.
+   * @param aResultValue the timestamp as a double.
+   * @result whether the parsing was successful.
+   */
+  bool ConvertStringToNumber(nsAString& aValue, double& aResultValue) const;
+
+  /**
    * Parse a date string of the form yyyy-mm-dd
    * @param the string to be parsed.
    * @return whether the string is a valid date.
    * Note : this function does not consider the empty string as valid.
    */
   bool IsValidDate(nsAString& aValue) const;
+
+  /**
+   * Parse a date string of the form yyyy-mm-dd
+   * @param the string to be parsed.
+   * @return the date in aYear, aMonth, aDay.
+   * @return whether the parsing was successful.
+   */
+  bool GetValueAsDate(nsAString& aValue,
+                      uint32_t& aYear,
+                      uint32_t& aMonth,
+                      uint32_t& aDay) const;
 
   /**
    * This methods returns the number of days in a given month, for a given year.
