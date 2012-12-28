@@ -2965,7 +2965,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                 codec = slave_list_p[j];
                 payload_info = &(media->payloads[media->num_payloads]);
 
-                if (master_list_p == remote_payload_types) {
+                if (master_list_p == remote_codecs) {
                     remote_pt = remote_payload_types[i];
                 } else {
                     remote_pt = remote_payload_types[j];
