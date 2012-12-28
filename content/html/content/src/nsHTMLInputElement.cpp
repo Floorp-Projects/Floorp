@@ -1203,6 +1203,13 @@ nsHTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
 void
 nsHTMLInputElement::SetValue(double aValue)
 {
+  MOZ_ASSERT(!MOZ_DOUBLE_IS_INFINITE(aValue), "aValue must not be Infinity!");
+
+  if (MOZ_DOUBLE_IS_NaN(aValue)) {
+    SetValue(EmptyString());
+    return;
+  }
+
   nsAutoString value;
   ConvertNumberToString(aValue, value);
   SetValue(value);
@@ -1214,6 +1221,8 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
 {
   MOZ_ASSERT(mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_NUMBER,
              "ConvertNumberToString is only implemented for type='{number,date}'");
+  MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(aValue) && !MOZ_DOUBLE_IS_INFINITE(aValue),
+             "aValue must be a valid non-Infinite number.");
 
   aResultString.Truncate();
 
@@ -1320,6 +1329,12 @@ nsHTMLInputElement::GetValueAsNumber(double* aValueAsNumber)
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueAsNumber(double aValueAsNumber)
 {
+  // TODO: return TypeError when HTMLInputElement is converted to WebIDL, see
+  // bug 825197.
+  if (MOZ_DOUBLE_IS_INFINITE(aValueAsNumber)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   if (!DoesValueAsNumberApply()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
