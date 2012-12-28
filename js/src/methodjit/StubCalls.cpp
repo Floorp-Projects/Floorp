@@ -839,7 +839,10 @@ stubs::TriggerIonCompile(VMFrame &f)
             osrPC = NULL;
 
         RootedFunction scriptFunction(f.cx, script->function());
-        if (!ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing())) {
+        ion::MethodStatus compileStatus =
+            ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing());
+
+        if (compileStatus != ion::Method_Compiled) {
             if (f.cx->isExceptionPending())
                 THROW();
         }

@@ -492,8 +492,11 @@ class IonBuilder : public MIRGenerator
     CodeGenerator *backgroundCodegen() const { return backgroundCodegen_; }
     void setBackgroundCodegen(CodeGenerator *codegen) { backgroundCodegen_ = codegen; }
 
+    AbortReason abortReason() { return abortReason_; }
+
   private:
     JSContext *cx;
+    AbortReason abortReason_;
 
     jsbytecode *pc;
     MBasicBlock *current;
