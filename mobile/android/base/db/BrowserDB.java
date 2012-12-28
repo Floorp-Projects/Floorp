@@ -10,6 +10,7 @@ import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 
@@ -115,7 +116,7 @@ public class BrowserDB {
     }
 
     public static Cursor getTopSites(ContentResolver cr, int limit) {
-        return sDb.getTopSites(cr, limit);
+        return new TopSitesCursorWrapper(sDb.getTopSites(cr, limit), limit);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {
@@ -242,5 +243,60 @@ public class BrowserDB {
 
     public static int getCount(ContentResolver cr, String database) {
         return sDb.getCount(cr, database);
+    }
+
+    /* Cursor wrapper that forces top sites to contain at least
+     * mNumberOfTopSites entries. For rows outside the wrapped cursor
+     * will return empty strings and zero.
+     */
+    static public class TopSitesCursorWrapper extends CursorWrapper {
+        int mIndex = -1;
+        Cursor mCursor = null;
+        int mSize = 0;
+        
+        public TopSitesCursorWrapper(Cursor cursor, int size) {
+            super(cursor);
+            mCursor = cursor;
+            mSize = size;
+        }
+
+        public int getPosition() { return mIndex; }
+        public int getCount() { return mSize; }
+        public boolean isAfterLast() { return mIndex >= mSize; }
+        public boolean isBeforeFirst() { return mIndex < 0; }
+        public boolean isLast() { return mIndex == mSize - 1; }
+        public boolean moveToNext() { return moveToPosition(mIndex + 1); }
+        public boolean moveToPrevious() { return moveToPosition(mIndex - 1); }
+
+        public boolean moveToPosition(int position) {
+            mIndex = position;
+            if (position > -1 && position < mCursor.getCount())
+                super.moveToPosition(position);
+            return !(isBeforeFirst() || isAfterLast());
+        }
+
+        public long getLong(int columnIndex) {
+            if (mIndex > -1 && mIndex < mCursor.getCount())
+                return super.getLong(columnIndex);
+            return 0;
+        }
+
+        public String getString(int columnIndex) {
+            if (mIndex > -1 && mIndex < mCursor.getCount())
+                return super.getString(columnIndex);
+            return "";
+        }
+
+        public boolean move(int offset) {
+            return moveToPosition(mIndex + offset);
+        }
+
+        public boolean moveToFirst() {
+            return moveToPosition(0);
+        }
+
+        public boolean moveToLast() {
+            return moveToPosition(mSize-1);
+        }
     }
 }
