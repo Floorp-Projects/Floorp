@@ -38,11 +38,15 @@ import android.graphics.Path;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
+import android.text.style.TextAppearanceSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
@@ -116,6 +120,9 @@ public class AboutHomeContent extends ScrollView
 
     private View.OnClickListener mRemoteTabClickListener;
 
+    private static Rect sIconBounds;
+    private static TextAppearanceSpan sSubTitleSpan;
+
     public interface UriLoadCallback {
         public void callback(String uriSpec);
     }
@@ -137,6 +144,10 @@ public class AboutHomeContent extends ScrollView
     }
 
     public void init() {
+        int iconSize = mContext.getResources().getDimensionPixelSize(R.dimen.abouthome_addon_icon_size);
+        sIconBounds = new Rect(0, 0, iconSize, iconSize); 
+        sSubTitleSpan = new TextAppearanceSpan(mContext, R.style.AboutHome_TextAppearance_SubTitle);
+
         inflate();
 
         mAccountManager = AccountManager.get(mContext);
@@ -583,10 +594,19 @@ public class AboutHomeContent extends ScrollView
 
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonobj = array.getJSONObject(i);
+                        String name = jsonobj.getString("name");
+                        String version = jsonobj.getString("version");
+                        String text = name + " " + version;
 
-                        final View row = mInflater.inflate(R.layout.abouthome_addon_row, mAddons.getItemsContainer(), false);
-                        ((TextView) row.findViewById(R.id.addon_title)).setText(jsonobj.getString("name"));
-                        ((TextView) row.findViewById(R.id.addon_version)).setText(jsonobj.getString("version"));
+                        SpannableString spannable = new SpannableString(text);
+                        spannable.setSpan(sSubTitleSpan, name.length() + 1, text.length(), 0);
+
+                        final TextView row = (TextView) mInflater.inflate(R.layout.abouthome_addon_row, mAddons.getItemsContainer(), false);
+                        row.setText(spannable, TextView.BufferType.SPANNABLE);
+
+                        Drawable drawable = mContext.getResources().getDrawable(R.drawable.ic_addons_empty);
+                        drawable.setBounds(sIconBounds);
+                        row.setCompoundDrawables(drawable, null, null, null);
 
                         String iconUrl = jsonobj.getString("iconURL");
                         String pageUrl = getPageUrlFromIconUrl(iconUrl);
@@ -604,8 +624,9 @@ public class AboutHomeContent extends ScrollView
                                     new Favicons.OnFaviconLoadedListener() {
                             public void onFaviconLoaded(String url, Bitmap favicon) {
                                 if (favicon != null) {
-                                    ImageView icon = (ImageView) row.findViewById(R.id.addon_icon);
-                                    icon.setImageBitmap(favicon);
+                                    Drawable drawable = new BitmapDrawable(favicon);
+                                    drawable.setBounds(sIconBounds);
+                                    row.setCompoundDrawables(drawable, null, null, null);
                                 }
                             }
                         });
@@ -716,8 +737,8 @@ public class AboutHomeContent extends ScrollView
             else if (!TextUtils.equals(client, tab.name))
                 break;
 
-            final RelativeLayout row = (RelativeLayout) mInflater.inflate(R.layout.abouthome_remote_tab_row, mRemoteTabs.getItemsContainer(), false);
-            ((TextView) row.findViewById(R.id.remote_tab_title)).setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
+            final TextView row = (TextView) mInflater.inflate(R.layout.abouthome_remote_tab_row, mRemoteTabs.getItemsContainer(), false);
+            row.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
             row.setTag(tab.url);
             mRemoteTabs.addItem(row);
             row.setOnClickListener(mRemoteTabClickListener);

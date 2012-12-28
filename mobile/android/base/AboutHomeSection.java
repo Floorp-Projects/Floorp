@@ -77,6 +77,7 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void addItem(View item) {
         mItemsContainer.addView(item);
+        mItemsContainer.addView(new Divider(getContext(), null));
     }
 
     public void clear() {
@@ -97,5 +98,15 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void hideMoreText() {
         mMoreText.setVisibility(View.GONE);
+    }
+
+    private class Divider extends View {
+        public Divider(Context context, AttributeSet attrs) {
+            super(context, attrs);
+
+            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+                                                          (int) context.getResources().getDisplayMetrics().density));
+            setBackgroundColor(0x3460666E);
+        }
     }
 }
