@@ -68,35 +68,33 @@ NS_IMPL_ISUPPORTS0(AudioChannelService)
 AudioChannelService::AudioChannelService()
 : mCurrentHigherChannel(AUDIO_CHANNEL_NORMAL)
 {
-  mChannelCounters = new int32_t[AUDIO_CHANNEL_PUBLICNOTIFICATION+1];
-
-  for (int i = AUDIO_CHANNEL_NORMAL;
-       i <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
-       ++i) {
-    mChannelCounters[i] = 0;
-  }
-
   // Creation of the hash table.
   mAgents.Init();
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->AddObserver(this, "ipc:content-shutdown", false);
+    }
+  }
 }
 
 AudioChannelService::~AudioChannelService()
 {
-  delete [] mChannelCounters;
 }
 
 void
 AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                          AudioChannelType aType)
+                                               AudioChannelType aType)
 {
   mAgents.Put(aAgent, aType);
-  RegisterType(aType);
+  RegisterType(aType, CONTENT_PARENT_UNKNOWN_CHILD_ID);
 }
 
 void
-AudioChannelService::RegisterType(AudioChannelType aType)
+AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID)
 {
-  mChannelCounters[aType]++;
+  mChannelCounters[aType].AppendElement(aChildID);
 
   // In order to avoid race conditions, it's safer to notify any existing
   // agent any time a new one is registered.
@@ -112,20 +110,21 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   }
 
   mAgents.Remove(aAgent);
-  UnregisterType(type);
+  UnregisterType(type, CONTENT_PARENT_UNKNOWN_CHILD_ID);
 }
 
 void
-AudioChannelService::UnregisterType(AudioChannelType aType)
+AudioChannelService::UnregisterType(AudioChannelType aType, uint64_t aChildID)
 {
-  mChannelCounters[aType]--;
-  MOZ_ASSERT(mChannelCounters[aType] >= 0);
+  // The array may contain multiple occurrence of this appId but
+  // this should remove only the first one.
+  mChannelCounters[aType].RemoveElement(aChildID);
 
   bool isNoChannelUsed = true;
   for (int32_t type = AUDIO_CHANNEL_NORMAL;
          type <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
          ++type) {
-    if (mChannelCounters[type]) {
+    if (!mChannelCounters[type].IsEmpty()) {
       isNoChannelUsed = false;
       break;
     }
@@ -153,7 +152,7 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
 
       case AUDIO_CHANNEL_CONTENT:
         // TODO: this should work per apps
-        if (mChannelCounters[AUDIO_CHANNEL_CONTENT] > 1)
+        if (mChannelCounters[AUDIO_CHANNEL_CONTENT].Length() > 1)
           return true;
         break;
 
@@ -177,11 +176,11 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
   switch (aType) {
     case AUDIO_CHANNEL_NORMAL:
     case AUDIO_CHANNEL_CONTENT:
-      muted = !!mChannelCounters[AUDIO_CHANNEL_NOTIFICATION] ||
-              !!mChannelCounters[AUDIO_CHANNEL_ALARM] ||
-              !!mChannelCounters[AUDIO_CHANNEL_TELEPHONY] ||
-              !!mChannelCounters[AUDIO_CHANNEL_RINGER] ||
-              !!mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION];
+      muted = !mChannelCounters[AUDIO_CHANNEL_NOTIFICATION].IsEmpty() ||
+              !mChannelCounters[AUDIO_CHANNEL_ALARM].IsEmpty() ||
+              !mChannelCounters[AUDIO_CHANNEL_TELEPHONY].IsEmpty() ||
+              !mChannelCounters[AUDIO_CHANNEL_RINGER].IsEmpty() ||
+              !mChannelCounters[AUDIO_CHANNEL_PUBLICNOTIFICATION].IsEmpty();
       break;
 
     case AUDIO_CHANNEL_NOTIFICATION:
@@ -207,7 +206,7 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
     for (int32_t type = AUDIO_CHANNEL_NORMAL;
          type <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
          ++type) {
-      if (mChannelCounters[type]) {
+      if (!mChannelCounters[type].IsEmpty()) {
         higher = (AudioChannelType)type;
       }
     }
@@ -225,7 +224,6 @@ AudioChannelService::GetMuted(AudioChannelType aType, bool aElementHidden)
 
   return muted;
 }
-
 
 static PLDHashOperator
 NotifyEnumerator(AudioChannelAgent* aAgent,
@@ -262,7 +260,7 @@ AudioChannelService::ChannelsActiveWithHigherPriorityThan(AudioChannelType aType
       return false;
     }
 
-    if (mChannelCounters[i]) {
+    if (!mChannelCounters[i].IsEmpty()) {
       return true;
     }
   }
@@ -298,3 +296,37 @@ AudioChannelService::ChannelName(AudioChannelType aType)
   return nullptr;
 }
 
+NS_IMETHODIMP
+AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* data)
+{
+  MOZ_ASSERT(!strcmp(aTopic, "ipc:content-shutdown"));
+
+  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
+  if (!props) {
+    NS_WARNING("ipc:content-shutdown message without property bag as subject");
+    return NS_OK;
+  }
+
+  uint64_t childID = 0;
+  nsresult rv = props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"),
+                                           &childID);
+  if (NS_SUCCEEDED(rv)) {
+    for (int32_t type = AUDIO_CHANNEL_NORMAL;
+         type <= AUDIO_CHANNEL_PUBLICNOTIFICATION;
+         ++type) {
+      int32_t index;
+      while ((index = mChannelCounters[type].IndexOf(childID)) != -1) {
+        mChannelCounters[type].RemoveElementAt(index);
+      }
+    }
+
+    // We don't have to remove the agents from the mAgents hashtable because if
+    // that table contains only agents running on the same process.
+
+    Notify();
+  } else {
+    NS_WARNING("ipc:content-shutdown message without childID property");
+  }
+
+  return NS_OK;
+}

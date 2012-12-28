@@ -775,7 +775,7 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
                              ChildOSPrivileges aOSPrivileges)
     : mSubprocess(nullptr)
     , mOSPrivileges(aOSPrivileges)
-    , mChildID(-1)
+    , mChildID(CONTENT_PARENT_UNKNOWN_CHILD_ID)
     , mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
@@ -1103,7 +1103,7 @@ ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType)
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->RegisterType(aType);
+        service->RegisterType(aType, mChildID);
     }
     return true;
 }
@@ -1114,7 +1114,7 @@ ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType)
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->UnregisterType(aType);
+        service->UnregisterType(aType, mChildID);
     }
     return true;
 }
