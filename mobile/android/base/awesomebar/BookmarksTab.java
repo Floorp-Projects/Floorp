@@ -192,11 +192,12 @@ public class BookmarksTab extends AwesomeBarTab {
         }
 
         String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+        String title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         long parentId = cursor.getLong(cursor.getColumnIndexOrThrow(Bookmarks.PARENT));
         if (parentId == Bookmarks.FIXED_READING_LIST_ID) {
             url = ReaderModeUtils.getAboutReaderForUrl(url, true);
         }
-        listener.onUrlOpen(url);
+        listener.onUrlOpen(url, title);
     }
 
     private class BookmarksListAdapter extends SimpleCursorAdapter {

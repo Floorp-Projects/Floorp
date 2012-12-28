@@ -7,10 +7,13 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserDB.PinnedSite;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
+import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import org.json.JSONArray;
@@ -161,6 +164,12 @@ public class AboutHomeContent extends ScrollView
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
                 String spec = holder.url;
+
+                // If we don't have a url, this must be an empty row. Show the edit dialog box
+                if (TextUtils.isEmpty(spec)) {
+                    editSite(spec, position);
+                    return;
+                }
 
                 if (mUriLoadCallback != null)
                     mUriLoadCallback.callback(spec);
@@ -838,5 +847,39 @@ public class AboutHomeContent extends ScrollView
             }
             return buildView(url, title, convertView);
         }
+    }
+
+    // Edit the site at position. Provide a url to start editing with
+    public void editSite(String url, final int position) {
+        Intent intent = new Intent(mContext, AwesomeBar.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra(AwesomeBar.TARGET_KEY, AwesomeBar.Target.PICK_SITE.toString());
+        if (url != null && !TextUtils.isEmpty(url)) {
+            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, url);
+        }
+
+        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCode(new ActivityResultHandler() {
+            public void onActivityResult(int resultCode, Intent data) {
+                final String title = data.getStringExtra(AwesomeBar.TITLE_KEY);
+                final String url = data.getStringExtra(AwesomeBar.URL_KEY);
+
+                // update the database on a background thread
+                (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+                    @Override
+                    public Void doInBackground(Void... params) {
+                        final ContentResolver resolver = mActivity.getContentResolver();
+                        BrowserDB.pinSite(resolver, url, (title == null ? url : title), position);
+                        return null;
+                    }
+        
+                    @Override
+                    public void onPostExecute(Void v) {
+                        update(EnumSet.of(UpdateFlags.TOP_SITES));
+                    }
+                }).execute();
+            }
+        });
+
+        mActivity.startActivityForResult(intent, requestCode);
     }
 }
