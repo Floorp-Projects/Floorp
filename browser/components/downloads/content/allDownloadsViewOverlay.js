@@ -882,8 +882,8 @@ DownloadsPlacesView.prototype = {
     let placesNodes = [];
     let selectedElements = this._richlistbox.selectedItems;
     for (let elt of selectedElements) {
-      if (elt._shell.placesNode)
-        placesNodes.push(elt._shell.placesNode);
+      if (elt.placesNode)
+        placesNodes.push(elt.placesNode);
     }
     return placesNodes;
   },
