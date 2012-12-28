@@ -126,6 +126,8 @@ function checkNumberGet()
   element.type = "number";
   for (data of testData) {
     element.value = data[0];
+
+    // Given that NaN != NaN, we have to use null when the expected value is NaN.
     if (data[1] != null) {
       is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
          "floating point representation of the value");
@@ -148,20 +150,34 @@ function checkNumberSet()
     [2e1, "20"],
     [1e-1, "0.1"], // value after e can be negative
     [1E2, "100"], // E can be used instead of e
-    ["", null], // the empty string is not a number
-    ["foo", null],
+    // Setting a string will set NaN.
+    ["foo", ""],
+    // "" is converted to 0.
+    ["", 0],
+    [42, "42"], // Keep this here, it is used by the next test.
+    // Setting Infinity should throw and not change the current value.
+    [Infinity, 42, true],
+    [-Infinity, 42, true],
+    // Setting NaN should change the value to the empty string.
+    [NaN, ""],
   ];
 
   element.type = "number";
   for (data of testData) {
-    element.valueAsNumber = data[0];
-    if (data[1] != null) {
+    var caught = false;
+    try {
+      element.valueAsNumber = data[0];
       is(element.value, data[1],
          "valueAsNumber should be able to set the value");
+    } catch (e) {
+      caught = true;
+    }
+
+    if (data[2]) {
+      ok(caught, "valueAsNumber should have thrown");
+      is(element.value, data[1], "value should not have changed");
     } else {
-      element.valueAsNumber = testData[0];
-      isnot(element.value, data[1],
-            "valueAsNumber should not set the value if it's not a number");
+      ok(!caught, "valueAsNumber should not have thrown");
     }
   }
 }
@@ -246,12 +262,29 @@ function checkDateSet()
     [ undefined,         "" ],
     // Out of range, the corresponding date string is the empty string
     [ -62135596800001,   "" ],
+    // Infinity will keep the current value and throw (so we need to set a current value).
+    [ 1298851200010, "2011-02-28" ],
+    [ Infinity, "2011-02-28", true ],
+    [ -Infinity, "2011-02-28", true ],
   ];
 
   element.type = "date";
   for (data of testData) {
-    element.valueAsNumber = data[0];
-    is(element.value, data[1], "valueAsNumber should set the value to " + data[1]);
+    var caught = false;
+
+    try {
+      element.valueAsNumber = data[0];
+      is(element.value, data[1], "valueAsNumber should set the value to " + data[1]);
+    } catch(e) {
+      caught = true;
+    }
+
+    if (data[2]) {
+      ok(caught, "valueAsNumber should have trhown"); 
+      is(element.value, data[1], "the value should not have changed");
+    } else {
+      ok(!caught, "valueAsNumber should not have thrown");
+    }
   }
 
 }
