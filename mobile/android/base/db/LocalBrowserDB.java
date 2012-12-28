@@ -444,9 +444,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             Cursor c = cr.query(bookmarksUriWithLimit(1),
                                 new String[] { Bookmarks._ID },
                                 Bookmarks.URL + " = ? AND " +
+                                Bookmarks.PARENT + " != ? AND " +
                                 Bookmarks.PARENT + " != ?",
                                 new String[] { uri,
-                                               String.valueOf(Bookmarks.FIXED_READING_LIST_ID) },
+                                               String.valueOf(Bookmarks.FIXED_READING_LIST_ID),
+                                               String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) },
                                 Bookmarks.URL);
             count = c.getCount();
             c.close();
@@ -1083,5 +1085,66 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         public int getColumnIndexOrThrow(String columnName) {
             return super.getColumnIndexOrThrow(translateColumnName(columnName));
         }
+    }
+
+
+    public void pinSite(ContentResolver cr, String url, String title, int position) {
+        ContentValues values = new ContentValues();
+        final long now = System.currentTimeMillis();
+        values.put(Bookmarks.TITLE, title);
+        values.put(Bookmarks.URL, url);
+        values.put(Bookmarks.PARENT, Bookmarks.FIXED_PINNED_LIST_ID);
+        values.put(Bookmarks.DATE_MODIFIED, now);
+        values.put(Bookmarks.POSITION, position);
+        values.put(Bookmarks.IS_DELETED, 0);
+
+        // If this site is already pinned, unpin it
+        cr.delete(mBookmarksUriWithProfile,
+                  Bookmarks.PARENT + " == ? AND " + Bookmarks.URL + " == ?",
+                  new String[] {
+                      String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
+                      url
+                  });
+
+        // If something is already pinned in this spot update it
+        int updated = cr.update(mBookmarksUriWithProfile,
+                                values,
+                                Bookmarks.POSITION + " = ? AND " +
+                                Bookmarks.PARENT + " = ?",
+                                new String[] { Integer.toString(position),
+                                               String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
+
+        // Otherwise just insert a new item
+        if (updated == 0) {
+            cr.insert(mBookmarksUriWithProfile, values);
+        }
+    }
+
+    public Cursor getPinnedSites(ContentResolver cr, int limit) {
+        return cr.query(bookmarksUriWithLimit(limit),
+                        new String[] { Bookmarks._ID,
+                                       Bookmarks.URL,
+                                       Bookmarks.TITLE,
+                                       Bookmarks.POSITION },
+                        Bookmarks.PARENT + " == ?",
+                        new String[] { String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) },
+                        Bookmarks.POSITION + " ASC");
+    }
+
+    public void unpinSite(ContentResolver cr, int position) {
+        cr.delete(mBookmarksUriWithProfile,
+                  Bookmarks.PARENT + " == ? AND " + Bookmarks.POSITION + " = ?",
+                  new String[] {
+                      String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
+                      Integer.toString(position)
+                  });
+    }
+
+    public void unpinAllSites(ContentResolver cr) {
+        cr.delete(mBookmarksUriWithProfile,
+                  Bookmarks.PARENT + " == ?",
+                  new String[] {
+                      String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID)
+                  });
     }
 }
