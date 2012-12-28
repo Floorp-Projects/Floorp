@@ -1377,6 +1377,42 @@ let RIL = {
   },
 
   /**
+   * Update UICC Phonebook.
+   *
+   * @param contactType   "ADN".
+   * @param contact       The contact will be updated.
+   * @param requestId     Request id from RadioInterfaceLayer.
+   */
+  updateICCContact: function updateICCContact(options) {
+    let onsuccess = function onsuccess() {
+      // Reuse 'options' to get 'requestId' and 'contactType'.
+      options.rilMessageType = "icccontactupdate";
+      RIL.sendDOMMessage(options);
+    }.bind(this);
+
+    let onerror = function onerror(errorMsg) {
+      options.rilMessageType = "icccontactupdate";
+      options.errorMsg = errorMsg;
+      RIL.sendDOMMessage(options);
+    }.bind(this);
+
+    if (!this.appType || !options.contact) {
+      onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+      return;
+    }
+
+    // If contact has 'recordId' property, updates corresponding record.
+    // If not, inserts the contact into a free record.
+    if (options.contact.recordId) {
+      ICCContactHelper.updateICCContact(
+        this.appType, options.contactType, options.contact, onsuccess, onerror);
+    } else {
+      ICCContactHelper.addICCContact(
+        this.appType, options.contactType, options.contact, onsuccess, onerror);
+    }
+  },
+
+  /**
    * Request the phone's radio power to be switched on or off.
    *
    * @param on
@@ -8867,6 +8903,41 @@ let ICCRecordHelper = {
   },
 
   /**
+   * Update ICC ADN.
+   *
+   * @param fileId      EF id of the ADN.
+   * @param contact     The contact will be updated. (Shall have recordId property)
+   * @param onsuccess   Callback to be called when success.
+   * @param onerror     Callback to be called when error.
+   */
+  updateADN: function updateADN(fileId, contact, onsuccess, onerror) {
+    function dataWriter(recordSize) {
+      GsmPDUHelper.writeAlphaIdDiallingNumber(recordSize,
+                                              contact.alphaId,
+                                              contact.number);
+    }
+
+    function callback(options) {
+      if (onsuccess) {
+        onsuccess();
+      }
+    }
+
+    if (!contact || !contact.recordId) {
+      if (onerror) {
+        onerror("Invalid parameter.");
+      }
+      return;
+    }
+
+    ICCIOHelper.updateLinearFixedEF({fileId: fileId,
+                                     recordNumber: contact.recordId,
+                                     dataWriter: dataWriter.bind(this),
+                                     callback: callback.bind(this),
+                                     onerror: onerror});
+  },
+
+  /**
    * Get ICC MBDN. (Mailbox Dialling Number)
    *
    * @see TS 131.102, clause 4.2.60
@@ -9224,6 +9295,39 @@ let ICCRecordHelper = {
   },
 
   /**
+   * Get free ICC ADN record id.
+   *
+   * @param fileId      EF id of the ADN.
+   * @param onsuccess   Callback to be called when success.
+   * @param onerror     Callback to be called when error.
+   */
+  getADNFreeRecordId: function getADNFreeRecordId(fileId, onsuccess, onerror) {
+    function callback(options) {
+      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
+      if (!contact) {
+        // Find free record.
+        if (onsuccess) {
+          onsuccess(options.p1);
+        }
+        return;
+      }
+
+      if (options.p1 < options.totalRecords) {
+        ICCIOHelper.loadNextRecord(options);
+      } else {
+        // No free record found.
+        if (onerror) {
+          onerror("No free record found.");
+        }
+      }
+    }
+
+    ICCIOHelper.loadLinearFixedEF({fileId: fileId,
+                                   callback: callback.bind(this),
+                                   onerror: onerror});
+  },
+
+  /**
    *  Read the list of PLMN (Public Land Mobile Network) entries
    *  We cannot directly rely on readSwappedNibbleBcdToString(),
    *  since it will no correctly handle some corner-cases that are
@@ -9561,6 +9665,88 @@ let ICCContactHelper = {
   },
 
   /**
+   * Helper function to find free contact record.
+   *
+   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param contactType   "ADN".
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  findFreeICCContact: function findFreeICCContact(appType, contactType, onsuccess, onerror) {
+    switch (contactType) {
+      case "ADN":
+        switch (appType) {
+          case CARD_APPTYPE_SIM:
+            ICCRecordHelper.getADNFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
+            break;
+          case CARD_APPTYPE_USIM:
+            let gotPbrCb = function gotPbrCb(pbr) {
+              if (pbr.adn) {
+                ICCRecordHelper.getADNFreeRecordId(pbr.adn.fileId, onsuccess, onerror);
+              }
+            }.bind(this);
+
+            ICCRecordHelper.readPBR(gotPbrCb, onerror);
+            break;
+        }
+        break;
+      default:
+        if (onerror) {
+          onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+        }
+        break;
+    }
+  },
+
+  /**
+   * Helper function to add a new ICC contact.
+   *
+   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param contactType   "ADN"
+   * @param contact       The contact will be added.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  addICCContact: function addICCContact(appType, contactType, contact, onsuccess, onerror) {
+    let foundFreeCb = function foundFreeCb(recordId) {
+      contact.recordId = recordId;
+      ICCContactHelper.updateICCContact(appType, contactType, contact, onsuccess, onerror);
+    }.bind(this);
+
+    // Find free record first.
+    ICCContactHelper.findFreeICCContact(appType, contactType, foundFreeCb, onerror);
+  },
+
+  /**
+   * Helper function to update ICC contact.
+   *
+   * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
+   * @param contactType   "ADN".
+   * @param contact       The contact will be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  updateICCContact: function updateICCContact(appType, contactType, contact, onsuccess, onerror) {
+    switch (contactType) {
+      case "ADN":
+        switch (appType) {
+          case CARD_APPTYPE_SIM:
+            this.updateSimContact(contact, onsuccess, onerror);
+            break;
+          case CARD_APPTYPE_USIM:
+            this.updateUSimContact(contact, onsuccess, onerror);
+            break;
+        }
+        break;
+      default:
+        if (onerror) {
+          onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+        }
+        break;
+    }
+  },
+
+  /**
    * Read contacts from USIM.
    *
    * @param onsuccess     Callback to be called when success.
@@ -9588,6 +9774,38 @@ let ICCContactHelper = {
    */
   readSimContacts: function readSimContacts(onsuccess, onerror) {
     ICCRecordHelper.readADN(ICC_EF_ADN, onsuccess, onerror);
+  },
+
+  /**
+   * Update USIM contact.
+   *
+   * @param contact       The contact will be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  updateUSimContact: function updateUSimContact(contact, onsuccess, onerror) {
+    let gotPbrCb = function gotPbrCb(pbr) {
+      if (pbr.adn) {
+        ICCRecordHelper.updateADN(pbr.adn.fileId, contact, onsuccess, onerror);
+      } else {
+        if (onerror) {
+          onerror("Cannot access ADN.");
+        }
+      }
+    }.bind(this);
+
+    ICCRecordHelper.readPBR(gotPbrCb, onerror);
+  },
+
+  /**
+   * Update SIM contact.
+   *
+   * @param contact       The contact will be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  updateSimContact: function updateSimContact(contact, onsuccess, onerror) {
+    ICCRecordHelper.updateADN(ICC_EF_ADN, contact, onsuccess, onerror);
   },
 };
 

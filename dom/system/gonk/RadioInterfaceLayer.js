@@ -610,6 +610,17 @@ RadioInterfaceLayer.prototype = {
                                        message.contacts);
         }
         break;
+      case "icccontactupdate":
+        if (!this._contactUpdateCallbacks) {
+          return;
+        }
+        let updateCallback = this._contactUpdateCallbacks[message.requestId];
+        if (updateCallback) {
+          delete this._contactUpdateCallbacks[message.requestId];
+          updateCallback.onUpdated(message.errorMsg,
+                                   message.contactType);
+        }
+        break;
       case "iccmbdn":
         this.handleICCMbdn(message);
         break;
@@ -2646,7 +2657,20 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage({rilMessageType: "getICCContacts",
                              contactType: contactType,
                              requestId: requestId});
-  }
+  },
+
+  _contactUpdateCallbacks: null,
+  updateICCContact: function updateICCContact(contactType, contact, callback) {
+    if (!this._contactUpdateCallbacks) {
+      this._contactUpdateCallbacks = {};
+    }
+    let requestId = Math.floor(Math.random() * 1000);
+    this._contactUpdateCallbacks[requestId] = callback;
+    this.worker.postMessage({rilMessageType: "updateICCContact",
+                             contactType: contactType,
+                             contact: contact,
+                             requestId: requestId});
+  },
 };
 
 function RILNetworkInterface(ril, type)
