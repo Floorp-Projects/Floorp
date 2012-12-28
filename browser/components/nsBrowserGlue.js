@@ -551,18 +551,20 @@ BrowserGlue.prototype = {
     //    browser.startup.page == 3 or browser.sessionstore.resume_session_once == true
     // 3. browser.warnOnQuit == false
     // 4. The browser is currently in Private Browsing mode
+    // 5. The browser will be restarted.
     //
     // Otherwise these are the conditions and the associated dialogs that will be shown:
     // 1. aQuitType == "lastwindow" or "quit" and browser.showQuitWarning == true
     //    - The quit dialog will be shown
-    // 2. aQuitType == "restart" && browser.warnOnRestart == true
-    //    - The restart dialog will be shown
-    // 3. aQuitType == "lastwindow" && browser.tabs.warnOnClose == true
+    // 2. aQuitType == "lastwindow" && browser.tabs.warnOnClose == true
     //    - The "closing multiple tabs" dialog will be shown
     //
     // aQuitType == "lastwindow" is overloaded. "lastwindow" is used to indicate
     // "the last window is closing but we're not quitting (a non-browser window is open)"
     // and also "we're quitting by closing the last window".
+
+    if (aQuitType == "restart")
+      return;
 
     var windowcount = 0;
     var pagecount = 0;
@@ -586,12 +588,10 @@ BrowserGlue.prototype = {
     if (!aQuitType)
       aQuitType = "quit";
 
-    var showPrompt = false;
     var mostRecentBrowserWindow;
 
     // browser.warnOnQuit is a hidden global boolean to override all quit prompts
     // browser.showQuitWarning specifically covers quitting
-    // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
     // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
 
     var sessionWillBeRestored = Services.prefs.getIntPref("browser.startup.page") == 3 ||
@@ -601,19 +601,15 @@ BrowserGlue.prototype = {
 
     // On last window close or quit && showQuitWarning, we want to show the
     // quit warning.
-    if (aQuitType != "restart" && Services.prefs.getBoolPref("browser.showQuitWarning")) {
-      showPrompt = true;
-    }
-    else if (aQuitType == "restart" && Services.prefs.getBoolPref("browser.warnOnRestart")) {
-      showPrompt = true;
-    }
-    else if (aQuitType == "lastwindow") {
-      // If aQuitType is "lastwindow" and we aren't showing the quit warning,
-      // we should show the window closing warning instead. warnAboutClosing
-      // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
-      // the window. It doesn't actually close the window.
-      mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(true);
+    if (!Services.prefs.getBoolPref("browser.showQuitWarning")) {
+      if (aQuitType == "lastwindow") {
+        // If aQuitType is "lastwindow" and we aren't showing the quit warning,
+        // we should show the window closing warning instead. warnAboutClosing
+        // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
+        // the window. It doesn't actually close the window.
+        mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(true);
+      }
       return;
     }
 
@@ -621,21 +617,15 @@ BrowserGlue.prototype = {
     if (allWindowsPrivate)
       return;
 
-    if (!showPrompt)
-      return;
-
     var quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
     var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
     var appName = brandBundle.GetStringFromName("brandShortName");
-    var quitTitleString = (aQuitType == "restart" ? "restart" : "quit") + "DialogTitle";
+    var quitTitleString = "quitDialogTitle";
     var quitDialogTitle = quitBundle.formatStringFromName(quitTitleString, [appName], 1);
 
     var message;
-    if (aQuitType == "restart")
-      message = quitBundle.formatStringFromName("messageRestart",
-                                                [appName], 1);
-    else if (windowcount == 1)
+    if (windowcount == 1)
       message = quitBundle.formatStringFromName("messageNoWindows",
                                                 [appName], 1);
     else
@@ -646,20 +636,14 @@ BrowserGlue.prototype = {
 
     var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
                 promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 +
                 promptService.BUTTON_POS_0_DEFAULT;
 
     var neverAsk = {value:false};
-    var button0Title, button2Title;
+    var button0Title = quitBundle.GetStringFromName("saveTitle");
     var button1Title = quitBundle.GetStringFromName("cancelTitle");
+    var button2Title = quitBundle.GetStringFromName("quitTitle");
     var neverAskText = quitBundle.GetStringFromName("neverAsk");
-
-    if (aQuitType == "restart")
-      button0Title = quitBundle.GetStringFromName("restartTitle");
-    else {
-      flags += promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2;
-      button0Title = quitBundle.GetStringFromName("saveTitle");
-      button2Title = quitBundle.GetStringFromName("quitTitle");
-    }
 
     // This wouldn't have been set above since we shouldn't be here for
     // aQuitType == "lastwindow"
@@ -682,12 +666,8 @@ BrowserGlue.prototype = {
     case 0: // Save & Quit
       this._saveSession = true;
       if (neverAsk.value) {
-        if (aQuitType == "restart")
-          Services.prefs.setBoolPref("browser.warnOnRestart", false);
-        else {
-          // always save state when shutting down
-          Services.prefs.setIntPref("browser.startup.page", 3);
-        }
+        // always save state when shutting down
+        Services.prefs.setIntPref("browser.startup.page", 3);
       }
       break;
     }
