@@ -29,6 +29,8 @@
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
 
+#define CONTENT_PARENT_UNKNOWN_CHILD_ID -1
+
 class mozIApplication;
 class nsConsoleService;
 class nsIDOMBlob;
@@ -131,6 +133,8 @@ public:
      * process.
      */
     void KillHard();
+
+    uint64_t ChildID() { return mChildID; }
 
 protected:
     void OnChannelConnected(int32_t pid);
