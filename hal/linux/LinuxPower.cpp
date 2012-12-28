@@ -71,7 +71,16 @@ ForceQuitWatchdog(void* aParamPtr)
   if (paramPtr->timeoutSecs > 0 && paramPtr->timeoutSecs <= 30) {
     // If we shut down normally before the timeout, this thread will
     // be harmlessly reaped by the OS.
-    sleep(paramPtr->timeoutSecs);
+    TimeStamp deadline =
+      (TimeStamp::Now() + TimeDuration::FromSeconds(paramPtr->timeoutSecs));
+    while (true) {
+      TimeDuration remaining = (deadline - TimeStamp::Now());
+      int sleepSeconds = int(remaining.ToSeconds());
+      if (sleepSeconds <= 0) {
+        break;
+      }
+      sleep(sleepSeconds);
+    }
   }
   hal::ShutdownMode mode = paramPtr->mode;
   delete paramPtr;
