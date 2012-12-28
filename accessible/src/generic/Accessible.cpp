@@ -612,6 +612,7 @@ Accessible::VisibilityState()
           deckFrame->GetContent()->Tag() == nsGkAtoms::tabpanels)
         return states::OFFSCREEN;
 
+      NS_NOTREACHED("Children of not selected deck panel are not accessible.");
       return states::INVISIBLE;
     }
 
