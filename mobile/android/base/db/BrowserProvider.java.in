@@ -1881,8 +1881,8 @@ public class BrowserProvider extends ContentProvider {
 
     /**
      * Remove any thumbnails that for sites that aren't likely to be ever shown.
-     * Items will be removed according to a frecency calculation.
-     *
+     * Items will be removed according to a frecency calculation and only if they are not pinned
+     * 
      * Call this method within a transaction.
      */
     private void expireThumbnails(final SQLiteDatabase db) {
@@ -1893,6 +1893,10 @@ public class BrowserProvider extends ContentProvider {
                              " FROM " + VIEW_COMBINED +
                              " ORDER BY " + sortOrder +
                              " LIMIT " + DEFAULT_EXPIRY_THUMBNAIL_COUNT +
+                           ") AND " + Thumbnails.URL + " NOT IN ( " +
+                             " SELECT " + Bookmarks.URL +
+                             " FROM " + TABLE_BOOKMARKS +
+                             " WHERE " + Bookmarks.PARENT + " = " + Bookmarks.FIXED_PINNED_LIST_ID +
                            ")";
         trace("Clear thumbs using query: " + sql);
         db.execSQL(sql);
