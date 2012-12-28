@@ -87,6 +87,9 @@ enum sdpTestFlags
   SHOULD_OMIT_VIDEO     = (1<<12),
   DONT_CHECK_VIDEO      = (1<<13),
 
+  SHOULD_OMIT_DATA      = (1 << 16),
+  DONT_CHECK_DATA       = (1 << 17),
+
   SHOULD_SENDRECV_AUDIO = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO,
   SHOULD_SENDRECV_VIDEO = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO,
   SHOULD_SENDRECV_AV = SHOULD_SENDRECV_AUDIO | SHOULD_SENDRECV_VIDEO,
@@ -601,7 +604,9 @@ class SignalingAgent {
 
 void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
                     uint32_t offerAnswerFlags,
-                    uint32_t sdpCheck = DONT_CHECK_AUDIO|DONT_CHECK_VIDEO) {
+                    uint32_t sdpCheck = DONT_CHECK_AUDIO|
+                                        DONT_CHECK_VIDEO|
+                                        DONT_CHECK_DATA) {
     // Create a media stream as if it came from GUM
     nsRefPtr<nsDOMMediaStream> domMediaStream = new nsDOMMediaStream();
 
@@ -752,6 +757,8 @@ private:
          << ((flags & SHOULD_OMIT_VIDEO)?" SHOULD_OMIT_VIDEO":"")
          << ((flags & DONT_CHECK_VIDEO)?" DONT_CHECK_VIDEO":"")
 
+         << ((flags & SHOULD_OMIT_DATA)?" SHOULD_OMIT_DATA":"")
+         << ((flags & DONT_CHECK_DATA)?" DONT_CHECK_DATA":"")
          << endl;
 
     switch(flags & AUDIO_FLAGS) {
@@ -826,6 +833,12 @@ private:
         break;
       default:
             ASSERT_FALSE("Missing case in switch statement");
+    }
+
+    if (flags & SHOULD_OMIT_DATA) {
+      ASSERT_EQ(sdp.find("m=application"), std::string::npos);
+    } else if (!(flags & DONT_CHECK_DATA)) {
+      ASSERT_NE(sdp.find("m=application"), std::string::npos);
     }
   }
 };
@@ -985,6 +998,15 @@ TEST_F(SignalingTest, CreateOfferNoAudioStream)
   constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   CreateOffer(constraints, OFFER_VIDEO,
               SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
+}
+
+TEST_F(SignalingTest, CreateOfferNoDataChannel)
+{
+  sipcc::MediaConstraints constraints;
+  constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  constraints.setBooleanConstraint("MozDontOfferDataChannel", true, false);
+  CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV | SHOULD_OMIT_DATA);
 }
 
 TEST_F(SignalingTest, CreateOfferDontReceiveAudio)
@@ -1376,7 +1398,7 @@ TEST_F(SignalingTest, AudioOnlyG711Call)
 
   std::cout << "Creating answer:" << std::endl;
   a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO,
-                   DONT_CHECK_AUDIO | DONT_CHECK_VIDEO);
+                   DONT_CHECK_AUDIO | DONT_CHECK_VIDEO | DONT_CHECK_DATA);
 
   std::string answer = a2_.answer();
 
