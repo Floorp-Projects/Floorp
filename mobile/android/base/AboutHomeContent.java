@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -40,9 +41,11 @@ import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AbsListView;
 import android.widget.GridView;
@@ -88,7 +91,6 @@ public class AboutHomeContent extends ScrollView
 
     private Context mContext;
     private BrowserApp mActivity;
-    private Cursor mCursor;
     UriLoadCallback mUriLoadCallback = null;
     VoidCallback mLoadCompleteCallback = null;
     private LayoutInflater mInflater;
@@ -96,7 +98,7 @@ public class AboutHomeContent extends ScrollView
     private AccountManager mAccountManager;
     private OnAccountsUpdateListener mAccountListener = null;
 
-    protected SimpleCursorAdapter mTopSitesAdapter;
+    protected TopSitesCursorAdapter mTopSitesAdapter;
     protected TopSitesGridView mTopSitesGrid;
 
     private AboutHomePromoBox mPromoBox;
@@ -118,6 +120,7 @@ public class AboutHomeContent extends ScrollView
     public AboutHomeContent(Context context) {
         super(context);
         mContext = context;
+        mActivity = (BrowserApp) context;
     }
 
     public AboutHomeContent(Context context, AttributeSet attrs) {
@@ -156,10 +159,8 @@ public class AboutHomeContent extends ScrollView
         mTopSitesGrid = (TopSitesGridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Cursor c = (Cursor) parent.getItemAtPosition(position);
-
-                String spec = c.getString(c.getColumnIndex(URLColumns.URL));
-                Log.i(LOGTAG, "clicked: " + spec);
+                TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+                String spec = holder.url;
 
                 if (mUriLoadCallback != null)
                     mUriLoadCallback.callback(spec);
@@ -205,8 +206,10 @@ public class AboutHomeContent extends ScrollView
             mAccountListener = null;
         }
 
-        if (mCursor != null && !mCursor.isClosed())
-            mCursor.close();
+        Cursor cursor = mTopSitesAdapter.getCursor();
+        if (cursor != null && !cursor.isClosed())
+            cursor.close();
+
     }
 
     void setLastTabsVisibility(boolean visible) {
@@ -255,23 +258,26 @@ public class AboutHomeContent extends ScrollView
         final boolean syncIsSetup = SyncAccounts.syncAccountsExist(mActivity);
 
         final ContentResolver resolver = mActivity.getContentResolver();
-        final Cursor oldCursor = mCursor;
+        Cursor old = null;
+        if (mTopSitesAdapter != null) {
+            old = mTopSitesAdapter.getCursor();
+        }
         // Swap in the new cursor.
-        mCursor = BrowserDB.getTopSites(resolver, mNumberOfTopSites);
+        final Cursor oldCursor = old;
+        final Cursor newCursor = BrowserDB.getTopSites(resolver, mNumberOfTopSites);
 
         post(new Runnable() {
             public void run() {
                 if (mTopSitesAdapter == null) {
                     mTopSitesAdapter = new TopSitesCursorAdapter(mActivity,
                                                                  R.layout.abouthome_topsite_item,
-                                                                 mCursor,
+                                                                 newCursor,
                                                                  new String[] { URLColumns.TITLE },
                                                                  new int[] { R.id.title });
 
-                    mTopSitesAdapter.setViewBinder(new TopSitesViewBinder());
                     mTopSitesGrid.setAdapter(mTopSitesAdapter);
                 } else {
-                    mTopSitesAdapter.changeCursor(mCursor);
+                    mTopSitesAdapter.changeCursor(newCursor);
                 }
 
                 if (mTopSitesAdapter.getCount() > 0)
@@ -334,12 +340,11 @@ public class AboutHomeContent extends ScrollView
             if (view == null)
                 continue;
 
-            Cursor c = (Cursor) mTopSitesAdapter.getItem(i);
-            final String url = c.getString(c.getColumnIndex(URLColumns.URL));
+            TopSitesViewHolder holder = (TopSitesViewHolder)view.getTag();
+            final String url = holder.url;
             if (TextUtils.isEmpty(url)) {
-                ImageView thumbnailView = (ImageView) view.findViewById(R.id.thumbnail);
-                thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
-                thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
+                holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             } else {
                 displayThumbnail(view, thumbnails.get(url));
             }
@@ -348,7 +353,7 @@ public class AboutHomeContent extends ScrollView
         mTopSitesGrid.invalidate();
     }
 
-    public Map<String, Bitmap> getTopSitesThumbnails(Cursor c) {
+    public Map<String, Bitmap> getThumbnailsFromCursor(Cursor c) {
         Map<String, Bitmap> thumbnails = new HashMap<String, Bitmap>();
 
         try {
@@ -388,7 +393,7 @@ public class AboutHomeContent extends ScrollView
 
             @Override
             public void onPostExecute(Cursor c) {
-                updateTopSitesThumbnails(getTopSitesThumbnails(c));
+                updateTopSitesThumbnails(getThumbnailsFromCursor(c));
             }
         }).execute();
     }
@@ -772,6 +777,12 @@ public class AboutHomeContent extends ScrollView
         }
     }
 
+    private class TopSitesViewHolder {
+        public TextView titleView = null;
+        public ImageView thumbnailView = null;
+        public String url = null;
+    }
+
     public class TopSitesCursorAdapter extends SimpleCursorAdapter {
         public TopSitesCursorAdapter(Context context, int layout, Cursor c,
                                      String[] from, int[] to) {
@@ -790,44 +801,42 @@ public class AboutHomeContent extends ScrollView
             return;
         }
 
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            super.bindView(view, context, cursor);
-            view.setLayoutParams(new AbsListView.LayoutParams(mTopSitesGrid.getColumnWidth(),
-                                                            Math.round(mTopSitesGrid.getColumnWidth()*ThumbnailHelper.THUMBNAIL_ASPECT_RATIO)));
-        }
-    }
+        private View buildView(String url, String title, View convertView) {
+            TopSitesViewHolder viewHolder;
+            if (convertView == null) {
+                convertView = mInflater.inflate(R.layout.abouthome_topsite_item, null);
 
-    class TopSitesViewBinder implements SimpleCursorAdapter.ViewBinder {
-        private boolean updateTitle(View view, Cursor cursor, int titleIndex) {
-            String title = cursor.getString(titleIndex);
-            TextView titleView = (TextView) view;
-
-            // Use the URL instead of an empty title for consistency with the normal URL
-            // bar view - this is the equivalent of getDisplayTitle() in Tab.java
-            if (title == null || title.length() == 0) {
-                int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
-                title = cursor.getString(urlIndex);
-            }
-
-            titleView.setText(title);
-            if (TextUtils.isEmpty(title)) {
-                titleView.setVisibility(View.GONE);
+                viewHolder = new TopSitesViewHolder();
+                viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
+                viewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.thumbnail);
+                convertView.setTag(viewHolder);
             } else {
-                titleView.setVisibility(View.VISIBLE);
+                viewHolder = (TopSitesViewHolder) convertView.getTag();
             }
-            return true;
+
+            viewHolder.titleView.setVisibility(TextUtils.isEmpty(title) ? View.INVISIBLE : View.VISIBLE);
+            viewHolder.titleView.setText(title);
+            viewHolder.url = url;
+
+            // Force the view to fit inside this slot in the grid
+            convertView.setLayoutParams(new AbsListView.LayoutParams(mTopSitesGrid.getColumnWidth(),
+                        Math.round(mTopSitesGrid.getColumnWidth()*ThumbnailHelper.THUMBNAIL_ASPECT_RATIO)));
+
+            return convertView;
         }
 
         @Override
-        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-            int titleIndex = cursor.getColumnIndexOrThrow(URLColumns.TITLE);
-            if (columnIndex == titleIndex) {
-                return updateTitle(view, cursor, titleIndex);
-            }
+        public View getView(int position, View convertView, ViewGroup parent) {
+            String url = "";
+            String title = "";
 
-            // Other columns are handled automatically
-            return false;
+            Cursor c = getCursor();
+            c.moveToPosition(position);
+            if (!c.isAfterLast()) {
+                url = c.getString(c.getColumnIndex(URLColumns.URL));
+                title = c.getString(c.getColumnIndex(URLColumns.TITLE));
+            }
+            return buildView(url, title, convertView);
         }
     }
 }
