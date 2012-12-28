@@ -73,7 +73,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 13;
+    static final int DATABASE_VERSION = 14;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -1101,6 +1101,8 @@ public class BrowserProvider extends ContentProvider {
                 R.string.bookmarks_folder_unfiled, 4);
             createOrUpdateSpecialFolder(db, Bookmarks.READING_LIST_FOLDER_GUID,
                 R.string.bookmarks_folder_reading_list, 5);
+            createOrUpdateSpecialFolder(db, Bookmarks.PINNED_FOLDER_GUID,
+                R.string.bookmarks_folder_pinned, 6);
         }
 
         private void createOrUpdateSpecialFolder(SQLiteDatabase db,
@@ -1114,6 +1116,8 @@ public class BrowserProvider extends ContentProvider {
                 values.put(Bookmarks._ID, Bookmarks.FIXED_ROOT_ID);
             else if (guid.equals(Bookmarks.READING_LIST_FOLDER_GUID))
                 values.put(Bookmarks._ID, Bookmarks.FIXED_READING_LIST_ID);
+            else if (guid.equals(Bookmarks.PINNED_FOLDER_GUID))
+                values.put(Bookmarks._ID, Bookmarks.FIXED_PINNED_LIST_ID);
 
             // Set the parent to 0, which sync assumes is the root
             values.put(Bookmarks.PARENT, Bookmarks.FIXED_ROOT_ID);
@@ -1567,6 +1571,11 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DROP TABLE IF EXISTS " + Obsolete.TABLE_IMAGES);
         }
 
+        private void upgradeDatabaseFrom13to14(SQLiteDatabase db) {
+            createOrUpdateSpecialFolder(db, Bookmarks.PINNED_FOLDER_GUID,
+                R.string.bookmarks_folder_pinned, 6);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -1624,6 +1633,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 13:
                         upgradeDatabaseFrom12to13(db);
+                        break;
+
+                    case 14:
+                        upgradeDatabaseFrom13to14(db);
                         break;
                 }
             }

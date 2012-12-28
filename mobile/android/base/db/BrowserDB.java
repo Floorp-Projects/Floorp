@@ -96,6 +96,14 @@ public class BrowserDB {
         public void registerHistoryObserver(ContentResolver cr, ContentObserver observer);
 
         public int getCount(ContentResolver cr, String database);
+
+        public void pinSite(ContentResolver cr, String url, String title, int position);
+
+        public void unpinSite(ContentResolver cr, int position);
+
+        public void unpinAllSites(ContentResolver cr);
+
+        public Cursor getPinnedSites(ContentResolver cr, int limit);
     }
 
     static {
@@ -243,6 +251,22 @@ public class BrowserDB {
 
     public static int getCount(ContentResolver cr, String database) {
         return sDb.getCount(cr, database);
+    }
+
+    public static void pinSite(ContentResolver cr, String url, String title, int position) {
+        sDb.pinSite(cr, url, title, position);
+    }
+
+    public static void unpinSite(ContentResolver cr, int position) {
+        sDb.unpinSite(cr, position);
+    }
+
+    public static void unpinAllSites(ContentResolver cr) {
+        sDb.unpinAllSites(cr);
+    }
+
+    public static Cursor getPinnedSites(ContentResolver cr, int limit) {
+        return sDb.getPinnedSites(cr, limit);
     }
 
     /* Cursor wrapper that forces top sites to contain at least
