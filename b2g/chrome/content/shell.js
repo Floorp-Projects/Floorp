@@ -688,7 +688,7 @@ var AlertsHelper = {
           let message = messages[i];
           if (message === "notification") {
             return helper.fullLaunchPath();
-          } else if ("notification" in message) {
+          } else if (typeof message == "object" && "notification" in message) {
             return helper.resolveFromOrigin(message["notification"]);
           }
         }
