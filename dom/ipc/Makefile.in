@@ -81,7 +81,6 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/uriloader/exthandler \
 	-I$(srcdir)/../../netwerk/base/src \
 	-I$(srcdir)/../src/base \
-	-I$(srcdir)/../src/geolocation \
 	-I$(srcdir)/../src/storage \
 	-I$(srcdir)/../../xpcom/base \
 	-I$(topsrcdir)/dom/indexedDB \
