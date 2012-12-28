@@ -5,10 +5,8 @@
 
 #include "mozilla/Util.h"
 
-#include "nsIDOMHTMLTableSectionElem.h"
-#include "nsIDOMEventTarget.h"
+#include "mozilla/dom/HTMLTableSectionElement.h"
 #include "nsMappedAttributes.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
@@ -18,92 +16,48 @@
 #include "nsError.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+NS_IMPL_NS_NEW_HTML_ELEMENT(TableSection)
+DOMCI_NODE_DATA(HTMLTableSectionElement, mozilla::dom::HTMLTableSectionElement)
+
+namespace mozilla {
+namespace dom {
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
-class nsHTMLTableSectionElement : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLTableSectionElement
-{
-public:
-  nsHTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLTableSectionElement
-  NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsAttrValue& aResult);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableSectionElement,
-                                                     nsGenericHTMLElement)
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  nsRefPtr<nsContentList> mRows;
-};
-
-
-NS_IMPL_NS_NEW_HTML_ELEMENT(TableSection)
-
-
-nsHTMLTableSectionElement::nsHTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLTableSectionElement::HTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTableSectionElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableSectionElement,
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableSectionElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTableSectionElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRows)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableSectionElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableSectionElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLTableSectionElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLTableSectionElement, Element)
 
-
-DOMCI_NODE_DATA(HTMLTableSectionElement, nsHTMLTableSectionElement)
-
-// QueryInterface implementation for nsHTMLTableSectionElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTableSectionElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableSectionElement,
+// QueryInterface implementation for HTMLTableSectionElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLTableSectionElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLTableSectionElement,
                                    nsIDOMHTMLTableSectionElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTableSectionElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTableSectionElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableSectionElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLTableSectionElement)
+NS_IMPL_ELEMENT_CLONE(HTMLTableSectionElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, VAlign, valign)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Ch, _char)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, charoff)
+NS_IMPL_STRING_ATTR(HTMLTableSectionElement, Align, align)
+NS_IMPL_STRING_ATTR(HTMLTableSectionElement, VAlign, valign)
+NS_IMPL_STRING_ATTR(HTMLTableSectionElement, Ch, _char)
+NS_IMPL_STRING_ATTR(HTMLTableSectionElement, ChOff, charoff)
 
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
+HTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
   if (!mRows) {
     mRows = new nsContentList(this,
@@ -119,8 +73,8 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::InsertRow(int32_t aIndex,
-                                     nsIDOMHTMLElement** aValue)
+HTMLTableSectionElement::InsertRow(int32_t aIndex,
+                                   nsIDOMHTMLElement** aValue)
 {
   *aValue = nullptr;
 
@@ -175,7 +129,7 @@ nsHTMLTableSectionElement::InsertRow(int32_t aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::DeleteRow(int32_t aValue)
+HTMLTableSectionElement::DeleteRow(int32_t aValue)
 {
   if (aValue < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -213,10 +167,10 @@ nsHTMLTableSectionElement::DeleteRow(int32_t aValue)
 }
 
 bool
-nsHTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
-                                          nsIAtom* aAttribute,
-                                          const nsAString& aValue,
-                                          nsAttrValue& aResult)
+HTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
+                                        nsIAtom* aAttribute,
+                                        const nsAString& aValue,
+                                        nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     /* ignore these attributes, stored simply as strings
@@ -282,7 +236,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLTableSectionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableSectionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align }, 
@@ -302,7 +256,10 @@ nsHTMLTableSectionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
 
 nsMapRuleToAttributesFunc
-nsHTMLTableSectionElement::GetAttributeMappingFunction() const
+HTMLTableSectionElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla

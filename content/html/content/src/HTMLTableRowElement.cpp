@@ -5,14 +5,11 @@
 
 #include "mozilla/Util.h"
 
-#include "nsIDOMHTMLTableRowElement.h"
+#include "mozilla/dom/HTMLTableRowElement.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDOMHTMLTableCellElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsError.h"
 #include "nsMappedAttributes.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentList.h"
 #include "nsGkAtoms.h"
@@ -21,88 +18,41 @@
 #include "nsRuleData.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLTableRowElement : public nsGenericHTMLElement,
-                              public nsIDOMHTMLTableRowElement
-{
-public:
-  nsHTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLTableRowElement
-  NS_DECL_NSIDOMHTMLTABLEROWELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableRowElement,
-                                                     nsGenericHTMLElement)
-
-protected:
-  already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection() const;
-  already_AddRefed<nsIDOMHTMLTableElement> GetTable() const;
-  nsRefPtr<nsContentList> mCells;
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableRow)
+DOMCI_NODE_DATA(HTMLTableRowElement, mozilla::dom::HTMLTableRowElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLTableRowElement::nsHTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLTableRowElement::HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTableRowElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableRowElement,
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableRowElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTableRowElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCells)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableRowElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableRowElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLTableRowElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLTableRowElement, Element)
 
-
-DOMCI_NODE_DATA(HTMLTableRowElement, nsHTMLTableRowElement)
-
-// QueryInterface implementation for nsHTMLTableRowElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTableRowElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableRowElement,
+// QueryInterface implementation for HTMLTableRowElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLTableRowElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLTableRowElement,
                                    nsIDOMHTMLTableRowElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTableRowElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTableRowElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableRowElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLTableRowElement)
+NS_IMPL_ELEMENT_CLONE(HTMLTableRowElement)
 
 
 // protected method
 already_AddRefed<nsIDOMHTMLTableSectionElement>
-nsHTMLTableRowElement::GetSection() const
+HTMLTableRowElement::GetSection() const
 {
   nsCOMPtr<nsIDOMHTMLTableSectionElement> section =
     do_QueryInterface(GetParent());
@@ -111,7 +61,7 @@ nsHTMLTableRowElement::GetSection() const
 
 // protected method
 already_AddRefed<nsIDOMHTMLTableElement>
-nsHTMLTableRowElement::GetTable() const
+HTMLTableRowElement::GetTable() const
 {
   nsIContent* parent = GetParent();
   if (!parent) {
@@ -133,7 +83,7 @@ nsHTMLTableRowElement::GetTable() const
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::GetRowIndex(int32_t* aValue)
+HTMLTableRowElement::GetRowIndex(int32_t* aValue)
 {
   *aValue = -1;
   nsCOMPtr<nsIDOMHTMLTableElement> table = GetTable();
@@ -157,7 +107,7 @@ nsHTMLTableRowElement::GetRowIndex(int32_t* aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::GetSectionRowIndex(int32_t* aValue)
+HTMLTableRowElement::GetSectionRowIndex(int32_t* aValue)
 {
   *aValue = -1;
   nsCOMPtr<nsIDOMHTMLTableSectionElement> section = GetSection();
@@ -191,7 +141,7 @@ IsCell(nsIContent *aContent, int32_t aNamespaceID,
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
+HTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 {
   if (!mCells) {
     mCells = new nsContentList(this,
@@ -209,7 +159,7 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::InsertCell(int32_t aIndex, nsIDOMHTMLElement** aValue)
+HTMLTableRowElement::InsertCell(int32_t aIndex, nsIDOMHTMLElement** aValue)
 {
   *aValue = nullptr;
 
@@ -267,7 +217,7 @@ nsHTMLTableRowElement::InsertCell(int32_t aIndex, nsIDOMHTMLElement** aValue)
 
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::DeleteCell(int32_t aValue)
+HTMLTableRowElement::DeleteCell(int32_t aValue)
 {
   if (aValue < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -304,18 +254,18 @@ nsHTMLTableRowElement::DeleteCell(int32_t aValue)
   return RemoveChild(cell, getter_AddRefs(retChild));
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, BgColor, bgcolor)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, _char)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, charoff)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
+NS_IMPL_STRING_ATTR(HTMLTableRowElement, Align, align)
+NS_IMPL_STRING_ATTR(HTMLTableRowElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(HTMLTableRowElement, Ch, _char)
+NS_IMPL_STRING_ATTR(HTMLTableRowElement, ChOff, charoff)
+NS_IMPL_STRING_ATTR(HTMLTableRowElement, VAlign, valign)
 
 
 bool
-nsHTMLTableRowElement::ParseAttribute(int32_t aNamespaceID,
-                                      nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsAttrValue& aResult)
+HTMLTableRowElement::ParseAttribute(int32_t aNamespaceID,
+                                    nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   /*
    * ignore these attributes, stored simply as strings
@@ -389,7 +339,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLTableRowElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableRowElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },
@@ -408,7 +358,10 @@ nsHTMLTableRowElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 nsMapRuleToAttributesFunc
-nsHTMLTableRowElement::GetAttributeMappingFunction() const
+HTMLTableRowElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla
