@@ -41,11 +41,16 @@ class runnable_args_base : public nsRunnable {
 // Temporary hack. Really we want to have a template which will do this
 static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, nsIRunnable *runnable, uint32_t flags) {
   RefPtr<nsIRunnable> runnable_ref(runnable);
-  
-  if (thread && (thread != nsRefPtr<nsIThread>(do_GetCurrentThread()))) {
-    return thread->Dispatch(runnable_ref, flags);
+  if (thread) {
+    bool on;
+    nsresult rv;
+    rv = thread->IsOnCurrentThread(&on);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if(!on) {
+      return thread->Dispatch(runnable_ref, flags);
+    }
   }
-
   return runnable_ref->Run();
 }
 
