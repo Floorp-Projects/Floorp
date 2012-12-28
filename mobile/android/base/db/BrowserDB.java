@@ -277,7 +277,7 @@ public class BrowserDB {
         return sDb.getPinnedSites(cr, limit);
     }
 
-    private static class PinnedSite {
+    public static class PinnedSite {
         public String title = "";
         public String url = "";
 
