@@ -2,21 +2,26 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsIDOMHTMLTableElement.h"
+#ifndef mozilla_dom_HTMLTableElement_h
+#define mozilla_dom_HTMLTableElement_h
+
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLTableElement.h"
 #include "nsMappedAttributes.h"
+
+namespace mozilla {
+namespace dom {
 
 #define TABLE_ATTRS_DIRTY ((nsMappedAttributes*)0x1)
 
-
 class TableRowsCollection;
 
-class nsHTMLTableElement :  public nsGenericHTMLElement,
-                            public nsIDOMHTMLTableElement
+class HTMLTableElement : public nsGenericHTMLElement,
+                         public nsIDOMHTMLTableElement
 {
 public:
-  nsHTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLTableElement();
+  HTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLTableElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -61,7 +66,7 @@ public:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTableElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTableElement,
                                            nsGenericHTMLElement)
   nsMappedAttributes* GetAttributesMappedForCell();
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetTHead() {
@@ -89,3 +94,7 @@ protected:
   }
 };
 
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_HTMLTableElement_h */

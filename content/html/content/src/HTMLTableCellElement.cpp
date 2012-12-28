@@ -5,13 +5,12 @@
 
 #include "mozilla/Util.h"
 
+#include "mozilla/dom/HTMLTableCellElement.h"
+#include "mozilla/dom/HTMLTableElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
-#include "nsHTMLTableElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -20,93 +19,42 @@
 #include "nsRuleWalker.h"
 #include "celldata.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLTableCellElement : public nsGenericHTMLElement,
-                               public nsIDOMHTMLTableCellElement
-{
-public:
-  nsHTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLTableCellElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLTableCellElement
-  NS_DECL_NSIDOMHTMLTABLECELLELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsAttrValue& aResult);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  nsHTMLTableElement* GetTable() const;
-
-  already_AddRefed<nsIDOMHTMLTableRowElement> GetRow() const;
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCell)
+DOMCI_NODE_DATA(HTMLTableCellElement, mozilla::dom::HTMLTableCellElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLTableCellElement::nsHTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLTableCellElement::~HTMLTableCellElement()
 {
 }
 
-nsHTMLTableCellElement::~nsHTMLTableCellElement()
-{
-}
+NS_IMPL_ADDREF_INHERITED(HTMLTableCellElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLTableCellElement, Element)
 
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLTableCellElement, nsHTMLTableCellElement)
-
-// QueryInterface implementation for nsHTMLTableCellElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLTableCellElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableCellElement,
+// QueryInterface implementation for HTMLTableCellElement
+NS_INTERFACE_TABLE_HEAD(HTMLTableCellElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLTableCellElement,
                                    nsIDOMHTMLTableCellElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTableCellElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTableCellElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableCellElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLTableCellElement)
+NS_IMPL_ELEMENT_CLONE(HTMLTableCellElement)
 
 
 // protected method
 already_AddRefed<nsIDOMHTMLTableRowElement>
-nsHTMLTableCellElement::GetRow() const
+HTMLTableCellElement::GetRow() const
 {
   nsCOMPtr<nsIDOMHTMLTableRowElement> row = do_QueryInterface(GetParent());
   return row.forget();
 }
 
 // protected method
-nsHTMLTableElement*
-nsHTMLTableCellElement::GetTable() const
+HTMLTableElement*
+HTMLTableCellElement::GetTable() const
 {
   nsIContent *parent = GetParent();
   if (!parent) {
@@ -121,20 +69,20 @@ nsHTMLTableCellElement::GetTable() const
 
   if (section->IsHTML(nsGkAtoms::table)) {
     // XHTML, without a row group.
-    return static_cast<nsHTMLTableElement*>(section);
+    return static_cast<HTMLTableElement*>(section);
   }
 
   // We have a row group.
   nsIContent* result = section->GetParent();
   if (result && result->IsHTML(nsGkAtoms::table)) {
-    return static_cast<nsHTMLTableElement*>(result);
+    return static_cast<HTMLTableElement*>(result);
   }
 
   return nullptr;
 }
 
 NS_IMETHODIMP
-nsHTMLTableCellElement::GetCellIndex(int32_t* aCellIndex)
+HTMLTableCellElement::GetCellIndex(int32_t* aCellIndex)
 {
   *aCellIndex = -1;
 
@@ -169,12 +117,12 @@ nsHTMLTableCellElement::GetCellIndex(int32_t* aCellIndex)
 
 
 NS_IMETHODIMP
-nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
+HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsresult rv = nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsHTMLTableElement* table = GetTable()) {
+  if (HTMLTableElement* table = GetTable()) {
     nsMappedAttributes* tableInheritedAttributes =
       table->GetAttributesMappedForCell();
     if (tableInheritedAttributes) {
@@ -185,23 +133,23 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Abbr, abbr)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Axis, axis)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, BgColor, bgcolor)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Ch, _char)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, ChOff, charoff)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, ColSpan, colspan, 1)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Headers, headers)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Height, height)
-NS_IMPL_BOOL_ATTR(nsHTMLTableCellElement, NoWrap, nowrap)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, RowSpan, rowspan, 1)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Scope, scope)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, VAlign, valign)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Width, width)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Abbr, abbr)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Axis, axis)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Ch, _char)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, ChOff, charoff)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(HTMLTableCellElement, ColSpan, colspan, 1)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Headers, headers)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Height, height)
+NS_IMPL_BOOL_ATTR(HTMLTableCellElement, NoWrap, nowrap)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(HTMLTableCellElement, RowSpan, rowspan, 1)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Scope, scope)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, VAlign, valign)
+NS_IMPL_STRING_ATTR(HTMLTableCellElement, Width, width)
 
 
 NS_IMETHODIMP
-nsHTMLTableCellElement::GetAlign(nsAString& aValue)
+HTMLTableCellElement::GetAlign(nsAString& aValue)
 {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue)) {
     // There's no align attribute, ask the row for the alignment.
@@ -215,7 +163,7 @@ nsHTMLTableCellElement::GetAlign(nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
+HTMLTableCellElement::SetAlign(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue, true);
 }
@@ -230,10 +178,10 @@ static const nsAttrValue::EnumTable kCellScopeTable[] = {
 };
 
 bool
-nsHTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
-                                       nsIAtom* aAttribute,
-                                       const nsAString& aValue,
-                                       nsAttrValue& aResult)
+HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
+                                     nsIAtom* aAttribute,
+                                     const nsAString& aValue,
+                                     nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     /* ignore these attributes, stored simply as strings
@@ -370,7 +318,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLTableCellElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableCellElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align }, 
@@ -399,7 +347,10 @@ nsHTMLTableCellElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 nsMapRuleToAttributesFunc
-nsHTMLTableCellElement::GetAttributeMappingFunction() const
+HTMLTableCellElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla
