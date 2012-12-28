@@ -8,6 +8,7 @@ import time
 import tempfile
 import re
 import traceback
+import shutil
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
@@ -173,6 +174,8 @@ class RemoteOptions(MochitestOptions):
                 return None
             options.robocopIds = os.path.abspath(options.robocopIds)
 
+        # allow us to keep original application around for cleanup while running robocop via 'am'
+        options.remoteappname = options.app
         return options
 
     def verifyOptions(self, options, mochitest):
@@ -294,6 +297,18 @@ class MochiRemote(Mochitest):
         manifest = Mochitest.buildProfile(self, options)
         self.localProfile = options.profilePath
         self._dm.removeDir(self.remoteProfile)
+
+        # we do not need this for robotium based tests, lets save a LOT of time
+        if options.robocop:
+            shutil.rmtree(os.path.join(options.profilePath, 'webapps'))
+            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'mochikit@mozilla.org'))
+            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
+            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'workerbootstrap-test@mozilla.org'))
+            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'special-powers@mozilla.org'))
+            os.remove(os.path.join(options.profilePath, 'tests.jar'))
+            os.remove(os.path.join(options.profilePath, 'userChrome.css'))
+            os.remove(os.path.join(options.profilePath, 'tests.manifest'))
+
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
         except devicemanager.DMError:
@@ -309,12 +324,14 @@ class MochiRemote(Mochitest):
         options.profilePath = self.localProfile
         env["MOZ_HIDE_RESULTS_TABLE"] = "1"
         retVal = Mochitest.buildURLOptions(self, options, env)
-        #we really need testConfig.js (for browser chrome)
-        try:
-            self._dm.pushDir(options.profilePath, self.remoteProfile)
-        except devicemanager.DMError:
-            print "Automation Error: Unable to copy profile to device."
-            raise
+
+        if not options.robocop:
+            #we really need testConfig.js (for browser chrome)
+            try:
+                self._dm.pushDir(options.profilePath, self.remoteProfile)
+            except devicemanager.DMError:
+                print "Automation Error: Unable to copy profile to device."
+                raise
 
         options.profilePath = self.remoteProfile
         options.logFile = self.localLog
@@ -497,7 +514,6 @@ def main():
         if (options.dm_trans == 'adb' and options.robocopPath):
           dm._checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
 
-        appname = options.app
         retVal = None
         for test in robocop_tests:
             if options.testPath and options.testPath != test['name']:
@@ -505,8 +521,8 @@ def main():
 
             options.app = "am"
             options.browserArgs = ["instrument", "-w", "-e", "deviceroot", deviceRoot, "-e", "class"]
-            options.browserArgs.append("%s.tests.%s" % (appname, test['name']))
-            options.browserArgs.append("org.mozilla.roboexample.test/%s.FennecInstrumentationTestRunner" % appname)
+            options.browserArgs.append("%s.tests.%s" % (options.remoteappname, test['name']))
+            options.browserArgs.append("org.mozilla.roboexample.test/%s.FennecInstrumentationTestRunner" % options.remoteappname)
 
             try:
                 dm.recordLogcat()
