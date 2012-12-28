@@ -44,7 +44,7 @@ public class AwesomeBarTabs extends TabHost
     private static final int MAX_RESULTS = 100;
 
     public interface OnUrlOpenListener {
-        public void onUrlOpen(String url);
+        public void onUrlOpen(String url, String title);
         public void onSearch(String engine, String text);
         public void onEditSuggestion(String suggestion);
     }
