@@ -11,6 +11,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.PinnedSite;
+import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -45,7 +46,10 @@ import android.text.style.StyleSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.ContextMenu;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -173,6 +177,29 @@ public class AboutHomeContent extends ScrollView
 
                 if (mUriLoadCallback != null)
                     mUriLoadCallback.callback(spec);
+            }
+        });
+
+        mTopSitesGrid.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
+                mTopSitesGrid.setSelectedPosition(info.position);
+
+                MenuInflater inflater = mActivity.getMenuInflater();
+                inflater.inflate(R.menu.abouthome_topsites_contextmenu, menu);
+
+                // If nothing is pinned at all, hide both clear items
+                TopSitesCursorWrapper cursor = (TopSitesCursorWrapper)mTopSitesAdapter.getCursor();
+                if (!cursor.hasPinnedSites()) {
+                    menu.findItem(R.id.abouthome_topsites_clearall).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_clear).setVisible(false);
+                } else {
+                    // If there's nothing pinned here, hide the clear item
+                    PinnedSite site = cursor.getPinnedSite(info.position);
+                    if (site == null) {
+                        menu.findItem(R.id.abouthome_topsites_clear).setVisible(false);
+                    }
+                }
             }
         });
 
@@ -740,6 +767,8 @@ public class AboutHomeContent extends ScrollView
     }
 
     public static class TopSitesGridView extends GridView {
+        int mSelected = -1;
+
         public TopSitesGridView(Context context, AttributeSet attrs) {
             super(context, attrs);
         }
@@ -783,6 +812,14 @@ public class AboutHomeContent extends ScrollView
             heightMeasureSpec = MeasureSpec.makeMeasureSpec((int)(w*ThumbnailHelper.THUMBNAIL_ASPECT_RATIO*numRows) + getPaddingTop() + getPaddingBottom(),
                                                                  MeasureSpec.EXACTLY);
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+
+        public void setSelectedPosition(int position) {
+            mSelected = position;
+        }
+
+        public int getSelectedPosition() {
+            return mSelected;
         }
     }
 
@@ -849,6 +886,68 @@ public class AboutHomeContent extends ScrollView
         }
     }
 
+    private void clearThumbnail(TopSitesViewHolder holder) {
+        holder.titleView.setText("");
+        holder.url = "";
+        holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
+        holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+    }
+
+    public void clearAllSites() {
+        final ContentResolver resolver = mActivity.getContentResolver();
+
+        // Clear the view quickly to make things appear responsive
+        for (int i = 0; i < mTopSitesGrid.getChildCount(); i++) {
+            View v = mTopSitesGrid.getChildAt(i);
+            TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+            clearThumbnail(holder);
+        }
+
+        (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+            @Override
+            public Void doInBackground(Void... params) {
+                ContentResolver resolver = mActivity.getContentResolver();
+                BrowserDB.unpinAllSites(resolver);
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void v) {
+                update(EnumSet.of(UpdateFlags.TOP_SITES));
+            }
+        }).execute();
+    }
+
+    public void clearSite() {
+        final int position = mTopSitesGrid.getSelectedPosition();
+        View v = mTopSitesGrid.getChildAt(position);
+        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+
+        // Quickly update the view so that there isn't as much lag between the request and response
+        clearThumbnail(holder);
+        (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+            @Override
+            public Void doInBackground(Void... params) {
+                ContentResolver resolver = mActivity.getContentResolver();
+                BrowserDB.unpinSite(resolver, position);
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void v) {
+                update(EnumSet.of(UpdateFlags.TOP_SITES));
+            }
+        }).execute();
+    }
+
+    public void editSite() {
+        int position = mTopSitesGrid.getSelectedPosition();
+       View v = mTopSitesGrid.getChildAt(position);
+
+        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+        editSite(holder.url, position);
+    }
+
     // Edit the site at position. Provide a url to start editing with
     public void editSite(String url, final int position) {
         Intent intent = new Intent(mContext, AwesomeBar.class);
@@ -868,6 +967,7 @@ public class AboutHomeContent extends ScrollView
                     @Override
                     public Void doInBackground(Void... params) {
                         final ContentResolver resolver = mActivity.getContentResolver();
+                        Log.i(LOGTAG, "Pin : " + url + " and " + title);
                         BrowserDB.pinSite(resolver, url, (title == null ? url : title), position);
                         return null;
                     }
