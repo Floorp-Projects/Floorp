@@ -8,7 +8,6 @@ function test() {
   waitForExplicitFinish();
 
   registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("browser.sessionstore.interval");
     ss.setBrowserState(originalState);
   });
 
@@ -34,8 +33,6 @@ function runNextTest() {
     let currentTest = tests.shift();
     waitForBrowserState(testState, currentTest);
   } else {
-    Services.prefs.clearUserPref("browser.sessionstore.interval");
-    ss.setBrowserState(originalState);
     finish();
   }
 }
@@ -105,33 +102,34 @@ function test_2() {
 // Test opening default-normal-private-normal windows and closing a normal window
 function test_3() {
   testOnWindow(false, function(normalWindow) {
-    let tab = normalWindow.gBrowser.addTab("http://www.example.com/1");
-    whenBrowserLoaded(tab.linkedBrowser, function() {
+    waitForTabLoad(normalWindow, "http://www.example.com/", function() {
       testOnWindow(true, function(aWindow) {
-        aWindow.gBrowser.addTab("http://www.example.com/2");
-        testOnWindow(false, function(aWindow) {
-          aWindow.gBrowser.addTab("http://www.example.com/3");
+        waitForTabLoad(aWindow, "http://www.example.com/", function() {
+          testOnWindow(false, function(aWindow) {
+            waitForTabLoad(aWindow, "http://www.example.com/", function() {
 
-          let curState = JSON.parse(ss.getBrowserState());
-          is (curState.windows.length, 4, "Browser has opened 4 windows");
-          is (curState.windows[2].isPrivate, true, "Window 2 is private");
-          is (curState.selectedWindow, 4, "Last window opened is the one selected");
+              let curState = JSON.parse(ss.getBrowserState());
+              is(curState.windows.length, 4, "Browser has opened 4 windows");
+              is(curState.windows[2].isPrivate, true, "Window 2 is private");
+              is(curState.selectedWindow, 4, "Last window opened is the one selected");
 
-          waitForWindowClose(normalWindow, function() {
-            forceWriteState(function(state) {
-              is(state.windows.length, 2,
-                 "sessionstore state: 2 windows in data being writted to disk");
-              is(state.selectedWindow, 2,
-                 "Selected window is updated to match one of the saved windows");
-              state.windows.forEach(function(win) {
-                is(!win.isPrivate, true, "Saved window is not private");
+              waitForWindowClose(normalWindow, function() {
+                forceWriteState(function(state) {
+                  is(state.windows.length, 2,
+                     "sessionstore state: 2 windows in data being writted to disk");
+                  is(state.selectedWindow, 2,
+                     "Selected window is updated to match one of the saved windows");
+                  state.windows.forEach(function(win) {
+                    is(!win.isPrivate, true, "Saved window is not private");
+                  });
+                  is(state._closedWindows.length, 1,
+                     "sessionstore state: 1 closed window in data being writted to disk");
+                  state._closedWindows.forEach(function(win) {
+                    is(!win.isPrivate, true, "Closed window is not private");
+                  });
+                  runNextTest();
+                });
               });
-              is(state._closedWindows.length, 1,
-                 "sessionstore state: 1 closed window in data being writted to disk");
-              state._closedWindows.forEach(function(win) {
-                is(!win.isPrivate, true, "Closed window is not private");
-              });
-              runNextTest();
             });
           });
         });
@@ -141,30 +139,27 @@ function test_3() {
 }
 
 function waitForWindowClose(aWin, aCallback) {
-  Services.obs.addObserver(function observe(aSubject, aTopic, aData) {
-    if (aTopic == "domwindowclosed" && aWin == aSubject) {
-      Services.obs.removeObserver(observe, aTopic);
-      checkWindowIsClosed(aWin, aCallback);
+  let winCount = JSON.parse(ss.getBrowserState()).windows.length;
+  aWin.addEventListener("SSWindowClosing", function onWindowClosing() {
+    aWin.removeEventListener("SSWindowClosing", onWindowClosing, false);
+    function checkCount() {
+      let state = JSON.parse(ss.getBrowserState());
+      if (state.windows.length == (winCount - 1)) {
+        aCallback();
+      } else {
+        executeSoon(checkCount);
+      }
     }
-  }, "domwindowclosed", false);
+    executeSoon(checkCount);
+  }, false);
   aWin.close();
-}
-
-function checkWindowIsClosed(aWin, aCallback) {
-  if (aWin.closed) {
-    info("Window is closed");
-    executeSoon(aCallback);
-  } else {
-    executeSoon(function() {
-      checkWindowIsClosed(aWin, aCallback);
-    });
-  }
 }
 
 function forceWriteState(aCallback) {
   Services.obs.addObserver(function observe(aSubject, aTopic, aData) {
     if (aTopic == "sessionstore-state-write") {
       Services.obs.removeObserver(observe, aTopic);
+      Services.prefs.clearUserPref("browser.sessionstore.interval");
       aSubject.QueryInterface(Ci.nsISupportsString);
       aCallback(JSON.parse(aSubject.data));
     }
@@ -178,4 +173,12 @@ function testOnWindow(aIsPrivate, aCallback) {
     win.removeEventListener("load", onLoad, false);
     executeSoon(function() { aCallback(win); });
   }, false);
+}
+
+function waitForTabLoad(aWin, aURL, aCallback) {
+  aWin.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
+    aWin.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+    aCallback();
+  }, true);
+  aWin.gBrowser.selectedBrowser.loadURI(aURL);
 }
