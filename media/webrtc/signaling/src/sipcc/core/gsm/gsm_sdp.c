@@ -200,6 +200,7 @@ void gsmsdp_process_cap_constraint(cc_media_cap_t *cap,
     cap->support_direction &= ~SDP_DIRECTION_FLAG_RECV;
   } else if (constraint[0] == 'T') {
     cap->support_direction |= SDP_DIRECTION_FLAG_RECV;
+    cap->enabled = TRUE;
   }
 }
 
