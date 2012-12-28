@@ -16,6 +16,7 @@
 #include "jsnum.h"
 #include "jsobjinlines.h"
 #include "shared/Lowering-shared-inl.h"
+#include "mozilla/DebugOnly.h"
 
 using namespace js;
 using namespace ion;
@@ -282,9 +283,16 @@ LIRGenerator::visitCall(MCall *call)
     // Call DOM functions.
     if (call->isDOMFunction()) {
         JS_ASSERT(target && target->isNative());
-        LCallDOMNative *lir = new LCallDOMNative(argslot, tempFixed(CallTempReg0),
-                                                 tempFixed(CallTempReg1), tempFixed(CallTempReg2),
-                                                 tempFixed(CallTempReg3), tempFixed(CallTempReg4));
+        Register cxReg, objReg, privReg, argcReg, valueReg;
+        GetTempRegForIntArg(0, 0, &cxReg);
+        GetTempRegForIntArg(1, 0, &objReg);
+        GetTempRegForIntArg(2, 0, &privReg);
+        GetTempRegForIntArg(3, 0, &argcReg);
+        mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(4, 0, &valueReg);
+        MOZ_ASSERT(ok, "How can we not have five temp registers?");
+        LCallDOMNative *lir = new LCallDOMNative(argslot, tempFixed(cxReg),
+                                                 tempFixed(objReg), tempFixed(privReg),
+                                                 tempFixed(argcReg), tempFixed(valueReg));
         return (defineReturn(lir, call) && assignSafepoint(lir, call));
     }
 
@@ -2144,11 +2152,23 @@ LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
 {
     MDefinition *val = ins->value();
 
-    LSetDOMProperty *lir = new LSetDOMProperty(tempFixed(CallTempReg0),
-                                               useFixed(ins->object(), CallTempReg1),
-                                               tempFixed(CallTempReg2),
-                                               tempFixed(CallTempReg3));
-    if (!useBoxFixed(lir, LSetDOMProperty::Value, val, CallTempReg4, CallTempReg5))
+    Register cxReg, objReg, privReg, valueReg;
+    GetTempRegForIntArg(0, 0, &cxReg);
+    GetTempRegForIntArg(1, 0, &objReg);
+    GetTempRegForIntArg(2, 0, &privReg);
+    GetTempRegForIntArg(3, 0, &valueReg);
+    LSetDOMProperty *lir = new LSetDOMProperty(tempFixed(cxReg),
+                                               useFixed(ins->object(), objReg),
+                                               tempFixed(privReg),
+                                               tempFixed(valueReg));
+
+    // Keep using GetTempRegForIntArg, since we want to make sure we
+    // don't clobber registers we're already using.
+    Register tempReg1, tempReg2;
+    GetTempRegForIntArg(2, 0, &tempReg1);
+    mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &tempReg2);
+    MOZ_ASSERT(ok, "How can we not have six temp registers?");
+    if (!useBoxFixed(lir, LSetDOMProperty::Value, val, tempReg1, tempReg2))
         return false;
 
     return add(lir, ins) && assignSafepoint(lir, ins);
@@ -2157,10 +2177,16 @@ LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
 bool
 LIRGenerator::visitGetDOMProperty(MGetDOMProperty *ins)
 {
-    LGetDOMProperty *lir = new LGetDOMProperty(tempFixed(CallTempReg0),
-                                               useFixed(ins->object(), CallTempReg1),
-                                               tempFixed(CallTempReg2),
-                                               tempFixed(CallTempReg3));
+    Register cxReg, objReg, privReg, valueReg;
+    GetTempRegForIntArg(0, 0, &cxReg);
+    GetTempRegForIntArg(1, 0, &objReg);
+    GetTempRegForIntArg(2, 0, &privReg);
+    mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &valueReg);
+    MOZ_ASSERT(ok, "How can we not have four temp registers?");
+    LGetDOMProperty *lir = new LGetDOMProperty(tempFixed(cxReg),
+                                               useFixed(ins->object(), objReg),
+                                               tempFixed(privReg),
+                                               tempFixed(valueReg));
 
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
