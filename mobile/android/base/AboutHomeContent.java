@@ -336,8 +336,13 @@ public class AboutHomeContent extends ScrollView
 
             Cursor c = (Cursor) mTopSitesAdapter.getItem(i);
             final String url = c.getString(c.getColumnIndex(URLColumns.URL));
-
-            displayThumbnail(view, thumbnails.get(url));
+            if (TextUtils.isEmpty(url)) {
+                ImageView thumbnailView = (ImageView) view.findViewById(R.id.thumbnail);
+                thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
+                thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            } else {
+                displayThumbnail(view, thumbnails.get(url));
+            }
         }
 
         mTopSitesGrid.invalidate();
@@ -806,6 +811,11 @@ public class AboutHomeContent extends ScrollView
             }
 
             titleView.setText(title);
+            if (TextUtils.isEmpty(title)) {
+                titleView.setVisibility(View.GONE);
+            } else {
+                titleView.setVisibility(View.VISIBLE);
+            }
             return true;
         }
 
