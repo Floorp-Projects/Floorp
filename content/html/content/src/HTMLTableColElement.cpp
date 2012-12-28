@@ -5,102 +5,54 @@
 
 #include "mozilla/Util.h"
 
-#include "nsIDOMHTMLTableColElement.h"
-#include "nsIDOMEventTarget.h"
+#include "mozilla/dom/HTMLTableColElement.h"
 #include "nsMappedAttributes.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsRuleData.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
+DOMCI_NODE_DATA(HTMLTableColElement, mozilla::dom::HTMLTableColElement)
+
+namespace mozilla {
+namespace dom {
 
 // use the same protection as ancient code did 
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
 #define MAX_COLSPAN 1000
 
-class nsHTMLTableColElement : public nsGenericHTMLElement,
-                              public nsIDOMHTMLTableColElement
-{
-public:
-  nsHTMLTableColElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLTableColElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLTableColElement
-  NS_DECL_NSIDOMHTMLTABLECOLELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
-
-NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
-
-
-nsHTMLTableColElement::nsHTMLTableColElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLTableColElement::~HTMLTableColElement()
 {
 }
 
-nsHTMLTableColElement::~nsHTMLTableColElement()
-{
-}
+NS_IMPL_ADDREF_INHERITED(HTMLTableColElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLTableColElement, Element)
 
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableColElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLTableColElement, nsHTMLTableColElement)
-
-// QueryInterface implementation for nsHTMLTableColElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLTableColElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableColElement,
+// QueryInterface implementation for HTMLTableColElement
+NS_INTERFACE_TABLE_HEAD(HTMLTableColElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLTableColElement,
                                    nsIDOMHTMLTableColElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTableColElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTableColElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableColElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLTableColElement)
+NS_IMPL_ELEMENT_CLONE(HTMLTableColElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Ch, _char)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, ChOff, charoff)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableColElement, Span, span, 1)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, VAlign, valign)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
+NS_IMPL_STRING_ATTR(HTMLTableColElement, Align, align)
+NS_IMPL_STRING_ATTR(HTMLTableColElement, Ch, _char)
+NS_IMPL_STRING_ATTR(HTMLTableColElement, ChOff, charoff)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(HTMLTableColElement, Span, span, 1)
+NS_IMPL_STRING_ATTR(HTMLTableColElement, VAlign, valign)
+NS_IMPL_STRING_ATTR(HTMLTableColElement, Width, width)
 
 
 bool
-nsHTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
-                                      nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsAttrValue& aResult)
+HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
+                                    nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     /* ignore these attributes, stored simply as strings ch */
@@ -189,7 +141,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::width },
@@ -209,7 +161,10 @@ nsHTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
 
 nsMapRuleToAttributesFunc
-nsHTMLTableColElement::GetAttributeMappingFunction() const
+HTMLTableColElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla

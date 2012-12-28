@@ -45,6 +45,12 @@ EXPORTS_mozilla/dom = \
 		HTMLScriptElement.h \
 		HTMLSharedListElement.h \
 		HTMLSpanElement.h \
+		HTMLTableCaptionElement.h \
+		HTMLTableCellElement.h \
+		HTMLTableColElement.h \
+		HTMLTableElement.h \
+		HTMLTableRowElement.h \
+		HTMLTableSectionElement.h \
 		HTMLTitleElement.h \
 		HTMLUnknownElement.h \
 		UndoManager.h \
@@ -101,12 +107,12 @@ CPPSRCS		= \
 		HTMLSpanElement.cpp \
 		HTMLSharedListElement.cpp \
 		nsHTMLStyleElement.cpp \
-		nsHTMLTableElement.cpp \
-		nsHTMLTableCaptionElement.cpp \
-		nsHTMLTableCellElement.cpp \
-		nsHTMLTableColElement.cpp \
-		nsHTMLTableRowElement.cpp \
-		nsHTMLTableSectionElement.cpp \
+		HTMLTableElement.cpp \
+		HTMLTableCaptionElement.cpp \
+		HTMLTableCellElement.cpp \
+		HTMLTableColElement.cpp \
+		HTMLTableRowElement.cpp \
+		HTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
 		HTMLTitleElement.cpp \
 		HTMLUnknownElement.cpp \
