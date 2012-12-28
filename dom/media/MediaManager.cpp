@@ -668,13 +668,13 @@ public:
      * we decide to provide a stream from a device already allocated).
      */
     for (i = 0; i < videoCount; i++) {
-      nsRefPtr<MediaEngineVideoSource> vSource = videoSources[i];
+      MediaEngineVideoSource *vSource = videoSources[i];
       if (vSource->IsAvailable()) {
         devices->AppendElement(new MediaDevice(vSource));
       }
     }
     for (i = 0; i < audioCount; i++) {
-      nsRefPtr<MediaEngineAudioSource> aSource = audioSources[i];
+      MediaEngineAudioSource *aSource = audioSources[i];
       if (aSource->IsAvailable()) {
         devices->AppendElement(new MediaDevice(aSource));
       }
@@ -966,6 +966,7 @@ MediaManager::OnNavigation(uint64_t aWindowID)
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
       listeners->ElementAt(i);
     listener->Invalidate();
+    listener->Remove();
   }
   listeners->Clear();
 
