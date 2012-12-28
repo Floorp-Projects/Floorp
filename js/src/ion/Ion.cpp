@@ -1135,7 +1135,7 @@ AttachFinishedCompilations(JSContext *cx)
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
 template <typename CompileContext>
-static bool
+static AbortReason
 IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing,
            CompileContext &compileContext)
 {
@@ -1149,31 +1149,31 @@ IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *o
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)
-        return false;
+        return AbortReason_Alloc;
 
     AutoDestroyAllocator autoDestroy(alloc);
 
     TempAllocator *temp = alloc->new_<TempAllocator>(alloc);
     if (!temp)
-        return false;
+        return AbortReason_Alloc;
 
     IonContext ictx(cx, cx->compartment, temp);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
-        return false;
+        return AbortReason_Alloc;
 
     MIRGraph *graph = alloc->new_<MIRGraph>(temp);
     ExecutionMode executionMode = compileContext.executionMode();
     CompileInfo *info = alloc->new_<CompileInfo>(script, fun, osrPc, constructing,
                                                  executionMode);
     if (!info)
-        return false;
+        return AbortReason_Alloc;
 
     types::AutoEnterTypeInference enter(cx, true);
     TypeInferenceOracle oracle;
 
     if (!oracle.init(cx, script))
-        return false;
+        return AbortReason_Disable;
 
     AutoFlushCache afc("IonCompile");
 
@@ -1185,10 +1185,10 @@ IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *o
     IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &oracle, info);
     if (!compileContext.compile(builder, graph, autoDestroy)) {
         IonSpew(IonSpew_Abort, "IM Compilation failed.");
-        return false;
+        return builder->abortReason();
     }
 
-    return true;
+    return AbortReason_NoAbort;
 }
 
 bool
@@ -1245,16 +1245,27 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     return success;
 }
 
-bool
+MethodStatus
 TestIonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing)
 {
     SequentialCompileContext compileContext;
-    if (!IonCompile(cx, script, fun, osrPc, constructing, compileContext)) {
+
+    AbortReason reason = IonCompile(cx, script, fun, osrPc, constructing, compileContext);
+
+    if (reason == AbortReason_Alloc)
+        return Method_Skipped;
+
+    if (reason == AbortReason_Inlining)
+        return Method_Skipped;
+
+    if (reason == AbortReason_Disable) {
         if (!cx->isExceptionPending())
             ForbidCompilation(cx, script);
-        return false;
+        return Method_CantCompile;
     }
-    return true;
+
+    JS_ASSERT(reason == AbortReason_NoAbort);
+    return Method_Compiled;
 }
 
 static bool
@@ -1370,10 +1381,12 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
     }
 
     SequentialCompileContext compileContext;
-    if (!IonCompile(cx, script, fun, osrPc, constructing, compileContext))
+
+    AbortReason reason = IonCompile(cx, script, fun, osrPc, constructing, compileContext);
+    if (reason == AbortReason_Disable)
         return Method_CantCompile;
 
-    // Compilation succeeded, but we invalidated right away.
+    // Compilation succeeded or we invalidated right away or an inlining/alloc abort
     return script->hasIonScript() ? Method_Compiled : Method_Skipped;
 }
 
