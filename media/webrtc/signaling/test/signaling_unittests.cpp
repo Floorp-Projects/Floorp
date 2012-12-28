@@ -982,11 +982,29 @@ TEST_F(SignalingTest, CreateOfferAudioVideoConstraintUndefined)
   CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
 }
 
-TEST_F(SignalingTest, CreateOfferNoVideoStream)
+TEST_F(SignalingTest, CreateOfferNoVideoStreamRecvVideo)
 {
   sipcc::MediaConstraints constraints;
   constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  CreateOffer(constraints, OFFER_AUDIO,
+              SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO);
+}
+
+TEST_F(SignalingTest, CreateOfferNoAudioStreamRecvAudio)
+{
+  sipcc::MediaConstraints constraints;
+  constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  CreateOffer(constraints, OFFER_VIDEO,
+              SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
+}
+
+TEST_F(SignalingTest, CreateOfferNoVideoStream)
+{
+  sipcc::MediaConstraints constraints;
+  constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  constraints.setBooleanConstraint("OfferToReceiveVideo", false, false);
   CreateOffer(constraints, OFFER_AUDIO,
               SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
 }
@@ -994,7 +1012,7 @@ TEST_F(SignalingTest, CreateOfferNoVideoStream)
 TEST_F(SignalingTest, CreateOfferNoAudioStream)
 {
   sipcc::MediaConstraints constraints;
-  constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  constraints.setBooleanConstraint("OfferToReceiveAudio", false, false);
   constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   CreateOffer(constraints, OFFER_VIDEO,
               SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -1114,10 +1132,23 @@ TEST_F(SignalingTest, OfferAnswerDontReceiveVideoOnAnswer)
               SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO);
 }
 
-TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnOffer)
+TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnOfferRecvAudio)
 {
   sipcc::MediaConstraints offerconstraints;
   offerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  offerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  sipcc::MediaConstraints answerconstraints;
+  answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  answerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  OfferAnswer(offerconstraints, answerconstraints, OFFER_VIDEO | ANSWER_AV,
+              false, SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO,
+              SHOULD_SEND_AUDIO | SHOULD_SENDRECV_VIDEO);
+}
+
+TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnOffer)
+{
+  sipcc::MediaConstraints offerconstraints;
+  offerconstraints.setBooleanConstraint("OfferToReceiveAudio", false, false);
   offerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   sipcc::MediaConstraints answerconstraints;
   answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
@@ -1127,11 +1158,24 @@ TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnOffer)
               SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
 
-TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnOffer)
+TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnOfferRecvVideo)
 {
   sipcc::MediaConstraints offerconstraints;
   offerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   offerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  sipcc::MediaConstraints answerconstraints;
+  answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  answerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+  OfferAnswer(offerconstraints, answerconstraints, OFFER_AUDIO | ANSWER_AV,
+              false, SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO,
+              SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO);
+}
+
+TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnOffer)
+{
+  sipcc::MediaConstraints offerconstraints;
+  offerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  offerconstraints.setBooleanConstraint("OfferToReceiveVideo", false, false);
   sipcc::MediaConstraints answerconstraints;
   answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
   answerconstraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
