@@ -888,6 +888,7 @@ class ScriptAnalysis
     bool failed() const { return hadFailure; }
     bool ionInlineable() const { return isIonInlineable; }
     bool ionInlineable(uint32_t argc) const { return isIonInlineable && argc == script_->function()->nargs; }
+    void setIonUninlineable() { isIonInlineable = false; }
     bool jaegerInlineable() const { return isJaegerInlineable; }
     bool jaegerInlineable(uint32_t argc) const { return isJaegerInlineable && argc == script_->function()->nargs; }
     bool jaegerCompileable() { return isJaegerCompileable; }
