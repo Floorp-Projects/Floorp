@@ -77,6 +77,22 @@ AccumulateCacheHitTelemetry(Telemetry::ID deviceHistogram,
     }
 }
 
+const char *
+GetCacheSessionNameForStoragePolicy(nsCacheStoragePolicy storagePolicy,
+                                    bool isPrivate)
+{
+    MOZ_ASSERT(!isPrivate || storagePolicy == nsICache::STORE_IN_MEMORY);
+
+    switch (storagePolicy) {
+    case nsICache::STORE_IN_MEMORY:
+        return isPrivate ? "HTTP-memory-only-PB" : "HTTP-memory-only";
+    case nsICache::STORE_OFFLINE:
+        return "HTTP-offline";
+    default:
+        return "HTTP";
+    }
+}
+
 // Computes and returns a SHA1 hash of the input buffer. The input buffer
 // must be a null-terminated string.
 nsresult
@@ -2464,18 +2480,6 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
     return OpenNormalCacheEntry(usingSSL);
 }
 
-static void
-GetAppInfo(nsIChannel* aChannel, uint32_t* aAppId, bool* aIsInBrowser)
-{
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(aChannel, loadContext);
-    *aAppId = NECKO_NO_APP_ID;
-    *aIsInBrowser = false;
-    if (loadContext) {
-        loadContext->GetAppId(aAppId);
-        loadContext->GetIsInBrowserElement(aIsInBrowser);
-    }
-}
 
 nsresult
 nsHttpChannel::OpenNormalCacheEntry(bool usingSSL)
@@ -2484,14 +2488,9 @@ nsHttpChannel::OpenNormalCacheEntry(bool usingSSL)
 
     nsresult rv;
 
-    uint32_t appId;
-    bool isInBrowser;
-    GetAppInfo(this, &appId, &isInBrowser);
-
     nsCacheStoragePolicy storagePolicy = DetermineStoragePolicy();
-    nsAutoCString clientID;
-    nsHttpHandler::GetCacheSessionNameForStoragePolicy(storagePolicy, mPrivateBrowsing,
-                                                       appId, isInBrowser, clientID);
+    nsDependentCString clientID(
+        GetCacheSessionNameForStoragePolicy(storagePolicy, mPrivateBrowsing));
 
     nsAutoCString cacheKey;
     GenerateCacheKey(mPostID, cacheKey);
@@ -5898,25 +5897,20 @@ nsHttpChannel::DoInvalidateCacheEntry(const nsCString &key)
     // The logic below deviates from the original logic in OpenCacheEntry on
     // one point by using only READ_ONLY access-policy. I think this is safe.
 
-    uint32_t appId;
-    bool isInBrowser;
-    GetAppInfo(this, &appId, &isInBrowser);
-
     // First, find session holding the cache-entry - use current storage-policy
     nsCacheStoragePolicy storagePolicy = DetermineStoragePolicy();
-    nsAutoCString clientID;
-    nsHttpHandler::GetCacheSessionNameForStoragePolicy(storagePolicy, mPrivateBrowsing,
-                                                       appId, isInBrowser, clientID);
+    const char * clientID =
+        GetCacheSessionNameForStoragePolicy(storagePolicy, mPrivateBrowsing);
 
     LOG(("DoInvalidateCacheEntry [channel=%p session=%s policy=%d key=%s]",
-         this, clientID.get(), int(storagePolicy), key.get()));
+         this, clientID, int(storagePolicy), key.get()));
 
     nsresult rv;
     nsCOMPtr<nsICacheService> serv =
         do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     nsCOMPtr<nsICacheSession> session;
     if (NS_SUCCEEDED(rv)) {
-        rv = serv->CreateSession(clientID.get(), storagePolicy,
+        rv = serv->CreateSession(clientID, storagePolicy,  
                                  nsICache::STREAM_BASED,
                                  getter_AddRefs(session));
     }
@@ -5928,7 +5922,7 @@ nsHttpChannel::DoInvalidateCacheEntry(const nsCString &key)
     }
 
     LOG(("DoInvalidateCacheEntry [channel=%p session=%s policy=%d key=%s rv=%d]",
-         this, clientID.get(), int(storagePolicy), key.get(), int(rv)));
+         this, clientID, int(storagePolicy), key.get(), int(rv)));
 }
 
 nsCacheStoragePolicy
