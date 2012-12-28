@@ -288,7 +288,6 @@ private:
 
     virtual bool RecvAddGeolocationListener();
     virtual bool RecvRemoveGeolocationListener();
-    virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable);
 
     virtual bool RecvConsoleMessage(const nsString& aMessage);
     virtual bool RecvScriptError(const nsString& aMessage,

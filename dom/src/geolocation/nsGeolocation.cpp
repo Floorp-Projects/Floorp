@@ -1003,12 +1003,6 @@ nsGeolocationService::SetDisconnectTimer()
 void
 nsGeolocationService::SetHigherAccuracy(bool aEnable)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendSetGeolocationHigherAccuracy(aEnable);
-    return;
-  }
-
   if (!mHigherAccuracy && aEnable) {
     for (int32_t i = 0; i < mProviders.Count(); i++) {
       mProviders[i]->SetHighAccuracy(true);
