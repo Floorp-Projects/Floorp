@@ -32,7 +32,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
-    private static final int MAX_WAIT_MS = 3000;
+    public static final int MAX_WAIT_MS = 3000;
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;

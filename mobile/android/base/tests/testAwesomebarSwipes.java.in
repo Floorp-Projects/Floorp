@@ -18,8 +18,6 @@ import @ANDROID_PACKAGE_NAME@.*;
 */
 
 public class testAwesomebarSwipes extends BaseTest {
-    private static final String ABOUT_HOME_URL = "about:home";
-
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
