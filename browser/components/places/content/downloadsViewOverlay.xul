@@ -8,13 +8,21 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"><![CDATA[
-    const DOWNLOADS_QUERY = "place:transition=" +
-      Components.interfaces.nsINavHistoryService.TRANSITION_DOWNLOAD +
-      "&sort=" +
-      Components.interfaces.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+    let useNewView = false;
+    try {
+      useNewView = Services.prefs.getBoolPref("browser.library.useNewDownloadsView");
+    }
+    catch(ex) { }
 
-    ContentArea.setContentViewForQueryString(DOWNLOADS_QUERY,
-      function() new DownloadsPlacesView(document.getElementById("downloadsRichListBox")));
+    if (useNewView) {
+      const DOWNLOADS_QUERY = "place:transition=" +
+        Components.interfaces.nsINavHistoryService.TRANSITION_DOWNLOAD +
+        "&sort=" +
+        Components.interfaces.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+
+      ContentArea.setContentViewForQueryString(DOWNLOADS_QUERY,
+        function() new DownloadsPlacesView(document.getElementById("downloadsRichListBox")));
+    }
   ]]></script>
 
   <window id="places">
