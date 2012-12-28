@@ -220,6 +220,12 @@ void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb,
                constraints->constraints[i]->name) == 0) {
       gsmsdp_process_cap_constraint(&dcb->media_cap_tbl->cap[CC_VIDEO_1],
                                     constraints->constraints[i]->value);
+    } else if (strcmp(constraints_table[MozDontOfferDataChannel].name,
+               constraints->constraints[i]->name) == 0) {
+      /* Hack to suppress data channel */
+      if (constraints->constraints[i]->value[0] == 'T') {
+        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
+      }
     }
   }
 }
