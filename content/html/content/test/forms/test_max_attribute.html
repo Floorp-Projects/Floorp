@@ -28,7 +28,7 @@ var types = [
   [ 'email',          false ],
   [ 'password',       false ],
   [ 'datetime',       true,  true ],
-  [ 'date',           true,  true ],
+  [ 'date',           true ],
   [ 'month',          true,  true ],
   [ 'week',           true,  true ],
   [ 'time',           true,  true ],
@@ -90,7 +90,12 @@ for (var data of types) {
 
   checkValidity(input, true, apply, false);
 
-  input.max = '2';
+  if (input.type == 'date') {
+    input.max = '2012-06-27';
+  } else {
+    input.max = '2';
+  }
+
   checkValidity(input, true, apply, apply);
 
   if (input.type == 'url') {
@@ -118,6 +123,36 @@ for (var data of types) {
     checkValidity(input, true, apply, apply);
 
     file.remove(false);
+  } else if (input.type == 'date') {
+    input.value = '2012-06-26';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '2012-06-27';
+    checkValidity(input, true, apply, apply);
+
+    input.value = 'foo';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '2012-06-28';
+    checkValidity(input, false, apply, apply);
+
+    input.max = '2012-06-30';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '2012-07-05';
+    checkValidity(input, false, apply, apply);
+
+    input.value = '1000-01-01';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '20120-01-01';
+    checkValidity(input, false, apply, apply);
+
+    input.max = '0050-01-01';
+    checkValidity(input, false, apply, apply);
+
+    input.value = '0049-01-01';
+    checkValidity(input, true, apply, apply);
   } else {
     input.value = '1';
     checkValidity(input, true, apply, apply);
