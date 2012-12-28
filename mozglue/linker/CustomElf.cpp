@@ -439,7 +439,7 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
   if (pt_load->p_memsz > pt_load->p_filesz) {
     Addr file_end = pt_load->p_vaddr + pt_load->p_filesz;
     Addr mem_end = pt_load->p_vaddr + pt_load->p_memsz;
-    Addr next_page = (file_end & ~(PAGE_SIZE - 1)) + PAGE_SIZE;
+    Addr next_page = (file_end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
     if (mem_end > next_page) {
       if (mprotect(GetPtr(next_page), mem_end - next_page, prot) < 0) {
         log("%s: Failed to mprotect", GetPath());
