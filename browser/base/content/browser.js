@@ -155,6 +155,7 @@ let gInitialPages = [
 #include browser-tabPreviews.js
 #include browser-tabview.js
 #include browser-thumbnails.js
+#include browser-webrtcUI.js
 
 #ifdef MOZ_SERVICES_SYNC
 #include browser-syncui.js
@@ -1254,6 +1255,7 @@ var gBrowserInit = {
     gFormSubmitObserver.init();
     SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
+    WebrtcIndicator.init();
 
     gBrowser.addEventListener("pageshow", function(event) {
       // Filter out events that are not about the document load we are interested in
