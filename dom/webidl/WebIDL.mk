@@ -20,6 +20,7 @@ webidl_files = \
   BiquadFilterNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
+  CaretPosition.webidl \
   ClientRectList.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
