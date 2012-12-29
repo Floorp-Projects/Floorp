@@ -195,9 +195,6 @@ members = [
     'nsIDOMHTMLTableRowElement.cells',
     'nsIDOMHTMLTableRowElement.deleteCell',
     'nsIDOMHTMLTableRowElement.insertCell',
-    'nsIDOMHTMLTableSectionElement.rows',
-    'nsIDOMHTMLTableSectionElement.insertRow',
-    'nsIDOMHTMLTableSectionElement.deleteRow',
     'nsIDOMHTMLTextAreaElement.rows',
     'nsIDOMHTMLTextAreaElement.name',
     'nsIDOMHTMLTextAreaElement.form',
@@ -316,9 +313,6 @@ members = [
 # a little help.
 #
 irregularFilenames = {
-    # abbreviations
-    'nsIDOMHTMLTableSectionElement': 'nsIDOMHTMLTableSectionElem',
-
     # stowaways
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',

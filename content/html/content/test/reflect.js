@@ -64,12 +64,9 @@ function reflectString(aParameters)
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
     link: [ "crossOrigin" ],
     source: [ "media" ],
-    tbody: [ "align", "vAlign", "ch" ],
     td: [ "align", "vAlign", "ch" ],
     textarea: [ "name", "placeholder" ],
-    tfoot: [ "align", "vAlign", "ch" ],
     th: [ "align", "vAlign", "ch" ],
-    thead: [ "align", "vAlign", "ch" ],
     tr: [ "align", "vAlign", "ch" ],
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {

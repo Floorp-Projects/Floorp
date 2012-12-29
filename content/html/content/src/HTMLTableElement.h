@@ -58,19 +58,16 @@ public:
   {
     return static_cast<HTMLTableSectionElement*>(GetChild(nsGkAtoms::thead));
   }
-  void SetTHead(nsIDOMHTMLTableSectionElement* aTHead, ErrorResult& aError)
+  void SetTHead(HTMLTableSectionElement* aTHead, ErrorResult& aError)
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aTHead);
-    if (!content || !content->IsHTML(nsGkAtoms::thead)) {
+    if (!aTHead->IsHTML(nsGkAtoms::thead)) {
       aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
       return;
     }
-    HTMLTableSectionElement* thead =
-      static_cast<HTMLTableSectionElement*>(aTHead);
 
     DeleteTHead();
-    if (thead) {
-      nsINode::InsertBefore(*thead, nsINode::GetFirstChild(), aError);
+    if (aTHead) {
+      nsINode::InsertBefore(*aTHead, nsINode::GetFirstChild(), aError);
     }
   }
   already_AddRefed<nsGenericHTMLElement> CreateTHead();
@@ -79,19 +76,16 @@ public:
   {
     return static_cast<HTMLTableSectionElement*>(GetChild(nsGkAtoms::tfoot));
   }
-  void SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot, ErrorResult& aError)
+  void SetTFoot(HTMLTableSectionElement* aTFoot, ErrorResult& aError)
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aTFoot);
-    if (!content || !content->IsHTML(nsGkAtoms::tfoot)) {
+    if (!aTFoot->IsHTML(nsGkAtoms::tfoot)) {
       aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
       return;
     }
-    HTMLTableSectionElement* tfoot =
-      static_cast<HTMLTableSectionElement*>(aTFoot);
 
     DeleteTFoot();
-    if (tfoot) {
-      nsINode::AppendChild(*tfoot, aError);
+    if (aTFoot) {
+      nsINode::AppendChild(*aTFoot, aError);
     }
   }
   already_AddRefed<nsGenericHTMLElement> CreateTFoot();

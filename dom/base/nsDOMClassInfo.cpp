@@ -256,7 +256,7 @@
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
-#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"

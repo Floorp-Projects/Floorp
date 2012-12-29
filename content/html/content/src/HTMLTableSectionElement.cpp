@@ -8,13 +8,9 @@
 #include "mozilla/dom/HTMLTableSectionElement.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
-#include "nsGkAtoms.h"
-#include "nsHTMLParts.h"
-#include "nsStyleConsts.h"
-#include "nsContentList.h"
 #include "nsRuleData.h"
-#include "nsError.h"
-#include "nsContentUtils.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/HTMLTableSectionElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableSection)
 DOMCI_NODE_DATA(HTMLTableSectionElement, mozilla::dom::HTMLTableSectionElement)
@@ -24,9 +20,11 @@ namespace dom {
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
-HTMLTableSectionElement::HTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+JSObject*
+HTMLTableSectionElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                                  bool *aTriedToWrap)
 {
+  return HTMLTableSectionElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableSectionElement)
@@ -49,15 +47,76 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableSectionElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableSectionElement)
 
-
-NS_IMPL_STRING_ATTR(HTMLTableSectionElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLTableSectionElement, VAlign, valign)
-NS_IMPL_STRING_ATTR(HTMLTableSectionElement, Ch, _char)
-NS_IMPL_STRING_ATTR(HTMLTableSectionElement, ChOff, charoff)
-
+NS_IMETHODIMP
+HTMLTableSectionElement::SetAlign(const nsAString& aAlign)
+{
+  ErrorResult rv;
+  SetAlign(aAlign, rv);
+  return rv.ErrorCode();
+}
 
 NS_IMETHODIMP
-HTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
+HTMLTableSectionElement::GetAlign(nsAString& aAlign)
+{
+  nsString align;
+  GetAlign(align);
+  aAlign = align;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::SetVAlign(const nsAString& aVAlign)
+{
+  ErrorResult rv;
+  SetVAlign(aVAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::GetVAlign(nsAString& aVAlign)
+{
+  nsString vAlign;
+  GetVAlign(vAlign);
+  aVAlign = vAlign;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::SetCh(const nsAString& aCh)
+{
+  ErrorResult rv;
+  SetCh(aCh, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::GetCh(nsAString& aCh)
+{
+  nsString ch;
+  GetCh(ch);
+  aCh = ch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::SetChOff(const nsAString& aChOff)
+{
+  ErrorResult rv;
+  SetChOff(aChOff, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::GetChOff(nsAString& aChOff)
+{
+  nsString chOff;
+  GetChOff(chOff);
+  aChOff = chOff;
+  return NS_OK;
+}
+
+nsIHTMLCollection*
+HTMLTableSectionElement::Rows()
 {
   if (!mRows) {
     mRows = new nsContentList(this,
@@ -67,29 +126,30 @@ HTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
                               false);
   }
 
-  NS_ADDREF(*aValue = mRows);
+  return mRows;
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
+{
+  NS_ADDREF(*aValue = Rows());
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-HTMLTableSectionElement::InsertRow(int32_t aIndex,
-                                   nsIDOMHTMLElement** aValue)
+already_AddRefed<nsGenericHTMLElement>
+HTMLTableSectionElement::InsertRow(int32_t aIndex, ErrorResult& aError)
 {
-  *aValue = nullptr;
-
   if (aIndex < -1) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
-  nsCOMPtr<nsIDOMHTMLCollection> rows;
-  GetRows(getter_AddRefs(rows));
+  nsIHTMLCollection* rows = Rows();
 
-  uint32_t rowCount;
-  rows->GetLength(&rowCount);
-
+  uint32_t rowCount = rows->Length();
   if (aIndex > (int32_t)rowCount) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
   bool doInsert = (aIndex < int32_t(rowCount)) && (aIndex != -1);
@@ -99,53 +159,45 @@ HTMLTableSectionElement::InsertRow(int32_t aIndex,
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                               getter_AddRefs(nodeInfo));
 
-  nsCOMPtr<nsIContent> rowContent = NS_NewHTMLTableRowElement(nodeInfo.forget());
+  nsRefPtr<nsGenericHTMLElement> rowContent =
+    NS_NewHTMLTableRowElement(nodeInfo.forget());
   if (!rowContent) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
 
-  nsCOMPtr<nsIDOMNode> rowNode(do_QueryInterface(rowContent));
-  NS_ASSERTION(rowNode, "Should implement nsIDOMNode!");
-
-  nsCOMPtr<nsIDOMNode> retChild;
-
-  nsresult rv;
   if (doInsert) {
-    nsCOMPtr<nsIDOMNode> refRow;
-    rows->Item(aIndex, getter_AddRefs(refRow));
-
-    rv = InsertBefore(rowNode, refRow, getter_AddRefs(retChild));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsINode::InsertBefore(*rowContent, rows->Item(aIndex), aError);
   } else {
-    rv = AppendChild(rowNode, getter_AddRefs(retChild));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsINode::AppendChild(*rowContent, aError);
   }
-
-  if (retChild) {
-    CallQueryInterface(retChild, aValue);
-  }
-
-  return NS_OK;
+  return rowContent.forget();
 }
 
 NS_IMETHODIMP
-HTMLTableSectionElement::DeleteRow(int32_t aValue)
+HTMLTableSectionElement::InsertRow(int32_t aIndex,
+                                   nsIDOMHTMLElement** aValue)
+{
+  ErrorResult rv;
+  nsRefPtr<nsGenericHTMLElement> row = InsertRow(aIndex, rv);
+  return rv.Failed() ? rv.ErrorCode() : CallQueryInterface(row, aValue);
+}
+
+void
+HTMLTableSectionElement::DeleteRow(int32_t aValue, ErrorResult& aError)
 {
   if (aValue < -1) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
   }
 
-  nsCOMPtr<nsIDOMHTMLCollection> rows;
-  GetRows(getter_AddRefs(rows));
+  nsIHTMLCollection* rows = Rows();
 
-  nsresult rv;
   uint32_t refIndex;
   if (aValue == -1) {
-    rv = rows->GetLength(&refIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    refIndex = rows->Length();
     if (refIndex == 0) {
-      return NS_OK;
+      return;
     }
 
     --refIndex;
@@ -154,16 +206,21 @@ HTMLTableSectionElement::DeleteRow(int32_t aValue)
     refIndex = (uint32_t)aValue;
   }
 
-  nsCOMPtr<nsIDOMNode> row;
-  rv = rows->Item(refIndex, getter_AddRefs(row));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsINode* row = rows->Item(refIndex);
   if (!row) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
   }
 
-  nsCOMPtr<nsIDOMNode> retChild;
-  return RemoveChild(row, getter_AddRefs(retChild));
+  nsINode::RemoveChild(*row, aError);
+}
+
+NS_IMETHODIMP
+HTMLTableSectionElement::DeleteRow(int32_t aValue)
+{
+  ErrorResult rv;
+  DeleteRow(aValue, rv);
+  return rv.ErrorCode();
 }
 
 bool

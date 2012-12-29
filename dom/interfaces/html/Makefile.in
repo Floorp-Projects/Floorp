@@ -72,7 +72,7 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLTableColElement.idl		\
 	nsIDOMHTMLTableElement.idl		\
 	nsIDOMHTMLTableRowElement.idl		\
-	nsIDOMHTMLTableSectionElem.idl		\
+	nsIDOMHTMLTableSectionElement.idl		\
 	nsIDOMHTMLTextAreaElement.idl		\
 	nsIDOMHTMLTitleElement.idl		\
 	nsIDOMHTMLUListElement.idl		\
