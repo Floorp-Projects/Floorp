@@ -19,7 +19,7 @@
 #include "nsStringGlue.h"
 
 class nsIDOMDocument;
-class nsIDOMDocumentType;
+class nsDOMDocumentType;
 
 namespace mozilla {
 namespace dom {
@@ -61,7 +61,7 @@ public:
 
   bool HasFeature(const nsAString& aFeature, const nsAString& aVersion);
 
-  already_AddRefed<nsIDOMDocumentType>
+  already_AddRefed<nsDOMDocumentType>
   CreateDocumentType(const nsAString& aQualifiedName,
                      const nsAString& aPublicId,
                      const nsAString& aSystemId,
