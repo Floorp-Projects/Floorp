@@ -2369,7 +2369,7 @@ nsDocumentViewer::FindContainerView()
         docShellItem->GetParent(getter_AddRefs(parentDocShellItem));
         if (parentDocShellItem) {
           nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
-          parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+          parentPresShell = parentDocShell->GetPresShell();
         }
       }
       if (!parentPresShell) {

@@ -1546,8 +1546,7 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
   GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal);
   mDoc->SetIsInitialDocument(true);
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetDocShell()->GetPresShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIPresShell> shell = GetDocShell()->GetPresShell();
 
   if (shell && !shell->DidInitialize()) {
     // Ensure that if someone plays with this document they will get
@@ -3670,8 +3669,7 @@ nsGlobalWindow::SetInnerWidth(int32_t aInnerWidth)
                     NS_ERROR_FAILURE);
 
 
-  nsRefPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (presShell && presShell->GetIsViewportOverridden())
   {
@@ -3737,8 +3735,7 @@ nsGlobalWindow::SetInnerHeight(int32_t aInnerHeight)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nullptr, &aInnerHeight),
                     NS_ERROR_FAILURE);
 
-  nsRefPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (presShell && presShell->GetIsViewportOverridden())
   {
@@ -3892,8 +3889,7 @@ nsGlobalWindow::GetInnerScreenRect()
     rootWindow->FlushPendingNotifications(Flush_Layout);
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (!presShell)
     return nsRect();
   nsIFrame* rootFrame = presShell->GetRootFrame();
@@ -3953,8 +3949,7 @@ nsGlobalWindow::GetMozPaintCount(uint64_t* aResult)
   if (!mDocShell)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (!presShell)
     return NS_OK;
 
@@ -4493,8 +4488,7 @@ nsGlobalWindow::GetNearestWidget()
 {
   nsIDocShell* docShell = GetDocShell();
   NS_ENSURE_TRUE(docShell, nullptr);
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
   nsIFrame* rootFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, nullptr);
@@ -4681,8 +4675,7 @@ nsGlobalWindow::EnsureReflowFlushAndPaint()
   if (!mDocShell)
     return;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell)
     return;
@@ -7427,8 +7420,7 @@ nsGlobalWindow::GetSelection(nsISelection** aSelection)
   if (!mDocShell)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell)
     return NS_OK;
@@ -8257,8 +8249,7 @@ nsGlobalWindow::UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent)
       return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell || !mDocument)
     return;
 
@@ -8325,8 +8316,7 @@ nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell) {
     // Try flushing frames on our parent in case there's a pending
@@ -8344,8 +8334,7 @@ nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
       return NS_OK;
     }
 
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-
+    presShell = mDocShell->GetPresShell();
     if (!presShell) {
       return NS_OK;
     }
@@ -10354,8 +10343,7 @@ nsGlobalWindow::GetScrollFrame()
     return nullptr;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (presShell) {
     return presShell->GetRootScrollFrameAsScrollable();
   }
@@ -11033,8 +11021,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
 
   if (presContext) {
     // Need root widget.
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     nsIViewManager* vm = presShell->GetViewManager();

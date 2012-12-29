@@ -5522,9 +5522,8 @@ PresShell::GetParentPresShell()
   nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentTreeItem);
   NS_ENSURE_TRUE(parentDocShell && treeItem != parentTreeItem, nullptr);
 
-  nsIPresShell* parentPresShell = nullptr;
-  parentDocShell->GetPresShell(&parentPresShell);
-  return parentPresShell;
+  nsCOMPtr<nsIPresShell> parentPresShell = parentDocShell->GetPresShell();
+  return parentPresShell.forget();
 }
 
 nsresult
