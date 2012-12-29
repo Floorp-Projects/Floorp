@@ -8,7 +8,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMDocumentType.h"
+#include "DocumentType.h"
 
 namespace mozilla {
 namespace dom {
@@ -50,7 +50,7 @@ DOMImplementation::HasFeature(const nsAString& aFeature,
   return NS_OK;
 }
 
-already_AddRefed<nsDOMDocumentType>
+already_AddRefed<DocumentType>
 DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
                                       const nsAString& aPublicId,
                                       const nsAString& aSystemId,
@@ -73,7 +73,7 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   }
 
   // Indicate that there is no internal subset (not just an empty one)
-  nsRefPtr<nsDOMDocumentType> docType =
+  nsRefPtr<DocumentType> docType =
     NS_NewDOMDocumentType(mOwner->NodeInfoManager(), name, aPublicId,
                           aSystemId, NullString(), aRv);
   return docType.forget();
