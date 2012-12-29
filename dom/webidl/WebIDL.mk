@@ -75,6 +75,7 @@ webidl_files = \
   HTMLSpanElement.webidl \
   HTMLTableCaptionElement.webidl \
   HTMLTableElement.webidl \
+  HTMLTableSectionElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   ImageData.webidl \

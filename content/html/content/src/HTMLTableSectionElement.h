@@ -6,7 +6,7 @@
 #define mozilla_dom_HTMLTableSectionElement_h
 
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -15,7 +15,11 @@ class HTMLTableSectionElement : public nsGenericHTMLElement,
                                 public nsIDOMHTMLTableSectionElement
 {
 public:
-  HTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLTableSectionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsGenericHTMLElement(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -31,6 +35,44 @@ public:
 
   // nsIDOMHTMLTableSectionElement
   NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
+
+  nsIHTMLCollection* Rows();
+  already_AddRefed<nsGenericHTMLElement>
+    InsertRow(int32_t aIndex, ErrorResult& aError);
+  void DeleteRow(int32_t aValue, ErrorResult& aError);
+
+  void GetAlign(nsString& aAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aAlign);
+  }
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+  void GetCh(nsString& aCh)
+  {
+    GetHTMLAttr(nsGkAtoms::_char, aCh);
+  }
+  void SetCh(const nsAString& aCh, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::_char, aCh, aError);
+  }
+  void GetChOff(nsString& aChOff)
+  {
+    GetHTMLAttr(nsGkAtoms::charoff, aChOff);
+  }
+  void SetChOff(const nsAString& aChOff, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::charoff, aChOff, aError);
+  }
+  void GetVAlign(nsString& aVAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::valign, aVAlign);
+  }
+  void SetVAlign(const nsAString& aVAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::valign, aVAlign, aError);
+  }
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
@@ -48,6 +90,8 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
+  JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap);
+
   nsRefPtr<nsContentList> mRows;
 };
 

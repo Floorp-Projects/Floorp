@@ -6,7 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/HTMLTableElement.h"
-#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsRuleData.h"
 #include "nsHTMLStyleSheet.h"
@@ -117,9 +117,9 @@ NS_INTERFACE_MAP_END
     if (mParent) {                                                   \
       /* THead */                                                    \
       HTMLTableSectionElement* rowGroup = mParent->GetTHead();       \
-      nsCOMPtr<nsIDOMHTMLCollection> rows;                           \
+      nsIHTMLCollection* rows;                                       \
       if (rowGroup) {                                                \
-        rowGroup->GetRows(getter_AddRefs(rows));                     \
+        rows = rowGroup->Rows();                                     \
         do { /* gives scoping */                                     \
           _code                                                      \
         } while (0);                                                 \
@@ -129,7 +129,7 @@ NS_INTERFACE_MAP_END
            _node; _node = _node->GetNextSibling()) {                 \
         if (_node->IsHTML(nsGkAtoms::tbody)) {                       \
           rowGroup = static_cast<HTMLTableSectionElement*>(_node);   \
-          rowGroup->GetRows(getter_AddRefs(rows));                   \
+          rows = rowGroup->Rows();                                   \
           do { /* gives scoping */                                   \
             _code                                                    \
           } while (0);                                               \
@@ -142,9 +142,9 @@ NS_INTERFACE_MAP_END
       } while (0);                                                   \
       /* TFoot */                                                    \
       rowGroup = mParent->GetTFoot();                                \
-      rows = nullptr;                                                 \
+      rows = nullptr;                                                \
       if (rowGroup) {                                                \
-        rowGroup->GetRows(getter_AddRefs(rows));                     \
+        rows = rowGroup->Rows();                                     \
         do { /* gives scoping */                                     \
           _code                                                      \
         } while (0);                                                 \
@@ -540,8 +540,10 @@ HTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
 NS_IMETHODIMP
 HTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 {
+  HTMLTableSectionElement* section =
+    static_cast<HTMLTableSectionElement*>(aValue);
   ErrorResult rv;
-  SetTHead(aValue, rv);
+  SetTHead(section, rv);
   return rv.ErrorCode();
 }
 
@@ -556,8 +558,10 @@ HTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
 NS_IMETHODIMP
 HTMLTableElement::SetTFoot(nsIDOMHTMLTableSectionElement* aValue)
 {
+  HTMLTableSectionElement* section =
+    static_cast<HTMLTableSectionElement*>(aValue);
   ErrorResult rv;
-  SetTFoot(aValue, rv);
+  SetTFoot(section, rv);
   return rv.ErrorCode();
 }
 
@@ -821,11 +825,8 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
       if (newRow) {
         HTMLTableSectionElement* section =
           static_cast<HTMLTableSectionElement*>(rowGroup.get());
-        nsCOMPtr<nsIDOMHTMLCollection> rows;
-        section->GetRows(getter_AddRefs(rows));
-        rowGroup->InsertBefore(*newRow,
-                               static_cast<nsIHTMLCollection*>(rows.get())->Item(0),
-                               aError);
+        nsIHTMLCollection* rows = section->Rows();
+        rowGroup->InsertBefore(*newRow, rows->Item(0), aError);
       }
     }
   }

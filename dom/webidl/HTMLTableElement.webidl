@@ -11,8 +11,6 @@
  * and create derivative works of this document.
  */
 
-interface HTMLTableSectionElement;
-
 interface HTMLTableElement : HTMLElement {
            attribute HTMLTableCaptionElement? caption;
   HTMLElement createCaption();
