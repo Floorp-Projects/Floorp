@@ -1438,7 +1438,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
       do_GetInterface(static_cast<nsIWebBrowser*>(self->mWebBrowser));
     nsCOMPtr<nsIPresShell> shell;
     if (docShell) {
-      docShell->GetPresShell(getter_AddRefs(shell));
+      shell = docShell->GetPresShell();
     }
 
     nsIWidget* widget = nullptr;

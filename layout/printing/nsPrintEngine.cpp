@@ -1066,7 +1066,7 @@ nsPrintEngine::IsThereARangeSelection(nsIDOMWindow* aDOMWin)
   nsCOMPtr<nsIPresShell> presShell;
   if (aDOMWin) {
     nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWin));
-    window->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
+    presShell = window->GetDocShell()->GetPresShell();
   }
 
   if (!presShell)
@@ -2022,8 +2022,7 @@ nsresult
 nsPrintEngine::UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
                                                    bool aDocumentIsTopLevel)
 {
-  nsCOMPtr<nsIPresShell> displayShell;
-  aPO->mDocShell->GetPresShell(getter_AddRefs(displayShell));
+  nsCOMPtr<nsIPresShell> displayShell = aPO->mDocShell->GetPresShell();
   // Transfer Selection Ranges to the new Print PresShell
   nsCOMPtr<nsISelection> selection, selectionPS;
   // It's okay if there is no display shell, just skip copying the selection

@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(ed04b29f-ae9a-460a-858e-960b523bb3a5)]
+[scriptable, builtinclass, uuid(008f5c86-b915-458c-aaf1-78de3b484e68)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -186,7 +186,7 @@ interface nsIDocShell : nsISupports
   /**
    * Presentation shell for the currently loaded document.  This may be null.
    */
-  [noscript] readonly attribute nsIPresShell presShell;
+  [noscript,notxpcom] nsIPresShell GetPresShell();
 
   /**
    * Presentation shell for the oldest document, if this docshell is

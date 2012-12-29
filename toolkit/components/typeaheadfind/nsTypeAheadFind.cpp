@@ -160,7 +160,7 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
   NS_ENSURE_TRUE(mWebBrowserFind, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresShell> presShell;
-  aDocShell->GetPresShell(getter_AddRefs(presShell));
+  presShell = aDocShell->GetPresShell();
   mPresShell = do_GetWeakReference(presShell);      
 
   mStartFindRange = nullptr;
@@ -275,7 +275,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
     nsCOMPtr<nsIDocShell> ds = do_QueryReferent(mDocShell);
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
 
-    ds->GetPresShell(getter_AddRefs(startingPresShell));
+    startingPresShell = ds->GetPresShell();
     mPresShell = do_GetWeakReference(startingPresShell);    
   }  
 
@@ -683,8 +683,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   if (!docShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
 
   nsRefPtr<nsPresContext> presContext;
   docShell->GetPresContext(getter_AddRefs(presContext));
@@ -898,7 +897,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     nsCOMPtr<nsIDocShell> ds (do_QueryReferent(mDocShell));
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
 
-    ds->GetPresShell(getter_AddRefs(presShell));
+    presShell = ds->GetPresShell();
     mPresShell = do_GetWeakReference(presShell);    
   }  
   nsCOMPtr<nsISelection> selection;

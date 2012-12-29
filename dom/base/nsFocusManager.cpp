@@ -618,8 +618,7 @@ nsFocusManager::MoveCaretToFocus(nsIDOMWindow* aWindow)
       nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(dsti);
       NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIPresShell> presShell;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
       NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
@@ -716,8 +715,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
 
   nsCOMPtr<nsIDocShell> currentDocShell = currentWindow->GetDocShell();
 
-  nsCOMPtr<nsIPresShell> presShell;
-  currentDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = currentDocShell->GetPresShell();
   if (presShell) {
     // disable selection mousedown state on activation
     // XXXndeakin P3 not sure if this is necessary, but it doesn't hurt
@@ -927,8 +925,7 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
   nsCOMPtr<nsIContent> oldFocusedContent = mFocusedContent.forget();
 
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
-  nsCOMPtr<nsIPresShell> presShell;
-  focusedDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = focusedDocShell->GetPresShell();
 
   if (oldFocusedContent && oldFocusedContent->IsInDoc()) {
     NotifyFocusStateChange(oldFocusedContent,
@@ -1056,8 +1053,7 @@ nsFocusManager::EnsureCurrentWidgetFocused()
   // platform knows that this widget is focused.
   nsCOMPtr<nsIDocShell> docShell = mFocusedWindow->GetDocShell();
   if (docShell) {
-    nsCOMPtr<nsIPresShell> presShell;
-    docShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
     if (presShell) {
       nsIViewManager* vm = presShell->GetViewManager();
       if (vm) {
@@ -1262,8 +1258,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
     if (aFocusChanged) {
       nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell();
 
-      nsCOMPtr<nsIPresShell> presShell;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
       if (presShell)
         ScrollIntoView(presShell, contentToFocus, aFlags);
     }
@@ -1513,8 +1508,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
 
   // Keep a ref to presShell since dispatching the DOM event may cause
   // the document to be destroyed.
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell) {
     mFocusedContent = nullptr;
     return true;
@@ -1664,8 +1658,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   if (!docShell)
     return;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell)
     return;
 
@@ -1977,8 +1970,7 @@ nsFocusManager::RaiseWindow(nsPIDOMWindow* aWindow)
   if (!docShell)
     return;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell)
     return;
 
@@ -2026,8 +2018,7 @@ nsFocusManager::UpdateCaret(bool aMoveCaretToFocus,
   bool browseWithCaret =
     Preferences::GetBool("accessibility.browsewithcaret");
 
-  nsCOMPtr<nsIPresShell> presShell;
-  focusedDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = focusedDocShell->GetPresShell();
   if (!presShell)
     return;
 

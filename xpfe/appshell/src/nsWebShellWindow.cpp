@@ -249,9 +249,7 @@ nsWebShellWindow::GetPresShell()
   if (!mDocShell)
     return nullptr;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
-  return presShell.get();
+  return mDocShell->GetPresShell();
 }
 
 bool
@@ -298,8 +296,7 @@ nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget)
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
   nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(window);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (eventTarget) {
     nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
