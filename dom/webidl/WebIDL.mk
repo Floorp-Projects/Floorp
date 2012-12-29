@@ -73,6 +73,7 @@ webidl_files = \
   HTMLPropertiesCollection.webidl \
   HTMLScriptElement.webidl \
   HTMLSpanElement.webidl \
+  HTMLTableElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   ImageData.webidl \

@@ -64,7 +64,6 @@ function reflectString(aParameters)
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
     link: [ "crossOrigin" ],
     source: [ "media" ],
-    table: [ "border", "width" ],
     tbody: [ "align", "vAlign", "ch" ],
     td: [ "align", "vAlign", "ch" ],
     textarea: [ "name", "placeholder" ],
