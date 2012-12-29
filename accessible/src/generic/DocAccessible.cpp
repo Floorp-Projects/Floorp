@@ -1469,9 +1469,11 @@ DocAccessible::NotifyOfLoading(bool aIsReloading)
 void
 DocAccessible::DoInitialUpdate()
 {
+  if (nsCoreUtils::IsTabDocument(mDocumentNode))
+    mDocFlags |= eTabDocument;
+
   // We provide a virtual cursor if this is a root doc or if it's a tab doc.
-  if (!(mDocumentNode->GetParentDocument()) ||
-      nsCoreUtils::IsTabDocument(mDocumentNode))
+  if (!mDocumentNode->GetParentDocument() || (mDocFlags & eTabDocument))
     mDocFlags |= eCursorable;
 
   mLoadState |= eTreeConstructed;
