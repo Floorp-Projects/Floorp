@@ -493,7 +493,10 @@ protected:
     eScrollInitialized = 1 << 0,
 
     // Whether we support nsIAccessibleCursorable.
-    eCursorable = 1 << 1
+    eCursorable = 1 << 1,
+
+    // Whether the document is a tab document.
+    eTabDocument = 1 << 2
   };
 
   /**
