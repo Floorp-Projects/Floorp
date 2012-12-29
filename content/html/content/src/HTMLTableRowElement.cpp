@@ -7,7 +7,7 @@
 
 #include "mozilla/dom/HTMLTableRowElement.h"
 #include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
