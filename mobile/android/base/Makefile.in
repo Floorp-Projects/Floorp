@@ -572,6 +572,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/handle_end.png \
   res/drawable/handle_middle.png \
   res/drawable/handle_start.png \
+  res/drawable/scrollbar.png \
   $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
