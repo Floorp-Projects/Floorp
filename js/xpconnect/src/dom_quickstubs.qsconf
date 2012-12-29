@@ -180,8 +180,6 @@ members = [
     'nsIDOMHTMLSelectElement.options',
     'nsIDOMHTMLSelectElement.size',
     'nsIDOMHTMLStyleElement.disabled',
-    'nsIDOMHTMLTableColElement.span',
-    'nsIDOMHTMLTableColElement.width',
     'nsIDOMHTMLTextAreaElement.rows',
     'nsIDOMHTMLTextAreaElement.name',
     'nsIDOMHTMLTextAreaElement.form',
