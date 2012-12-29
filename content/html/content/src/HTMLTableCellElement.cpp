@@ -91,22 +91,14 @@ HTMLTableCellElement::CellIndex() const
     return -1;
   }
 
-  nsCOMPtr<nsIDOMHTMLCollection> cells;
-
-  row->GetCells(getter_AddRefs(cells));
-
+  nsIHTMLCollection* cells = row->Cells();
   if (!cells) {
     return -1;
   }
 
-  uint32_t numCells;
-  cells->GetLength(&numCells);
-
+  uint32_t numCells = cells->Length();
   for (uint32_t i = 0; i < numCells; i++) {
-    nsCOMPtr<nsIDOMNode> node;
-    cells->Item(i, getter_AddRefs(node));
-
-    if (node.get() == static_cast<const nsIDOMNode *>(this)) {
+    if (cells->Item(i) == this) {
       return i;
     }
   }

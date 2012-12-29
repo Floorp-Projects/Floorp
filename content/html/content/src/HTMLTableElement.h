@@ -25,6 +25,8 @@ public:
   HTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~HTMLTableElement();
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableElement, nsGkAtoms::table)
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
