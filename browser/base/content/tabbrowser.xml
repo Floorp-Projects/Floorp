@@ -876,7 +876,7 @@
             newBrowser.docShellIsActive =
               (window.windowState != window.STATE_MINIMIZED);
             this.mCurrentBrowser = newBrowser;
-            this.mCurrentTab = this.selectedTab;
+            this.mCurrentTab = this.tabContainer.selectedItem;
             this.showTab(this.mCurrentTab);
 
             var backForwardContainer = document.getElementById("unified-back-forward-button");
@@ -2135,7 +2135,7 @@
 
       <property name="selectedTab">
         <getter>
-          return this.mTabBox.selectedTab;
+          return this.mCurrentTab;
         </getter>
         <setter>
           <![CDATA[
