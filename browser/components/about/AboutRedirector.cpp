@@ -80,6 +80,8 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT },
   { "preferences", "chrome://browser/content/preferences/in-content/preferences.xul",
     nsIAboutModule::ALLOW_SCRIPT },
+  { "downloads", "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
+    nsIAboutModule::ALLOW_SCRIPT },
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 
