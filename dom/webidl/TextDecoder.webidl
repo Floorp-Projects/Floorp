@@ -15,7 +15,9 @@ interface TextDecoder {
   [Constant]
   readonly attribute DOMString encoding;
   [Throws]
-  DOMString decode(optional ArrayBufferView? input = null, optional TextDecodeOptions options);
+  DOMString decode();
+  [Throws]
+  DOMString decode(ArrayBufferView input, optional TextDecodeOptions options);
 };
 
 dictionary TextDecoderOptions {
