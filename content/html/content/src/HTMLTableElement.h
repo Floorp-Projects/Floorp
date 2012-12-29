@@ -7,6 +7,8 @@
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLTableElement.h"
+#include "mozilla/dom/HTMLTableCaptionElement.h"
+#include "mozilla/dom/HTMLTableSectionElement.h"
 #include "nsMappedAttributes.h"
 
 namespace mozilla {
@@ -37,6 +39,142 @@ public:
 
   // nsIDOMHTMLTableElement
   NS_DECL_NSIDOMHTMLTABLEELEMENT
+
+  HTMLTableCaptionElement* GetCaption() const
+  {
+    return static_cast<HTMLTableCaptionElement*>(GetChild(nsGkAtoms::caption));
+  }
+  void SetCaption(HTMLTableCaptionElement* aCaption)
+  {
+    DeleteCaption();
+    if (aCaption) {
+      mozilla::ErrorResult rv;
+      nsINode::AppendChild(*aCaption, rv);
+    }
+  }
+  already_AddRefed<nsGenericHTMLElement> CreateCaption();
+
+  HTMLTableSectionElement* GetTHead() const
+  {
+    return static_cast<HTMLTableSectionElement*>(GetChild(nsGkAtoms::thead));
+  }
+  void SetTHead(nsIDOMHTMLTableSectionElement* aTHead, ErrorResult& aError)
+  {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aTHead);
+    if (!content || !content->IsHTML(nsGkAtoms::thead)) {
+      aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return;
+    }
+    HTMLTableSectionElement* thead =
+      static_cast<HTMLTableSectionElement*>(aTHead);
+
+    DeleteTHead();
+    if (thead) {
+      nsINode::InsertBefore(*thead, nsINode::GetFirstChild(), aError);
+    }
+  }
+  already_AddRefed<nsGenericHTMLElement> CreateTHead();
+
+  HTMLTableSectionElement* GetTFoot() const
+  {
+    return static_cast<HTMLTableSectionElement*>(GetChild(nsGkAtoms::tfoot));
+  }
+  void SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot, ErrorResult& aError)
+  {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aTFoot);
+    if (!content || !content->IsHTML(nsGkAtoms::tfoot)) {
+      aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      return;
+    }
+    HTMLTableSectionElement* tfoot =
+      static_cast<HTMLTableSectionElement*>(aTFoot);
+
+    DeleteTFoot();
+    if (tfoot) {
+      nsINode::AppendChild(*tfoot, aError);
+    }
+  }
+  already_AddRefed<nsGenericHTMLElement> CreateTFoot();
+
+  nsIHTMLCollection* TBodies();
+  nsIHTMLCollection* Rows();
+
+  already_AddRefed<nsGenericHTMLElement> InsertRow(int32_t aIndex,
+                                                   ErrorResult& aError);
+  void DeleteRow(int32_t aIndex, ErrorResult& aError);
+
+  void GetAlign(nsString& aAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aAlign);
+  }
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+  void GetBorder(nsString& aBorder)
+  {
+    GetHTMLAttr(nsGkAtoms::border, aBorder);
+  }
+  void SetBorder(const nsAString& aBorder, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::border, aBorder, aError);
+  }
+  void GetFrame(nsString& aFrame)
+  {
+    GetHTMLAttr(nsGkAtoms::frame, aFrame);
+  }
+  void SetFrame(const nsAString& aFrame, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::frame, aFrame, aError);
+  }
+  void GetRules(nsString& aRules)
+  {
+    GetHTMLAttr(nsGkAtoms::rules, aRules);
+  }
+  void SetRules(const nsAString& aRules, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::rules, aRules, aError);
+  }
+  void GetSummary(nsString& aSummary)
+  {
+    GetHTMLAttr(nsGkAtoms::summary, aSummary);
+  }
+  void SetSummary(const nsAString& aSummary, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::summary, aSummary, aError);
+  }
+  void GetWidth(nsString& aWidth)
+  {
+    GetHTMLAttr(nsGkAtoms::width, aWidth);
+  }
+  void SetWidth(const nsAString& aWidth, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
+  }
+  void GetBgColor(nsString& aBgColor)
+  {
+    GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
+  }
+  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
+  }
+  void GetCellPadding(nsString& aCellPadding)
+  {
+    GetHTMLAttr(nsGkAtoms::cellpadding, aCellPadding);
+  }
+  void SetCellPadding(const nsAString& aCellPadding, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::cellpadding, aCellPadding, aError);
+  }
+  void GetCellSpacing(nsString& aCellSpacing)
+  {
+    GetHTMLAttr(nsGkAtoms::cellspacing, aCellSpacing);
+  }
+  void SetCellSpacing(const nsAString& aCellSpacing, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::cellspacing, aCellSpacing, aError);
+  }
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -69,16 +207,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTableElement,
                                            nsGenericHTMLElement)
   nsMappedAttributes* GetAttributesMappedForCell();
-  already_AddRefed<nsIDOMHTMLTableSectionElement> GetTHead() {
-    return GetSection(nsGkAtoms::thead);
-  }
-  already_AddRefed<nsIDOMHTMLTableSectionElement> GetTFoot() {
-    return GetSection(nsGkAtoms::tfoot);
-  }
-  already_AddRefed<nsIDOMHTMLTableCaptionElement> GetCaption();
-  nsContentList* TBodies();
+
 protected:
-  already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+
+  nsIContent* GetChild(nsIAtom *aTag) const
+  {
+    for (nsIContent* cur = nsINode::GetFirstChild(); cur;
+         cur = cur->GetNextSibling()) {
+      if (cur->IsHTML(aTag)) {
+        return cur;
+      }
+    }
+    return nullptr;
+  }
 
   nsRefPtr<nsContentList> mTBodies;
   nsRefPtr<TableRowsCollection> mRows;
