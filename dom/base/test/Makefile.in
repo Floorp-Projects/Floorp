@@ -19,7 +19,6 @@ MOCHITEST_FILES = \
   test_gsp-qualified.html \
   test_nondomexception.html \
   test_screen_orientation.html \
-  test_window_constructor.html \
   test_window_enumeration.html \
   test_writable-replaceable.html \
   $(NULL)

@@ -2529,7 +2529,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         return false;
 
     JS_ValueToBoolean(cx, v, &b);
-    if (b) {
+    if (b && (flags & JSRESOLVE_ASSIGNING) == 0) {
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return false;
         if (resolved) {
@@ -4582,6 +4582,9 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 {
     JSString *valstr;
     const char *name, *value;
+
+    if (flags & JSRESOLVE_ASSIGNING)
+        return true;
 
     IdStringifier idstr(cx, id, true);
     if (idstr.threw())

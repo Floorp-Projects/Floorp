@@ -509,6 +509,12 @@ ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsign
 {
   AssertIsOnMainThread();
 
+  // Don't care about assignments, bail now.
+  if (aFlags & JSRESOLVE_ASSIGNING) {
+    aObjp.set(nullptr);
+    return true;
+  }
+
   // Make sure our strings are interned.
   if (JSID_IS_VOID(gStringIDs[0])) {
     for (uint32_t i = 0; i < ID_COUNT; i++) {
