@@ -17,6 +17,15 @@
 #include "nsIXPConnect.h"
 #include "xpcpublic.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/dom/DocumentTypeBinding.h"
+
+using namespace mozilla;
+
+JSObject*
+nsDOMDocumentType::WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap)
+{
+  return dom::DocumentTypeBinding::Wrap(cx, scope, this, triedToWrap);
+}
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
@@ -27,20 +36,38 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       const nsAString& aInternalSubset)
 {
   NS_ENSURE_ARG_POINTER(aDocType);
-  NS_ENSURE_ARG_POINTER(aName);
+  ErrorResult rv;
+  *aDocType = NS_NewDOMDocumentType(aNodeInfoManager, aName, aPublicId,
+                                    aSystemId, aInternalSubset, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsDOMDocumentType>
+NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
+                      nsIAtom *aName,
+                      const nsAString& aPublicId,
+                      const nsAString& aSystemId,
+                      const nsAString& aInternalSubset,
+                      ErrorResult& rv)
+{
+  if (!aName) {
+    rv.Throw(NS_ERROR_INVALID_POINTER);
+    return nullptr;
+  }
 
   nsCOMPtr<nsINodeInfo> ni =
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,
                                   kNameSpaceID_None,
                                   nsIDOMNode::DOCUMENT_TYPE_NODE,
                                   aName);
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
+  if (!ni) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
 
-  *aDocType = new nsDOMDocumentType(ni.forget(), aPublicId, aSystemId,
-                                    aInternalSubset);
-  NS_ADDREF(*aDocType);
-
-  return NS_OK;
+  nsRefPtr<nsDOMDocumentType> docType =
+    new nsDOMDocumentType(ni.forget(), aPublicId, aSystemId, aInternalSubset);
+  return docType.forget();
 }
 
 nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -52,6 +79,7 @@ nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
 {
+  SetIsDOMBinding();
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
                     "Bad NodeType in aNodeInfo");
 }

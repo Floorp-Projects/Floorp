@@ -73,11 +73,22 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
 protected:
   nsString mPublicId;
   nsString mSystemId;
   nsString mInternalSubset;
 };
+
+already_AddRefed<nsDOMDocumentType>
+NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
+                      nsIAtom *aName,
+                      const nsAString& aPublicId,
+                      const nsAString& aSystemId,
+                      const nsAString& aInternalSubset,
+                      mozilla::ErrorResult& rv);
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
