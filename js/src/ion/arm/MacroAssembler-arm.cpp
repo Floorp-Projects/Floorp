@@ -2759,6 +2759,9 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
         if (from.isDouble()) {
             floatArgsInGPR[destReg.code() >> 1] = VFPRegister(from.floatReg());
             useResolver = false;
+        } else if (from.isGeneralReg() && from.reg() == destReg) {
+            // No need to move anything
+            useResolver = false;
         } else {
             dest = MoveOperand(destReg);
         }
