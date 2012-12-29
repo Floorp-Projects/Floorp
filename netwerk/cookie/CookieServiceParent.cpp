@@ -4,36 +4,48 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/net/NeckoParent.h"
 
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCookieService.h"
 #include "nsNetUtil.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla::ipc;
+using mozilla::dom::PBrowserParent;
+using mozilla::net::NeckoParent;
 
-static void
-GetAppInfoFromLoadContext(const IPC::SerializedLoadContext &aLoadContext,
-                          uint32_t& aAppId,
-                          bool& aIsInBrowserElement,
-                          bool& aIsPrivate)
+namespace mozilla {
+namespace net {
+
+MOZ_WARN_UNUSED_RESULT
+static bool
+GetAppInfoFromParams(const IPC::SerializedLoadContext &aLoadContext,
+                     PBrowserParent* aBrowser,
+                     uint32_t& aAppId,
+                     bool& aIsInBrowserElement,
+                     bool& aIsPrivate)
 {
-  // TODO: bug 782542: what to do when we get null loadContext?  For now assume
-  // NECKO_NO_APP_ID.
   aAppId = NECKO_NO_APP_ID;
   aIsInBrowserElement = false;
   aIsPrivate = false;
 
-  if (aLoadContext.IsNotNull()) {
-    aAppId = aLoadContext.mAppId;
-    aIsInBrowserElement = aLoadContext.mIsInBrowserElement;
+  const char* error = NeckoParent::GetValidatedAppInfo(aLoadContext, aBrowser,
+                                                       &aAppId,
+                                                       &aIsInBrowserElement);
+  if (error) {
+    NS_WARNING(nsPrintfCString("CookieServiceParent: GetAppInfoFromParams: "
+                               "FATAL error: %s: KILLING CHILD PROCESS\n",
+                               error).get());
+    return false;
   }
 
-  if (aLoadContext.IsPrivateBitValid())
+  if (aLoadContext.IsPrivateBitValid()) {
     aIsPrivate = aLoadContext.mUsePrivateBrowsing;
+  }
+  return true;
 }
-
-namespace mozilla {
-namespace net {
 
 CookieServiceParent::CookieServiceParent()
 {
@@ -57,6 +69,7 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aFromHttp,
                                          const IPC::SerializedLoadContext&
                                                aLoadContext,
+                                         PBrowserParent* aBrowser,
                                          nsCString* aResult)
 {
   if (!mCookieService)
@@ -70,7 +83,11 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
 
   uint32_t appId;
   bool isInBrowserElement, isPrivate;
-  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement, isPrivate);
+  bool valid = GetAppInfoFromParams(aLoadContext, aBrowser, appId,
+                                    isInBrowserElement, isPrivate);
+  if (!valid) {
+    return false;
+  }
 
   mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aFromHttp, appId,
                                           isInBrowserElement, isPrivate, *aResult);
@@ -84,7 +101,8 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const nsCString& aServerTime,
                                          const bool& aFromHttp,
                                          const IPC::SerializedLoadContext&
-                                               aLoadContext)
+                                               aLoadContext,
+                                         PBrowserParent* aBrowser)
 {
   if (!mCookieService)
     return true;
@@ -97,7 +115,11 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
 
   uint32_t appId;
   bool isInBrowserElement, isPrivate;
-  GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement, isPrivate);
+  bool valid = GetAppInfoFromParams(aLoadContext, aBrowser, appId,
+                                    isInBrowserElement, isPrivate);
+  if (!valid) {
+    return false;
+  }
 
   nsDependentCString cookieString(aCookieString, 0);
   //TODO: bug 812475, pass a real channel object

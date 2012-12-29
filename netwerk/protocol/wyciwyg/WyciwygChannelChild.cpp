@@ -6,6 +6,7 @@
 
 #include "mozilla/net/NeckoChild.h"
 #include "WyciwygChannelChild.h"
+#include "mozilla/dom/TabChild.h"
 
 #include "nsCharsetSource.h"
 #include "nsStringStream.h"
@@ -592,7 +593,16 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   URIParams originalURI;
   SerializeURI(mOriginalURI, originalURI);
 
-  SendAsyncOpen(originalURI, mLoadFlags, IPC::SerializedLoadContext(this));
+  mozilla::dom::TabChild* tabChild = nullptr;
+  nsCOMPtr<nsITabChild> iTabChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsITabChild),
+                                getter_AddRefs(iTabChild));
+  if (iTabChild) {
+    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+  }
+
+  SendAsyncOpen(originalURI, mLoadFlags, IPC::SerializedLoadContext(this), tabChild);
 
   mState = WCC_OPENED;
 
