@@ -7,10 +7,9 @@
 
 #include "mozilla/dom/HTMLTableCaptionElement.h"
 #include "nsAttrValueInlines.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
+#include "mozilla/dom/HTMLTableCaptionElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCaption)
 DOMCI_NODE_DATA(HTMLTableCaptionElement, mozilla::dom::HTMLTableCaptionElement)
@@ -20,6 +19,13 @@ namespace dom {
 
 HTMLTableCaptionElement::~HTMLTableCaptionElement()
 {
+}
+
+JSObject*
+HTMLTableCaptionElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                                  bool *aTriedToWrap)
+{
+  return HTMLTableCaptionElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLTableCaptionElement, Element)

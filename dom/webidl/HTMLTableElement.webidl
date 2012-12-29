@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-interface HTMLTableCaptionElement;
 interface HTMLTableSectionElement;
 
 interface HTMLTableElement : HTMLElement {

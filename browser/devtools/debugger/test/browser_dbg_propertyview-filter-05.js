@@ -45,8 +45,8 @@ function testVariablesFiltering()
       "There should be 0 variables displayed in the test scope");
     is(loadScope.querySelectorAll(".variable:not([non-match])").length, 1,
       "There should be 1 variable displayed in the load scope");
-    is(globalScope.querySelectorAll(".variable:not([non-match])").length, 3,
-      "There should be 3 variables displayed in the global scope");
+    is(globalScope.querySelectorAll(".variable:not([non-match])").length, 4,
+      "There should be 4 variables displayed in the global scope");
 
     is(innerScope.querySelectorAll(".property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the inner scope");
