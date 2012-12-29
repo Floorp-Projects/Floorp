@@ -27,7 +27,8 @@ parent:
   AsyncOpen(URIParams aURI,
             nsCString aOrigin,
             nsCString aProtocol,
-            bool aSecure);
+            bool aSecure,
+            SerializedLoadContext loadContext);
   Close(uint16_t code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);

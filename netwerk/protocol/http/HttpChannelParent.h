@@ -12,7 +12,6 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "mozilla/net/NeckoParent.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsHttpChannel.h"
@@ -45,8 +44,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   HttpChannelParent(mozilla::dom::PBrowserParent* iframeEmbedding,
-                    nsILoadContext* aLoadContext,
-                    PBOverrideStatus aStatus);
+                    const IPC::SerializedLoadContext& loadContext);
   virtual ~HttpChannelParent();
 
 protected:
@@ -110,6 +108,12 @@ private:
   bool mSentRedirect1BeginFailed    : 1;
   bool mReceivedRedirect2Verify     : 1;
 
+  // Used to override channel Private Browsing status if needed.
+  enum PBOverrideStatus {
+    kPBOverride_Unset = 0,
+    kPBOverride_Private,
+    kPBOverride_NotPrivate
+  };
   PBOverrideStatus mPBOverride;
 
   nsCOMPtr<nsILoadContext> mLoadContext;
