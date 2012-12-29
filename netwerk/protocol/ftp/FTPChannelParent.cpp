@@ -23,10 +23,8 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-FTPChannelParent::FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus)
+FTPChannelParent::FTPChannelParent()
   : mIPCClosed(false)
-  , mLoadContext(aLoadContext)
-  , mPBOverride(aOverrideStatus)
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
@@ -64,7 +62,8 @@ bool
 FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                 const uint64_t& aStartPos,
                                 const nsCString& aEntityID,
-                                const OptionalInputStreamParams& aUploadStream)
+                                const OptionalInputStreamParams& aUploadStream,
+                                const IPC::SerializedLoadContext& loadContext)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri)
@@ -88,11 +87,7 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
     return SendFailedAsyncOpen(rv);
 
   mChannel = static_cast<nsFtpChannel*>(chan.get());
-
-  if (mPBOverride != kPBOverride_Unset) {
-    mChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
-  }
-
+  
   nsCOMPtr<nsIInputStream> upload = DeserializeInputStream(aUploadStream);
   if (upload) {
     // contentType and contentLength are ignored
@@ -104,6 +99,14 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
   rv = mChannel->ResumeAt(aStartPos, aEntityID);
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
+
+  if (loadContext.IsNotNull())
+    mLoadContext = new LoadContext(loadContext);
+  else if (loadContext.IsPrivateBitValid()) {
+    nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(chan);
+    if (pbChannel)
+      pbChannel->SetPrivate(loadContext.mUsePrivateBrowsing);
+  }
 
   rv = mChannel->AsyncOpen(this, nullptr);
   if (NS_FAILED(rv))

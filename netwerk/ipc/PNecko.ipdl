@@ -43,8 +43,8 @@ parent:
   PHttpChannel(nullable PBrowser browser,
                SerializedLoadContext loadContext);
   PWyciwygChannel();
-  PFTPChannel(PBrowser browser, SerializedLoadContext loadContext);
-  PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
+  PFTPChannel();
+  PWebSocket(PBrowser browser);
   PTCPSocket(nsString host, uint16_t port, bool useSSL, nsString binaryType,
              nullable PBrowser browser);
   PRemoteOpenFile(URIParams fileuri, nullable PBrowser browser);
