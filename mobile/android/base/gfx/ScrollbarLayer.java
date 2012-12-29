@@ -32,8 +32,6 @@ public class ScrollbarLayer extends TileLayer {
     private static final int CAP_RADIUS = (BAR_SIZE / 2);
 
     private final boolean mVertical;
-    private final Bitmap mBitmap;
-    private final Canvas mCanvas;
     private float mOpacity;
 
     // To avoid excessive GC, declare some objects here that would otherwise
@@ -78,8 +76,8 @@ public class ScrollbarLayer extends TileLayer {
         mRenderer = renderer;
 
         IntSize size = image.getSize();
-        mBitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
+        Bitmap bitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
 
         // Paint a spot to use as the scroll indicator
         Paint foregroundPaint = new Paint();
@@ -87,10 +85,10 @@ public class ScrollbarLayer extends TileLayer {
         foregroundPaint.setStyle(Paint.Style.FILL);
         foregroundPaint.setColor(Color.argb(127, 0, 0, 0));
 
-        mCanvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
-        mCanvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
+        canvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
+        canvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
 
-        mBitmap.copyPixelsToBuffer(buffer.asIntBuffer());
+        bitmap.copyPixelsToBuffer(buffer.asIntBuffer());
 
         mBarRectF = new RectF();
         mBarRect = new Rect();
@@ -229,106 +227,61 @@ public class ScrollbarLayer extends TileLayer {
 
         // Vertex coordinates are x,y,z starting at position 0 into the buffer.
         coordBuffer.position(0);
-        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                coordBuffer);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
 
         // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
         coordBuffer.position(3);
-        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                coordBuffer);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
         // Reset the position in the buffer for the next set of vertex and texture coordinates.
         coordBuffer.position(0);
-
         if (mVertical) {
             // top endcap
             mCapRectF.set(mBarRectF.left, mBarRectF.top + CAP_RADIUS, mBarRectF.left + BAR_SIZE, mBarRectF.top);
             fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, TOP_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
+        } else {
+            mCapRectF.set(mBarRectF.left - CAP_RADIUS, mBarRectF.bottom + BAR_SIZE, mBarRectF.left, mBarRectF.bottom);
+            fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, LEFT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
+        }
+        coordBuffer.put(mCoords);
 
-            coordBuffer.put(mCoords);
+        // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+        coordBuffer.position(0);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
 
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
+        // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
+        coordBuffer.position(3);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
 
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-            // Reset the position in the buffer for the next set of vertex and texture
-            // coordinates.
-            coordBuffer.position(0);
-
+        // Reset the position in the buffer for the next set of vertex and texture coordinates.
+        coordBuffer.position(0);
+        if (mVertical) {
             // bottom endcap
             mCapRectF.set(mBarRectF.left, mBarRectF.bottom, mBarRectF.left + BAR_SIZE, mBarRectF.bottom - CAP_RADIUS);
             fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, BOT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-            // Reset the position in the buffer for the next set of vertex and texture
-            // coordinates.
-            coordBuffer.position(0);
         } else {
-            // left endcap
-            mCapRectF.set(mBarRectF.left - CAP_RADIUS, mBarRectF.bottom + BAR_SIZE, mBarRectF.left, mBarRectF.bottom);
-            fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, LEFT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-            // Reset the position in the buffer for the next set of vertex and texture
-            // coordinates.
-            coordBuffer.position(0);
-
             // right endcap
             mCapRectF.set(mBarRectF.right, mBarRectF.bottom + BAR_SIZE, mBarRectF.right + CAP_RADIUS, mBarRectF.bottom);
             fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, RIGHT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         }
+        coordBuffer.put(mCoords);
+
+        // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+        coordBuffer.position(0);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
+
+        // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
+        coordBuffer.position(3);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+        // Reset the position in the buffer for the next set of vertex and texture coordinates.
+        coordBuffer.position(0);
 
         // Enable the default shader program again
         deactivateProgram();
