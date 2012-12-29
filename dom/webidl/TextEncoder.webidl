@@ -10,12 +10,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-[Constructor(optional DOMString label = "utf-8")]
+[Constructor(optional DOMString utfLabel = "utf-8")]
 interface TextEncoder {
   [Constant]
   readonly attribute DOMString encoding;
   [Throws]
-  Uint8Array encode(optional DOMString? input = null, optional TextEncodeOptions options);
+  Uint8Array encode(optional DOMString input = "", optional TextEncodeOptions options);
 };
 
 dictionary TextEncodeOptions {
