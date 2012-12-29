@@ -56,7 +56,7 @@
 #include "nsRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
-#include "nsDOMDocumentType.h"
+#include "DocumentType.h"
 #include "nsNodeIterator.h"
 #include "nsTreeWalker.h"
 
@@ -4351,14 +4351,14 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 //
 // nsIDOMDocument interface
 //
-nsDOMDocumentType*
+DocumentType*
 nsIDocument::GetDoctype() const
 {
   for (nsIContent* child = GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     if (child->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
-      return static_cast<nsDOMDocumentType*>(child);
+      return static_cast<DocumentType*>(child);
     }
   }
   return nullptr;

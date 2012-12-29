@@ -18,7 +18,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCDATASection.h"
-#include "nsDOMDocumentType.h"
+#include "DocumentType.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsCSSStyleSheet.h"

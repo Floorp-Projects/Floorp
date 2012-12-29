@@ -47,6 +47,7 @@ EXPORTS_NAMESPACES = mozilla/dom
 EXPORTS_mozilla/dom = \
   Comment.h \
   DocumentFragment.h \
+  DocumentType.h \
   DOMImplementation.h \
   EventSource.h \
   Link.h \
@@ -55,6 +56,7 @@ EXPORTS_mozilla/dom = \
 CPPSRCS		= \
 		Comment.cpp \
 		DirectionalityUtils.cpp \
+		DocumentType.cpp \
 		DOMImplementation.cpp \
 		EventSource.cpp \
 		FileIOObject.cpp \
@@ -78,7 +80,6 @@ CPPSRCS		= \
 		nsDOMAttributeMap.cpp \
 		nsDOMBlobBuilder.cpp \
 		nsDOMCaretPosition.cpp \
-		nsDOMDocumentType.cpp \
 		nsDOMFile.cpp \
 		nsDOMFileReader.cpp \
 		nsDOMLists.cpp \

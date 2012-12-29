@@ -7,7 +7,7 @@
  * Implementation of DOM Core's nsIDOMDocumentType node.
  */
 
-#include "nsDOMDocumentType.h"
+#include "mozilla/dom/DocumentType.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsGkAtoms.h"
@@ -19,13 +19,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/DocumentTypeBinding.h"
 
-using namespace mozilla;
-
-JSObject*
-nsDOMDocumentType::WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap)
-{
-  return dom::DocumentTypeBinding::Wrap(cx, scope, this, triedToWrap);
-}
+DOMCI_NODE_DATA(DocumentType, mozilla::dom::DocumentType)
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
@@ -36,19 +30,19 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       const nsAString& aInternalSubset)
 {
   NS_ENSURE_ARG_POINTER(aDocType);
-  ErrorResult rv;
+  mozilla::ErrorResult rv;
   *aDocType = NS_NewDOMDocumentType(aNodeInfoManager, aName, aPublicId,
                                     aSystemId, aInternalSubset, rv).get();
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsDOMDocumentType>
+already_AddRefed<mozilla::dom::DocumentType>
 NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
                       nsIAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset,
-                      ErrorResult& rv)
+                      mozilla::ErrorResult& rv)
 {
   if (!aName) {
     rv.Throw(NS_ERROR_INVALID_POINTER);
@@ -65,16 +59,25 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
     return nullptr;
   }
 
-  nsRefPtr<nsDOMDocumentType> docType =
-    new nsDOMDocumentType(ni.forget(), aPublicId, aSystemId, aInternalSubset);
+  nsRefPtr<mozilla::dom::DocumentType> docType =
+    new mozilla::dom::DocumentType(ni.forget(), aPublicId, aSystemId, aInternalSubset);
   return docType.forget();
 }
 
-nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                     const nsAString& aPublicId,
-                                     const nsAString& aSystemId,
-                                     const nsAString& aInternalSubset) :
-  nsDOMDocumentTypeForward(aNodeInfo),
+namespace mozilla {
+namespace dom {
+
+JSObject*
+DocumentType::WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap)
+{
+  return DocumentTypeBinding::Wrap(cx, scope, this, triedToWrap);
+}
+
+DocumentType::DocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
+                           const nsAString& aPublicId,
+                           const nsAString& aSystemId,
+                           const nsAString& aInternalSubset) :
+  DocumentTypeForward(aNodeInfo),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
@@ -84,25 +87,23 @@ nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
                     "Bad NodeType in aNodeInfo");
 }
 
-nsDOMDocumentType::~nsDOMDocumentType()
+DocumentType::~DocumentType()
 {
 }
 
-DOMCI_NODE_DATA(DocumentType, nsDOMDocumentType)
-
-// QueryInterface implementation for nsDOMDocumentType
-NS_INTERFACE_TABLE_HEAD(nsDOMDocumentType)
-  NS_NODE_INTERFACE_TABLE2(nsDOMDocumentType, nsIDOMNode, nsIDOMDocumentType)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMDocumentType)
+// QueryInterface implementation for DocumentType
+NS_INTERFACE_TABLE_HEAD(DocumentType)
+  NS_NODE_INTERFACE_TABLE2(DocumentType, nsIDOMNode, nsIDOMDocumentType)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(DocumentType)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DocumentType)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
 
-NS_IMPL_ADDREF_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
-NS_IMPL_RELEASE_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
+NS_IMPL_ADDREF_INHERITED(DocumentType, nsGenericDOMDataNode)
+NS_IMPL_RELEASE_INHERITED(DocumentType, nsGenericDOMDataNode)
 
 bool
-nsDOMDocumentType::IsNodeOfType(uint32_t aFlags) const
+DocumentType::IsNodeOfType(uint32_t aFlags) const
 {
   // Don't claim to be eDATA_NODE since we're just inheriting
   // nsGenericDOMDataNode for convinience. Doctypes aren't really
@@ -112,20 +113,20 @@ nsDOMDocumentType::IsNodeOfType(uint32_t aFlags) const
 }
 
 const nsTextFragment*
-nsDOMDocumentType::GetText()
+DocumentType::GetText()
 {
   return nullptr;
 }
 
 NS_IMETHODIMP    
-nsDOMDocumentType::GetName(nsAString& aName)
+DocumentType::GetName(nsAString& aName)
 {
   aName = NodeName();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetPublicId(nsAString& aPublicId)
+DocumentType::GetPublicId(nsAString& aPublicId)
 {
   aPublicId = mPublicId;
 
@@ -133,7 +134,7 @@ nsDOMDocumentType::GetPublicId(nsAString& aPublicId)
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetSystemId(nsAString& aSystemId)
+DocumentType::GetSystemId(nsAString& aSystemId)
 {
   aSystemId = mSystemId;
 
@@ -141,17 +142,20 @@ nsDOMDocumentType::GetSystemId(nsAString& aSystemId)
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetInternalSubset(nsAString& aInternalSubset)
+DocumentType::GetInternalSubset(nsAString& aInternalSubset)
 {
   aInternalSubset = mInternalSubset;
   return NS_OK;
 }
 
 nsGenericDOMDataNode*
-nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+DocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 {
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  return new nsDOMDocumentType(ni.forget(), mPublicId, mSystemId,
-                               mInternalSubset);
+  return new DocumentType(ni.forget(), mPublicId, mSystemId,
+                          mInternalSubset);
 }
+
+} // namespace dom
+} // namespace mozilla
 
