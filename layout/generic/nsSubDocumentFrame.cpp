@@ -331,7 +331,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       mFrameLoader->GetDocShell(getter_AddRefs(docShell));
       if (!docShell)
         return NS_OK;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      presShell = docShell->GetPresShell();
       if (!presShell)
         return NS_OK;
     }
@@ -1117,8 +1117,7 @@ nsSubDocumentFrame::ObtainIntrinsicSizeFrame()
     nsCOMPtr<nsIDocShell> docShell;
     GetDocShell(getter_AddRefs(docShell));
     if (docShell) {
-      nsCOMPtr<nsIPresShell> presShell;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
       if (presShell) {
         nsIScrollableFrame* scrollable = presShell->GetRootScrollFrameAsScrollable();
         if (scrollable) {

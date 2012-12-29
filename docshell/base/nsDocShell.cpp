@@ -1037,9 +1037,8 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         return NS_OK;
     }
     else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult rv = GetPresShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(rv) && shell)
+      nsIPresShell* shell = GetPresShell();
+      if (shell)
         return shell->QueryInterface(aIID,aSink);    
     }
     else if (aIID.Equals(NS_GET_IID(nsIDocShellTreeOwner))) {
@@ -1733,22 +1732,12 @@ nsDocShell::GetPresContext(nsPresContext ** aPresContext)
     return mContentViewer->GetPresContext(aPresContext);
 }
 
-NS_IMETHODIMP
-nsDocShell::GetPresShell(nsIPresShell ** aPresShell)
+NS_IMETHODIMP_(nsIPresShell*)
+nsDocShell::GetPresShell()
 {
-    nsresult rv = NS_OK;
-
-    NS_ENSURE_ARG_POINTER(aPresShell);
-    *aPresShell = nullptr;
-
     nsRefPtr<nsPresContext> presContext;
     (void) GetPresContext(getter_AddRefs(presContext));
-
-    if (presContext) {
-        NS_IF_ADDREF(*aPresShell = presContext->GetPresShell());
-    }
-
-    return rv;
+    return presContext ? presContext->GetPresShell() : nullptr;
 }
 
 NS_IMETHODIMP
@@ -1869,8 +1858,7 @@ nsDocShell::GetCharset(char** aCharset)
     NS_ENSURE_ARG_POINTER(aCharset);
     *aCharset = nullptr; 
 
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
+    nsIPresShell* presShell = GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     nsIDocument *doc = presShell->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -3246,8 +3234,7 @@ PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentNode));
   int32_t type;
   aParentNode->GetItemType(&type);
-  nsCOMPtr<nsIPresShell> presShell;
-  parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = parentAsDocShell->GetPresShell();
   nsRefPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsIDocument *doc = presShell->GetDocument();
@@ -5051,8 +5038,7 @@ nsDocShell::DoGetPositionAndSize(int32_t * x, int32_t * y, int32_t * cx,
 NS_IMETHODIMP
 nsDocShell::Repaint(bool aForce)
 {
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell =GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     nsIViewManager* viewManager = presShell->GetViewManager();
@@ -5117,8 +5103,7 @@ nsDocShell::GetVisibility(bool * aVisibility)
     if (!mContentViewer)
         return NS_OK;
 
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     if (!presShell)
         return NS_OK;
 
@@ -5143,11 +5128,10 @@ nsDocShell::GetVisibility(bool * aVisibility)
     treeItem->GetParent(getter_AddRefs(parentItem));
     while (parentItem) {
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(treeItem));
-        docShell->GetPresShell(getter_AddRefs(presShell));
+        presShell = docShell->GetPresShell();
 
         nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentItem);
-        nsCOMPtr<nsIPresShell> pPresShell;
-        parentDS->GetPresShell(getter_AddRefs(pPresShell));
+        nsCOMPtr<nsIPresShell> pPresShell = parentDS->GetPresShell();
 
         // Null-check for crash in bug 267804
         if (!pPresShell) {
@@ -5208,8 +5192,7 @@ nsDocShell::SetIsActive(bool aIsActive)
   mIsActive = aIsActive;
 
   // Tell the PresShell about it.
-  nsCOMPtr<nsIPresShell> pshell;
-  GetPresShell(getter_AddRefs(pshell));
+  nsCOMPtr<nsIPresShell> pshell = GetPresShell();
   if (pshell)
     pshell->SetIsActive(aIsActive);
 
@@ -7396,8 +7379,7 @@ nsDocShell::RestoreFromHistory()
     nsView *rootViewSibling = nullptr, *rootViewParent = nullptr;
     nsIntRect newBounds(0, 0, 0, 0);
 
-    nsCOMPtr<nsIPresShell> oldPresShell;
-    nsDocShell::GetPresShell(getter_AddRefs(oldPresShell));
+    nsCOMPtr<nsIPresShell> oldPresShell = GetPresShell();
     if (oldPresShell) {
         nsIViewManager *vm = oldPresShell->GetViewManager();
         if (vm) {
@@ -7618,8 +7600,7 @@ nsDocShell::RestoreFromHistory()
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsCOMPtr<nsIPresShell> shell;
-    nsDocShell::GetPresShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
 
     nsIViewManager *newVM = shell ? shell->GetViewManager() : nullptr;
     nsView *newRootView = newVM ? newVM->GetRootView() : nullptr;
@@ -7899,8 +7880,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // the ID can be used to distinguish it from the other parts.
     nsCOMPtr<nsIMultiPartChannel> multiPartChannel(do_QueryInterface(request));
     if (multiPartChannel) {
-      nsCOMPtr<nsIPresShell> shell;
-      rv = GetPresShell(getter_AddRefs(shell));
+      nsCOMPtr<nsIPresShell> shell = GetPresShell();
       if (NS_SUCCEEDED(rv) && shell) {
         nsIDocument *doc = shell->GetDocument();
         if (doc) {
@@ -9605,12 +9585,11 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = GetPresShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv) || !shell) {
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    if (!shell) {
         // If we failed to get the shell, or if there is no shell,
         // nothing left to do here.
-        return rv;
+        return NS_OK;
     }
 
     // If we have no new anchor, we do not want to scroll, unless there is a
@@ -9652,7 +9631,7 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
         // conversion will fail and give us an empty Unicode string.
         // In that case, we should just fall through to using the
         // page's charset.
-        rv = NS_ERROR_FAILURE;
+        nsresult rv = NS_ERROR_FAILURE;
         NS_ConvertUTF8toUTF16 uStr(str);
         if (!uStr.IsEmpty()) {
             rv = shell->GoToAnchor(NS_ConvertUTF8toUTF16(str), scroll);
@@ -10635,9 +10614,8 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
     nsresult  rv = NS_OK;
     
     if (mOSHE) {
-        nsCOMPtr<nsIPresShell> shell;
-        rv = GetPresShell(getter_AddRefs(shell));
-        if (NS_SUCCEEDED(rv) && shell) {
+        nsCOMPtr<nsIPresShell> shell = GetPresShell();
+        if (shell) {
             nsCOMPtr<nsILayoutHistoryState> layoutState;
             rv = shell->CaptureHistoryState(getter_AddRefs(layoutState));
         }
@@ -11283,8 +11261,7 @@ nsDocShell::GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,
 nsIScrollableFrame *
 nsDocShell::GetRootScrollFrame()
 {
-    nsCOMPtr<nsIPresShell> shell;
-    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), nullptr);
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
     NS_ENSURE_TRUE(shell, nullptr);
 
     return shell->GetRootScrollFrameAsScrollableExternal();

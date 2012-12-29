@@ -74,8 +74,7 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
 
   nsIFrame* root = presShell->GetRootFrame();
 

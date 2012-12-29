@@ -175,8 +175,7 @@ PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentItem));
   int32_t type;
   aParentItem->GetItemType(&type);
-  nsCOMPtr<nsIPresShell> presShell;
-  parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = parentAsDocShell->GetPresShell();
   nsRefPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsCOMPtr<nsIContentViewer> cv;
@@ -1467,8 +1466,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
 
       nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
       if (subDS && IsShellVisible(subDS)) {
-        nsCOMPtr<nsIPresShell> subPS;
-        subDS->GetPresShell(getter_AddRefs(subPS));
+        nsCOMPtr<nsIPresShell> subPS = subDS->GetPresShell();
 
         // Docshells need not have a presshell (eg. display:none
         // iframes, docshells in transition between documents, etc).
@@ -1504,9 +1502,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     docShell->GetParent(getter_AddRefs(parentShellItem));
     nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentShellItem);
     if (parentDS) {
-      nsCOMPtr<nsIPresShell> parentPS;
-
-      parentDS->GetPresShell(getter_AddRefs(parentPS));
+      nsCOMPtr<nsIPresShell> parentPS = parentDS->GetPresShell();
       NS_ASSERTION(parentPS, "Our PresShell exists but the parent's does not?");
 
       nsPresContext *parentPC = parentPS->GetPresContext();

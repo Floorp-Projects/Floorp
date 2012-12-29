@@ -36,10 +36,7 @@ inLayoutUtils::GetPresShellFor(nsISupports* aThing)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aThing);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  window->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
-
-  return presShell;
+  return window->GetDocShell()->GetPresShell();
 }
 
 /*static*/
