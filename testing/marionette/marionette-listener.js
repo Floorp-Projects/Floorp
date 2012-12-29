@@ -60,8 +60,6 @@ let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
  * If the actor returns an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  Services.io.manageOfflineStatus = false;
-  Services.io.offline = false;
   let msg = {value: winUtil.outerWindowID, href: content.location.href};
   let register = sendSyncMessage("Marionette:register", msg);
 
