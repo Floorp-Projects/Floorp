@@ -586,6 +586,8 @@ MOCHITEST_FILES_B = \
 		test_XHR_onuploadprogress.html \
 		test_XHR_anon.html \
 		file_XHR_anon.sjs \
+		file_XHR_system_redirect.html \
+		file_XHR_system_redirect.html^headers^ \
 		test_XHR_system.html \
 		test_XHR_parameters.html \
 		test_ipc_messagemanager_blob.html \
