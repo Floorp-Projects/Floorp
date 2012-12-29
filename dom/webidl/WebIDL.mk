@@ -30,6 +30,7 @@ webidl_files = \
   DelayNode.webidl \
   Document.webidl \
   DocumentFragment.webidl \
+  DocumentType.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
   DOMSettableTokenList.webidl \
