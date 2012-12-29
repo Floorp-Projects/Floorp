@@ -18,6 +18,7 @@ public:
   HTMLTableColElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLTableColElement();
 
@@ -36,6 +37,56 @@ public:
   // nsIDOMHTMLTableColElement
   NS_DECL_NSIDOMHTMLTABLECOLELEMENT
 
+  uint32_t Span() const
+  {
+    return GetIntAttr(nsGkAtoms::span, 1);
+  }
+  void SetSpan(uint32_t aSpan, ErrorResult& aError)
+  {
+    SetHTMLIntAttr(nsGkAtoms::span, aSpan, aError);
+  }
+
+  void GetAlign(nsString& aAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aAlign);
+  }
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+  void GetCh(nsString& aCh)
+  {
+    GetHTMLAttr(nsGkAtoms::_char, aCh);
+  }
+  void SetCh(const nsAString& aCh, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::_char, aCh, aError);
+  }
+  void GetChOff(nsString& aChOff)
+  {
+    GetHTMLAttr(nsGkAtoms::charoff, aChOff);
+  }
+  void SetChOff(const nsAString& aChOff, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::charoff, aChOff, aError);
+  }
+  void GetVAlign(nsString& aVAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::valign, aVAlign);
+  }
+  void SetVAlign(const nsAString& aVAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::valign, aVAlign, aError);
+  }
+  void GetWidth(nsString& aWidth)
+  {
+    GetHTMLAttr(nsGkAtoms::width, aWidth);
+  }
+  void SetWidth(const nsAString& aWidth, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
+  }
+
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -48,6 +99,10 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
