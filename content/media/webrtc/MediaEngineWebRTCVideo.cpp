@@ -15,7 +15,6 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 #else
 #define LOG(msg)
 #endif
-#define LOG_ALL_FRAMES 1
 
 /**
  * Webrtc video source.
@@ -111,16 +110,12 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   TrackTicks target = TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
   TrackTicks delta = target - mLastEndTime;
 #ifdef LOG_ALL_FRAMES
-  LOG(("NotifyPull, desired = %ld, target = %ld, delta = %ld", (int64_t) aDesiredTime, (int64_t) target, (int64_t) delta));
+  LOG(("NotifyPull, target = %lu, delta = %lu", (uint64_t) target, (uint64_t) delta));
 #endif
-  // Don't append if we've already provided a frame that supposedly goes past the current aDesiredTime
-  // Doing so means a negative delta and thus messes up handling of the graph
-  if (delta > 0) {
-    // NULL images are allowed
-    segment.AppendFrame(image ? image.forget() : nullptr, delta, gfxIntSize(mWidth, mHeight));
-    mSource->AppendToTrack(mTrackID, &(segment));
-    mLastEndTime = target;
-  }
+  // NULL images are allowed
+  segment.AppendFrame(image ? image.forget() : nullptr, delta, gfxIntSize(mWidth, mHeight));
+  mSource->AppendToTrack(mTrackID, &(segment));
+  mLastEndTime = target;
 }
 
 void
