@@ -14,6 +14,10 @@
 #include "nsILoadContext.h"
 
 namespace mozilla {
+namespace dom {
+  class PBrowserParent;
+}
+
 namespace net {
 
 class WyciwygChannelParent : public PWyciwygChannelParent
@@ -33,7 +37,8 @@ protected:
   virtual bool RecvInit(const URIParams& uri);
   virtual bool RecvAsyncOpen(const URIParams& original,
                              const uint32_t& loadFlags,
-                             const IPC::SerializedLoadContext& loadContext);
+                             const IPC::SerializedLoadContext& loadContext,
+                             PBrowserParent* parent);
   virtual bool RecvWriteToCacheEntry(const nsString& data);
   virtual bool RecvCloseCacheEntry(const nsresult& reason);
   virtual bool RecvSetCharsetAndSource(const int32_t& source,
