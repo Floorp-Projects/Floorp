@@ -46,7 +46,6 @@ class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMDocumentType;
-class nsDOMDocumentType;
 class nsXMLProcessingInstruction;
 class nsIDOMElement;
 class nsIDOMEventTarget;
@@ -87,6 +86,7 @@ class ImageLoader;
 namespace dom {
 class Comment;
 class DocumentFragment;
+class DocumentType;
 class DOMImplementation;
 class Element;
 class Link;
@@ -553,7 +553,7 @@ public:
   /**
    * Return the doctype for this document.
    */
-  nsDOMDocumentType* GetDoctype() const;
+  mozilla::dom::DocumentType* GetDoctype() const;
 
   /**
    * Return the root element for this document.

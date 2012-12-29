@@ -103,7 +103,7 @@
 #include "nsHTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
-#include "nsDOMDocumentType.h"
+#include "DocumentType.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
