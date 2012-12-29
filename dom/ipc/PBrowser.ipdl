@@ -216,6 +216,8 @@ parent:
      *   URI of the manifest to fetch, the application cache group ID
      * @param documentURI
      *   URI of the document that referred the manifest
+     * @param clientID
+     *   The group cache version identifier to use
      * @param stickDocument
      *   True if the update was initiated by a document load that referred
      *   a manifest.
@@ -233,6 +235,7 @@ parent:
      *   has already been cached (stickDocument=false).
      */
     POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
+                        bool isInBrowserElement, uint32_t appId,
                         bool stickDocument);
 
     sync PIndexedDB(nsCString asciiOrigin)
