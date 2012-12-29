@@ -8,9 +8,8 @@
 #include "mozilla/dom/HTMLTableColElement.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
 #include "nsRuleData.h"
+#include "mozilla/dom/HTMLTableColElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
 DOMCI_NODE_DATA(HTMLTableColElement, mozilla::dom::HTMLTableColElement)
@@ -26,6 +25,13 @@ HTMLTableColElement::~HTMLTableColElement()
 {
 }
 
+JSObject*
+HTMLTableColElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                              bool *aTriedToWrap)
+{
+  return HTMLTableColElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
 NS_IMPL_ADDREF_INHERITED(HTMLTableColElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTableColElement, Element)
 
@@ -39,14 +45,105 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableColElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableColElement)
 
+NS_IMETHODIMP
+HTMLTableColElement::SetSpan(int32_t aSpan)
+{
+  ErrorResult rv;
+  SetSpan(aSpan, rv);
+  return rv.ErrorCode();
+}
 
-NS_IMPL_STRING_ATTR(HTMLTableColElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLTableColElement, Ch, _char)
-NS_IMPL_STRING_ATTR(HTMLTableColElement, ChOff, charoff)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(HTMLTableColElement, Span, span, 1)
-NS_IMPL_STRING_ATTR(HTMLTableColElement, VAlign, valign)
-NS_IMPL_STRING_ATTR(HTMLTableColElement, Width, width)
+NS_IMETHODIMP
+HTMLTableColElement::GetSpan(int32_t* aSpan)
+{
+  *aSpan = Span();
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+HTMLTableColElement::SetAlign(const nsAString& aAlign)
+{
+  ErrorResult rv;
+  SetAlign(aAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetAlign(nsAString& aAlign)
+{
+  nsString align;
+  GetAlign(align);
+  aAlign = align;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetVAlign(const nsAString& aVAlign)
+{
+  ErrorResult rv;
+  SetVAlign(aVAlign, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetVAlign(nsAString& aVAlign)
+{
+  nsString vAlign;
+  GetVAlign(vAlign);
+  aVAlign = vAlign;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetCh(const nsAString& aCh)
+{
+  ErrorResult rv;
+  SetCh(aCh, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetCh(nsAString& aCh)
+{
+  nsString ch;
+  GetCh(ch);
+  aCh = ch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetChOff(const nsAString& aChOff)
+{
+  ErrorResult rv;
+  SetChOff(aChOff, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetChOff(nsAString& aChOff)
+{
+  nsString chOff;
+  GetChOff(chOff);
+  aChOff = chOff;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::SetWidth(const nsAString& aWidth)
+{
+  ErrorResult rv;
+  SetWidth(aWidth, rv);
+  return rv.ErrorCode();
+}
+
+NS_IMETHODIMP
+HTMLTableColElement::GetWidth(nsAString& aWidth)
+{
+  nsString width;
+  GetWidth(width);
+  aWidth = width;
+  return NS_OK;
+}
 
 bool
 HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
