@@ -53,28 +53,17 @@
 #  endif
 
 
-#  if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#  ifdef __GNUC__
 #    define MOZILLA_MAY_SUPPORT_EDSP 1
-#  endif
 
-#  if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
 #    if defined(HAVE_ARM_SIMD)
 #      define MOZILLA_MAY_SUPPORT_ARMV6 1
 #    endif
-#  endif
 
-  // Technically 4.2.x only works in the CodeSourcery releases, but I don't
-  // know how to detect those separately from mainline gcc (which got support
-  // in 4.3). The Maemo version 5 SDK shipped with the CodeSourcery 4.2.1
-  // release, which we need to work.
-#  if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2)
 #    if defined(HAVE_ARM_NEON)
 #      define MOZILLA_MAY_SUPPORT_NEON 1
 #    endif
-#  endif
 
-  // ARMv7 support was merged in gcc 4.3.
-#  if __GNUC__> 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
 #    if defined(HAVE_ARM_SIMD)
 #      define MOZILLA_MAY_SUPPORT_ARMV7 1
 #    endif

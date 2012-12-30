@@ -1134,9 +1134,28 @@ ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
 }
 
 static bool
-TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool *eliminated)
+TryEliminateBoundsCheck(BoundsCheckMap &checks, size_t blockIndex, MBoundsCheck *dominated, bool *eliminated)
 {
     JS_ASSERT(!*eliminated);
+
+    // Replace all uses of the bounds check with the actual index.
+    // This is (a) necessary, because we can coalesce two different
+    // bounds checks and would otherwise use the wrong index and
+    // (b) helps register allocation. Note that this is safe since
+    // no other pass after bounds check elimination moves instructions.
+    dominated->replaceAllUsesWith(dominated->index());
+
+    if (!dominated->isMovable())
+        return true;
+
+    MBoundsCheck *dominating = FindDominatingBoundsCheck(checks, dominated, blockIndex);
+    if (!dominating)
+        return false;
+
+    if (dominating == dominated) {
+        // We didn't find a dominating bounds check.
+        return true;
+    }
 
     // We found two bounds checks with the same hash number, but we still have
     // to make sure the lengths and index terms are equal.
@@ -1177,6 +1196,99 @@ TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool 
     return true;
 }
 
+static void
+TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool filtersUndefined,
+                                MTest *test, BranchDirection direction, bool *eliminated)
+{
+    JS_ASSERT(filtersNull || filtersUndefined);
+
+    // Watch for code patterns similar to 'if (x.f) { ... = x.f }'.  If x.f
+    // is either an object or null/undefined, there will be a type barrier on
+    // the latter read as the null/undefined value is never realized there.
+    // The type barrier can be eliminated, however, by looking at tests
+    // performed on the result of the first operation that filter out all
+    // types that have been seen in the first access but not the second.
+
+    // A test 'if (x.f)' filters both null and undefined.
+    if (test->getOperand(0) == barrier->input() && direction == TRUE_BRANCH) {
+        *eliminated = true;
+        barrier->replaceAllUsesWith(barrier->input());
+        return;
+    }
+
+    if (!test->getOperand(0)->isCompare())
+        return;
+
+    MCompare *compare = test->getOperand(0)->toCompare();
+    MCompare::CompareType compareType = compare->compareType();
+
+    if (compareType != MCompare::Compare_Undefined && compareType != MCompare::Compare_Null)
+        return;
+    if (compare->getOperand(0) != barrier->input())
+        return;
+
+    JSOp op = compare->jsop();
+    JS_ASSERT(op == JSOP_EQ || op == JSOP_STRICTEQ ||
+              op == JSOP_NE || op == JSOP_STRICTNE);
+
+    if ((direction == TRUE_BRANCH) != (op == JSOP_NE || op == JSOP_STRICTNE))
+        return;
+
+    // A test 'if (x.f != null)' or 'if (x.f != undefined)' filters both null
+    // and undefined. If strict equality is used, only the specified rhs is
+    // tested for.
+    if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
+        if (compareType == MCompare::Compare_Undefined && !filtersUndefined)
+            return;
+        if (compareType == MCompare::Compare_Null && !filtersNull)
+            return;
+    }
+
+    *eliminated = true;
+    barrier->replaceAllUsesWith(barrier->input());
+}
+
+static bool
+TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
+{
+    JS_ASSERT(!*eliminated);
+
+    const types::StackTypeSet *barrierTypes = barrier->typeSet();
+    const types::StackTypeSet *inputTypes = barrier->input()->typeSet();
+
+    if (!barrierTypes || !inputTypes)
+        return true;
+
+    bool filtersNull = barrierTypes->filtersType(inputTypes, types::Type::NullType());
+    bool filtersUndefined = barrierTypes->filtersType(inputTypes, types::Type::UndefinedType());
+
+    if (!filtersNull && !filtersUndefined)
+        return true;
+
+    MBasicBlock *block = barrier->block();
+    while (true) {
+        BranchDirection direction;
+        MTest *test = block->immediateDominatorBranch(&direction);
+
+        if (test) {
+            TryEliminateTypeBarrierFromTest(barrier, filtersNull, filtersUndefined,
+                                            test, direction, eliminated);
+        }
+
+        MBasicBlock *previous = block->immediateDominator();
+        if (previous == block)
+            break;
+        block = previous;
+    }
+
+    return true;
+}
+
+// Eliminate checks which are redundant given each other or other instructions.
+//
+// A type barrier is considered redundant if all missing types have been tested
+// for by earlier control instructions.
+//
 // A bounds check is considered redundant if it's dominated by another bounds
 // check with the same length and the indexes differ by only a constant amount.
 // In this case we eliminate the redundant bounds check and update the other one
@@ -1186,7 +1298,7 @@ TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool 
 // differences in constant offset, this offers a fast way to find redundant
 // checks.
 bool
-ion::EliminateRedundantBoundsChecks(MIRGraph &graph)
+ion::EliminateRedundantChecks(MIRGraph &graph)
 {
     BoundsCheckMap checks;
 
@@ -1220,41 +1332,18 @@ ion::EliminateRedundantBoundsChecks(MIRGraph &graph)
         }
 
         for (MDefinitionIterator iter(block); iter; ) {
-            if (!iter->isBoundsCheck()) {
-                iter++;
-                continue;
-            }
-
-            MBoundsCheck *check = iter->toBoundsCheck();
-
-            // Replace all uses of the bounds check with the actual index.
-            // This is (a) necessary, because we can coalesce two different
-            // bounds checks and would otherwise use the wrong index and
-            // (b) helps register allocation. Note that this is safe since
-            // no other pass after bounds check elimination moves instructions.
-            check->replaceAllUsesWith(check->index());
-
-            if (!check->isMovable()) {
-                iter++;
-                continue;
-            }
-
-            MBoundsCheck *dominating = FindDominatingBoundsCheck(checks, check, index);
-            if (!dominating)
-                return false;
-
-            if (dominating == check) {
-                // We didn't find a dominating bounds check.
-                iter++;
-                continue;
-            }
-
             bool eliminated = false;
-            if (!TryEliminateBoundsCheck(dominating, check, &eliminated))
-                return false;
+
+            if (iter->isBoundsCheck()) {
+                if (!TryEliminateBoundsCheck(checks, index, iter->toBoundsCheck(), &eliminated))
+                    return false;
+            } else if (iter->isTypeBarrier()) {
+                if (!TryEliminateTypeBarrier(iter->toTypeBarrier(), &eliminated))
+                    return false;
+            }
 
             if (eliminated)
-                iter = check->block()->discardDefAt(iter);
+                iter = block->discardDefAt(iter);
             else
                 iter++;
         }

@@ -55,7 +55,7 @@ void
 AssertExtendedGraphCoherency(MIRGraph &graph);
 
 bool
-EliminateRedundantBoundsChecks(MIRGraph &graph);
+EliminateRedundantChecks(MIRGraph &graph);
 
 class MDefinition;
 

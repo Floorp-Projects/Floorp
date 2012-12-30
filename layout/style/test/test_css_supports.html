@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=779917
+-->
+<head>
+  <title>Test for Bug 779917</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=779917">Mozilla Bug 779917</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 779917 **/
+
+function runTest()
+{
+  var passingConditions = [
+    "(color: green)",
+    "((color: green))",
+    "(color: green !important)",
+    "(color: rainbow) or (color: green)",
+    "(color: green) or (color: rainbow)",
+    "(color: green) and (color: blue)",
+    "(color: rainbow) or (color: iridescent) or (color: green)",
+    "(color: red) and (color: green) and (color: blue)",
+    "(color:green)",
+    "not (color: rainbow)",
+    "not (not (color: green))",
+    "(unknown:) or (color: green)",
+    "(unknown) or (color: green)",
+    "(font: 16px serif)",
+    "(color:) or (color: green)",
+    "not (@page)",
+    "not ({ something @with [ balanced ] brackets })",
+    "an-extension(of some kind) or (color: green)",
+    "not ()",
+    "( Font:  20px serif ! Important) ",
+    "(color: /* comment */ green)",
+    "(/* comment */ color: green)",
+    "(color: green /* comment */)",
+    "(color: green) /* comment */",
+    "/* comment */ (color: green)",
+    "(color /* comment */: green)",
+    "(color: green) /* unclosed comment",
+    "(color: green",
+    "(((((((color: green",
+    "(font-family: 'Helvetica"
+  ];
+
+  var failingConditions = [
+    "(color: rainbow)",
+    "(color: rainbow) and (color: green)",
+    "(color: blue) and (color: rainbow)",
+    "(color: green) and (color: green) or (color: green)",
+    "(color: green) or (color: green) and (color: green)",
+    "not not (color: green)",
+    "not (color: rainbow) and not (color: iridescent)",
+    "not (color: rainbow) or (color: green)",
+    "(not (color: rainbow) or (color: green))",
+    "(unknown: green)",
+    "not ({ something @with (unbalanced brackets })",
+    "(color: green) or an-extension(that is [unbalanced)",
+    "not(unknown: unknown)",
+    "(color: green) or(color: blue)",
+    "color: green",
+    "(color: green;)",
+    "(font-family: 'Helvetica\n",
+    "(font-family: 'Helvetica\n')",
+    "()",
+    ""
+  ];
+
+  var passingDeclarations = [
+    ["color", "green"],
+    ["color", " green "],
+    ["Color", "Green"],
+    ["color", "green /* comment */"],
+    ["color", "/* comment */ green"],
+    ["color", "green /* unclosed comment"],
+    ["font", "16px serif"],
+    ["font", "16px /* comment */ serif"],
+    ["font", "16px\nserif"],
+    ["color", "\\0067reen"]
+  ];
+
+  var failingDeclarations = [
+    ["color ", "green"],
+    ["color", "rainbow"],
+    ["color", "green green"],
+    ["color", "green !important"],
+    ["\\0063olor", "green"],
+    ["/* comment */color", "green"],
+    ["color/* comment */", "green"],
+    ["font-family", "'Helvetica\n"],
+    ["font-family", "'Helvetica\n'"],
+    ["color", "green;"],
+    ["color", ""],
+    ["unknown", "unknown"],
+    ["", "green"],
+    ["", ""]
+  ];
+
+  passingConditions.forEach(function(aCondition) {
+    is(CSS.supports(aCondition), true, "CSS.supports returns true for passing condition \"" + aCondition + "\"");
+  });
+
+  failingConditions.forEach(function(aCondition) {
+    is(CSS.supports(aCondition), false, "CSS.supports returns false for failing condition \"" + aCondition + "\"");
+  });
+
+  passingDeclarations.forEach(function(aDeclaration) {
+    is(CSS.supports(aDeclaration[0], aDeclaration[1]), true, "CSS.supports returns true for supported declaration \"" + aDeclaration.join(":") + "\"");
+  });
+
+  failingDeclarations.forEach(function(aDeclaration) {
+    is(CSS.supports(aDeclaration[0], aDeclaration[1]), false, "CSS.supports returns false for unsupported declaration \"" + aDeclaration.join(":") + "\"");
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.supports-rule.enabled", true]] }, runTest);
+</script>
+</pre>
+</body>
+</html>

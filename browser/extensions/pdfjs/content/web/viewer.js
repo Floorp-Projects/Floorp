@@ -936,6 +936,21 @@ var PDFView = {
     return support;
   },
 
+  get supportsDocumentFonts() {
+    var support = true;
+    support = FirefoxCom.requestSync('supportsDocumentFonts');
+    Object.defineProperty(this, 'supportsDocumentFonts', { value: support,
+                                                           enumerable: true,
+                                                           configurable: true,
+                                                           writable: false });
+    return support;
+  },
+
+  get isHorizontalScrollbarEnabled() {
+    var div = document.getElementById('viewerContainer');
+    return div.scrollWidth > div.clientWidth;
+  },
+
   initPassiveLoading: function pdfViewInitPassiveLoading() {
     if (!PDFView.loadingBar) {
       PDFView.loadingBar = new ProgressBar('#loadingBar', {});
@@ -2037,6 +2052,8 @@ var PageView = function pageView(container, pdfPage, id, scale,
     if (outputScale.scaled) {
       ctx.scale(outputScale.sx, outputScale.sy);
     }
+    // Checking if document fonts are used only once
+    var checkIfDocumentFontsUsed = !PDFView.pdfDocument.embeddedFontsUsed;
 
     // Rendering area
 
@@ -2049,6 +2066,12 @@ var PageView = function pageView(container, pdfPage, id, scale,
         delete self.loadingIconDiv;
       }
 
+      if (checkIfDocumentFontsUsed && PDFView.pdfDocument.embeddedFontsUsed &&
+          !PDFView.supportsDocumentFonts) {
+        console.error(mozL10n.get('web_fonts_disabled', null,
+          'Web fonts are disabled: unable to use embedded PDF fonts.'));
+        PDFView.fallback();
+      }
       if (error) {
         PDFView.error(mozL10n.get('rendering_error', null,
           'An error occurred while rendering the page.'), error);
@@ -3095,6 +3118,7 @@ window.addEventListener('keydown', function keydown(evt) {
       case 61: // FF/Mac '='
       case 107: // FF '+' and '='
       case 187: // Chrome '+'
+      case 171: // FF with German keyboard
         PDFView.zoomIn();
         handled = true;
         break;
@@ -3105,6 +3129,7 @@ window.addEventListener('keydown', function keydown(evt) {
         handled = true;
         break;
       case 48: // '0'
+      case 96: // '0' on Numpad of Swedish keyboard
         PDFView.parseScale(DEFAULT_SCALE, true);
         handled = true;
         break;
@@ -3152,6 +3177,10 @@ window.addEventListener('keydown', function keydown(evt) {
         }
         //  in fullscreen mode falls throw here
       case 37: // left arrow
+        // horizontal scrolling using arrow keys
+        if (PDFView.isHorizontalScrollbarEnabled) {
+          break;
+        }
       case 75: // 'k'
       case 80: // 'p'
         PDFView.page--;
@@ -3165,6 +3194,10 @@ window.addEventListener('keydown', function keydown(evt) {
         }
         //  in fullscreen mode falls throw here
       case 39: // right arrow
+        // horizontal scrolling using arrow keys
+        if (PDFView.isHorizontalScrollbarEnabled) {
+          break;
+        }
       case 74: // 'j'
       case 78: // 'n'
         PDFView.page++;

@@ -51,6 +51,10 @@ class ActivityHandlerHelper {
         return mActivityResultHandlerMap.put(mAwesomebarResultHandler);
     }
 
+    int makeRequestCode(ActivityResultHandler aHandler) {
+        return mActivityResultHandlerMap.put(aHandler);
+    }
+
     private int addIntentActivitiesToList(Context context, Intent intent, ArrayList<PromptService.PromptListItem> items, ArrayList<Intent> aIntents) {
         PackageManager pm = context.getPackageManager();
         List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoApp.mAppContext.getComponentName(), null, intent, 0);

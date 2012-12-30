@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * When we send a mozbrowserasyncscroll event (an instance of CustomEvent), we
+ * use an instance of this interface as the event's detail.
+ * [left, top, width, height]: The portion of the page which is currently 
+ * visible onscreen in CSS pixels.
+ * [scrollWidth, scrollHeight]: The content width/height in CSS pixels.
+ *
+ * top + height may be larger than scrollHeight.
+ * This indicates that the content is over-scrolled, which occurs when the
+ * page "rubber-bands" after being scrolled all the way to the bottom.
+ * Similarly, left + width may be greater than scrollWidth, 
+ * and both left and top may be negative.
+ */
+[scriptable, uuid(d0c13577-31e6-4701-b9b7-3535bbe19fe6)]
+interface nsIAsyncScrollEventDetail : nsISupports
+{
+  readonly attribute float top;
+  readonly attribute float left;
+  readonly attribute float width;
+  readonly attribute float height;
+  readonly attribute float scrollWidth;
+  readonly attribute float scrollHeight;
+};

@@ -52,13 +52,17 @@ TabContext::TabContext(const IPCTabContext& aParams)
         MOZ_CRASH();
       }
 
-      // If ipcContext is a browser element, then the opener's app-id becomes
-      // our containing app-id.  Otherwise, our own and containing app-ids are
-      // directly inherited from our opener.
+      // Browser elements can't nest other browser elements.  So if
+      // our opener is browser element, we must be a new DOM window
+      // opened by it.  In that case we inherit our containing app ID
+      // (if any).
+      //
+      // Otherwise, we're a new app window and we inherit from our
+      // opener app.
       if (ipcContext.isBrowserElement()) {
         mIsBrowser = true;
         mOwnAppId = nsIScriptSecurityManager::NO_APP_ID;
-        mContainingAppId = context->OwnAppId();
+        mContainingAppId = context->OwnOrContainingAppId();
       }
       else {
         mIsBrowser = false;

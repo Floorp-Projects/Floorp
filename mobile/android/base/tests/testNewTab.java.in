@@ -7,7 +7,6 @@ import android.view.View;
 
 /* A simple test that creates 2 new tabs and checks that the tab count increases. */
 public class testNewTab extends BaseTest {
-    private static final int MAX_WAIT_MS = 3000;
     private Element tabCount = null;
     private Element tabs = null;
     private Element addTab = null;

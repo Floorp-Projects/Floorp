@@ -19,12 +19,74 @@
 #include "runnable_utils.h"
 #include "cpr_socket.h"
 
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
+#include "mozilla/Services.h"
+#include "StaticPtr.h"
+
 static const char* logTag = "PeerConnectionCtx";
+
+namespace mozilla {
+class PeerConnectionCtxShutdown : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  PeerConnectionCtxShutdown() {}
+
+  void Init()
+    {
+      nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+      if (!observerService)
+        return;
+
+      nsresult rv = observerService->AddObserver(this,
+                                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                                 false);
+      MOZ_ASSERT(rv == NS_OK);
+      (void) rv;
+    }
+
+  virtual ~PeerConnectionCtxShutdown()
+    {
+      nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+      if (observerService)
+        observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
+
+  NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
+                        const PRUnichar* aData) {
+    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+      CSFLogDebug(logTag, "Shutting down PeerConnectionCtx");
+      sipcc::PeerConnectionCtx::Destroy();
+
+      nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+      if (!observerService)
+        return NS_ERROR_FAILURE;
+
+      nsresult rv = observerService->RemoveObserver(this,
+                                                    NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+
+      // Make sure we're not deleted while still inside ::Observe()
+      nsRefPtr<PeerConnectionCtxShutdown> kungFuDeathGrip(this);
+      sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown = nullptr;
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(PeerConnectionCtxShutdown, nsIObserver);
+}
 
 namespace sipcc {
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
+StaticRefPtr<mozilla::PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
 
 nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread) {
   if (!gMainThread) {
@@ -57,6 +119,11 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread) {
       return res;
 
     gInstance = ctx;
+
+    if (!sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown) {
+      sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown = new PeerConnectionCtxShutdown();
+      sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown->Init();
+    }
   }
 
   return NS_OK;

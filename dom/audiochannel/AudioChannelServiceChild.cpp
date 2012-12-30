@@ -74,7 +74,7 @@ AudioChannelServiceChild::GetMuted(AudioChannelType aType, bool aMozHidden)
 
 void
 AudioChannelServiceChild::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                               AudioChannelType aType)
+                                                    AudioChannelType aType)
 {
   AudioChannelService::RegisterAudioChannelAgent(aAgent, aType);
 

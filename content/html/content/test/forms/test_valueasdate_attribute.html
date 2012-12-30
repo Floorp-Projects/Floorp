@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=769370
+-->
+<head>
+  <title>Test for input.valueAsDate</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=769370">Mozilla Bug 769370</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 769370**/
+
+/**
+ * This test is checking .valueAsDate.
+ */
+
+var element = document.createElement("input");
+
+function checkAvailability()
+{
+  var testData =
+  [
+    ["text", false],
+    ["password", false],
+    ["search", false],
+    ["telephone", false],
+    ["email", false],
+    ["url", false],
+    ["hidden", false],
+    ["checkbox", false],
+    ["radio", false],
+    ["file", false],
+    ["submit", false],
+    ["image", false],
+    ["reset", false],
+    ["button", false],
+    ["number", false],
+    ["date", true],
+    // The next types have not been implemented but will fallback to "text"
+    // which has the same value.
+    ["range", false],
+    ["color", false],
+  ];
+
+  var todoList =
+  [
+    ["datetime", true],
+    ["month", true],
+    ["week", true],
+    ["time", true],
+    ["datetime-local", true],
+  ];
+
+  for (data of testData) {
+    var exceptionCatched = false;
+    element.type = data[0];
+    try {
+      element.valueAsDate;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, false,
+       "valueAsDate shouldn't throw exception on getting");
+
+    exceptionCatched = false;
+    try {
+      element.valueAsDate = new Date();
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, !data[1], "valueAsDate for " + data[0] +
+                                   " availability is not correct");
+  }
+
+  for (data of todoList) {
+    var exceptionCatched = false;
+    element.type = data[0];
+    try {
+      element.valueAsDate;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, false,
+       "valueAsDate shouldn't throw exception on getting");
+
+    exceptionCatched = false;
+    try {
+      element.valueAsDate= 42;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    todo_is(exceptionCatched, !data[1],
+            "valueAsDate for " + data[0] + " availability is not correct");
+  }
+}
+
+function checkGet()
+{
+  var validData =
+  [
+    [ "2012-07-12", 1342051200000 ],
+    [ "1970-01-01", 0 ],
+    [ "1970-01-02", 86400000 ],
+    [ "1969-12-31", -86400000 ],
+    [ "0311-01-31", -52350451200000 ],
+    [ "275760-09-13", 8640000000000000 ],
+    [ "0001-01-01", -62135596800000 ],
+    [ "2012-02-29", 1330473600000 ],
+    [ "2011-02-28", 1298851200000 ],
+  ];
+
+  var invalidData =
+  [
+    [ "invaliddate" ],
+    [ "-001-12-31" ],
+    [ "901-12-31" ],
+    [ "1901-13-31" ],
+    [ "1901-12-32" ],
+    [ "1901-00-12" ],
+    [ "1901-01-00" ],
+    [ "1900-02-29" ],
+    [ "0000-01-01" ],
+    [ "" ],
+    // This date is valid for the input element, but is out of
+    // the date object range. In this case, on getting valueAsDate,
+    // a Date object will be created, but it will have a NaN internal value,
+    // and will return the string "Invalid Date".
+    [ "275760-09-14", true ],
+  ];
+
+  element.type = "date";
+  for (data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this date");
+  }
+
+  for (data of invalidData) {
+    element.value = data[0];
+    is(element.valueAsDate, data[1] ? "Invalid Date" : null,
+       "valueAsDate should return null "  +
+       "when the element value is not a valid date");
+  }
+
+}
+
+function checkSet()
+{
+  var testData =
+  [
+    [ 1342051200000,     "2012-07-12" ],
+    [ 0,                 "1970-01-01" ],
+    // Maximum valid date (limited by the ecma date object range).
+    [ 8640000000000000,  "275760-09-13" ],
+    // Minimum valid date (limited by the input element minimum valid value).
+    [ -62135596800000 ,   "0001-01-01" ],
+    [ 1330473600000,     "2012-02-29" ],
+    [ 1298851200000,     "2011-02-28" ],
+    // "Values must be truncated to valid dates"
+    [ 42.1234,           "1970-01-01" ],
+    [ 123.123456789123,  "1970-01-01" ],
+    [ 1e-1,              "1970-01-01" ],
+    [ 1298851200010,     "2011-02-28" ],
+    [ -1,                "1969-12-31" ],
+    [ -86400000,         "1969-12-31" ],
+    [ 86400000,          "1970-01-02" ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding date string is the empty string
+    [ -62135596800001,   "" ],
+    // Invalid dates.
+    [ NaN,               "" ],
+  ];
+
+  element.type = "date";
+  for (data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to "
+                                + data[1]);
+  }
+
+  element.valueAsDate = null;
+  is(element.value, "", "valueAsDate should set the value to the empty string");
+
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+checkAvailability();
+checkGet();
+checkSet();
+
+SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

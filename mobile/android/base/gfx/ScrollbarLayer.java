@@ -20,20 +20,11 @@ import android.opengl.GLES20;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
-/**
- * Draws a small rect. This is scaled to become a scrollbar.
- */
 public class ScrollbarLayer extends TileLayer {
     public static final long FADE_DELAY = 500; // milliseconds before fade-out starts
     private static final float FADE_AMOUNT = 0.03f; // how much (as a percent) the scrollbar should fade per frame
 
-    private static final int PADDING = 1;   // gap between scrollbar and edge of viewport
-    private static final int BAR_SIZE = 6;
-    private static final int CAP_RADIUS = (BAR_SIZE / 2);
-
     private final boolean mVertical;
-    private final Bitmap mBitmap;
-    private final Canvas mCanvas;
     private float mOpacity;
 
     // To avoid excessive GC, declare some objects here that would otherwise
@@ -62,50 +53,43 @@ public class ScrollbarLayer extends TileLayer {
         "    gl_FragColor.a *= uOpacity;\n" +
         "}\n";
 
-    // Dimensions of the texture image
-    private static final int TEX_HEIGHT = 8;
-    private static final int TEX_WIDTH = 8;
+    // Dimensions of the texture bitmap (will always be power-of-two)
+    private final int mTexWidth;
+    private final int mTexHeight;
+    // Some useful dimensions of the actual content in the bitmap
+    private final int mBarWidth;
+    private final int mCapLength;
 
-    private static final Rect BODY_TEX_COORDS = new Rect(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS + 1, CAP_RADIUS + 1);
-    private static final Rect LEFT_CAP_TEX_COORDS = new Rect(0, TEX_HEIGHT - BAR_SIZE, CAP_RADIUS, TEX_HEIGHT);
-    private static final Rect TOP_CAP_TEX_COORDS = new Rect(0, TEX_HEIGHT - CAP_RADIUS, BAR_SIZE, TEX_HEIGHT);
-    private static final Rect RIGHT_CAP_TEX_COORDS = new Rect(CAP_RADIUS, TEX_HEIGHT - BAR_SIZE, BAR_SIZE, TEX_HEIGHT);
-    private static final Rect BOT_CAP_TEX_COORDS = new Rect(0, TEX_HEIGHT - BAR_SIZE, BAR_SIZE, TEX_HEIGHT - CAP_RADIUS);
+    private final Rect mStartCapTexCoords;  // top/left endcap coordinates
+    private final Rect mBodyTexCoords;      // 1-pixel slice of the texture to be stretched
+    private final Rect mEndCapTexCoords;    // bottom/right endcap coordinates
 
-    private ScrollbarLayer(LayerRenderer renderer, CairoImage image, boolean vertical, ByteBuffer buffer) {
-        super(image, TileLayer.PaintMode.NORMAL);
-        mVertical = vertical;
+    ScrollbarLayer(LayerRenderer renderer, Bitmap scrollbarImage, IntSize imageSize, boolean vertical) {
+        super(new BufferedCairoImage(scrollbarImage), TileLayer.PaintMode.NORMAL);
         mRenderer = renderer;
-
-        IntSize size = image.getSize();
-        mBitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
-
-        // Paint a spot to use as the scroll indicator
-        Paint foregroundPaint = new Paint();
-        foregroundPaint.setAntiAlias(true);
-        foregroundPaint.setStyle(Paint.Style.FILL);
-        foregroundPaint.setColor(Color.argb(127, 0, 0, 0));
-
-        mCanvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
-        mCanvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
-
-        mBitmap.copyPixelsToBuffer(buffer.asIntBuffer());
+        mVertical = vertical;
 
         mBarRectF = new RectF();
         mBarRect = new Rect();
         mCoords = new float[20];
         mCapRectF = new RectF();
-    }
 
-    public static ScrollbarLayer create(LayerRenderer renderer, boolean vertical) {
-        // just create an empty image for now, it will get drawn
-        // on demand anyway
-        int imageSize = IntSize.nextPowerOfTwo(BAR_SIZE);
-        ByteBuffer buffer = DirectBufferAllocator.allocate(imageSize * imageSize * 4);
-        CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize,
-                                                  CairoImage.FORMAT_ARGB32);
-        return new ScrollbarLayer(renderer, image, vertical, buffer);
+        mTexHeight = scrollbarImage.getHeight();
+        mTexWidth = scrollbarImage.getWidth();
+
+        if (mVertical) {
+            mBarWidth = imageSize.width;
+            mCapLength = imageSize.height / 2;
+            mStartCapTexCoords = new Rect(0, mTexHeight - mCapLength, imageSize.width, mTexHeight);
+            mBodyTexCoords = new Rect(0, mTexHeight - (mCapLength + 1), imageSize.width, mTexHeight - mCapLength);
+            mEndCapTexCoords = new Rect(0, mTexHeight - imageSize.height, imageSize.width, mTexHeight - (mCapLength + 1));
+        } else {
+            mBarWidth = imageSize.height;
+            mCapLength = imageSize.width / 2;
+            mStartCapTexCoords = new Rect(0, mTexHeight - imageSize.height, mCapLength, mTexHeight);
+            mBodyTexCoords = new Rect(mCapLength, mTexHeight - imageSize.height, mCapLength + 1, mTexHeight);
+            mEndCapTexCoords = new Rect(mCapLength + 1, mTexHeight - imageSize.height, imageSize.width, mTexHeight);
+        }
     }
 
     private void createProgram() {
@@ -211,8 +195,8 @@ public class ScrollbarLayer extends TileLayer {
 
         mBarRectF.set(mBarRect.left, viewHeight - mBarRect.top, mBarRect.right, viewHeight - mBarRect.bottom);
 
-        // We take a 1x1 pixel from the center of the image and scale it to become the bar
-        fillRectCoordBuffer(mCoords, mBarRectF, viewWidth, viewHeight, BODY_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
+        // We take a 1-pixel slice from the center of the image and scale it to become the bar
+        fillRectCoordBuffer(mCoords, mBarRectF, viewWidth, viewHeight, mBodyTexCoords, mTexWidth, mTexHeight);
 
         // Get the buffer and handles from the context
         FloatBuffer coordBuffer = context.coordBuffer;
@@ -229,106 +213,61 @@ public class ScrollbarLayer extends TileLayer {
 
         // Vertex coordinates are x,y,z starting at position 0 into the buffer.
         coordBuffer.position(0);
-        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                coordBuffer);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
 
         // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
         coordBuffer.position(3);
-        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                coordBuffer);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
         // Reset the position in the buffer for the next set of vertex and texture coordinates.
         coordBuffer.position(0);
-
         if (mVertical) {
             // top endcap
-            mCapRectF.set(mBarRectF.left, mBarRectF.top + CAP_RADIUS, mBarRectF.left + BAR_SIZE, mBarRectF.top);
-            fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, TOP_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-            // Reset the position in the buffer for the next set of vertex and texture
-            // coordinates.
-            coordBuffer.position(0);
-
-            // bottom endcap
-            mCapRectF.set(mBarRectF.left, mBarRectF.bottom, mBarRectF.left + BAR_SIZE, mBarRectF.bottom - CAP_RADIUS);
-            fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, BOT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-            // Reset the position in the buffer for the next set of vertex and texture
-            // coordinates.
-            coordBuffer.position(0);
+            mCapRectF.set(mBarRectF.left, mBarRectF.top + mCapLength, mBarRectF.right, mBarRectF.top);
         } else {
             // left endcap
-            mCapRectF.set(mBarRectF.left - CAP_RADIUS, mBarRectF.bottom + BAR_SIZE, mBarRectF.left, mBarRectF.bottom);
-            fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, LEFT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-
-            // Reset the position in the buffer for the next set of vertex and texture
-            // coordinates.
-            coordBuffer.position(0);
-
-            // right endcap
-            mCapRectF.set(mBarRectF.right, mBarRectF.bottom + BAR_SIZE, mBarRectF.right + CAP_RADIUS, mBarRectF.bottom);
-            fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, RIGHT_CAP_TEX_COORDS, TEX_WIDTH, TEX_HEIGHT);
-            coordBuffer.put(mCoords);
-
-            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
-            coordBuffer.position(0);
-            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            // Texture coordinates are texture_x, texture_y starting at position 3 into the
-            // buffer.
-            coordBuffer.position(3);
-            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
-                    coordBuffer);
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            mCapRectF.set(mBarRectF.left - mCapLength, mBarRectF.bottom + mBarWidth, mBarRectF.left, mBarRectF.bottom);
         }
+
+        fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, mStartCapTexCoords, mTexWidth, mTexHeight);
+        coordBuffer.put(mCoords);
+
+        // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+        coordBuffer.position(0);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
+
+        // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
+        coordBuffer.position(3);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+        // Reset the position in the buffer for the next set of vertex and texture coordinates.
+        coordBuffer.position(0);
+        if (mVertical) {
+            // bottom endcap
+            mCapRectF.set(mBarRectF.left, mBarRectF.bottom, mBarRectF.right, mBarRectF.bottom - mCapLength);
+        } else {
+            // right endcap
+            mCapRectF.set(mBarRectF.right, mBarRectF.bottom + mBarWidth, mBarRectF.right + mCapLength, mBarRectF.bottom);
+        }
+        fillRectCoordBuffer(mCoords, mCapRectF, viewWidth, viewHeight, mEndCapTexCoords, mTexWidth, mTexHeight);
+        coordBuffer.put(mCoords);
+
+        // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+        coordBuffer.position(0);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20, coordBuffer);
+
+        // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
+        coordBuffer.position(3);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20, coordBuffer);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+        // Reset the position in the buffer for the next set of vertex and texture coordinates.
+        coordBuffer.position(0);
 
         // Enable the default shader program again
         deactivateProgram();
@@ -338,26 +277,24 @@ public class ScrollbarLayer extends TileLayer {
     private void getVerticalRect(RenderContext context, RectF dest) {
         RectF viewport = context.viewport;
         RectF pageRect = context.pageRect;
-        float barStart = ((viewport.top - pageRect.top) * (viewport.height() / pageRect.height())) + CAP_RADIUS;
-        float barEnd = ((viewport.bottom - pageRect.top) * (viewport.height() / pageRect.height())) - CAP_RADIUS;
+        float barStart = ((viewport.top - pageRect.top) * (viewport.height() / pageRect.height())) + mCapLength;
+        float barEnd = ((viewport.bottom - pageRect.top) * (viewport.height() / pageRect.height())) - mCapLength;
         if (barStart > barEnd) {
             float middle = (barStart + barEnd) / 2.0f;
             barStart = barEnd = middle;
         }
-        float right = viewport.width() - PADDING;
-        dest.set(right - BAR_SIZE, barStart, right, barEnd);
+        dest.set(viewport.width() - mBarWidth, barStart, viewport.width(), barEnd);
     }
 
     private void getHorizontalRect(RenderContext context, RectF dest) {
         RectF viewport = context.viewport;
         RectF pageRect = context.pageRect;
-        float barStart = ((viewport.left - pageRect.left) * (viewport.width() / pageRect.width())) + CAP_RADIUS;
-        float barEnd = ((viewport.right - pageRect.left) * (viewport.width() / pageRect.width())) - CAP_RADIUS;
+        float barStart = ((viewport.left - pageRect.left) * (viewport.width() / pageRect.width())) + mCapLength;
+        float barEnd = ((viewport.right - pageRect.left) * (viewport.width() / pageRect.width())) - mCapLength;
         if (barStart > barEnd) {
             float middle = (barStart + barEnd) / 2.0f;
             barStart = barEnd = middle;
         }
-        float bottom = viewport.height() - PADDING;
-        dest.set(barStart, bottom - BAR_SIZE, barEnd, bottom);
+        dest.set(barStart, viewport.height() - mBarWidth, barEnd, viewport.height());
     }
 }

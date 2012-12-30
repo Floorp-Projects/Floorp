@@ -914,6 +914,28 @@ fsmdef_set_per_media_local_hold_sdp (fsmdef_dcb_t *dcb)
     }
 }
 
+/**
+ * This function deallocates a constraints structure
+ *
+ * @param[in]constraints - pointer to cc_media_constraints_t
+ * @return None
+ */
+void
+fsmdef_free_constraints(cc_media_constraints_t *constraints) {
+    int i;
+
+    if (!constraints) {
+       return;
+    }
+
+    for (i = 0; i < constraints->constraint_count; i++) {
+        cpr_free(constraints->constraints[i]->name);
+        cpr_free(constraints->constraints[i]->value);
+    }
+    cpr_free(constraints->constraints);
+    cpr_free(constraints);
+}
+
 void
 fsmdef_init_dcb (fsmdef_dcb_t *dcb, callid_t call_id,
                  fsmdef_call_types_t call_type,
@@ -2890,17 +2912,10 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     }
     dcb->inbound = FALSE;
 
-    if (msg->data.session.has_constraints) {
-        sess_data_p = (session_data_t *)findhash(msg->data.session.sessionid);
-        if (sess_data_p) {
-            gsmsdp_process_cap_constraints(dcb, sess_data_p->cc_constraints);
-
-            if (0 > delhash(msg->data.session.sessionid)) {
-                FSM_DEBUG_SM (DEB_F_PREFIX"failed to delete hash sessid=0x%08x\n",
-                DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), msg->data.session.sessionid);
-            }
-            cpr_free(sess_data_p);
-        }
+    if (msg->data.session.constraints) {
+       gsmsdp_process_cap_constraints(dcb, msg->data.session.constraints);
+       fsmdef_free_constraints(msg->data.session.constraints);
+       msg->data.session.constraints = 0;
     }
 
     vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
@@ -3004,17 +3019,10 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     }
     dcb->inbound = TRUE;
 
-    if (msg->data.session.has_constraints) {
-        sess_data_p = (session_data_t *)findhash(msg->data.session.sessionid);
-        if (sess_data_p) {
-            gsmsdp_process_cap_constraints(dcb, sess_data_p->cc_constraints);
-
-            if (0 > delhash(msg->data.session.sessionid)) {
-                FSM_DEBUG_SM (DEB_F_PREFIX"failed to delete hash sessid=0x%08x\n",
-                DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), msg->data.session.sessionid);
-            }
-            cpr_free(sess_data_p);
-        }
+    if (msg->data.session.constraints) {
+       gsmsdp_process_cap_constraints(dcb, msg->data.session.constraints);
+       fsmdef_free_constraints(msg->data.session.constraints);
+       msg->data.session.constraints = 0;
     }
 
     vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);

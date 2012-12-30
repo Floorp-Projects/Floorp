@@ -17,7 +17,6 @@
 
 interface Attr;
 interface CDATASection;
-interface DocumentFragment;
 interface Comment;
 interface NodeIterator;
 interface ProcessingInstruction;
@@ -29,6 +28,8 @@ interface TouchList;
 interface TreeWalker;
 interface WindowProxy;
 interface nsISupports;
+
+enum VisibilityState { "hidden", "visible" };
 
 /* http://dom.spec.whatwg.org/#interface-document */
 [Constructor]
@@ -353,9 +354,8 @@ partial interface Document {
 */
   readonly attribute boolean hidden;
   readonly attribute boolean mozHidden;
-  readonly attribute DOMString visibilityState;
-  readonly attribute DOMString mozVisibilityState;
-  // "hidden", "visible", "prerender", "unloaded"
+  readonly attribute VisibilityState visibilityState;
+  readonly attribute VisibilityState mozVisibilityState;
 /*
 };
 

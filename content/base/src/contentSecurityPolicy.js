@@ -322,6 +322,9 @@ ContentSecurityPolicy.prototype = {
           // we need to set an nsIChannelEventSink on the channel object
           // so we can tell it to not follow redirects when posting the reports
           chan.notificationCallbacks = new CSPReportRedirectSink(this._policy);
+          if (this._docRequest) {
+            chan.loadGroup = this._docRequest.loadGroup;
+          }
 
           chan.QueryInterface(Ci.nsIUploadChannel)
               .setUploadStream(content, "application/json", content.available());

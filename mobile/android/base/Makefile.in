@@ -501,6 +501,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_promo_logo_sync.png \
   res/drawable/abouthome_thumbnail.png \
   res/drawable/abouthome_thumbnail_bg.png \
+  res/drawable/abouthome_thumbnail_add.png \
   res/drawable/address_bar_bg_shadow.png \
   res/drawable/alert_addon.png \
   res/drawable/alert_app.png \
@@ -571,6 +572,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/handle_end.png \
   res/drawable/handle_middle.png \
   res/drawable/handle_start.png \
+  res/drawable/scrollbar.png \
   $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
@@ -592,6 +594,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_promo_logo_sync.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/abouthome_thumbnail_bg.png \
+  res/drawable-hdpi/abouthome_thumbnail_add.png \
   res/drawable-hdpi/address_bar_bg_shadow.png \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
@@ -673,6 +676,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_promo_logo_sync.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
   res/drawable-xhdpi/abouthome_thumbnail_bg.png \
+  res/drawable-xhdpi/abouthome_thumbnail_add.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
   res/drawable-xhdpi/address_bar_texture_port.png \
   res/drawable-xhdpi/address_bar_texture_port_pb.png \
@@ -1011,6 +1015,7 @@ RES_MENU = \
   res/menu/tabs_menu.xml \
   res/menu/tabs_switcher_menu.xml \
   res/menu/titlebar_contextmenu.xml \
+  res/menu/abouthome_topsites_contextmenu.xml \
   res/menu-v11/tabs_menu.xml \
   $(NULL)
 

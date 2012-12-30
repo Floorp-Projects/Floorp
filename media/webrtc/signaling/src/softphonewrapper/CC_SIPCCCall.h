@@ -110,8 +110,8 @@ namespace CSF
         virtual void removeStream(int streamId);
         virtual bool setVolume(int volume);
         virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip);
-        virtual void createOffer(const  cc_media_constraints_t *constraints);
-        virtual void createAnswer(const  cc_media_constraints_t *constraints);
+        virtual void createOffer(cc_media_constraints_t *constraints);
+        virtual void createAnswer(cc_media_constraints_t *constraints);
         virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp);
         virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp);
         virtual void setPeerConnection(const std::string& handle);

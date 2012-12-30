@@ -244,7 +244,6 @@ pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 // browser.warnOnQuit == false will override all other possible prompts when quitting or restarting
 pref("browser.warnOnQuit", true);
-pref("browser.warnOnRestart", false);
 // browser.showQuitWarning specifically controls the quit warning dialog. We
 // might still show the window closing dialog with showQuitWarning == false.
 pref("browser.showQuitWarning", false);

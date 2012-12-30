@@ -253,6 +253,12 @@ public:
     // returns true in between Init and Shutdown states
     bool Active() { return mHandlerActive; }
 
+    static void GetCacheSessionNameForStoragePolicy(
+            nsCacheStoragePolicy storagePolicy,
+            bool isPrivate,
+            uint32_t appId,
+            bool inBrowser,
+            nsACString& sessionName);
 private:
 
     //

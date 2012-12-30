@@ -109,14 +109,6 @@ public:
                                     nsWrapperCache **aCache,
                                     nsresult *aResult);
 
-  Element *GetBody();
-  Element *GetHead() { return GetHeadElement(); }
-  already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
-  {
-    return NS_GetFuncStringNodeList(this, MatchNameAttribute, nullptr,
-                                    UseExistingNameString, aName);
-  }
-
   virtual nsresult ResolveName(const nsAString& aName,
                                nsIContent *aForm,
                                nsISupports **aResult,
@@ -181,6 +173,76 @@ public:
   virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
   // DocSizeOfIncludingThis is inherited from nsIDocument.
 
+  // WebIDL API
+  void GetDomain(nsAString& aDomain, mozilla::ErrorResult& rv);
+  void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
+  void GetCookie(nsAString& aCookie, mozilla::ErrorResult& rv);
+  void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
+  nsGenericHTMLElement *GetBody();
+  void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
+  Element *GetHead() { return GetHeadElement(); }
+  nsIHTMLCollection* Images();
+  nsIHTMLCollection* Embeds();
+  nsIHTMLCollection* Plugins();
+  nsIHTMLCollection* Links();
+  nsIHTMLCollection* Forms()
+  {
+    return nsHTMLDocument::GetForms();
+  }
+  nsIHTMLCollection* Scripts();
+  already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
+  {
+    return NS_GetFuncStringNodeList(this, MatchNameAttribute, nullptr,
+                                    UseExistingNameString, aName);
+  }
+  already_AddRefed<nsINodeList> GetItems(const nsAString& aTypeNames);
+  already_AddRefed<nsIDocument> Open(JSContext* cx,
+                                     const nsAString& aType,
+                                     const nsAString& aReplace,
+                                     mozilla::ErrorResult& rv);
+  already_AddRefed<nsIDOMWindow> Open(JSContext* cx,
+                                      const nsAString& aURL,
+                                      const nsAString& aName,
+                                      const nsAString& aFeatures,
+                                      bool aReplace,
+                                      mozilla::ErrorResult& rv);
+  void Close(mozilla::ErrorResult& rv);
+  void Write(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
+             mozilla::ErrorResult& rv);
+  void Writeln(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
+               mozilla::ErrorResult& rv);
+  // The XPCOM GetDesignMode() works OK for us, since it never throws.
+  void SetDesignMode(const nsAString& aDesignMode, mozilla::ErrorResult& rv);
+  bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
+                   const nsAString& aValue, mozilla::ErrorResult& rv);
+  bool QueryCommandEnabled(const nsAString& aCommandID,
+                           mozilla::ErrorResult& rv);
+  bool QueryCommandIndeterm(const nsAString& aCommandID,
+                            mozilla::ErrorResult& rv);
+  bool QueryCommandState(const nsAString& aCommandID, mozilla::ErrorResult& rv);
+  bool QueryCommandSupported(const nsAString& aCommandID);
+  void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
+                         mozilla::ErrorResult& rv);
+  // The XPCOM Get/SetFgColor work OK for us, since they never throw.
+  // The XPCOM Get/SetLinkColor work OK for us, since they never throw.
+  // The XPCOM Get/SetVLinkColor work OK for us, since they never throw.
+  // The XPCOM Get/SetALinkColor work OK for us, since they never throw.
+  // The XPCOM Get/SetBgColor work OK for us, since they never throw.
+  nsIHTMLCollection* Anchors();
+  nsIHTMLCollection* Applets();
+  void Clear() const
+  {
+    // Deprecated
+  }
+  already_AddRefed<nsISelection> GetSelection(mozilla::ErrorResult& rv);
+  // The XPCOM CaptureEvents works fine for us.
+  // The XPCOM ReleaseEvents works fine for us.
+  // The XPCOM RouteEvent works fine for us.
+  // We're picking up GetLocation from Document
+  already_AddRefed<nsIDOMLocation> GetLocation() const {
+    return nsIDocument::GetLocation();
+  }
+
 protected:
   nsresult GetBodySize(int32_t* aWidth,
                        int32_t* aHeight);
@@ -201,6 +263,11 @@ protected:
 
   nsresult WriteCommon(JSContext *cx, const nsAString& aText,
                        bool aNewlineTerminate);
+  // A version of WriteCommon used by WebIDL bindings
+  void WriteCommon(JSContext *cx,
+                   const mozilla::dom::Sequence<nsString>& aText,
+                   bool aNewlineTerminate,
+                   mozilla::ErrorResult& rv);
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
@@ -212,12 +279,12 @@ protected:
 
   void *GenerateParserKey(void);
 
-  nsCOMPtr<nsIDOMHTMLCollection> mImages;
-  nsCOMPtr<nsIDOMHTMLCollection> mApplets;
-  nsCOMPtr<nsIDOMHTMLCollection> mEmbeds;
-  nsCOMPtr<nsIDOMHTMLCollection> mLinks;
-  nsCOMPtr<nsIDOMHTMLCollection> mAnchors;
-  nsCOMPtr<nsIDOMHTMLCollection> mScripts;
+  nsRefPtr<nsContentList> mImages;
+  nsRefPtr<nsContentList> mApplets;
+  nsRefPtr<nsContentList> mEmbeds;
+  nsRefPtr<nsContentList> mLinks;
+  nsRefPtr<nsContentList> mAnchors;
+  nsRefPtr<nsContentList> mScripts;
   nsRefPtr<nsContentList> mForms;
   nsRefPtr<nsContentList> mFormControls;
 

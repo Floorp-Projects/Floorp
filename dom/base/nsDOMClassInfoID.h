@@ -93,8 +93,7 @@ class EventTarget;
  * but it does the job adequately for our purposes.
  */
 
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 2) || \
-    _MSC_FULL_VER >= 140050215
+#if defined(__GNUC__) || _MSC_FULL_VER >= 140050215
 
 /* Use a compiler intrinsic if one is available. */
 

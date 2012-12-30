@@ -277,7 +277,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         // if it matches the selected tab or no active tab and the browser
         // tab is hidden, the active group item would be set.
-        if (this.tab == gBrowser.selectedTab ||
+        if (this.tab.selected ||
             (!GroupItems.getActiveGroupItem() && !this.tab.hidden))
           UI.setActive(this.parent);
       }
@@ -539,11 +539,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       UI.goToTab(tab);
 
-      // tab might not be selected because hideTabView() is invoked after 
+      // tab might not be selected because hideTabView() is invoked after
       // UI.goToTab() so we need to setup everything for the gBrowser.selectedTab
-      if (tab != gBrowser.selectedTab) {
+      if (!tab.selected) {
         UI.onTabSelect(gBrowser.selectedTab);
-      } else { 
+      } else {
         if (isNewBlankTab)
           gWindow.gURLBar.focus();
       }
