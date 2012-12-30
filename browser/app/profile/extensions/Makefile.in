@@ -16,24 +16,37 @@ DIRS = \
   {972ce4c6-7e08-4474-a285-3208198ce6fd} \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
 
 ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
 EXTENSIONS = \
   testpilot@labs.mozilla.com \
   $(NULL)
 
-define _INSTALL_EXTENSION
-$(NSINSTALL) -D $(dir) && \
-  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/$(dir)/install.rdf.in > $(dir)/install.rdf && \
-  cd $(dir) && \
-  $(ZIP) -r9XD $(DISTROEXT)/$(dir).xpi install.rdf && \
-  cd $(call core_abspath,$(srcdir)/$(dir)) && \
-  $(ZIP) -r9XD $(DISTROEXT)/$(dir).xpi * -x install.rdf.in
+all_xpis = $(foreach dir,$(EXTENSIONS),$(DISTROEXT)/$(dir).xpi)
+libs:: $(all_xpis)
+GARBAGE += $(all_xpis)
 
-endef # do not remove the blank line!
+$(all_xpis): $(DISTROEXT)/%.xpi: $(call mkdir_deps,$(DISTROEXT)) libs-%
+	cd $* && \
+	$(ZIP) -r9XD $@ * -x \*.in -x \*.mkdir.done
+	cd $(call core_abspath,$(srcdir)/$*) && \
+	$(ZIP) -r9XD $@ * -x \*.in -x \*.mkdir.done
 
-libs::
-	$(NSINSTALL) -D $(DISTROEXT)
-	$(foreach dir,$(EXTENSIONS),$(_INSTALL_EXTENSION))
+.PHONY: $(all_xpis:.xpi=)
+
+define pp_one
+$(2) := $(2)
+$(2)_PATH := $(dir $(2))
+$(2)_TARGET := libs-$(1)
+PP_TARGETS += $(2)
+endef
+$(foreach d,$(EXTENSIONS), \
+  $(foreach in,$(shell cd $(srcdir) ; find $(d) -name '*.in'), \
+    $(eval $(call pp_one,$(d),$(in))) \
+  ) \
+)
+
 endif
+
+include $(topsrcdir)/config/rules.mk
