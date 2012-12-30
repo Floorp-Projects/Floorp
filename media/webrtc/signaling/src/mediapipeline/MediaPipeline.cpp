@@ -496,17 +496,16 @@ nsresult MediaPipelineTransmit::TransportReady(TransportFlow *flow) {
 
 nsresult MediaPipeline::PipelineTransport::SendRtpPacket(
     const void *data, int len) {
-    nsresult ret;
 
     nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t *>(data),
                                              len));
 
     RUN_ON_THREAD(sts_thread_,
-		  WrapRunnableRet(
+                  WrapRunnable(
                       RefPtr<MediaPipeline::PipelineTransport>(this),
-		      &MediaPipeline::PipelineTransport::SendRtpPacket_s,
-                      buf, &ret),
-      NS_DISPATCH_NORMAL);
+                      &MediaPipeline::PipelineTransport::SendRtpPacket_s,
+                      buf),
+                  NS_DISPATCH_NORMAL);
 
     return NS_OK;
 }
@@ -548,17 +547,16 @@ nsresult MediaPipeline::PipelineTransport::SendRtpPacket_s(
 
 nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(
     const void *data, int len) {
-    nsresult ret;
 
     nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t *>(data),
                                              len));
 
     RUN_ON_THREAD(sts_thread_,
-		  WrapRunnableRet(
+                  WrapRunnable(
                       RefPtr<MediaPipeline::PipelineTransport>(this),
-		      &MediaPipeline::PipelineTransport::SendRtcpPacket_s,
-		      buf, &ret),
-		  NS_DISPATCH_NORMAL);
+                      &MediaPipeline::PipelineTransport::SendRtcpPacket_s,
+                      buf),
+                  NS_DISPATCH_NORMAL);
 
     return NS_OK;
 }
