@@ -2479,12 +2479,11 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     (void)ResumeAllDownloads(false);
   }
   else if (strcmp(aTopic, "alertclickcallback") == 0) {
-    //TODO: This doens't make sense when clicking a notification related to
-    //      private downloads when per-window mode is enabled. (bug 810208)
     nsCOMPtr<nsIDownloadManagerUI> dmui =
       do_GetService("@mozilla.org/download-manager-ui;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    return dmui->Show(nullptr, 0, nsIDownloadManagerUI::REASON_USER_INTERACTED);
+    return dmui->Show(nullptr, 0, nsIDownloadManagerUI::REASON_USER_INTERACTED,
+                      aData && NS_strcmp(aData, NS_LITERAL_STRING("private").get()) == 0);
   } else if (strcmp(aTopic, "sleep_notification") == 0 ||
              strcmp(aTopic, "suspend_process_notification") == 0) {
     // Pause downloads if we're sleeping, and mark the downloads as auto-resume
@@ -2776,8 +2775,9 @@ nsDownload::SetState(DownloadState aState)
               // the items they downloaded will have been removed.
               alerts->ShowAlertNotification(
                   NS_LITERAL_STRING(DOWNLOAD_MANAGER_ALERT_ICON), title,
-                  message, !removeWhenDone, EmptyString(), mDownloadManager,
-                  EmptyString());
+                  message, !removeWhenDone,
+                  mPrivate ? NS_LITERAL_STRING("private") : NS_LITERAL_STRING("non-private"),
+                  mDownloadManager, EmptyString());
             }
         }
       }
