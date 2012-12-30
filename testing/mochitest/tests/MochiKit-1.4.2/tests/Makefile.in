@@ -32,6 +32,7 @@ _TEST_FILES = \
 	test_MochiKit-Color.html \
 	test_MochiKit-DateTime.html \
 	test_MochiKit-DOM.html \
+	test_MochiKit-DOM-Safari.html \
 	test_MochiKit-DragAndDrop.html \
 	test_MochiKit-Format.html \
 	test_MochiKit-Iter.html \
@@ -43,14 +44,6 @@ _TEST_FILES = \
 	test_MochiKit-Visual.html \
 	test_Signal.js \
 	$(NULL)
-
-ifneq (Linux,$(OS_ARCH))
-_TEST_FILES += \
-	test_MochiKit-DOM-Safari.html \
-	$(NULL)
-else
-$(filter disabled-on-linux-for-crashes--bug-810705, test_MochiKit-DOM-Safari.html)
-endif
 
 # This test is broken: "Error: JSAN is not defined ... Line: 10".
 # (And is removed in future MochiKit v1.5)
