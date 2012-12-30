@@ -860,6 +860,7 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
 
 /* history sidebar button */
 
+#webrtc-status-button /* temporary placeholder (bug 824825) */,
 #history-button {
   -moz-image-region: rect(0, 160px, 20px, 140px);
 }
@@ -3006,7 +3007,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-decoration: none;
 }
 
-.geolocation-text-link {
+#geolocation-learnmore-link {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
@@ -3079,11 +3080,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-#webRTC-notification-icon {
+#webRTC-sharingDevices-notification-icon,
+#webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 @media (min-resolution: 2dppx) {
-  #webRTC-notification-icon {
+  #webRTC-sharingDevices-notification-icon,
+  #webRTC-shareDevices-notification-icon {
     list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
   }
 }
@@ -3164,6 +3167,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
 }
 
+.popup-notification-icon[popupid="webRTC-sharingDevices"],
 .popup-notification-icon[popupid="webRTC-shareDevices"] {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
 }

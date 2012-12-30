@@ -1616,7 +1616,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   event.modifiers = aSourceEvent->modifiers;
   if (aExtraEventFlags) {
     // Be careful not to overwrite existing flags!
-    event.mFlags |= *aExtraEventFlags;
+    event.mFlags.Union(*aExtraEventFlags);
   }
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);

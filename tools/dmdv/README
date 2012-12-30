@@ -1,4 +1,0 @@
-dmdv.patch is a patch for Valgrind that adds DMDV to it.  See
-https://wiki.mozilla.org/Performance/MemShrink/DMD for details.
-
-dmdv.h is #include by Firefox, to allow it to interact with DMDV.

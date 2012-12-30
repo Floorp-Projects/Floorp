@@ -16,6 +16,11 @@ namespace dom {
 class TabParent;
 }
 
+namespace gfx{
+struct Rect;
+struct Size;
+}
+
 /**
  * BrowserElementParent implements a portion of the parent-process side of
  * <iframe mozbrowser>.
@@ -63,8 +68,8 @@ public:
    *         window.open request.
    */
   static bool
-  OpenWindowOOP(mozilla::dom::TabParent* aOpenerTabParent,
-                mozilla::dom::TabParent* aPopupTabParent,
+  OpenWindowOOP(dom::TabParent* aOpenerTabParent,
+                dom::TabParent* aPopupTabParent,
                 const nsAString& aURL,
                 const nsAString& aName,
                 const nsAString& aFeatures);
@@ -86,6 +91,26 @@ public:
                       const nsAString& aName,
                       const nsACString& aFeatures,
                       nsIDOMWindow** aReturnWindow);
+
+  /**
+   * Fire a mozbrowserasyncscroll CustomEvent on the given TabParent's frame element.
+   * This event's detail is an instance of nsIAsyncScrollEventDetail.
+   *
+   * @param aContentRect: The portion of the page which is currently visible
+   *                      onscreen in CSS pixels.
+   *
+   * @param aContentSize: The content width/height in CSS pixels.
+   *
+   * aContentRect.top + aContentRect.height may be larger than aContentSize.height.
+   * This indicates that the content is over-scrolled, which occurs when the
+   * page "rubber-bands" after being scrolled all the way to the bottom.
+   * Similarly, aContentRect.left + aContentRect.width may be greater than
+   * contentSize.width, and both left and top may be negative.
+   */
+  static bool
+  DispatchAsyncScrollEvent(dom::TabParent* aTabParent,
+                           const gfx::Rect& aContentRect,
+                           const gfx::Size& aContentSize);
 };
 
 } // namespace mozilla

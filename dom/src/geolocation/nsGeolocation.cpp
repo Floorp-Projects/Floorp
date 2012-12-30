@@ -340,15 +340,22 @@ nsGeolocationRequest::NotifyError(int16_t errorCode)
 NS_IMETHODIMP
 nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
-  // If we haven't gotten an answer from the geolocation
-  // provider yet, cancel the request.  Same logic as
-  // ::Cancel, just a different error
+  if (mCleared) {
+    return NS_OK;
+  }
 
-  // remove ourselves from the locator's callback lists.
-  mLocator->RemoveRequest(this);
+  // If we haven't gotten an answer from the geolocation
+  // provider yet, fire a TIMEOUT error and reset the timer.
+  if (!mIsWatchPositionRequest) {
+    mLocator->RemoveRequest(this);
+  }
+
   NotifyError(nsIDOMGeoPositionError::TIMEOUT);
 
-  mTimeoutTimer = nullptr;
+  if (mIsWatchPositionRequest) {
+    SetTimeoutTimer();
+  }
+
   return NS_OK;
 }
 

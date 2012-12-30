@@ -312,7 +312,7 @@ load 514800-1.html
 load 515811-1.html
 load 517968.html
 load 519031.xhtml
-load 520340.html
+asserts(3-7) load 520340.html # bug 734777
 load 522170-1.html
 load 533379-1.html
 load 533379-2.html

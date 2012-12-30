@@ -62,8 +62,8 @@ interface nsIAccessibleProvider : nsISupports
   const long XULTab = 0x00001017;
   /** Used for XUL tabs element, a container for tab elements */
   const long XULTabs = 0x00001018;
-  /** Used for XUL deck frame */
-  const long XULDeck = 0x00001019;
+  /** Used for XUL tabpanels element */
+  const long XULTabpanels = 0x00001019;
 
   const long XULText             = 0x0000101A;
   const long XULTextBox          = 0x0000101B;

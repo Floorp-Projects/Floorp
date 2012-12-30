@@ -342,8 +342,10 @@
 @BINPATH@/components/DownloadsUI.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
+#endif
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/toolkitsearch.manifest

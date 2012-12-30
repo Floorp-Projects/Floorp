@@ -235,13 +235,10 @@ public:
     }
     void Set(JSScript* aObject);
 
-    struct ScriptObjectHolder
+    JSScript *GetScriptObject()
     {
-        ScriptObjectHolder() : mObject(nullptr)
-        {
-        }
-        JSScript* mObject;
-    };
+        return mScriptObject;
+    }
 
     nsCOMPtr<nsIURI>         mSrcURI;
     uint32_t                 mLineNo;
@@ -249,7 +246,8 @@ public:
     bool                     mOutOfLine;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     uint32_t                 mLangVersion;
-    ScriptObjectHolder       mScriptObject;
+private:
+    JSScript*                mScriptObject;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode

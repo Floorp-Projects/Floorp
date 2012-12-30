@@ -410,6 +410,9 @@ public class TabsPanel extends TabHost
             mVisible = false;
             mPopupMenu.dismiss();
             dispatchLayoutChange(0, 0);
+
+            mPanel.hide();
+            mPanel = null;
         }
     }
 

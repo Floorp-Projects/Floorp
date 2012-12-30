@@ -589,13 +589,11 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
              dp_int_update_keypress(line_id, call_id, BKSP_KEY);
              break;
          case CC_FEATURE_CREATEOFFER:
-             featdata.session.sessionid = ccData.sessionid;
-             featdata.session.has_constraints = ccData.has_constraints;
+             featdata.session.constraints = ccData.constraints;
              cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata);
              break;
          case CC_FEATURE_CREATEANSWER:
-             featdata.session.sessionid = ccData.sessionid;
-             featdata.session.has_constraints = ccData.has_constraints;
+             featdata.session.constraints = ccData.constraints;
              cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata);
              break;
          case CC_FEATURE_SETLOCALDESC:

@@ -1473,6 +1473,80 @@ TEST_F(SignalingTest, ChromeOfferAnswer)
   std::string answer = a2_.answer();
 }
 
+
+TEST_F(SignalingTest, FullChromeHandshake)
+{
+  sipcc::MediaConstraints constraints;
+  constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
+
+  std::string offer = "v=0\r\n"
+      "o=- 3835809413 2 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE audio video\r\n"
+      "a=msid-semantic: WMS ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOH\r\n"
+      "m=audio 1 RTP/SAVPF 103 104 111 0 8 107 106 105 13 126\r\n"
+      "c=IN IP4 1.1.1.1\r\n"
+      "a=rtcp:1 IN IP4 1.1.1.1\r\n"
+      "a=ice-ufrag:jz9UBk9RT8eCQXiL\r\n"
+      "a=ice-pwd:iscXxsdU+0gracg0g5D45orx\r\n"
+      "a=ice-options:google-ice\r\n"
+      "a=fingerprint:sha-256 A8:76:8C:4C:FA:2E:67:D7:F8:1D:28:4E:90:24:04:"
+        "12:EB:B4:A6:69:3D:05:92:E4:91:C3:EA:F9:B7:54:D3:09\r\n"
+      "a=sendrecv\r\n"
+      "a=mid:audio\r\n"
+      "a=rtcp-mux\r\n"
+      "a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:/he/v44FKu/QvEhex86zV0pdn2V"
+        "4Y7wB2xaZ8eUy\r\n"
+      "a=rtpmap:103 ISAC/16000\r\n"
+      "a=rtpmap:104 ISAC/32000\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=rtpmap:0 PCMU/8000\r\n"
+      "a=rtpmap:8 PCMA/8000\r\n"
+      "a=rtpmap:107 CN/48000\r\n"
+      "a=rtpmap:106 CN/32000\r\n"
+      "a=rtpmap:105 CN/16000\r\n"
+      "a=rtpmap:13 CN/8000\r\n"
+      "a=rtpmap:126 telephone-event/8000\r\n"
+      "a=ssrc:3389377748 cname:G5I+Jxz4rcaq8IIK\r\n"
+      "a=ssrc:3389377748 msid:ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOH a0\r\n"
+      "a=ssrc:3389377748 mslabel:ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOH\r\n"
+      "a=ssrc:3389377748 label:ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOHa0\r\n"
+      "m=video 1 RTP/SAVPF 100 116 117\r\n"
+      "c=IN IP4 1.1.1.1\r\n"
+      "a=rtcp:1 IN IP4 1.1.1.1\r\n"
+      "a=ice-ufrag:jz9UBk9RT8eCQXiL\r\n"
+      "a=ice-pwd:iscXxsdU+0gracg0g5D45orx\r\n"
+      "a=ice-options:google-ice\r\n"
+      "a=fingerprint:sha-256 A8:76:8C:4C:FA:2E:67:D7:F8:1D:28:4E:90:24:04:"
+        "12:EB:B4:A6:69:3D:05:92:E4:91:C3:EA:F9:B7:54:D3:09\r\n"
+      "a=sendrecv\r\n"
+      "a=mid:video\r\n"
+      "a=rtcp-mux\r\n"
+      "a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:/he/v44FKu/QvEhex86zV0pdn2V"
+        "4Y7wB2xaZ8eUy\r\n"
+      "a=rtpmap:100 VP8/90000\r\n"
+      "a=rtpmap:116 red/90000\r\n"
+      "a=rtpmap:117 ulpfec/90000\r\n"
+      "a=ssrc:3613537198 cname:G5I+Jxz4rcaq8IIK\r\n"
+      "a=ssrc:3613537198 msid:ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOH v0\r\n"
+      "a=ssrc:3613537198 mslabel:ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOH\r\n"
+      "a=ssrc:3613537198 label:ahheYQXHFU52slYMrWNtKUyHCtWZsOJgjlOHv0\r\n";
+
+  std::cout << "Setting offer to:" << std::endl << offer << std::endl;
+  a2_.SetRemote(TestObserver::OFFER, offer);
+
+  std::cout << "Creating answer:" << std::endl;
+  a2_.CreateAnswer(constraints, offer, OFFER_AUDIO | ANSWER_AUDIO);
+
+  std::cout << "Setting answer" << std::endl;
+  a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
+
+  std::string answer = a2_.answer();
+  ASSERT_NE(answer.find("111 opus/"), std::string::npos);
+}
+
 TEST_F(SignalingTest, OfferAllDynamicTypes)
 {
   sipcc::MediaConstraints constraints;

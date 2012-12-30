@@ -364,6 +364,20 @@ GeckoChildProcessHost::InitializeChannel()
   lock.Notify();
 }
 
+void
+GeckoChildProcessHost::Join()
+{
+  AssertIOThread();
+
+  if (!mChildProcessHandle) {
+    return;
+  }
+
+  // If this fails, there's nothing we can do.
+  base::KillProcess(mChildProcessHandle, 0, /*wait*/true);
+  mChildProcessHandle = 0;
+}
+
 int32_t GeckoChildProcessHost::mChildCounter = 0;
 
 //

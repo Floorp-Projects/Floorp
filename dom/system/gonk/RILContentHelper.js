@@ -136,8 +136,8 @@ MobileICCInfo.prototype = {
   msisdn: null
 };
 
-function MobileVoicemailInfo() {}
-MobileVoicemailInfo.prototype = {
+function VoicemailInfo() {}
+VoicemailInfo.prototype = {
   number: null,
   displayName: null
 };
@@ -319,7 +319,7 @@ function RILContentHelper() {
   this.iccInfo = new MobileICCInfo();
   this.voiceConnectionInfo = new MobileConnectionInfo();
   this.dataConnectionInfo = new MobileConnectionInfo();
-  this.voicemailInfo = new MobileVoicemailInfo();
+  this.voicemailInfo = new VoicemailInfo();
 
   this.initRequests();
   this.initMessageListener(RIL_IPC_MSG_NAMES);
@@ -336,7 +336,6 @@ function RILContentHelper() {
   this.updateICCInfo(rilContext.icc, this.iccInfo);
   this.updateConnectionInfo(rilContext.voice, this.voiceConnectionInfo);
   this.updateConnectionInfo(rilContext.data, this.dataConnectionInfo);
-  this.updateVoicemailInfo(rilContext.voicemail, this.voicemailInfo);
 }
 
 RILContentHelper.prototype = {
@@ -651,11 +650,25 @@ RILContentHelper.prototype = {
   _enumerateTelephonyCallbacks: null,
 
   voicemailStatus: null,
+
+  getVoicemailInfo: function getVoicemailInfo() {
+    // Get voicemail infomation by IPC only on first time.
+    this.getVoicemailInfo = function getVoicemailInfo() {
+      return this.voicemailInfo;
+    };
+
+    let voicemailInfo = cpmm.sendSyncMessage("RIL:GetVoicemailInfo")[0];
+    if (voicemailInfo) {
+      this.updateVoicemailInfo(voicemailInfo, this.voicemailInfo);
+    }
+
+    return this.voicemailInfo;
+  },
   get voicemailNumber() {
-    return this.voicemailInfo.number;
+    return this.getVoicemailInfo().number;
   },
   get voicemailDisplayName() {
-    return this.voicemailInfo.displayName;
+    return this.getVoicemailInfo().displayName;
   },
 
   registerCallback: function registerCallback(callbackType, callback) {

@@ -91,9 +91,7 @@
 #        define MOZ_HAVE_CXX11_OVERRIDE
 #        define MOZ_HAVE_CXX11_FINAL     final
 #      endif
-#      if __GNUC_MINOR__ >= 4
-#        define MOZ_HAVE_CXX11_DELETE
-#      endif
+#      define MOZ_HAVE_CXX11_DELETE
 #      if __GNUC_MINOR__ >= 5
 #        define MOZ_HAVE_CXX11_ENUM_TYPE
 #        define MOZ_HAVE_CXX11_STRONG_ENUMS

@@ -3490,7 +3490,7 @@ dnl = Enable DMD
 dnl ========================================================
 
 MOZ_ARG_ENABLE_BOOL(dmd,
-[  --enable-dmd            Enable DMD; also enables jemalloc and replace-malloc and disables DMDV],
+[  --enable-dmd            Enable DMD; also enables jemalloc and replace-malloc],
     MOZ_DMD=1,
     MOZ_DMD= )
 
