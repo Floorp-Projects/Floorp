@@ -925,7 +925,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
-                        HasTransform()),
+                        HasTransform(aAbsoluteContainingBlock)),
     mHavePendingPopupgroup(false),
     mCreatingExtraFrames(false),
     mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
@@ -958,7 +958,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
-                        HasTransform()),
+                        HasTransform(aAbsoluteContainingBlock)),
     mHavePendingPopupgroup(false),
     mCreatingExtraFrames(false),
     mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
@@ -1038,8 +1038,8 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
   /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens iff
    * we're a transformed element.
    */
-  mFixedPosIsAbsPos = (aNewAbsoluteContainingBlock &&
-                       aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform());
+  mFixedPosIsAbsPos = aNewAbsoluteContainingBlock &&
+    aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform(aNewAbsoluteContainingBlock);
 
   if (aNewAbsoluteContainingBlock) {
     aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
@@ -7774,7 +7774,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       needInvalidatingPaint = true;
       aFrame->MarkLayersActive(nsChangeHint_UpdateOpacityLayer);
     }
-    if (aChange & nsChangeHint_UpdateTransformLayer) {
+    if ((aChange & nsChangeHint_UpdateTransformLayer) &&
+        aFrame->IsTransformed()) {
       aFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
       // If we're not already going to do an invalidating paint, see
       // if we can get away with only updating the transform on a
@@ -7808,7 +7809,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
   // CSS transforms.
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
                aFrame->IsTransformed() ||
-               aFrame->GetStyleDisplay()->HasTransform(),
+               aFrame->GetStyleDisplay()->HasTransformStyle(),
                "Unexpected UpdateTransformLayer hint");
 
   nsIPresShell *shell = aPresContext->PresShell();
