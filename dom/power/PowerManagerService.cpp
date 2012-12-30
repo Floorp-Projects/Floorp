@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -139,6 +140,12 @@ PowerManagerService::Restart()
   // because it relies on the Gonk to initialize the Gecko processes to
   // restart B2G. It's better to do it here to have a real "restart".
   StartForceQuitWatchdog(eHalShutdownMode_Restart, mWatchdogTimeoutSecs);
+  // Ensure all content processes are dead before we continue
+  // restarting.  This code is used to restart to apply updates, and
+  // if we don't join all the subprocesses, race conditions can cause
+  // them to see an inconsistent view of the application directory.
+  ContentParent::JoinAllSubprocesses();
+
   // To synchronize any unsaved user data before restarting.
   SyncProfile();
 #ifdef XP_UNIX

@@ -528,13 +528,13 @@ void CC_SIPCCCall::originateP2PCall (cc_sdp_direction_t video_pref, const std::s
 /*
  * This method works asynchronously, is an onCallEvent with the resulting SDP
  */
-void CC_SIPCCCall::createOffer (const cc_media_constraints_t *constraints) {
+void CC_SIPCCCall::createOffer (cc_media_constraints_t *constraints) {
     CCAPI_CreateOffer(callHandle, constraints);
 }
 /*
  * This method works asynchronously, there is onCallEvent with the resulting SDP
  */
-void CC_SIPCCCall::createAnswer (const cc_media_constraints_t *constraints) {
+void CC_SIPCCCall::createAnswer (cc_media_constraints_t *constraints) {
     CCAPI_CreateAnswer(callHandle, constraints);
 
 }

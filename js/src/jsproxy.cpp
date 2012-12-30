@@ -379,7 +379,7 @@ DirectProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
                                           PropertyDescriptor *desc)
 {
     RootedObject target(cx, GetProxyTargetObject(proxy));
-    return JS_GetPropertyDescriptorById(cx, target, id, JSRESOLVE_QUALIFIED, desc);
+    return JS_GetPropertyDescriptorById(cx, target, id, 0, desc);
 }
 
 static bool
@@ -406,7 +406,7 @@ DirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
                                              PropertyDescriptor *desc)
 {
     RootedObject target(cx, GetProxyTargetObject(proxy));
-    return GetOwnPropertyDescriptor(cx, target, id, JSRESOLVE_QUALIFIED, desc);
+    return GetOwnPropertyDescriptor(cx, target, id, 0, desc);
 }
 
 bool
@@ -546,7 +546,7 @@ DirectProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     RootedObject target(cx, GetProxyTargetObject(proxy));
     AutoPropertyDescriptorRooter desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, target, id, JSRESOLVE_QUALIFIED, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, target, id, 0, &desc))
         return false;
     *bp = (desc.obj == target);
     return true;
@@ -1254,7 +1254,7 @@ static bool
 HasOwn(JSContext *cx, HandleObject obj, HandleId id, bool *bp)
 {
     AutoPropertyDescriptorRooter desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, 0, &desc))
         return false;
     *bp = (desc.obj == obj);
     return true;
@@ -1587,7 +1587,7 @@ ScriptedDirectProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy
         JS_ASSERT(!desc->obj);
         return true;
     }
-    return JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, desc);
+    return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc);
 }
 
 bool
@@ -2211,8 +2211,7 @@ Proxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy_, jsid id_, bool set
     if (desc->obj)
         return true;
     INVOKE_ON_PROTOTYPE(cx, handler, proxy,
-                        JS_GetPropertyDescriptorById(cx, proto, id,
-                                                     JSRESOLVE_QUALIFIED, desc));
+                        JS_GetPropertyDescriptorById(cx, proto, id, 0, desc));
 }
 
 bool
@@ -2398,7 +2397,7 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
         AutoPropertyDescriptorRooter desc(cx);
         if (handler->hasOwn(cx, proxy, id, &hasOwn) && !hasOwn &&
             handler->getPrototypeOf(cx, proxy, proto.address()) && proto &&
-            JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc) &&
+            JS_GetPropertyDescriptorById(cx, proto, id, 0, &desc) &&
             desc.obj && desc.setter)
         {
             return JSObject::setGeneric(cx, proto, receiver, id, vp, strict);

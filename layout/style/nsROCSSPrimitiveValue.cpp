@@ -12,7 +12,7 @@
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
 #include "nsDOMCSSRGBColor.h"
-#include "nsIDOMRect.h"
+#include "nsDOMCSSRect.h"
 #include "nsIURI.h"
 #include "nsError.h"
 
@@ -458,7 +458,7 @@ nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
   return nullptr;
 }
 
-already_AddRefed<nsIDOMRect>
+nsDOMCSSRect*
 nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
 {
   if (mType != CSS_RECT) {
@@ -467,7 +467,6 @@ nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
   }
 
   NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
-  NS_ADDREF(mValue.mRect);
   return mValue.mRect;
 }
 
@@ -475,7 +474,7 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aRect)
 {
   ErrorResult error;
-  *aRect = GetRectValue(error).get();
+  NS_IF_ADDREF(*aRect = GetRectValue(error));
   return error.ErrorCode();
 }
 
@@ -601,7 +600,7 @@ nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
 }
 
 void
-nsROCSSPrimitiveValue::SetRect(nsIDOMRect* aRect)
+nsROCSSPrimitiveValue::SetRect(nsDOMCSSRect* aRect)
 {
   NS_PRECONDITION(aRect, "Null rect being set!");
   Reset();

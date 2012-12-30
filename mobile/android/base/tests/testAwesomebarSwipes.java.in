@@ -18,8 +18,6 @@ import @ANDROID_PACKAGE_NAME@.*;
 */
 
 public class testAwesomebarSwipes extends BaseTest {
-    private static final String ABOUT_HOME_URL = "about:home";
-
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -34,10 +32,12 @@ public class testAwesomebarSwipes extends BaseTest {
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
         mAsserter.is(pager.getCurrentItem(), 0, "All pages is selected");
 
-        mSolo.scrollToSide(Solo.RIGHT);
+        int width = mDriver.getGeckoWidth() / 2;
+        int y = mDriver.getGeckoHeight() / 2;
+        mActions.drag(width, 0, y, y);
         mAsserter.is(pager.getCurrentItem(), 1, "Bookmarks page is selected");
 
-        mSolo.scrollToSide(Solo.LEFT);
+        mActions.drag(0, width, y, y);
         mAsserter.is(pager.getCurrentItem(), 0, "All pages is selected");
 
         // Test tapping on the tab strip changes tabs

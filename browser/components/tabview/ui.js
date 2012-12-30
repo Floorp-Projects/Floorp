@@ -823,7 +823,7 @@ let UI = {
   // Selects the given xul:tab in the browser.
   goToTab: function UI_goToTab(xulTab) {
     // If it's not focused, the onFocus listener would handle it.
-    if (gBrowser.selectedTab == xulTab)
+    if (xulTab.selected)
       this.onTabSelect(xulTab);
     else
       gBrowser.selectedTab = xulTab;
@@ -936,7 +936,7 @@ let UI = {
     // TabView is hidden and that the correct group is activated. When a modal
     // dialog is shown for currently selected tab the onTabSelect event handler
     // is not called, so we need to do it.
-    if (gBrowser.selectedTab == tab && this._currentTab == tab)
+    if (tab.selected && this._currentTab == tab)
       this.onTabSelect(tab);
   },
 

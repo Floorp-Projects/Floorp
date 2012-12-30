@@ -65,6 +65,13 @@ public:
   virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible);
 
   /**
+   * Notification used to update the accessible tree when deck panel is
+   * switched.
+   */
+  void DeckPanelSwitched(nsIPresShell* aPresShell, nsIContent* aDeckNode,
+                         nsIFrame* aPrevBoxFrame, nsIFrame* aCurrentBoxFrame);
+
+  /**
    * Notification used to update the accessible tree when new content is
    * inserted.
    */
@@ -172,13 +179,6 @@ private:
   already_AddRefed<Accessible>
     CreateAccessibleByFrameType(nsIFrame* aFrame, nsIContent* aContent,
                                 Accessible* aContext);
-
-  /**
-   * Create accessible if parent is a deck frame.
-   */
-  already_AddRefed<Accessible>
-    CreateAccessibleForDeckChild(nsIFrame* aFrame, nsIContent* aContent,
-                                 DocAccessible* aDoc);
 
 #ifdef MOZ_XUL
   /**

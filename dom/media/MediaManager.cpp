@@ -59,7 +59,8 @@ public:
     : mSuccess(aSuccess)
     , mError(aError)
     , mErrorMsg(aErrorMsg)
-    , mWindowID(aWindowID) {}
+    , mWindowID(aWindowID)
+    , mManager(MediaManager::GetInstance()) {}
 
   NS_IMETHOD
   Run()
@@ -70,7 +71,7 @@ public:
     nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
 
-    if (!(MediaManager::Get()->IsWindowStillActive(mWindowID))) {
+    if (!(mManager->IsWindowStillActive(mWindowID))) {
       return NS_OK;
     }
     // This is safe since we're on main-thread, and the windowlist can only
@@ -84,6 +85,7 @@ private:
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   const nsString mErrorMsg;
   uint64_t mWindowID;
+  nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
 
 /**
@@ -102,7 +104,8 @@ public:
     : mSuccess(aSuccess)
     , mError(aError)
     , mFile(aFile)
-    , mWindowID(aWindowID) {}
+    , mWindowID(aWindowID)
+    , mManager(MediaManager::GetInstance()) {}
 
   NS_IMETHOD
   Run()
@@ -113,7 +116,7 @@ public:
     nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
 
-    if (!(MediaManager::Get()->IsWindowStillActive(mWindowID))) {
+    if (!(mManager->IsWindowStillActive(mWindowID))) {
       return NS_OK;
     }
     // This is safe since we're on main-thread, and the windowlist can only
@@ -127,6 +130,7 @@ private:
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsCOMPtr<nsIDOMFile> mFile;
   uint64_t mWindowID;
+  nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
 
 /**
@@ -244,7 +248,8 @@ public:
     , mError(aError)
     , mAudioSource(aAudioSource)
     , mVideoSource(aVideoSource)
-    , mWindowID(aWindowID) {}
+    , mWindowID(aWindowID)
+    , mManager(MediaManager::GetInstance()) {}
 
   ~GetUserMediaStreamRunnable() {}
 
@@ -255,7 +260,7 @@ public:
 
     // We're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
-    StreamListeners* listeners = MediaManager::Get()->GetWindowListeners(mWindowID);
+    StreamListeners* listeners = mManager->GetWindowListeners(mWindowID);
     if (!listeners) {
       // This window is no longer live.
       return NS_OK;
@@ -306,7 +311,7 @@ public:
     nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
 
-    if (!(MediaManager::Get()->IsWindowStillActive(mWindowID))) {
+    if (!(mManager->IsWindowStillActive(mWindowID))) {
       return NS_OK;
     }
     // This is safe since we're on main-thread, and the windowlist can only
@@ -323,6 +328,7 @@ private:
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   uint64_t mWindowID;
+  nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
 
 /**
@@ -353,6 +359,7 @@ public:
     , mWindowID(aWindowID)
     , mDeviceChosen(true)
     , mBackendChosen(false)
+    , mManager(MediaManager::GetInstance())
     {
       if (mAudio) {
         mAudioDevice = aAudioDevice;
@@ -373,7 +380,8 @@ public:
     , mError(aError)
     , mWindowID(aWindowID)
     , mDeviceChosen(false)
-    , mBackendChosen(false) {}
+    , mBackendChosen(false)
+    , mManager(MediaManager::GetInstance()) {}
 
   /**
    * The caller can also choose to provide their own backend instead of
@@ -391,7 +399,8 @@ public:
     , mWindowID(aWindowID)
     , mDeviceChosen(false)
     , mBackendChosen(true)
-    , mBackend(aBackend) {}
+    , mBackend(aBackend)
+    , mManager(MediaManager::GetInstance()) {}
 
   ~GetUserMediaRunnable() {
     if (mBackendChosen) {
@@ -403,8 +412,6 @@ public:
   Run()
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
-    mManager = MediaManager::Get();
 
     // Was a backend provided?
     if (!mBackendChosen) {
@@ -623,7 +630,7 @@ private:
   bool mBackendChosen;
 
   MediaEngine* mBackend;
-  MediaManager* mManager;
+  nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
 
 /**
@@ -639,7 +646,9 @@ public:
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
     : mSuccess(aSuccess)
-    , mError(aError) {}
+    , mError(aError)
+    , mManager(MediaManager::GetInstance())
+    {}
   ~GetUserMediaDevicesRunnable() {}
 
   NS_IMETHOD
@@ -648,14 +657,13 @@ public:
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
     uint32_t audioCount, videoCount, i;
-    MediaManager* manager = MediaManager::Get();
 
     nsTArray<nsRefPtr<MediaEngineVideoSource> > videoSources;
-    manager->GetBackend()->EnumerateVideoDevices(&videoSources);
+    mManager->GetBackend()->EnumerateVideoDevices(&videoSources);
     videoCount = videoSources.Length();
 
     nsTArray<nsRefPtr<MediaEngineAudioSource> > audioSources;
-    manager->GetBackend()->EnumerateAudioDevices(&audioSources);
+    mManager->GetBackend()->EnumerateAudioDevices(&audioSources);
     audioCount = audioSources.Length();
 
     nsTArray<nsCOMPtr<nsIMediaDevice> > *devices =
@@ -668,13 +676,13 @@ public:
      * we decide to provide a stream from a device already allocated).
      */
     for (i = 0; i < videoCount; i++) {
-      nsRefPtr<MediaEngineVideoSource> vSource = videoSources[i];
+      MediaEngineVideoSource *vSource = videoSources[i];
       if (vSource->IsAvailable()) {
         devices->AppendElement(new MediaDevice(vSource));
       }
     }
     for (i = 0; i < audioCount; i++) {
-      nsRefPtr<MediaEngineAudioSource> aSource = audioSources[i];
+      MediaEngineAudioSource *aSource = audioSources[i];
       if (aSource->IsAvailable()) {
         devices->AppendElement(new MediaDevice(aSource));
       }
@@ -689,6 +697,7 @@ public:
 private:
   already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
+  nsRefPtr<MediaManager> mManager;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(MediaManager, nsIMediaManagerService, nsIObserver)
@@ -966,6 +975,7 @@ MediaManager::OnNavigation(uint64_t aWindowID)
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
       listeners->ElementAt(i);
     listener->Invalidate();
+    listener->Remove();
   }
   listeners->Clear();
 

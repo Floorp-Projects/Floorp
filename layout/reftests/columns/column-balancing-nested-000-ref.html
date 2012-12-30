@@ -1,0 +1,61 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>Testing nested balancing column sets</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822053">
+<style type="text/css">
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+
+  .colset {
+    -moz-column-count: 2;
+    -moz-column-gap: 1px;
+    -moz-column-rule: 1px solid black;
+    border: solid silver;
+    margin-bottom:1em;
+    width:30ch;
+  }
+  p { margin: 0; }
+
+  /* balancing column sets deeper than level 2 should only use 1 column */
+  .colset .colset .colset,
+  .colset .colset .colset .colset {
+    -moz-column-count: 1;
+  }
+</style>
+</head>
+<body>
+<div class="colset">
+  <p>one one one one one</p>
+  <div class="colset">
+    <p>two two two two two</p>
+  </div>
+</div>
+<div class="colset">
+  <p>one one one one one</p>
+  <div class="colset">
+    <p>two two two two two</p>
+    <div class="colset">
+      <p>three three three three three</p>
+    </div>
+  </div>
+</div>
+<div class="colset">
+  <p>one one one one one</p>
+  <div class="colset">
+    <p>two two two two two</p>
+    <div class="colset">
+      <p>three three</p>
+      <div class="colset">
+        <p>four four four four four</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

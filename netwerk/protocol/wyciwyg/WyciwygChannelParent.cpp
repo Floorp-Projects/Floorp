@@ -11,8 +11,8 @@
 #include "nsCharsetSource.h"
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"
-#include "mozilla/LoadContext.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/NeckoParent.h"
 
 using namespace mozilla::ipc;
 
@@ -86,7 +86,8 @@ WyciwygChannelParent::RecvInit(const URIParams& aURI)
 bool
 WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
                                     const uint32_t& aLoadFlags,
-                                    const IPC::SerializedLoadContext& loadContext)
+                                    const IPC::SerializedLoadContext& loadContext,
+                                    PBrowserParent* aParent)
 {
   nsCOMPtr<nsIURI> original = DeserializeURI(aOriginal);
   if (!original)
@@ -107,9 +108,15 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
 
-  if (loadContext.IsNotNull())
-    mLoadContext = new LoadContext(loadContext);
-  else if (loadContext.IsPrivateBitValid()) {
+  const char* error = NeckoParent::CreateChannelLoadContext(aParent, loadContext,
+                                                            mLoadContext);
+  if (error) {
+    NS_WARNING(nsPrintfCString("WyciwygChannelParent::RecvAsyncOpen: error: %s\n",
+                               error).get());
+    return false;
+  }
+
+  if (!mLoadContext && loadContext.IsPrivateBitValid()) {
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(mChannel);
     if (pbChannel)
       pbChannel->SetPrivate(loadContext.mUsePrivateBrowsing);

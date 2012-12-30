@@ -73,7 +73,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.20
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.14.1
+SQLITE_VERSION=3.7.15.1
 
 MSMANIFEST_TOOL=
 
@@ -1712,21 +1712,6 @@ if test -n "$MOZ_VALGRIND"; then
     AC_DEFINE(MOZ_VALGRIND)
 fi
 AC_SUBST(MOZ_VALGRIND)
-
-dnl ========================================================
-dnl = Enable DMDV
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(dmdv,
-[  --enable-dmdv           Enable DMDV; also disables jemalloc (default=no)],
-    MOZ_DMDV=1,
-    MOZ_DMDV= )
-if test -n "$MOZ_DMDV"; then
-    MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
-        AC_MSG_ERROR(
-            [--enable-dmdv specified but Valgrind is not installed]))
-    AC_DEFINE(MOZ_DMDV)
-fi
-AC_SUBST(MOZ_DMDV)
 
 dnl ========================================================
 dnl jprof
@@ -7043,7 +7028,7 @@ dnl = Enable DMD
 dnl ========================================================
 
 MOZ_ARG_ENABLE_BOOL(dmd,
-[  --enable-dmd            Enable DMD; also enables jemalloc and replace-malloc and disables DMDV],
+[  --enable-dmd            Enable DMD; also enables jemalloc and replace-malloc],
     MOZ_DMD=1,
     MOZ_DMD= )
 
@@ -7061,7 +7046,6 @@ if test "$MOZ_DMD"; then
 
     MOZ_MEMORY=1                        # DMD enables jemalloc
     MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
-    MOZ_DMDV=                           # DMD disables DMDV
 fi
 AC_SUBST(MOZ_DMD)
 
@@ -7074,9 +7058,6 @@ MOZ_ARG_ENABLE_BOOL(jemalloc,
     MOZ_MEMORY=)
 
 if test "$NS_TRACE_MALLOC"; then
-    MOZ_MEMORY=
-fi
-if test "$MOZ_DMDV"; then
     MOZ_MEMORY=
 fi
 
@@ -7306,6 +7287,7 @@ if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl--wrap=PR_GetEnv,--wrap=PR_SetEnv"
     if test -z "$gonkdir"; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=fork,--wrap=pthread_atfork,--wrap=raise"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=memccpy,--wrap=memchr,--wrap=memrchr,--wrap=memcmp,--wrap=memcpy,--wrap=memmove,--wrap=memset,--wrap=memmem,--wrap=memswap,--wrap=index,--wrap=strchr,--wrap=strrchr,--wrap=strlen,--wrap=strcmp,--wrap=strcpy,--wrap=strcat,--wrap=strcasecmp,--wrap=strncasecmp,--wrap=strstr,--wrap=strcasestr,--wrap=strtok,--wrap=strtok_r,--wrap=strerror,--wrap=strerror_r,--wrap=strnlen,--wrap=strncat,--wrap=strncmp,--wrap=strncpy,--wrap=strlcat,--wrap=strlcpy,--wrap=strcspn,--wrap=strpbrk,--wrap=strsep,--wrap=strspn,--wrap=strcoll,--wrap=strxfrm"
     fi
 fi
 

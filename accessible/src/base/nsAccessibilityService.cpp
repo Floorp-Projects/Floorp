@@ -60,6 +60,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Util.h"
+#include "nsDeckFrame.h"
 
 #ifdef MOZ_XUL
 #include "XULAlertAccessible.h"
@@ -185,6 +186,7 @@ Accessible*
 nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                   bool aCanCreate)
 {
+  nsIPresShell* ps = aPresShell;
   nsIDocument* documentNode = aPresShell->GetDocument();
   if (documentNode) {
     nsCOMPtr<nsISupports> container = documentNode->GetContainer();
@@ -196,11 +198,10 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootTreeItem));
         nsCOMPtr<nsIPresShell> presShell;
         docShell->GetPresShell(getter_AddRefs(presShell));
-        documentNode = presShell->GetDocument();
+        ps = presShell;
       }
 
-      return aCanCreate ?
-        GetDocAccessible(documentNode) : GetDocAccessibleFromCache(documentNode);
+      return aCanCreate ? GetDocAccessible(ps) : ps->GetDocAccessible();
     }
   }
   return nullptr;
@@ -252,6 +253,47 @@ nsAccessibilityService::CreatePluginAccessible(nsObjectFrame* aFrame,
 #endif
 
   return nullptr;
+}
+
+void
+nsAccessibilityService::DeckPanelSwitched(nsIPresShell* aPresShell,
+                                          nsIContent* aDeckNode,
+                                          nsIFrame* aPrevBoxFrame,
+                                          nsIFrame* aCurrentBoxFrame)
+{
+  // Ignore tabpanels elements (a deck having an accessible) since their
+  // children are accessible not depending on selected tab.
+  DocAccessible* document = GetDocAccessible(aPresShell);
+  if (!document || document->HasAccessible(aDeckNode))
+    return;
+
+  if (aPrevBoxFrame) {
+    nsIContent* panelNode = aPrevBoxFrame->GetContent();
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eTree)) {
+      logging::MsgBegin("TREE", "deck panel unselected");
+      logging::Node("container", panelNode);
+      logging::Node("content", aDeckNode);
+      logging::MsgEnd();
+    }
+#endif
+
+    document->ContentRemoved(aDeckNode, panelNode);
+  }
+
+  if (aCurrentBoxFrame) {
+    nsIContent* panelNode = aCurrentBoxFrame->GetContent();
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eTree)) {
+      logging::MsgBegin("TREE", "deck panel selected");
+      logging::Node("container", panelNode);
+      logging::Node("content", aDeckNode);
+      logging::MsgEnd();
+    }
+#endif
+
+    document->ContentInserted(aDeckNode, panelNode, panelNode->GetNextSibling());
+  }
 }
 
 void
@@ -364,15 +406,12 @@ nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
 void
 nsAccessibilityService::PresShellActivated(nsIPresShell* aPresShell)
 {
-  nsIDocument* DOMDoc = aPresShell->GetDocument();
-  if (DOMDoc) {
-    DocAccessible* document = GetDocAccessibleFromCache(DOMDoc);
-    if (document) {
-      RootAccessible* rootDocument = document->RootAccessible();
-      NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
-      if (rootDocument)
-        rootDocument->DocumentActivated(document);
-    }
+  DocAccessible* document = aPresShell->GetDocAccessible();
+  if (document) {
+    RootAccessible* rootDocument = document->RootAccessible();
+    NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
+    if (rootDocument)
+      rootDocument->DocumentActivated(document);
   }
 }
 
@@ -608,7 +647,7 @@ nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   if (!accessible) {
     nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
     if (document)
-      accessible = GetDocAccessibleFromCache(document);
+      accessible = GetExistingDocAccessible(document);
   }
 
   NS_IF_ADDREF(*aAccessible = accessible);
@@ -843,27 +882,42 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     }
   }
 
-  if (!newAcc) {
+  // Accessible XBL types and deck stuff are used in XUL only currently.
+  if (!newAcc && content->IsXUL()) {
+    // No accessible for not selected deck panel and its children.
+    if (!aContext->IsXULTabpanels()) {
+      nsDeckFrame* deckFrame = do_QueryFrame(frame->GetParent());
+      if (deckFrame && deckFrame->GetSelectedBox() != frame) {
+        if (aIsSubtreeHidden)
+          *aIsSubtreeHidden = true;
+
+        return nullptr;
+      }
+    }
+
     // Elements may implement nsIAccessibleProvider via XBL. This allows them to
     // say what kind of accessible to create.
     newAcc = CreateAccessibleByType(content, document);
+
+    // Any XUL box can be used as tabpanel, make sure we create a proper
+    // accessible for it.
+    if (!newAcc && aContext->IsXULTabpanels() &&
+        content->GetParent() == aContext->GetContent()) {
+      nsIAtom* frameType = frame->GetType();
+      if (frameType == nsGkAtoms::boxFrame ||
+          frameType == nsGkAtoms::scrollFrame) {
+        newAcc = new XULTabpanelAccessible(content, document);
+      }
+    }
   }
 
   if (!newAcc) {
-    // xul:deck does not have XBL and nsIFrame::CreateAccessible() is only called 
-    // on HTML elements
-    nsIAtom* tag = content->Tag();
-    if ((tag == nsGkAtoms::deck) || (tag == nsGkAtoms::tabpanels)) {
-      newAcc = new XULDeckAccessible(content, document);
-    } else if (content->IsSVG(nsGkAtoms::svg)) {
+    if (content->IsSVG(nsGkAtoms::svg)) {
       newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
     } else if (content->IsMathML(nsGkAtoms::math)) {
       newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
     }
   }
-
-  if (!newAcc)
-    newAcc = CreateAccessibleForDeckChild(frame, content, document);
 
   // If no accessible, see if we need to create a generic accessible because
   // of some property that makes this object interesting
@@ -1011,8 +1065,8 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       accessible = new XULComboboxAccessible(aContent, aDoc);
       break;
 
-    case nsIAccessibleProvider::XULDeck:
-      accessible = new XULDeckAccessible(aContent, aDoc);
+    case nsIAccessibleProvider::XULTabpanels:
+      accessible = new XULTabpanelsAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULDropmarker:
@@ -1479,37 +1533,6 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private (DON'T put methods here)
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateAccessibleForDeckChild(nsIFrame* aFrame,
-                                                     nsIContent* aContent,
-                                                     DocAccessible* aDoc)
-{
-  if (aFrame->GetType() == nsGkAtoms::boxFrame ||
-      aFrame->GetType() == nsGkAtoms::scrollFrame) {
-
-    nsIFrame* parentFrame = aFrame->GetParent();
-    if (parentFrame && parentFrame->GetType() == nsGkAtoms::deckFrame) {
-      // If deck frame is for xul:tabpanels element then the given node has
-      // tabpanel accessible.
-      nsIContent* parentContent = parentFrame->GetContent();
-#ifdef MOZ_XUL
-      if (parentContent->NodeInfo()->Equals(nsGkAtoms::tabpanels,
-                                            kNameSpaceID_XUL)) {
-        Accessible* accessible = new XULTabpanelAccessible(aContent, aDoc);
-        NS_ADDREF(accessible);
-        return accessible;
-      }
-#endif
-      Accessible* accessible = new EnumRoleAccessible(aContent, aDoc,
-                                                      roles::PROPERTYPAGE);
-      NS_ADDREF(accessible);
-      return accessible;
-    }
-  }
-
-  return nullptr;
-}
 
 #ifdef MOZ_XUL
 already_AddRefed<Accessible>

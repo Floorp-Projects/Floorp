@@ -600,6 +600,7 @@ function DownloadsPlacesView(aRichListBox) {
 
   // Make sure to unregister the view if the window is closed.
   window.addEventListener("unload", function() {
+    this._richlistbox.controllers.removeController(this);
     downloadsData.removeView(this);
     this.result = null;
   }.bind(this), true);
@@ -770,6 +771,7 @@ DownloadsPlacesView.prototype = {
     // sibling first, if any.
     if (aElement.nextSibling &&
         this._richlistbox.selectedItems &&
+        this._richlistbox.selectedItems.length > 0 &&
         this._richlistbox.selectedItems[0] == aElement) {
       this._richlistbox.selectItem(aElement.nextSibling);
     }
@@ -882,8 +884,8 @@ DownloadsPlacesView.prototype = {
     let placesNodes = [];
     let selectedElements = this._richlistbox.selectedItems;
     for (let elt of selectedElements) {
-      if (elt.placesNode)
-        placesNodes.push(elt.placesNode);
+      if (elt._shell.placesNode)
+        placesNodes.push(elt._shell.placesNode);
     }
     return placesNodes;
   },

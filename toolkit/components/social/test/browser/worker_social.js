@@ -42,6 +42,11 @@ onconnect = function(e) {
         // start
         apiPort.postMessage({topic: 'social.reload-worker'});
         break;
+      case "test-notification-create":
+        apiPort.postMessage({topic: 'social.notification-create',
+                             data: data});
+        testerPort.postMessage({topic: 'did-notification-create'});
+        break;
     }
   }
   // used for "test-reload-worker"

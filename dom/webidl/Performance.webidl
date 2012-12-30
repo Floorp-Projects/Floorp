@@ -15,6 +15,8 @@ typedef double DOMHighResTimeStamp;
 interface Performance {
   DOMHighResTimeStamp now();
 
+  [Constant]
   readonly attribute PerformanceTiming timing;
+  [Constant]
   readonly attribute PerformanceNavigation navigation;
 };

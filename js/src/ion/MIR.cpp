@@ -367,7 +367,7 @@ MConstantElements::printOpcode(FILE *fp)
 }
 
 MParameter *
-MParameter::New(int32_t index, const types::TypeSet *types)
+MParameter::New(int32_t index, const types::StackTypeSet *types)
 {
     return new MParameter(index, types);
 }
@@ -1720,4 +1720,20 @@ MBeta::computeRange()
     } else {
         setRange(range);
     }
+}
+
+bool
+MLoadFixedSlot::mightAlias(MDefinition *store)
+{
+    if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
+        return false;
+    return true;
+}
+
+bool
+MLoadSlot::mightAlias(MDefinition *store)
+{
+    if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
+        return false;
+    return true;
 }

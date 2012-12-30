@@ -20,13 +20,17 @@ webidl_files = \
   BiquadFilterNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
+  CaretPosition.webidl \
   ClientRectList.webidl \
+  CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
   CSSValue.webidl \
   CSSValueList.webidl \
   DelayNode.webidl \
   Document.webidl \
+  DocumentFragment.webidl \
+  DocumentType.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
   DOMSettableTokenList.webidl \
@@ -49,9 +53,11 @@ webidl_files = \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDivElement.webidl \
+  HTMLDocument.webidl \
   HTMLElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
+  HTMLHeadingElement.webidl \
   HTMLLabelElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
@@ -67,6 +73,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  Rect.webidl \
   RGBColor.webidl \
   Screen.webidl \
   SVGAngle.webidl \
