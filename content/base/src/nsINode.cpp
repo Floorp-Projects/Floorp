@@ -698,6 +698,7 @@ nsINode::SetUserData(JSContext* aCx, const nsAString& aKey, JS::Value aData,
   }
 
   JS::Value result;
+  JSAutoCompartment ac(aCx, GetWrapper());
   aError = nsContentUtils::XPConnect()->VariantToJS(aCx, GetWrapper(), oldData,
                                                     &result);
   return result;
@@ -712,6 +713,7 @@ nsINode::GetUserData(JSContext* aCx, const nsAString& aKey, ErrorResult& aError)
   }
 
   JS::Value result;
+  JSAutoCompartment ac(aCx, GetWrapper());
   aError = nsContentUtils::XPConnect()->VariantToJS(aCx, GetWrapper(), data,
                                                     &result);
   return result;

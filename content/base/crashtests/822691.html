@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var frameDoc = document.getElementById("f").contentDocument;
+
+  var confusedNode = frameDoc.createTextNode("y");
+  confusedNode.__proto__ = document.createTextNode("x");
+  confusedNode.setUserData("key", "data", null);
+  confusedNode.setUserData("key", "data", null);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<iframe src="data:text/html,1" id="f"></iframe>
+</body>
+</html>
