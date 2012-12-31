@@ -231,17 +231,13 @@ PeerConnectionImpl::~PeerConnectionImpl()
   PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
   CloseInt(false);
 
-#if 0
-  // TODO(ekr@rtfm.com): figure out how to shut down PCCtx.
-  // bug 820011.
-
   // Since this and Initialize() occur on MainThread, they can't both be
   // running at once
-  // Might be more optimal to release off a timer (and XPCOM Shutdown)
-  // to avoid churn
-  if (PeerConnectionCtx::GetInstance()->mPeerConnections.empty())
-    Shutdown();
-#endif
+
+  // Right now, we delete PeerConnectionCtx at XPCOM shutdown only, but we
+  // probably want to shut it down more aggressively to save memory.  We
+  // could shut down here when there are no uses.  It might be more optimal
+  // to release off a timer (and XPCOM Shutdown) to avoid churn
 
   /* We should release mPCObserver on the main thread, but also prevent a double free.
   nsCOMPtr<nsIThread> mainThread;
@@ -962,12 +958,6 @@ PeerConnectionImpl::ShutdownMedia(bool aIsSynchronous)
   RUN_ON_THREAD(mThread, WrapRunnable(mMedia.forget().get(),
                                       &PeerConnectionMedia::SelfDestruct),
                 aIsSynchronous ? NS_DISPATCH_SYNC : NS_DISPATCH_NORMAL);
-}
-
-void
-PeerConnectionImpl::Shutdown()
-{
-  PeerConnectionCtx::Destroy();
 }
 
 void

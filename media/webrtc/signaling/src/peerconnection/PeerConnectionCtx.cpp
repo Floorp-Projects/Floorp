@@ -137,9 +137,11 @@ PeerConnectionCtx* PeerConnectionCtx::GetInstance() {
 void PeerConnectionCtx::Destroy() {
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
-  gInstance->Cleanup();
-  delete gInstance;
-  gInstance = NULL;
+  if (gInstance) {
+    gInstance->Cleanup();
+    delete gInstance;
+    gInstance = NULL;
+  }
 }
 
 nsresult PeerConnectionCtx::Initialize() {
