@@ -1511,7 +1511,7 @@ nsTextStore::SetText(DWORD dwFlags,
     return hr;
   }
   // Replace just selected text
-  if (!InsertTextAtSelectionInternal(nsDependentString(pchText, cch),
+  if (!InsertTextAtSelectionInternal(nsDependentSubstring(pchText, cch),
                                      pChange)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::SetText() FAILED due to "
@@ -2063,7 +2063,7 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
       return E_INVALIDARG;
     }
 
-    if (!InsertTextAtSelectionInternal(nsDependentString(pchText, cch),
+    if (!InsertTextAtSelectionInternal(nsDependentSubstring(pchText, cch),
                                        pChange)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelection() FAILED due to "
