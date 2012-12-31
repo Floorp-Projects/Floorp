@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<window title="Mozilla Bug 824917"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <iframe type="content"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 799299 **/
+  var SimpleTest = opener.wrappedJSObject.SimpleTest;
+  var ok = opener.wrappedJSObject.ok;
+
+  var doc = frames[0].document;
+  ok(doc.createElement("body") instanceof HTMLBodyElement,
+     "Should be instance of HTMLBodyElement");
+  ok(doc.createElement("div") instanceof HTMLDivElement,
+     "Should be instance of HTMLDivElement");
+  ok(doc.createElement("frameset") instanceof HTMLFrameSetElement,
+     "Should be instance of HTMLFrameSetElement");
+  ok(doc.createElement("h1") instanceof HTMLHeadingElement,
+     "Should be instance of HTMLHeadingElement");
+  ok(doc.createElement("label") instanceof HTMLLabelElement,
+     "Should be instance of HTMLLabelElement");
+
+  window.close();
+  opener.wrappedJSObject.SimpleTest.finish();
+  ]]>
+  </script>
+</window>
