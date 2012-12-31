@@ -19,7 +19,7 @@
 extern "C" {
 struct JSContext;
 class JSFunction;
-struct JSObject;
+class JSObject;
 class JSScript;
 }
 

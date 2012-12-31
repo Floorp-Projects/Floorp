@@ -546,9 +546,9 @@ class StackTypeSet : public TypeSet
 
     void addSubset(JSContext *cx, TypeSet *target);
     void addGetProperty(JSContext *cx, HandleScript script, jsbytecode *pc,
-                        StackTypeSet *target, jsid id);
+                        StackTypeSet *target, RawId id);
     void addSetProperty(JSContext *cx, HandleScript script, jsbytecode *pc,
-                        StackTypeSet *target, jsid id);
+                        StackTypeSet *target, RawId id);
     void addSetElement(JSContext *cx, HandleScript script, jsbytecode *pc,
                        StackTypeSet *objectTypes, StackTypeSet *valueTypes);
     void addCall(JSContext *cx, TypeCallsite *site);
@@ -602,7 +602,7 @@ class StackTypeSet : public TypeSet
     RawObject getSingleton();
 
     /* Whether any objects in the type set needs a barrier on id. */
-    bool propertyNeedsBarrier(JSContext *cx, jsid id);
+    bool propertyNeedsBarrier(JSContext *cx, RawId id);
 
     /*
      * Whether this set contains all types in other, except (possibly) the
@@ -641,7 +641,7 @@ class HeapTypeSet : public TypeSet
 
     void addSubset(JSContext *cx, TypeSet *target);
     void addGetProperty(JSContext *cx, HandleScript script, jsbytecode *pc,
-                        StackTypeSet *target, jsid id);
+                        StackTypeSet *target, RawId id);
     void addCallProperty(JSContext *cx, HandleScript script, jsbytecode *pc, jsid id);
     void addFilterPrimitives(JSContext *cx, TypeSet *target);
     void addSubsetBarrier(JSContext *cx, HandleScript script, jsbytecode *pc, TypeSet *target);
@@ -820,7 +820,7 @@ struct Property
     inline Property(jsid id);
     inline Property(const Property &o);
 
-    static uint32_t keyBits(jsid id) { return uint32_t(JSID_BITS(id)); }
+    static uint32_t keyBits(RawId id) { return uint32_t(JSID_BITS(id)); }
     static jsid getKey(Property *p) { return p->id; }
 };
 
@@ -1009,10 +1009,10 @@ struct TypeObject : gc::Cell
      * assignment, and the own types of the property will be used instead of
      * aggregate types.
      */
-    inline HeapTypeSet *getProperty(JSContext *cx, jsid id, bool own);
+    inline HeapTypeSet *getProperty(JSContext *cx, RawId id, bool own);
 
     /* Get a property only if it already exists. */
-    inline HeapTypeSet *maybeGetProperty(JSContext *cx, jsid id);
+    inline HeapTypeSet *maybeGetProperty(RawId id, JSContext *cx);
 
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
@@ -1028,7 +1028,7 @@ struct TypeObject : gc::Cell
 
     /* Helpers */
 
-    bool addProperty(JSContext *cx, jsid id, Property **pprop);
+    bool addProperty(JSContext *cx, RawId id, Property **pprop);
     bool addDefiniteProperties(JSContext *cx, HandleObject obj);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
@@ -1398,7 +1398,7 @@ struct TypeCompartment
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
-    void addPendingRecompile(JSContext *cx, HandleScript script, jsbytecode *pc);
+    void addPendingRecompile(JSContext *cx, UnrootedScript script, jsbytecode *pc);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, HandleScript script, uint32_t offset,

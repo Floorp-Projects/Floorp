@@ -4410,7 +4410,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     bool needsBarrier = true;
     TypeOracle::BinaryTypes b = oracle->binaryTypes(script(), pc);
     if (b.lhsTypes &&
-        ((jsid)id == types::MakeTypeId(cx, id)) &&
+        (id == types::IdToTypeId(id)) &&
         !b.lhsTypes->propertyNeedsBarrier(cx, id))
     {
         needsBarrier = false;
@@ -5238,17 +5238,19 @@ IonBuilder::jsop_bindname(PropertyName *name)
 bool
 IonBuilder::jsop_getelem()
 {
-    if (oracle->elementReadIsDenseArray(script(), pc))
+    RootedScript script(cx, this->script());
+
+    if (oracle->elementReadIsDenseArray(script, pc))
         return jsop_getelem_dense();
 
     int arrayType = TypedArray::TYPE_MAX;
-    if (oracle->elementReadIsTypedArray(script(), pc, &arrayType))
+    if (oracle->elementReadIsTypedArray(script, pc, &arrayType))
         return jsop_getelem_typed(arrayType);
 
-    if (oracle->elementReadIsString(script(), pc))
+    if (oracle->elementReadIsString(script, pc))
         return jsop_getelem_string();
 
-    LazyArgumentsType isArguments = oracle->elementReadMagicArguments(script(), pc);
+    LazyArgumentsType isArguments = oracle->elementReadMagicArguments(script, pc);
     if (isArguments == MaybeArguments)
         return abort("Type is not definitely lazy arguments.");
     if (isArguments == DefinitelyArguments)
@@ -5266,7 +5268,7 @@ IonBuilder::jsop_getelem()
     bool mustMonitorResult = false;
     bool cacheable = false;
 
-    oracle->elementReadGeneric(script(), pc, &cacheable, &mustMonitorResult);
+    oracle->elementReadGeneric(script, pc, &cacheable, &mustMonitorResult);
 
     if (cacheable)
         ins = MGetElementCache::New(lhs, rhs, mustMonitorResult);
@@ -5279,9 +5281,8 @@ IonBuilder::jsop_getelem()
     if (!resumeAfter(ins))
         return false;
 
-    RootedScript scriptRoot(cx, script());
-    types::StackTypeSet *barrier = oracle->propertyReadBarrier(scriptRoot, pc);
-    types::StackTypeSet *types = oracle->propertyRead(script(), pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     if (mustMonitorResult)
         monitorResult(ins, barrier, types);
@@ -5505,17 +5506,18 @@ IonBuilder::jsop_getelem_string()
 bool
 IonBuilder::jsop_setelem()
 {
-    if (oracle->propertyWriteCanSpecialize(script(), pc)) {
-        RootedScript scriptRoot(cx, script());
-        if (oracle->elementWriteIsDenseArray(scriptRoot, pc))
+    RootedScript script(cx, this->script());
+
+    if (oracle->propertyWriteCanSpecialize(script, pc)) {
+        if (oracle->elementWriteIsDenseArray(script, pc))
             return jsop_setelem_dense();
 
         int arrayType = TypedArray::TYPE_MAX;
-        if (oracle->elementWriteIsTypedArray(script(), pc, &arrayType))
+        if (oracle->elementWriteIsTypedArray(script, pc, &arrayType))
             return jsop_setelem_typed(arrayType);
     }
 
-    LazyArgumentsType isArguments = oracle->elementWriteMagicArguments(script(), pc);
+    LazyArgumentsType isArguments = oracle->elementWriteMagicArguments(script, pc);
     if (isArguments == MaybeArguments)
         return abort("Type is not definitely lazy arguments.");
     if (isArguments == DefinitelyArguments)
@@ -5769,8 +5771,8 @@ GetDefiniteSlot(JSContext *cx, types::StackTypeSet *types, JSAtom *atom)
     if (!type || type->unknownProperties())
         return NULL;
 
-    jsid id = AtomToId(atom);
-    if (id != types::MakeTypeId(cx, id))
+    RawId id = AtomToId(atom);
+    if (id != types::IdToTypeId(id))
         return NULL;
 
     types::HeapTypeSet *propertyTypes = type->getProperty(cx, id, false);
@@ -5832,8 +5834,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
 
             // If the type has an own property, we can't be sure we don't shadow
             // the chain.
-            jsid typeId = types::MakeTypeId(cx, id);
-            types::HeapTypeSet *propSet = typeObj->getProperty(cx, typeId, false);
+            types::HeapTypeSet *propSet = typeObj->getProperty(cx, types::IdToTypeId(id), false);
             if (!propSet)
                 return false;
             if (propSet->ownProperty(false))
@@ -5920,8 +5921,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             // Even though we are not directly accessing the properties on the whole
             // prototype chain, we need to fault in the sets anyway, as we need
             // to freeze on them.
-            jsid typeId = types::MakeTypeId(cx, id);
-            types::HeapTypeSet *propSet = typeObj->getProperty(cx, typeId, false);
+            types::HeapTypeSet *propSet = typeObj->getProperty(cx, types::IdToTypeId(id), false);
             if (!propSet)
                 return false;
             if (propSet->ownProperty(false))
@@ -5978,7 +5978,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
         if (obj != foundProto) {
             // Walk the prototype chain. Everyone has to have the property, since we
             // just checked, so propSet cannot be NULL.
-            jsid typeId = types::MakeTypeId(cx, id);
+            RawId typeId = types::IdToTypeId(id);
             while (true) {
                 types::HeapTypeSet *propSet = curType->getProperty(cx, typeId, false);
                 // This assert is now assured, since we have faulted them in
@@ -6008,7 +6008,7 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
                                     types::StackTypeSet *objTypes, types::StackTypeSet *pushedTypes)
 {
     RootedId id(cx, NameToId(getPropCache->name()));
-    if ((jsid)id != types::MakeTypeId(cx, id))
+    if (id != types::IdToTypeId(id))
         return true;
 
     // Ensure every pushed value is a singleton.
@@ -6537,25 +6537,23 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     if (monitored) {
         ins = MCallSetProperty::New(obj, value, name, script()->strict);
     } else {
-        UnrootedShape objShape;
-        if ((objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) &&
-            !objShape->inDictionary())
-        {
+        RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing());
+        if (objShape && !objShape->inDictionary()) {
             // The JM IC was monomorphic, so we inline the property access as
             // long as the shape is not in dictionary mode. We cannot be sure
             // that the shape is still a lastProperty, and calling Shape::search
             // on dictionary mode shapes that aren't lastProperty is invalid.
             obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
-            UnrootedShape shape = DropUnrooted(objShape)->search(cx, NameToId(name));
+            RootedShape shape(cx, objShape->search(cx, NameToId(name)));
             JS_ASSERT(shape);
 
             spew("Inlining monomorphic SETPROP");
 
-            jsid typeId = types::MakeTypeId(cx, id);
+            RawId typeId = types::IdToTypeId(id);
             bool needsBarrier = oracle->propertyWriteNeedsBarrier(script(), pc, typeId);
 
-            return storeSlot(obj, DropUnrooted(shape), value, needsBarrier);
+            return storeSlot(obj, shape, value, needsBarrier);
         }
 
         spew("SETPROP not monomorphic");
