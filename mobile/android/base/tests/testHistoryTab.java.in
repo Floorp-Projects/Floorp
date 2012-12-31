@@ -99,13 +99,17 @@ public class testHistoryTab extends PixelTest {
 
     private void testList(String url) {
         listview = getHistoryList();
-        mSolo.waitForText(url);
+
+        // Around midnight we will switch from Today -> Yesterday, account for both
+        if (!mSolo.waitForText("Today")) {
+            mSolo.waitForText("Yesterday");
+        }
 
         mAsserter.isnot(listview,  null, "checking that history list exists");
 
-        mAsserter.is(listview.getChildCount(), 3, "history list has 3 children");
-
         final int count = listview.getChildCount();
+        mAsserter.is(count, 3, "history list has 3 children");
+
         String loadUrl = "";
         for (int i = count - 1; i >= 0; i--) {
             View child = listview.getChildAt(i);
