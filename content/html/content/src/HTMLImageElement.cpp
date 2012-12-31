@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/HTMLImageElementBinding.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -139,21 +140,26 @@ HTMLImageElement::Draggable() const
                       nsGkAtoms::_false, eIgnoreCase);
 }
 
-NS_IMETHODIMP
-HTMLImageElement::GetComplete(bool* aComplete)
+bool
+HTMLImageElement::Complete()
 {
-  NS_PRECONDITION(aComplete, "Null out param!");
-  *aComplete = true;
-
   if (!mCurrentRequest) {
-    return NS_OK;
+    return true;
   }
 
   uint32_t status;
   mCurrentRequest->GetImageStatus(&status);
-  *aComplete =
+  return
     (status &
      (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
+}
+
+NS_IMETHODIMP
+HTMLImageElement::GetComplete(bool* aComplete)
+{
+  NS_PRECONDITION(aComplete, "Null out param!");
+
+  *aComplete = Complete();
 
   return NS_OK;
 }
@@ -197,7 +203,7 @@ HTMLImageElement::GetY(int32_t* aY)
 NS_IMETHODIMP
 HTMLImageElement::GetHeight(uint32_t* aHeight)
 {
-  *aHeight = GetWidthHeightForImage(mCurrentRequest).height;
+  *aHeight = Height();
 
   return NS_OK;
 }
@@ -211,7 +217,7 @@ HTMLImageElement::SetHeight(uint32_t aHeight)
 NS_IMETHODIMP
 HTMLImageElement::GetWidth(uint32_t* aWidth)
 {
-  *aWidth = GetWidthHeightForImage(mCurrentRequest).width;
+  *aWidth = Width();
 
   return NS_OK;
 }
@@ -482,28 +488,54 @@ HTMLImageElement::Initialize(nsISupports* aOwner, JSContext* aContext,
   return rv;
 }
 
+uint32_t
+HTMLImageElement::NaturalHeight()
+{
+  if (!mCurrentRequest) {
+    return 0;
+  }
+
+  nsCOMPtr<imgIContainer> image;
+  mCurrentRequest->GetImage(getter_AddRefs(image));
+  if (!image) {
+    return 0;
+  }
+
+  int32_t height;
+  if (NS_SUCCEEDED(image->GetHeight(&height))) {
+    return height;
+  }
+  return 0;
+}
+
 NS_IMETHODIMP
 HTMLImageElement::GetNaturalHeight(uint32_t* aNaturalHeight)
 {
   NS_ENSURE_ARG_POINTER(aNaturalHeight);
 
-  *aNaturalHeight = 0;
+  *aNaturalHeight = NaturalHeight();
 
+  return NS_OK;
+}
+
+uint32_t
+HTMLImageElement::NaturalWidth()
+{
   if (!mCurrentRequest) {
-    return NS_OK;
+    return 0;
   }
-  
+
   nsCOMPtr<imgIContainer> image;
   mCurrentRequest->GetImage(getter_AddRefs(image));
   if (!image) {
-    return NS_OK;
+    return 0;
   }
 
-  int32_t height;
-  if (NS_SUCCEEDED(image->GetHeight(&height))) {
-    *aNaturalHeight = height;
+  int32_t width;
+  if (NS_SUCCEEDED(image->GetWidth(&width))) {
+    return width;
   }
-  return NS_OK;
+  return 0;
 }
 
 NS_IMETHODIMP
@@ -511,22 +543,8 @@ HTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
 {
   NS_ENSURE_ARG_POINTER(aNaturalWidth);
 
-  *aNaturalWidth = 0;
+  *aNaturalWidth = NaturalWidth();
 
-  if (!mCurrentRequest) {
-    return NS_OK;
-  }
-  
-  nsCOMPtr<imgIContainer> image;
-  mCurrentRequest->GetImage(getter_AddRefs(image));
-  if (!image) {
-    return NS_OK;
-  }
-
-  int32_t width;
-  if (NS_SUCCEEDED(image->GetWidth(&width))) {
-    *aNaturalWidth = width;
-  }
   return NS_OK;
 }
 
@@ -543,6 +561,13 @@ CORSMode
 HTMLImageElement::GetCORSMode()
 {
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
+}
+
+JSObject*
+HTMLImageElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                           bool* aTriedToWrap)
+{
+  return HTMLImageElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
