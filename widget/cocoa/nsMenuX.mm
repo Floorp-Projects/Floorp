@@ -824,11 +824,13 @@ nsresult nsMenuX::SetupIcon()
     return;
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
-  nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  if (rollupWidget) {
-    rollupListener->Rollup(0, nullptr);
-    [menu cancelTracking];
-    return;
+  if (rollupListener) {
+    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+    if (rollupWidget) {
+      rollupListener->Rollup(0, nullptr);
+      [menu cancelTracking];
+      return;
+    }
   }
   mGeckoMenu->MenuOpened();
 }
