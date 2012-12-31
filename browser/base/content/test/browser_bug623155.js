@@ -82,7 +82,7 @@ var gWebProgressListener = {
     }
 
     ok(gNewTab, "There is a new tab.");
-    ok(isRedirectedURI(aLocation), 
+    ok(isRedirectedURI(aLocation),
        "onLocationChange catches only redirected URI.");
 
     if (aLocation.ref == "BG") {
@@ -97,7 +97,7 @@ var gWebProgressListener = {
       ok(false, "This URI hash is not expected:" + aLocation.ref);
     }
 
-    let isSelectedTab = (gNewTab == gBrowser.selectedTab);
+    let isSelectedTab = gNewTab.selected;
     setTimeout(delayed, 0, isSelectedTab);
   }
 };

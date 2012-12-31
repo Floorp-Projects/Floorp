@@ -6761,7 +6761,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       }
 
       nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
-      keypressEvent.mFlags |= extraFlags;
+      keypressEvent.mFlags.Union(extraFlags);
       keypressEvent.charCode = uniChar;
       keypressEvent.alternativeCharCodes.AppendElements(altArray);
       InitKeyEvent(keypressEvent, nativeKey, modKeyState);
@@ -6769,7 +6769,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     }
   } else {
     nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
-    keypressEvent.mFlags |= extraFlags;
+    keypressEvent.mFlags.Union(extraFlags);
     keypressEvent.keyCode = DOMKeyCode;
     InitKeyEvent(keypressEvent, nativeKey, aModKeyState);
     DispatchKeyEvent(keypressEvent, nullptr);
@@ -6874,7 +6874,7 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
 
   nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
   if (aExtraFlags) {
-    keypressEvent.mFlags |= *aExtraFlags;
+    keypressEvent.mFlags.Union(*aExtraFlags);
   }
   keypressEvent.charCode = uniChar;
   if (!keypressEvent.charCode) {

@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
   test_document.all_unqualified.html \
   test_domrequest.html \
+  test_e4x_for_each.html \
   test_gsp-standards.html \
   test_gsp-quirks.html \
   test_gsp-qualified.html \

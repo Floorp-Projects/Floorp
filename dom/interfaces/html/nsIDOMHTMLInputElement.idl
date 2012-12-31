@@ -69,6 +69,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             defaultValue;
            attribute DOMString             value;
            attribute double                valueAsNumber;
+  [implicit_jscontext] attribute jsval     valueAsDate;
 
   [optional_argc] void stepDown([optional] in long n);
   [optional_argc] void stepUp([optional] in long n);

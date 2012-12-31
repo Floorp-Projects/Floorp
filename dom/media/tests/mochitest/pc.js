@@ -7,6 +7,13 @@ var PeerConnection = {
   pc1_offer : null,
   pc2_answer : null,
 
+  /**
+   * Establishes the peer connection between two clients
+   *
+   * @param {object) aPCLocal Local client
+   * @param {object} aPCRemote Remote client
+   * @param {function} aSuccessCallback Method to call when the connection has been established
+   */
   handShake: function PC_handShake(aPCLocal, aPCRemote, aSuccessCallback) {
 
     function onCreateOfferSuccess(aOffer) {
@@ -40,5 +47,25 @@ var PeerConnection = {
     }
 
     aPCLocal.createOffer(onCreateOfferSuccess, unexpectedCallbackAndFinish);
+  },
+
+  /**
+   * Finds the given media stream in the list of available streams.
+   *
+   * This function is necessary because localStreams and remoteStreams don't have
+   * an indexOf method.
+   *
+   * @param {object} aMediaStreamList List of available media streams
+   * @param {object} aMediaStream Media stream to check for
+   * @return {number} Index in the media stream list
+   */
+  findStream: function PC_findStream(aMediaStreamList, aMediaStream) {
+    for (var index = 0; index < aMediaStreamList.length; index++) {
+      if (aMediaStreamList[index] === aMediaStream) {
+        return index;
+      }
+    }
+
+    return -1
   }
 };

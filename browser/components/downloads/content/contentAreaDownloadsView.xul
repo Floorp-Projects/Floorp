@@ -5,12 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/contentAreaDownloadsView.css"?>
+
 <?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
+<!DOCTYPE window [
+<!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
+%downloadsDTD;
+]>
+
 <window id="contentAreaDownloadsView"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&downloads.title;"
         onload="ContentAreaDownloadsView.init();">
 
   <script type="application/javascript"

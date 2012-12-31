@@ -13,18 +13,24 @@
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
+#include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
+#include "mozilla/Preferences.h"
 
 using mozilla::dom::TCPSocketChild;
 
 namespace mozilla {
 namespace net {
 
+static bool gDisableIPCSecurity = false;
+static const char kPrefDisableIPCSecurity[] = "network.disable.ipc.security";
+
 PNeckoChild *gNeckoChild = nullptr;
 
 // C++ file contents
 NeckoChild::NeckoChild()
 {
+  Preferences::AddBoolVarCache(&gDisableIPCSecurity, kPrefDisableIPCSecurity);
 }
 
 NeckoChild::~NeckoChild()
@@ -80,7 +86,8 @@ NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
 }
 
 PFTPChannelChild*
-NeckoChild::AllocPFTPChannel()
+NeckoChild::AllocPFTPChannel(PBrowserChild* aBrowser,
+                             const SerializedLoadContext& aSerialized)
 {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
   NS_RUNTIMEABORT("AllocPFTPChannel should not be called");
@@ -134,7 +141,8 @@ NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
 }
 
 PWebSocketChild*
-NeckoChild::AllocPWebSocket(PBrowserChild* browser)
+NeckoChild::AllocPWebSocket(PBrowserChild* browser,
+                            const SerializedLoadContext& aSerialized)
 {
   NS_NOTREACHED("AllocPWebSocket should not be called");
   return nullptr;
@@ -163,6 +171,23 @@ bool
 NeckoChild::DeallocPTCPSocket(PTCPSocketChild* child)
 {
   TCPSocketChild* p = static_cast<TCPSocketChild*>(child);
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PRemoteOpenFileChild*
+NeckoChild::AllocPRemoteOpenFile(const URIParams&, PBrowserChild*)
+{
+  // We don't allocate here: instead we always use IPDL constructor that takes
+  // an existing RemoteOpenFileChild
+  NS_NOTREACHED("AllocPRemoteOpenFile should not be called on child");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPRemoteOpenFile(PRemoteOpenFileChild* aChild)
+{
+  RemoteOpenFileChild *p = static_cast<RemoteOpenFileChild*>(aChild);
   p->ReleaseIPDLReference();
   return true;
 }

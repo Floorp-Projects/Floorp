@@ -196,6 +196,23 @@ private:
   nsRefPtr<nsGeolocation>        mLocator;
 };
 
+class RequestRestartTimerEvent : public nsRunnable
+{
+public:
+  RequestRestartTimerEvent(nsGeolocationRequest* aRequest)
+    : mRequest(aRequest)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    mRequest->SetTimeoutTimer();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsGeolocationRequest> mRequest;
+};
+
 ////////////////////////////////////////////////////
 // nsDOMGeoPositionError
 ////////////////////////////////////////////////////
@@ -323,15 +340,22 @@ nsGeolocationRequest::NotifyError(int16_t errorCode)
 NS_IMETHODIMP
 nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
-  // If we haven't gotten an answer from the geolocation
-  // provider yet, cancel the request.  Same logic as
-  // ::Cancel, just a different error
+  if (mCleared) {
+    return NS_OK;
+  }
 
-  // remove ourselves from the locator's callback lists.
-  mLocator->RemoveRequest(this);
+  // If we haven't gotten an answer from the geolocation
+  // provider yet, fire a TIMEOUT error and reset the timer.
+  if (!mIsWatchPositionRequest) {
+    mLocator->RemoveRequest(this);
+  }
+
   NotifyError(nsIDOMGeoPositionError::TIMEOUT);
 
-  mTimeoutTimer = nullptr;
+  if (mIsWatchPositionRequest) {
+    SetTimeoutTimer();
+  }
+
   return NS_OK;
 }
 
@@ -530,13 +554,16 @@ nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition, bool aIsBetter)
   // in the case when newly detected positions are all less accurate than the cached one.
   //
   // Fixes bug 596481
+  nsCOMPtr<nsIRunnable> ev;
   if (mIsFirstUpdate || aIsBetter) {
     mIsFirstUpdate = false;
-    nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aPosition,
-                                                             this,
-                                                             mIsWatchPositionRequest ? nullptr : mLocator);
-    NS_DispatchToMainThread(ev);
+    ev  = new RequestSendLocationEvent(aPosition,
+                                       this,
+                                       mIsWatchPositionRequest ? nullptr : mLocator);
+  } else {
+    ev = new RequestRestartTimerEvent(this);
   }
+  NS_DispatchToMainThread(ev);
   return true;
 }
 
@@ -828,7 +855,11 @@ nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
   if (!aSomewhere) {
     return false;
   }
-  
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return true;
+  }
+
   if (mProviders.Count() == 1 || !mLastPosition) {
     return true;
   }

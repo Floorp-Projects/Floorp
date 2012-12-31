@@ -149,8 +149,8 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
   // sscanf doesn't do what we want here to we parse this manually.
   int len = strlen(aSource);
   char *dest[4] = { aAStr, aBStr, aCStr, aDStr };
-  int destIdx = 0;
-  int destPos = 0;
+  unsigned destIdx = 0;
+  unsigned destPos = 0;
 
   for (int i = 0; i < len; i++) {
     if (destIdx > ArrayLength(dest)) {

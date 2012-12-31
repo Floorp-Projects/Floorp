@@ -6,12 +6,15 @@
 package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.util.SparseArray;
 
 import java.util.List;
 
@@ -35,6 +38,8 @@ public class BrowserDB {
 
         public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
 
+        // This should onlyl return frecent sites, BrowserDB.getTopSites will do the
+        // work to combine that list with the pinned sites list
         public Cursor getTopSites(ContentResolver cr, int limit);
 
         public void updateVisitedHistory(ContentResolver cr, String uri);
@@ -95,6 +100,14 @@ public class BrowserDB {
         public void registerHistoryObserver(ContentResolver cr, ContentObserver observer);
 
         public int getCount(ContentResolver cr, String database);
+
+        public void pinSite(ContentResolver cr, String url, String title, int position);
+
+        public void unpinSite(ContentResolver cr, int position);
+
+        public void unpinAllSites(ContentResolver cr);
+
+        public Cursor getPinnedSites(ContentResolver cr, int limit);
     }
 
     static {
@@ -115,7 +128,11 @@ public class BrowserDB {
     }
 
     public static Cursor getTopSites(ContentResolver cr, int limit) {
-        return sDb.getTopSites(cr, limit);
+        // Note this is not a single query anymore, but actually returns a mixture of two queries, one for topSites
+        // and one for pinned sites
+        Cursor topSites = sDb.getTopSites(cr, limit);
+        Cursor pinnedSites = sDb.getPinnedSites(cr, limit);
+        return new TopSitesCursorWrapper(pinnedSites, topSites, limit);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {
@@ -242,5 +259,154 @@ public class BrowserDB {
 
     public static int getCount(ContentResolver cr, String database) {
         return sDb.getCount(cr, database);
+    }
+
+    public static void pinSite(ContentResolver cr, String url, String title, int position) {
+        sDb.pinSite(cr, url, title, position);
+    }
+
+    public static void unpinSite(ContentResolver cr, int position) {
+        sDb.unpinSite(cr, position);
+    }
+
+    public static void unpinAllSites(ContentResolver cr) {
+        sDb.unpinAllSites(cr);
+    }
+
+    public static Cursor getPinnedSites(ContentResolver cr, int limit) {
+        return sDb.getPinnedSites(cr, limit);
+    }
+
+    public static class PinnedSite {
+        public String title = "";
+        public String url = "";
+
+        public PinnedSite(String aTitle, String aUrl) {
+            title = aTitle;
+            url = aUrl;
+        }
+    }
+
+    /* Cursor wrapper that forces top sites to contain at least
+     * mNumberOfTopSites entries. For rows outside the wrapped cursor
+     * will return empty strings and zero.
+     */
+    public static class TopSitesCursorWrapper extends CursorWrapper {
+        int mIndex = -1; // Current position of the cursor
+        Cursor mCursor = null;
+        int mSize = 0;
+        private SparseArray<PinnedSite> mPinnedSites = null;
+
+        public TopSitesCursorWrapper(Cursor pinnedCursor, Cursor normalCursor, int size) {
+            super(normalCursor);
+
+            setPinnedSites(pinnedCursor);
+            mCursor = normalCursor;
+            mSize = size;
+        }
+
+        public void setPinnedSites(Cursor c) {
+            mPinnedSites = new SparseArray<PinnedSite>();
+            if (c != null && c.getCount() > 0) {
+                c.moveToPosition(0);
+                do {
+                    int pos = c.getInt(c.getColumnIndex(Bookmarks.POSITION));
+                    String url = c.getString(c.getColumnIndex(URLColumns.URL));
+                    String title = c.getString(c.getColumnIndex(URLColumns.TITLE));
+                    mPinnedSites.put(pos, new PinnedSite(title, url));
+                } while (c.moveToNext());
+            }
+        }
+
+        public boolean hasPinnedSites() {
+            return mPinnedSites != null && mPinnedSites.size() > 0;
+        }
+
+        public PinnedSite getPinnedSite(int position) {
+            if (!hasPinnedSites()) {
+                return null;
+            }
+            return mPinnedSites.get(position);
+        }
+
+        private int getPinnedBefore(int position) {
+            int numFound = 0;
+            if (!hasPinnedSites()) {
+                return numFound;
+            }
+
+            for (int i = 0; i < position; i++) {
+                if (mPinnedSites.get(i) != null) {
+                    numFound++;
+                }
+            }
+
+            return numFound;
+        }
+
+        public int getPosition() { return mIndex; }
+        public int getCount() { return mSize; }
+        public boolean isAfterLast() { return mIndex >= mSize; }
+        public boolean isBeforeFirst() { return mIndex < 0; }
+        public boolean isLast() { return mIndex == mSize - 1; }
+        public boolean moveToNext() { return moveToPosition(mIndex + 1); }
+        public boolean moveToPrevious() { return moveToPosition(mIndex - 1); }
+
+        public boolean moveToPosition(int position) {
+            mIndex = position;
+
+            // move the real cursor as  if we were stepping through it to this position
+            // be careful not to move it to far, and to account for any pinned sites
+            int before = getPinnedBefore(position);
+            int p2 = position - before;
+            if (p2 >= -1 && p2 <= mCursor.getCount()) {
+                super.moveToPosition(p2);
+            }
+
+            return !(isBeforeFirst() || isAfterLast());
+        }
+
+        public long getLong(int columnIndex) {
+            if (hasPinnedSites()) {
+                PinnedSite site = getPinnedSite(mIndex);
+                if (site != null) {
+                    return 0;
+                }
+            }
+
+            if (!super.isBeforeFirst() && !super.isAfterLast())
+                return super.getLong(columnIndex);
+            return 0;
+        }
+
+        public String getString(int columnIndex) {
+            if (hasPinnedSites()) {
+                PinnedSite site = getPinnedSite(mIndex);
+                if (site != null) {
+                    if (columnIndex == mCursor.getColumnIndex(URLColumns.URL)) {
+                        return site.url;
+                    } else if (columnIndex == mCursor.getColumnIndex(URLColumns.TITLE)) {
+                        return site.title;
+                    }
+                    return "";
+                }
+            }
+
+            if (!super.isBeforeFirst() && !super.isAfterLast())
+                return super.getString(columnIndex);
+            return "";
+        }
+
+        public boolean move(int offset) {
+            return moveToPosition(mIndex + offset);
+        }
+
+        public boolean moveToFirst() {
+            return moveToPosition(0);
+        }
+
+        public boolean moveToLast() {
+            return moveToPosition(mSize-1);
+        }
     }
 }

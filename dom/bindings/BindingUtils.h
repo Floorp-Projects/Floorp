@@ -13,7 +13,6 @@
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 
@@ -23,6 +22,7 @@
 #include "nsTraceRefcnt.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 // nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
 // try to use it without fixing that first.
@@ -368,15 +368,19 @@ DefineUnforgeableAttributes(JSContext* cx, JSObject* obj,
 bool
 DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties);
 
-// If *vp is an object and *vp and obj are not in the same compartment, wrap *vp
-// into the compartment of obj (typically by replacing it with an Xray or
+// If *vp is a gcthing and is not in the compartment of cx, wrap *vp
+// into the compartment of cx (typically by replacing it with an Xray or
 // cross-compartment wrapper around the original object).
 inline bool
-MaybeWrapValue(JSContext* cx, JSObject* obj, JS::Value* vp)
+MaybeWrapValue(JSContext* cx, JS::Value* vp)
 {
-  if (vp->isObject() &&
-      js::GetObjectCompartment(&vp->toObject()) != js::GetContextCompartment(cx)) {
-    return JS_WrapValue(cx, vp);
+  if (vp->isGCThing()) {
+    void* gcthing = vp->toGCThing();
+    // Might be null if vp.isNull() :(
+    if (gcthing &&
+        js::GetGCThingCompartment(gcthing) != js::GetContextCompartment(cx)) {
+      return JS_WrapValue(cx, vp);
+    }
   }
 
   return true;
@@ -691,11 +695,6 @@ HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
 {
   return HandleNewBindingWrappingFailure(cx, scope, value.get(), vp);
 }
-
-struct EnumEntry {
-  const char* value;
-  size_t length;
-};
 
 template<bool Fatal>
 inline bool
@@ -1651,15 +1650,6 @@ MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 // For Paris Bindings only. See the relevant infrastructure in XrayWrapper.cpp.
 JSObject* GetXrayExpandoChain(JSObject *obj);
 void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
-
-struct MainThreadDictionaryBase
-{
-protected:
-  JSContext* ParseJSON(const nsAString& aJSON,
-                       mozilla::Maybe<JSAutoRequest>& aAr,
-                       mozilla::Maybe<JSAutoCompartment>& aAc,
-                       JS::Value& aVal);
-};
 
 /**
  * This creates a JSString containing the value that the toString function for

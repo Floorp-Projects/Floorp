@@ -86,6 +86,15 @@ this.DOMApplicationRegistry = {
   getAppFromObserverMessage: function getAppFromObserverMessage(aMessage) {
     debug("getAppFromObserverMessage " + aMessage);
     return AppsUtils.getAppFromObserverMessage(this.webapps. aMessage);
+  },
+  getCoreAppsBasePath: function getCoreAppsBasePath() {
+    debug("getCoreAppsBasePath() not yet supported on child!");
+    return null;
+  },
+
+  getWebAppsBasePath: function getWebAppsBasePath() {
+    debug("getWebAppsBasePath() not yet supported on child!");
+    return null;
   }
 }
 

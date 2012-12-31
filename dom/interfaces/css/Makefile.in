@@ -39,9 +39,7 @@ XPIDLSRCS =					\
 	nsIDOMCSSStyleRule.idl			\
 	nsIDOMCSSUnknownRule.idl		\
 	nsIDOMCounter.idl			\
-	nsIDOMRGBColor.idl			\
 	nsIDOMRect.idl				\
-	nsIDOMNSRGBAColor.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

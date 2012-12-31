@@ -50,7 +50,7 @@ namespace net {
 void
 MPD::AddPeriod(Period* aPeriod)
 {
-  NS_ENSURE_TRUE(aPeriod,);
+  NS_ENSURE_TRUE_VOID(aPeriod);
   // Only add |Period| if it's not in the array already.
   if (!mPeriods.Contains(aPeriod)) {
     mPeriods.AppendElement(aPeriod);
@@ -73,7 +73,7 @@ MPD::GetNumPeriods() const
 void
 MPD::AddBaseUrl(nsAString const& aUrl)
 {
-  NS_ENSURE_FALSE(aUrl.IsEmpty(),);
+  NS_ENSURE_FALSE_VOID(aUrl.IsEmpty());
   // Only add |BaseUrl| string if it's not in the array already.
   if (!mBaseUrls.Contains(aUrl)) {
     mBaseUrls.AppendElement(aUrl);

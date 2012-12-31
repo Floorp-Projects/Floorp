@@ -358,39 +358,17 @@ nsresult NS_RegisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 nsresult NS_UnregisterMemoryReporter(nsIMemoryReporter *reporter);
 nsresult NS_UnregisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 
-#if defined(MOZ_DMDV) || defined(MOZ_DMD)
+#if defined(MOZ_DMD)
 namespace mozilla {
 namespace dmd {
 // This runs all the memory reporters but does nothing with the results;  i.e.
-// it does the minimal amount of work possible for DMD/DMDV to do its thing.
+// it does the minimal amount of work possible for DMD to do its thing.
 void RunReporters();
 }
 }
-#endif  // defined(MOZ_DMDV) || defined(MOZ_DMD)
+#endif  // defined(MOZ_DMD)
 
-#ifdef MOZ_DMDV
-
-#if defined(MOZ_MEMORY)
-#error "MOZ_DMDV precludes MOZ_MEMORY"
-#endif
-
-// Because DMDV is not a tool that comes with the standard Valgrind
-// distribution, we have to #include our own local copy of dmdv.h.  Ugly but
-// unavoidable.
-#include "dmdv.h"
-
-#define MOZ_REPORT(ptr, usable, name)          VALGRIND_DMDV_REPORT(ptr, usable, name)
-#define MOZ_REPORT_ON_ALLOC(ptr, usable, name) VALGRIND_DMDV_REPORT(ptr, usable, name)
-
-namespace mozilla {
-namespace dmdv {
-// This dumps the DMDV output to stderr (or somewhere else, if one of
-// DMDV/Valgrind's logging options was used).
-void Dump();
-}
-}
-
-#elif defined(MOZ_DMD)
+#if defined(MOZ_DMD)
 
 #if !defined(MOZ_MEMORY)
 #error "MOZ_DMD requires MOZ_MEMORY"
@@ -406,7 +384,7 @@ void Dump();
 #define MOZ_REPORT(ptr, usable, name)
 #define MOZ_REPORT_ON_ALLOC(ptr, usable, name)
 
-#endif  /* defined(MOZ_DMDV) || defined(MOZ_DMD) */
+#endif  // defined(MOZ_DMD)
 
 // Functions generated via this macro should be used by all traversal-based
 // memory reporters.  Such functions return |moz_malloc_size_of(ptr)|;  this
@@ -414,7 +392,7 @@ void Dump();
 //
 // You might be wondering why we have a macro that creates multiple
 // functions distinguished only by |name|, instead of a single
-// MemoryReporterMallocSizeOf function.  It's mostly to help with DMDV/DMD
+// MemoryReporterMallocSizeOf function.  It's mostly to help with DMD
 // integration, though it sometimes also helps with debugging and temporary
 // ad hoc profiling.  The |name| chosen doesn't matter greatly, but it's
 // best to make it similar to the path used by the relevant memory

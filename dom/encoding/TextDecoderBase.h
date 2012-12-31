@@ -61,8 +61,9 @@ public:
    * @param      aOutDecodedString, decoded string of UTF-16 code points.
    * @param      aRv, error result.
    */
-  void Decode(const ArrayBufferView* aView, const bool aStream,
-              nsAString& aOutDecodedString, ErrorResult& aRv);
+  void Decode(const char* aInput, const int32_t aLength,
+              const bool aStream, nsAString& aOutDecodedString,
+              ErrorResult& aRv);
 
 private:
   nsCString mEncoding;

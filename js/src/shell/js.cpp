@@ -2799,7 +2799,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
     RootedObject ignore(cx);
     for (size_t i = 0; ok && i < ida.length(); i++) {
         Rooted<jsid> id(cx, ida[i]);
-        ok = CopyProperty(cx, obj, referent, id, JSRESOLVE_QUALIFIED, &ignore);
+        ok = CopyProperty(cx, obj, referent, id, 0, &ignore);
     }
     return ok;
 }
@@ -4196,9 +4196,8 @@ its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 {
     if (its_noisy) {
         IdStringifier idString(cx, id);
-        fprintf(gOutFile, "resolving its property %s, flags {%s,%s}\n",
+        fprintf(gOutFile, "resolving its property %s, flags {%s}\n",
                idString.getBytes(),
-               (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
                (flags & JSRESOLVE_ASSIGNING) ? "assigning" : "");
     }
     return true;
@@ -4447,54 +4446,52 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #endif
 
 #if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
-    if (!(flags & JSRESOLVE_QUALIFIED)) {
-        /*
-         * Do this expensive hack only for unoptimized Unix builds, which are
-         * not used for benchmarking.
-         */
-        char *path, *comp, *full;
-        const char *name;
-        bool ok, found;
-        JSFunction *fun;
+    /*
+     * Do this expensive hack only for unoptimized Unix builds, which are
+     * not used for benchmarking.
+     */
+    char *path, *comp, *full;
+    const char *name;
+    bool ok, found;
+    JSFunction *fun;
 
-        if (!JSVAL_IS_STRING(id))
-            return true;
-        path = getenv("PATH");
-        if (!path)
-            return true;
-        path = JS_strdup(cx, path);
-        if (!path)
-            return false;
-        JSAutoByteString name(cx, JSVAL_TO_STRING(id));
-        if (!name)
-            return false;
-        ok = true;
-        for (comp = strtok(path, ":"); comp; comp = strtok(NULL, ":")) {
-            if (*comp != '\0') {
-                full = JS_smprintf("%s/%s", comp, name.ptr());
-                if (!full) {
-                    JS_ReportOutOfMemory(cx);
-                    ok = false;
-                    break;
-                }
-            } else {
-                full = (char *)name;
-            }
-            found = (access(full, X_OK) == 0);
-            if (*comp != '\0')
-                free(full);
-            if (found) {
-                fun = JS_DefineFunction(cx, obj, name, Exec, 0,
-                                        JSPROP_ENUMERATE);
-                ok = (fun != NULL);
-                if (ok)
-                    objp.set(obj);
+    if (!JSVAL_IS_STRING(id))
+        return true;
+    path = getenv("PATH");
+    if (!path)
+        return true;
+    path = JS_strdup(cx, path);
+    if (!path)
+        return false;
+    JSAutoByteString name(cx, JSVAL_TO_STRING(id));
+    if (!name)
+        return false;
+    ok = true;
+    for (comp = strtok(path, ":"); comp; comp = strtok(NULL, ":")) {
+        if (*comp != '\0') {
+            full = JS_smprintf("%s/%s", comp, name.ptr());
+            if (!full) {
+                JS_ReportOutOfMemory(cx);
+                ok = false;
                 break;
             }
+        } else {
+            full = (char *)name;
         }
-        JS_free(cx, path);
-        return ok;
+        found = (access(full, X_OK) == 0);
+        if (*comp != '\0')
+            free(full);
+        if (found) {
+            fun = JS_DefineFunction(cx, obj, name, Exec, 0,
+                                    JSPROP_ENUMERATE);
+            ok = (fun != NULL);
+            if (ok)
+                objp.set(obj);
+            break;
+        }
     }
+    JS_free(cx, path);
+    return ok;
 #else
     return true;
 #endif
