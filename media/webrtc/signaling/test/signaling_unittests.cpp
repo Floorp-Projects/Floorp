@@ -846,7 +846,7 @@ private:
 class SignalingEnvironment : public ::testing::Environment {
  public:
   void TearDown() {
-    sipcc::PeerConnectionImpl::Shutdown();
+    // Signaling is shut down in XPCOM shutdown
   }
 };
 
