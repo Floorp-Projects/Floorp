@@ -174,7 +174,6 @@ typedef struct JSExceptionState             JSExceptionState;
 typedef struct JSFunctionSpec               JSFunctionSpec;
 typedef struct JSIdArray                    JSIdArray;
 typedef struct JSLocaleCallbacks            JSLocaleCallbacks;
-typedef struct JSObject                     JSObject;
 typedef struct JSObjectMap                  JSObjectMap;
 typedef struct JSPrincipals                 JSPrincipals;
 typedef struct JSPropertyDescriptor         JSPropertyDescriptor;
@@ -191,12 +190,14 @@ typedef struct JSTracer                     JSTracer;
 #ifdef __cplusplus
 class                                       JSFlatString;
 class                                       JSFunction;
+class                                       JSObject;
 class                                       JSScript;
 class                                       JSStableString;  // long story
 class                                       JSString;
 #else
 typedef struct JSFlatString                 JSFlatString;
 typedef struct JSFunction                   JSFunction;
+typedef struct JSObject                     JSObject;
 typedef struct JSScript                     JSScript;
 typedef struct JSString                     JSString;
 #endif /* !__cplusplus */
