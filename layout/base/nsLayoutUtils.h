@@ -21,7 +21,6 @@ class nsFontFaceList;
 class nsHTMLCanvasElement;
 class nsHTMLVideoElement;
 class nsIImageLoadingContent;
-class nsHTMLImageElement;
 
 #include "nsChangeHint.h"
 #include "nsStyleContext.h"
@@ -47,6 +46,7 @@ class gfxDrawable;
 namespace mozilla {
 namespace dom {
 class Element;
+class HTMLImageElement;
 } // namespace dom
 } // namespace mozilla
 
@@ -1471,10 +1471,10 @@ public:
                                                      uint32_t aSurfaceFlags = 0);
   static SurfaceFromElementResult SurfaceFromElement(nsIImageLoadingContent *aElement,
                                                      uint32_t aSurfaceFlags = 0);
-  // Need an nsHTMLImageElement overload, because otherwise the
+  // Need an HTMLImageElement overload, because otherwise the
   // nsIImageLoadingContent and mozilla::dom::Element overloads are ambiguous
-  // for nsHTMLImageElement.
-  static SurfaceFromElementResult SurfaceFromElement(nsHTMLImageElement *aElement,
+  // for HTMLImageElement.
+  static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLImageElement *aElement,
                                                      uint32_t aSurfaceFlags = 0);
   static SurfaceFromElementResult SurfaceFromElement(nsHTMLCanvasElement *aElement,
                                                      uint32_t aSurfaceFlags = 0);
