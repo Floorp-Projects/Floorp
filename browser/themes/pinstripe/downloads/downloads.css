@@ -18,10 +18,13 @@
   display: none;
 }
 
-#downloadsHistory {
-  background: transparent;
+#downloadsFooter {
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
+}
+
+#downloadsHistory {
+  background: transparent;
   color: hsl(210,100%,75%);
   cursor: pointer;
 }
