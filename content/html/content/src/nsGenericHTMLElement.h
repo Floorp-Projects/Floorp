@@ -829,6 +829,13 @@ protected:
 
     SetHTMLAttr(aName, value, aError);
   }
+  void SetHTMLUnsignedIntAttr(nsIAtom* aName, uint32_t aValue, mozilla::ErrorResult& aError)
+  {
+    nsAutoString value;
+    value.AppendInt(aValue);
+
+    SetHTMLAttr(aName, value, aError);
+  }
 
   /**
    * Helper method for NS_IMPL_STRING_ATTR macro.
