@@ -18,7 +18,7 @@ function test() {
       is(crhCommand.hasAttribute("disabled"), aPrivateMode,
         "Clear Recent History command should be disabled according to the private browsing mode");
 
-      aCallback();
+      executeSoon(aCallback);
     });
   };
 
