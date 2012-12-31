@@ -56,7 +56,7 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLVideoElement.h"
 #endif
-#include "nsHTMLImageElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "imgIRequest.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
@@ -4512,7 +4512,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
 }
 
 nsLayoutUtils::SurfaceFromElementResult
-nsLayoutUtils::SurfaceFromElement(nsHTMLImageElement *aElement,
+nsLayoutUtils::SurfaceFromElement(HTMLImageElement *aElement,
                                   uint32_t aSurfaceFlags)
 {
   return SurfaceFromElement(static_cast<nsIImageLoadingContent*>(aElement),
