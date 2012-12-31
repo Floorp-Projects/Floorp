@@ -27,12 +27,6 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 #define MM_LOG(msg)
 #endif
 
-// We only support 1 audio and 1 video track for now.
-enum {
-  kVideoTrack = 1,
-  kAudioTrack = 2
-};
-
 class GetUserMediaNotificationEvent: public nsRunnable
 {
   public:
@@ -155,11 +149,11 @@ public:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
           if (mAudioSource) {
-            mAudioSource->Stop();
+            mAudioSource->Stop(mSourceStream, kAudioTrack);
             mAudioSource->Deallocate();
           }
           if (mVideoSource) {
-            mVideoSource->Stop();
+            mVideoSource->Stop(mSourceStream, kVideoTrack);
             mVideoSource->Deallocate();
           }
           // Do this after stopping all tracks with EndTrack()
@@ -202,7 +196,10 @@ public:
     : mMediaThread(aThread)
     , mAudioSource(aAudioSource)
     , mVideoSource(aVideoSource)
-    , mStream(aStream) {}
+    , mStream(aStream)
+    , mSourceStream(aStream->GetStream()->AsSourceStream())
+    , mLastEndTimeAudio(0)
+    , mLastEndTimeVideo(0) {}
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
@@ -231,8 +228,7 @@ public:
     // b) if on MediaStreamGraph thread, dispatch a runnable to MainThread
     //    to call Invalidate() (with a strong ref to this listener)
     runnable = new MediaOperationRunnable(MEDIA_STOP,
-                                          mStream->GetStream()->AsSourceStream(),
-                                          mAudioSource, mVideoSource);
+                                          mSourceStream, mAudioSource, mVideoSource);
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
     return;
@@ -253,10 +249,10 @@ public:
     // Currently audio sources ignore NotifyPull, but they could
     // watch it especially for fake audio.
     if (mAudioSource) {
-      mAudioSource->NotifyPull(aGraph, aDesiredTime);
+      mAudioSource->NotifyPull(aGraph, mSourceStream, kAudioTrack, aDesiredTime, mLastEndTimeAudio);
     }
     if (mVideoSource) {
-      mVideoSource->NotifyPull(aGraph, aDesiredTime);
+      mVideoSource->NotifyPull(aGraph, mSourceStream, kVideoTrack, aDesiredTime, mLastEndTimeVideo);
     }
   }
 
@@ -272,6 +268,9 @@ private:
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   nsRefPtr<nsDOMMediaStream> mStream;
+  SourceMediaStream *mSourceStream; // mStream controls ownership
+  TrackTicks mLastEndTimeAudio;
+  TrackTicks mLastEndTimeVideo;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;

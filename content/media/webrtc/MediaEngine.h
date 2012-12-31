@@ -28,6 +28,12 @@ enum MediaEngineState {
   kReleased
 };
 
+// We only support 1 audio and 1 video track for now.
+enum {
+  kVideoTrack = 1,
+  kAudioTrack = 2
+};
+
 class MediaEngine
 {
 public:
@@ -74,10 +80,14 @@ public:
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile) = 0;
 
   /* Called when the stream wants more data */
-  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) = 0;
+  virtual void NotifyPull(MediaStreamGraph* aGraph,
+                          SourceMediaStream *aSource,
+                          TrackID aId,
+                          StreamTime aDesiredTime,
+                          TrackTicks &aLastEndTime) = 0;
 
   /* Stop the device and release the corresponding MediaStream */
-  virtual nsresult Stop() = 0;
+  virtual nsresult Stop(SourceMediaStream *aSource, TrackID aID) = 0;
 
   /* Return false if device is currently allocated or started */
   bool IsAvailable() {
