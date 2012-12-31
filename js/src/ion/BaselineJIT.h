@@ -46,6 +46,13 @@ struct ICStubSpace
     static ICStubSpace *StubSpaceFor(JSScript *script);
 };
 
+// Stores the native code offset for a bytecode pc.
+struct PCMappingEntry
+{
+    uint32_t pcOffset;
+    uint32_t nativeOffset;
+};
+
 struct BaselineScript
 {
   private:
@@ -64,11 +71,14 @@ struct BaselineScript
     uint32_t icEntriesOffset_;
     uint32_t icEntries_;
 
+    uint32_t pcMappingOffset_;
+    uint32_t pcMappingEntries_;
+
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript();
 
-    static BaselineScript *New(JSContext *cx, size_t icEntries);
+    static BaselineScript *New(JSContext *cx, size_t icEntries, size_t pcMappingEntries);
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
 
@@ -78,6 +88,9 @@ struct BaselineScript
 
     ICEntry *icEntryList() {
         return (ICEntry *)(reinterpret_cast<uint8_t *>(this) + icEntriesOffset_);
+    }
+    PCMappingEntry *pcMappingEntryList() {
+        return (PCMappingEntry *)(reinterpret_cast<uint8_t *>(this) + pcMappingOffset_);
     }
 
     ICStubSpace *fallbackStubSpace() {
@@ -106,6 +119,14 @@ struct BaselineScript
 
     void copyICEntries(const ICEntry *entries, MacroAssembler &masm);
     void adoptFallbackStubs(ICStubSpace *stubSpace);
+
+    size_t numPCMappingEntries() const {
+        return pcMappingEntries_;
+    }
+
+    PCMappingEntry &pcMappingEntry(size_t index);
+    void copyPCMappingEntries(const PCMappingEntry *entries);
+    uint8_t *nativeCodeForPC(HandleScript script, jsbytecode *pc);
 };
 
 inline bool IsBaselineEnabled(JSContext *cx)

@@ -157,11 +157,31 @@ MacroAssemblerX86::handleException()
     setupUnalignedABICall(1, ecx);
     passABIArg(eax);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
-    
-    // Load the error value, load the new stack pointer, and return.
+
+    Label catch_;
+    Label entryFrame;
+
+    branch32(Assembler::Equal, Address(esp, offsetof(ResumeFromException, kind)),
+             Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    branch32(Assembler::Equal, Address(esp, offsetof(ResumeFromException, kind)),
+             Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+
+    breakpoint(); // Invalid kind.
+
+    // No exception handler. Load the error value, load the new stack pointer
+    // and return from the entry frame.
+    bind(&entryFrame);
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
     ret();
+
+    // If we found a catch handler, this must be a baseline frame. Restore state
+    // and jump to the catch block.
+    bind(&catch_);
+    movl(Operand(esp, offsetof(ResumeFromException, target)), eax);
+    movl(Operand(esp, offsetof(ResumeFromException, framePointer)), ebp);
+    movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
+    jmp(Operand(eax));
 }
 
 void

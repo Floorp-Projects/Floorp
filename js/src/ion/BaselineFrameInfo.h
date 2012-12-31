@@ -172,8 +172,17 @@ class FrameInfo
         return spIndex;
     }
     inline void setStackDepth(uint32_t newDepth) {
-        JS_ASSERT(newDepth <= stackDepth());
-        spIndex = newDepth;
+        if (newDepth <= stackDepth()) {
+            spIndex = newDepth;
+        } else {
+            uint32_t diff = newDepth - stackDepth();
+            for (uint32_t i = 0; i < diff; i++) {
+                StackValue *val = rawPush();
+                val->setStack();
+            }
+
+            JS_ASSERT(spIndex == newDepth);
+        }
     }
     inline StackValue *peek(int32_t index) const {
         JS_ASSERT(index < 0);
@@ -226,7 +235,15 @@ class FrameInfo
         sv->setStack();
     }
     inline Address addressOfLocal(size_t local) const {
-        JS_ASSERT(local < nlocals());
+#ifdef DEBUG
+        if (local >= nlocals()) {
+            // GETLOCAL and SETLOCAL can be used to access stack values. This is
+            // fine, as long as they are synced.
+            size_t slot = local - nlocals();
+            JS_ASSERT(slot < stackDepth());
+            JS_ASSERT(stack[slot].kind() == StackValue::Stack);
+        }
+#endif
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(local));
     }
     inline Address addressOfArg(size_t arg) const {
@@ -257,6 +274,10 @@ class FrameInfo
     void sync(StackValue *val);
     void syncStack(uint32_t uses);
     void popRegsAndSync(uint32_t uses);
+
+    inline void assertSyncedStack() const {
+        JS_ASSERT_IF(stackDepth() > 0, peek(-1)->kind() == StackValue::Stack);
+    }
 
 #ifdef DEBUG
     // Assert the state is valid before excuting "pc".
