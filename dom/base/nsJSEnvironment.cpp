@@ -3342,7 +3342,6 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         // Our efforts to avoid a CC have failed, so we return to let the
         // timer fire once more to trigger a CC.
-        MOZ_ASSERT(!sCCLockedOut);
         return;
       }
     } else {
@@ -3355,10 +3354,6 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // Only do a forget skippable if there are more than a few new objects.
       FireForgetSkippable(suspected, false);
   }
-
-  // If we were in the middle of an incremental GC, we should have finished
-  // it by now.
-  MOZ_ASSERT(!sCCLockedOut);
 
   if (isLateTimerFire) {
     ccDelay = NS_CC_DELAY;
