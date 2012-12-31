@@ -212,7 +212,7 @@ MacroAssemblerX64::handleException()
     // and jump to the catch block.
     bind(&catch_);
     movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
-    movq(Operand(rsp, offsetof(ResumeFromException, basePointer)), rbp);
+    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
     movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
     jmp(Operand(rax));
 }
