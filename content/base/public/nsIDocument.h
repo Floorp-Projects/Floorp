@@ -1941,8 +1941,10 @@ public:
                 int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
                 int32_t aClientY, int32_t aRadiusX, int32_t aRadiusY,
                 float aRotationAngle, float aForce);
+  already_AddRefed<nsIDOMTouchList> CreateTouchList();
   already_AddRefed<nsIDOMTouchList>
-    CreateTouchList(nsIDOMTouch* aTouch);
+    CreateTouchList(nsIDOMTouch* aTouch,
+                    const mozilla::dom::Sequence<nsRefPtr<nsIDOMTouch> >& aTouches);
   already_AddRefed<nsIDOMTouchList>
     CreateTouchList(const mozilla::dom::Sequence<nsRefPtr<nsIDOMTouch> >& aTouches);
 
