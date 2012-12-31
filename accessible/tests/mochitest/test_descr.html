@@ -8,18 +8,10 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
           src="common.js"></script>
+  <script type="application/javascript"
+          src="name.js"></script>
 
   <script type="application/javascript">
-    function testDescr(aAccOrElmOrID, aDescr)
-    {
-      var acc = getAccessible(aAccOrElmOrID);
-      if (!acc)
-        return;
-
-      is(acc.description, aDescr,
-         "Wrong description for " + prettyName(aAccOrElmOrID));
-    }
-
     function doTest()
     {
       // Description from aria-describedby attribute

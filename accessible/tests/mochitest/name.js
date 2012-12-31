@@ -17,3 +17,16 @@ function testName(aAccOrElmOrID, aName, aMsg)
   }
   return acc;
 }
+
+/**
+ * Test accessible description for the given accessible.
+ */
+function testDescr(aAccOrElmOrID, aDescr)
+{
+  var acc = getAccessible(aAccOrElmOrID);
+  if (!acc)
+   return;
+
+  is(acc.description, aDescr,
+     "Wrong description for " + prettyName(aAccOrElmOrID));
+}
