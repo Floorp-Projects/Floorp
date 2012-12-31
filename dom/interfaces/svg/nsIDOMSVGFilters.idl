@@ -4,15 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMSVGElement.idl"
-#include "nsIDOMSVGStylable.idl"
 
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedString;
 interface nsIDOMSVGAnimatedNumber;
 interface nsIDOMSVGAnimatedEnumeration;
-interface nsIDOMSVGAnimatedNumberList;
 interface nsIDOMSVGAnimatedInteger;
-interface nsIDOMSVGAnimatedBoolean;
 
 [scriptable, uuid(117CFA4C-B0EB-4C0F-A590-F77FBF42E76D)]
 interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
@@ -51,7 +48,8 @@ interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttrib
 
     readonly attribute nsIDOMSVGAnimatedString in1;
     readonly attribute nsIDOMSVGAnimatedEnumeration type;
-    readonly attribute nsIDOMSVGAnimatedNumberList  values;
+    // SVGAnimatedNumberList
+    readonly attribute nsISupports  values;
 };
 
 [scriptable, uuid(539000B3-2272-4F1A-BF24-23340DD408AF)]
@@ -72,7 +70,8 @@ interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
     const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_GAMMA    = 5;
 
     readonly attribute nsIDOMSVGAnimatedEnumeration type;
-    readonly attribute nsIDOMSVGAnimatedNumberList  tableValues;
+    // SVGAnimatedNumberList
+    readonly attribute nsISupports                  tableValues;
     readonly attribute nsIDOMSVGAnimatedNumber      slope;
     readonly attribute nsIDOMSVGAnimatedNumber      intercept;
     readonly attribute nsIDOMSVGAnimatedNumber      amplitude;
@@ -210,7 +209,8 @@ interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAtt
     readonly attribute nsIDOMSVGAnimatedString      in1;
     readonly attribute nsIDOMSVGAnimatedInteger     orderX;
     readonly attribute nsIDOMSVGAnimatedInteger     orderY;
-    readonly attribute nsIDOMSVGAnimatedNumberList  kernelMatrix;
+    // SVGAnimatedNumberList
+    readonly attribute nsISupports                  kernelMatrix;
     readonly attribute nsIDOMSVGAnimatedNumber      divisor;
     readonly attribute nsIDOMSVGAnimatedNumber      bias;
     readonly attribute nsIDOMSVGAnimatedInteger     targetX;
@@ -218,7 +218,7 @@ interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAtt
     readonly attribute nsIDOMSVGAnimatedEnumeration edgeMode;
     readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthX;
     readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthY;
-    readonly attribute nsIDOMSVGAnimatedBoolean     preserveAlpha;
+    readonly attribute nsISupports                  preserveAlpha;
 };
 
 [scriptable, uuid(43662657-4DA9-4B64-8891-033B08DBD11B)]

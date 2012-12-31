@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=553917
+-->
+<html>
+  <head>
+    <title>Test for Bug 553917</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript">
+      var stringBundleService = 
+        SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
+                    .getService(SpecialPowers.Ci.nsIStringBundleService);
+      var g_bundl =
+        stringBundleService.createBundle("chrome://global/locale/mathml/mathml.properties");
+      
+      var g_errorInfo = {
+      /*<math><mroot></mroot></math>
+        <math><msub></msub></math>
+        <math><msup></msup></math>
+        <math><mfrac></mfrac></math>
+        <math><msubsup></msubsup></math>
+        <math><munderover></munderover></math>*/
+        ChildCountIncorrect: {
+            status : [false, false, false, false, false, false],
+            args : [["mroot"], ["msub"], ["msup"], ["mfrac"], ["msubsup"], ["munderover"]] },
+      /*<math fontfamily="serif"></math>
+        <math color="#112233"></math>
+        <math background="#FFFFFF"></math>
+        <math fontsize="10"></math>
+        <math xlink:href="http://www.mozilla.org"></math>*/
+        DeprecatedSupersededBy: { 
+          status: [false, false, false, false, false],
+          args: [["fontfamily","mathvariant"],["color","mathcolor"], ["background","mathbackground"], 
+                ["fontsize","mathsize"], ["xlink:href","href"]] },
+      /*<math><mpadded width="BAD!"></mpadded></math>
+        <math><mpadded height="BAD!"></mpadded></math>
+        <math><mpadded voffset="BAD!"></mpadded></math>*/
+        AttributeParsingError: { 
+          status: [false, false, false],
+          args: [["BAD!","width","mpadded"], ["BAD!","height","mpadded"], ["BAD!","voffset","mpadded"]]
+        },
+      /*<math scriptlevel="BAD!"></math>
+        <math scriptsizemultiplier="BAD!"></math>*/
+        AttributeParsingErrorNoTag: {
+          status: [false, false],
+          args: [["BAD!","scriptlevel"], ["BAD!","scriptsizemultiplier"]]
+        },
+      /* <math><mo rspace="2..0">+</mo></math>
+        <math><mo minsize="1.5notaunit">+</mo></math>
+        <math><mspace width="2"/></math>
+        <math><mo lspace="BADlspace">+</mo></math>
+        <math><mspace height="BADheight"/></math>
+        <math><mspace depth="BADdepth"/></math>*/
+        LengthParsingError : {
+          status: [false, false, false, false, false, false],
+          args: [["2..0"], ["1.5notaunit"], ["2"],["BADlspace"],["BADheight"],["BADdepth"]]
+        },
+      /*<math><mmultiscripts></mmultiscripts></math>
+        <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
+        <math><mmultiscripts><mi>x</mi><mi>y</mi></mmultiscripts></math>*/
+        MMultiscriptsErrors: {
+          status: [false, false, false],
+          args: ["DuplicateMprescripts", "NoSubSup", "SubSupMismatch"]
+        },
+      /*<math><mo minsize="2">+</mo></math>*/
+        UnitlessValuesAreDeprecated : {
+          status : [false],
+          args : [[]] }};
+      
+      var g_errorTypes = ["ChildCountIncorrect","DeprecatedSupersededBy","AttributeParsingError",
+                          "AttributeParsingErrorNoTag","LengthParsingError", "MMultiscriptsErrors",
+                          "UnitlessValuesAreDeprecated"];
+      
+      function getErrorMessage(name,idx)
+      {
+        if (name != "MMultiscriptsErrors") {
+          return g_bundl.formatStringFromName(name,g_errorInfo[name].args[idx], 
+                                            g_errorInfo[name].args[idx].length);
+        }
+        else {
+          return g_bundl.formatStringFromName(g_errorInfo[name].args[idx],[],0);
+        }
+      }
+    
+    /** Checks the roll call to see if all expected error messages were present. */
+    function processRollCall()
+    {
+      for (var i=0; i<g_errorTypes.length;i++) {
+        for (var j = 0; j < g_errorInfo[g_errorTypes[i]].status.length; j++) {
+          ok(g_errorInfo[g_errorTypes[i]].status[j],
+             "\"" + getErrorMessage(g_errorTypes[i], j)
+                  + "\" was expected to be in the error console.");
+        }
+      }
+    }
+    
+    /** Tests a candidate to see if it is one of the expected messages and updates the 
+        g_errorInfo structure if it is. */
+    function doRollCall(msg)
+    {
+      for (var i = 0; i < g_errorTypes.length; i++) {
+        for (var j = 0; j < g_errorInfo[g_errorTypes[i]].status.length; j++) {
+          if (msg == getErrorMessage(g_errorTypes[i], j))
+          {
+            g_errorInfo[g_errorTypes[i]].status[j] = true;
+          }
+        }
+      }
+    }
+    
+    SpecialPowers.registerConsoleListener(
+      function (msg) {
+        if (msg.message == "SENTINEL") {
+          processRollCall();
+          SimpleTest.finish();
+        } else if (msg.isScriptError) {
+          doRollCall(msg.errorMessage);
+        }
+      });
+      
+    SimpleTest.waitForExplicitFinish();
+  </script>
+  </head>
+  <body onload="SpecialPowers.postConsoleSentinel();">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=553917">Mozilla Bug 553917</a>
+    <!-- ChildCountIncorrect -->
+    <math><mroot></mroot></math>
+    <math><msub></msub></math>
+    <math><msup></msup></math>
+    <math><mfrac></mfrac></math>
+    <math><msubsup></msubsup></math>
+    <math><munderover></munderover></math>
+    
+    <!-- DeprecatedSupersededBy -->
+    <math fontfamily="serif"></math>
+    <math color="#112233"></math>
+    <math background="#FFFFFF"></math>
+    <math fontsize="10"></math>
+    <math xlink:href="http://www.mozilla.org"></math>
+    
+    <!-- AttributeParsingError -->
+    <math><mpadded width="BAD!"></mpadded></math>
+    <math><mpadded height="BAD!"></mpadded></math>
+    <math><mpadded voffset="BAD!"></mpadded></math>
+    
+    <!-- AttributeParsingErrorNoTag -->
+    <math scriptlevel="BAD!"></math>
+    <math scriptsizemultiplier="BAD!"></math>
+    
+    <!-- LengthParsingError -->
+    <math><mo rspace="2..0">+</mo></math>
+    <math><mo minsize="1.5notaunit">+</mo></math>
+    <math><mspace width="2"/></math>
+    <math><mo lspace="BADlspace">+</mo></math>
+    <math><mspace height="BADheight"/></math>
+    <math><mspace depth="BADdepth"/></math>
+    
+    <!-- MMultiscriptsErrors -->
+    <math><mmultiscripts></mmultiscripts></math>
+    <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
+    <math><mmultiscripts><mi>x</mi><mi>y</mi></mmultiscripts></math>
+    
+    <!-- UnitlessValuesAreDeprecated -->
+    <math><mo minsize="2">+</mo></math>
+  </body>
+</html>

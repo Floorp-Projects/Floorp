@@ -1,0 +1,53 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.util.Log;
+
+public class testTabHistory extends PixelTest {
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    /* This test will check the functionality of the Back, Forward and Reload buttons.
+    First it will determine the Device and the OS.
+    Then it will create the appropriate navigation mechanisms for back, forward and reload depending on device type and OS.
+    Finally it will run the tests */
+
+    public void testTabHistory() {
+        blockForGeckoReady();
+
+        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
+        String url3 = getAbsoluteUrl("/robocop/robocop_blank_03.html");
+
+        // Create tab history
+        loadAndPaint(url);
+        loadAndPaint(url2);
+        loadAndPaint(url3);
+
+        // Get the device information and create the navigation for it
+        Device mDevice = new Device();
+        Navigation nav = new Navigation(mDevice);
+
+        // Go to the 2nd page
+        nav.back();
+        mSolo.waitForText("Browser Blank Page 02");
+
+        // Go to the first page
+        nav.back();
+        mSolo.waitForText("Browser Blank Page 01");
+        verifyPageTitle("Browser Blank Page 01");
+
+        // Go forward to the second page
+        nav.forward();
+        mSolo.waitForText("Browser Blank Page 02");
+        verifyPageTitle("Browser Blank Page 02");
+
+        // Reload page
+        nav.reload();
+        verifyPageTitle("Browser Blank Page 02");
+    }
+}

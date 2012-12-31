@@ -191,7 +191,7 @@ this.EventManager = {
             if (txtIface.characterCount)
               throw x;
           }
-          this.present(Presentation, textChanged(
+          this.present(Presentation.textChanged(
                          isInserted, event.start, event.length,
                          text, event.modifiedText));
         }

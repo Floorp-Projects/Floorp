@@ -44,6 +44,7 @@ members = [
     'nsIDOMWindow.localStorage',
     'nsIDOMWindow.onmouseenter',
     'nsIDOMWindow.onmouseleave',
+    'nsIDOMWindowPerformance.performance',
     'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
@@ -65,40 +66,8 @@ members = [
     # dom/interfaces/core
     'nsIDOMCharacterData.data',
     'nsIDOMCharacterData.length',
-    'nsIDOMDocument.documentElement',
-    'nsIDOMDocument.implementation',
-    'nsIDOMDocument.getElementsByTagName',
-    'nsIDOMDocument.doctype',
-    'nsIDOMDocument.getElementsByTagNameNS',
-    'nsIDOMDocument.getElementById',
-    'nsIDOMDocument.createDocumentFragment',
-    'nsIDOMDocument.createElement',
-    'nsIDOMDocument.createElementNS',
-    'nsIDOMDocument.importNode',
-    'nsIDOMDocument.createTextNode',
-    'nsIDOMDocument.documentURI',
-    'nsIDOMDocument.adoptNode',
-    'nsIDOMDocument.defaultView',
-    'nsIDOMDocument.createNodeIterator',
-    'nsIDOMDocument.createEvent',
-    'nsIDOMDocument.getElementsByClassName',
-    'nsIDOMDocument.title',
-    'nsIDOMDocument.referrer',
-    'nsIDOMDocument.hasFocus',
-    # This property is treated specially in nsDOMClassInfo in a way that
-    # would shadow any quick stub.  Also, document.location is a special
-    # case for security.
-    #'nsIDOMDocument.location',
-    'nsIDOMDocument.elementFromPoint',
-    'nsIDOMDocument.activeElement',
-    'nsIDOMDocument.onreadystatechange',
-    'nsIDOMDocument.onmouseenter',
-    'nsIDOMDocument.onmouseleave',
-    'nsIDOMDocument.URL',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMNodeSelector.querySelector',
-    'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
@@ -164,19 +133,6 @@ members = [
     'nsIDOMHTMLButtonElement.value',
     'nsIDOMHTMLButtonElement.disabled',
     'nsIDOMHTMLCommandElement.*',
-    'nsIDOMHTMLDocument.body',
-    'nsIDOMHTMLDocument.getElementsByName',
-    'nsIDOMHTMLDocument.anchors',
-    'nsIDOMHTMLDocument.links',
-    'nsIDOMHTMLDocument.forms',
-    'nsIDOMHTMLDocument.cookie',
-    'nsIDOMHTMLDocument.images',
-    'nsIDOMHTMLDocument.write',
-    'nsIDOMHTMLDocument.writeln',
-    'nsIDOMHTMLDocument.domain',
-    'nsIDOMHTMLDocument.getSelection',
-    'nsIDOMHTMLDocument.designMode',
-    'nsIDOMHTMLDocument.head',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
     'nsIDOMHTMLFormElement.submit',
@@ -307,7 +263,6 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
-    'nsIDOMSVGStylable.*',
 
     # dom/interfaces/traversal
     'nsIDOMNodeIterator.nextNode',
@@ -315,9 +270,6 @@ members = [
     # dom/interfaces/xbl - None.
 
     # dom/interfaces/xpath
-    'nsIDOMXPathEvaluator.evaluate',
-    'nsIDOMXPathEvaluator.createExpression',
-    'nsIDOMXPathEvaluator.createNSResolver',
     'nsIDOMXPathExpression.evaluate',
     'nsIDOMXPathNSResolver.lookupNamespaceURI',
     'nsIDOMXPathResult.snapshotItem',
@@ -398,6 +350,8 @@ irregularFilenames = {
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
 
     'nsITelephoneCallback': 'nsITelephone',
+
+    'nsIDOMWindowPerformance': 'nsIDOMWindow',
     }
 
 customIncludes = [
@@ -405,13 +359,11 @@ customIncludes = [
     'nsIContent.h',
     'nsIDocument.h',
     'nsCSSPropertiesQS.h',
-    'nsDocument.h',
     'nsDOMTokenList.h',
     'nsGenericDOMDataNode.h',
     'mozilla/dom/Element.h',
     'nsGenericHTMLElement.h',
-    'nsSVGStylableElement.h',
-    'nsHTMLDocument.h',
+    'nsSVGElement.h',
     'nsDOMQS.h',
     'nsDOMStringMap.h',
     'HTMLPropertiesCollection.h',
@@ -419,28 +371,17 @@ customIncludes = [
     'nsICSSDeclaration.h',
     'mozilla/dom/NodeBinding.h',
     'mozilla/dom/ElementBinding.h',
-    'mozilla/dom/HTMLElementBinding.h'
+    'mozilla/dom/HTMLElementBinding.h',
+    'mozilla/dom/DocumentBinding.h',
+    'mozilla/dom/SVGElementBinding.h',
+    'nsPerformance.h',
+    'mozilla/dom/HTMLDocumentBinding.h',
     ]
 
 customReturnInterfaces = [
     'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
     ]
-
-nsIDOMHTMLDocument_Write_customMethodCallCode = """
-    nsAString &str = arg0;
-    for (unsigned i = 1; i < argc; ++i) {
-      xpc_qsDOMString next_arg(cx, argv[i], &argv[i],
-                               xpc_qsDOMString::eStringify,
-                               xpc_qsDOMString::eStringify);
-      if (!next_arg.IsValid())
-        return JS_FALSE;
-
-      str.Append(next_arg);
-    }
-
-    rv = self->%s(arg0, cx);
-"""
 
 nsIDOMStorage_Clear_customMethodCallCode = """
     rv = self->Clear();
@@ -449,48 +390,8 @@ nsIDOMStorage_Clear_customMethodCallCode = """
 """
 
 customMethodCalls = {
-    'nsIDOMHTMLDocument_': {
-        'thisType': 'nsHTMLDocument'
-        },
-    'nsIDOMHTMLDocument_Write': {
-        'thisType': 'nsHTMLDocument',
-        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write'
-        },
-    'nsIDOMHTMLDocument_Writeln': {
-        'thisType': 'nsHTMLDocument',
-        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln'
-        },
-    'nsIDOMHTMLDocument_GetBody': {
-        'thisType': 'nsHTMLDocument',
-        'code': '    nsIContent *result = self->GetBody();',
-        'canFail': False
-        },
-    'nsIDOMHTMLDocument_GetHead': {
-        'thisType': 'nsHTMLDocument',
-        'code': '    nsIContent *result = self->GetHead();',
-        'canFail': False
-        },
-    'nsIDOMHTMLDocument_GetElementsByName': {
-        'thisType': 'nsHTMLDocument',
-        'code': '    nsRefPtr<nsContentList> result = '
-                'self->GetElementsByName(arg0);',
-        'canFail': False
-        },
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
-        },
-    'nsIDOMNodeSelector_QuerySelector': {
-        'thisType': 'nsINode',
-        'code': '    mozilla::ErrorResult error;\n'
-                '    nsIContent* result = '
-                'self->QuerySelector(arg0, error);\n'
-                '    rv = error.ErrorCode();'
-        },
-    'nsIDOMNodeSelector_QuerySelectorAll': {
-        'thisType': 'nsINode',
-        'code': '    mozilla::ErrorResult error;\n'
-                '    nsCOMPtr<nsINodeList> result = self->QuerySelectorAll(arg0, error);\n'
-                '    rv = error.ErrorCode();'
         },
     'nsIDOMElementCSSInlineStyle_GetStyle': {
         'thisType': 'nsStyledElement',
@@ -500,70 +401,6 @@ customMethodCalls = {
                 '      return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n'
                 '    nsIDOMCSSStyleDeclaration* result = '
                 'self->GetStyle(&rv);'
-        },
-    'nsIDOMSVGStylable_GetStyle': {
-        'thisType': 'nsSVGStylableElement',
-        'code': '    nsICSSDeclaration* result = '
-                'self->GetStyle(&rv);'
-        },
-    'nsIDOMDocument_': {
-        'thisType': 'nsDocument'
-        },
-    'nsIDOMDocument_GetElementById': {
-        'thisType': 'nsDocument',
-        'code': '    mozilla::dom::Element *result = self->GetElementById(arg0);',
-        'canFail': False
-        },
-    'nsIDOMDocument_GetElementsByTagName': {
-        'thisType': 'nsDocument',
-        'code': '    nsRefPtr<nsContentList> result ='
-                'self->GetElementsByTagName(arg0);',
-        'canFail': False
-        },
-    'nsIDOMDocument_GetElementsByTagNameNS': {
-        'thisType': 'nsDocument',
-        'code': '    nsRefPtr<nsContentList> result ='
-                'self->GetElementsByTagNameNS(arg0, arg1);',
-        'canFail': False
-        },
-    'nsIDOMDocument_CreateElement': {
-        'thisType': 'nsDocument',
-        'code': '    nsCOMPtr<nsIContent> result;\n'
-                '    rv = self->CreateElement(arg0, getter_AddRefs(result));'
-    },
-    'nsIDOMDocument_CreateElementNS': {
-        'thisType': 'nsDocument',
-        'code': '    nsCOMPtr<nsIContent> result;\n'
-                '    rv = self->CreateElementNS(arg0, arg1, getter_AddRefs(result));'
-    },
-    'nsIDOMDocument_CreateTextNode': {
-        'thisType': 'nsDocument',
-        'code': '    nsCOMPtr<nsIContent> result;\n'
-                '    rv = self->CreateTextNode(arg0, getter_AddRefs(result));'
-    },
-    'nsIDOMDocument_GetOnreadystatechange' : {
-        'thisType' : 'nsDocument',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMDocument_SetOnreadystatechange' : {
-        'thisType' : 'nsDocument',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMDocument_GetOnmouseenter' : {
-        'thisType' : 'nsDocument',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMDocument_SetOnmouseenter' : {
-        'thisType' : 'nsDocument',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMDocument_GetOnmouseleave' : {
-        'thisType' : 'nsDocument',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMDocument_SetOnmouseleave' : {
-        'thisType' : 'nsDocument',
-        'unwrapThisFailureFatal' : False
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',
@@ -580,11 +417,19 @@ customMethodCalls = {
     'nsIDOMWindow_SetOnmouseleave' : {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
-        }
+        },
+    'nsIDOMWindowPerformance_GetPerformance' : {
+        'thisType': 'nsPIDOMWindow',
+        'code' : '    nsPerformance* result = self->GetPerformance();\n',
+        'canFail': False,
+        },
     }
 
 newBindingProperties = {
     'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular'
+    'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMDocument': 'mozilla::dom::DocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMHTMLDocument': 'mozilla::dom::HTMLDocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     }

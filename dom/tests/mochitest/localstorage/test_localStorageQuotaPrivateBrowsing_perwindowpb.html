@@ -1,0 +1,192 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage and DOM quota test</title>
+
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<script type="text/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+const Ci = Components.interfaces;
+const CONTENT_PAGE = "http://mochi.test:8888/chrome/dom/tests/mochitest/localstorage/page_blank.html";
+const slavePath = "/tests/dom/tests/mochitest/localstorage/";
+var currentTest = 1;
+var quota;
+
+try {
+  quota = Services.prefs.getIntPref("dom.storage.default_quota");
+} catch (ex) {
+  quota = 5*1024;
+}
+Services.prefs.setIntPref("dom.storage.default_quota", 1);
+
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShellTreeItem)
+                      .rootTreeItem
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow);
+
+var slaveLoadsPending = 1;
+var slaveOrigin = "";
+var slave = null;
+var failureRegExp = new RegExp("^FAILURE");
+
+function startTest() {
+  testOnWindow(true, function(aWindow) {
+    var frame = aWindow.content.document.createElement("iframe");
+    aWindow.content.document.body.appendChild(frame);
+    aWindow.content.addEventListener("message", function(aEvt) {
+      onMessageReceived(aEvt, aWindow)
+    }, false);
+    slave = aWindow.content.frames[0];
+
+    doNextTest(aWindow);
+  });
+}
+
+function doNextTest(aWindow) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  switch (currentTest) {
+    // Initialy setup the quota to testing value of 1024B and
+    // set a 500 bytes key with name length 1 (allocate 501 bytes)
+    case 1:
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
+      break;
+
+    // In subdomain now set another key with length 500 bytes, i.e.
+    // allocate 501 bytes
+    case 2:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    // Try to set the same key value again to check we don't fail
+    // even 1002 bytes has already been exhausted from the quota
+    // We just change the value of an existing key.
+    case 3:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&B&success";
+      break;
+
+    // Try to set the same key to a larger value that would lead to
+    // quota reach and check that the value is still the old one
+    case 4:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add2&B&failure";
+      break;
+
+    // In a different subdomain try to set a new 500 bytes key
+    // and check we fail because we are over the quota
+    case 5:
+      slaveOrigin = "https://test2.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&failure";
+      break;
+
+    // Remove from the second subdomain the second key, it must not fail
+    // This should release the allocated space of the quota assigned to
+    // example.com.
+    case 6:
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?remove&B&success";
+      break;
+
+    // Now try again to set 500 bytes key, it must succeed.
+    case 7:
+      slaveOrigin = "https://test2.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?add&C&success";
+      break;
+
+    case 8:
+      // Do a clean up...
+      // TODO Bug 455070, use just ?clear what invokes call
+      // of clear() in the target frame. W/o clear method we must
+      // call clear implemented as removeItem for each item in
+      // the localStorage.
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear&A&";
+      break;
+
+    case 9:
+      // Do a clean up...
+      slaveOrigin = "http://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear&B&";
+      break;
+
+    case 10:
+      // Do a clean up...
+      slaveOrigin = "https://test2.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuota.html?clear&C&";
+      break;
+
+    default:
+      Services.prefs.setIntPref("dom.storage.default_quota", quota);
+      aWindow.close();
+      SimpleTest.finish();
+  }
+
+  ++currentTest;
+}
+
+function onMessageReceived(event, aWindow) {
+  switch (event.data) {
+    // Indication of the frame onload event
+    case "frame loaded":
+      if (--slaveLoadsPending)
+        break;
+
+      // Just fall through...
+
+    // Indication of successfully finished step of a test
+    case "perf":
+      if (event.data == "perf")
+        doStep();
+
+      slave.postMessage("step", slaveOrigin);
+      break;
+
+    // Indication of all test parts finish (from any of the frames)
+    case "done":
+      aWindow.content.localStorage.clear();
+      slaveLoadsPending = 1;
+      doNextTest(aWindow);
+      break;
+
+    // Any other message indicates error or succes message of a test
+    default:
+      SimpleTest.ok(!event.data.match(failureRegExp), event.data);
+      break;
+  }
+}
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href == "about:privatebrowsing") {
+        win.gBrowser.loadURI(CONTENT_PAGE);
+        return;
+      }
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+    win.gBrowser.loadURI(CONTENT_PAGE);
+  }, true);
+}
+
+function doStep() {
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</head>
+<body onload="startTest();">
+</body>
+</html>

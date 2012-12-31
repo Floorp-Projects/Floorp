@@ -74,8 +74,10 @@ browser.jar:
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-glow@2x.png       (downloads/download-glow@2x.png)
   skin/classic/browser/downloads/download-notification.png  (downloads/download-notification.png)
+  skin/classic/browser/downloads/download-summary.png       (downloads/download-summary.png)
   skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
+  skin/classic/browser/downloads/contentAreaDownloadsView.css (downloads/contentAreaDownloadsView.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
@@ -243,10 +245,15 @@ browser.jar:
   skin/classic/browser/devtools/tools-icons-small.png       (devtools/tools-icons-small.png)
   skin/classic/browser/devtools/dock-bottom.png             (devtools/dock-bottom.png)
   skin/classic/browser/devtools/dock-side.png               (devtools/dock-side.png)
-  skin/classic/browser/devtools/dock-window.png             (devtools/dock-window.png)
   skin/classic/browser/devtools/floating-scrollbars.css     (devtools/floating-scrollbars.css)
 * skin/classic/browser/devtools/inspector.css               (devtools/inspector.css)
   skin/classic/browser/devtools/toolbox.css                 (devtools/toolbox.css)
+  skin/classic/browser/devtools/tool-webconsole.png         (devtools/tool-webconsole.png)
+  skin/classic/browser/devtools/tool-debugger.png           (devtools/tool-debugger.png)
+  skin/classic/browser/devtools/tool-inspector.png          (devtools/tool-inspector.png)
+  skin/classic/browser/devtools/tool-styleeditor.png        (devtools/tool-styleeditor.png)
+  skin/classic/browser/devtools/close.png                   (devtools/close.png)
+  skin/classic/browser/devtools/undock.png                  (devtools/undock.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

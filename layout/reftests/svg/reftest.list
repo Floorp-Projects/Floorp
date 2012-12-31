@@ -242,7 +242,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == script-empty-01.svg pass.svg
 == selector-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-== style-property-not-on-script-element-01.svg pass.svg
+== style-property-on-script-element-01.svg pass.svg
 == style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml

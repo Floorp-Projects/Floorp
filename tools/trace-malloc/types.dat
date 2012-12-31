@@ -1345,7 +1345,7 @@ basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned
 nsString::nsString(basic_nsAReadableString<unsigned short> const &)
 nsHTMLDocument::SetTitle(basic_nsAReadableString<unsigned short> const &)
 
-<nsDOMDocumentType>
+<mozilla::dom::DocumentType>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
@@ -1358,7 +1358,7 @@ nsString::SetLength(unsigned int)
 nsAString::do_AssignFromReadable(nsAString const &)
 nsAString::AssignFromReadable(nsAString const &)
 nsString::nsString(nsAString const &)
-nsDOMDocumentType::nsDOMDocumentType(nsAString const &, nsIDOMNamedNodeMap *, nsIDOMNamedNodeMap *, nsAString const &, nsAString const &, nsAString const &)
+mozilla::dom::DocumentType::DocumentType(nsAString const &, nsIDOMNamedNodeMap *, nsIDOMNamedNodeMap *, nsAString const &, nsAString const &, nsAString const &)
 
 #----------------------------------------------------------------------
 #

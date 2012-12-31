@@ -20,6 +20,7 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsEnumeratorUtils.h"
 #include "nsEscape.h"
 #include "nsIEnumerator.h"
 #include "nsIRDFService.h"
@@ -168,6 +169,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     unicodeMsg.AssignWithConversion(msg);
     JSAutoRequest ar(cx);
     JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, (jschar*) unicodeMsg.get());
+    NS_ENSURE_TRUE(jsMsgStr, NS_ERROR_OUT_OF_MEMORY);
 
     params[0] = BOOLEAN_TO_JSVAL(server);
     params[1] = STRING_TO_JSVAL(jsMsgStr);
@@ -1171,32 +1173,18 @@ nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval
 
 	*_retval = nullptr;
 
-	nsCOMPtr<nsISupportsArray> array;
-	rv = NS_NewISupportsArray(getter_AddRefs(array));
-	if (NS_FAILED(rv)) return rv;
-
+	nsCOMPtr<nsISimpleEnumerator> child, anonArcs;
 	if (isWellknownContainerURI(aSource))
 	{
-		array->AppendElement(kNC_Child);
+		NS_NewSingletonEnumerator(getter_AddRefs(child), kNC_Child);
 	}
 
 	if (mInner)
 	{
-		nsCOMPtr<nsISimpleEnumerator>	anonArcs;
 		rv = mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
-		bool hasResults;
-		while (NS_SUCCEEDED(rv) &&
-		       NS_SUCCEEDED(anonArcs->HasMoreElements(&hasResults)) &&
-		       hasResults)
-		{
-			nsCOMPtr<nsISupports>	anonArc;
-			if (NS_FAILED(anonArcs->GetNext(getter_AddRefs(anonArc))))
-				break;
-			array->AppendElement(anonArc);
-		}
 	}
 
-        return NS_NewArrayEnumerator(_retval, array);
+	return NS_NewUnionEnumerator(_retval, child, anonArcs);
 }
 
 NS_IMETHODIMP

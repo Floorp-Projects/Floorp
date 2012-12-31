@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+namespace mozilla {
+namespace net {
+
+/**
+ * Protocol to support RemoteOpenFile, an nsIFile that opens it's file handle on
+ * the parent instead of the child (since child lacks permission to do so).
+ */
+protocol PRemoteOpenFile
+{
+  manager PNecko;
+
+parent:
+  // Tell parent to open file. URI to open was passed and vetted for security in
+  // IPDL constructor: see NeckoParent::AllocPRemoteOpenFile()
+  AsyncOpenFile();
+
+  __delete__();
+
+child:
+  // success/failure code, and if NS_SUCCEEDED(rv), an open file descriptor
+  FileOpened(FileDescriptor fd, nsresult rv);
+};
+
+
+} // namespace net
+} // namespace mozilla

@@ -202,6 +202,10 @@
   <string name="abouthome_about_apps">&abouthome_about_apps3;</string>
   <string name="abouthome_sync_bold_name">&abouthome_sync_bold_name;</string>
   <string name="abouthome_apps_bold_name">&abouthome_apps_bold_name2;</string>
+  
+  <string name="abouthome_topsites_edit">&abouthome_topsites_edit;</string>
+  <string name="abouthome_topsites_clear">&abouthome_topsites_clear;</string>
+  <string name="abouthome_topsites_clearall">&abouthome_topsites_clearall;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>

@@ -30,6 +30,7 @@
 #include "mozilla/Attributes.h"
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 static const char kPrefDnsCacheEntries[]    = "network.dnsCacheEntries";
 static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
@@ -51,7 +52,6 @@ public:
     nsDNSRecord(nsHostRecord *hostRecord)
         : mHostRecord(hostRecord)
         , mIter(nullptr)
-        , mLastIter(nullptr)
         , mIterGenCnt(-1)
         , mDone(false) {}
 
@@ -59,9 +59,7 @@ private:
     virtual ~nsDNSRecord() {}
 
     nsRefPtr<nsHostRecord>  mHostRecord;
-    void                   *mIter;       // enum ptr for PR_EnumerateAddrInfo
-    void                   *mLastIter;   // previous enum ptr, for use in
-                                         // getting addrinfo in ReportUnusable
+    NetAddrElement         *mIter;
     int                     mIterGenCnt; // the generation count of
                                          // mHostRecord->addr_info when we
                                          // start iterating
@@ -83,7 +81,7 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
     {
         MutexAutoLock lock(mHostRecord->addr_info_lock);
         if (mHostRecord->addr_info)
-            cname = PR_GetCanonNameFromAddrInfo(mHostRecord->addr_info);
+            cname = mHostRecord->addr_info->mHostName;
         else
             cname = mHostRecord->host;
         result.Assign(cname);
@@ -92,46 +90,45 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsDNSRecord::GetNextAddr(uint16_t port, PRNetAddr *addr)
+nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
 {
-    // not a programming error to poke the DNS record when it has no more
-    // entries.  just fail without any debug warnings.  this enables consumers
-    // to enumerate the DNS record without calling HasMore.
-    if (mDone)
+    if (mDone) {
         return NS_ERROR_NOT_AVAILABLE;
+    }
 
     mHostRecord->addr_info_lock.Lock();
-    bool startedFresh = !mIter;
-
     if (mHostRecord->addr_info) {
-        if (!mIter)
-            mIterGenCnt = mHostRecord->addr_info_gencnt;
-        else if (mIterGenCnt != mHostRecord->addr_info_gencnt) {
-            // mHostRecord->addr_info has changed, so mIter is invalid.
-            // Restart the iteration.  Alternatively, we could just fail.
+        if (mIterGenCnt != mHostRecord->addr_info_gencnt) {
+            // mHostRecord->addr_info has changed, restart the iteration.
             mIter = nullptr;
             mIterGenCnt = mHostRecord->addr_info_gencnt;
-            startedFresh = true;
         }
+
+        bool startedFresh = !mIter;
 
         do {
-            mLastIter = mIter;
-            mIter = PR_EnumerateAddrInfo(mIter, mHostRecord->addr_info,
-                                         port, addr);
+            if (!mIter) {
+                mIter = mHostRecord->addr_info->mAddresses.getFirst();
+            } else {
+                mIter = mIter->getNext();
+            }
         }
-        while (mIter && mHostRecord->Blacklisted(addr));
+        while (mIter && mHostRecord->Blacklisted(&mIter->mAddress));
 
-        if (startedFresh && !mIter) {
-            // if everything was blacklisted we want to reset the blacklist (and
+        if (!mIter && startedFresh) {
+            // If everything was blacklisted we want to reset the blacklist (and
             // likely relearn it) and return the first address. That is better
-            // than nothing
+            // than nothing.
             mHostRecord->ResetBlacklist();
-            mLastIter = nullptr;
-            mIter = PR_EnumerateAddrInfo(nullptr, mHostRecord->addr_info,
-                                         port, addr);
+            mIter = mHostRecord->addr_info->mAddresses.getFirst();
         }
-            
+
+        if (mIter) {
+            memcpy(addr, &mIter->mAddress, sizeof(NetAddr));
+        }
+
         mHostRecord->addr_info_lock.Unlock();
+
         if (!mIter) {
             mDone = true;
             return NS_ERROR_NOT_AVAILABLE;
@@ -139,57 +136,61 @@ nsDNSRecord::GetNextAddr(uint16_t port, PRNetAddr *addr)
     }
     else {
         mHostRecord->addr_info_lock.Unlock();
+
         if (!mHostRecord->addr) {
             // Both mHostRecord->addr_info and mHostRecord->addr are null.
             // This can happen if mHostRecord->addr_info expired and the
             // attempt to reresolve it failed.
             return NS_ERROR_NOT_AVAILABLE;
         }
-        memcpy(addr, mHostRecord->addr, sizeof(PRNetAddr));
-        // set given port
-        port = PR_htons(port);
-        if (addr->raw.family == PR_AF_INET)
-            addr->inet.port = port;
-        else
-            addr->ipv6.port = port;
-        mDone = true; // no iterations
+        memcpy(addr, mHostRecord->addr, sizeof(NetAddr));
+        mDone = true;
     }
-        
-    return NS_OK; 
+
+    // set given port
+    port = htons(port);
+    if (addr->raw.family == AF_INET) {
+        addr->inet.port = port;
+    }
+    else if (addr->raw.family == AF_INET6) {
+        addr->inet6.port = port;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDNSRecord::GetNextAddrAsString(nsACString &result)
 {
-    PRNetAddr addr;
+    NetAddr addr;
     nsresult rv = GetNextAddr(0, &addr);
     if (NS_FAILED(rv)) return rv;
 
-    char buf[64];
-    if (PR_NetAddrToString(&addr, buf, sizeof(buf)) == PR_SUCCESS) {
+    char buf[kIPv6CStrBufSize];
+    if (NetAddrToString(&addr, buf, sizeof(buf))) {
         result.Assign(buf);
         return NS_OK;
     }
-    NS_ERROR("PR_NetAddrToString failed unexpectedly");
+    NS_ERROR("NetAddrToString failed unexpectedly");
     return NS_ERROR_FAILURE; // conversion failed for some reason
 }
 
 NS_IMETHODIMP
 nsDNSRecord::HasMore(bool *result)
 {
-    if (mDone)
+    if (mDone) {
         *result = false;
-    else {
-        // unfortunately, NSPR does not provide a way for us to determine if
-        // there is another address other than to simply get the next address.
-        void *iterCopy = mIter;
-        void *iterLastCopy = mLastIter;
-        PRNetAddr addr;
-        *result = NS_SUCCEEDED(GetNextAddr(0, &addr));
-        mIter = iterCopy; // backup iterator
-        mLastIter = iterLastCopy; // backup iterator
-        mDone = false;
+        return NS_OK;
     }
+
+    NetAddrElement *iterCopy = mIter;
+
+    NetAddr addr;
+    *result = NS_SUCCEEDED(GetNextAddr(0, &addr));
+
+    mIter = iterCopy;
+    mDone = false;
+
     return NS_OK;
 }
 
@@ -197,7 +198,6 @@ NS_IMETHODIMP
 nsDNSRecord::Rewind()
 {
     mIter = nullptr;
-    mLastIter = nullptr;
     mIterGenCnt = -1;
     mDone = false;
     return NS_OK;
@@ -208,7 +208,7 @@ nsDNSRecord::ReportUnusable(uint16_t aPort)
 {
     // right now we don't use the port in the blacklist
 
-    mHostRecord->addr_info_lock.Lock();
+    MutexAutoLock lock(mHostRecord->addr_info_lock);
 
     // Check that we are using a real addr_info (as opposed to a single
     // constant address), and that the generation count is valid. Otherwise,
@@ -216,14 +216,9 @@ nsDNSRecord::ReportUnusable(uint16_t aPort)
 
     if (mHostRecord->addr_info &&
         mIterGenCnt == mHostRecord->addr_info_gencnt) {
-        PRNetAddr addr;
-        void *id = PR_EnumerateAddrInfo(mLastIter, mHostRecord->addr_info,
-                                        aPort, &addr);
-        if (id)
-            mHostRecord->ReportUnusable(&addr);
+        mHostRecord->ReportUnusable(&mIter->mAddress);
     }
-    
-    mHostRecord->addr_info_lock.Unlock();
+
     return NS_OK;
 }
 

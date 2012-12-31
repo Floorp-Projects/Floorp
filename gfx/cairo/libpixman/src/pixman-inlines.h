@@ -933,7 +933,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
     {												\
 	vx = v.vector[0];									\
 	repeat (PIXMAN_REPEAT_NORMAL, &vx, pixman_int_to_fixed(src_image->bits.width));		\
-	max_x = pixman_fixed_to_int (vx + (width - 1) * unit_x) + 1;				\
+	max_x = pixman_fixed_to_int (vx + (width - 1) * (int64_t)unit_x) + 1;			\
 												\
 	if (src_image->bits.width < REPEAT_NORMAL_MIN_WIDTH)					\
 	{											\

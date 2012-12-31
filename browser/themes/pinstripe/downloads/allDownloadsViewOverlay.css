@@ -1,16 +1,16 @@
-richlistitem.download {
-  height: 7em;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#downloadsRichListBox {
+  /** The default listbox appearance comes with an unwanted margin. **/
+  -moz-appearance: none;
   margin: 0;
-  padding: 8px;
-  -moz-padding-end: 0;
 }
 
-richlistitem.download:first-child {
-  border-top: 1px solid transparent;
-}
-
-richlistitem.download:last-child {
-  border-bottom: 1px solid transparent;
+#downloadsRichListBox > richlistitem.download {
+  height: 6em;
+  padding: 5px 8px;
 }
 
 .downloadTypeIcon {
@@ -25,7 +25,7 @@ richlistitem.download:last-child {
 }
 
 .downloadTarget {
-  margin-bottom: 6px;
+  margin-bottom: 3px;
   cursor: inherit;
 }
 
@@ -37,16 +37,13 @@ richlistitem.download:last-child {
 
 .downloadButton {
   -moz-appearance: none;
+  background: transparent;
   min-width: 0;
   min-height: 0;
   margin: 3px;
   border: none;
   padding: 5px;
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
-}
-
-.downloadButton > .button-box {
-  padding: 0;
 }
 
 /*** Button icons ***/

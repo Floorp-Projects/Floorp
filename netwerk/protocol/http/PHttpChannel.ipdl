@@ -13,13 +13,14 @@ include protocol PBlob; //FIXME: bug #792908
 
 include "mozilla/net/PHttpChannelParams.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/net/DNS.h";
 include "prio.h";
 
 using RequestHeaderTuples;
 using nsHttpHeaderArray;
 using nsHttpResponseHead;
 using nsHttpAtom;
-using PRNetAddr;
+using mozilla::net::NetAddr;
 
 namespace mozilla {
 namespace net {
@@ -102,8 +103,8 @@ child:
                  uint32_t            cacheExpirationTime,
                  nsCString           cachedCharset,
                  nsCString           securityInfoSerialization,
-                 PRNetAddr           selfAddr,
-                 PRNetAddr           peerAddr);
+                 NetAddr             selfAddr,
+                 NetAddr             peerAddr);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

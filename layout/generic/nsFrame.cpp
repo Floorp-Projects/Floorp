@@ -2411,7 +2411,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
                      nsEventStatus*  aEventStatus)
 {
 
-  if (aEvent->message == NS_MOUSE_MOVE || aEvent->message == NS_TOUCH_MOVE) {
+  if (aEvent->message == NS_MOUSE_MOVE) {
     return HandleDrag(aPresContext, aEvent, aEventStatus);
   }
 
@@ -3012,6 +3012,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
 {
+  MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT, "HandleDrag can only handle mouse event");
+
   bool    selectable;
   uint8_t selectStyle;
   IsSelectable(&selectable, &selectStyle);
@@ -3031,14 +3033,6 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     return NS_OK;
 
   frameselection->StopAutoScrollTimer();
-
-#ifdef MOZ_B2G
-  // We only check touch move event since mouse move event is not cancelable.
-  if (aEvent->message == NS_TOUCH_MOVE &&
-      nsEventStatus_eConsumeNoDefault == *aEventStatus) {
-    return NS_OK;
-  }
-#endif // MOZ_B2G
 
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
@@ -4848,27 +4842,34 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
     aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
   }
   nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
-  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
   bool needsSchedulePaint = false;
-  while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    if (aHasDisplayItem) {
-      parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
-    }
-    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+  if (nsLayoutUtils::IsPopup(aFrame)) {
+    needsSchedulePaint = true;
+  } else {
+    nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+    while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+      if (aHasDisplayItem) {
+        parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+      }
+      nsSVGEffects::InvalidateDirectRenderingObservers(parent);
 
-    // If we're inside a popup, then we need to make sure that we
-    // call schedule paint so that the NS_FRAME_UPDATE_LAYER_TREE
-    // flag gets added to the popup display root frame.
-    if (nsLayoutUtils::IsPopup(parent)) {
-      needsSchedulePaint = true;
-      break;
+      // If we're inside a popup, then we need to make sure that we
+      // call schedule paint so that the NS_FRAME_UPDATE_LAYER_TREE
+      // flag gets added to the popup display root frame.
+      if (nsLayoutUtils::IsPopup(parent)) {
+        needsSchedulePaint = true;
+        break;
+      }
+      parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
     }
-    parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+    if (!parent) {
+      needsSchedulePaint = true;
+    }
   }
   if (!aHasDisplayItem) {
     return;
   }
-  if (!parent || needsSchedulePaint) {
+  if (needsSchedulePaint) {
     aFrame->SchedulePaint();
   }
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {

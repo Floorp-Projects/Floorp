@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=549475
+-->
+<head>
+  <title>Test for Bug 549475</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=549475">Mozilla Bug 549475</a>
+<p id="display"></p>
+<pre id="test">
+<div id='content'>
+  <form>
+  </form>
+</div>
+<script type="application/javascript">
+
+/** Test for Bug 549475 **/
+
+// We are excluding "file" because it's too different from the other types.
+// And it has no sanitizing algorithm.
+var inputTypes =
+[
+  "text", "password", "search", "tel", "hidden", "checkbox", "radio",
+  "submit", "image", "reset", "button", "email", "url", "number", "date",
+];
+
+var todoTypes =
+[
+  "range", "color",
+  "month", "week", "time", "datetime", "datetime-local",
+];
+
+var valueModeValue =
+[
+  "text", "search", "url", "tel", "email", "password", "date", "datetime",
+  "month", "week", "time", "datetime-local", "number", "range", "color",
+];
+
+function checkDateSanitizing(element) {
+  var invalidData =
+  [
+    "1234",
+    "1234-",
+    "12345",
+    "1234-01",
+    "1234-012",
+    "1234-01-",
+    "12-12",
+    "999-01-01",
+    "1234-56-78-91",
+    "1234-567-78",
+    "1234--7-78",
+    "abcd-12-12",
+    "thisinotadate",
+    "2012-13-01",
+    "1234-12-42",
+    " 2012-13-01",
+    " 123-01-01",
+    "2012- 3-01",
+    "12- 10- 01",
+    "  12-0-1",
+    "2012-3-001",
+    "2012-12-00",
+    "2012-12-1r",
+    "2012-11-31",
+    "2011-02-29",
+    "2100-02-29",
+    "a2000-01-01",
+    "2000a-01-0'",
+    "20aa00-01-01",
+    "2000a2000-01-01",
+    "2000-1-1",
+    "2000-1-01",
+    "2000-01-1",
+    "2000-01-01 ",
+    "2000- 01-01",
+    "-1970-01-01",
+    "0000-00-00",
+    "0001-00-00",
+    "0000-01-01",
+    "1234-12 12",
+    "1234 12-12",
+    "1234 12 12",
+  ];
+
+  var validData =
+  [
+    "1970-01-01",
+    "1234-12-12",
+    "1234567890-01-02",
+    "2012-12-31",
+    "2012-02-29",
+    "2000-02-29",
+  ];
+
+  for (data of validData) {
+    element.value = data;
+    is(element.value, data, "valid date should not be sanitized");
+  }
+
+  for (data of invalidData) {
+    element.value = data;
+    is(element.value, "", "invalid date should be sanitized");
+  }
+}
+
+function sanitizeValue(aType, aValue)
+{
+	switch (aType) {
+		case "text":
+		case "password":
+		case "search":
+		case "tel":
+			return aValue.replace(/[\n\r]/g, "");
+		case "url":
+		case "email":
+			return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
+		case "date":
+			return "";
+		case "month":
+		case "week":
+		case "time":
+		case "datetime":
+		case "datetime-local":
+			// TODO: write the sanitize algorithm.
+			return "";
+		case "number":
+			return (parseFloat(aValue) + "" === aValue) ? aValue : "";
+		case "range":
+			// TODO: write the sanitize algorithm.
+			return "";
+		case "color":
+			// TODO: write the sanitize algorithm.
+			return "";
+		default:
+			return aValue;
+	}
+}
+
+function checkSanitizing(element)
+{
+  if (element.type == 'date') {
+    checkDateSanitizing(element);
+    return;
+  }
+
+  var testData =
+  [
+    // For text, password, search, tel, email:
+    "\n\rfoo\n\r",
+    "foo\n\rbar",
+    "  foo  ",
+    "  foo\n\r  bar  ",
+    // For url:
+    "\r\n foobar    \n\r",
+    // For number:
+    "42",
+    "13.37",
+    "1.234567898765432",
+  ];
+
+  for (value of testData) {
+    element.setAttribute('value', value);
+    is(element.value, sanitizeValue(type, value),
+       "The value has not been correctly sanitized for type=" + type);
+    is(element.getAttribute('value'), value,
+       "The content value should not have been sanitized");
+
+    if (type in valueModeValue) {
+      element.setAttribute('value', 'tulip');
+      element.value = value;
+      is(element.value, sanitizeValue(type, value),
+         "The value has not been correctly sanitized for type=" + type);
+      is(element.getAttribute('value'), 'tulip',
+         "The content value should not have been sanitized");
+    }
+
+    element.setAttribute('value', '');
+    form.reset();
+    element.type = 'checkbox'; // We know this type has no sanitizing algorithm.
+    element.setAttribute('value', value);
+    is(element.value, value, "The value should not have been sanitized");
+    element.type = type;
+    is(element.value, sanitizeValue(type, value),
+       "The value has not been correctly sanitized for type=" + type);
+    is(element.getAttribute('value'), value,
+       "The content value should not have been sanitized");
+
+    element.setAttribute('value', '');
+    form.reset();
+    element.setAttribute('value', value);
+    form.reset();
+    is(element.value, sanitizeValue(type, value),
+       "The value has not been correctly sanitized for type=" + type);
+    is(element.getAttribute('value'), value,
+       "The content value should not have been sanitized");
+
+    // Cleaning-up.
+    element.setAttribute('value', '');
+    form.reset();
+  }
+}
+
+var pref = SpecialPowers.getBoolPref("dom.experimental_forms");
+SpecialPowers.setBoolPref("dom.experimental_forms", true);
+for (type of inputTypes) {
+  var form = document.forms[0];
+  var element = document.createElement("input");
+  element.style.display = "none";
+  element.type = type;
+  form.appendChild(element);
+
+  checkSanitizing(element); // no frame, no editor
+
+  element.style.display = "";
+  checkSanitizing(element); // frame, no editor
+
+  element.focus();
+  element.blur();
+  checkSanitizing(element); // frame, editor
+
+  element.style.display = "none";
+  checkSanitizing(element); // no frame, editor
+
+  form.removeChild(element);
+}
+
+for (type of todoTypes) {
+  // The only meaning of this is to have a failure when new types are introduced
+  // so we will know we have to write the tests here.
+  var form = document.forms[0];
+  var element = document.createElement("input");
+  element.type = type;
+  form.appendChild(element);
+
+  todo_is(element.type, type, "");
+
+  form.removeChild(element);
+}
+
+SpecialPowers.setBoolPref("dom.experimental_forms", pref);
+
+</script>
+</pre>
+</body>
+</html>

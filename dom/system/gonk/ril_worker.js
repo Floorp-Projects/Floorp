@@ -1555,39 +1555,34 @@ let RIL = {
    */
   getSPDI: function getSPDI() {
     function callback() {
-      if (DEBUG) debug("SPDI: Process SPDI callback");
       let length = Buf.readUint32();
-      let tlvTag;
-      let tlvLen;
       let readLen = 0;
       let endLoop = false;
       this.iccInfoPrivate.SPDI = null;
-      while ((readLen < length) && !endLoop) {
-        tlvTag = GsmPDUHelper.readHexOctet();
-        tlvLen = GsmPDUHelper.readHexOctet();
-        readLen += 2; // For tag and length.
+      while ((readLen < length / 2) && !endLoop) {
+        let tlvTag = GsmPDUHelper.readHexOctet();
+        let tlvLen = GsmPDUHelper.readHexOctet();
+        readLen += 2; // For tag and length fields.
         switch (tlvTag) {
         case SPDI_TAG_SPDI:
           // The value part itself is a TLV.
           continue;
         case SPDI_TAG_PLMN_LIST:
           // This PLMN list is what we want.
-          this.iccInfoPrivate.SPDI = this.readPLMNEntries(tlvLen/3);
+          this.iccInfoPrivate.SPDI = this.readPLMNEntries(tlvLen / 3);
           readLen += tlvLen;
           endLoop = true;
           break;
         default:
           // We don't care about its content if its tag is not SPDI nor
           // PLMN_LIST.
-          GsmPDUHelper.readHexOctetArray(tlvLen);
-          readLen += tlvLen;
+          endLoop = true;
+          break;
         }
       }
 
       // Consume unread octets.
-      if (length - readLen > 0) {
-        GsmPDUHelper.readHexOctetArray(length - readLen);
-      }
+      Buf.seekIncoming((length / 2 - readLen) * PDU_HEX_OCTET_SIZE);
       Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("SPDI: " + JSON.stringify(this.iccInfoPrivate.SPDI));
@@ -1596,7 +1591,7 @@ let RIL = {
       }
     }
 
-    // PLMN List is Servive 51 in USIM, EF_SPDI
+    // PLMN List is Service 51 in USIM, EF_SPDI
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_SPDI,
@@ -3387,30 +3382,32 @@ let RIL = {
       }
     }
 
-    // 1 octets = 2 chars.
-    let size = (TLV_COMMAND_DETAILS_SIZE +
-                TLV_DEVICE_ID_SIZE +
-                TLV_RESULT_SIZE +
-                (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
-                (textLen ? textLen + 3 : 0)) * 2;
+    let berLen = TLV_COMMAND_DETAILS_SIZE +
+                 TLV_DEVICE_ID_SIZE +
+                 TLV_RESULT_SIZE +
+                 (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
+                 (textLen ? textLen + 3 : 0);
+
     if (response.localInfo) {
       let localInfo = response.localInfo;
-      size = size +
-             (((localInfo.locationInfo ?
-               (localInfo.locationInfo.gsmCellId > 0xffff ?
-                 TLV_LOCATION_INFO_UMTS_SIZE :
-                 TLV_LOCATION_INFO_GSM_SIZE) :
-               0) +
-             (localInfo.imei ? TLV_IMEI_SIZE : 0) +
-             (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
-             (localInfo.language ? TLV_LANGUAGE_SIZE : 0)) * 2);
+      berLen += ((localInfo.locationInfo ?
+                 (localInfo.locationInfo.gsmCellId > 0xffff ?
+                   TLV_LOCATION_INFO_UMTS_SIZE :
+                   TLV_LOCATION_INFO_GSM_SIZE) :
+                  0) +
+                 (localInfo.imei ? TLV_IMEI_SIZE : 0) +
+                 (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
+                 (localInfo.language ? TLV_LANGUAGE_SIZE : 0));
     }
+
     if (response.timer) {
       let timer = response.timer;
-      size = size +
-             ((timer.timerId ? TLV_TIMER_IDENTIFIER : 0) +
-              (timer.timerValue ? TLV_TIMER_VALUE : 0)) * 2;
+      berLen += TLV_TIMER_IDENTIFIER +
+                (timer.timerValue ? TLV_TIMER_VALUE : 0);
     }
+
+    // 1 octets = 2 chars.
+    let size = berLen * 2;
     Buf.writeUint32(size);
 
     // Command Details

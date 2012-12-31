@@ -2773,10 +2773,13 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
     if (from.isDouble()) {
         FloatRegister fr;
         if (GetFloatArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(fr), Move::DOUBLE);
+            if (!from.isFloatReg() || from.floatReg() != fr) {
+                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(fr), Move::DOUBLE);
+            }
+            // else nothing to do; the value is in the right register already
         } else {
             // If (and only if) the integer registers have started spilling, do we
-            // need to take the double register's alignment into accoun
+            // need to take the double register's alignment into account
             uint32_t disp = GetFloatArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
             enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::DOUBLE);
         }
@@ -2784,13 +2787,16 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
     } else {
         Register r;
         if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(r), Move::GENERAL);
+            if (!from.isGeneralReg() || from.reg() != r) {
+                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(r), Move::GENERAL);
+            }
+            // else nothing to do; the value is in the right register already
         } else {
             uint32_t disp = GetIntArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
             fprintf(stderr, "Float on the stack! (%d)\n", disp);
             enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::GENERAL);
         }
-            usedIntSlots_++;
+        usedIntSlots_++;
     }
 
 }
@@ -2817,6 +2823,9 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
     if (GetIntArgReg(usedSlots_, 0, &destReg)) {
         if (from.isDouble()) {
             floatArgsInGPR[destReg.code() >> 1] = VFPRegister(from.floatReg());
+            useResolver = false;
+        } else if (from.isGeneralReg() && from.reg() == destReg) {
+            // No need to move anything
             useResolver = false;
         } else {
             dest = MoveOperand(destReg);
@@ -2848,7 +2857,7 @@ void MacroAssemblerARMCompat::checkStackAlignment()
 {
 #ifdef DEBUG
     ma_tst(sp, Imm32(StackAlignment - 1));
-    breakpoint(Equal);
+    breakpoint(NonZero);
 #endif
 }
 
