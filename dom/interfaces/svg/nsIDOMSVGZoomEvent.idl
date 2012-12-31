@@ -11,14 +11,15 @@
  */
 
 interface nsIDOMSVGRect;
-interface nsIDOMSVGPoint;
 
 [scriptable, builtinclass, uuid(9cf032c6-8485-4bde-90d4-0c8bbff27a12)]
 interface nsIDOMSVGZoomEvent : nsIDOMUIEvent
 {
   readonly attribute nsIDOMSVGRect  zoomRectScreen;
   readonly attribute float          previousScale;
-  readonly attribute nsIDOMSVGPoint previousTranslate;
+  // SVGPoint
+  readonly attribute nsISupports    previousTranslate;
   readonly attribute float          newScale;
-  readonly attribute nsIDOMSVGPoint newTranslate;
+  // SVGPoint
+  readonly attribute nsISupports    newTranslate;
 };

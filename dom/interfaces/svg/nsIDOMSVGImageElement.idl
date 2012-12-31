@@ -6,7 +6,6 @@
 #include "nsIDOMSVGElement.idl"
 
 interface nsIDOMSVGAnimatedLength;
-interface nsIDOMSVGAnimatedPreserveAspectRatio;
 
 [scriptable, uuid(2268AAD3-7E88-4F7B-89A3-F5294C89514D)]
 interface nsIDOMSVGImageElement
@@ -31,5 +30,5 @@ interface nsIDOMSVGImageElement
   readonly attribute nsIDOMSVGAnimatedLength y;
   readonly attribute nsIDOMSVGAnimatedLength width;
   readonly attribute nsIDOMSVGAnimatedLength height;
-  readonly attribute nsIDOMSVGAnimatedPreserveAspectRatio preserveAspectRatio;
+  readonly attribute nsISupports             preserveAspectRatio;
 };

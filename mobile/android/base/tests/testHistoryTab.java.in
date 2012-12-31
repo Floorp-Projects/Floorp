@@ -32,7 +32,6 @@ import java.util.GregorianCalendar;
 public class testHistoryTab extends PixelTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String OPEN_NEW_TAB = "Open in New Tab";
-    private static final int WAIT_FOR_CHILD_TIMEOUT = 4000;
     private static ListView listview = null;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
@@ -100,8 +99,6 @@ public class testHistoryTab extends PixelTest {
 
     private void testList(String url) {
         listview = getHistoryList();
-        // clear VKB
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         mAsserter.isnot(listview,  null, "checking that history list exists");
@@ -187,7 +184,7 @@ public class testHistoryTab extends PixelTest {
                 }
                 return true;
             }
-        }, WAIT_FOR_CHILD_TIMEOUT);
+        }, MAX_WAIT_MS);
         if (success == true && mFirstChild != null) {
             mAsserter.dumpLog("clickLongOnView: "+mFirstChild);
             mSolo.clickLongOnView(mFirstChild);
@@ -229,7 +226,7 @@ public class testHistoryTab extends PixelTest {
                 }
                 return true;
             }
-        }, WAIT_FOR_CHILD_TIMEOUT);
+        }, MAX_WAIT_MS);
         if (success == true && mFirstChild != null) {
             mSolo.clickOnView(mFirstChild);
             contentEventExpecter.blockForEvent();
@@ -255,7 +252,7 @@ public class testHistoryTab extends PixelTest {
                }
                return false;
             }
-        }, WAIT_FOR_CHILD_TIMEOUT);
+        }, MAX_WAIT_MS);
 
         return listview;
     }

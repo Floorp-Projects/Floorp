@@ -54,6 +54,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStart(LStart *lir);
     bool visitReturn(LReturn *ret);
     bool visitDefVar(LDefVar *lir);
+    bool visitDefFun(LDefFun *lir);
     bool visitOsrEntry(LOsrEntry *lir);
     bool visitOsrScopeChain(LOsrScopeChain *lir);
     bool visitStackArgT(LStackArgT *lir);
@@ -128,7 +129,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitMinMaxI(LMinMaxI *lir);
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareS(LCompareS *lir);
-    bool visitCompareV(LCompareV *lir);
+    bool visitCompareVM(LCompareVM *lir);
     bool visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir);
     bool visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
     bool visitEmulatesUndefined(LEmulatesUndefined *lir);

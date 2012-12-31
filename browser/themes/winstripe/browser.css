@@ -1030,6 +1030,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 /* history sidebar button */
 
+#webrtc-status-button /* temporary placeholder (bug 824825) */,
 #history-button {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
@@ -2331,6 +2332,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
 }
 
+.popup-notification-icon[popupid="webRTC-sharingDevices"],
 .popup-notification-icon[popupid="webRTC-shareDevices"] {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
 }
@@ -2417,7 +2419,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   }
 }
 
-#webRTC-notification-icon {
+#webRTC-sharingDevices-notification-icon,
+#webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
 

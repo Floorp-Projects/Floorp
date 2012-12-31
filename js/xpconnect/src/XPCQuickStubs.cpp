@@ -155,7 +155,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, unsigned argc, jsval *vp)
     jsid id;
     JSPropertyDescriptor desc;
     if (!JS_ValueToId(cx, idval, &id) ||
-        !JS_GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, &desc))
+        !JS_GetPropertyDescriptorById(cx, obj, id, 0, &desc))
         return false;
 
     // No property at all means no getters or setters possible.
@@ -238,8 +238,7 @@ DefineGetterOrSetter(JSContext *cx, unsigned argc, JSBool wantGetter, jsval *vp)
         return forward(cx, argc, vp);
 
     if (!JS_ValueToId(cx, idval, &id) ||
-        !JS_LookupPropertyWithFlagsById(cx, obj, id,
-                                        JSRESOLVE_QUALIFIED, &obj2, &v) ||
+        !JS_LookupPropertyWithFlagsById(cx, obj, id, 0, &obj2, &v) ||
         (obj2 &&
          !JS_GetPropertyAttrsGetterAndSetterById(cx, obj2, id, &attrs,
                                                  &found, &getter, &setter)))

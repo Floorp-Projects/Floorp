@@ -334,7 +334,7 @@ class InlineFrameIterator
     bool isConstructing() const;
     JSObject *scopeChain() const;
     JSObject *thisObject() const;
-    InlineFrameIterator operator++();
+    InlineFrameIterator &operator++();
 
     void dump() const;
 };

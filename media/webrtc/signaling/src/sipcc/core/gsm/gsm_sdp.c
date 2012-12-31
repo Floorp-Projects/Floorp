@@ -122,15 +122,33 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
 
     *(dcb_p->media_cap_tbl) = g_media_table;
 
-    /*
-     * Turn off two default streams, this is temporary
-     * until we can handle multiple streams properly
-     */
     if (sdpmode) {
-        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].enabled = TRUE;
-        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].enabled = TRUE;
-        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_RECVONLY;
-        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_RECVONLY;
+        /* This needs to change when we handle more than one stream
+           of each media type at a time. */
+
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].enabled = FALSE;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].enabled = FALSE;
+
+        /* We initialize as RECVONLY to allow the application to
+           display incoming media streams, even if it doesn't
+           plan to send media for those streams. This will be
+           upgraded to SENDRECV when and if a stream is added. */
+
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].support_direction =
+          SDP_DIRECTION_RECVONLY;
+
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_direction =
+          SDP_DIRECTION_RECVONLY;
+
+        /*
+         * This really should be set to FALSE unless we have added
+         * a data channel using createDataChannel(). Right now,
+         * though, those operations are not queued (and, in fact,
+         * the W3C hasn't specified the proper behavior here anyway, so
+         * we would only be implementing speculatively) -- so we'll
+         * always offer data channels until the standard is
+         * a bit more set.
+         */
         dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
     } else {
         dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
@@ -190,7 +208,7 @@ void gsmsdp_process_cap_constraint(cc_media_cap_t *cap,
  * OfferToReceiveAudio, OfferToReceiveVideo
  */
 void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb,
-                                    const cc_media_constraints_t* constraints) {
+                                    cc_media_constraints_t* constraints) {
   int i = 0;
 
   for (i=0; i<constraints->constraint_count; i++) {
@@ -1562,7 +1580,7 @@ gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, cha
 }
 
 /*
- * gsmsdp_set_attributes
+ * gsmsdp_set_ice_attribute
  *
  * Description:
  *
@@ -1575,7 +1593,7 @@ gsmsdp_get_ice_attributes (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, cha
  * sdp_p        - Pointer to the SDP to set the ice candidate attribute against.
  * ice_attrib   - ice attribute to set
  */
-static void
+void
 gsmsdp_set_ice_attribute (sdp_attr_e sdp_attr, uint16_t level, void *sdp_p, char *ice_attrib)
 {
     uint16_t      a_instance = 0;
@@ -2947,7 +2965,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                 codec = slave_list_p[j];
                 payload_info = &(media->payloads[media->num_payloads]);
 
-                if (master_list_p == remote_payload_types) {
+                if (master_list_p == remote_codecs) {
                     remote_pt = remote_payload_types[i];
                 } else {
                     remote_pt = remote_payload_types[j];
@@ -5882,12 +5900,12 @@ gsmsdp_encode_sdp (cc_sdp_t *sdp_p, cc_msgbody_info_t *msg_body)
     cc_msgbody_t   *part;
     uint32_t        body_length;
 
-    if (msg_body == NULL) {
+    if (!msg_body || !sdp_p) {
         return CC_CAUSE_ERROR;
     }
 
     /* Support single SDP encoding for now */
-    sdp_body = sipsdp_write_to_buf(sdp_p, &body_length);
+    sdp_body = sipsdp_write_to_buf(sdp_p->src_sdp, &body_length);
 
     if (sdp_body == NULL) {
         return CC_CAUSE_ERROR;

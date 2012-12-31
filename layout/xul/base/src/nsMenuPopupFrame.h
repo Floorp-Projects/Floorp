@@ -79,23 +79,6 @@ enum FlipStyle {
 #define POPUPALIGNMENT_TOPCENTER 17
 #define POPUPALIGNMENT_BOTTOMCENTER 18
 
-// The constants here are selected so that horizontally and vertically flipping
-// can be easily handled using the two flip macros below.
-#define POPUPPOSITION_UNKNOWN -1
-#define POPUPPOSITION_BEFORESTART 0
-#define POPUPPOSITION_BEFOREEND 1
-#define POPUPPOSITION_AFTERSTART 2
-#define POPUPPOSITION_AFTEREND 3
-#define POPUPPOSITION_STARTBEFORE 4
-#define POPUPPOSITION_ENDBEFORE 5
-#define POPUPPOSITION_STARTAFTER 6
-#define POPUPPOSITION_ENDAFTER 7
-#define POPUPPOSITION_OVERLAP 8
-#define POPUPPOSITION_AFTERPOINTER 9
-
-#define POPUPPOSITION_HFLIP(v) (v ^ 1)
-#define POPUPPOSITION_VFLIP(v) (v ^ 2)
-
 #define INC_TYP_INTERVAL  1000  // 1s. If the interval between two keypresses is shorter than this, 
                                 //   treat as a continue typing
 // XXX, kyle.yuan@sun.com, there are 4 definitions for the same purpose:
@@ -332,9 +315,6 @@ public:
 
   nsIntPoint GetLastClientOffset() const { return mLastClientOffset; }
 
-  // Return the alignment of the popup
-  int8_t GetAlignmentPosition() const;
-
 protected:
 
   // returns the popup's level.
@@ -430,8 +410,6 @@ protected:
   // popup alignment relative to the anchor node
   int8_t mPopupAlignment;
   int8_t mPopupAnchor;
-  int8_t mPosition;
-
   // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
   int8_t mConsumeRollupEvent;
   bool mFlipBoth; // flip in both directions

@@ -593,9 +593,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           default:
-            if (!(js_CodeSpec[op].format & JOF_DECOMPOSE))
+            if (!(js_CodeSpec[op].format & JOF_DECOMPOSE)) {
                 isJaegerCompileable = false;
                 isJaegerInlineable = isIonInlineable = false;
+            }
             break;
         }
 

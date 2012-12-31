@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
+                                  "resource:///modules/DownloadsCommon.jsm");
+
 var gMainPane = {
   _pane: null,
 
@@ -18,10 +21,23 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
+    this.setupDownloadsWindowOptions();
+
     // Notify observers that the UI is now ready
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
+  },
+
+  setupDownloadsWindowOptions: function ()
+  {
+    let showWhenDownloading = document.getElementById("showWhenDownloading");
+    let closeWhenDone = document.getElementById("closeWhenDone");
+
+    // These radio buttons should be hidden when the Downloads Panel is enabled.
+    let shouldHide = !DownloadsCommon.useToolkitUI;
+    showWhenDownloading.hidden = shouldHide;
+    closeWhenDone.hidden = shouldHide;
   },
 
   // HOME PAGE

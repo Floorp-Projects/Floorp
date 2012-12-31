@@ -10,20 +10,21 @@
 #include "nsDOMStorageBaseDB.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
+#include "mozilla/storage/StatementCache.h"
+#include "mozIStorageBindingParamsArray.h"
 #include "nsTHashtable.h"
 #include "nsDataHashtable.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/storage/StatementCache.h"
+#include "nsIThread.h"
+
+#include "nsLocalStorageCache.h"
 
 class DOMStorageImpl;
 class nsSessionStorageEntry;
 
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
-
 class nsDOMStoragePersistentDB : public nsDOMStorageBaseDB
 {
   typedef mozilla::storage::StatementCache<mozIStorageStatement> StatementCache;
+  typedef nsLocalStorageCache::FlushData FlushData;
 
 public:
   nsDOMStoragePersistentDB();
@@ -37,6 +38,13 @@ public:
    */
   void
   Close();
+
+  /**
+   * Indicates whether any data is cached that might need to be
+   * flushed or evicted.
+   */
+  bool
+  IsFlushTimerNeeded() const;
 
   /**
    * Retrieve a list of all the keys associated with a particular domain.
@@ -82,9 +90,10 @@ public:
             const nsAString& aKey);
 
   /**
-    * Remove all keys belonging to this storage.
-    */
-  nsresult ClearStorage(DOMStorageImpl* aStorage);
+   * Remove all keys belonging to this storage.
+   */
+  nsresult
+  ClearStorage(DOMStorageImpl* aStorage);
 
   /**
    * Removes all keys added by a given domain.
@@ -108,74 +117,141 @@ public:
   RemoveAllForApp(uint32_t aAppId, bool aOnlyBrowserElement);
 
   /**
-    * Returns usage for a storage using its GetQuotaDBKey() as a key.
-    */
+   * Returns usage for a storage using its GetQuotaDBKey() as a key.
+   */
   nsresult
   GetUsage(DOMStorageImpl* aStorage, int32_t *aUsage);
 
   /**
-    * Returns usage of the domain and optionaly by any subdomain.
-    */
+   * Returns usage of the domain and optionaly by any subdomain.
+   */
   nsresult
   GetUsage(const nsACString& aDomain, int32_t *aUsage);
 
   /**
    * Clears all in-memory data from private browsing mode
    */
-  nsresult ClearAllPrivateBrowsingData();
+  nsresult
+  ClearAllPrivateBrowsingData();
 
   /**
-   * We process INSERTs in a transaction because of performance.
-   * If there is currently no transaction in progress, start one.
+   * This is the top-level method called by timer & shutdown code.
+   *
+   * LocalStorage now flushes dirty items off the main thread to reduce
+   * main thread jank.
+   *
+   * When the flush timer fires, pointers to changed data are retrieved from
+   * nsLocalStorageCache on the main thread and are used to build an SQLite
+   * statement array with bound parameters that is then executed on a
+   * background thread. Only one flush operation is outstanding at once.
+   * After the flush operation completes, a notification task
+   * is enqueued on the main thread which updates the cache state.
+   *
+   * Cached scopes are evicted if they aren't dirty and haven't been used for
+   * the maximum idle time.
    */
-  nsresult EnsureInsertTransaction();
+  nsresult
+  FlushAndEvictFromCache(bool aMainThread);
 
   /**
-   * If there is an INSERT transaction in progress, commit it now.
+   * Executes SQL statements for flushing dirty data to disk.
    */
-  nsresult MaybeCommitInsertTransaction();
+  nsresult
+  Flush();
 
   /**
-   * Flushes all temporary tables based on time or forcibly during shutdown. 
+   * The notifier task calls this method to update cache state after a
+   * flush operation completes.
    */
-  nsresult FlushTemporaryTables(bool force);
+  void
+  HandleFlushComplete(bool aSucceeded);
 
-protected:
-  /**
-   * Ensures that a temporary table is correctly filled for the scope of
-   * the given storage.
-   */
-  nsresult EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage);
+private:
 
-  struct FlushTemporaryTableData {
-    nsDOMStoragePersistentDB* mDB;
-    bool mForce;
-    nsresult mRV;
-  };
-  static PLDHashOperator FlushTemporaryTable(nsCStringHashKey::KeyType aKey,
-                                             TimeStamp& aData,
-                                             void* aUserArg);       
-
-  nsCOMPtr<mozIStorageConnection> mConnection;
-  StatementCache mStatements;
-
-  nsCString mCachedOwner;
-  int32_t mCachedUsage;
-
-  // Maps ScopeDBKey to time of the temporary table load for that scope.
-  // If a record is present, the temp table has been loaded. If it is not
-  // present, the table has not yet been loaded or has alrady been flushed.
-  nsDataHashtable<nsCStringHashKey, TimeStamp> mTempTableLoads; 
-
-  friend class nsDOMStorageDBWrapper;
   friend class nsDOMStorageMemoryDB;
+
+  /**
+   * Sets the database's journal mode to WAL or TRUNCATE.
+   */
+  nsresult
+  SetJournalMode(bool aIsWal);
+
+  /**
+   * Ensures that the scope's keys are cached.
+   */
+  nsresult
+  EnsureScopeLoaded(DOMStorageImpl* aStorage);
+
+  /**
+   * Fetches the scope's data from the database.
+   */
+  nsresult
+  FetchScope(DOMStorageImpl* aStorage, nsScopeCache* aScopeCache);
+
+  /**
+   * Ensures that the quota usage information for the site is known.
+   *
+   * The current quota usage is calculated from the space occupied by
+   * the cached scopes + the size of the uncached scopes on disk.
+   * This method ensures that the size of the site's uncached scopes
+   * on disk is known.
+   */
+  nsresult
+  EnsureQuotaUsageLoaded(const nsACString& aQuotaKey);
+
+  /**
+   * Fetches the size of scopes matching aQuotaDBKey from the database.
+   */
+  nsresult
+  FetchQuotaUsage(const nsACString& aQuotaDBKey);
+
   nsresult
   GetUsageInternal(const nsACString& aQuotaDBKey, int32_t *aUsage);
 
-  // Compares aDomain with the mCachedOwner and returns false if changes
-  // in aDomain don't affect mCachedUsage.
-  bool DomainMaybeCached(const nsACString& aDomain);
+  /**
+   * Helper function for RemoveOwner and RemoveAllForApp.
+   */
+  nsresult
+  FetchMatchingScopeNames(const nsACString& aPattern);
 
+  nsresult
+  PrepareFlushStatements(const FlushData& aFlushData);
+
+  /**
+   * Gathers the dirty data from the cache, prepares SQL statements and
+   * updates state flags
+   */
+  nsresult
+  PrepareForFlush();
+
+  /**
+   * Removes non-dirty scopes that haven't been used in X seconds.
+   */
+  void
+  EvictUnusedScopes();
+
+  /**
+   * DB data structures
+   */
+  nsTArray<nsCOMPtr<mozIStorageStatement> > mFlushStatements;
+  nsTArray<nsCOMPtr<mozIStorageBindingParamsArray> > mFlushStatementParams;
+  StatementCache mStatements;
+  nsCOMPtr<mozIStorageConnection> mConnection;
+
+  /**
+   * Cache state data
+   */
+  nsLocalStorageCache mCache;
+  nsDataHashtable<nsCStringHashKey, int32_t> mQuotaUseByUncached;
+  // Set if the DB needs to be emptied on next flush
+  bool mWasRemoveAllCalled;
+  // Set if the DB is currently getting emptied in an async flush
+  bool mIsRemoveAllPending;
+  // Set if a flush operation has been enqueued in the async thread
+  bool mIsFlushPending;
+
+  // Helper thread for flushing
+  nsCOMPtr<nsIThread> mFlushThread;
 };
 
 #endif /* nsDOMStorageDB_h___ */

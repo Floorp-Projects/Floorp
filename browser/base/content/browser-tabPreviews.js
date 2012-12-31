@@ -448,7 +448,7 @@ var ctrlTab = {
             if (tabs.length > 2) {
               this.open();
             } else if (tabs.length == 2) {
-              let index = gBrowser.selectedTab == tabs[0] ? 1 : 0;
+              let index = tabs[0].selected ? 1 : 0;
               gBrowser.selectedTab = tabs[index];
             }
           }
@@ -488,7 +488,7 @@ var ctrlTab = {
       this.advanceFocus(false);
 
     // If the current tab is removed, another tab can steal our focus.
-    if (aTab == gBrowser.selectedTab && this.panel.state == "open") {
+    if (aTab.selected && this.panel.state == "open") {
       setTimeout(function (selected) {
         selected.focus();
       }, 0, this.selected);

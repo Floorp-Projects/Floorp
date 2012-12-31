@@ -135,6 +135,12 @@ std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
       case SETREMOTEDESC:
         statestr = "SETREMOTEDESC";
         break;
+      case UPDATELOCALDESC:
+        statestr = "UPDATELOCALDESC";
+        break;
+      case UPDATEREMOTEDESC:
+        statestr = "UPDATEREMOTEDESC";
+        break;
       case SETLOCALDESCERROR:
         statestr = "SETLOCALDESCERROR";
         break;
@@ -418,7 +424,7 @@ bool CC_SIPCCCallInfo::isVideoMuted()
 
 string CC_SIPCCCallInfo::getSDP()
 {
-	return CCAPI_CallInfo_getSDP(callinfo_ref);
+    return CCAPI_CallInfo_getSDP(callinfo_ref);
 }
 
 cc_int32_t CC_SIPCCCallInfo::getStatusCode()

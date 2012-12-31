@@ -14,14 +14,14 @@
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedTransformList.h"
 
 //--------------------- Patterns ------------------------
 
-typedef nsSVGStylableElement nsSVGPatternElementBase;
+typedef nsSVGElement nsSVGPatternElementBase;
 
 class nsSVGPatternElement : public nsSVGPatternElementBase,
                             public nsIDOMSVGPatternElement,

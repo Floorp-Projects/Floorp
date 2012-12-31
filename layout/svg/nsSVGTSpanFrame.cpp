@@ -126,7 +126,7 @@ nsSVGTSpanFrame::GetSubStringLength(uint32_t charnum, uint32_t nchars)
 }
 
 int32_t
-nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
+nsSVGTSpanFrame::GetCharNumAtPosition(mozilla::DOMSVGPoint *point)
 {
   return nsSVGTSpanFrameBase::GetCharNumAtPosition(point);
 }

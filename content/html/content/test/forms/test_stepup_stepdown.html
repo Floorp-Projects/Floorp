@@ -47,6 +47,7 @@ function checkAvailability()
     ["reset", false],
     ["button", false],
     ["number", true],
+    ["date", true],
     // The next types have not been implemented but will fallback to "text"
     // which has the same value.
     ["color", false],
@@ -55,7 +56,6 @@ function checkAvailability()
   var todoList =
   [
     ["datetime", true],
-    ["date", true],
     ["month", true],
     ["week", true],
     ["time", true],
@@ -107,12 +107,13 @@ function checkAvailability()
   }
 }
 
-function checkStepDownForNumber()
+function checkStepDown()
 {
-  // This testData is very similar to the one in checkStepUpForNumber
-  // with some changes relative to stepDown.
+  // This testData is very similar to the one in checkStepUp with some changes
+  // relative to stepDown.
   var testData = [
   /* Initial value | step | min | max | stepDown arg | final value | exception */
+  { type: 'number', data: [
     // Regular case.
     [ '1',   null,  null,  null,  null, '0',    false ],
     // Argument testing.
@@ -178,54 +179,124 @@ function checkStepDownForNumber()
     [ '0',  'aNy',  null,  null,  1,    null,   true ],
     // With @value = step base.
     [ '1',  '2',    null,  null,  null, '-1',   false ],
+  ]},
+  { type: 'date', data: [
+    // Regular case.
+    [ '2012-07-09',  null,  null,  null,  null, '2012-07-08',   false ],
+    // Argument testing.
+    [ '2012-07-09',  null,  null,  null,  1,    '2012-07-08',   false ],
+    [ '2012-07-09',  null,  null,  null,  5,    '2012-07-04',   false ],
+    [ '2012-07-09',  null,  null,  null,  -1,   '2012-07-10',   false ],
+    [ '2012-07-09',  null,  null,  null,  0,    '2012-07-09',   false ],
+    // Month/Year wrapping.
+    [ '2012-08-01',  null,  null,  null,  1,    '2012-07-31',   false ],
+    [ '1969-01-02',  null,  null,  null,  4,    '1968-12-29',   false ],
+    [ '1969-01-01',  null,  null,  null,  -365, '1970-01-01',   false ],
+    [ '2012-02-29',  null,  null,  null,  -1,   '2012-03-01',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '2012-01-02',  null,  null,  null,  1.1,  '2012-01-01',   false ],
+    [ '2012-01-02',  null,  null,  null,  1.9,  '2012-01-01',   false ],
+    // With step values.
+    [ '2012-01-03',  '0.5', null,  null,  null, '2012-01-02',   false ],
+    [ '2012-01-02',  '0.5', null,  null,  null, '2012-01-01',   false ],
+    [ '2012-01-01',  '2',   null,  null,  null, '2011-12-30',   false ],
+    [ '2012-01-02',  '0.25',null,  null,  4,    '2012-01-01',   false ],
+    [ '2012-01-15',  '1.1',  '2012-01-01', null,  1,    '2012-01-12',   false ],
+    [ '2012-01-12',  '1.1',  '2012-01-01', null,  2,    '2012-01-01',   false ],
+    [ '2012-01-23',  '1.1',  '2012-01-01', null,  10,   '2012-01-12',   false ],
+    [ '2012-01-23',  '1.1',  '2012-01-01', null,  11,   '2012-01-01',   false ],
+    [ '1968-01-12',  '1.1',  '1968-01-01', null,  8,    '1968-01-01',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2012-01-02',  '0',   null,  null,  null, '2012-01-01',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2012-01-02',  '-1',  null,  null,  null, '2012-01-01',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2012-01-02',  'foo', null,  null,  null, '2012-01-01',   false ],
+    // Min values testing.
+    [ '2012-01-03',  '1',    'foo',        null,  2,     '2012-01-01',  false ],
+    [ '2012-01-02',  '1',    '2012-01-01', null,  null,  '2012-01-01',  false ],
+    [ '2012-01-01',  '1',    '2012-01-01', null,  null,  '2012-01-01',  false ],
+    [ '2012-01-01',  '1',    '2012-01-10', null,  1,     '2012-01-01',  false ],
+    [ '2012-01-05',  '3',    '2012-01-01', null,  null,  '2012-01-04',  false ],
+    [ '1969-01-01',  '5',    '1969-01-01', '1969-01-02', null,  '1969-01-01',  false ],
+    // Max values testing.
+    [ '2012-01-02',  '1',    null,  'foo',         null,  '2012-01-01',  false ],
+    [ '2012-01-02',  null,   null,  '2012-01-05',  null,  '2012-01-01',  false ],
+    [ '2012-01-03',  null,   null,  '2012-01-03',  null,  '2012-01-02',  false ],
+    [ '2012-01-07',  null,   null,  '2012-01-04',  4,     '2012-01-03',  false ],
+    [ '2012-01-07',  '2',    null,  '2012-01-04',  3,     '2012-01-01',  false ],
+    // Step mismatch.
+    [ '2012-01-04',  '2',    '2012-01-01',  null,         null,  '2012-01-03',  false ],
+    [ '2012-01-06',  '2',    '2012-01-01',  null,         2,     '2012-01-03',  false ],
+    [ '2012-01-05',  '2',    '2012-01-04',  '2012-01-08', null,  '2012-01-04',  false ],
+    [ '1970-01-04',  '2',    null,          null,         null,  '1970-01-03',  false ],
+    [ '1970-01-09',  '3',    null,          null,         null,  '1970-01-07',  false ],
+    // Clamping.
+    [ '2012-05-01',  null,   null,          '2012-01-05', null,  '2012-01-05',  false ],
+    [ '1970-01-05',  '2',    '1970-01-02',  '1970-01-05', null,  '1970-01-04',  false ],
+    [ '1970-01-01',  '5',    '1970-01-02',  '1970-01-09', 10,    '1970-01-01',  false ],
+    [ '1970-01-07',  '5',    '1969-12-27',  '1970-01-06', 2,     '1970-01-01',  false ],
+    [ '1970-03-08',  '3',    '1970-02-01',  '1970-02-07', 15,    '1970-02-01',  false ],
+    [ '1970-01-10',  '3',    '1970-01-01',  '1970-01-06', 2,     '1970-01-04',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '',    false ],
+    // With step = 'any'.
+    [ '2012-01-01',  'any',  null,  null,  1,  null,  true ],
+    [ '2012-01-01',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2012-01-01',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2012-01-01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
   ];
 
-  for (var data of testData) {
-    var element = document.createElement("input");
-    element.type = 'number';
+  for (var test of testData) {
+    for (var data of test.data) {
+      var element = document.createElement("input");
+      element.type = test.type;
 
-    if (data[0] != null) {
-      element.setAttribute('value', data[0]);
-    }
-
-    if (data[1] != null) {
-      element.step = data[1];
-    }
-
-    if (data[2] != null) {
-      element.min = data[2];
-    }
-
-    if (data[3] != null) {
-      element.max = data[3];
-    }
-
-    var exceptionCaught = false;
-    try {
-      if (data[4] != null) {
-        element.stepDown(data[4]);
-      } else {
-        element.stepDown();
+      if (data[0] != null) {
+        element.setAttribute('value', data[0]);
       }
 
-      is(element.value, data[5], "The value should be " + data[5]);
-    } catch (e) {
-      exceptionCaught = true;
-      is(element.value, data[0], e.name + "The value should not have changed");
-      is(e.name, 'InvalidStateError',
-         "It should be a InvalidStateError exception.");
-    } finally {
-      is(exceptionCaught, data[6], "exception status should be " + data[6]);
+      if (data[1] != null) {
+        element.step = data[1];
+      }
+
+      if (data[2] != null) {
+        element.min = data[2];
+      }
+
+      if (data[3] != null) {
+        element.max = data[3];
+      }
+
+      var exceptionCaught = false;
+      try {
+        if (data[4] != null) {
+          element.stepDown(data[4]);
+        } else {
+          element.stepDown();
+        }
+
+        is(element.value, data[5], "The value should be " + data[5]);
+      } catch (e) {
+        exceptionCaught = true;
+        is(element.value, data[0], e.name + "The value should not have changed");
+        is(e.name, 'InvalidStateError',
+           "It should be a InvalidStateError exception.");
+      } finally {
+        is(exceptionCaught, data[6], "exception status should be " + data[6]);
+      }
     }
   }
 }
 
-function checkStepUpForNumber()
+function checkStepUp()
 {
-  // This testData is very similar to the one in checkStepDownForNumber
-  // with some changes relative to stepUp.
+  // This testData is very similar to the one in checkStepDown with some changes
+  // relative to stepUp.
   var testData = [
   /* Initial value | step | min | max | stepUp arg | final value | exception */
+  { type: 'number', data: [
     // Regular case.
     [ '1',   null,  null,  null,  null, '2',   false ],
     // Argument testing.
@@ -288,44 +359,116 @@ function checkStepUpForNumber()
     [ '0',  'aNy',  null,  null,  1,    null,  true ],
     // With @value = step base.
     [ '1',  '2',    null,  null,  null, '3',   false ],
+  ]},
+  { type: 'date', data: [
+    // Regular case.
+    [ '2012-07-09',  null,  null,  null,  null, '2012-07-10',   false ],
+    // Argument testing.
+    [ '2012-07-09',  null,  null,  null,  1,    '2012-07-10',   false ],
+    [ '2012-07-09',  null,  null,  null,  9,    '2012-07-18',   false ],
+    [ '2012-07-09',  null,  null,  null,  -1,   '2012-07-08',   false ],
+    [ '2012-07-09',  null,  null,  null,  0,    '2012-07-09',   false ],
+    // Month/Year wrapping.
+    [ '2012-07-31',  null,  null,  null,  1,    '2012-08-01',   false ],
+    [ '1968-12-29',  null,  null,  null,  4,    '1969-01-02',   false ],
+    [ '1970-01-01',  null,  null,  null,  -365, '1969-01-01',   false ],
+    [ '2012-03-01',  null,  null,  null,  -1,   '2012-02-29',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '2012-01-01',  null,  null,  null,  1.1,  '2012-01-02',   false ],
+    [ '2012-01-01',  null,  null,  null,  1.9,  '2012-01-02',   false ],
+    // With step values.
+    [ '2012-01-01',  '0.5',  null,         null,  null, '2012-01-02',   false ],
+    [ '2012-01-01',  '0.5',  null,         null,  null, '2012-01-02',   false ],
+    [ '2012-01-01',  '2',    null,         null,  null, '2012-01-03',   false ],
+    [ '2012-01-01',  '0.25', null,         null,  4,    '2012-01-02',   false ],
+    [ '2012-01-01',  '1.1',  '2012-01-01', null,  1,    '2012-01-12',   false ],
+    [ '2012-01-01',  '1.1',  '2012-01-01', null,  2,    '2012-01-12',   false ],
+    [ '2012-01-01',  '1.1',  '2012-01-01', null,  10,   '2012-01-12',   false ],
+    [ '2012-01-01',  '1.1',  '2012-01-01', null,  11,   '2012-01-23',   false ],
+    [ '1968-01-01',  '1.1',  '1968-01-01', null,  8,    '1968-01-12',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2012-01-01',  '0',   null,  null,  null, '2012-01-02',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2012-01-01',  '-1',  null,  null,  null, '2012-01-02',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2012-01-01',  'foo', null,  null,  null, '2012-01-02',   false ],
+    // Min values testing.
+    [ '2012-01-01',  '1',   'foo',         null,  null,  '2012-01-02',  false ],
+    [ '2012-01-01',  null,  '2011-12-01',  null,  null,  '2012-01-02',  false ],
+    [ '2012-01-01',  null,  '2012-01-02',  null,  null,  '2012-01-02',  false ],
+    [ '2012-01-01',  null,  '2012-01-01',  null,  null,  '2012-01-02',  false ],
+    [ '2012-01-01',  null,  '2012-01-04',  null,  4,     '2012-01-05',  false ],
+    [ '2012-01-01',  '2',   '2012-01-04',  null,  3,     '2012-01-06',  false ],
+    // Max values testing.
+    [ '2012-01-01',  '1',    null,  'foo',        2,     '2012-01-03',  false ],
+    [ '2012-01-01',  '1',    null,  '2012-01-10', 1,     '2012-01-02',  false ],
+    [ '2012-01-02',  null,   null,  '2012-01-01', null,  '2012-01-02',  false ],
+    [ '2012-01-02',  null,   null,  '2012-01-02', null,  '2012-01-02',  false ],
+    [ '2012-01-02',  null,   null,  '2012-01-02', null,  '2012-01-02',  false ],
+    [ '1969-01-02',  '5',    '1969-01-01',  '1969-01-02', null,  '1969-01-02',  false ],
+    // Step mismatch.
+    [ '2012-01-02',  '2',    '2012-01-01',  null,         null,  '2012-01-03',  false ],
+    [ '2012-01-02',  '2',    '2012-01-01',  null,         2,     '2012-01-05',  false ],
+    [ '2012-01-05',  '2',    '2012-01-01',  '2012-01-06', null,  '2012-01-05',  false ],
+    [ '1970-01-02',  '2',    null,          null,         null,  '1970-01-03',  false ],
+    [ '1970-01-05',  '3',    null,          null,         null,  '1970-01-07',  false ],
+    [ '1970-01-03',  '3',    null,          null,         null,  '1970-01-04',  false ],
+    [ '1970-01-03',  '3',    '1970-01-02',  null,         null,  '1970-01-05',  false ],
+    // Clamping.
+    [ '2012-01-01',  null,   '2012-01-31',  null,         null,  '2012-01-31',  false ],
+    [ '1970-01-02',  '2',    '1970-01-01',  '1970-01-04', null,  '1970-01-03',  false ],
+    [ '1970-01-01',  '5',    '1970-01-02',  '1970-01-09', 10,    '1970-01-07',  false ],
+    [ '1969-12-28',  '5',    '1969-12-29',  '1970-01-06', 3,     '1970-01-03',  false ],
+    [ '1970-01-01',  '3',    '1970-02-01',  '1970-02-07', 15,    '1970-02-07',  false ],
+    [ '1970-01-01',  '3',    '1970-01-01',  '1970-01-06', 2,     '1970-01-04',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '',    false ],
+    // With step = 'any'.
+    [ '2012-01-01',  'any',  null,  null,  1,  null,  true ],
+    [ '2012-01-01',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2012-01-01',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2012-01-01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
   ];
 
-  for (var data of testData) {
-    var element = document.createElement("input");
-    element.type = 'number';
+  for (var test of testData) {
+    for (var data of test.data) {
+      var element = document.createElement("input");
+      element.type = test.type;
 
-    if (data[0] != null) {
-      element.setAttribute('value', data[0]);
-    }
-
-    if (data[1] != null) {
-      element.step = data[1];
-    }
-
-    if (data[2] != null) {
-      element.min = data[2];
-    }
-
-    if (data[3] != null) {
-      element.max = data[3];
-    }
-
-    var exceptionCaught = false;
-    try {
-      if (data[4] != null) {
-        element.stepUp(data[4]);
-      } else {
-        element.stepUp();
+      if (data[0] != null) {
+        element.setAttribute('value', data[0]);
       }
 
-      is(element.value, data[5], "The value should be " + data[5]);
-    } catch (e) {
-      exceptionCaught = true;
-      is(element.value, data[0], e.name + "The value should not have changed");
-      is(e.name, 'InvalidStateError',
-         "It should be a InvalidStateError exception.");
-    } finally {
-      is(exceptionCaught, data[6], "exception status should be " + data[6]);
+      if (data[1] != null) {
+        element.step = data[1];
+      }
+
+      if (data[2] != null) {
+        element.min = data[2];
+      }
+
+      if (data[3] != null) {
+        element.max = data[3];
+      }
+
+      var exceptionCaught = false;
+      try {
+        if (data[4] != null) {
+          element.stepUp(data[4]);
+        } else {
+          element.stepUp();
+        }
+
+        is(element.value, data[5], "The value should be " + data[5]);
+      } catch (e) {
+        exceptionCaught = true;
+        is(element.value, data[0], e.name + "The value should not have changed");
+        is(e.name, 'InvalidStateError',
+           "It should be a InvalidStateError exception.");
+      } finally {
+        is(exceptionCaught, data[6], "exception status should be " + data[6]);
+      }
     }
   }
 }
@@ -335,8 +478,9 @@ SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function(
 
 checkPresence();
 checkAvailability();
-checkStepDownForNumber();
-checkStepUpForNumber();
+
+checkStepDown();
+checkStepUp();
 
 SimpleTest.finish();
 });

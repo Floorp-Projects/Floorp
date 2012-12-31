@@ -30,7 +30,6 @@ import @ANDROID_PACKAGE_NAME@.*;
 
 public class testAllPagesTab extends BaseTest {
     private static final String ABOUT_HOME_URL = "about:home";
-    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
     private static ListView listview = null;
 
     private String[] bookmarks = new String[] {
@@ -159,7 +158,7 @@ public class testAllPagesTab extends BaseTest {
                }
                return false;
             }
-        }, WAIT_FOR_CHILD_TIMEOUT);
+        }, MAX_WAIT_MS);
         return listview;
     }
 

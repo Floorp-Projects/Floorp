@@ -4,6 +4,7 @@
 
 #include "MediaEngine.h"
 #include "mozilla/Services.h"
+#include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"
 #include "nsGlobalWindow.h"
@@ -14,6 +15,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPtr.h"
 #include "prlog.h"
 
 namespace mozilla {
@@ -70,12 +72,11 @@ typedef enum {
   MEDIA_STOP
 } MediaOperation;
 
-// Generic class for running long media operations off the main thread, and
-// then (because nsDOMMediaStreams aren't threadsafe), re-sends itseld to
-// MainThread to release mStream.  This is part of the reason we use an
-// operation type - we can change it to repost the runnable to MainThread
-// to do operations with the nsDOMMediaStreams, while we can't assign or
-// copy a nsRefPtr to a nsDOMMediaStream
+class GetUserMediaCallbackMediaStreamListener;
+
+// Generic class for running long media operations like Start off the main
+// thread, and then (because nsDOMMediaStreams aren't threadsafe),
+// ProxyReleases mStream since it's cycle collected.
 class MediaOperationRunnable : public nsRunnable
 {
 public:
@@ -106,7 +107,9 @@ public:
     // refcounting and releasing
     if (mStream) {
       nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      NS_ProxyRelease(mainThread,mStream,false);
+      nsDOMMediaStream *stream;
+      mStream.forget(&stream);
+      NS_ProxyRelease(mainThread, stream, true);
     }
   }
 
@@ -168,6 +171,10 @@ public:
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
         break;
+
+      default:
+        MOZ_ASSERT(false,"invalid MediaManager operation");
+        break;
     }
     return NS_OK;
   }
@@ -197,6 +204,18 @@ public:
     , mVideoSource(aVideoSource)
     , mStream(aStream) {}
 
+  ~GetUserMediaCallbackMediaStreamListener()
+  {
+    // In theory this could be released from the MediaStreamGraph thread (RemoveListener)
+    if (mStream) {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      nsDOMMediaStream *stream;
+      mStream.forget(&stream);
+      // Releases directly if on MainThread already
+      NS_ProxyRelease(mainThread, stream, false);
+    }
+  }
+
   void
   Invalidate()
   {
@@ -205,13 +224,26 @@ public:
     // We can't take a chance on blocking here, so proxy this to another
     // thread.
     // XXX FIX! I'm cheating and passing a raw pointer to the sourcestream
-    // which is valid as long as the mStream pointer here is.  Need a better solution.
-    runnable = new MediaOperationRunnable(MEDIA_STOP, 
+    // which is valid as long as the mStream pointer here is.
+    // Solutions (see bug 825235):
+    // a) if on MainThread, pass mStream and let it addref
+    //    (MediaOperation will need to ProxyRelease however)
+    // b) if on MediaStreamGraph thread, dispatch a runnable to MainThread
+    //    to call Invalidate() (with a strong ref to this listener)
+    runnable = new MediaOperationRunnable(MEDIA_STOP,
                                           mStream->GetStream()->AsSourceStream(),
                                           mAudioSource, mVideoSource);
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
     return;
+  }
+
+  void
+  Remove()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    // Caller holds strong reference to us, so no death grip required
+    mStream->GetStream()->RemoveListener(this);
   }
 
   // Proxy NotifyPull() to sources
@@ -232,6 +264,7 @@ public:
   NotifyFinished(MediaStreamGraph* aGraph)
   {
     Invalidate();
+    // XXX right now this calls Finish, which isn't ideal but doesn't hurt
   }
 
 private:
@@ -272,9 +305,12 @@ private:
   nsRefPtr<MediaEngineSource> mSource;
 };
 
-class MediaManager MOZ_FINAL : public nsIObserver
+class MediaManager MOZ_FINAL : public nsIMediaManagerService,
+                               public nsIObserver
 {
 public:
+  static already_AddRefed<MediaManager> GetInstance();
+
   static MediaManager* Get() {
     if (!sSingleton) {
       sSingleton = new MediaManager();
@@ -296,6 +332,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEDIAMANAGERSERVICE
 
   MediaEngine* GetBackend();
   StreamListeners *GetWindowListeners(uint64_t aWindowId) {
@@ -345,7 +382,7 @@ private:
   // protected with mMutex:
   MediaEngine* mBackend;
 
-  static nsRefPtr<MediaManager> sSingleton;
+  static StaticRefPtr<MediaManager> sSingleton;
 };
 
 } // namespace mozilla

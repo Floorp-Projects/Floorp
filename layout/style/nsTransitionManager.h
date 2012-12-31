@@ -24,7 +24,9 @@ struct ElementDependentRuleProcessorData;
 
 struct ElementPropertyTransition
 {
-  ElementPropertyTransition() {}
+  ElementPropertyTransition() 
+    : mIsRunningOnCompositor(false)
+  {}
 
   nsCSSProperty mProperty;
   nsStyleAnimation::Value mStartValue, mEndValue;
@@ -50,6 +52,10 @@ struct ElementPropertyTransition
   // in again when the transition is back to 2px, the mReversePortion
   // for the third transition (from 0px/2px to 10px) will be 0.8.
   double mReversePortion;
+  // true when the transition is running on the compositor. In particular,
+  // mIsRunningOnCompositor will be false if the transition has a delay and we
+  // are not yet at mStartTime, so there is no animation on the layer.
+  bool mIsRunningOnCompositor;
 
   // Compute the portion of the *value* space that we should be through
   // at the given time.  (The input to the transition timing function

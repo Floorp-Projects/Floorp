@@ -21,7 +21,7 @@ function a(s) {
 	var r;
 	try { r = frames[0].document.body; }
 	catch (e) { r = e; }
-        is(r instanceof HTMLBodyElement, true,
+        is(r instanceof frames[0].HTMLBodyElement, true,
            "Can't get body" + s);
 }
 var p = 0;

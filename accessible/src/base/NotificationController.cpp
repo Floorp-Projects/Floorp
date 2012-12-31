@@ -9,7 +9,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "DocAccessible.h"
+#include "DocAccessible-inl.h"
 #include "nsEventShell.h"
 #include "FocusManager.h"
 #include "Role.h"
@@ -212,6 +212,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     NS_ASSERTION(mContentInsertions.Length() == 0,
                  "Pending content insertions while initial accessible tree isn't created!");
   }
+
+  // Initialize scroll support if needed.
+  if (!(mDocument->mDocFlags & DocAccessible::eScrollInitialized))
+    mDocument->AddScrollListener();
 
   // Process content inserted notifications to update the tree. Process other
   // notifications like DOM events and then flush event queue. If any new

@@ -1544,8 +1544,8 @@ var NativeWindow = {
         this._target = null;
         BrowserEventHandler._cancelTapHighlight();
 
-        if (SelectionHandler.canSelect(rootElement))
-          SelectionHandler.startSelection(rootElement, aX, aY);
+        if (SelectionHandler.canSelect(target))
+          SelectionHandler.startSelection(target, aX, aY);
       }
     },
 
@@ -1562,7 +1562,7 @@ var NativeWindow = {
       let node = popupNode;
       let title ="";
       while(node && !title) {
-        if (node.hasAttribute("title")) {
+        if (node.hasAttribute && node.hasAttribute("title")) {
           title = node.getAttribute("title")
         } else if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
                 (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {

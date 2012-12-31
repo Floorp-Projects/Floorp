@@ -362,6 +362,9 @@ Toolbox.prototype = {
     radio.id = "toolbox-tab-" + id;
     radio.setAttribute("toolid", id);
     radio.setAttribute("tooltiptext", toolDefinition.tooltip);
+    if (toolDefinition.icon) {
+      radio.setAttribute("src", toolDefinition.icon);
+    }
 
     let ordinal = (typeof toolDefinition.ordinal == "number") ?
                   toolDefinition.ordinal : MAX_ORDINAL;
