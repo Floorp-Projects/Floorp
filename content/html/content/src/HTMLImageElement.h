@@ -10,6 +10,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIJSNativeInitializer.h"
+#include "imgRequestProxy.h"
 
 namespace mozilla {
 namespace dom {
@@ -87,10 +88,91 @@ public:
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  bool IsMap()
+  {
+    return GetBoolAttr(nsGkAtoms::ismap);
+  }
+  void SetIsMap(bool aIsMap, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::ismap, aIsMap, aError);
+  }
+  uint32_t Width()
+  {
+    return GetWidthHeightForImage(mCurrentRequest).width;
+  }
+  void SetWidth(uint32_t aWidth, ErrorResult& aError)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::width, aWidth, aError);
+  }
+  uint32_t Height()
+  {
+    return GetWidthHeightForImage(mCurrentRequest).height;
+  }
+  void SetHeight(uint32_t aHeight, ErrorResult& aError)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::height, aHeight, aError);
+  }
+  uint32_t NaturalWidth();
+  uint32_t NaturalHeight();
+  bool Complete();
+  int32_t Hspace()
+  {
+    return GetIntAttr(nsGkAtoms::hspace, 0);
+  }
+  void SetHspace(int32_t aHspace, ErrorResult& aError)
+  {
+    SetHTMLIntAttr(nsGkAtoms::hspace, aHspace, aError);
+  }
+  int32_t Vspace()
+  {
+    return GetIntAttr(nsGkAtoms::vspace, 0);
+  }
+  void SetVspace(int32_t aVspace, ErrorResult& aError)
+  {
+    SetHTMLIntAttr(nsGkAtoms::vspace, aVspace, aError);
+  }
+
+  // The XPCOM versions of the following getters work for Web IDL bindings as well
+  void SetAlt(const nsAString& aAlt, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
+  }
+  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
+  }
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
+  }
+  void SetUseMap(const nsAString& aUseMap, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::usemap, aUseMap, aError);
+  }
+  void SetName(const nsAString& aName, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aError);
+  }
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+  void SetLongDesc(const nsAString& aLongDesc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::longdesc, aLongDesc, aError);
+  }
+  void SetBorder(const nsAString& aBorder, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::border, aBorder, aError);
+  }
+
 protected:
   nsIntPoint GetXY();
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
