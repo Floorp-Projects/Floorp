@@ -168,7 +168,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Stop()
+MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 {
   if (mState != kStarted) {
     return NS_ERROR_FAILURE;
@@ -180,8 +180,8 @@ MediaEngineDefaultVideoSource::Stop()
   mTimer->Cancel();
   mTimer = NULL;
 
-  mSource->EndTrack(mTrackID);
-  mSource->Finish();
+  aSource->EndTrack(aID);
+  aSource->Finish();
 
   mState = kStopped;
   return NS_OK;
@@ -353,7 +353,7 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Stop()
+MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
 {
   if (mState != kStarted) {
     return NS_ERROR_FAILURE;
@@ -365,8 +365,8 @@ MediaEngineDefaultAudioSource::Stop()
   mTimer->Cancel();
   mTimer = NULL;
 
-  mSource->EndTrack(mTrackID);
-  mSource->Finish();
+  aSource->EndTrack(aID);
+  aSource->Finish();
 
   mState = kStopped;
   return NS_OK;

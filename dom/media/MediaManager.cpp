@@ -670,22 +670,18 @@ public:
       new nsTArray<nsCOMPtr<nsIMediaDevice> >;
 
     /**
-     * We only display available devices in the UI for now. We can easily
-     * change this later, when we implement a more sophisticated UI that
-     * lets the user revoke a device currently held by another tab (or
-     * we decide to provide a stream from a device already allocated).
+     * We're allowing multiple tabs to access the same camera for parity
+     * with Chrome.  See bug 811757 for some of the issues surrounding
+     * this decision.  To disallow, we'd filter by IsAvailable() as we used
+     * to.
      */
     for (i = 0; i < videoCount; i++) {
       MediaEngineVideoSource *vSource = videoSources[i];
-      if (vSource->IsAvailable()) {
-        devices->AppendElement(new MediaDevice(vSource));
-      }
+      devices->AppendElement(new MediaDevice(vSource));
     }
     for (i = 0; i < audioCount; i++) {
       MediaEngineAudioSource *aSource = audioSources[i];
-      if (aSource->IsAvailable()) {
-        devices->AppendElement(new MediaDevice(aSource));
-      }
+      devices->AppendElement(new MediaDevice(aSource));
     }
 
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(
