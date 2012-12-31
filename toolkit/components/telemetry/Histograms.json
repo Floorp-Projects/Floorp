@@ -28,6 +28,20 @@
     "n_buckets": 50,
     "description": "Time spent on one cycle collection (ms)"
   },
+  "CYCLE_COLLECTOR_FULL": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Full pause time for one cycle collection, including preparation (ms)"
+  },
+  "CYCLE_COLLECTOR_FINISH_IGC": {
+    "kind": "boolean",
+    "description": "Cycle collection finished an incremental GC"
+  },
+  "CYCLE_COLLECTOR_SYNC_SKIPPABLE": {
+    "kind": "boolean",
+    "description": "Cycle collection synchronously ran forget skippable"
+  },
   "CYCLE_COLLECTOR_VISITED_REF_COUNTED": {
     "kind": "exponential",
     "high": "300000",

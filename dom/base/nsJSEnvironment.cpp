@@ -3094,6 +3094,14 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless)
   ++sForgetSkippableBeforeCC;
 }
 
+MOZ_ALWAYS_INLINE
+static uint32_t
+TimeBetween(PRTime start, PRTime end)
+{
+  MOZ_ASSERT(end >= start);
+  return (uint32_t)(end - start) / PR_USEC_PER_MSEC;
+}
+
 //static
 void
 nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
@@ -3104,29 +3112,40 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     return;
   }
 
-  FinishAnyIncrementalGC();
-
-  SAMPLE_LABEL("GC", "CycleCollectNow");
-
-  KillCCTimer();
+  SAMPLE_LABEL("CC", "CycleCollectNow");
 
   PRTime start = PR_Now();
 
-  uint32_t suspected = nsCycleCollector_suspectedCount();
+  // Before we begin the cycle collection, make sure there is no active GC.
+  bool finishedIGC = sCCLockedOut;
+  FinishAnyIncrementalGC();
+  PRTime endGCTime = PR_Now();
+  uint32_t gcDuration = TimeBetween(start, endGCTime);
 
-  // nsCycleCollector_forgetSkippable may mark some gray js to black.
+  KillCCTimer();
+
+  uint32_t suspected = nsCycleCollector_suspectedCount();
+  bool ranSyncForgetSkippable = false;
+
+  // Run forgetSkippable synchronously to reduce the size of the CC graph. This
+  // is particularly useful if we recently finished a GC.
   if (sCleanupsSinceLastGC < 2 && aExtraForgetSkippableCalls >= 0) {
     while (sCleanupsSinceLastGC < 2) {
       FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
+      ranSyncForgetSkippable = true;
     }
   }
 
   for (int32_t i = 0; i < aExtraForgetSkippableCalls; ++i) {
     FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
+    ranSyncForgetSkippable = true;
   }
 
-  bool mergingCC = DoMergingCC(aForced);
+  PRTime endSkippableTime = PR_Now();
+  uint32_t skippableDuration = TimeBetween(endGCTime, endSkippableTime);
 
+  // Prepare to actually run the CC.
+  bool mergingCC = DoMergingCC(aForced);
   nsCycleCollectorResults ccResults;
   nsCycleCollector_collect(mergingCC, &ccResults, aListener);
   sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
@@ -3137,13 +3156,19 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     PokeGC(js::gcreason::CC_WAITING);
   }
 
-  PRTime now = PR_Now();
+  PRTime endCCTime = PR_Now();
+
+  // Log information about the CC via telemetry, JSON and the console.
+  uint32_t ccNowDuration = TimeBetween(start, endCCTime);
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FINISH_IGC, finishedIGC);
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SYNC_SKIPPABLE, ranSyncForgetSkippable);
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL, ccNowDuration);
 
   if (sLastCCEndTime) {
     uint32_t timeBetween = (uint32_t)(start - sLastCCEndTime) / PR_USEC_PER_SEC;
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN, timeBetween);
   }
-  sLastCCEndTime = now;
+  sLastCCEndTime = endCCTime;
 
   Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC);
@@ -3167,10 +3192,10 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
       NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
-      NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, removed: %lu"));
+      NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, sync: %lu ms, removed: %lu"));
     nsString msg;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
-                                        (now - start) / PR_USEC_PER_MSEC, suspected,
+                                        ccNowDuration, suspected,
                                         ccResults.mVisitedRefCounted, ccResults.mVisitedGCed, mergeMsg.get(),
                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
                                         sCCollectedWaitingForGC, gcMsg.get(),
@@ -3180,7 +3205,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
                                         (sTotalForgetSkippableTime / cleanups) /
                                           PR_USEC_PER_MSEC,
                                         sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        sRemovedPurples));
+                                        skippableDuration, sRemovedPurples));
     nsCOMPtr<nsIConsoleService> cs =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (cs) {
@@ -3192,6 +3217,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
        NS_LL("{ \"timestamp\": %llu, ")
          NS_LL("\"duration\": %llu, ")
+         NS_LL("\"finish_gc_duration\": %llu, ")
+         NS_LL("\"sync_skippable_duration\": %llu, ")
          NS_LL("\"suspected\": %lu, ")
          NS_LL("\"visited\": { ")
              NS_LL("\"RCed\": %lu, ")
@@ -3210,8 +3237,9 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
              NS_LL("\"removed\": %lu } ")
        NS_LL("}"));
     nsString json;
-    json.Adopt(nsTextFormatter::smprintf(kJSONFmt.get(),
-                                         now, (now - start) / PR_USEC_PER_MSEC, suspected,
+    json.Adopt(nsTextFormatter::smprintf(kJSONFmt.get(), endCCTime,
+                                         ccNowDuration, gcDuration, skippableDuration,
+                                         suspected,
                                          ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
                                          ccResults.mFreedRefCounted, ccResults.mFreedGCed,
                                          sCCollectedWaitingForGC,
@@ -3228,6 +3256,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       observerService->NotifyObservers(nullptr, "cycle-collection-statistics", json.get());
     }
   }
+
+  // Update global state to indicate we have just run a cycle collection.
   sMinForgetSkippableTime = UINT32_MAX;
   sMaxForgetSkippableTime = 0;
   sTotalForgetSkippableTime = 0;
