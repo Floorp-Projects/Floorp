@@ -191,10 +191,30 @@ MacroAssemblerX64::handleException()
     passABIArg(rax);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
 
-    // Load the error value, load the new stack pointer, and return.
+    Label catch_;
+    Label entryFrame;
+
+    branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
+             Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
+             Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+
+    breakpoint(); // Invalid kind.
+
+    // No exception handler. Load the error value, load the new stack pointer
+    // and return from the entry frame.
+    bind(&entryFrame);
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
     ret();
+
+    // If we found a catch handler, this must be a baseline frame. Restore state
+    // and jump to the catch block.
+    bind(&catch_);
+    movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
+    movq(Operand(rsp, offsetof(ResumeFromException, basePointer)), rbp);
+    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    jmp(Operand(rax));
 }
 
 Assembler::Condition

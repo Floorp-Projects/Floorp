@@ -30,6 +30,8 @@ class BaselineCompilerShared
     ICStubSpace stubSpace_;
     js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
 
+    js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
+
     // Labels for the 'movWithPatch' for loading IC entry pointers in
     // the generated IC-calling code in the main jitcode.  These need
     // to be patched with the actual icEntry offsets after the BaselineScript
@@ -72,6 +74,18 @@ class BaselineCompilerShared
 
     JSFunction *function() const {
         return script->function();
+    }
+
+    bool addPCMappingEntry() {
+        frame.assertSyncedStack();
+
+        masm.flushBuffer();
+
+        PCMappingEntry entry;
+        entry.pcOffset = pc - script->code;
+        entry.nativeOffset = masm.currentOffset();
+
+        return pcMappingEntries_.append(entry);
     }
 
     template <typename T>

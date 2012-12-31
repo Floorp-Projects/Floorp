@@ -243,7 +243,13 @@ class FrameSizeClass
 // Data needed to recover from an exception.
 struct ResumeFromException
 {
-    void *stackPointer;
+    static const uint32_t RESUME_ENTRY_FRAME = 0;
+    static const uint32_t RESUME_CATCH = 1;
+
+    uint8_t *framePointer;
+    uint8_t *stackPointer;
+    uint8_t *target;
+    uint32_t kind;
 };
 
 void HandleException(ResumeFromException *rfe);

@@ -242,14 +242,19 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
 static const unsigned DataAlignment = sizeof(uintptr_t);
 
 BaselineScript *
-BaselineScript::New(JSContext *cx, size_t icEntries)
+BaselineScript::New(JSContext *cx, size_t icEntries, size_t pcMappingEntries)
 {
     size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
 
     size_t icEntriesSize = icEntries * sizeof(ICEntry);
-    size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
+    size_t pcMappingEntriesSize = pcMappingEntries * sizeof(PCMappingEntry);
 
-    size_t allocBytes = paddedBaselineScriptSize + paddedICEntriesSize;
+    size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
+    size_t paddedPCMappingEntriesSize = AlignBytes(pcMappingEntriesSize, DataAlignment);
+
+    size_t allocBytes = paddedBaselineScriptSize +
+        paddedICEntriesSize +
+        paddedPCMappingEntriesSize;
 
     uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
     if (!buffer)
@@ -258,10 +263,15 @@ BaselineScript::New(JSContext *cx, size_t icEntries)
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
     new (script) BaselineScript();
 
-    uint8_t *icEntryStart = buffer + paddedBaselineScriptSize;
+    size_t offsetCursor = paddedBaselineScriptSize;
 
-    script->icEntriesOffset_ = (uint32_t) (icEntryStart - buffer);
+    script->icEntriesOffset_ = offsetCursor;
     script->icEntries_ = icEntries;
+    offsetCursor += paddedICEntriesSize;
+
+    script->pcMappingOffset_ = offsetCursor;
+    script->pcMappingEntries_ = pcMappingEntries;
+    offsetCursor += paddedPCMappingEntriesSize;
 
     return script;
 }
@@ -342,4 +352,35 @@ void
 BaselineScript::adoptFallbackStubs(ICStubSpace *stubSpace)
 {
     fallbackStubSpace_.adoptFrom(stubSpace);
+}
+
+PCMappingEntry &
+BaselineScript::pcMappingEntry(size_t index)
+{
+    JS_ASSERT(index < numPCMappingEntries());
+    return pcMappingEntryList()[index];
+}
+
+void
+BaselineScript::copyPCMappingEntries(const PCMappingEntry *entries)
+{
+    for (uint32_t i = 0; i < numPCMappingEntries(); i++)
+        pcMappingEntry(i) = entries[i];
+}
+
+uint8_t *
+BaselineScript::nativeCodeForPC(HandleScript script, jsbytecode *pc)
+{
+    JS_ASSERT(script->baseline == this);
+
+    uint32_t pcOffset = pc - script->code;
+
+    for (size_t i = 0; i < numPCMappingEntries(); i++) {
+        PCMappingEntry &entry = pcMappingEntry(i);
+        if (entry.pcOffset == pcOffset)
+            return method_->raw() + entry.nativeOffset;
+    }
+
+    JS_NOT_REACHED("Invalid pc");
+    return NULL;
 }
