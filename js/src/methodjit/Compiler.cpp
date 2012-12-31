@@ -5176,7 +5176,8 @@ mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType,
     /* Check if this is a property access we can make a loop invariant entry for. */
     if (loop && loop->generatingInvariants() && !hasTypeBarriers(PC)) {
         CrossSSAValue topv(a->inlineIndex, analysis->poppedValue(PC, 0));
-        if (FrameEntry *fe = loop->invariantProperty(topv, NameToId(name))) {
+        RootedId id(cx, NameToId(name));
+        if (FrameEntry *fe = loop->invariantProperty(topv, id)) {
             if (knownType != JSVAL_TYPE_UNKNOWN && knownType != JSVAL_TYPE_DOUBLE)
                 frame.learnType(fe, knownType, false);
             frame.pop();
@@ -5200,13 +5201,14 @@ mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType,
      * in a particular inline slot. Get the property directly in this case,
      * without using an IC.
      */
-    jsid id = NameToId(name);
+    RootedId id(cx, NameToId(name));
     types::TypeSet *types = frame.extra(top).types;
     if (types && !types->unknownObject() &&
         types->getObjectCount() == 1 &&
         types->getTypeObject(0) != NULL &&
         !types->getTypeObject(0)->unknownProperties() &&
-        id == types::MakeTypeId(cx, id)) {
+        id == types::IdToTypeId(id))
+    {
         JS_ASSERT(!forPrototype);
         types::TypeObject *object = types->getTypeObject(0);
         types::HeapTypeSet *propertyTypes = object->getProperty(cx, id, false);
@@ -5481,7 +5483,7 @@ mjit::Compiler::jsop_getprop_dispatch(HandlePropertyName name)
         return false;
 
     RootedId id(cx, NameToId(name));
-    if (id.get() != types::MakeTypeId(cx, id))
+    if (id.get() != types::IdToTypeId(id))
         return false;
 
     types::TypeSet *pushedTypes = pushedTypeSet(0);
@@ -5629,9 +5631,9 @@ mjit::Compiler::jsop_setprop(HandlePropertyName name, bool popGuaranteed)
      * Set the property directly if we are accessing a known object which
      * always has the property in a particular inline slot.
      */
-    jsid id = NameToId(name);
+    RootedId id(cx, NameToId(name));
     types::StackTypeSet *types = frame.extra(lhs).types;
-    if (JSOp(*PC) == JSOP_SETPROP && id == types::MakeTypeId(cx, id) &&
+    if (JSOp(*PC) == JSOP_SETPROP && id == types::IdToTypeId(id) &&
         types && !types->unknownObject() &&
         types->getObjectCount() == 1 &&
         types->getTypeObject(0) != NULL &&
@@ -6498,9 +6500,9 @@ mjit::Compiler::jsop_getgname(uint32_t index)
         }
     }
 
-    jsid id = NameToId(name);
+    RootedId id(cx, NameToId(name));
     JSValueType type = knownPushedType(0);
-    if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::IdToTypeId(id) &&
         !globalObj->getType(cx)->unknownProperties()) {
         types::HeapTypeSet *propertyTypes = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!propertyTypes)
@@ -6511,7 +6513,8 @@ mjit::Compiler::jsop_getgname(uint32_t index)
          * then bake its address into the jitcode and guard against future
          * reallocation of the global object's slots.
          */
-        UnrootedShape shape = globalObj->nativeLookup(cx, NameToId(name));
+        RootedId id(cx, NameToId(name));
+        UnrootedShape shape = globalObj->nativeLookup(cx, id);
         if (shape && shape->hasDefaultGetter() && shape->hasSlot()) {
             HeapSlot *value = &globalObj->getSlotRef(DropUnrooted(shape)->slot());
             if (!value->isUndefined() &&
@@ -6625,8 +6628,8 @@ mjit::Compiler::jsop_setgname(HandlePropertyName name, bool popGuaranteed)
         return true;
     }
 
-    jsid id = NameToId(name);
-    if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
+    RootedId id(cx, NameToId(name));
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::IdToTypeId(id) &&
         !globalObj->getType(cx)->unknownProperties()) {
         /*
          * Note: object branding is disabled when inference is enabled. With
@@ -6637,10 +6640,12 @@ mjit::Compiler::jsop_setgname(HandlePropertyName name, bool popGuaranteed)
         types::HeapTypeSet *types = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!types)
             return false;
-        UnrootedShape shape = globalObj->nativeLookup(cx, NameToId(name));
+        RootedId id(cx, NameToId(name));
+        RootedShape shape(cx, globalObj->nativeLookup(cx, id));
         if (shape && shape->hasDefaultSetter() &&
             shape->writable() && shape->hasSlot() &&
-            !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
+            !types->isOwnProperty(cx, globalObj->getType(cx), true))
+        {
             watchGlobalReallocation();
             HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             RegisterID reg = frame.allocReg();
@@ -7393,7 +7398,7 @@ mjit::Compiler::constructThis()
         }
 
         Rooted<jsid> id(cx, NameToId(cx->names().classPrototype));
-        types::HeapTypeSet *protoTypes = fun->getType(cx)->getProperty(cx, id, false);
+        types::HeapTypeSet *protoTypes = fun->getType(cx)->getProperty(cx, HandleId(id), false);
 
         JSObject *proto = protoTypes->getSingleton(cx);
         if (!proto)

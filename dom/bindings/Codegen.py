@@ -6920,7 +6920,7 @@ class CGBindingRoot(CGThing):
             components = nativeType.split('::')
             className = components[-1]
             # JSObject is a struct, not a class
-            declare = CGClassForwardDeclare(className, className == "JSObject")
+            declare = CGClassForwardDeclare(className)
             if len(components) > 1:
                 declare = CGNamespace.build(components[:-1],
                                             CGWrapper(declare, declarePre='\n',
