@@ -485,7 +485,7 @@ nsresult MediaPipelineTransmit::Init() {
 nsresult MediaPipelineTransmit::TransportReady(TransportFlow *flow) {
   // Call base ready function.
   MediaPipeline::TransportReady(flow);
-  
+
   if (flow == rtp_transport_) {
     // TODO(ekr@rtfm.com): Move onto MSG thread.
     listener_->SetActive(true);
@@ -605,7 +605,7 @@ NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
   MOZ_MTLOG(PR_LOG_DEBUG, "MediaPipeline::NotifyQueuedTrackChanges()");
 
   if (!active_) {
-    MOZ_MTLOG(PR_LOG_DEBUG, "Discarding packets because transport not ready");    
+    MOZ_MTLOG(PR_LOG_DEBUG, "Discarding packets because transport not ready");
     return;
   }
 
@@ -872,4 +872,3 @@ void MediaPipelineReceiveVideo::PipelineRenderer::RenderVideoFrame(
 
 
 }  // end namespace
-
