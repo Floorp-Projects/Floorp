@@ -397,6 +397,7 @@ parent:
 
     AddGeolocationListener();
     RemoveGeolocationListener();
+    SetGeolocationHigherAccuracy(bool enable);
 
     ConsoleMessage(nsString message);
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,
