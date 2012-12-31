@@ -50,7 +50,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun)
     uint32_t frameSize = BaselineFrame::FramePointerOffset + BaselineFrame::Size() +
         (frame.nlocals() + frame.stackDepth()) * sizeof(Value);
 
-    masm.store32(Imm32(frameSize), Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.storePtr(ImmWord(frameSize), Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     uint32_t descriptor = MakeFrameDescriptor(frameSize + argSize, IonFrame_BaselineJS);
     masm.push(Imm32(descriptor));
