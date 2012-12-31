@@ -272,8 +272,8 @@ TypeFlagPrimitive(TypeFlags flags)
  * maintains the constraint that if two different jsids map to the same property
  * in JS (e.g. 3 and "3"), they have the same type representation.
  */
-inline jsid
-MakeTypeId(JSContext *cx, jsid id)
+inline RawId
+IdToTypeId(RawId id)
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(!JSID_IS_EMPTY(id));
@@ -309,7 +309,7 @@ const char * TypeIdStringImpl(jsid id);
 
 /* Convert an id for printing during debug. */
 static inline const char *
-TypeIdString(jsid id)
+TypeIdString(RawId id)
 {
 #ifdef DEBUG
     return TypeIdStringImpl(id);
@@ -552,14 +552,14 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 }
 
 inline bool
-TrackPropertyTypes(JSContext *cx, HandleObject obj, jsid id)
+TrackPropertyTypes(JSContext *cx, UnrootedObject obj, RawId id)
 {
     AutoAssertNoGC nogc;
 
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
 
-    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(cx, id))
+    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(id, cx))
         return false;
 
     return true;
@@ -567,21 +567,21 @@ TrackPropertyTypes(JSContext *cx, HandleObject obj, jsid id)
 
 /* Add a possible type for a property of obj. */
 inline void
-AddTypePropertyId(JSContext *cx, HandleObject obj, jsid id, Type type)
+AddTypePropertyId(JSContext *cx, HandleObject obj, RawId id, Type type)
 {
     AssertCanGC();
     if (cx->typeInferenceEnabled())
-        id = MakeTypeId(cx, id);
+        id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
         obj->type()->addPropertyType(cx, id, type);
 }
 
 inline void
-AddTypePropertyId(JSContext *cx, HandleObject obj, jsid id, const Value &value)
+AddTypePropertyId(JSContext *cx, HandleObject obj, RawId id, const Value &value)
 {
     AssertCanGC();
     if (cx->typeInferenceEnabled())
-        id = MakeTypeId(cx, id);
+        id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
         obj->type()->addPropertyType(cx, id, value);
 }
@@ -633,10 +633,10 @@ MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj,
  * have a getter/setter.
  */
 inline void
-MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, jsid id)
+MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, RawId id)
 {
     if (cx->typeInferenceEnabled())
-        id = MakeTypeId(cx, id);
+        id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
         obj->type()->markPropertyConfigured(cx, id);
 }
@@ -1535,11 +1535,13 @@ TypeObject::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet *
-TypeObject::getProperty(JSContext *cx, jsid id, bool own)
+TypeObject::getProperty(JSContext *cx, RawId id, bool own)
 {
     JS_ASSERT(cx->compartment->activeAnalysis);
+    AssertCanGC();
+
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
-    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
+    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());
 
     uint32_t propertyCount = basePropertyCount();
@@ -1557,6 +1559,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool own)
             propertySet = NULL;
             return NULL;
         }
+        AutoAssertNoGC nogc;
         if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
             markUnknown(cx);
 
@@ -1583,14 +1586,14 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool own)
 }
 
 inline HeapTypeSet *
-TypeObject::maybeGetProperty(JSContext *cx, jsid id)
+TypeObject::maybeGetProperty(RawId id, JSContext *cx)
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
-    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
+    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());
 
-    Property *prop = HashSetLookup<jsid,Property,Property>
+    Property *prop = HashSetLookup<RawId,Property,Property>
         (propertySet, basePropertyCount(), id);
 
     return prop ? &prop->types : NULL;

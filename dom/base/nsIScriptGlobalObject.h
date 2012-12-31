@@ -17,7 +17,7 @@ class nsIScriptGlobalObjectOwner;
 class nsIArray;
 class nsScriptErrorEvent;
 class nsIScriptGlobalObject;
-struct JSObject; // until we finally remove GetGlobalJSObject...
+class JSObject; // until we finally remove GetGlobalJSObject...
 
 // XXXbz can we just remove all this script type id stuff?
 // Some helpers for working with integer "script type IDs", and specifically

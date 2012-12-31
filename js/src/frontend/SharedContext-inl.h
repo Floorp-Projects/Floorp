@@ -113,6 +113,8 @@ template <class ContextT>
 typename ContextT::StmtInfo *
 frontend::LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::StmtInfo *stmt)
 {
+    RootedId id(ct->sc->context, AtomToId(atom));
+
     if (!stmt)
         stmt = ct->topScopeStmt;
     for (; stmt; stmt = stmt->downScope) {
@@ -129,7 +131,7 @@ frontend::LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename Cont
             continue;
 
         StaticBlockObject &blockObj = *stmt->blockObj;
-        UnrootedShape shape = blockObj.nativeLookup(ct->sc->context, AtomToId(atom));
+        UnrootedShape shape = blockObj.nativeLookup(ct->sc->context, id);
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 

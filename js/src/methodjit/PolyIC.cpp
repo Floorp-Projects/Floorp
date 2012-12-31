@@ -408,7 +408,6 @@ class SetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.typeMonitored);
 
         RecompilationMonitor monitor(cx);
-        jsid id = NameToId(name);
 
         types::TypeObject *type = obj->getType(cx);
         if (monitor.recompiled())
@@ -416,7 +415,8 @@ class SetPropCompiler : public PICStubCompiler
 
         if (!type->unknownProperties()) {
             types::AutoEnterAnalysis enter(cx);
-            types::TypeSet *types = type->getProperty(cx, types::MakeTypeId(cx, id), true);
+            RootedId id(cx, NameToId(name));
+            types::TypeSet *types = type->getProperty(cx, types::IdToTypeId(id), true);
             if (!types)
                 return false;
 

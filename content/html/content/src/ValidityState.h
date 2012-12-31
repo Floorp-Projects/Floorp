@@ -10,7 +10,7 @@
 #include "nsIConstraintValidation.h"
 #include "nsWrapperCache.h"
 
-struct JSObject;
+class JSObject;
 struct JSContext;
 
 namespace mozilla {

@@ -2532,7 +2532,7 @@ extern JS_PUBLIC_DATA(jsid) JS_DEFAULT_XML_NAMESPACE_ID;
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_VOID(jsid id)
+JSID_IS_VOID(const js::RawId id)
 {
     JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
                  JSID_BITS(id) == JSID_TYPE_VOID);
@@ -2540,7 +2540,7 @@ JSID_IS_VOID(jsid id)
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_EMPTY(jsid id)
+JSID_IS_EMPTY(const js::RawId id)
 {
     return ((size_t)JSID_BITS(id) == JSID_TYPE_OBJECT);
 }

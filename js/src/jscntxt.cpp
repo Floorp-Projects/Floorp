@@ -637,7 +637,8 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
 {
     const char *usageStr = "usage";
     PropertyName *usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
-    DebugOnly<RawShape> shape = static_cast<RawShape>(callee->nativeLookup(cx, NameToId(usageAtom)));
+    RootedId id(cx, NameToId(usageAtom));
+    DebugOnly<RawShape> shape = static_cast<RawShape>(callee->nativeLookup(cx, id));
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(!shape->writable());
     JS_ASSERT(shape->hasDefaultGetter());
