@@ -142,8 +142,6 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
                     "Unknown request");
   }
 
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
   LOOP_OVER_OBSERVERS(Notify(aRequest, aType, aData));
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
