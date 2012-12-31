@@ -57,9 +57,10 @@ richlistitem[type="download"]:not([selected]) button {
                                            .downloadRemoveFromHistoryMenuItem,
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
-                              [state="5"], /* Starting (queued)  */
                               [state="0"], /* Downloading        */
-                              [state="4"]) /* Paused             */)
+                              [state="1"], /* Finished           */
+                              [state="4"], /* Paused             */
+                              [state="5"]) /* Starting (queued)  */)
                                            .downloadShowMenuItem,
 
 .download-state[state="7"]                 .downloadCommandsSeparator
