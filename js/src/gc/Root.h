@@ -250,6 +250,7 @@ class Handle : public js::HandleBase<T>
     T operator->() const { return get(); }
 
     bool operator!=(const T &other) { return *ptr != other; }
+    bool operator==(const T &other) { return *ptr == other; }
 
   private:
     Handle() {}
@@ -664,6 +665,9 @@ class Rooted : public RootedBase<T>
         return ptr;
     }
 
+    bool operator!=(const T &other) { return ptr != other; }
+    bool operator==(const T &other) { return ptr == other; }
+
   private:
     void commonInit(Rooted<void*> **thingGCRooters) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
@@ -929,5 +933,6 @@ class CompilerRootNode
 
 ForwardDeclareJS(Script);
 ForwardDeclareJS(Function);
+ForwardDeclareJS(Object);
 
 #endif  /* jsgc_root_h___ */

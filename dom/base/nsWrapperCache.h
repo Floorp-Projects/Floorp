@@ -8,7 +8,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 
-struct JSObject;
+class JSObject;
 struct JSContext;
 class XPCWrappedNativeScope;
 
