@@ -9,7 +9,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLCanvasElement.h"
 #include "nsHTMLFormElement.h"
-#include "nsHTMLImageElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "nsHTMLOptionElement.h"
 #include "nsHTMLOptGroupElement.h"
 #include "nsHTMLVideoElement.h"
@@ -170,7 +170,7 @@ xpc_qsUnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,               \
 
 DEFINE_UNWRAP_CAST_HTML(canvas, nsHTMLCanvasElement)
 DEFINE_UNWRAP_CAST_HTML(form, nsHTMLFormElement)
-DEFINE_UNWRAP_CAST_HTML(img, nsHTMLImageElement)
+DEFINE_UNWRAP_CAST_HTML(img, mozilla::dom::HTMLImageElement)
 DEFINE_UNWRAP_CAST_HTML(optgroup, nsHTMLOptGroupElement)
 DEFINE_UNWRAP_CAST_HTML(option, nsHTMLOptionElement)
 DEFINE_UNWRAP_CAST_HTML(video, nsHTMLVideoElement)
