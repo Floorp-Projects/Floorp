@@ -129,9 +129,7 @@ DownloadsUI.prototype = {
 
     // If window is private then show it in a tab.
     if (PrivateBrowsingUtils.isWindowPrivate(parentWindow)) {
-      const DOWNLOAD_VIEW_URL =
-        "chrome://browser/content/downloads/contentAreaDownloadsView.xul";
-      parentWindow.openUILinkIn(DOWNLOAD_VIEW_URL, "tab");
+      parentWindow.openUILinkIn("about:downloads", "tab");
       return;
     } else {
       let organizer = Services.wm.getMostRecentWindow("Places:Organizer");
