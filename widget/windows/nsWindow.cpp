@@ -3687,15 +3687,43 @@ bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
     case APPCOMMAND_BROWSER_HOME:
       command = nsGkAtoms::Home;
       break;
+    case APPCOMMAND_CLOSE:
+      command = nsGkAtoms::Close;
+      break;
+    case APPCOMMAND_FIND:
+      command = nsGkAtoms::Find;
+      break;
+    case APPCOMMAND_HELP:
+      command = nsGkAtoms::Help;
+      break;
+    case APPCOMMAND_NEW:
+      command = nsGkAtoms::New;
+      break;
+    case APPCOMMAND_OPEN:
+      command = nsGkAtoms::Open;
+      break;
+    case APPCOMMAND_PRINT:
+      command = nsGkAtoms::Print;
+      break;
+    case APPCOMMAND_SAVE:
+      command = nsGkAtoms::Save;
+      break;
+    case APPCOMMAND_FORWARD_MAIL:
+      command = nsGkAtoms::ForwardMail;
+      break;
+    case APPCOMMAND_REPLY_TO_MAIL:
+      command = nsGkAtoms::ReplyToMail;
+      break;
+    case APPCOMMAND_SEND_MAIL:
+      command = nsGkAtoms::SendMail;
+      break;
     default:
       return false;
   }
   nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
 
   InitEvent(event);
-  DispatchWindowEvent(&event);
-
-  return true;
+  return DispatchWindowEvent(&event);
 }
 
 // Recursively dispatch synchronous paints for nsIWidget
@@ -5028,10 +5056,24 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         case APPCOMMAND_BROWSER_SEARCH:
         case APPCOMMAND_BROWSER_FAVORITES:
         case APPCOMMAND_BROWSER_HOME:
-          DispatchCommandEvent(appCommand);
-          // tell the driver that we handled the event
-          *aRetValue = 1;
-          result = true;
+        case APPCOMMAND_CLOSE:
+        case APPCOMMAND_FIND:
+        case APPCOMMAND_HELP:
+        case APPCOMMAND_NEW:
+        case APPCOMMAND_OPEN:
+        case APPCOMMAND_PRINT:
+        case APPCOMMAND_SAVE:
+        case APPCOMMAND_FORWARD_MAIL:
+        case APPCOMMAND_REPLY_TO_MAIL:
+        case APPCOMMAND_SEND_MAIL:
+          // We shouldn't consume the message always because if we don't handle
+          // the message, the sender (typically, utility of keyboard or mouse)
+          // may send other key messages which indicate well known shortcut key.
+          if (DispatchCommandEvent(appCommand)) {
+            // tell the driver that we handled the event
+            *aRetValue = 1;
+            result = true;
+          }
           break;
       }
       // default = false - tell the driver that the event was not handled
