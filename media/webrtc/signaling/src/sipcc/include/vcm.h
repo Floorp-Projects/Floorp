@@ -404,7 +404,7 @@ short vcmTxOpen(cc_mcapid_t mcap_id,
  *  @param[in]  port_requested - port requested (if zero -> give any)
  *  @param[out]  port_allocated - port that was actually allocated.
  *
- *  @return    void
+ *  @return 0 for success; VCM_ERROR for failure
  *
  */
 
@@ -416,7 +416,7 @@ void vcmRxAllocPort(cc_mcapid_t mcap_id,
         int *port_allocated);
 
 
-void vcmRxAllocICE(cc_mcapid_t mcap_id,
+short vcmRxAllocICE(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle,
@@ -435,9 +435,9 @@ void vcmRxAllocICE(cc_mcapid_t mcap_id,
  *  @param[out] ufragp - where to put the ufrag
  *  @param[out] pwdp - where to put the pwd
  *
- *  @return void
+ *  @return 0 for success; VCM_ERROR for failure
  */
-void vcmGetIceParams(const char *peerconnection, char **ufragp, char **pwdp);
+short vcmGetIceParams(const char *peerconnection, char **ufragp, char **pwdp);
 
 /* Set remote ICE global parameters.
  *
@@ -685,11 +685,11 @@ int vcmTxStart(cc_mcapid_t mcap_id,
  *  @param[in]    stream_id - stream id of the given media type.
  *  @param[in]    call_handle - call handle
  *
- *  @return   None
+ *  @return 0 for success; VCM_ERROR for failure
  *
  */
 
-void vcmRxClose(cc_mcapid_t mcap_id,
+short vcmRxClose(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle);
@@ -702,10 +702,10 @@ void vcmRxClose(cc_mcapid_t mcap_id,
  *  @param[in] stream_id - stream id of the given media type.
  *  @param[in] call_handle - call handle
  *
- *  @return     void
+ *  @return 0 for success; VCM_ERROR for failure
  */
 
-void vcmTxClose(cc_mcapid_t mcap_id,
+short vcmTxClose(cc_mcapid_t mcap_id,
         cc_groupid_t group_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle);
