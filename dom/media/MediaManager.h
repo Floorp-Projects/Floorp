@@ -61,126 +61,6 @@ class GetUserMediaNotificationEvent: public nsRunnable
     GetUserMediaStatus mStatus;
 };
 
-typedef enum {
-  MEDIA_START,
-  MEDIA_STOP
-} MediaOperation;
-
-class GetUserMediaCallbackMediaStreamListener;
-
-// Generic class for running long media operations like Start off the main
-// thread, and then (because nsDOMMediaStreams aren't threadsafe),
-// ProxyReleases mStream since it's cycle collected.
-class MediaOperationRunnable : public nsRunnable
-{
-public:
-  MediaOperationRunnable(MediaOperation aType,
-    nsDOMMediaStream* aStream,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource)
-    : mType(aType)
-    , mAudioSource(aAudioSource)
-    , mVideoSource(aVideoSource)
-    , mStream(aStream)
-    {}
-
-  MediaOperationRunnable(MediaOperation aType,
-    SourceMediaStream* aStream,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource)
-    : mType(aType)
-    , mAudioSource(aAudioSource)
-    , mVideoSource(aVideoSource)
-    , mStream(nullptr)
-    , mSourceStream(aStream)
-    {}
-
-  ~MediaOperationRunnable()
-  {
-    // nsDOMMediaStreams are cycle-collected and thus main-thread-only for
-    // refcounting and releasing
-    if (mStream) {
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      nsDOMMediaStream *stream;
-      mStream.forget(&stream);
-      NS_ProxyRelease(mainThread, stream, true);
-    }
-  }
-
-  NS_IMETHOD
-  Run()
-  {
-    // No locking between these is required as all the callbacks for the
-    // same MediaStream will occur on the same thread.
-    if (mStream) {
-      mSourceStream = mStream->GetStream()->AsSourceStream();
-    }
-    switch (mType) {
-      case MEDIA_START:
-        {
-          NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          nsresult rv;
-
-          mSourceStream->SetPullEnabled(true);
-
-          if (mAudioSource) {
-            rv = mAudioSource->Start(mSourceStream, kAudioTrack);
-            if (NS_FAILED(rv)) {
-              MM_LOG(("Starting audio failed, rv=%d",rv));
-            }
-          }
-          if (mVideoSource) {
-            rv = mVideoSource->Start(mSourceStream, kVideoTrack);
-            if (NS_FAILED(rv)) {
-              MM_LOG(("Starting video failed, rv=%d",rv));
-            }
-          }
-
-          MM_LOG(("started all sources"));
-          nsRefPtr<GetUserMediaNotificationEvent> event =
-            new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
-
-
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-        }
-        break;
-
-      case MEDIA_STOP:
-        {
-          NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          if (mAudioSource) {
-            mAudioSource->Stop(mSourceStream, kAudioTrack);
-            mAudioSource->Deallocate();
-          }
-          if (mVideoSource) {
-            mVideoSource->Stop(mSourceStream, kVideoTrack);
-            mVideoSource->Deallocate();
-          }
-          // Do this after stopping all tracks with EndTrack()
-          mSourceStream->Finish();
-
-          nsRefPtr<GetUserMediaNotificationEvent> event =
-            new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
-
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-        }
-        break;
-
-      default:
-        MOZ_ASSERT(false,"invalid MediaManager operation");
-        break;
-    }
-    return NS_OK;
-  }
-
-private:
-  MediaOperation mType;
-  nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe
-  nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe
-  nsRefPtr<nsDOMMediaStream> mStream;       // not threadsafe
-  SourceMediaStream *mSourceStream;
-};
-
 /**
  * This class is an implementation of MediaStreamListener. This is used
  * to Start() and Stop() the underlying MediaEngineSource when MediaStreams
@@ -199,7 +79,7 @@ public:
     , mStream(aStream)
     , mSourceStream(aStream->GetStream()->AsSourceStream())
     , mLastEndTimeAudio(0)
-    , mLastEndTimeVideo(0) {}
+    , mLastEndTimeVideo(0) { MOZ_ASSERT(mSourceStream); }
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
@@ -213,26 +93,13 @@ public:
     }
   }
 
-  void
-  Invalidate()
+  SourceMediaStream *GetSourceStream()
   {
-    nsRefPtr<MediaOperationRunnable> runnable;
-
-    // We can't take a chance on blocking here, so proxy this to another
-    // thread.
-    // XXX FIX! I'm cheating and passing a raw pointer to the sourcestream
-    // which is valid as long as the mStream pointer here is.
-    // Solutions (see bug 825235):
-    // a) if on MainThread, pass mStream and let it addref
-    //    (MediaOperation will need to ProxyRelease however)
-    // b) if on MediaStreamGraph thread, dispatch a runnable to MainThread
-    //    to call Invalidate() (with a strong ref to this listener)
-    runnable = new MediaOperationRunnable(MEDIA_STOP,
-                                          mSourceStream, mAudioSource, mVideoSource);
-    mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-
-    return;
+    return mStream->GetStream()->AsSourceStream();
   }
+
+  void
+  Invalidate(); // implement in .cpp to avoid circular dependency with MediaOperationRunnable
 
   void
   Remove()
@@ -271,6 +138,131 @@ private:
   SourceMediaStream *mSourceStream; // mStream controls ownership
   TrackTicks mLastEndTimeAudio;
   TrackTicks mLastEndTimeVideo;
+};
+
+typedef enum {
+  MEDIA_START,
+  MEDIA_STOP
+} MediaOperation;
+
+// Generic class for running long media operations like Start off the main
+// thread, and then (because nsDOMMediaStreams aren't threadsafe),
+// ProxyReleases mStream since it's cycle collected.
+class MediaOperationRunnable : public nsRunnable
+{
+public:
+  MediaOperationRunnable(MediaOperation aType,
+    nsDOMMediaStream* aStream,
+    MediaEngineSource* aAudioSource,
+    MediaEngineSource* aVideoSource)
+    : mType(aType)
+    , mAudioSource(aAudioSource)
+    , mVideoSource(aVideoSource)
+    , mStream(aStream)
+    {}
+
+  MediaOperationRunnable(MediaOperation aType,
+    GetUserMediaCallbackMediaStreamListener* aListener,
+    MediaEngineSource* aAudioSource,
+    MediaEngineSource* aVideoSource)
+    : mType(aType)
+    , mAudioSource(aAudioSource)
+    , mVideoSource(aVideoSource)
+    , mStream(nullptr)
+    , mListener(aListener)
+    {}
+
+  ~MediaOperationRunnable()
+  {
+    // nsDOMMediaStreams are cycle-collected and thus main-thread-only for
+    // refcounting and releasing
+    if (mStream) {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      nsDOMMediaStream *stream;
+      mStream.forget(&stream);
+      NS_ProxyRelease(mainThread, stream, true);
+    }
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    SourceMediaStream *source;
+    // No locking between these is required as all the callbacks for the
+    // same MediaStream will occur on the same thread.
+    if (mStream) {
+      source = mStream->GetStream()->AsSourceStream();
+    } else {
+      source = mListener->GetSourceStream();
+    }
+    MOZ_ASSERT(source);
+    if (!source)  // paranoia
+      return NS_ERROR_FAILURE;
+
+    switch (mType) {
+      case MEDIA_START:
+        {
+          NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
+          nsresult rv;
+
+          source->SetPullEnabled(true);
+
+          if (mAudioSource) {
+            rv = mAudioSource->Start(source, kAudioTrack);
+            if (NS_FAILED(rv)) {
+              MM_LOG(("Starting audio failed, rv=%d",rv));
+            }
+          }
+          if (mVideoSource) {
+            rv = mVideoSource->Start(source, kVideoTrack);
+            if (NS_FAILED(rv)) {
+              MM_LOG(("Starting video failed, rv=%d",rv));
+            }
+          }
+
+          MM_LOG(("started all sources"));
+          nsRefPtr<GetUserMediaNotificationEvent> event =
+            new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
+
+
+          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+        }
+        break;
+
+      case MEDIA_STOP:
+        {
+          NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
+          if (mAudioSource) {
+            mAudioSource->Stop(source, kAudioTrack);
+            mAudioSource->Deallocate();
+          }
+          if (mVideoSource) {
+            mVideoSource->Stop(source, kVideoTrack);
+            mVideoSource->Deallocate();
+          }
+          // Do this after stopping all tracks with EndTrack()
+          source->Finish();
+
+          nsRefPtr<GetUserMediaNotificationEvent> event =
+            new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
+
+          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+        }
+        break;
+
+      default:
+        MOZ_ASSERT(false,"invalid MediaManager operation");
+        break;
+    }
+    return NS_OK;
+  }
+
+private:
+  MediaOperation mType;
+  nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe
+  nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe
+  nsRefPtr<nsDOMMediaStream> mStream;       // not threadsafe
+  nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;

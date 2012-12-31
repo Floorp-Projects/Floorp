@@ -1099,4 +1099,17 @@ MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray **aArray)
   return NS_OK;
 }
 
+void
+GetUserMediaCallbackMediaStreamListener::Invalidate()
+{
+  nsRefPtr<MediaOperationRunnable> runnable;
+  // We can't take a chance on blocking here, so proxy this to another
+  // thread.
+  // Pass a ref to us (which is threadsafe) so it can query us for the
+  // source stream info.
+  runnable = new MediaOperationRunnable(MEDIA_STOP,
+                                        this, mAudioSource, mVideoSource);
+  mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+}
+
 } // namespace mozilla
