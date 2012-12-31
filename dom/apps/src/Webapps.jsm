@@ -1759,7 +1759,8 @@ this.DOMApplicationRegistry = {
       let requestChannel = NetUtil.newChannel(aManifest.fullPackagePath())
                                   .QueryInterface(Ci.nsIHttpChannel);
       if (app.packageEtag) {
-        requestChannel.setRequestHeader("If-None-Match", app.packageEtag);
+        debug('Add If-None-Match header: ' + app.packageEtag);
+        requestChannel.setRequestHeader("If-None-Match", app.packageEtag, false);
       }
 
       AppDownloadManager.add(aApp.manifestURL,
@@ -1834,7 +1835,17 @@ this.DOMApplicationRegistry = {
       let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
                        .createInstance(Ci.nsISimpleStreamListener);
       listener.init(bufferedOutputStream, {
-        onStartRequest: function(aRequest, aContext) { },
+        onStartRequest: function(aRequest, aContext) {
+          // early check for ETag header
+          try {
+            requestChannel.getResponseHeader("Etag");
+          } catch (e) {
+            // in https://bugzilla.mozilla.org/show_bug.cgi?id=825218
+            // we might do something cleaner to have a proper user error
+            debug("We found no ETag Header, canceling the request");
+            requestChannel.cancel(Cr.NS_BINDING_ABORTED);
+          }
+        },
         onStopRequest: function(aRequest, aContext, aStatusCode) {
           debug("onStopRequest " + aStatusCode);
           bufferedOutputStream.close();
@@ -1862,8 +1873,18 @@ this.DOMApplicationRegistry = {
           }
 
           // Save the new Etag for the package.
-          app.packageEtag = requestChannel.getResponseHeader("Etag");
-          debug("Package etag=" + app.packageEtag);
+          // (We'll move this below in
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=825237)
+          try {
+            app.packageEtag = requestChannel.getResponseHeader("Etag");
+            debug("Package etag=" + app.packageEtag);
+          } catch (e) {
+            // in https://bugzilla.mozilla.org/show_bug.cgi?id=825218
+            // we'll fail in this case
+            // for now, just going on
+            app.packageEtag = null;
+            debug("Can't find an etag, this should not happen");
+          }
 
           if (!Components.isSuccessCode(aStatusCode)) {
             cleanup("NETWORK_ERROR");
