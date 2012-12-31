@@ -638,16 +638,16 @@ lsm_open_rx (lsm_lcb_t *lcb, cc_action_data_open_rcv_t *data,
           char **candidates;
           int candidate_ct;
           char *default_addr;
+          short status;
 
-          vcmRxAllocICE(media->cap_index, dcb->group_id, media->refid,
+          status = vcmRxAllocICE(media->cap_index, dcb->group_id, media->refid,
             lsm_get_ms_ui_call_handle(lcb->line, lcb->call_id, lcb->ui_id),
             dcb->peerconnection,
             media->level,
             &default_addr, &port_allocated,
             &candidates, &candidate_ct);
 
-          // Check that we got a valid address and port
-          if (default_addr && (strlen(default_addr) > 0) && (port_allocated != -1)) {
+          if (!status) {
             sstrncpy(dcb->ice_default_candidate_addr, default_addr, sizeof(dcb->ice_default_candidate_addr));
 
             data->port = (uint16_t)port_allocated;
@@ -659,8 +659,10 @@ lsm_open_rx (lsm_lcb_t *lcb, cc_action_data_open_rcv_t *data,
       }
     }
 
-    LSM_DEBUG(get_debug_string(LSM_DBG_INT1), lcb->call_id, lcb->line, fname,
-              "allocated port", port_allocated);
+    if (rc == CC_RC_SUCCESS) {
+      LSM_DEBUG(get_debug_string(LSM_DBG_INT1), lcb->call_id, lcb->line, fname,
+                "allocated port", port_allocated);
+    }
 
     return (rc);
 }
