@@ -1077,7 +1077,7 @@ TelemetryPing.prototype = {
   },
 
   classID: Components.ID("{55d6a5fa-130e-4ee6-a158-0133af3b86ba}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelemetryPing]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelemetryPing, Ci.nsIObserver]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelemetryPing]);
