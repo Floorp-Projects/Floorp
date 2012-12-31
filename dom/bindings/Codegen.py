@@ -3899,7 +3899,7 @@ class CGMethodCall(CGThing):
                 # We can't handle unions at the distinguishing index.
                 if distinguishingType(sig).isUnion():
                     raise TypeError("No support for unions as distinguishing "
-                                    "arguments yet: %s",
+                                    "arguments yet: %s" %
                                     distinguishingArgument(sig).location)
                 # We don't support variadics as the distinguishingArgument yet.
                 # If you want to add support, consider this case:
@@ -3917,7 +3917,7 @@ class CGMethodCall(CGThing):
                 # double-check.
                 if distinguishingArgument(sig).variadic:
                     raise TypeError("No support for variadics as distinguishing "
-                                    "arguments yet: %s",
+                                    "arguments yet: %s" %
                                     distinguishingArgument(sig).location)
 
             # Convert all our arguments up to the distinguishing index.
