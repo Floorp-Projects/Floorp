@@ -35,7 +35,7 @@ function test() {
                "The checkbox should not be disabled");
 
           win.close();
-          callback();
+          executeSoon(callback);
         });
       }, false);
     }
