@@ -3065,9 +3065,20 @@ DoMergingCC(bool aForced)
 }
 
 static void
+FinishAnyIncrementalGC()
+{
+  if (sCCLockedOut) {
+    // We're in the middle of an incremental GC, so finish it.
+    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
+    js::FinishIncrementalGC(nsJSRuntime::sRuntime, js::gcreason::CC_FORCED);
+  }
+}
+
+static void
 FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless)
 {
   PRTime startTime = PR_Now();
+  FinishAnyIncrementalGC();
   nsCycleCollector_forgetSkippable(aRemoveChildless);
   sPreviousSuspectedCount = nsCycleCollector_suspectedCount();
   ++sCleanupsSinceLastGC;
@@ -3093,11 +3104,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     return;
   }
 
-  if (sCCLockedOut) {
-    // We're in the middle of an incremental GC; finish it first
-    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
-    js::FinishIncrementalGC(nsJSRuntime::sRuntime, js::gcreason::CC_FORCED);
-  }
+  FinishAnyIncrementalGC();
 
   SAMPLE_LABEL("GC", "CycleCollectNow");
 
@@ -3289,10 +3296,6 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     if (now - sCCLockedOutTime < NS_MAX_CC_LOCKEDOUT_TIME) {
       return;
     }
-
-    // Finish the current incremental GC
-    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
-    js::FinishIncrementalGC(nsJSRuntime::sRuntime, js::gcreason::CC_FORCED);
   }
 
   ++sCCTimerFireCount;
@@ -3309,17 +3312,23 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         // Our efforts to avoid a CC have failed, so we return to let the
         // timer fire once more to trigger a CC.
+        MOZ_ASSERT(!sCCLockedOut);
         return;
       }
     } else {
       // We are in the final timer fire and still meet the conditions for
-      // triggering a CC.
+      // triggering a CC. Let CycleCollectNow finish the current IGC, if any,
+      // because that will allow us to include the GC time in the CC pause.
       nsJSContext::CycleCollectNow(nullptr, 0, false);
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
-    // Only do a forget skippable if there are more than a few new objects.
-    FireForgetSkippable(suspected, false);
+      // Only do a forget skippable if there are more than a few new objects.
+      FireForgetSkippable(suspected, false);
   }
+
+  // If we were in the middle of an incremental GC, we should have finished
+  // it by now.
+  MOZ_ASSERT(!sCCLockedOut);
 
   if (isLateTimerFire) {
     ccDelay = NS_CC_DELAY;

@@ -4046,7 +4046,7 @@ nsXPCComponents_Utils::ForceGC()
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceCC()
 {
-    nsJSContext::CycleCollectNow(nullptr, 0);
+    nsJSContext::CycleCollectNow();
     return NS_OK;
 }
 
