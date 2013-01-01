@@ -125,7 +125,7 @@ static void DeferredDestroyCompositor(CompositorParent* aCompositorParent,
     aCompositorChild->Release();
 }
 
-void nsBaseWidget::DestroyCompositor() 
+void nsBaseWidget::DestroyCompositor()
 {
   if (mCompositorChild) {
     mCompositorChild->SendWillStop();
@@ -273,7 +273,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   return nullptr;
 }
 
-// Attach a view to our widget which we'll send events to. 
+// Attach a view to our widget which we'll send events to.
 NS_IMETHODIMP
 nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents,
                                    nsDeviceContext *aContext)
@@ -301,7 +301,7 @@ nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener()
  {
    return mAttachedWidgetListener;
  }
- 
+
 void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener)
  {
    mAttachedWidgetListener = aListener;
@@ -405,7 +405,7 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
   NS_PRECONDITION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
                   "aChild not properly removed from its old child list");
-  
+
   if (!mFirstChild) {
     mFirstChild = mLastChild = aChild;
   } else {
@@ -427,7 +427,7 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
   NS_ASSERTION(aChild->GetParent() == this, "Not one of our kids!");
-  
+
   if (mLastChild == aChild) {
     mLastChild = mLastChild->GetPrevSibling();
   }
@@ -445,7 +445,7 @@ void nsBaseWidget::RemoveChild(nsIWidget* aChild)
   if (next) {
     next->SetPrevSibling(prev);
   }
-  
+
   aChild->SetNextSibling(nullptr);
   aChild->SetPrevSibling(nullptr);
 }
@@ -461,7 +461,7 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(int32_t aZIndex)
   // Hold a ref to ourselves just in case, since we're going to remove
   // from our parent.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-  
+
   mZIndex = aZIndex;
 
   // reorder this child in its parent's list.
@@ -562,7 +562,6 @@ nscolor nsBaseWidget::GetForegroundColor(void)
   return mForeground;
 }
 
-    
 //-------------------------------------------------------------------------
 //
 // Set the foreground color
@@ -574,7 +573,6 @@ NS_METHOD nsBaseWidget::SetForegroundColor(const nscolor &aColor)
   return NS_OK;
 }
 
-    
 //-------------------------------------------------------------------------
 //
 // Get the background color
@@ -595,7 +593,7 @@ NS_METHOD nsBaseWidget::SetBackgroundColor(const nscolor &aColor)
   mBackground = aColor;
   return NS_OK;
 }
-     
+
 //-------------------------------------------------------------------------
 //
 // Get this component cursor
@@ -608,7 +606,7 @@ nsCursor nsBaseWidget::GetCursor()
 
 NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
 {
-  mCursor = aCursor; 
+  mCursor = aCursor;
   return NS_OK;
 }
 
@@ -617,7 +615,7 @@ NS_IMETHODIMP nsBaseWidget::SetCursor(imgIContainer* aCursor,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-    
+
 //-------------------------------------------------------------------------
 //
 // Get the window type for this widget
@@ -704,7 +702,7 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
 
     // Move to top-left corner of screen and size to the screen dimensions
     nsCOMPtr<nsIScreenManager> screenManager;
-    screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1"); 
+    screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
     NS_ASSERTION(screenManager, "Unable to grab screenManager.");
     if (screenManager) {
       nsCOMPtr<nsIScreen> screen;
@@ -779,12 +777,12 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
   bool accelerateByDefault = false;
 #endif
 
-  // We don't want to accelerate small popup windows like menu, but we still 
+  // We don't want to accelerate small popup windows like menu, but we still
   // want to accelerate xul panels that may contain arbitrarily complex content.
-  bool isSmallPopup = ((mWindowType == eWindowType_popup) && 
+  bool isSmallPopup = ((mWindowType == eWindowType_popup) &&
                       (mPopupType != ePopupTypePanel));
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration = isSmallPopup || 
+  bool disableAcceleration = isSmallPopup ||
     Preferences::GetBool("layers.acceleration.disabled", false);
   mForceLayersAcceleration =
     Preferences::GetBool("layers.acceleration.force-enabled", false);
@@ -821,7 +819,7 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 
   if (mForceLayersAcceleration)
     return true;
-  
+
   if (!whitelisted) {
     NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
 #ifdef MOZ_ANDROID_OMTC
@@ -884,7 +882,7 @@ void nsBaseWidget::CreateCompositor()
 
 bool nsBaseWidget::UseOffMainThreadCompositing()
 {
-  bool isSmallPopup = ((mWindowType == eWindowType_popup) && 
+  bool isSmallPopup = ((mWindowType == eWindowType_popup) &&
                       (mPopupType != ePopupTypePanel));
   return CompositorParent::CompositorLoop() && !isSmallPopup;
 }
@@ -952,13 +950,13 @@ CompositorChild* nsBaseWidget::GetRemoteRenderer()
 // Return the used device context
 //
 //-------------------------------------------------------------------------
-nsDeviceContext* nsBaseWidget::GetDeviceContext() 
+nsDeviceContext* nsBaseWidget::GetDeviceContext()
 {
   if (!mContextInitialized) {
     mContext->Init(this);
     mContextInitialized = true;
   }
-  return mContext; 
+  return mContext;
 }
 
 //-------------------------------------------------------------------------
@@ -1079,7 +1077,7 @@ nsBaseWidget::GetNonClientMargins(nsIntMargin &margins)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
- 
+
 NS_IMETHODIMP
 nsBaseWidget::SetNonClientMargins(nsIntMargin &margins)
 {
@@ -1243,7 +1241,7 @@ void
 nsBaseWidget::ResolveIconName(const nsAString &aIconName,
                               const nsAString &aIconSuffix,
                               nsIFile **aResult)
-{ 
+{
   *aResult = nullptr;
 
   nsCOMPtr<nsIProperties> dirSvc = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
@@ -1281,7 +1279,7 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
     NS_ADDREF(*aResult = file);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsBaseWidget::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1481,17 +1479,17 @@ case _value: eventName.AssignLiteral(_name) ; break
 
 #undef _ASSIGN_eventName
 
-  default: 
+  default:
     {
       char buf[32];
-      
+
       sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
-      
+
       CopyASCIItoUTF16(buf, eventName);
     }
     break;
   }
-  
+
   return nsAutoString(eventName);
 }
 //////////////////////////////////////////////////////////////
@@ -1598,7 +1596,7 @@ static int32_t
 _GetPrintCount()
 {
   static int32_t sCount = 0;
-  
+
   return ++sCount;
 }
 //////////////////////////////////////////////////////////////
@@ -1620,8 +1618,8 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
     if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping"))
       return;
   }
-  
-  if (aGuiEvent->message == NS_MOUSE_ENTER || 
+
+  if (aGuiEvent->message == NS_MOUSE_ENTER ||
       aGuiEvent->message == NS_MOUSE_EXIT)
   {
     if (!debug_GetCachedBoolPref("nglayout.debug.crossing_event_dumping"))
@@ -1632,14 +1630,14 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
     return;
 
   NS_LossyConvertUTF16toASCII tempString(debug_GuiEventToString(aGuiEvent).get());
-  
+
   fprintf(aFileOut,
-          "%4d %-26s widget=%-8p name=%-12s id=%-8p refpt=%d,%d\n",
+          "%4d %-26s widget=%-8p name=%-12s id=0x%-6x refpt=%d,%d\n",
           _GetPrintCount(),
           tempString.get(),
           (void *) aWidget,
           aWidgetName.get(),
-          (void *) (aWindowID ? aWindowID : 0x0),
+          aWindowID,
           aGuiEvent->refPoint.x,
           aGuiEvent->refPoint.y);
 }
@@ -1656,17 +1654,17 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 
   if (!debug_GetCachedBoolPref("nglayout.debug.paint_dumping"))
     return;
-  
+
   nsIntRect rect = aRegion.GetBounds();
   fprintf(aFileOut,
-          "%4d PAINT      widget=%p name=%-12s id=%-8p bounds-rect=%3d,%-3d %3d,%-3d", 
+          "%4d PAINT      widget=%p name=%-12s id=0x%-6x bounds-rect=%3d,%-3d %3d,%-3d",
           _GetPrintCount(),
           (void *) aWidget,
           aWidgetName.get(),
-          (void *) aWindowID,
+          aWindowID,
           rect.x, rect.y, rect.width, rect.height
     );
-  
+
   fprintf(aFileOut,"\n");
 }
 //////////////////////////////////////////////////////////////
@@ -1684,19 +1682,19 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
   NS_ASSERTION(nullptr != aWidget,"cmon, the widget is null");
 
   fprintf(aFileOut,
-          "%4d Invalidate widget=%p name=%-12s id=%-8p",
+          "%4d Invalidate widget=%p name=%-12s id=0x%-6x",
           _GetPrintCount(),
           (void *) aWidget,
           aWidgetName.get(),
-          (void *) aWindowID);
+          aWindowID);
 
-  if (aRect) 
+  if (aRect)
   {
     fprintf(aFileOut,
             " rect=%3d,%-3d %3d,%-3d",
-            aRect->x, 
+            aRect->x,
             aRect->y,
-            aRect->width, 
+            aRect->width,
             aRect->height);
   }
   else
@@ -1705,7 +1703,7 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
             " rect=%-15s",
             "none");
   }
-  
+
   fprintf(aFileOut,"\n");
 }
 //////////////////////////////////////////////////////////////
