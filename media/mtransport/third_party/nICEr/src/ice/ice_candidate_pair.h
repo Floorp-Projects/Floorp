@@ -66,7 +66,11 @@ struct nr_ice_cand_pair_ {
 
   nr_stun_client_ctx *stun_client;    /* STUN context when acting as a client */
   void *stun_client_handle;
-  
+
+  void *stun_cb_timer;
+  void *restart_controlled_cb_timer;
+  void *restart_nominated_cb_timer;
+
   TAILQ_ENTRY(nr_ice_cand_pair_) entry;
 };
 

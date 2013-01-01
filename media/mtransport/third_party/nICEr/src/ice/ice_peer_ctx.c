@@ -283,15 +283,17 @@ static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     nr_ice_peer_ctx *pctx=cb_arg;
     nr_ice_media_stream *str1,*str2;
 
+    NR_async_timer_cancel(pctx->done_cb_timer);
     RFREE(pctx->label);
     RFREE(pctx->peer_ufrag);
     RFREE(pctx->peer_pwd);
-    
+
     STAILQ_FOREACH_SAFE(str1, &pctx->peer_streams, entry, str2){
       STAILQ_REMOVE(&pctx->peer_streams,str1,nr_ice_media_stream_,entry);
       nr_ice_media_stream_destroy(&str1);
     }
     STAILQ_REMOVE(&pctx->ctx->peers, pctx, nr_ice_peer_ctx_, entry);
+
     RFREE(pctx);
   }
 
@@ -393,6 +395,8 @@ static void nr_ice_peer_ctx_fire_done(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_peer_ctx *pctx=cb_arg;
 
+    pctx->done_cb_timer=0;
+
     /* Fire the handler callback to say we're done */
     if (pctx->handler) {
       pctx->handler->vtbl->ice_completed(pctx->handler->obj, pctx);
@@ -433,7 +437,8 @@ int nr_ice_peer_ctx_stream_done(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stre
        IMPORTANT: This is done in a callback because we expect destructors
        of various kinds to be fired from here */
 
-    NR_ASYNC_SCHEDULE(nr_ice_peer_ctx_fire_done,pctx);
+    assert(!pctx->done_cb_timer);
+    NR_ASYNC_TIMER_SET(0,nr_ice_peer_ctx_fire_done,pctx,&pctx->done_cb_timer);
 
   done:
     _status=0;

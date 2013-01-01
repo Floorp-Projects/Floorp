@@ -92,6 +92,9 @@ int NR_async_schedule(NR_async_cb cb, void *arg, char *func, int l) {
 }
 
 int NR_async_timer_cancel(void *handle) {
+  if (!handle)
+    return 0;
+
   nsITimer *timer = static_cast<nsITimer *>(handle);
 
   timer->Cancel();
