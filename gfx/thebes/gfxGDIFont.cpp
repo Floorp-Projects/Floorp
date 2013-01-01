@@ -62,6 +62,9 @@ gfxGDIFont::~gfxGDIFont()
     if (mFontFace) {
         cairo_font_face_destroy(mFontFace);
     }
+    if (mFont) {
+        ::DeleteObject(mFont);
+    }
     delete mMetrics;
 }
 
@@ -374,7 +377,6 @@ gfxGDIFont::Initialize()
                 NS_WARNING("Missing or corrupt font data, fasten your seatbelt");
                 mIsValid = false;
                 memset(mMetrics, 0, sizeof(*mMetrics));
-                ::DeleteObject(mFont);
                 return;
             }
 
@@ -437,9 +439,6 @@ gfxGDIFont::Initialize()
         mMetrics->maxAdvance += GetSyntheticBoldOffset();
     }
 
-    // This transfers ownership of mFont to mFontFace, making
-    // mFontFace responsible for deleting mFont so we don't have to
-    // (and shouldn't, since we don't know exactly when mFontFace will die).
     mFontFace = cairo_win32_font_face_create_for_logfontw_hfont(&logFont,
                                                                 mFont);
 
