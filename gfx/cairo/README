@@ -200,6 +200,8 @@ handle-multi-path-clip.patch: bug 813124, handle multiple clip paths correctly
 
 win32-gdi-font-cache.patch: Bug 717178, cache GDI font faces to reduce usage of GDI resources
 
+win32-hfont-ownership.patch: Bug 717178, make cairo_win32_font_face_create_for_logfontw_hfont take ownership of the passed HFONT
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
