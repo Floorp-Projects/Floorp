@@ -7,13 +7,15 @@ DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
-FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE       = nptest
 LIBRARY_NAME = nptest
 MODULE_NAME  = TestPlugin
+ifndef _MSC_VER
+FAIL_ON_WARNINGS = 1
+endif # !_MSC_VER
 
 DIRS = secondplugin
 
