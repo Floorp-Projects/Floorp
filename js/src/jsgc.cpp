@@ -267,7 +267,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * list in the compartment can mutate at any moment. We cannot do any
      * checks in this case.
      */
-    if (!compartment->rt->isHeapBusy())
+    if (IsBackgroundFinalized(getAllocKind()) && !compartment->rt->isHeapBusy())
         return;
 
     FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
