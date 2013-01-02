@@ -239,6 +239,9 @@ public:
     }
     return style;
   }
+
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
 // The using nsINode::Get/SetOn* are to avoid warnings about shadowing the XPCOM
 // getter and setter on nsINode.

@@ -67,12 +67,13 @@ public:
   virtual nsSMILTimedElement& TimedElement();
   virtual nsSMILTimeContainer* GetTimeContainer();
 
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
   // Utility methods for within SVG
   void ActivateByHyperlink();
 
 protected:
   // nsSVGElement overrides
-  bool IsEventName(nsIAtom* aName);
 
   void UpdateHrefTarget(nsIContent* aNodeForContext,
                         const nsAString& aHrefStr);

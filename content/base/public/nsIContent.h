@@ -495,6 +495,18 @@ public:
    */
   virtual uint32_t TextLength() const = 0;
 
+   /**
+    * Determines if an event attribute name (such as onclick) is valid for
+    * a given element type.
+    * @note calls nsContentUtils::IsEventAttributeName with right flag
+    * @note overridden by subclasses as needed
+    * @param aName the event name to look up
+    */
+  virtual bool IsEventAttributeName(nsIAtom* aName)
+  {
+    return false;
+  }
+
   /**
    * Set the text to the given value. If aNotify is true then
    * the document is notified of the content change.

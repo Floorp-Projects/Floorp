@@ -485,6 +485,14 @@ HTMLBodyElement::GetAssociatedEditor()
   return editor.forget();
 }
 
+bool
+HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
+{
+  return nsContentUtils::IsEventAttributeName(aName,
+                                              EventNameType_HTML |
+                                              EventNameType_HTMLBodyOrFramesetOnly);
+}
+
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */
 // nsGenericHTMLElement::GetOnError returns
 // already_AddRefed<EventHandlerNonNull> while other getters return
