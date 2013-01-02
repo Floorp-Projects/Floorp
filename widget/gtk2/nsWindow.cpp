@@ -3453,11 +3453,6 @@ nsWindow::Create(nsIWidget        *aParent,
                                          topLevelParent);
             mTransientParent = topLevelParent;
             // add ourselves to the parent window's window group
-            if (!topLevelParent) {
-                gtk_widget_realize(mShell);
-                GdkWindow* dialoglead = gtk_widget_get_window(mShell);
-                gdk_window_set_group(dialoglead, dialoglead);
-            }
             if (parentGdkWindow) {
                 if (parentnsWindow->mWindowGroup) {
                     gtk_window_group_add_window(parentnsWindow->mWindowGroup,
