@@ -424,7 +424,7 @@ nsGeolocationRequest::Allow()
 
   // Kick off the geo device, if it isn't already running
   nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
-  nsresult rv = gs->StartDevice(GetPrincipal(), isPrivate);
+  nsresult rv = gs->StartDevice(isPrivate);
 
   if (NS_FAILED(rv)) {
     // Location provider error
@@ -539,15 +539,6 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   if (mIsWatchPositionRequest) {
     SetTimeoutTimer();
   }
-}
-
-nsIPrincipal*
-nsGeolocationRequest::GetPrincipal()
-{
-  if (!mLocator) {
-    return nullptr;
-  }
-  return mLocator->GetPrincipal();
 }
 
 bool
@@ -961,7 +952,7 @@ nsGeolocationService::GetCachedPosition()
 }
 
 nsresult
-nsGeolocationService::StartDevice(nsIPrincipal *aPrincipal, bool aRequestPrivate)
+nsGeolocationService::StartDevice(bool aRequestPrivate)
 {
   if (!sGeoEnabled || sGeoInitPending) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -974,7 +965,7 @@ nsGeolocationService::StartDevice(nsIPrincipal *aPrincipal, bool aRequestPrivate
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendAddGeolocationListener(IPC::Principal(aPrincipal));
+    cpc->SendAddGeolocationListener();
     return NS_OK;
   }
 

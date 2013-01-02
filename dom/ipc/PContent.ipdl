@@ -23,10 +23,10 @@ include DOMTypes;
 include URIParams;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
-include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
+
 include "nsGeoPositionIPCSerialiser.h";
 
 using GeoPosition;
@@ -36,7 +36,6 @@ using ChromePackage;
 using ResourceMapping;
 using OverrideMapping;
 using IPC::Permission;
-using IPC::Principal;
 using mozilla::null_t;
 using mozilla::void_t;
 using mozilla::dom::AudioChannelType;
@@ -396,7 +395,7 @@ parent:
                        nsCString aContentDisposition, bool aForceSave,
                        int64_t aContentLength, OptionalURIParams aReferrer);
 
-    AddGeolocationListener(Principal principal);
+    AddGeolocationListener();
     RemoveGeolocationListener();
     SetGeolocationHigherAccuracy(bool enable);
 
