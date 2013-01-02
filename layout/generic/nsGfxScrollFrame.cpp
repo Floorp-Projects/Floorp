@@ -2087,8 +2087,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsRect scrollRange = GetScrollRange();
     ScrollbarStyles styles = GetScrollbarStylesFromFrame();
     mShouldBuildLayer =
-       (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
-        styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+       ((styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN && mHScrollbarBox) ||
+        (styles.mVertical   != NS_STYLE_OVERFLOW_HIDDEN && mVScrollbarBox)) &&
        (XRE_GetProcessType() == GeckoProcessType_Content &&
         (scrollRange.width > 0 || scrollRange.height > 0) &&
         (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
