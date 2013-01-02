@@ -254,10 +254,11 @@ public class AboutHomeContent extends ScrollView
             mAccountListener = null;
         }
 
-        Cursor cursor = mTopSitesAdapter.getCursor();
-        if (cursor != null && !cursor.isClosed())
-            cursor.close();
-
+        if (mTopSitesAdapter != null) {
+            Cursor cursor = mTopSitesAdapter.getCursor();
+            if (cursor != null && !cursor.isClosed())
+                cursor.close();
+        }
     }
 
     void setLastTabsVisibility(boolean visible) {
