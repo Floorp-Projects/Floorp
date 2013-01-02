@@ -1421,7 +1421,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
       return pat.forget();
     }
   } else if (element.IsHTMLImageElement()) {
-    htmlElement = element.GetAsHTMLImageElement();
+    htmlElement = &element.GetAsHTMLImageElement();
   } else {
     htmlElement = element.GetAsHTMLVideoElement();
   }
@@ -2944,7 +2944,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     }
   } else {
     if (image.IsHTMLImageElement()) {
-      HTMLImageElement* img = image.GetAsHTMLImageElement();
+      HTMLImageElement* img = &image.GetAsHTMLImageElement();
       element = img;
     } else {
       nsHTMLVideoElement* video = image.GetAsHTMLVideoElement();

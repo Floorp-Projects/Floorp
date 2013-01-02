@@ -76,6 +76,7 @@ HTMLImageElement::HTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
+  SetIsDOMBinding();
 }
 
 HTMLImageElement::~HTMLImageElement()
