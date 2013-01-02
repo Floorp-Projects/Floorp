@@ -2001,6 +2001,14 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
 
+  if (!IsReady()) {
+    BluetoothValue v;
+    nsString errorStr;
+    errorStr.AssignLiteral("Bluetooth service is not ready yet!");
+    DispatchBluetoothReply(aRunnable, v, errorStr);
+    return NS_OK;
+  }
+
   MOZ_ASSERT(aType < ArrayLength(sBluetoothDBusIfaces));
   const char* interface = sBluetoothDBusIfaces[aType];
 
