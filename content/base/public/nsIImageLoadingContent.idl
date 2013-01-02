@@ -32,6 +32,9 @@ interface nsIFrame;
  * missed.  We should NOT freeze this interface without considering
  * this issue.  (It could be that the image status on imgIRequest is
  * sufficient, when combined with the imageBlockingStatus information.)
+ *
+ * Please make sure to update the HTMLImageElement Web IDL interface to
+ * mirror this interface when changing it.
  */
 
 [scriptable, builtinclass, uuid(497bfb9b-d996-4d1e-a647-8137b0cfc876)]
