@@ -114,7 +114,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString string, MatchPairs &matc
 }
 
 RegExpRunStatus
-ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re, RegExpObject &regexp,
+ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re,
                   JSLinearString *input, StableCharPtr chars, size_t length,
                   size_t *lastIndex, MatchConduit &matches)
 {
@@ -126,7 +126,7 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re, RegExpObj
         /* Only one MatchPair slot provided: execute short-circuiting regexp. */
         status = re.executeMatchOnly(cx, chars, length, lastIndex, *matches.u.pair);
         if (status == RegExpRunStatus_Success && res)
-            res->updateLazily(cx, input, &regexp, lastIndex_orig);
+            res->updateLazily(cx, input, &re, lastIndex_orig);
     } else {
         /* Vector of MatchPairs provided: execute full regexp. */
         status = re.execute(cx, chars, length, lastIndex, *matches.u.pairs);
@@ -151,7 +151,7 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
     MatchConduit conduit(&matches);
 
     RegExpRunStatus status =
-        ExecuteRegExpImpl(cx, res, *shared, reobj, input, chars, length, lastIndex, conduit);
+        ExecuteRegExpImpl(cx, res, *shared, input, chars, length, lastIndex, conduit);
 
     if (status == RegExpRunStatus_Error)
         return false;
@@ -580,7 +580,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string, Match
     /* Steps 8-21. */
     size_t lastIndexInt(i);
     RegExpRunStatus status =
-        ExecuteRegExpImpl(cx, res, *re, *reobj, stableInput, chars, length, &lastIndexInt, matches);
+        ExecuteRegExpImpl(cx, res, *re, stableInput, chars, length, &lastIndexInt, matches);
 
     if (status == RegExpRunStatus_Error)
         return RegExpRunStatus_Error;
