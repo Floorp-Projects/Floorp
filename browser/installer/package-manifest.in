@@ -342,7 +342,10 @@
 @BINPATH@/components/DownloadsUI.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+@BINPATH@/components/nsPrivateBrowsingServiceObsolete.manifest
+@BINPATH@/components/nsPrivateBrowsingServiceObsolete.js
+#else
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
 #endif
