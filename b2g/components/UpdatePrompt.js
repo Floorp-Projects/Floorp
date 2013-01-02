@@ -192,15 +192,15 @@ UpdatePrompt.prototype = {
     this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
   },
 
+  _copyProperties: ["appVersion", "buildID", "detailsURL", "displayVersion",
+                    "errorCode", "isOSUpdate", "platformVersion",
+                    "previousAppVersion", "state", "statusText"],
+
   sendUpdateEvent: function UP_sendUpdateEvent(aType, aUpdate) {
-    let detail = {
-      displayVersion: aUpdate.displayVersion,
-      detailsURL: aUpdate.detailsURL,
-      statusText: aUpdate.statusText,
-      state: aUpdate.state,
-      errorCode: aUpdate.errorCode,
-      isOSUpdate: aUpdate.isOSUpdate
-    };
+    let detail = {};
+    for each (let property in this._copyProperties) {
+      detail[property] = aUpdate[property];
+    }
 
     let patch = aUpdate.selectedPatch;
     if (!patch && aUpdate.patchCount > 0) {
