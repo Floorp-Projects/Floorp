@@ -11,6 +11,12 @@
  * and create derivative works of this document.
  */
 
+interface imgINotificationObserver;
+interface imgIRequest;
+interface URI;
+interface MozChannel;
+interface nsIStreamListener;
+
 [NamedConstructor=Image(),
  NamedConstructor=Image(unsigned long width),
  NamedConstructor=Image(unsigned long width, unsigned long height)]
@@ -50,4 +56,34 @@ partial interface HTMLImageElement {
            attribute DOMString longDesc;
 
   [TreatNullAs=EmptyString,SetterThrows] attribute DOMString border;
+
+  // Mirrored chrome-only nsIImageLoadingContent methods.  Please make sure
+  // to update this list if nsIImageLoadingContent changes.
+  [ChromeOnly]
+  const long UNKNOWN_REQUEST = -1;
+  [ChromeOnly]
+  const long CURRENT_REQUEST = 0;
+  [ChromeOnly]
+  const long PENDING_REQUEST = 1;
+
+  [ChromeOnly]
+  attribute boolean loadingEnabled;
+  [ChromeOnly]
+  readonly attribute short imageBlockingStatus;
+  [ChromeOnly]
+  void addObserver(imgINotificationObserver aObserver);
+  [ChromeOnly]
+  void removeObserver(imgINotificationObserver aObserver);
+  [ChromeOnly,Throws]
+  imgIRequest? getRequest(long aRequestType);
+  [ChromeOnly,Throws]
+  long getRequestType(imgIRequest aRequest);
+  [ChromeOnly,Throws]
+  readonly attribute URI? currentURI;
+  [ChromeOnly,Throws]
+  nsIStreamListener? loadImageWithChannel(MozChannel aChannel);
+  [ChromeOnly,Throws]
+  void forceReload();
+  [ChromeOnly]
+  void forceImageState(boolean aForce, unsigned long long aState);
 };
