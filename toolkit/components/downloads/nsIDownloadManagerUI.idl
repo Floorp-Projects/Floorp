@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(bc54ef90-5215-11e2-bcfd-0800200c9a66)]
+[scriptable, uuid(ca7663d5-69e3-4c4a-b754-f462bd36b05f)]
 interface nsIDownloadManagerUI : nsISupports {
   /**
    * The reason that should be passed when the user requests to show the
@@ -30,14 +30,10 @@ interface nsIDownloadManagerUI : nsISupports {
   *        The reason to show the download manager's UI.  This defaults to
   *        REASON_USER_INTERACTED, and should be one of the previously listed
   *        constants.
-  * @param [optional] aUsePrivateUI
-  *        Pass true as this argument to hint to the implementation that it
-  *        should only display private downloads in the UI, if possible.
   */
   void show([optional] in nsIInterfaceRequestor aWindowContext,
             [optional] in unsigned long aID,
-            [optional] in short aReason,
-            [optional] in boolean aUsePrivateUI);
+            [optional] in short aReason);
 
  /**
   * Indicates if the UI is visible or not.

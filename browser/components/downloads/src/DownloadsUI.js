@@ -60,10 +60,10 @@ DownloadsUI.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadManagerUI
 
-  show: function DUI_show(aWindowContext, aID, aReason, aUsePrivateUI)
+  show: function DUI_show(aWindowContext, aID, aReason)
   {
     if (DownloadsCommon.useToolkitUI) {
-      this._toolkitUI.show(aWindowContext, aID, aReason, aUsePrivateUI);
+      this._toolkitUI.show(aWindowContext, aID, aReason);
       return;
     }
 
@@ -76,19 +76,19 @@ DownloadsUI.prototype = {
       let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
 
       if (!browserWin || browserWin.windowState == kMinimized) {
-        this._showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI);
+        this._showDownloadManagerUI(aWindowContext, aID, aReason);
       }
       else {
         // If the indicator is visible, then new download notifications are
         // already handled by the panel service.
         browserWin.DownloadsButton.checkIsVisible(function(isVisible) {
           if (!isVisible) {
-            this._showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI);
+            this._showDownloadManagerUI(aWindowContext, aID, aReason);
           }
         }.bind(this));
       }
     } else {
-      this._showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI);
+      this._showDownloadManagerUI(aWindowContext, aID, aReason);
     }
   },
 
@@ -112,13 +112,13 @@ DownloadsUI.prototype = {
    * Helper function that opens the download manager UI.
    */
   _showDownloadManagerUI:
-  function DUI_showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI)
+  function DUI_showDownloadManagerUI(aWindowContext, aID, aReason)
   {
     // If we weren't given a window context, try to find a browser window
     // to use as our parent - and if that doesn't work, error out and give up.
     let parentWindow = aWindowContext;
     if (!parentWindow) {
-      parentWindow = RecentWindow.getMostRecentBrowserWindow({ private: !!aUsePrivateUI });
+      parentWindow = RecentWindow.getMostRecentBrowserWindow();
       if (!parentWindow) {
         Components.utils.reportError(
           "Couldn't find a browser window to open the Places Downloads View " +
