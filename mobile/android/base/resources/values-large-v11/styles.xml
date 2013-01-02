@@ -42,7 +42,7 @@
         <item name="android:background">@drawable/address_bar_nav_button</item>
         <!-- Start with the button hidden -->
         <item name="android:alpha">0</item>
-        <item name="android:layout_marginLeft">@dimen/forward_default_offset</item>
+        <item name="android:layout_marginLeft">-11dp</item>
     </style>
 
    <style name="AddressBar.Button.Container">
