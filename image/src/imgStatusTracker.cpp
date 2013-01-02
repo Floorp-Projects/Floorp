@@ -20,13 +20,13 @@
 
 using namespace mozilla::image;
 
-class imgStatusTrackerObserver : public imgDecoderObserver
+class imgStatusTrackerNotifyingObserver : public imgDecoderObserver
 {
 public:
-  imgStatusTrackerObserver(imgStatusTracker* aTracker)
+  imgStatusTrackerNotifyingObserver(imgStatusTracker* aTracker)
   : mTracker(aTracker) {}
 
-  virtual ~imgStatusTrackerObserver() {}
+  virtual ~imgStatusTrackerNotifyingObserver() {}
 
   void SetTracker(imgStatusTracker* aTracker) {
     mTracker = aTracker;
@@ -36,7 +36,7 @@ public:
 
   virtual void OnStartDecode()
   {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartDecode");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStartDecode");
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
                       "OnStartDecode callback before we've created our image");
 
@@ -59,12 +59,12 @@ public:
 
   virtual void OnStartRequest()
   {
-    NS_NOTREACHED("imgRequest(imgDecoderObserver)::OnStartRequest");
+    NS_NOTREACHED("imgStatusTrackerNotifyingObserver(imgDecoderObserver)::OnStartRequest");
   }
 
   virtual void OnStartContainer()
   {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartContainer");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStartContainer");
 
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
                       "OnStartContainer callback before we've created our image");
@@ -78,7 +78,7 @@ public:
 
   virtual void OnStartFrame()
   {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartFrame");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStartFrame");
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
                       "OnStartFrame callback before we've created our image");
 
@@ -90,7 +90,7 @@ public:
 
   virtual void FrameChanged(const nsIntRect* dirtyRect)
   {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::FrameChanged");
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
                       "FrameChanged callback before we've created our image");
 
@@ -104,7 +104,7 @@ public:
 
   virtual void OnStopFrame()
   {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopFrame");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStopFrame");
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
                       "OnStopFrame callback before we've created our image");
 
@@ -120,7 +120,7 @@ public:
 
   virtual void OnStopDecode(nsresult aStatus)
   {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopDecode");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStopDecode");
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
                       "OnStopDecode callback before we've created our image");
 
@@ -144,7 +144,7 @@ public:
 
   virtual void OnStopRequest(bool aLastPart)
   {
-    NS_NOTREACHED("imgRequest(imgDecoderObserver)::OnStopRequest");
+    NS_NOTREACHED("imgStatusTrackerNotifyingObserver(imgDecoderObserver)::OnStopRequest");
   }
 
   virtual void OnDiscard()
@@ -188,12 +188,103 @@ private:
   imgStatusTracker* mTracker;
 };
 
+class imgStatusTrackerObserver : public imgDecoderObserver
+{
+public:
+  imgStatusTrackerObserver(imgStatusTracker* aTracker)
+  : mTracker(aTracker) {}
+
+  virtual ~imgStatusTrackerObserver() {}
+
+  void SetTracker(imgStatusTracker* aTracker) {
+    mTracker = aTracker;
+  }
+
+  /** imgDecoderObserver methods **/
+
+  virtual void OnStartDecode() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartDecode");
+    mTracker->RecordStartDecode();
+    if (!mTracker->IsMultipart()) {
+      mTracker->RecordBlockOnload();
+    }
+  }
+
+  virtual void OnStartRequest() MOZ_OVERRIDE
+  {
+    NS_NOTREACHED("imgStatusTrackerObserver(imgDecoderObserver)::OnStartRequest");
+  }
+
+  virtual void OnStartContainer() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartContainer");
+    mTracker->RecordStartContainer(mTracker->GetImage());
+  }
+
+  virtual void OnStartFrame() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartFrame");
+    mTracker->RecordStartFrame();
+  }
+
+  virtual void FrameChanged(const nsIntRect* dirtyRect) MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
+    mTracker->RecordFrameChanged(dirtyRect);
+  }
+
+  virtual void OnStopFrame() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopFrame");
+    mTracker->RecordStopFrame();
+    mTracker->RecordUnblockOnload();
+  }
+
+  virtual void OnStopDecode(nsresult aStatus) MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopDecode");
+    mTracker->RecordStopDecode(aStatus);
+
+    // This is really hacky. We need to handle the case where we start decoding,
+    // block onload, but then hit an error before we get to our first frame.
+    mTracker->RecordUnblockOnload();
+  }
+
+  virtual void OnStopRequest(bool aLastPart) MOZ_OVERRIDE
+  {
+    NS_NOTREACHED("imgStatusTrackerObserver::(imgDecoderObserver)::OnStopRequest");
+  }
+
+  virtual void OnDiscard() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnDiscard");
+    mTracker->RecordDiscard();
+  }
+
+  virtual void OnUnlockedDraw() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnUnlockedDraw");
+    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+                      "OnUnlockedDraw callback before we've created our image");
+    mTracker->RecordUnlockedDraw();
+  }
+
+  virtual void OnImageIsAnimated() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnImageIsAnimated");
+    mTracker->RecordImageIsAnimated();
+  }
+
+private:
+  imgStatusTracker* mTracker;
+};
 
 // imgStatusTracker methods
 
 imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
-    mTrackerObserver(new imgStatusTrackerObserver(this)),
+    mTrackerObserver(new imgStatusTrackerNotifyingObserver(this)),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
     mIsMultipart(false),
