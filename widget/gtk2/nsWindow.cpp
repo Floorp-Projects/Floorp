@@ -360,7 +360,6 @@ nsWindow::nsWindow()
     mHasMappedToplevel   = false;
     mIsFullyObscured     = false;
     mRetryPointerGrab    = false;
-    mTransientParent     = nullptr;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
     mLastSizeMode        = nsSizeMode_Normal;
@@ -767,8 +766,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    NS_ASSERTION(!mTransientParent, "child widget with transient parent");
-
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
     if (mParent) {
         mParent->RemoveChild(this);
@@ -822,12 +819,12 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
     GdkWindow* newParentWindow = newParent->mGdkWindow;
     GtkWidget* newContainer = newParent->GetMozContainerWidget();
+    GtkWindow* shell = GTK_WINDOW(mShell);
 
-    if (mTransientParent) {
+    if (shell && gtk_window_get_transient_for(shell)) {
       GtkWindow* topLevelParent =
           GTK_WINDOW(gtk_widget_get_toplevel(newContainer));
-      gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
-      mTransientParent = topLevelParent;
+      gtk_window_set_transient_for(shell, topLevelParent);
     }
 
     ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
@@ -3429,7 +3426,6 @@ nsWindow::Create(nsIWidget        *aParent,
                                      GDK_WINDOW_TYPE_HINT_DIALOG);
             gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                          topLevelParent);
-            mTransientParent = topLevelParent;
         }
         else if (mWindowType == eWindowType_popup) {
             // With popup windows, we want to control their position, so don't
@@ -3516,7 +3512,6 @@ nsWindow::Create(nsIWidget        *aParent,
             if (topLevelParent) {
                 gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                             topLevelParent);
-                mTransientParent = topLevelParent;
             }
         }
         else { // must be eWindowType_toplevel
