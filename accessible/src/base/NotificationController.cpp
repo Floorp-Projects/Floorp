@@ -641,7 +641,6 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
 void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
-  DocAccessible* document = aEvent->GetDocAccessible();
   Accessible* container = aEvent->mAccessible->Parent();
   if (!container)
     return;

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -117,10 +118,12 @@ AccReorderEvent::IsShowHideEventTarget(const Accessible* aTarget) const
 {
   uint32_t count = mDependentEvents.Length();
   for (uint32_t index = count - 1; index < count; index--) {
-    if (mDependentEvents[index]->mAccessible == aTarget &&
-        mDependentEvents[index]->mEventType == nsIAccessibleEvent::EVENT_SHOW ||
-        mDependentEvents[index]->mEventType == nsIAccessibleEvent::EVENT_HIDE) {
-      return mDependentEvents[index]->mEventType;
+    if (mDependentEvents[index]->mAccessible == aTarget) {
+      uint32_t eventType = mDependentEvents[index]->mEventType;
+      if (eventType == nsIAccessibleEvent::EVENT_SHOW ||
+          eventType == nsIAccessibleEvent::EVENT_HIDE) {
+        return mDependentEvents[index]->mEventType;
+      }
     }
   }
 
