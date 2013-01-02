@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from b2ginstance import B2GInstance
 import datetime
 from errors import *
 from mozdevice import devicemanagerADB, DMError
@@ -72,15 +73,9 @@ class Emulator(object):
         self.copy_userdata = self.dataImg is None
 
     def _check_for_b2g(self):
-        if self.homedir is None:
-            self.homedir = os.getenv('B2G_HOME')
-        if self.homedir is None:
-            raise Exception('Must define B2G_HOME or pass the homedir parameter')
-        self._check_file(self.homedir)
-
-        oldstyle_homedir = os.path.join(self.homedir, 'glue', 'gonk-ics')
-        if os.access(oldstyle_homedir, os.F_OK):
-            self.homedir = oldstyle_homedir
+        self.b2g = B2GInstance(homedir=self.homedir)
+        self.adb = self.b2g.adb_path
+        self.homedir = self.b2g.homedir
 
         if self.arch not in ("x86", "arm"):
             raise Exception("Emulator architecture must be one of x86, arm, got: %s" %
@@ -103,7 +98,6 @@ class Emulator(object):
             sysdir = "out/target/product/generic"
             self.tail_args = ["-cpu", "cortex-a8"]
 
-        self._check_for_adb()
         if(self.sdcard):
             self.mksdcard = os.path.join(self.homedir, host_bin_dir, "mksdcard")
             self.create_sdcard(self.sdcard)
@@ -111,28 +105,22 @@ class Emulator(object):
         if not self.binary:
             self.binary = os.path.join(self.homedir, binary)
 
-        self._check_file(self.binary)
+        self.b2g.check_file(self.binary)
 
         self.kernelImg = os.path.join(self.homedir, kernel)
-        self._check_file(self.kernelImg)
+        self.b2g.check_file(self.kernelImg)
 
         self.sysDir = os.path.join(self.homedir, sysdir)
-        self._check_file(self.sysDir)
+        self.b2g.check_file(self.sysDir)
 
         if not self.dataImg:
             self.dataImg = os.path.join(self.sysDir, 'userdata.img')
-        self._check_file(self.dataImg)
+        self.b2g.check_file(self.dataImg)
 
     def __del__(self):
         if self.telnet:
             self.telnet.write('exit\n')
             self.telnet.read_all()
-
-    def _check_file(self, filePath):
-        if not os.access(filePath, os.F_OK):
-            raise Exception(('File not found: %s; did you pass the B2G home '
-                             'directory as the homedir parameter, or set '
-                             'B2G_HOME correctly?') % filePath)
 
     @property
     def args(self):
@@ -182,27 +170,6 @@ class Emulator(object):
             raise Exception('unable to create sdcard : exit code %d: %s'
                             % (retcode, sd.stdout.read()))
         return None
-
-    def _check_for_adb(self):
-        host_dir = "linux-x86"
-        if platform.system() == "Darwin":
-            host_dir = "darwin-x86"
-        adb = subprocess.Popen(['which', 'adb'],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        if adb.wait() == 0:
-            self.adb = adb.stdout.read().strip()  # remove trailing newline
-            return
-        adb_paths = [os.path.join(self.homedir, 'glue', 'gonk', 'out', 'host',
-                                  host_dir, 'bin', 'adb'),
-                     os.path.join(self.homedir, 'out', 'host', host_dir,
-                                  'bin', 'adb'),
-                     os.path.join(self.homedir, 'bin', 'adb')]
-        for option in adb_paths:
-            if os.path.exists(option):
-                self.adb = option
-                return
-        raise Exception('adb not found!')
 
     def _run_adb(self, args):
         args.insert(0, self.adb)
@@ -313,7 +280,7 @@ waitFor(
         marionette.delete_session()
 
     def connect(self):
-        self._check_for_adb()
+        self.adb = B2GInstance.check_adb(self.homedir)
         self.start_adb()
 
         online, offline = self._get_adb_devices()

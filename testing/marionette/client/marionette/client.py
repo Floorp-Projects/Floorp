@@ -5,7 +5,7 @@
 import json
 import socket
 
-from errors import MarionetteException
+from errors import MarionetteException, InvalidResponseException, ErrorCodes
 
 class MarionetteClient(object):
     """ The Marionette socket client.  This speaks the same protocol
@@ -49,14 +49,17 @@ class MarionetteClient(object):
             response += self._recv_n_bytes(int(length) + 1 + len(length) - 10)
             return json.loads(response)
         else:
-            raise MarionetteException("Could not successfully complete transport of message to Gecko, socket closed?")
+            raise InvalidResponseException("Could not successfully complete " \
+                                           "transport of message to Gecko, "
+                                           "socket closed?",
+                                           status=ErrorCodes.INVALID_RESPONSE)
 
-    def connect(self):
+    def connect(self, timeout=180.0):
         """ Connect to the server and process the hello message we expect
             to receive in response.
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(180.0)
+        self.sock.settimeout(timeout)
         try:
             self.sock.connect((self.addr, self.port))
         except:

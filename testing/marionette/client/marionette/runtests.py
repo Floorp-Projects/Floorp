@@ -185,7 +185,8 @@ class MarionetteTestRunner(object):
                  es_server=None, rest_server=None, logger=None,
                  testgroup="marionette", noWindow=False, logcat_dir=None,
                  xml_output=None, repeat=0, perf=False, perfserv=None,
-                 gecko_path=None, testvars=None, tree=None, load_early=False):
+                 gecko_path=None, testvars=None, tree=None, load_early=False,
+                 device=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -214,6 +215,7 @@ class MarionetteTestRunner(object):
         self.testvars = None
         self.tree = tree
         self.load_early = load_early
+        self.device = device
 
         if testvars is not None:
             if not os.path.exists(testvars):
@@ -592,6 +594,8 @@ def parse_options():
                       help='directory to store logcat dump files')
     parser.add_option('--address', dest='address', action='store',
                       help='host:port of running Gecko instance to connect to')
+    parser.add_option('--device', dest='device', action='store',
+                      help='serial ID of a device to use for adb / fastboot')
     parser.add_option('--type', dest='type', action='store',
                       default='browser+b2g',
                       help = "The type of test to run, can be a combination "
@@ -693,7 +697,8 @@ def startTestRunner(runner_class, options, tests):
                           perfserv=options.perfserv,
                           gecko_path=options.gecko_path,
                           testvars=options.testvars,
-                          load_early=options.load_early)
+                          load_early=options.load_early,
+                          device=options.device)
     runner.run_tests(tests, testtype=options.type)
     return runner
 
