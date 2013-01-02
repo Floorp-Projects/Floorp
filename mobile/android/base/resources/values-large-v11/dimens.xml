@@ -12,5 +12,6 @@
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="addressbar_offset_left">90dp</dimen>
     <dimen name="addressbar_offset_left_noforward">50dip</dimen>
+    <dimen name="forward_default_offset">-11dip</dimen>
 
 </resources>
