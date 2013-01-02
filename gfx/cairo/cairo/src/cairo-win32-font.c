@@ -1946,6 +1946,11 @@ const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
  *
  * Modifications to this hash table are protected by
  * _cairo_win32_font_face_mutex.
+ *
+ * Only #cairo_font_face_t values with null 'hfont' (no
+ * HFONT preallocated by caller) are stored in this table. We rely
+ * on callers to manage the lifetime of the HFONT, and they can't
+ * do that if we share #cairo_font_face_t values with other callers.
  */
 
 static cairo_hash_table_t *cairo_win32_font_face_hash_table = NULL;
@@ -2041,12 +2046,14 @@ _cairo_win32_font_face_destroy (void *abstract_face)
     cairo_hash_table_t *hash_table;
     cairo_win32_font_face_t *font_face = abstract_face;
 
-    hash_table = _cairo_win32_font_face_hash_table_lock ();
-    if (unlikely (hash_table == NULL)) {
-        return;
+    if (!font_face->hfont) {
+        hash_table = _cairo_win32_font_face_hash_table_lock ();
+        if (unlikely (hash_table == NULL)) {
+            return;
+        }
+        _cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
+        _cairo_win32_font_face_hash_table_unlock ();
     }
-    _cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
-    _cairo_win32_font_face_hash_table_unlock ();
 }
 
 /**
@@ -2075,20 +2082,22 @@ cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
     cairo_hash_table_t *hash_table;
     cairo_status_t status;
 
-    hash_table = _cairo_win32_font_face_hash_table_lock ();
-    if (unlikely (hash_table == NULL)) {
-        _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_font_face_t *)&_cairo_font_face_nil;
-    }
+    if (!font) {
+        hash_table = _cairo_win32_font_face_hash_table_lock ();
+        if (unlikely (hash_table == NULL)) {
+            _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_font_face_t *)&_cairo_font_face_nil;
+        }
 
-    _cairo_win32_font_face_init_key (&key, logfont, font);
+        _cairo_win32_font_face_init_key (&key, logfont, font);
 
-    /* Return existing unscaled font if it exists in the hash table. */
-    font_face = _cairo_hash_table_lookup (hash_table,
-					 &key.base.hash_entry);
-    if (font_face != NULL) {
-	cairo_font_face_reference (&font_face->base);
-	goto DONE;
+        /* Return existing unscaled font if it exists in the hash table. */
+        font_face = _cairo_hash_table_lookup (hash_table,
+                                              &key.base.hash_entry);
+        if (font_face != NULL) {
+	    cairo_font_face_reference (&font_face->base);
+	    goto DONE;
+        }
     }
 
     /* Otherwise create it and insert into hash table. */
@@ -2100,20 +2109,26 @@ cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
 
     _cairo_win32_font_face_init_key (font_face, logfont, font);
     _cairo_font_face_init (&font_face->base, &_cairo_win32_font_face_backend);
-
     assert (font_face->base.hash_entry.hash == key.base.hash_entry.hash);
-    status = _cairo_hash_table_insert (hash_table,
-				       &font_face->base.hash_entry);
-    if (unlikely (status))
-	goto FAIL;
+
+    if (!font) {
+        status = _cairo_hash_table_insert (hash_table,
+                                           &font_face->base.hash_entry);
+        if (unlikely (status))
+	    goto FAIL;
+    }
 
 DONE:
-    _cairo_win32_font_face_hash_table_unlock ();
+    if (!font) {
+        _cairo_win32_font_face_hash_table_unlock ();
+    }
 
     return &font_face->base;
 
 FAIL:
-    _cairo_win32_font_face_hash_table_unlock ();
+    if (!font) {
+        _cairo_win32_font_face_hash_table_unlock ();
+    }
 
     return (cairo_font_face_t *)&_cairo_font_face_nil;
 }
