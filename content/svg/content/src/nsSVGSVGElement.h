@@ -166,6 +166,8 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const;
@@ -255,7 +257,6 @@ public:
 
 private:
   // nsSVGElement overrides
-  bool IsEventName(nsIAtom* aName);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

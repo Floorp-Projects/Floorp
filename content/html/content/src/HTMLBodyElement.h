@@ -143,6 +143,9 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
 private:
   nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
 
