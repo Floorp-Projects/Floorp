@@ -100,7 +100,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     private int mAddressBarViewOffset;
     private int mAddressBarViewOffsetNoForward;
-    private int mDefaultForwardMargin;
     private PropertyAnimator mForwardAnim = null;
 
     private int mCount;
@@ -135,7 +134,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mAddressBarView = mLayout.findViewById(R.id.addressbar);
         mAddressBarViewOffset = mActivity.getResources().getDimensionPixelSize(R.dimen.addressbar_offset_left);
         mAddressBarViewOffsetNoForward = mActivity.getResources().getDimensionPixelSize(R.dimen.addressbar_offset_left_noforward);
-        mDefaultForwardMargin = mActivity.getResources().getDimensionPixelSize(R.dimen.forward_default_offset);
         mAwesomeBarRightEdge = (GeckoFrameLayout) mLayout.findViewById(R.id.awesome_bar_right_edge);
         mAwesomeBarEntry = mLayout.findViewById(R.id.awesome_bar_entry);
 
@@ -1006,7 +1004,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             return;
 
         mForwardAnim = new PropertyAnimator(FORWARD_ANIMATION_DURATION);
-        final int width = mForward.getWidth()/2;
+        final int width = enabled ? mForward.getWidth()/2 : 0;
 
         mForwardAnim.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -1038,27 +1036,20 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                     proxy = AnimatorProxy.create(mSiteSecurity);
                     proxy.setTranslationX(0);
 
+                    mAddressBarView.requestLayout();
                 }
-
-                ViewGroup.MarginLayoutParams layoutParams =
-                    (ViewGroup.MarginLayoutParams)mForward.getLayoutParams();
-                layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? width : 0);
-                AnimatorProxy proxy = AnimatorProxy.create(mForward);
-                proxy.setTranslationX(0);
-
-                mAddressBarView.requestLayout();
                 mForwardAnim = null;
             }
         });
-        prepareForwardAnimation(mForwardAnim, enabled, width);
+        prepareForwardAnimation(mForwardAnim, width);
         mForwardAnim.start();
     }
 
-    private void prepareForwardAnimation(PropertyAnimator anim, boolean enabled, int width) {
-        if (!enabled) {
+    private void prepareForwardAnimation(PropertyAnimator anim, int width) {
+        if (width == 0) {
             anim.attach(mForward,
                       PropertyAnimator.Property.TRANSLATION_X,
-                      -width);
+                      0);
             anim.attach(mForward,
                       PropertyAnimator.Property.ALPHA,
                       0);
