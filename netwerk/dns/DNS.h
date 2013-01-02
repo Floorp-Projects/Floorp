@@ -47,9 +47,18 @@ namespace mozilla {
 namespace net {
 
 // Required buffer size for text form of an IP address.
-// Includes space for null termination.
+// Includes space for null termination. We make our own contants
+// because we don't want higher-level code depending on things
+// like INET6_ADDRSTRLEN and having to include the associated
+// platform-specific headers.
+#ifdef XP_WIN
+// Windows requires longer buffers for some reason.
+const int kIPv4CStrBufSize = 22;
+const int kIPv6CStrBufSize = 65;
+#else
 const int kIPv4CStrBufSize = 16;
 const int kIPv6CStrBufSize = 46;
+#endif
 
 // This was all created at a time in which we were using NSPR for host
 // resolution and we were propagating NSPR types like "PRAddrInfo" and
