@@ -625,9 +625,9 @@ private:
     bool startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
     bool finishLoop(jsbytecode *head);
     inline bool shouldStartLoop(jsbytecode *head);
-    void jsop_bindname(PropertyName *name);
+    void jsop_bindname(HandlePropertyName name);
     void jsop_setglobal(uint32_t index);
-    void jsop_getprop_slow(PropertyName *name, bool forPrototype = false);
+    void jsop_getprop_slow(HandlePropertyName name, bool forPrototype = false);
     void jsop_aliasedArg(unsigned i, bool get, bool poppedAfter = false);
     void jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter = false);
     void jsop_this();
@@ -652,20 +652,20 @@ private:
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     bool jsop_getgname(uint32_t index);
     void jsop_getgname_slow(uint32_t index);
-    bool jsop_setgname(PropertyName *name, bool popGuaranteed);
-    void jsop_setgname_slow(PropertyName *name);
+    bool jsop_setgname(HandlePropertyName name, bool popGuaranteed);
+    void jsop_setgname_slow(HandlePropertyName name);
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
-    bool jsop_getprop(PropertyName *name, JSValueType type,
+    bool jsop_getprop(HandlePropertyName name, JSValueType type,
                       bool typeCheck = true, bool forPrototype = false);
-    bool jsop_getprop_dispatch(PropertyName *name);
-    bool jsop_setprop(PropertyName *name, bool popGuaranteed);
-    void jsop_setprop_slow(PropertyName *name);
+    bool jsop_getprop_dispatch(HandlePropertyName name);
+    bool jsop_setprop(HandlePropertyName name, bool popGuaranteed);
+    void jsop_setprop_slow(HandlePropertyName name);
     bool jsop_instanceof();
-    bool jsop_intrinsic(PropertyName *name, JSValueType type);
-    void jsop_name(PropertyName *name, JSValueType type);
-    bool jsop_xname(PropertyName *name);
+    bool jsop_intrinsic(HandlePropertyName name, JSValueType type);
+    void jsop_name(HandlePropertyName name, JSValueType type);
+    bool jsop_xname(HandlePropertyName name);
     void enterBlock(StaticBlockObject *block);
     void leaveBlock();
     void emitEval(uint32_t argc);

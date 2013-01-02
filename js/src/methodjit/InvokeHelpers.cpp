@@ -287,7 +287,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     RootedFunction newfun(cx, args.callee().toFunction());
 
-    RootedScript newscript(cx, newfun->getOrCreateScript(cx));
+    RootedScript newscript(cx, JSFunction::getOrCreateScript(cx, newfun));
     if (!newscript)
         return false;
 
