@@ -87,35 +87,6 @@ MarkExactStackRoots(JSTracer *trc)
 }
 #endif /* JSGC_USE_EXACT_ROOTING */
 
-static inline bool
-InFreeList(ArenaHeader *aheader, uintptr_t addr)
-{
-    if (!aheader->hasFreeThings())
-        return false;
-
-    FreeSpan firstSpan(aheader->getFirstFreeSpan());
-
-    for (const FreeSpan *span = &firstSpan;;) {
-        /* If the thing comes fore the current span, it's not free. */
-        if (addr < span->first)
-            return false;
-
-        /*
-         * If we find it inside the span, it's dead. We use here "<=" and not
-         * "<" even for the last span as we know that thing is inside the
-         * arena. Thus for the last span thing < span->end.
-         */
-        if (addr <= span->last)
-            return true;
-
-        /*
-         * The last possible empty span is an the end of the arena. Here
-         * span->end < thing < thingsEnd and so we must have more spans.
-         */
-        span = span->nextSpan();
-    }
-}
-
 enum ConservativeGCTest
 {
     CGCT_VALID,
@@ -240,7 +211,7 @@ MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
      * this point we no longer have the mark bits from the previous GC run and
      * we must account for newly allocated things.
      */
-    if (InFreeList(aheader, uintptr_t(thing)))
+    if (InFreeList(aheader, thing))
         return CGCT_NOTLIVE;
 
     JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
