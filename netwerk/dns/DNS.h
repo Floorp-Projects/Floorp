@@ -15,7 +15,7 @@
 #endif
 
 #ifdef XP_WIN
-#include "Winsock2.h"
+#include "winsock2.h"
 #endif
 
 #define IPv6ADDR_IS_LOOPBACK(a) \
