@@ -273,7 +273,7 @@ nsImageLoadingContent::GetImageBlockingStatus(int16_t* aStatus)
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
   NS_PRECONDITION(aStatus, "Null out param");
-  *aStatus = mImageBlockingStatus;
+  *aStatus = ImageBlockingStatus();
   return NS_OK;
 }
 
@@ -341,25 +341,36 @@ nsImageLoadingContent::RemoveObserver(imgINotificationObserver* aObserver)
   return NS_OK;
 }
 
+already_AddRefed<imgIRequest>
+nsImageLoadingContent::GetRequest(int32_t aRequestType,
+                                  ErrorResult& aError)
+{
+  nsCOMPtr<imgIRequest> request;
+  switch(aRequestType) {
+  case CURRENT_REQUEST:
+    request = mCurrentRequest;
+    break;
+  case PENDING_REQUEST:
+    request = mPendingRequest;
+    break;
+  default:
+    NS_ERROR("Unknown request type");
+    aError.Throw(NS_ERROR_UNEXPECTED);
+  }
+
+  return request.forget();
+}
+
 NS_IMETHODIMP
 nsImageLoadingContent::GetRequest(int32_t aRequestType,
                                   imgIRequest** aRequest)
 {
-  switch(aRequestType) {
-  case CURRENT_REQUEST:
-    *aRequest = mCurrentRequest;
-    break;
-  case PENDING_REQUEST:
-    *aRequest = mPendingRequest;
-    break;
-  default:
-    NS_ERROR("Unknown request type");
-    *aRequest = nullptr;
-    return NS_ERROR_UNEXPECTED;
-  }
-  
-  NS_IF_ADDREF(*aRequest);
-  return NS_OK;
+  NS_ENSURE_ARG_POINTER(aRequest);
+
+  ErrorResult result;
+  *aRequest = GetRequest(aRequestType, result).get();
+
+  return result.ErrorCode();
 }
 
 NS_IMETHODIMP_(void)
@@ -401,6 +412,23 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
   }
 }
 
+int32_t
+nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
+                                      ErrorResult& aError)
+{
+  if (aRequest == mCurrentRequest) {
+    return CURRENT_REQUEST;
+  }
+
+  if (aRequest == mPendingRequest) {
+    return PENDING_REQUEST;
+  }
+
+  NS_ERROR("Unknown request");
+  aError.Throw(NS_ERROR_UNEXPECTED);
+  return UNKNOWN_REQUEST;
+}
+
 NS_IMETHODIMP
 nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
                                       int32_t* aRequestType)
@@ -408,51 +436,51 @@ nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
   NS_PRECONDITION(aRequestType, "Null out param");
-  
-  if (aRequest == mCurrentRequest) {
-    *aRequestType = CURRENT_REQUEST;
-    return NS_OK;
+
+  ErrorResult result;
+  *aRequestType = GetRequestType(aRequest, result);
+  return result.ErrorCode();
+}
+
+already_AddRefed<nsIURI>
+nsImageLoadingContent::GetCurrentURI(ErrorResult& aError)
+{
+  nsCOMPtr<nsIURI> uri;
+  if (mCurrentRequest) {
+    mCurrentRequest->GetURI(getter_AddRefs(uri));
+  } else if (mCurrentURI) {
+    nsresult rv = NS_EnsureSafeToReturn(mCurrentURI, getter_AddRefs(uri));
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
+    }
   }
 
-  if (aRequest == mPendingRequest) {
-    *aRequestType = PENDING_REQUEST;
-    return NS_OK;
-  }
-
-  *aRequestType = UNKNOWN_REQUEST;
-  NS_ERROR("Unknown request");
-  return NS_ERROR_UNEXPECTED;
+  return uri.forget();
 }
 
 NS_IMETHODIMP
 nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
 {
-  if (mCurrentRequest) {
-    return mCurrentRequest->GetURI(aURI);
-  }
+  NS_ENSURE_ARG_POINTER(aURI);
 
-  if (!mCurrentURI) {
-    *aURI = nullptr;
-    return NS_OK;
-  }
-  
-  return NS_EnsureSafeToReturn(mCurrentURI, aURI);
+  ErrorResult result;
+  *aURI = GetCurrentURI(result).get();
+  return result.ErrorCode();
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsIStreamListener>
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
-                                            nsIStreamListener** aListener)
+                                            ErrorResult& aError)
 {
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
   if (!nsContentUtils::GetImgLoaderForChannel(aChannel)) {
-    return NS_ERROR_NULL_POINTER;
+    aError.Throw(NS_ERROR_NULL_POINTER);
+    return nullptr;
   }
 
   nsCOMPtr<nsIDocument> doc = GetOurOwnerDoc();
   if (!doc) {
     // Don't bother
-    return NS_OK;
+    return nullptr;
   }
 
   // XXX what should we do with content policies here, if anything?
@@ -463,9 +491,11 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   AutoStateChanger changer(this, true);
 
   // Do the load.
+  nsCOMPtr<nsIStreamListener> listener;
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
   nsresult rv = nsContentUtils::GetImgLoaderForChannel(aChannel)->
-    LoadImageWithChannel(aChannel, this, doc, aListener,
+    LoadImageWithChannel(aChannel, this, doc,
+                         getter_AddRefs(listener),
                          getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
@@ -476,22 +506,46 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     if (!mCurrentRequest)
       aChannel->GetURI(getter_AddRefs(mCurrentURI));
     FireEvent(NS_LITERAL_STRING("error"));
-    return rv;
+    aError.Throw(rv);
   }
-  return NS_OK;;
+  return listener.forget();
+}
+
+NS_IMETHODIMP
+nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
+                                            nsIStreamListener** aListener)
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_ARG_POINTER(aListener);
+
+  ErrorResult result;
+  *aListener = LoadImageWithChannel(aChannel, result).get();
+  return result.ErrorCode();
+}
+
+void
+nsImageLoadingContent::ForceReload(ErrorResult& aError)
+{
+  nsCOMPtr<nsIURI> currentURI;
+  GetCurrentURI(getter_AddRefs(currentURI));
+  if (!currentURI) {
+    aError.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  nsresult rv = LoadImage(currentURI, true, true, nullptr, nsIRequest::VALIDATE_ALWAYS);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
 }
 
 NS_IMETHODIMP nsImageLoadingContent::ForceReload()
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIURI> currentURI;
-  GetCurrentURI(getter_AddRefs(currentURI));
-  if (!currentURI) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return LoadImage(currentURI, true, true, nullptr, nsIRequest::VALIDATE_ALWAYS);
+  ErrorResult result;
+  ForceReload(result);
+  return result.ErrorCode();
 }
 
 NS_IMETHODIMP
