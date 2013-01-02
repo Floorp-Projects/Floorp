@@ -9827,12 +9827,6 @@ nsGlobalWindow::RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
-
-  // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
-  // PRTime to make the division do the right thing on 64-bit
-  // platforms whether delay is positive or negative (which we
-  // know is always positive here, but cast anyways for
-  // consistency).
   nsresult rv = aTimeout->InitTimer(TimerCallback, delay.ToMilliseconds());
 
   if (NS_FAILED(rv)) {
