@@ -791,6 +791,33 @@ gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
     return mFontFamilies.GetWeak(key);
 }
 
+struct FindFamilyCallbackData {
+    gfxFontEntry  *mFontEntry;
+    gfxFontFamily *mFamily;
+};
+
+static PLDHashOperator
+FindFamilyCallback(const nsAString&    aName,
+                   gfxMixedFontFamily* aFamily,
+                   void*               aUserArg)
+{
+    FindFamilyCallbackData *d = static_cast<FindFamilyCallbackData*>(aUserArg);
+    if (aFamily->ContainsFace(d->mFontEntry)) {
+        d->mFamily = aFamily;
+        return PL_DHASH_STOP;
+    }
+
+    return PL_DHASH_NEXT;
+}
+
+gfxFontFamily*
+gfxUserFontSet::FindFamilyFor(gfxFontEntry* aFontEntry) const
+{
+    FindFamilyCallbackData d = { aFontEntry, nullptr };
+    mFontFamilies.EnumerateRead(FindFamilyCallback, &d);
+    return d.mFamily;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // gfxUserFontSet::UserFontCache - re-use platform font entries for user fonts
 // across pages/fontsets rather than instantiating new platform fonts.
