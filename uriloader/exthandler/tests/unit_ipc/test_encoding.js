@@ -58,7 +58,7 @@ function HelperAppDlg() { }
 HelperAppDlg.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
   contractID: "@mozilla.org/helperapplauncherdialog;1",
-  show: function (launcher, ctx, reason, usePrivateUI) {
+  show: function (launcher, ctx, reason) {
     launcher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToFile;
     launcher.launchWithApplication(null, false);
   },
