@@ -125,7 +125,8 @@ protected:
     }
 
     // Start at 1 or we'll loop forever.
-    CheckedUint32 bufferLen = NS_MAX<uint32_t>(mDataBufferLen, 1);
+    CheckedUint32 bufferLen =
+      NS_MAX<uint32_t>(static_cast<uint32_t>(mDataBufferLen), 1);
     while (bufferLen.isValid() && bufferLen.value() < mDataLen + aSize)
       bufferLen *= 2;
 
