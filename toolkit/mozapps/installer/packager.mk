@@ -745,6 +745,10 @@ ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
 	$(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(DEPTH)/installer-stage && true
 endif
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+ELF_HACK_FLAGS = --fill
+endif
+
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 ifndef MOZ_FAST_PACKAGE
@@ -839,7 +843,7 @@ ifdef USE_ELF_HACK
 	@echo === and your environment \(compiler and linker versions\), and use
 	@echo === --disable-elf-hack until this is fixed.
 	@echo ===
-	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . -name "*$(DLL_SUFFIX)" | xargs ../../build/unix/elfhack/elfhack
+	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . -name "*$(DLL_SUFFIX)" | xargs ../../build/unix/elfhack/elfhack $(ELF_HACK_FLAGS)
 endif
 
 # We always sign nss because we don't do it from security/manager anymore
