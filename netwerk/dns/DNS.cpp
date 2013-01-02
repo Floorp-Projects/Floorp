@@ -9,7 +9,7 @@
 #include <string.h>
 
 #ifdef XP_WIN
-#include "Ws2tcpip.h"
+#include "ws2tcpip.h"
 #endif
 
 namespace mozilla {
