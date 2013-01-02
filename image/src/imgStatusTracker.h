@@ -12,6 +12,7 @@ class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
 class imgStatusTrackerObserver;
+class imgStatusTrackerNotifyingObserver;
 struct nsIntRect;
 namespace mozilla {
 namespace image {
@@ -183,6 +184,7 @@ private:
   friend class imgStatusNotifyRunnable;
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
+  friend class imgStatusTrackerNotifyingObserver;
 
   void FireFailureNotification();
 
