@@ -842,11 +842,8 @@ nsSVGSVGElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsSVGSVGElementBase::PreHandleEvent(aVisitor);
 }
 
-//----------------------------------------------------------------------
-// nsSVGElement overrides
-
 bool
-nsSVGSVGElement::IsEventName(nsIAtom* aName)
+nsSVGSVGElement::IsEventAttributeName(nsIAtom* aName)
 {
   /* The events in EventNameType_SVGSVG are for events that are only
      applicable to outermost 'svg' elements. We don't check if we're an outer
@@ -857,6 +854,9 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
   return nsContentUtils::IsEventAttributeName(aName,
          (EventNameType_SVGGraphic | EventNameType_SVGSVG));
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement overrides
 
 // Helper for GetViewBoxTransform on root <svg> node
 // * aLength: internal value for our <svg> width or height attribute.

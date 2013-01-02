@@ -797,13 +797,7 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    uint32_t eventType = EventNameType_HTML;
-    if (mNodeInfo->Equals(nsGkAtoms::body) ||
-        mNodeInfo->Equals(nsGkAtoms::frameset)) {
-      eventType |= EventNameType_HTMLBodyOrFramesetOnly;
-    }
-    if (nsContentUtils::IsEventAttributeName(aName, eventType) &&
-        aValue) {
+    if (IsEventAttributeName(aName) && aValue) {
       NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
         "Expected string value for script body");
       nsresult rv = SetEventHandler(aName, aValue->GetStringValue());
@@ -1043,8 +1037,7 @@ nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
       UnregAccessKey();
       UnsetFlags(NODE_HAS_ACCESSKEY);
     }
-    else if (nsContentUtils::IsEventAttributeName(aAttribute,
-                                                  EventNameType_HTML)) {
+    else if (IsEventAttributeName(aAttribute)) {
       nsEventListenerManager* manager = GetListenerManager(false);
       if (manager) {
         manager->RemoveEventHandler(aAttribute);
@@ -3008,7 +3001,7 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
         }
 
         nsIAtom *attr = name->Atom();
-        if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_HTML)) {
+        if (!IsEventAttributeName(attr)) {
             continue;
         }
 
@@ -3294,4 +3287,10 @@ nsGenericHTMLElement::GetWidthHeightForImage(imgIRequest *aImageRequest)
   NS_ASSERTION(size.width >= 0, "negative width");
   NS_ASSERTION(size.height >= 0, "negative height");
   return size;
+}
+
+bool
+nsGenericHTMLElement::IsEventAttributeName(nsIAtom *aName)
+{
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML);
 }
