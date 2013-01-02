@@ -495,8 +495,12 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    void addTab() {
+    public void addTab() {
         showAwesomebar(AwesomeBar.Target.NEW_TAB);
+    }
+
+    public void addPrivateTab() {
+        Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
     }
 
     public void showNormalTabs() {
@@ -1116,7 +1120,7 @@ abstract public class BrowserApp extends GeckoApp
                 addTab();
                 return true;
             case R.id.new_private_tab:
-                Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+                addPrivateTab();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
