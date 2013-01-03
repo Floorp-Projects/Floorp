@@ -649,7 +649,7 @@ MMul::computeRange()
         return;
     Range *left = getOperand(0)->range();
     Range *right = getOperand(1)->range();
-    if (isPossibleTruncated())
+    if (!implicitTruncate_ && isPossibleTruncated())
         implicitTruncate_ = !Range::precisionLossMul(left, right);
     if (canBeNegativeZero())
         canBeNegativeZero_ = Range::negativeZeroMul(left, right);
