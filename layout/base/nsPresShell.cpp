@@ -41,7 +41,7 @@
 #include "nsFrame.h"
 #include "FrameLayerBuilder.h"
 #include "nsViewManager.h"
-#include "nsView.h"
+#include "nsIView.h"
 #include "nsCRTGlue.h"
 #include "prlog.h"
 #include "prprf.h"

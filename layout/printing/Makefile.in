@@ -39,7 +39,6 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../../content/base/src \
-		-I$(srcdir)/../../view/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
