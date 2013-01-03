@@ -7,9 +7,9 @@
 #define __NS_SVGSWITCHELEMENT_H__
 
 #include "nsIDOMSVGSwitchElement.h"
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 
-typedef nsSVGGraphicElement nsSVGSwitchElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGSwitchElementBase;
 
 class nsSVGSwitchElement : public nsSVGSwitchElementBase,
                            public nsIDOMSVGSwitchElement

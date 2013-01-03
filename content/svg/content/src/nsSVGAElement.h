@@ -10,10 +10,10 @@
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGString.h"
+#include "SVGGraphicsElement.h"
 
-typedef nsSVGGraphicElement nsSVGAElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGAElementBase;
 
 class nsSVGAElement : public nsSVGAElementBase,
                       public nsIDOMSVGAElement,

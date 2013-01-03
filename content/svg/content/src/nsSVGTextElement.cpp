@@ -5,7 +5,7 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsCOMPtr.h"
@@ -22,7 +22,7 @@
 
 using namespace mozilla;
 
-typedef nsSVGGraphicElement nsSVGTextElementBase;
+typedef dom::SVGGraphicsElement nsSVGTextElementBase;
 
 /**
  * This class does not inherit nsSVGTextPositioningElement - it reimplements it

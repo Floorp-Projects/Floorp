@@ -10,7 +10,7 @@
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
-#include "nsSVGGraphicElement.h"
+#include "nsSVGElement.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
