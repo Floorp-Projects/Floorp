@@ -58,7 +58,6 @@ struct _GtkXtBin
   Display       *xtdisplay;        /* Xt Toolkit Display */
 
   Window         xtwindow;         /* Xt Toolkit XWindow */
-  gint           x, y;
   gint           width, height;
   XtClient	 xtclient;         /* Xt Client for XEmbed */
 };
@@ -70,9 +69,6 @@ struct _GtkXtBinClass
 
 GTKXTBIN_API(GType)       gtk_xtbin_get_type (void);
 GTKXTBIN_API(GtkWidget *) gtk_xtbin_new (GdkWindow *parent_window, String *f);
-GTKXTBIN_API(void)        gtk_xtbin_set_position (GtkXtBin *xtbin,
-                                                  gint       x,
-                                                  gint       y);
 GTKXTBIN_API(void)       gtk_xtbin_resize (GtkWidget *widget,
                                            gint       width,
                                            gint       height);

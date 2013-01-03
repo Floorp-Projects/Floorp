@@ -210,8 +210,6 @@ gtk_xtbin_init (GtkXtBin *xtbin)
   xtbin->xtdisplay = NULL;
   xtbin->parent_window = NULL;
   xtbin->xtwindow = 0;
-  xtbin->x = 0;
-  xtbin->y = 0;
 }
 
 static void
@@ -317,18 +315,6 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
 }
 
 void
-gtk_xtbin_set_position (GtkXtBin *xtbin,
-                        gint       x,
-                        gint       y)
-{
-  xtbin->x = x;
-  xtbin->y = y;
-
-  if (GTK_WIDGET_REALIZED (xtbin))
-    gdk_window_move (GTK_WIDGET (xtbin)->window, x, y);
-}
-
-void
 gtk_xtbin_resize (GtkWidget *widget,
                   gint       width,
                   gint       height)
@@ -356,8 +342,8 @@ gtk_xtbin_resize (GtkWidget *widget,
 
   /* we need to send a size allocate so the socket knows about the
      size changes */
-  allocation.x = xtbin->x;
-  allocation.y = xtbin->y;
+  allocation.x = 0;
+  allocation.y = 0;
   allocation.width = xtbin->width;
   allocation.height = xtbin->height;
 
