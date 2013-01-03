@@ -74,10 +74,9 @@ function run_test() {
   // clear the cache
   evict_cache_entries();
 
-  // force to write file bigger than 5MiB
   asyncOpenCacheEntry("data",
                       "HTTP",
-                      Ci.nsICache.STORE_ON_DISK_AS_FILE,
+                      Ci.nsICache.STORE_ON_DISK,
                       Ci.nsICache.ACCESS_WRITE,
                       write_datafile);
 

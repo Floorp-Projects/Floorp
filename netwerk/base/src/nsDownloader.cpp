@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDownloader.h"
-#include "nsICachingChannel.h"
 #include "nsIInputStream.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -43,39 +42,33 @@ nsDownloader::Init(nsIDownloadObserver *observer, nsIFile *location)
 NS_IMETHODIMP 
 nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv;
     if (!mLocation) {
-        nsCOMPtr<nsICachingChannel> caching = do_QueryInterface(request, &rv);
-        if (NS_SUCCEEDED(rv))
-            rv = caching->SetCacheAsFile(true);
-    }
-    if (NS_FAILED(rv)) {
-        // OK, we will need to stream the data to disk ourselves.  Make
-        // sure mLocation exists.
-        if (!mLocation) {
-            rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mLocation));
-            if (NS_FAILED(rv)) return rv;
-
-            char buf[13];
-            NS_MakeRandomString(buf, 8);
-            memcpy(buf+8, ".tmp", 5);
-            rv = mLocation->AppendNative(nsDependentCString(buf, 12));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = mLocation->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-            if (NS_FAILED(rv)) return rv;
-
-            mLocationIsTemp = true;
-        }
-        
-        rv = NS_NewLocalFileOutputStream(getter_AddRefs(mSink), mLocation);
+        nsCOMPtr<nsIFile> location;
+        rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(location));
         if (NS_FAILED(rv)) return rv;
 
-        // we could wrap this output stream with a buffered output stream,
-        // but it shouldn't be necessary since we will be writing large
-        // chunks given to us via OnDataAvailable.
+        char buf[13];
+        NS_MakeRandomString(buf, 8);
+        memcpy(buf+8, ".tmp", 5);
+        rv = location->AppendNative(nsDependentCString(buf, 12));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = location->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        if (NS_FAILED(rv)) return rv;
+
+        location.swap(mLocation);
+        mLocationIsTemp = true;
     }
-    return rv;
+
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(mSink), mLocation);
+    if (NS_FAILED(rv)) return rv;
+
+    // we could wrap this output stream with a buffered output stream,
+    // but it shouldn't be necessary since we will be writing large
+    // chunks given to us via OnDataAvailable.
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -83,20 +76,7 @@ nsDownloader::OnStopRequest(nsIRequest  *request,
                             nsISupports *ctxt,
                             nsresult     status)
 {
-    if (!mSink && NS_SUCCEEDED(status)) {
-        nsCOMPtr<nsICachingChannel> caching = do_QueryInterface(request, &status);
-        if (NS_SUCCEEDED(status)) {
-            status = caching->GetCacheFile(getter_AddRefs(mLocation));
-            if (NS_SUCCEEDED(status)) {
-                NS_ASSERTION(mLocation, "success without a cache file");
-                // ok, then we need to hold a reference to the cache token in
-                // order to ensure that the cache file remains valid until we
-                // get destroyed.
-                caching->GetCacheToken(getter_AddRefs(mCacheToken));
-            }
-        }
-    }
-    else if (mSink) {
+    if (mSink) {
         mSink->Close();
         mSink = nullptr;
     }

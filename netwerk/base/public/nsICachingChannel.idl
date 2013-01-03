@@ -17,7 +17,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(8456EBEE-7127-485b-9518-C2E328C09F5D)]
+[scriptable, uuid(a77b664e-e707-4017-9c03-47bcedcb5b05)]
 interface nsICachingChannel : nsICacheInfoChannel
 {
     /**
@@ -63,22 +63,6 @@ interface nsICachingChannel : nsICacheInfoChannel
      * is likewise valid.
      */
     attribute nsISupports cacheKey;
-
-    /**
-     * Specifies whether or not the data should be cached to a file.  This
-     * may fail if the disk cache is not present.  The value of this attribute
-     * is usually only settable during the processing of a channel's
-     * OnStartRequest.  The default value of this attribute depends on the
-     * particular implementation of nsICachingChannel.
-     */
-    attribute boolean cacheAsFile;
-
-    /**
-     * Get the "file" where the cached data can be found.  This is valid for
-     * as long as a reference to the cache token is held.  This may return
-     * an error if cacheAsFile is false.
-     */
-    readonly attribute nsIFile cacheFile;
 
     /**************************************************************************
      * Caching channel specific load flags:
