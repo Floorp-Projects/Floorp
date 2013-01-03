@@ -2348,12 +2348,10 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             callbackObject = None
 
-        if callbackObject:
+        if callbackObject and callbackMemberTypes[0].isCallbackInterface():
             callbackObject = CGWrapper(CGIndenter(callbackObject),
                                        pre="if (!IsPlatformObject(cx, &argObj)) {\n",
                                        post="\n}")
-        else:
-            callbackObject = None
 
         dictionaryMemberTypes = filter(lambda t: t.isDictionary(), memberTypes)
         if len(dictionaryMemberTypes) > 0:
@@ -4032,17 +4030,18 @@ class CGMethodCall(CGThing):
             #     passed to an interface or "object" arg.
             # 2)  A Date object being passed to a Date or "object" arg.
             # 3)  A RegExp object being passed to a RegExp or "object" arg.
-            # 4)  Any non-Date and non-RegExp object being passed to a
+            # 4)  A callable object being passed to a callback or "object" arg.
+            # 5)  Any non-Date and non-RegExp object being passed to a
             #     dictionary or array or sequence or "object" arg.
-            # 5)  Some other kind of object being passed to a callback
-            #     interface, callback function, or "object" arg.
+            # 6)  Some other kind of object being passed to a callback
+            #     interface or "object" arg.
             #
             # Unfortunately, we cannot push the "some other kind of object"
-            # check down into case 5, because callbacks _can_ normally be
+            # check down into case 6, because callbacks interfaces _can_ normally be
             # initialized from platform objects. But we can coalesce the other
-            # four cases together, as long as we make sure to check whether our
+            # five cases together, as long as we make sure to check whether our
             # object works as an interface argument before checking whether it
-            # works as an arraylike or dictionary.
+            # works as an arraylike or dictionary or callback function.
 
             # First grab all the overloads that have a non-callback interface
             # (which includes typed arrays and arraybuffers) at the
@@ -4057,6 +4056,10 @@ class CGMethodCall(CGThing):
             # And all the overloads that take Date
             objectSigs.extend(s for s in possibleSignatures
                               if distinguishingType(s).isDate())
+
+            # And all the overloads that take callbacks
+            objectSigs.extend(s for s in possibleSignatures
+                              if distinguishingType(s).isCallback())
 
             # Now append all the overloads that take an array or sequence or
             # dictionary:
@@ -4092,8 +4095,7 @@ class CGMethodCall(CGThing):
             # Check for vanilla JS objects
             pickFirstSignature("%s.isObject() && !IsPlatformObject(cx, &%s.toObject())" %
                                (distinguishingArg, distinguishingArg),
-                               lambda s: (distinguishingType(s).isCallback() or
-                                          distinguishingType(s).isCallbackInterface()))
+                               lambda s: distinguishingType(s).isCallbackInterface())
 
             # The remaining cases are mutually exclusive.  The
             # pickFirstSignature calls are what change caseBody
