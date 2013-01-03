@@ -1363,8 +1363,26 @@ struct JSContext : js::ContextFriendFields,
     /* Per-context run options. */
     unsigned            runOptions;          /* see jsapi.h for JSOPTION_* */
 
+    /* Default locale for Internationalization API */
+    char                *defaultLocale;
+
   public:
     int32_t             reportGranularity;  /* see jsprobes.h */
+
+    /*
+     * Set the default locale for the ECMAScript Internationalization API
+     * (Intl.Collator, Intl.NumberFormat, Intl.DateTimeFormat).
+     * Note that the Internationalization API encourages clients to
+     * specify their own locales.
+     * The locale string remains owned by the caller.
+     */
+    bool setDefaultLocale(const char *locale);
+
+    /* Reset the default locale to OS defaults. */
+    void resetDefaultLocale();
+
+    /* Gets current default locale. String remains owned by context. */
+    const char *getDefaultLocale();
 
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
