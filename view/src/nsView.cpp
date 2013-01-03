@@ -117,25 +117,6 @@ void nsIView::DestroyWidget()
   }
 }
 
-nsresult nsIView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (nullptr == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsISupports)),
-               "Someone expects views to be ISupports-derived!");
-  
-  *aInstancePtr = nullptr;
-  
-  if (aIID.Equals(NS_GET_IID(nsIView))) {
-    *aInstancePtr = (void*)(nsIView*)this;
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
 nsIView* nsIView::GetViewFor(nsIWidget* aWidget)
 {
   NS_PRECONDITION(nullptr != aWidget, "null widget ptr");
