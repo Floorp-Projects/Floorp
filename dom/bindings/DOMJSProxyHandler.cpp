@@ -76,10 +76,10 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)
 }
 
 bool
-DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id, bool set,
-                                       JSPropertyDescriptor* desc)
+DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id,
+                                       JSPropertyDescriptor* desc, unsigned flags)
 {
-  if (!getOwnPropertyDescriptor(cx, proxy, id, set, desc)) {
+  if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
     return false;
   }
   if (desc->obj) {

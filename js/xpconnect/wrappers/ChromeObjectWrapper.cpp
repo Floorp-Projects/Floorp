@@ -25,15 +25,15 @@ PropIsFromStandardPrototype(JSContext *cx, JSPropertyDescriptor *desc)
 
 bool
 ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                           jsid id, bool set,
-                                           js::PropertyDescriptor *desc)
+                                           jsid id, js::PropertyDescriptor *desc,
+                                           unsigned flags)
 {
     // First, try the lookup on the base wrapper. This can throw for various
     // reasons, including sets (gets fail silently). There's nothing we can really
     // do for sets, so we can conveniently propagate any exception we hit here.
     desc->obj = NULL;
     if (!ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
-                                                        set, desc)) {
+                                                        desc, flags)) {
         return false;
     }
 
@@ -46,8 +46,8 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
     // If we found something, were doing a set, or have no proto, we're done.
     JSObject *wrapperProto;
     if (!JS_GetPrototype(cx, wrapper, &wrapperProto))
-	return false;
-    if (desc->obj || set || !wrapperProto)
+      return false;
+    if (desc->obj || (flags & JSRESOLVE_ASSIGNING) || !wrapperProto)
         return true;
 
     // If not, try doing the lookup on the prototype.
@@ -86,8 +86,8 @@ ChromeObjectWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
     // this because the call signature of ::get doesn't give us any way to
     // determine the object upon which the property was found.
     JSPropertyDescriptor desc;
-    if (!ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id, false,
-                                                        &desc)) {
+    if (!ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id, &desc,
+                                                        0)) {
         return false;
     }
 
