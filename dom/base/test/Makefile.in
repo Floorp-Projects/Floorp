@@ -11,6 +11,8 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+  test_constructor.html \
+  test_constructor-assignment.html \
   test_document.all_unqualified.html \
   test_domrequest.html \
   test_e4x_for_each.html \
