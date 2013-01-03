@@ -225,10 +225,8 @@ public:
    * @return the widget closest to this view; can be null because some view trees
    * don't have widgets at all (e.g., printing), but if any view in the view tree
    * has a widget, then it's safe to assume this will not return null
-   * XXX Remove this 'virtual' when gfx+widget are merged into gklayout;
-   * Mac widget depends on this method, which is BOGUS!
    */
-  virtual nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
+  nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
 
   /**
    * Create a widget to associate with this view.  This variant of
@@ -357,15 +355,15 @@ public:
    * @param x new x position
    * @param y new y position
    */
-  virtual void SetPosition(nscoord aX, nscoord aY);
+  void SetPosition(nscoord aX, nscoord aY);
   /**
    * Called to indicate that the dimensions of the view have been changed.
    * The x and y coordinates may be < 0, indicating that the view extends above
    * or to the left of its origin position. The term 'dimensions' indicates it
    * is relative to this view.
    */
-  virtual void SetDimensions(const nsRect &aRect, bool aPaint = true,
-                             bool aResizeWidget = true);
+  void SetDimensions(const nsRect &aRect, bool aPaint = true,
+                     bool aResizeWidget = true);
 
   /**
    * Called to indicate that the visibility of a view has been
