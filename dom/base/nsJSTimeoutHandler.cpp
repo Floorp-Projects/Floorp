@@ -21,9 +21,12 @@
 #include "nsAlgorithm.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/FunctionBinding.h"
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
+
+using namespace mozilla::dom;
 
 // Our JS nsIScriptTimeoutHandler implementation.
 class nsJSScriptTimeoutHandler MOZ_FINAL : public nsIScriptTimeoutHandler
@@ -37,16 +40,19 @@ public:
   ~nsJSScriptTimeoutHandler();
 
   virtual const PRUnichar *GetHandlerText();
-  virtual JSObject *GetScriptObject() {
-    return mFunObj;
+  virtual Function* GetCallback()
+  {
+    return mFunction;
   }
-  virtual void GetLocation(const char **aFileName, uint32_t *aLineNo) {
+  virtual void GetLocation(const char **aFileName, uint32_t *aLineNo)
+  {
     *aFileName = mFileName.get();
     *aLineNo = mLineNo;
   }
 
-  virtual nsIArray *GetArgv() {
-    return mArgv;
+  virtual const nsTArray<JS::Value>& GetArgs()
+  {
+    return mArgs;
   }
 
   nsresult Init(nsGlobalWindow *aWindow, bool *aIsInterval,
@@ -55,18 +61,15 @@ public:
   void ReleaseJSObjects();
 
 private:
-
-  nsCOMPtr<nsIScriptContext> mContext;
-
   // filename, line number and JS language version string of the
   // caller of setTimeout()
   nsCString mFileName;
   uint32_t mLineNo;
-  nsCOMPtr<nsIJSArgArray> mArgv;
+  nsTArray<JS::Value> mArgs;
 
   // The JS expression to evaluate or function to call, if !mExpr
   JSFlatString *mExpr;
-  JSObject *mFunObj;
+  nsRefPtr<Function> mFunction;
 };
 
 
@@ -86,8 +89,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
       name.AppendInt(tmp->mLineNo);
       name.AppendLiteral("]");
     }
-    else if (tmp->mFunObj) {
-      JSFunction* fun = JS_GetObjectFunction(tmp->mFunObj);
+    else if (tmp->mFunction) {
+      JSFunction* fun =
+        JS_GetObjectFunction(js::UnwrapObject(tmp->mFunction->Callable()));
       if (fun && JS_GetFunctionId(fun)) {
         JSFlatString *funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
         size_t size = 1 + JS_PutEscapedFlatString(NULL, 0, funId, 0);
@@ -108,14 +112,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
                                       tmp->mRefCnt.get())
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArgv)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFunction)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSScriptTimeoutHandler)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mExpr)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mFunObj)
+  for (uint32_t i = 0; i < tmp->mArgs.Length(); ++i) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mArgs[i])
+  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSScriptTimeoutHandler)
@@ -128,8 +133,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSScriptTimeoutHandler)
 
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler() :
   mLineNo(0),
-  mExpr(nullptr),
-  mFunObj(nullptr)
+  mExpr(nullptr)
 {
 }
 
@@ -144,7 +148,8 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
   if (mExpr) {
     mExpr = nullptr;
   } else {
-    mFunObj = nullptr;
+    mFunction = nullptr;
+    mArgs.Clear();
   }
   NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
 }
@@ -153,8 +158,7 @@ nsresult
 nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
                                int32_t *aInterval)
 {
-  mContext = aWindow->GetContextInternal();
-  if (!mContext) {
+  if (!aWindow->GetContextInternal() || !aWindow->FastGetGlobalJSObject()) {
     // This window was already closed, or never properly initialized,
     // don't let a timer be scheduled on such a window.
 
@@ -272,33 +276,28 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   } else if (funobj) {
     NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
 
-    mFunObj = funobj;
+    bool ok;
+    mFunction = new Function(cx, aWindow->FastGetGlobalJSObject(), funobj, &ok);
+    if (!ok) {
+      NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Create our arg array.  argc is the number of arguments passed
     // to setTimeout or setInterval; the first two are our callback
     // and the delay, so only arguments after that need to go in our
     // array.
-    nsCOMPtr<nsIJSArgArray> array;
     // NS_MAX(argc - 2, 0) wouldn't work right because argc is unsigned.
-    rv = NS_CreateJSArgv(cx, NS_MAX(argc, 2u) - 2, nullptr,
-                         getter_AddRefs(array));
-    if (NS_FAILED(rv)) {
+    uint32_t argCount = NS_MAX(argc, 2u) - 2;
+    FallibleTArray<JS::Value> args;
+    if (!args.SetCapacity(argCount)) {
+      // No need to drop here, since we already have a non-null mFunction
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    uint32_t dummy;
-    jsval *jsargv = nullptr;
-    array->GetArgs(&dummy, reinterpret_cast<void **>(&jsargv));
-
-    // jsargv might be null if we have argc <= 2
-    if (jsargv) {
-      for (int32_t i = 2; (uint32_t)i < argc; ++i) {
-        jsargv[i - 2] = argv[i];
-      }
-    } else {
-      NS_ASSERTION(argc <= 2, "Why do we have no jsargv when we have arguments?");
+    for (uint32_t idx = 0; idx < argCount; ++idx) {
+      *args.AppendElement() = argv[idx + 2];
     }
-    mArgv = array;
+    args.SwapElements(mArgs);
   } else {
     NS_WARNING("No func and no expr - why are we here?");
   }
@@ -319,17 +318,13 @@ nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                                    nsIScriptTimeoutHandler **aRet)
 {
   *aRet = nullptr;
-  nsJSScriptTimeoutHandler *handler = new nsJSScriptTimeoutHandler();
-  if (!handler)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  nsRefPtr<nsJSScriptTimeoutHandler> handler = new nsJSScriptTimeoutHandler();
   nsresult rv = handler->Init(aWindow, aIsInterval, aInterval);
   if (NS_FAILED(rv)) {
-    delete handler;
     return rv;
   }
 
-  NS_ADDREF(*aRet = handler);
+  handler.forget(aRet);
 
   return NS_OK;
 }
