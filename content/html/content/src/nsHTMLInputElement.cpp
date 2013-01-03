@@ -2243,12 +2243,18 @@ nsHTMLInputElement::NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisi
   }
 }
 
+bool
+nsHTMLInputElement::IsDisabledForEvents(uint32_t aMessage)
+{
+  return IsElementDisabledForEvents(aMessage, GetPrimaryFrame());
+}
+
 nsresult
 nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = false;
-  if (IsElementDisabledForEvents(aVisitor.mEvent->message, GetPrimaryFrame())) {
+  if (IsDisabledForEvents(aVisitor.mEvent->message)) {
     return NS_OK;
   }
 

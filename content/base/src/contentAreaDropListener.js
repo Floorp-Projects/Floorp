@@ -95,6 +95,9 @@ ContentAreaDropListener.prototype =
 
   canDropLink: function(aEvent, aAllowSameDocument)
   {
+    if (this._eventTargetIsDisabled(aEvent))
+      return false;
+
     let dataTransfer = aEvent.dataTransfer;
     let types = dataTransfer.types;
     if (!types.contains("application/x-moz-file") &&
@@ -131,6 +134,8 @@ ContentAreaDropListener.prototype =
   dropLink: function(aEvent, aName, aDisallowInherit)
   {
     aName.value = "";
+    if (this._eventTargetIsDisabled(aEvent))
+      return "";
 
     let dataTransfer = aEvent.dataTransfer;
     let [url, name] = this._getDropURL(dataTransfer);
@@ -147,6 +152,18 @@ ContentAreaDropListener.prototype =
       aName.value = name;
 
     return url;
+  },
+
+  _eventTargetIsDisabled: function(aEvent)
+  {
+    let ownerDoc = aEvent.originalTarget.ownerDocument;
+    if (!ownerDoc || !ownerDoc.defaultView)
+      return false;
+
+    return ownerDoc.defaultView
+                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                   .isNodeDisabledForEvents(aEvent.originalTarget);
   }
 };
 
