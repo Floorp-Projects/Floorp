@@ -121,6 +121,7 @@ webidl_files = \
   SVGStyleElement.webidl \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
+  SVGTransformableElement.webidl \
   SVGTransformList.webidl \
   SVGURIReference.webidl \
   Text.webidl \

@@ -134,6 +134,7 @@ CPPSRCS		= \
 		SVGScriptElement.cpp \
 		SVGStopElement.cpp \
 		SVGStyleElement.cpp \
+		SVGTransformableElement.cpp \
 		SVGTransformListSMILType.cpp \
 		SVGViewBoxSMILType.cpp \
 		$(NULL)
@@ -163,6 +164,7 @@ EXPORTS_mozilla/dom = \
 	SVGStopElement.h \
 	SVGStyleElement.h \
 	SVGTitleElement.h \
+	SVGTransformableElement.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
