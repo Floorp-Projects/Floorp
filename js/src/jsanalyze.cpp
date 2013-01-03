@@ -388,29 +388,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
           }
 
-          case JSOP_LOOKUPSWITCH: {
-            isJaegerInlineable = isIonInlineable = false;
-            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-            unsigned npairs = GET_UINT16(pc2);
-            pc2 += UINT16_LEN;
-
-            if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                return;
-            getCode(defaultOffset).safePoint = true;
-
-            while (npairs) {
-                pc2 += UINT32_INDEX_LEN;
-                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                    return;
-                getCode(targetOffset).safePoint = true;
-                pc2 += JUMP_OFFSET_LEN;
-                npairs--;
-            }
-            break;
-          }
-
           case JSOP_TRY: {
             /*
              * Everything between a try and corresponding catch or finally is conditional.
@@ -790,7 +767,6 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             break;
           }
 
-          case JSOP_LOOKUPSWITCH:
           case JSOP_TABLESWITCH:
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
@@ -1518,24 +1494,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 if (targetOffset != offset)
                     checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
                 pc2 += JUMP_OFFSET_LEN;
-            }
-
-            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
-            break;
-          }
-
-          case JSOP_LOOKUPSWITCH: {
-            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-            unsigned npairs = GET_UINT16(pc2);
-            pc2 += UINT16_LEN;
-
-            while (npairs) {
-                pc2 += UINT32_INDEX_LEN;
-                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
-                pc2 += JUMP_OFFSET_LEN;
-                npairs--;
             }
 
             checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);

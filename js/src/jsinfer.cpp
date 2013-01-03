@@ -3765,7 +3765,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_DEBUGGER:
       case JSOP_SETCALL:
       case JSOP_TABLESWITCH:
-      case JSOP_LOOKUPSWITCH:
       case JSOP_TRY:
       case JSOP_LABEL:
         break;
