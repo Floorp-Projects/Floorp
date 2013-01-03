@@ -156,7 +156,6 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI)
     }
     
     mInputStreamTable.Remove(aURI);
-    RemoveFromCacheSet(aURI);
     return newProto;
 }
 
@@ -348,23 +347,12 @@ nsXULPrototypeCache::AbortCaching()
 
 static const char kDisableXULDiskCachePref[] = "nglayout.debug.disable_xul_fastload";
 
-void
-nsXULPrototypeCache::RemoveFromCacheSet(nsIURI* aURI)
-{
-    mCacheURITable.RemoveEntry(aURI);
-}
-
 nsresult
 nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
 {
     nsresult rv = NS_OK, rv2 = NS_OK;
 
     nsCOMPtr<nsIURI> protoURI = aPrototypeDocument->GetURI();
-
-    // Remove this document from the cache table. We use the table's
-    // emptiness instead of a counter to decide when the caching process 
-    // has completed.
-    RemoveFromCacheSet(protoURI);
 
     nsCOMPtr<nsIObjectOutputStream> oos;
     rv = GetOutputStream(protoURI, getter_AddRefs(oos));
@@ -457,14 +445,18 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
                                     &len);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoCString spec(kXULCachePrefix);
-    rv = PathifyURI(uri, spec);
-    if (NS_FAILED(rv))
-        return NS_ERROR_NOT_AVAILABLE;
-    rv = sc->PutBuffer(spec.get(), buf, len);
-    if (NS_SUCCEEDED(rv))
-        mOutputStreamTable.Remove(uri);
-    
+    if (!mCacheURITable.GetEntry(uri)) {
+        nsAutoCString spec(kXULCachePrefix);
+        rv = PathifyURI(uri, spec);
+        if (NS_FAILED(rv))
+            return NS_ERROR_NOT_AVAILABLE;
+        rv = sc->PutBuffer(spec.get(), buf, len);
+        if (NS_SUCCEEDED(rv)) {
+            mOutputStreamTable.Remove(uri);
+            mCacheURITable.RemoveEntry(uri);
+        }
+    }
+
     return rv;
 }
 
