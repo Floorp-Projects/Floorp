@@ -8,7 +8,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIFileChannel.h"
-#include "nsICachingChannel.h"
 #include "nsMimeTypes.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetCID.h"
@@ -359,8 +358,6 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
 }
 
 // SetupPluginCacheFile is called if we have to save the stream to disk.
-// the most likely cause for this is either there is no disk cache available
-// or the stream is coming from a https server.
 //
 // These files will be deleted when the host is destroyed.
 //
@@ -759,13 +756,9 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   // force the plugin to use stream as file
   mStreamType = NP_ASFILE;
   
-  // then check it out if browser cache is not available
-  nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
-  if (!(cacheChannel && (NS_SUCCEEDED(cacheChannel->SetCacheAsFile(true))))) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel) {
-      SetupPluginCacheFile(channel);
-    }
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  if (channel) {
+    SetupPluginCacheFile(channel);
   }
   
   // unset mPendingRequests
@@ -984,15 +977,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     if (mLocalCachedFileHolder)
       localFile = mLocalCachedFileHolder->file();
     else {
-      nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
-      if (cacheChannel) {
-        cacheChannel->GetCacheFile(getter_AddRefs(localFile));
-      } else {
-        // see if it is a file channel.
-        nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
-        if (fileChannel) {
-          fileChannel->GetFile(getter_AddRefs(localFile));
-        }
+      // see if it is a file channel.
+      nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
+      if (fileChannel) {
+        fileChannel->GetFile(getter_AddRefs(localFile));
       }
     }
     
@@ -1143,11 +1131,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     // check it out if this is not a file channel.
     nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
     if (!fileChannel) {
-      // and browser cache is not available
-      nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
-      if (!(cacheChannel && (NS_SUCCEEDED(cacheChannel->SetCacheAsFile(true))))) {
         useLocalCache = true;
-      }
     }
   }
   
