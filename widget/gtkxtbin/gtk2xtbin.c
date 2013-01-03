@@ -551,12 +551,12 @@ xt_client_create ( XtClient* xtclient ,
 
   /* set the event handler */
   XtAddEventHandler(child_widget,
-                    0x0FFFFF & ~ResizeRedirectMask,
+                    StructureNotifyMask | KeyPressMask,
                     TRUE, 
                     (XtEventHandler)xt_client_event_handler, xtclient);
   XtAddEventHandler(child_widget, 
                     SubstructureNotifyMask | ButtonReleaseMask, 
-                    TRUE, 
+                    FALSE,
                     (XtEventHandler)xt_client_focus_listener, 
                     xtclient);
   XSync(xtclient->xtdisplay, FALSE);
@@ -590,7 +590,9 @@ void
 xt_client_destroy   (XtClient* xtclient)
 {
   if(xtclient->top_widget) {
-    XtRemoveEventHandler(xtclient->child_widget, 0x0FFFFF, TRUE, 
+    XtRemoveEventHandler(xtclient->child_widget,
+                         StructureNotifyMask | KeyPressMask,
+                         TRUE, 
                          (XtEventHandler)xt_client_event_handler, xtclient);
     XtDestroyWidget(xtclient->top_widget);
     xtclient->top_widget = NULL;
@@ -696,12 +698,6 @@ xt_client_event_handler( Widget w, XtPointer client_data, XEvent *event)
       break;
     case UnmapNotify:
       xt_client_set_info (w, 0);
-      break;
-    case FocusIn:
-      send_xembed_message ( xtplug,
-                            XEMBED_REQUEST_FOCUS, 0, 0, 0, 0);
-      break;
-    case FocusOut:
       break;
     case KeyPress:
 #ifdef DEBUG_XTBIN
@@ -836,7 +832,7 @@ xt_add_focus_listener( Widget w, XtPointer user_data)
 
   XtAddEventHandler(w, 
                     SubstructureNotifyMask | ButtonReleaseMask, 
-                    TRUE, 
+                    FALSE, 
                     (XtEventHandler)xt_client_focus_listener, 
                     xtclient);
   untrap_error();
@@ -848,7 +844,7 @@ xt_remove_focus_listener(Widget w, XtPointer user_data)
   int errorcode;
 
   trap_errors ();
-  XtRemoveEventHandler(w, SubstructureNotifyMask | ButtonReleaseMask, TRUE, 
+  XtRemoveEventHandler(w, SubstructureNotifyMask | ButtonReleaseMask, FALSE, 
                       (XtEventHandler)xt_client_focus_listener, user_data);
 
   untrap_error();
