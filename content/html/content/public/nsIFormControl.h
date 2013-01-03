@@ -70,8 +70,8 @@ PR_STATIC_ASSERT((uint32_t)eButtonElementTypesMax < (uint32_t)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((uint32_t)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0xbc53dcf5, 0xbd4f, 0x4991, \
- { 0xa1, 0x87, 0xc4, 0x57, 0x98, 0x54, 0xda, 0x6e } }
+{ 0x4b89980c, 0x4dcd, 0x428f, \
+  { 0xb7, 0xad, 0x43, 0x5b, 0x93, 0x29, 0x79, 0xec } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -182,6 +182,10 @@ public:
    */
   inline bool AllowDraggableChildren() const;
 
+  virtual bool IsDisabledForEvents(uint32_t aMessage)
+  {
+    return false;
+  }
 protected:
 
   /**

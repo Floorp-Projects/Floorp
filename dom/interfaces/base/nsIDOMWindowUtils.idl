@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(C98B7275-93C4-4EAD-B7CF-573D872C1071)]
+[scriptable, uuid(2196a216-ed3c-46dd-aa24-9f5b3ac17539)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1285,4 +1285,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * was created can be closed using scripts.
    */
    void allowScriptsToClose();
+
+   /**
+    * In certain cases the event handling of nodes, form controls in practice,
+    * may be disabled. Such cases are for example the existence of disabled
+    * attribute or -moz-user-input: none/disabled.
+    */
+   boolean isNodeDisabledForEvents(in nsIDOMNode aNode);
 };

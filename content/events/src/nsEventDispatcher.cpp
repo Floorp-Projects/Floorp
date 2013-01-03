@@ -197,7 +197,7 @@ public:
 
   static void ResetMaxEtciCount()
   {
-    NS_ASSERTION(!sCurrentEtciCount, "Wrong time to call ResetMaxEtciCount()!");
+    MOZ_ASSERT(!sCurrentEtciCount, "Wrong time to call ResetMaxEtciCount()!");
     sMaxEtciCount = 0;
   }
 
@@ -438,6 +438,30 @@ int32_t ChainItemPool::sEtciPoolUsers = 0;
 
 void NS_ShutdownChainItemPool() { ChainItemPool::Shutdown(); }
 
+nsEventTargetChainItem*
+EventTargetChainItemForChromeTarget(ChainItemPool& aPool,
+                                    nsINode* aNode,
+                                    nsEventTargetChainItem* aChild = nullptr)
+{
+  if (!aNode->IsInDoc()) {
+    return nullptr;
+  }
+  nsPIDOMWindow* win = aNode->OwnerDoc()->GetInnerWindow();
+  nsIDOMEventTarget* piTarget = win ? win->GetParentTarget() : nullptr;
+  NS_ENSURE_TRUE(piTarget, nullptr);
+
+  nsEventTargetChainItem* etci =
+    nsEventTargetChainItem::Create(aPool.GetPool(),
+                                   piTarget->GetTargetForEventTargetChain(),
+                                   aChild);
+  NS_ENSURE_TRUE(etci, nullptr);
+  if (!etci->IsValid()) {
+    nsEventTargetChainItem::Destroy(aPool.GetPool(), etci);
+    return nullptr;
+  }
+  return etci;
+}
+
 /* static */ nsresult
 nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsPresContext* aPresContext,
@@ -577,6 +601,13 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                                     isInAnon);
   targetEtci->PreHandleEvent(preVisitor);
 
+  if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
+    // Event target couldn't handle the event. Try to propagate to chrome.
+    nsEventTargetChainItem::Destroy(pool.GetPool(), targetEtci);
+    targetEtci = EventTargetChainItemForChromeTarget(pool, content);
+    NS_ENSURE_STATE(targetEtci);
+    targetEtci->PreHandleEvent(preVisitor);
+  }
   if (preVisitor.mCanHandle) {
     // At least the original target can handle the event.
     // Setting the retarget to the |target| simplifies retargeting code.
@@ -584,6 +615,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     targetEtci->SetNewTarget(t);
     nsEventTargetChainItem* topEtci = targetEtci;
     while (preVisitor.mParentTarget) {
+      nsIDOMEventTarget* parentTarget = preVisitor.mParentTarget;
       nsEventTargetChainItem* parentEtci =
         nsEventTargetChainItem::Create(pool.GetPool(), preVisitor.mParentTarget,
                                        topEtci);
@@ -610,6 +642,24 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
       } else {
         nsEventTargetChainItem::Destroy(pool.GetPool(), parentEtci);
         parentEtci = nullptr;
+        if (preVisitor.mAutomaticChromeDispatch && content) {
+          // Even if the current target can't handle the event, try to
+          // propagate to chrome.
+          nsCOMPtr<nsINode> disabledTarget = do_QueryInterface(parentTarget);
+          if (disabledTarget) {
+            parentEtci = EventTargetChainItemForChromeTarget(pool,
+                                                             disabledTarget,
+                                                             topEtci);
+            if (parentEtci) {
+              parentEtci->PreHandleEvent(preVisitor);
+              if (preVisitor.mCanHandle) {
+                targetEtci->SetNewTarget(parentTarget);
+                topEtci = parentEtci;
+                continue;
+              }
+            }
+          }
+        }
         break;
       }
     }
