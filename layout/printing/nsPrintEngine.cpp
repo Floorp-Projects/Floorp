@@ -18,7 +18,7 @@
 #include "nsITextToSubURI.h"
 #include "nsError.h"
 
-#include "nsView.h"
+#include "nsIView.h"
 #include "nsAsyncDOMEvent.h"
 
 // Print Options
@@ -2145,7 +2145,7 @@ nsPrintEngine::SetRootView(
     rootView = aPO->mViewManager->GetRootView();
     // Remove it from its existing parent if necessary
     aPO->mViewManager->RemoveChild(rootView);
-    reinterpret_cast<nsView*>(rootView)->SetParent(reinterpret_cast<nsView*>(parentView));
+    rootView->SetParent(parentView);
   } else {
     // Create a child window of the parent that is our "root view/window"
     nsRect tbounds = nsRect(nsPoint(0, 0), adjSize);
