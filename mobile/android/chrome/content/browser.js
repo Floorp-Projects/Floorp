@@ -2808,13 +2808,8 @@ Tab.prototype = {
 
     if (aActive) {
       this.browser.setAttribute("type", "content-primary");
+      this.browser.focus();
       this.browser.docShellIsActive = true;
-
-      // setTimeout() is needed to make sure the browser is visible before it
-      // is focused (see bug 823325).
-      setTimeout(function () {
-        this.browser.focus();
-      }.bind(this), 0);
     } else {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
