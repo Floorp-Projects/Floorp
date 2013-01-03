@@ -21,7 +21,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         self.remote_test_root = self.device.getDeviceRoot() + "/cppunittests"
         self.remote_bin_dir = posixpath.join(self.remote_test_root, "b")
         self.remote_tmp_dir = posixpath.join(self.remote_test_root, "tmp")
-        self.remote_profile_dir = posixpath.join(self.remote_test_root, "p")
+        self.remote_home_dir = posixpath.join(self.remote_test_root, "h")
         if options.setup:
             self.setup_bin(progs)
 
@@ -34,6 +34,9 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         if self.device.dirExists(self.remote_bin_dir):
             self.device.removeDir(self.remote_bin_dir)
         self.device.mkDir(self.remote_bin_dir)
+        if self.device.dirExists(self.remote_home_dir):
+            self.device.removeDir(self.remote_home_dir)
+        self.device.mkDir(self.remote_home_dir)
         self.push_libs()
         self.push_progs(progs)
         self.device.chmodDir(self.remote_bin_dir)
@@ -61,6 +64,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
     def build_environment(self):
         env = self.build_core_environment()
         env['LD_LIBRARY_PATH'] = self.remote_bin_dir
+        env["TMPDIR"]=self.remote_tmp_dir
+        env["HOME"]=self.remote_home_dir
         return env
 
     def run_one_test(self, prog, env, symbols_path=None):
@@ -79,11 +84,11 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         remote_bin = posixpath.join(self.remote_bin_dir, basename)
         log.info("Running test %s", basename)
         buf = StringIO.StringIO()
-        returncode = self.device.shell([remote_bin], buf, env=env, cwd=self.remote_tmp_dir,
+        returncode = self.device.shell([remote_bin], buf, env=env, cwd=self.remote_home_dir,
                                        timeout=cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT)
         print >> sys.stdout, buf.getvalue()
         with cppunittests.TemporaryDirectory() as tempdir:
-            self.device.getDirectory(self.remote_tmp_dir, tempdir)
+            self.device.getDirectory(self.remote_home_dir, tempdir)
             if mozcrash.check_for_crashes(tempdir, symbols_path,
                                           test_name=basename):
                 log.testFail("%s | test crashed", basename)
