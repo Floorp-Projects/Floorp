@@ -818,18 +818,9 @@ xt_client_focus_listener( Widget w, XtPointer user_data, XEvent *event)
 static void
 xt_add_focus_listener( Widget w, XtPointer user_data)
 {
-  XWindowAttributes attr;
-  long eventmask;
   XtClient *xtclient = user_data;
-  int errorcode;
 
   trap_errors ();
-  XGetWindowAttributes(XtDisplay(w), XtWindow(w), &attr);
-  eventmask = attr.your_event_mask | SubstructureNotifyMask | ButtonReleaseMask;
-  XSelectInput(XtDisplay(w),
-               XtWindow(w), 
-               eventmask);
-
   XtAddEventHandler(w, 
                     SubstructureNotifyMask | ButtonReleaseMask, 
                     FALSE, 
@@ -841,8 +832,6 @@ xt_add_focus_listener( Widget w, XtPointer user_data)
 static void
 xt_remove_focus_listener(Widget w, XtPointer user_data)
 {
-  int errorcode;
-
   trap_errors ();
   XtRemoveEventHandler(w, SubstructureNotifyMask | ButtonReleaseMask, FALSE, 
                       (XtEventHandler)xt_client_focus_listener, user_data);
