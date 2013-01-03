@@ -401,7 +401,7 @@ CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 
-#define PIERCE(cx, wrapper, mode, pre, op, post)                \
+#define PIERCE(cx, wrapper, pre, op, post)                      \
     JS_BEGIN_MACRO                                              \
         bool ok;                                                \
         {                                                       \
@@ -417,7 +417,7 @@ bool
 CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                PropertyDescriptor *desc, unsigned flags)
 {
-    PIERCE(cx, wrapper, (flags & JSRESOLVE_ASSIGNING) ? SET : GET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrapId(cx, &id),
            Wrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags),
            cx->compartment->wrap(cx, desc));
@@ -427,7 +427,7 @@ bool
 CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                   PropertyDescriptor *desc, unsigned flags)
 {
-    PIERCE(cx, wrapper, (flags & JSRESOLVE_ASSIGNING) ? SET : GET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrapId(cx, &id),
            Wrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags),
            cx->compartment->wrap(cx, desc));
@@ -437,7 +437,7 @@ bool
 CrossCompartmentWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc)
 {
     AutoPropertyDescriptorRooter desc2(cx, desc);
-    PIERCE(cx, wrapper, SET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrapId(cx, &id) && cx->compartment->wrap(cx, &desc2),
            Wrapper::defineProperty(cx, wrapper, id, &desc2),
            NOTHING);
@@ -446,7 +446,7 @@ CrossCompartmentWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid i
 bool
 CrossCompartmentWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            NOTHING,
            Wrapper::getOwnPropertyNames(cx, wrapper, props),
            cx->compartment->wrap(cx, props));
@@ -455,7 +455,7 @@ CrossCompartmentWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, A
 bool
 CrossCompartmentWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    PIERCE(cx, wrapper, SET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrapId(cx, &id),
            Wrapper::delete_(cx, wrapper, id, bp),
            NOTHING);
@@ -464,7 +464,7 @@ CrossCompartmentWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool
 bool
 CrossCompartmentWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            NOTHING,
            Wrapper::enumerate(cx, wrapper, props),
            cx->compartment->wrap(cx, props));
@@ -473,7 +473,7 @@ CrossCompartmentWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVecto
 bool
 CrossCompartmentWrapper::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrapId(cx, &id),
            Wrapper::has(cx, wrapper, id, bp),
            NOTHING);
@@ -482,7 +482,7 @@ CrossCompartmentWrapper::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp
 bool
 CrossCompartmentWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrapId(cx, &id),
            Wrapper::hasOwn(cx, wrapper, id, bp),
            NOTHING);
@@ -495,7 +495,7 @@ CrossCompartmentWrapper::get(JSContext *cx, JSObject *wrapperArg, JSObject *rece
     RootedObject wrapper(cx, wrapperArg);
     RootedObject receiver(cx, receiverArg);
     RootedId id(cx, idArg);
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrap(cx, receiver.address()) && cx->compartment->wrapId(cx, id.address()),
            Wrapper::get(cx, wrapper, receiver, id, vp),
            cx->compartment->wrap(cx, vp));
@@ -508,7 +508,7 @@ CrossCompartmentWrapper::set(JSContext *cx, JSObject *wrapper_, JSObject *receiv
     RootedObject wrapper(cx, wrapper_), receiver(cx, receiver_);
     RootedId id(cx, id_);
     RootedValue value(cx, *vp);
-    PIERCE(cx, wrapper, SET,
+    PIERCE(cx, wrapper,
            cx->compartment->wrap(cx, receiver.address()) &&
            cx->compartment->wrapId(cx, id.address()) &&
            cx->compartment->wrap(cx, value.address()),
@@ -519,7 +519,7 @@ CrossCompartmentWrapper::set(JSContext *cx, JSObject *wrapper_, JSObject *receiv
 bool
 CrossCompartmentWrapper::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            NOTHING,
            Wrapper::keys(cx, wrapper, props),
            cx->compartment->wrap(cx, props));
@@ -606,7 +606,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 bool
 CrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp)
 {
-    PIERCE(cx, wrapper, GET,
+    PIERCE(cx, wrapper,
            NOTHING,
            Wrapper::iterate(cx, wrapper, flags, vp),
            CanReify(vp) ? Reify(cx, cx->compartment, vp) : cx->compartment->wrap(cx, vp));
