@@ -1063,101 +1063,154 @@ var BrowserApp = {
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
 
-    if (aTopic == "Session:Back") {
-      browser.goBack();
-    } else if (aTopic == "Session:Forward") {
-      browser.goForward();
-    } else if (aTopic == "Session:Reload") {
-      browser.reload();
-    } else if (aTopic == "Session:Stop") {
-      browser.stop();
-    } else if (aTopic == "Tab:Load") {
-      let data = JSON.parse(aData);
+    switch (aTopic) {
 
-      // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
-      // inheriting the currently loaded document's principal.
-      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-      if (data.userEntered)
-        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+      case "Session:Back":
+        browser.goBack();
+        break;
 
-      let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
-      let params = {
-        selected: !delayLoad,
-        parentId: ("parentId" in data) ? data.parentId : -1,
-        flags: flags,
-        tabID: data.tabID,
-        isPrivate: (data.isPrivate == true),
-        pinned: (data.pinned == true),
-        delayLoad: (delayLoad == true),
-        desktopMode: (data.desktopMode == true)
-      };
+      case "Session:Forward":
+        browser.goForward();
+        break;
 
-      let url = data.url;
-      if (data.engine) {
-        let engine = Services.search.getEngineByName(data.engine);
-        if (engine) {
-          let submission = engine.getSubmission(url);
-          url = submission.uri.spec;
-          params.postData = submission.postData;
+      case "Session:Reload":
+        browser.reload();
+        break;
+
+      case "Session:Stop":
+        browser.stop();
+        break;
+
+      case "Tab:Load": {
+        let data = JSON.parse(aData);
+
+        // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
+        // inheriting the currently loaded document's principal.
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+        if (data.userEntered) {
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
         }
+
+        let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
+        let params = {
+          selected: !delayLoad,
+          parentId: ("parentId" in data) ? data.parentId : -1,
+          flags: flags,
+          tabID: data.tabID,
+          isPrivate: (data.isPrivate == true),
+          pinned: (data.pinned == true),
+          delayLoad: (delayLoad == true),
+          desktopMode: (data.desktopMode == true)
+        };
+
+        let url = data.url;
+        if (data.engine) {
+          let engine = Services.search.getEngineByName(data.engine);
+          if (engine) {
+            let submission = engine.getSubmission(url);
+            url = submission.uri.spec;
+            params.postData = submission.postData;
+          }
+        }
+
+        // Don't show progress throbber for about:home or about:reader
+        if (!shouldShowProgress(url))
+          params.showProgress = false;
+
+        if (data.newTab)
+          this.addTab(url, params);
+        else
+          this.loadURI(url, browser, params);
+        break;
       }
 
-      // Don't show progress throbber for about:home or about:reader
-      if (!shouldShowProgress(url))
-        params.showProgress = false;
+      case "Tab:Selected":
+        this._handleTabSelected(this.getTabForId(parseInt(aData)));
+        break;
 
-      if (data.newTab)
-        this.addTab(url, params);
-      else
-        this.loadURI(url, browser, params);
-    } else if (aTopic == "Tab:Selected") {
-      this._handleTabSelected(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Tab:Closed") {
-      this._handleTabClosed(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Browser:Quit") {
-      this.quit();
-    } else if (aTopic == "SaveAs:PDF") {
-      this.saveAsPDF(browser);
-    } else if (aTopic == "Preferences:Get") {
-      this.getPreferences(aData);
-    } else if (aTopic == "Preferences:Set") {
-      this.setPreferences(aData);
-    } else if (aTopic == "ScrollTo:FocusedInput") {
-      this.scrollToFocusedInput(browser);
-    } else if (aTopic == "Sanitize:ClearData") {
-      this.sanitize(aData);
-    } else if (aTopic == "FullScreen:Exit") {
-      browser.contentDocument.mozCancelFullScreen();
-    } else if (aTopic == "Viewport:Change") {
-      if (this.isBrowserContentDocumentDisplayed())
-        this.selectedTab.setViewport(JSON.parse(aData));
-    } else if (aTopic == "Viewport:Flush") {
-      this.displayedDocumentChanged();
-    } else if (aTopic == "Passwords:Init") {
-      let storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
-        getService(Components.interfaces.nsILoginManagerStorage);
-      storage.init();
+      case "Tab:Closed":
+        this._handleTabClosed(this.getTabForId(parseInt(aData)));
+        break;
 
-      sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
-      Services.obs.removeObserver(this, "Passwords:Init", false);
-    } else if (aTopic == "FormHistory:Init") {
-      let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-      // Force creation/upgrade of formhistory.sqlite
-      let db = fh.DBConnection;
-      sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
-      Services.obs.removeObserver(this, "FormHistory:Init", false);
-    } else if (aTopic == "sessionstore-state-purge-complete") {
-      sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
-    } else if (aTopic == "ToggleProfiling") {
-      let profiler = Cc["@mozilla.org/tools/profiler;1"].
+      case "Browser:Quit":
+        this.quit();
+        break;
+
+      case "SaveAs:PDF":
+        this.saveAsPDF(browser);
+        break;
+
+      case "Preferences:Get":
+        this.getPreferences(aData);
+        break;
+
+      case "Preferences:Set":
+        this.setPreferences(aData);
+        break;
+
+      case "ScrollTo:FocusedInput":
+        this.scrollToFocusedInput(browser);
+        break;
+
+      case "Sanitize:ClearData":
+        this.sanitize(aData);
+        break;
+
+      case "FullScreen:Exit":
+        browser.contentDocument.mozCancelFullScreen();
+        break;
+
+      case "Viewport:Change":
+        if (this.isBrowserContentDocumentDisplayed())
+          this.selectedTab.setViewport(JSON.parse(aData));
+        break;
+
+      case "Viewport:Flush":
+        this.displayedDocumentChanged();
+        break;
+
+      case "Passwords:Init": {
+        let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
+                      getService(Ci.nsILoginManagerStorage);
+        storage.init();
+
+        sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
+        Services.obs.removeObserver(this, "Passwords:Init", false);
+        break;
+      }
+
+      case "FormHistory:Init": {
+        let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+        // Force creation/upgrade of formhistory.sqlite
+        let db = fh.DBConnection;
+        sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
+        Services.obs.removeObserver(this, "FormHistory:Init", false);
+        break;
+      }
+
+      case "sessionstore-state-purge-complete":
+        sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
+        break;
+
+      case "ToggleProfiling": {
+        let profiler = Cc["@mozilla.org/tools/profiler;1"].
                        getService(Ci.nsIProfiler);
-      if (profiler.IsActive()) {
-        profiler.StopProfiler();
-      } else {
-        profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
+        if (profiler.IsActive()) {
+          profiler.StopProfiler();
+        } else {
+          profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
+        }
+        break;
       }
-    } else if (aTopic == "gather-telemetry") {
-      sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+
+      case "gather-telemetry":
+        sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+        break;
+
+      default:
+        dump('BrowserApp.observe: unexpected topic "' + aTopic + '"\n');
+        break;
+
     }
   },
 
