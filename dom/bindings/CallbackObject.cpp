@@ -97,7 +97,7 @@ CallbackObject::CallSetup::CallSetup(JSObject* const aCallback,
   // After this point we guarantee calling ScriptEvaluated() if we
   // have an nsIScriptContext.
   // XXXbz Why, if, say CheckFunctionAccess fails?  I know that's how
-  // nsJSContext::CallEventHandler works, but is it required?
+  // nsJSContext::CallEventHandler used to work, but is it required?
   // FIXME: Bug 807369.
   mCtx = ctx;
 
