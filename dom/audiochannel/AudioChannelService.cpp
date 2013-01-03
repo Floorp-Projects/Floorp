@@ -133,6 +133,7 @@ AudioChannelService::UnregisterType(AudioChannelType aType, uint64_t aChildID)
   if (isNoChannelUsed) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->NotifyObservers(nullptr, "audio-channel-changed", NS_LITERAL_STRING("default").get());
+    mCurrentHigherChannel = AUDIO_CHANNEL_NORMAL;
     return;
   }
 
