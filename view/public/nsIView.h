@@ -34,10 +34,6 @@ enum nsViewVisibility {
   nsViewVisibility_kShow = 1
 };
 
-#define NS_IVIEW_IID    \
-{ 0x7f979fcc, 0xa15a, 0x4f8a, \
-  { 0x8b, 0x68, 0xa4, 0x16, 0xa1, 0x87, 0xad, 0xdc } }
-
 // Public view flags
 
 // Indicates that the view is using auto z-indexing
@@ -69,8 +65,6 @@ enum nsViewVisibility {
 class nsIView MOZ_FINAL : public nsIWidgetListener
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
-
   nsIView(nsViewManager* aViewManager = nullptr,
           nsViewVisibility aVisibility = nsViewVisibility_kShow);
 
@@ -347,8 +341,6 @@ public:
   // origin) to view origin expressed in appunits of this.
   nsPoint ViewToWidgetOffset() const { return mViewToWidgetOffset; }
 
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
   /**
    * Called to indicate that the position of the view has been changed.
    * The specified coordinates are in the parent view's coordinate space.
@@ -487,7 +479,5 @@ protected:
   bool              mForcedRepaint;
   bool              mInAlternatePaint;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIView, NS_IVIEW_IID)
 
 #endif
