@@ -67,6 +67,10 @@ static bool gHQDownscaling = false;
 // This is interpreted as a floating-point value / 1000
 static uint32_t gHQDownscalingMinFactor = 1000;
 
+// The maximum number of times any one RasterImage was decoded.  This is only
+// used for statistics.
+static int32_t sMaxDecodeCount = 0;
+
 static void
 InitPrefCaches()
 {
@@ -2573,6 +2577,16 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Subtract(mDecodeCount);
     mDecodeCount++;
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(mDecodeCount);
+
+    if (mDecodeCount > sMaxDecodeCount) {
+      // Don't subtract out 0 from the histogram, because that causes its count
+      // to go negative, which is not kosher.
+      if (sMaxDecodeCount > 0) {
+        Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Subtract(sMaxDecodeCount);
+      }
+      sMaxDecodeCount = mDecodeCount;
+      Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Add(sMaxDecodeCount);
+    }
   }
 
   return NS_OK;
