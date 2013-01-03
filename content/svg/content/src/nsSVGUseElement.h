@@ -11,7 +11,7 @@
 #include "nsIDOMSVGUseElement.h"
 #include "nsReferencedElement.h"
 #include "nsStubMutationObserver.h"
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
 #include "nsTArray.h"
@@ -28,7 +28,7 @@ NS_NewSVGSVGElement(nsIContent **aResult,
                     already_AddRefed<nsINodeInfo> aNodeInfo,
                     mozilla::dom::FromParser aFromParser);
 
-typedef nsSVGGraphicElement nsSVGUseElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGUseElementBase;
 
 class nsSVGUseElement : public nsSVGUseElementBase,
                         public nsIDOMSVGUseElement,

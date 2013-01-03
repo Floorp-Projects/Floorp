@@ -6,7 +6,6 @@
 #include "mozilla/Util.h"
 
 #include "nsSVGAElement.h"
-#include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"

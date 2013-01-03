@@ -9,9 +9,9 @@
 #include "nsIDOMSVGClipPathElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEnum.h"
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 
-typedef nsSVGGraphicElement nsSVGClipPathElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGClipPathElementBase;
 
 class nsSVGClipPathElement : public nsSVGClipPathElementBase,
                              public nsIDOMSVGClipPathElement,
