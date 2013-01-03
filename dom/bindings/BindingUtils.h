@@ -210,9 +210,8 @@ IsArrayLike(JSContext* cx, JSObject* obj)
     ac.construct(cx, obj);
   }
 
-  // XXXbz need to detect platform objects (including listbinding
-  // ones) with indexGetters here!
-  return JS_IsArrayObject(cx, obj) || JS_IsTypedArrayObject(obj);
+  // Everything except dates and regexps is arraylike
+  return !JS_ObjectIsDate(cx, obj) && !JS_ObjectIsRegExp(cx, obj);
 }
 
 inline bool

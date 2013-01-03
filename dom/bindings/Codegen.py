@@ -2313,9 +2313,6 @@ for (uint32_t i = 0; i < length; ++i) {
             memberType = arrayObjectMemberTypes[0]
             name = memberType.name
             arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${obj}, ${val}, ${valPtr}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
-            # XXX Now we're supposed to check for an array or a platform object
-            # that supports indexed properties... skip that last for now. It's a
-            # bit of a pain.
             arrayObject = CGWrapper(CGIndenter(arrayObject),
                                     pre="if (IsArrayLike(cx, &argObj)) {\n",
                                     post="}")
