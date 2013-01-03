@@ -29,8 +29,6 @@ which makes Windows Media Foundation unavailable.
 #include <propvarutil.h>
 #include <wmcodecdsp.h>
 
-#pragma comment(lib,"uuid.lib")
-#pragma comment(lib,"mfuuid.lib")
 
 namespace mozilla {
 namespace wmf {

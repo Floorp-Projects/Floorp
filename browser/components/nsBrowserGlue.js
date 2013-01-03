@@ -910,13 +910,13 @@ BrowserGlue.prototype = {
      *
      * - The last accepted/refused policy (either by accepting the prompt or by
      *   manually flipping the telemetry preference) is already at version
-     *   TELEMETRY_DISPLAY_REV.
+     *   TELEMETRY_DISPLAY_REV or higher (to avoid the prompt in tests).
      */
     var telemetryDisplayed;
     try {
       telemetryDisplayed = Services.prefs.getIntPref(PREF_TELEMETRY_DISPLAYED);
     } catch(e) {}
-    if (telemetryDisplayed === TELEMETRY_DISPLAY_REV)
+    if (telemetryDisplayed >= TELEMETRY_DISPLAY_REV)
       return;
 
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
@@ -925,7 +925,8 @@ BrowserGlue.prototype = {
      *
      * - Telemetry is disabled
      * - Telemetry was explicitly refused through the UI
-     * - Opt-in telemetry was enabled and this is the first run with opt-out.
+     * - Opt-in telemetry was already enabled, don't notify the user until next
+     *   policy update. (Do the check only at first run with opt-out builds)
      */
 
     var telemetryEnabled = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED);

@@ -264,6 +264,16 @@ Accessible::Name(nsString& aName)
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
+  } else if (mContent->IsSVG()) {
+    // If user agents need to choose among multiple ‘desc’ or ‘title’ elements
+    // for processing, the user agent shall choose the first one.
+    for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
+         childElm = childElm->GetNextSibling()) {
+      if (childElm->IsSVG(nsGkAtoms::title)) {
+        nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
+        return eNameFromTooltip;
+      }
+    }
   }
 
   if (nameFlag != eNoNameOnPurpose)
@@ -307,25 +317,40 @@ Accessible::Description(nsString& aDescription)
       // Try XUL <description control="[id]">description text</description>
       XULDescriptionIterator iter(Document(), mContent);
       Accessible* descr = nullptr;
-      while ((descr = iter.Next()))
+      while ((descr = iter.Next())) {
         nsTextEquivUtils::AppendTextEquivFromContent(this, descr->GetContent(),
                                                      &aDescription);
       }
+    }
 
-      if (aDescription.IsEmpty()) {
-        nsIAtom *descAtom = isXUL ? nsGkAtoms::tooltiptext :
-                                    nsGkAtoms::title;
-        if (mContent->GetAttr(kNameSpaceID_None, descAtom, aDescription)) {
-          nsAutoString name;
-          Name(name);
-          if (name.IsEmpty() || aDescription == name)
-            // Don't use tooltip for a description if this object
-            // has no name or the tooltip is the same as the name
-            aDescription.Truncate();
+    if (aDescription.IsEmpty()) {
+      // Keep the Name() method logic.
+      if (mContent->IsHTML()) {
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aDescription);
+      } else if (mContent->IsXUL()) {
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aDescription);
+      } else if (mContent->IsSVG()) {
+        for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
+             childElm = childElm->GetNextSibling()) {
+          if (childElm->IsSVG(nsGkAtoms::title)) {
+            nsTextEquivUtils::AppendTextEquivFromContent(this, childElm,
+                                                         &aDescription);
+            break;
+          }
         }
       }
+
+      if (!aDescription.IsEmpty()) {
+        nsAutoString name;
+        ENameValueFlag nameFlag = Name(name);
+
+        // Don't use tooltip for a description if it was used for a name.
+        if (nameFlag == eNameFromTooltip)
+          aDescription.Truncate();
+      }
     }
-    aDescription.CompressWhitespace();
+  }
+  aDescription.CompressWhitespace();
 }
 
 NS_IMETHODIMP
@@ -2493,6 +2518,18 @@ Accessible::NativeName(nsString& aName)
 
   if (mContent->IsXUL())
     return GetXULName(aName);
+
+  if (mContent->IsSVG()) {
+    // If user agents need to choose among multiple ‘desc’ or ‘title’ elements
+    // for processing, the user agent shall choose the first one.
+    for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
+         childElm = childElm->GetNextSibling()) {
+      if (childElm->IsSVG(nsGkAtoms::desc)) {
+        nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
+        return eNameOK;
+      }
+    }
+  }
 
   return eNameOK;
 }

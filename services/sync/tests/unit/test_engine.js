@@ -6,7 +6,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
   this.wasWiped = false;
@@ -64,17 +63,21 @@ Observers.add("weave:engine:wipe-client:finish", engineObserver);
 Observers.add("weave:engine:sync:start", engineObserver);
 Observers.add("weave:engine:sync:finish", engineObserver);
 
+function run_test() {
+  run_next_test();
+}
 
-function test_members() {
+add_test(function test_members() {
   _("Engine object members");
   let engine = new SteamEngine(Service);
   do_check_eq(engine.Name, "Steam");
   do_check_eq(engine.prefName, "steam");
   do_check_true(engine._store instanceof SteamStore);
   do_check_true(engine._tracker instanceof SteamTracker);
-}
+  run_next_test();
+});
 
-function test_score() {
+add_test(function test_score() {
   _("Engine.score corresponds to tracker.score and is readonly");
   let engine = new SteamEngine(Service);
   do_check_eq(engine.score, 0);
@@ -89,9 +92,10 @@ function test_score() {
     // the attribute's value won't change.
   }
   do_check_eq(engine.score, 5);
-}
+  run_next_test();
+});
 
-function test_resetClient() {
+add_test(function test_resetClient() {
   _("Engine.resetClient calls _resetClient");
   let engine = new SteamEngine(Service);
   do_check_false(engine.wasReset);
@@ -103,9 +107,25 @@ function test_resetClient() {
 
   engine.wasReset = false;
   engineObserver.reset();
-}
+  run_next_test();
+});
 
-function test_wipeClient() {
+add_test(function test_invalidChangedIDs() {
+  _("Test that invalid changed IDs on disk don't end up live.");
+  let engine = new SteamEngine(Service);
+  let tracker = engine._tracker;
+  tracker.changedIDs = 5;
+  tracker.saveChangedIDs(function onSaved() {
+      tracker.changedIDs = {placeholder: true};
+      tracker.loadChangedIDs(function onLoaded(json) {
+        do_check_null(json);
+        do_check_true(tracker.changedIDs.placeholder);
+        run_next_test();
+      });
+    });
+});
+
+add_test(function test_wipeClient() {
   _("Engine.wipeClient calls resetClient, wipes store, clears changed IDs");
   let engine = new SteamEngine(Service);
   do_check_false(engine.wasReset);
@@ -125,9 +145,10 @@ function test_wipeClient() {
   engine.wasReset = false;
   engine._store.wasWiped = false;
   engineObserver.reset();
-}
+  run_next_test();
+});
 
-function test_enabled() {
+add_test(function test_enabled() {
   _("Engine.enabled corresponds to preference");
   let engine = new SteamEngine(Service);
   try {
@@ -137,12 +158,13 @@ function test_enabled() {
 
     engine.enabled = false;
     do_check_false(Svc.Prefs.get("engine.steam"));
+    run_next_test();
   } finally {
     Svc.Prefs.resetBranch("");
   }
-}
+});
 
-function test_sync() {
+add_test(function test_sync() {
   let engine = new SteamEngine(Service);
   try {
     _("Engine.sync doesn't call _sync if it's not enabled");
@@ -157,18 +179,10 @@ function test_sync() {
     do_check_true(engine.wasSynced);
     do_check_eq(engineObserver.topics[0], "weave:engine:sync:start");
     do_check_eq(engineObserver.topics[1], "weave:engine:sync:finish");
+    run_next_test();
   } finally {
     Svc.Prefs.resetBranch("");
     engine.wasSynced = false;
     engineObserver.reset();
   }
-}
-
-function run_test() {
-  test_members();
-  test_score();
-  test_resetClient();
-  test_wipeClient();
-  test_enabled();
-  test_sync();
-}
+});
