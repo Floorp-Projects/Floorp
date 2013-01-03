@@ -177,8 +177,7 @@ static nsJSContext *sContextList = nullptr;
 static nsScriptNameSpaceManager *gNameSpaceManager;
 static nsIMemoryReporter *gReporter;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ScriptNameSpaceManagerMallocSizeOf,
-                                     "script-namespace-manager")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ScriptNameSpaceManagerMallocSizeOf)
 
 static int64_t
 GetScriptNameSpaceManagerSize()

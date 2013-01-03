@@ -585,7 +585,7 @@ void ElfSegment::removeSection(ElfSection *section)
 
 unsigned int ElfSegment::getFileSize()
 {
-    if (type == PT_GNU_RELRO)
+    if (type == PT_GNU_RELRO || isElfHackFillerSegment())
         return filesz;
 
     if (sections.empty())
@@ -604,7 +604,7 @@ unsigned int ElfSegment::getFileSize()
 
 unsigned int ElfSegment::getMemSize()
 {
-    if (type == PT_GNU_RELRO)
+    if (type == PT_GNU_RELRO || isElfHackFillerSegment())
         return memsz;
 
     if (sections.empty())
@@ -621,6 +621,10 @@ unsigned int ElfSegment::getOffset()
         (sections.front()->getAddr() != vaddr))
         throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
 
+    // Neither bionic nor glibc linkers seem to like when the offset of that segment is 0
+    if (isElfHackFillerSegment())
+        return vaddr;
+
     return sections.empty() ? 0 : sections.front()->getOffset();
 }
 
@@ -629,6 +633,9 @@ unsigned int ElfSegment::getAddr()
     if ((type == PT_GNU_RELRO) && !sections.empty() &&
         (sections.front()->getAddr() != vaddr))
         throw std::runtime_error("PT_GNU_RELRO segment doesn't start on a section start");
+
+    if (isElfHackFillerSegment())
+        return vaddr;
 
     return sections.empty() ? 0 : sections.front()->getAddr();
 }
