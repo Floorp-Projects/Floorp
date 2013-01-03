@@ -37,7 +37,7 @@
 #include "nsEscape.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRange.h"

@@ -26,7 +26,7 @@ class nsIImageLoadingContent;
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIPresShell.h"
@@ -272,7 +272,7 @@ public:
    * corresponding content is before aFrame's content (view siblings
    * are in reverse content order).
    */
-  static nsIView* FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame);
+  static nsView* FindSiblingViewFor(nsView* aParentView, nsIFrame* aFrame);
 
   /**
    * Get the parent of aFrame. If aFrame is the root frame for a document,
@@ -471,7 +471,7 @@ public:
    */
   static nsPoint TranslateWidgetToView(nsPresContext* aPresContext,
                                        nsIWidget* aWidget, nsIntPoint aPt,
-                                       nsIView* aView);
+                                       nsView* aView);
 
   /**
    * Given a matrix and a point, let T be the transformation matrix translating points

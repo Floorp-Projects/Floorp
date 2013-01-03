@@ -62,7 +62,7 @@ class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
 class nsRenderingContext;
-class nsIView;
+class nsView;
 class nsIWidget;
 class nsIDOMRange;
 class nsISelectionController;
@@ -1949,16 +1949,16 @@ public:
    * GetView returns non-null if and only if |HasView| returns true.
    */
   bool HasView() const { return !!(mState & NS_FRAME_HAS_VIEW); }
-  nsIView* GetView() const;
-  virtual nsIView* GetViewExternal() const;
-  nsresult SetView(nsIView* aView);
+  nsView* GetView() const;
+  virtual nsView* GetViewExternal() const;
+  nsresult SetView(nsView* aView);
 
   /**
    * Find the closest view (on |this| or an ancestor).
    * If aOffset is non-null, it will be set to the offset of |this|
    * from the returned view.
    */
-  nsIView* GetClosestView(nsPoint* aOffset = nullptr) const;
+  nsView* GetClosestView(nsPoint* aOffset = nullptr) const;
 
   /**
    * Find the closest ancestor (excluding |this| !) that has a view
@@ -2026,7 +2026,7 @@ public:
    * has a view. Also returns the containing view or null in case of error
    */
   NS_IMETHOD  GetOffsetFromView(nsPoint&  aOffset,
-                                nsIView** aView) const = 0;
+                                nsView** aView) const = 0;
 
   /**
    * Returns the nearest widget containing this frame. If this frame has a

@@ -59,7 +59,7 @@
 #include "nsIMozBrowserFrame.h"
 
 #include "nsLayoutUtils.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsAsyncDOMEvent.h"
 
 #include "nsIURI.h"
@@ -815,7 +815,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
     }
   }
 
-  nsIView* view = frame->EnsureInnerView();
+  nsView* view = frame->EnsureInnerView();
   if (!view)
     return false;
 
@@ -2454,14 +2454,14 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 }
 
 void
-nsFrameLoader::SetDetachedSubdocView(nsIView* aDetachedViews,
+nsFrameLoader::SetDetachedSubdocView(nsView* aDetachedViews,
                                      nsIDocument* aContainerDoc)
 {
   mDetachedSubdocViews = aDetachedViews;
   mContainerDocWhileDetached = aContainerDoc;
 }
 
-nsIView*
+nsView*
 nsFrameLoader::GetDetachedSubdocView(nsIDocument** aContainerDoc) const
 {
   NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);

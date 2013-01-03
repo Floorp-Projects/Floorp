@@ -41,7 +41,7 @@
 #include "nsFrame.h"
 #include "FrameLayerBuilder.h"
 #include "nsViewManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsCRTGlue.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -3447,7 +3447,7 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 {
   uint32_t hoverGenerationBefore = mFrameConstructor->GetHoverGeneration();
   nsEventStatus status;
-  nsIView* targetView = nsIView::GetViewFor(aEvent->widget);
+  nsView* targetView = nsView::GetViewFor(aEvent->widget);
   targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
   if (aFlushOnHoverChange &&
       hoverGenerationBefore != mFrameConstructor->GetHoverGeneration()) {
@@ -3458,7 +3458,7 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 }
 
 void
-PresShell::ClearMouseCaptureOnView(nsIView* aView)
+PresShell::ClearMouseCaptureOnView(nsView* aView)
 {
   if (gCaptureInfo.mContent) {
     if (aView) {
@@ -3466,7 +3466,7 @@ PresShell::ClearMouseCaptureOnView(nsIView* aView)
       // this view.
       nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
       if (frame) {
-        nsIView* view = frame->GetClosestView();
+        nsView* view = frame->GetClosestView();
         // if there is no view, capturing won't be handled any more, so
         // just release the capture.
         if (view) {
@@ -4380,7 +4380,7 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   }
   if (aFlags & RENDER_USE_WIDGET_LAYERS) {
     // We only support using widget layers on display root's with widgets.
-    nsIView* view = rootFrame->GetView();
+    nsView* view = rootFrame->GetView();
     if (view && view->GetWidget() &&
         nsLayoutUtils::GetDisplayRootFrame(rootFrame) == rootFrame) {
       flags |= nsLayoutUtils::PAINT_WIDGET_LAYERS;
@@ -4950,7 +4950,7 @@ void PresShell::UpdateCanvasBackground()
   }
 }
 
-nscolor PresShell::ComputeBackstopColor(nsIView* aDisplayRoot)
+nscolor PresShell::ComputeBackstopColor(nsView* aDisplayRoot)
 {
   nsIWidget* widget = aDisplayRoot->GetWidget();
   if (widget && (widget->GetTransparencyMode() != eTransparencyOpaque ||
@@ -4973,7 +4973,7 @@ LayerManager* PresShell::GetLayerManager()
 {
   NS_ASSERTION(mViewManager, "Should have view manager");
 
-  nsIView* rootView = mViewManager->GetRootView();
+  nsView* rootView = mViewManager->GetRootView();
   if (rootView) {
     if (nsIWidget* widget = rootView->GetWidget()) {
       return widget->GetLayerManager();
@@ -5075,7 +5075,7 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll)
  * views aren't necessarily included in their parent's bounds, so this could
  * traverse the entire view hierarchy --- use carefully.
  */
-static nsIView* FindFloatingViewContaining(nsIView* aView, nsPoint aPt)
+static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
 {
   if (aView->GetVisibility() == nsViewVisibility_kHide)
     // No need to look into descendants.
@@ -5089,8 +5089,8 @@ static nsIView* FindFloatingViewContaining(nsIView* aView, nsPoint aPt)
     }
   }
 
-  for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsIView* r = FindFloatingViewContaining(v, v->ConvertFromParentCoords(aPt));
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsView* r = FindFloatingViewContaining(v, v->ConvertFromParentCoords(aPt));
     if (r)
       return r;
   }
@@ -5111,7 +5111,7 @@ static nsIView* FindFloatingViewContaining(nsIView* aView, nsPoint aPt)
  * This methods should only be called if FindFloatingViewContaining
  * returns null.
  */
-static nsIView* FindViewContaining(nsIView* aView, nsPoint aPt)
+static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
 {
   if (!aView->GetDimensions().Contains(aPt) ||
       aView->GetVisibility() == nsViewVisibility_kHide) {
@@ -5126,8 +5126,8 @@ static nsIView* FindViewContaining(nsIView* aView, nsPoint aPt)
     }
   }
 
-  for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsIView* r = FindViewContaining(v, v->ConvertFromParentCoords(aPt));
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsView* r = FindViewContaining(v, v->ConvertFromParentCoords(aPt));
     if (r)
       return r;
   }
@@ -5151,7 +5151,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
     mSynthMouseMoveEvent.Forget();
   }
 
-  nsIView* rootView = mViewManager ? mViewManager->GetRootView() : nullptr;
+  nsView* rootView = mViewManager ? mViewManager->GetRootView() : nullptr;
   if (mMouseLocation == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) ||
       !rootView || !rootView->HasWidget() || !mPresContext) {
     mSynthMouseMoveEvent.Forget();
@@ -5175,7 +5175,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   // for a view that has a widget and the mouse location is over. We first look
   // for floating views, if there isn't one we use the root view. |view| holds
   // that view.
-  nsIView* view = nullptr;
+  nsView* view = nullptr;
 
   // The appunits per devpixel ratio of |view|.
   int32_t viewAPD;
@@ -5193,7 +5193,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   view = FindFloatingViewContaining(rootView, mMouseLocation);
   if (!view) {
     view = rootView;
-    nsIView *pointView = FindViewContaining(rootView, mMouseLocation);
+    nsView *pointView = FindViewContaining(rootView, mMouseLocation);
     // pointView can be null in situations related to mouse capture
     pointVM = (pointView ? pointView : view)->GetViewManager();
     refpoint = mMouseLocation + rootView->ViewToWidgetOffset();
@@ -5247,7 +5247,7 @@ private:
 };
 
 void
-PresShell::Paint(nsIView*        aViewToPaint,
+PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
@@ -5581,7 +5581,7 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
       aEvent->message == NS_MOUSE_BUTTON_UP) {
     nsIFrame* rootFrame = GetRootFrame();
     if (!rootFrame) {
-      nsIView* rootView = mViewManager->GetRootView();
+      nsView* rootView = mViewManager->GetRootView();
       mMouseLocation = nsLayoutUtils::TranslateWidgetToView(mPresContext,
         aEvent->widget, aEvent->refPoint, rootView);
     } else {
@@ -5678,7 +5678,7 @@ FindAnyTarget(const uint32_t& aKey, nsCOMPtr<nsIDOMTouch>& aData,
 
 nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 {
-  nsIView* view = aPresShell->GetViewManager()->GetRootView();
+  nsView* view = aPresShell->GetViewManager()->GetRootView();
   while (view && !view->GetFrame()) {
     view = view->GetParent();
   }
@@ -6801,7 +6801,7 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
       nsPoint offset(0, 0);
       nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
       if (rootFrame) {
-        nsIView* view = rootFrame->GetClosestView(&offset);
+        nsView* view = rootFrame->GetClosestView(&offset);
         offset += view->GetOffsetToWidget(aEvent->widget);
         aEvent->refPoint =
           offset.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
@@ -6944,7 +6944,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   if (!caretFrame)
     return false;
   nsPoint viewOffset;
-  nsIView* view = caretFrame->GetClosestView(&viewOffset);
+  nsView* view = caretFrame->GetClosestView(&viewOffset);
   if (!view)
     return false;
   // and then get the caret coords relative to the event widget
@@ -7066,7 +7066,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     nsPoint frameOrigin(0, 0);
 
     // Get the frame's origin within its view
-    nsIView *view = frame->GetClosestView(&frameOrigin);
+    nsView *view = frame->GetClosestView(&frameOrigin);
     NS_ASSERTION(view, "No view for frame");
 
     // View's origin relative the widget
@@ -7179,7 +7179,7 @@ PresShell::IsVisible()
   if (!mViewManager)
     return false;
 
-  nsIView* view = mViewManager->GetRootView();
+  nsView* view = mViewManager->GetRootView();
   if (!view)
     return true;
 
@@ -7634,7 +7634,7 @@ PresShell::DoVerifyReflow()
   if (GetVerifyReflowEnable()) {
     // First synchronously render what we have so far so that we can
     // see it.
-    nsIView* rootView = mViewManager->GetRootView();
+    nsView* rootView = mViewManager->GetRootView();
     mViewManager->InvalidateView(rootView);
 
     FlushPendingNotifications(Flush_Layout);
@@ -8049,7 +8049,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
     }
 
     nsIntRect r1, r2;
-    nsIView* v1, *v2;
+    nsView* v1, *v2;
     for (nsFrameList::Enumerator e1(kids1), e2(kids2);
          ;
          e1.Next(), e2.Next()) {
@@ -8294,7 +8294,7 @@ PresShell::VerifyIncrementalReflow()
   NS_ENSURE_SUCCESS(rv, false);
 
   // Get our scrolling preference
-  nsIView* rootView = mViewManager->GetRootView();
+  nsView* rootView = mViewManager->GetRootView();
   NS_ENSURE_TRUE(rootView->HasWidget(), false);
   nsIWidget* parentWidget = rootView->GetWidget();
 
@@ -8307,7 +8307,7 @@ PresShell::VerifyIncrementalReflow()
   // Create a child window of the parent that is our "root view/window"
   // Create a view
   nsRect tbounds = mPresContext->GetVisibleArea();
-  nsIView* view = vm->CreateView(tbounds, nullptr);
+  nsView* view = vm->CreateView(tbounds, nullptr);
   NS_ENSURE_TRUE(view, false);
 
   //now create the widget for the view

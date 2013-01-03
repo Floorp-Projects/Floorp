@@ -38,7 +38,7 @@
 #include "nsIXULTemplateBuilder.h"
 #include "nsXPIDLString.h"
 #include "nsContainerFrame.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"

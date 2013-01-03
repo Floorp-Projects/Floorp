@@ -18,7 +18,7 @@
 #include "nsITextToSubURI.h"
 #include "nsError.h"
 
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsAsyncDOMEvent.h"
 
 // Print Options
@@ -91,7 +91,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsRenderingContext.h"
 
 #include "nsIPageSequenceFrame.h"
@@ -2079,7 +2079,7 @@ nsPrintEngine::DoSetPixelScale()
   return doSetPixelScale;
 }
 
-nsIView*
+nsView*
 nsPrintEngine::GetParentViewForRoot()
 {
   if (mIsCreatingPrintPreview) {
@@ -2101,8 +2101,8 @@ nsPrintEngine::SetRootView(
 {
   bool canCreateScrollbars = true;
 
-  nsIView* rootView;
-  nsIView* parentView = nullptr;
+  nsView* rootView;
+  nsView* parentView = nullptr;
 
   doReturn = false;
 
@@ -2125,7 +2125,7 @@ nsPrintEngine::SetRootView(
 
     // the top nsPrintObject's widget will always have scrollbars
     if (frame && frame->GetType() == nsGkAtoms::subDocumentFrame) {
-      nsIView* view = frame->GetView();
+      nsView* view = frame->GetView();
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
       view = view->GetFirstChild();
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
@@ -2179,7 +2179,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   nsPresContext::nsPresContextType type =
       mIsCreatingPrintPreview ? nsPresContext::eContext_PrintPreview:
                                 nsPresContext::eContext_Print;
-  nsIView* parentView =
+  nsView* parentView =
     aPO->mParent && aPO->mParent->IsPrintable() ? nullptr : GetParentViewForRoot();
   aPO->mPresContext = parentView ?
       new nsPresContext(aPO->mDocument, type) :
@@ -2287,7 +2287,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
         //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
         fprintf(fd, "---------------------------------------\n\n");
         fprintf(fd, "--------------- Views From Root Frame----------------\n");
-        nsIView* v = theRootFrame->GetView();
+        nsView* v = theRootFrame->GetView();
         if (v) {
           v->List(fd);
         } else {
@@ -3796,7 +3796,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
     if (shell) {
       nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
-        nsIView* root = vm->GetRootView();
+        nsView* root = vm->GetRootView();
         if (root) {
           root->List(out);
         }
@@ -3862,7 +3862,7 @@ void DumpLayoutData(char*              aTitleStr,
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
     fprintf(fd, "---------------------------------------\n\n");
     fprintf(fd, "--------------- Views From Root Frame----------------\n");
-    nsIView* v = aRootFrame->GetView();
+    nsView* v = aRootFrame->GetView();
     if (v) {
       v->List(fd);
     } else {

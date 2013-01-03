@@ -6412,9 +6412,9 @@ nsContentUtils::WidgetForDocument(nsIDocument* aDoc)
   if (shell) {
     nsIViewManager* VM = shell->GetViewManager();
     if (VM) {
-      nsIView* rootView = VM->GetRootView();
+      nsView* rootView = VM->GetRootView();
       if (rootView) {
-        nsIView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
+        nsView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
         if (displayRoot) {
           return displayRoot->GetNearestWidget(nullptr);
         }
