@@ -3596,6 +3596,19 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
     rt->gcMarker.stop();
 
     /*
+     * Recalculate whether GC was full or not as this may have changed due to
+     * newly created compartments.  Can only change from full to not full.
+     */
+    if (rt->gcIsFull) {
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            if (!c->isCollecting()) {
+                rt->gcIsFull = false;
+                break;
+            }
+        }
+    }
+
+    /*
      * If we found any black->gray edges during marking, we completely clear the
      * mark bits of all uncollected compartments. This is safe, although it may
      * prevent the cycle collector from collecting some dead objects.
@@ -3649,19 +3662,11 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
 
-        bool isFull = true;
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            if (!c->isCollecting()) {
-                rt->gcIsFull = false;
-                break;
-            }
-        }
-
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !isFull);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !rt->gcIsFull);
 
         /* If we finished a full GC, then the gray bits are correct. */
-        if (isFull)
+        if (rt->gcIsFull)
             rt->gcGrayBitsValid = true;
     }
 
@@ -4323,12 +4328,27 @@ js::GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reas
     Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
 }
 
+static bool
+CompartmentsSelected(JSRuntime *rt)
+{
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->isGCScheduled())
+            return true;
+    }
+    return false;
+}
+
 void
 js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
     AssertCanGC();
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
-    PrepareForDebugGC(rt);
+    if (!CompartmentsSelected(rt)) {
+        if (IsIncrementalGCInProgress(rt))
+            PrepareForIncrementalGC(rt);
+        else
+            PrepareForFullGC(rt);
+    }
     Collect(rt, true, budget, GC_NORMAL, gcreason::DEBUG_GC);
 }
 
@@ -4336,12 +4356,8 @@ js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 void
 js::PrepareForDebugGC(JSRuntime *rt)
 {
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->isGCScheduled())
-            return;
-    }
-
-    PrepareForFullGC(rt);
+    if (!CompartmentsSelected(rt))
+        PrepareForFullGC(rt);
 }
 
 void
