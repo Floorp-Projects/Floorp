@@ -600,21 +600,17 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
         /* Check basic jump opcodes, which may or may not have a fallthrough. */
         if (jump) {
-            /* Some opcodes behave differently on their branching path. */
+            /* Case instructions do not push the lvalue back when branching. */
             unsigned newStackDepth = stackDepth;
-
-            switch (op) {
-              case JSOP_CASE:
-                /* Case instructions do not push the lvalue back when branching. */
+            if (op == JSOP_CASE)
                 newStackDepth--;
-                break;
-
-              default:;
-            }
 
             unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
             if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, newStackDepth))
                 return;
+
+            if (op == JSOP_CASE || op == JSOP_DEFAULT)
+                getCode(targetOffset).safePoint = true;
         }
 
         /* Handle any fallthrough from this opcode. */
