@@ -768,7 +768,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
                 }
             }
             else if (!identFromURI ||
-                     (NS_strcmp(ident->User(),
+                     (nsCRT::strcmp(ident->User(),
                                     entry->Identity().User()) == 0 &&
                      !(loadFlags &
                        (nsIChannel::LOAD_ANONYMOUS |
@@ -1350,7 +1350,7 @@ nsHttpChannelAuthProvider::SetAuthorizationHeader(nsHttpAuthCache    *authCache,
             // up the one from the auth cache instead.
             // when this is undesired, specify LOAD_EXPLICIT_CREDENTIALS load
             // flag.
-            if (NS_strcmp(ident.User(), entry->User()) == 0) {
+            if (nsCRT::strcmp(ident.User(), entry->User()) == 0) {
                 uint32_t loadFlags;
                 if (NS_SUCCEEDED(mAuthChannel->GetLoadFlags(&loadFlags)) &&
                     !(loadFlags && nsIChannel::LOAD_EXPLICIT_CREDENTIALS)) {

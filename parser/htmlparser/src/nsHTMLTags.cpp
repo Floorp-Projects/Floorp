@@ -305,7 +305,7 @@ HTMLTagsKeyCompareUCPtr(const void *key1, const void *key2)
   const PRUnichar *str1 = (const PRUnichar *)key1;
   const PRUnichar *str2 = (const PRUnichar *)key2;
 
-  return str1 && str2 && NS_strcmp(str1, str2) == 0;
+  return nsCRT::strcmp(str1, str2) == 0;
 }
 
 // nsIAtom* -> id hash
@@ -476,7 +476,7 @@ nsHTMLTags::TestTagTable()
        id = LookupTag(nsDependentString(tag));
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
        const PRUnichar* check = GetStringValue(id);
-       NS_ASSERTION(0 == NS_strcmp(check, tag), "can't map id back to tag");
+       NS_ASSERTION(0 == nsCRT::strcmp(check, tag), "can't map id back to tag");
 
        nsAutoString uname(tag);
        ToUpperCase(uname);
