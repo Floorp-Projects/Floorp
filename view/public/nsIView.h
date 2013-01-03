@@ -113,9 +113,7 @@ public:
    * @param y out parameter for y position
    */
   nsPoint GetPosition() const {
-    // Call ExternalIsRoot here so that we can get to it from other
-    // components
-    NS_ASSERTION(!ExternalIsRoot() || (mPosX == 0 && mPosY == 0),
+    NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
                  "root views should always have explicit position of (0,0)");
     return nsPoint(mPosX, mPosY);
   }
@@ -340,8 +338,6 @@ public:
    * @result true iff this is the root view for its view manager
    */
   bool IsRoot() const;
-
-  virtual bool ExternalIsRoot() const;
 
   nsIntRect CalcWidgetBounds(nsWindowType aType);
 

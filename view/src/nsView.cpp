@@ -888,11 +888,6 @@ bool nsIView::IsRoot() const
   return mViewManager->GetRootViewImpl() == this;
 }
 
-bool nsIView::ExternalIsRoot() const
-{
-  return nsIView::IsRoot();
-}
-
 nsRect
 nsIView::GetBoundsInParentUnits() const
 {
