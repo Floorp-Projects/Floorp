@@ -185,7 +185,7 @@ interface nsIZipReader : nsISupports
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-[scriptable, uuid(72fc56e5-3e6e-4d11-8967-26ab96071032)]
+[scriptable, uuid(748050ac-3ab6-4472-bc2a-cb1564ac6a81)]
 interface nsIZipReaderCache : nsISupports
 {
     /**
@@ -209,6 +209,11 @@ interface nsIZipReaderCache : nsISupports
      *       will return the closed zip reader.
      */
     nsIZipReader getZip(in nsIFile zipFile);
+
+    /**
+     * returns true if this zipreader already has this file cached
+     */
+    bool isCached(in nsIFile zipFile);
 
     /**
      * Returns a (possibly shared) nsIZipReader for a zip inside another zip

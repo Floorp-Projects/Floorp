@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/2012/WD-dom-20120105/
+ * http://dom.spec.whatwg.org/#documenttype
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -15,9 +15,14 @@ interface DocumentType : Node {
   readonly attribute DOMString publicId;
   readonly attribute DOMString systemId;
 
+  /* Not implemented
   // NEW
   void before((Node or DOMString)... nodes);
   void after((Node or DOMString)... nodes);
   void replace((Node or DOMString)... nodes);
   void remove();
+  */
+
+  // Mozilla extension
+  readonly attribute DOMString? internalSubset;
 };

@@ -1350,7 +1350,7 @@ class DebugScopeProxy : public BaseProxyHandler
             return true;
         }
 
-        return JS_GetPropertyDescriptorById(cx, scope, id, JSRESOLVE_QUALIFIED, desc);
+        return JS_GetPropertyDescriptorById(cx, scope, id, 0, desc);
     }
 
     bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid idArg, Value *vp) MOZ_OVERRIDE

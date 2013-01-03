@@ -12,7 +12,6 @@
 <?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
 
 <?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
 
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
@@ -405,7 +404,6 @@
           </treecols>
           <treechildren flex="1"/>
         </tree>
-        <richlistbox id="downloadsRichListBox"/>
       </deck>
       <deck id="detailsDeck" style="height: 11em;">
         <vbox id="itemsCountBox" align="center">
@@ -440,7 +438,4 @@
       </deck>
     </vbox>
   </hbox>
-
-  <commandset id="downloadCommands"/>
-  <menupopup id="downloadsContextMenu"/>
 </window>

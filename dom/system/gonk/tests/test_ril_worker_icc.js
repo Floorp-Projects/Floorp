@@ -191,17 +191,18 @@ add_test(function test_octect_BCD() {
 });
 
 /**
- * Verify RIL.isICCServiceAvailable.
+ * Verify ICCUtilsHelper.isICCServiceAvailable.
  */
 add_test(function test_is_icc_service_available() {
   let worker = newUint8Worker();
+  let ICCUtilsHelper = worker.ICCUtilsHelper;
 
   function test_table(sst, geckoService, simEnabled, usimEnabled) {
     worker.RIL.iccInfo.sst = sst;
     worker.RIL.appType = CARD_APPTYPE_SIM;
-    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), simEnabled);
+    do_check_eq(ICCUtilsHelper.isICCServiceAvailable(geckoService), simEnabled);
     worker.RIL.appType = CARD_APPTYPE_USIM;
-    do_check_eq(worker.RIL.isICCServiceAvailable(geckoService), usimEnabled);
+    do_check_eq(ICCUtilsHelper.isICCServiceAvailable(geckoService), usimEnabled);
   }
 
   test_table([0x08], "ADN", true, false);
@@ -570,17 +571,19 @@ add_test(function test_stk_proactive_command_event_list() {
 });
 
 add_test(function test_spn_display_condition() {
-  let RIL = newWorker({
+  let worker = newWorker({
     postRILMessage: function fakePostRILMessage(data) {
       // Do nothing
     },
     postMessage: function fakePostMessage(message) {
       // Do nothing
     }
-  }).RIL;
+  });
+  let RIL = worker.RIL;
+  let ICCUtilsHelper = worker.ICCUtilsHelper;
 
   // Test updateDisplayCondition runs before any of SIM file is ready.
-  do_check_eq(RIL.updateDisplayCondition(), true);
+  do_check_eq(ICCUtilsHelper.updateDisplayCondition(), true);
   do_check_eq(RIL.iccInfo.isDisplayNetworkNameRequired, true);
   do_check_eq(RIL.iccInfo.isDisplaySpnRequired, false);
 
@@ -602,7 +605,7 @@ add_test(function test_spn_display_condition() {
       mnc: plmnMnc
     };
 
-    do_check_eq(RIL.updateDisplayCondition(), true);
+    do_check_eq(ICCUtilsHelper.updateDisplayCondition(), true);
     do_check_eq(RIL.iccInfo.isDisplayNetworkNameRequired, expectedIsDisplayNetworkNameRequired);
     do_check_eq(RIL.iccInfo.isDisplaySpnRequired, expectedIsDisplaySPNRequired);
     do_timeout(0, callback);
@@ -901,14 +904,15 @@ add_test(function test_stk_proactive_command_provide_local_information() {
 });
 
 add_test(function test_path_id_for_spid_and_spn() {
-  let RIL = newWorker({
+  let worker = newWorker({
     postRILMessage: function fakePostRILMessage(data) {
       // Do nothing
     },
     postMessage: function fakePostMessage(message) {
       // Do nothing
-    }
-  }).RIL;
+    }});
+  let RIL = worker.RIL;
+  let ICCFileHelper = worker.ICCFileHelper;
 
   // Test SIM
   RIL.iccStatus = {
@@ -921,16 +925,16 @@ add_test(function test_path_id_for_spid_and_spn() {
       }
     ]
   }
-  do_check_eq(RIL._getPathIdForICCRecord(ICC_EF_SPDI),
+  do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPDI),
               EF_PATH_MF_SIM + EF_PATH_DF_GSM);
-  do_check_eq(RIL._getPathIdForICCRecord(ICC_EF_SPN),
+  do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPN),
               EF_PATH_MF_SIM + EF_PATH_DF_GSM);
 
   // Test USIM
   RIL.iccStatus.gsmUmtsSubscriptionAppIndex = 1;
-  do_check_eq(RIL._getPathIdForICCRecord(ICC_EF_SPDI),
+  do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPDI),
               EF_PATH_MF_SIM + EF_PATH_ADF_USIM);
-  do_check_eq(RIL._getPathIdForICCRecord(ICC_EF_SPDI),
+  do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPDI),
               EF_PATH_MF_SIM + EF_PATH_ADF_USIM);
   run_next_test();
 });

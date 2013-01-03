@@ -1188,7 +1188,7 @@ void
 KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
                                  GdkEventKey* aGdkKeyEvent)
 {
-    NS_ENSURE_TRUE(aKeyEvent.message == NS_KEY_PRESS, );
+    NS_ENSURE_TRUE_VOID(aKeyEvent.message == NS_KEY_PRESS);
 
     aKeyEvent.charCode = GetCharCodeFor(aGdkKeyEvent);
     if (!aKeyEvent.charCode) {

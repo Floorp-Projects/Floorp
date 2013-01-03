@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset=utf-8>
+  <title></title>
+  <script type="application/javascript">
+  function runTest() {
+    document.write("<body>");
+    var succeeded = true;
+    try {
+      new DOMParser();
+    } catch(e) {
+      succeeded = false;
+    }
+    window.parent.ok(succeeded, "Creating DOMParser failed!");
+    window.parent.SimpleTest.finish();
+    document.close();
+  }
+  </script>
+</head>
+<body onload="runTest()">
+</body>
+</html>

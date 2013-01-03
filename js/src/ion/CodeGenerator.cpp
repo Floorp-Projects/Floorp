@@ -600,6 +600,11 @@ CodeGenerator::visitParameter(LParameter *lir)
 bool
 CodeGenerator::visitCallee(LCallee *lir)
 {
+    // read number of actual arguments from the JS frame.
+    Register callee = ToRegister(lir->output());
+    Address ptr(StackPointer, frameSize() + IonJSFrameLayout::offsetOfCalleeToken());
+
+    masm.loadPtr(ptr, callee);
     return true;
 }
 
@@ -1504,19 +1509,31 @@ static const VMFunction DefVarOrConstInfo =
 bool
 CodeGenerator::visitDefVar(LDefVar *lir)
 {
-    Register scopeChain = ToRegister(lir->getScopeChain());
-    Register nameTemp   = ToRegister(lir->nameTemp());
-
-    masm.movePtr(ImmGCPtr(lir->mir()->name()), nameTemp);
+    Register scopeChain = ToRegister(lir->scopeChain());
 
     pushArg(scopeChain); // JSObject *
     pushArg(Imm32(lir->mir()->attrs())); // unsigned
-    pushArg(nameTemp); // PropertyName *
+    pushArg(ImmGCPtr(lir->mir()->name())); // PropertyName *
 
     if (!callVM(DefVarOrConstInfo, lir))
         return false;
 
     return true;
+}
+
+typedef bool (*DefFunOperationFn)(JSContext *, HandleScript, HandleObject, HandleFunction);
+static const VMFunction DefFunOperationInfo = FunctionInfo<DefFunOperationFn>(DefFunOperation);
+
+bool
+CodeGenerator::visitDefFun(LDefFun *lir)
+{
+    Register scopeChain = ToRegister(lir->scopeChain());
+
+    pushArg(ImmGCPtr(lir->mir()->fun()));
+    pushArg(scopeChain);
+    pushArg(ImmGCPtr(current->mir()->info().script()));
+
+    return callVM(DefFunOperationInfo, lir);
 }
 
 typedef bool (*ReportOverRecursedFn)(JSContext *);
@@ -2410,7 +2427,7 @@ static const VMFunction GtInfo = FunctionInfo<CompareFn>(ion::GreaterThan);
 static const VMFunction GeInfo = FunctionInfo<CompareFn>(ion::GreaterThanOrEqual);
 
 bool
-CodeGenerator::visitCompareV(LCompareV *lir)
+CodeGenerator::visitCompareVM(LCompareVM *lir)
 {
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
@@ -2450,8 +2467,9 @@ bool
 CodeGenerator::visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir)
 {
     JSOp op = lir->mir()->jsop();
-    MIRType specialization = lir->mir()->specialization();
-    JS_ASSERT(IsNullOrUndefined(specialization));
+    MCompare::CompareType compareType = lir->mir()->compareType();
+    JS_ASSERT(compareType == MCompare::Compare_Undefined ||
+              compareType == MCompare::Compare_Null);
 
     const ValueOperand value = ToValue(lir, LIsNullOrLikeUndefined::Value);
     Register output = ToRegister(lir->output());
@@ -2512,7 +2530,7 @@ CodeGenerator::visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir)
     JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
 
     Assembler::Condition cond = JSOpToCondition(op);
-    if (specialization == MIRType_Null)
+    if (compareType == MCompare::Compare_Null)
         cond = masm.testNull(cond, value);
     else
         cond = masm.testUndefined(cond, value);
@@ -2525,8 +2543,9 @@ bool
 CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir)
 {
     JSOp op = lir->mir()->jsop();
-    MIRType specialization = lir->mir()->specialization();
-    JS_ASSERT(IsNullOrUndefined(specialization));
+    MCompare::CompareType compareType = lir->mir()->compareType();
+    JS_ASSERT(compareType == MCompare::Compare_Undefined ||
+              compareType == MCompare::Compare_Null);
 
     const ValueOperand value = ToValue(lir, LIsNullOrLikeUndefinedAndBranch::Value);
 
@@ -2577,7 +2596,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
     JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
 
     Assembler::Condition cond = JSOpToCondition(op);
-    if (specialization == MIRType_Null)
+    if (compareType == MCompare::Compare_Null)
         cond = masm.testNull(cond, value);
     else
         cond = masm.testUndefined(cond, value);
@@ -2592,7 +2611,8 @@ static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(js_Con
 bool
 CodeGenerator::visitEmulatesUndefined(LEmulatesUndefined *lir)
 {
-    MOZ_ASSERT(IsNullOrUndefined(lir->mir()->specialization()));
+    MOZ_ASSERT(lir->mir()->compareType() == MCompare::Compare_Undefined ||
+               lir->mir()->compareType() == MCompare::Compare_Null);
     MOZ_ASSERT(lir->mir()->lhs()->type() == MIRType_Object);
     MOZ_ASSERT(lir->mir()->operandMightEmulateUndefined(),
                "If the object couldn't emulate undefined, this should have been folded.");
@@ -2626,7 +2646,8 @@ CodeGenerator::visitEmulatesUndefined(LEmulatesUndefined *lir)
 bool
 CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
 {
-    MOZ_ASSERT(IsNullOrUndefined(lir->mir()->specialization()));
+    MOZ_ASSERT(lir->mir()->compareType() == MCompare::Compare_Undefined ||
+               lir->mir()->compareType() == MCompare::Compare_Null);
     MOZ_ASSERT(lir->mir()->operandMightEmulateUndefined(),
                "Operands which can't emulate undefined should have been folded");
 

@@ -20,7 +20,6 @@
   <![CDATA[
     function doTest()
     {
-      testStates("deck_pane1", STATE_INVISIBLE, 0, STATE_OFFSCREEN);
       testStates("deck_pane2", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("tabs_pane1", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("tabs_pane2", STATE_OFFSCREEN, 0, STATE_INVISIBLE);

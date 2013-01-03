@@ -41,10 +41,10 @@ using mozilla::dom::ContentChild;
 #include "GeneratedEvents.h"
 #include "mozIApplicationClearPrivateDataParams.h"
 
-// calls FlushAndDeleteTemporaryTables(false)
+// calls FlushAndEvictFromCache(false)
 #define NS_DOMSTORAGE_FLUSH_TIMER_TOPIC "domstorage-flush-timer"
 
-// calls FlushAndDeleteTemporaryTables(true)
+// calls FlushAndEvictFromCache(false)
 #define NS_DOMSTORAGE_FLUSH_FORCE_TOPIC "domstorage-flush-force"
 
 using namespace mozilla;
@@ -52,10 +52,6 @@ using namespace mozilla;
 static const uint32_t ASK_BEFORE_ACCEPT = 1;
 static const uint32_t ACCEPT_SESSION = 2;
 static const uint32_t BEHAVIOR_REJECT = 2;
-
-// Intervals to flush the temporary table after in seconds
-#define NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_INACTIVITY_TIME (5)
-#define NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_AGE (30)
 
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
@@ -288,25 +284,25 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
   } else if (!strcmp(aTopic, "profile-before-change")) {
     if (DOMStorageImpl::gStorageDB) {
       DebugOnly<nsresult> rv =
-        DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(true);
+        DOMStorageImpl::gStorageDB->FlushAndEvictFromCache(true);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                       "DOMStorage: temporary table commit failed");
+                       "DOMStorage: cache commit failed");
       DOMStorageImpl::gStorageDB->Close();
       nsDOMStorageManager::ShutdownDB();
     }
   } else if (!strcmp(aTopic, NS_DOMSTORAGE_FLUSH_TIMER_TOPIC)) {
     if (DOMStorageImpl::gStorageDB) {
       DebugOnly<nsresult> rv =
-        DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(false);
+        DOMStorageImpl::gStorageDB->FlushAndEvictFromCache(false);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                       "DOMStorage: temporary table commit failed");
+                       "DOMStorage: cache commit failed");
     }
   } else if (!strcmp(aTopic, NS_DOMSTORAGE_FLUSH_FORCE_TOPIC)) {
     if (DOMStorageImpl::gStorageDB) {
       DebugOnly<nsresult> rv =
-        DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(true);
+        DOMStorageImpl::gStorageDB->FlushAndEvictFromCache(false);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                       "DOMStorage: temporary table commit failed");
+                       "DOMStorage: cache  commit failed");
     }
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     if (DOMStorageImpl::gStorageDB) {

@@ -19,6 +19,7 @@ CPPSRCS = \
        nsDOMStorage.cpp \
        nsDOMStorageBaseDB.cpp \
        nsDOMStorageDBWrapper.cpp \
+       nsLocalStorageCache.cpp \
        nsDOMStoragePersistentDB.cpp \
        nsDOMStorageMemoryDB.cpp \
        StorageChild.cpp \

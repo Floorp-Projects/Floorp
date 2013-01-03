@@ -476,10 +476,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   max-width: 280px;
 }
 
-#geolocation-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
-}
-
 #addon-progress-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#addon-progress-notification");
 }

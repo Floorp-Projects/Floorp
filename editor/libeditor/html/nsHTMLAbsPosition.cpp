@@ -26,14 +26,13 @@
 #include "nsHTMLEditor.h"
 #include "nsHTMLObjectResizer.h"
 #include "nsIContent.h"
-#include "nsIDOMCSSPrimitiveValue.h"
+#include "nsROCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMCSSValue.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRGBColor.h"
+#include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -661,43 +660,32 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
       NS_ENSURE_STATE(cssDecl);
 
       // from these declarations, get the one we want and that one only
-      nsCOMPtr<nsIDOMCSSValue> colorCssValue;
-      res = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), getter_AddRefs(colorCssValue));
-      NS_ENSURE_SUCCESS(res, res);
+      ErrorResult error;
+      nsRefPtr<dom::CSSValue> cssVal = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
+      NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
 
-      uint16_t type;
-      res = colorCssValue->GetCssValueType(&type);
-      NS_ENSURE_SUCCESS(res, res);
-      if (nsIDOMCSSValue::CSS_PRIMITIVE_VALUE == type) {
-        nsCOMPtr<nsIDOMCSSPrimitiveValue> val = do_QueryInterface(colorCssValue);
-        res = val->GetPrimitiveType(&type);
-        NS_ENSURE_SUCCESS(res, res);
-        if (nsIDOMCSSPrimitiveValue::CSS_RGBCOLOR == type) {
-          nsCOMPtr<nsIDOMRGBColor> rgbColor;
-          res = val->GetRGBColorValue(getter_AddRefs(rgbColor));
-          NS_ENSURE_SUCCESS(res, res);
-          nsCOMPtr<nsIDOMCSSPrimitiveValue> red, green, blue;
-          float r, g, b;
-          res = rgbColor->GetRed(getter_AddRefs(red));
-          NS_ENSURE_SUCCESS(res, res);
-          res = rgbColor->GetGreen(getter_AddRefs(green));
-          NS_ENSURE_SUCCESS(res, res);
-          res = rgbColor->GetBlue(getter_AddRefs(blue));
-          NS_ENSURE_SUCCESS(res, res);
-          res = red->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, &r);
-          NS_ENSURE_SUCCESS(res, res);
-          res = green->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, &g);
-          NS_ENSURE_SUCCESS(res, res);
-          res = blue->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, &b);
-          NS_ENSURE_SUCCESS(res, res);
-          if (r >= BLACK_BG_RGB_TRIGGER &&
-              g >= BLACK_BG_RGB_TRIGGER &&
-              b >= BLACK_BG_RGB_TRIGGER)
-            aReturn.AssignLiteral("black");
-          else
-            aReturn.AssignLiteral("white");
-          return NS_OK;
-        }
+      nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();
+      NS_ENSURE_TRUE(val, NS_ERROR_FAILURE);
+
+      if (nsIDOMCSSPrimitiveValue::CSS_RGBCOLOR == val->PrimitiveType()) {
+        nsDOMCSSRGBColor* rgbVal = val->GetRGBColorValue(error);
+        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        float r = rgbVal->Red()->
+          GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
+        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        float g = rgbVal->Green()->
+          GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
+        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        float b = rgbVal->Blue()->
+          GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
+        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        if (r >= BLACK_BG_RGB_TRIGGER &&
+            g >= BLACK_BG_RGB_TRIGGER &&
+            b >= BLACK_BG_RGB_TRIGGER)
+          aReturn.AssignLiteral("black");
+        else
+          aReturn.AssignLiteral("white");
+        return NS_OK;
       }
     }
   }

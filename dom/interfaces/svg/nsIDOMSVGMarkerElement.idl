@@ -7,10 +7,7 @@
 
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedEnumeration;
-interface nsIDOMSVGAngle;
-interface nsIDOMSVGAnimatedAngle;
 interface nsIDOMSVGAnimatedRect;
-interface nsIDOMSVGMatrix;
 
 /**
  * The nsIDOMSVGMarker interface is the interface to an SVG marker element.
@@ -52,8 +49,8 @@ interface nsIDOMSVGMarkerElement
   readonly attribute nsIDOMSVGAnimatedLength      markerWidth;
   readonly attribute nsIDOMSVGAnimatedLength      markerHeight;
   readonly attribute nsIDOMSVGAnimatedEnumeration orientType;
-  readonly attribute nsIDOMSVGAnimatedAngle       orientAngle;
+  readonly attribute nsISupports                  orientAngle;
 
   void setOrientToAuto ( );
-  void setOrientToAngle ( in nsIDOMSVGAngle angle );
+  void setOrientToAngle ( in nsISupports angle );
 };

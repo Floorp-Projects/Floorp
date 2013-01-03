@@ -52,27 +52,15 @@ TextDecoderBase::Init(const nsAString& aEncoding, const bool aFatal,
 }
 
 void
-TextDecoderBase::Decode(const ArrayBufferView* aView,
-                        const bool aStream,
-                        nsAString& aOutDecodedString,
+TextDecoderBase::Decode(const char* aInput, const int32_t aLength,
+                        const bool aStream, nsAString& aOutDecodedString,
                         ErrorResult& aRv)
 {
-  const char* data;
-  int32_t length;
-  // If view is not specified, let view be a Uint8Array of length 0.
-  if (!aView) {
-    data = EmptyCString().BeginReading();
-    length = EmptyCString().Length();
-  } else {
-    data = reinterpret_cast<const char*>(aView->Data());
-    length = aView->Length();
-  }
-
   aOutDecodedString.Truncate();
 
   // Run or resume the decoder algorithm of the decoder object's encoder.
   int32_t outLen;
-  nsresult rv = mDecoder->GetMaxLength(data, length, &outLen);
+  nsresult rv = mDecoder->GetMaxLength(aInput, aLength, &outLen);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -86,7 +74,8 @@ TextDecoderBase::Decode(const ArrayBufferView* aView,
     return;
   }
 
-  rv = mDecoder->Convert(data, &length, buf, &outLen);
+  int32_t length = aLength;
+  rv = mDecoder->Convert(aInput, &length, buf, &outLen);
   MOZ_ASSERT(mFatal || rv != NS_ERROR_ILLEGAL_INPUT);
   buf[outLen] = 0;
   aOutDecodedString.Append(buf, outLen);

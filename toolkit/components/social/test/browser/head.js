@@ -59,3 +59,66 @@ function runTests(tests, cbPreTest, cbPostTest, cbFinish) {
   }
   runNextTest();
 }
+
+// A mock notifications server.  Based on:
+// dom/tests/mochitest/notification/notification_common.js
+const FAKE_CID = Cc["@mozilla.org/uuid-generator;1"].
+    getService(Ci.nsIUUIDGenerator).generateUUID();
+
+const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
+const ALERTS_SERVICE_CID = Components.ID(Cc[ALERTS_SERVICE_CONTRACT_ID].number);
+
+function MockAlertsService() {}
+
+MockAlertsService.prototype = {
+
+    showAlertNotification: function(imageUrl, title, text, textClickable,
+                                    cookie, alertListener, name) {
+        let obData = JSON.stringify({
+          imageUrl: imageUrl,
+          title: title,
+          text:text,
+          textClickable: textClickable,
+          cookie: cookie,
+          name: name
+        });
+        Services.obs.notifyObservers(null, "social-test:notification-alert", obData);
+
+        if (textClickable) {
+          // probably should do this async....
+          alertListener.observe(null, "alertclickcallback", cookie);
+        }
+
+        alertListener.observe(null, "alertfinished", cookie);
+    },
+
+    QueryInterface: function(aIID) {
+        if (aIID.equals(Ci.nsISupports) ||
+            aIID.equals(Ci.nsIAlertsService))
+            return this;
+        throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+};
+
+var factory = {
+    createInstance: function(aOuter, aIID) {
+        if (aOuter != null)
+            throw Cr.NS_ERROR_NO_AGGREGATION;
+        return new MockAlertsService().QueryInterface(aIID);
+    }
+};
+
+function replaceAlertsService() {
+  Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+            .registerFactory(FAKE_CID, "",
+                             ALERTS_SERVICE_CONTRACT_ID,
+                             factory)
+}
+
+function restoreAlertsService() {
+  Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+            .registerFactory(ALERTS_SERVICE_CID, "",
+                             ALERTS_SERVICE_CONTRACT_ID,
+                             null);
+}
+// end of alerts service mock.

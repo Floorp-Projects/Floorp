@@ -67,7 +67,7 @@ inline bool IsDrawingModelAsync(int16_t aModel) {
 
 #if defined(_MSC_VER)
 #define FULLFUNCTION __FUNCSIG__
-#elif (__GNUC__ >= 4)
+#elif defined(__GNUC__)
 #define FULLFUNCTION __PRETTY_FUNCTION__
 #else
 #define FULLFUNCTION __FUNCTION__

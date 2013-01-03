@@ -8,7 +8,7 @@
 #define nsNetAddr_h__
 
 #include "nsINetAddr.h"
-#include "prio.h"
+#include "mozilla/net/DNS.h"
 #include "mozilla/Attributes.h"
 
 class nsNetAddr MOZ_FINAL : public nsINetAddr
@@ -17,10 +17,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETADDR
 
-  nsNetAddr(PRNetAddr* addr);
+  nsNetAddr(mozilla::net::NetAddr* addr);
 
 private:
-  PRNetAddr mAddr;
+  mozilla::net::NetAddr mAddr;
 
 protected:
   /* additional members */

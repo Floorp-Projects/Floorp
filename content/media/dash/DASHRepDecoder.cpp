@@ -321,7 +321,7 @@ DASHRepDecoder::GetByteRangeForSeek(int64_t const aOffset,
   // i.e. inactive rep decoders should only load metadata.
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
-  for (int i = 0; i < mByteRanges.Length(); i++) {
+  for (uint32_t i = 0; i < mByteRanges.Length(); i++) {
     NS_ENSURE_FALSE(mByteRanges[i].IsNull(), NS_ERROR_NOT_INITIALIZED);
     // Check if |aOffset| lies within the current data range.
     if (mByteRanges[i].mStart <= aOffset && aOffset <= mByteRanges[i].mEnd) {

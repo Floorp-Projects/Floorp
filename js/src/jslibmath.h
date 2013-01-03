@@ -18,7 +18,7 @@
  */
 
 /* The right copysign function is not always named the same thing. */
-#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#ifdef __GNUC__
 #define js_copysign __builtin_copysign
 #elif defined _WIN32
 #define js_copysign _copysign

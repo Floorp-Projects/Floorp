@@ -34,6 +34,7 @@ MOCHITEST_BROWSER_FILES += \
 	browser_favicon_setAndFetchFaviconForPage.js \
 	browser_favicon_setAndFetchFaviconForPage_failures.js \
 	browser_visituri_privatebrowsing_perwindowpb.js \
+	browser_favicon_privatebrowsing_perwindowpb.js \
 	$(NULL)
 else
 MOCHITEST_BROWSER_FILES += \

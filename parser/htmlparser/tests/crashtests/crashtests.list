@@ -30,7 +30,7 @@ load 269095-1.html
 load 286733-1.html
 load 286733-2.html
 load 299036-1.html
-asserts-if(Android,1) skip-if(isDebugBuild&&(OSX==10.7||OSX==10.8)) load 328751-1.html # 10.7 and 10.8 leaks are bug 705570
+asserts-if(Android,1) load 328751-1.html
 load 408939-1.html
 load 423373-1.html
 load 445171-1.html

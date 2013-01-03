@@ -57,6 +57,7 @@ EXPORTS_mozilla = \
   $(NULL)
 
 EXPORTS_$(binding_include_path) = \
+  BindingDeclarations.h \
   BindingUtils.h \
   CallbackFunction.h \
   DOMJSClass.h \
@@ -81,6 +82,7 @@ LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/content/xslt/src/base \
   -I$(topsrcdir)/content/xslt/src/xpath \
+  -I$(topsrcdir)/content/xml/content/src \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

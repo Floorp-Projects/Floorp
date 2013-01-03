@@ -1,4 +1,3 @@
 {
-  "Should be able to delete Document.": true,
   "Should be able to delete CharacterData.": true
 }

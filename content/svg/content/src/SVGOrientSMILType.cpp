@@ -21,7 +21,7 @@ SVGOrientSMILType::Init(nsSMILValue& aValue) const
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
 
   aValue.mU.mOrient.mAngle = 0.0f;
-  aValue.mU.mOrient.mUnit = nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED;
+  aValue.mU.mOrient.mUnit = SVG_ANGLETYPE_UNSPECIFIED;
   aValue.mU.mOrient.mOrientType = nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE;
   aValue.mType = this;
 }

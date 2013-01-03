@@ -638,16 +638,16 @@ lsm_open_rx (lsm_lcb_t *lcb, cc_action_data_open_rcv_t *data,
           char **candidates;
           int candidate_ct;
           char *default_addr;
+          short status;
 
-          vcmRxAllocICE(media->cap_index, dcb->group_id, media->refid,
+          status = vcmRxAllocICE(media->cap_index, dcb->group_id, media->refid,
             lsm_get_ms_ui_call_handle(lcb->line, lcb->call_id, lcb->ui_id),
             dcb->peerconnection,
             media->level,
             &default_addr, &port_allocated,
             &candidates, &candidate_ct);
 
-          // Check that we got a valid address and port
-          if (default_addr && (strlen(default_addr) > 0) && (port_allocated != -1)) {
+          if (!status) {
             sstrncpy(dcb->ice_default_candidate_addr, default_addr, sizeof(dcb->ice_default_candidate_addr));
 
             data->port = (uint16_t)port_allocated;
@@ -659,8 +659,10 @@ lsm_open_rx (lsm_lcb_t *lcb, cc_action_data_open_rcv_t *data,
       }
     }
 
-    LSM_DEBUG(get_debug_string(LSM_DBG_INT1), lcb->call_id, lcb->line, fname,
-              "allocated port", port_allocated);
+    if (rc == CC_RC_SUCCESS) {
+      LSM_DEBUG(get_debug_string(LSM_DBG_INT1), lcb->call_id, lcb->line, fname,
+                "allocated port", port_allocated);
+    }
 
     return (rc);
 }
@@ -975,17 +977,24 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                     media->src_port = open_rcv.port;
                 }
 
-                /* TODO(ekr@rtfm.com): Needs changing for when we have > 2 streams */
+                /* TODO(ekr@rtfm.com): Needs changing for when we
+                   have > 2 streams. (adam@nostrum.com): For now,
+                   we know that the stream IDs are assigned in the
+                   same order as things appear in the media objects.
+                   The "level" in the media objects are indexed
+                   starting from one, while pc_stream_id is
+                   zero-indexed.  This means that the stream ID
+                   will (for now) be equal to media->level-1. */
                 if ( media->cap_index == CC_VIDEO_1 ) {
                     attrs.video.opaque = media->video;
-                    pc_stream_id = 1;
+                    pc_stream_id = media->level - 1;
                 } else {
                     attrs.audio.packetization_period = media->packetization_period;
                     attrs.audio.max_packetization_period = media->max_packetization_period;
                     attrs.audio.avt_payload_type = media->avt_payload_type;
                     attrs.audio.mixing_mode = mix_mode;
                     attrs.audio.mixing_party = mix_party;
-                    pc_stream_id = 0;
+                    pc_stream_id = media->level - 1;
                 }
                 pc_track_id = 0;
                 dcb->cur_video_avail &= ~CC_ATTRIB_CAST;

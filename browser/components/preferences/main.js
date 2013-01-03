@@ -23,10 +23,23 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
+    this.setupDownloadsWindowOptions();
+
     // Notify observers that the UI is now ready
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
+  },
+
+  setupDownloadsWindowOptions: function ()
+  {
+    let showWhenDownloading = document.getElementById("showWhenDownloading");
+    let closeWhenDone = document.getElementById("closeWhenDone");
+
+    // These radio buttons should be hidden when the Downloads Panel is enabled.
+    let shouldHide = !DownloadsCommon.useToolkitUI;
+    showWhenDownloading.hidden = shouldHide;
+    closeWhenDone.hidden = shouldHide;
   },
 
   // HOME PAGE

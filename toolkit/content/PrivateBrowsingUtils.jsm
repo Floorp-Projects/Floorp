@@ -50,19 +50,3 @@ this.PrivateBrowsingUtils = {
   }
 };
 
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-function autoStartObserver(aSubject, aTopic, aData) {
-  var newValue = Services.prefs.getBoolPref(kAutoStartPref);
-  var windowsEnum = Services.wm.getEnumerator(null);
-  while (windowsEnum.hasMoreElements()) {
-    var window = windowsEnum.getNext();
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsILoadContext)
-          .usePrivateBrowsing = newValue;
-  }
-}
-
-Services.prefs.addObserver(kAutoStartPref, autoStartObserver, false);
-#endif
-

@@ -36,22 +36,21 @@ class LayerManager;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
-  ViewTransform(nsIntPoint aTranslation = nsIntPoint(0, 0), float aXScale = 1, float aYScale = 1)
+  ViewTransform(nsIntPoint aTranslation = nsIntPoint(0, 0),
+                gfxSize aScale = gfxSize(1, 1))
     : mTranslation(aTranslation)
-    , mXScale(aXScale)
-    , mYScale(aYScale)
+    , mScale(aScale)
   {}
 
   operator gfx3DMatrix() const
   {
     return
-      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1) *
+      gfx3DMatrix::ScalingMatrix(mScale.width, mScale.height, 1) *
       gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
   }
 
   nsIntPoint mTranslation;
-  float mXScale;
-  float mYScale;
+  gfxSize mScale;
 };
 
 class CompositorParent : public PCompositorParent,
@@ -249,7 +248,7 @@ private:
    */
   void TransformFixedLayers(Layer* aLayer,
                             const gfxPoint& aTranslation,
-                            const gfxPoint& aScaleDiff);
+                            const gfxSize& aScaleDiff);
 
   virtual PGrallocBufferParent* AllocPGrallocBuffer(
     const gfxIntSize&, const uint32_t&, const uint32_t&,

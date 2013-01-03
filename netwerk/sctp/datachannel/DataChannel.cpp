@@ -346,7 +346,7 @@ DataChannelConnection::StartDefer()
   if (!mTimerRunning) {
     rv = mDeferredTimer->InitWithCallback(this, mDeferTimeout,
                                           nsITimer::TYPE_ONE_SHOT);
-    NS_ENSURE_TRUE(rv == NS_OK, /* */);
+    NS_ENSURE_TRUE_VOID(rv == NS_OK);
 
     mTimerRunning = true;
   }
@@ -1058,15 +1058,15 @@ DataChannelConnection::HandleOpenResponseMessage(const struct rtcweb_datachannel
   streamOut = ntohs(rsp->reverse_stream);
   channel = FindChannelByStreamOut(streamOut);
 
-  NS_ENSURE_TRUE(channel, /* */);
-  NS_ENSURE_TRUE(channel->mState == CONNECTING, /* */);
+  NS_ENSURE_TRUE_VOID(channel);
+  NS_ENSURE_TRUE_VOID(channel->mState == CONNECTING);
 
   if (rsp->error) {
     LOG(("%s: error in response to open of channel %d (%s)",
          __FUNCTION__, streamOut, channel->mLabel.get()));
 
   } else {
-    NS_ENSURE_TRUE(!FindChannelByStreamIn(streamIn), /* */);
+    NS_ENSURE_TRUE_VOID(!FindChannelByStreamIn(streamIn));
 
     channel->mStreamIn = streamIn;
     channel->mState = OPEN;
@@ -1096,8 +1096,8 @@ DataChannelConnection::HandleOpenAckMessage(const struct rtcweb_datachannel_ack 
 
   channel = FindChannelByStreamIn(streamIn);
 
-  NS_ENSURE_TRUE(channel, /* */);
-  NS_ENSURE_TRUE(channel->mState == CONNECTING, /* */);
+  NS_ENSURE_TRUE_VOID(channel);
+  NS_ENSURE_TRUE_VOID(channel->mState == CONNECTING);
 
   channel->mState = channel->mReady ? DataChannel::OPEN : DataChannel::WAITING_TO_OPEN;
   if (channel->mState == OPEN) {
@@ -1131,11 +1131,11 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
   channel = FindChannelByStreamIn(streamIn);
 
   // XXX A closed channel may trip this... check
-  NS_ENSURE_TRUE(channel, /* */);
-  NS_ENSURE_TRUE(channel->mState != CONNECTING, /* */);
+  NS_ENSURE_TRUE_VOID(channel);
+  NS_ENSURE_TRUE_VOID(channel->mState != CONNECTING);
 
   // XXX should this be a simple if, no warnings/debugbreaks?
-  NS_ENSURE_TRUE(channel->mState != CLOSED, /* */);
+  NS_ENSURE_TRUE_VOID(channel->mState != CLOSED);
 
   {
     nsAutoCString recvData(buffer, length);
@@ -1211,19 +1211,19 @@ DataChannelConnection::HandleMessage(const void *buffer, size_t length, uint32_t
 
   switch (ppid) {
     case DATA_CHANNEL_PPID_CONTROL:
-      NS_ENSURE_TRUE(length >= sizeof(*ack), /* */); // Ack is the smallest
+      NS_ENSURE_TRUE_VOID(length >= sizeof(*ack)); // Ack is the smallest
 
       msg = static_cast<const struct rtcweb_datachannel_ack *>(buffer);
       switch (msg->msg_type) {
         case DATA_CHANNEL_OPEN_REQUEST:
           LOG(("length %u, sizeof(*req) = %u", length, sizeof(*req)));
-          NS_ENSURE_TRUE(length >= sizeof(*req), /* */);
+          NS_ENSURE_TRUE_VOID(length >= sizeof(*req));
 
           req = static_cast<const struct rtcweb_datachannel_open_request *>(buffer);
           HandleOpenRequestMessage(req, length, streamIn);
           break;
         case DATA_CHANNEL_OPEN_RESPONSE:
-          NS_ENSURE_TRUE(length >= sizeof(*rsp), /* */);
+          NS_ENSURE_TRUE_VOID(length >= sizeof(*rsp));
 
           rsp = static_cast<const struct rtcweb_datachannel_open_response *>(buffer);
           HandleOpenResponseMessage(rsp, length, streamIn);

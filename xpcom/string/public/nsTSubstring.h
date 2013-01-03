@@ -299,11 +299,12 @@ class nsTSubstring_CharT
         }
 #endif
 
-    // The LowerCaseEquals methods compare the lower case version of
-    // this string to some ASCII/Literal string. The ASCII string is
-    // *not* lowercased for you. If you compare to an ASCII or literal
-    // string that contains an uppercase character, it is guaranteed to
-    // return false. We will throw assertions too.
+    // The LowerCaseEquals methods compare the ASCII-lowercase version of
+    // this string (lowercasing only ASCII uppercase characters) to some
+    // ASCII/Literal string. The ASCII string is *not* lowercased for
+    // you. If you compare to an ASCII or literal string that contains an
+    // uppercase character, it is guaranteed to return false. We will
+    // throw assertions too.
       bool NS_FASTCALL LowerCaseEqualsASCII( const char* data, size_type len ) const;
       bool NS_FASTCALL LowerCaseEqualsASCII( const char* data ) const;
 

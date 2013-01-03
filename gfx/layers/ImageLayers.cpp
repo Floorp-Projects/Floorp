@@ -44,7 +44,7 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurfa
   // transform, then we'd snap again when compositing the ThebesLayer).
   mEffectiveTransform =
       SnapTransform(local, sourceRect, nullptr) *
-      SnapTransform(aTransformToSurface, gfxRect(0, 0, 0, 0), nullptr);
+      SnapTransformTranslation(aTransformToSurface, nullptr);
   ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
 }
 

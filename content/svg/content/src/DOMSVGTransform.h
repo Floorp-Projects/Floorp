@@ -12,9 +12,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsID.h"
-#include "nsIDOMSVGTransform.h"
 #include "nsTArray.h"
 #include "SVGTransform.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
 class nsSVGElement;
@@ -39,13 +39,13 @@ class DOMSVGMatrix;
 /**
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
-class DOMSVGTransform MOZ_FINAL : public nsIDOMSVGTransform
+class DOMSVGTransform MOZ_FINAL : public nsISupports,
+                                  public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGTRANSFORM_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGTransform)
-  NS_DECL_NSIDOMSVGTRANSFORM
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTransform)
 
   /**
    * Generic ctor for DOMSVGTransform objects that are created for an attribute.
@@ -61,13 +61,13 @@ public:
    *   SVGTransformList.createSVGTransformFromMatrix(in SVGMatrix matrix)
    * which do not initially belong to an attribute.
    */
-  DOMSVGTransform();
-  DOMSVGTransform(const gfxMatrix &aMatrix);
+  explicit DOMSVGTransform();
+  explicit DOMSVGTransform(const gfxMatrix &aMatrix);
 
   /**
    * Ctor for creating an unowned copy. Used with Clone().
    */
-  DOMSVGTransform(const SVGTransform &aMatrix);
+  explicit DOMSVGTransform(const SVGTransform &aMatrix);
 
   ~DOMSVGTransform() {
     // Our matrix tear-off pointer should be cleared before we are destroyed
@@ -139,13 +139,26 @@ public:
     return Transform();
   }
 
+  // WebIDL
+  DOMSVGTransformList* GetParentObject() const { return mList; }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  uint16_t Type() const;
+  already_AddRefed<DOMSVGMatrix> Matrix();
+  float Angle() const;
+  void SetMatrix(mozilla::DOMSVGMatrix& matrix, ErrorResult& rv);
+  void SetTranslate(float tx, float ty, ErrorResult& rv);
+  void SetScale(float sx, float sy, ErrorResult& rv);
+  void SetRotate(float angle, float cx, float cy, ErrorResult& rv);
+  void SetSkewX(float angle, ErrorResult& rv);
+  void SetSkewY(float angle, ErrorResult& rv);
+
 protected:
   // Interface for DOMSVGMatrix's use
   friend class DOMSVGMatrix;
   const bool IsAnimVal() const {
     return mIsAnimValItem;
   }
-  const gfxMatrix& Matrix() const {
+  const gfxMatrix& Matrixgfx() const {
     return Transform().Matrix();
   }
   void SetMatrix(const gfxMatrix& aMatrix);

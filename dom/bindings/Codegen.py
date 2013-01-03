@@ -530,6 +530,8 @@ class CGHeaders(CGWrapper):
         if len(callbacks) != 0:
             # We need CallbackFunction to serve as our parent class
             declareIncludes.add("mozilla/dom/CallbackFunction.h")
+            # And we need BindingUtils.h so we can wrap "this" objects
+            declareIncludes.add("mozilla/dom/BindingUtils.h")
 
         # Let the machinery do its thing.
         def _includeString(includes):
@@ -3210,7 +3212,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         if not callWrapValue:
             tail = successCode
         else:
-            tail = ("if (!MaybeWrapValue(cx, ${obj}, ${jsvalPtr})) {\n" +
+            tail = ("if (!MaybeWrapValue(cx, ${jsvalPtr})) {\n" +
                     ("%s\n" % exceptionCodeIndented.define()) +
                     "}\n" +
                     successCode)
@@ -3897,7 +3899,7 @@ class CGMethodCall(CGThing):
                 # We can't handle unions at the distinguishing index.
                 if distinguishingType(sig).isUnion():
                     raise TypeError("No support for unions as distinguishing "
-                                    "arguments yet: %s",
+                                    "arguments yet: %s" %
                                     distinguishingArgument(sig).location)
                 # We don't support variadics as the distinguishingArgument yet.
                 # If you want to add support, consider this case:
@@ -3915,7 +3917,7 @@ class CGMethodCall(CGThing):
                 # double-check.
                 if distinguishingArgument(sig).variadic:
                     raise TypeError("No support for variadics as distinguishing "
-                                    "arguments yet: %s",
+                                    "arguments yet: %s" %
                                     distinguishingArgument(sig).location)
 
             # Convert all our arguments up to the distinguishing index.
@@ -5834,7 +5836,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
 
         return setOrIndexedGet + """JSObject* expando;
 if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = GetExpandoObject(proxy))) {
-  unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+  unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
   if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
     return false;
   }
@@ -6809,7 +6811,7 @@ class CGBindingRoot(CGThing):
             components = nativeType.split('::')
             className = components[-1]
             # JSObject is a struct, not a class
-            declare = CGClassForwardDeclare(className, className is "JSObject")
+            declare = CGClassForwardDeclare(className, className == "JSObject")
             if len(components) > 1:
                 declare = CGNamespace.build(components[:-1],
                                             CGWrapper(declare, declarePre='\n',
@@ -6920,10 +6922,12 @@ class CGBindingRoot(CGThing):
         curr = CGHeaders(descriptors,
                          dictionaries,
                          callbacks,
-                         ['mozilla/dom/BindingUtils.h',
+                         ['mozilla/dom/BindingDeclarations.h',
+                          'mozilla/ErrorResult.h',
                           'mozilla/dom/DOMJSClass.h',
                           'mozilla/dom/DOMJSProxyHandler.h'],
-                         ['mozilla/dom/NonRefcountedDOMObject.h',
+                         ['mozilla/dom/BindingUtils.h',
+                          'mozilla/dom/NonRefcountedDOMObject.h',
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',

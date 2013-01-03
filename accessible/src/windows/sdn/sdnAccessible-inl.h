@@ -18,9 +18,7 @@ namespace a11y {
 inline DocAccessible*
 sdnAccessible::GetDocument() const
 {
-  DocManager* docMgr = GetAccService();
-  return docMgr ?
-    docMgr->GetDocAccessibleFromCache(mNode->OwnerDoc()) : nullptr;
+  return GetExistingDocAccessible(mNode->OwnerDoc());
 }
 
 inline Accessible*

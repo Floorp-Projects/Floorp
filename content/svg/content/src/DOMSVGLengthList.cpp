@@ -62,15 +62,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLengthList)
 
-} // namespace mozilla
-DOMCI_DATA(SVGLengthList, mozilla::DOMSVGLengthList)
-namespace mozilla {
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGLengthList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLengthList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLengthList)
 NS_INTERFACE_MAP_END
 
 JSObject*
@@ -125,14 +119,6 @@ DOMSVGLengthList::InternalList() const
 }
 
 // ----------------------------------------------------------------------------
-// nsIDOMSVGLengthList implementation:
-
-NS_IMETHODIMP
-DOMSVGLengthList::GetNumberOfItems(uint32_t *aNumberOfItems)
-{
-  *aNumberOfItems = NumberOfItems();
-  return NS_OK;
-}
 
 void
 DOMSVGLengthList::Clear(ErrorResult& aError)
@@ -156,14 +142,6 @@ DOMSVGLengthList::Clear(ErrorResult& aError)
       Element()->AnimationNeedsResample();
     }
   }
-}
-
-NS_IMETHODIMP
-DOMSVGLengthList::Clear()
-{
-  ErrorResult rv;
-  Clear(rv);
-  return rv.ErrorCode();
 }
 
 already_AddRefed<nsIDOMSVGLength>
@@ -192,17 +170,10 @@ DOMSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
     newItem = domItem->Copy();
   }
 
-  Clear();
-  return InsertItemBefore(newItem, 0, error);
-}
-
-NS_IMETHODIMP
-DOMSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
-                             nsIDOMSVGLength **_retval)
-{
   ErrorResult rv;
-  *_retval = Initialize(newItem, rv).get();
-  return rv.ErrorCode();
+  Clear(rv);
+  MOZ_ASSERT(!rv.Failed());
+  return InsertItemBefore(newItem, 0, error);
 }
 
 nsIDOMSVGLength*
@@ -217,15 +188,6 @@ DOMSVGLengthList::IndexedGetter(uint32_t index, bool& found, ErrorResult& error)
     return mItems[index];
   }
   return nullptr;
-}
-
-NS_IMETHODIMP
-DOMSVGLengthList::GetItem(uint32_t index,
-                          nsIDOMSVGLength **_retval)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*_retval = GetItem(index, rv));
-  return rv.ErrorCode();
 }
 
 already_AddRefed<nsIDOMSVGLength>
@@ -281,16 +243,6 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
   return domItem.forget();
 }
 
-NS_IMETHODIMP
-DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
-                                   uint32_t index,
-                                   nsIDOMSVGLength **_retval)
-{
-  ErrorResult rv;
-  *_retval = InsertItemBefore(newItem, index, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsIDOMSVGLength>
 DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
                               uint32_t index,
@@ -335,16 +287,6 @@ DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
   return domItem.forget();
 }
 
-NS_IMETHODIMP
-DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
-                              uint32_t index,
-                              nsIDOMSVGLength **_retval)
-{
-  ErrorResult rv;
-  *_retval = ReplaceItem(newItem, index, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsIDOMSVGLength>
 DOMSVGLengthList::RemoveItem(uint32_t index,
                              ErrorResult& error)
@@ -383,31 +325,6 @@ DOMSVGLengthList::RemoveItem(uint32_t index,
     Element()->AnimationNeedsResample();
   }
   return result.forget();
-}
-
-NS_IMETHODIMP
-DOMSVGLengthList::RemoveItem(uint32_t index,
-                             nsIDOMSVGLength **_retval)
-{
-  ErrorResult rv;
-  *_retval = RemoveItem(index, rv).get();
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-DOMSVGLengthList::AppendItem(nsIDOMSVGLength *newItem,
-                             nsIDOMSVGLength **_retval)
-{
-  ErrorResult rv;
-  *_retval = AppendItem(newItem, rv).get();
-  return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-DOMSVGLengthList::GetLength(uint32_t *aLength)
-{
-  *aLength = Length();
-  return NS_OK;
 }
 
 void

@@ -30,7 +30,6 @@ endif
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../shell/src \
 	-I$(srcdir)/../feeds/src \
-	-I$(srcdir)/../privatebrowsing/src \
 	-I$(srcdir)/../about \
 	-I$(srcdir)/../dirprovider \
 	$(NULL)
@@ -41,10 +40,14 @@ endif
 
 SHARED_LIBRARY_LIBS = \
 	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
-	../privatebrowsing/src/$(LIB_PREFIX)privatebrowsing_s.$(LIB_SUFFIX) \
 	../about/$(LIB_PREFIX)browserabout_s.$(LIB_SUFFIX) \
 	../dirprovider/$(LIB_PREFIX)browserdir_s.$(LIB_SUFFIX) \
 	$(NULL)
+
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+LOCAL_INCLUDES += -I$(srcdir)/../privatebrowsing/src
+SHARED_LIBRARY_LIBS += ../privatebrowsing/src/$(LIB_PREFIX)privatebrowsing_s.$(LIB_SUFFIX)
+endif
 
 ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)

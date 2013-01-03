@@ -201,7 +201,7 @@ NS_IMETHODIMP MaemoLocationProvider::Startup()
   return NS_OK;
 }
 
-NS_IMETHODIMP MaemoLocationProvider::Watch(nsIGeolocationUpdate *callback)
+NS_IMETHODIMP MaemoLocationProvider::Watch(nsIGeolocationUpdate *callback, bool aRequestPrivate)
 {
   if (mCallback)
     return NS_OK;

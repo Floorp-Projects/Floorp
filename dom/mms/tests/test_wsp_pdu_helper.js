@@ -717,6 +717,7 @@ add_test(function test_TypeValue_decode() {
   // Test for number-typed return value from ConstrainedEncoding
   wsp_decode_test(WSP.TypeValue, [0x33 | 0x80],
                   "application/vnd.wap.multipart.related");
+  wsp_decode_test(WSP.TypeValue, [0x1d | 0x80], "image/gif");
   // Test for NotWellKnownEncodingError
   wsp_decode_test(WSP.TypeValue, [0x59 | 0x80], null, "NotWellKnownEncodingError");
 
@@ -730,6 +731,8 @@ add_test(function test_TypeValue_encode() {
                   [110, 111, 47, 115, 117, 99, 104, 46, 116, 121, 112, 101, 0]);
   wsp_encode_test(WSP.TypeValue, "application/vnd.wap.multipart.related",
                   [0x33 | 0x80]);
+  wsp_encode_test(WSP.TypeValue, "image/gif",
+                  [0x1d | 0x80]);
 
   run_next_test();
 });

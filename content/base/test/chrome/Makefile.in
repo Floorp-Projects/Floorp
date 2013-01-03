@@ -50,6 +50,9 @@ MOCHITEST_CHROME_FILES = \
     test_bug800386.xul \
     test_csp_bug773891.html \
     test_domparsing.xul \
+    test_bug814638.xul \
+    host_bug814638.xul \
+    frame_bug814638.xul \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

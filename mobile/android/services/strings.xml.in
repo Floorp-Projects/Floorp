@@ -76,6 +76,7 @@
   <string name="bookmarks_folder_desktop">&bookmarks.folder.desktop.label;</string>
   <string name="bookmarks_folder_mobile">&bookmarks.folder.mobile.label;</string>
   <string name="bookmarks_folder_reading_list">&bookmarks.folder.readinglist.label;</string>
+  <string name="bookmarks_folder_pinned">&bookmarks.folder.pinned.label;</string>
 
   <!-- Notification strings -->
   <string name="sync_notification_oneaccount">&sync.notification.oneaccount.label;</string>

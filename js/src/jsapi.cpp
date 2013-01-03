@@ -3350,7 +3350,7 @@ JS_GetConstructor(JSContext *cx, JSObject *protoArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto);
     {
-        JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+        JSAutoResolveFlags rf(cx, 0);
 
         if (!JSObject::getProperty(cx, proto, proto, cx->names().constructor, &cval))
             return NULL;
@@ -3597,7 +3597,7 @@ JS_LookupPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
     RootedObject obj2(cx);
     RootedShape prop(cx);
 
-    return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
+    return LookupPropertyById(cx, obj, id, 0, &obj2, &prop) &&
            LookupResult(cx, obj, obj2, id, prop, vp);
 }
 
@@ -3668,7 +3668,7 @@ JS_HasPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, JSBool *foundp)
     RootedId id(cx, idArg);
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    JSBool ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop);
+    JSBool ok = LookupPropertyById(cx, obj, id, 0, &obj2, &prop);
     *foundp = (prop != NULL);
     return ok;
 }
@@ -3714,7 +3714,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *objArg, jsid id_, JSBool *
         RootedObject obj2(cx);
         RootedShape prop(cx);
 
-        if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
+        if (!LookupPropertyById(cx, obj, id, 0, &obj2, &prop))
             return JS_FALSE;
         *foundp = (obj == obj2);
         return JS_TRUE;
@@ -3838,7 +3838,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
                             ? JS_FUNC_TO_DATA_PTR(JSObject *, setter)
                             : NULL);
 
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
     if (flags != 0 && obj->isNative()) {
         return DefineNativeProperty(cx, obj, id, value, getter, setter,
                                     attrs, flags, tinyid);
@@ -4092,7 +4092,7 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *objArg, jsid idA
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
     AutoPropertyDescriptorRooter desc(cx);
-    if (!GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
+    if (!GetPropertyDescriptorById(cx, obj, id, 0, JS_FALSE, &desc))
         return false;
 
     *attrsp = desc.attrs;
@@ -4164,7 +4164,7 @@ SetPropertyAttributesById(JSContext *cx, HandleObject obj, HandleId id, unsigned
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &shape))
+    if (!LookupPropertyById(cx, obj, id, 0, &obj2, &shape))
         return false;
     if (!shape || obj != obj2) {
         *foundp = false;
@@ -4215,7 +4215,7 @@ JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *o
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     assertSameCompartment(cx, onBehalfOf);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     RootedValue value(cx);
     if (!JSObject::getGeneric(cx, obj, onBehalfOf, id, &value))
@@ -4254,7 +4254,7 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     RootedValue value(cx);
     if (!JSObject::getElement(cx, obj, onBehalfOf, index, &value))
@@ -4272,7 +4272,7 @@ JS_GetElementIfPresent(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     RootedValue value(cx);
     bool isPresent;
@@ -4343,7 +4343,7 @@ JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
     RootedValue value(cx, *vp);
     if (!JSObject::setGeneric(cx, obj, obj, id, &value, false))
@@ -4360,7 +4360,7 @@ JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval *vp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, *vp);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
     RootedValue value(cx, *vp);
     if (!JSObject::setElement(cx, obj, obj, index, &value, false))
@@ -4393,7 +4393,7 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *objArg, jsid id, jsval *rval)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     RootedValue value(cx);
 
@@ -4417,7 +4417,7 @@ JS_DeleteElement2(JSContext *cx, JSObject *objArg, uint32_t index, jsval *rval)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     RootedValue value(cx);
     if (!JSObject::deleteElement(cx, obj, index, &value, false))
@@ -4433,7 +4433,7 @@ JS_DeleteProperty2(JSContext *cx, JSObject *objArg, const char *name, jsval *rva
     RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
@@ -4453,7 +4453,7 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *objArg, const jschar *name, size_t
     RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    JSAutoResolveFlags rf(cx, 0);
 
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)

@@ -39,6 +39,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 //-----------------------------------------------------------------------------
 
@@ -806,22 +807,22 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
 }
 
 nsresult
-nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const PRNetAddr *addr)
+nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 {
     NS_ASSERTION(!mFD, "already initialized");
 
-    char buf[64];
-    PR_NetAddrToString(addr, buf, sizeof(buf));
+    char buf[kIPv6CStrBufSize];
+    NetAddrToString(addr, buf, sizeof(buf));
     mHost.Assign(buf);
 
     uint16_t port;
-    if (addr->raw.family == PR_AF_INET)
+    if (addr->raw.family == AF_INET)
         port = addr->inet.port;
     else
-        port = addr->ipv6.port;
-    mPort = PR_ntohs(port);
+        port = addr->inet6.port;
+    mPort = ntohs(port);
 
-    memcpy(&mNetAddr, addr, sizeof(PRNetAddr));
+    memcpy(&mNetAddr, addr, sizeof(NetAddr));
 
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
     mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
@@ -907,7 +908,9 @@ nsSocketTransport::ResolveHost()
             // we send it when it's created, rather than the empty address
             // we send with the connect call.
             mState = STATE_RESOLVING;
-            PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET, SocketPort(), &mNetAddr);
+            mNetAddr.raw.family = AF_INET;
+            mNetAddr.inet.port = htons(SocketPort());
+            mNetAddr.inet.ip = htonl(INADDR_ANY);
             return PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nullptr);
         }
     }
@@ -1058,7 +1061,7 @@ nsSocketTransport::InitiateSocket()
     nsresult rv;
 
     if (gIOService->IsOffline() &&
-        !PR_IsNetAddrType(&mNetAddr, PR_IpAddrLoopback))
+        !IsLoopBackAddress(&mNetAddr))
         return NS_ERROR_OFFLINE;
 
     //
@@ -1164,8 +1167,8 @@ nsSocketTransport::InitiateSocket()
 
 #if defined(PR_LOGGING)
     if (SOCKET_LOG_ENABLED()) {
-        char buf[64];
-        PR_NetAddrToString(&mNetAddr, buf, sizeof(buf));
+        char buf[kIPv6CStrBufSize];
+        NetAddrToString(&mNetAddr, buf, sizeof(buf));
         SOCKET_LOG(("  trying address: %s\n", buf));
     }
 #endif
@@ -1173,7 +1176,9 @@ nsSocketTransport::InitiateSocket()
     // 
     // Initiate the connect() to the host...  
     //
-    status = PR_Connect(fd, &mNetAddr, NS_SOCKET_CONNECT_TIMEOUT);
+    PRNetAddr prAddr;
+    NetAddrToPRNetAddr(&mNetAddr, &prAddr);
+    status = PR_Connect(fd, &prAddr, NS_SOCKET_CONNECT_TIMEOUT);
     if (status == PR_SUCCESS) {
         // 
         // we are connected!
@@ -1686,7 +1691,7 @@ nsSocketTransport::IsLocal(bool *aIsLocal)
 {
     {
         MutexAutoLock lock(mLock);
-        *aIsLocal = PR_IsNetAddrType(&mNetAddr, PR_IpAddrLoopback);
+        *aIsLocal = IsLoopBackAddress(&mNetAddr);
     }
 }
 
@@ -1907,7 +1912,7 @@ nsSocketTransport::GetPort(int32_t *port)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetPeerAddr(PRNetAddr *addr)
+nsSocketTransport::GetPeerAddr(NetAddr *addr)
 {
     // once we are in the connected state, mNetAddr will not change.
     // so if we can verify that we are in the connected state, then
@@ -1920,12 +1925,12 @@ nsSocketTransport::GetPeerAddr(PRNetAddr *addr)
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    memcpy(addr, &mNetAddr, sizeof(mNetAddr));
+    memcpy(addr, &mNetAddr, sizeof(NetAddr));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
+nsSocketTransport::GetSelfAddr(NetAddr *addr)
 {
     // we must not call any PR methods on our file descriptor
     // while holding mLock since those methods might re-enter
@@ -1937,11 +1942,14 @@ nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
         fd = GetFD_Locked();
     }
 
-    if (!fd)
+    if (!fd) {
         return NS_ERROR_NOT_CONNECTED;
+    }
 
+    PRNetAddr prAddr;
     nsresult rv =
-        (PR_GetSockName(fd, addr) == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+        (PR_GetSockName(fd, &prAddr) == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+    PRNetAddrToNetAddr(&prAddr, addr);
 
     {
         MutexAutoLock lock(mLock);
@@ -1955,7 +1963,7 @@ nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
 NS_IMETHODIMP
 nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr)
 {
-    PRNetAddr rawAddr;
+    NetAddr rawAddr;
 
     nsresult rv;
     rv = GetPeerAddr(&rawAddr);
@@ -1971,7 +1979,7 @@ nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr)
 NS_IMETHODIMP
 nsSocketTransport::GetScriptableSelfAddr(nsINetAddr * *addr)
 {
-    PRNetAddr rawAddr;
+    NetAddr rawAddr;
 
     nsresult rv;
     rv = GetSelfAddr(&rawAddr);

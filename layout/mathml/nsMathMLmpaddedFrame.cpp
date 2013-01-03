@@ -82,37 +82,47 @@ nsMathMLmpaddedFrame::ProcessAttributes()
   mWidthSign = NS_MATHML_SIGN_INVALID;
   GetAttribute(mContent, nullptr, nsGkAtoms::width, value);
   if (!value.IsEmpty()) {
-    ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit);
+    if (!ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit)) {      
+      ReportParseError(nsGkAtoms::width->GetUTF16String(), value.get());
+    }
   }
 
   // height
   mHeightSign = NS_MATHML_SIGN_INVALID;
   GetAttribute(mContent, nullptr, nsGkAtoms::height, value);
   if (!value.IsEmpty()) {
-    ParseAttribute(value, mHeightSign, mHeight, mHeightPseudoUnit);
+    if (!ParseAttribute(value, mHeightSign, mHeight, mHeightPseudoUnit)) {
+      ReportParseError(nsGkAtoms::height->GetUTF16String(), value.get());
+    }
   }
 
   // depth
   mDepthSign = NS_MATHML_SIGN_INVALID;
   GetAttribute(mContent, nullptr, nsGkAtoms::depth_, value);
   if (!value.IsEmpty()) {
-    ParseAttribute(value, mDepthSign, mDepth, mDepthPseudoUnit);
+    if (!ParseAttribute(value, mDepthSign, mDepth, mDepthPseudoUnit)) {
+      ReportParseError(nsGkAtoms::depth_->GetUTF16String(), value.get());
+    }
   }
 
   // lspace
   mLeadingSpaceSign = NS_MATHML_SIGN_INVALID;
   GetAttribute(mContent, nullptr, nsGkAtoms::lspace_, value);
   if (!value.IsEmpty()) {
-    ParseAttribute(value, mLeadingSpaceSign, mLeadingSpace,
-                   mLeadingSpacePseudoUnit);
+    if (!ParseAttribute(value, mLeadingSpaceSign, mLeadingSpace, 
+                        mLeadingSpacePseudoUnit)) {
+      ReportParseError(nsGkAtoms::lspace_->GetUTF16String(), value.get());
+    }
   }
 
   // voffset
   mVerticalOffsetSign = NS_MATHML_SIGN_INVALID;
   GetAttribute(mContent, nullptr, nsGkAtoms::voffset_, value);
   if (!value.IsEmpty()) {
-    ParseAttribute(value, mVerticalOffsetSign, mVerticalOffset, 
-                   mVerticalOffsetPseudoUnit);
+    if (!ParseAttribute(value, mVerticalOffsetSign, mVerticalOffset,
+                        mVerticalOffsetPseudoUnit)) {
+      ReportParseError(nsGkAtoms::voffset_->GetUTF16String(), value.get());
+    }
   }
   
 }
@@ -174,10 +184,6 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   // floatValue = 1, to cater for cases such as width="height", but that wouldn't
   // be in line with the spec which requires an explicit number
   if (number.IsEmpty()) {
-#ifdef DEBUG
-    printf("mpadded: attribute with bad numeric value: %s\n",
-            NS_LossyConvertUTF16toASCII(aString).get());
-#endif
     aSign = NS_MATHML_SIGN_INVALID;
     return false;
   }
@@ -234,7 +240,9 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     // We are not supposed to have a unitless, percent, negative or namedspace
     // value here.
     number.Append(unit); // leave the sign out if it was there
-    if (nsMathMLElement::ParseNumericValue(number, aCSSValue, 0))
+    if (nsMathMLElement::ParseNumericValue(number, aCSSValue, 
+                                           nsMathMLElement::
+                                           PARSE_SUPPRESS_WARNINGS, nullptr))
       return true;
   }
 

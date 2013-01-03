@@ -1836,7 +1836,6 @@ typedef JSBool
 /*
  * Like JSResolveOp, but flags provide contextual information as follows:
  *
- *  JSRESOLVE_QUALIFIED   a qualified property id: obj.id or obj[id], not id
  *  JSRESOLVE_ASSIGNING   obj[id] is on the left-hand side of an assignment
  *
  * The *objp out parameter, on success, should be null to indicate that id
@@ -4230,8 +4229,7 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 /*
  * JSNewResolveOp flag bits.
  */
-#define JSRESOLVE_QUALIFIED     0x01    /* resolve a qualified property id */
-#define JSRESOLVE_ASSIGNING     0x02    /* resolve on the left of assignment */
+#define JSRESOLVE_ASSIGNING     0x01    /* resolve on the left of assignment */
 
 /*
  * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on

@@ -400,8 +400,7 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
   }
 
   nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(DOMDocument));
-  DocAccessible* document =
-    GetAccService()->GetDocAccessibleFromCache(documentNode);
+  DocAccessible* document = GetExistingDocAccessible(documentNode);
 
   LogDocInfo(documentNode, document);
 
@@ -425,8 +424,7 @@ logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode)
 {
   MsgBegin(sDocLoadTitle, aMsg);
 
-  DocAccessible* document =
-    GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
+  DocAccessible* document = GetExistingDocAccessible(aDocumentNode);
   LogDocInfo(aDocumentNode, document);
 
   MsgEnd();
@@ -486,7 +484,7 @@ logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
                    DocAccessible* aDocument)
 {
   DocAccessible* document = aDocument ?
-    aDocument : GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
+    aDocument : GetExistingDocAccessible(aDocumentNode);
 
   MsgBegin(sDocCreateTitle, aMsg);
   LogDocInfo(aDocumentNode, document);
@@ -498,7 +496,7 @@ logging::DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
                     DocAccessible* aDocument)
 {
   DocAccessible* document = aDocument ?
-    aDocument : GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
+    aDocument : GetExistingDocAccessible(aDocumentNode);
 
   MsgBegin(sDocDestroyTitle, aMsg);
   LogDocInfo(aDocumentNode, document);

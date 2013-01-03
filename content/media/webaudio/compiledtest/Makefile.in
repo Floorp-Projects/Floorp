@@ -7,9 +7,12 @@ topsrcdir      := @top_srcdir@
 srcdir         := @srcdir@
 VPATH          := @srcdir@
 relativesrcdir := @relativesrcdir@
-FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
+
+ifndef _MSC_VER
+FAIL_ON_WARNINGS = 1
+endif # !_MSC_VER
 
 LOCAL_INCLUDES := -I$(srcdir)/..
 

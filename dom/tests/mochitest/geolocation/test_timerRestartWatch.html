@@ -26,12 +26,19 @@ resume_geolocationProvider();
 force_prompt(true);
 
 var watchID;
+var times = 0;
 
 function errorCallback(err) {
   ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
-  resume_geolocationProvider();
-  reset_prompt();
-  SimpleTest.finish();
+  times++;
+
+  // make sure we got at least 3 times errorCallback
+  if (times >= 3) {
+    navigator.geolocation.clearWatch(watchID);
+    resume_geolocationProvider();
+    reset_prompt();
+    SimpleTest.finish();
+  }
 }
 
 function successCallback(position) {

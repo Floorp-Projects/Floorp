@@ -40,13 +40,15 @@ typedef struct {
 typedef enum constraints_ {
     OfferToReceiveAudio     = 0,
     OfferToReceiveVideo     = 1,
-    VoiceActivityDetection  = 2
+    VoiceActivityDetection  = 2,
+    MozDontOfferDataChannel = 3
 } constraints;
 
 static const gsmsdp_key_table_entry_t constraints_table[] = {
     {"OfferToReceiveAudio",         OfferToReceiveAudio},
     {"OfferToReceiveVideo",         OfferToReceiveVideo},
-    {"VoiceActivityDetection",      VoiceActivityDetection}
+    {"VoiceActivityDetection",      VoiceActivityDetection},
+    {"MozDontOfferDataChannel",     MozDontOfferDataChannel}
 };
 
 cc_causes_t gsmsdp_create_local_sdp(fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
@@ -131,9 +133,14 @@ void gsmsdp_add_remote_stream(uint16_t idx, int pc_stream_id, fsmdef_dcb_t * dcb
 cc_causes_t gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb, const char * mid, uint16_t *level);
-void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb, const cc_media_constraints_t* constraints);
+void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb,
+                                    cc_media_constraints_t* constraints);
 cc_causes_t
 gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_audio, boolean *has_video, boolean *has_data);
 fsmdef_media_t* gsmsdp_find_media_by_media_type(fsmdef_dcb_t *dcb, sdp_media_e 	media_type);
+
+extern void gsmsdp_set_ice_attribute (sdp_attr_e sdp_attr, uint16_t level,
+                                      void *sdp_p, char *ice_attrib);
+
 #endif
 

@@ -26,6 +26,7 @@ static IonSpewer ionspewer;
 
 static bool LoggingChecked = false;
 static uint32_t LoggingBits = 0;
+static uint32_t filteredOutCompilations = 0;
 
 static const char *ChannelNames[] =
 {
@@ -33,6 +34,32 @@ static const char *ChannelNames[] =
     IONSPEW_CHANNEL_LIST(IONSPEW_CHANNEL)
 #undef IONSPEW_CHANNEL
 };
+
+static bool
+FilterContainsLocation(const char *filename, const size_t line = size_t(-1))
+{
+    static const char *filter = getenv("IONFILTER");
+
+    // If there is no filter we accept all outputs.
+    if (!filter || !filter[0])
+        return true;
+
+    static size_t filelen = strlen(filename);
+    const char *index = strstr(filter, filename);
+    while (index) {
+        if (index == filter || index[-1] == ',') {
+            if (index[filelen] == 0 || index[filelen] == ',')
+                return true;
+            if (index[filelen] == ':' && line != size_t(-1)) {
+                size_t read_line = strtoul(&index[filelen + 1], NULL, 10);
+                if (read_line == line)
+                    return true;
+            }
+        }
+        index = strstr(index + filelen, filename);
+    }
+    return false;
+}
 
 void
 ion::EnableIonDebugLogging()
@@ -93,11 +120,24 @@ IonSpewer::init()
     return true;
 }
 
+bool
+IonSpewer::isSpewingFunction() const
+{
+    return inited_ && graph;
+}
+
 void
 IonSpewer::beginFunction(MIRGraph *graph, HandleScript function)
 {
     if (!inited_)
         return;
+
+    if (!FilterContainsLocation(function->filename, function->lineno)) {
+        JS_ASSERT(!this->function);
+        // filter out logs during the compilation.
+        filteredOutCompilations++;
+        return;
+    }
 
     this->graph = graph;
     this->function = function;
@@ -109,7 +149,7 @@ IonSpewer::beginFunction(MIRGraph *graph, HandleScript function)
 void
 IonSpewer::spewPass(const char *pass)
 {
-    if (!inited_)
+    if (!isSpewingFunction())
         return;
 
     c1Spewer.spewPass(pass);
@@ -122,7 +162,7 @@ IonSpewer::spewPass(const char *pass)
 void
 IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 {
-    if (!inited_)
+    if (!isSpewingFunction())
         return;
 
     c1Spewer.spewPass(pass);
@@ -137,11 +177,15 @@ IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 void
 IonSpewer::endFunction()
 {
-    if (!inited_)
+    if (!isSpewingFunction()) {
+        filteredOutCompilations--;
         return;
+    }
 
     c1Spewer.endFunction();
     jsonSpewer.endFunction();
+
+    this->graph = NULL;
 }
 
 
@@ -311,14 +355,13 @@ ion::IonSpewHeader(IonSpewChannel channel)
         return;
 
     fprintf(stderr, "[%s] ", ChannelNames[channel]);
-
 }
 
 bool
 ion::IonSpewEnabled(IonSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
-    return LoggingBits & (1 << uint32_t(channel));
+    return (LoggingBits & (1 << uint32_t(channel))) && !filteredOutCompilations;
 }
 
 void

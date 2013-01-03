@@ -5,7 +5,7 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGURIReference.h"

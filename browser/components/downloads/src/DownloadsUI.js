@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gBrowserGlue",
                                    "nsIBrowserGlue");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsUI
@@ -107,50 +109,38 @@ DownloadsUI.prototype = {
   },
 
   /**
-   * Helper function that opens the right download manager UI. Either the
-   * new Downloads View in Places, or the toolkit download window if the
-   * Places Downloads View is not enabled.
+   * Helper function that opens the download manager UI.
    */
   _showDownloadManagerUI:
   function DUI_showDownloadManagerUI(aWindowContext, aID, aReason)
   {
-    // First, determine if the Places Downloads view is preffed on.
-    let usePlacesView = false;
-    try {
-      usePlacesView =
-        Services.prefs.getBoolPref("browser.library.useNewDownloadsView");
-    } catch(e) {}
-
-    if (!usePlacesView) {
-      // If we got here, then the browser.library.useNewDownloadsView pref
-      // either didn't exist or was false, so just show the toolkit downloads
-      // manager.
-      this._toolkitUI.show(aWindowContext, aID, aReason);
-      return;
-    }
-
-    let organizer = Services.wm.getMostRecentWindow("Places:Organizer");
-    if (!organizer) {
-      let parentWindow = aWindowContext;
-      // If we weren't given a window context, try to find a browser window
-      // to use as our parent - and if that doesn't work, error out and give
-      // up.
+    // If we weren't given a window context, try to find a browser window
+    // to use as our parent - and if that doesn't work, error out and give up.
+    let parentWindow = aWindowContext;
+    if (!parentWindow) {
+      parentWindow = RecentWindow.getMostRecentBrowserWindow();
       if (!parentWindow) {
-        parentWindow = RecentWindow.getMostRecentBrowserWindow();
-        if (!parentWindow) {
-          Components.utils
-                    .reportError("Couldn't find a browser window to open " +
-                                 "the Places Downloads View from.");
-          return;
-        }
+        Components.utils.reportError(
+          "Couldn't find a browser window to open the Places Downloads View " +
+          "from.");
+        return;
       }
-      parentWindow.openDialog("chrome://browser/content/places/places.xul",
-                              "", "chrome,toolbar=yes,dialog=no,resizable",
-                              "Downloads");
     }
-    else {
-      organizer.PlacesOrganizer.selectLeftPaneQuery("Downloads");
-      organizer.focus();
+
+    // If window is private then show it in a tab.
+    if (PrivateBrowsingUtils.isWindowPrivate(parentWindow)) {
+      parentWindow.openUILinkIn("about:downloads", "tab");
+      return;
+    } else {
+      let organizer = Services.wm.getMostRecentWindow("Places:Organizer");
+      if (!organizer) {
+        parentWindow.openDialog("chrome://browser/content/places/places.xul",
+                                "", "chrome,toolbar=yes,dialog=no,resizable",
+                                "Downloads");
+      } else {
+        organizer.PlacesOrganizer.selectLeftPaneQuery("Downloads");
+        organizer.focus();
+      }
     }
   }
 };

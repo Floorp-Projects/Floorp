@@ -11,7 +11,11 @@ function test() {
     let tmpdir = extractJarToTmp(jar);
     rootDir = "file://" + tmpdir.path + '/';
   }
-  loader.loadSubScript(rootDir + "privacypane_tests.js", this);
+  try {
+    loader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
+  } catch(x) {
+    loader.loadSubScript(rootDir + "privacypane_tests.js", this);
+  }
 
   run_test_subset([
     test_privatebrowsing_ui,

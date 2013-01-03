@@ -255,12 +255,17 @@ TelemetryPing.prototype = {
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
       values: {},
-      sum: hgram.sum,
-      sum_squares_lo: hgram.sum_squares_lo,
-      sum_squares_hi: hgram.sum_squares_hi,
-      log_sum: hgram.log_sum,
-      log_sum_squares: hgram.log_sum_squares
+      sum: hgram.sum
     };
+
+    if (hgram.histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
+      retgram.log_sum = hgram.log_sum;
+      retgram.log_sum_squares = hgram.log_sum_squares;
+    } else {
+      retgram.sum_squares_lo = hgram.sum_squares_lo;
+      retgram.sum_squares_hi = hgram.sum_squares_hi;
+    }
+
     let first = true;
     let last = 0;
 
@@ -1072,7 +1077,7 @@ TelemetryPing.prototype = {
   },
 
   classID: Components.ID("{55d6a5fa-130e-4ee6-a158-0133af3b86ba}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelemetryPing]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelemetryPing, Ci.nsIObserver]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelemetryPing]);

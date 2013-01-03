@@ -326,7 +326,7 @@ JS_ClearAllWatchPoints(JSContext *cx)
 /************************************************************************/
 
 JS_PUBLIC_API(unsigned)
-JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
+JS_PCToLineNumber(JSContext *cx, RawScript script, jsbytecode *pc)
 {
     return js::PCToLineNumber(script, pc);
 }

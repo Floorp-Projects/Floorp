@@ -261,7 +261,7 @@ function testDecodeABVOption(data, expectedString)
     msg: "text decoding ABV empty string test."});
 
   // null for Array Buffer
-  testCharset({encoding: "iso-8859-11", input: null, expected: "",
+  testCharset({encoding: "iso-8859-11", input: null, error: "TypeError",
     msg: "text decoding ABV null test."});
 }
 
