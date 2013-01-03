@@ -127,20 +127,25 @@ public:
   bool IsLoading() { return mLoader != nullptr; }
 
   /**
-   * Returns true if the given URI matches the URI of our PAC file.
+   * Returns true if the given URI matches the URI of our PAC file or the
+   * URI it has been redirected to. In the case of a chain of redirections
+   * only the current one being followed and the original are considered
+   * becuase this information is used, respectively, to determine if we
+   * should bypass the proxy (to fetch the pac file) or if the pac
+   * configuration has changed (and we should reload the pac file)
    */
+  bool IsPACURI(const nsACString &spec)
+  {
+    return mPACURISpec.Equals(spec) || mPACURIRedirectSpec.Equals(spec);
+  }
+
   bool IsPACURI(nsIURI *uri) {
-    if (mPACURISpec.IsEmpty())
+    if (mPACURISpec.IsEmpty() && mPACURIRedirectSpec.IsEmpty())
       return false;
 
     nsAutoCString tmp;
     uri->GetSpec(tmp);
     return IsPACURI(tmp);
-  }
-
-  bool IsPACURI(const nsACString &spec)
-  {
-    return mPACURISpec.Equals(spec);
   }
 
   NS_HIDDEN_(nsresult) Init(nsISystemProxySettings *);
@@ -202,6 +207,7 @@ private:
   mozilla::LinkedList<PendingPACQuery> mPendingQ; /* pac thread only */
 
   nsCString                    mPACURISpec; // Not an nsIRUI for use off main thread
+  nsCString                    mPACURIRedirectSpec;
   nsCOMPtr<nsIStreamLoader>    mLoader;
   bool                         mLoadPending;
   bool                         mShutdown;

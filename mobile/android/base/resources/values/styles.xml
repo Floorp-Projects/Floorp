@@ -256,4 +256,16 @@
       <item name="android:gravity">center|left</item>
     </style>
 
+    <style name="AboutHome.TextAppearance" />
+
+    <style name="AboutHome.TextAppearance.Title">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/abouthome_section_title</item>
+    </style>
+
+    <style name="AboutHome.TextAppearance.SubTitle">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/abouthome_section_subtitle</item>
+    </style>
+
 </resources>

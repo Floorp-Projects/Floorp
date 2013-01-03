@@ -46,7 +46,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(Freetype,
     "Memory used by Freetype."
 )
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(FreetypeMallocSizeOfOnAlloc, "freetype")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(FreetypeMallocSizeOfOnAlloc)
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(FreetypeMallocSizeOfOnFree)
 
 static void*

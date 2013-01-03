@@ -368,15 +368,19 @@ DefineUnforgeableAttributes(JSContext* cx, JSObject* obj,
 bool
 DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties);
 
-// If *vp is an object and *vp and obj are not in the same compartment, wrap *vp
-// into the compartment of obj (typically by replacing it with an Xray or
+// If *vp is a gcthing and is not in the compartment of cx, wrap *vp
+// into the compartment of cx (typically by replacing it with an Xray or
 // cross-compartment wrapper around the original object).
 inline bool
-MaybeWrapValue(JSContext* cx, JSObject* obj, JS::Value* vp)
+MaybeWrapValue(JSContext* cx, JS::Value* vp)
 {
-  if (vp->isObject() &&
-      js::GetObjectCompartment(&vp->toObject()) != js::GetContextCompartment(cx)) {
-    return JS_WrapValue(cx, vp);
+  if (vp->isGCThing()) {
+    void* gcthing = vp->toGCThing();
+    // Might be null if vp.isNull() :(
+    if (gcthing &&
+        js::GetGCThingCompartment(gcthing) != js::GetContextCompartment(cx)) {
+      return JS_WrapValue(cx, vp);
+    }
   }
 
   return true;

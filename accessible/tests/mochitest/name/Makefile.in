@@ -21,6 +21,7 @@ MOCHITEST_A11Y_FILES =\
 		test_link.html \
 		test_list.html \
 		test_markup.html \
+		test_svg.html \
 		test_browserui.xul \
 		test_tree.xul \
 		markuprules.xml \

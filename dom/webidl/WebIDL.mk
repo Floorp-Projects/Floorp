@@ -61,6 +61,7 @@ webidl_files = \
   HTMLLabelElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
+  HTMLTitleElement.webidl \
   ImageData.webidl \
   Location.webidl \
   MutationObserver.webidl \

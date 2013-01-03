@@ -8676,10 +8676,21 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
 }
 
 already_AddRefed<nsIDOMTouchList>
-nsIDocument::CreateTouchList(nsIDOMTouch* aTouch)
+nsIDocument::CreateTouchList()
+{
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  return retval.forget();
+}
+
+already_AddRefed<nsIDOMTouchList>
+nsIDocument::CreateTouchList(nsIDOMTouch* aTouch,
+                             const Sequence<nsRefPtr<nsIDOMTouch> >& aTouches)
 {
   nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
   retval->Append(aTouch);
+  for (uint32_t i = 0; i < aTouches.Length(); ++i) {
+    retval->Append(aTouches[i]);
+  }
   return retval.forget();
 }
 

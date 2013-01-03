@@ -1783,9 +1783,13 @@ nsHTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode)
       nsresult rv = RelativeFontChangeOnNode(aSizeChange, aNode->GetChildAt(i));
       NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // RelativeFontChangeOnNode already calls us recursively,
+    // so we don't need to check our children again.
+    return NS_OK;
   }
 
-  // Now cycle through the children.
+  // Otherwise cycle through the children.
   for (uint32_t i = aNode->GetChildCount(); i--; ) {
     nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode->GetChildAt(i));
     NS_ENSURE_SUCCESS(rv, rv);

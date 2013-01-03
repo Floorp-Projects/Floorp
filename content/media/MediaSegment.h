@@ -215,6 +215,7 @@ protected:
   void AppendFromInternal(MediaSegmentBase<C, Chunk>* aSource)
   {
     static_cast<C*>(this)->CheckCompatible(*static_cast<C*>(aSource));
+    MOZ_ASSERT(aSource->mDuration >= 0);
     mDuration += aSource->mDuration;
     aSource->mDuration = 0;
     if (!mChunks.IsEmpty() && !aSource->mChunks.IsEmpty() &&
@@ -248,6 +249,7 @@ protected:
 
   Chunk* AppendChunk(TrackTicks aDuration)
   {
+    MOZ_ASSERT(aDuration >= 0);
     Chunk* c = mChunks.AppendElement();
     c->mDuration = aDuration;
     mDuration += aDuration;

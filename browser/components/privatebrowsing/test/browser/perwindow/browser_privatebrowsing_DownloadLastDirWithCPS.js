@@ -6,6 +6,7 @@
 let gTests;
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
   gTests = runTest();
   moveAlong();
 }
