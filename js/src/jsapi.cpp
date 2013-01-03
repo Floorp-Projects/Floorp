@@ -1317,10 +1317,6 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
     if (oldVersionNumber == newVersionNumber)
         return oldVersionNumber; /* No override actually occurs! */
 
-    /* We no longer support 1.4 or below. */
-    if (newVersionNumber != JSVERSION_DEFAULT && newVersionNumber <= JSVERSION_1_4)
-        return oldVersionNumber;
-
     VersionCopyFlags(&newVersion, oldVersion);
     cx->maybeOverrideVersion(newVersion);
     JS_ASSERT(cx->getCompileOptions() == coptsBefore);
@@ -1331,18 +1327,18 @@ static struct v2smap {
     JSVersion   version;
     const char  *string;
 } v2smap[] = {
-    {JSVERSION_1_0,     "1.0"},
-    {JSVERSION_1_1,     "1.1"},
-    {JSVERSION_1_2,     "1.2"},
-    {JSVERSION_1_3,     "1.3"},
-    {JSVERSION_1_4,     "1.4"},
     {JSVERSION_ECMA_3,  "ECMAv3"},
-    {JSVERSION_1_5,     "1.5"},
     {JSVERSION_1_6,     "1.6"},
     {JSVERSION_1_7,     "1.7"},
     {JSVERSION_1_8,     "1.8"},
     {JSVERSION_ECMA_5,  "ECMAv5"},
     {JSVERSION_DEFAULT, js_default_str},
+    {JSVERSION_DEFAULT, "1.0"},
+    {JSVERSION_DEFAULT, "1.1"},
+    {JSVERSION_DEFAULT, "1.2"},
+    {JSVERSION_DEFAULT, "1.3"},
+    {JSVERSION_DEFAULT, "1.4"},
+    {JSVERSION_DEFAULT, "1.5"},
     {JSVERSION_UNKNOWN, NULL},          /* must be last, NULL is sentinel */
 };
 
