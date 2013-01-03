@@ -73,8 +73,10 @@ MOZ_MEMORY_API char *
 strndup_impl(const char *src, size_t len)
 {
   char* dst = (char*) malloc_impl(len + 1);
-  if (dst)
-    strncpy(dst, src, len + 1);
+  if (dst) {
+    strncpy(dst, src, len);
+    dst[len] = '\0';
+  }
   return dst;
 }
 
