@@ -10,9 +10,11 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# temporarily disabled due to bug 826168
+# test_getUserMedia_basicVideo.html 
+
 MOCHITEST_FILES = \
   test_getUserMedia_exceptions.html \
-  test_getUserMedia_basicVideo.html \
   test_getUserMedia_basicAudio.html \
   test_getUserMedia_basicVideoAudio.html \
   head.js \
