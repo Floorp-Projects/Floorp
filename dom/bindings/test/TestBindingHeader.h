@@ -482,8 +482,15 @@ public:
   // Overload resolution tests
   bool Overload1(TestInterface&);
   TestInterface* Overload1(const nsAString&, TestInterface&);
+  void Overload2(TestInterface&);
   void Overload2(const Dict&);
   void Overload2(const nsAString&);
+  void Overload3(TestInterface&);
+  void Overload3(const TestCallback&);
+  void Overload3(const nsAString&);
+  void Overload4(TestInterface&);
+  void Overload4(TestCallbackInterface&);
+  void Overload4(const nsAString&);
 
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
