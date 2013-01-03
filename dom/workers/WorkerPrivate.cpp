@@ -80,7 +80,7 @@ USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
 using namespace mozilla::dom;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf, "js-worker")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf)
 
 namespace {
 
@@ -937,9 +937,13 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    JSObject* target = aWorkerPrivate->IsAcceptingEvents() ?
-                       aWorkerPrivate->GetJSObject() :
-                       nullptr;
+    // Don't fire this event if the JS object has been disconnected from the
+    // private object.
+    if (!aWorkerPrivate->IsAcceptingEvents()) {
+      return true;
+    }
+
+    JSObject* target = aWorkerPrivate->GetJSObject();
 
     uint64_t innerWindowId;
 

@@ -2918,8 +2918,10 @@ fsmdef_ev_createoffer (sm_event_t *event) {
        msg->data.session.constraints = 0;
     }
 
-    vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
-    if (!ufrag || !ice_pwd) {
+    vcm_res = vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
+    if (vcm_res) {
+    	FSM_DEBUG_SM(DEB_F_PREFIX"vcmGetIceParams returned an error\n",
+            DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
       ui_create_offer(evCreateOfferError, line, call_id,
           dcb->caller_id.call_instance_id, strlib_empty());
       return (fsmdef_release(fcb, cause, FALSE));
@@ -3025,8 +3027,10 @@ fsmdef_ev_createanswer (sm_event_t *event) {
        msg->data.session.constraints = 0;
     }
 
-    vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
-    if (!ufrag || !ice_pwd) {
+    vcm_res = vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
+    if (vcm_res) {
+    	FSM_DEBUG_SM(DEB_F_PREFIX"vcmGetIceParams returned an error\n",
+            DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
       ui_create_offer(evCreateAnswerError, line, call_id,
           dcb->caller_id.call_instance_id, strlib_empty());
       return (fsmdef_release(fcb, cause, FALSE));

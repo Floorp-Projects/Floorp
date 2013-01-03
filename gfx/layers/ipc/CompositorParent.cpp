@@ -125,6 +125,10 @@ CompositorParent::StartUpWithExistingThread(MessageLoop* aMsgLoop,
 
 void CompositorParent::StartUp()
 {
+  // Check if compositor started already with StartUpWithExistingThread
+  if (sCompositorThreadID) {
+    return;
+  }
   MOZ_ASSERT(!sCompositorLoop);
   CreateCompositorMap();
   CreateThread();

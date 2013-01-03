@@ -315,6 +315,7 @@ public class BrowserDB {
                     String title = c.getString(c.getColumnIndex(URLColumns.TITLE));
                     mPinnedSites.put(pos, new PinnedSite(title, url));
                 } while (c.moveToNext());
+                c.close();
             }
         }
 
