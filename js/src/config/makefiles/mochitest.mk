@@ -51,6 +51,10 @@ ifdef MOCHITEST_A11Y_FILES
 $(eval $(call mochitest-libs-rule-template,MOCHITEST_A11Y_FILES,a11y))
 endif
 
+ifdef MOCHITEST_ROBOCOP_FILES
+$(eval $(call mochitest-libs-rule-template,MOCHITEST_ROBOCOP_FILES,tests/robocop))
+endif
+
 ifdef MOCHITEST_WEBAPPRT_CHROME_FILES
 $(eval $(call mochitest-libs-rule-template,MOCHITEST_WEBAPPRT_CHROME_FILES,webapprtChrome))
 endif
