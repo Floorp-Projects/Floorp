@@ -10,10 +10,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-function GetOutputStreamForEntry(key, asFile, append, callback)
+function GetOutputStreamForEntry(key, append, callback)
 {
   this._key = key;
-  this._asFile = asFile;
   this._append = append;
   this._callback = callback;
   this.run();
@@ -21,7 +20,6 @@ function GetOutputStreamForEntry(key, asFile, append, callback)
 
 GetOutputStreamForEntry.prototype = {
   _key: "",
-  _asFile: false,
   _append: false,
   _callback: null,
 
@@ -44,8 +42,7 @@ GetOutputStreamForEntry.prototype = {
     var cache = get_cache_service();
     var session = cache.createSession(
                     "HTTP",
-                    this._asFile ? Ci.nsICache.STORE_ON_DISK_AS_FILE
-                                 : Ci.nsICache.STORE_ON_DISK,
+                    Ci.nsICache.STORE_ON_DISK,
                     Ci.nsICache.STREAM_BASED);
     session.asyncOpenCacheEntry(this._key,
                                 this._append ? Ci.nsICache.ACCESS_READ_WRITE
@@ -96,7 +93,7 @@ function write_and_check(str, data, len)
 
 function write_entry()
 {
-  new GetOutputStreamForEntry("testentry", true, false, write_entry_cont);
+  new GetOutputStreamForEntry("testentry", false, write_entry_cont);
 }
 
 function write_entry_cont(entry, ostream)
@@ -117,7 +114,7 @@ function check_doom1(status)
 function check_doom2(status)
 {
   do_check_eq(status, Cr.NS_ERROR_NOT_AVAILABLE);
-  new GetOutputStreamForEntry("testentry", true, false, write_entry2);
+  new GetOutputStreamForEntry("testentry", false, write_entry2);
 }
 
 var gEntry;

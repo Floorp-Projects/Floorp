@@ -13,7 +13,7 @@ typedef long nsCacheAccessMode;
  * nsICache is a namespace for various cache constants.  It does not represent
  * an actual object.
  */
-[scriptable, uuid(ec1c0063-197d-44bb-84ba-7525d50fc937)]
+[scriptable, uuid(d6c67f38-b39a-4582-8a48-4c4f8a56dfd0)]
 interface nsICache
 {
     /**
@@ -105,15 +105,13 @@ interface nsICache
      *                         storage (ie. typically in system RAM).
      * STORE_ON_DISK         - Requires the cache entry to reside in persistent
      *                         storage (ie. typically on a system's hard disk).
-     * STORE_ON_DISK_AS_FILE - Requires the cache entry to reside in persistent
-     *                         storage, and in a separate file.
      * STORE_OFFLINE         - Requires the cache entry to reside in persistent,
      *                         reliable storage for offline use.
      */
     const nsCacheStoragePolicy STORE_ANYWHERE        = 0;
     const nsCacheStoragePolicy STORE_IN_MEMORY       = 1;
     const nsCacheStoragePolicy STORE_ON_DISK         = 2;
-    const nsCacheStoragePolicy STORE_ON_DISK_AS_FILE = 3;
+    // value 3 was used by STORE_ON_DISK_AS_FILE which was removed
     const nsCacheStoragePolicy STORE_OFFLINE         = 4;
 
     /**
