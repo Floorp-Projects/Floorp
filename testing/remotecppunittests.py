@@ -66,6 +66,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         env['LD_LIBRARY_PATH'] = self.remote_bin_dir
         env["TMPDIR"]=self.remote_tmp_dir
         env["HOME"]=self.remote_home_dir
+        env["MOZILLA_FIVE_HOME"] = self.remote_home_dir
+        env["MOZ_XRE_DIR"] = self.remote_bin_dir
         return env
 
     def run_one_test(self, prog, env, symbols_path=None):
