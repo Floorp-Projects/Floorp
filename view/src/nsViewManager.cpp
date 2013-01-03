@@ -70,8 +70,8 @@ uint32_t nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
   : mDelayedResize(NSCOORD_NONE, NSCOORD_NONE)
-  , mRootViewManager(this)
 {
+  mRootViewManager = this;
   if (gViewManagers == nullptr) {
     NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");
     // Create an array to hold a list of view managers
