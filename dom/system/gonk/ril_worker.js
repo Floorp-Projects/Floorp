@@ -8342,9 +8342,14 @@ let ICCIOHelper = {
       throw new Error("Expected EF type " + options.type + " but read " + efType);
     }
 
-    // Length of a record, data[14]
-    options.recordSize = GsmPDUHelper.readHexOctet();
-    options.totalRecords = options.fileSize / options.recordSize;
+    // Length of a record, data[14].
+    // Only available for LINEAR_FIXED and CYCLIC.
+    if (efType == EF_TYPE_LINEAR_FIXED || efType == EF_TYPE_CYCLIC) {
+      options.recordSize = GsmPDUHelper.readHexOctet();
+      options.totalRecords = options.fileSize / options.recordSize;
+    } else {
+      Buf.seekIncoming(1 * PDU_HEX_OCTET_SIZE);
+    }
 
     Buf.readStringDelimiter(length);
 
