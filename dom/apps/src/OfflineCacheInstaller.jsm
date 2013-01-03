@@ -21,6 +21,8 @@ let Namespace = CC('@mozilla.org/network/application-cache-namespace;1',
 let makeFile = CC('@mozilla.org/file/local;1',
                 'nsIFile',
                 'initWithPath');
+let MutableArray = CC('@mozilla.org/array;1', 'nsIMutableArray');
+
 const nsICache = Ci.nsICache;
 const nsIApplicationCache = Ci.nsIApplicationCache;
 const applicationCacheService =
@@ -98,77 +100,162 @@ function readFile(aFile, aCallback) {
   });
 }
 
-this.OfflineCacheInstaller = {
-  installCache: function installCache(app) {
-    let cacheDir = makeFile(app.basePath)
-    cacheDir.append(app.appId);
-    cacheDir.append("cache");
-    if (!cacheDir.exists())
-      return;
-
-    let cacheManifest = cacheDir.clone();
-    cacheManifest.append("manifest.appcache");
-    if (!cacheManifest.exists())
-      return;
-
-    enableOfflineCacheForApp(app.origin, app.localId);
-
-    // Get the url for the manifest.
-    let appcacheURL = app.origin + "cache/manifest.appcache";
-
-    // The group ID contains application id and 'f' for not being hosted in
-    // a browser element, but a mozbrowser iframe.
-    // See netwerk/cache/nsDiskCacheDeviceSQL.cpp: AppendJARIdentifier
-    let groupID = appcacheURL + '#' + app.localId+ '+f';
-    let applicationCache = applicationCacheService.createApplicationCache(groupID);
-    applicationCache.activate();
-
-    readFile(cacheManifest, function (content) {
-      let lines = content.split(/\r?\n/);
-      // Process each manifest line, read only CACHE entries
-      // (ignore NETWORK entries) and compute absolute URL for each entry
-      let urls = [];
-      for(let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        // Ignore comments
-        if (/^#/.test(line) || !line.length)
-          continue;
-        if (line == 'CACHE MANIFEST')
-          continue;
-        if (line == 'CACHE:')
-          continue;
-        // Ignore network entries and everything that comes after
-        if (line == 'NETWORK:')
-          break;
-
-        // Prepend webapp origin in case of absolute path
-        if (line[0] == '/') {
-          urls.push(app.origin + line.substring(1));
-        // Just pass along the url, if we have one
-        } else if (line.substr(0, 4) == 'http') {
-          urls.push(line);
-        } else {
-          throw new Error('Invalid line in appcache manifest:\n' + line +
-                          '\nFrom: ' + cacheManifest.path);
-        }
-      }
-      urls.forEach(function processCachedFile(url) {
-        // Get this nsIFile from cache folder for this URL
-        let path = url.replace(/https?:\/\//, '');
-        let file = cacheDir.clone();
-        let paths = path.split('/');
-        paths.forEach(file.append);
-
-        if (!file.exists()) {
-          let msg = 'File ' + file.path + ' exists in the manifest but does ' +
-                    'not points to a real file.';
-          throw new Error(msg);
-        }
-
-        let itemType = nsIApplicationCache.ITEM_EXPLICIT;
-        storeCache(applicationCache, url, file, itemType);
-      });
-    });
+function parseCacheLine(app, urls, line) {
+  // Prepend webapp origin in case of absolute path
+  if (line[0] == '/') {
+    urls.push(app.origin + line.substring(1));
+  // Just pass along the url, if we have one
+  } else if (line.substr(0, 4) == 'http') {
+    urls.push(line);
+  } else {
+    throw new Error('Only accept absolute path and http/https URLs');
   }
+}
+
+function parseFallbackLine(app, namespaces, fallbacks, line) {
+  let split = line.split(/[ \t]+/);
+  if (split.length != 2) {
+    throw new Error('Should be made of two URLs seperated with spaces')
+  }
+  let type = Ci.nsIApplicationCacheNamespace.NAMESPACE_FALLBACK;
+  let [ namespace, fallback ] = split;
+
+  // Prepend webapp origin in case of absolute path
+  if (namespace[0] == '/')
+    namespace = app.origin + namespace.substring(1);
+  if (fallback[0] == '/')
+    fallback = app.origin + fallback.substring(1);
+
+  namespaces.push([type, namespace, fallback]);
+  fallbacks.push(fallback);
+}
+
+function parseNetworkLine(namespaces, line) {
+  let type = Ci.nsIApplicationCacheNamespace.NAMESPACE_BYPASS;
+  if (line[0] == '*' && (line.length == 1 || line[1] == ' '
+                                          || line[1] == '\t')) {
+    namespaces.push([type, '', '']);
+  } else {
+    namespaces.push([type, namespace, '']);
+  }
+}
+
+function parseAppCache(app, path, content) {
+  let lines = content.split(/\r?\n/);
+
+  let urls = [];
+  let namespaces = [];
+  let fallbacks = [];
+
+  let currentSection = 'CACHE';
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Ignore comments
+    if (/^#/.test(line) || !line.length)
+      continue;
+
+    // Process section headers
+    if (line == 'CACHE MANIFEST')
+      continue;
+    if (line == 'CACHE:') {
+      currentSection = 'CACHE';
+      continue;
+    } else if (line == 'NETWORK:') {
+      currentSection = 'NETWORK';
+      continue;
+    } else if (line == 'FALLBACK:') {
+      currentSection = 'FALLBACK';
+      continue;
+    }
+
+    // Process cache, network and fallback rules
+    try {
+      if (currentSection == 'CACHE') {
+        parseCacheLine(app, urls, line);
+      } else if (currentSection == 'NETWORK') {
+        parseNetworkLine(namespaces, line);
+      } else if (currentSection == 'FALLBACK') {
+        parseFallbackLine(app, namespaces, fallbacks, line);
+      }
+    } catch(e) {
+      throw new Error('Invalid ' + currentSection + ' line in appcache ' +
+                      'manifest:\n' + e.message +
+                      '\nFrom: ' + path +
+                      '\nLine ' + i + ': ' + line);
+    }
+  }
+
+  return {
+    urls: urls,
+    namespaces: namespaces,
+    fallbacks: fallbacks
+  };
+}
+
+function installCache(app) {
+  let cacheDir = makeFile(app.basePath)
+  cacheDir.append(app.appId);
+  cacheDir.append('cache');
+  if (!cacheDir.exists())
+    return;
+
+  let cacheManifest = cacheDir.clone();
+  cacheManifest.append('manifest.appcache');
+  if (!cacheManifest.exists())
+    return;
+
+  enableOfflineCacheForApp(app.origin, app.localId);
+
+  // Get the url for the manifest.
+  let appcacheURL = app.origin + 'cache/manifest.appcache';
+
+  // The group ID contains application id and 'f' for not being hosted in
+  // a browser element, but a mozbrowser iframe.
+  // See netwerk/cache/nsDiskCacheDeviceSQL.cpp: AppendJARIdentifier
+  let groupID = appcacheURL + '#' + app.localId+ '+f';
+  let applicationCache = applicationCacheService.createApplicationCache(groupID);
+  applicationCache.activate();
+
+  readFile(cacheManifest, function readAppCache(content) {
+    let entries = parseAppCache(app, cacheManifest.path, content);
+
+    entries.urls.forEach(function processCachedFile(url) {
+      // Get this nsIFile from cache folder for this URL
+      let path = url.replace(/https?:\/\//, '');
+      let file = cacheDir.clone();
+      let paths = path.split('/');
+      paths.forEach(file.append);
+
+      if (!file.exists()) {
+        let msg = 'File ' + file.path + ' exists in the manifest but does ' +
+                  'not points to a real file.';
+        throw new Error(msg);
+      }
+
+      let itemType = nsIApplicationCache.ITEM_EXPLICIT;
+      storeCache(applicationCache, url, file, itemType);
+    });
+
+    let array = new MutableArray();
+    entries.namespaces.forEach(function processNamespace([type, spec, data]) {
+      debug('add namespace: ' + type + ' - ' + spec + ' - ' + data + '\n');
+      array.appendElement(new Namespace(type, spec, data), false);
+    });
+    applicationCache.addNamespaces(array);
+
+    entries.fallbacks.forEach(function processFallback(url) {
+      debug('add fallback: ' + url + '\n');
+      let type = nsIApplicationCache.ITEM_FALLBACK;
+      applicationCache.markEntry(url, type);
+    });
+  });
+}
+
+
+// Public API
+
+this.OfflineCacheInstaller = {
+  installCache: installCache
 };
 
