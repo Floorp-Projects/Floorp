@@ -8,6 +8,8 @@
 #include "cpr_stdlib.h"
 #include "cpr_debug.h"
 #include "cpr_memory.h"
+#include "prtypes.h"
+#include "mozilla/Assertions.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -222,40 +224,29 @@ cprCreateThread(const char* name,
 cprRC_t
 cprDestroyThread(cprThread_t thread)
 {
-	cprRC_t retCode = CPR_FAILURE;
-    static const char fname[] = "cprDestroyThread";
     cpr_thread_t *cprThreadPtr;
 
     cprThreadPtr = (cpr_thread_t*)thread;
-    if (cprThreadPtr != NULL) {
-		HANDLE *hThread;
-		uint32_t result = 0;
-		uint32_t waitrc = WAIT_FAILED;
-		hThread = (HANDLE*)((cpr_thread_t *)thread)->u.handlePtr;
-		if (hThread != NULL) {
+    if (cprThreadPtr) {
+        /*
+         * Make sure thread is trying to destroy itself.
+         */
+        if (cprThreadPtr->threadId == GetCurrentThreadId()) {
+            CPR_INFO("%s: Destroying Thread %d", __FUNCTION__, cprThreadPtr->threadId);
+            cpr_free(cprThreadPtr);
+            ExitThread(0);
+            return CPR_SUCCESS;
+        }
 
-			if (!cprThreadPtr) {
-				CPR_ERROR("%s - cprThreadPtr - NULL pointer passed in.\n", fname);
-				return CPR_FAILURE;
-			}
-
-			result = PostThreadMessage(((cpr_thread_t *)thread)->threadId, WM_CLOSE, 0, 0);
-			if(result) {
-				waitrc = WaitForSingleObject(hThread, 60000);
-			}
-		}
-		if (result == 0) {
-			CPR_ERROR("%s - Thread exit failure %d\n", fname, GetLastError());
-            retCode = CPR_FAILURE;
-		}
-        retCode = CPR_SUCCESS;
-    /* Bad application! */
-    } else {
-        CPR_ERROR("%s - NULL pointer passed in.\n", fname);
-        retCode = CPR_FAILURE;
+        CPR_ERROR("%s: Thread attempted to destroy another thread, not itself.",
+            __FUNCTION__);
+        MOZ_ASSERT(PR_FALSE);
+        return CPR_FAILURE;
     }
-	cpr_free(cprThreadPtr);
-	return (retCode);
+
+    CPR_ERROR("%s - NULL pointer passed in.", __FUNCTION__);
+    MOZ_ASSERT(PR_FALSE);
+    return CPR_FAILURE;
 };
 
 /*
