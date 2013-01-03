@@ -233,6 +233,12 @@ IsConvertibleToDictionary(JSContext* cx, JS::Value val)
     (val.isObject() && IsConvertibleToDictionary(cx, &val.toObject()));
 }
 
+MOZ_ALWAYS_INLINE bool
+IsConvertibleToCallbackInterface(JSContext* cx, JSObject* obj)
+{
+  return IsNotDateOrRegExp(cx, obj);
+}
+
 inline bool
 IsPlatformObject(JSContext* cx, JSObject* obj)
 {
