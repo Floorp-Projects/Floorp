@@ -446,7 +446,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         // native. Handle proxies separately.
         args.rval().setUndefined();
         AutoPropertyDescriptorRooter desc(cx);
-        if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
+        if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
             return JS_FALSE;
         if (desc.obj && (desc.attrs & JSPROP_GETTER) && desc.getter)
             args.rval().set(CastAsObjectJsval(desc.getter));
@@ -482,7 +482,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         // native. Handle proxies separately.
         args.rval().setUndefined();
         AutoPropertyDescriptorRooter desc(cx);
-        if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
+        if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
             return JS_FALSE;
         if (desc.obj && (desc.attrs & JSPROP_SETTER) && desc.setter)
             args.rval().set(CastAsObjectJsval(desc.setter));
