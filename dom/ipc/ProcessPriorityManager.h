@@ -26,6 +26,13 @@ namespace ipc {
  */
 void InitProcessPriorityManager();
 
+/**
+ * True iff the current process has foreground or higher priority as
+ * computed by DOM visibility.  The returned answer may not match the
+ * actual OS process priority, for short intervals.
+ */
+bool CurrentProcessIsForeground();
+
 } // namespace ipc
 } // namespace dom
 } // namespace mozilla
