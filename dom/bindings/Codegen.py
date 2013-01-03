@@ -2001,7 +2001,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isClamp=False,
                                     isNullOrUndefined=False,
                                     exceptionCode=None,
-                                    lenientFloatCode=None):
+                                    lenientFloatCode=None,
+                                    allowTreatNonCallableAsNull=False):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -2041,6 +2042,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
     If lenientFloatCode is not None, it should be used in cases when
     we're a non-finite float that's not unrestricted.
+
+    If allowTreatNonCallableAsNull is true, then [TreatNonCallableAsNull]
+    extended attributes on nullable callback functions will be honored.
 
     The return value from this function is a tuple consisting of four things:
 
@@ -2792,7 +2796,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 "%s\n"
                 "  }\n" % (name, CGIndenter(exceptionCodeIndented).define()))
 
-        if type.treatNonCallableAsNull():
+        if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
             if not isDefinitelyObject:
                 haveCallable = "${val}.isObject() && " + haveCallable
@@ -3087,7 +3091,8 @@ class CGArgumentConverter(CGThing):
     unwrap the argument to the right native type.
     """
     def __init__(self, argument, index, argv, argc, descriptorProvider,
-                 invalidEnumValueFatal=True, lenientFloatCode=None):
+                 invalidEnumValueFatal=True, lenientFloatCode=None,
+                 allowTreatNonCallableAsNull=False):
         CGThing.__init__(self)
         self.argument = argument
         assert(not argument.defaultValue or argument.optional)
@@ -3117,6 +3122,7 @@ class CGArgumentConverter(CGThing):
             self.argcAndIndex = None
         self.invalidEnumValueFatal = invalidEnumValueFatal
         self.lenientFloatCode = lenientFloatCode
+        self.allowTreatNonCallableAsNull = allowTreatNonCallableAsNull
 
     def define(self):
         typeConversion = getJSToNativeConversionTemplate(
@@ -3131,7 +3137,8 @@ class CGArgumentConverter(CGThing):
             isEnforceRange=self.argument.enforceRange,
             isClamp=self.argument.clamp,
             lenientFloatCode=self.lenientFloatCode,
-            isMember=self.argument.variadic)
+            isMember=self.argument.variadic,
+            allowTreatNonCallableAsNull=self.allowTreatNonCallableAsNull)
 
         if not self.argument.variadic:
             return instantiateJSToNativeConversionTemplate(
@@ -3706,6 +3713,7 @@ class CGPerSignatureCall(CGThing):
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
                                              invalidEnumValueFatal=not setter,
+                                             allowTreatNonCallableAsNull=setter,
                                              lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
 
