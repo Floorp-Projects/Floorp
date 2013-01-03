@@ -55,7 +55,7 @@
 #include "nsIURI.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserSetup.h"

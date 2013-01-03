@@ -21,7 +21,7 @@
 #include "nsIURL.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsGkAtoms.h"

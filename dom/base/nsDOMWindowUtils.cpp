@@ -665,7 +665,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     nsIViewManager* viewManager = presShell->GetViewManager();
     if (!viewManager)
       return NS_ERROR_FAILURE;
-    nsIView* view = viewManager->GetRootView();
+    nsView* view = viewManager->GetRootView();
     if (!view)
       return NS_ERROR_FAILURE;
 

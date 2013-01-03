@@ -435,7 +435,7 @@ DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
     fprintf(out, "docshell=%p \n", static_cast<void*>(aDocShell));
     nsCOMPtr<nsIViewManager> vm(view_manager(aDocShell));
     if (vm) {
-        nsIView* root = vm->GetRootView();
+        nsView* root = vm->GetRootView();
         if (root) {
             root->List(out);
         }
@@ -527,7 +527,7 @@ void nsLayoutDebuggingTools::ForceRefresh()
     nsCOMPtr<nsIViewManager> vm(view_manager(mDocShell));
     if (!vm)
         return;
-    nsIView* root = vm->GetRootView();
+    nsView* root = vm->GetRootView();
     if (root) {
         vm->InvalidateView(root);
     }

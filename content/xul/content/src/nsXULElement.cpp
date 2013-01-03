@@ -1664,7 +1664,7 @@ nsXULElement::HideWindowChrome(bool aShouldHide)
         nsPresContext *presContext = shell->GetPresContext();
 
         if (frame && presContext && presContext->IsChrome()) {
-            nsIView* view = frame->GetClosestView();
+            nsView* view = frame->GetClosestView();
 
             if (view) {
                 nsIWidget* w = view->GetWidget();

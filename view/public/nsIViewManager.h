@@ -7,7 +7,7 @@
 #define nsIViewManager_h___
 
 #include "nscore.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsEvent.h"
 
 class nsIWidget;
@@ -38,22 +38,22 @@ public:
    * @param aBounds initial bounds for view
    *        XXX We should eliminate this parameter; you can set the bounds after CreateView
    * @param aParent intended parent for view. this is not actually set in the
-   *        nsIView through this method. it is only used by the initialization
+   *        nsView through this method. it is only used by the initialization
    *        code to walk up the view tree, if necessary, to find resources.
    *        XXX We should eliminate this parameter!
    * @param aVisibilityFlag initial visibility state of view
    *        XXX We should eliminate this parameter; you can set it after CreateView
    * @result The new view
    */
-  NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
-                                   const nsIView* aParent,
+  NS_IMETHOD_(nsView*) CreateView(const nsRect& aBounds,
+                                   const nsView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
   /**
    * Get the root of the view tree.
    * @result the root view
    */
-  NS_IMETHOD_(nsIView*) GetRootView() = 0;
+  NS_IMETHOD_(nsView*) GetRootView() = 0;
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
@@ -61,7 +61,7 @@ public:
    * aView may have a widget (anything but printing) or may not (printing).
    * @param aView view to set as root
    */
-  NS_IMETHOD  SetRootView(nsIView *aView) = 0;
+  NS_IMETHOD  SetRootView(nsView *aView) = 0;
 
   /**
    * Get the dimensions of the root window. The dimensions are in
@@ -90,7 +90,7 @@ public:
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
    */
-  NS_IMETHOD  InvalidateView(nsIView *aView) = 0;
+  NS_IMETHOD  InvalidateView(nsView *aView) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -99,7 +99,7 @@ public:
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
    */
-  NS_IMETHOD  InvalidateViewNoSuppression(nsIView *aView, const nsRect &aRect) = 0;
+  NS_IMETHOD  InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect) = 0;
 
   /**
    * Called to inform the view manager that it should invalidate all views.
@@ -115,7 +115,7 @@ public:
    * @param aStatus event handling status
    */
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
-      nsIView* aViewTarget, nsEventStatus* aStatus) = 0;
+      nsView* aViewTarget, nsEventStatus* aStatus) = 0;
 
   /**
    * Given a parent view, insert another view as its child.
@@ -132,7 +132,7 @@ public:
    * @param aSibling sibling view
    * @param aAfter after or before in the document order
    */
-  NS_IMETHOD  InsertChild(nsIView *aParent, nsIView *aChild, nsIView *aSibling,
+  NS_IMETHOD  InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
                           bool aAfter) = 0;
 
   /**
@@ -142,7 +142,7 @@ public:
    * @param aParent parent view
    * @param aChild child view
    */
-  NS_IMETHOD  RemoveChild(nsIView *aChild) = 0;
+  NS_IMETHOD  RemoveChild(nsView *aChild) = 0;
 
   /**
    * Move a view to the specified position, provided in parent coordinates.
@@ -153,7 +153,7 @@ public:
    * @param aX x value for new view position
    * @param aY y value for new view position
    */
-  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD  MoveViewTo(nsView *aView, nscoord aX, nscoord aY) = 0;
 
   /**
    * Resize a view. In addition to setting the width and height, you can
@@ -167,7 +167,7 @@ public:
    *     if true Repaint only the expanded or contracted region,
    *     if false Repaint the union of the old and new rectangles.
    */
-  NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect,
+  NS_IMETHOD  ResizeView(nsView *aView, const nsRect &aRect,
                          bool aRepaintExposedAreaOnly = false) = 0;
 
   /**
@@ -181,7 +181,7 @@ public:
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible) = 0;
+  NS_IMETHOD  SetViewVisibility(nsView *aView, nsViewVisibility aVisible) = 0;
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view
@@ -199,7 +199,7 @@ public:
    *        true if the view should be topmost when compared with 
    *        other z-index:auto views.
    */
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false) = 0;
+  NS_IMETHOD  SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false) = 0;
 
   /**
    * Set whether the view "floats" above all other views,
@@ -208,7 +208,7 @@ public:
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
    */
-  NS_IMETHOD  SetViewFloating(nsIView *aView, bool aFloatingView) = 0;
+  NS_IMETHOD  SetViewFloating(nsView *aView, bool aFloatingView) = 0;
 
   /**
    * Set the presshell associated with this manager
@@ -292,7 +292,7 @@ public:
    * Find the nearest display root view for the view aView. This is the view for
    * the nearest enclosing popup or the root view for the root document.
    */
-  static nsIView* GetDisplayRootFor(nsIView* aView);
+  static nsView* GetDisplayRootFor(nsView* aView);
 
   /**
    * Flush the accumulated dirty region to the widget and update widget
