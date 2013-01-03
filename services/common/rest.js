@@ -324,7 +324,13 @@ RESTRequest.prototype = {
     channel.contentCharset = this.charset;
 
     // Blast off!
-    channel.asyncOpen(this, null);
+    try {
+      channel.asyncOpen(this, null);
+    } catch (ex) {
+      // asyncOpen can throw in a bunch of cases -- e.g., a forbidden port.
+      this._log.warn("Caught an error in asyncOpen: " + CommonUtils.exceptionStr(ex));
+      CommonUtils.nextTick(onComplete.bind(this, ex));
+    }
     this.status = this.SENT;
     this.delayTimeout();
     return this;
