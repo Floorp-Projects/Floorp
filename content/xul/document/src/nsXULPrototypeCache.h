@@ -136,10 +136,7 @@ protected:
     nsDataHashtable<nsURIHashKey,CacheScriptEntry>         mScriptTable;
     nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>  mXBLDocTable;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // StartupCache
-    // this is really a hash set, with a dummy data parameter
-    nsDataHashtable<nsURIHashKey,uint32_t> mCacheURITable;
+    nsTHashtable<nsURIHashKey> mCacheURITable;
 
     nsInterfaceHashtable<nsURIHashKey, nsIStorageStream> mOutputStreamTable;
     nsInterfaceHashtable<nsURIHashKey, nsIObjectInputStream> mInputStreamTable;
