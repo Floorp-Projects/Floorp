@@ -409,9 +409,6 @@ public:
   // Same as GetBounds but converts to parent appunits if they are different.
   nsRect GetBoundsInParentUnits() const;
 
-  // These are defined exactly the same in nsIView, but for now they have to be redeclared
-  // here because of stupid C++ method hiding rules
-
   bool HasNonEmptyDirtyRegion() {
     return mDirtyRegion && !mDirtyRegion->IsEmpty();
   }
