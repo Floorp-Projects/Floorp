@@ -271,6 +271,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
   virtual bool RestoreState(nsPresState* aState);
+  virtual bool IsDisabledForEvents(uint32_t aMessage);
 
   virtual void FieldSetDisabledChanged(bool aNotify);
 
