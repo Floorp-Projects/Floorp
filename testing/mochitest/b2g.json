@@ -422,6 +422,7 @@
 	"dom/workers/test/test_workersDisabled.html":"",
 	"dom/workers/test/test_xhr_parameters.html":"",
 	"dom/workers/test/test_xhr_system.html":"",
+	"dom/workers/test/test_closeOnGC.html": "Stack scanner keeps things alive",
 
 	"dom/devicestorage/test/test_available.html":"",
 	"dom/devicestorage/test/test_freeSpace.html":"",
