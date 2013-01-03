@@ -374,7 +374,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                 return;
-            getCode(defaultOffset).switchTarget = true;
             getCode(defaultOffset).safePoint = true;
 
             for (int32_t i = low; i <= high; i++) {
@@ -383,7 +382,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                         return;
                 }
-                getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
                 pc2 += JUMP_OFFSET_LEN;
             }
@@ -399,7 +397,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                 return;
-            getCode(defaultOffset).switchTarget = true;
             getCode(defaultOffset).safePoint = true;
 
             while (npairs) {
@@ -407,7 +404,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                     return;
-                getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
                 pc2 += JUMP_OFFSET_LEN;
                 npairs--;
