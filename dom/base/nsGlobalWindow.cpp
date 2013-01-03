@@ -9571,11 +9571,11 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   // Now clamp the actual interval we will use for the timer based on
   uint32_t nestingLevel = sNestingLevel + 1;
-  int32_t realInterval = interval;
+  uint32_t realInterval = interval;
   if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
-    realInterval = NS_MAX(realInterval, DOMMinTimeoutValue());
+    realInterval = NS_MAX(realInterval, uint32_t(DOMMinTimeoutValue()));
   }
 
   // Get principal of currently executing code, save for execution of timeout.
