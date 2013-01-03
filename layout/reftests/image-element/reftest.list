@@ -2,15 +2,15 @@
 == bug-463204.html bug-463204-ref.html
 fails-if(Android) == canvas-outside-document.html canvas-inside-document.html
 == mozsetimageelement-01.html mozsetimageelement-01-ref.html
-== mozsetimageelement-02.html about:blank
-== image-outside-document-invalidate.html about:blank
-== canvas-outside-document-invalidate-01.html about:blank
-fails-if(azureSkia&&winWidget) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
+skip-if(B2G) == mozsetimageelement-02.html about:blank # bug 773482
+skip-if(B2G) == image-outside-document-invalidate.html about:blank # bug 773482
+skip-if(B2G) == canvas-outside-document-invalidate-01.html about:blank # bug 773482
+skip-if(B2G) fails-if(azureSkia&&winWidget) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800 # bug 773482
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
-HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
+skip-if(B2G) HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
 random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
 == element-paint-background-size-01.html element-paint-background-size-01-ref.html
@@ -28,8 +28,8 @@ random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
 == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html
 == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html
-== element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01-ref.html
-== element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01-ref.html
+skip-if(B2G) == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01-ref.html # bug 773482
+skip-if(B2G) == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01-ref.html # bug 773482
 == gradient-html-01.html gradient-html-01-ref.svg
 == gradient-html-02.html gradient-html-02-ref.svg
 random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03-ref.svg

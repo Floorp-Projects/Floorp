@@ -12,27 +12,27 @@ include empty/reftest.list
 == tall--32px-auto--nonpercent-width-nonpercent-height.html ref-tall-lime32x64-aqua32x64.html
 == tall--32px-auto--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime32x64-aqua32x64.html
 == tall--32px-auto--nonpercent-width-omitted-height.html ref-tall-lime32x384-aqua32x384.html
-== tall--32px-auto--nonpercent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
-== tall--32px-auto--nonpercent-width-percent-height.html ref-tall-lime32x384-aqua32x384.html
+skip-if(B2G) == tall--32px-auto--nonpercent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
+skip-if(B2G) == tall--32px-auto--nonpercent-width-percent-height.html ref-tall-lime32x384-aqua32x384.html # bug 773482
 == tall--32px-auto--nonpercent-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
-== tall--32px-auto--omitted-width-nonpercent-height.html ref-tall-lime32x16-aqua32x16.html
+skip-if(B2G) == tall--32px-auto--omitted-width-nonpercent-height.html ref-tall-lime32x16-aqua32x16.html # bug 773482
 == tall--32px-auto--omitted-width-nonpercent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
 == tall--32px-auto--omitted-width-omitted-height.html ref-tall-lime32x384-aqua32x384.html
 == tall--32px-auto--omitted-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
-== tall--32px-auto--omitted-width-percent-height.html ref-tall-lime32x384-aqua32x384.html
-== tall--32px-auto--omitted-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
+skip-if(B2G) == tall--32px-auto--omitted-width-percent-height.html ref-tall-lime32x384-aqua32x384.html # bug 773482
+skip-if(B2G) == tall--32px-auto--omitted-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
 == tall--32px-auto--percent-width-nonpercent-height.html ref-tall-lime32x16-aqua32x16.html
 == tall--32px-auto--percent-width-nonpercent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
 == tall--32px-auto--percent-width-omitted-height.html ref-tall-lime32x384-aqua32x384.html
-== tall--32px-auto--percent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
+skip-if(B2G) == tall--32px-auto--percent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
 == tall--32px-auto--percent-width-percent-height.html ref-tall-lime32x384-aqua32x384.html
-== tall--32px-auto--percent-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
+skip-if(B2G) == tall--32px-auto--percent-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
 
 == tall--auto-32px--nonpercent-width-nonpercent-height.html ref-tall-lime8x16-aqua8x16.html
 == tall--auto-32px--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime8x16-aqua8x16.html
-== tall--auto-32px--nonpercent-width-omitted-height.html ref-tall-lime8x16-aqua8x16.html
+skip-if(B2G) == tall--auto-32px--nonpercent-width-omitted-height.html ref-tall-lime8x16-aqua8x16.html # bug 773482
 == tall--auto-32px--nonpercent-width-omitted-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
-== tall--auto-32px--nonpercent-width-percent-height.html ref-tall-lime8x16-aqua8x16.html
+skip-if(B2G) == tall--auto-32px--nonpercent-width-percent-height.html ref-tall-lime8x16-aqua8x16.html
 == tall--auto-32px--nonpercent-width-percent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
 == tall--auto-32px--omitted-width-nonpercent-height.html ref-tall-lime256x16-aqua256x16.html
 == tall--auto-32px--omitted-width-nonpercent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
@@ -47,7 +47,7 @@ include empty/reftest.list
 == tall--auto-32px--percent-width-percent-height.html ref-tall-lime256x16-aqua256x16.html
 == tall--auto-32px--percent-width-percent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
 
-== tall--auto--nonpercent-width-nonpercent-height.html ref-tall-lime8x16-aqua8x16.html
+skip-if(B2G) == tall--auto--nonpercent-width-nonpercent-height.html ref-tall-lime8x16-aqua8x16.html # bug 773482
 == tall--auto--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime8x16-aqua8x16.html
 == tall--auto--nonpercent-width-omitted-height.html ref-tall-lime8x384-aqua8x384.html
 == tall--auto--nonpercent-width-omitted-height-viewbox.html ref-tall-lime8x64-aqua8x64.html
@@ -56,7 +56,7 @@ include empty/reftest.list
 == tall--auto--omitted-width-nonpercent-height.html ref-tall-lime256x16-aqua256x16.html
 == tall--auto--omitted-width-nonpercent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
 == tall--auto--omitted-width-omitted-height.html ref-tall-lime256x384-aqua256x384.html
-== tall--auto--omitted-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
+skip-if(B2G) == tall--auto--omitted-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html # bug 773482
 == tall--auto--omitted-width-percent-height.html ref-tall-lime256x384-aqua256x384.html
 == tall--auto--omitted-width-percent-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
 == tall--auto--percent-width-nonpercent-height.html ref-tall-lime256x16-aqua256x16.html
@@ -68,8 +68,8 @@ include empty/reftest.list
 
 == tall--contain--nonpercent-width-nonpercent-height.html ref-tall-lime192x384-aqua192x384.html
 == tall--contain--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime192x384-aqua192x384.html
-== tall--contain--nonpercent-width-omitted-height.html ref-tall-lime256x384-aqua256x384.html
-== tall--contain--nonpercent-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
+skip-if(B2G) == tall--contain--nonpercent-width-omitted-height.html ref-tall-lime256x384-aqua256x384.html # bug 773482
+skip-if(B2G) == tall--contain--nonpercent-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html # bug 773482
 == tall--contain--nonpercent-width-percent-height.html ref-tall-lime256x384-aqua256x384.html
 == tall--contain--nonpercent-width-percent-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
 == tall--contain--omitted-width-nonpercent-height.html ref-tall-lime256x384-aqua256x384.html
@@ -87,8 +87,8 @@ include empty/reftest.list
 
 # We smear the background image when scaling it in these two tests...
 # Android uses FILTER_NEAREST for background images so the smear doesn't occur
-fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height.html ref-tall-lime256x512-aqua256x256.html
-fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime256x512-aqua256x256.html
+fails-if(!(Android||B2G)) == tall--cover--nonpercent-width-nonpercent-height.html ref-tall-lime256x512-aqua256x256.html
+fails-if(!(Android||B2G)) == tall--cover--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime256x512-aqua256x256.html
 
 # ...but we don't in identical tests with image-rendering: -moz-crisp-edges.
 == tall--cover--nonpercent-width-nonpercent-height--crisp.html ref-tall-lime256x512-aqua256x256.html
@@ -113,12 +113,12 @@ fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.ht
 
 == wide--12px-auto--nonpercent-width-nonpercent-height.html ref-wide-lime12x24-aqua12x24.html
 == wide--12px-auto--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime12x24-aqua12x24.html
-== wide--12px-auto--nonpercent-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
-== wide--12px-auto--nonpercent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
+skip-if(B2G) == wide--12px-auto--nonpercent-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
+skip-if(B2G) == wide--12px-auto--nonpercent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482
 == wide--12px-auto--nonpercent-width-percent-height.html ref-wide-lime12x128-aqua12x128.html
 == wide--12px-auto--nonpercent-width-percent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
-== wide--12px-auto--omitted-width-nonpercent-height.html ref-wide-lime12x16-aqua12x16.html
-== wide--12px-auto--omitted-width-nonpercent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
+skip-if(B2G) == wide--12px-auto--omitted-width-nonpercent-height.html ref-wide-lime12x16-aqua12x16.html # bug 773482
+skip-if(B2G) == wide--12px-auto--omitted-width-nonpercent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482
 == wide--12px-auto--omitted-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
 == wide--12px-auto--omitted-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
 == wide--12px-auto--omitted-width-percent-height.html ref-wide-lime12x128-aqua12x128.html
@@ -126,15 +126,15 @@ fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.ht
 == wide--12px-auto--percent-width-nonpercent-height.html ref-wide-lime12x16-aqua12x16.html
 == wide--12px-auto--percent-width-nonpercent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
 == wide--12px-auto--percent-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
-== wide--12px-auto--percent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
-== wide--12px-auto--percent-width-percent-height.html ref-wide-lime12x128-aqua12x128.html
+skip-if(B2G) == wide--12px-auto--percent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482
+skip-if(B2G) == wide--12px-auto--percent-width-percent-height.html ref-wide-lime12x128-aqua12x128.html # bug 773482
 == wide--12px-auto--percent-width-percent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
 
 == wide--auto-32px--nonpercent-width-nonpercent-height.html ref-wide-lime8x16-aqua8x16.html
 == wide--auto-32px--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime8x16-aqua8x16.html
 == wide--auto-32px--nonpercent-width-omitted-height.html ref-wide-lime8x16-aqua8x16.html
 == wide--auto-32px--nonpercent-width-omitted-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
-== wide--auto-32px--nonpercent-width-percent-height.html ref-wide-lime8x16-aqua8x16.html
+skip-if(B2G) == wide--auto-32px--nonpercent-width-percent-height.html ref-wide-lime8x16-aqua8x16.html # bug 773482
 == wide--auto-32px--nonpercent-width-percent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
 == wide--auto-32px--omitted-width-nonpercent-height.html ref-wide-lime768x16-aqua768x16.html
 == wide--auto-32px--omitted-width-nonpercent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
@@ -149,16 +149,16 @@ fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.ht
 == wide--auto-32px--percent-width-percent-height.html ref-wide-lime768x16-aqua768x16.html
 == wide--auto-32px--percent-width-percent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
 
-== wide--auto--nonpercent-width-nonpercent-height.html ref-wide-lime8x16-aqua8x16.html
-== wide--auto--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime8x16-aqua8x16.html
+skip-if(B2G) == wide--auto--nonpercent-width-nonpercent-height.html ref-wide-lime8x16-aqua8x16.html
+skip-if(B2G) == wide--auto--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime8x16-aqua8x16.html # bug 773482
 == wide--auto--nonpercent-width-omitted-height.html ref-wide-lime8x128-aqua8x128.html
 == wide--auto--nonpercent-width-omitted-height-viewbox.html ref-wide-lime8x64-aqua8x64.html
 == wide--auto--nonpercent-width-percent-height.html ref-wide-lime8x128-aqua8x128.html
-== wide--auto--nonpercent-width-percent-height-viewbox.html ref-wide-lime8x64-aqua8x64.html
+skip-if(B2G) == wide--auto--nonpercent-width-percent-height-viewbox.html ref-wide-lime8x64-aqua8x64.html # bug 773482
 == wide--auto--omitted-width-nonpercent-height.html ref-wide-lime768x16-aqua768x16.html
 == wide--auto--omitted-width-nonpercent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
 == wide--auto--omitted-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
-== wide--auto--omitted-width-omitted-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
+skip-if(B2G) == wide--auto--omitted-width-omitted-height-viewbox.html ref-wide-lime16x128-aqua16x128.html # bug 773482
 == wide--auto--omitted-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--auto--omitted-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 == wide--auto--percent-width-nonpercent-height.html ref-wide-lime768x16-aqua768x16.html
@@ -170,7 +170,7 @@ fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.ht
 
 == wide--contain--nonpercent-width-nonpercent-height.html ref-wide-lime64x128-aqua64x128.html
 == wide--contain--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime64x128-aqua64x128.html
-== wide--contain--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
+skip-if(B2G) == wide--contain--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html # bug 773482
 == wide--contain--nonpercent-width-omitted-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 == wide--contain--nonpercent-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--contain--nonpercent-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
@@ -188,13 +188,13 @@ fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.ht
 == wide--contain--percent-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 
 == wide--cover--nonpercent-width-nonpercent-height.html ref-wide-lime768x256.html
-== wide--cover--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html
+skip-if(B2G) == wide--cover--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html # bug 773482
 == wide--cover--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--nonpercent-width-omitted-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--nonpercent-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--nonpercent-width-percent-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--omitted-width-nonpercent-height.html ref-wide-lime768x128-aqua768x128.html
-== wide--cover--omitted-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html
+skip-if(B2G) == wide--cover--omitted-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html # bug 773482
 == wide--cover--omitted-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--omitted-width-omitted-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--omitted-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
