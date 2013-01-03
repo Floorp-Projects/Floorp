@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.setup.auth;
 
@@ -13,7 +13,7 @@ import java.security.GeneralSecurityException;
 
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.net.BaseResource;
-import org.mozilla.gecko.sync.net.SyncResourceDelegate;
+import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.setup.Constants;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -77,7 +77,7 @@ public class FetchUserNodeStage implements AuthenticatorStage {
   private BaseResource makeFetchNodeRequest(final FetchNodeStageDelegate callbackDelegate, String fetchNodeUrl) throws URISyntaxException {
     // Fetch node containing user.
     final BaseResource httpResource = new BaseResource(fetchNodeUrl);
-    httpResource.delegate = new SyncResourceDelegate(httpResource) {
+    httpResource.delegate = new BaseResourceDelegate(httpResource) {
 
       @Override
       public void handleHttpResponse(HttpResponse response) {

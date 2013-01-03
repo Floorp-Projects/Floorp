@@ -18,7 +18,7 @@ import org.mozilla.gecko.sync.NodeAuthenticationException;
 import org.mozilla.gecko.sync.NullClusterURLException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.net.BaseResource;
-import org.mozilla.gecko.sync.net.SyncResourceDelegate;
+import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -72,7 +72,7 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
     Logger.info(LOG_TAG, "In fetchClusterURL: node/weave is " + nodeWeaveURL);
 
     BaseResource resource = new BaseResource(nodeWeaveURL);
-    resource.delegate = new SyncResourceDelegate(resource) {
+    resource.delegate = new BaseResourceDelegate(resource) {
 
       /**
        * Handle the response for GET https://server/pathname/version/username/node/weave.

@@ -23,7 +23,7 @@ import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
  */
 public interface ResourceDelegate {
   // Request augmentation.
-  String getCredentials();
+  AuthHeaderProvider getAuthHeaderProvider();
   void addHeaders(HttpRequestBase request, DefaultHttpClient client);
 
   // Response handling.
