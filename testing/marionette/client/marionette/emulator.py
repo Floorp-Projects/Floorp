@@ -236,13 +236,6 @@ class Emulator(object):
                     online.add(m.group(1))
         return (online, offline)
 
-    def restart(self, port):
-        if not self._emulator_launched:
-            return
-        self.close()
-        self.start()
-        return self.setup_port_forwarding(port)
-
     def start_adb(self):
         result = self._run_adb(['start-server'])
         # We keep track of whether we've started adb or not, so we know
