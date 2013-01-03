@@ -7,7 +7,7 @@ fails == dir-6.html dir-6-ref.html
 == dir-7.html dir-7-ref.html
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
-fails-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
+skip-if(B2G) fails-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
@@ -34,7 +34,7 @@ fails-if(winWidget) == mfenced-10.html mfenced-10-ref.html
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
-== quotes-1.xhtml quotes-1-ref.xhtml
+skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml 
 == table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
@@ -104,10 +104,10 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == mtable-width.html mtable-width-ref.html
 == maction-selection.html maction-selection-ref.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
-== maction-dynamic-1.html maction-dynamic-1-ref.html
+skip-if(B2G) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
-== maction-dynamic-3.html maction-dynamic-3-ref.html
+skip-if(B2G) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
 == whitespace-trim-3.html whitespace-trim-3-ref.html

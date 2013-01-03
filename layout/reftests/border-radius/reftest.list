@@ -63,24 +63,24 @@ fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemot
 == table-collapse-1.html table-collapse-1-ref.html # border-radius is ignored on internal table elements
 # when border-collapse: collapse
 
-== invalidate-1a.html invalidate-1-ref.html
-== invalidate-1b.html invalidate-1-ref.html
+skip-if(B2G) == invalidate-1a.html invalidate-1-ref.html
+skip-if(B2G) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
-fails-if(Android) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
-fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
+skip-if(B2G) fails-if(Android) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+skip-if(B2G) fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
-random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
+skip-if(B2G) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
-fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,248) == scroll-1.html scroll-1-ref.html # see bug 732535
+skip-if(B2G) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,248) == scroll-1.html scroll-1-ref.html # see bug 732535
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-fails-if(winWidget) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+skip-if(B2G) fails-if(winWidget) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html
