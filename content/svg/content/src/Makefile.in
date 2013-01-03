@@ -119,6 +119,7 @@ CPPSRCS		= \
 		SVGDescElement.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
+		SVGLocatableElement.cpp \
 		SVGMetadataElement.cpp \
 		SVGMotionSMILType.cpp \
 		SVGMotionSMILAttr.cpp \
@@ -155,6 +156,7 @@ EXPORTS_mozilla/dom = \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
 	SVGDescElement.h \
+	SVGLocatableElement.h \
 	SVGMetadataElement.h \
 	SVGMPathElement.h \
 	SVGScriptElement.h \
