@@ -105,6 +105,7 @@ webidl_files = \
   SVGAnimatedTransformList.webidl \
   SVGDescElement.webidl \
   SVGElement.webidl \
+  SVGGraphicsElement.webidl \
   SVGLengthList.webidl \
   SVGLocatableElement.webidl \
   SVGMatrix.webidl \
@@ -119,6 +120,7 @@ webidl_files = \
   SVGScriptElement.webidl \
   SVGStopElement.webidl \
   SVGStyleElement.webidl \
+  SVGTests.webidl \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformableElement.webidl \

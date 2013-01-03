@@ -166,7 +166,7 @@ nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
   return FindAttributeDependence(name, map) ||
-    nsSVGGraphicElementBase::IsAttributeMapped(name);
+    nsSVGFilterElementBase::IsAttributeMapped(name);
 }
 
 void

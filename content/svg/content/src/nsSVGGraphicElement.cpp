@@ -18,8 +18,16 @@
 #include "nsError.h"
 #include "nsSVGRect.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGGraphicsElementBinding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
+
+JSObject*
+nsSVGGraphicElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGGraphicsElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -28,8 +36,6 @@ NS_IMPL_ADDREF_INHERITED(nsSVGGraphicElement, nsSVGGraphicElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGGraphicElement, nsSVGGraphicElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGraphicElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLocatable)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransformable)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTests)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
 
@@ -39,96 +45,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
 nsSVGGraphicElement::nsSVGGraphicElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGGraphicElementBase(aNodeInfo)
 {
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGLocatable methods
-
-/* readonly attribute nsIDOMSVGElement nearestViewportElement; */
-NS_IMETHODIMP nsSVGGraphicElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
-{
-  *aNearestViewportElement = SVGContentUtils::GetNearestViewportElement(this).get();
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGElement farthestViewportElement; */
-NS_IMETHODIMP nsSVGGraphicElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
-{
-  NS_IF_ADDREF(*aFarthestViewportElement = SVGContentUtils::GetOuterSVGElement(this));
-  return NS_OK;
-}
-
-/* nsIDOMSVGRect getBBox (); */
-NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
-{
-  *_retval = nullptr;
-
-  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
-
-  if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
-    return NS_ERROR_FAILURE;
-
-  nsISVGChildFrame* svgframe = do_QueryFrame(frame);
-  if (svgframe) {
-    return NS_NewSVGRect(_retval, nsSVGUtils::GetBBox(frame));
-  }
-  return NS_ERROR_FAILURE;
-}
-
-/* DOMSVGMatrix getCTM (); */
-NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsISupports * *aCTM)
-{
-  gfxMatrix m = SVGContentUtils::GetCTM(this, false);
-  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
-  NS_IF_ADDREF(*aCTM);
-  return NS_OK;
-}
-
-/* DOMSVGMatrix getScreenCTM (); */
-NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsISupports * *aCTM)
-{
-  gfxMatrix m = SVGContentUtils::GetCTM(this, true);
-  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
-  NS_IF_ADDREF(*aCTM);
-  return NS_OK;
-}
-
-/* DOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
-NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *element, nsISupports **_retval)
-{
-  if (!element)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  nsresult rv;
-  *_retval = nullptr;
-  nsCOMPtr<DOMSVGMatrix> ourScreenCTM;
-  nsCOMPtr<DOMSVGMatrix> targetScreenCTM;
-  nsCOMPtr<nsIDOMSVGLocatable> target = do_QueryInterface(element, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // the easiest way to do this (if likely to increase rounding error):
-  GetScreenCTM(getter_AddRefs(ourScreenCTM));
-  if (!ourScreenCTM) return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
-  target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
-  if (!targetScreenCTM) return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
-  ErrorResult result;
-  nsCOMPtr<DOMSVGMatrix> tmp = targetScreenCTM->Inverse(result);
-  if (result.Failed()) return result.ErrorCode();
-  *_retval = tmp->Multiply(*ourScreenCTM).get(); // addrefs, so we don't
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGTransformable methods
-/* readonly attribute nsISupports transform; */
-
-NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsISupports **aTransform)
-{
-  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
-  // to allocate the SVGAnimatedTransformList if it hasn't already done so:
-  *aTransform = DOMSVGAnimatedTransformList::GetDOMWrapper(
-                  GetAnimatedTransformList(DO_ALLOCATE), this).get();
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
