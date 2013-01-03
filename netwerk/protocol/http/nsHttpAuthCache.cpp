@@ -41,7 +41,7 @@ StrEquivalent(const PRUnichar *a, const PRUnichar *b)
     if (!b)
         b = emptyStr;
 
-    return NS_strcmp(a, b) == 0;
+    return nsCRT::strcmp(a, b) == 0;
 }
 
 //-----------------------------------------------------------------------------

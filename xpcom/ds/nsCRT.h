@@ -136,6 +136,8 @@ public:
   static char* strtok(char* str, const char* delims, char* *newStr); 
 
   /// Like strcmp except for ucs2 strings
+  static int32_t strcmp(const PRUnichar* s1, const PRUnichar* s2);
+  /// Like strcmp except for ucs2 strings
   static int32_t strncmp(const PRUnichar* s1, const PRUnichar* s2,
                          uint32_t aMaxLen);
 

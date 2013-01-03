@@ -73,6 +73,36 @@ char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Compare unichar string ptrs, stopping at the 1st null 
+ * NOTE: If both are null, we return 0.
+ * NOTE: We terminate the search upon encountering a NULL
+ *
+ * @update  gess 11/10/99
+ * @param   s1 and s2 both point to unichar strings
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
+ */
+int32_t nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2) {
+  if(s1 && s2) {
+    for (;;) {
+      PRUnichar c1 = *s1++;
+      PRUnichar c2 = *s2++;
+      if (c1 != c2) {
+        if (c1 < c2) return -1;
+        return 1;
+      }
+      if ((0==c1) || (0==c2)) break;
+    }
+  }
+  else {
+    if (s1)                     // s2 must have been null
+      return -1;
+    if (s2)                     // s1 must have been null
+      return 1;
+  }
+  return 0;
+}
+
+/**
  * Compare unichar string ptrs, stopping at the 1st null or nth char.
  * NOTE: If either is null, we return 0.
  * NOTE: We DO NOT terminate the search upon encountering NULL's before N
