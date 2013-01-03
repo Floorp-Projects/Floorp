@@ -351,6 +351,8 @@ interface TestExampleInterface {
   //void overload1(DOMString... strs);
   boolean overload1(TestInterface arg);
   TestInterface overload1(DOMString strs, TestInterface arg);
+  void overload2(optional Dict arg);
+  void overload2(DOMString arg);
 
   // Variadic handling
   void passVariadicThirdArg(DOMString arg1, long arg2, TestInterface... arg3);

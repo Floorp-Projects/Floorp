@@ -2348,20 +2348,19 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             callbackObject = None
 
+        if callbackObject:
+            callbackObject = CGWrapper(CGIndenter(callbackObject),
+                                       pre="if (!IsPlatformObject(cx, &argObj)) {\n",
+                                       post="\n}")
+        else:
+            callbackObject = None
+
         dictionaryMemberTypes = filter(lambda t: t.isDictionary(), memberTypes)
         if len(dictionaryMemberTypes) > 0:
             raise TypeError("No support for unwrapping dictionaries as member "
                             "of a union")
         else:
             dictionaryObject = None
-
-        if callbackObject or dictionaryObject:
-            nonPlatformObject = CGList([callbackObject, dictionaryObject], "\n")
-            nonPlatformObject = CGWrapper(CGIndenter(nonPlatformObject),
-                                          pre="if (!IsPlatformObject(cx, &argObj)) {\n",
-                                          post="\n}")
-        else:
-            nonPlatformObject = None
 
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
@@ -2370,32 +2369,32 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             object = None
 
-        hasObjectTypes = interfaceObject or arrayObject or dateObject or nonPlatformObject or object
+        hasObjectTypes = interfaceObject or arrayObject or dateObject or callbackObject or dictionaryObject or object
         if hasObjectTypes:
-            # If we try more specific object types first then we need to check
-            # whether that succeeded before converting to object.
-            if object and (interfaceObject or arrayObject or dateObject or nonPlatformObject):
-                object = CGWrapper(CGIndenter(object), pre="if (!done) {\n",
-                                   post=("\n}"))
-
-            if arrayObject or dateObject or nonPlatformObject:
-                # An object can be both an array object and not a platform
-                # object, but we shouldn't have both in the union's members
+            # "object" is not distinguishable from other types
+            assert not object or not (interfaceObject or arrayObject or dateObject or callbackObject or dictionaryObject)
+            if arrayObject or dateObject or callbackObject or dictionaryObject:
+                # An object can be both an array object and a callback or
+                # dictionary, but we shouldn't have both in the union's members
                 # because they are not distinguishable.
-                assert not (arrayObject and nonPlatformObject)
-                templateBody = CGList([arrayObject, dateObject, nonPlatformObject], " else ")
+                assert not (arrayObject and callbackObject)
+                assert not (arrayObject and dictionaryObject)
+                assert not (dictionaryObject and callbackObject)
+                templateBody = CGList([arrayObject, dateObject, callbackObject,
+                                       dictionaryObject], " else ")
             else:
                 templateBody = None
             if interfaceObject:
+                assert not object
                 if templateBody:
-                    templateBody = CGList([templateBody, object], "\n")
                     templateBody = CGWrapper(CGIndenter(templateBody),
                                              pre="if (!done) {\n", post=("\n}"))
                 templateBody = CGList([interfaceObject, templateBody], "\n")
             else:
                 templateBody = CGList([templateBody, object], "\n")
 
-            if any([arrayObject, dateObject, nonPlatformObject, object]):
+            if any([arrayObject, dateObject, callbackObject, dictionaryObject,
+                    object]):
                 templateBody.prepend(CGGeneric("JSObject& argObj = ${val}.toObject();"))
             templateBody = CGWrapper(CGIndenter(templateBody),
                                      pre="if (${val}.isObject()) {\n",
@@ -2870,8 +2869,10 @@ for (uint32_t i = 0; i < length; ++i) {
         return (template, declType, None, isOptional)
 
     if type.isDictionary():
-        if failureCode is not None:
-            raise TypeError("Can't handle dictionaries when failureCode is not None")
+        if failureCode is not None and not isDefinitelyObject:
+            raise TypeError("Can't handle dictionaries when failureCode is "
+                            "not None and we don't know we're an object")
+
         # There are no nullable dictionaries
         assert not type.nullable()
         # All optional dictionaries always have default values, so we
@@ -2893,15 +2894,29 @@ for (uint32_t i = 0; i < length; ++i) {
 
         # We do manual default value handling here, because we
         # actually do want a jsval, and we only handle null anyway
-        if defaultValue is not None:
+        # NOTE: if isNullOrUndefined or isDefinitelyObject are true,
+        # we know we have a value, so we don't have to worry about the
+        # default value.
+        if (not isNullOrUndefined and not isDefinitelyObject and
+            defaultValue is not None):
             assert(isinstance(defaultValue, IDLNullValue))
             val = "(${haveValue}) ? ${val} : JSVAL_NULL"
         else:
             val = "${val}"
 
-        template = ("if (!%s.Init(cx, ${obj}, %s)) {\n"
-                    "%s\n"
-                    "}" % (selfRef, val, exceptionCodeIndented.define()))
+        if failureCode is not None:
+            assert isDefinitelyObject
+            # Check that the value we have can in fact be converted to
+            # a dictionary, and return failureCode if not.
+            template = CGIfWrapper(
+                CGGeneric(failureCode),
+                "!IsConvertibleToDictionary(cx, &${val}.toObject())").define() + "\n\n"
+        else:
+            template = ""
+
+        template += ("if (!%s.Init(cx, ${obj}, %s)) {\n"
+                     "%s\n"
+                     "}" % (selfRef, val, exceptionCodeIndented.define()))
 
         return (template, declType, None, False)
 
@@ -4015,19 +4030,19 @@ class CGMethodCall(CGThing):
             # The spec says to check for the following things in order:
             # 1)  A platform object that's not a platform array object, being
             #     passed to an interface or "object" arg.
-            # 2)  A platform array object or Array or platform object with
-            #     indexed properties being passed to an array or sequence or
-            #     "object" arg.
-            # 3)  A Date object being passed to a Date or "object" arg
-            # 4)  Some other kind of object being passed to a callback
-            #     interface, callback function, dictionary, or "object" arg.
+            # 2)  A Date object being passed to a Date or "object" arg.
+            # 3)  A RegExp object being passed to a RegExp or "object" arg.
+            # 4)  Any non-Date and non-RegExp object being passed to a
+            #     dictionary or array or sequence or "object" arg.
+            # 5)  Some other kind of object being passed to a callback
+            #     interface, callback function, or "object" arg.
             #
             # Unfortunately, we cannot push the "some other kind of object"
-            # check down into case 4, because dictionaries _can_ normally be
+            # check down into case 5, because callbacks _can_ normally be
             # initialized from platform objects. But we can coalesce the other
-            # three cases together, as long as we make sure to check whether our
+            # four cases together, as long as we make sure to check whether our
             # object works as an interface argument before checking whether it
-            # works as an arraylike.
+            # works as an arraylike or dictionary.
 
             # First grab all the overloads that have a non-callback interface
             # (which includes typed arrays and arraybuffers) at the
@@ -4039,14 +4054,16 @@ class CGMethodCall(CGThing):
                 if (distinguishingType(s).isObject() or
                     distinguishingType(s).isNonCallbackInterface()) ]
 
-            # Now append all the overloads that take an array or sequence:
-            objectSigs.extend(s for s in possibleSignatures
-                              if (distinguishingType(s).isArray() or
-                                  distinguishingType(s).isSequence()))
-
             # And all the overloads that take Date
             objectSigs.extend(s for s in possibleSignatures
                               if distinguishingType(s).isDate())
+
+            # Now append all the overloads that take an array or sequence or
+            # dictionary:
+            objectSigs.extend(s for s in possibleSignatures
+                              if (distinguishingType(s).isArray() or
+                                  distinguishingType(s).isSequence() or
+                                  distinguishingType(s).isDictionary()))
 
             # There might be more than one thing in objectSigs; we need to check
             # which ones we unwrap to.
@@ -4073,12 +4090,10 @@ class CGMethodCall(CGThing):
                 caseBody.append(CGGeneric("}"))
 
             # Check for vanilla JS objects
-            # XXXbz Do we need to worry about security wrappers?
             pickFirstSignature("%s.isObject() && !IsPlatformObject(cx, &%s.toObject())" %
                                (distinguishingArg, distinguishingArg),
                                lambda s: (distinguishingType(s).isCallback() or
-                                          distinguishingType(s).isCallbackInterface() or
-                                          distinguishingType(s).isDictionary()))
+                                          distinguishingType(s).isCallbackInterface()))
 
             # The remaining cases are mutually exclusive.  The
             # pickFirstSignature calls are what change caseBody
@@ -6637,8 +6652,8 @@ class CGDictionary(CGThing):
             ("  JSBool found;\n"
              "  JS::Value temp;\n" if len(memberInits) > 0 else "") +
             "  bool isNull = val.isNullOrUndefined();\n"
-            "  if (!isNull && !val.isObject()) {\n"
-            "    return ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n"
+            "  if (!IsConvertibleToDictionary(cx, val)) {\n"
+            "    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
             "  }\n"
             "\n"
             "${initMembers}\n"

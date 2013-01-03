@@ -30,6 +30,7 @@ MSG_DEF(MSG_NO_PROPERTY_SETTER, 1, "{0} doesn't have an indexed property setter.
 MSG_DEF(MSG_ENFORCE_RANGE_NON_FINITE, 1, "Non-finite value is out of range for {0}.")
 MSG_DEF(MSG_ENFORCE_RANGE_OUT_OF_RANGE, 1, "Value is out of range for {0}.")
 MSG_DEF(MSG_NOT_SEQUENCE, 0, "object can not be converted to a sequence")
+MSG_DEF(MSG_NOT_DICTIONARY, 0, "value can not be converted to a dictionary")
 MSG_DEF(MSG_INVALID_ARG, 2, "argument {0} is not valid for any of the {1}-argument overloads")
 MSG_DEF(MSG_GLOBAL_NOT_NATIVE, 0, "global is not a native object")
 MSG_DEF(MSG_ENCODING_NOT_SUPPORTED, 1, "The given encoding '{0}' is not supported.")
