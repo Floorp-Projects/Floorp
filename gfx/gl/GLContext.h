@@ -1783,7 +1783,7 @@ public:
 
     void PushScissorRect(const nsIntRect& aRect) {
         mScissorStack.AppendElement(aRect);
-        raw_fScissor(aRect.x, aRect.y, aRect.width, aRect.height);
+        fScissor(aRect.x, aRect.y, aRect.width, aRect.height);
     }
 
     void PopScissorRect() {
@@ -1795,8 +1795,8 @@ public:
         nsIntRect thisRect = ScissorRect();
         mScissorStack.TruncateLength(mScissorStack.Length() - 1);
         if (!thisRect.IsEqualInterior(ScissorRect())) {
-            raw_fScissor(ScissorRect().x, ScissorRect().y,
-                              ScissorRect().width, ScissorRect().height);
+            fScissor(ScissorRect().x, ScissorRect().y,
+                     ScissorRect().width, ScissorRect().height);
         }
     }
 
