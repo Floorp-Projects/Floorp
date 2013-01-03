@@ -15,35 +15,88 @@
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.8">
 
-function runTests() {
-  var comp = SpecialPowers.wrap(SpecialPowers.Components);
-  SimpleTest.waitForExplicitFinish();
-  SpecialPowers.addPermission("systemXHR", true, document);
+let tests = [];
 
-  function tearDown() {
-    SpecialPowers.removePermission("systemXHR", document);
-    SimpleTest.finish();
-  }
+const PROTECTED_URL = "file:///etc/passwd";
+const REDIRECT_URL = window.location.protocol + "//" + window.location.host + "/tests/content/base/test/file_XHR_system_redirect.html";
+const CROSSSITE_URL = "http://example.com/tests/content/base/test/test_XHR_system.html";
 
-  // An XHR with system privileges will be able to do cross-site calls.
+tests.push(function test_cross_origin() {
+  // System XHR can load cross-origin resources.
 
-  const TEST_URL = "http://example.com/tests/content/base/test/test_XHR_system.html";
-  is(window.location.hostname, "mochi.test");
+  is(window.location.hostname, "mochi.test", "correct origin");
 
   let xhr = new XMLHttpRequest({mozSystem: true});
   is(xhr.mozSystem, true, ".mozSystem == true");
-  xhr.open("GET", TEST_URL);
+  xhr.open("GET", CROSSSITE_URL);
   xhr.onload = function onload() {
-    is(xhr.status, 200);
-    ok(xhr.responseText != null);
-    ok(xhr.responseText.length);
-    tearDown();
+    is(xhr.status, 200, "correct HTTP status");
+    ok(xhr.responseText != null, "HTTP response non-null");
+    ok(xhr.responseText.length, "HTTP response not empty");
+    runNextTest();
   };
-  xhr.onerror = function onerror() {
-    ok(false, "Got an error event!");
-    tearDown();
+  xhr.onerror = function onerror(event) {
+    ok(false, "Got an error event: " + event);
+    runNextTest();
   }
   xhr.send();
+});
+
+tests.push(function test_file_uri() {
+  // System XHR is not permitted to access file:/// URIs.
+
+  let xhr = new XMLHttpRequest({mozSystem: true});
+  is(xhr.mozSystem, true, ".mozSystem == true");
+  xhr.open("GET", PROTECTED_URL);
+  let error;
+  try {
+    xhr.send();
+  } catch (ex) {
+    error = ex;
+  }
+  ok(!!error, "got exception");
+  is(error.name, "NS_ERROR_DOM_BAD_URI");
+  is(error.message, "Access to restricted URI denied");
+
+  runNextTest();
+});
+
+tests.push(function test_redirect_to_file_uri() {
+  // System XHR won't load file:/// URIs even if an HTTP resource redirects there.
+
+  let xhr = new XMLHttpRequest({mozSystem: true});
+  is(xhr.mozSystem, true, ".mozSystem == true");
+  xhr.open("GET", REDIRECT_URL);
+  xhr.onload = function onload() {
+    ok(false, "Should not have loaded");
+    runNextTest();
+  };
+  xhr.onerror = function onerror(event) {
+    ok(true, "Got an error event: " + event);
+    is(xhr.status, 0, "HTTP status is 0");
+    runNextTest();
+  }
+  xhr.send();
+});
+
+
+function runNextTest() {
+  if (!tests.length) {
+    return;
+  }
+  tests.shift()();
+}
+
+function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.addPermission("systemXHR", true, document);
+
+  tests.push(function tearDown() {
+    SpecialPowers.removePermission("systemXHR", document);
+    SimpleTest.finish();
+  });
+
+  runNextTest();
 }
 
 </script>

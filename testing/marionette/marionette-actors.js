@@ -41,6 +41,10 @@ Cu.import("resource://gre/modules/services-common/log4moz.js");
 let logger = Log4Moz.repository.getLogger("Marionette");
 logger.info('marionette-actors.js loaded');
 
+Services.prefs.setBoolPref("network.gonk.manage-offline-status", false);
+Services.io.manageOfflineStatus = false;
+Services.io.offline = false;
+
 // This is used to prevent newSession from returning before the telephony
 // API's are ready; see bug 792647.  This assumes that marionette-actors.js
 // will be loaded before the 'system-message-listener-ready' message

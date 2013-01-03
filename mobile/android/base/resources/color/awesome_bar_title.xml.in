@@ -10,6 +10,12 @@
     <!-- private browsing mode -->
     <item gecko:state_private="true" android:color="#FFDDDDDD" />
 
+    <!-- dark theme -->
+    <item gecko:state_dark="true" android:color="#FFDDDDDD"/>
+
+    <!-- light theme -->
+    <item gecko:state_light="true" android:color="#FF222222"/>
+
     <!-- normal mode -->
     <item android:color="#FF222222"/>
 

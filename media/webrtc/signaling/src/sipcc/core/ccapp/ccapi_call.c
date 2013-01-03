@@ -90,11 +90,13 @@ cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t
 	return CC_CallFeature_dial(handle, video_pref, digits);
 }
 
-cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle, const cc_media_constraints_t *constraints) {
+cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle,
+                              cc_media_constraints_t *constraints) {
 	return CC_CallFeature_CreateOffer(handle, constraints);
 }
 
-cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle, const cc_media_constraints_t *constraints) {
+cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle,
+                               cc_media_constraints_t *constraints) {
 	return CC_CallFeature_CreateAnswer(handle, constraints);
 }
 

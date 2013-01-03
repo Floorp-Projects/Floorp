@@ -24,7 +24,7 @@ namespace image {
 class SVGDocumentWrapper;
 class SVGRootRenderingObserver;
 
-class VectorImage : public Image,
+class VectorImage : public ImageResource,
                     public nsIStreamListener
 {
 public:
@@ -39,7 +39,6 @@ public:
   // Methods inherited from Image
   nsresult Init(imgDecoderObserver* aObserver,
                 const char* aMimeType,
-                const char* aURIString,
                 uint32_t aFlags);
   virtual void GetCurrentFrameRect(nsIntRect& aRect) MOZ_OVERRIDE;
 
@@ -62,7 +61,7 @@ public:
   void InvalidateObserver();
 
 protected:
-  VectorImage(imgStatusTracker* aStatusTracker = nullptr);
+  VectorImage(imgStatusTracker* aStatusTracker = nullptr, nsIURI* aURI = nullptr);
 
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();

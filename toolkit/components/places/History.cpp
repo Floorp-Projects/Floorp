@@ -1402,8 +1402,7 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(HistoryLinksHashtableMallocSizeOf,
-                                     "history-links-hashtable")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(HistoryLinksHashtableMallocSizeOf)
 
 int64_t GetHistoryObserversSize()
 {
@@ -2020,7 +2019,7 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
     mozilla::dom::ContentChild * cpc = 
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    (void)cpc->SendSetURITitle(uri, nsString(aTitle));
+    (void)cpc->SendSetURITitle(uri, PromiseFlatString(aTitle));
     return NS_OK;
   } 
 

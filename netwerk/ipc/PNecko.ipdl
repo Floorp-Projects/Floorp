@@ -13,6 +13,8 @@ include protocol PWyciwygChannel;
 include protocol PFTPChannel;
 include protocol PWebSocket;
 include protocol PTCPSocket;
+include protocol PRemoteOpenFile;
+include URIParams;
 
 include "SerializedLoadContext.h";
 
@@ -32,6 +34,7 @@ sync protocol PNecko
   manages PFTPChannel;
   manages PWebSocket;
   manages PTCPSocket;
+  manages PRemoteOpenFile;
 
 parent:
   __delete__();
@@ -40,10 +43,11 @@ parent:
   PHttpChannel(nullable PBrowser browser,
                SerializedLoadContext loadContext);
   PWyciwygChannel();
-  PFTPChannel();
-  PWebSocket(PBrowser browser);
+  PFTPChannel(PBrowser browser, SerializedLoadContext loadContext);
+  PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
   PTCPSocket(nsString host, uint16_t port, bool useSSL, nsString binaryType,
              nullable PBrowser browser);
+  PRemoteOpenFile(URIParams fileuri, nullable PBrowser browser);
 
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);

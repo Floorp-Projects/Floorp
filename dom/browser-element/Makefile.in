@@ -22,10 +22,12 @@ TEST_DIRS += mochitest
 
 XPIDLSRCS = \
   nsIOpenWindowEventDetail.idl \
+  nsIAsyncScrollEventDetail.idl \
   $(NULL)
 
 EXPORTS = \
   nsOpenWindowEventDetail.h \
+  nsAsyncScrollEventDetail.h \
   $(NULL)
 
 EXPORTS_NAMESPACES = mozilla
@@ -35,6 +37,7 @@ EXPORTS_mozilla = \
 
 CPPSRCS = \
   nsOpenWindowEventDetail.cpp \
+  nsAsyncScrollEventDetail.cpp \
   BrowserElementParent.cpp \
   $(NULL)
 

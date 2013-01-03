@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#if defined(__GNUC__) && defined(__i386__) && (__GNUC__ >= 3) && !defined(XP_OS2)
+#if defined(__GNUC__) && defined(__i386__) && !defined(XP_OS2)
 #define PL_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
 #elif defined(XP_WIN)
 #define PL_DHASH_FASTCALL __fastcall

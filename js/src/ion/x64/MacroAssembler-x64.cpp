@@ -51,6 +51,10 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from)
     if (from.isDouble()) {
         FloatRegister dest;
         if (GetFloatArgReg(passedIntArgs_, passedFloatArgs_++, &dest)) {
+            if (from.isFloatReg() && from.floatReg() == dest) {
+                // Nothing to do; the value is in the right register already
+                return;
+            }
             to = MoveOperand(dest);
         } else {
             to = MoveOperand(StackPointer, stackForCall_);
@@ -60,6 +64,10 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from)
     } else {
         Register dest;
         if (GetIntArgReg(passedIntArgs_++, passedFloatArgs_, &dest)) {
+            if (from.isGeneralReg() && from.reg() == dest) {
+                // Nothing to do; the value is in the right register already
+                return;
+            }
             to = MoveOperand(dest);
         } else {
             to = MoveOperand(StackPointer, stackForCall_);

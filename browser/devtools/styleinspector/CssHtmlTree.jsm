@@ -1204,13 +1204,13 @@ SelectorView.prototype = {
     let result = this.selectorInfo.selector.text;
     if (this.selectorInfo.elementStyle) {
       let source = this.selectorInfo.sourceElement;
-      let IUI = this.tree.styleInspector.IUI;
-      if (IUI && IUI.selection == source) {
+      let inspector = this.tree.styleInspector.inspector;
+
+      if (inspector.selection.node == source) {
         result = "this";
       } else {
         result = CssLogic.getShortName(source);
       }
-
       result += ".style";
     }
 

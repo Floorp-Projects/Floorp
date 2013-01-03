@@ -66,6 +66,33 @@ DocAccessible::UpdateText(nsIContent* aTextNode)
 }
 
 inline void
+DocAccessible::AddScrollListener()
+{
+  // Delay scroll initializing until the document has a root frame.
+  if (!mPresShell->GetRootFrame())
+    return;
+
+  mDocFlags |= eScrollInitialized;
+  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->AddScrollPositionListener(this);
+
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eDocCreate))
+      logging::Text("add scroll listener");
+#endif
+  }
+}
+
+inline void
+DocAccessible::RemoveScrollListener()
+{
+  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
+  if (sf)
+    sf->RemoveScrollPositionListener(this);
+}
+
+inline void
 DocAccessible::NotifyOfLoad(uint32_t aLoadEventType)
 {
   mLoadState |= eDOMLoaded;

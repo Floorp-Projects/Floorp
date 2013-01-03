@@ -268,9 +268,9 @@ namespace CSF
           */
         virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip) = 0;
 
-        virtual void createOffer (const cc_media_constraints_t* constraints) = 0;
+        virtual void createOffer (cc_media_constraints_t* constraints) = 0;
 
-        virtual void createAnswer(const cc_media_constraints_t* constraints) = 0;
+        virtual void createAnswer(cc_media_constraints_t* constraints) = 0;
 
         virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp) = 0;
 

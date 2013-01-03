@@ -372,10 +372,9 @@ public:
     NS_ASSERTION(aBlob, "Null should go to string version");
     aRv = Send(RequestBody(aBlob));
   }
-  void Send(nsIDocument* aDoc, ErrorResult& aRv)
+  void Send(nsIDocument& aDoc, ErrorResult& aRv)
   {
-    NS_ASSERTION(aDoc, "Null should go to string version");
-    aRv = Send(RequestBody(aDoc));
+    aRv = Send(RequestBody(&aDoc));
   }
   void Send(const nsAString& aString, ErrorResult& aRv)
   {

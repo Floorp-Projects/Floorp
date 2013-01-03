@@ -95,7 +95,7 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id, 
     return true;
   }
 
-  return JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, desc);
+  return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc);
 }
 
 bool

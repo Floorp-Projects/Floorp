@@ -925,7 +925,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
-                        HasTransform()),
+                        HasTransform(aAbsoluteContainingBlock)),
     mHavePendingPopupgroup(false),
     mCreatingExtraFrames(false),
     mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
@@ -958,7 +958,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
-                        HasTransform()),
+                        HasTransform(aAbsoluteContainingBlock)),
     mHavePendingPopupgroup(false),
     mCreatingExtraFrames(false),
     mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
@@ -1038,8 +1038,8 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
   /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens iff
    * we're a transformed element.
    */
-  mFixedPosIsAbsPos = (aNewAbsoluteContainingBlock &&
-                       aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform());
+  mFixedPosIsAbsPos = aNewAbsoluteContainingBlock &&
+    aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform(aNewAbsoluteContainingBlock);
 
   if (aNewAbsoluteContainingBlock) {
     aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
@@ -3432,6 +3432,8 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
     SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
     // TODO: this is temporary until a frame is written: bug 635240.
     SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewTextControlFrame),
+    // TODO: this is temporary until a frame is written: bug 773205.
+    SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewTextControlFrame),
     { NS_FORM_INPUT_SUBMIT,
       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                  nsCSSAnonBoxes::buttonContent) },
@@ -5794,8 +5796,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
     if (!aFrameList.IsEmpty()) {
       const nsStyleDisplay* parentDisplay = aParentFrame->GetStyleDisplay();
       bool positioned =
-        (parentDisplay->mPosition == NS_STYLE_POSITION_RELATIVE ||
-         parentDisplay->HasTransform()) &&
+        parentDisplay->mPosition == NS_STYLE_POSITION_RELATIVE &&
         !aParentFrame->IsSVGText();
       nsFrameItems ibSiblings;
       CreateIBSiblings(aState, aParentFrame, positioned, aFrameList,
@@ -7773,7 +7774,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       needInvalidatingPaint = true;
       aFrame->MarkLayersActive(nsChangeHint_UpdateOpacityLayer);
     }
-    if (aChange & nsChangeHint_UpdateTransformLayer) {
+    if ((aChange & nsChangeHint_UpdateTransformLayer) &&
+        aFrame->IsTransformed()) {
       aFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
       // If we're not already going to do an invalidating paint, see
       // if we can get away with only updating the transform on a
@@ -7807,7 +7809,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
   // CSS transforms.
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
                aFrame->IsTransformed() ||
-               aFrame->GetStyleDisplay()->HasTransform(),
+               aFrame->GetStyleDisplay()->HasTransformStyle(),
                "Unexpected UpdateTransformLayer hint");
 
   nsIPresShell *shell = aPresContext->PresShell();
@@ -8112,6 +8114,11 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
                  (hint & nsChangeHint_NeedReflow),
                  "Reflow hint bits set without actually asking for a reflow");
 
+    // skip any frame that has been destroyed due to a ripple effect
+    if (frame && !propTable->Get(frame, ChangeListProperty())) {
+      continue;
+    }
+
     if (frame && frame->GetContent() != content) {
       // XXXbz this is due to image maps messing with the primary frame of
       // <area>s.  See bug 135040.  Remove this block once that's fixed.
@@ -8119,12 +8126,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       if (!(hint & nsChangeHint_ReconstructFrame)) {
         continue;
       }
-    }
-
-    // skip any frame that has been destroyed due to a ripple effect
-    if (frame) {
-      if (!propTable->Get(frame, ChangeListProperty()))
-        continue;
     }
 
     if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
@@ -11107,8 +11108,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   bool positioned =
     NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay &&
-    (NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition ||
-     aDisplay->HasTransform()) &&
+    NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition &&
     !aParentFrame->IsSVGText();
 
   nsIFrame* newFrame = NS_NewInlineFrame(mPresShell, styleContext);

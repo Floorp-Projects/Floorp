@@ -421,7 +421,7 @@ protected:
   static void             ScheduleHookTimer(HWND aWnd, UINT aMsgId);
   static void             RegisterSpecialDropdownHooks();
   static void             UnregisterSpecialDropdownHooks();
-  static BOOL             DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
+  static bool             DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
 
   /**
    * Window transparency helpers

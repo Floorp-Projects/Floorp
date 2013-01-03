@@ -208,10 +208,14 @@ protected:
 
   virtual void StartTimer()
   {
+    // pretend we just fired, and we schedule the next tick normally
+    mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
-    mTargetTime = mLastFireTime;
 
-    mTimer->InitWithFuncCallback(TimerTick, this, 0, nsITimer::TYPE_ONE_SHOT);
+    mTargetTime = mLastFireTime + mRateDuration;
+
+    uint32_t delay = static_cast<uint32_t>(mRateMilliseconds);
+    mTimer->InitWithFuncCallback(TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT);
   }
 
   virtual void StopTimer()
@@ -278,6 +282,7 @@ protected:
         delay);
 
     // then schedule the timer
+    LOG("[%p] scheduling callback for %d ms (2)", this, delay);
     mTimer->InitWithFuncCallback(TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT);
 
     mTargetTime = newTarget;
@@ -340,10 +345,13 @@ public:
 protected:
   virtual void StartTimer()
   {
+    mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
-    mTargetTime = mLastFireTime;
 
-    mTimer->InitWithFuncCallback(TimerTickOne, this, 0, nsITimer::TYPE_ONE_SHOT);
+    mTargetTime = mLastFireTime + mRateDuration;
+
+    uint32_t delay = static_cast<uint32_t>(mRateMilliseconds);
+    mTimer->InitWithFuncCallback(TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT);
   }
 
   virtual void StopTimer()
@@ -563,12 +571,16 @@ nsRefreshDriver::RestoreNormalRefresh()
 TimeStamp
 nsRefreshDriver::MostRecentRefresh() const
 {
+  const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted(false);
+
   return mMostRecentRefresh;
 }
 
 int64_t
 nsRefreshDriver::MostRecentRefreshEpochTime() const
 {
+  const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted(false);
+
   return mMostRecentRefreshEpochTime;
 }
 
@@ -641,6 +653,9 @@ nsRefreshDriver::EnsureTimerStarted(bool aAdjustingTimer)
     mActiveTimer = newTimer;
     mActiveTimer->AddRefreshDriver(this);
   }
+
+  mMostRecentRefresh = mActiveTimer->MostRecentRefresh();
+  mMostRecentRefreshEpochTime = mActiveTimer->MostRecentRefreshEpochTime();
 }
 
 void

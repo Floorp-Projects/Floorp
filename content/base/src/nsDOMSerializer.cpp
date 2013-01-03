@@ -8,6 +8,7 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
+#include "nsINode.h"
 
 using namespace mozilla;
 

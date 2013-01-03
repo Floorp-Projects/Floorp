@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=811701
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 811701</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=811701">Mozilla Bug 811701</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<math><mtext>test</mtext></math>
+<svg><polygon points="0,0 100,100 200,300"/></svg>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 811701 **/
+  var math = document.querySelector("math");
+  is(math.innerHTML, "<mtext>test</mtext>", "<math> should have innerHTML");
+  is(math.outerHTML, "<math><mtext>test</mtext></math>",
+     "<math> should have innerHTML");
+  math.innerHTML = "<mo>+</mo>";
+  is(math.firstChild.namespaceURI, "http://www.w3.org/1999/xhtml",
+     "Should have the right namespace after setting innerHTML on <math>");
+
+  var polygon = document.querySelector("polygon");
+  is(polygon.parentNode.innerHTML,
+     '<polygon points="0,0 100,100 200,300"></polygon>',
+     "<svg> should have innerHTML");
+  is(polygon.parentNode.outerHTML,
+     '<svg><polygon points="0,0 100,100 200,300"></polygon></svg>',
+     "<svg> should have outerHTML");
+  is(polygon.outerHTML, '<polygon points="0,0 100,100 200,300"></polygon>',
+     "<polygon> should have outerHTML");
+
+  var svg = document.querySelector("svg");
+  svg.innerHTML = "<rect/>";
+  is(svg.firstChild.namespaceURI, "http://www.w3.org/1999/xhtml",
+     "Should have the right namespace after setting innerHTML on <math>");
+  </script>
+</body>
+</html>

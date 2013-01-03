@@ -7,7 +7,6 @@
  %toolboxDTD;
 ]>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/shared/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/framework/toolbox.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/toolbox.css" type="text/css"?>
@@ -20,7 +19,6 @@
 #ifdef XP_MACOSX
       <hbox id="toolbox-controls">
         <toolbarbutton id="toolbox-close"
-                       class="devtools-closebutton"
                        tooltiptext="&toolboxCloseButton.tooltip;"/>
         <hbox id="toolbox-dock-buttons"/>
       </hbox>
@@ -29,10 +27,10 @@
       </radiogroup>
       <hbox id="toolbox-buttons" flex="1" pack="end"/>
 #ifndef XP_MACOSX
+      <vbox id="toolbox-controls-separator"/>
       <hbox id="toolbox-controls">
         <hbox id="toolbox-dock-buttons"/>
         <toolbarbutton id="toolbox-close"
-                       class="devtools-closebutton"
                        tooltiptext="&toolboxCloseButton.tooltip;"/>
       </hbox>
 #endif

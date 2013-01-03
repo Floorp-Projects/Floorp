@@ -247,6 +247,7 @@ public class TabsPanel extends TabHost
                 for (Tab tab : Tabs.getInstance().getTabsInOrder()) {
                     Tabs.getInstance().closeTab(tab);
                 }
+                autoHidePanel();
                 return true;
 
             case R.id.new_tab:
@@ -410,6 +411,9 @@ public class TabsPanel extends TabHost
             mVisible = false;
             mPopupMenu.dismiss();
             dispatchLayoutChange(0, 0);
+
+            mPanel.hide();
+            mPanel = null;
         }
     }
 

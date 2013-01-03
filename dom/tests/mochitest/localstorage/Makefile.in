@@ -73,6 +73,7 @@ ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 MOCHITEST_CHROME_FILES += \
     test_localStorageBasePrivateBrowsing_perwindowpb.html \
     page_blank.html \
+    test_localStorageQuotaPrivateBrowsing_perwindowpb.html \
     $(NULL)
 endif
 

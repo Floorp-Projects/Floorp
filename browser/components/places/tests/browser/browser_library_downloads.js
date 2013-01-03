@@ -15,42 +15,56 @@ let now = Date.now();
 function test() {
   waitForExplicitFinish();
 
-  function onLibraryReady(win) {
+  let onLibraryReady = function(win) {
     // Add visits to compare contents with.
-    fastAddVisit("http://mozilla.com",
-                  PlacesUtils.history.TRANSITION_TYPED);
-    fastAddVisit("http://google.com",
-                  PlacesUtils.history.TRANSITION_DOWNLOAD);
-    fastAddVisit("http://en.wikipedia.org",
-                  PlacesUtils.history.TRANSITION_TYPED);
-    fastAddVisit("http://ubuntu.org",
-                  PlacesUtils.history.TRANSITION_DOWNLOAD);
+    let places = [
+      { uri: NetUtil.newURI("http://mozilla.com"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_TYPED) ]
+      },
+      { uri: NetUtil.newURI("http://google.com"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_DOWNLOAD) ]
+      },
+      { uri: NetUtil.newURI("http://en.wikipedia.org"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_TYPED) ]
+      },
+      { uri: NetUtil.newURI("http://ubuntu.org"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_DOWNLOAD) ]
+      },
+    ]
+    PlacesUtils.asyncHistory.updatePlaces(places, {
+      handleResult: function () {},
+      handleError: function () {
+        ok(false, "gHistory.updatePlaces() failed");
+      },
+      handleCompletion: function () {
+        // Make sure Downloads is present.
+        isnot(win.PlacesOrganizer._places.selectedNode, null,
+              "Downloads is present and selected");
 
-    // Make sure Downloads is present.
-    isnot(win.PlacesOrganizer._places.selectedNode, null,
-          "Downloads is present and selected");
 
-    // Make sure content in right pane exists.
-    let tree = win.document.getElementById("placeContent");
-    isnot(tree, null, "placeContent tree exists");
+        // Check results.
+        let contentRoot = win.ContentArea.currentView.result.root;
+        let len = contentRoot.childCount;
+        const TEST_URIS = ["http://ubuntu.org/", "http://google.com/"];
+        for (let i = 0; i < len; i++) {
+          is(contentRoot.getChild(i).uri, TEST_URIS[i],
+              "Comparing downloads shown at index " + i);
+        }
 
-    // Check results.
-    var contentRoot = tree.result.root;
-    var len = contentRoot.childCount;
-    var testUris = ["http://ubuntu.org/", "http://google.com/"];
-    for (var i = 0; i < len; i++) {
-      is(contentRoot.getChild(i).uri, testUris[i],
-          "Comparing downloads shown at index " + i);
-    }
-
-    win.close();
-    waitForClearHistory(finish);
+        win.close();
+        waitForClearHistory(finish);
+      }
+    })
   }
 
   openLibrary(onLibraryReady, "Downloads");
 }
 
-function fastAddVisit(uri, transition) {
-  PlacesUtils.history.addVisit(PlacesUtils._uri(uri), now++ * 1000,
-                               null, transition, false, 0);
+function VisitInfo(aTransitionType)
+{
+  this.transitionType =
+    aTransitionType === undefined ?
+      PlacesUtils.history.TRANSITION_LINK : aTransitionType;
+  this.visitDate = now++ * 1000;
 }
+VisitInfo.prototype = {}

@@ -15,7 +15,6 @@
  */
 
 interface nsIDOMSVGAnimatedEnumeration;
-interface nsIDOMSVGAnimatedTransformList;
 interface nsIDOMSVGAnimatedLength;
 
 [scriptable, uuid(A8D23223-A3DA-46DB-87F0-EA6BBCF4A7DD)]
@@ -40,7 +39,8 @@ interface nsIDOMSVGPatternElement
 { 
   readonly attribute nsIDOMSVGAnimatedEnumeration   patternUnits;
   readonly attribute nsIDOMSVGAnimatedEnumeration   patternContentUnits;
-  readonly attribute nsIDOMSVGAnimatedTransformList patternTransform;
+  // SVGAnimatedTransformList
+  readonly attribute nsISupports                    patternTransform;
   readonly attribute nsIDOMSVGAnimatedLength        x;
   readonly attribute nsIDOMSVGAnimatedLength        y;
   readonly attribute nsIDOMSVGAnimatedLength        width;

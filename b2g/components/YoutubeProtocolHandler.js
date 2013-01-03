@@ -16,17 +16,6 @@ XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
            .getService(Ci.nsIMessageSender);
 });
 
-// Splits parameters in a query string.
-function extractParameters(aQuery) {
-  let params = aQuery.split("&");
-  let res = {};
-  params.forEach(function(aParam) {
-    let obj = aParam.split("=");
-    res[obj[0]] = decodeURIComponent(obj[1]);
-  });
-  return res;
-}
-
 function YoutubeProtocolHandler() {
 }
 
@@ -61,24 +50,95 @@ YoutubeProtocolHandler.prototype = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", infoURI, true);
     xhr.addEventListener("load", function() {
-      // Youtube sends the response as a double wrapped url answer:
-      // we first extract the url_encoded_fmt_stream_map parameter,
-      // and from each comma-separated entry in this value, we extract
-      // other parameters (url and type).
-      let key = "url_encoded_fmt_stream_map=";
-      let pos = xhr.responseText.indexOf(key);
-      if (pos == -1) {
-        return;
+      try {
+        let info = parseYoutubeVideoInfo(xhr.responseText);
+        cpmm.sendAsyncMessage("content-handler", info);
       }
-      let streams = decodeURIComponent(xhr.responseText
-                                       .substring(pos + key.length)).split(",");
-      let uri;
-      let mimeType;
+      catch(e) {
+        // If parseYoutubeVideoInfo() can't find a video URL, it
+        // throws an Error. We report the error message here and do
+        // nothing. This shouldn't happen often. But if it does, the user
+        // will find that clicking on a video doesn't do anything.
+        log(e.message);
+      }
+    });
+    xhr.send(null);
 
-      // itag is an undocumented value which maps to resolution and mimetype
-      // see https://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
-      // Ordered from least to most preferred
-      let recognizedItags = [
+    function log(msg) {
+      msg = "YoutubeProtocolHandler.js: " + (msg.join ? msg.join(" ") : msg);
+      Cc["@mozilla.org/consoleservice;1"]
+        .getService(Ci.nsIConsoleService)
+        .logStringMessage(msg);
+    }
+
+    // 
+    // Parse the response from a youtube get_video_info query.
+    // 
+    // If youtube's response is a failure, this function returns an object
+    // with status, errorcode, type and reason properties. Otherwise, it returns
+    // an object with status, url, and type properties, and optional
+    // title, poster, and duration properties.
+    // 
+    function parseYoutubeVideoInfo(response) {
+      // Splits parameters in a query string.
+      function extractParameters(q) {
+        let params = q.split("&");
+        let result = {};
+        for(let i = 0, n = params.length; i < n; i++) {
+          let param = params[i];
+          let pos = param.indexOf('=');
+          if (pos === -1) 
+            continue;
+          let name = param.substring(0, pos);
+          let value = param.substring(pos+1);
+          result[name] = decodeURIComponent(value);
+        }
+        return result;
+      }
+
+      let params = extractParameters(response);
+      
+      // If the request failed, return an object with an error code
+      // and an error message
+      if (params.status === 'fail') {
+        // 
+        // Hopefully this error message will be properly localized.
+        // Do we need to add any parameters to the XMLHttpRequest to 
+        // specify the language we want?
+        // 
+        // Note that we include fake type and url properties in the returned
+        // object. This is because we still need to trigger the video app's
+        // view activity handler to display the error message from youtube,
+        // and those parameters are required.
+        //
+        return {
+          status: params.status,
+          errorcode: params.errorcode,
+          reason:  (params.reason || '').replace(/\+/g, ' '),
+          type: 'video/3gpp',
+          url: 'https://m.youtube.com'
+        }
+      }
+
+      // Otherwise, the query was successful
+      let result = {
+        status: params.status,
+      };
+
+      // Now parse the available streams
+      let streamsText = params.url_encoded_fmt_stream_map;
+      if (!streamsText)
+        throw Error("No url_encoded_fmt_stream_map parameter");
+      let streams = streamsText.split(',');
+      for(let i = 0, n = streams.length; i < n; i++) {
+        streams[i] = extractParameters(streams[i]);
+      }
+
+      // This is the list of youtube video formats, ordered from worst
+      // (but playable) to best.  These numbers are values used as the
+      // itag parameter of each stream description. See
+      // https://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
+      let formats = [
         "17", // 144p 3GP
         "36", // 240p 3GP
         "43", // 360p WebM
@@ -87,39 +147,39 @@ YoutubeProtocolHandler.prototype = {
 #endif
       ];
 
-      let bestItag = -1;
-
-      let extras = { }
-
-      streams.forEach(function(aStream) {
-        let params = extractParameters(aStream);
-        let url = params["url"];
-        let type = params["type"] ? params["type"].split(";")[0] : null;
-        let itag = params["itag"];
-
-        let index;
-        if (url && type && ((index = recognizedItags.indexOf(itag)) != -1) &&
-            index > bestItag) {
-          uri = url + '&signature=' + (params["sig"] ? params['sig'] : '');
-          mimeType = type;
-          bestItag = index;
-        }
-        for (let param in params) {
-          if (["thumbnail_url", "length_seconds", "title"].indexOf(param) != -1) {
-            extras[param] = decodeURIComponent(params[param]);
-          }
-        }
+      // Sort the array of stream descriptions in order of format
+      // preference, so that the first item is the most preferred one
+      streams.sort(function(a, b) {
+        let x = a.itag ? formats.indexOf(a.itag) : -1;
+        let y = b.itag ? formats.indexOf(b.itag) : -1;
+        return y - x;
       });
 
-      if (uri && mimeType) {
-        cpmm.sendAsyncMessage("content-handler", {
-          url: uri,
-          type: mimeType,
-          extras: extras
-        });
+      let bestStream = streams[0];
+
+      // If the best stream is a format we don't support just return
+      if (formats.indexOf(bestStream.itag) === -1) 
+        throw Error("No supported video formats");
+
+      result.url = bestStream.url + '&signature=' + (bestStream.sig || '');
+      result.type = bestStream.type;
+      // Strip codec information off of the mime type
+      if (result.type && result.type.indexOf(';') !== -1) {
+        result.type = result.type.split(';',1)[0];
       }
-    });
-    xhr.send(null);
+
+      if (params.title) {
+        result.title = params.title.replace(/\+/g, ' ');
+      }
+      if (params.length_seconds) {
+        result.duration = params.length_seconds;
+      }
+      if (params.thumbnail_url) {
+        result.poster = params.thumbnail_url;
+      }
+
+      return result;
+    }
 
     throw Components.results.NS_ERROR_ILLEGAL_VALUE;
   },

@@ -16,6 +16,7 @@
 #include "nsGkAtoms.h"
 #include "nsDOMString.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/DocumentFragmentBinding.h"
 
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
@@ -50,6 +51,14 @@ DocumentFragment::DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
                     mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
                                       kNameSpaceID_None),
                     "Bad NodeType in aNodeInfo");
+
+  SetIsDOMBinding();
+}
+
+JSObject*
+DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return DocumentFragmentBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 bool

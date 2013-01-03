@@ -39,7 +39,7 @@ if (typeof Components != "undefined") {
 
   // Open libc
   let libc;
-  let libc_candidates =  [ "libsystem.B.dylib",
+  let libc_candidates =  [ "libSystem.B.dylib",
                            "libc.so.6",
                            "libc.so" ];
   for (let i = 0; i < libc_candidates.length; ++i) {

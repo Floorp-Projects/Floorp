@@ -96,7 +96,7 @@ DownloadElementShell.prototype = {
     }
     else if (this._placesNode) {
       this._wasInProgress = false;
-      this._wasDone = this._state == nsIDM.DOWNLOAD_FINISHED;
+      this._wasDone = this.getDownloadState(true) == nsIDM.DOWNLOAD_FINISHED;
     }
 
     this._updateStatusUI();
@@ -115,7 +115,7 @@ DownloadElementShell.prototype = {
       this._placesNode = aNode;
       if (!this._dataItem && this._placesNode) {
         this._wasInProgress = false;
-        this._wasDone = this._state == nsIDM.DOWNLOAD_FINISHED;
+        this._wasDone = this.getDownloadState(true) == nsIDM.DOWNLOAD_FINISHED;
         this._updateStatusUI();
       }
     }
@@ -216,42 +216,53 @@ DownloadElementShell.prototype = {
   // The target's file size in bytes. If there's no target file, or If we
   // cannot determine its size, 0 is returned.
   get _fileSize() {
-    if (!this._file || !this._file.exists())
-      return 0;
-    try {
-      return this._file.fileSize;
+    if (!("__fileSize" in this)) {
+      if (!this._file || !this._file.exists())
+        this.__fileSize = 0;
+      try {
+        this.__fileSize = this._file.fileSize;
+      }
+      catch(ex) {
+        Cu.reportError(ex);
+        this.__fileSize = 0;
+      }
     }
-    catch(ex) {
-      Cu.reportError(ex);
-      return 0;
-    }
+    return this.__fileSize;
   },
 
+  /**
+   * Get the state of the download
+   * @param [optional] aForceUpdate
+   *        Whether to force update the cached download state. Default: false.
+   */
   // The download state (see nsIDownloadManager).
-  get _state() {
-    if (this._dataItem)
-      return this._dataItem.state;
-
-    let state = -1;
-    try {
-      return this._getAnnotation(DOWNLOAD_STATE_ANNO);
-    }
-    catch (ex) {
-      // The state annotation didn't exist in past releases.
-      if (!this._file) {
-        state = nsIDM.DOWNLOAD_FAILED;
-      }
-      else if (this._file.exists()) {
-        state = this._fileSize > 0 ?
-          nsIDM.DOWNLOAD_FINISHED : nsIDM.DOWNLOAD_FAILED;
+  getDownloadState: function DES_getDownloadState(aForceUpdate = false) {
+    if (aForceUpdate || !("_state" in this)) {
+      if (this._dataItem) {
+        this._state = this._dataItem.state;
       }
       else {
-        // XXXmano I'm not sure if this right. We should probably show no
-        // status text at all in this case.
-        state = nsIDM.DOWNLOAD_CANCELED;
+        try {
+          this._state = this._getAnnotation(DOWNLOAD_STATE_ANNO);
+        }
+        catch (ex) {
+          // The state annotation didn't exist in past releases.
+          if (!this._file) {
+            this._state = nsIDM.DOWNLOAD_FAILED;
+          }
+          else if (this._file.exists()) {
+            this._state = this._fileSize > 0 ?
+              nsIDM.DOWNLOAD_FINISHED : nsIDM.DOWNLOAD_FAILED;
+          }
+          else {
+            // XXXmano I'm not sure if this right. We should probably show no
+            // status text at all in this case.
+            this._state = nsIDM.DOWNLOAD_CANCELED;
+          }
+        }
       }
     }
-    return state;
+    return this._state;
   },
 
   // The status text for the download
@@ -292,7 +303,7 @@ DownloadElementShell.prototype = {
       return s.statusSeparator(fullHost, fullDate);
     }
 
-    switch (this._state) {
+    switch (this.getDownloadState()) {
       case nsIDM.DOWNLOAD_FAILED:
         return s.stateFailed;
       case nsIDM.DOWNLOAD_CANCELED:
@@ -331,7 +342,7 @@ DownloadElementShell.prototype = {
   // appropriate buttons and context menu items), the status text label,
   // and the progress meter.
   _updateDownloadStatusUI: function  DES__updateDownloadStatusUI() {
-    this._element.setAttribute("state", this._state);
+    this._element.setAttribute("state", this.getDownloadState(true));
     this._element.setAttribute("status", this._statusText);
 
     // For past-downloads, we're done. For session-downloads, we may also need
@@ -429,7 +440,7 @@ DownloadElementShell.prototype = {
       case "downloadsCmd_open": {
         return this._file.exists() &&
                ((this._dataItem && this._dataItem.openable) ||
-                (this._state == nsIDM.DOWNLOAD_FINISHED));
+                (this.getDownloadState() == nsIDM.DOWNLOAD_FINISHED));
       }
       case "downloadsCmd_show": {
         return this._getTargetFileOrPartFileIfExists() != null;
@@ -547,7 +558,7 @@ DownloadElementShell.prototype = {
       }
       return "";
     }
-    let command = getDefaultCommandForState(this._state);
+    let command = getDefaultCommandForState(this.getDownloadState());
     if (this.isCommandEnabled(command))
       this.doCommand(command);
   }
@@ -589,6 +600,7 @@ function DownloadsPlacesView(aRichListBox) {
 
   // Make sure to unregister the view if the window is closed.
   window.addEventListener("unload", function() {
+    this._richlistbox.controllers.removeController(this);
     downloadsData.removeView(this);
     this.result = null;
   }.bind(this), true);
@@ -759,6 +771,7 @@ DownloadsPlacesView.prototype = {
     // sibling first, if any.
     if (aElement.nextSibling &&
         this._richlistbox.selectedItems &&
+        this._richlistbox.selectedItems.length > 0 &&
         this._richlistbox.selectedItems[0] == aElement) {
       this._richlistbox.selectItem(aElement.nextSibling);
     }
@@ -871,8 +884,8 @@ DownloadsPlacesView.prototype = {
     let placesNodes = [];
     let selectedElements = this._richlistbox.selectedItems;
     for (let elt of selectedElements) {
-      if (elt.placesNode)
-        placesNodes.push(elt.placesNode);
+      if (elt._shell.placesNode)
+        placesNodes.push(elt._shell.placesNode);
     }
     return placesNodes;
   },
@@ -1079,7 +1092,7 @@ DownloadsPlacesView.prototype = {
 
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
-    contextMenu.setAttribute("state", element._shell._state);
+    contextMenu.setAttribute("state", element._shell.getDownloadState());
     return true;
   },
 

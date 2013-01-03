@@ -56,12 +56,19 @@ public:
     return mGlobal;
   }
 
-  void Decode(const ArrayBufferView* aView,
+  void Decode(nsAString& aOutDecodedString,
+              ErrorResult& aRv) {
+    TextDecoderBase::Decode(nullptr, 0, false,
+                            aOutDecodedString, aRv);
+  }
+
+  void Decode(const ArrayBufferView& aView,
               const TextDecodeOptions& aOptions,
               nsAString& aOutDecodedString,
               ErrorResult& aRv) {
-    return TextDecoderBase::Decode(aView, aOptions.mStream,
-                                   aOutDecodedString, aRv);
+    TextDecoderBase::Decode(reinterpret_cast<char*>(aView.Data()),
+                            aView.Length(), aOptions.mStream,
+                            aOutDecodedString, aRv);
   }
 
 private:

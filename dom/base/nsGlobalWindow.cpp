@@ -1101,8 +1101,10 @@ nsGlobalWindow::FreeInnerObjects()
   if (mDocument) {
     NS_ASSERTION(mDoc, "Why is mDoc null?");
 
-    // Remember the document's principal.
+    // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
+    mDocumentURI = mDoc->GetDocumentURI();
+    mDocBaseURI = mDoc->GetDocBaseURI();
   }
 
 #ifdef DEBUG
@@ -2277,8 +2279,10 @@ nsGlobalWindow::DetachFromDocShell()
   if (currentInner) {
     NS_ASSERTION(mDoc, "Must have doc!");
     
-    // Remember the document's principal.
+    // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
+    mDocumentURI = mDoc->GetDocumentURI();
+    mDocBaseURI = mDoc->GetDocBaseURI();
 
     // Release our document reference
     mDocument = nullptr;
@@ -2798,6 +2802,18 @@ nsGlobalWindow::GetPrincipal()
 // nsGlobalWindow::nsIDOMWindow
 //*****************************************************************************
 
+nsIURI*
+nsPIDOMWindow::GetDocumentURI() const
+{
+  return mDoc ? mDoc->GetDocumentURI() : mDocumentURI.get();
+}
+
+nsIURI*
+nsPIDOMWindow::GetDocBaseURI() const
+{
+  return mDoc ? mDoc->GetDocBaseURI() : mDocBaseURI.get();
+}
+
 void
 nsPIDOMWindow::MaybeCreateDoc()
 {
@@ -2902,17 +2918,23 @@ nsGlobalWindow::GetPerformance(nsISupports** aPerformance)
 {
   FORWARD_TO_INNER(GetPerformance, (aPerformance), NS_ERROR_NOT_INITIALIZED);
 
-  *aPerformance = nullptr;
-
-  if (nsGlobalWindow::HasPerformanceSupport()) {
-    CreatePerformanceObjectIfNeeded();
-    NS_IF_ADDREF(*aPerformance = mPerformance);
-  }
+  NS_IF_ADDREF(*aPerformance = nsPIDOMWindow::GetPerformance());
   return NS_OK;
 }
 
+nsPerformance*
+nsPIDOMWindow::GetPerformance()
+{
+  MOZ_ASSERT(IsInnerWindow());
+  if (HasPerformanceSupport()) {
+    CreatePerformanceObjectIfNeeded();
+    return mPerformance;
+  }
+  return nullptr;
+}
+
 void
-nsGlobalWindow::CreatePerformanceObjectIfNeeded()
+nsPIDOMWindow::CreatePerformanceObjectIfNeeded()
 {
   if (mPerformance || !mDoc) {
     return;
@@ -9805,12 +9827,6 @@ nsGlobalWindow::RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
-
-  // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
-  // PRTime to make the division do the right thing on 64-bit
-  // platforms whether delay is positive or negative (which we
-  // know is always positive here, but cast anyways for
-  // consistency).
   nsresult rv = aTimeout->InitTimer(TimerCallback, delay.ToMilliseconds());
 
   if (NS_FAILED(rv)) {
@@ -10765,7 +10781,7 @@ nsGlobalWindow::HasIndexedDBSupport()
 
 // static
 bool
-nsGlobalWindow::HasPerformanceSupport() 
+nsPIDOMWindow::HasPerformanceSupport()
 {
   return Preferences::GetBool("dom.enable_performance", false);
 }

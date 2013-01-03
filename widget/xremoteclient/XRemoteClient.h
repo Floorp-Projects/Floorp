@@ -65,7 +65,6 @@ private:
   Atom           mMozUserAtom;
   Atom           mMozProfileAtom;
   Atom           mMozProgramAtom;
-  Atom           mMozSupportsCLAtom;
 
   char          *mLockData;
 

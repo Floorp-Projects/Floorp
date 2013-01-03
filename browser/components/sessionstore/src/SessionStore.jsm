@@ -3728,6 +3728,9 @@ let SessionStoreInternal = {
     for (let i = oState.windows.length - 1; i >= 0; i--) {
       if (oState.windows[i].isPrivate) {
         oState.windows.splice(i, 1);
+        if (oState.selectedWindow >= i) {
+          oState.selectedWindow--;
+        }
       }
     }
     for (let i = oState._closedWindows.length - 1; i >= 0; i--) {

@@ -5,11 +5,6 @@
 
 Components.utils.import("resource:///modules/MigrationUtils.jsm");
 
-const DOWNLOADS_QUERY = "place:transition=" +
-  Components.interfaces.nsINavHistoryService.TRANSITION_DOWNLOAD +
-  "&sort=" +
-  Components.interfaces.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-
 var PlacesOrganizer = {
   _places: null,
 
@@ -87,7 +82,7 @@ var PlacesOrganizer = {
     // Select the first item in the content area view.
     let view = ContentArea.currentView;
     let root = view.result ? view.result.root : null;
-    if (root && root.containerOpen && root.childCount >= 0)
+    if (root && root.containerOpen && root.childCount > 0)
       view.selectNode(root.getChild(0));
     ContentArea.focus();
   },
@@ -279,6 +274,13 @@ var PlacesOrganizer = {
    * Handle focus changes on the places list and the current content view.
    */
   updateDetailsPane: function PO_updateDetailsPane() {
+    let detailsDeck = document.getElementById("detailsDeck");
+    let detailsPaneDisabled = detailsDeck.hidden =
+      !ContentArea.currentViewOptions.showDetailsPane;
+    if (detailsPaneDisabled) {
+      return;
+    }
+
     let view = PlacesUIUtils.getViewForNode(document.activeElement);
     if (view) {
       let selectedNodes = view.selectedNode ?
@@ -1246,35 +1248,60 @@ let gPrivateBrowsingListener = {
 #endif
 
 let ContentArea = {
+  _specialViews: new Map(),
+
   init: function CA_init() {
     this._deck = document.getElementById("placesViewsDeck");
-    this._specialViews = new Map();
     ContentTree.init();
   },
 
-  _shouldUseNewDownloadsView: function CA_shouldUseNewDownloadsView() {
-    try {
-      return Services.prefs.getBoolPref("browser.library.useNewDownloadsView");
-    }
-    catch(ex) { }
-    return false;
-  },
-
+  /**
+   * Gets the content view to be used for loading the given query.
+   * If a custom view was set by setContentViewForQueryString, that
+   * view would be returned, else the default tree view is returned
+   *
+   * @param aQueryString
+   *        a query string
+   * @return the view to be used for loading aQueryString.
+   */
   getContentViewForQueryString:
   function CA_getContentViewForQueryString(aQueryString) {
-    if (this._specialViews.has(aQueryString))
-      return this._specialViews.get(aQueryString);
-    if (aQueryString == DOWNLOADS_QUERY && this._shouldUseNewDownloadsView()) {
-      let view = new DownloadsPlacesView(document.getElementById("downloadsRichListBox"));
-      this.setContentViewForQueryString(aQueryString, view);
-      return view;
+    try {
+      if (this._specialViews.has(aQueryString)) {
+        let { view, options } = this._specialViews.get(aQueryString);
+        if (typeof view == "function") {
+          view = view();
+          this._specialViews.set(aQueryString, { view: view, options: options });
+        }
+        return view;
+      }
+    }
+    catch(ex) {
+      Cu.reportError(ex);
     }
     return ContentTree.view;
   },
 
+  /**
+   * Sets a custom view to be used rather than the default places tree
+   * whenever the given query is selected in the left pane.
+   * @param aQueryString
+   *        a query string
+   * @param aView
+   *        Either the custom view or a function that will return the view
+   *        the first (and only) time it's called.
+   * @param [optional] aOptions
+   *        Object defining special options for the view.
+   * @see ContentTree.viewOptions for supported options and default values.
+   */
   setContentViewForQueryString:
-  function CA_setContentViewForQueryString(aQueryString, aView) {
-    this._specialViews.set(aQueryString, aView);
+  function CA_setContentViewForQueryString(aQueryString, aView, aOptions) {
+    if (!aQueryString ||
+        typeof aView != "object" && typeof aView != "function")
+      throw new Error("Invalid arguments");
+
+    this._specialViews.set(aQueryString, { view: aView,
+                                           options: aOptions || new Object() });
   },
 
   get currentView() PlacesUIUtils.getViewForNode(this._deck.selectedPanel),
@@ -1291,6 +1318,23 @@ let ContentArea = {
     return aQueryString;
   },
 
+  /**
+   * Options for the current view.
+   *
+   * @see ContentTree.viewOptions for supported options and default values.
+   */
+  get currentViewOptions() {
+    // Use ContentTree options as default.
+    let viewOptions = ContentTree.viewOptions;
+    if (this._specialViews.has(this.currentPlace)) {
+      let { view, options } = this._specialViews.get(this.currentPlace);
+      for (let option in options) {
+        viewOptions[option] = options[option];
+      }
+    }
+    return viewOptions;
+  },
+
   focus: function() {
     this._deck.selectedPanel.focus();
   }
@@ -1302,6 +1346,8 @@ let ContentTree = {
   },
 
   get view() this._view,
+
+  get viewOptions() Object.seal({ showDetailsPane: true }),
 
   openSelectedNode: function CT_openSelectedNode(aEvent) {
     let view = this.view;

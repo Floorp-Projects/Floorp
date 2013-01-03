@@ -34,8 +34,8 @@
     <style name="AddressBar.ImageButton.Forward">
         <item name="android:contentDescription">@string/forward</item>
         <item name="android:layout_width">64dip</item>
-        <item name="android:layout_height">42dip</item>
-        <item name="android:paddingLeft">21dp</item>
+        <item name="android:layout_height">38dip</item>
+        <item name="android:paddingLeft">22dp</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:src">@drawable/ic_menu_forward</item>

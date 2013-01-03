@@ -986,7 +986,7 @@ void nsCaret::DrawCaret(bool aInvalidate)
   
   // Can we draw the caret now?
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  NS_ENSURE_TRUE(presShell, /**/);
+  NS_ENSURE_TRUE_VOID(presShell);
   {
     if (presShell->IsPaintingSuppressed())
     {

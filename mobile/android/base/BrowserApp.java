@@ -1028,6 +1028,24 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.abouthome_topsites_edit:
+                mAboutHomeContent.editSite();
+                return true;
+
+            case R.id.abouthome_topsites_clear:
+                mAboutHomeContent.clearSite();
+                return true;
+
+            case R.id.abouthome_topsites_clearall:
+                mAboutHomeContent.clearAllSites();
+                return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
         Intent intent = null;

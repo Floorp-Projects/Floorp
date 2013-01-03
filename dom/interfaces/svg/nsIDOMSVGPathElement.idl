@@ -6,26 +6,6 @@
 #include "nsIDOMSVGElement.idl"
 
 interface nsIDOMSVGAnimatedNumber;
-interface nsIDOMSVGPoint;
-interface nsIDOMSVGPathSegClosePath;
-interface nsIDOMSVGPathSegMovetoAbs;
-interface nsIDOMSVGPathSegMovetoRel;
-interface nsIDOMSVGPathSegLinetoAbs;
-interface nsIDOMSVGPathSegLinetoRel;
-interface nsIDOMSVGPathSegCurvetoCubicAbs;
-interface nsIDOMSVGPathSegCurvetoCubicRel;
-interface nsIDOMSVGPathSegCurvetoQuadraticAbs;
-interface nsIDOMSVGPathSegCurvetoQuadraticRel;
-interface nsIDOMSVGPathSegArcAbs;
-interface nsIDOMSVGPathSegArcRel;
-interface nsIDOMSVGPathSegLinetoHorizontalAbs;
-interface nsIDOMSVGPathSegLinetoHorizontalRel;
-interface nsIDOMSVGPathSegLinetoVerticalAbs;
-interface nsIDOMSVGPathSegLinetoVerticalRel;
-interface nsIDOMSVGPathSegCurvetoCubicSmoothAbs;
-interface nsIDOMSVGPathSegCurvetoCubicSmoothRel;
-interface nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs;
-interface nsIDOMSVGPathSegCurvetoQuadraticSmoothRel;
 
 [scriptable, uuid(89AF3EAE-1703-461A-A2E0-86D2131C11AC)]
 interface nsIDOMSVGPathElement
@@ -50,60 +30,80 @@ interface nsIDOMSVGPathElement
   readonly attribute nsIDOMSVGAnimatedNumber pathLength;
   
   float          getTotalLength();
-  nsIDOMSVGPoint getPointAtLength(in float distance);
+  // SVGPoint
+  nsISupports getPointAtLength(in float distance);
   unsigned long  getPathSegAtLength(in float distance);
 
-  nsIDOMSVGPathSegClosePath createSVGPathSegClosePath();
-  nsIDOMSVGPathSegMovetoAbs createSVGPathSegMovetoAbs(in float x, in float y);
-  nsIDOMSVGPathSegMovetoRel createSVGPathSegMovetoRel(in float x, in float y);
-  nsIDOMSVGPathSegLinetoAbs createSVGPathSegLinetoAbs(in float x, in float y);
-  nsIDOMSVGPathSegLinetoRel createSVGPathSegLinetoRel(in float x, in float y);
+  // SVGPathSegClosePath
+  nsISupports createSVGPathSegClosePath();
+  // SVGPathSegMoveToAbs
+  nsISupports createSVGPathSegMovetoAbs(in float x, in float y);
+  // SVGPathSegMoveToRel
+  nsISupports createSVGPathSegMovetoRel(in float x, in float y);
+  // SVGPathSegLineToAbs
+  nsISupports createSVGPathSegLinetoAbs(in float x, in float y);
+  // SVGPathSegLineToRel
+  nsISupports createSVGPathSegLinetoRel(in float x, in float y);
 
-  nsIDOMSVGPathSegCurvetoCubicAbs     createSVGPathSegCurvetoCubicAbs(in float x,
+  // SVGPathSegCurveToCubicAbs
+  nsISupports                         createSVGPathSegCurvetoCubicAbs(in float x,
                                                                       in float y,
                                                                       in float x1,
                                                                       in float y1,
                                                                       in float x2,
                                                                       in float y2);
-  nsIDOMSVGPathSegCurvetoCubicRel     createSVGPathSegCurvetoCubicRel(in float x,
+  // SVGPathSegCurveToCubicRel
+  nsISupports                         createSVGPathSegCurvetoCubicRel(in float x,
                                                                       in float y,
                                                                       in float x1,
                                                                       in float y1,
                                                                       in float x2,
                                                                       in float y2);
-  nsIDOMSVGPathSegCurvetoQuadraticAbs createSVGPathSegCurvetoQuadraticAbs(in float x,
+  // SVGPathSegCurveToQuadraticAbs
+  nsISupports                         createSVGPathSegCurvetoQuadraticAbs(in float x,
                                                                           in float y,
                                                                           in float x1,
                                                                           in float y1);
-  nsIDOMSVGPathSegCurvetoQuadraticRel createSVGPathSegCurvetoQuadraticRel(in float x,
+  // SVGPathSegCurveToQuadraticRel
+  nsISupports                         createSVGPathSegCurvetoQuadraticRel(in float x,
                                                                           in float y,
                                                                           in float x1,
                                                                           in float y1);
 
-  nsIDOMSVGPathSegArcAbs createSVGPathSegArcAbs(in float x, in float y, in float r1,
+  // SVGPathSegArcAbs
+  nsISupports            createSVGPathSegArcAbs(in float x, in float y, in float r1,
                                                 in float r2, in float angle,
                                                 in boolean largeArcFlag,
                                                 in boolean sweepFlag);
-  nsIDOMSVGPathSegArcRel createSVGPathSegArcRel(in float x, in float y, in float r1,
+  // SVGPathSegArcRel
+  nsISupports            createSVGPathSegArcRel(in float x, in float y, in float r1,
                                                 in float r2, in float angle,
                                                 in boolean largeArcFlag,
                                                 in boolean sweepFlag);
 
-  nsIDOMSVGPathSegLinetoHorizontalAbs createSVGPathSegLinetoHorizontalAbs(in float x);
-  nsIDOMSVGPathSegLinetoHorizontalRel createSVGPathSegLinetoHorizontalRel(in float x);
-  nsIDOMSVGPathSegLinetoVerticalAbs   createSVGPathSegLinetoVerticalAbs(in float y);
-  nsIDOMSVGPathSegLinetoVerticalRel   createSVGPathSegLinetoVerticalRel(in float y);
+  // SVGPathSegLineToHorizontalAbs
+  nsISupports createSVGPathSegLinetoHorizontalAbs(in float x);
+  // SVGPathSegLineToHorizontalRel
+  nsISupports createSVGPathSegLinetoHorizontalRel(in float x);
+  // SVGPathSegLineToVerticalAbs
+  nsISupports createSVGPathSegLinetoVerticalAbs(in float y);
+  // SVGPathSegLineToVerticalRel
+  nsISupports createSVGPathSegLinetoVerticalRel(in float y);
 
-  nsIDOMSVGPathSegCurvetoCubicSmoothAbs     createSVGPathSegCurvetoCubicSmoothAbs(in float x,
+  // SVGPathSegCurveToCubicSmoothAbs
+  nsISupports                               createSVGPathSegCurvetoCubicSmoothAbs(in float x,
                                                                                   in float y,
                                                                                   in float x2,
                                                                                   in float y2);
-  nsIDOMSVGPathSegCurvetoCubicSmoothRel     createSVGPathSegCurvetoCubicSmoothRel(in float x,
+  // SVGPathSegCurveToCubicSmoothRel
+  nsISupports                               createSVGPathSegCurvetoCubicSmoothRel(in float x,
                                                                                   in float y,
                                                                                   in float x2,
                                                                                   in float y2);
-  nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs createSVGPathSegCurvetoQuadraticSmoothAbs(in float x,
+  // SVGPathSegCurveToQuadraticSmoothAbs
+  nsISupports                               createSVGPathSegCurvetoQuadraticSmoothAbs(in float x,
                                                                                       in float y);
-  nsIDOMSVGPathSegCurvetoQuadraticSmoothRel createSVGPathSegCurvetoQuadraticSmoothRel(in float x,
+  // SVGPathSegCurveToQuadraticSmoothRel
+  nsISupports                               createSVGPathSegCurvetoQuadraticSmoothRel(in float x,
                                                                                       in float y);
 };

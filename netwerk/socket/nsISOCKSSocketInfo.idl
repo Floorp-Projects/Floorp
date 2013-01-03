@@ -6,12 +6,15 @@
 
 #include "nsISupports.idl"
 
-[ptr] native PRNetAddrPtr(union PRNetAddr);
+%{ C++
+#include "mozilla/net/DNS.h"
+%}
+[ptr] native NetAddrPtr(mozilla::net::NetAddr);
 
-[scriptable, uuid(8f755c44-1dd2-11b2-a613-91117453fa95)]
+[scriptable, uuid(D5C0D1F9-22D7-47DC-BF91-D9AC6E1251A6)]
 interface nsISOCKSSocketInfo : nsISupports
 {
-    [noscript] attribute PRNetAddrPtr destinationAddr;
-    [noscript] attribute PRNetAddrPtr externalProxyAddr;
-    [noscript] attribute PRNetAddrPtr internalProxyAddr;
+    [noscript] attribute NetAddrPtr destinationAddr;
+    [noscript] attribute NetAddrPtr externalProxyAddr;
+    [noscript] attribute NetAddrPtr internalProxyAddr;
 };

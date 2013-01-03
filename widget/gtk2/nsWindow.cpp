@@ -638,9 +638,11 @@ nsWindow::Destroy(void)
                                          this);
 
     nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
-    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-    if (static_cast<nsIWidget *>(this) == rollupWidget) {
-        rollupListener->Rollup(0, nullptr);
+    if (rollupListener) {
+        nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+        if (static_cast<nsIWidget *>(this) == rollupWidget) {
+            rollupListener->Rollup(0, nullptr);
+        }
     }
 
     // dragService will be null after shutdown of the service manager.
@@ -4782,55 +4784,58 @@ bool
 nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
                          bool aIsWheel, bool aAlwaysRollup)
 {
-    bool retVal = false;
     nsIRollupListener* rollupListener = GetActiveRollupListener();
-    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-    if (rollupWidget) {
-        GdkWindow *currentPopup =
-            (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-        if (aAlwaysRollup || !is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
-            bool rollup = true;
-            if (aIsWheel) {
-                rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
-                retVal = true;
-            }
-            // if we're dealing with menus, we probably have submenus and
-            // we don't want to rollup if the click is in a parent menu of
-            // the current submenu
-            uint32_t popupsToRollup = UINT32_MAX;
-            if (!aAlwaysRollup) {
-                nsAutoTArray<nsIWidget*, 5> widgetChain;
-                uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
-                for (uint32_t i=0; i<widgetChain.Length(); ++i) {
-                    nsIWidget* widget = widgetChain[i];
-                    GdkWindow* currWindow =
-                        (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
-                    if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                      // don't roll up if the mouse event occurred within a
-                      // menu of the same type. If the mouse event occurred
-                      // in a menu higher than that, roll up, but pass the
-                      // number of popups to Rollup so that only those of the
-                      // same type close up.
-                      if (i < sameTypeCount) {
-                        rollup = false;
-                      }
-                      else {
-                        popupsToRollup = sameTypeCount;
-                      }
-                      break;
-                    }
-                } // foreach parent menu widget
-            } // if rollup listener knows about menus
-
-            // if we've determined that we should still rollup, do it.
-            if (rollup && rollupListener->Rollup(popupsToRollup, nullptr)) {
-                retVal = true;
-            }
-        }
-    } else {
+    nsCOMPtr<nsIWidget> rollupWidget;
+    if (rollupListener) {
+        rollupWidget = rollupListener->GetRollupWidget();
+    }
+    if (!rollupWidget) {
         nsBaseWidget::gRollupListener = nullptr;
+        return false;
     }
 
+    bool retVal = false;
+    GdkWindow *currentPopup =
+        (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (aAlwaysRollup || !is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
+        bool rollup = true;
+        if (aIsWheel) {
+            rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
+            retVal = true;
+        }
+        // if we're dealing with menus, we probably have submenus and
+        // we don't want to rollup if the click is in a parent menu of
+        // the current submenu
+        uint32_t popupsToRollup = UINT32_MAX;
+        if (!aAlwaysRollup) {
+            nsAutoTArray<nsIWidget*, 5> widgetChain;
+            uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
+            for (uint32_t i=0; i<widgetChain.Length(); ++i) {
+                nsIWidget* widget = widgetChain[i];
+                GdkWindow* currWindow =
+                    (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
+                if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
+                  // don't roll up if the mouse event occurred within a
+                  // menu of the same type. If the mouse event occurred
+                  // in a menu higher than that, roll up, but pass the
+                  // number of popups to Rollup so that only those of the
+                  // same type close up.
+                  if (i < sameTypeCount) {
+                    rollup = false;
+                  }
+                  else {
+                    popupsToRollup = sameTypeCount;
+                  }
+                  break;
+                }
+            } // foreach parent menu widget
+        } // if rollup listener knows about menus
+
+        // if we've determined that we should still rollup, do it.
+        if (rollup && rollupListener->Rollup(popupsToRollup, nullptr)) {
+            retVal = true;
+        }
+    }
     return retVal;
 }
 

@@ -20,31 +20,10 @@
 #undef GetClassName
 #endif
 
-namespace mozilla {
-class DOMSVGLengthList;
-class DOMSVGNumberList;
-class DOMSVGPathSegList;
-class DOMSVGPointList;
-class DOMSVGStringList;
-class DOMSVGTransformList;
-}
-
 class nsContentList;
 class nsGlobalWindow;
 class nsICanvasRenderingContextInternal;
 class nsIDOMHTMLOptionsCollection;
-class nsIDOMSVGLength;
-class nsIDOMSVGLengthList;
-class nsIDOMSVGNumber;
-class nsIDOMSVGNumberList;
-class nsIDOMSVGPathSeg;
-class nsIDOMSVGPathSegList;
-class nsIDOMSVGPoint;
-class nsIDOMSVGPointList;
-class nsIDOMSVGStringList;
-class nsIDOMSVGTests;
-class nsIDOMSVGTransform;
-class nsIDOMSVGTransformList;
 class nsIDOMWindow;
 class nsIForm;
 class nsIHTMLDocument;

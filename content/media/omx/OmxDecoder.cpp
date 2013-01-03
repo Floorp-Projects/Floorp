@@ -560,6 +560,11 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
   else if (err == ERROR_END_OF_STREAM) {
     return false;
   }
+  else if (err == UNKNOWN_ERROR) {
+    // This sometimes is used to mean "out of memory", but regardless,
+    // don't keep trying to decode if the decoder doesn't want to.
+    return false;
+  }
 
   return true;
 }
@@ -567,6 +572,10 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
 bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 {
   status_t err;
+
+  if (!mAudioBuffer) {
+    return false;
+  }
 
   if (mAudioMetadataRead && aSeekTimeUs == -1) {
     // Use the data read into the buffer during metadata time
@@ -609,6 +618,9 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     if (aFrame->mSize == 0) {
       return false;
     }
+  }
+  else if (err == UNKNOWN_ERROR) {
+    return false;
   }
 
   return true;

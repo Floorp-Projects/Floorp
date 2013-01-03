@@ -11,7 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = privatebrowsing
 
+ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 DIRS = src
+endif
 
 TEST_DIRS += test
 

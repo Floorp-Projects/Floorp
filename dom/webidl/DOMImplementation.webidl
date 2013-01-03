@@ -11,9 +11,6 @@
  * related or neighboring rights to this work.
  */
 
-interface Document;
-interface DocumentType;
-
 interface DOMImplementation {
   boolean hasFeature(DOMString feature,
                      [TreatNullAs=EmptyString] DOMString version);

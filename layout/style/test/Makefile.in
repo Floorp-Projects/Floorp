@@ -98,6 +98,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_default_computed_style.html \
 		test_css_cross_domain.html \
 		test_css_eof_handling.html \
+		test_css_supports.html \
 		test_default_bidi_css.html \
 		test_descriptor_storage.html \
 		test_descriptor_syntax_errors.html \

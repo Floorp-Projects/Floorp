@@ -117,8 +117,7 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p);
  *           NS_HIDDEN_(int) NS_FASTCALL func2(char *foo);
  */
 
-#if defined(__i386__) && defined(__GNUC__) && \
-    (__GNUC__ >= 3) && !defined(XP_OS2)
+#if defined(__i386__) && defined(__GNUC__) && !defined(XP_OS2)
 #define NS_FASTCALL __attribute__ ((regparm (3), stdcall))
 #define NS_CONSTRUCTOR_FASTCALL __attribute__ ((regparm (3), stdcall))
 #elif defined(XP_WIN) && !defined(_WIN64)
@@ -212,7 +211,7 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p);
 /**
  * Deprecated declarations.
  */
-#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#ifdef __GNUC__
 # define MOZ_DEPRECATED __attribute__((deprecated))
 #elif defined(_MSC_VER)
 # define MOZ_DEPRECATED __declspec(deprecated)

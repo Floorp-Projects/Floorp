@@ -6,13 +6,14 @@
 
 #include "nsNetAddr.h"
 #include "nsString.h"
-
 #include "prnetdb.h"
+
+using namespace mozilla::net;
 
 NS_IMPL_ISUPPORTS1(nsNetAddr, nsINetAddr)
 
 /* Makes a copy of |addr| */
-nsNetAddr::nsNetAddr(PRNetAddr* addr)
+nsNetAddr::nsNetAddr(NetAddr* addr)
 {
   NS_ASSERTION(addr, "null addr");
   mAddr = *addr;
@@ -22,15 +23,17 @@ nsNetAddr::nsNetAddr(PRNetAddr* addr)
 NS_IMETHODIMP nsNetAddr::GetFamily(uint16_t *aFamily)
 {
   switch(mAddr.raw.family) {
-  case PR_AF_INET: 
+  case AF_INET:
     *aFamily = nsINetAddr::FAMILY_INET;
     break;
-  case PR_AF_INET6:
+  case AF_INET6:
     *aFamily = nsINetAddr::FAMILY_INET6;
     break;
-  case PR_AF_LOCAL:
+#if defined(XP_UNIX) || defined(XP_OS2)
+  case AF_LOCAL:
     *aFamily = nsINetAddr::FAMILY_LOCAL;
     break;
+#endif
   default:
     return NS_ERROR_UNEXPECTED;
   }
@@ -43,18 +46,18 @@ NS_IMETHODIMP nsNetAddr::GetAddress(nsACString & aAddress)
 {
   switch(mAddr.raw.family) {
   /* PR_NetAddrToString can handle INET and INET6, but not LOCAL. */
-  case PR_AF_INET: 
-    aAddress.SetCapacity(16);
-    PR_NetAddrToString(&mAddr, aAddress.BeginWriting(), 16);
+  case AF_INET:
+    aAddress.SetCapacity(kIPv4CStrBufSize);
+    NetAddrToString(&mAddr, aAddress.BeginWriting(), kIPv4CStrBufSize);
     aAddress.SetLength(strlen(aAddress.BeginReading()));
     break;
-  case PR_AF_INET6:
-    aAddress.SetCapacity(46);
-    PR_NetAddrToString(&mAddr, aAddress.BeginWriting(), 46);
+  case AF_INET6:
+    aAddress.SetCapacity(kIPv6CStrBufSize);
+    NetAddrToString(&mAddr, aAddress.BeginWriting(), kIPv6CStrBufSize);
     aAddress.SetLength(strlen(aAddress.BeginReading()));
     break;
 #if defined(XP_UNIX) || defined(XP_OS2)
-  case PR_AF_LOCAL:
+  case AF_LOCAL:
     aAddress.Assign(mAddr.local.path);
     break;
 #endif
@@ -70,15 +73,17 @@ NS_IMETHODIMP nsNetAddr::GetAddress(nsACString & aAddress)
 NS_IMETHODIMP nsNetAddr::GetPort(uint16_t *aPort)
 {
   switch(mAddr.raw.family) {
-  case PR_AF_INET: 
-    *aPort = PR_ntohs(mAddr.inet.port);
+  case AF_INET:
+    *aPort = ntohs(mAddr.inet.port);
     break;
-  case PR_AF_INET6:
-    *aPort = PR_ntohs(mAddr.ipv6.port);
+  case AF_INET6:
+    *aPort = ntohs(mAddr.inet6.port);
     break;
-  case PR_AF_LOCAL:
+#if defined(XP_UNIX) || defined(XP_OS2)
+  case AF_LOCAL:
     // There is no port number for local / connections.
     return NS_ERROR_NOT_AVAILABLE;
+#endif
   default:
     return NS_ERROR_UNEXPECTED;
   }
@@ -90,11 +95,13 @@ NS_IMETHODIMP nsNetAddr::GetPort(uint16_t *aPort)
 NS_IMETHODIMP nsNetAddr::GetFlow(uint32_t *aFlow)
 {
   switch(mAddr.raw.family) {
-  case PR_AF_INET6:
-    *aFlow = PR_ntohl(mAddr.ipv6.flowinfo);
+  case AF_INET6:
+    *aFlow = ntohl(mAddr.inet6.flowinfo);
     break;
-  case PR_AF_INET: 
-  case PR_AF_LOCAL:
+  case AF_INET:
+#if defined(XP_UNIX) || defined(XP_OS2)
+  case AF_LOCAL:
+#endif
     // only for IPv6
     return NS_ERROR_NOT_AVAILABLE;
   default:
@@ -108,11 +115,13 @@ NS_IMETHODIMP nsNetAddr::GetFlow(uint32_t *aFlow)
 NS_IMETHODIMP nsNetAddr::GetScope(uint32_t *aScope)
 {
   switch(mAddr.raw.family) {
-  case PR_AF_INET6:
-    *aScope = PR_ntohl(mAddr.ipv6.scope_id);
+  case AF_INET6:
+    *aScope = ntohl(mAddr.inet6.scope_id);
     break;
-  case PR_AF_INET: 
-  case PR_AF_LOCAL:
+  case AF_INET:
+#if defined(XP_UNIX) || defined(XP_OS2)
+  case AF_LOCAL:
+#endif
     // only for IPv6
     return NS_ERROR_NOT_AVAILABLE;
   default:

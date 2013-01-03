@@ -178,6 +178,9 @@ NS_IMETHODIMP
 nsDOMFileBase::GetMozLastModifiedDate(uint64_t* aLastModifiedDate)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
+  if (IsDateUnknown()) {
+    mLastModificationDate = PR_Now();
+  }
   *aLastModifiedDate = mLastModificationDate;
   return NS_OK;
 }
@@ -489,7 +492,6 @@ nsDOMFileFile::GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate)
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
   PRTime msecs;
-  mFile->GetLastModifiedTime(&msecs);
   if (IsDateUnknown()) {
     nsresult rv = mFile->GetLastModifiedTime(&msecs);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -562,6 +564,12 @@ NS_IMETHODIMP
 nsDOMFileFile::GetMozLastModifiedDate(uint64_t* aLastModifiedDate)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
+  if (IsDateUnknown()) {
+    PRTime msecs;
+    nsresult rv = mFile->GetLastModifiedTime(&msecs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mLastModificationDate = msecs;
+  }
   *aLastModifiedDate = mLastModificationDate;
   return NS_OK;
 }
@@ -607,8 +615,7 @@ nsDOMMemoryFile::DataOwner::sDataOwners;
 /* static */ bool
 nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerSizeOf,
-                                     "memory-file-data");
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerMallocSizeOf)
 
 class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
   : public nsIMemoryMultiReporter
@@ -643,7 +650,7 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
     for (DataOwner *owner = DataOwner::sDataOwners->getFirst();
          owner; owner = owner->getNext()) {
 
-      size_t size = DOMMemoryFileDataOwnerSizeOf(owner->mData);
+      size_t size = DOMMemoryFileDataOwnerMallocSizeOf(owner->mData);
 
       if (size < LARGE_OBJECT_MIN_SIZE) {
         smallObjectsTotal += size;

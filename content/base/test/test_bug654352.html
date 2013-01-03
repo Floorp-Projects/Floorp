@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=654352
+-->
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <title>Test for Bug 654352</title>
+  <style>
+    @font-face {
+      font-family: Ahem;
+      src: url("Ahem.ttf");
+    }
+
+    #a {
+      font-family: Ahem;
+      padding: 10px;
+      border: 8px solid black;
+      width: 600px;
+    }
+  </style>
+<script>
+  function convertEmToPx(aEm) {
+    // Assumes our base font size is 16px = 12pt = 1.0em.
+    var pxPerEm = 16.0 / 1.0;
+    return pxPerEm * aEm;
+  }
+
+  function checkOffsetsFromPoint(aX, aY, aExpected) {
+    var cp = document.caretPositionFromPoint(aX, aY);
+    ok(aExpected == cp.offset, 'expected offset at (' + aX + ', ' + aY + '): ' + aExpected + ', got: ' + cp.offset);
+  }
+
+  function doTesting() {
+    var test1Element = document.getElementById("test1");
+    var test1Rect = test1Element.getBoundingClientRect();
+
+    // Check the first and last characters of the basic div.
+    checkOffsetsFromPoint(Math.round(test1Rect.left + 1), Math.round(test1Rect.top + 1), 0);
+    checkOffsetsFromPoint(Math.round(test1Rect.left + test1Rect.width - 1), Math.round(test1Rect.top + 1), 13);
+
+    // Check a middle character in the second line of the div.
+    // To do this, we calculate 7em in from the left of the bounding
+    // box, and convert this to PX. (Hence the reason we need the AHEM
+    // font).
+    var pixelsLeft = convertEmToPx(7);
+    var test2Element = document.getElementById("test2");
+    var test2Rect = test2Element.getBoundingClientRect();
+    checkOffsetsFromPoint(Math.round(test2Rect.left + pixelsLeft + 1), Math.round(test2Rect.top + 1), 7);
+
+    // Check the first and last characters of the textarea.
+    var test3Element = document.getElementById('test3');
+    var test3Rect = test3Element.getBoundingClientRect();
+    checkOffsetsFromPoint(test3Rect.left + 1, test3Rect.top + 1, 0);
+    // xxxTODO: This test is disabled due to bug 824965.
+    //checkOffsetsFromPoint(Math.round(test3Rect.left + test3Rect.width - 1), Math.round(test3Rect.top + 1), 0);
+
+    // Check the first and last characters of the input.
+    var test4Element = document.getElementById('test4');
+    var test4Rect = test4Element.getBoundingClientRect();
+    checkOffsetsFromPoint(test4Rect.left + 1, test4Rect.top + 1, 0);
+    checkOffsetsFromPoint(Math.round(test4Rect.left + convertEmToPx(3)), Math.round(test4Rect.top + 10), 3);
+
+    // Check the first and last characters of the marquee.
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</head>
+<body onload="doTesting();">
+<div id="a" contenteditable><span id="test1">abc, abc, abc</span><br>
+<span id="test2" style="color: blue;">abc, abc, abc</span><br>
+<textarea id="test3">abc</textarea><input id="test4" value="abc"><br><br>
+<marquee>marquee</marquee>
+</div>
+</body>
+</html>

@@ -743,7 +743,7 @@ function testStaleList()
   };
 
   // Consider a match stale after one second.
-  prefBranch.setIntPref("urlclassifier.confirm-age", 1);
+  prefBranch.setIntPref("urlclassifier.max-complete-age", 1);
 
   // Apply the update.
   doStreamUpdate(update, function() {
@@ -752,7 +752,7 @@ function testStaleList()
       new Timer(3000, function() {
           // Now the lists should be marked stale.  Check assertions.
           checkAssertions(assertions, function() {
-              prefBranch.setIntPref("urlclassifier.confirm-age", 2700);
+              prefBranch.setIntPref("urlclassifier.max-complete-age", 2700);
               runNextTest();
             });
         }, updateError);
@@ -783,7 +783,7 @@ function testStaleListEmpty()
   };
 
   // Consider a match stale after one second.
-  prefBranch.setIntPref("urlclassifier.confirm-age", 1);
+  prefBranch.setIntPref("urlclassifier.max-complete-age", 1);
 
   // Apply the update.
   doStreamUpdate(update, function() {
@@ -792,7 +792,7 @@ function testStaleListEmpty()
       new Timer(3000, function() {
           // Now the lists should be marked stale.  Check assertions.
           checkAssertions(assertions, function() {
-              prefBranch.setIntPref("urlclassifier.confirm-age", 2700);
+              prefBranch.setIntPref("urlclassifier.max-complete-age", 2700);
               runNextTest();
             });
         }, updateError);

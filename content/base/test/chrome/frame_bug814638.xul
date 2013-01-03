@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=814638
+-->
+<window title="Mozilla Bug 814638"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset>
+    <key key="T" modifiers="control" oncommand="receivedKeyEvent()"/>
+  </keyset>
+
+  <iframe flex="1" src="about:"/>
+
+</window>

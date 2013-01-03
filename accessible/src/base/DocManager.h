@@ -60,14 +60,6 @@ public:
   Accessible* FindAccessibleInCache(nsINode* aNode) const;
 
   /**
-   * Return document accessible from the cache. Convenient method for testing.
-   */
-  inline DocAccessible* GetDocAccessibleFromCache(nsIDocument* aDocument) const
-  {
-    return mDocAccessibleCache.GetWeak(aDocument);
-  }
-
-  /**
    * Called by document accessible when it gets shutdown.
    */
   inline void NotifyOfDocumentShutdown(nsIDocument* aDocument)
@@ -153,6 +145,18 @@ private:
 
   DocAccessibleHashtable mDocAccessibleCache;
 };
+
+/**
+ * Return the existing document accessible for the document if any.
+ * Note this returns the doc accessible for the primary pres shell if there is
+ * more than one.
+ */
+inline DocAccessible*
+GetExistingDocAccessible(const nsIDocument* aDocument)
+{
+  nsIPresShell* ps = aDocument->GetShell();
+  return ps ? ps->GetDocAccessible() : nullptr;
+}
 
 } // namespace a11y
 } // namespace mozilla

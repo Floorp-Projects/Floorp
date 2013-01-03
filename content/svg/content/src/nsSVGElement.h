@@ -20,6 +20,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
+#include "nsSVGClass.h"
 
 class nsIDOMSVGElement;
 class nsIDOMSVGSVGElement;
@@ -36,6 +37,10 @@ class nsSVGSVGElement;
 class nsSVGViewBox;
 
 namespace mozilla {
+namespace dom {
+class CSSValue;
+}
+
 class SVGAnimatedNumberList;
 class SVGNumberList;
 class SVGAnimatedLengthList;
@@ -73,6 +78,9 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  virtual const nsAttrValue* DoGetClasses() const;
+  void DidAnimateClass();
 
   // nsIContent interface methods
 
@@ -114,6 +122,9 @@ public:
   NS_IMETHOD SetId(const nsAString & aId);
   NS_IMETHOD GetOwnerSVGElement(nsIDOMSVGSVGElement** aOwnerSVGElement);
   NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
+  NS_IMETHOD GetClassName(nsIDOMSVGAnimatedString** aClassName);
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  NS_IMETHOD GetPresentationAttribute(const nsAString& aName, nsIDOMCSSValue** aReturn);
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
@@ -287,7 +298,15 @@ public:
     return nullptr;
   }
 
+  // WebIDL
+  nsSVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
+  already_AddRefed<nsSVGElement> GetViewportElement();
+  already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
+  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& rv);
+  already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
 protected:
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap);
+
 #ifdef DEBUG
   // We define BeforeSetAttr here and mark it MOZ_FINAL to ensure it is NOT used
   // by SVG elements.
@@ -597,6 +616,8 @@ private:
   void UnsetAttrInternal(int32_t aNameSpaceID, nsIAtom* aAttribute,
                          bool aNotify);
 
+  nsSVGClass mClassAttribute;
+  nsAutoPtr<nsAttrValue> mClassAnimAttr;
   nsRefPtr<mozilla::css::StyleRule> mContentStyleRule;
 };
 
@@ -642,7 +663,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
   return rv;                                                                 \
 }
 
- // No unlinking, we'd need to null out the value pointer (the object it
+// No unlinking, we'd need to null out the value pointer (the object it
 // points to is held by the element) and null-check it everywhere.
 #define NS_SVG_VAL_IMPL_CYCLE_COLLECTION(_val, _element)                     \
 NS_IMPL_CYCLE_COLLECTION_CLASS(_val)                                         \
@@ -651,5 +672,17 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_val)                                \
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                        \
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_val)
 
+#define NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(_val, _element)       \
+NS_IMPL_CYCLE_COLLECTION_CLASS(_val)                                         \
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_val)                                  \
+NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER                            \
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                          \
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_val)                                \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_element)                                \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                           \
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                        \
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_val)                                   \
+NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER                             \
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 #endif // __NS_SVGELEMENT_H__

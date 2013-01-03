@@ -57,7 +57,7 @@ static PRLogModuleInfo* gnsDASHWebMODManagerLog = nullptr;
 nsDASHWebMODManager::nsDASHWebMODManager(MPD* aMpd)
 {
   MOZ_COUNT_CTOR(nsDASHWebMODManager);
-  NS_ENSURE_TRUE(aMpd,);
+  NS_ENSURE_TRUE_VOID(aMpd);
   mMpd = aMpd;
 #if defined(PR_LOGGING)
   if(!gnsDASHWebMODManagerLog)

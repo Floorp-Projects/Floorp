@@ -5,14 +5,14 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "nsIDOMSVGStopElement.h"
 #include "nsSVGNumber2.h"
 #include "nsGenericHTMLElement.h"
 
 using namespace mozilla;
 
-typedef nsSVGStylableElement nsSVGStopElementBase;
+typedef nsSVGElement nsSVGStopElementBase;
 
 class nsSVGStopElement : public nsSVGStopElementBase,
                          public nsIDOMSVGStopElement

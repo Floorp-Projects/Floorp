@@ -3,7 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
                 android:layout_height="47dip"
@@ -41,10 +40,5 @@
               android:singleLine="true"
               android:textColor="@color/abouthome_section_subtitle"
               android:duplicateParentState="true"/>
-
-    <View android:layout_width="fill_parent"
-          android:layout_height="1dp"
-          android:background="@drawable/abouthome_divider"
-          android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

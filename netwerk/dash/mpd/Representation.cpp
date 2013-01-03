@@ -85,7 +85,7 @@ Representation::GetHeight() const
 void
 Representation::AddBaseUrl(nsAString const& aUrl)
 {
-  NS_ENSURE_FALSE(aUrl.IsEmpty(),);
+  NS_ENSURE_FALSE_VOID(aUrl.IsEmpty());
   // Only add if it's not already in the array.
   if (!mBaseUrls.Contains(aUrl)) {
     mBaseUrls.AppendElement(aUrl);
@@ -108,7 +108,7 @@ Representation::GetSegmentBase() const
 void
 Representation::SetSegmentBase(SegmentBase* aBase)
 {
-  NS_ENSURE_TRUE(aBase,);
+  NS_ENSURE_TRUE_VOID(aBase);
   // Don't reassign if the ptrs or contents are equal.
   if (mSegmentBase != aBase
       || (mSegmentBase && (*mSegmentBase != *aBase))) {

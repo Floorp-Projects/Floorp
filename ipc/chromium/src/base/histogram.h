@@ -374,6 +374,8 @@ class Histogram {
     double log_sum_squares_; // sum of squares of logs of samples
 
    private:
+    void Accumulate(Sample value, Count count, size_t index);
+
     // Allow tests to corrupt our innards for testing purposes.
     FRIEND_TEST(HistogramTest, CorruptSampleCounts);
 

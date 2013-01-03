@@ -12,6 +12,9 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_satchel
+DIRS = \
+  browser \
+  $(NULL)
 
 XPCSHELL_TESTS = \
   unit \

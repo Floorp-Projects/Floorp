@@ -42,8 +42,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     inliningDepth(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
-    lazyArguments_(NULL),
-    callee_(NULL)
+    lazyArguments_(NULL)
 {
     script_.init(info->script());
     pc = info->startPC();
@@ -584,15 +583,6 @@ IonBuilder::initScopeChain()
 {
     MInstruction *scope = NULL;
 
-    // Add callee, it will be removed if it is not used by neither the scope
-    // chain nor the function body.
-    JSFunction *fun = info().fun();
-    if (fun) {
-        JS_ASSERT(!callee_);
-        callee_ = MCallee::New();
-        current->add(callee_);
-    }
-
     // If the script doesn't use the scopechain, then it's already initialized
     // from earlier.
     if (!script()->analysis()->usesScopeChain())
@@ -605,19 +595,22 @@ IonBuilder::initScopeChain()
     if (!script()->compileAndGo)
         return abort("non-CNG global scripts are not supported");
 
-    if (fun) {
-        scope = MFunctionEnvironment::New(callee_);
+    if (JSFunction *fun = info().fun()) {
+        MCallee *callee = MCallee::New();
+        current->add(callee);
+
+        scope = MFunctionEnvironment::New(callee);
         current->add(scope);
 
         // This reproduce what is done in CallObject::createForFunction
         if (fun->isHeavyweight()) {
             if (fun->isNamedLambda()) {
-                scope = createDeclEnvObject(callee_, scope);
+                scope = createDeclEnvObject(callee, scope);
                 if (!scope)
                     return false;
             }
 
-            scope = createCallObject(callee_, scope);
+            scope = createCallObject(callee, scope);
             if (!scope)
                 return false;
         }
@@ -842,6 +835,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DEFCONST:
         return jsop_defvar(GET_UINT32_INDEX(pc));
 
+      case JSOP_DEFFUN:
+        return jsop_deffun(GET_UINT32_INDEX(pc));
+
       case JSOP_EQ:
       case JSOP_NE:
       case JSOP_STRICTEQ:
@@ -1051,9 +1047,12 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_this();
 
       case JSOP_CALLEE:
-        JS_ASSERT(callee_);
-        current->push(callee_);
+      {
+        MCallee *callee = MCallee::New();
+        current->add(callee);
+        current->push(callee);
         return true;
+      }
 
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
@@ -4561,7 +4560,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     RootedShape shape(cx);
     RootedId id(cx, NameToId(name));
     bool res = LookupPropertyWithFlags(cx, templateObject, id,
-                                       JSRESOLVE_QUALIFIED, &holder, &shape);
+                                       0, &holder, &shape);
     if (!res)
         return false;
 
@@ -5103,6 +5102,11 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
             current->pop();
             current->add(replace);
             current->push(replace);
+            if (replace->acceptsTypeSet())
+                replace->setTypeSet(cloneTypeSet(actual));
+        } else {
+            if (ins->acceptsTypeSet())
+                ins->setTypeSet(cloneTypeSet(actual));
         }
         return true;
     }
@@ -5151,7 +5155,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
 // Test the type of values returned by a VM call. This is an optimized version
 // of calling TypeScript::Monitor inside such stubs.
 void
-IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::TypeSet *types)
+IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *barrier, types::StackTypeSet *types)
 {
     // MonitorTypes is redundant if we will also add a type barrier.
     if (barrier)
@@ -6770,7 +6774,7 @@ IonBuilder::jsop_defvar(uint32_t index)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
 
-    PropertyName *name = script()->getName(index);
+    RootedPropertyName name(cx, script()->getName(index));
 
     // Bake in attrs.
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
@@ -6785,6 +6789,19 @@ IonBuilder::jsop_defvar(uint32_t index)
     current->add(defvar);
 
     return resumeAfter(defvar);
+}
+
+bool
+IonBuilder::jsop_deffun(uint32_t index)
+{
+    RootedFunction fun(cx, script()->getFunction(index));
+
+    JS_ASSERT(script()->analysis()->usesScopeChain());
+
+    MDefFun *deffun = MDefFun::New(fun, current->scopeChain());
+    current->add(deffun);
+
+    return resumeAfter(deffun);
 }
 
 bool
@@ -7081,8 +7098,8 @@ IonBuilder::addShapeGuard(MDefinition *obj, const UnrootedShape shape, BailoutKi
     return guard;
 }
 
-const types::TypeSet *
-IonBuilder::cloneTypeSet(const types::TypeSet *types)
+const types::StackTypeSet *
+IonBuilder::cloneTypeSet(const types::StackTypeSet *types)
 {
     if (!js_IonOptions.parallelCompilation)
         return types;

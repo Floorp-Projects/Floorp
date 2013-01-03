@@ -5,6 +5,10 @@
 
 var FullScreen = {
   _XULNS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+  get _fullScrToggler() {
+    delete this._fullScrToggler;
+    return this._fullScrToggler = document.getElementById("fullscr-toggler");
+  },
   toggle: function (event) {
     var enterFS = window.fullScreen;
 
@@ -46,15 +50,8 @@ var FullScreen = {
       // events than raw listening of mouse coords. We don't add the toolbar in DOM full-screen
       // mode, only browser full-screen mode.
       if (!document.mozFullScreen) {
-        let fullScrToggler = document.getElementById("fullscr-toggler");
-        if (!fullScrToggler) {
-          fullScrToggler = document.createElement("hbox");
-          fullScrToggler.id = "fullscr-toggler";
-          fullScrToggler.collapsed = true;
-          gNavToolbox.parentNode.insertBefore(fullScrToggler, gNavToolbox.nextSibling);
-        }
-        fullScrToggler.addEventListener("mouseover", this._expandCallback, false);
-        fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
+        this._fullScrToggler.addEventListener("mouseover", this._expandCallback, false);
+        this._fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
       }
       if (gPrefService.getBoolPref("browser.fullscreen.autohide"))
         gBrowser.mPanelContainer.addEventListener("mousemove",
@@ -152,13 +149,10 @@ var FullScreen = {
     this._cancelAnimation();
     this.mouseoverToggle(false);
 
-    // If there's a full-screen toggler, remove its listeners, so that mouseover
+    // Remove listeners on the full-screen toggler, so that mouseover
     // the top of the screen will not cause the toolbar to re-appear.
-    let fullScrToggler = document.getElementById("fullscr-toggler");
-    if (fullScrToggler) {
-      fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
-      fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
-    }
+    this._fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
+    this._fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
   },
 
   cleanup: function () {
@@ -170,11 +164,8 @@ var FullScreen = {
       document.removeEventListener("popuphidden", this._setPopupOpen, false);
       gPrefService.removeObserver("browser.fullscreen", this);
 
-      let fullScrToggler = document.getElementById("fullscr-toggler");
-      if (fullScrToggler) {
-        fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
-        fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
-      }
+      this._fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
+      this._fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
       this.cancelWarning();
       gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
       gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
@@ -506,10 +497,7 @@ var FullScreen = {
     gNavToolbox.style.marginTop =
       aShow ? "" : -gNavToolbox.getBoundingClientRect().height + "px";
 
-    let toggler = document.getElementById("fullscr-toggler");
-    if (toggler) {
-      toggler.collapsed = aShow;
-    }
+    this._fullScrToggler.collapsed = aShow;
     this._isChromeCollapsed = !aShow;
     if (gPrefService.getIntPref("browser.fullscreen.animateUp") == 2)
       this._shouldAnimate = true;

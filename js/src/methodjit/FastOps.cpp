@@ -2492,7 +2492,7 @@ mjit::Compiler::jsop_initprop()
 #ifdef DEBUG
     bool res =
 #endif
-    LookupPropertyWithFlags(cx, baseobj, id, JSRESOLVE_QUALIFIED, &holder, &shape);
+    LookupPropertyWithFlags(cx, baseobj, id, 0, &holder, &shape);
     JS_ASSERT(res && shape && holder == baseobj);
 
     RegisterID objReg = frame.copyDataIntoReg(obj);

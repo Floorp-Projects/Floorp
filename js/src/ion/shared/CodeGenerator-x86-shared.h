@@ -63,7 +63,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     Operand createArrayElementOperand(Register elements, const LAllocation *index);
 
-    void emitCompare(MIRType type, const LAllocation *left, const LAllocation *right);
+    void emitCompare(MCompare::CompareType type, const LAllocation *left, const LAllocation *right);
 
     // Emits a conditional set.
     void emitSet(Assembler::Condition cond, const Register &dest,
