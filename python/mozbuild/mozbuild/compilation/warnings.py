@@ -27,7 +27,7 @@ RE_CLANG_WARNING = re.compile(r"""
     (?P<column>\d+)
     :
     \swarning:\s
-    (?P<message>[^\[]+)
+    (?P<message>.+)
     \[(?P<flag>[^\]]+)
     """, re.X)
 
