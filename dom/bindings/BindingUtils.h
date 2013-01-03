@@ -193,7 +193,7 @@ UnwrapObject(JSContext* cx, JSObject* obj, U& value)
 }
 
 inline bool
-IsArrayLike(JSContext* cx, JSObject* obj)
+IsNotDateOrRegExp(JSContext* cx, JSObject* obj)
 {
   MOZ_ASSERT(obj);
   // For simplicity, check for security wrappers up front.  In case we
@@ -214,17 +214,34 @@ IsArrayLike(JSContext* cx, JSObject* obj)
   return !JS_ObjectIsDate(cx, obj) && !JS_ObjectIsRegExp(cx, obj);
 }
 
+MOZ_ALWAYS_INLINE bool
+IsArrayLike(JSContext* cx, JSObject* obj)
+{
+  return IsNotDateOrRegExp(cx, obj);
+}
+
+MOZ_ALWAYS_INLINE bool
+IsConvertibleToDictionary(JSContext* cx, JSObject* obj)
+{
+  return IsNotDateOrRegExp(cx, obj);
+}
+
+MOZ_ALWAYS_INLINE bool
+IsConvertibleToDictionary(JSContext* cx, JS::Value val)
+{
+  return val.isNullOrUndefined() ||
+    (val.isObject() && IsConvertibleToDictionary(cx, &val.toObject()));
+}
+
 inline bool
 IsPlatformObject(JSContext* cx, JSObject* obj)
 {
-  // XXXbz Should be treating list-binding objects as platform objects
-  // too?  The one consumer so far wants non-array-like platform
-  // objects, so listbindings that have an indexGetter should test
-  // false from here.  Maybe this function should have a different
-  // name?
   MOZ_ASSERT(obj);
-  // Fast-path the common case
+  // Fast-path the common cases
   JSClass* clasp = js::GetObjectJSClass(obj);
+  if (js::Valueify(clasp) == &js::ObjectClass) {
+    return false;
+  }
   if (IsDOMClass(clasp)) {
     return true;
   }
