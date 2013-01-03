@@ -247,6 +247,7 @@ public class TabsPanel extends TabHost
                 for (Tab tab : Tabs.getInstance().getTabsInOrder()) {
                     Tabs.getInstance().closeTab(tab);
                 }
+                autoHidePanel();
                 return true;
 
             case R.id.new_tab:
