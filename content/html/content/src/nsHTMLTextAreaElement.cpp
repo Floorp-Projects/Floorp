@@ -97,6 +97,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
   virtual bool RestoreState(nsPresState* aState);
+  virtual bool IsDisabledForEvents(uint32_t aMessage);
 
   virtual void FieldSetDisabledChanged(bool aNotify);
 
@@ -665,17 +666,22 @@ nsHTMLTextAreaElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
-nsresult
-nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+bool
+nsHTMLTextAreaElement::IsDisabledForEvents(uint32_t aMessage)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = NULL;
   if (formControlFrame) {
     formFrame = do_QueryFrame(formControlFrame);
   }
+  return IsElementDisabledForEvents(aMessage, formFrame);
+}
 
+nsresult
+nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
   aVisitor.mCanHandle = false;
-  if (IsElementDisabledForEvents(aVisitor.mEvent->message, formFrame)) {
+  if (IsDisabledForEvents(aVisitor.mEvent->message)) {
     return NS_OK;
   }
 

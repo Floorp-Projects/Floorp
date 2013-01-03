@@ -51,6 +51,7 @@ public:
   NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_FIELDSET; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
+  virtual bool IsDisabledForEvents(uint32_t aMessage);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
