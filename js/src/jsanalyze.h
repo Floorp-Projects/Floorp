@@ -247,7 +247,6 @@ BytecodeNoFallThrough(JSOp op)
       case JSOP_RETRVAL:
       case JSOP_THROW:
       case JSOP_TABLESWITCH:
-      case JSOP_LOOKUPSWITCH:
       case JSOP_FILTER:
         return true;
       case JSOP_GOSUB:

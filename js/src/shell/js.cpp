@@ -1715,14 +1715,6 @@ UpdateSwitchTableBounds(JSContext *cx, HandleScript script, unsigned offset,
         n = high - low + 1;
         break;
 
-      case JSOP_LOOKUPSWITCH:
-        jmplen = JUMP_OFFSET_LEN;
-        pc += jmplen;
-        n = GET_UINT16(pc);
-        pc += UINT16_LEN;
-        jmplen += JUMP_OFFSET_LEN;
-        break;
-
       default:
         /* [condswitch] switch does not have any jump or lookup tables. */
         JS_ASSERT(op == JSOP_CONDSWITCH);
