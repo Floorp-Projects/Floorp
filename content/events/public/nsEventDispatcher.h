@@ -100,15 +100,17 @@ public:
                          nsEventStatus aEventStatus,
                          bool aIsInAnon)
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
-    mCanHandle(true), mForceContentDispatch(false),
-    mRelatedTargetIsInAnon(false), mOriginalTargetIsInAnon(aIsInAnon),
-    mWantsWillHandleEvent(false), mMayHaveListenerManager(true),
-    mParentTarget(nullptr), mEventTargetAtParent(nullptr) {}
+    mCanHandle(true), mAutomaticChromeDispatch(true),
+    mForceContentDispatch(false), mRelatedTargetIsInAnon(false),
+    mOriginalTargetIsInAnon(aIsInAnon), mWantsWillHandleEvent(false),
+    mMayHaveListenerManager(true), mParentTarget(nullptr),
+    mEventTargetAtParent(nullptr) {}
 
   void Reset() {
     mItemFlags = 0;
     mItemData = nullptr;
     mCanHandle = true;
+    mAutomaticChromeDispatch = true;
     mForceContentDispatch = false;
     mWantsWillHandleEvent = false;
     mMayHaveListenerManager = true;
@@ -123,6 +125,12 @@ public:
    * mCanHandle to false is NOT included in the event target chain.
    */
   bool                  mCanHandle;
+
+  /**
+   * If mCanHandle is false and mAutomaticChromeDispatch is also false
+   * event will not be dispatched to the chrome event handler.
+   */
+  bool                  mAutomaticChromeDispatch;
 
   /**
    * If mForceContentDispatch is set to true,

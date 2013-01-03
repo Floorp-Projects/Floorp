@@ -1126,6 +1126,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             // Stop building the event target chain for the original event.
             // We don't want it to propagate to any DOM nodes.
             aVisitor.mCanHandle = false;
+            aVisitor.mAutomaticChromeDispatch = false;
 
             // XXX sXBL/XBL2 issue! Owner or current document?
             nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetCurrentDoc()));
