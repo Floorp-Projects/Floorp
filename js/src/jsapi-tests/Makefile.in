@@ -39,6 +39,7 @@ CPPSRCS = \
   testFindSCCs.cpp \
   testFuncCallback.cpp \
   testFunctionProperties.cpp \
+  testGCFinalizeCallback.cpp \
   testGCOutOfMemory.cpp \
   testGetPropertyDefault.cpp \
   testHashTable.cpp \
