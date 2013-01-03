@@ -36,17 +36,16 @@ function write_datafile(status, entry)
   var os = entry.openOutputStream(0);
   var data = gen_1MiB();
 
-  // max size in MB
-  var max_size = get_pref_service().
-                 getIntPref("browser.cache.disk.max_entry_size") / 1024;
-
-  // write larger entry than is allowed
+  // write 2MiB
   var i;
-  for (i=0 ; i<(max_size+1) ; i++)
+  for (i=0 ; i<2 ; i++)
     write_and_check(os, data, data.length);
 
   os.close();
   entry.close();
+
+  // now change max_entry_size so that the existing entry is too big
+  get_pref_service().setIntPref("browser.cache.disk.max_entry_size", 1024);
 
   // append to entry
   asyncOpenCacheEntry("data",
@@ -87,10 +86,9 @@ function run_test() {
   // clear the cache
   evict_cache_entries();
 
-  // force to write file bigger than 5MiB
   asyncOpenCacheEntry("data",
                       "HTTP",
-                      Ci.nsICache.STORE_ON_DISK_AS_FILE,
+                      Ci.nsICache.STORE_ON_DISK,
                       Ci.nsICache.ACCESS_WRITE,
                       write_datafile);
 

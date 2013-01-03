@@ -163,8 +163,7 @@ public:
     bool IsAllowedOnDisk()
     {
         return !IsPrivate() && ((StoragePolicy() == nsICache::STORE_ANYWHERE) ||
-            (StoragePolicy() == nsICache::STORE_ON_DISK) ||
-            (StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE));
+            (StoragePolicy() == nsICache::STORE_ON_DISK));
     }
 
     bool IsAllowedOffline()

@@ -33,7 +33,6 @@ protected:
     nsCOMPtr<nsIDownloadObserver> mObserver;
     nsCOMPtr<nsIFile>             mLocation;
     nsCOMPtr<nsIOutputStream>     mSink;
-    nsCOMPtr<nsISupports>         mCacheToken;
     bool                          mLocationIsTemp;
 };
 

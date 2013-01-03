@@ -63,7 +63,7 @@ function run_test() {
 
   asyncOpenCacheEntry("data",
                       "HTTP",
-                      Ci.nsICache.STORE_ON_DISK_AS_FILE,
+                      Ci.nsICache.STORE_ON_DISK,
                       Ci.nsICache.ACCESS_WRITE,
                       write_datafile);
 
