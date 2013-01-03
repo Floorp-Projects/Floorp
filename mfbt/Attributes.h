@@ -110,15 +110,15 @@
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
 #  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
 #elif defined(_MSC_VER)
-#  if _MSC_VER >= 1400
-#    define MOZ_HAVE_CXX11_OVERRIDE
-     /* MSVC currently spells "final" as "sealed". */
-#    define MOZ_HAVE_CXX11_FINAL         sealed
-#    define MOZ_HAVE_CXX11_ENUM_TYPE
-#  endif
 #  if _MSC_VER >= 1700
+#    define MOZ_HAVE_CXX11_FINAL         final
 #    define MOZ_HAVE_CXX11_STRONG_ENUMS
+#  else
+     /* MSVC <= 10 used to spell "final" as "sealed". */
+#    define MOZ_HAVE_CXX11_FINAL         sealed
 #  endif
+#  define MOZ_HAVE_CXX11_OVERRIDE
+#  define MOZ_HAVE_CXX11_ENUM_TYPE
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
 #endif

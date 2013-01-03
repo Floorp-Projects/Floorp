@@ -93,10 +93,16 @@ Tracker.prototype = {
     }, 1000, this, "_lazySave");
   },
 
-  loadChangedIDs: function T_loadChangedIDs() {
+  loadChangedIDs: function (cb) {
     Utils.jsonLoad("changes/" + this.file, this, function(json) {
-      if (json) {
+      if (json && (typeof(json) == "object")) {
         this.changedIDs = json;
+      } else {
+        this._log.warn("Changed IDs file " + this.file + " contains non-object value.");
+        json = null;
+      }
+      if (cb) {
+        cb.call(this, json);
       }
     });
   },

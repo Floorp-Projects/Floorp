@@ -220,7 +220,13 @@ AsyncResource.prototype = {
     let listener = new ChannelListener(this._onComplete, this._onProgress,
                                        this._log, this.ABORT_TIMEOUT);
     channel.requestMethod = action;
-    channel.asyncOpen(listener, null);
+    try {
+      channel.asyncOpen(listener, null);
+    } catch (ex) {
+      // asyncOpen can throw in a bunch of cases -- e.g., a forbidden port.
+      this._log.warn("Caught an error in asyncOpen: " + CommonUtils.exceptionStr(ex));
+      CommonUtils.nextTick(callback.bind(this, ex));
+    }
   },
 
   _onComplete: function _onComplete(error, data, channel) {
@@ -285,13 +291,17 @@ AsyncResource.prototype = {
 
       // This is a server-side safety valve to allow slowing down
       // clients without hurting performance.
-      if (headers["x-weave-backoff"])
+      if (headers["x-weave-backoff"]) {
+        let backoff = headers["x-weave-backoff"];
+        this._log.debug("Got X-Weave-Backoff: " + backoff);
         Observers.notify("weave:service:backoff:interval",
-                         parseInt(headers["x-weave-backoff"], 10));
+                         parseInt(backoff, 10));
+      }
 
-      if (success && headers["x-weave-quota-remaining"])
+      if (success && headers["x-weave-quota-remaining"]) {
         Observers.notify("weave:service:quota:remaining",
                          parseInt(headers["x-weave-quota-remaining"], 10));
+      }
     } catch (ex) {
       this._log.debug("Caught exception " + CommonUtils.exceptionStr(ex) +
                       " visiting headers in _onComplete.");

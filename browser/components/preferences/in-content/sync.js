@@ -117,7 +117,7 @@ let gSyncPane = {
    *          "reset" -- reset sync
    */
   openSetup: function (wizardType) {
-    var win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
+    let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
     if (win)
       win.focus();
     else {
@@ -150,6 +150,6 @@ let gSyncPane = {
 
   resetSync: function () {
     this.openSetup("reset");
-  }
-}
+  },
+};
 

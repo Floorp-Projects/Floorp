@@ -53,8 +53,6 @@ function MediaStreamPlayback(mediaElement, mediaStream) {
 
       is(self.mediaElement.paused, false,
         "Media element should be playing");
-      is(self.mediaElement.ended, false,
-        "Media element should not have ended");
       is(self.mediaElement.duration, Number.POSITIVE_INFINITY,
         "Duration should be infinity");
 
@@ -69,14 +67,6 @@ function MediaStreamPlayback(mediaElement, mediaStream) {
          "Seekable length shall be zero");
       is(self.mediaElement.buffered.length, 0,
          "Buffered length shall be zero");
-      is(self.mediaElement.played.length, 1, "Played length shall be one");
-
-      if(self.mediaElement.played.length > 0) {
-        is(self.mediaElement.played.start(0), 0,
-          "Played start shall be zero");
-        is(self.mediaElement.played.end(0), self.mediaElement.currentTime,
-          "End shall be current time");
-      }
 
       is(self.mediaElement.seeking, false,
          "MediaElement is not seekable with MediaStream");
