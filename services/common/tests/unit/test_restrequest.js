@@ -90,6 +90,22 @@ add_test(function test_proxy_auth_redirect() {
 });
 
 /**
+ * Ensure that failures that cause asyncOpen to throw
+ * result in callbacks being invoked.
+ * Bug 826086.
+ */
+add_test(function test_forbidden_port() {
+  let request = new RESTRequest("http://localhost:6000/");
+  request.get(function(error) {
+    if (!error) {
+      do_throw("Should have got an error.");
+    }
+    do_check_eq(error.result, Components.results.NS_ERROR_PORT_ACCESS_NOT_ALLOWED);
+    run_next_test();
+  });
+});
+
+/**
  * Demonstrate API short-hand: create a request and dispatch it immediately.
  */
 add_test(function test_simple_get() {
