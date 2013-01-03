@@ -3734,7 +3734,7 @@ dnl __cxa_finalize. The custom linker actually takes care of calling
 dnl __cxa_finalize when the library doesn't call it itself, which makes it
 dnl safe not to link crtbegin. Besides, previous versions of the NDK didn't
 dnl link crtbegin and crtend at all.
-if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$OS_TARGET" = "Android"; then
+if test -n "$MOZ_LINKER" -a "$OS_TARGET" = "Android"; then
   AC_CACHE_CHECK([whether the CRT objects have text relocations],
     ac_cv_crt_has_text_relocations,
     [echo 'int foo() { return 0; }' > conftest.cpp
@@ -4611,9 +4611,6 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    if test "$MOZ_BUILD_APP" = "mobile/xul"; then
-        MOZ_OLD_LINKER=1
-    fi
     ;;
 
 cairo-gonk)
@@ -4629,7 +4626,6 @@ cairo-gonk)
 
 esac
 
-AC_SUBST(MOZ_OLD_LINKER)
 AC_SUBST(MOZ_PDF_PRINTING)
 if test "$MOZ_PDF_PRINTING"; then
    PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
@@ -7288,9 +7284,6 @@ dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
-    if test -n "$MOZ_OLD_LINKER"; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
-    fi
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl--wrap=PR_GetEnv,--wrap=PR_SetEnv"
     if test -z "$gonkdir"; then
@@ -9275,7 +9268,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
     ac_configure_args="$ac_configure_args $NSPR_CONFIGURE_ARGS"
-    if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$ac_cv_func_dladdr" = no ; then
+    if test -n "$MOZ_LINKER" -a "$ac_cv_func_dladdr" = no ; then
       # dladdr is supported by the new linker, even when the system linker doesn't
       # support it. Trick nspr into using dladdr when it's not supported.
       _SAVE_CPPFLAGS="$CPPFLAGS"
@@ -9285,7 +9278,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     export LDFLAGS="$LDFLAGS $NSPR_LDFLAGS"
     AC_OUTPUT_SUBDIRS(nsprpub)
     LDFLAGS="$_SAVE_LDFLAGS"
-    if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$ac_cv_func_dladdr" = no; then
+    if test -n "$MOZ_LINKER" -a "$ac_cv_func_dladdr" = no; then
       unset CPPFLAGS
       CPPFLAGS="$_SAVE_CFLAGS"
     fi

@@ -13,34 +13,7 @@ MODULE           = android
 LIBRARY_NAME     = android
 FORCE_STATIC_LIB = 1
 
-CSRCS =
-
-ifdef MOZ_OLD_LINKER
-DEFINES += \
-  -DLINKER_DEBUG=0 \
-  -DLINKER_TEXT_BASE=0xB0001000 \
-  -DLINKER_AREA_SIZE=0x01000000 \
-  $(NULL)
-
-ifeq ($(CPU_ARCH),arm)
-DEFINES += -DANDROID_ARM_LINKER
-else
-ifeq ($(CPU_ARCH),x86)
-DEFINES += -DANDROID_X86_LINKER
-endif
-endif
-
-CSRCS += \
-  ba.c \
-  debugger.c \
-  dlfcn.c \
-  linker.c \
-  linker_format.c \
-  rt.c \
-  $(NULL)
-endif
-
-CSRCS += \
+CSRCS = \
   ev_streams.c \
   ev_timers.c \
   getaddrinfo.c \

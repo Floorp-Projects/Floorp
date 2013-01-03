@@ -8,9 +8,7 @@
 #include <android/log.h>
 #include "dlfcn.h"
 #include "APKOpen.h"
-#ifndef MOZ_OLD_LINKER
 #include "ElfLoader.h"
-#endif
 #include "SQLiteBridge.h"
 
 #ifdef DEBUG
