@@ -43,11 +43,11 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
     if (desc->obj && PropIsFromStandardPrototype(cx, desc))
         desc->obj = NULL;
 
-    // If we found something, were doing a set, or have no proto, we're done.
+    // If we found something or have no proto, we're done.
     JSObject *wrapperProto;
     if (!JS_GetPrototype(cx, wrapper, &wrapperProto))
       return false;
-    if (desc->obj || (flags & JSRESOLVE_ASSIGNING) || !wrapperProto)
+    if (desc->obj || !wrapperProto)
         return true;
 
     // If not, try doing the lookup on the prototype.
