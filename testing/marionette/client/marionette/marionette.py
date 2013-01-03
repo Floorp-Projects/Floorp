@@ -210,10 +210,6 @@ class Marionette(object):
             self.session = None
             self.window = None
             self.client.close()
-            if self.emulator:
-                port = self.emulator.restart(self.local_port)
-                if port is not None:
-                    self.port = self.client.port = port
             raise TimeoutException(message='socket.timeout', status=ErrorCodes.TIMEOUT, stacktrace=None)
 
         # Process any emulator commands that are sent from a script
