@@ -367,24 +367,6 @@ DefineUnforgeableAttributes(JSContext* cx, JSObject* obj,
 bool
 DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties);
 
-// If *vp is a gcthing and is not in the compartment of cx, wrap *vp
-// into the compartment of cx (typically by replacing it with an Xray or
-// cross-compartment wrapper around the original object).
-inline bool
-MaybeWrapValue(JSContext* cx, JS::Value* vp)
-{
-  if (vp->isGCThing()) {
-    void* gcthing = vp->toGCThing();
-    // Might be null if vp.isNull() :(
-    if (gcthing &&
-        js::GetGCThingCompartment(gcthing) != js::GetContextCompartment(cx)) {
-      return JS_WrapValue(cx, vp);
-    }
-  }
-
-  return true;
-}
-
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \
   template<typename V> static yes& Check(char (*)[(&V::_name == 0) + 1])
@@ -518,6 +500,42 @@ SetSystemOnlyWrapper(JSObject* obj, nsWrapperCache* cache, JSObject& wrapper)
 {
   SetSystemOnlyWrapperSlot(obj, JS::ObjectValue(wrapper));
   cache->SetHasSystemOnlyWrapper();
+}
+
+// If *vp is a gcthing and is not in the compartment of cx, wrap *vp
+// into the compartment of cx (typically by replacing it with an Xray or
+// cross-compartment wrapper around the original object).
+MOZ_ALWAYS_INLINE bool
+MaybeWrapValue(JSContext* cx, JS::Value* vp)
+{
+  if (vp->isGCThing()) {
+    void* gcthing = vp->toGCThing();
+    // Might be null if vp.isNull() :(
+    if (gcthing &&
+        js::GetGCThingCompartment(gcthing) != js::GetContextCompartment(cx)) {
+      return JS_WrapValue(cx, vp);
+    }
+
+    // We're same-compartment, but even then we might need to wrap
+    // objects specially.  Check for that.
+    if (vp->isObject()) {
+      JSObject* obj = &vp->toObject();
+      if (GetSameCompartmentWrapperForDOMBinding(obj)) {
+        // We're a new-binding object, and "obj" now points to the right thing
+        *vp = JS::ObjectValue(*obj);
+        return true;
+      }
+
+      if (!IS_SLIM_WRAPPER(obj)) {
+        // We might need a SOW
+        return JS_WrapValue(cx, vp);
+      }
+
+      // Fall through to returning true
+    }
+  }
+
+  return true;
 }
 
 static inline void
