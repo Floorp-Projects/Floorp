@@ -315,15 +315,6 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
   mDecoder->SetTransportSeekable(seekable);
   mCacheStream.SetTransportSeekable(seekable);
 
-  nsCOMPtr<nsICachingChannel> cc = do_QueryInterface(aRequest);
-  if (cc) {
-    bool fromCache = false;
-    rv = cc->IsFromCache(&fromCache);
-    if (NS_SUCCEEDED(rv) && !fromCache) {
-      cc->SetCacheAsFile(true);
-    }
-  }
-
   {
     MutexAutoLock lock(mLock);
     mChannelStatistics->Start();
