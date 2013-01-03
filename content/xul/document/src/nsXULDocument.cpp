@@ -249,12 +249,6 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kNC_persist);
         NS_IF_RELEASE(kNC_attribute);
         NS_IF_RELEASE(kNC_value);
-
-        // Remove the current document here from the table in
-        // case the document did not make it past StartLayout in
-        // ResumeWalk. 
-        if (mDocumentURI)
-            nsXULPrototypeCache::GetInstance()->RemoveFromCacheSet(mDocumentURI);
     }
 }
 

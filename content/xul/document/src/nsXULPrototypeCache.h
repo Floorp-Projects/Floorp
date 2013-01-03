@@ -91,11 +91,6 @@ public:
     nsresult PutStyleSheet(nsCSSStyleSheet* aStyleSheet);
 
     /**
-     * Remove a XUL document from the set of loading documents.
-     */
-    void RemoveFromCacheSet(nsIURI* aDocumentURI);
-
-    /**
      * Write the XUL prototype document to a cache file. The proto must be
      * fully loaded.
      */
