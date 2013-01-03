@@ -131,6 +131,13 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
                         help = "location of libraries to push -- preferably stripped")
         defaults["local_lib"] = None
 
+        self.add_option("--remoteTestRoot", action = "store",
+                    type = "string", dest = "remote_test_root",
+                    help = "remote directory to use as test root (eg. /data/local/tests)")
+        # /data/local/tests is used because it is usually not possible to set +x permissions
+        # on binaries on /mnt/sdcard
+        defaults["remote_test_root"] = "/data/local/tests"
+
         self.set_defaults(**defaults)
 
 def main():
@@ -150,11 +157,11 @@ def main():
         sys.exit(1)
     if options.dm_trans == "adb":
         if options.device_ip:
-            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None)
+            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None, deviceRoot=options.remote_test_root)
         else:
-            dm = devicemanagerADB.DeviceManagerADB(packageName=None)
+            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root)
     else:
-        dm = devicemanagerSUT.DeviceManagerSUT(options.device_ip, options.device_port)
+        dm = devicemanagerSUT.DeviceManagerSUT(options.device_ip, options.device_port, deviceRoot=options.remote_test_root)
         if not options.device_ip:
             print "Error: you must provide a device IP to connect to via the --deviceIP option"
             sys.exit(1)
