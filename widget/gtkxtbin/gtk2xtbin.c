@@ -237,17 +237,13 @@ gtk_xtbin_realize (GtkWidget *widget)
   printf("initial allocation %d %d %d %d\n", x, y, w, h);
 #endif
 
-  xtbin->width = widget->allocation.width;
-  xtbin->height = widget->allocation.height;
-
   /* use GtkSocket's realize */
   (*GTK_WIDGET_CLASS(parent_class)->realize)(widget);
 
   /* create the Xt client widget */
   xt_client_create(&(xtbin->xtclient), 
        gtk_socket_get_id(GTK_SOCKET(xtbin)), 
-       xtbin->height, 
-       xtbin->width);
+       h, w);
   xtbin->xtwindow = XtWindow(xtbin->xtclient.child_widget);
 
   gdk_flush();
@@ -312,42 +308,6 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
   gdk_window_set_back_pixmap(GTK_WIDGET(xtbin)->window, NULL, FALSE);
 
   return GTK_WIDGET (xtbin);
-}
-
-void
-gtk_xtbin_resize (GtkWidget *widget,
-                  gint       width,
-                  gint       height)
-{
-  Arg args[2];
-  GtkXtBin *xtbin = GTK_XTBIN (widget);
-  GtkAllocation allocation;
-
-#ifdef DEBUG_XTBIN
-  printf("gtk_xtbin_resize %p %d %d\n", (void *)widget, width, height);
-#endif
-
-  xtbin->height = height;
-  xtbin->width  = width;
-
-  /* Avoid BadValue errors in XtSetValues */
-  if (height <= 0 || width <=0) {
-    height = 1;
-    width = 1;
-  }
-  XtSetArg(args[0], XtNheight, height);
-  XtSetArg(args[1], XtNwidth,  width);
-  if (xtbin->xtclient.top_widget)
-    XtSetValues(xtbin->xtclient.top_widget, args, 2);
-
-  /* we need to send a size allocate so the socket knows about the
-     size changes */
-  allocation.x = 0;
-  allocation.y = 0;
-  allocation.width = xtbin->width;
-  allocation.height = xtbin->height;
-
-  gtk_widget_size_allocate(widget, &allocation);
 }
 
 static void
@@ -582,8 +542,8 @@ xt_client_create ( XtClient* xtclient ,
 
   /* listen to all Xt events */
   XSelectInput(xtclient->xtdisplay, 
-               XtWindow(top_widget), 
-               0x0FFFFF);
+               embedderid, 
+               XtBuildEventMask(top_widget));
   xt_client_set_info (child_widget, 0);
 
   XtManageChild(child_widget);
