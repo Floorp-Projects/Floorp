@@ -55,7 +55,6 @@ DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 
 //----------------------------------------------------------------------
 
-StartupCache*   nsXULPrototypeCache::gStartupCache = nullptr;
 nsXULPrototypeCache*  nsXULPrototypeCache::sInstance = nullptr;
 
 
@@ -103,12 +102,6 @@ nsXULPrototypeCache::GetInstance()
 		
     }
     return sInstance;
-}
-
-/* static */ StartupCache*
-nsXULPrototypeCache::GetStartupCache()
-{
-    return gStartupCache;
 }
 
 //----------------------------------------------------------------------
@@ -366,11 +359,6 @@ nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
 {
     nsresult rv = NS_OK, rv2 = NS_OK;
 
-    // We're here before the startupcache service has been initialized, probably because
-    // of the profile manager. Bail quietly, don't worry, we'll be back later.
-    if (!gStartupCache)
-        return NS_OK;
-
     nsCOMPtr<nsIURI> protoURI = aPrototypeDocument->GetURI();
 
     // Remove this document from the cache table. We use the table's
@@ -399,11 +387,12 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
     nsAutoArrayPtr<char> buf;
     uint32_t len;
     nsCOMPtr<nsIObjectInputStream> ois;
-    if (!gStartupCache)
+    StartupCache* sc = StartupCache::GetSingleton();
+    if (!sc)
         return NS_ERROR_NOT_AVAILABLE;
-    
-    rv = gStartupCache->GetBuffer(spec.get(), getter_Transfers(buf), &len);
-    if (NS_FAILED(rv)) 
+
+    rv = sc->GetBuffer(spec.get(), getter_Transfers(buf), &len);
+    if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
 
     rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
@@ -450,9 +439,10 @@ nsresult
 nsXULPrototypeCache::FinishOutputStream(nsIURI* uri) 
 {
     nsresult rv;
-    if (!gStartupCache)
+    StartupCache* sc = StartupCache::GetSingleton();
+    if (!sc)
         return NS_ERROR_NOT_AVAILABLE;
-    
+
     nsCOMPtr<nsIStorageStream> storageStream;
     bool found = mOutputStreamTable.Get(uri, getter_AddRefs(storageStream));
     if (!found)
@@ -471,7 +461,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
     rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
-    rv = gStartupCache->PutBuffer(spec.get(), buf, len);
+    rv = sc->PutBuffer(spec.get(), buf, len);
     if (NS_SUCCEEDED(rv))
         mOutputStreamTable.Remove(uri);
     
@@ -495,19 +485,12 @@ nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
     }
     nsAutoArrayPtr<char> buf;
     uint32_t len;
-    if (gStartupCache)
-        rv = gStartupCache->GetBuffer(spec.get(), getter_Transfers(buf), 
-                                      &len);
-    else {
-        // We don't have everything we need to call BeginCaching and set up
-        // gStartupCache right now, but we just need to check the cache for 
-        // this URI.
-        StartupCache* sc = StartupCache::GetSingleton();
-        if (!sc) {
-            *exists = false;
-            return NS_OK;
-        }
+    StartupCache* sc = StartupCache::GetSingleton();
+    if (sc)
         rv = sc->GetBuffer(spec.get(), getter_Transfers(buf), &len);
+    else {
+        *exists = false;
+        return NS_OK;
     }
     *exists = NS_SUCCEEDED(rv);
     return NS_OK;
@@ -540,21 +523,6 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     if (!StringEndsWith(path, NS_LITERAL_CSTRING(".xul")))
         return NS_ERROR_NOT_AVAILABLE;
 
-    // Test gStartupCache to decide whether this is the first nsXULDocument
-    // participating in the serialization.  If gStartupCache is non-null, this document
-    // must not be first, but it can join the process.  Examples of
-    // multiple master documents participating include hiddenWindow.xul and
-    // navigator.xul on the Mac, and multiple-app-component (e.g., mailnews
-    // and browser) startup due to command-line arguments.
-    //
-    if (gStartupCache) {
-        mCacheURITable.Put(aURI, 1);
-
-        return NS_OK;
-    }
-
-    // Use a local to refer to the service till we're sure we succeeded, then
-    // commit to gStartupCache.
     StartupCache* startupCache = StartupCache::GetSingleton();
     if (!startupCache)
         return NS_ERROR_FAILURE;
@@ -679,7 +647,6 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     // and commit locals to globals.
     mCacheURITable.Put(aURI, 1);
 
-    gStartupCache = startupCache;
     return NS_OK;
 }
 
