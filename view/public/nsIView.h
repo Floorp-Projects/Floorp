@@ -436,16 +436,16 @@ public:
   void InvalidateHierarchy(nsViewManager *aViewManagerParent);
 
   // nsIWidgetListener
-  virtual nsIPresShell* GetPresShell();
-  virtual nsIView* GetView() { return this; }
-  bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y);
-  bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight);
-  bool RequestWindowClose(nsIWidget* aWidget);
-  void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint);
-  bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags);
-  void DidPaintWindow();
-  void RequestRepaint() MOZ_OVERRIDE;
-  nsEventStatus HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents);
+  virtual nsIPresShell* GetPresShell() MOZ_OVERRIDE;
+  virtual nsIView* GetView() MOZ_OVERRIDE { return this; }
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) MOZ_OVERRIDE;
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) MOZ_OVERRIDE;
+  virtual bool RequestWindowClose(nsIWidget* aWidget) MOZ_OVERRIDE;
+  virtual void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint) MOZ_OVERRIDE;
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) MOZ_OVERRIDE;
+  virtual void DidPaintWindow() MOZ_OVERRIDE;
+  virtual void RequestRepaint() MOZ_OVERRIDE;
+  virtual nsEventStatus HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents) MOZ_OVERRIDE;
 
   virtual ~nsIView();
 
