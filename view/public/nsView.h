@@ -376,9 +376,6 @@ public:
     return mDirtyRegion;
   }
 
-  uint32_t GetViewFlags() const { return mVFlags; }
-  void SetViewFlags(uint32_t aFlags) { mVFlags = aFlags; }
-
   // nsIWidgetListener
   virtual nsIPresShell* GetPresShell() MOZ_OVERRIDE;
   virtual nsView* GetView() MOZ_OVERRIDE { return this; }
