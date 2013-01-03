@@ -357,4 +357,21 @@ xpc_LocalizeContext(JSContext *cx)
   NS_ABORT_IF_FALSE(sHookedRuntime == rt, "created multiple JSRuntimes?");
 
   JS_SetLocaleCallbacks(cx, new XPCLocaleCallbacks());
+
+  // set the context's default locale
+  nsresult rv;
+  nsCOMPtr<nsILocaleService> localeService =
+    do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsILocale> appLocale;
+    rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString localeStr;
+      rv = appLocale->
+           GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get app locale info");
+      NS_LossyConvertUTF16toASCII locale(localeStr);
+      JS_SetDefaultLocale(cx, locale.get());
+    }
+  }
 }

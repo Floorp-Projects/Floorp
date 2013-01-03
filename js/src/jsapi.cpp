@@ -6824,6 +6824,20 @@ JS_GetRegExpSource(JSContext *cx, JSObject *objArg)
 
 /************************************************************************/
 
+JS_PUBLIC_API(JSBool)
+JS_SetDefaultLocale(JSContext *cx, const char *locale)
+{
+    AssertHeapIsIdle(cx);
+    return cx->setDefaultLocale(locale);
+}
+
+JS_PUBLIC_API(void)
+JS_ResetDefaultLocale(JSContext *cx)
+{
+    AssertHeapIsIdle(cx);
+    cx->resetDefaultLocale();
+}
+
 JS_PUBLIC_API(void)
 JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks)
 {

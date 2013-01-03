@@ -10,6 +10,7 @@
 
 /*global ToObject: false, ToInteger: false, IsCallable: false, ThrowError: false,
          AssertionFailed: false, MakeConstructible: false, DecompileArg: false,
+         RuntimeDefaultLocale: false,
          callFunction: false,
          IS_UNDEFINED: false, TO_UINT32: false,
          JSMSG_NOT_FUNCTION: false, JSMSG_MISSING_FUN_ARG: false,
