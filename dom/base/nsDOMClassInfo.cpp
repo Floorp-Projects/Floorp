@@ -5169,13 +5169,6 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  if (id == sWrappedJSObject_id &&
-      xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
-    obj = JS_ObjectToOuterObject(cx, obj);
-    *vp = OBJECT_TO_JSVAL(obj);
-    return NS_SUCCESS_I_DID_SOMETHING;
-  }
-
   return NS_OK;
 }
 

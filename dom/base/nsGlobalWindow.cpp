@@ -227,6 +227,12 @@
 #include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
 
+// Apple system headers seem to have a check() macro.  <sigh>
+#ifdef check
+#undef check
+#endif // check
+#include "AccessCheck.h"
+
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -525,8 +531,10 @@ public:
   virtual bool isOuterWindow() {
     return true;
   }
-  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
-  void finalize(JSFreeOp *fop, JSObject *proxy);
+  virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
+  virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
+  virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
+                   jsid id, js::Value *vp) MOZ_OVERRIDE;
 
   static nsOuterWindowProxy singleton;
 };
@@ -550,6 +558,19 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
     CallQueryInterface(global, &cache);
     cache->ClearWrapper();
   }
+}
+
+bool
+nsOuterWindowProxy::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
+                        jsid id, js::Value *vp)
+{
+  if (id == nsDOMClassInfo::sWrappedJSObject_id &&
+      xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
+    *vp = JS::ObjectValue(*wrapper);
+    return true;
+  }
+
+  return js::Wrapper::get(cx, wrapper, receiver, id, vp);
 }
 
 nsOuterWindowProxy
