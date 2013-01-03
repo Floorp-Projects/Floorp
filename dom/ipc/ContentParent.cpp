@@ -705,16 +705,20 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), true);
 
 #ifdef MOZ_CRASHREPORTER
-            MOZ_ASSERT(ManagedPCrashReporterParent().Length() > 0);
-            CrashReporterParent* crashReporter =
+            // There's a window in which child processes can crash
+            // after IPC is established, but before a crash reporter
+            // is created.
+            if (ManagedPCrashReporterParent().Length() > 0) {
+                CrashReporterParent* crashReporter =
                     static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
 
-            crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("URL"),
-                                               NS_ConvertUTF16toUTF8(mAppManifestURL));
-            crashReporter->GenerateCrashReport(this, NULL);
+                crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("URL"),
+                                                   NS_ConvertUTF16toUTF8(mAppManifestURL));
+                crashReporter->GenerateCrashReport(this, NULL);
 
-            nsAutoString dumpID(crashReporter->ChildDumpID());
-            props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
+                nsAutoString dumpID(crashReporter->ChildDumpID());
+                props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
+            }
 #endif
         }
         obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
