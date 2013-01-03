@@ -5755,6 +5755,22 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 /************************************************************************/
 
 /*
+ * The default locale for the ECMAScript Internationalization API
+ * (Intl.Collator, Intl.NumberFormat, Intl.DateTimeFormat).
+ * Note that the Internationalization API encourages clients to
+ * specify their own locales.
+ * The locale string remains owned by the caller.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_SetDefaultLocale(JSContext *cx, const char *locale);
+
+/*
+ * Reset the default locale to OS defaults.
+ */
+extern JS_PUBLIC_API(void)
+JS_ResetDefaultLocale(JSContext *cx);
+
+/*
  * Locale specific string conversion and error message callbacks.
  */
 struct JSLocaleCallbacks {
