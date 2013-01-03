@@ -2371,38 +2371,7 @@ var LightWeightThemeWebInstaller = {
   },
 
   _install: function (newLWTheme) {
-    let previousLWTheme = this._manager.currentTheme;
-
-    let listener = {
-      onEnabled: function(aAddon) {
-        LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
-      }
-    };
-
-    AddonManager.addAddonListener(listener);
     this._manager.currentTheme = newLWTheme;
-    AddonManager.removeAddonListener(listener);
-  },
-
-  _postInstallNotification: function (newTheme, previousTheme) {
-    let buttons = [{
-      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.undoButton"),
-      callback: function () {
-        LightWeightThemeWebInstaller._manager.forgetUsedTheme(newTheme.id);
-        LightWeightThemeWebInstaller._manager.currentTheme = previousTheme;
-      }
-    }, {
-      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.manageButton"),
-      callback: function () {
-        BrowserApp.addTab("about:addons", {
-          showProgress: false,
-          selected: true
-        });
-      }
-    }];
-
-    let message = Strings.browser.GetStringFromName("lwthemePostInstallNotification.message"); 
-    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
   },
 
   _previewWindow: null,
