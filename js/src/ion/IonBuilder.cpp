@@ -4090,6 +4090,27 @@ IonBuilder::makeCallHelper(HandleFunction target, bool constructing,
     return call;
 }
 
+static types::StackTypeSet*
+AdjustTypeBarrierForDOMCall(const JSJitInfo* jitinfo, types::StackTypeSet *types,
+                            types::StackTypeSet *barrier)
+{
+    // If the return type of our DOM native is in "types" already, we don't
+    // actually need a barrier.
+    if (jitinfo->returnType == JSVAL_TYPE_UNKNOWN)
+        return barrier;
+
+    // JSVAL_TYPE_OBJECT doesn't tell us much; we still have to barrier on the
+    // actual type of the object.
+    if (jitinfo->returnType == JSVAL_TYPE_OBJECT)
+        return barrier;
+
+    if (jitinfo->returnType != types->getKnownTypeTag())
+        return barrier;
+    
+    // No need for a barrier if we're already expecting the type we'll produce.
+    return NULL;
+}
+
 bool
 IonBuilder::makeCallBarrier(HandleFunction target, uint32_t argc,
                             bool constructing,
@@ -4118,6 +4139,12 @@ IonBuilder::makeCallBarrier(HandleFunction target, bool constructing,
     current->push(call);
     if (!resumeAfter(call))
         return false;
+
+    if (call->isDOMFunction()) {
+        JSFunction* target = call->getSingleTarget();
+        JS_ASSERT(target && target->isNative() && target->jitInfo());
+        barrier = AdjustTypeBarrierForDOMCall(target->jitInfo(), types, barrier);
+    }
 
     return pushTypeBarrier(call, types, barrier);
 }
@@ -6235,6 +6262,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id, types::StackTypeS
 
         if (get->isEffectful() && !resumeAfter(get))
             return false;
+        barrier = AdjustTypeBarrierForDOMCall(jitinfo, types, barrier);
         if (!pushTypeBarrier(get, types, barrier))
             return false;
 
