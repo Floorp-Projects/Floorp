@@ -14,7 +14,7 @@ import java.security.GeneralSecurityException;
 
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.net.BaseResource;
-import org.mozilla.gecko.sync.net.SyncResourceDelegate;
+import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.setup.Constants;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -55,7 +55,7 @@ public class EnsureUserExistenceStage implements AuthenticatorStage {
 
     String userRequestUrl = aa.nodeServer + Constants.AUTH_NODE_PATHNAME + Constants.AUTH_NODE_VERSION + aa.username;
     final BaseResource httpResource = new BaseResource(userRequestUrl);
-    httpResource.delegate = new SyncResourceDelegate(httpResource) {
+    httpResource.delegate = new BaseResourceDelegate(httpResource) {
 
       @Override
       public void handleHttpResponse(HttpResponse response) {

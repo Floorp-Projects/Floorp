@@ -261,6 +261,7 @@ public:
     , mGraphUpdateIndices(0)
     , mFinished(false)
     , mNotifiedFinished(false)
+    , mNotifiedBlocked(false)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
@@ -457,6 +458,11 @@ protected:
    * and fired NotifyFinished notifications.
    */
   bool mNotifiedFinished;
+  /**
+   * When true, the last NotifyBlockingChanged delivered to the listeners
+   * indicated that the stream is blocked.
+   */
+  bool mNotifiedBlocked;
 
   // Temporary data for ordering streams by dependency graph
   bool mHasBeenOrdered;

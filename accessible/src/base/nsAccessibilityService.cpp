@@ -1460,6 +1460,9 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
     case eTextLeafType:
       newAcc = new TextLeafAccessibleWrap(aContent, document);
       break;
+    default:
+      MOZ_ASSERT(false);
+      break;
   }
 
   return newAcc.forget();
