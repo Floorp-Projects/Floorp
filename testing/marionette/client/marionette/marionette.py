@@ -292,7 +292,7 @@ class Marionette(object):
             # should be here.
             pass
         if returncode is not None:
-            print ('TEST-UNEXPECTED-FAIL - PROCESS CRASH - %s has terminated with exit code %d' %
+            print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
                 (name, returncode))
         return returncode is not None
 
