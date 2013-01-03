@@ -239,31 +239,6 @@ IsConvertibleToCallbackInterface(JSContext* cx, JSObject* obj)
   return IsNotDateOrRegExp(cx, obj);
 }
 
-inline bool
-IsPlatformObject(JSContext* cx, JSObject* obj)
-{
-  MOZ_ASSERT(obj);
-  // Fast-path the common cases
-  JSClass* clasp = js::GetObjectJSClass(obj);
-  if (js::Valueify(clasp) == &js::ObjectClass) {
-    return false;
-  }
-  if (IsDOMClass(clasp)) {
-    return true;
-  }
-  // Now for simplicity check for security wrappers before anything else
-  if (js::IsWrapper(obj)) {
-    obj = xpc::Unwrap(cx, obj, false);
-    if (!obj) {
-      // Let's say it's not
-      return false;
-    }
-    clasp = js::GetObjectJSClass(obj);
-  }
-  return IS_WRAPPER_CLASS(js::Valueify(clasp)) || IsDOMClass(clasp) ||
-    JS_IsArrayBufferObject(obj);
-}
-
 // U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
 template <class T, typename U>
 inline nsresult
