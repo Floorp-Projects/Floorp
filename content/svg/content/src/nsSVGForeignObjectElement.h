@@ -6,11 +6,11 @@
 #ifndef __NS_SVGFOREIGNOBJECTELEMENT_H__
 #define __NS_SVGFOREIGNOBJECTELEMENT_H__
 
+#include "SVGGraphicsElement.h"
 #include "nsIDOMSVGForeignObjectElem.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGLength2.h"
 
-typedef nsSVGGraphicElement nsSVGForeignObjectElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGForeignObjectElementBase;
 
 class nsSVGForeignObjectElement : public nsSVGForeignObjectElementBase,
                                   public nsIDOMSVGForeignObjectElement

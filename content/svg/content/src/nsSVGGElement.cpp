@@ -5,12 +5,12 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 #include "nsIDOMSVGGElement.h"
 
 using namespace mozilla;
 
-typedef nsSVGGraphicElement nsSVGGElementBase;
+typedef dom::SVGGraphicsElement nsSVGGElementBase;
 
 class nsSVGGElement : public nsSVGGElementBase,
                       public nsIDOMSVGGElement

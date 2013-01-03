@@ -5,7 +5,7 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGGraphicElement.h"
+#include "mozilla/dom/SVGGraphicsElement.h"
 #include "nsSVGSVGElement.h"
 #include "DOMSVGAnimatedTransformList.h"
 #include "DOMSVGMatrix.h"
@@ -20,11 +20,11 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGGraphicsElementBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 JSObject*
-nsSVGGraphicElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGGraphicsElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 {
   return SVGGraphicsElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
@@ -32,18 +32,18 @@ nsSVGGraphicElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWr
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGGraphicElement, nsSVGGraphicElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGGraphicElement, nsSVGGraphicElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGGraphicsElement, SVGGraphicsElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGGraphicsElement, SVGGraphicsElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGGraphicElement)
+NS_INTERFACE_MAP_BEGIN(SVGGraphicsElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTests)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGGraphicsElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGraphicElement::nsSVGGraphicElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGGraphicElementBase(aNodeInfo)
+SVGGraphicsElement::SVGGraphicsElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGGraphicsElementBase(aNodeInfo)
 {
 }
 
@@ -51,30 +51,30 @@ nsSVGGraphicElement::nsSVGGraphicElement(already_AddRefed<nsINodeInfo> aNodeInfo
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
+SVGGraphicsElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sColorMap,
     sFillStrokeMap,
     sGraphicsMap
   };
-  
+
   return FindAttributeDependence(name, map) ||
-    nsSVGGraphicElementBase::IsAttributeMapped(name);
+    SVGGraphicsElementBase::IsAttributeMapped(name);
 }
 
 nsChangeHint
-nsSVGGraphicElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            int32_t aModType) const
+SVGGraphicsElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                           int32_t aModType) const
 {
   nsChangeHint retval =
-    nsSVGGraphicElementBase::GetAttributeChangeHint(aAttribute, aModType);
+    SVGGraphicsElementBase::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::transform ||
       aAttribute == nsGkAtoms::mozAnimateMotionDummyAttr) {
     // We add nsChangeHint_UpdateOverflow so that nsFrame::UpdateOverflow()
     // will be called on us and our ancestors.
     nsIFrame* frame =
-      const_cast<nsSVGGraphicElement*>(this)->GetPrimaryFrame();
+      const_cast<SVGGraphicsElement*>(this)->GetPrimaryFrame();
     if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
       return retval; // no change
     }
@@ -94,7 +94,7 @@ nsSVGGraphicElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 bool
-nsSVGGraphicElement::IsEventAttributeName(nsIAtom* aName)
+SVGGraphicsElement::IsEventAttributeName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
@@ -103,8 +103,8 @@ nsSVGGraphicElement::IsEventAttributeName(nsIAtom* aName)
 // nsSVGElement overrides
 
 gfxMatrix
-nsSVGGraphicElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                                              TransformTypes aWhich) const
+SVGGraphicsElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                                             TransformTypes aWhich) const
 {
   NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
                     "Skipping eUserSpaceToParent transforms makes no sense");
@@ -137,13 +137,13 @@ nsSVGGraphicElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
 }
 
 const gfxMatrix*
-nsSVGGraphicElement::GetAnimateMotionTransform() const
+SVGGraphicsElement::GetAnimateMotionTransform() const
 {
   return mAnimateMotionTransform.get();
 }
 
 void
-nsSVGGraphicElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
+SVGGraphicsElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
 {
   if ((!aMatrix && !mAnimateMotionTransform) ||
       (aMatrix && mAnimateMotionTransform && *aMatrix == *mAnimateMotionTransform)) {
@@ -154,10 +154,13 @@ nsSVGGraphicElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
 }
 
 SVGAnimatedTransformList*
-nsSVGGraphicElement::GetAnimatedTransformList(uint32_t aFlags)
+SVGGraphicsElement::GetAnimatedTransformList(uint32_t aFlags)
 {
   if (!mTransforms && (aFlags & DO_ALLOCATE)) {
     mTransforms = new SVGAnimatedTransformList();
   }
   return mTransforms;
 }
+
+} // namespace dom
+} // namespace mozilla

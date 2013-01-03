@@ -14,7 +14,7 @@
 #include "nsIDOMSVGZoomAndPan.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGPreserveAspectRatio.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -27,7 +27,7 @@ namespace mozilla {
   class SVGFragmentIdentifier;
 }
 
-typedef nsSVGGraphicElement nsSVGSVGElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGSVGElementBase;
 
 class nsSVGSVGElement;
 
