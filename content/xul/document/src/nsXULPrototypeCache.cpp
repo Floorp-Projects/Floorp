@@ -351,7 +351,7 @@ static const char kDisableXULDiskCachePref[] = "nglayout.debug.disable_xul_fastl
 void
 nsXULPrototypeCache::RemoveFromCacheSet(nsIURI* aURI)
 {
-    mCacheURITable.Remove(aURI);
+    mCacheURITable.RemoveEntry(aURI);
 }
 
 nsresult
@@ -645,7 +645,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 
     // Success!  Insert this URI into the mCacheURITable
     // and commit locals to globals.
-    mCacheURITable.Put(aURI, 1);
+    mCacheURITable.PutEntry(aURI);
 
     return NS_OK;
 }
