@@ -780,20 +780,14 @@ nsContentUtils::IsJavaScriptLanguage(const nsString& aName, uint32_t *aFlags)
 
   if (aName.LowerCaseEqualsLiteral("javascript") ||
       aName.LowerCaseEqualsLiteral("livescript") ||
-      aName.LowerCaseEqualsLiteral("mocha")) {
+      aName.LowerCaseEqualsLiteral("mocha") ||
+      aName.LowerCaseEqualsLiteral("javascript1.0") ||
+      aName.LowerCaseEqualsLiteral("javascript1.1") ||
+      aName.LowerCaseEqualsLiteral("javascript1.2") ||
+      aName.LowerCaseEqualsLiteral("javascript1.3") ||
+      aName.LowerCaseEqualsLiteral("javascript1.4") ||
+      aName.LowerCaseEqualsLiteral("javascript1.5")) {
     version = JSVERSION_DEFAULT;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.0")) {
-    version = JSVERSION_1_0;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.1")) {
-    version = JSVERSION_1_1;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.2")) {
-    version = JSVERSION_1_2;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.3")) {
-    version = JSVERSION_1_3;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.4")) {
-    version = JSVERSION_1_4;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.5")) {
-    version = JSVERSION_1_5;
   } else if (aName.LowerCaseEqualsLiteral("javascript1.6")) {
     version = JSVERSION_1_6;
   } else if (aName.LowerCaseEqualsLiteral("javascript1.7")) {
@@ -818,12 +812,12 @@ nsContentUtils::ParseJavascriptVersion(const nsAString& aVersionStr)
   }
 
   switch (aVersionStr[2]) {
-  case '0': return JSVERSION_1_0;
-  case '1': return JSVERSION_1_1;
-  case '2': return JSVERSION_1_2;
-  case '3': return JSVERSION_1_3;
-  case '4': return JSVERSION_1_4;
-  case '5': return JSVERSION_1_5;
+  case '0': /* fall through */
+  case '1': /* fall through */
+  case '2': /* fall through */
+  case '3': /* fall through */
+  case '4': /* fall through */
+  case '5': return JSVERSION_DEFAULT;
   case '6': return JSVERSION_1_6;
   case '7': return JSVERSION_1_7;
   case '8': return JSVERSION_1_8;

@@ -24,7 +24,7 @@ JSBool CheckVersionHasMoarXML(JSContext *cx, unsigned argc, jsval *vp);
 JSBool DisableMoarXMLOption(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CallSetVersion17(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CheckNewScriptNoXML(JSContext *cx, unsigned argc, jsval *vp);
-JSBool OverrideVersion15(JSContext *cx, unsigned argc, jsval *vp);
+JSBool OverrideVersion18(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CaptureVersion(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CheckOverride(JSContext *cx, unsigned argc, jsval *vp);
 JSBool EvalScriptVersion16(JSContext *cx, unsigned argc, jsval *vp);
@@ -44,7 +44,7 @@ struct VersionFixture : public JSAPITest
                JS_DefineFunction(cx, global, "disableMoarXMLOption", DisableMoarXMLOption, 0, 0) &&
                JS_DefineFunction(cx, global, "callSetVersion17", CallSetVersion17, 0, 0) &&
                JS_DefineFunction(cx, global, "checkNewScriptNoXML", CheckNewScriptNoXML, 0, 0) &&
-               JS_DefineFunction(cx, global, "overrideVersion15", OverrideVersion15, 0, 0) &&
+               JS_DefineFunction(cx, global, "overrideVersion18", OverrideVersion18, 0, 0) &&
                JS_DefineFunction(cx, global, "captureVersion", CaptureVersion, 0, 0) &&
                JS_DefineFunction(cx, global, "checkOverride", CheckOverride, 1, 0) &&
                JS_DefineFunction(cx, global, "evalScriptVersion16",
@@ -149,9 +149,9 @@ CheckNewScriptNoXML(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 JSBool
-OverrideVersion15(JSContext *cx, unsigned argc, jsval *vp)
+OverrideVersion18(JSContext *cx, unsigned argc, jsval *vp)
 {
-    if (!callbackData->setVersion(JSVERSION_1_5))
+    if (!callbackData->setVersion(JSVERSION_1_8))
         return false;
     return callbackData->checkVersionIsOverridden();
 }
@@ -221,14 +221,14 @@ END_FIXTURE_TEST(VersionFixture, testVersion_OptionsAreUsedForVersionFlags)
  */
 BEGIN_FIXTURE_TEST(VersionFixture, testVersion_EntryLosesOverride)
 {
-    EXEC("overrideVersion15(); evalScriptVersion16('checkOverride(false); captureVersion()');");
+    EXEC("overrideVersion18(); evalScriptVersion16('checkOverride(false); captureVersion()');");
     CHECK_EQUAL(captured, JSVERSION_1_6);
 
     /*
      * Override gets propagated to default version as non-override when you leave the VM's execute
      * call.
      */
-    CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_1_5);
+    CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_1_8);
     CHECK(!cx->isVersionOverridden());
     return true;
 }
@@ -245,7 +245,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testVersion_ReturnLosesOverride)
     CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_ECMA_5);
     EXEC(
         "checkOverride(false);"
-        "evalScriptVersion16('overrideVersion15();');"
+        "evalScriptVersion16('overrideVersion18();');"
         "checkOverride(false);"
         "captureVersion();"
     );
@@ -259,11 +259,11 @@ BEGIN_FIXTURE_TEST(VersionFixture, testVersion_EvalPropagatesOverride)
     CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_ECMA_5);
     EXEC(
         "checkOverride(false);"
-        "eval('overrideVersion15();');"
+        "eval('overrideVersion18();');"
         "checkOverride(true);"
         "captureVersion();"
     );
-    CHECK_EQUAL(captured, JSVERSION_1_5);
+    CHECK_EQUAL(captured, JSVERSION_1_8);
     return true;
 }
 END_FIXTURE_TEST(VersionFixture, testVersion_EvalPropagatesOverride)
