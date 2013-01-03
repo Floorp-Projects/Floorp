@@ -34,15 +34,16 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
   }
 }
 
-void
+bool
 TaskThrottler::TaskComplete()
 {
   if (mQueuedTask) {
     mQueuedTask->Run();
     mQueuedTask = nullptr;
-  } else {
-    mOutstanding = false;
+    return true;
   }
+  mOutstanding = false;
+  return false;
 }
 
 }

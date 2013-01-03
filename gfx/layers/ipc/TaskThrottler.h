@@ -43,7 +43,10 @@ public:
    */
   void PostTask(const tracked_objects::Location& aLocation,
                 CancelableTask* aTask);
-  void TaskComplete();
+  /**
+   * return true if Throttler had outstanding task
+   */
+  bool TaskComplete();
 
 private:
   bool mOutstanding;
