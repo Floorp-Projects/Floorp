@@ -1020,11 +1020,17 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_CLOSEINTERNAL"
   },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_DESTRUCTOR": {
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_RELEASE": {
     "kind": "exponential",
     "high": "10 * 1000",
     "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_DESTRUCTOR"
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_RELEASE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCOMPRESSOUTPUTSTREAMWRAPPER_RELEASE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCOMPRESSOUTPUTSTREAMWRAPPER_RELEASE"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_LAZYINIT": {
     "kind": "exponential",
@@ -1038,11 +1044,17 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_CLOSEINTERNAL"
   },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_DESTRUCTOR": {
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_RELEASE": {
     "kind": "exponential",
     "high": "10 * 1000",
     "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_DESTRUCTOR"
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_RELEASE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDECOMPRESSINPUTSTREAMWRAPPER_RELEASE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDECOMPRESSINPUTSTREAMWRAPPER_RELEASE"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSEVICTDISKCACHEENTRIESEVENT_RUN": {
     "kind": "exponential",

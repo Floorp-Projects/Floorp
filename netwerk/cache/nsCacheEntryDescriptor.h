@@ -95,23 +95,12 @@ private:
          }
          virtual ~nsInputStreamWrapper()
          {
-             nsCOMPtr<nsCacheEntryDescriptor> desc;
-             {
-                 nsCacheServiceAutoLock lock(LOCK_TELEM(
-                                             NSINPUTSTREAMWRAPPER_DESTRUCTOR));
-                 desc.swap(mDescriptor);
-                 if (desc) {
-                     NS_ASSERTION(desc->mInputWrappers.IndexOf(this) != -1,
-                                  "Wrapper not found in array!");
-                     desc->mInputWrappers.RemoveElement(this);
-                 }
-             }
-
+             NS_IF_RELEASE(mDescriptor);
          }
 
      private:
          nsresult LazyInit();
-         nsresult EnsureInit() { return mInitialized ? NS_OK : LazyInit(); }
+         nsresult EnsureInit();
          nsresult Read_Locked(char *buf, uint32_t count, uint32_t *countRead);
          nsresult Close_Locked();
          void CloseInternal();
@@ -177,24 +166,16 @@ private:
              NS_ADDREF(mDescriptor); // owning ref
          }
          virtual ~nsOutputStreamWrapper()
-         { 
-             // XXX _HACK_ the storage stream needs this!
+         {
              Close();
-             nsCOMPtr<nsCacheEntryDescriptor> desc;
-             {
-                 nsCacheServiceAutoLock lock(LOCK_TELEM(
-                                             NSOUTPUTSTREAMWRAPPER_DESTRUCTOR));
-                 desc.swap(mDescriptor);
-                 if (desc) {
-                     desc->mOutputWrapper = nullptr;
-                 }
-                 mOutput = nullptr;
-             }
+
+             NS_ASSERTION(!mOutput, "Bad state");
+             NS_ASSERTION(!mDescriptor, "Bad state");
          }
 
      private:
          nsresult LazyInit();
-         nsresult EnsureInit() { return mInitialized ? NS_OK : LazyInit(); }
+         nsresult EnsureInit();
          nsresult OnWrite(uint32_t count);
          nsresult Write_Locked(const char * buf,
                                uint32_t count,
