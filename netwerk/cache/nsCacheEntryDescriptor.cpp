@@ -586,6 +586,7 @@ nsCacheEntryDescriptor::Close()
     inputWrappers.Clear();
 
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_CLOSE));
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     // XXX perhaps closing descriptors should clear/sever transports
 
