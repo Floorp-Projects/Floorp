@@ -404,6 +404,10 @@ public:
   void PassNullableTreatAsNullCallback(TestTreatAsNullCallback*);
   void PassOptionalNullableTreatAsNullCallback(const Optional<nsRefPtr<TestTreatAsNullCallback> >&);
   void PassOptionalNullableTreatAsNullCallbackWithDefaultValue(TestTreatAsNullCallback*);
+  void SetTreatAsNullCallback(TestTreatAsNullCallback&);
+  already_AddRefed<TestTreatAsNullCallback> TreatAsNullCallback();
+  void SetNullableTreatAsNullCallback(TestTreatAsNullCallback*);
+  already_AddRefed<TestTreatAsNullCallback> GetNullableTreatAsNullCallback();
 
   // Any types
   void PassAny(JSContext*, JS::Value);
