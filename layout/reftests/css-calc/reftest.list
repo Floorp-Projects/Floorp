@@ -4,7 +4,7 @@ random-if(bug685516) == background-position-1.html background-position-1-ref.htm
 random-if(bug685516) == background-size-1.html background-size-1-ref.html
 == border-radius-1.html border-radius-1-ref.html
 == height-block-1.html height-block-1-ref.html
-== height-table-1.html height-table-1-ref.html
+skip-if(B2G) == height-table-1.html height-table-1-ref.html
 == margin-block-1.html margin-block-1-ref.html
 == max-height-block-1.html max-height-block-1-ref.html
 == max-width-block-1.html width-block-1-ref.html

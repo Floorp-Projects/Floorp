@@ -2,9 +2,9 @@
 != inline-horizontal-1.html inline-horizontal-1-noref.html
 == inline-horizontal-2.html inline-horizontal-2-ref.html
 != inline-horizontal-2.html inline-horizontal-2-noref.html
-== inline-horizontal-1-dyn.html inline-horizontal-1-ref.html
+skip-if(B2G) == inline-horizontal-1-dyn.html inline-horizontal-1-ref.html # bug 773482
 != inline-horizontal-1-dyn.html inline-horizontal-1-noref.html
-== inline-horizontal-2-dyn.html inline-horizontal-2-ref.html
+skip-if(B2G) == inline-horizontal-2-dyn.html inline-horizontal-2-ref.html # bug 773482
 != inline-horizontal-2-dyn.html inline-horizontal-2-noref.html
 == block-horizontal-1.html block-horizontal-1-ref.html
 != block-horizontal-1.html block-horizontal-1-noref.html
@@ -14,25 +14,25 @@
 != block-horizontal-3.html block-horizontal-3-noref.html
 == block-horizontal-4.html block-horizontal-4-ref.html
 != block-horizontal-4.html block-horizontal-4-noref.html
-== block-horizontal-1-dyn.html block-horizontal-1-ref.html
+skip-if(B2G) == block-horizontal-1-dyn.html block-horizontal-1-ref.html # bug 773482
 != block-horizontal-1-dyn.html block-horizontal-1-noref.html
-== block-horizontal-2-dyn.html block-horizontal-2-ref.html
+skip-if(B2G) == block-horizontal-2-dyn.html block-horizontal-2-ref.html # bug 773482
 != block-horizontal-2-dyn.html block-horizontal-2-noref.html
-== block-horizontal-3-dyn.html block-horizontal-3-ref.html
+skip-if(B2G) == block-horizontal-3-dyn.html block-horizontal-3-ref.html # bug 773482
 != block-horizontal-3-dyn.html block-horizontal-3-noref.html
-== block-horizontal-4-dyn.html block-horizontal-4-ref.html
+skip-if(B2G) == block-horizontal-4-dyn.html block-horizontal-4-ref.html # bug 773482
 != block-horizontal-4-dyn.html block-horizontal-4-noref.html
 == inline-block-horizontal-1.html inline-block-horizontal-1-ref.html
 != inline-block-horizontal-1.html inline-block-horizontal-1-noref.html
 == inline-block-horizontal-2.html inline-block-horizontal-2-ref.html
 != inline-block-horizontal-2.html inline-block-horizontal-2-noref.html
-== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-ref.html
+skip-if(B2G) == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-ref.html # bug 773482
 != inline-block-horizontal-1-dyn.html inline-block-horizontal-1-noref.html
-== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html
+skip-if(B2G) == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html # bug 773482
 != inline-block-horizontal-2-dyn.html inline-block-horizontal-2-noref.html
 == inline-table-horizontal-1.html inline-table-horizontal-1-ref.html
 != inline-table-horizontal-1.html inline-table-horizontal-1-noref.html
-== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-ref.html
+skip-if(B2G) == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-ref.html # bug 773482
 != inline-table-horizontal-1-dyn.html inline-table-horizontal-1-noref.html
 == block-sibling-1a.html block-sibling-1-ref.html
 == block-sibling-1a.html block-sibling-1-ref2.html
@@ -58,7 +58,7 @@
 == block-sibling-1c-dyn.html block-sibling-1-ref.html
 == block-sibling-1c-dyn.html block-sibling-1-ref2.html
 != block-sibling-1c-dyn.html block-sibling-1-noref2.html
-== block-sibling-2-dyn.html block-sibling-2-ref.html
+skip-if(B2G) == block-sibling-2-dyn.html block-sibling-2-ref.html # bug 773482
 == block-sibling-2-dyn.html block-sibling-2-ref2.html
 != block-sibling-2-dyn.html block-sibling-2-noref.html
 == block-sibling-3-dyn.html block-sibling-1-ref.html
@@ -208,10 +208,10 @@
 == block-overflow-1.html block-overflow-1-ref2.html
 == block-overflow-2.html block-overflow-2-ref.html
 == block-overflow-2.html block-overflow-2-ref2.html
-== block-overflow-3.html block-overflow-3-ref.html
-== block-overflow-3.html block-overflow-3-ref2.html
-== block-overflow-4.html block-overflow-4-ref.html
-== block-overflow-4.html block-overflow-4-ref2.html
+skip-if(B2G) == block-overflow-3.html block-overflow-3-ref.html # bug 773482
+skip-if(B2G) == block-overflow-3.html block-overflow-3-ref2.html
+skip-if(B2G) == block-overflow-4.html block-overflow-4-ref.html
+skip-if(B2G) == block-overflow-4.html block-overflow-4-ref2.html
 == block-overflow-5a.html block-overflow-5-ref.html
 == block-overflow-5a.html block-overflow-5-ref2.html
 == block-overflow-5b.html block-overflow-5-ref.html
@@ -232,19 +232,19 @@
 != table-sibling-2b.html table-sibling-2-noref.html
 == table-sibling-2c.html table-sibling-2-ref.html
 != table-sibling-2c.html table-sibling-2-noref2.html
-== table-sibling-1a-dyn.html table-sibling-1-ref.html
+skip-if(B2G) == table-sibling-1a-dyn.html table-sibling-1-ref.html # bug 773482
 != table-sibling-1a-dyn.html table-sibling-1-noref.html
-== table-sibling-1b-dyn.html table-sibling-1-ref.html
+skip-if(B2G) == table-sibling-1b-dyn.html table-sibling-1-ref.html # bug 773482
 != table-sibling-1b-dyn.html table-sibling-1-noref.html
-== table-sibling-1c-dyn.html table-sibling-1-ref.html
+skip-if(B2G) == table-sibling-1c-dyn.html table-sibling-1-ref.html # bug 773482
 != table-sibling-1c-dyn.html table-sibling-1-noref2.html
-== table-sibling-2a-dyn.html table-sibling-2-ref.html
+skip-if(B2G) == table-sibling-2a-dyn.html table-sibling-2-ref.html # bug 773482
 != table-sibling-2a-dyn.html table-sibling-2-noref.html
-== table-sibling-2b-dyn.html table-sibling-2-ref.html
+skip-if(B2G) == table-sibling-2b-dyn.html table-sibling-2-ref.html # bug 773482
 != table-sibling-2b-dyn.html table-sibling-2-noref.html
-== table-sibling-2c-dyn.html table-sibling-2-ref.html
+skip-if(B2G) == table-sibling-2c-dyn.html table-sibling-2-ref.html # bug 773482
 != table-sibling-2c-dyn.html table-sibling-2-noref2.html
-== table-sibling-3-dyn.html table-sibling-3-ref.html
+skip-if(B2G) == table-sibling-3-dyn.html table-sibling-3-ref.html # bug 773482
 != table-sibling-3-dyn.html table-sibling-3-noref.html
 == table-caption-1a.html table-caption-1-ref.html
 == table-caption-1b.html table-caption-1-ref.html

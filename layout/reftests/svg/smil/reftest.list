@@ -18,7 +18,7 @@
 include motion/reftest.list
 
 # animation sort-order tests
-include sort/reftest.list
+skip-if(B2G) include sort/reftest.list
 
 # set tests
 include set/reftest.list
@@ -27,7 +27,7 @@ include set/reftest.list
 include style/reftest.list
 
 # animateTransform tests
-include transform/reftest.list
+skip-if(B2G) include transform/reftest.list
 
 # time-dependent tests
 # XXXdholbert Disabling this class of tests for now, because most of them
@@ -48,7 +48,7 @@ include restart/reftest.list
 include pause/reftest.list
 
 # syncbase tests
-include syncbase/reftest.list
+skip-if(B2G) include syncbase/reftest.list
 
 # seek tests
 include seek/reftest.list
@@ -57,17 +57,17 @@ include seek/reftest.list
 include event/reftest.list
 
 # General tests
-== anim-discrete-values-1.svg      anim-standard-ref.svg
-== anim-discrete-values-2.svg      anim-standard-ref.svg
-== anim-discrete-values-3.svg      anim-standard-ref.svg
-== anim-discrete-replace-sum-1.svg anim-standard-ref.svg
-== anim-discrete-sum-none-1.svg    anim-standard-ref.svg
-== anim-discrete-sum-sum-1.svg     anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-values-1.svg      anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-values-2.svg      anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-values-3.svg      anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-replace-sum-1.svg anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-sum-none-1.svg    anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-sum-sum-1.svg     anim-standard-ref.svg
 
-== anim-discrete-to-1.svg          anim-standard-ref.svg
-== anim-discrete-to-2.svg          anim-standard-ref.svg
-== anim-discrete-to-3.svg          anim-standard-ref.svg
-== anim-discrete-to-4.svg          anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-to-1.svg          anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-to-2.svg          anim-standard-ref.svg
+skip-if(B2G) == anim-discrete-to-3.svg          anim-standard-ref.svg # bug 773482
+skip-if(B2G) == anim-discrete-to-4.svg          anim-standard-ref.svg # bug 773482
 
 == anim-indefinite-to-1.svg        anim-standard-ref.svg
 == anim-indefinite-to-2.svg        anim-standard-ref.svg
@@ -76,65 +76,65 @@ include event/reftest.list
 
 fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-fillopacity-1none.svg anim-standard-ref.svg
-== anim-fillopacity-1css.svg  anim-standard-ref.svg
+skip-if(B2G) == anim-fillopacity-1css.svg  anim-standard-ref.svg
 == anim-fillopacity-1xml.svg  anim-standard-ref.svg
 
-== anim-height-done-1a.svg anim-standard-ref.svg
-== anim-height-done-1b.svg anim-standard-ref.svg
+skip-if(B2G) == anim-height-done-1a.svg anim-standard-ref.svg # bug 773482
+skip-if(B2G) == anim-height-done-1b.svg anim-standard-ref.svg # bug 773482
 == anim-height-done-2.svg lime.svg
-== anim-height-interp-1.svg anim-height-interp-1-ref.svg
-== anim-height-interp-2.svg anim-height-interp-2-ref.svg
-== anim-height-interp-3.svg anim-height-interp-3-ref.svg
-== anim-height-interp-4.svg anim-height-interp-4-ref.svg
-== anim-height-interp-5.svg anim-height-interp-5-ref.svg
-== anim-height-interp-6.svg anim-height-interp-6-ref.svg
+skip-if(B2G) == anim-height-interp-1.svg anim-height-interp-1-ref.svg # bug 773482
+skip-if(B2G) == anim-height-interp-2.svg anim-height-interp-2-ref.svg # bug 773482
+skip-if(B2G) == anim-height-interp-3.svg anim-height-interp-3-ref.svg # bug 773482
+skip-if(B2G) == anim-height-interp-4.svg anim-height-interp-4-ref.svg
+skip-if(B2G) == anim-height-interp-5.svg anim-height-interp-5-ref.svg # bug 773482
+skip-if(B2G) == anim-height-interp-6.svg anim-height-interp-6-ref.svg # bug 773482
 
 # check conditional processing
 == anim-conditions-01.svg lime.svg
-== anim-conditions-02.svg lime.svg
+skip-if(B2G) == anim-conditions-02.svg lime.svg # bug 773482
 
 # animate some <length> attributes:
-== anim-filter-primitive-size-01.svg lime.svg
-== anim-filter-size-01.svg lime.svg
+skip-if(B2G) == anim-filter-primitive-size-01.svg lime.svg # bug 773482
+skip-if(B2G) == anim-filter-size-01.svg lime.svg # bug 773482
 == anim-length-reset-01.svg lime.svg
 == anim-nonpixel-length-reset-01.svg lime.svg
-== anim-use-length-01.svg lime.svg
+skip-if(B2G) == anim-use-length-01.svg lime.svg # bug 773482
 == anim-use-length-02.svg lime.svg
 
 # animate some <number> attributes:
-== anim-feComponentTransfer-01.svg lime.svg
-== anim-feDistantLight-01.svg anim-feDistantLight-01-ref.svg
-== anim-feOffset-01.svg lime.svg
-== anim-feSpotLight-01.svg anim-feSpotLight-01-ref.svg
-== anim-offset-01.svg lime.svg
+skip-if(B2G) == anim-feComponentTransfer-01.svg lime.svg # bug 773482
+skip-if(B2G) == anim-feDistantLight-01.svg anim-feDistantLight-01-ref.svg # bug 773482
+skip-if(B2G) == anim-feOffset-01.svg lime.svg # bug 773482
+skip-if(B2G) == anim-feSpotLight-01.svg anim-feSpotLight-01-ref.svg # bug 773482
+skip-if(B2G) == anim-offset-01.svg lime.svg # bug 773482
 == anim-pathLength-01.svg anim-pathLength-01-ref.svg
 
 # animate some <number-optional-number> attributes:
 == anim-feGaussianBlur-01.svg lime.svg
 
 # animate some <integer> attributes:
-== anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg
+skip-if(B2G) == anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg # bug 773482
 
 # animate some <integer-optional-integer> attributes:
-== anim-filter-filterRes-01.svg lime.svg
+skip-if(B2G) == anim-filter-filterRes-01.svg lime.svg
 
 # animate some <angle> attributes:
-== anim-marker-orient-01.svg lime.svg
-== anim-marker-orient-02.svg lime.svg
+skip-if(B2G) == anim-marker-orient-01.svg lime.svg # bug 773482
+skip-if(B2G) == anim-marker-orient-02.svg lime.svg # bug 773482
 
 #animate points list:
-== anim-polygon-points-01.svg anim-polygon-points-01-ref.svg
+skip-if(B2G) == anim-polygon-points-01.svg anim-polygon-points-01-ref.svg
 == anim-polyline-points-01.svg anim-polyline-points-01-ref.svg
 
 # animate path data:
-fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,13) == anim-path-d-01.svg anim-path-d-01-ref.svg # Bug 726400
+skip-if(B2G) fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,13) == anim-path-d-01.svg anim-path-d-01-ref.svg # Bug 726400 # bug 773482
 
 # animate some enumeration attributes:
-== anim-feComposite-operator-01.svg lime.svg
+skip-if(B2G) == anim-feComposite-operator-01.svg lime.svg
 == anim-filter-filterUnits-01.svg lime.svg
 
 # animate some boolean attributes:
-== anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg
+skip-if(B2G) == anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg # bug 773482
 
 # animate some viewBox attributes
 == anim-svg-viewBox-01.svg lime.svg
@@ -142,19 +142,19 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&la
 == anim-view-01.svg#view lime.svg
 
 # animate some preserveAspectRatio attributes
-== anim-feImage-preserveAspectRatio-01.svg lime.svg
+skip-if(B2G) == anim-feImage-preserveAspectRatio-01.svg lime.svg
 == anim-svg-preserveAspectRatio-01.svg lime.svg
 
 # animate some string attributes:
 == anim-filter-href-01.svg lime.svg
 == anim-gradient-href-01.svg lime.svg
-== anim-image-href-01.svg lime.svg
-== anim-pattern-href-01.svg lime.svg
-== anim-use-href-01.svg lime.svg
+skip-if(B2G) == anim-image-href-01.svg lime.svg
+skip-if(B2G) == anim-pattern-href-01.svg lime.svg
+skip-if(B2G) == anim-use-href-01.svg lime.svg # bug 773482
 
 # animate the class attribute
 == anim-class-01.svg lime.svg
-== anim-class-02.svg lime.svg
+skip-if(B2G) == anim-class-02.svg lime.svg
 == anim-class-03.svg lime.svg
 == anim-class-04.svg anim-class-04-ref.svg
 
@@ -179,7 +179,7 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&la
 == anim-remove-8xml.svg anim-standard-ref.svg
 == anim-remove-9.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
-== anim-retarget-2.svg anim-standard-ref.svg
+skip-if(B2G) == anim-retarget-2.svg anim-standard-ref.svg # bug 773482
 == anim-retarget-3.svg anim-standard-ref.svg
 == anim-retarget-4.svg anim-standard-ref.svg
 == anim-retarget-5.svg anim-standard-ref.svg
@@ -188,46 +188,46 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&la
 == anim-retarget-8.svg anim-standard-ref.svg
 
 fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
-== anim-strokewidth-1xml.svg anim-standard-ref.svg
+skip-if(B2G) == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 773482
 
 == anim-targethref-1.svg anim-standard-ref.svg
-== anim-targethref-2.svg anim-standard-ref.svg
+skip-if(B2G) == anim-targethref-2.svg anim-standard-ref.svg # bug 773482
 == anim-targethref-3.svg anim-standard-ref.svg
 == anim-targethref-4.svg anim-standard-ref.svg
-== anim-targethref-5.svg anim-standard-ref.svg
+skip-if(B2G) == anim-targethref-5.svg anim-standard-ref.svg # bug 773482
 == anim-targethref-6.svg anim-standard-ref.svg
 == anim-targethref-7.svg anim-standard-ref.svg
 == anim-targethref-8.svg anim-standard-ref.svg
-== anim-targethref-9.svg anim-standard-ref.svg
+skip-if(B2G) == anim-targethref-9.svg anim-standard-ref.svg # bug 773482
 
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == anim-text-rotate-01.svg anim-text-rotate-01-ref.svg # Bug 645104 for random failure on WinXP
-== anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01-ref.svg
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == anim-text-rotate-01.svg anim-text-rotate-01-ref.svg # Bug 645104 for skip failure on WinXP
+skip-if(B2G) == anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01-ref.svg # bug 773482
 
-random == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
+skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 
-== anim-width-done-1a.svg anim-standard-ref.svg
+skip-if(B2G) == anim-width-done-1a.svg anim-standard-ref.svg # bug 773482
 == anim-width-done-1b.svg anim-standard-ref.svg
 
-== anim-x-done-1a.svg anim-standard-ref.svg
-== anim-x-done-1b.svg anim-standard-ref.svg
-== anim-x-interp-1.svg anim-x-interp-1-ref.svg
-== anim-x-interp-2.svg anim-x-interp-2-ref.svg
-== anim-x-interp-3.svg anim-x-interp-3-ref.svg
-== anim-x-interp-4.svg anim-x-interp-4-ref.svg
-== anim-x-interp-5.svg anim-x-interp-5-ref.svg
-== anim-x-interp-6.svg anim-x-interp-6-ref.svg
+skip-if(B2G) == anim-x-done-1a.svg anim-standard-ref.svg # bug 773482
+skip-if(B2G) == anim-x-done-1b.svg anim-standard-ref.svg # bug 773482
+skip-if(B2G) == anim-x-interp-1.svg anim-x-interp-1-ref.svg # bug 773482
+skip-if(B2G) == anim-x-interp-2.svg anim-x-interp-2-ref.svg
+skip-if(B2G) == anim-x-interp-3.svg anim-x-interp-3-ref.svg
+skip-if(B2G) == anim-x-interp-4.svg anim-x-interp-4-ref.svg # bug 773482
+skip-if(B2G) == anim-x-interp-5.svg anim-x-interp-5-ref.svg # bug 773482
+skip-if(B2G) == anim-x-interp-6.svg anim-x-interp-6-ref.svg
 
 == anim-y-done-1a.svg anim-standard-ref.svg
 == anim-y-done-1b.svg anim-standard-ref.svg
-== anim-y-interp-1.svg anim-y-interp-1-ref.svg
-== anim-y-interp-2.svg anim-y-interp-2-ref.svg
-== anim-y-interp-3.svg anim-y-interp-3-ref.svg
-== anim-y-interp-4.svg anim-y-interp-4-ref.svg
-== anim-y-interp-5.svg anim-y-interp-5-ref.svg
-== anim-y-interp-6.svg anim-y-interp-6-ref.svg
+skip-if(B2G) == anim-y-interp-1.svg anim-y-interp-1-ref.svg
+skip-if(B2G) == anim-y-interp-2.svg anim-y-interp-2-ref.svg # bug 773482
+skip-if(B2G) == anim-y-interp-3.svg anim-y-interp-3-ref.svg
+skip-if(B2G) == anim-y-interp-4.svg anim-y-interp-4-ref.svg
+skip-if(B2G) == anim-y-interp-5.svg anim-y-interp-5-ref.svg # bug 773482
+skip-if(B2G) == anim-y-interp-6.svg anim-y-interp-6-ref.svg
 
 # Test we don't rely on HasAttr to see if an attribute has been set
-== anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
+skip-if(B2G) == anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg # bug 773482
 == anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
 fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
 # ^ bug 621651
@@ -250,10 +250,10 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == smil-transitions-interaction-1a.svg lime.svg
 == smil-transitions-interaction-1b.svg lime.svg
 == smil-transitions-interaction-2a.svg lime.svg
-== smil-transitions-interaction-2b.svg lime.svg
+skip-if(B2G) == smil-transitions-interaction-2b.svg lime.svg
 == smil-transitions-interaction-3a.svg lime.svg
 == smil-transitions-interaction-3b.svg lime.svg
-== smil-transitions-interaction-4a.svg lime.svg
+skip-if(B2G) == smil-transitions-interaction-4a.svg lime.svg # bug 773482
 == smil-transitions-interaction-4b.svg lime.svg
 
 # Test filtering of excessive times

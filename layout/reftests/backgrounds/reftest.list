@@ -1,8 +1,8 @@
 include gradient/reftest.list
 include vector/reftest.list
 
-random-if(bug685516) == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
-random-if(bug685516) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
+skip-if(B2G) random-if(bug685516) == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
+skip-if(B2G) random-if(bug685516) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
 random-if(bug685516) == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
 random-if(bug685516) == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 random-if(bug685516) == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
@@ -15,7 +15,7 @@ random-if(bug685516) == translucent-color-1.html translucent-color-ref.html
 random-if(bug685516) == translucent-color-2.html translucent-color-ref.html
 random-if(bug685516) == translucent-color-3.html translucent-color-ref.html
 != translucent-color-ref.html about:blank
-== root-element-display-none-1.html root-element-display-none-ref.html
+skip-if(B2G) == root-element-display-none-1.html root-element-display-none-ref.html
 random-if(bug685516) == continuous-inline-1a.html continuous-inline-1-ref.html
 random-if(bug685516) == continuous-inline-1b.html continuous-inline-1-ref.html
 random-if(bug685516) == continuous-inline-1c.html continuous-inline-1-ref.html
@@ -23,8 +23,8 @@ random-if(bug685516) == continuous-inline-1d.html continuous-inline-1-ref.html
 random-if(bug685516) == continuous-inline-2a.html continuous-inline-2-ref.html
 random-if(bug685516) == continuous-inline-2b.html continuous-inline-2-ref.html
 random-if(bug685516) == continuous-inline-3.html continuous-inline-3-ref.html
-random-if(bug685516) == continuous-inline-4a.html continuous-inline-4-ref.html
-random-if(bug685516) == continuous-inline-4b.html continuous-inline-4-ref.html
+skip-if(B2G) random-if(bug685516) == continuous-inline-4a.html continuous-inline-4-ref.html
+skip-if(B2G) random-if(bug685516) == continuous-inline-4b.html continuous-inline-4-ref.html
 random-if(bug685516) == continuous-inline-5a.html continuous-inline-5-ref.html
 random-if(bug685516) == continuous-inline-5b.html continuous-inline-5-ref.html
 random-if(bug685516) == background-redraw-237766.html background-redraw-237766-ref.html
@@ -32,7 +32,7 @@ random-if(bug685516) == background-redraw-237766.html background-redraw-237766-r
 random-if(bug685516) == background-clip-1.html background-clip-1-ref.html
 random-if(bug685516) == background-clip-2.html background-clip-2-ref.html
 
-random-if(bug685516) == background-position-1a.html background-position-1-ref.html
+skip-if(B2G) random-if(bug685516) == background-position-1a.html background-position-1-ref.html
 random-if(bug685516) == background-position-1b.html background-position-1-ref.html
 random-if(bug685516) == background-position-1c.html background-position-1-ref.html
 random-if(bug685516) == background-position-2a.html background-position-2-ref.html
@@ -61,7 +61,7 @@ random-if(bug685516) == background-size-length-percent.html background-size-leng
 random-if(bug685516) == background-size-percent-length.html background-size-length-percent-ref.html
 random-if(bug685516) == background-size-percent-percent.html background-size-percent-percent-ref.html
 random-if(bug685516) == background-size-length-length.html background-size-length-length-ref.html
-random-if(bug685516) == background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html
+skip-if(B2G) random-if(bug685516) == background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html # bug 773482
 
 random-if(bug685516) == background-size-body-percent-percent.html background-size-body-percent-percent-ref.html
 random-if(bug685516) == background-size-body-percent-percent-no-repeat.html background-size-body-percent-percent-ref.html
@@ -87,7 +87,7 @@ random-if(bug685516) == background-size-contain-position-fifty-fifty.html backgr
 random-if(bug685516) == background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
 random-if(bug685516) == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
 
-== background-layers-1a.html background-layers-1-ref.html
+skip-if(B2G) == background-layers-1a.html background-layers-1-ref.html # bug 773482
 == background-layers-1b.html background-layers-1-ref.html
 
 # -moz-background-inline-policy is touchy and hard to test due to stretching
@@ -125,12 +125,12 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
 
-random-if(bug685516) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+random-if(bug685516||B2G) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
 
 random-if(bug685516) HTTP == root-background-1.html root-background-ref.html
 random-if(bug685516) HTTP != root-background-1.html about:blank
 
-random-if(bug685516) == really-big-background.html really-big-background-ref.html
+random-if(bug685516||B2G) == really-big-background.html really-big-background-ref.html
 random-if(bug685516) == body-background.html body-background-ref.html
 random-if(bug685516) == table-background.html table-background-ref.html
 random-if(bug685516) != div-background.html div-background-ref.html

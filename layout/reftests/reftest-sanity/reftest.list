@@ -36,15 +36,15 @@ HTTP == data:text/html,<div>Text</div> default.html
 != blank.html default.html
 HTTP != blank.html default.html
 
-HTTP(..) == filter-1.xhtml filter-1-ref.xhtml
-HTTP(..) == filter-2.xhtml filter-2-ref.xhtml
+skip-if(B2G) HTTP(..) == filter-1.xhtml filter-1-ref.xhtml
+skip-if(B2G) HTTP(..) == filter-2.xhtml filter-2-ref.xhtml # bug 773482
 
 # test that the MozReftestInvalidate event fires
 == invalidation.html about:blank
-== zoom-invalidation.html zoom-invalidation-ref.html
+== zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
 
 # test that xulRuntime.OS works
-fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
+skip-if(B2G) fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
 fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 

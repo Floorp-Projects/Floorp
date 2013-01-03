@@ -1,24 +1,24 @@
-== ellipsis-font-fallback.html ellipsis-font-fallback-ref.html
-HTTP(..) == marker-basic.html marker-basic-ref.html
-HTTP(..) == marker-string.html marker-string-ref.html
-skip-if(Android) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
+skip-if(B2G) == ellipsis-font-fallback.html ellipsis-font-fallback-ref.html
+skip-if(B2G) HTTP(..) == marker-basic.html marker-basic-ref.html
+skip-if(B2G) HTTP(..) == marker-string.html marker-string-ref.html
+skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtk2Widget) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
-fuzzy-if(Android,9,2125) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
+skip-if(B2G) fuzzy-if(Android,9,2125) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
 fuzzy-if(OSX==10.8,1,1) HTTP(..) == anonymous-block.html anonymous-block-ref.html
-HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html
+skip-if(B2G) HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
-HTTP(..) == block-padding.html block-padding-ref.html
+skip-if(B2G) HTTP(..) == block-padding.html block-padding-ref.html
 HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
 HTTP(..) == standards-line-height.html standards-line-height-ref.html
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == selection.html selection-ref.html # bug 668849
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == selection.html selection-ref.html # bug 668849
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
-skip-if(Android) == clipped-elements.html clipped-elements-ref.html
+skip-if(Android||B2G) == clipped-elements.html clipped-elements-ref.html
 HTTP(..) == theme-overflow.html theme-overflow-ref.html
-HTTP(..) == table-cell.html table-cell-ref.html
+skip-if(B2G) HTTP(..) == table-cell.html table-cell-ref.html
 HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
-HTTP(..) == single-value.html single-value-ref.html 
-HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html
-fuzzy(1,702) skip-if(Android) HTTP(..) == xulscroll.html xulscroll-ref.html
+skip-if(B2G) HTTP(..) == single-value.html single-value-ref.html 
+skip-if(B2G) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html
+fuzzy(1,702) skip-if(Android||B2G) HTTP(..) == xulscroll.html xulscroll-ref.html

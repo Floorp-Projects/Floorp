@@ -1,5 +1,5 @@
-== complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
-== complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
+skip-if(B2G) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html # bug 773482
+skip-if(B2G) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html # bug 773482
 == decoration-color-quirks.html decoration-color-quirks-ref.html
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html
@@ -90,7 +90,7 @@ fails == underline-block-propagation-2-quirks.html underline-block-propagation-2
 == table-quirk-2.html table-quirk-2-ref.html
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
 == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
-== 641444-1.html 641444-1-ref.html
+skip-if(B2G) == 641444-1.html 641444-1-ref.html # bug 773482
 == decoration-css21.html decoration-css21-ref.html
 == decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
 == decoration-color-override-standards.html decoration-color-override-standards-ref.html

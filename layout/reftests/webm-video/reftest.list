@@ -1,34 +1,34 @@
-fails-if(Android) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
-fails-if(Android) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
-fails-if(Android) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
-fails-if(Android) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
+fails-if(Android||B2G) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+fails-if(Android||B2G) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
 HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
-fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 623460 for WinXP
-fails-if(Android) HTTP(..) == basic-1.xhtml basic-1-ref.html
-skip-if(Android) HTTP(..) == canvas-1a.xhtml basic-1-ref.html
-fails-if(Android) HTTP(..) == canvas-1b.xhtml basic-1-ref.html
+fails-if(Android||B2G) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 623460 for WinXP
+fails-if(Android||B2G) HTTP(..) == basic-1.xhtml basic-1-ref.html
+skip-if(Android||B2G) HTTP(..) == canvas-1a.xhtml basic-1-ref.html
+fails-if(Android||B2G) HTTP(..) == canvas-1b.xhtml basic-1-ref.html
 == clipping-1a.html clipping-1-ref.html
 == empty-1a.html empty-1-ref.html
 == empty-1b.html empty-1-ref.html
 #these is skipped because we hang on the htmlparser tests when this is ran
-random skip-if(Android) HTTP(..) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
-random skip-if(Android) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
-skip-if(Android) HTTP(..) == offset-1.xhtml offset-1-ref.html
-random skip-if(Android) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
-random skip-if(Android) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-skip-if(Android) skip-if(gtk2Widget) fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
-skip-if(Android) == poster-1.html poster-ref-blue250x200.html
-skip-if(Android) == poster-2.html poster-ref-black140x100.html
-skip-if(Android) == poster-3.html poster-ref-black140x100.html
-skip-if(Android) == poster-4.html poster-ref-black140x100.html
-skip-if(Android) == poster-5.html poster-ref-black140x100.html
-skip-if(Android) == poster-6.html poster-ref-black140x100.html
-skip-if(Android) == poster-7.html poster-ref-red140x100.html
-skip-if(Android) == poster-8.html poster-ref-black140x100.html
-skip-if(Android) == poster-10.html poster-ref-blue125x100.html
-skip-if(Android) == poster-11.html poster-ref-blue140x100.html
-skip-if(Android) == poster-12.html poster-ref-blue140x100.html
-skip-if(Android) == poster-13.html poster-ref-blue400x300.html
-skip-if(Android) == poster-15.html poster-ref-green70x30.html
-skip-if(Android) == bug686957.html bug686957-ref.html
+random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+skip-if(Android||B2G) HTTP(..) == offset-1.xhtml offset-1-ref.html
+random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
+skip-if(Android||B2G) skip-if(gtk2Widget) fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
+skip-if(Android||B2G) == poster-1.html poster-ref-blue250x200.html
+skip-if(Android||B2G) == poster-2.html poster-ref-black140x100.html
+skip-if(Android||B2G) == poster-3.html poster-ref-black140x100.html
+skip-if(Android||B2G) == poster-4.html poster-ref-black140x100.html
+skip-if(Android||B2G) == poster-5.html poster-ref-black140x100.html
+skip-if(Android||B2G) == poster-6.html poster-ref-black140x100.html
+skip-if(Android||B2G) == poster-7.html poster-ref-red140x100.html
+skip-if(Android||B2G) == poster-8.html poster-ref-black140x100.html
+skip-if(Android||B2G) == poster-10.html poster-ref-blue125x100.html
+skip-if(Android||B2G) == poster-11.html poster-ref-blue140x100.html
+skip-if(Android||B2G) == poster-12.html poster-ref-blue140x100.html
+skip-if(Android||B2G) == poster-13.html poster-ref-blue400x300.html
+skip-if(Android||B2G) == poster-15.html poster-ref-green70x30.html
+skip-if(Android||B2G) == bug686957.html bug686957-ref.html
