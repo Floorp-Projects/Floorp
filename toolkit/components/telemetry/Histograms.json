@@ -507,6 +507,12 @@
     "n_buckets": 50,
     "description": "Decode count"
   },
+  "IMAGE_MAX_DECODE_COUNT": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 100,
+    "description": "Max decode count over all images"
+  },
   "IMAGE_DECODE_SPEED_JPEG": {
     "kind": "exponential",
     "low": 500,
