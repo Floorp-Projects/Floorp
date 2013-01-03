@@ -1,0 +1,61 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+function testConstructor(name)
+{
+  window[name]; // resolve not through assignment
+  window[name] = 17;
+
+  var desc = Object.getOwnPropertyDescriptor(window, name);
+  ok(typeof desc === "object" && desc !== null, name + ": property must exist");
+
+  is(desc.value, 17, name + ": overwrite didn't work correctly");
+  is(desc.enumerable, false,
+     name + ": initial descriptor was non-enumerable, and [[Put]] changes " +
+     "the property value but not its enumerability");
+  is(desc.configurable, true,
+     name + ": initial descriptor was configurable, and [[Put]] changes the " +
+     "property value but not its configurability");
+  is(desc.writable, true,
+     name + ": initial descriptor was writable, and [[Put]] changes the " +
+     "property value but not its writability");
+}
+
+var ctors =
+  [
+   "HTMLElement",
+   "HTMLDivElement",
+   "HTMLSpanElement",
+   "HTMLParagraphElement",
+   "HTMLOptionElement",
+   "HTMLHtmlElement",
+   "Element",
+   "Node",
+   "Document",
+   "Image",
+   "Audio",
+   "HTMLAudioElement",
+   "HTMLVideoElement",
+   "Window",
+   "XMLHttpRequest",
+   "Navigator",
+   "WebSocket",
+   "Event",
+   "IDBKeyRange",
+   "CSSPageRule",
+   "SVGPatternElement",
+  ];
+
+ctors.forEach(testConstructor);
+</script>
+</body>
+</html>
