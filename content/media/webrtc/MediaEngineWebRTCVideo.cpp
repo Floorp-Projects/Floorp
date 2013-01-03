@@ -12,8 +12,10 @@ namespace mozilla {
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
+#define LOGFRAME(msg) PR_LOG(GetMediaManagerLog(), 6, msg)
 #else
 #define LOG(msg)
+#define LOGFRAME(msg)
 #endif
 
 /**
@@ -77,9 +79,9 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   videoImage->SetData(data);
 
-#ifdef LOG_ALL_FRAMES
+#ifdef DEBUG
   static uint32_t frame_num = 0;
-  LOG(("frame %d; timestamp %u, render_time %lu", frame_num++, time_stamp, render_time));
+  LOGFRAME(("frame %d; timestamp %u, render_time %lu", frame_num++, time_stamp, render_time));
 #endif
 
   // we don't touch anything in 'this' until here (except for snapshot,
@@ -112,13 +114,16 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   nsRefPtr<layers::Image> image = mImage;
   TrackTicks target = TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
-#ifdef LOG_ALL_FRAMES
-  LOG(("NotifyPull, target = %lu, delta = %lu", (uint64_t) target, (uint64_t) delta));
-#endif
-  // NULL images are allowed
-  segment.AppendFrame(image ? image.forget() : nullptr, delta, gfxIntSize(mWidth, mHeight));
-  aSource->AppendToTrack(aID, &(segment));
-  aLastEndTime = target;
+  LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime, 
+            (int64_t) target, (int64_t) delta, image ? "" : "<null>"));
+  // Don't append if we've already provided a frame that supposedly goes past the current aDesiredTime
+  // Doing so means a negative delta and thus messes up handling of the graph
+  if (delta > 0) {
+    // NULL images are allowed
+    segment.AppendFrame(image ? image.forget() : nullptr, delta, gfxIntSize(mWidth, mHeight));
+    aSource->AppendToTrack(aID, &(segment));
+    aLastEndTime = target;
+  }
 }
 
 void
@@ -192,6 +197,7 @@ MediaEngineWebRTCVideoSource::GetUUID(nsAString& aUUID)
 nsresult
 MediaEngineWebRTCVideoSource::Allocate()
 {
+  LOG((__FUNCTION__));
   if (!mCapabilityChosen) {
     // XXX these should come from constraints
     ChooseCapability(mWidth, mHeight, mMinFps);
@@ -215,6 +221,7 @@ MediaEngineWebRTCVideoSource::Allocate()
 nsresult
 MediaEngineWebRTCVideoSource::Deallocate()
 {
+  LOG((__FUNCTION__));
   if (mSources.IsEmpty()) {
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
@@ -241,6 +248,7 @@ MediaEngineWebRTCVideoSource::GetOptions()
 nsresult
 MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
+  LOG((__FUNCTION__));
   int error = 0;
   if (!mInitDone || !aStream) {
     return NS_ERROR_FAILURE;
@@ -278,6 +286,7 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 nsresult
 MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 {
+  LOG((__FUNCTION__));
   if (!mSources.RemoveElement(aSource)) {
     // Already stopped - this is allowed
     return NS_OK;
@@ -294,6 +303,9 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
     ReentrantMonitorAutoEnter enter(mMonitor);
     mState = kStopped;
     aSource->EndTrack(aID);
+    // Drop any cached image so we don't start with a stale image on next
+    // usage
+    mImage = nullptr;
   }
 
   mViERender->StopRender(mCaptureIndex);
@@ -407,6 +419,7 @@ MediaEngineWebRTCVideoSource::Init()
   mDeviceName[0] = '\0'; // paranoia
   mUniqueId[0] = '\0';
 
+  LOG((__FUNCTION__));
   if (mVideoEngine == NULL) {
     return;
   }
@@ -436,6 +449,7 @@ MediaEngineWebRTCVideoSource::Init()
 void
 MediaEngineWebRTCVideoSource::Shutdown()
 {
+  LOG((__FUNCTION__));
   if (!mInitDone) {
     return;
   }

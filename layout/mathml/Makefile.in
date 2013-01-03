@@ -14,7 +14,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = layout
 LIBRARY_NAME = gkmathml_s
 LIBXUL_LIBRARY	= 1
+ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
+endif # !_MSC_VER
 
 
 LOCAL_INCLUDES = \

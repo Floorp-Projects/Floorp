@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.OnAccountsUpdateListener;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -253,10 +254,11 @@ public class AboutHomeContent extends ScrollView
             mAccountListener = null;
         }
 
-        Cursor cursor = mTopSitesAdapter.getCursor();
-        if (cursor != null && !cursor.isClosed())
-            cursor.close();
-
+        if (mTopSitesAdapter != null) {
+            Cursor cursor = mTopSitesAdapter.getCursor();
+            if (cursor != null && !cursor.isClosed())
+                cursor.close();
+        }
     }
 
     void setLastTabsVisibility(boolean visible) {
@@ -980,6 +982,9 @@ public class AboutHomeContent extends ScrollView
 
         int requestCode = GeckoAppShell.sActivityHelper.makeRequestCode(new ActivityResultHandler() {
             public void onActivityResult(int resultCode, Intent data) {
+                if (resultCode == Activity.RESULT_CANCELED || data == null)
+                    return;
+
                 final String title = data.getStringExtra(AwesomeBar.TITLE_KEY);
                 final String url = data.getStringExtra(AwesomeBar.URL_KEY);
 
@@ -988,7 +993,6 @@ public class AboutHomeContent extends ScrollView
                     @Override
                     public Void doInBackground(Void... params) {
                         final ContentResolver resolver = mActivity.getContentResolver();
-                        Log.i(LOGTAG, "Pin : " + url + " and " + title);
                         BrowserDB.pinSite(resolver, url, (title == null ? url : title), position);
                         return null;
                     }

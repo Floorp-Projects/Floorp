@@ -158,7 +158,7 @@ static nsTArray<nsAutoPtr<CacheData> >* gCacheData = nullptr;
 static nsRefPtrHashtable<ValueObserverHashKey,
                          ValueObserver>* gObserverTable = nullptr;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(PreferencesMallocSizeOf, "preferences")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(PreferencesMallocSizeOf)
 
 static size_t
 SizeOfObserverEntryExcludingThis(ValueObserverHashKey* aKey,

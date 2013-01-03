@@ -460,6 +460,10 @@ OS_LIBS += \
   $(NULL)
 endif
 
+ifdef MOZ_WMF
+OS_LIBS += $(call EXPAND_LIBNAME,mfuuid)
+endif
+
 EXTRA_DEPS += \
   $(topsrcdir)/intl/unicharutil/util/objs.mk \
   $(topsrcdir)/rdf/util/src/objs.mk \
