@@ -173,7 +173,8 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
         const LiteralHashEntry *entry =
             static_cast<const LiteralHashEntry *>(hdr);
 
-        return 0 == NS_strcmp(static_cast<const PRUnichar *>(key), entry->mKey);
+        return 0 == nsCRT::strcmp(static_cast<const PRUnichar *>(key),
+                                  entry->mKey);
     }
 };
 

@@ -218,8 +218,8 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
                              const PRUnichar *aData)
 {
   if (!strcmp(aTopic, "profile-after-change")) {
-  } else if (!strcmp(aTopic, "cookie-changed") && aData &&
-             !NS_strcmp(aData, NS_LITERAL_STRING("cleared").get())) {
+  } else if (!strcmp(aTopic, "cookie-changed") &&
+             !nsCRT::strcmp(aData, NS_LITERAL_STRING("cleared").get())) {
     mStorages.EnumerateEntries(ClearStorage, nullptr);
 
     nsresult rv = DOMStorageImpl::InitDB();

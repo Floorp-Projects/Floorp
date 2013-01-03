@@ -146,7 +146,7 @@ nsCertOverrideService::Observe(nsISupports     *,
 
     ReentrantMonitorAutoEnter lock(monitor);
 
-    if (aData && !NS_strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       RemoveAllFromMemory();
       // delete the storage file
       if (mSettingsFile) {
