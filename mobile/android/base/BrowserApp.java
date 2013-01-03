@@ -1046,7 +1046,7 @@ abstract public class BrowserApp extends GeckoApp
                 mAboutHomeContent.clearAllSites();
                 return true;
         }
-        return false;
+        return super.onContextItemSelected(item);
     }
 
     @Override
