@@ -32,7 +32,7 @@
       return getDocNode(aID).body.firstChild;
     }
 
-    function rootContentReplaced(aID, aTextName)
+    function rootContentReplaced(aID, aTextName, aRootContentRole)
     {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
@@ -42,7 +42,7 @@
       this.finalCheck = function rootContentReplaced_finalCheck()
       {
         var tree = {
-          role: ROLE_DOCUMENT,
+          role: aRootContentRole || ROLE_DOCUMENT,
           children: [
             {
               role: ROLE_TEXT_LEAF,
@@ -142,14 +142,14 @@
         docNode.replaceChild(newHTMLNode, docNode.documentElement);
       }
 
-      this.getID = function replaceIFrameBody_getID()
+      this.getID = function replaceIFrameHTMLElm_getID()
       {
         return "replace HTML element";
       }
     }
 
     /**
-     * Replace HTML body.
+     * Replace HTML body on new body having ARIA role.
      */
     function replaceIFrameBody(aID)
     {
@@ -164,23 +164,33 @@
         docNode.documentElement.replaceChild(newBodyNode, docNode.body);
       }
 
-      this.finalCheck = function replaceIFrameBody_finalCheck()
-      {
-        var tree = {
-          role: ROLE_DOCUMENT,
-          children: [
-            {
-              role: ROLE_TEXT_LEAF,
-              name: "New Hello"
-            }
-          ]
-        };
-        testAccessibleTree(getDocNode(aID), tree);
-      }
-
       this.getID = function replaceIFrameBody_getID()
       {
         return "replace body";
+      }
+    }
+
+    /**
+     * Replace HTML body on new body having ARIA role.
+     */
+    function replaceIFrameBodyOnARIARoleBody(aID)
+    {
+      this.__proto__ = new rootContentReplaced(aID, "New Hello",
+                                               ROLE_PUSHBUTTON);
+
+      this.invoke = function replaceIFrameBodyOnARIARoleBody_invoke()
+      {
+        var docNode = getDocNode(aID);
+        var newBodyNode = docNode.createElement("body");
+        var newTextNode = docNode.createTextNode("New Hello");
+        newBodyNode.appendChild(newTextNode);
+        newBodyNode.setAttribute("role", "button");
+        docNode.documentElement.replaceChild(newBodyNode, docNode.body);
+      }
+
+      this.getID = function replaceIFrameBodyOnARIARoleBody_getID()
+      {
+        return "replace body on body having ARIA role";
       }
     }
 
@@ -401,6 +411,7 @@
       gQueue.push(new insertElmUnderDocElmWhileBodyMissed("iframe"));
       gQueue.push(new insertBodyToIFrameDoc("iframe"));
       gQueue.push(new changeSrc("iframe"));
+      gQueue.push(new replaceIFrameBodyOnARIARoleBody("iframe"));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -420,6 +431,9 @@
   <a target="_blank"
      title="Reorder event for document must be fired after document initial tree creation"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=669263">Mozilla Bug 669263</a>
+  <a target="_blank"
+     title="Changing the HTML body doesn't pick up ARIA role"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=818407">Mozilla Bug 818407</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>

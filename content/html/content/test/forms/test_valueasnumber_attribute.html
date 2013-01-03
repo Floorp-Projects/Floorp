@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=636737
 -->
 <head>
-  <title>Test for Bug 636737</title>
+  <title>Test for Bug input.valueAsNumber</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -43,6 +43,7 @@ function checkAvailability()
     ["reset", false],
     ["button", false],
     ["number", true],
+    ["date", true],
     // The next types have not been implemented but will fallback to "text"
     // which has the same value.
     ["color", false],
@@ -51,7 +52,6 @@ function checkAvailability()
   var todoList =
   [
     ["datetime", true],
-    ["date", true],
     ["month", true],
     ["week", true],
     ["time", true],
@@ -103,7 +103,7 @@ function checkAvailability()
   }
 }
 
-function checkGet()
+function checkNumberGet()
 {
   var testData =
   [
@@ -126,6 +126,8 @@ function checkGet()
   element.type = "number";
   for (data of testData) {
     element.value = data[0];
+
+    // Given that NaN != NaN, we have to use null when the expected value is NaN.
     if (data[1] != null) {
       is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
          "floating point representation of the value");
@@ -136,7 +138,7 @@ function checkGet()
   }
 }
 
-function checkSet()
+function checkNumberSet()
 {
   var testData =
   [
@@ -148,29 +150,156 @@ function checkSet()
     [2e1, "20"],
     [1e-1, "0.1"], // value after e can be negative
     [1E2, "100"], // E can be used instead of e
-    ["", null], // the empty string is not a number
-    ["foo", null],
+    // Setting a string will set NaN.
+    ["foo", ""],
+    // "" is converted to 0.
+    ["", 0],
+    [42, "42"], // Keep this here, it is used by the next test.
+    // Setting Infinity should throw and not change the current value.
+    [Infinity, 42, true],
+    [-Infinity, 42, true],
+    // Setting NaN should change the value to the empty string.
+    [NaN, ""],
   ];
 
   element.type = "number";
   for (data of testData) {
-    element.valueAsNumber = data[0];
-    if (data[1] != null) {
+    var caught = false;
+    try {
+      element.valueAsNumber = data[0];
       is(element.value, data[1],
          "valueAsNumber should be able to set the value");
+    } catch (e) {
+      caught = true;
+    }
+
+    if (data[2]) {
+      ok(caught, "valueAsNumber should have thrown");
+      is(element.value, data[1], "value should not have changed");
     } else {
-      element.valueAsNumber = testData[0];
-      isnot(element.value, data[1],
-            "valueAsNumber should not set the value if it's not a number");
+      ok(!caught, "valueAsNumber should not have thrown");
     }
   }
+}
+
+function checkDateGet()
+{
+  var validData =
+  [
+    [ "2012-07-12", 1342051200000 ],
+    [ "1970-01-01", 0 ],
+    // We are supposed to support at least until this date.
+    // (corresponding to the date object maximal value)
+    [ "275760-09-13", 8640000000000000 ],
+    // Minimum valid date (limited by the input element minimum valid value)
+    [ "0001-01-01", -62135596800000 ],
+    [ "2012-02-29", 1330473600000 ],
+    [ "2011-02-28", 1298851200000 ],
+  ];
+
+  var invalidData =
+  [
+    "invaliddate",
+    "",
+    "275760-09-14",
+    "999-12-31",
+    "-001-12-31",
+    "0000-01-01",
+    "2011-02-29",
+    "1901-13-31",
+    "1901-12-32",
+    "1901-00-12",
+    "1901-01-00",
+    "1900-02-29",
+  ];
+
+  element.type = "date";
+  for (data of validData) {
+    element.value = data[0];
+    is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
+       "timestamp representing this date");
+  }
+
+  for (data of invalidData) {
+    element.value = data;
+    ok(isNaN(element.valueAsNumber), "valueAsNumber should return NaN "  +
+       "when the element value is not a valid date");
+  }
+}
+
+function checkDateSet()
+{
+  var testData =
+  [
+    [ 1342051200000,     "2012-07-12" ],
+    [ 0,                 "1970-01-01" ],
+    // Maximum valid date (limited by the ecma date object range).
+    [ 8640000000000000,  "275760-09-13" ],
+    // Minimum valid date (limited by the input element minimum valid value)
+    [ -62135596800000,   "0001-01-01" ],
+    [ 1330473600000,     "2012-02-29" ],
+    [ 1298851200000,     "2011-02-28" ],
+    // "Values must be truncated to valid dates"
+    [ 42.1234,           "1970-01-01" ],
+    [ 123.123456789123,  "1970-01-01" ],
+    [ 1e2,               "1970-01-01" ],
+    [ 1E9,               "1970-01-12" ],
+    [ 1e-1,              "1970-01-01" ],
+    [ 2e10,              "1970-08-20" ],
+    [ 1298851200010,     "2011-02-28" ],
+    [ -1,                "1969-12-31" ],
+    [ -86400000,         "1969-12-31" ],
+    [ 86400000,          "1970-01-02" ],
+    // Invalid numbers.
+    // Those are implicitly converted to numbers
+    [ "",                "1970-01-01" ],
+    [ true,              "1970-01-01" ],
+    [ false,             "1970-01-01" ],
+    [ null,              "1970-01-01" ],
+    // Those are converted to NaN, the corresponding date string is the empty string
+    [ "invaliddatenumber", "" ],
+    [ NaN,               "" ],
+    [ undefined,         "" ],
+    // Out of range, the corresponding date string is the empty string
+    [ -62135596800001,   "" ],
+    // Infinity will keep the current value and throw (so we need to set a current value).
+    [ 1298851200010, "2011-02-28" ],
+    [ Infinity, "2011-02-28", true ],
+    [ -Infinity, "2011-02-28", true ],
+  ];
+
+  element.type = "date";
+  for (data of testData) {
+    var caught = false;
+
+    try {
+      element.valueAsNumber = data[0];
+      is(element.value, data[1], "valueAsNumber should set the value to " + data[1]);
+    } catch(e) {
+      caught = true;
+    }
+
+    if (data[2]) {
+      ok(caught, "valueAsNumber should have trhown"); 
+      is(element.value, data[1], "the value should not have changed");
+    } else {
+      ok(!caught, "valueAsNumber should not have thrown");
+    }
+  }
+
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 checkAvailability();
-checkGet();
-checkSet();
+
+// <input type='number'> test
+checkNumberGet();
+checkNumberSet();
+
+// <input type='date'> test
+checkDateGet();
+checkDateSet();
 
 SimpleTest.finish();
 });

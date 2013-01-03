@@ -2,8 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#toolbox-tabs {
-  margin: 0;
+#toolbox-controls {
+  margin: 0 4px;
+}
+
+#toolbox-controls > toolbarbutton,
+#toolbox-dock-buttons > toolbarbutton {
+  -moz-appearance: none;
+  margin: 0 4px;
+  min-width: 16px;
+  width: 16px;
 }
 
 #toolbox-dock-bottom {
@@ -15,7 +23,52 @@
 }
 
 #toolbox-dock-window {
-  list-style-image: url("chrome://browser/skin/devtools/dock-window.png");
+  list-style-image: url("chrome://browser/skin/devtools/undock.png");
+}
+
+#toolbox-close {
+  list-style-image: url("chrome://browser/skin/devtools/close.png");
+}
+
+#toolbox-dock-window,
+#toolbox-dock-bottom,
+#toolbox-dock-side,
+#toolbox-close {
+  opacity: 0.6;
+}
+
+#toolbox-dock-window:hover,
+#toolbox-dock-bottom:hover,
+#toolbox-dock-side:hover,
+#toolbox-close:hover {
+  opacity: 1;
+}
+
+#toolbox-controls-separator {
+  width: 3px;
+  background-image: linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)),
+                    linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)),
+                    linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0));
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position: 0, 1px, 2px;
+  -moz-margin-start: 8px;
+}
+
+/* Command buttons */
+
+.command-button {
+  -moz-appearance: none;
+  padding: 0 8px;
+  margin: 0;
+  width: 16px;
+}
+
+.command-button:hover {
+  background-color: hsla(206,37%,4%,.2);
+}
+.command-button:hover:active {
+  background-color: hsla(206,37%,4%,.4);
 }
 
 #command-button-responsive {
@@ -66,29 +119,91 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  background-image: linear-gradient(to bottom, hsl(210,11%,36%), hsl(210,11%,18%));
-  color: hsl(210,30%,85%);
-  padding: 4px 3px 3px;
-  box-shadow: 0 -3px 0 0 rgb(20,20,20) inset, 0 -4px 0 0 rgba(0,0,0,0.8) inset;
+  background-image: url(background-noise-toolbar.png),
+                    linear-gradient(#303840, #2d3640);
+  border-top: 1px solid #060a0d;
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset,
+              0 -1px 0 hsla(206,37%,4%,.1) inset;
+  min-height: 32px;
+  padding: 0;
+}
+
+#toolbox-tabs {
+  margin: 0;
 }
 
 .devtools-tab {
   -moz-appearance: none;
-  min-width: 78px;
-  min-height: 22px;
-  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
-  border-radius: 3px 3px 0 0;
-  color: inherit;
-  border-style: solid;
-  border-color: transparent;
-  border-width: 1px 1px 0;
-  margin: 0 5px;
-  padding: 0 10px 1px;
+  min-width: 88px;
+  min-height: 32px;
+  color: #b6babf;
+  margin: 0;
+  padding: 0;
+  background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1));
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position: left, right;
+  border-right: 1px solid hsla(206,37%,4%,.45);
+}
+
+.devtools-tab > .radio-label-center-box > .radio-label-box {
+  -moz-appearance: none;
+  border: none;
+  padding: 0 16px;
+}
+
+.devtools-tab > .radio-label-center-box >.radio-label-box > .radio-icon {
+  -moz-margin-end: 6px;
+  opacity: 0.6;
+}
+
+.devtools-tab:hover > .radio-label-center-box > .radio-label-box >
+.radio-icon {
+  opacity: 0.8;
+}
+
+.devtools-tab:active > .radio-label-center-box > .radio-label-box > .radio-icon,
+.devtools-tab[selected=true] > .radio-label-center-box > .radio-label-box >
+.radio-icon {
+  opacity: 1;
+}
+
+.devtools-tab:hover {
+  background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(206,37%,4%,.1), hsla(206,37%,4%,.2));
+  background size: 1px 100%,
+                   1px 100%,
+                   100%;
+  background-repeat: no-repeat,
+                     no-repeat,
+                     repeat-x;
+  background-position: left, right;
+  color: #ced3d9;
+}
+.devtools-tab:hover:active {
+  background-color: hsla(206,37%,4%,.2);
+  color: #f5f7fa;
 }
 
 .devtools-tab[selected=true] {
-  border-color: hsla(210,8%,5%,.6);
-  background-color: rgb(20,20,20);
-  text-shadow: none;
-  color: white;
+  color: #f5f7fa;
+  background-image: radial-gradient(ellipse farthest-corner at center top, #9fdfff, hsla(200,100%,70%,.3)),
+                    radial-gradient(ellipse farthest-side at center top, hsla(200,100%,70%,.4), hsla(200,100%,70%,0)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.02), hsla(204,45%,98%,.04)),
+                    linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.3));
+  background-size: 100% 1px,
+                   100% 5px,
+                   1px 100%,
+                   1px 100%,
+                   100%;
+  background-repeat: no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     repeat-x;
+  background-position: top right, top left, left, right;
+  box-shadow: 1px -1px 0 hsla(206,37%,4%,.2) inset;
 }

@@ -88,9 +88,13 @@ public:
   virtual nsresult Allocate();
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
-  virtual nsresult Stop();
+  virtual nsresult Stop(SourceMediaStream*, TrackID);
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
-  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
+  virtual void NotifyPull(MediaStreamGraph* aGraph,
+                          SourceMediaStream *aSource,
+                          TrackID aId,
+                          StreamTime aDesiredTime,
+                          TrackTicks &aLastEndTime);
 
   NS_DECL_ISUPPORTS
 
@@ -136,7 +140,7 @@ private:
   TrackTicks mLastEndTime;
 
   mozilla::ReentrantMonitor mMonitor; // Monitor for processing WebRTC frames.
-  SourceMediaStream* mSource;
+  nsTArray<SourceMediaStream *> mSources; // When this goes empty, we shut down HW
 
   int mFps; // Track rate (30 fps by default)
   int mMinFps; // Min rate we want to accept
@@ -184,9 +188,13 @@ public:
   virtual nsresult Allocate();
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
-  virtual nsresult Stop();
+  virtual nsresult Stop(SourceMediaStream*, TrackID);
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
-  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
+  virtual void NotifyPull(MediaStreamGraph* aGraph,
+                          SourceMediaStream *aSource,
+                          TrackID aId,
+                          StreamTime aDesiredTime,
+                          TrackTicks &aLastEndTime);
 
   // VoEMediaProcess.
   void Process(const int channel, const webrtc::ProcessingTypes type,
@@ -208,6 +216,7 @@ private:
   webrtc::VoENetwork*  mVoENetwork;
 
   mozilla::ReentrantMonitor mMonitor;
+  nsTArray<SourceMediaStream *> mSources; // When this goes empty, we shut down HW
 
   int mCapIndex;
   int mChannel;
@@ -217,7 +226,6 @@ private:
   nsString mDeviceName;
   nsString mDeviceUUID;
 
-  SourceMediaStream* mSource;
   NullTransport *mNullTransport;
 };
 

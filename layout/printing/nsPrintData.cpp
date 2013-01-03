@@ -12,6 +12,10 @@
 #include "nsIWebProgressListener.h"
 #include "mozilla/Services.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 //-----------------------------------------------------
 // PR LOGGING
 #ifdef MOZ_LOGGING
@@ -66,6 +70,62 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
 
 }
 
+#ifdef MOZ_CRASHREPORTER
+#define ASSERT_AND_NOTE(message) \
+  { NS_ASSERTION(false, message); \
+    CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING(message "\n")); }
+#else
+#define ASSERT_AND_NOTE(message) \
+  NS_ASSERTION(false, message);
+#endif
+
+static void
+AssertPresShellsAndContextsSane(nsPrintObject* aPO,
+                                nsTArray<nsIPresShell*>& aPresShells,
+                                nsTArray<nsPresContext*>& aPresContexts)
+{
+  if (aPO->mPresShell) {
+    if (aPresShells.Contains(aPO->mPresShell)) {
+      ASSERT_AND_NOTE("duplicate pres shells in print object tree");
+    } else {
+      aPresShells.AppendElement(aPO->mPresShell);
+    }
+  }
+  if (aPO->mPresContext) {
+    if (aPresContexts.Contains(aPO->mPresContext)) {
+      ASSERT_AND_NOTE("duplicate pres contexts in print object tree");
+    } else {
+      aPresContexts.AppendElement(aPO->mPresContext);
+    }
+  }
+  if (aPO->mPresShell && !aPO->mPresContext) {
+    ASSERT_AND_NOTE("print object has pres shell but no pres context");
+  }
+  if (!aPO->mPresShell && aPO->mPresContext) {
+    ASSERT_AND_NOTE("print object has pres context but no pres shell");
+  }
+  if (aPO->mPresContext && aPO->mPresContext->GetPresShell() != aPO->mPresShell) {
+    ASSERT_AND_NOTE("print object has mismatching pres shell and pres context");
+  }
+  if (aPO->mPresContext && !aPO->mPresContext->GetPresShell()) {
+    ASSERT_AND_NOTE("mPresShell->GetPresShell() is null");
+  }
+
+  for (uint32_t i = 0; i < aPO->mKids.Length(); i++) {
+    AssertPresShellsAndContextsSane(aPO->mKids[i], aPresShells, aPresContexts);
+  }
+}
+
+#undef ASSERT_AND_NOTE
+
+static void
+AssertPresShellsAndContextsSane(nsPrintObject* aPO)
+{
+  nsTArray<nsIPresShell*> presShells;
+  nsTArray<nsPresContext*> presContexts;
+  AssertPresShellsAndContextsSane(aPO, presShells, presContexts);
+}
+
 nsPrintData::~nsPrintData()
 {
   MOZ_COUNT_DTOR(nsPrintData);
@@ -99,6 +159,7 @@ nsPrintData::~nsPrintData()
     }
   }
 
+  AssertPresShellsAndContextsSane(mPrintObject);
   delete mPrintObject;
 
   if (mBrandName) {

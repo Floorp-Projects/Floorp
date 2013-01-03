@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsISupportsArray;
+
+%{C++
+#define NS_MEDIAMANAGERSERVICE_CID {0xabc622ea, 0x9655, 0x4123, {0x80, 0xd9, 0x22, 0x62, 0x1b, 0xdd, 0x54, 0x65}}
+#define MEDIAMANAGERSERVICE_CONTRACTID "@mozilla.org/mediaManagerService;1"
+%}
+
+[scriptable, builtinclass, uuid(afe82ff1-2caa-4304-85da-0158a5dee56b)]
+interface nsIMediaManagerService : nsISupports
+{
+  readonly attribute nsISupportsArray activeMediaCaptureWindows;
+};

@@ -77,14 +77,6 @@ class BitwisePolicy : public BoxInputsPolicy
 
 class ComparePolicy : public BoxInputsPolicy
 {
-  protected:
-    MIRType specialization_;
-
-  public:
-    ComparePolicy()
-      : specialization_(MIRType_None)
-    { }
-
     bool adjustInputs(MInstruction *def);
 };
 

@@ -6,12 +6,21 @@
 #include "nsIDOMElement.idl"
 
 interface nsIDOMSVGSVGElement;
+interface nsIDOMSVGAnimatedString;
+interface nsIDOMCSSStyleDeclaration;
+interface nsIDOMCSSValue;
 
-[scriptable, uuid(9B16734D-DBFD-4465-8EAF-354694934A1D)]
-interface nsIDOMSVGElement : nsIDOMElement 
-{ 
+
+[scriptable, uuid(7ccf8faf-29b4-4113-bb23-bc187bac27cf)]
+interface nsIDOMSVGElement : nsIDOMElement
+{
   attribute DOMString id;
             // raises DOMException on setting
   readonly attribute nsIDOMSVGSVGElement ownerSVGElement;
   readonly attribute nsIDOMSVGElement    viewportElement;
+
+  readonly attribute nsIDOMSVGAnimatedString   className;
+  readonly attribute nsIDOMCSSStyleDeclaration style;
+
+  nsIDOMCSSValue getPresentationAttribute(in DOMString name);
 };

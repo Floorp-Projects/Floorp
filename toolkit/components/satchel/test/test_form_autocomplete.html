@@ -92,6 +92,12 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with input type='date' -->
+  <form id="form14" onsubmit="return false;">
+    <input  type="date" name="field11">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -134,10 +140,11 @@ fh.addEntry("field7", "value");
 fh.addEntry("field8", "value");
 fh.addEntry("field9", "value");
 fh.addEntry("field10", "42");
+fh.addEntry("field11", "2010-10-10");
 fh.addEntry("searchbar-history", "blacklist test");
 
 // All these non-implemeted types might need autocomplete tests in the future.
-var todoTypes = [ "datetime", "date", "month", "week", "time", "datetime-local",
+var todoTypes = [ "datetime", "month", "week", "time", "datetime-local",
                   "range", "color" ];
 var todoInput = document.createElement("input");
 for (var type of todoTypes) {
@@ -729,6 +736,17 @@ function runTest(testNum) {
         doKey("down");
         doKey("return");
         checkForm("42");
+
+        input = $_(14, "field11");
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 405:
+        checkMenuEntries(["2010-10-10"]);
+        doKey("down");
+        doKey("return");
+        checkForm("2010-10-10");
 
         // Go to test 500.
         fh.addEntry("field1", "value1");

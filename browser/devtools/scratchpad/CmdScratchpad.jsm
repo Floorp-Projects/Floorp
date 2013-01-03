@@ -12,7 +12,7 @@ Components.utils.import("resource:///modules/devtools/gcli.jsm");
 gcli.addCommand({
   name: "scratchpad",
   buttonId: "command-button-scratchpad",
-  buttonClass: "command-button devtools-toolbarbutton",
+  buttonClass: "command-button",
   tooltipText: gcli.lookup("scratchpadOpenTooltip"),
   hidden: true,
   exec: function(args, context) {

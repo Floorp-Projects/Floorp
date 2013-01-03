@@ -22,7 +22,7 @@ var PDFJS = {};
   'use strict';
 
   PDFJS.build =
-'3c7ef79';
+'e22ee54';
 
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
@@ -215,7 +215,9 @@ var Page = (function PageClosure() {
                                 xref, handler, this.pageIndex,
                                 'p' + this.pageIndex + '_');
 
-      return pe.getOperatorList(contentStream, resources, dependency);
+      var list = pe.getOperatorList(contentStream, resources, dependency);
+      pe.optimizeQueue(list);
+      return list;
     },
     extractTextContent: function Page_extractTextContent() {
       var handler = {
@@ -306,6 +308,12 @@ var Page = (function PageClosure() {
                   break;
                 case 'GoToR':
                   var url = a.get('F');
+                  if (isDict(url)) {
+                    // We assume that the 'url' is a Filspec dictionary
+                    // and fetch the url without checking any further
+                    url = url.get('F') || '';
+                  }
+
                   // TODO: pdf reference says that GoToR
                   // can also have 'NewWindow' attribute
                   if (!isValidUrl(url))
@@ -1359,6 +1367,13 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       return this.pdfInfo.fingerprint;
     },
     /**
+     * @return {boolean} true if embedded document fonts are in use. Will be
+     * set during rendering of the pages.
+     */
+    get embeddedFontsUsed() {
+      return this.transport.embeddedFontsUsed;
+    },
+    /**
      * @param {number} The page number to get. The first page is 1.
      * @return {Promise} A promise that is resolved with a {PDFPageProxy}
      * object.
@@ -1605,6 +1620,9 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
           warn('Error during font loading: ' + obj.error);
           continue;
         }
+        if (!obj.coded) {
+          this.transport.embeddedFontsUsed = true;
+        }
         fontObjs.push(obj);
       }
 
@@ -1710,7 +1728,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
     this.pageCache = [];
     this.pagePromises = [];
-    this.fontsLoading = {};
+    this.embeddedFontsUsed = false;
 
     // If worker support isn't disabled explicit and the browser has worker
     // support, create a new web worker and test if it/the browser fullfills
@@ -2176,6 +2194,81 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
   }
 
+  function applyStencilMask(imgArray, width, height, inverseDecode, buffer) {
+    var imgArrayPos = 0;
+    var i, j, mask, buf;
+    // removing making non-masked pixels transparent
+    var bufferPos = 3; // alpha component offset
+    for (i = 0; i < height; i++) {
+      mask = 0;
+      for (j = 0; j < width; j++) {
+        if (!mask) {
+          buf = imgArray[imgArrayPos++];
+          mask = 128;
+        }
+        if (!(buf & mask) == inverseDecode) {
+          buffer[bufferPos] = 0;
+        }
+        bufferPos += 4;
+        mask >>= 1;
+      }
+    }
+  }
+
+  function rescaleImage(pixels, width, height, widthScale, heightScale) {
+    var scaledWidth = Math.ceil(width / widthScale);
+    var scaledHeight = Math.ceil(height / heightScale);
+
+    var itemsSum = new Float32Array(scaledWidth * scaledHeight * 3);
+    var itemsCount = new Float32Array(scaledWidth * scaledHeight);
+    var maxAlphas = new Uint8Array(scaledWidth * scaledHeight);
+    for (var i = 0, position = 0; i < height; i++) {
+      var lineOffset = (0 | (i / heightScale)) * scaledWidth;
+      for (var j = 0; j < width; j++) {
+        var countOffset = lineOffset + (0 | (j / widthScale));
+        var sumOffset = countOffset * 3;
+        var maxAlpha = maxAlphas[countOffset];
+        var currentAlpha = pixels[position + 3];
+        if (maxAlpha < currentAlpha) {
+          // lowering total alpha
+          var scale = 1 - (currentAlpha - maxAlpha) / 255;
+          itemsSum[sumOffset] *= scale;
+          itemsSum[sumOffset + 1] *= scale;
+          itemsSum[sumOffset + 2] *= scale;
+          maxAlphas[countOffset] = maxAlpha = currentAlpha;
+        }
+        if (maxAlpha > currentAlpha) {
+          var scale = 1 - (maxAlpha - currentAlpha) / 255;
+          itemsSum[sumOffset] += pixels[position] * scale;
+          itemsSum[sumOffset + 1] += pixels[position + 1] * scale;
+          itemsSum[sumOffset + 2] += pixels[position + 2] * scale;
+          itemsCount[countOffset] += scale;
+        } else {
+          itemsSum[sumOffset] += pixels[position];
+          itemsSum[sumOffset + 1] += pixels[position + 1];
+          itemsSum[sumOffset + 2] += pixels[position + 2];
+          itemsCount[countOffset]++;
+        }
+        position += 4;
+      }
+    }
+    var tmpCanvas = createScratchCanvas(scaledWidth, scaledHeight);
+    var tmpCtx = tmpCanvas.getContext('2d');
+    var imgData = tmpCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+    pixels = imgData.data;
+    var j = 0, q = 0;
+    for (var i = 0, ii = scaledWidth * scaledHeight; i < ii; i++) {
+      var count = itemsCount[i];
+      pixels[j] = itemsSum[q++] / count;
+      pixels[j + 1] = itemsSum[q++] / count;
+      pixels[j + 2] = itemsSum[q++] / count;
+      pixels[j + 3] = maxAlphas[i];
+      j += 4;
+    }
+    tmpCtx.putImageData(imgData, 0, 0);
+    return tmpCanvas;
+  }
+
   var LINE_CAP_STYLES = ['butt', 'round', 'square'];
   var LINE_JOIN_STYLES = ['miter', 'round', 'bevel'];
   var NORMAL_CLIP = {};
@@ -2207,7 +2300,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       'setFillCMYKColor': true,
       'paintJpegXObject': true,
       'paintImageXObject': true,
+      'paintInlineImageXObject': true,
+      'paintInlineImageXObjectGroup': true,
       'paintImageMaskXObject': true,
+      'paintImageMaskXObjectGroup': true,
       'shadingFill': true
     },
 
@@ -2313,10 +2409,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.ctx.miterLimit = limit;
     },
     setDash: function CanvasGraphics_setDash(dashArray, dashPhase) {
-      this.ctx.mozDash = dashArray;
-      this.ctx.mozDashOffset = dashPhase;
-      this.ctx.webkitLineDash = dashArray;
-      this.ctx.webkitLineDashOffset = dashPhase;
+      var ctx = this.ctx;
+      if ('setLineDash' in ctx) {
+        ctx.setLineDash(dashArray);
+        ctx.lineDashOffset = dashPhase;
+      } else {
+        ctx.mozDash = dashArray;
+        ctx.mozDashOffset = dashPhase;
+      }
     },
     setRenderingIntent: function CanvasGraphics_setRenderingIntent(intent) {
       // Maybe if we one day fully support color spaces this will be important
@@ -3107,96 +3207,58 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
                              imgArray, inverseDecode, width, height) {
-      function applyStencilMask(buffer, inverseDecode) {
-        var imgArrayPos = 0;
-        var i, j, mask, buf;
-        // removing making non-masked pixels transparent
-        var bufferPos = 3; // alpha component offset
-        for (i = 0; i < height; i++) {
-          mask = 0;
-          for (j = 0; j < width; j++) {
-            if (!mask) {
-              buf = imgArray[imgArrayPos++];
-              mask = 128;
-            }
-            if (!(buf & mask) == inverseDecode) {
-              buffer[bufferPos] = 0;
-            }
-            bufferPos += 4;
-            mask >>= 1;
-          }
-        }
-      }
-      function rescaleImage(pixels, widthScale, heightScale) {
-        var scaledWidth = Math.ceil(width / widthScale);
-        var scaledHeight = Math.ceil(height / heightScale);
-
-        var itemsSum = new Uint32Array(scaledWidth * scaledHeight * 4);
-        var itemsCount = new Uint32Array(scaledWidth * scaledHeight);
-        for (var i = 0, position = 0; i < height; i++) {
-          var lineOffset = (0 | (i / heightScale)) * scaledWidth;
-          for (var j = 0; j < width; j++) {
-            var countOffset = lineOffset + (0 | (j / widthScale));
-            var sumOffset = countOffset << 2;
-            itemsSum[sumOffset] += pixels[position];
-            itemsSum[sumOffset + 1] += pixels[position + 1];
-            itemsSum[sumOffset + 2] += pixels[position + 2];
-            itemsSum[sumOffset + 3] += pixels[position + 3];
-            itemsCount[countOffset]++;
-            position += 4;
-          }
-        }
-        var tmpCanvas = createScratchCanvas(scaledWidth, scaledHeight);
-        var tmpCtx = tmpCanvas.getContext('2d');
-        var imgData = tmpCtx.getImageData(0, 0, scaledWidth, scaledHeight);
-        pixels = imgData.data;
-        for (var i = 0, j = 0, ii = scaledWidth * scaledHeight; i < ii; i++) {
-          var count = itemsCount[i];
-          pixels[j] = itemsSum[j] / count;
-          pixels[j + 1] = itemsSum[j + 1] / count;
-          pixels[j + 2] = itemsSum[j + 2] / count;
-          pixels[j + 3] = itemsSum[j + 3] / count;
-          j += 4;
-        }
-        tmpCtx.putImageData(imgData, 0, 0);
-        return tmpCanvas;
-      }
-
-      this.save();
-
       var ctx = this.ctx;
-      var w = width, h = height;
-      // scale the image to the unit square
-      ctx.scale(1 / w, -1 / h);
-
-      var tmpCanvas = createScratchCanvas(w, h);
+      var tmpCanvas = createScratchCanvas(width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
       var fillColor = this.current.fillColor;
       tmpCtx.fillStyle = (fillColor && fillColor.hasOwnProperty('type') &&
                           fillColor.type === 'Pattern') ?
                           fillColor.getPattern(tmpCtx) : fillColor;
-      tmpCtx.fillRect(0, 0, w, h);
+      tmpCtx.fillRect(0, 0, width, height);
 
-      var imgData = tmpCtx.getImageData(0, 0, w, h);
+      var imgData = tmpCtx.getImageData(0, 0, width, height);
       var pixels = imgData.data;
 
-      applyStencilMask(pixels, inverseDecode);
+      applyStencilMask(imgArray, width, height, inverseDecode, pixels);
 
-      var currentTransform = ctx.mozCurrentTransformInverse;
-      var widthScale = Math.max(Math.abs(currentTransform[0]), 1);
-      var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
-      if (widthScale >= 2 || heightScale >= 2) {
-        // canvas does not resize well large images to small -- using simple
-        // algorithm to perform pre-scaling
-        tmpCanvas = rescaleImage(imgData.data, widthScale, heightScale);
-        ctx.scale(widthScale, heightScale);
-        ctx.drawImage(tmpCanvas, 0, -h / heightScale);
-      } else {
+      this.paintInlineImageXObject(imgData);
+    },
+
+    paintImageMaskXObjectGroup:
+      function CanvasGraphics_paintImageMaskXObjectGroup(images) {
+      var ctx = this.ctx;
+      var tmpCanvasWidth = 0, tmpCanvasHeight = 0, tmpCanvas, tmpCtx;
+      for (var i = 0, ii = images.length; i < ii; i++) {
+        var image = images[i];
+        var w = image.width, h = image.height;
+        if (w > tmpCanvasWidth || h > tmpCanvasHeight) {
+          tmpCanvasWidth = Math.max(w, tmpCanvasWidth);
+          tmpCanvasHeight = Math.max(h, tmpCanvasHeight);
+          tmpCanvas = createScratchCanvas(tmpCanvasWidth, tmpCanvasHeight);
+          tmpCtx = tmpCanvas.getContext('2d');
+
+          var fillColor = this.current.fillColor;
+          tmpCtx.fillStyle = (fillColor && fillColor.hasOwnProperty('type') &&
+                              fillColor.type === 'Pattern') ?
+                              fillColor.getPattern(tmpCtx) : fillColor;
+        }
+        tmpCtx.fillRect(0, 0, w, h);
+
+        var imgData = tmpCtx.getImageData(0, 0, w, h);
+        var pixels = imgData.data;
+
+        applyStencilMask(image.data, w, h, image.inverseDecode, pixels);
+
         tmpCtx.putImageData(imgData, 0, 0);
-        ctx.drawImage(tmpCanvas, 0, -h);
+
+        ctx.save();
+        ctx.transform.apply(ctx, image.transform);
+        ctx.scale(1, -1);
+        ctx.drawImage(tmpCanvas, 0, 0, w, h,
+                      0, -1, 1, 1);
+        ctx.restore();
       }
-      this.restore();
     },
 
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
@@ -3204,23 +3266,67 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!imgData)
         error('Dependent image isn\'t ready yet');
 
-      this.save();
+      this.paintInlineImageXObject(imgData);
+    },
+
+    paintInlineImageXObject:
+      function CanvasGraphics_paintInlineImageXObject(imgData) {
+      var width = imgData.width;
+      var height = imgData.height;
       var ctx = this.ctx;
-      var w = imgData.width;
-      var h = imgData.height;
+      this.save();
       // scale the image to the unit square
-      ctx.scale(1 / w, -1 / h);
+      ctx.scale(1 / width, -1 / height);
 
-      var tmpCanvas = createScratchCanvas(w, h);
+      var currentTransform = ctx.mozCurrentTransformInverse;
+      var widthScale = Math.max(Math.abs(currentTransform[0]), 1);
+      var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
+      var tmpCanvas = createScratchCanvas(width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
-      this.putBinaryImageData(tmpCtx, imgData, w, h);
 
-      ctx.drawImage(tmpCanvas, 0, -h);
+      if (widthScale >= 2 || heightScale >= 2) {
+        // canvas does not resize well large images to small -- using simple
+        // algorithm to perform pre-scaling
+        tmpCanvas = rescaleImage(imgData.data,
+                                 width, height,
+                                 widthScale, heightScale);
+        ctx.scale(widthScale, heightScale);
+        ctx.drawImage(tmpCanvas, 0, -height / heightScale);
+      } else {
+        if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
+          tmpCtx.putImageData(imgData, 0, 0);
+        } else {
+          this.putBinaryImageData(tmpCtx, imgData);
+        }
+        ctx.drawImage(tmpCanvas, 0, -height);
+      }
       this.restore();
     },
 
-    putBinaryImageData: function CanvasGraphics_putBinaryImageData(ctx, imgData,
-                                                                   w, h) {
+    paintInlineImageXObjectGroup:
+      function CanvasGraphics_paintInlineImageXObjectGroup(imgData, map) {
+      var ctx = this.ctx;
+      var w = imgData.width;
+      var h = imgData.height;
+
+      var tmpCanvas = createScratchCanvas(w, h);
+      var tmpCtx = tmpCanvas.getContext('2d');
+      this.putBinaryImageData(tmpCtx, imgData);
+
+      for (var i = 0, ii = map.length; i < ii; i++) {
+        var entry = map[i];
+        ctx.save();
+        ctx.transform.apply(ctx, entry.transform);
+        ctx.scale(1, -1);
+        ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
+                      0, -1, 1, 1);
+        ctx.restore();
+      }
+    },
+
+    putBinaryImageData: function CanvasGraphics_putBinaryImageData(ctx,
+                                                                   imgData) {
+      var w = imgData.width, h = imgData.height;
       var tmpImgData = 'createImageData' in ctx ? ctx.createImageData(w, h) :
         ctx.getImageData(0, 0, w, h);
 
@@ -14303,14 +14409,27 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           return;
         }
 
+        var softMask = dict.get('SMask', 'SM') || false;
+        var mask = dict.get('Mask') || false;
+
+        var SMALL_IMAGE_DIMENSIONS = 200;
+        // Inlining small images into the queue as RGB data
+        if (inline && !softMask && !mask &&
+            !(image instanceof JpegStream) &&
+            (w + h) < SMALL_IMAGE_DIMENSIONS) {
+          var imageObj = new PDFImage(xref, resources, image,
+                                      inline, null, null);
+          var imgData = imageObj.getImageData();
+          fn = 'paintInlineImageXObject';
+          args = [imgData];
+          return;
+        }
+
         // If there is no imageMask, create the PDFImage and a lot
         // of image processing can be done here.
         var objId = 'img_' + uniquePrefix + (++self.objIdCounter);
         insertDependency([objId]);
         args = [objId, w, h];
-
-        var softMask = dict.get('SMask', 'SM') || false;
-        var mask = dict.get('Mask') || false;
 
         if (!softMask && !mask && image instanceof JpegStream &&
             image.isNativelySupported(xref, resources)) {
@@ -14323,15 +14442,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         fn = 'paintImageXObject';
 
         PDFImage.buildImage(function(imageObj) {
-            var drawWidth = imageObj.drawWidth;
-            var drawHeight = imageObj.drawHeight;
-            var imgData = {
-              width: drawWidth,
-              height: drawHeight,
-              data: new Uint8Array(drawWidth * drawHeight * 4)
-            };
-            var pixels = imgData.data;
-            imageObj.fillRgbaBuffer(pixels, drawWidth, drawHeight);
+            var imgData = imageObj.getImageData();
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline);
       }
@@ -14553,6 +14664,122 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       }
 
       return queue;
+    },
+
+    optimizeQueue: function PartialEvaluator_optimizeQueue(queue) {
+      var fnArray = queue.fnArray, argsArray = queue.argsArray;
+      // grouping paintInlineImageXObject's into paintInlineImageXObjectGroup
+      // searching for (save, transform, paintInlineImageXObject, restore)+
+      var MIN_IMAGES_IN_INLINE_IMAGES_BLOCK = 10;
+      var MAX_IMAGES_IN_INLINE_IMAGES_BLOCK = 200;
+      var MAX_WIDTH = 1000;
+      var IMAGE_PADDING = 1;
+      for (var i = 0, ii = fnArray.length; i < ii; i++) {
+        if (fnArray[i] === 'paintInlineImageXObject' &&
+            fnArray[i - 2] === 'save' && fnArray[i - 1] === 'transform' &&
+            fnArray[i + 1] === 'restore') {
+          var j = i - 2;
+          for (i += 2; i < ii && fnArray[i - 4] === fnArray[i]; i++) {
+          }
+          var count = Math.min((i - j) >> 2,
+                               MAX_IMAGES_IN_INLINE_IMAGES_BLOCK);
+          if (count < MIN_IMAGES_IN_INLINE_IMAGES_BLOCK) {
+            continue;
+          }
+          // assuming that heights of those image is too small (~1 pixel)
+          // packing as much as possible by lines
+          var maxX = 0;
+          var map = [], maxLineHeight = 0;
+          var currentX = IMAGE_PADDING, currentY = IMAGE_PADDING;
+          for (var q = 0; q < count; q++) {
+            var transform = argsArray[j + (q << 2) + 1];
+            var img = argsArray[j + (q << 2) + 2][0];
+            if (currentX + img.width > MAX_WIDTH) {
+              // starting new line
+              maxX = Math.max(maxX, currentX);
+              currentY += maxLineHeight + 2 * IMAGE_PADDING;
+              currentX = 0;
+              maxLineHeight = 0;
+            }
+            map.push({
+              transform: transform,
+              x: currentX, y: currentY,
+              w: img.width, h: img.height
+            });
+            currentX += img.width + 2 * IMAGE_PADDING;
+            maxLineHeight = Math.max(maxLineHeight, img.height);
+          }
+          var imgWidth = Math.max(maxX, currentX) + IMAGE_PADDING;
+          var imgHeight = currentY + maxLineHeight + IMAGE_PADDING;
+          var imgData = new Uint8Array(imgWidth * imgHeight * 4);
+          var imgRowSize = imgWidth << 2;
+          for (var q = 0; q < count; q++) {
+            var data = argsArray[j + (q << 2) + 2][0].data;
+            // copy image by lines and extends pixels into padding
+            var rowSize = map[q].w << 2;
+            var dataOffset = 0;
+            var offset = (map[q].x + map[q].y * imgWidth) << 2;
+            imgData.set(
+              data.subarray(0, rowSize), offset - imgRowSize);
+            for (var k = 0, kk = map[q].h; k < kk; k++) {
+              imgData.set(
+                data.subarray(dataOffset, dataOffset + rowSize), offset);
+              dataOffset += rowSize;
+              offset += imgRowSize;
+            }
+            imgData.set(
+              data.subarray(dataOffset - rowSize, dataOffset), offset);
+            while (offset >= 0) {
+              data[offset - 4] = data[offset];
+              data[offset - 3] = data[offset + 1];
+              data[offset - 2] = data[offset + 2];
+              data[offset - 1] = data[offset + 3];
+              data[offset + rowSize] = data[offset + rowSize - 4];
+              data[offset + rowSize + 1] = data[offset + rowSize - 3];
+              data[offset + rowSize + 2] = data[offset + rowSize - 2];
+              data[offset + rowSize + 3] = data[offset + rowSize - 1];
+              offset -= imgRowSize;
+            }
+          }
+          // replacing queue items
+          fnArray.splice(j, count * 4, ['paintInlineImageXObjectGroup']);
+          argsArray.splice(j, count * 4,
+            [{width: imgWidth, height: imgHeight, data: imgData}, map]);
+          i = j;
+          ii = fnArray.length;
+        }
+      }
+      // grouping paintImageMaskXObject's into paintImageMaskXObjectGroup
+      // searching for (save, transform, paintImageMaskXObject, restore)+
+      var MIN_IMAGES_IN_MASKS_BLOCK = 10;
+      var MAX_IMAGES_IN_MASKS_BLOCK = 100;
+      for (var i = 0, ii = fnArray.length; i < ii; i++) {
+        if (fnArray[i] === 'paintImageMaskXObject' &&
+            fnArray[i - 2] === 'save' && fnArray[i - 1] === 'transform' &&
+            fnArray[i + 1] === 'restore') {
+          var j = i - 2;
+          for (i += 2; i < ii && fnArray[i - 4] === fnArray[i]; i++) {
+          }
+          var count = Math.min((i - j) >> 2,
+                               MAX_IMAGES_IN_MASKS_BLOCK);
+          if (count < MIN_IMAGES_IN_MASKS_BLOCK) {
+            continue;
+          }
+          var images = [];
+          for (var q = 0; q < count; q++) {
+            var transform = argsArray[j + (q << 2) + 1];
+            var maskParams = argsArray[j + (q << 2) + 2];
+            images.push({data: maskParams[0], width: maskParams[2],
+              height: maskParams[3], transform: transform,
+              inverseDecode: maskParams[1]});
+          }
+          // replacing queue items
+          fnArray.splice(j, count * 4, ['paintImageMaskXObjectGroup']);
+          argsArray.splice(j, count * 4, [images]);
+          i = j;
+          ii = fnArray.length;
+        }
+      }
     },
 
     getTextContent: function PartialEvaluator_getTextContent(
@@ -17244,6 +17471,11 @@ var Font = (function FontClosure() {
       type = 'Type1';
     if (subtype == 'CIDFontType0C' && type != 'CIDFontType0')
       type = 'CIDFontType0';
+    // XXX: Temporarily change the type for open type so we trigger a warning.
+    // This should be removed when we add support for open type.
+    if (subtype === 'OpenType') {
+      type = 'OpenType';
+    }
 
     var data;
     switch (type) {
@@ -17268,7 +17500,7 @@ var Font = (function FontClosure() {
         break;
 
       default:
-        warn('Font ' + properties.type + ' is not supported');
+        warn('Font ' + type + ' is not supported');
         break;
     }
 
@@ -19443,11 +19675,21 @@ var Type1Parser = function type1Parser() {
     return args;
   }
 
+  // Remove the same number of args from the stack that are in the args
+  // parameter. Args should be built from breakUpArgs().
+  function popArgs(stack, args) {
+    for (var i = 0, ii = args.length; i < ii; i++) {
+      for (var j = 0, jj = args[i].arg.length; j < jj; j++) {
+        stack.pop();
+      }
+    }
+  }
+
   function decodeCharString(array) {
     var charstring = [];
     var lsb = 0;
     var width = 0;
-    var flexState = 0;
+    var flexing = false;
 
     var value = '';
     var count = array.length;
@@ -19531,27 +19773,60 @@ var Type1Parser = function type1Parser() {
             continue;
           } else if (value == 10) { // callsubr
             if (charstring[charstring.length - 1] < 3) { // subr #0..2
+              // XXX: According to the spec if flex or hinting is not used then
+              // subroutines 0-3 can actually be anything defined by the font,
+              // so we really shouldn't be doing flex here but when
+              // callothersubr 0-2 is used. There hasn't been a real world
+              // example of this yet so we'll keep doing it here.
               var subrNumber = charstring.pop();
               switch (subrNumber) {
                 case 1:
-                  flexState = 1; // prepare for flex coordinates
-                  break;
-                case 2:
-                  flexState = 2; // flex in progress
+                  flexing = true; // prepare for flex coordinates
                   break;
                 case 0:
-                  // type2 flex command does not need final coords
-                  charstring.push('exch', 'drop', 'exch', 'drop');
-                  charstring.push('flex');
-                  flexState = 0;
+                  var flexArgs = breakUpArgs(charstring, 17);
+                  popArgs(charstring, flexArgs);
+
+                  charstring.push(
+                    flexArgs[2].value + flexArgs[0].value, // bcp1x + rpx
+                    flexArgs[3].value + flexArgs[1].value, // bcp1y + rpy
+                    flexArgs[4].value, // bcp2x
+                    flexArgs[5].value, // bcp2y
+                    flexArgs[6].value, // p2x
+                    flexArgs[7].value, // p2y
+                    flexArgs[8].value, // bcp3x
+                    flexArgs[9].value, // bcp3y
+                    flexArgs[10].value, // bcp4x
+                    flexArgs[11].value, // bcp4y
+                    flexArgs[12].value, // p3x
+                    flexArgs[13].value, // p3y
+                    flexArgs[14].value, // flexDepth
+                    // 15 = finalx unused by flex
+                    // 16 = finaly unused by flex
+                    'flex'
+                  );
+
+                  flexing = false;
                   break;
               }
               continue;
             }
-          } else if (value == 21 && flexState > 0) {
-            if (flexState > 1)
-              continue; // ignoring rmoveto
-            value = 5; // first segment replacing with rlineto
+          } else if (value == 21 && flexing) { // rmoveto
+            continue; // ignoring rmoveto
+          } else if (value == 22 && flexing) { // hmoveto
+            // Add the dy for flex.
+            charstring.push(0);
+            continue; // ignoring hmoveto
+          } else if (value == 4 && flexing) { // vmoveto
+            // Add the dx for flex and but also swap the values so they are the
+            // right order.
+            var vArgs = breakUpArgs(charstring, 1);
+            popArgs(charstring, vArgs);
+            charstring.push(0);
+            for (var t = 0, tt = vArgs[0].arg.length; t < tt; t++) {
+              charstring.push(vArgs[0].arg[t]);
+            }
+            continue; // ignoring vmoveto
           } else if (!HINTING_ENABLED && (value == 1 || value == 3)) {
             charstring.push('drop', 'drop');
             continue;
@@ -19943,61 +20218,6 @@ var Type1Font = function Type1Font(name, file, properties) {
 };
 
 Type1Font.prototype = {
-  createCFFIndexHeader: function Type1Font_createCFFIndexHeader(objects,
-                                                                isByte) {
-    // First 2 bytes contains the number of objects contained into this index
-    var count = objects.length;
-
-    // If there is no object, just create an array saying that with another
-    // offset byte.
-    if (count == 0)
-      return '\x00\x00\x00';
-
-    var data = String.fromCharCode((count >> 8) & 0xFF, count & 0xff);
-
-    // Next byte contains the offset size use to reference object in the file
-    // Actually we're using 0x04 to be sure to be able to store everything
-    // without thinking of it while coding.
-    data += '\x04';
-
-    // Add another offset after this one because we need a new offset
-    var relativeOffset = 1;
-    for (var i = 0; i < count + 1; i++) {
-      data += String.fromCharCode((relativeOffset >>> 24) & 0xFF,
-                                  (relativeOffset >> 16) & 0xFF,
-                                  (relativeOffset >> 8) & 0xFF,
-                                  relativeOffset & 0xFF);
-
-      if (objects[i])
-        relativeOffset += objects[i].length;
-    }
-
-    for (var i = 0; i < count; i++) {
-      for (var j = 0, jj = objects[i].length; j < jj; j++)
-        data += isByte ? String.fromCharCode(objects[i][j] & 0xFF) :
-                objects[i][j];
-    }
-    return data;
-  },
-
-  encodeNumber: function Type1Font_encodeNumber(value) {
-    // some of the fonts has ouf-of-range values
-    // they are just arithmetic overflows
-    // make sanitizer happy
-    value |= 0;
-    if (value >= -32768 && value <= 32767) {
-      return '\x1c' +
-             String.fromCharCode((value >> 8) & 0xFF) +
-             String.fromCharCode(value & 0xFF);
-    } else {
-      return '\x1d' +
-             String.fromCharCode((value >> 24) & 0xFF) +
-             String.fromCharCode((value >> 16) & 0xFF) +
-             String.fromCharCode((value >> 8) & 0xFF) +
-             String.fromCharCode(value & 0xFF);
-    }
-  },
-
   getOrderedCharStrings: function Type1Font_getOrderedCharStrings(glyphs,
                                                             properties) {
     var charstrings = [];
@@ -20116,9 +20336,9 @@ Type1Font.prototype = {
         if (command > 32000) {
           var divisor = charstring[i + 1];
           command /= divisor;
-          charstring.splice(i, 3, 28, command >> 8, command & 0xff);
+          charstring.splice(i, 3, 28, (command >> 8) & 0xff, command & 0xff);
         } else {
-          charstring.splice(i, 1, 28, command >> 8, command & 0xff);
+          charstring.splice(i, 1, 28, (command >> 8) & 0xff, command & 0xff);
         }
         i += 2;
       }
@@ -20127,140 +20347,88 @@ Type1Font.prototype = {
   },
 
   wrap: function Type1Font_wrap(name, glyphs, charstrings, subrs, properties) {
-    var fields = {
-      // major version, minor version, header size, offset size
-      'header': '\x01\x00\x04\x04',
+    var cff = new CFF();
+    cff.header = new CFFHeader(1, 0, 4, 4);
 
-      'names': this.createCFFIndexHeader([name]),
+    cff.names = [name];
 
-      'topDict': (function topDict(self) {
-        return function cffWrapTopDict() {
-          var header = '\x00\x01\x01\x01';
-          var dict =
-              '\xf8\x1b\x00' + // version
-              '\xf8\x1c\x01' + // Notice
-              '\xf8\x1d\x02' + // FullName
-              '\xf8\x1e\x03' + // FamilyName
-              '\xf8\x1f\x04' +  // Weight
-              '\x1c\x00\x00\x10'; // Encoding
+    var topDict = new CFFTopDict();
+    topDict.setByName('version', 0);
+    topDict.setByName('Notice', 1);
+    topDict.setByName('FullName', 2);
+    topDict.setByName('FamilyName', 3);
+    topDict.setByName('Weight', 4);
+    topDict.setByName('Encoding', null); // placeholder
+    topDict.setByName('FontBBox', properties.bbox);
+    topDict.setByName('charset', null); // placeholder
+    topDict.setByName('CharStrings', null); // placeholder
+    topDict.setByName('Private', null); // placeholder
+    cff.topDict = topDict;
 
-          var boundingBox = properties.bbox;
-          for (var i = 0, ii = boundingBox.length; i < ii; i++)
-            dict += self.encodeNumber(boundingBox[i]);
-          dict += '\x05'; // FontBBox;
+    var strings = new CFFStrings();
+    strings.add('Version 0.11'); // Version
+    strings.add('See original notice'); // Notice
+    strings.add(name); // FullName
+    strings.add(name); // FamilyName
+    strings.add('Medium'); // Weight
+    cff.strings = strings;
 
-          var offset = fields.header.length +
-                       fields.names.length +
-                       (header.length + 1) +
-                       (dict.length + (4 + 4)) +
-                       fields.strings.length +
-                       fields.globalSubrs.length;
+    cff.globalSubrIndex = new CFFIndex();
 
-          // If the offset if over 32767, encodeNumber is going to return
-          // 5 bytes to encode the position instead of 3.
-          if ((offset + fields.charstrings.length) > 32767) {
-            offset += 9;
-          } else {
-            offset += 7;
-          }
+    var count = glyphs.length;
+    var charsetArray = [0];
+    for (var i = 0; i < count; i++) {
+      var index = CFFStandardStrings.indexOf(charstrings[i].glyph);
+      // Some characters like asterikmath && circlecopyrt are
+      // missing from the original strings, for the moment let's
+      // map them to .notdef and see later if it cause any
+      // problems
+      if (index == -1)
+        index = 0;
 
-          dict += self.encodeNumber(offset) + '\x0f'; // Charset
-
-          offset = offset + (glyphs.length * 2) + 1;
-          dict += self.encodeNumber(offset) + '\x11'; // Charstrings
-
-          offset = offset + fields.charstrings.length;
-          dict += self.encodeNumber(fields.privateData.length);
-          dict += self.encodeNumber(offset) + '\x12'; // Private
-
-          return header + String.fromCharCode(dict.length + 1) + dict;
-        };
-      })(this),
-
-      'strings': (function strings(self) {
-        var strings = [
-          'Version 0.11',         // Version
-          'See original notice',  // Notice
-          name,                   // FullName
-          name,                   // FamilyName
-          'Medium'                // Weight
-        ];
-        return self.createCFFIndexHeader(strings);
-      })(this),
-
-      'globalSubrs': this.createCFFIndexHeader([]),
-
-      'charset': (function charset(self) {
-        var charsetString = '\x00'; // Encoding
-
-        var count = glyphs.length;
-        for (var i = 0; i < count; i++) {
-          var index = CFFStandardStrings.indexOf(charstrings[i].glyph);
-          // Some characters like asterikmath && circlecopyrt are
-          // missing from the original strings, for the moment let's
-          // map them to .notdef and see later if it cause any
-          // problems
-          if (index == -1)
-            index = 0;
-
-          charsetString += String.fromCharCode(index >> 8, index & 0xff);
-        }
-        return charsetString;
-      })(this),
-
-      'charstrings': this.createCFFIndexHeader([[0x8B, 0x0E]].concat(glyphs),
-                                               true),
-
-      'privateData': (function cffWrapPrivate(self) {
-        var data =
-            '\x8b\x14' + // defaultWidth
-            '\x8b\x15';  // nominalWidth
-        var fieldMap = {
-          BlueValues: '\x06',
-          OtherBlues: '\x07',
-          FamilyBlues: '\x08',
-          FamilyOtherBlues: '\x09',
-          StemSnapH: '\x0c\x0c',
-          StemSnapV: '\x0c\x0d',
-          BlueShift: '\x0c\x0a',
-          BlueFuzz: '\x0c\x0b',
-          BlueScale: '\x0c\x09',
-          LanguageGroup: '\x0c\x11',
-          ExpansionFactor: '\x0c\x18'
-        };
-        for (var field in fieldMap) {
-          if (!properties.privateData.hasOwnProperty(field))
-            continue;
-          var value = properties.privateData[field];
-
-          if (isArray(value)) {
-            data += self.encodeNumber(value[0]);
-            for (var i = 1, ii = value.length; i < ii; i++)
-              data += self.encodeNumber(value[i] - value[i - 1]);
-          } else {
-            data += self.encodeNumber(value);
-          }
-          data += fieldMap[field];
-        }
-
-        data += self.encodeNumber(data.length + 4) + '\x13'; // Subrs offset
-
-        return data;
-      })(this),
-
-      'localSubrs': this.createCFFIndexHeader(subrs, true)
-    };
-    fields.topDict = fields.topDict();
-
-
-    var cff = [];
-    for (var index in fields) {
-      var field = fields[index];
-      for (var i = 0, ii = field.length; i < ii; i++)
-        cff.push(field.charCodeAt(i));
+      charsetArray.push((index >> 8) & 0xff, index & 0xff);
     }
+    cff.charset = new CFFCharset(false, 0, [], charsetArray);
 
-    return cff;
+    var charStringsIndex = new CFFIndex();
+    charStringsIndex.add([0x8B, 0x0E]); // .notdef
+    for (var i = 0; i < count; i++) {
+      charStringsIndex.add(glyphs[i]);
+    }
+    cff.charStrings = charStringsIndex;
+
+    var privateDict = new CFFPrivateDict();
+    privateDict.setByName('Subrs', null); // placeholder
+    var fields = [
+      // TODO: missing StdHW, StdVW, ForceBold
+      'BlueValues',
+      'OtherBlues',
+      'FamilyBlues',
+      'FamilyOtherBlues',
+      'StemSnapH',
+      'StemSnapV',
+      'BlueShift',
+      'BlueFuzz',
+      'BlueScale',
+      'LanguageGroup',
+      'ExpansionFactor'
+    ];
+    for (var i = 0, ii = fields.length; i < ii; i++) {
+      var field = fields[i];
+      if (!properties.privateData.hasOwnProperty(field))
+        continue;
+      privateDict.setByName(field, properties.privateData[field]);
+    }
+    cff.topDict.privateDict = privateDict;
+
+    var subrIndex = new CFFIndex();
+    for (var i = 0, ii = subrs.length; i < ii; i++) {
+      subrIndex.add(subrs[i]);
+    }
+    privateDict.subrsIndex = subrIndex;
+
+    var compiler = new CFFCompiler(cff);
+    return compiler.compile();
   }
 };
 
@@ -20721,7 +20889,6 @@ var CFFParser = (function CFFParserClosure() {
             stackSize++;
           } else if (value == 14) {
             if (stackSize >= 4) {
-              // TODO fix deprecated endchar construct for Windows
               stackSize -= 4;
             }
           } else if (value >= 32 && value <= 246) {  // number
@@ -20883,13 +21050,13 @@ var CFFParser = (function CFFParserClosure() {
       if (pos == 0 || pos == 1) {
         predefined = true;
         format = pos;
-        var gid = 1;
         var baseEncoding = pos ? Encodings.ExpertEncoding :
                                  Encodings.StandardEncoding;
         for (var i = 0, ii = charset.length; i < ii; i++) {
           var index = baseEncoding.indexOf(charset[i]);
-          if (index != -1)
-            encoding[index] = gid++;
+          if (index != -1) {
+            encoding[index] = i;
+          }
         }
       } else {
         var dataStart = pos;
@@ -21070,6 +21237,12 @@ var CFFDict = (function CFFDictClosure() {
         value = value[0];
       this.values[key] = value;
       return true;
+    },
+    setByName: function CFFDict_setByName(name, value) {
+      if (!(name in this.nameToKeyMap)) {
+        error('Invalid dictionary name "' + name + '"');
+      }
+      this.values[this.nameToKeyMap[name]] = value;
     },
     hasName: function CFFDict_hasName(name) {
       return this.nameToKeyMap[name] in this.values;
@@ -26270,6 +26443,18 @@ var PDFImage = (function PDFImageClosure() {
       for (var i = 0; i < length; ++i)
         buffer[i] = (scale * comps[i]) | 0;
     },
+    getImageData: function PDFImage_getImageData() {
+      var drawWidth = this.drawWidth;
+      var drawHeight = this.drawHeight;
+      var imgData = {
+        width: drawWidth,
+        height: drawHeight,
+        data: new Uint8Array(drawWidth * drawHeight * 4)
+      };
+      var pixels = imgData.data;
+      this.fillRgbaBuffer(pixels, drawWidth, drawHeight);
+      return imgData;
+    },
     getImageBytes: function PDFImage_getImageBytes(length) {
       this.image.reset();
       return this.image.getBytes(length);
@@ -29243,7 +29428,6 @@ var Parser = (function ParserClosure() {
     this.lexer = lexer;
     this.allowStreams = allowStreams;
     this.xref = xref;
-    this.inlineImg = 0;
     this.refill();
   }
 
@@ -29366,15 +29550,6 @@ var Parser = (function ParserClosure() {
             state = 0;
             break;
         }
-      }
-
-      // TODO improve the small images performance to remove the limit
-      var inlineImgLimit = 500;
-      if (++this.inlineImg >= inlineImgLimit) {
-        if (this.inlineImg === inlineImgLimit)
-          warn('Too many inline images');
-        this.shift();
-        return null;
       }
 
       var length = (stream.pos - 4) - startPos;
@@ -30254,7 +30429,8 @@ var TilingPattern = (function TilingPatternClosure() {
 
 var Stream = (function StreamClosure() {
   function Stream(arrayBuffer, start, length, dict) {
-    this.bytes = new Uint8Array(arrayBuffer);
+    this.bytes = arrayBuffer instanceof Uint8Array ? arrayBuffer :
+      new Uint8Array(arrayBuffer);
     this.start = start || 0;
     this.pos = this.start;
     this.end = (start + length) || this.bytes.length;

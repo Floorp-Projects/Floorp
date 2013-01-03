@@ -903,50 +903,6 @@
     </implementation>
   </binding>
 
-  <binding id="geolocation-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
-    <content align="start">
-      <xul:image class="popup-notification-icon"
-                 xbl:inherits="popupid,src=icon"/>
-      <xul:vbox flex="1">
-        <xul:description class="popup-notification-description"
-                         xbl:inherits="xbl:text=label"/>
-        <xul:spacer flex="1"/>
-        <xul:hbox class="popup-notification-button-container"
-                  pack="end" align="center">
-          <xul:label anonid="learnmore" class="text-link geolocation-text-link"/>
-          <xul:spacer flex="1"/>
-          <xul:button anonid="button"
-                      type="menu-button"
-                      class="popup-notification-menubutton"
-                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
-            <xul:menupopup anonid="menupopup"
-                           xbl:inherits="oncommand=menucommand">
-              <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
-                            label="&closeNotificationItem.label;"
-                            xbl:inherits="oncommand=closeitemcommand"/>
-            </xul:menupopup>
-          </xul:button>
-        </xul:hbox>
-      </xul:vbox>
-      <xul:vbox pack="start">
-        <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton popup-notification-closebutton tabbable"
-                           xbl:inherits="oncommand=closebuttoncommand"
-                           tooltiptext="&closeNotification.tooltip;"/>
-      </xul:vbox>
-    </content>
-    <implementation>  
-      <constructor><![CDATA[
-        let link = document.getAnonymousElementByAttribute(this, "anonid", "learnmore");
-        link.value = gNavigatorBundle.getString("geolocation.learnMore");
-        
-        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-        link.href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
-      ]]></constructor>
-    </implementation>
-  </binding>
-
   <binding id="addon-progress-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start">
       <xul:image class="popup-notification-icon"

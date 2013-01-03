@@ -601,7 +601,7 @@
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULDeck;
+            return Components.interfaces.nsIAccessibleProvider.XULTabpanels;
           ]]>
         </getter>
       </property>

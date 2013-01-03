@@ -30,17 +30,12 @@ class nsISupportsArray;
 #define NS_SUPPORTSARRAY_CONTRACTID "@mozilla.org/supports-array;1"
 #define NS_SUPPORTSARRAY_CLASSNAME "Supports Array"
  
-nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
-                      nsISupportsArray* array);
 %}
 
 [scriptable, uuid(241addc8-3608-4e73-8083-2fd6fa09eba2)]
 interface nsISupportsArray : nsICollection {
 
   [notxpcom] boolean Equals([const] in nsISupportsArray other);
-  
-  [notxpcom] nsISupports ElementAt(in unsigned long aIndex);
   
   [notxpcom] long IndexOf([const] in nsISupports aPossibleElement);
   [notxpcom] long IndexOfStartingAt([const] in nsISupports aPossibleElement,

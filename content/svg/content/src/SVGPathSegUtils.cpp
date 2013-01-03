@@ -19,7 +19,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
 {
   // Adding new seg type? Is the formatting below acceptable for the new types?
   PR_STATIC_ASSERT(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
-                     nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
+                     PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
   PR_STATIC_ASSERT(NS_SVG_PATH_SEG_MAX_ARGS == 7);
 
   uint32_t type = DecodeType(aSeg[0]);

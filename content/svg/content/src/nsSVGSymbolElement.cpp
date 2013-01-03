@@ -7,14 +7,14 @@
 
 #include "nsIDOMSVGSymbolElement.h"
 #include "DOMSVGTests.h"
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsGkAtoms.h"
 
 using namespace mozilla;
-typedef nsSVGStylableElement nsSVGSymbolElementBase;
+typedef nsSVGElement nsSVGSymbolElementBase;
 
 class nsSVGSymbolElement : public nsSVGSymbolElementBase,
                            public nsIDOMSVGSymbolElement,
@@ -94,9 +94,9 @@ NS_IMETHODIMP nsSVGSymbolElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
   return mViewBox.ToDOMAnimatedRect(aViewBox, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedPreserveAspectRatio preserveAspectRatio; */
+/* readonly attribute SVGPreserveAspectRatio preserveAspectRatio; */
 NS_IMETHODIMP
-nsSVGSymbolElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
+nsSVGSymbolElement::GetPreserveAspectRatio(nsISupports
                                            **aPreserveAspectRatio)
 {
   return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(aPreserveAspectRatio, this);

@@ -1277,7 +1277,6 @@ public:
 private:
   JSObject* mOldReflector;
   JSObject* mNewReflector;
-  size_t mSlot;
 };
 
 nsresult

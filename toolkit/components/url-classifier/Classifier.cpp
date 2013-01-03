@@ -778,7 +778,7 @@ Classifier::GetLookupCache(const nsACString& aTable)
 nsresult
 Classifier::ReadNoiseEntries(const Prefix& aPrefix,
                              const nsACString& aTableName,
-                             int32_t aCount,
+                             uint32_t aCount,
                              PrefixArray* aNoiseEntries)
 {
   LookupCache *cache = GetLookupCache(aTableName);
@@ -790,7 +790,7 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
   nsresult rv = cache->GetPrefixes(&prefixes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t idx = prefixes.BinaryIndexOf(aPrefix.ToUint32());
+  uint32_t idx = prefixes.BinaryIndexOf(aPrefix.ToUint32());
 
   if (idx == nsTArray<uint32_t>::NoIndex) {
     NS_WARNING("Could not find prefix in PrefixSet during noise lookup");
@@ -799,7 +799,7 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
 
   idx -= idx % aCount;
 
-  for (int32_t i = 0; (i < aCount) && ((idx+i) < prefixes.Length()); i++) {
+  for (uint32_t i = 0; (i < aCount) && ((idx+i) < prefixes.Length()); i++) {
     Prefix newPref;
     newPref.FromUint32(prefixes[idx+i]);
     if (newPref != aPrefix) {
@@ -810,5 +810,5 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
   return NS_OK;
 }
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla

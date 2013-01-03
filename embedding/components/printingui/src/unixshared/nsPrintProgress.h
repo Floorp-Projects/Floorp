@@ -9,8 +9,8 @@
 #include "nsIPrintProgress.h"
 #include "nsIPrintingPromptService.h"
 
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrintStatusFeedback.h"
 #include "nsIObserver.h"
@@ -36,7 +36,7 @@ private:
   int32_t                           m_pendingStateFlags;
   nsresult                          m_pendingStateValue;
   nsCOMPtr<nsIDOMWindow>            m_dialog;
-  nsCOMPtr<nsISupportsArray>        m_listenerList;
+  nsCOMArray<nsIWebProgressListener>        m_listenerList;
   nsCOMPtr<nsIObserver>             m_observer;
   nsCOMPtr<nsIPrintSettings>        m_PrintSetting;
 };

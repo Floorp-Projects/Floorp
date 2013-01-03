@@ -27,6 +27,7 @@
 #include "nsIAssociatedContentSecurity.h"
 #include "nsIChildChannel.h"
 #include "nsIHttpChannelChild.h"
+#include "mozilla/net/DNS.h"
 
 namespace mozilla {
 namespace net {
@@ -97,8 +98,8 @@ protected:
                           const uint32_t& cacheExpirationTime,
                           const nsCString& cachedCharset,
                           const nsCString& securityInfoSerialization,
-                          const PRNetAddr& selfAddr,
-                          const PRNetAddr& peerAddr);
+                          const mozilla::net::NetAddr& selfAddr,
+                          const mozilla::net::NetAddr& peerAddr);
   bool RecvOnTransportAndData(const nsresult& status,
                               const uint64_t& progress,
                               const uint64_t& progressMax,
@@ -151,8 +152,8 @@ private:
                       const uint32_t& cacheExpirationTime,
                       const nsCString& cachedCharset,
                       const nsCString& securityInfoSerialization,
-                      const PRNetAddr& selfAddr,
-                      const PRNetAddr& peerAddr);
+                      const mozilla::net::NetAddr& selfAddr,
+                      const mozilla::net::NetAddr& peerAddr);
   void OnTransportAndData(const nsresult& status,
                           const uint64_t progress,
                           const uint64_t& progressMax,

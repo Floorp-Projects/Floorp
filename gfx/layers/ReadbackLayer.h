@@ -79,7 +79,7 @@ public:
     mEffectiveTransform =
         SnapTransform(GetLocalTransform(), gfxRect(0, 0, mSize.width, mSize.height),
                       nullptr)*
-        SnapTransform(aTransformToSurface, gfxRect(0, 0, 0, 0), nullptr);
+        SnapTransformTranslation(aTransformToSurface, nullptr);
   }
 
   /**

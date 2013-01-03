@@ -17,6 +17,7 @@ MOCHITEST_A11Y_FILES =\
 		test_colorpicker.xul \
 		test_cssoverflow.html \
 		test_contextmenu.xul \
+		test_deck.xul \
 		test_doc.html \
 		test_gencontent.html \
 		test_hidden.html \

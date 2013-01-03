@@ -1544,8 +1544,8 @@ var NativeWindow = {
         this._target = null;
         BrowserEventHandler._cancelTapHighlight();
 
-        if (SelectionHandler.canSelect(rootElement))
-          SelectionHandler.startSelection(rootElement, aX, aY);
+        if (SelectionHandler.canSelect(target))
+          SelectionHandler.startSelection(target, aX, aY);
       }
     },
 
@@ -1562,7 +1562,7 @@ var NativeWindow = {
       let node = popupNode;
       let title ="";
       while(node && !title) {
-        if (node.hasAttribute("title")) {
+        if (node.hasAttribute && node.hasAttribute("title")) {
           title = node.getAttribute("title")
         } else if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
                 (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
@@ -7283,13 +7283,13 @@ var Telemetry = {
      *
      * - The last accepted/refused policy (either by accepting the prompt or by
      *   manually flipping the telemetry preference) is already at version
-     *   TELEMETRY_DISPLAY_REV.
+     *   TELEMETRY_DISPLAY_REV or higher (to avoid the prompt in tests).
      */
     let telemetryDisplayed;
     try {
       telemetryDisplayed = Services.prefs.getIntPref(self._PREF_TELEMETRY_DISPLAYED);
     } catch(e) {}
-    if (telemetryDisplayed === self._TELEMETRY_DISPLAY_REV)
+    if (telemetryDisplayed >= self._TELEMETRY_DISPLAY_REV)
       return;
 
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT

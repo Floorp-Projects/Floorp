@@ -7,7 +7,7 @@ load 56746-1.html
 load 89101-1.html
 load 89358-1.html
 load 90205-1.html
-skip-if(isDebugBuild&&(OSX==10.7||OSX==10.8)) load 99776-1.html # 10.7 and 10.8 leaks are bug 705570
+load 99776-1.html
 load 118931-1.html
 load 121533-1.html
 load 123049-1.html
@@ -41,7 +41,7 @@ load 265736-1.html
 load 265736-2.html
 load 265899-1.html
 load 265973-1.html
-asserts(6-12) skip-if(isDebugBuild&&(OSX==10.7||OSX==10.8)) load 265986-1.html # Bug 512405 for assertions, bug 705570 for 10.7 and 10.8 leaks
+asserts(6-12) load 265986-1.html # Bug 512405
 load 265999-1.html
 load 266222-1.html
 asserts(3-7) load 266360-1.html # bug 575011 / bug 576358

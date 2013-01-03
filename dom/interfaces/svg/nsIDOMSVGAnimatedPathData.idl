@@ -5,14 +5,12 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMSVGPathSegList;
-
 [scriptable, uuid(6ef2b400-dbf4-4c12-8787-fe15caac5648)]
 interface nsIDOMSVGAnimatedPathData : nsISupports
-{   
-  readonly attribute nsIDOMSVGPathSegList   pathSegList;
-  readonly attribute nsIDOMSVGPathSegList   normalizedPathSegList;
-  readonly attribute nsIDOMSVGPathSegList   animatedPathSegList;
-  readonly attribute nsIDOMSVGPathSegList   animatedNormalizedPathSegList;
+{
+  readonly attribute nsISupports   pathSegList;
+  readonly attribute nsISupports   normalizedPathSegList;
+  readonly attribute nsISupports   animatedPathSegList;
+  readonly attribute nsISupports   animatedNormalizedPathSegList;
 };
 

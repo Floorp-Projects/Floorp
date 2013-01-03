@@ -597,7 +597,6 @@ NS_IMETHODIMP
 GonkGPSGeolocationProvider::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mInitThread);
 
   if (!mStarted) {
     return NS_OK;
@@ -623,8 +622,6 @@ GonkGPSGeolocationProvider::ShutdownGPS()
     mGpsInterface->stop();
     mGpsInterface->cleanup();
   }
-
-  mInitThread = nullptr;
 }
 
 NS_IMETHODIMP

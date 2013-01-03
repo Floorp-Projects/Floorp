@@ -322,7 +322,7 @@ sipsdp_src_dest_create (const char *peerconnection,
  *                              and by examining SDP library error counters.
  */
 char *
-sipsdp_write_to_buf (cc_sdp_t *sdp_info, uint32_t *retbytes)
+sipsdp_write_to_buf (sdp_t *sdp_info, uint32_t *retbytes)
 {
     flex_string fs;
     uint32_t sdp_len;
@@ -330,12 +330,12 @@ sipsdp_write_to_buf (cc_sdp_t *sdp_info, uint32_t *retbytes)
 
     flex_string_init(&fs);
 
-    if (!sdp_info || !sdp_info->src_sdp) {
+    if (!sdp_info) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp\n", __FUNCTION__);
         return (NULL);
     }
 
-    if ((rc = sdp_build(sdp_info->src_sdp, &fs))
+    if ((rc = sdp_build(sdp_info, &fs))
         != SDP_SUCCESS) {
         CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s\n", DEB_F_PREFIX_ARGS(SIP_SDP, __FUNCTION__),
                          sdp_get_result_name(rc));

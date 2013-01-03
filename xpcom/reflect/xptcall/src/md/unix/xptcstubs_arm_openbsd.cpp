@@ -8,7 +8,7 @@
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 
-#if (__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))
+#ifdef __GNUC__
 /* This tells gcc3.4+ not to optimize away symbols.
  * @see http://gcc.gnu.org/gcc-3.4/changes.html
  */

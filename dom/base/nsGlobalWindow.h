@@ -102,7 +102,6 @@ class nsBarProp;
 class nsLocation;
 class nsScreen;
 class nsHistory;
-class nsPerformance;
 class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
@@ -149,7 +148,8 @@ struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
   nsrefcnt AddRef();
 
   nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
-    return mTimer->InitWithFuncCallback(aFunc, this, delay,
+    return mTimer->InitWithFuncCallback(aFunc, this,
+                                        static_cast<uint32_t>(delay),
                                         nsITimer::TYPE_ONE_SHOT);
   }
 
@@ -596,8 +596,6 @@ public:
 
   static bool HasIndexedDBSupport();
 
-  static bool HasPerformanceSupport();
-
   static WindowByIdTable* GetWindowsTable() {
     return sWindowsById;
   }
@@ -980,9 +978,6 @@ protected:
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
-  // Helper for creating performance objects.
-  void CreatePerformanceObjectIfNeeded();
-
   // Outer windows only.
   nsDOMWindowList* GetWindowList();
 
@@ -1072,8 +1067,6 @@ protected:
   nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
   nsRefPtr<Navigator>           mNavigator;
   nsRefPtr<nsScreen>            mScreen;
-  // mPerformance is only used on inner windows.
-  nsRefPtr<nsPerformance>       mPerformance;
   nsRefPtr<nsDOMWindowList>     mFrames;
   nsRefPtr<nsBarProp>           mMenubar;
   nsRefPtr<nsBarProp>           mToolbar;

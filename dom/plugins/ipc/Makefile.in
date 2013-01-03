@@ -6,11 +6,13 @@ DEPTH = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = dom
+ifndef _MSC_VER
+FAIL_ON_WARNINGS := 1
+endif # !_MSC_VER
 
 EXPORTS_NAMESPACES = mozilla
 

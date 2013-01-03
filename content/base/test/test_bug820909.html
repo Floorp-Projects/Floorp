@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=820909
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 820909</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=820909">Mozilla Bug 820909</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <span dİsabled="CAPS"></span>
+</div>
+<pre id="test">
+<script>
+  var bogusScriptRan = false;
+</script>
+<script type="applİcation/javascript">
+  bogusScriptRan = true;
+</script>
+<script type="application/javascript">
+
+/** Test for Bug 820909 **/
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 1
+ok(!bogusScriptRan, "Script types should be ASCII case-insensitive");
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 2
+var input = document.createElement("input");
+input.type = "radİo";
+is(input.type, "text", "Input types should be ASCII case-insensitive");
+
+// XXX Not sure how to test items 3, 4, 5
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 6
+is(document.querySelector("[dİsabled='caps']"), null,
+   "Checking whether an attribute is case-sensitive for selector-matching " +
+   "purposes should be ASCII case-insensitive on the attr name");
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 7
+$("content").style.width = "0";
+$("content").style.width = "1İn";
+is($("content").style.width, "0px",
+   "CSS unit names should be ASCII case-insensitive");
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 8
+$("content").style.setProperty("animation-name", "a");
+$("content").style.setProperty("-moz-anİmation-name", "b");
+is($("content").style.animationName, "a",
+   "CSS property aliases should be ASCII case-insensitive");
+
+// XXXbz don't know how to test item 9
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 10
+$("content").innerHTML = "<table><input type='hİdden'></table>";
+is($("content").querySelector("input").parentNode, $("content"),
+   "Inputs that aren't actually type='hidden' should not be allowed as " +
+   "table kids");
+
+// XXXbz add test for item 11?
+
+// XXXbz add test for item 12?
+
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=820909#c7 item 13
+$("content").style.setProperty("animation-name", "a");
+$("content").style.setProperty("anİmation-name", "b");
+is($("content").style.animationName, "a",
+   "CSS property names should be ASCII case-insensitive");
+
+$("content").style.setProperty("display", "none");
+$("content").style.setProperty("display", "İnline");
+is($("content").style.display, "none",
+   "CSS keywords should be ASCII case-insensitive");
+
+$("content").style.setProperty("color", "white");
+$("content").style.setProperty("color", "İndigo");
+is($("content").style.color, "white",
+   "CSS color names should be ASCII case-insensitive");
+
+
+</script>
+</pre>
+</body>
+</html>

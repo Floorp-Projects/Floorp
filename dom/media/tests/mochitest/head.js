@@ -24,8 +24,14 @@ function runTest(aCallback, desktopSupportedOnly) {
     ok(true, navigator.userAgent + ' currently not supported');
     SimpleTest.finish();
   } else {
-    SpecialPowers.pushPrefEnv({'set': [['media.peerconnection.enabled', true]]},
-      aCallback);
+    SpecialPowers.pushPrefEnv({'set': [['media.peerconnection.enabled', true]]}, function () {
+      try {
+        aCallback();
+      }
+      catch (err) {
+        unexpectedCallbackAndFinish(err);
+      }
+    });
   }
 }
 

@@ -100,6 +100,9 @@ NS_INTERFACE_MAP_END_THREADSAFE
 nsresult
 nsMacAlertsService::Init()
 {
+  // Notification Center support isn't ready, don't use it.
+  return NS_ERROR_NOT_AVAILABLE;
+/*
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv;
@@ -126,6 +129,7 @@ nsMacAlertsService::Init()
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+*/
 }
 
 nsresult

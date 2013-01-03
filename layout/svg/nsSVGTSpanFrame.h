@@ -16,11 +16,14 @@
 
 class nsIAtom;
 class nsIContent;
-class nsIDOMSVGPoint;
 class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
 class nsSVGGlyphFrame;
+
+namespace mozilla {
+class DOMSVGPoint;
+}
 
 typedef nsSVGTextContainerFrame nsSVGTSpanFrameBase;
 
@@ -68,7 +71,7 @@ public:
   virtual uint32_t GetNumberOfChars();
   virtual float GetComputedTextLength() MOZ_OVERRIDE;
   virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars) MOZ_OVERRIDE;
-  virtual int32_t GetCharNumAtPosition(nsIDOMSVGPoint *point) MOZ_OVERRIDE;
+  virtual int32_t GetCharNumAtPosition(mozilla::DOMSVGPoint *point) MOZ_OVERRIDE;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame() MOZ_OVERRIDE;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame() MOZ_OVERRIDE;
   NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace) MOZ_OVERRIDE;

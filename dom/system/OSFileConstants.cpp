@@ -631,6 +631,7 @@ bool SetStringProperty(JSContext *cx, JSObject *aObject, const char *aProperty,
     return true;
   }
   JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
+  NS_ENSURE_TRUE(strValue, false);
   jsval valValue = STRING_TO_JSVAL(strValue);
   return JS_SetProperty(cx, aObject, aProperty, &valValue);
 }

@@ -1080,7 +1080,7 @@ NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(NetworkMemoryCache,
     nsCacheService::MemoryDeviceSize,
     "Memory used by the network memory cache.")
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(NetworkDiskCacheSizeOfFun, "network-disk-cache")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(NetworkDiskCacheMallocSizeOf)
 
 static nsCOMPtr<nsIMemoryReporter> DiskCacheReporter = nullptr;
 
@@ -2288,7 +2288,7 @@ nsCacheService::DiskDeviceHeapSize()
 {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_DISKDEVICEHEAPSIZE));
     nsDiskCacheDevice *diskDevice = GlobalInstance()->mDiskDevice;
-    return (int64_t)(diskDevice ? diskDevice->SizeOfIncludingThis(NetworkDiskCacheSizeOfFun) : 0);
+    return (int64_t)(diskDevice ? diskDevice->SizeOfIncludingThis(NetworkDiskCacheMallocSizeOf) : 0);
 }
 
 nsresult

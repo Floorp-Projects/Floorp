@@ -28,11 +28,11 @@
    * promises.  You must never use it to promise characters out of a string
    * with a shorter lifespan.  The typical use will be something like this:
    *
-   *   SomeOSFunction( PromiseFlatCString(aCString).get() ); // GOOD
+   *   SomeOSFunction( PromiseFlatCString(aCSubstring).get() ); // GOOD
    *
    * Here's a BAD use:
    *
-   *  const char* buffer = PromiseFlatCString(aCString).get();
+   *  const char* buffer = PromiseFlatCString(aCSubstring).get();
    *  SomeOSFunction(buffer); // BAD!! |buffer| is a dangling pointer
    *
    * The only way to make one is with the function |PromiseFlat[C]String|,
@@ -40,9 +40,9 @@
    * around for a little while?'' you might ask.  In that case, you can keep a
    * reference, like so
    *
-   *   const nsPromiseFlatString& flat = PromiseFlatString(aString);
+   *   const nsCString& flat = PromiseFlatString(aCSubstring);
    *     // this reference holds the anonymous temporary alive, but remember,
-   *     // it must _still_ have a lifetime shorter than that of |aString|
+   *     // it must _still_ have a lifetime shorter than that of |aCSubstring|
    *
    *  SomeOSFunction(flat.get());
    *  SomeOtherOSFunction(flat.get());
@@ -69,10 +69,13 @@ class nsTPromiseFlatString_CharT : public nsTString_CharT
       void Init( const substring_type& );
 
         // NOT TO BE IMPLEMENTED
-      void operator=( const self_type& );
+      void operator=( const self_type& ) MOZ_DELETE;
 
         // NOT TO BE IMPLEMENTED
-      nsTPromiseFlatString_CharT();
+      nsTPromiseFlatString_CharT() MOZ_DELETE;
+
+        // NOT TO BE IMPLEMENTED
+      nsTPromiseFlatString_CharT( const string_type& str ) MOZ_DELETE;
 
     public:
 
@@ -93,18 +96,11 @@ class nsTPromiseFlatString_CharT : public nsTString_CharT
         }
   };
 
-  // e.g., PromiseFlatCString(Substring(s))
-inline
+// We template this so that the constructor is chosen based on the type of the
+// parameter. This allows us to reject attempts to promise a flat flat string.
+template<class T>
 const nsTPromiseFlatString_CharT
-TPromiseFlatString_CharT( const nsTSubstring_CharT& frag )
+TPromiseFlatString_CharT( const T& string )
   {
-    return nsTPromiseFlatString_CharT(frag);
-  }
-
-  // e.g., PromiseFlatCString(a + b)
-inline
-const nsTPromiseFlatString_CharT
-TPromiseFlatString_CharT( const nsTSubstringTuple_CharT& tuple )
-  {
-    return nsTPromiseFlatString_CharT(tuple);
+    return nsTPromiseFlatString_CharT(string);
   }

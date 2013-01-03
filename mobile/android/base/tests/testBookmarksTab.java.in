@@ -28,7 +28,6 @@ import java.io.File;
 */
 
 public class testBookmarksTab extends BaseTest {
-    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
     private String[] defaultBookmarksUrls = new String[] {
         "about:firefox",
         "about:home",
@@ -131,7 +130,7 @@ public class testBookmarksTab extends BaseTest {
                 }
                 return true;
             }
-        }, WAIT_FOR_CHILD_TIMEOUT);
+        }, MAX_WAIT_MS);
         if (success == true && mFirstChild != null) {
             mAsserter.dumpLog("clickLongOnView: "+mFirstChild);
 
@@ -214,7 +213,7 @@ public class testBookmarksTab extends BaseTest {
                }
                return false;
             }
-        }, WAIT_FOR_CHILD_TIMEOUT);
+        }, MAX_WAIT_MS);
         return list;
     }
 

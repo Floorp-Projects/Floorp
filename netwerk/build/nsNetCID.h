@@ -473,6 +473,7 @@
     {0x9a, 0x05, 0xb6, 0xd9, 0x2f, 0x8f, 0x22, 0x9a} \
 }
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 // component implementing nsIPrivateBrowsingService
 #define NS_PRIVATE_BROWSING_SERVICE_CONTRACTID \
     "@mozilla.org/privatebrowsing-wrapper;1"
@@ -483,6 +484,7 @@
     0x45f6,                                          \
     {0x82, 0xad, 0xa6, 0xa9, 0xbc, 0x5a, 0xd5, 0x99} \
 }
+#endif
 
 /**
  * Contract ID for a service implementing nsIURIClassifier that identifies

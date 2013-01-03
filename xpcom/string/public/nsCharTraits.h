@@ -239,32 +239,17 @@ struct nsCharTraits<PRUnichar>
       }
 
     /**
-     * Convert c to its lower-case form, but only if the lower-case form is
-     * ASCII. Otherwise leave it alone.
-     *
-     * There are only two non-ASCII Unicode characters whose lowercase
-     * equivalents are ASCII: KELVIN SIGN and LATIN CAPITAL LETTER I WITH
-     * DOT ABOVE. So it's a simple matter to handle those explicitly.
+     * Convert c to its lower-case form, but only if c is in the ASCII
+     * range. Otherwise leave it alone.
      */
     static
     char_type
     ASCIIToLower( char_type c )
       {
-        if (c < 0x100)
-          {
-            if (c >= 'A' && c <= 'Z')
-              return char_type(c + ('a' - 'A'));
+        if (c >= 'A' && c <= 'Z')
+          return char_type(c + ('a' - 'A'));
           
-            return c;
-          }
-        else
-          {
-            if (c == 0x212A) // KELVIN SIGN
-              return 'k';
-            if (c == 0x0130) // LATIN CAPITAL LETTER I WITH DOT ABOVE
-              return 'i';
-            return c;
-          }
+        return c;
       }
 
     static

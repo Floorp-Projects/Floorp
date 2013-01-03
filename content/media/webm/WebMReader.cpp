@@ -1030,10 +1030,10 @@ WebMReader::RequestSwitchAtSubsegment(int32_t aSubsegmentIdx,
   if (mSwitchingCluster != -1) {
     return;
   }
-  NS_ENSURE_TRUE((uint32_t)aSubsegmentIdx < mClusterByteRanges.Length(), );
+  NS_ENSURE_TRUE_VOID((uint32_t)aSubsegmentIdx < mClusterByteRanges.Length());
   mSwitchingCluster = aSubsegmentIdx;
-  NS_ENSURE_TRUE(aNextReader, );
-  NS_ENSURE_TRUE(aNextReader != this, );
+  NS_ENSURE_TRUE_VOID(aNextReader);
+  NS_ENSURE_TRUE_VOID(aNextReader != this);
   mNextReader = static_cast<WebMReader*>(aNextReader);
 }
 
@@ -1053,7 +1053,7 @@ WebMReader::RequestSeekToSubsegment(uint32_t aIdx)
   if (mSeekToCluster != -1) {
     return;
   }
-  NS_ENSURE_TRUE(aIdx < mClusterByteRanges.Length(), );
+  NS_ENSURE_TRUE_VOID(aIdx < mClusterByteRanges.Length());
   mSeekToCluster = aIdx;
 
   // XXX Hack to get the resource to seek to the correct offset if the decode
@@ -1080,12 +1080,12 @@ WebMReader::SeekToCluster(uint32_t aIdx)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   NS_ASSERTION(0 <= mSeekToCluster, "mSeekToCluster should be set.");
-  NS_ENSURE_TRUE(aIdx < mClusterByteRanges.Length(), );
+  NS_ENSURE_TRUE_VOID(aIdx < mClusterByteRanges.Length());
   LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: seeking to "
                      "subsegment [%lld] at offset [%lld]",
                      this, mDecoder, aIdx, mClusterByteRanges[aIdx].mStart));
   int r = nestegg_offset_seek(mContext, mClusterByteRanges[aIdx].mStart);
-  NS_ENSURE_TRUE(r == 0, );
+  NS_ENSURE_TRUE_VOID(r == 0);
   mSeekToCluster = -1;
 }
 

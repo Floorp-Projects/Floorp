@@ -27,7 +27,9 @@ const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_DEFAULT_ROUTE_CHANGED    = "network-default-route-changed";
 const TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
+const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
+const PREF_MANAGE_OFFLINE_STATUS     = "network.gonk.manage-offline-status";
 
 // TODO, get USB RNDIS interface name automatically.(see Bug 776212)
 const DEFAULT_USB_INTERFACE_NAME  = "rndis0";
@@ -109,9 +111,7 @@ function NetworkManager() {
 
   debug("Starting worker.");
   this.worker = new ChromeWorker("resource://gre/modules/net_worker.js");
-  this.worker.onmessage = function onmessage(event) {
-    this.handleWorkerMessage(event);
-  }.bind(this);
+  this.worker.onmessage = this.handleWorkerMessage.bind(this);
   this.worker.onerror = function onerror(event) {
     debug("Received error from worker: " + event.filename +
           ":" + event.lineno + ": " + event.message + "\n");
@@ -121,6 +121,14 @@ function NetworkManager() {
 
   // Callbacks to invoke when a reply arrives from the net_worker.
   this.controlCallbacks = Object.create(null);
+
+  try {
+    this._manageOfflineStatus =
+      Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
+  } catch(ex) {
+    // Ignore.
+  }
+  Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this, false);
 
   // Default values for internal and external interfaces.
   this._tetheringInterface = Object.create(null);
@@ -224,6 +232,11 @@ NetworkManager.prototype = {
         let setting = JSON.parse(data);
         this.handle(setting.key, setting.value);
         break;
+      case TOPIC_PREF_CHANGED:
+        this._manageOfflineStatus =
+          Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
+        debug(PREF_MANAGE_OFFLINE_STATUS + " has changed to " + this._manageOfflineStatus);
+        break;
       case TOPIC_XPCOM_SHUTDOWN:
         Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_MOZSETTINGS_CHANGED);
@@ -278,6 +291,8 @@ NetworkManager.prototype = {
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_UNREGISTERED, null);
     debug("Network '" + network.name + "' unregistered.");
   },
+
+  _manageOfflineStatus: true,
 
   networkInterfaces: null,
 
@@ -342,13 +357,13 @@ NetworkManager.prototype = {
   },
 
   handleWorkerMessage: function handleWorkerMessage(e) {
+    debug("NetworkManager received message from worker: " + JSON.stringify(e.data));
     let response = e.data;
     let id = response.id;
     let callback = this.controlCallbacks[id];
     if (callback) {
       callback.call(this, response);
     }
-    debug("NetworkManager received message from worker: " + JSON.stringify(e));
   },
 
   /**
@@ -405,7 +420,10 @@ NetworkManager.prototype = {
       }
       this.setDefaultRouteAndDNS(oldActive);
     }
-    Services.io.offline = !this.active;
+
+    if (this._manageOfflineStatus) {
+      Services.io.offline = !this.active;
+    }
   },
 
   setDefaultRouteAndDNS: function setDefaultRouteAndDNS(oldInterface) {

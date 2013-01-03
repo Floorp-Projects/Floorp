@@ -16,6 +16,7 @@
 #include "jsnum.h"
 #include "jsobjinlines.h"
 #include "shared/Lowering-shared-inl.h"
+#include "mozilla/DebugOnly.h"
 
 using namespace js;
 using namespace ion;
@@ -50,16 +51,9 @@ LIRGenerator::visitParameter(MParameter *param)
 }
 
 bool
-LIRGenerator::visitCallee(MCallee *callee)
+LIRGenerator::visitCallee(MCallee *ins)
 {
-    LCallee *ins = new LCallee;
-    if (!define(ins, callee, LDefinition::PRESET))
-        return false;
-
-    ins->getDef(0)->setOutput(LArgument(-int32_t(sizeof(IonJSFrameLayout))
-                                        + IonJSFrameLayout::offsetOfCalleeToken()));
-
-    return true;
+    return define(new LCallee(), ins);
 }
 
 bool
@@ -122,15 +116,20 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 bool
 LIRGenerator::visitDefVar(MDefVar *ins)
 {
-    LDefVar *lir = new LDefVar(useFixed(ins->scopeChain(), CallTempReg0),
-                               tempFixed(CallTempReg1));
-
+    LDefVar *lir = new LDefVar(useRegisterAtStart(ins->scopeChain()));
     if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;
 
     return true;
+}
+
+bool
+LIRGenerator::visitDefFun(MDefFun *ins)
+{
+    LDefFun *lir = new LDefFun(useRegisterAtStart(ins->scopeChain()));
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -284,9 +283,16 @@ LIRGenerator::visitCall(MCall *call)
     // Call DOM functions.
     if (call->isDOMFunction()) {
         JS_ASSERT(target && target->isNative());
-        LCallDOMNative *lir = new LCallDOMNative(argslot, tempFixed(CallTempReg0),
-                                                 tempFixed(CallTempReg1), tempFixed(CallTempReg2),
-                                                 tempFixed(CallTempReg3), tempFixed(CallTempReg4));
+        Register cxReg, objReg, privReg, argcReg, valueReg;
+        GetTempRegForIntArg(0, 0, &cxReg);
+        GetTempRegForIntArg(1, 0, &objReg);
+        GetTempRegForIntArg(2, 0, &privReg);
+        GetTempRegForIntArg(3, 0, &argcReg);
+        mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(4, 0, &valueReg);
+        MOZ_ASSERT(ok, "How can we not have five temp registers?");
+        LCallDOMNative *lir = new LCallDOMNative(argslot, tempFixed(cxReg),
+                                                 tempFixed(objReg), tempFixed(privReg),
+                                                 tempFixed(argcReg), tempFixed(valueReg));
         return (defineReturn(lir, call) && assignSafepoint(lir, call));
     }
 
@@ -431,21 +437,14 @@ LIRGenerator::visitTest(MTest *test)
         if (comp->tryFold(&result))
             return add(new LGoto(result ? ifTrue : ifFalse));
 
-        if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
-            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            LAllocation rhs = comp->specialization() == MIRType_Object
-                              ? useRegister(right)
-                              : useAnyOrConstant(right);
-            return add(new LCompareAndBranch(op, useRegister(left), rhs, ifTrue, ifFalse), comp);
-        }
-        if (comp->specialization() == MIRType_Double) {
-            return add(new LCompareDAndBranch(useRegister(left), useRegister(right), ifTrue,
-                                              ifFalse), comp);
-        }
+        // Emit LCompare*AndBranch.
 
-        // The second operand has known null/undefined type, so just test the
-        // first operand.
-        if (IsNullOrUndefined(comp->specialization())) {
+        // Compare and branch null/undefined.
+        // The second operand has known null/undefined type,
+        // so just test the first operand.
+        if (comp->compareType() == MCompare::Compare_Null ||
+            comp->compareType() == MCompare::Compare_Undefined)
+        {
             if (left->type() == MIRType_Object) {
                 MOZ_ASSERT(comp->operandMightEmulateUndefined(),
                            "MCompare::tryFold should handle the never-emulates-undefined case");
@@ -471,13 +470,45 @@ LIRGenerator::visitTest(MTest *test)
             return add(lir, comp);
         }
 
-        if (comp->specialization() == MIRType_Boolean) {
+        // Compare and branch booleans.
+        if (comp->compareType() == MCompare::Compare_Boolean) {
             JS_ASSERT(left->type() == MIRType_Value);
             JS_ASSERT(right->type() == MIRType_Boolean);
 
-            LCompareBAndBranch *lir = new LCompareBAndBranch(useRegisterOrConstant(right),
-                                                             ifTrue, ifFalse);
+            LAllocation rhs = useRegisterOrConstant(right);
+            LCompareBAndBranch *lir = new LCompareBAndBranch(rhs, ifTrue, ifFalse);
             if (!useBox(lir, LCompareBAndBranch::Lhs, left))
+                return false;
+            return add(lir, comp);
+        }
+
+        // Compare and branch Int32 or Object pointers.
+        if (comp->compareType() == MCompare::Compare_Int32 ||
+            comp->compareType() == MCompare::Compare_Object)
+        {
+            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+            LAllocation lhs = useRegister(left);
+            LAllocation rhs = useRegister(right);
+            if (comp->compareType() == MCompare::Compare_Int32)
+                rhs = useAnyOrConstant(right);
+            LCompareAndBranch *lir = new LCompareAndBranch(op, lhs, rhs, ifTrue, ifFalse);
+            return add(lir, comp);
+        }
+
+        // Compare and branch doubles.
+        if (comp->compareType() == MCompare::Compare_Double) {
+            LAllocation lhs = useRegister(left);
+            LAllocation rhs = useRegister(right);
+            LCompareDAndBranch *lir = new LCompareDAndBranch(lhs, rhs, ifTrue, ifFalse);
+            return add(lir, comp);
+        }
+
+        // Compare values.
+        if (comp->compareType() == MCompare::Compare_Value) {
+            LCompareVAndBranch *lir = new LCompareVAndBranch(ifTrue, ifFalse);
+            if (!useBoxAtStart(lir, LCompareVAndBranch::LhsInput, left))
+                return false;
+            if (!useBoxAtStart(lir, LCompareVAndBranch::RhsInput, right))
                 return false;
             return add(lir, comp);
         }
@@ -526,52 +557,42 @@ LIRGenerator::visitCompare(MCompare *comp)
     MDefinition *left = comp->lhs();
     MDefinition *right = comp->rhs();
 
-    if (comp->specialization() != MIRType_None) {
-        // Try to fold the comparison so that we don't have to handle all cases.
-        bool result;
-        if (comp->tryFold(&result))
-            return define(new LInteger(result), comp);
+    // Try to fold the comparison so that we don't have to handle all cases.
+    bool result;
+    if (comp->tryFold(&result))
+        return define(new LInteger(result), comp);
 
-        // Move below the emitAtUses call if we ever implement
-        // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
-        // make sense and avoids confusion.
-        if (comp->specialization() == MIRType_String) {
-            LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
-            if (!define(lir, comp))
-                return false;
-            return assignSafepoint(lir, comp);
-        }
+    // Move below the emitAtUses call if we ever implement
+    // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
+    // make sense and avoids confusion.
+    if (comp->compareType() == MCompare::Compare_String) {
+        LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
+        if (!define(lir, comp))
+            return false;
+        return assignSafepoint(lir, comp);
+    }
 
-        // Sniff out if the output of this compare is used only for a branching.
-        // If it is, then we will emit an LCompare*AndBranch instruction in place
-        // of this compare and any test that uses this compare. Thus, we can
-        // ignore this Compare.
-        if (CanEmitCompareAtUses(comp))
-            return emitAtUses(comp);
+    // Unknown/unspecialized compare use a VM call.
+    if (comp->compareType() == MCompare::Compare_Unknown) {
+        LCompareVM *lir = new LCompareVM();
+        if (!useBoxAtStart(lir, LCompareVM::LhsInput, left))
+            return false;
+        if (!useBoxAtStart(lir, LCompareVM::RhsInput, right))
+            return false;
+        return defineReturn(lir, comp) && assignSafepoint(lir, comp);
+    }
 
-        if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
-            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            LAllocation rhs = comp->specialization() == MIRType_Object
-                              ? useRegister(right)
-                              : useAnyOrConstant(right);
-            return define(new LCompare(op, useRegister(left), rhs), comp);
-        }
+    // Sniff out if the output of this compare is used only for a branching.
+    // If it is, then we will emit an LCompare*AndBranch instruction in place
+    // of this compare and any test that uses this compare. Thus, we can
+    // ignore this Compare.
+    if (CanEmitCompareAtUses(comp))
+        return emitAtUses(comp);
 
-        if (comp->specialization() == MIRType_Double)
-            return define(new LCompareD(useRegister(left), useRegister(right)), comp);
-
-        if (comp->specialization() == MIRType_Boolean) {
-            JS_ASSERT(left->type() == MIRType_Value);
-            JS_ASSERT(right->type() == MIRType_Boolean);
-
-            LCompareB *lir = new LCompareB(useRegisterOrConstant(right));
-            if (!useBox(lir, LCompareB::Lhs, left))
-                return false;
-            return define(lir, comp);
-        }
-
-        JS_ASSERT(IsNullOrUndefined(comp->specialization()));
-
+    // Compare Null and Undefined.
+    if (comp->compareType() == MCompare::Compare_Null ||
+        comp->compareType() == MCompare::Compare_Undefined)
+    {
         if (left->type() == MIRType_Object) {
             MOZ_ASSERT(comp->operandMightEmulateUndefined(),
                        "MCompare::tryFold should have folded this away");
@@ -594,12 +615,45 @@ LIRGenerator::visitCompare(MCompare *comp)
         return define(lir, comp);
     }
 
-    LCompareV *lir = new LCompareV();
-    if (!useBoxAtStart(lir, LCompareV::LhsInput, left))
-        return false;
-    if (!useBoxAtStart(lir, LCompareV::RhsInput, right))
-        return false;
-    return defineReturn(lir, comp) && assignSafepoint(lir, comp);
+    // Compare booleans.
+    if (comp->compareType() == MCompare::Compare_Boolean) {
+        JS_ASSERT(left->type() == MIRType_Value);
+        JS_ASSERT(right->type() == MIRType_Boolean);
+
+        LCompareB *lir = new LCompareB(useRegisterOrConstant(right));
+        if (!useBox(lir, LCompareB::Lhs, left))
+            return false;
+        return define(lir, comp);
+    }
+
+    // Compare Int32 or Object pointers.
+    if (comp->compareType() == MCompare::Compare_Int32 ||
+        comp->compareType() == MCompare::Compare_Object)
+    {
+        JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+        LAllocation lhs = useRegister(left);
+        LAllocation rhs = useRegister(right);
+        if (comp->compareType() == MCompare::Compare_Int32)
+            rhs = useAnyOrConstant(right);
+        return define(new LCompare(op, lhs, rhs), comp);
+    }
+
+    // Compare doubles.
+    if (comp->compareType() == MCompare::Compare_Double)
+        return define(new LCompareD(useRegister(left), useRegister(right)), comp);
+
+    // Compare values.
+    if (comp->compareType() == MCompare::Compare_Value) {
+        LCompareV *lir = new LCompareV();
+        if (!useBoxAtStart(lir, LCompareV::LhsInput, left))
+            return false;
+        if (!useBoxAtStart(lir, LCompareV::RhsInput, right))
+            return false;
+        return define(lir, comp);
+    }
+
+    JS_NOT_REACHED("Unrecognized compare type.");
+    return false;
 }
 
 static void
@@ -2098,11 +2152,23 @@ LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
 {
     MDefinition *val = ins->value();
 
-    LSetDOMProperty *lir = new LSetDOMProperty(tempFixed(CallTempReg0),
-                                               useFixed(ins->object(), CallTempReg1),
-                                               tempFixed(CallTempReg2),
-                                               tempFixed(CallTempReg3));
-    if (!useBoxFixed(lir, LSetDOMProperty::Value, val, CallTempReg4, CallTempReg5))
+    Register cxReg, objReg, privReg, valueReg;
+    GetTempRegForIntArg(0, 0, &cxReg);
+    GetTempRegForIntArg(1, 0, &objReg);
+    GetTempRegForIntArg(2, 0, &privReg);
+    GetTempRegForIntArg(3, 0, &valueReg);
+    LSetDOMProperty *lir = new LSetDOMProperty(tempFixed(cxReg),
+                                               useFixed(ins->object(), objReg),
+                                               tempFixed(privReg),
+                                               tempFixed(valueReg));
+
+    // Keep using GetTempRegForIntArg, since we want to make sure we
+    // don't clobber registers we're already using.
+    Register tempReg1, tempReg2;
+    GetTempRegForIntArg(2, 0, &tempReg1);
+    mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &tempReg2);
+    MOZ_ASSERT(ok, "How can we not have six temp registers?");
+    if (!useBoxFixed(lir, LSetDOMProperty::Value, val, tempReg1, tempReg2))
         return false;
 
     return add(lir, ins) && assignSafepoint(lir, ins);
@@ -2111,10 +2177,16 @@ LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
 bool
 LIRGenerator::visitGetDOMProperty(MGetDOMProperty *ins)
 {
-    LGetDOMProperty *lir = new LGetDOMProperty(tempFixed(CallTempReg0),
-                                               useFixed(ins->object(), CallTempReg1),
-                                               tempFixed(CallTempReg2),
-                                               tempFixed(CallTempReg3));
+    Register cxReg, objReg, privReg, valueReg;
+    GetTempRegForIntArg(0, 0, &cxReg);
+    GetTempRegForIntArg(1, 0, &objReg);
+    GetTempRegForIntArg(2, 0, &privReg);
+    mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &valueReg);
+    MOZ_ASSERT(ok, "How can we not have four temp registers?");
+    LGetDOMProperty *lir = new LGetDOMProperty(tempFixed(cxReg),
+                                               useFixed(ins->object(), objReg),
+                                               tempFixed(privReg),
+                                               tempFixed(valueReg));
 
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }

@@ -589,13 +589,11 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
              dp_int_update_keypress(line_id, call_id, BKSP_KEY);
              break;
          case CC_FEATURE_CREATEOFFER:
-             featdata.session.sessionid = ccData.sessionid;
-             featdata.session.has_constraints = ccData.has_constraints;
+             featdata.session.constraints = ccData.constraints;
              cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata);
              break;
          case CC_FEATURE_CREATEANSWER:
-             featdata.session.sessionid = ccData.sessionid;
-             featdata.session.has_constraints = ccData.has_constraints;
+             featdata.session.constraints = ccData.constraints;
              cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata);
              break;
          case CC_FEATURE_SETLOCALDESC:
@@ -983,6 +981,7 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_name =  strlib_copy(data->plcd_name);
            newData->plcd_number =  strlib_copy(data->plcd_number);
            newData->status =  strlib_copy(data->status);
+           newData->sdp = strlib_copy(data->sdp);
            calllogger_copy_call_log(&newData->call_log, &data->call_log);
        } else {
            newData->ref_count = 1;
@@ -1001,6 +1000,7 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_name =  strlib_empty();
            newData->plcd_number =  strlib_empty();
            newData->status = strlib_empty();
+           newData->sdp = strlib_empty();
            calllogger_init_call_log(&newData->call_log);
        }
 
@@ -1045,6 +1045,8 @@ void cleanSessionData(session_data_t *data)
         data->plcd_number = strlib_empty();
 	strlib_free(data->status);
         data->status = strlib_empty();
+	strlib_free(data->sdp);
+        data->sdp = strlib_empty();
         calllogger_free_call_log(&data->call_log);
     }
 }
@@ -1296,7 +1298,11 @@ cc_call_handle_t ccappGetConnectedCall(){
 static void ccappUpdateSessionData (session_update_t *sessUpd)
 {
     static const char fname[] = "ccappUpdateSessionData";
-	session_data_t * data = (session_data_t *)findhash(sessUpd->sessionID), *sess_data_p;
+    /* TODO -- I don't think the hash handling is synchronized; we could
+       end up with data integrity issues here if we end up in a race.
+       <adam@nostrum.com> */
+    session_data_t *data = (session_data_t *)findhash(sessUpd->sessionID);
+    session_data_t *sess_data_p;
     boolean createdSessionData = TRUE;
     cc_deviceinfo_ref_t  handle = 0;
     boolean previouslyInConference = FALSE;
@@ -1304,11 +1310,16 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
     if ( data == NULL ) {
         cc_call_state_t call_state = sessUpd->update.ccSessionUpd.data.state_data.state;
 
-        if ( ( sessUpd->eventID == CALL_INFORMATION ) ||
-                ( sessUpd->eventID == CALL_STATE || sessUpd->eventID == CALL_NEWCALL
-                || sessUpd->eventID == CREATE_OFFER || sessUpd->eventID == CREATE_ANSWER
-                || sessUpd->eventID == SET_LOCAL_DESC  || sessUpd->eventID == SET_REMOTE_DESC
-                || sessUpd->eventID == REMOTE_STREAM_ADD)) {
+        if ( sessUpd->eventID == CALL_INFORMATION ||
+             sessUpd->eventID == CALL_STATE ||
+             sessUpd->eventID == CALL_NEWCALL ||
+             sessUpd->eventID == CREATE_OFFER ||
+             sessUpd->eventID == CREATE_ANSWER ||
+             sessUpd->eventID == SET_LOCAL_DESC  ||
+             sessUpd->eventID == SET_REMOTE_DESC ||
+             sessUpd->eventID == UPDATE_LOCAL_DESC  ||
+             sessUpd->eventID == UPDATE_REMOTE_DESC ||
+             sessUpd->eventID == REMOTE_STREAM_ADD ) {
 
             CCAPP_DEBUG(DEB_F_PREFIX"CALL_SESSION_CREATED for session id 0x%x event is 0x%x \n",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->sessionID,
@@ -1343,9 +1354,14 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         data->sess_id = sessUpd->sessionID;
 				data->state = call_state;
         data->line = sessUpd->update.ccSessionUpd.data.state_data.line_id;
-        if (sessUpd->eventID == CALL_NEWCALL || sessUpd->eventID == CREATE_OFFER ||
-            sessUpd->eventID == CREATE_ANSWER || sessUpd->eventID == SET_LOCAL_DESC ||
-            sessUpd->eventID == SET_REMOTE_DESC || sessUpd->eventID == REMOTE_STREAM_ADD ) {
+        if (sessUpd->eventID == CALL_NEWCALL ||
+            sessUpd->eventID == CREATE_OFFER ||
+            sessUpd->eventID == CREATE_ANSWER ||
+            sessUpd->eventID == SET_LOCAL_DESC ||
+            sessUpd->eventID == SET_REMOTE_DESC ||
+            sessUpd->eventID == UPDATE_LOCAL_DESC ||
+            sessUpd->eventID == UPDATE_REMOTE_DESC ||
+            sessUpd->eventID == REMOTE_STREAM_ADD ) {
             data->attr = sessUpd->update.ccSessionUpd.data.state_data.attr;
             data->inst = sessUpd->update.ccSessionUpd.data.state_data.inst;
         }
@@ -1365,15 +1381,28 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         data->gci[0] = 0;
 	data->vid_dir = SDP_DIRECTION_INACTIVE;
         data->callref = 0;
+        data->sdp = strlib_empty();
         calllogger_init_call_log(&data->call_log);
 
-        if ( sessUpd->eventID == CREATE_OFFER || sessUpd->eventID == CREATE_ANSWER
-            || sessUpd->eventID == SET_LOCAL_DESC  || sessUpd->eventID == SET_REMOTE_DESC
-            || sessUpd->eventID == REMOTE_STREAM_ADD) {
-        	data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
-        	data->cause = sessUpd->update.ccSessionUpd.data.state_data.cause;
-            data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_track_id;
-            data->media_stream_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_id;
+        switch (sessUpd->eventID) {
+            case CREATE_OFFER:
+            case CREATE_ANSWER:
+            case SET_LOCAL_DESC:
+            case SET_REMOTE_DESC:
+            case UPDATE_LOCAL_DESC:
+            case UPDATE_REMOTE_DESC:
+                data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
+                /* Fall through to the next case... */
+            case REMOTE_STREAM_ADD:
+                data->cause =
+                    sessUpd->update.ccSessionUpd.data.state_data.cause;
+                data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.
+                    state_data.media_stream_track_id;
+                data->media_stream_id = sessUpd->update.ccSessionUpd.data.
+                    state_data.media_stream_id;
+                break;
+            default:
+                break;
         }
 
         /*
@@ -1697,8 +1726,11 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
     case CREATE_ANSWER:
     case SET_LOCAL_DESC:
     case SET_REMOTE_DESC:
-    case REMOTE_STREAM_ADD:
+    case UPDATE_LOCAL_DESC:
+    case UPDATE_REMOTE_DESC:
         data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
+        /* Fall through to the next case... */
+    case REMOTE_STREAM_ADD:
         data->cause = sessUpd->update.ccSessionUpd.data.state_data.cause;
         data->state = sessUpd->update.ccSessionUpd.data.state_data.state;
         data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_track_id;

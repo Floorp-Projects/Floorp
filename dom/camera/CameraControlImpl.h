@@ -27,6 +27,7 @@ class StopRecordingTask;
 class SetParameterTask;
 class GetParameterTask;
 class GetPreviewStreamVideoModeTask;
+class ReleaseHardwareTask;
 
 class DOMCameraPreview;
 class RecorderProfileManager;
@@ -43,6 +44,7 @@ class CameraControlImpl : public ICameraControl
   friend class SetParameterTask;
   friend class GetParameterTask;
   friend class GetPreviewStreamVideoModeTask;
+  friend class ReleaseHardwareTask;
 
 public:
   CameraControlImpl(uint32_t aCameraId, nsIThread* aCameraThread, uint64_t aWindowId);
@@ -55,6 +57,7 @@ public:
   nsresult StartRecording(dom::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult StopRecording();
   nsresult GetPreviewStreamVideoMode(dom::CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult ReleaseHardware(nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError);
 
   nsresult Set(uint32_t aKey, const nsAString& aValue);
   nsresult Get(uint32_t aKey, nsAString& aValue);
@@ -117,6 +120,7 @@ protected:
   virtual nsresult PushParametersImpl() = 0;
   virtual nsresult PullParametersImpl() = 0;
   virtual nsresult GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask* aGetPreviewStreamVideoMode) = 0;
+  virtual nsresult ReleaseHardwareImpl(ReleaseHardwareTask* aReleaseHardware) = 0;
   virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() = 0;
 
   void OnShutterInternal();
@@ -143,8 +147,6 @@ protected:
   nsCOMPtr<nsICameraErrorCallback>          mAutoFocusOnErrorCb;
   nsCOMPtr<nsICameraTakePictureCallback>    mTakePictureOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback>          mTakePictureOnErrorCb;
-  nsCOMPtr<nsICameraStartRecordingCallback> mStartRecordingOnSuccessCb;
-  nsCOMPtr<nsICameraErrorCallback>          mStartRecordingOnErrorCb;
   nsCOMPtr<nsICameraShutterCallback>        mOnShutterCb;
   nsCOMPtr<nsICameraClosedCallback>         mOnClosedCb;
   nsCOMPtr<nsICameraRecorderStateChange>    mOnRecorderStateChangeCb;
@@ -610,7 +612,73 @@ public:
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
 
-// Error result runnable
+// Return the result of releasing the camera hardware.  Runs on the main thread.
+class ReleaseHardwareResult : public nsRunnable
+{
+public:
+  ReleaseHardwareResult(nsICameraReleaseCallback* onSuccess, uint64_t aWindowId)
+    : mOnSuccessCb(onSuccess)
+    , mWindowId(aWindowId)
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  virtual ~ReleaseHardwareResult()
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+      mOnSuccessCb->HandleEvent();
+    }
+    return NS_OK;
+  }
+
+protected:
+  nsCOMPtr<nsICameraReleaseCallback> mOnSuccessCb;
+  uint64_t mWindowId;
+};
+
+// Release the camera hardware.
+class ReleaseHardwareTask : public nsRunnable
+{
+public:
+  ReleaseHardwareTask(CameraControlImpl* aCameraControl, nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError)
+    : mCameraControl(aCameraControl)
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  virtual ~ReleaseHardwareTask()
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  NS_IMETHOD Run()
+  {
+    DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+    nsresult rv = mCameraControl->ReleaseHardwareImpl(this);
+    DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+
+    if (NS_FAILED(rv) && mOnErrorCb) {
+      rv = NS_DispatchToMainThread(new CameraErrorResult(mOnErrorCb, NS_LITERAL_STRING("FAILURE"), mCameraControl->GetWindowId()));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return rv;
+  }
+
+  nsRefPtr<CameraControlImpl> mCameraControl;
+  nsCOMPtr<nsICameraReleaseCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
+};
+
+// Report that the video recorder state has changed.
 class CameraRecorderStateChange : public nsRunnable
 {
 public:

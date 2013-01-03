@@ -266,14 +266,6 @@ public:
   {
     SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName, true);
   }
-  virtual void GetInnerHTML(nsAString& aInnerHTML,
-                            mozilla::ErrorResult& aError);
-  virtual void SetInnerHTML(const nsAString& aInnerHTML,
-                            mozilla::ErrorResult& aError);
-  void GetOuterHTML(nsAString& aOuterHTML, mozilla::ErrorResult& aError);
-  void SetOuterHTML(const nsAString& aOuterHTML, mozilla::ErrorResult& aError);
-  void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
-                          mozilla::ErrorResult& aError);
   mozilla::dom::Element* GetOffsetParent()
   {
     nsRect rcFrame;
@@ -336,9 +328,6 @@ public:
    * Get width and height, using given image request if attributes are unset.
    */
   nsSize GetWidthHeightForImage(imgIRequest *aImageRequest);
-
-protected:
-  nsresult GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
 
 public:
   // Implementation for nsIContent
@@ -697,7 +686,6 @@ public:
    * Locate an nsIEditor rooted at this content node, if there is one.
    */
   NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
-  NS_HIDDEN_(nsresult) GetEditorInternal(nsIEditor** aEditor);
 
   /**
    * Helper method for NS_IMPL_URI_ATTR macro.
@@ -776,18 +764,6 @@ protected:
   }
 
 private:
-  /**
-   * Fire mutation events for changes caused by parsing directly into a
-   * context node.
-   *
-   * @param aDoc the document of the node
-   * @param aDest the destination node that got stuff appended to it
-   * @param aOldChildCount the number of children the node had before parsing
-   */
-  void FireMutationEventsForDirectParsing(nsIDocument* aDoc,
-                                          nsIContent* aDest,
-                                          int32_t aOldChildCount);
-
   void RegUnRegAccessKey(bool aDoReg);
 
 protected:
@@ -1084,6 +1060,10 @@ public:
 
   // nsIFormControl
   virtual mozilla::dom::Element* GetFormElement();
+  nsHTMLFormElement* GetForm() const
+  {
+    return mForm;
+  }
   virtual void SetForm(nsIDOMHTMLFormElement* aForm);
   virtual void ClearForm(bool aRemoveFromForm);
 
@@ -1800,13 +1780,13 @@ protected:
     *aDraggable = Draggable();                                                 \
     return NS_OK;                                                              \
   }                                                                            \
-  using nsGenericHTMLElement::GetInnerHTML;                                    \
+  using Element::GetInnerHTML;                                                 \
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_FINAL {                   \
     mozilla::ErrorResult rv;                                                   \
     GetInnerHTML(aInnerHTML, rv);                                              \
     return rv.ErrorCode();                                                     \
   }                                                                            \
-  using nsGenericHTMLElement::SetInnerHTML;                                    \
+  using Element::SetInnerHTML;                                                 \
   NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) MOZ_FINAL {             \
     mozilla::ErrorResult rv;                                                   \
     SetInnerHTML(aInnerHTML, rv);                                              \
@@ -1817,6 +1797,12 @@ protected:
  * A macro to declare the NS_NewHTMLXXXElement() functions.
  */
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)                       \
+class nsHTML##_elementName##Element;                                       \
+namespace mozilla {                                                        \
+namespace dom {                                                            \
+class HTML##_elementName##Element;                                         \
+}                                                                          \
+}                                                                          \
 nsGenericHTMLElement*                                                      \
 NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo, \
                                   mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
@@ -1829,6 +1815,55 @@ NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo, \
   return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);                  \
 }
 
+namespace mozilla {
+namespace dom {
+
+// A helper struct to automatically detect whether HTMLFooElement is implemented
+// as nsHTMLFooElement or as mozilla::dom::HTMLFooElement by using SFINAE to
+// look for the InNavQuirksMode function (which lives on nsGenericHTMLElement)
+// on both types and using whichever one the substitution succeeds with.
+
+struct NewHTMLElementHelper
+{
+  template<typename V, V> struct SFINAE;
+  typedef bool (*InNavQuirksMode)(nsIDocument*);
+
+  template<typename T, typename U>
+  static nsGenericHTMLElement*
+  Create(already_AddRefed<nsINodeInfo> aNodeInfo,
+         SFINAE<InNavQuirksMode, T::InNavQuirksMode>* dummy=nullptr)
+  {
+    return new T(aNodeInfo);
+  }
+  template<typename T, typename U>
+  static nsGenericHTMLElement*
+  Create(already_AddRefed<nsINodeInfo> aNodeInfo,
+         SFINAE<InNavQuirksMode, U::InNavQuirksMode>* dummy=nullptr)
+  {
+    return new U(aNodeInfo);
+  }
+
+  template<typename T, typename U>
+  static nsGenericHTMLElement*
+  Create(already_AddRefed<nsINodeInfo> aNodeInfo,
+         mozilla::dom::FromParser aFromParser,
+         SFINAE<InNavQuirksMode, U::InNavQuirksMode>* dummy=nullptr)
+  {
+    return new U(aNodeInfo, aFromParser);
+  }
+  template<typename T, typename U>
+  static nsGenericHTMLElement*
+  Create(already_AddRefed<nsINodeInfo> aNodeInfo,
+         mozilla::dom::FromParser aFromParser,
+         SFINAE<InNavQuirksMode, T::InNavQuirksMode>* dummy=nullptr)
+  {
+    return new T(aNodeInfo, aFromParser);
+  }
+};
+
+}
+}
+
 /**
  * A macro to implement the NS_NewHTMLXXXElement() functions.
  */
@@ -1837,7 +1872,9 @@ nsGenericHTMLElement*                                                        \
 NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
                                   mozilla::dom::FromParser aFromParser)      \
 {                                                                            \
-  return new nsHTML##_elementName##Element(aNodeInfo);                       \
+  return mozilla::dom::NewHTMLElementHelper::                                \
+    Create<nsHTML##_elementName##Element,                                    \
+           mozilla::dom::HTML##_elementName##Element>(aNodeInfo);            \
 }
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)               \
@@ -1845,7 +1882,10 @@ nsGenericHTMLElement*                                                        \
 NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
                                   mozilla::dom::FromParser aFromParser)      \
 {                                                                            \
-  return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
+  return mozilla::dom::NewHTMLElementHelper::                                \
+    Create<nsHTML##_elementName##Element,                                    \
+           mozilla::dom::HTML##_elementName##Element>(aNodeInfo,             \
+                                                      aFromParser);          \
 }
 
 // Here, we expand 'NS_DECLARE_NS_NEW_HTML_ELEMENT()' by hand.

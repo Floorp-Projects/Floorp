@@ -8,11 +8,7 @@
 #include "SVGMotionSMILType.h"
 #include "nsSMILValue.h"
 #include "nsDebug.h"
-#include "nsSVGAngle.h"
-#include "nsIDOMSVGAngle.h"
 #include "nsSVGPathElement.h"
-#include "nsIDOMSVGPathSeg.h"
-#include "nsIDOMSVGPathSegList.h"
 #include "nsMathUtils.h"
 #include <math.h>
 

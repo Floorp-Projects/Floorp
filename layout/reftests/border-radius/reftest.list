@@ -41,20 +41,20 @@ fuzzy-if(Android,9,73) == clipping-3.html clipping-3-ref.xhtml # edge of border-
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
-fuzzy-if(true,1,20) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android&&browserIsRemote,7,169) fails-if(Android&&!browserIsRemote) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
+fuzzy-if(true,1,20) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android&&browserIsRemote,7,169) fuzzy-if(Android&&!browserIsRemote,140,237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
 fuzzy-if(Android,5,54) == clipping-4-image.html clipping-4-ref.html
 == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
 == clipping-5-image.html clipping-5-refi.html
 == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
-fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fails-if(Android&&!browserIsRemote) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,107) == clipping-5-refc.html clipping-5-ref.html # bug 732535
 == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
 fuzzy-if(Android,5,105) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fails-if(Android&&!browserIsRemote) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
+fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,429) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
 
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit
@@ -74,7 +74,7 @@ fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
-fuzzy-if(Android&&browserIsRemote,7,146) fails-if(Android&&!browserIsRemote) == scroll-1.html scroll-1-ref.html # see bug 602892, 732535
+fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,248) == scroll-1.html scroll-1-ref.html # see bug 732535
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 

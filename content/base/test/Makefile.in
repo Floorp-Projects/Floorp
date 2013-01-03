@@ -268,6 +268,9 @@ MOCHITEST_FILES_A = \
 		test_bug282547.html \
 		bug282547.sjs \
 		test_domparser_null_char.html \
+		test_bug811701.html \
+		test_bug811701.xhtml \
+		test_bug820909.html \
 		$(NULL)
 
 MOCHITEST_FILES_B = \
@@ -503,6 +506,8 @@ MOCHITEST_FILES_B = \
 		file_html_in_xhr3.html \
 		file_html_in_xhr.sjs \
 		test_bug647518.html \
+		test_bug654352.html \
+                Ahem.ttf \
 		test_bug664916.html \
 		test_bug666604.html \
 		test_bug675121.html \
@@ -581,6 +586,8 @@ MOCHITEST_FILES_B = \
 		test_XHR_onuploadprogress.html \
 		test_XHR_anon.html \
 		file_XHR_anon.sjs \
+		file_XHR_system_redirect.html \
+		file_XHR_system_redirect.html^headers^ \
 		test_XHR_system.html \
 		test_XHR_parameters.html \
 		test_ipc_messagemanager_blob.html \

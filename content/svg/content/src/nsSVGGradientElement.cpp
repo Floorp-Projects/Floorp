@@ -11,7 +11,7 @@
 #include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsCOMPtr.h"
-#include "nsSVGStylableElement.h"
+#include "nsSVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGGradientElement.h"
 
@@ -88,8 +88,8 @@ NS_IMETHODIMP nsSVGGradientElement::GetGradientUnits(nsIDOMSVGAnimatedEnumeratio
   return mEnumAttributes[GRADIENTUNITS].ToDOMAnimatedEnum(aGradientUnits, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform; */
-NS_IMETHODIMP nsSVGGradientElement::GetGradientTransform(nsIDOMSVGAnimatedTransformList * *aGradientTransform)
+/* readonly attribute nsISupports gradientTransform; */
+NS_IMETHODIMP nsSVGGradientElement::GetGradientTransform(nsISupports * *aGradientTransform)
 {
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
   // to allocate the SVGAnimatedTransformList if it hasn't already done so:

@@ -23,11 +23,6 @@ ifdef MOZ_TREE_FREETYPE
 tier_platform_staticdirs += modules/freetype2
 endif
 
-# this must precede xpcom
-ifdef MOZ_DMDV
-tier_platform_dirs += tools/dmdv
-endif
-
 tier_platform_dirs += xpcom
 
 tier_platform_dirs += \

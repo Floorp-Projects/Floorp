@@ -45,7 +45,7 @@ class Bootstrapper(object):
                 cls = FedoraBootstrapper
             elif distro == 'Gentoo Base System':
                 cls = GentooBootstrapper
-            elif distro == 'Mint':
+            elif distro in ('Mint', 'LinuxMint'):
                 cls = MintBootstrapper
             elif distro == 'Ubuntu':
                 cls = UbuntuBootstrapper

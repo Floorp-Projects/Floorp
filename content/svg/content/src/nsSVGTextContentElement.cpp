@@ -5,6 +5,7 @@
 
 #include "nsSVGTextContentElement.h"
 #include "DOMSVGPoint.h"
+#include "nsCOMPtr.h"
 
 using namespace mozilla;
 
@@ -75,8 +76,8 @@ NS_IMETHODIMP nsSVGTextContentElement::GetSubStringLength(uint32_t charnum, uint
   return NS_OK;
 }
 
-/* nsIDOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
-NS_IMETHODIMP nsSVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
+/* DOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
+NS_IMETHODIMP nsSVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -86,8 +87,8 @@ NS_IMETHODIMP nsSVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, 
   return metrics->GetStartPositionOfChar(charnum, _retval);
 }
 
-/* nsIDOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
-NS_IMETHODIMP nsSVGTextContentElement::GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
+/* DOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
+NS_IMETHODIMP nsSVGTextContentElement::GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -120,18 +121,19 @@ NS_IMETHODIMP nsSVGTextContentElement::GetRotationOfChar(uint32_t charnum, float
   return metrics->GetRotationOfChar(charnum, _retval);
 }
 
-/* long getCharNumAtPosition (in nsIDOMSVGPoint point); */
-NS_IMETHODIMP nsSVGTextContentElement::GetCharNumAtPosition(nsIDOMSVGPoint *point, int32_t *_retval)
+/* long getCharNumAtPosition (in DOMSVGPoint point); */
+NS_IMETHODIMP nsSVGTextContentElement::GetCharNumAtPosition(nsISupports *point, int32_t *_retval)
 {
-  nsCOMPtr<DOMSVGPoint> p = do_QueryInterface(point);
-  if (!p)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
   *_retval = -1;
+
+  nsCOMPtr<DOMSVGPoint> domPoint = do_QueryInterface(point);
+  if (!domPoint) {
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
 
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
   if (metrics)
-    *_retval = metrics->GetCharNumAtPosition(point);
+    *_retval = metrics->GetCharNumAtPosition(domPoint);
 
   return NS_OK;
 }
