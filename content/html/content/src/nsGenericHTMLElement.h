@@ -1178,7 +1178,7 @@ protected:
                               void* aData);
 
   // Returns true if the event should not be handled from PreHandleEvent
-  virtual bool IsElementDisabledForEvents(uint32_t aMessage, nsIFrame* aFrame);
+  bool IsElementDisabledForEvents(uint32_t aMessage, nsIFrame* aFrame);
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
