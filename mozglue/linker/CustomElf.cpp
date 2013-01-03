@@ -102,7 +102,7 @@ private:
 TemporaryRef<LibHandle>
 CustomElf::Load(Mappable *mappable, const char *path, int flags)
 {
-  debug("CustomElf::Load(\"%s\", %x) = ...", path, flags);
+  debug("CustomElf::Load(\"%s\", 0x%x) = ...", path, flags);
   if (!mappable)
     return NULL;
   /* Keeping a RefPtr of the CustomElf is going to free the appropriate
@@ -219,7 +219,7 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
     return NULL;
 
   elf->stats("oneLibLoaded");
-  debug("CustomElf::Load(\"%s\", %x) = %p", path, flags,
+  debug("CustomElf::Load(\"%s\", 0x%x) = %p", path, flags,
         static_cast<void *>(elf));
   return elf;
 }
