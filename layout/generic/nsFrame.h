@@ -199,7 +199,7 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   virtual nsIFrame* GetNextInFlowVirtual() const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
+  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsView** aView) const;
   virtual nsIAtom* GetType() const;
 
   NS_IMETHOD  IsSelectable(bool* aIsSelectable, uint8_t* aSelectStyle) const;

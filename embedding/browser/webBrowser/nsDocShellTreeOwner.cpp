@@ -62,7 +62,7 @@
 #include "nsContextMenuInfo.h"
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
@@ -1445,7 +1445,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
     if (shell) {
       nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
-        nsIView* view = vm->GetRootView();
+        nsView* view = vm->GetRootView();
         if (view) {
           nsPoint offset;
           widget = view->GetNearestWidget(&offset);

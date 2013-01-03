@@ -26,7 +26,7 @@
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsIViewManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 
 
 

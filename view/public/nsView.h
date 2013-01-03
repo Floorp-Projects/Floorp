@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIView_h___
-#define nsIView_h___
+#ifndef nsView_h__
+#define nsView_h__
 
 #include "nsISupports.h"
 #include "nsCoord.h"
@@ -62,7 +62,7 @@ enum nsViewVisibility {
  * of a view, go through nsIViewManager.
  */
 
-class nsIView MOZ_FINAL : public nsIWidgetListener
+class nsView MOZ_FINAL : public nsIWidgetListener
 {
 public:
   friend class nsViewManager;
@@ -84,7 +84,7 @@ public:
    * @return the view the widget belongs to, or null if the widget doesn't
    * belong to any view.
    */
-  static nsIView* GetViewFor(nsIWidget* aWidget);
+  static nsView* GetViewFor(nsIWidget* aWidget);
 
   /**
    * Destroy the view.
@@ -148,7 +148,7 @@ public:
    * NOTE: this actually returns the offset from aOther to |this|, but
    * that offset is added to transform _coordinates_ from |this| to aOther.
    */
-  nsPoint GetOffsetTo(const nsIView* aOther) const;
+  nsPoint GetOffsetTo(const nsView* aOther) const;
 
   /**
    * Get the offset between the origin of |this| and the origin of aWidget.
@@ -186,19 +186,19 @@ public:
    * Called to query the parent of the view.
    * @result view's parent
    */
-  nsIView* GetParent() const { return mParent; }
+  nsView* GetParent() const { return mParent; }
 
   /**
    * The view's first child is the child which is earliest in document order.
    * @result first child
    */
-  nsIView* GetFirstChild() const { return mFirstChild; }
+  nsView* GetFirstChild() const { return mFirstChild; }
 
   /**
    * Called to query the next sibling of the view.
    * @result view's next sibling
    */
-  nsIView* GetNextSibling() const { return mNextSibling; }
+  nsView* GetNextSibling() const { return mNextSibling; }
 
   /**
    * Set the view's frame.
@@ -359,8 +359,8 @@ public:
   bool GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
   int32_t GetZIndex() const { return mZIndex; }
 
-  void SetParent(nsIView *aParent) { mParent = aParent; }
-  void SetNextSibling(nsIView *aSibling)
+  void SetParent(nsView *aParent) { mParent = aParent; }
+  void SetNextSibling(nsView *aSibling)
   {
     NS_ASSERTION(aSibling != this, "Can't be our own sibling!");
     mNextSibling = aSibling;
@@ -381,7 +381,7 @@ public:
 
   // nsIWidgetListener
   virtual nsIPresShell* GetPresShell() MOZ_OVERRIDE;
-  virtual nsIView* GetView() MOZ_OVERRIDE { return this; }
+  virtual nsView* GetView() MOZ_OVERRIDE { return this; }
   virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) MOZ_OVERRIDE;
   virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) MOZ_OVERRIDE;
   virtual bool RequestWindowClose(nsIWidget* aWidget) MOZ_OVERRIDE;
@@ -391,13 +391,13 @@ public:
   virtual void RequestRepaint() MOZ_OVERRIDE;
   virtual nsEventStatus HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents) MOZ_OVERRIDE;
 
-  virtual ~nsIView();
+  virtual ~nsView();
 
-  nsPoint GetOffsetTo(const nsIView* aOther, const int32_t aAPD) const;
+  nsPoint GetOffsetTo(const nsView* aOther, const int32_t aAPD) const;
   nsIWidget* GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const;
 
 private:
-  nsIView(nsViewManager* aViewManager = nullptr,
+  nsView(nsViewManager* aViewManager = nullptr,
           nsViewVisibility aVisibility = nsViewVisibility_kShow);
 
   bool ForcedRepaint() { return mForcedRepaint; }
@@ -446,8 +446,8 @@ private:
     return mDirtyRegion && !mDirtyRegion->IsEmpty();
   }
 
-  void InsertChild(nsIView *aChild, nsIView *aSibling);
-  void RemoveChild(nsIView *aChild);
+  void InsertChild(nsView *aChild, nsView *aSibling);
+  void RemoveChild(nsView *aChild);
 
   void SetTopMost(bool aTopMost) { aTopMost ? mVFlags |= NS_VIEW_FLAG_TOPMOST : mVFlags &= ~NS_VIEW_FLAG_TOPMOST; }
   bool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
@@ -464,10 +464,10 @@ private:
   void InvalidateHierarchy(nsViewManager *aViewManagerParent);
 
   nsViewManager     *mViewManager;
-  nsIView           *mParent;
+  nsView           *mParent;
   nsIWidget         *mWindow;
-  nsIView           *mNextSibling;
-  nsIView           *mFirstChild;
+  nsView           *mNextSibling;
+  nsView           *mFirstChild;
   nsIFrame          *mFrame;
   nsRegion          *mDirtyRegion;
   int32_t           mZIndex;
