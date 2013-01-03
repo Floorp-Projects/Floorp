@@ -45,11 +45,14 @@
     macro(callFunction, callFunction, "callFunction") \
     macro(classPrototype, classPrototype, "prototype") \
     macro(Collator, Collator, "Collator") \
+    macro(CollatorCompare, CollatorCompare, "Intl_Collator_compare") \
     macro(columnNumber, columnNumber, "columnNumber") \
+    macro(compare, compare, "compare") \
     macro(configurable, configurable, "configurable") \
     macro(construct, construct, "construct") \
     macro(constructor, constructor, "constructor") \
     macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
+    macro(DateTimeFormatFormat, DateTimeFormatFormat, "Intl_DateTimeFormat_format") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
     macro(defineProperty, defineProperty, "defineProperty") \
@@ -68,6 +71,7 @@
     macro(false, false_, "false") \
     macro(fileName, fileName, "fileName") \
     macro(fix, fix, "fix") \
+    macro(format, format, "format") \
     macro(get, get, "get") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
@@ -78,9 +82,9 @@
     macro(hasOwnProperty, hasOwnProperty, "hasOwnProperty") \
     macro(ignoreCase, ignoreCase, "ignoreCase") \
     macro(index, index, "index") \
-    macro(InitializeCollator, InitializeCollator, "intl_InitializeCollator") \
-    macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "intl_InitializeDateTimeFormat") \
-    macro(InitializeNumberFormat, InitializeNumberFormat, "intl_InitializeNumberFormat") \
+    macro(InitializeCollator, InitializeCollator, "InitializeCollator") \
+    macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "InitializeDateTimeFormat") \
+    macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
     macro(isFinite, isFinite, "isFinite") \
@@ -107,6 +111,7 @@
     macro(next, next, "next") \
     macro(noSuchMethod, noSuchMethod, "__noSuchMethod__") \
     macro(NumberFormat, NumberFormat, "NumberFormat") \
+    macro(NumberFormatFormat, NumberFormatFormat, "Intl_NumberFormat_format") \
     macro(objectNull, objectNull, "[object Null]") \
     macro(objectUndefined, objectUndefined, "[object Undefined]") \
     macro(of, of, "of") \
