@@ -162,9 +162,9 @@ NeckoParent::AllocPHttpChannel(PBrowserParent* aBrowser,
   const char *error = CreateChannelLoadContext(aBrowser, aSerialized,
                                                loadContext);
   if (error) {
-    NS_WARNING(nsPrintfCString("NeckoParent::AllocPHttpChannel: "
-                               "FATAL error: %s: KILLING CHILD PROCESS\n",
-                               error).get());
+    printf_stderr("NeckoParent::AllocPHttpChannel: "
+                  "FATAL error: %s: KILLING CHILD PROCESS\n",
+                  error);
     return nullptr;
   }
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(aSerialized);
@@ -189,9 +189,9 @@ NeckoParent::AllocPFTPChannel(PBrowserParent* aBrowser,
   const char *error = CreateChannelLoadContext(aBrowser, aSerialized,
                                                loadContext);
   if (error) {
-    NS_WARNING(nsPrintfCString("NeckoParent::AllocPFTPChannel: "
-                               "FATAL error: %s: KILLING CHILD PROCESS\n",
-                               error).get());
+    printf_stderr("NeckoParent::AllocPFTPChannel: "
+                  "FATAL error: %s: KILLING CHILD PROCESS\n",
+                  error);
     return nullptr;
   }
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(aSerialized);
@@ -245,9 +245,9 @@ NeckoParent::AllocPWebSocket(PBrowserParent* browser,
   const char *error = CreateChannelLoadContext(browser, serialized,
                                                loadContext);
   if (error) {
-    NS_WARNING(nsPrintfCString("NeckoParent::AllocPWebSocket: "
-                               "FATAL error: %s: KILLING CHILD PROCESS\n",
-                               error).get());
+    printf_stderr("NeckoParent::AllocPWebSocket: "
+                  "FATAL error: %s: KILLING CHILD PROCESS\n",
+                  error);
     return nullptr;
   }
 
@@ -312,8 +312,8 @@ NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
   // security checks
   if (!gDisableIPCSecurity) {
     if (!aBrowser) {
-      NS_WARNING("NeckoParent::AllocPRemoteOpenFile: "
-                 "FATAL error: missing TabParent: KILLING CHILD PROCESS\n");
+      printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
+                    "FATAL error: missing TabParent: KILLING CHILD PROCESS\n");
       return nullptr;
     }
     nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(aBrowser);
@@ -369,9 +369,9 @@ NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
       // provide attack vectors.
       if (PL_strnstr(requestedPath.BeginReading(), "/../",
                      requestedPath.Length())) {
-        NS_WARNING("NeckoParent::AllocPRemoteOpenFile: "
-                   "FATAL error: requested file URI contains '/../' "
-                   "KILLING CHILD PROCESS\n");
+        printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
+                      "FATAL error: requested file URI contains '/../' "
+                      "KILLING CHILD PROCESS\n");
         return nullptr;
       }
     } else {
@@ -390,9 +390,9 @@ NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
                                 NS_LossyConvertUTF16toASCII(basePath).get(),
                                 NS_LossyConvertUTF16toASCII(uuid).get());
       if (!requestedPath.Equals(mustMatch)) {
-        NS_WARNING("NeckoParent::AllocPRemoteOpenFile: "
-                   "FATAL error: requesting file other than application.zip: "
-                   "KILLING CHILD PROCESS\n");
+        printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
+                      "FATAL error: requesting file other than application.zip: "
+                      "KILLING CHILD PROCESS\n");
         return nullptr;
       }
     }
