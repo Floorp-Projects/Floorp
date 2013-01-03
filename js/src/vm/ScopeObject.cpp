@@ -1316,14 +1316,14 @@ class DebugScopeProxy : public BaseProxyHandler
 
     DebugScopeProxy() : BaseProxyHandler(&family) {}
 
-    bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                               PropertyDescriptor *desc) MOZ_OVERRIDE
+    bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc,
+                               unsigned flags) MOZ_OVERRIDE
     {
-        return getOwnPropertyDescriptor(cx, proxy, id, set, desc);
+        return getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
     }
 
-    bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid idArg, bool set,
-                                  PropertyDescriptor *desc) MOZ_OVERRIDE
+    bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid idArg,
+                                  PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());

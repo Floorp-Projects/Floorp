@@ -162,22 +162,20 @@ Wrapper::~Wrapper()
 
 bool
 Wrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                               jsid id, bool set,
-                               PropertyDescriptor *desc)
+                               jsid id, PropertyDescriptor *desc, unsigned flags)
 {
     JS_ASSERT(!hasPrototype()); // Should never be called when there's a prototype.
     desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(DirectProxyHandler::getPropertyDescriptor(cx, wrapper, id, set, desc),
-            set ? SET : GET);
+    CHECKED(DirectProxyHandler::getPropertyDescriptor(cx, wrapper, id, desc, flags),
+            (flags & JSRESOLVE_ASSIGNING) ? SET : GET);
 }
 
 bool
 Wrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                  jsid id, bool set,
-                                  PropertyDescriptor *desc)
+                                  jsid id, PropertyDescriptor *desc, unsigned flags)
 {
     desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(DirectProxyHandler::getOwnPropertyDescriptor(cx, wrapper, id, set, desc), GET);
+    CHECKED(DirectProxyHandler::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags), GET);
 }
 
 bool
@@ -417,21 +415,21 @@ CrossCompartmentWrapper::~CrossCompartmentWrapper()
 
 bool
 CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                               bool set, PropertyDescriptor *desc)
+                                               PropertyDescriptor *desc, unsigned flags)
 {
-    PIERCE(cx, wrapper, set ? SET : GET,
+    PIERCE(cx, wrapper, (flags & JSRESOLVE_ASSIGNING) ? SET : GET,
            cx->compartment->wrapId(cx, &id),
-           Wrapper::getPropertyDescriptor(cx, wrapper, id, set, desc),
+           Wrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags),
            cx->compartment->wrap(cx, desc));
 }
 
 bool
 CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                  bool set, PropertyDescriptor *desc)
+                                                  PropertyDescriptor *desc, unsigned flags)
 {
-    PIERCE(cx, wrapper, set ? SET : GET,
+    PIERCE(cx, wrapper, (flags & JSRESOLVE_ASSIGNING) ? SET : GET,
            cx->compartment->wrapId(cx, &id),
-           Wrapper::getOwnPropertyDescriptor(cx, wrapper, id, set, desc),
+           Wrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags),
            cx->compartment->wrap(cx, desc));
 }
 
@@ -823,18 +821,16 @@ DeadObjectProxy::DeadObjectProxy()
 }
 
 bool
-DeadObjectProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                       jsid id, bool set,
-                                       PropertyDescriptor *desc)
+DeadObjectProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                       PropertyDescriptor *desc, unsigned flags)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
-DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                          jsid id, bool set,
-                                          PropertyDescriptor *desc)
+DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                          PropertyDescriptor *desc, unsigned flags)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;
