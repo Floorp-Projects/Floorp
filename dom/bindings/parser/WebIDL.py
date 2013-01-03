@@ -2142,6 +2142,9 @@ class IDLAttribute(IDLInterfaceMember):
             if not self.readonly:
                 raise WebIDLError("[Unforgeable] is only allowed on readonly "
                                   "attributes", [attr.location, self.location])
+            if self.isStatic():
+                raise WebIDLError("[Unforgeable] is only allowed on non-static "
+                                  "attributes", [attr.location, self.location])
             self._unforgeable = True
         elif identifier == "Constant" and not self.readonly:
             raise WebIDLError("[Constant] only allowed on readonly attributes",

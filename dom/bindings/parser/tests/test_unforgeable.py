@@ -176,3 +176,18 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should have thrown for writable [Unforgeable] attribute.")
+
+    parser = parser.reset();
+    threw = False
+    try:
+        parser.parse("""
+            interface iface {
+              [Unforgeable] static readonly attribute long foo;
+            };
+        """)
+
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should have thrown for static [Unforgeable] attribute.")
