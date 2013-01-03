@@ -359,6 +359,8 @@ interface TestInterface {
   void passNullableTreatAsNullCallback(TestTreatAsNullCallback? arg);
   void passOptionalNullableTreatAsNullCallback(optional TestTreatAsNullCallback? arg);
   void passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
+  attribute TestTreatAsNullCallback treatAsNullCallback;
+  attribute TestTreatAsNullCallback? nullableTreatAsNullCallback;
 
   // Any types
   void passAny(any arg);
