@@ -1287,8 +1287,7 @@ class IDLSequenceType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDictionary() or other.isDate() or
-                other.isNonCallbackInterface())
+                other.isDate() or other.isNonCallbackInterface())
 
 class IDLUnionType(IDLType):
     def __init__(self, location, memberTypes):
@@ -1452,8 +1451,7 @@ class IDLArrayType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDictionary() or other.isDate() or
-                other.isNonCallbackInterface())
+                other.isDate() or other.isNonCallbackInterface())
 
 class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
     def __init__(self, location, innerType, name):
@@ -1618,16 +1616,14 @@ class IDLWrapperType(IDLType):
                     other.isCallback() or other.isDictionary() or
                     other.isSequence() or other.isArray() or
                     other.isDate())
+        if self.isDictionary() and other.nullable():
+            return False
         if other.isPrimitive() or other.isString() or other.isEnum() or other.isDate():
             return True
         if self.isDictionary():
-            return (not other.nullable() and
-                    (other.isNonCallbackInterface() or other.isSequence() or
-                     other.isArray()))
+            return other.isNonCallbackInterface()
 
         assert self.isInterface()
-        # XXXbz need to check that the interfaces can't be implemented
-        # by the same object
         if other.isInterface():
             if other.isSpiderMonkeyInterface():
                 # Just let |other| handle things
