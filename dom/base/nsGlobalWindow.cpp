@@ -1390,7 +1390,7 @@ nsGlobalWindow::UnmarkGrayTimers()
       Function* f = timeout->mScriptHandler->GetCallback();
       if (f) {
         // Callable() already does xpc_UnmarkGrayObject.
-        JSObject* o = f->Callable();
+        DebugOnly<JSObject*> o = f->Callable();
         MOZ_ASSERT(!xpc_IsGrayGCThing(o), "Should have been unmarked");
       }
     }
