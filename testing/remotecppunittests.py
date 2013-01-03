@@ -68,6 +68,16 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         env["HOME"]=self.remote_home_dir
         env["MOZILLA_FIVE_HOME"] = self.remote_home_dir
         env["MOZ_XRE_DIR"] = self.remote_bin_dir
+        if self.options.add_env:
+            for envdef in self.options.add_env:
+                envdef_parts = envdef.split("=", 1)
+                if len(envdef_parts) == 2:
+                    env[envdef_parts[0]] = envdef_parts[1]
+                elif len(envdef_parts) == 1:
+                    env[envdef_parts[0]] = ""
+                else:
+                    print >> sys.stderr, "warning: invalid --addEnv option skipped: "+envdef
+
         return env
 
     def run_one_test(self, prog, env, symbols_path=None):
@@ -137,6 +147,11 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         # /data/local/tests is used because it is usually not possible to set +x permissions
         # on binaries on /mnt/sdcard
         defaults["remote_test_root"] = "/data/local/tests"
+
+        self.add_option("--addEnv", action = "append",
+                    type = "string", dest = "add_env",
+                    help = "additional remote environment variable definitions (eg. --addEnv \"somevar=something\")")
+        defaults["add_env"] = None
 
         self.set_defaults(**defaults)
 
