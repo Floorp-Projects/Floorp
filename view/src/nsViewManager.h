@@ -13,7 +13,6 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
-#include "nsView.h"
 #include "nsIPresShell.h"
 #include "nsDeviceContext.h"
 
@@ -114,36 +113,36 @@ protected:
 private:
 
   void FlushPendingInvalidates();
-  void ProcessPendingUpdatesForView(nsView *aView,
+  void ProcessPendingUpdatesForView(nsIView *aView,
                                     bool aFlushDirtyRegion = true);
-  void FlushDirtyRegionToWidget(nsView* aView);
+  void FlushDirtyRegionToWidget(nsIView* aView);
   /**
    * Call WillPaint() on all view observers under this vm root.
    */
   void CallWillPaintOnObservers(bool aWillSendDidPaint);
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
-  void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
+  void InvalidateWidgetArea(nsIView *aWidgetView, const nsRegion &aDamagedRegion);
 
-  void InvalidateViews(nsView *aView);
+  void InvalidateViews(nsIView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
-  void Refresh(nsView *aView, const nsIntRegion& aRegion, bool aWillSendDidPaint);
+  void Refresh(nsIView *aView, const nsIntRegion& aRegion, bool aWillSendDidPaint);
 
-  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
-  void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
+  void InvalidateRectDifference(nsIView *aView, const nsRect& aRect, const nsRect& aCutOut);
+  void InvalidateHorizontalBandDifference(nsIView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           nscoord aY1, nscoord aY2, bool aInCutOut);
 
   // Utilities
 
-  bool IsViewInserted(nsView *aView);
+  bool IsViewInserted(nsIView *aView);
 
   /**
    * Intersects aRect with aView's bounds and then transforms it from aView's
    * coordinate system to the coordinate system of the widget attached to
    * aView.
    */
-  nsIntRect ViewToWidget(nsView *aView, const nsRect &aRect) const;
+  nsIntRect ViewToWidget(nsIView *aView, const nsRect &aRect) const;
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
@@ -158,7 +157,7 @@ private:
   nsresult InvalidateView(nsIView *aView, const nsRect &aRect);
 
 public: // NOT in nsIViewManager, so private to the view module
-  nsView* GetRootViewImpl() const { return mRootView; }
+  nsIView* GetRootViewImpl() const { return mRootView; }
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
 
@@ -189,7 +188,7 @@ private:
   // visible again.
   nsSize            mDelayedResize;
 
-  nsView            *mRootView;
+  nsIView           *mRootView;
   // mRootViewManager is a strong ref unless it equals |this|.  It's
   // never null (if we have no ancestors, it will be |this|).
   nsViewManager     *mRootViewManager;
