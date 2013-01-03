@@ -1936,12 +1936,16 @@ class CallbackObjectUnwrapper:
                               "codeOnFailure" : CGIndenter(CGGeneric(codeOnFailure)).define() }
 
     def __str__(self):
+        checkObjectType = CGIfWrapper(
+            CGGeneric(self.substitution["codeOnFailure"]),
+            "!IsConvertibleToCallbackInterface(cx, %(source)s)" %
+            self.substitution).define() + "\n\n"
         if self.descriptor.workers:
-            return string.Template(
+            return checkObjectType + string.Template(
                 "${target} = ${source};"
                 ).substitute(self.substitution)
 
-        return string.Template(
+        return checkObjectType + string.Template(
             """nsresult rv;
 XPCCallContext ccx(JS_CALLER, cx);
 if (!ccx.IsValid()) {
@@ -2347,11 +2351,6 @@ for (uint32_t i = 0; i < length; ++i) {
             names.append(name)
         else:
             callbackObject = None
-
-        if callbackObject and callbackMemberTypes[0].isCallbackInterface():
-            callbackObject = CGWrapper(CGIndenter(callbackObject),
-                                       pre="if (!IsPlatformObject(cx, &argObj)) {\n",
-                                       post="\n}")
 
         dictionaryMemberTypes = filter(lambda t: t.isDictionary(), memberTypes)
         if len(dictionaryMemberTypes) > 0:
@@ -4032,16 +4031,13 @@ class CGMethodCall(CGThing):
             # 3)  A RegExp object being passed to a RegExp or "object" arg.
             # 4)  A callable object being passed to a callback or "object" arg.
             # 5)  Any non-Date and non-RegExp object being passed to a
-            #     dictionary or array or sequence or "object" arg.
-            # 6)  Some other kind of object being passed to a callback
-            #     interface or "object" arg.
+            #     array or sequence or callback interface dictionary or
+            #     "object" arg.
             #
-            # Unfortunately, we cannot push the "some other kind of object"
-            # check down into case 6, because callbacks interfaces _can_ normally be
-            # initialized from platform objects. But we can coalesce the other
-            # five cases together, as long as we make sure to check whether our
-            # object works as an interface argument before checking whether it
-            # works as an arraylike or dictionary or callback function.
+            # We can can coalesce these five cases together, as long as we make
+            # sure to check whether our object works as an interface argument
+            # before checking whether it works as an arraylike or dictionary or
+            # callback function or callback interface.
 
             # First grab all the overloads that have a non-callback interface
             # (which includes typed arrays and arraybuffers) at the
@@ -4062,11 +4058,12 @@ class CGMethodCall(CGThing):
                               if distinguishingType(s).isCallback())
 
             # Now append all the overloads that take an array or sequence or
-            # dictionary:
+            # dictionary or callback interface:
             objectSigs.extend(s for s in possibleSignatures
                               if (distinguishingType(s).isArray() or
                                   distinguishingType(s).isSequence() or
-                                  distinguishingType(s).isDictionary()))
+                                  distinguishingType(s).isDictionary() or
+                                  distinguishingType(s).isCallbackInterface()))
 
             # There might be more than one thing in objectSigs; we need to check
             # which ones we unwrap to.
@@ -4091,11 +4088,6 @@ class CGMethodCall(CGThing):
                     caseBody.append(CGIndenter(CGGeneric("} while (0);")))
 
                 caseBody.append(CGGeneric("}"))
-
-            # Check for vanilla JS objects
-            pickFirstSignature("%s.isObject() && !IsPlatformObject(cx, &%s.toObject())" %
-                               (distinguishingArg, distinguishingArg),
-                               lambda s: distinguishingType(s).isCallbackInterface())
 
             # The remaining cases are mutually exclusive.  The
             # pickFirstSignature calls are what change caseBody
