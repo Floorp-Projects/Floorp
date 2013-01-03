@@ -331,28 +331,18 @@ void nsIView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible)
   }
 }
 
-NS_IMETHODIMP nsIView::SetVisibility(nsViewVisibility aVisibility)
+void nsIView::SetVisibility(nsViewVisibility aVisibility)
 {
   mVis = aVisibility;
   NotifyEffectiveVisibilityChanged(IsEffectivelyVisible());
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsIView::SetFloating(bool aFloatingView)
+void nsIView::SetFloating(bool aFloatingView)
 {
 	if (aFloatingView)
 		mVFlags |= NS_VIEW_FLAG_FLOATING;
 	else
 		mVFlags &= ~NS_VIEW_FLAG_FLOATING;
-
-#if 0
-	// recursively make all sub-views "floating" grr.
-	for (nsIView* child = mFirstChild; chlid; child = child->GetNextSibling()) {
-		child->SetFloating(aFloatingView);
-	}
-#endif
-
-	return NS_OK;
 }
 
 void nsIView::InvalidateHierarchy(nsViewManager *aViewManagerParent)

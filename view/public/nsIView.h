@@ -362,7 +362,7 @@ public:
    * changed.
    * @param visibility new visibility state
    */
-  NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
+  void SetVisibility(nsViewVisibility visibility);
 
   /**
    * Called to indicate that the z-index of a view has been changed.
@@ -383,7 +383,7 @@ public:
    * views that need to be drawn in front of all other views.
    * @result true if the view floats, false otherwise.
    */
-  NS_IMETHOD  SetFloating(bool aFloatingView);
+  void SetFloating(bool aFloatingView);
 
   // Helper function to get mouse grabbing off this view (by moving it to the
   // parent, if we can)
