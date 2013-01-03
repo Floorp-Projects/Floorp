@@ -256,8 +256,12 @@ var gPluginHandler = {
 
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindowUtils);
-    let haveVisibleCTPPlugin = cwu.plugins.some(function(plugin) {
+    let plugins = cwu.plugins.filter(function(plugin) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      return gPluginHandler.canActivatePlugin(objLoadingContent);
+    });
+
+    let haveVisibleCTPPlugin = plugins.some(function(plugin) {
       let doc = plugin.ownerDocument;
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
       if (!overlay)
@@ -271,12 +275,11 @@ var gPluginHandler = {
       let isInvisible = ((computedStyle.width == "240px" &&
                           computedStyle.height == "200px") ||
                          gPluginHandler.isTooSmall(plugin, overlay));
-      return (!isInvisible &&
-              gPluginHandler.canActivatePlugin(objLoadingContent));
+      return !isInvisible;
     });
 
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
-    if (notification && !haveVisibleCTPPlugin && !this._notificationDisplayedOnce) {
+    if (notification && plugins.length > 0 && !haveVisibleCTPPlugin && !this._notificationDisplayedOnce) {
       notification.dismissed = false;
       PopupNotifications._update(notification.anchorElement);
       this._notificationDisplayedOnce = true;
