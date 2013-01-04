@@ -118,6 +118,8 @@ function MediaStreamPlayback(mediaElement, mediaStream) {
     // If canplaythrough doesn't fire in enough time, we fail the test
     setTimeout(function() {
       if(!canPlayThroughFired) {
+        self.mediaElement.removeEventListener('canplaythrough',
+          canPlayThroughCallback, false);
         ok(false, "canplaythrough event never fired");
         onError();
       }
