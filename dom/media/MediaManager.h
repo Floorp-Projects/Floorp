@@ -291,6 +291,7 @@ public:
       obs->AddObserver(sSingleton, "xpcom-shutdown", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:deny", false);
+      obs->AddObserver(sSingleton, "getUserMedia:revoke", false);
     }
     return sSingleton;
   }
