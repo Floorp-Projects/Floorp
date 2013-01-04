@@ -666,7 +666,9 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      type="menu"
                      hidden="true"
-                     orient="horizontal">
+                     orient="horizontal"
+                     label="&webrtcIndicatorButton.label;"
+                     tooltiptext="&webrtcIndicatorButton.tooltip;">
         <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                    onpopuphiding="WebrtcIndicator.clearPopup(this);"
                    oncommand="WebrtcIndicator.menuCommand(event.target);"/>

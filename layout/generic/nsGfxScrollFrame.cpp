@@ -9,7 +9,7 @@
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
 #include "nsIServiceManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIScrollable.h"
 #include "nsIViewManager.h"
 #include "nsContainerFrame.h"
@@ -1633,7 +1633,7 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
 // we don't want to invalidate views that have moved.
 static void AdjustViews(nsIFrame* aFrame)
 {
-  nsIView* view = aFrame->GetView();
+  nsView* view = aFrame->GetView();
   if (view) {
     nsPoint pt;
     aFrame->GetParent()->GetClosestView(&pt);

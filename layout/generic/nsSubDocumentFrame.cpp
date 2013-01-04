@@ -29,7 +29,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsGkAtoms.h"
 #include "nsStyleCoord.h"
@@ -61,7 +61,7 @@ using namespace mozilla;
 using mozilla::layout::RenderFrameParent;
 
 static nsIDocument*
-GetDocumentFromView(nsIView* aView)
+GetDocumentFromView(nsView* aView)
 {
   NS_PRECONDITION(aView, "");
 
@@ -109,10 +109,10 @@ private:
 };
 
 static void
-InsertViewsInReverseOrder(nsIView* aSibling, nsIView* aParent);
+InsertViewsInReverseOrder(nsView* aSibling, nsView* aParent);
 
 static void
-EndSwapDocShellsForViews(nsIView* aView);
+EndSwapDocShellsForViews(nsView* aView);
 
 NS_IMETHODIMP
 nsSubDocumentFrame::Init(nsIContent*     aContent,
@@ -154,7 +154,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
   if (frameloader) {
     nsCOMPtr<nsIDocument> oldContainerDoc;
-    nsIView* detachedViews =
+    nsView* detachedViews =
       frameloader->GetDetachedSubdocView(getter_AddRefs(oldContainerDoc));
     if (detachedViews) {
       if (oldContainerDoc == aContent->OwnerDoc()) {
@@ -232,7 +232,7 @@ nsSubDocumentFrame::GetSubdocumentRootFrame()
 {
   if (!mInnerView)
     return nullptr;
-  nsIView* subdocView = mInnerView->GetFirstChild();
+  nsView* subdocView = mInnerView->GetFirstChild();
   return subdocView ? subdocView->GetFrame() : nullptr;
 }
 
@@ -293,7 +293,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  nsIView* subdocView = mInnerView->GetFirstChild();
+  nsView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
     return NS_OK;
 
@@ -310,7 +310,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // During page transition mInnerView will sometimes have two children, the
     // first being the new page that may not have any frame, and the second
     // being the old page that will probably have a frame.
-    nsIView* nextView = subdocView->GetNextSibling();
+    nsView* nextView = subdocView->GetNextSibling();
     nsIFrame* frame = nullptr;
     if (nextView) {
       frame = nextView->GetFrame();
@@ -331,7 +331,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       mFrameLoader->GetDocShell(getter_AddRefs(docShell));
       if (!docShell)
         return NS_OK;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      presShell = docShell->GetPresShell();
       if (!presShell)
         return NS_OK;
     }
@@ -827,8 +827,8 @@ private:
   bool mHideViewerIfFrameless;
 };
 
-static nsIView*
-BeginSwapDocShellsForViews(nsIView* aSibling);
+static nsView*
+BeginSwapDocShellsForViews(nsView* aSibling);
 
 void
 nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
@@ -843,7 +843,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // the frame has been made position:fixed).
   nsFrameLoader* frameloader = FrameLoader();
   if (frameloader) {
-    nsIView* detachedViews = ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
+    nsView* detachedViews = ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
     frameloader->SetDetachedSubdocView(detachedViews, mContent->OwnerDoc());
 
     // We call nsFrameLoader::HideViewer() in a script runner so that we can
@@ -933,17 +933,17 @@ BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*)
   return true;
 }
 
-static nsIView*
-BeginSwapDocShellsForViews(nsIView* aSibling)
+static nsView*
+BeginSwapDocShellsForViews(nsView* aSibling)
 {
   // Collect the removed sibling views in reverse order in 'removedViews'.
-  nsIView* removedViews = nullptr;
+  nsView* removedViews = nullptr;
   while (aSibling) {
     nsIDocument* doc = ::GetDocumentFromView(aSibling);
     if (doc) {
       ::BeginSwapDocShellsForDocument(doc, nullptr);
     }
-    nsIView* next = aSibling->GetNextSibling();
+    nsView* next = aSibling->GetNextSibling();
     aSibling->GetViewManager()->RemoveChild(aSibling);
     aSibling->SetNextSibling(removedViews);
     removedViews = aSibling;
@@ -953,14 +953,14 @@ BeginSwapDocShellsForViews(nsIView* aSibling)
 }
 
 static void
-InsertViewsInReverseOrder(nsIView* aSibling, nsIView* aParent)
+InsertViewsInReverseOrder(nsView* aSibling, nsView* aParent)
 {
   NS_PRECONDITION(aParent, "");
   NS_PRECONDITION(!aParent->GetFirstChild(), "inserting into non-empty list");
 
   nsIViewManager* vm = aParent->GetViewManager();
   while (aSibling) {
-    nsIView* next = aSibling->GetNextSibling();
+    nsView* next = aSibling->GetNextSibling();
     aSibling->SetNextSibling(nullptr);
     // true means 'after' in document order which is 'before' in view order,
     // so this call prepends the child, thus reversing the siblings as we go.
@@ -986,10 +986,10 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
                "Can't swap doc shells when only one is within a popup!");
 
   if (mInnerView && other->mInnerView) {
-    nsIView* ourSubdocViews = mInnerView->GetFirstChild();
-    nsIView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
-    nsIView* otherSubdocViews = other->mInnerView->GetFirstChild();
-    nsIView* otherRemovedViews = ::BeginSwapDocShellsForViews(otherSubdocViews);
+    nsView* ourSubdocViews = mInnerView->GetFirstChild();
+    nsView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
+    nsView* otherSubdocViews = other->mInnerView->GetFirstChild();
+    nsView* otherRemovedViews = ::BeginSwapDocShellsForViews(otherSubdocViews);
 
     ::InsertViewsInReverseOrder(ourRemovedViews, other->mInnerView);
     ::InsertViewsInReverseOrder(otherRemovedViews, mInnerView);
@@ -1016,7 +1016,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
       cv->GetPresContext(getter_AddRefs(pc));
       nsDeviceContext* dc = pc ? pc->DeviceContext() : nullptr;
       if (dc) {
-        nsIView* v = cv->FindContainerView();
+        nsView* v = cv->FindContainerView();
         dc->Init(v ? v->GetNearestWidget(nullptr) : nullptr);
       }
       nsCOMPtr<nsIContentViewer> prev;
@@ -1032,7 +1032,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
 }
 
 static void
-EndSwapDocShellsForViews(nsIView* aSibling)
+EndSwapDocShellsForViews(nsView* aSibling)
 {
   for ( ; aSibling; aSibling = aSibling->GetNextSibling()) {
     nsIDocument* doc = ::GetDocumentFromView(aSibling);
@@ -1080,7 +1080,7 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
   }
 }
 
-nsIView*
+nsView*
 nsSubDocumentFrame::EnsureInnerView()
 {
   if (mInnerView) {
@@ -1088,12 +1088,12 @@ nsSubDocumentFrame::EnsureInnerView()
   }
 
   // create, init, set the parent of the view
-  nsIView* outerView = GetView();
+  nsView* outerView = GetView();
   NS_ASSERTION(outerView, "Must have an outer view already");
   nsRect viewBounds(0, 0, 0, 0); // size will be fixed during reflow
 
   nsIViewManager* viewMan = outerView->GetViewManager();
-  nsIView* innerView = viewMan->CreateView(viewBounds, outerView);
+  nsView* innerView = viewMan->CreateView(viewBounds, outerView);
   if (!innerView) {
     NS_ERROR("Could not create inner view");
     return nullptr;
@@ -1117,8 +1117,7 @@ nsSubDocumentFrame::ObtainIntrinsicSizeFrame()
     nsCOMPtr<nsIDocShell> docShell;
     GetDocShell(getter_AddRefs(docShell));
     if (docShell) {
-      nsCOMPtr<nsIPresShell> presShell;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
       if (presShell) {
         nsIScrollableFrame* scrollable = presShell->GetRootScrollFrameAsScrollable();
         if (scrollable) {

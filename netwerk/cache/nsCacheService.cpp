@@ -1462,8 +1462,7 @@ nsCacheService::IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy  storagePo
     }
     if (gService->mEnableDiskDevice &&
         (storagePolicy == nsICache::STORE_ANYWHERE ||
-         storagePolicy == nsICache::STORE_ON_DISK  ||
-         storagePolicy == nsICache::STORE_ON_DISK_AS_FILE)) {
+         storagePolicy == nsICache::STORE_ON_DISK)) {
         return true;
     }
     if (gService->mEnableOfflineDevice &&
@@ -2215,7 +2214,6 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
         if (mDiskDevice) {
             // Bypass the cache if Content-Length says the entry will be too big
             if (predictedDataSize != -1 &&
-                entry->StoragePolicy() != nsICache::STORE_ON_DISK_AS_FILE &&
                 mDiskDevice->EntryIsTooBig(predictedDataSize)) {
                 DebugOnly<nsresult> rv = nsCacheService::DoomEntry(entry);
                 NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");

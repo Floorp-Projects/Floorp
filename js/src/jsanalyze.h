@@ -74,9 +74,6 @@ class Bytecode
     /* Whether this instruction is the fall through point of a conditional jump. */
     bool jumpFallthrough : 1;
 
-    /* Whether this instruction can be branched to from a switch statement. Implies jumpTarget. */
-    bool switchTarget : 1;
-
     /*
      * Whether this instruction must always execute, unless the script throws
      * an exception which it does not later catch.
@@ -250,7 +247,6 @@ BytecodeNoFallThrough(JSOp op)
       case JSOP_RETRVAL:
       case JSOP_THROW:
       case JSOP_TABLESWITCH:
-      case JSOP_LOOKUPSWITCH:
       case JSOP_FILTER:
         return true;
       case JSOP_GOSUB:

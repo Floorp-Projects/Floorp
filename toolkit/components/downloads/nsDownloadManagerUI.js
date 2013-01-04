@@ -24,7 +24,7 @@ nsDownloadManagerUI.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadManagerUI
 
-  show: function show(aWindowContext, aID, aReason)
+  show: function show(aWindowContext, aID, aReason, aUsePrivateUI)
   {
     if (!aReason)
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;

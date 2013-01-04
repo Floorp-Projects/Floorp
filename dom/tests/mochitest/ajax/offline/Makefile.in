@@ -16,7 +16,6 @@ DIRS = namespace1 namespace2
 MOCHITEST_FILES	= \
 	offlineTests.js \
 	test_badManifestMagic.html \
-	test_badManifestMime.html \
 	test_bypass.html \
 	test_missingFile.html \
 	test_noManifest.html \
@@ -89,7 +88,6 @@ MOCHITEST_FILES	= \
 	wildcardManifest.cacheManifest \
 	wildcardManifest.cacheManifest^headers^ \
 	updatingManifest.sjs \
-	simpleManifest.notmanifest \
 	changing1Sec.sjs \
 	changing1Hour.sjs \
 	changingManifest.sjs \

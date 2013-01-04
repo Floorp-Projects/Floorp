@@ -7,12 +7,12 @@
 #ifndef jsfriendapi_h___
 #define jsfriendapi_h___
 
+#include "mozilla/GuardObjects.h"
+
 #include "jsclass.h"
 #include "jscpucfg.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
-
-#include "mozilla/GuardObjects.h"
 
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
@@ -220,10 +220,11 @@ class JS_FRIEND_API(AutoSwitchCompartment) {
     JSCompartment *oldCompartment;
   public:
     AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    AutoSwitchCompartment(JSContext *cx, JSHandleObject target JS_GUARD_OBJECT_NOTIFIER_PARAM);
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    AutoSwitchCompartment(JSContext *cx, JSHandleObject target
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~AutoSwitchCompartment();
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #ifdef OLD_GETTER_SETTER_METHODS
@@ -1446,8 +1447,9 @@ struct JSJitInfo {
     uint32_t protoID;
     uint32_t depth;
     OpType type;
-    bool isInfallible;    /* Is op fallible? False in setters. */
-    bool isConstant;      /* Getting a construction-time constant? */
+    bool isInfallible;      /* Is op fallible? False in setters. */
+    bool isConstant;        /* Getting a construction-time constant? */
+    JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
 };
 
 static JS_ALWAYS_INLINE const JSJitInfo *

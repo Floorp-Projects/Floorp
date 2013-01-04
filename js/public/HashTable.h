@@ -470,6 +470,7 @@ struct PointerHasher
 {
     typedef Key Lookup;
     static HashNumber hash(const Lookup &l) {
+        JS_ASSERT(!js::IsPoisonedPtr(l));
         size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
         JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 #if JS_BYTES_PER_WORD == 4
@@ -480,6 +481,8 @@ struct PointerHasher
 #endif
     }
     static bool match(const Key &k, const Lookup &l) {
+        JS_ASSERT(!js::IsPoisonedPtr(k));
+        JS_ASSERT(!js::IsPoisonedPtr(l));
         return k == l;
     }
 };

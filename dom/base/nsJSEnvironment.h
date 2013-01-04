@@ -84,9 +84,6 @@ public:
                                        uint32_t aVersion,
                                        bool aIsXBL,
                                        nsScriptObjectHolder<JSObject>& aHandler);
-  virtual nsresult CallEventHandler(nsISupports* aTarget, JSObject* aScope,
-                                    JSObject* aHandler,
-                                    nsIArray *argv, nsIVariant **rv);
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JSObject *aScope,
                                             JSObject* aHandler,

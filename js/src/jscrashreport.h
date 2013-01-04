@@ -8,8 +8,8 @@
 #ifndef jscrashreport_h___
 #define jscrashreport_h___
 
-#include "jstypes.h"
-#include "jsutil.h"
+#include "mozilla/GuardObjects.h"
+#include "mozilla/StandardInteger.h"
 
 namespace js {
 namespace crash {
@@ -24,21 +24,20 @@ void
 SaveCrashData(uint64_t tag, void *ptr, size_t size);
 
 template<size_t size, unsigned char marker>
-class StackBuffer {
-  private:
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-    volatile unsigned char buffer[size + 4];
-
+class StackBuffer
+{
   public:
-    StackBuffer(void *data JS_GUARD_OBJECT_NOTIFIER_PARAM) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    StackBuffer(void *data
+                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
         buffer[0] = marker;
         buffer[1] = '[';
 
         for (size_t i = 0; i < size; i++) {
             if (data)
-                buffer[i + 2] = ((unsigned char *)data)[i];
+                buffer[i + 2] = static_cast<unsigned char*>(data)[i];
             else
                 buffer[i + 2] = 0;
         }
@@ -46,6 +45,10 @@ class StackBuffer {
         buffer[size - 2] = ']';
         buffer[size - 1] = marker;
     }
+
+  private:
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    volatile unsigned char buffer[size + 4];
 };
 
 } /* namespace crash */

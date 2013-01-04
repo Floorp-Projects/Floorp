@@ -8,7 +8,7 @@
   <binding id="chatbox">
     <content orient="vertical" mousethrough="never">
       <xul:hbox class="chat-titlebar" xbl:inherits="minimized,selected,activity"
-                onclick="document.getBindingParent(this).toggle();" align="baseline">
+                onclick="document.getBindingParent(this).onTitlebarClick(event);" align="baseline">
         <xul:image class="chat-status-icon" xbl:inherits="src=image"/>
         <xul:label class="chat-title" flex="1" xbl:inherits="value=label" crop="center"/>
         <xul:toolbarbutton class="chat-close-button chat-toolbarbutton"
@@ -56,6 +56,16 @@
           this.iframe.contentDocument.documentElement.dispatchEvent(evt);
         </setter>
       </property>
+
+      <method name="onTitlebarClick">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.button == 0) // left-click: toggle minimized.
+            this.toggle();
+          else if (aEvent.button == 1) // middle-click: close chat
+            this.close();
+        ]]></body>
+      </method>
 
       <method name="close">
         <body><![CDATA[
