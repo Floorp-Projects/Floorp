@@ -200,7 +200,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * to have unknown properties, to simplify handling of e.g. heterogenous
      * objects in JSON and script literals.
      */
-    if (!objectProto->setNewTypeUnknown(cx))
+    if (!setNewTypeUnknown(cx, objectProto))
         return NULL;
 
     /* Create |Function.prototype| next so we can create other functions. */
@@ -263,7 +263,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
          * inference to have unknown properties, to simplify handling of e.g.
          * CloneFunctionObject.
          */
-        if (!functionProto->setNewTypeUnknown(cx))
+        if (!setNewTypeUnknown(cx, functionProto))
             return NULL;
     }
 
