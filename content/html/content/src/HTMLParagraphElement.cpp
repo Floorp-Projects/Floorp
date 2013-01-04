@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLParagraphElement.h"
+#include "mozilla/dom/HTMLParagraphElementBinding.h"
 
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
@@ -72,6 +73,12 @@ nsMapRuleToAttributesFunc
 HTMLParagraphElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
+}
+
+JSObject*
+HTMLParagraphElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLParagraphElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom

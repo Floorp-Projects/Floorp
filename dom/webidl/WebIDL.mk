@@ -67,6 +67,7 @@ webidl_files = \
   HTMLLIElement.webidl \
   HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
+  HTMLParagraphElement.webidl \
   HTMLPropertiesCollection.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
