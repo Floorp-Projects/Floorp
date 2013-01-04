@@ -28,12 +28,6 @@ import java.io.File;
 */
 
 public class testBookmarksTab extends BaseTest {
-    private String[] defaultBookmarksUrls = new String[] {
-        "about:firefox",
-        "about:home",
-        "http://support.mozilla.org/en-US/mobile",
-        "https://addons.mozilla.org/en-US/android/"
-    };
     private View mFirstChild;
 
     @Override
