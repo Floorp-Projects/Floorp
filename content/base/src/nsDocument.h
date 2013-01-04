@@ -94,6 +94,12 @@ class nsDOMNavigationTiming;
 class nsWindowSizes;
 class nsHtml5TreeOpExecutor;
 
+namespace mozilla {
+namespace dom {
+class UndoManager;
+}
+}
+
 /**
  * Right now our identifier map entries contain information for 'name'
  * and 'id' mappings of a given string. This is so that
@@ -568,6 +574,8 @@ public:
   virtual void DeleteShell();
 
   virtual nsresult GetAllowPlugins(bool* aAllowPlugins);
+
+  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager();
 
   virtual nsresult SetSubDocumentFor(Element* aContent,
                                      nsIDocument* aSubDoc);
@@ -1348,6 +1356,8 @@ private:
 
   // Tracking for plugins in the document.
   nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
+
+  nsRefPtr<mozilla::dom::UndoManager> mUndoManager;
 
 #ifdef DEBUG
 protected:

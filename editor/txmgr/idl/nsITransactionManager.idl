@@ -20,7 +20,7 @@
  * This interface is implemented by an object that wants to
  * manage/track transactions.
  */
-[scriptable, builtinclass, uuid(58e330c2-7b48-11d2-98b9-00805f297d89)]
+[scriptable, builtinclass, uuid(c77763df-0fb9-41a8-8074-8e882f605755)]
 interface nsITransactionManager : nsISupports
 {
   /**
@@ -52,18 +52,33 @@ interface nsITransactionManager : nsISupports
   void clear();
 
   /**
+   * Clears the undo stack only.
+   */
+  void clearUndoStack();
+
+  /**
+   * Clears the redo stack only.
+   */
+  void clearRedoStack();
+
+  /**
    * Turns on the transaction manager's batch mode, forcing all transactions
    * executed by the transaction manager's doTransaction() method to be
    * aggregated together until EndBatch() is called.  This mode allows an
    * application to execute and group together several independent transactions
    * so they can be undone with a single call to undoTransaction().
+   * @param aData An arbitrary nsISupports object that is associated with the
+   * batch. Can be retrieved from nsITransactionList.
    */
-  void beginBatch();
+  void beginBatch(in nsISupports aData);
 
   /**
    * Turns off the transaction manager's batch mode.
+   * @param aAllowEmpty If true, a batch containing no children will be
+   * pushed onto the undo stack. Otherwise, ending a batch with no
+   * children will result in no transactions being pushed on the undo stack.
    */
-  void endBatch();
+  void endBatch(in boolean aAllowEmpty);
 
   /**
    * The number of items on the undo stack.
@@ -89,6 +104,19 @@ interface nsITransactionManager : nsISupports
    * on both the undo and redo stacks.
    */
   attribute long maxTransactionCount;
+
+  /**
+   * Combines the transaction at the top of the undo stack (if any) with the
+   * preceding undo transaction (if any) into a batch transaction. Thus,
+   * a call to undoTransaction() will undo both transactions.
+   */
+  void batchTopUndo();
+
+  /**
+   * Removes the transaction at the top of the undo stack (if any) without
+   * transacting.
+   */
+  void removeTopUndo();
 
   /**
    * Returns an AddRef'd pointer to the transaction at the top of the

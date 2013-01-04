@@ -101,6 +101,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
+#include "mozilla/dom/UndoManager.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -539,6 +540,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsInlineEventHandlersTearoff)
 FragmentOrElement::nsDOMSlots::nsDOMSlots()
   : nsINode::nsSlots(),
     mDataset(nullptr),
+    mUndoManager(nullptr),
     mBindingParent(nullptr)
 {
 }
@@ -566,6 +568,9 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mAttributeMap");
   cb.NoteXPCOMChild(mAttributeMap.get());
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mUndoManager");
+  cb.NoteXPCOMChild(mUndoManager.get());
+
   if (aIsXUL) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mControllers");
     cb.NoteXPCOMChild(mControllers);
@@ -590,6 +595,7 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
   if (aIsXUL)
     NS_IF_RELEASE(mControllers);
   mChildrenList = nullptr;
+  mUndoManager = nullptr;
   if (mClassList) {
     mClassList->DropReference();
     mClassList = nullptr;

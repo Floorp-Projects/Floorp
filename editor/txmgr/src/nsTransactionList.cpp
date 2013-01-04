@@ -87,6 +87,42 @@ NS_IMETHODIMP nsTransactionList::ItemIsBatch(int32_t aIndex, bool *aIsBatch)
   return item->GetIsBatch(aIsBatch);
 }
 
+/* void getData (in long aIndex,
+                 [optional] out unsigned long aLength,
+                 [array, size_is (aLength), retval]
+                 out nsISupports aData); */
+NS_IMETHODIMP nsTransactionList::GetData(int32_t aIndex,
+                                         uint32_t *aLength,
+                                         nsISupports ***aData)
+{
+  nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
+
+  NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
+
+  nsRefPtr<nsTransactionItem> item;
+
+  if (mTxnStack) {
+    item = mTxnStack->GetItem(aIndex);
+  } else if (mTxnItem) {
+    nsresult result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(result, result);
+  }
+
+  nsCOMArray<nsISupports>& data = item->GetData();
+
+  nsISupports** ret = static_cast<nsISupports**>(NS_Alloc(data.Count() *
+    sizeof(nsISupports*)));
+
+  for (int32_t i = 0; i < data.Count(); i++) {
+    NS_ADDREF(ret[i] = data[i]);
+  }
+
+  *aLength = data.Count();
+  *aData = ret;
+
+  return NS_OK;
+}
+
 /* nsITransaction getItem (in long aIndex); */
 NS_IMETHODIMP nsTransactionList::GetItem(int32_t aIndex, nsITransaction **aItem)
 {
