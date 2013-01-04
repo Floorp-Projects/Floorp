@@ -429,16 +429,9 @@ waitFor(
     def install_busybox(self, busybox):
         self._run_adb(['remount'])
 
-        push_attempts = 10
         remote_file = "/system/bin/busybox"
-        for retry in range(1, push_attempts+1):
-            print 'pushing', remote_file, '(attempt %s of %s)' % (retry, push_attempts)
-            try:
-                self.dm.pushFile(busybox, remote_file)
-                break
-            except DMError:
-                if retry == push_attempts:
-                    raise
+        print 'pushing %s' % remote_file
+        self.dm.pushFile(busybox, remote_file, retryLimit=10)
         self._run_adb(['shell', 'cd /system/bin; chmod 555 busybox; for x in `./busybox --list`; do ln -s ./busybox $x; done'])
         self.dm._verifyZip()
 
