@@ -3,11 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/dom/HTMLSharedListElement.h"
 
-#include "nsIDOMHTMLOListElement.h"
-#include "nsIDOMHTMLDListElement.h"
-#include "nsIDOMHTMLUListElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -16,82 +13,23 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLSharedListElement : public nsGenericHTMLElement,
-                                public nsIDOMHTMLOListElement,
-                                public nsIDOMHTMLDListElement,
-                                public nsIDOMHTMLUListElement
-{
-public:
-  nsHTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLSharedListElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLOListElement
-  NS_DECL_NSIDOMHTMLOLISTELEMENT
-
-  // nsIDOMHTMLDListElement
-  // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
-
-  // nsIDOMHTMLUListElement
-  // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo()
-  {
-    return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
-  }
-  nsIClassInfo* GetClassInfoInternal();
-
-  virtual nsIDOMNode* AsDOMNode()
-  {
-    return static_cast<nsIDOMHTMLOListElement*>(this);
-  }
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
+DOMCI_DATA(HTMLOListElement, mozilla::dom::HTMLSharedListElement)
+DOMCI_DATA(HTMLDListElement, mozilla::dom::HTMLSharedListElement)
+DOMCI_DATA(HTMLUListElement, mozilla::dom::HTMLSharedListElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLSharedListElement::nsHTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLSharedListElement::~HTMLSharedListElement()
 {
 }
 
-nsHTMLSharedListElement::~nsHTMLSharedListElement()
-{
-}
-
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLSharedListElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSharedListElement, Element)
-
-
-DOMCI_DATA(HTMLOListElement, nsHTMLSharedListElement)
-DOMCI_DATA(HTMLDListElement, nsHTMLSharedListElement)
-DOMCI_DATA(HTMLUListElement, nsHTMLSharedListElement)
+NS_IMPL_ADDREF_INHERITED(HTMLSharedListElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLSharedListElement, Element)
 
 nsIClassInfo* 
-nsHTMLSharedListElement::GetClassInfoInternal()
+HTMLSharedListElement::GetClassInfoInternal()
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol)) {
     return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLOListElement_id);
@@ -106,11 +44,11 @@ nsHTMLSharedListElement::GetClassInfoInternal()
 }
 
 // QueryInterface implementation for nsHTMLSharedListElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLSharedListElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(nsHTMLSharedListElement,
+NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedListElement,
                                                   nsIDOMHTMLOListElement)
   NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(nsHTMLSharedListElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(HTMLSharedListElement,
                                                          nsGenericHTMLElement,
                                                          nsIDOMHTMLOListElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLOListElement, ol)
@@ -121,13 +59,13 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLSharedListElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLSharedListElement)
+NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)
 
 
-NS_IMPL_BOOL_ATTR(nsHTMLSharedListElement, Compact, compact)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedListElement, Start, start, 1)
-NS_IMPL_STRING_ATTR(nsHTMLSharedListElement, Type, type)
-NS_IMPL_BOOL_ATTR(nsHTMLSharedListElement, Reversed, reversed)
+NS_IMPL_BOOL_ATTR(HTMLSharedListElement, Compact, compact)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(HTMLSharedListElement, Start, start, 1)
+NS_IMPL_STRING_ATTR(HTMLSharedListElement, Type, type)
+NS_IMPL_BOOL_ATTR(HTMLSharedListElement, Reversed, reversed)
 
 // Shared with nsHTMLSharedElement.cpp
 nsAttrValue::EnumTable kListTypeTable[] = {
@@ -154,10 +92,10 @@ static const nsAttrValue::EnumTable kOldListTypeTable[] = {
 };
 
 bool
-nsHTMLSharedListElement::ParseAttribute(int32_t aNamespaceID,
-                                        nsIAtom* aAttribute,
-                                        const nsAString& aValue,
-                                        nsAttrValue& aResult)
+HTMLSharedListElement::ParseAttribute(int32_t aNamespaceID,
+                                      nsIAtom* aAttribute,
+                                      const nsAString& aValue,
+                                      nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (mNodeInfo->Equals(nsGkAtoms::ol) ||
@@ -197,7 +135,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol) ||
       mNodeInfo->Equals(nsGkAtoms::ul)) {
@@ -218,7 +156,7 @@ nsHTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 nsMapRuleToAttributesFunc
-nsHTMLSharedListElement::GetAttributeMappingFunction() const
+HTMLSharedListElement::GetAttributeMappingFunction() const
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol) ||
       mNodeInfo->Equals(nsGkAtoms::ul)) {
@@ -227,3 +165,6 @@ nsHTMLSharedListElement::GetAttributeMappingFunction() const
 
   return nsGenericHTMLElement::GetAttributeMappingFunction();
 }
+
+} // namespace dom
+} // namespace mozilla
