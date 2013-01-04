@@ -106,6 +106,7 @@ webidl_files = \
   SVGPoint.webidl \
   SVGPointList.webidl \
   SVGPreserveAspectRatio.webidl \
+  SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformList.webidl \
   Text.webidl \
