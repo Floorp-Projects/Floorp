@@ -200,7 +200,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSAtom *unescaped)
             return NULL;
     }
 
-    return sb.empty() ? unescaped : sb.finishAtom();
+    return sb.empty() ? UnrootedAtom(unescaped) : sb.finishAtom();
 }
 
 /*
