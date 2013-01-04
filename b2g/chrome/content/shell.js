@@ -81,8 +81,12 @@ var shell = {
 
   get CrashSubmit() {
     delete this.CrashSubmit;
+#ifdef MOZ_CRASHREPORTER
     Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
     return this.CrashSubmit;
+#else
+    return this.CrashSubmit = null;
+#endif
   },
 
   onlineForCrashReport: function shell_onlineForCrashReport() {
@@ -103,7 +107,7 @@ var shell = {
     } catch(e) { }
 
     // Bail if there isn't a valid crashID.
-    if (!crashID && !this.CrashSubmit.pendingIDs().length) {
+    if (!this.CrashSubmit || !crashID && !this.CrashSubmit.pendingIDs().length) {
       return;
     }
 
