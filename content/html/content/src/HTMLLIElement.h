@@ -20,6 +20,7 @@ public:
   HTMLLIElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLLIElement();
 
@@ -47,6 +48,28 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL API
+  void GetType(nsString& aType)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aType);
+  }
+  void SetType(const nsAString& aType, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aType, rv);
+  }
+  int32_t Value() const
+  {
+    return GetIntAttr(nsGkAtoms::value, 0);
+  }
+  void SetValue(int32_t aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLIntAttr(nsGkAtoms::value, aValue, rv);
+  }
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
