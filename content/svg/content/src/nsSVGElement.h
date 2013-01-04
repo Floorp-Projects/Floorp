@@ -640,6 +640,25 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
   return rv;                                                                 \
 }
 
+#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(_elementName)                  \
+nsresult                                                                     \
+NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo)    \
+{                                                                            \
+  nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
+    new mozilla::dom::SVG##_elementName##Element(aNodeInfo);                 \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  if (NS_FAILED(rv)) {                                                       \
+    return rv;                                                               \
+  }                                                                          \
+                                                                             \
+  it.forget(aResult);                                                        \
+                                                                             \
+  return rv;                                                                 \
+}
+
 #define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
