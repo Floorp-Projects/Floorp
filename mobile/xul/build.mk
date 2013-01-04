@@ -21,6 +21,10 @@ ifdef MOZ_EXTENSIONS
 tier_app_dirs += extensions
 endif
 
+ifdef MOZ_SERVICES_SYNC
+tier_app_dirs += services
+endif
+
 tier_app_dirs += \
   $(MOZ_BRANDING_DIRECTORY) \
   mobile/xul \
