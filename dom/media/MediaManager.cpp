@@ -222,6 +222,37 @@ MediaDevice::GetSource()
 }
 
 /**
+ * A subclass that we only use to stash internal pointers to MediaStreamGraph objects
+ * that need to be cleaned up.
+ */
+class nsDOMUserMediaStream : public nsDOMLocalMediaStream
+{
+public:
+  static already_AddRefed<nsDOMUserMediaStream>
+  CreateTrackUnionStream(uint32_t aHintContents)
+  {
+    nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream();
+    stream->InitTrackUnionStream(aHintContents);
+    return stream.forget();
+  }
+
+  virtual ~nsDOMUserMediaStream()
+  {
+    if (mPort) {
+      mPort->Destroy();
+    }
+    if (mSourceStream) {
+      mSourceStream->Destroy();
+    }
+  }
+
+  // The actual MediaStream is a TrackUnionStream. But these resources need to be
+  // explicitly destroyed too.
+  nsRefPtr<SourceMediaStream> mSourceStream;
+  nsRefPtr<MediaInputPort> mPort;
+};
+
+/**
  * Creates a MediaStream, attaches a listener and fires off a success callback
  * to the DOM with the stream. We also pass in the error callback so it can
  * be released correctly.
@@ -267,29 +298,31 @@ public:
     }
 
     // Create a media stream.
-    nsRefPtr<nsDOMLocalMediaStream> stream;
-    nsRefPtr<nsDOMLocalMediaStream> trackunion;
     uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
     hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
-    stream     = nsDOMLocalMediaStream::CreateSourceStream(hints);
-    trackunion = nsDOMLocalMediaStream::CreateTrackUnionStream(hints);
-    if (!stream || !trackunion) {
+    nsRefPtr<nsDOMUserMediaStream> trackunion =
+      nsDOMUserMediaStream::CreateTrackUnionStream(hints);
+    if (!trackunion) {
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
       LOG(("Returning error for getUserMedia() - no stream"));
       error->OnError(NS_LITERAL_STRING("NO_STREAM"));
       return NS_OK;
     }
+
+    MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+    nsRefPtr<SourceMediaStream> stream = gm->CreateSourceStream(nullptr);
+
     // connect the source stream to the track union stream to avoid us blocking
     trackunion->GetStream()->AsProcessedStream()->SetAutofinish(true);
     nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
-      AllocateInputPort(stream->GetStream()->AsSourceStream(),
-                        MediaInputPort::FLAG_BLOCK_OUTPUT);
+      AllocateInputPort(stream, MediaInputPort::FLAG_BLOCK_OUTPUT);
+    trackunion->mSourceStream = stream;
+    trackunion->mPort = port;
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
     if (window && window->GetExtantDoc()) {
-      stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
       trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
     }
 
@@ -300,11 +333,11 @@ public:
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
     GetUserMediaCallbackMediaStreamListener* listener =
-      new GetUserMediaCallbackMediaStreamListener(mediaThread, stream,
+      new GetUserMediaCallbackMediaStreamListener(mediaThread, stream.forget(),
                                                   port.forget(),
                                                   mAudioSource,
                                                   mVideoSource);
-    stream->GetStream()->AddListener(listener);
+    listener->Stream()->AddListener(listener);
 
     // No need for locking because we always do this in the main thread.
     listeners->AppendElement(listener);
@@ -312,7 +345,7 @@ public:
     // Dispatch to the media thread to ask it to start the sources,
     // because that can take a while
     nsRefPtr<MediaOperationRunnable> runnable(
-      new MediaOperationRunnable(MEDIA_START, stream,
+      new MediaOperationRunnable(MEDIA_START, listener,
                                  mAudioSource, mVideoSource));
     mediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
