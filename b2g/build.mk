@@ -18,8 +18,6 @@ ifdef MOZ_EXTENSIONS
 tier_app_dirs += extensions
 endif
 
-tier_app_dirs += services
-
 tier_app_dirs += \
   $(MOZ_BRANDING_DIRECTORY) \
   b2g \
