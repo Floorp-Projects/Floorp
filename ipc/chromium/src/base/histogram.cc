@@ -746,7 +746,7 @@ void Histogram::SampleSet::AccumulateWithExponentialStats(Sample value,
                                                           size_t index) {
   Accumulate(value, count, index);
   DCHECK_GE(value, 0);
-  float value_log = logf(static_cast<float>(value) + 1.0f);
+  double value_log = log(static_cast<double>(value) + 1);
   log_sum_ += count * value_log;
   log_sum_squares_ += count * value_log * value_log;
 }
