@@ -49,7 +49,7 @@
 #include "nsIStringBundle.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScrollableFrame.h"
 #include "nsFocusManager.h"
@@ -624,7 +624,7 @@ Accessible::VisibilityState()
   nsIFrame* curFrame = frame;
   nsPoint framePos(0, 0);
   do {
-    nsIView* view = curFrame->GetView();
+    nsView* view = curFrame->GetView();
     if (view && view->GetVisibility() == nsViewVisibility_kHide)
       return states::INVISIBLE;
 
@@ -2015,7 +2015,7 @@ Accessible::RelationByType(uint32_t aType)
       // above it).
       nsIFrame *frame = GetFrame();
       if (frame) {
-        nsIView *view = frame->GetViewExternal();
+        nsView *view = frame->GetViewExternal();
         if (view) {
           nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
           if (scrollFrame || view->GetWidget() || !frame->GetParent())

@@ -70,7 +70,7 @@ public:
       if (visible && !focusWhenStarting)
         return NS_OK;
 
-      return dmui->Show(nullptr, id, nsIDownloadManagerUI::REASON_NEW_DOWNLOAD);
+      return dmui->Show(nullptr, id, nsIDownloadManagerUI::REASON_NEW_DOWNLOAD, aIsPrivate);
     }
     return rv;
   }

@@ -738,6 +738,8 @@ let RIL = {
      */
     this.IMEI = null;
     this.IMEISV = null;
+    this.ESN = null;
+    this.MEID = null;
     this.SMSC = null;
 
     /**
@@ -1497,7 +1499,7 @@ let RIL = {
   },
 
   getDeviceIdentity: function getDeviceIdentity() {
-    Buf.simpleRequest(REQUEST_GET_DEVICE_IDENTITY);
+    Buf.simpleRequest(REQUEST_DEVICE_IDENTITY);
   },
 
   getBasebandVersion: function getBasebandVersion() {
@@ -4847,7 +4849,19 @@ RIL[REQUEST_CDMA_SMS_BROADCAST_ACTIVATION] = null;
 RIL[REQUEST_CDMA_SUBSCRIPTION] = null;
 RIL[REQUEST_CDMA_WRITE_SMS_TO_RUIM] = null;
 RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
-RIL[REQUEST_DEVICE_IDENTITY] = null;
+RIL[REQUEST_DEVICE_IDENTITY] = function REQUEST_DEVICE_IDENTITY(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  let result = Buf.readStringList();
+
+  // The result[0] is for IMEI. (Already be handled in REQUEST_GET_IMEI)
+  // The result[1] is for IMEISV. (Already be handled in REQUEST_GET_IMEISV)
+  // They are both ignored.
+  this.ESN = result[2];
+  this.MEID = result[3];
+};
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   if (options.rilRequestError) {
@@ -8342,9 +8356,14 @@ let ICCIOHelper = {
       throw new Error("Expected EF type " + options.type + " but read " + efType);
     }
 
-    // Length of a record, data[14]
-    options.recordSize = GsmPDUHelper.readHexOctet();
-    options.totalRecords = options.fileSize / options.recordSize;
+    // Length of a record, data[14].
+    // Only available for LINEAR_FIXED and CYCLIC.
+    if (efType == EF_TYPE_LINEAR_FIXED || efType == EF_TYPE_CYCLIC) {
+      options.recordSize = GsmPDUHelper.readHexOctet();
+      options.totalRecords = options.fileSize / options.recordSize;
+    } else {
+      Buf.seekIncoming(1 * PDU_HEX_OCTET_SIZE);
+    }
 
     Buf.readStringDelimiter(length);
 

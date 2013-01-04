@@ -8,7 +8,6 @@ const MARIONETTE_CONTRACTID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 const DEBUGGER_ENABLED_PREF = 'devtools.debugger.remote-enabled';
 const MARIONETTE_ENABLED_PREF = 'marionette.defaultPrefs.enabled';
-const MARIONETTE_LOADEARLY_PREF = 'marionette.loadearly';
 const DEBUGGER_FORCELOCAL_PREF = 'devtools.debugger.force-local';
 const MARIONETTE_FORCELOCAL_PREF = 'marionette.force-local';
 
@@ -41,6 +40,7 @@ MarionetteComponent.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
   _xpcom_categories: [{category: "profile-after-change", service: true}],
   original_forcelocal: null,
+  appName: Services.appinfo.name,
 
   onSocketAccepted: function mc_onSocketAccepted(aSocket, aTransport) {
     this.logger.info("onSocketAccepted for Marionette dummy socket");
@@ -55,39 +55,31 @@ MarionetteComponent.prototype = {
     let observerService = Services.obs;
     switch (aTopic) {
       case "profile-after-change":
-        let appName = Services.appinfo.name;
         let enabled = false;
-        let loadearly = appName == 'B2G' ? false : true;
         try {
           enabled = Services.prefs.getBoolPref(MARIONETTE_ENABLED_PREF);
-          loadearly = Services.prefs.getBoolPref(MARIONETTE_LOADEARLY_PREF);
         } catch(e) {}
         if (enabled) {
-          this.logger.info("marionette enabled, loadearly: " + loadearly);
+          this.logger.info("marionette enabled");
 
           //add observers
-          if (loadearly) {
-            observerService.addObserver(this, "final-ui-startup", false);
-          }
-          else {
-            observerService.addObserver(this, "system-message-listener-ready", false);
-          }
+          observerService.addObserver(this, "final-ui-startup", false);
           observerService.addObserver(this, "xpcom-shutdown", false);
         }
         else {
           this.logger.info("marionette not enabled");
         }
         break;
-      case "system-message-listener-ready":
-        this.logger.info("marionette initializing at system-message-listener-ready");
-        observerService.removeObserver(this, "system-message-listener-ready");
+      case "final-ui-startup":
+        this.logger.info("marionette initializing at " + aTopic);
+        observerService.removeObserver(this, aTopic);
 
         try {
           this.original_forcelocal = Services.prefs.getBoolPref(DEBUGGER_FORCELOCAL_PREF);
         }
         catch(e) {}
 
-        let marionette_forcelocal = false;
+        let marionette_forcelocal = this.appName == 'B2G' ? false : true;
         try {
           marionette_forcelocal = Services.prefs.getBoolPref(MARIONETTE_FORCELOCAL_PREF);
         }
@@ -103,11 +95,6 @@ MarionetteComponent.prototype = {
           insaneSacrificialGoat.asyncListen(this);
         }
 
-        this.init();
-        break;
-      case "final-ui-startup":
-        this.logger.info("marionette initializing at final-ui-startup");
-        observerService.removeObserver(this, "final-ui-startup");
         this.init();
         break;
       case "xpcom-shutdown":

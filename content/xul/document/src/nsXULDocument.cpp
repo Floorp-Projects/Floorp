@@ -29,7 +29,7 @@
 #include "nsError.h"
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
@@ -249,12 +249,6 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kNC_persist);
         NS_IF_RELEASE(kNC_attribute);
         NS_IF_RELEASE(kNC_value);
-
-        // Remove the current document here from the table in
-        // case the document did not make it past StartLayout in
-        // ResumeWalk. 
-        if (mDocumentURI)
-            nsXULPrototypeCache::GetInstance()->RemoveFromCacheSet(mDocumentURI);
     }
 }
 
@@ -2219,6 +2213,15 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
     }
 
     return NS_OK;
+}
+
+void
+nsXULDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
+{
+    uint32_t i, count = mPrototypes.Length();
+    for (i = 0; i < count; ++i) {
+        mPrototypes[i]->TraceProtos(aTrc, aGCNumber);
+    }
 }
 
 //----------------------------------------------------------------------

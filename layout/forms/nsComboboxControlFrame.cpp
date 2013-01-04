@@ -23,7 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsContentList.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsEventDispatcher.h"
 #include "nsEventListenerManager.h"
@@ -142,7 +142,7 @@ public:
   }
 
 private:
-  nsIWidget* GetWidget(nsIView** aOutView = nullptr) const;
+  nsIWidget* GetWidget(nsView** aOutView = nullptr) const;
 
 private:
   nsCOMPtr<nsIContent> mCombobox;
@@ -151,7 +151,7 @@ private:
 
 NS_IMETHODIMP DestroyWidgetRunnable::Run()
 {
-  nsIView* view = nullptr;
+  nsView* view = nullptr;
   nsIWidget* currentWidget = GetWidget(&view);
   // Make sure that we are destroying the same widget as what was requested
   // when the event was fired.
@@ -161,14 +161,14 @@ NS_IMETHODIMP DestroyWidgetRunnable::Run()
   return NS_OK;
 }
 
-nsIWidget* DestroyWidgetRunnable::GetWidget(nsIView** aOutView) const
+nsIWidget* DestroyWidgetRunnable::GetWidget(nsView** aOutView) const
 {
   nsIFrame* primaryFrame = mCombobox->GetPrimaryFrame();
   nsIComboboxControlFrame* comboboxFrame = do_QueryFrame(primaryFrame);
   if (comboboxFrame) {
     nsIFrame* dropdown = comboboxFrame->GetDropDown();
     if (dropdown) {
-      nsIView* view = dropdown->GetView();
+      nsView* view = dropdown->GetView();
       NS_ASSERTION(view, "nsComboboxControlFrame view is null");
       if (aOutView) {
         *aOutView = view;
@@ -355,7 +355,7 @@ nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
 void
 nsComboboxControlFrame::ShowPopup(bool aShowPopup)
 {
-  nsIView* view = mDropdownFrame->GetView();
+  nsView* view = mDropdownFrame->GetView();
   nsIViewManager* viewManager = view->GetViewManager();
 
   if (aShowPopup) {
@@ -388,7 +388,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
   nsWeakFrame weakFrame(this);
 
   if (aShowList) {
-    nsIView* view = mDropdownFrame->GetView();
+    nsView* view = mDropdownFrame->GetView();
     NS_ASSERTION(!view->HasWidget(),
                  "We shouldn't have a widget before we need to display the popup");
 
@@ -422,7 +422,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
 
   nsIFrame* listFrame = do_QueryFrame(mListControlFrame);
   if (listFrame) {
-    nsIView* view = listFrame->GetView();
+    nsView* view = listFrame->GetView();
     NS_ASSERTION(view, "nsComboboxControlFrame view is null");
     if (view) {
       nsIWidget* widget = view->GetWidget();
@@ -509,7 +509,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
 
   // ensure we start off hidden
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    nsIView* view = mDropdownFrame->GetView();
+    nsView* view = mDropdownFrame->GetView();
     nsIViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
     nsRect emptyRect(0, 0, 0, 0);
@@ -684,7 +684,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   if (above <= 0 && below <= 0) {
     if (IsDroppedDown()) {
       // Hide the view immediately to minimize flicker.
-      nsIView* view = mDropdownFrame->GetView();
+      nsView* view = mDropdownFrame->GetView();
       view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
       NS_DispatchToCurrentThread(new nsAsyncRollup(this));
     }
@@ -1457,7 +1457,7 @@ nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // Get parent view
     nsIFrame * listFrame = do_QueryFrame(mListControlFrame);
     if (listFrame) {
-      nsIView* view = listFrame->GetView();
+      nsView* view = listFrame->GetView();
       NS_ASSERTION(view, "nsComboboxControlFrame view is null");
       if (view) {
         nsIWidget* widget = view->GetWidget();
@@ -1540,7 +1540,7 @@ nsComboboxControlFrame::GetRollupWidget()
   if (!listFrame)
     return nullptr;
 
-  nsIView* view = listFrame->GetView();
+  nsView* view = listFrame->GetView();
   MOZ_ASSERT(view);
   return view->GetWidget();
 }
