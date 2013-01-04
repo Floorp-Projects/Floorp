@@ -456,7 +456,12 @@ DeveloperToolbar.prototype.hide = function DT_hide()
  */
 DeveloperToolbar.prototype.destroy = function DT_destroy()
 {
+  if (this._lastState == NOTIFICATIONS.HIDE) {
+    return;
+  }
+
   this._chromeWindow.getBrowser().tabContainer.removeEventListener("TabSelect", this, false);
+  this._chromeWindow.getBrowser().tabContainer.removeEventListener("TabClose", this, false);
   this._chromeWindow.getBrowser().removeEventListener("load", this, true); 
   this._chromeWindow.getBrowser().removeEventListener("beforeunload", this, true);
 
@@ -483,6 +488,8 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   delete this.outputPanel;
   delete this.tooltipPanel;
   */
+
+  this._lastState = NOTIFICATIONS.HIDE;
 };
 
 /**
