@@ -10,6 +10,10 @@ import android.content.ContentResolver;
 import android.app.Instrumentation;
 import android.util.DisplayMetrics;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class testAddonManager extends PixelTest  {
     Actions.EventExpecter tabEventExpecter;
     Actions.EventExpecter contentEventExpecter;
@@ -50,6 +54,34 @@ public class testAddonManager extends PixelTest  {
         loadAndPaint(url);
         verifyPageTitle("Add-ons");
 
+        // Change the AMO URL so we do not try to navigate to a live webpage
+        JSONObject jsonPref = new JSONObject();
+        try {
+            jsonPref.put("name", "extensions.getAddons.browseAddons");
+            jsonPref.put("type", "string");
+            jsonPref.put("value", getAbsoluteUrl("/robocop/robocop_blank_01.html"));
+            mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
+
+            // Wait for confirmation of the pref change before proceeding with the test.
+            JSONArray getPrefData = new JSONArray();
+            getPrefData.put("extensions.getAddons.browseAddons");
+            JSONObject message = new JSONObject();
+            message.put("requestId", "testAddonManager");
+            message.put("preferences", getPrefData);
+            Actions.RepeatedEventExpecter contentEventExpecter = mActions.expectGeckoEvent("Preferences:Data");
+            mActions.sendGeckoEvent("Preferences:Get", message.toString());
+            // Receiving a Preferences:Data event is not conclusive evidence that *our*
+            // preference has been set -- another component may be changing preferences
+            // at the same time. Mitigate this risk by waiting for a Preference:Data
+            // and then waiting for a period of time in which no more Preference:Data
+            // events are received.
+            // TODO: add a new expectGeckoEvent function that listens for a Preferences:Data
+            // message with a specific requestId
+            contentEventExpecter.blockUntilClear(2000);
+        } catch (Exception ex) { 
+            mAsserter.ok(false, "exception in testAddonManager", ex.toString());
+        }
+
         // Load AMO page by clicking the AMO icon
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -75,7 +107,7 @@ public class testAddonManager extends PixelTest  {
         verifyTabCount(2);
 
         // Verify the page was opened
-        verifyPageTitle("Add-ons for Android");
+        verifyPageTitle("Browser Blank Page 01");
 
         // Addons Manager is not opened 2 separate times when opened from the menu
         selectMenuItem("Add-ons");        
