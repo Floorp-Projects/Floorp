@@ -54,6 +54,7 @@ webidl_files = \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDivElement.webidl \
+  HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
   HTMLFontElement.webidl \
@@ -61,9 +62,11 @@ webidl_files = \
   HTMLHeadingElement.webidl \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
+  HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
   HTMLTitleElement.webidl \
+  HTMLUListElement.webidl \
   ImageData.webidl \
   Location.webidl \
   MutationObserver.webidl \
