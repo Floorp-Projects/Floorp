@@ -17,6 +17,7 @@ PARALLEL_DIRS = \
   forgetaboutsite \
   identity \
   locales \
+  modules \
   mozapps/downloads \
   mozapps/extensions \
   mozapps/handling \
