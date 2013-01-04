@@ -485,10 +485,6 @@ public class GeckoSmsManager
     }
   }
 
-  public int getNumberOfMessagesForText(String aText) {
-    return SmsManager.getDefault().divideMessage(aText).size();
-  }
-
   public void send(String aNumber, String aMessage, int aRequestId) {
     int envelopeId = Postman.kUnknownEnvelopeId;
 
