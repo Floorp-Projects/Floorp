@@ -11,7 +11,7 @@
 #include "gfxPoint.h"
 #include "mozilla/dom/Element.h"
 #include "nsTHashtable.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
+#include "nsHTMLCanvasElement.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -19,10 +19,10 @@ namespace mozilla {
 using namespace dom;
 
 struct ImageCacheKey {
-  ImageCacheKey(Element* aImage, HTMLCanvasElement* aCanvas)
+  ImageCacheKey(Element* aImage, nsHTMLCanvasElement* aCanvas)
     : mImage(aImage), mCanvas(aCanvas) {}
   Element* mImage;
-  HTMLCanvasElement* mCanvas;
+  nsHTMLCanvasElement* mCanvas;
 };
 
 struct ImageCacheEntryData {
@@ -45,7 +45,7 @@ struct ImageCacheEntryData {
   // Key
   nsRefPtr<Element> mImage;
   nsIImageLoadingContent* mILC;
-  nsRefPtr<HTMLCanvasElement> mCanvas;
+  nsRefPtr<nsHTMLCanvasElement> mCanvas;
   // Value
   nsCOMPtr<imgIRequest> mRequest;
   nsRefPtr<gfxASurface> mSurface;
@@ -113,7 +113,7 @@ public:
 
 void
 CanvasImageCache::NotifyDrawImage(Element* aImage,
-                                  HTMLCanvasElement* aCanvas,
+                                  nsHTMLCanvasElement* aCanvas,
                                   imgIRequest* aRequest,
                                   gfxASurface* aSurface,
                                   const gfxIntSize& aSize)
@@ -144,7 +144,7 @@ CanvasImageCache::NotifyDrawImage(Element* aImage,
 
 gfxASurface*
 CanvasImageCache::Lookup(Element* aImage,
-                         HTMLCanvasElement* aCanvas,
+                         nsHTMLCanvasElement* aCanvas,
                          gfxIntSize* aSize)
 {
   if (!gImageCache)

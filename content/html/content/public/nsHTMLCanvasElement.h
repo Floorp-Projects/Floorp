@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(mozilla_dom_HTMLCanvasElement_h)
-#define mozilla_dom_HTMLCanvasElement_h
+#if !defined(nsHTMLCanvasElement_h__)
+#define nsHTMLCanvasElement_h__
 
 #include "nsIDOMHTMLCanvasElement.h"
 #include "nsGenericHTMLElement.h"
@@ -18,6 +18,7 @@
 
 class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
+class nsHTMLCanvasPrintState;
 class nsITimerCallback;
 class nsIPropertyBag;
 
@@ -32,22 +33,20 @@ namespace gfx {
 struct Rect;
 }
 
-namespace dom {
+}
 
-class HTMLCanvasPrintState;
-
-class HTMLCanvasElement MOZ_FINAL : public nsGenericHTMLElement,
-                                    public nsICanvasElementExternal,
-                                    public nsIDOMHTMLCanvasElement
+class nsHTMLCanvasElement : public nsGenericHTMLElement,
+                            public nsICanvasElementExternal,
+                            public nsIDOMHTMLCanvasElement
 {
-  typedef layers::CanvasLayer CanvasLayer;
-  typedef layers::LayerManager LayerManager;
+  typedef mozilla::layers::CanvasLayer CanvasLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
 
 public:
-  HTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~HTMLCanvasElement();
+  nsHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~nsHTMLCanvasElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLCanvasElement, canvas)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLCanvasElement, canvas)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -65,7 +64,7 @@ public:
   NS_DECL_NSIDOMHTMLCANVASELEMENT
 
   // CC
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLCanvasElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLCanvasElement,
                                            nsGenericHTMLElement)
 
   /**
@@ -174,10 +173,10 @@ protected:
   void CallPrintCallback();
 
   nsString mCurrentContextId;
-  nsRefPtr<HTMLCanvasElement> mOriginalCanvas;
+  nsRefPtr<nsHTMLCanvasElement> mOriginalCanvas;
   nsCOMPtr<nsIPrintCallback> mPrintCallback;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
-  nsCOMPtr<HTMLCanvasPrintState> mPrintState;
+  nsCOMPtr<nsHTMLCanvasPrintState> mPrintState;
   
 public:
   // Record whether this canvas should be write-only or not.
@@ -194,16 +193,13 @@ public:
 
   void ResetPrintCallback();
 
-  HTMLCanvasElement* GetOriginalCanvas();
+  nsHTMLCanvasElement* GetOriginalCanvas();
 };
 
 inline nsISupports*
-GetISupports(HTMLCanvasElement* p)
+GetISupports(nsHTMLCanvasElement* p)
 {
-  return static_cast<Element*>(p);
+  return static_cast<mozilla::dom::Element*>(p);
 }
 
-} // namespace dom
-} // namespace mozilla
-
-#endif /* mozilla_dom_HTMLCanvasElement_h */
+#endif /* nsHTMLCanvasElement_h__ */
