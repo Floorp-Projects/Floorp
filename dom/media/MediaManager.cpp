@@ -162,8 +162,11 @@ public:
 
     int32_t len = mDevices.Length();
     if (len == 0) {
-      devices->SetAsEmptyArray();
-      success->OnSuccess(devices);
+      // XXX
+      // We should in the future return an empty array, and dynamically add
+      // devices to the dropdowns if things are hotplugged while the
+      // requester is up.
+      error->OnError(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
       return NS_OK;
     }
 
