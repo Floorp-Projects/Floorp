@@ -927,6 +927,8 @@ bool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 // specific code to work around this bug, which breaks when we fix it (see bmo
 // bug 477077).  So we'll need to coordinate releasing a fix for this bug with
 // Adobe and other major plugin vendors that support the CoreGraphics mode.
+//
+// outClipRect and outOrigin are in display pixels, not device pixels.
 NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, bool& outWidgetVisible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -964,7 +966,11 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
     if (mClipRects) {
       nsIntRect clipBounds;
       for (uint32_t i = 0; i < mClipRectCount; ++i) {
-        clipBounds.UnionRect(clipBounds, mClipRects[i]);
+        NSRect cocoaPoints = DevPixelsToCocoaPoints(mClipRects[i]);
+        clipBounds.UnionRect(clipBounds, nsIntRect(NSToIntRound(cocoaPoints.origin.x),
+                                                   NSToIntRound(cocoaPoints.origin.y),
+                                                   NSToIntRound(cocoaPoints.size.width),
+                                                   NSToIntRound(cocoaPoints.size.height)));
       }
       outClipRect.IntersectRect(outClipRect, clipBounds - outOrigin);
     }
