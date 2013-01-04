@@ -102,9 +102,12 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     /* OK, now the STUN data */
     lufrag=lcand->stream->ufrag?lcand->stream->ufrag:pctx->ctx->ufrag;
     lpwd=lcand->stream->pwd?lcand->stream->pwd:pctx->ctx->pwd;
+    assert(lufrag);
+    assert(lpwd);
     rufrag=rcand->stream->ufrag?rcand->stream->ufrag:pctx->peer_ufrag;
     rpwd=rcand->stream->pwd?rcand->stream->pwd:pctx->peer_pwd;
-
+    if (!rufrag || !rpwd)
+      ABORT(R_BAD_DATA);
 
     /* Compute the RTO per S 16 */
     RTO = MAX(100, (pctx->ctx->Ta * pctx->waiting_pairs));
