@@ -11,33 +11,33 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 
-public class RepositorySessionBundle extends ExtendedJSONObject {
+public class RepositorySessionBundle {
+  public static final String LOG_TAG = RepositorySessionBundle.class.getSimpleName();
 
-  private static final String LOG_TAG = "RepositorySessionBundle";
+  protected static final String JSON_KEY_TIMESTAMP = "timestamp";
 
-  public RepositorySessionBundle() {
-    super();
-  }
+  protected final ExtendedJSONObject object;
 
   public RepositorySessionBundle(String jsonString) throws IOException, ParseException, NonObjectJSONException {
-    super(jsonString);
+    object = ExtendedJSONObject.parseJSONObject(jsonString);
   }
 
   public RepositorySessionBundle(long lastSyncTimestamp) {
-    this();
+    object = new ExtendedJSONObject();
     this.setTimestamp(lastSyncTimestamp);
   }
 
   public long getTimestamp() {
-    if (this.containsKey("timestamp")) {
-      return this.getLong("timestamp");
+    if (object.containsKey(JSON_KEY_TIMESTAMP)) {
+      return object.getLong(JSON_KEY_TIMESTAMP);
     }
+
     return -1;
   }
 
   public void setTimestamp(long timestamp) {
-    Logger.debug(LOG_TAG, "Setting timestamp on RepositorySessionBundle to " + timestamp);
-    this.put("timestamp", new Long(timestamp));
+    Logger.debug(LOG_TAG, "Setting timestamp to " + timestamp + ".");
+    object.put(JSON_KEY_TIMESTAMP, Long.valueOf(timestamp));
   }
 
   public void bumpTimestamp(long timestamp) {
@@ -47,5 +47,9 @@ public class RepositorySessionBundle extends ExtendedJSONObject {
     } else {
       Logger.debug(LOG_TAG, "Timestamp " + timestamp + " not greater than " + existing + "; not bumping.");
     }
+  }
+
+  public String toJSONString() {
+    return object.toJSONString();
   }
 }
