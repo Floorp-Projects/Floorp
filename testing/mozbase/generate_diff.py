@@ -22,8 +22,7 @@ files that show up in `hg st`.
 See: https://bugzilla.mozilla.org/show_bug.cgi?id=702832
 """
 
-from __future__ import with_statement
-
+import imp
 import optparse
 import os
 import re
@@ -32,12 +31,17 @@ import subprocess
 import sys
 import tempfile
 
+from pkg_resources import parse_version
 from subprocess import check_call as call
 
 # globals
 here = os.path.dirname(os.path.abspath(__file__))
 MOZBASE = 'git://github.com/mozilla/mozbase.git'
 version_regex = r"""PACKAGE_VERSION *= *['"]([0-9.]+)["'].*"""
+setup_development = imp.load_source('setup_development',
+                                    os.path.join(here, 'setup_development.py'))
+current_package = None
+current_package_info = {}
 
 def error(msg):
     """err out with a message"""
@@ -123,6 +127,51 @@ def parse_versions(*args):
 def version_tag(directory, version):
     return '%s-%s' % (directory, version)
 
+def setup(**kwargs):
+    """monkey-patch function for setuptools.setup"""
+    assert current_package
+    current_package_info[current_package] = kwargs
+
+def check_consistency(*package_info):
+    """checks consistency between a set of packages"""
+
+    # set versions and dependencies per package
+    versions = {}
+    dependencies = {}
+    for package in package_info:
+        name = package['name']
+        versions[name] = package['version']
+        for dep in package.get('install_requires', []):
+            dependencies.setdefault(name, []).append(dep)
+
+    func_map = {'==': tuple.__eq__,
+                '<=': tuple.__le__,
+                '>=': tuple.__ge__}
+
+    # check dependencies
+    errors = []
+    for package, deps in dependencies.items():
+        for dep in deps:
+            parsed = setup_development.dependency_info(dep)
+            if parsed['Name'] not in versions:
+                # external dependency
+                continue
+            if parsed.get('Version') is None:
+                # no version specified for dependency
+                continue
+
+            # check versions
+            func = func_map[parsed['Type']]
+            comparison = func(parse_version(versions[parsed['Name']]),
+                              parse_version(parsed['Version']))
+
+            if not comparison:
+                # an error
+                errors.append("Dependency for package '%s' failed: %s-%s not %s %s" % (package, parsed['Name'], versions[parsed['Name']], parsed['Type'], parsed['Version']))
+
+    # raise an Exception if errors exist
+    if errors:
+        raise Exception('\n'.join(errors))
 
 ###
 
@@ -150,6 +199,24 @@ def main(args=sys.argv[1:]):
         parser.print_help()
         parser.exit()
     output = options.output
+
+    # gather info from current mozbase packages
+    global current_package
+    setuptools = sys.modules.get('setuptools')
+    sys.modules['setuptools'] = sys.modules[__name__]
+    try:
+        for package in setup_development.mozbase_packages:
+            current_package = package
+            imp.load_source('setup', os.path.join(here, package, 'setup.py'))
+    finally:
+        current_package = None
+        sys.modules.pop('setuptools')
+        if setuptools:
+            sys.modules['setuptools'] = setuptools
+    assert set(current_package_info.keys()) == set(setup_development.mozbase_packages)
+
+    # check consistency of current set of packages
+    check_consistency(*current_package_info.values())
 
     # calculate hg root
     hg_root = os.path.dirname(os.path.dirname(here))  # testing/mozbase
@@ -202,6 +269,30 @@ def main(args=sys.argv[1:]):
             tag = version_tag(directory, version)
             if tag not in _tags:
                 error("Tag for '%s' -- %s -- not in tags")
+
+        # ensure that the versions to mirror are compatible with what is in m-c
+        old_package_info = current_package_info.copy()
+        setuptools = sys.modules.get('setuptools')
+        sys.modules['setuptools'] = sys.modules[__name__]
+        try:
+            for directory, version in versions:
+
+                # checkout appropriate revision of mozbase
+                tag = version_tag(directory, version)
+                checkout(src, tag)
+
+                # update the package information
+                setup_py = os.path.join(src, directory, 'setup.py')
+                current_package = directory
+                imp.load_source('setup', setup_py)
+        finally:
+            current_package = None
+            sys.modules.pop('setuptools')
+            if setuptools:
+                sys.modules['setuptools'] = setuptools
+        checkout(src, 'HEAD')
+        current_package_info['mozprocess']['version'] = '0.9'
+        check_consistency(*current_package_info.values())
 
         # copy mozbase directories to m-c
         for directory, version in versions:
