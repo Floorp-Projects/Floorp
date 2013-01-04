@@ -24,6 +24,7 @@ public:
   HTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLSharedListElement();
 
@@ -65,6 +66,60 @@ public:
   {
     return static_cast<nsIDOMHTMLOListElement*>(this);
   }
+
+  bool Reversed() const
+  {
+    return GetBoolAttr(nsGkAtoms::reversed);
+  }
+  void SetReversed(bool aReversed, mozilla::ErrorResult& rv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::reversed, aReversed, rv);
+  }
+  int32_t Start() const
+  {
+    return GetIntAttr(nsGkAtoms::start, 1);
+  }
+  void SetStart(int32_t aStart, mozilla::ErrorResult& rv)
+  {
+    SetHTMLIntAttr(nsGkAtoms::start, aStart, rv);
+  }
+  void GetType(nsString& aType)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aType);
+  }
+  void SetType(const nsAString& aType, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aType, rv);
+  }
+  bool Compact() const
+  {
+    return GetBoolAttr(nsGkAtoms::compact);
+  }
+  void SetCompact(bool aCompact, mozilla::ErrorResult& rv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::compact, aCompact, rv);
+  }
+};
+
+class HTMLDListElement MOZ_FINAL : public HTMLSharedListElement
+{
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+};
+
+class HTMLOListElement MOZ_FINAL : public HTMLSharedListElement
+{
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+};
+
+class HTMLUListElement MOZ_FINAL : public HTMLSharedListElement
+{
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
