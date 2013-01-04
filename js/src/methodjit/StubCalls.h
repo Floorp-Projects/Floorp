@@ -81,7 +81,6 @@ void UncachedNewHelper(VMFrame &f, uint32_t argc, UncachedCallResult &ucr);
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
 
-void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f, PropertyName *name);

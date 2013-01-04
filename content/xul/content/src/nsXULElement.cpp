@@ -1126,6 +1126,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             // Stop building the event target chain for the original event.
             // We don't want it to propagate to any DOM nodes.
             aVisitor.mCanHandle = false;
+            aVisitor.mAutomaticChromeDispatch = false;
 
             // XXX sXBL/XBL2 issue! Owner or current document?
             nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetCurrentDoc()));
@@ -1664,7 +1665,7 @@ nsXULElement::HideWindowChrome(bool aShouldHide)
         nsPresContext *presContext = shell->GetPresContext();
 
         if (frame && presContext && presContext->IsChrome()) {
-            nsIView* view = frame->GetClosestView();
+            nsView* view = frame->GetClosestView();
 
             if (view) {
                 nsIWidget* w = view->GetWidget();
@@ -1823,6 +1824,12 @@ nsXULElement::RecompileScriptEventListeners()
         GetAttr(kNameSpaceID_None, attr, value);
         SetEventHandler(attr, value, true);
     }
+}
+
+bool
+nsXULElement::IsEventAttributeName(nsIAtom *aName)
+{
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL);
 }
 
 NS_IMPL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsXULPrototypeNode)
@@ -2223,6 +2230,22 @@ nsXULPrototypeElement::Unlink()
     mNumAttributes = 0;
     delete[] mAttributes;
     mAttributes = nullptr;
+}
+
+void
+nsXULPrototypeElement::TraceAllScripts(JSTracer* aTrc)
+{
+    for (uint32_t i = 0; i < mChildren.Length(); ++i) {
+        nsXULPrototypeNode* child = mChildren[i];
+        if (child->mType == nsXULPrototypeNode::eType_Element) {
+            static_cast<nsXULPrototypeElement*>(child)->TraceAllScripts(aTrc);
+        } else if (child->mType == nsXULPrototypeNode::eType_Script) {
+            JSScript* script = static_cast<nsXULPrototypeScript*>(child)->GetScriptObject();
+            if (script) {
+                JS_CALL_SCRIPT_TRACER(aTrc, script, "active window XUL prototype script");
+            }
+        }
+    }
 }
 
 //----------------------------------------------------------------------

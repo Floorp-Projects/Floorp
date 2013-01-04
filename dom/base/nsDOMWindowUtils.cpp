@@ -67,6 +67,7 @@
 #include "nsIDOMFileHandle.h"
 #include "nsPrintfCString.h"
 #include "nsViewportInfo.h"
+#include "nsIFormControl.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -107,9 +108,7 @@ nsDOMWindowUtils::GetPresShell()
   if (!docShell)
     return nullptr;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  return presShell;
+  return docShell->GetPresShell();
 }
 
 nsPresContext*
@@ -665,7 +664,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     nsIViewManager* viewManager = presShell->GetViewManager();
     if (!viewManager)
       return NS_ERROR_FAILURE;
-    nsIView* view = viewManager->GetRootView();
+    nsView* view = viewManager->GetRootView();
     if (!view)
       return NS_ERROR_FAILURE;
 
@@ -1054,8 +1053,7 @@ nsDOMWindowUtils::GetWidget(nsPoint* aOffset)
   if (window) {
     nsIDocShell *docShell = window->GetDocShell();
     if (docShell) {
-      nsCOMPtr<nsIPresShell> presShell;
-      docShell->GetPresShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
       if (presShell) {
         nsIFrame* frame = presShell->GetRootFrame();
         if (frame)
@@ -1373,8 +1371,7 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(bool aDisable)
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
   nsIDocShell *docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
   presShell->DisableNonTestMouseEvents(aDisable);
   return NS_OK;
@@ -1764,8 +1761,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   nsIDocShell *docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsPresContext* presContext = presShell->GetPresContext();
@@ -2160,14 +2156,15 @@ nsDOMWindowUtils::StartFrameTimeRecording()
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::StopFrameTimeRecording(uint32_t *frameCount, float **frames)
+nsDOMWindowUtils::StopFrameTimeRecording(float** paintTimes, uint32_t *frameCount, float **frameIntervals)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   NS_ENSURE_ARG_POINTER(frameCount);
-  NS_ENSURE_ARG_POINTER(frames);
+  NS_ENSURE_ARG_POINTER(frameIntervals);
+  NS_ENSURE_ARG_POINTER(paintTimes);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2177,20 +2174,32 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t *frameCount, float **frames)
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  nsTArray<float> frameTimes;
-  mgr->StopFrameTimeRecording(frameTimes);
+  nsTArray<float> tmpFrameIntervals;
+  nsTArray<float> tmpPaintTimes;
+  mgr->StopFrameTimeRecording(tmpFrameIntervals, tmpPaintTimes);
 
-  *frames = nullptr;
-  *frameCount = frameTimes.Length();
+  *frameIntervals = nullptr;
+  *paintTimes = nullptr;
+  *frameCount = tmpFrameIntervals.Length();
 
   if (*frameCount != 0) {
-    *frames = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
-    if (!*frames)
+    *frameIntervals = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
+    if (!*frameIntervals)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    /* copy over the frame times into the array we just allocated */
+    *paintTimes = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
+    if (!*paintTimes)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* copy over the frame intervals and paint times into the arrays we just allocated */
     for (uint32_t i = 0; i < *frameCount; i++) {
-      (*frames)[i] = frameTimes[i];
+      (*frameIntervals)[i] = tmpFrameIntervals[i];
+#ifndef ANDROID
+      (*paintTimes)[i] = tmpPaintTimes[i];
+#else
+      // Waiting for bug 785597 to work on android.
+      (*paintTimes)[i] = 0;
+#endif
     }
   }
 
@@ -2813,8 +2822,7 @@ nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
   nsIDocShell *docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   *aPaintingSuppressed = presShell->IsPaintingSuppressed();
@@ -3088,5 +3096,28 @@ nsDOMWindowUtils::AllowScriptsToClose()
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
   static_cast<nsGlobalWindow*>(window.get())->AllowScriptsToClose();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsNodeDisabledForEvents(nsIDOMNode* aNode, bool* aRetVal)
+{
+  *aRetVal = false;
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  nsCOMPtr<nsINode> n = do_QueryInterface(aNode);
+  nsINode* node = n;
+  while (node) {
+    if (node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(node);
+      if (fc && fc->IsDisabledForEvents(NS_EVENT_NULL)) {
+        *aRetVal = true;
+        break;
+      }
+    }
+    node = node->GetParentNode();
+  }
+
   return NS_OK;
 }

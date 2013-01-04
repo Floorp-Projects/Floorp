@@ -45,10 +45,8 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
 
-  // nsSVGElement overrides
-  virtual bool IsEventName(nsIAtom* aName);
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 };
 
 
@@ -112,11 +110,14 @@ nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
     nsSVGTSpanElementBase::IsAttributeMapped(name);
 }
 
-//----------------------------------------------------------------------
-// nsSVGElement overrides
 
 bool
-nsSVGTSpanElement::IsEventName(nsIAtom* aName)
+nsSVGTSpanElement::IsEventAttributeName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement overrides
+
+// - no methods -

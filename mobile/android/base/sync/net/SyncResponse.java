@@ -4,9 +4,11 @@
 
 package org.mozilla.gecko.sync.net;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Scanner;
 
 import org.json.simple.parser.ParseException;
@@ -59,34 +61,6 @@ public class SyncResponse {
   }
 
   /**
-   * Return the body as an Object.
-   *
-   * @return null if there is no body, or an Object if it successfully parses.
-   *         The return value will be an ExtendedJSONObject if it's a JSON object.
-   * @throws IllegalStateException
-   * @throws IOException
-   * @throws ParseException
-   */
-  public Object jsonBody() throws IllegalStateException, IOException,
-                          ParseException {
-    if (body != null) {
-      // Do it from the cached String.
-      return ExtendedJSONObject.parse(body);
-    }
-
-    HttpEntity entity = this.response.getEntity();
-    if (entity == null) {
-      return null;
-    }
-    InputStream content = entity.getContent();
-    try {
-      return ExtendedJSONObject.parse(content);
-    } finally {
-      content.close();
-    }
-  }
-
-  /**
    * Return the body as a <b>non-null</b> <code>ExtendedJSONObject</code>.
    *
    * @return A non-null <code>ExtendedJSONObject</code>.
@@ -99,11 +73,23 @@ public class SyncResponse {
   public ExtendedJSONObject jsonObjectBody() throws IllegalStateException,
                                             IOException, ParseException,
                                             NonObjectJSONException {
-    Object body = this.jsonBody();
-    if (body instanceof ExtendedJSONObject) {
-      return (ExtendedJSONObject) body;
+    if (body != null) {
+      // Do it from the cached String.
+      return ExtendedJSONObject.parseJSONObject(body);
     }
-    throw new NonObjectJSONException(body);
+
+    HttpEntity entity = this.response.getEntity();
+    if (entity == null) {
+      throw new IOException("no entity");
+    }
+
+    InputStream content = entity.getContent();
+    try {
+      Reader in = new BufferedReader(new InputStreamReader(content, "UTF-8"));
+      return ExtendedJSONObject.parseJSONObject(in);
+    } finally {
+      content.close();
+    }
   }
 
   private boolean hasHeader(String h) {

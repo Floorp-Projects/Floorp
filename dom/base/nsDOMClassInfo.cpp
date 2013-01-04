@@ -440,6 +440,7 @@
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 
 using mozilla::dom::indexedDB::IDBWrapperCache;
+using mozilla::dom::workers::ResolveWorkerClasses;
 
 #include "nsIDOMMediaQueryList.h"
 
@@ -458,6 +459,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "nsIDOMSmsRequest.h"
 #include "nsIDOMSmsFilter.h"
 #include "nsIDOMSmsCursor.h"
+#include "nsIDOMSmsSegmentInfo.h"
 #include "nsIDOMConnection.h"
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMMobileConnection.h"
@@ -1370,6 +1372,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozSmsCursor, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozSmsSegmentInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozConnection, nsDOMGenericSH,
@@ -2633,6 +2638,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLImageElement, nsIDOMHTMLImageElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLImageElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIImageLoadingContent)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3676,6 +3682,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MozSmsCursor, nsIDOMMozSmsCursor)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsCursor)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozSmsSegmentInfo, nsIDOMMozSmsSegmentInfo)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsSegmentInfo)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozConnection, nsIDOMMozConnection)
@@ -5169,13 +5179,6 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  if (id == sWrappedJSObject_id &&
-      xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
-    obj = JS_ObjectToOuterObject(cx, obj);
-    *vp = OBJECT_TO_JSVAL(obj);
-    return NS_SUCCESS_I_DID_SOMETHING;
-  }
-
   return NS_OK;
 }
 
@@ -6558,10 +6561,6 @@ ContentWindowGetter(JSContext *cx, unsigned argc, jsval *vp)
   return ::JS_GetProperty(cx, obj, "content", vp);
 }
 
-static JSNewResolveOp sOtherResolveFuncs[] = {
-  mozilla::dom::workers::ResolveWorkerClasses
-};
-
 template<class Interface>
 static nsresult
 LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
@@ -6746,7 +6745,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
   if (sLocation_id == id) {
     // This must be done even if we're just getting the value of
     // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
@@ -6754,7 +6752,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // getter from being overriden (for security reasons).
 
     nsCOMPtr<nsIDOMLocation> location;
-    rv = win->GetLocation(getter_AddRefs(location));
+    nsresult rv = win->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make sure we wrap the location object in the window's scope.
@@ -6783,7 +6781,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (sTop_id == id) {
     nsCOMPtr<nsIDOMWindow> top;
-    rv = win->GetScriptableTop(getter_AddRefs(top));
+    nsresult rv = win->GetScriptableTop(getter_AddRefs(top));
     NS_ENSURE_SUCCESS(rv, rv);
 
     jsval v;
@@ -6833,9 +6831,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         jsval v;
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        rv = WrapNative(cx, wrapperObj, child_win,
-                        &NS_GET_IID(nsIDOMWindow), true, &v,
-                        getter_AddRefs(holder));
+        nsresult rv = WrapNative(cx, wrapperObj, child_win,
+                                 &NS_GET_IID(nsIDOMWindow), true, &v,
+                                 getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, rv);
 
         JSAutoRequest ar(cx);
@@ -6853,38 +6851,28 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  // It is not worth calling GlobalResolve() if we are resolving
-  // for assignment, since only read-write properties get dealt
-  // with there.
-  if (!(flags & JSRESOLVE_ASSIGNING)) {
-    JSAutoRequest ar(cx);
+  // Handle resolving if id refers to a name resolved by DOM worker code.
+  js::RootedObject tmp(cx, NULL);
+  if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (tmp) {
+    *objp = tmp;
+    return NS_OK;
+  }
 
-    // Resolve special classes.
-    for (uint32_t i = 0; i < ArrayLength(sOtherResolveFuncs); i++) {
-      js::RootedObject tmp(cx, *objp);
-      if (!sOtherResolveFuncs[i](cx, obj, id, flags, &tmp)) {
-        return NS_ERROR_FAILURE;
-      }
-      *objp = tmp;
-      if (*objp) {
-        return NS_OK;
-      }
-    }
+  // Check for names managed by the script namespace manager.  Call
+  // GlobalResolve() after we call FindChildWithName() so that named child
+  // frames will override external properties which have been registered with
+  // the script namespace manager -- pages must be able to depend on frame
+  // names working no matter how Gecko's been configured.
+  bool did_resolve = false;
+  nsresult rv = GlobalResolve(win, cx, obj, id, &did_resolve);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // Call GlobalResolve() after we call FindChildWithName() so
-    // that named child frames will override external properties
-    // which have been registered with the script namespace manager.
-
-    bool did_resolve = false;
-    rv = GlobalResolve(win, cx, obj, id, &did_resolve);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (did_resolve) {
-      // GlobalResolve() resolved something, so we're done here.
-      *objp = obj;
-
-      return NS_OK;
-    }
+  if (did_resolve) {
+    *objp = obj;
+    return NS_OK;
   }
 
   if (s_content_id == id) {
@@ -7004,11 +6992,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  JSObject *oldobj = *objp;
   rv = nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                   _retval);
 
-  if (NS_FAILED(rv) || *objp != oldobj) {
+  if (NS_FAILED(rv) || *objp) {
     // Something went wrong, or the property got resolved. Return.
     return rv;
   }

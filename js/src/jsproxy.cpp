@@ -3084,8 +3084,11 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
      * their properties and so that we don't need to walk the compartment if
      * their prototype changes later.
      */
-    if (proto.isObject() && !proto.toObject()->setNewTypeUnknown(cx))
-        return NULL;
+    if (proto.isObject()) {
+        RootedObject protoObj(cx, proto.toObject());
+        if (!JSObject::setNewTypeUnknown(cx, protoObj))
+            return NULL;
+    }
 
     RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent));
     if (!obj)

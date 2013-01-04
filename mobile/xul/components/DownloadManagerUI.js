@@ -16,7 +16,7 @@ function DownloadManagerUI() { }
 DownloadManagerUI.prototype = {
   classID: Components.ID("{93db15b1-b408-453e-9a2b-6619e168324a}"),
 
-  show: function show(aWindowContext, aID, aReason) {
+  show: function show(aWindowContext, aID, aReason, aUsePrivateUI) {
     if (!aReason)
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
 

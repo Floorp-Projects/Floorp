@@ -104,6 +104,7 @@ public:
   NS_IMETHOD SaveState();
   virtual bool RestoreState(nsPresState* aState);
   virtual bool AllowDrop();
+  virtual bool IsDisabledForEvents(uint32_t aMessage);
 
   virtual void FieldSetDisabledChanged(bool aNotify);
 

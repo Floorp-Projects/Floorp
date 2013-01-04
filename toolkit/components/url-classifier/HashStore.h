@@ -119,8 +119,9 @@ private:
 
   nsresult ReadHeader();
   nsresult SanityCheck();
-  nsresult CalculateChecksum(nsAutoCString& aChecksum, int64_t aSize, bool aChecksumPresent);
-  nsresult CheckChecksum(nsIFile* aStoreFile);
+  nsresult CalculateChecksum(nsAutoCString& aChecksum, uint32_t aFileSize,
+                             bool aChecksumPresent);
+  nsresult CheckChecksum(nsIFile* aStoreFile, uint32_t aFileSize);
   void UpdateHeader();
 
   nsresult ReadChunkNumbers();

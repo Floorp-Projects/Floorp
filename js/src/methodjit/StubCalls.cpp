@@ -1317,63 +1317,6 @@ FindNativeCode(VMFrame &f, jsbytecode *target)
 }
 
 void * JS_FASTCALL
-stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
-{
-    AutoAssertNoGC nogc;
-    jsbytecode *jpc = pc;
-    UnrootedScript script = f.fp()->script();
-
-    /* This is correct because the compiler adjusts the stack beforehand. */
-    Value lval = f.regs.sp[-1];
-
-    if (!lval.isPrimitive())
-        return FindNativeCode(f, pc + GET_JUMP_OFFSET(pc));
-
-    JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
-
-    pc += JUMP_OFFSET_LEN;
-    uint32_t npairs = GET_UINT16(pc);
-    pc += UINT16_LEN;
-
-    JS_ASSERT(npairs);
-
-    if (lval.isString()) {
-        JSLinearString *str = lval.toString()->ensureLinear(f.cx);
-        if (!str)
-            THROWV(NULL);
-        for (uint32_t i = 1; i <= npairs; i++) {
-            Value rval = script->getConst(GET_UINT32_INDEX(pc));
-            pc += UINT32_INDEX_LEN;
-            if (rval.isString()) {
-                JSLinearString *rhs = &rval.toString()->asLinear();
-                if (rhs == str || EqualStrings(str, rhs))
-                    return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
-            }
-            pc += JUMP_OFFSET_LEN;
-        }
-    } else if (lval.isNumber()) {
-        double d = lval.toNumber();
-        for (uint32_t i = 1; i <= npairs; i++) {
-            Value rval = script->getConst(GET_UINT32_INDEX(pc));
-            pc += UINT32_INDEX_LEN;
-            if (rval.isNumber() && d == rval.toNumber())
-                return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
-            pc += JUMP_OFFSET_LEN;
-        }
-    } else {
-        for (uint32_t i = 1; i <= npairs; i++) {
-            Value rval = script->getConst(GET_UINT32_INDEX(pc));
-            pc += UINT32_INDEX_LEN;
-            if (lval == rval)
-                return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
-            pc += JUMP_OFFSET_LEN;
-        }
-    }
-
-    return FindNativeCode(f, jpc + GET_JUMP_OFFSET(jpc));
-}
-
-void * JS_FASTCALL
 stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 {
     jsbytecode * const originalPC = origPc;

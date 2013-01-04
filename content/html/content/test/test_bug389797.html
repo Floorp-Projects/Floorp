@@ -159,8 +159,7 @@ HTML_TAG("i", "");
 HTML_TAG("iframe", "IFrame", [ "nsIDOMGetSVGDocument", "nsIDOMMozBrowserFrame" ],
                              [ "nsIFrameLoaderOwner" ]);
 HTML_TAG("image", "Span");
-HTML_TAG("img", "Image", [], [ "imgINotificationObserver",
-                               "nsIImageLoadingContent" ]);
+HTML_TAG("img", "Image", [ "nsIImageLoadingContent" ], []);
 HTML_TAG("input", "Input", [], [ "imgINotificationObserver",
                                  "nsIImageLoadingContent",
                                  "nsIDOMNSEditableElement" ]);

@@ -374,7 +374,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                 return;
-            getCode(defaultOffset).switchTarget = true;
             getCode(defaultOffset).safePoint = true;
 
             for (int32_t i = low; i <= high; i++) {
@@ -383,34 +382,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                         return;
                 }
-                getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
                 pc2 += JUMP_OFFSET_LEN;
-            }
-            break;
-          }
-
-          case JSOP_LOOKUPSWITCH: {
-            isJaegerInlineable = isIonInlineable = false;
-            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-            unsigned npairs = GET_UINT16(pc2);
-            pc2 += UINT16_LEN;
-
-            if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                return;
-            getCode(defaultOffset).switchTarget = true;
-            getCode(defaultOffset).safePoint = true;
-
-            while (npairs) {
-                pc2 += UINT32_INDEX_LEN;
-                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                    return;
-                getCode(targetOffset).switchTarget = true;
-                getCode(targetOffset).safePoint = true;
-                pc2 += JUMP_OFFSET_LEN;
-                npairs--;
             }
             break;
           }
@@ -604,21 +577,17 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
         /* Check basic jump opcodes, which may or may not have a fallthrough. */
         if (jump) {
-            /* Some opcodes behave differently on their branching path. */
+            /* Case instructions do not push the lvalue back when branching. */
             unsigned newStackDepth = stackDepth;
-
-            switch (op) {
-              case JSOP_CASE:
-                /* Case instructions do not push the lvalue back when branching. */
+            if (op == JSOP_CASE)
                 newStackDepth--;
-                break;
-
-              default:;
-            }
 
             unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
             if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, newStackDepth))
                 return;
+
+            if (op == JSOP_CASE || op == JSOP_DEFAULT)
+                getCode(targetOffset).safePoint = true;
         }
 
         /* Handle any fallthrough from this opcode. */
@@ -798,7 +767,6 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             break;
           }
 
-          case JSOP_LOOKUPSWITCH:
           case JSOP_TABLESWITCH:
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
@@ -1526,24 +1494,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 if (targetOffset != offset)
                     checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
                 pc2 += JUMP_OFFSET_LEN;
-            }
-
-            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
-            break;
-          }
-
-          case JSOP_LOOKUPSWITCH: {
-            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-            unsigned npairs = GET_UINT16(pc2);
-            pc2 += UINT16_LEN;
-
-            while (npairs) {
-                pc2 += UINT32_INDEX_LEN;
-                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
-                pc2 += JUMP_OFFSET_LEN;
-                npairs--;
             }
 
             checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);

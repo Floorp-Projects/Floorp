@@ -491,7 +491,7 @@ nsSVGAnimationElement::EndElementAt(float offset)
 }
 
 bool
-nsSVGAnimationElement::IsEventName(nsIAtom* aName)
+nsSVGAnimationElement::IsEventAttributeName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SMIL);
 }

@@ -1,5 +1,5 @@
 const gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-const EXPECTED_PLUGINSCRIPTED_EVENT_COUNT = 6;
+const EXPECTED_PLUGINSCRIPTED_EVENT_COUNT = 7;
 
 var gTestBrowser = null;
 var gNextTestList = [];
@@ -89,6 +89,35 @@ function testNoEventFired() {
   ok(notification, "should have a click-to-play notification (" + getCurrentTestLocation() + ")");
   ok(notification.dismissed, "notification should not be showing (" + getCurrentTestLocation() + ")");
   ok(!gPluginScriptedFired, "PluginScripted should not have fired (" + getCurrentTestLocation() + ")");
+
+  prepareTest(testDenyPermissionPart1, gHttpTestRoot + "plugin_test_noScriptNoPopup.html");
+}
+
+function testDenyPermissionPart1() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "test deny permission: should have a click-to-play notification");
+  // Simulate clicking the "Deny Always" button.
+  notification.secondaryActions[1].callback();
+  gPluginScriptedFired = false;
+  prepareTest(testDenyPermissionPart2, gHttpTestRoot + "plugin_test_scriptedPopup1.html");
+}
+
+function testDenyPermissionPart2() {
+  var condition = function() gPluginScriptedFired;
+  waitForCondition(condition, testDenyPermissionPart3, "test deny permission: waited too long for PluginScripted event");
+}
+
+function testDenyPermissionPart3() {
+  var condition = function() gTestBrowser._pluginScriptedState == gPluginHandler.PLUGIN_SCRIPTED_STATE_DONE;
+  waitForCondition(condition, testDenyPermissionPart4, "test deny permission: waited too long for PluginScripted event handling");
+}
+
+function testDenyPermissionPart4() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "test deny permission: should not have a click-to-play notification");
+
+  var pluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+  Services.perms.remove("127.0.0.1:8888", pluginHost.getPermissionStringForType("application/x-test"));
 
   runNextTest();
 }
