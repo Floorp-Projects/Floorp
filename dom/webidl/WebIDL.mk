@@ -100,6 +100,7 @@ webidl_files = \
   SVGElement.webidl \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
+  SVGMetadataElement.webidl \
   SVGNumberList.webidl \
   SVGPathSeg.webidl \
   SVGPathSegList.webidl \
