@@ -26,7 +26,7 @@ Marionette.prototype = {
 
   ok: function Marionette__ok(condition, name, passString, failString, diag) {
     if (typeof(diag) == "undefined") {
-      diag = this.repr(condition) + " was false, expected true";
+      diag = this.repr(condition) + " was " + !!condition + ", expected true";
     }
     let test = {'result': !!condition, 'name': name, 'diag': diag};
     this.logResult(test,

@@ -13,7 +13,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMDragEvent.h"
@@ -328,7 +328,7 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
 nsObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   if (HasView()) {
-    nsIView* view = GetView();
+    nsView* view = GetView();
     nsIViewManager* vm = view->GetViewManager();
     if (vm) {
       nsViewVisibility visibility = 
@@ -359,7 +359,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
 {
   mWidget = aWidget;
 
-  nsIView* view = GetView();
+  nsView* view = GetView();
   NS_ASSERTION(view, "Object frames must have views");  
   if (!view) {
     return NS_ERROR_FAILURE;
@@ -374,7 +374,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
   // Position and size view relative to its parent, not relative to our
   // parent frame (our parent frame may not have a view).
   
-  nsIView* parentWithView;
+  nsView* parentWithView;
   nsPoint origin;
   nsRect r(0, 0, mRect.width, mRect.height);
 
@@ -843,7 +843,7 @@ nsObjectFrame::IsHidden(bool aCheckVisibilityStyle) const
 
 nsIntPoint nsObjectFrame::GetWindowOriginInPixels(bool aWindowless)
 {
-  nsIView * parentWithView;
+  nsView * parentWithView;
   nsPoint origin(0,0);
 
   GetOffsetFromView(origin, &parentWithView);
@@ -883,7 +883,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     return rv;
 
   if (HasView()) {
-    nsIView* view = GetView();
+    nsView* view = GetView();
     nsIViewManager* vm = view->GetViewManager();
     if (vm)
       vm->SetViewVisibility(view, IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow);

@@ -29,7 +29,6 @@ interface ISmsManager
   public void stop();
   public void shutdown();
 
-  public int getNumberOfMessagesForText(String aText);
   public void send(String aNumber, String aMessage, int aRequestId);
   public void getMessage(int aMessageId, int aRequestId);
   public void deleteMessage(int aMessageId, int aRequestId);

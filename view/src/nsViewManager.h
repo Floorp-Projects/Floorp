@@ -13,7 +13,6 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
-#include "nsView.h"
 #include "nsIPresShell.h"
 #include "nsDeviceContext.h"
 
@@ -52,41 +51,41 @@ public:
 
   NS_IMETHOD  Init(nsDeviceContext* aContext);
 
-  NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
-                                   const nsIView* aParent,
+  NS_IMETHOD_(nsView*) CreateView(const nsRect& aBounds,
+                                   const nsView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
-  NS_IMETHOD_(nsIView*) GetRootView();
-  NS_IMETHOD  SetRootView(nsIView *aView);
+  NS_IMETHOD_(nsView*) GetRootView();
+  NS_IMETHOD  SetRootView(nsView *aView);
 
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
   NS_IMETHOD  FlushDelayedResize(bool aDoReflow);
 
-  NS_IMETHOD  InvalidateView(nsIView *aView);
-  NS_IMETHOD  InvalidateViewNoSuppression(nsIView *aView, const nsRect &aRect);
+  NS_IMETHOD  InvalidateView(nsView *aView);
+  NS_IMETHOD  InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect);
   NS_IMETHOD  InvalidateAllViews();
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
-      nsIView* aTargetView, nsEventStatus* aStatus);
+      nsView* aTargetView, nsEventStatus* aStatus);
 
-  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
+  NS_IMETHOD  InsertChild(nsView *parent, nsView *child, nsView *sibling,
                           bool above);
 
-  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
+  NS_IMETHOD  InsertChild(nsView *parent, nsView *child,
                           int32_t zindex);
 
-  NS_IMETHOD  RemoveChild(nsIView *parent);
+  NS_IMETHOD  RemoveChild(nsView *parent);
 
-  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY);
+  NS_IMETHOD  MoveViewTo(nsView *aView, nscoord aX, nscoord aY);
 
-  NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect, bool aRepaintExposedAreaOnly = false);
+  NS_IMETHOD  ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExposedAreaOnly = false);
 
-  NS_IMETHOD  SetViewFloating(nsIView *aView, bool aFloating);
+  NS_IMETHOD  SetViewFloating(nsView *aView, bool aFloating);
 
-  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
+  NS_IMETHOD  SetViewVisibility(nsView *aView, nsViewVisibility aVisible);
 
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAuto, int32_t aZIndex, bool aTopMost=false);
+  NS_IMETHOD  SetViewZIndex(nsView *aView, bool aAuto, int32_t aZIndex, bool aTopMost=false);
 
   virtual void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
   virtual nsIPresShell* GetPresShell() { return mPresShell; }
@@ -121,8 +120,8 @@ private:
    * Call WillPaint() on all view observers under this vm root.
    */
   void CallWillPaintOnObservers(bool aWillSendDidPaint);
-  void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
-  void ReparentWidgets(nsIView* aView, nsIView *aParent);
+  void ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget);
+  void ReparentWidgets(nsView* aView, nsView *aParent);
   void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
 
   void InvalidateViews(nsView *aView);
@@ -155,7 +154,7 @@ private:
     RootViewManager()->mPainting = aPainting;
   }
 
-  nsresult InvalidateView(nsIView *aView, const nsRect &aRect);
+  nsresult InvalidateView(nsView *aView, const nsRect &aRect);
 
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootViewImpl() const { return mRootView; }
@@ -189,7 +188,7 @@ private:
   // visible again.
   nsSize            mDelayedResize;
 
-  nsView            *mRootView;
+  nsView           *mRootView;
   // mRootViewManager is a strong ref unless it equals |this|.  It's
   // never null (if we have no ancestors, it will be |this|).
   nsViewManager     *mRootViewManager;

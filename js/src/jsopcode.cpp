@@ -120,27 +120,21 @@ Dup(const char *chars, DupBuffer *cb)
 size_t
 js_GetVariableBytecodeLength(jsbytecode *pc)
 {
-    unsigned ncases;
-    int32_t low, high;
-
     JSOp op = JSOp(*pc);
     JS_ASSERT(js_CodeSpec[op].length == -1);
     switch (op) {
-      case JSOP_TABLESWITCH:
+      case JSOP_TABLESWITCH: {
         /* Structure: default-jump case-low case-high case1-jump ... */
         pc += JUMP_OFFSET_LEN;
-        low = GET_JUMP_OFFSET(pc);
+        int32_t low = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc);
-        ncases = (unsigned)(high - low + 1);
+        int32_t high = GET_JUMP_OFFSET(pc);
+        unsigned ncases = unsigned(high - low + 1);
         return 1 + 3 * JUMP_OFFSET_LEN + ncases * JUMP_OFFSET_LEN;
-
+      }
       default:
-        /* Structure: default-jump case-count (case1-value case1-jump) ... */
-        JS_ASSERT(op == JSOP_LOOKUPSWITCH);
-        pc += JUMP_OFFSET_LEN;
-        ncases = GET_UINT16(pc);
-        return 1 + JUMP_OFFSET_LEN + UINT16_LEN + ncases * (UINT32_INDEX_LEN + JUMP_OFFSET_LEN);
+        JS_NOT_REACHED("Unexpected op");
+        return 0;
     }
 }
 
@@ -657,31 +651,6 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
             off = GET_JUMP_OFFSET(pc2);
             Sprint(sp, "\n\t%d: %d", i, int(off));
             pc2 += JUMP_OFFSET_LEN;
-        }
-        len = 1 + pc2 - pc;
-        break;
-      }
-
-      case JOF_LOOKUPSWITCH:
-      {
-        jsatomid npairs;
-
-        ptrdiff_t off = GET_JUMP_OFFSET(pc);
-        jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-        npairs = GET_UINT16(pc2);
-        pc2 += UINT16_LEN;
-        Sprint(sp, " offset %d npairs %u", int(off), unsigned(npairs));
-        while (npairs) {
-            uint32_t constIndex = GET_UINT32_INDEX(pc2);
-            pc2 += UINT32_INDEX_LEN;
-            off = GET_JUMP_OFFSET(pc2);
-            pc2 += JUMP_OFFSET_LEN;
-
-            JSAutoByteString bytes;
-            if (!ToDisassemblySource(cx, script->getConst(constIndex), &bytes))
-                return 0;
-            Sprint(sp, "\n\t%s: %d", bytes.ptr(), int(off));
-            npairs--;
         }
         len = 1 + pc2 - pc;
         break;
@@ -3628,8 +3597,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     LOCAL_ASSERT(SN_TYPE(js_GetSrcNote(cx, jp->script, nextpc)) == SRC_FOR_IN);
                 } else {
                     LOCAL_ASSERT(*nextpc == JSOP_CONDSWITCH ||
-                                 *nextpc == JSOP_TABLESWITCH ||
-                                 *nextpc == JSOP_LOOKUPSWITCH);
+                                 *nextpc == JSOP_TABLESWITCH);
                 }
 
                 DupBuffer rhs(cx);
@@ -5049,48 +5017,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
                 if (ok)
                     ok = DecompileSwitch(ss, table, (unsigned)j, pc, len, off, false);
-                js_free(table);
-                if (!ok)
-                    return NULL;
-                todo = -2;
-                break;
-              }
-
-              case JSOP_LOOKUPSWITCH:
-              {
-                ptrdiff_t off, off2;
-                jsatomid npairs, k;
-                TableEntry *table;
-
-                sn = js_GetSrcNote(cx, jp->script, pc);
-                LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_SWITCH);
-                len = js_GetSrcNoteOffset(sn, 0);
-                off = GET_JUMP_OFFSET(pc);
-                pc2 = pc + JUMP_OFFSET_LEN;
-                npairs = GET_UINT16(pc2);
-                pc2 += UINT16_LEN;
-
-                table = cx->pod_malloc<TableEntry>(npairs);
-                if (!table)
-                    return NULL;
-                for (k = 0; k < npairs; k++) {
-                    sn = js_GetSrcNote(cx, jp->script, pc2);
-                    if (sn) {
-                        LOCAL_ASSERT(SN_TYPE(sn) == SRC_LABEL);
-                        GET_SOURCE_NOTE_ATOM(sn, table[k].label);
-                    } else {
-                        table[k].label = NULL;
-                    }
-                    uint32_t constIndex = GET_UINT32_INDEX(pc2);
-                    pc2 += UINT32_INDEX_LEN;
-                    off2 = GET_JUMP_OFFSET(pc2);
-                    pc2 += JUMP_OFFSET_LEN;
-                    table[k].key = jp->script->getConst(constIndex);
-                    table[k].offset = off2;
-                }
-
-                ok = DecompileSwitch(ss, table, (unsigned)npairs, pc, len, off,
-                                     JS_FALSE);
                 js_free(table);
                 if (!ok)
                     return NULL;

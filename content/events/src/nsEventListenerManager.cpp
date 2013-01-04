@@ -26,7 +26,7 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"

@@ -495,7 +495,7 @@ pref("extensions.getAddons.cache.enabled", false);
 
 // Context Menu
 pref("ui.click_hold_context_menus", true);
-pref("ui.click_hold_context_menus.delay", 1000);
+pref("ui.click_hold_context_menus.delay", 750);
 
 // Enable device storage
 pref("device.storage.enabled", true);
@@ -615,3 +615,7 @@ pref("wap.UAProf.tagname", "x-wap-profile");
 
 // Wait up to this much milliseconds when orientation changed
 pref("layers.orientation.sync.timeout", 1000);
+
+// Don't discard WebGL contexts for foreground apps on memory
+// pressure.
+pref("webgl.can-lose-context-in-foreground", false);

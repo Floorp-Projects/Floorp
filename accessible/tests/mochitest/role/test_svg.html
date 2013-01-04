@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SVG elements accessible roles</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTests()
+    {
+      testRole("svg", ROLE_DIAGRAM);
+      testRole("rect", ROLE_GRAPHIC);
+      testRole("circle", ROLE_GRAPHIC);
+      testRole("ellipse", ROLE_GRAPHIC);
+      testRole("line", ROLE_GRAPHIC);
+      testRole("polygon", ROLE_GRAPHIC);
+      testRole("polyline", ROLE_GRAPHIC);
+      testRole("path", ROLE_GRAPHIC);
+      testRole("image", ROLE_GRAPHIC);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=822983"
+     title="Map SVG graphic elements to accessibility API">
+    Bug 822983
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg"
+       xmlns:xlink="http://www.w3.org/1999/xlink">
+    <rect width="300" height="100" id="rect"
+          style="fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)"/>
+    <circle cx="100" cy="50" r="40" stroke="black" id="circle"
+            stroke-width="2" fill="red"/>
+    <ellipse cx="300" cy="80" rx="100" ry="50" id="ellipse"
+             style="fill:yellow;stroke:purple;stroke-width:2"/>
+    <line x1="0" y1="0" x2="200" y2="200" id="line"
+          style="stroke:rgb(255,0,0);stroke-width:2"/>
+    <polygon points="200,10 250,190 160,210" id="polygon"
+             style="fill:lime;stroke:purple;stroke-width:1"/>
+    <polyline points="20,20 40,25 60,40 80,120 120,140 200,180" id="polyline"
+              style="fill:none;stroke:black;stroke-width:3" />
+    <path d="M150 0 L75 200 L225 200 Z" id="path"/>
+    <image x1="25" y1="80" width="50" height="20" id="image"
+           xlink:href="../moz.png"/>
+  </svg>
+
+</body>
+</html>

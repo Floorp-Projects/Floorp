@@ -23,10 +23,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <zlib.h>
-#ifdef MOZ_OLD_LINKER
-#include <linux/ashmem.h>
-#include <endian.h>
-#endif
 #include "dlfcn.h"
 #include "APKOpen.h"
 #include <sys/time.h>
@@ -35,9 +31,7 @@
 #include "sqlite3.h"
 #include "SQLiteBridge.h"
 #include "NSSBridge.h"
-#ifndef MOZ_OLD_LINKER
 #include "ElfLoader.h"
-#endif
 #include "application.ini.h"
 
 /* Android headers don't define RUSAGE_THREAD */
@@ -104,27 +98,6 @@ JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
     }
     jenv->DeleteLocalRef(cls);
 }
-
-#ifdef MOZ_OLD_LINKER
-static int
-createAshmem(size_t bytes, const char *name)
-{
-  int fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
-  if (fd < 0)
-    return -1;
-
-  char buf[ASHMEM_NAME_LEN];
-
-  strlcpy(buf, name, sizeof(buf));
-  /*ret = */ioctl(fd, ASHMEM_SET_NAME, buf);
-
-  if (!ioctl(fd, ASHMEM_SET_SIZE, bytes))
-    return fd;
-
-  close(fd);
-  return -1;
-}
-#endif
 
 #define SHELL_WRAPPER0(name) \
 typedef void (*name ## _t)(JNIEnv *, jclass); \
@@ -349,88 +322,13 @@ static void * nss_handle = NULL;
 static void * nspr_handle = NULL;
 static void * plc_handle = NULL;
 
-#ifdef MOZ_OLD_LINKER
-static bool simple_linker_initialized = false;
-static time_t apk_mtime = 0;
-#ifdef DEBUG
-extern "C" int extractLibs = 1;
-#else
-extern "C" int extractLibs = 0;
-#endif
-
-static void
-extractFile(const char * path, Zip::Stream &s)
-{
-  uint32_t size = s.GetUncompressedSize();
-
-  struct stat status;
-  if (!stat(path, &status) &&
-      status.st_size == size &&
-      apk_mtime < status.st_mtime)
-    return;
-
-  int fd = open(path, O_CREAT | O_NOATIME | O_TRUNC | O_RDWR, S_IRWXU);
-  if (fd == -1) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't open %s to decompress library", path);
-    return;
-  }
-
-  if (ftruncate(fd, size) == -1) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't ftruncate %s to decompress library", path);
-    close(fd);
-    return;
-  }
-
-  void * buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
-                    MAP_SHARED, fd, 0);
-  if (buf == (void *)-1) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't mmap decompression buffer");
-    close(fd);
-    return;
-  }
-
-  z_stream strm = {
-    next_in: (Bytef *)s.GetBuffer(),
-    avail_in: s.GetSize(),
-    total_in: 0,
-
-    next_out: (Bytef *)buf,
-    avail_out: size,
-    total_out: 0
-  };
-
-  int ret;
-  ret = inflateInit2(&strm, -MAX_WBITS);
-  if (ret != Z_OK)
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateInit failed: %s", strm.msg);
-
-  if (inflate(&strm, Z_FINISH) != Z_STREAM_END)
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflate failed: %s", strm.msg);
-
-  if (strm.total_out != size)
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "extracted %d, expected %d!", strm.total_out, size);
-
-  ret = inflateEnd(&strm);
-  if (ret != Z_OK)
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateEnd failed: %s", strm.msg);
-
-  close(fd);
-#ifdef ANDROID_ARM_LINKER
-  /* We just extracted data that is going to be executed in the future.
-   * We thus need to ensure Instruction and Data cache coherency. */
-  cacheflush((unsigned) buf, (unsigned) buf + size, 0);
-#endif
-  munmap(buf, size);
-}
-#endif
-
 template <typename T> inline void
 xul_dlsym(const char *symbolName, T *value)
 {
   *value = (T) (uintptr_t) __wrap_dlsym(xul_handle, symbolName);
 }
 
-#if defined(MOZ_CRASHREPORTER) || defined(MOZ_OLD_LINKER)
+#if defined(MOZ_CRASHREPORTER)
 static void
 extractLib(Zip::Stream &s, void * dest)
 {
@@ -469,171 +367,6 @@ getLibraryCache()
 {
   return cache_mapping;
 }
-
-#ifdef MOZ_OLD_LINKER
-
-static int cache_count = 0;
-
-static void
-ensureLibCache()
-{
-  if (!cache_mapping)
-    cache_mapping = (struct lib_cache_info *)calloc(MAX_LIB_CACHE_ENTRIES,
-                                                    sizeof(*cache_mapping));
-}
-
-static void
-fillLibCache(const char *buf)
-{
-  ensureLibCache();
-
-  char * str = strdup(buf);
-  if (!str)
-    return;
-
-  char * saveptr;
-  char * nextstr = str;
-  do {
-    struct lib_cache_info *info = &cache_mapping[cache_count];
-
-    char * name = strtok_r(nextstr, ":", &saveptr);
-    if (!name)
-      break;
-    nextstr = NULL;
-
-    char * fd_str = strtok_r(NULL, ";", &saveptr);
-    if (!fd_str)
-      break;
-
-    long int fd = strtol(fd_str, NULL, 10);
-    if (fd == LONG_MIN || fd == LONG_MAX)
-      break;
-    strncpy(info->name, name, MAX_LIB_CACHE_NAME_LEN - 1);
-    info->fd = fd;
-  } while (cache_count++ < MAX_LIB_CACHE_ENTRIES);
-  free(str);
-}
-
-static int
-lookupLibCacheFd(const char *libName)
-{
-  if (!cache_mapping)
-    return -1;
-
-  int count = cache_count;
-  while (count--) {
-    struct lib_cache_info *info = &cache_mapping[count];
-    if (!strcmp(libName, info->name))
-      return info->fd;
-  }
-  return -1;
-}
-
-static void
-addLibCacheFd(const char *libName, int fd, uint32_t lib_size = 0, void* buffer = NULL)
-{
-  ensureLibCache();
-
-  struct lib_cache_info *info = &cache_mapping[cache_count++];
-  strncpy(info->name, libName, MAX_LIB_CACHE_NAME_LEN - 1);
-  info->fd = fd;
-  info->lib_size = lib_size;
-  info->buffer = buffer;
-}
-
-static void * mozload(const char * path, Zip *zip)
-{
-#ifdef DEBUG
-  struct timeval t0, t1;
-  gettimeofday(&t0, 0);
-#endif
-
-  void *handle;
-  Zip::Stream s;
-  if (!zip->GetStream(path, &s))
-    return NULL;
-
-  if (extractLibs) {
-    char fullpath[PATH_MAX];
-    snprintf(fullpath, PATH_MAX, "%s/%s", getenv("MOZ_LINKER_CACHE"), path);
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
-    extractFile(fullpath, s);
-    handle = __wrap_dlopen(fullpath, RTLD_LAZY);
-    if (!handle)
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't load %s because %s", fullpath, __wrap_dlerror());
-#ifdef DEBUG
-    gettimeofday(&t1, 0);
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "%s: spent %d", path,
-                        (((long long)t1.tv_sec * 1000000LL) +
-                          (long long)t1.tv_usec) -
-                        (((long long)t0.tv_sec * 1000000LL) +
-                          (long long)t0.tv_usec));
-#endif
-    return handle;
-  }
-
-  int fd;
-  void * buf = NULL;
-  uint32_t lib_size = s.GetUncompressedSize();
-  int cache_fd = 0;
-  if (s.GetType() == Zip::Stream::DEFLATE) {
-    cache_fd = lookupLibCacheFd(path);
-    fd = cache_fd;
-    if (fd < 0)
-      fd = createAshmem(lib_size, path);
-#ifdef DEBUG
-    else
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s from cache", path);
-#endif
-    if (fd < 0) {
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't open " ASHMEM_NAME_DEF ", Error %d, %s, bailing out", errno, strerror(errno));
-      return NULL;
-    }
-    buf = mmap(NULL, lib_size,
-               PROT_READ | PROT_WRITE,
-               MAP_SHARED, fd, 0);
-    if (buf == (void *)-1) {
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't mmap decompression buffer");
-      close(fd);
-      return NULL;
-    }
-
-    if (cache_fd < 0) {
-      extractLib(s, buf);
-#ifdef ANDROID_ARM_LINKER
-      /* We just extracted data that is going to be executed in the future.
-       * We thus need to ensure Instruction and Data cache coherency. */
-      cacheflush((unsigned) buf, (unsigned) buf + s.GetUncompressedSize(), 0);
-#endif
-      addLibCacheFd(path, fd, lib_size, buf);
-    }
-
-    // preload libxul, to avoid slowly demand-paging it
-    if (!strcmp(path, "libxul.so"))
-      madvise(buf, s.GetUncompressedSize(), MADV_WILLNEED);
-  }
-
-#ifdef DEBUG
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d (0x%08x)", path, lib_size, lib_size);
-#endif
-
-  handle = moz_mapped_dlopen(path, RTLD_LAZY, fd, buf,
-                             lib_size, 0);
-  if (!handle)
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't load %s because %s", path, __wrap_dlerror());
-
-  if (buf)
-    munmap(buf, lib_size);
-
-#ifdef DEBUG
-  gettimeofday(&t1, 0);
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "%s: spent %d", path, (((long long)t1.tv_sec * 1000000LL) + (long long)t1.tv_usec) -
-               (((long long)t0.tv_sec * 1000000LL) + (long long)t0.tv_usec));
-#endif
-
-  return handle;
-}
-#endif
 
 #ifdef MOZ_CRASHREPORTER
 static void *
@@ -683,20 +416,10 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
     info->file_id = strndup(entry + strlen(name) + 1, 32);
 }
 
-#ifdef MOZ_OLD_LINKER
-extern "C" void simple_linker_init(void);
-#endif
-
 static mozglueresult
 loadGeckoLibs(const char *apkName)
 {
   chdir(getenv("GRE_HOME"));
-
-#ifdef MOZ_OLD_LINKER
-  struct stat status;
-  if (!stat(apkName, &status))
-    apk_mtime = status.st_mtime;
-#endif
 
   MOZTime t0 = MOZ_Now();
   struct rusage usage1;
@@ -708,20 +431,12 @@ loadGeckoLibs(const char *apkName)
   file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
-#ifndef MOZ_OLD_LINKER
   char *file = new char[strlen(apkName) + sizeof("!/libxpcom.so")];
   sprintf(file, "%s!/libxpcom.so", apkName);
   __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   // libxul.so is pulled from libxpcom.so, so we don't need to give the full path
   xul_handle = __wrap_dlopen("libxul.so", RTLD_GLOBAL | RTLD_LAZY);
   delete[] file;
-#else
-#define MOZLOAD(name) mozload("lib" name ".so", zip)
-  MOZLOAD("mozalloc");
-  xul_handle = MOZLOAD("xul");
-  MOZLOAD("xpcom");
-#undef MOZLOAD
-#endif
 
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
@@ -794,17 +509,6 @@ static int loadSQLiteLibs(const char *apkName)
 {
   chdir(getenv("GRE_HOME"));
 
-#ifdef MOZ_OLD_LINKER
-  if (!simple_linker_initialized) {
-    simple_linker_init();
-    simple_linker_initialized = true;
-  }
-
-  struct stat status;
-  if (!stat(apkName, &status))
-    apk_mtime = status.st_mtime;
-#endif
-
   RefPtr<Zip> zip = new Zip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
@@ -814,16 +518,10 @@ static int loadSQLiteLibs(const char *apkName)
   file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
-#ifndef MOZ_OLD_LINKER
   char *file = new char[strlen(apkName) + sizeof("!/libmozsqlite3.so")];
   sprintf(file, "%s!/libmozsqlite3.so", apkName);
   sqlite_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
-#else
-#define MOZLOAD(name) mozload("lib" name ".so", zip)
-  sqlite_handle = MOZLOAD("mozsqlite3");
-#undef MOZLOAD
-#endif
 
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
@@ -844,17 +542,6 @@ loadNSSLibs(const char *apkName)
 {
   chdir(getenv("GRE_HOME"));
 
-#ifdef MOZ_OLD_LINKER
-  if (!simple_linker_initialized) {
-    simple_linker_init();
-    simple_linker_initialized = true;
-  }
-
-  struct stat status;
-  if (!stat(apkName, &status))
-    apk_mtime = status.st_mtime;
-#endif
-
   RefPtr<Zip> zip = new Zip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
@@ -864,7 +551,6 @@ loadNSSLibs(const char *apkName)
   file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
-#ifndef MOZ_OLD_LINKER
   char *file = new char[strlen(apkName) + sizeof("!/libnss3.so")];
   sprintf(file, "%s!/libnss3.so", apkName);
   nss_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
@@ -879,20 +565,6 @@ loadNSSLibs(const char *apkName)
   sprintf(file, "%s!/libplc4.so", apkName);
   plc_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
-#else
-#define MOZLOAD(name) mozload("lib" name ".so", zip)
-  nspr_handle = MOZLOAD("nspr4");
-  plc_handle = MOZLOAD("plc4");
-  MOZLOAD("plds4");
-  MOZLOAD("nssutil3");
-  nss_handle = MOZLOAD("nss3");
-  MOZLOAD("ssl3");
-  MOZLOAD("smime3");
-  MOZLOAD("nssckbi");
-  MOZLOAD("freebl3");
-  MOZLOAD("softokn3");
-#undef MOZLOAD
-#endif
 
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
@@ -937,11 +609,7 @@ Java_org_mozilla_gecko_GeckoAppShell_loadGeckoLibsNative(JNIEnv *jenv, jclass jG
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
   if (jShouldExtract) {
-#ifdef MOZ_OLD_LINKER
-    extractLibs = 1;
-#else
     putenv("MOZ_LINKER_EXTRACT=1");
-#endif
   }
 
   const char* str;
@@ -963,11 +631,7 @@ Java_org_mozilla_gecko_GeckoAppShell_loadSQLiteLibsNative(JNIEnv *jenv, jclass j
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
   if (jShouldExtract) {
-#ifdef MOZ_OLD_LINKER
-    extractLibs = 1;
-#else
     putenv("MOZ_LINKER_EXTRACT=1");
-#endif
   }
 
   const char* str;
@@ -1020,9 +684,6 @@ ChildProcessInit(int argc, char* argv[])
     break;
   }
 
-#ifdef MOZ_OLD_LINKER
-  fillLibCache(argv[argc - 1]);
-#endif
   if (loadNSSLibs(argv[i]) != SUCCESS) {
     return FAILURE;
   }

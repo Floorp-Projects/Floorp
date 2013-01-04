@@ -63,3 +63,4 @@ fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-qui
 == colspan-distribute-to-empty-1a.html colspan-distribute-to-empty-1-ref.html
 == colspan-distribute-to-empty-1b.html colspan-distribute-to-empty-1-ref.html
 == colspan-distribute-to-empty-2.html colspan-distribute-to-empty-2-ref.html
+== distribute-percent-nonoriginating.html distribute-percent-nonoriginating-ref.html

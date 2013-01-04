@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIView_h___
-#define nsIView_h___
+#ifndef nsView_h__
+#define nsView_h__
 
 #include "nsISupports.h"
 #include "nsCoord.h"
@@ -13,10 +13,15 @@
 #include "nsNativeWidget.h"
 #include "nsIWidget.h"
 #include "nsWidgetInitData.h"
+#include "nsRegion.h"
+#include "nsCRT.h"
+#include "nsIFactory.h"
+#include "nsEvent.h"
+#include "nsIWidgetListener.h"
+#include <stdio.h>
 
 class nsIViewManager;
 class nsViewManager;
-class nsView;
 class nsIWidget;
 class nsIFrame;
 
@@ -28,10 +33,6 @@ enum nsViewVisibility {
   nsViewVisibility_kHide = 0,
   nsViewVisibility_kShow = 1
 };
-
-#define NS_IVIEW_IID    \
-  { 0xa4577c1d, 0xbc80, 0x444c, \
-    { 0xb0, 0x9d, 0x5b, 0xef, 0x94, 0x7c, 0x43, 0x31 } }
 
 // Public view flags
 
@@ -61,17 +62,12 @@ enum nsViewVisibility {
  * of a view, go through nsIViewManager.
  */
 
-class nsIView
+class nsView MOZ_FINAL : public nsIWidgetListener
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
+  friend class nsViewManager;
 
-  /**
-   * Find the view for the given widget, if there is one.
-   * @return the view the widget belongs to, or null if the widget doesn't
-   * belong to any view.
-   */
-  static nsIView* GetViewFor(nsIWidget* aWidget);
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   /**
    * Get the view manager which "owns" the view.
@@ -81,6 +77,14 @@ public:
    */
   nsIViewManager* GetViewManager() const
   { return reinterpret_cast<nsIViewManager*>(mViewManager); }
+  nsViewManager* GetViewManagerInternal() const { return mViewManager; }
+
+  /**
+   * Find the view for the given widget, if there is one.
+   * @return the view the widget belongs to, or null if the widget doesn't
+   * belong to any view.
+   */
+  static nsView* GetViewFor(nsIWidget* aWidget);
 
   /**
    * Destroy the view.
@@ -103,19 +107,11 @@ public:
    * @param y out parameter for y position
    */
   nsPoint GetPosition() const {
-    // Call ExternalIsRoot here so that we can get to it from other
-    // components
-    NS_ASSERTION(!ExternalIsRoot() || (mPosX == 0 && mPosY == 0),
+    NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
                  "root views should always have explicit position of (0,0)");
     return nsPoint(mPosX, mPosY);
   }
 
-  /**
-   * Set the position of a view. This does not cause any invalidation. It
-   * does reposition any widgets in this view or its descendants.
-   */
-  virtual void SetPosition(nscoord aX, nscoord aY) = 0;
-  
   /**
    * Called to get the dimensions and position of the view's bounds.
    * The view's bounds (x,y) are relative to the origin of the parent view, but
@@ -152,7 +148,7 @@ public:
    * NOTE: this actually returns the offset from aOther to |this|, but
    * that offset is added to transform _coordinates_ from |this| to aOther.
    */
-  nsPoint GetOffsetTo(const nsIView* aOther) const;
+  nsPoint GetOffsetTo(const nsView* aOther) const;
 
   /**
    * Get the offset between the origin of |this| and the origin of aWidget.
@@ -190,22 +186,19 @@ public:
    * Called to query the parent of the view.
    * @result view's parent
    */
-  nsIView* GetParent() const { return reinterpret_cast<nsIView*>(mParent); }
+  nsView* GetParent() const { return mParent; }
 
   /**
    * The view's first child is the child which is earliest in document order.
    * @result first child
    */
-  nsIView* GetFirstChild() const { return reinterpret_cast<nsIView*>(mFirstChild); }
+  nsView* GetFirstChild() const { return mFirstChild; }
 
   /**
    * Called to query the next sibling of the view.
    * @result view's next sibling
    */
-  nsIView* GetNextSibling() const { return reinterpret_cast<nsIView*>(mNextSibling); }
-  void SetNextSibling(nsIView *aSibling) {
-    mNextSibling = reinterpret_cast<nsView*>(aSibling);
-  }
+  nsView* GetNextSibling() const { return mNextSibling; }
 
   /**
    * Set the view's frame.
@@ -226,10 +219,8 @@ public:
    * @return the widget closest to this view; can be null because some view trees
    * don't have widgets at all (e.g., printing), but if any view in the view tree
    * has a widget, then it's safe to assume this will not return null
-   * XXX Remove this 'virtual' when gfx+widget are merged into gklayout;
-   * Mac widget depends on this method, which is BOGUS!
    */
-  virtual nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
+  nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
 
   /**
    * Create a widget to associate with this view.  This variant of
@@ -312,7 +303,6 @@ public:
       mForcedRepaint = aForceRepaint; 
     }
   }
-  bool ForcedRepaint() { return mForcedRepaint; }
 
   /**
    * Make aWidget direct its events to this view.
@@ -340,11 +330,7 @@ public:
    */
   bool IsRoot() const;
 
-  virtual bool ExternalIsRoot() const;
-
   nsIntRect CalcWidgetBounds(nsWindowType aType);
-
-  bool IsEffectivelyVisible();
 
   // This is an app unit offset to add when converting view coordinates to
   // widget coordinates.  It is the offset in view coordinates from widget
@@ -352,13 +338,135 @@ public:
   // origin) to view origin expressed in appunits of this.
   nsPoint ViewToWidgetOffset() const { return mViewToWidgetOffset; }
 
-protected:
+  /**
+   * Called to indicate that the position of the view has been changed.
+   * The specified coordinates are in the parent view's coordinate space.
+   * @param x new x position
+   * @param y new y position
+   */
+  void SetPosition(nscoord aX, nscoord aY);
+
+  /**
+   * Called to indicate that the z-index of a view has been changed.
+   * The z-index is relative to all siblings of the view.
+   * @param aAuto Indicate that the z-index of a view is "auto". An "auto" z-index
+   * means that the view does not define a new stacking context,
+   * which means that the z-indicies of the view's children are
+   * relative to the view's siblings.
+   * @param zindex new z depth
+   */
+  void SetZIndex(bool aAuto, int32_t aZIndex, bool aTopMost);
+  bool GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
+  int32_t GetZIndex() const { return mZIndex; }
+
+  void SetParent(nsView *aParent) { mParent = aParent; }
+  void SetNextSibling(nsView *aSibling)
+  {
+    NS_ASSERTION(aSibling != this, "Can't be our own sibling!");
+    mNextSibling = aSibling;
+  }
+
+  nsRegion* GetDirtyRegion() {
+    if (!mDirtyRegion) {
+      NS_ASSERTION(!mParent || GetFloating(),
+                   "Only display roots should have dirty regions");
+      mDirtyRegion = new nsRegion();
+      NS_ASSERTION(mDirtyRegion, "Out of memory!");
+    }
+    return mDirtyRegion;
+  }
+
+  // nsIWidgetListener
+  virtual nsIPresShell* GetPresShell() MOZ_OVERRIDE;
+  virtual nsView* GetView() MOZ_OVERRIDE { return this; }
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) MOZ_OVERRIDE;
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) MOZ_OVERRIDE;
+  virtual bool RequestWindowClose(nsIWidget* aWidget) MOZ_OVERRIDE;
+  virtual void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint) MOZ_OVERRIDE;
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) MOZ_OVERRIDE;
+  virtual void DidPaintWindow() MOZ_OVERRIDE;
+  virtual void RequestRepaint() MOZ_OVERRIDE;
+  virtual nsEventStatus HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents) MOZ_OVERRIDE;
+
+  virtual ~nsView();
+
+  nsPoint GetOffsetTo(const nsView* aOther, const int32_t aAPD) const;
+  nsIWidget* GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const;
+
+private:
+  nsView(nsViewManager* aViewManager = nullptr,
+          nsViewVisibility aVisibility = nsViewVisibility_kShow);
+
+  bool ForcedRepaint() { return mForcedRepaint; }
+
+  // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
+  // call this method if we have no widget.
+  void DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize);
+  void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
+
+  bool IsEffectivelyVisible();
+
+  /**
+   * Called to indicate that the dimensions of the view have been changed.
+   * The x and y coordinates may be < 0, indicating that the view extends above
+   * or to the left of its origin position. The term 'dimensions' indicates it
+   * is relative to this view.
+   */
+  void SetDimensions(const nsRect &aRect, bool aPaint = true,
+                     bool aResizeWidget = true);
+
+  /**
+   * Called to indicate that the visibility of a view has been
+   * changed.
+   * @param visibility new visibility state
+   */
+  void SetVisibility(nsViewVisibility visibility);
+
+  /**
+   * Set/Get whether the view "floats" above all other views,
+   * which tells the compositor not to consider higher views in
+   * the view hierarchy that would geometrically intersect with
+   * this view. This is a hack, but it fixes some problems with
+   * views that need to be drawn in front of all other views.
+   * @result true if the view floats, false otherwise.
+   */
+  void SetFloating(bool aFloatingView);
+
+  // Helper function to get mouse grabbing off this view (by moving it to the
+  // parent, if we can)
+  void DropMouseGrabbing();
+
+  // Same as GetBounds but converts to parent appunits if they are different.
+  nsRect GetBoundsInParentUnits() const;
+
+  bool HasNonEmptyDirtyRegion() {
+    return mDirtyRegion && !mDirtyRegion->IsEmpty();
+  }
+
+  void InsertChild(nsView *aChild, nsView *aSibling);
+  void RemoveChild(nsView *aChild);
+
+  void SetTopMost(bool aTopMost) { aTopMost ? mVFlags |= NS_VIEW_FLAG_TOPMOST : mVFlags &= ~NS_VIEW_FLAG_TOPMOST; }
+  bool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
+
+  void ResetWidgetBounds(bool aRecurse, bool aForceSync);
+  void AssertNoWindow();
+
+  void NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible);
+
+  // Update the cached RootViewManager for all view manager descendents,
+  // If the hierarchy is being removed, aViewManagerParent points to the view
+  // manager for the hierarchy's old parent, and will have its mouse grab
+  // released if it points to any view in this view hierarchy.
+  void InvalidateHierarchy(nsViewManager *aViewManagerParent);
+
   nsViewManager     *mViewManager;
-  nsView            *mParent;
+  nsView           *mParent;
   nsIWidget         *mWindow;
-  nsView            *mNextSibling;
-  nsView            *mFirstChild;
+  nsView           *mNextSibling;
+  nsView           *mFirstChild;
   nsIFrame          *mFrame;
+  nsRegion          *mDirtyRegion;
   int32_t           mZIndex;
   nsViewVisibility  mVis;
   // position relative our parent view origin but in our appunits
@@ -372,14 +480,6 @@ protected:
   bool              mWidgetIsTopLevel;
   bool              mForcedRepaint;
   bool              mInAlternatePaint;
-
-  virtual ~nsIView() {}
-
-private:
-  nsView* Impl();
-  const nsView* Impl() const;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIView, NS_IVIEW_IID)
 
 #endif

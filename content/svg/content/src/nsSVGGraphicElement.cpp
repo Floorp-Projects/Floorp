@@ -176,14 +176,14 @@ nsSVGGraphicElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
-//----------------------------------------------------------------------
-// nsSVGElement overrides
-
 bool
-nsSVGGraphicElement::IsEventName(nsIAtom* aName)
+nsSVGGraphicElement::IsEventAttributeName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement overrides
 
 gfxMatrix
 nsSVGGraphicElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,

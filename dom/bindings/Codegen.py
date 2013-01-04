@@ -1936,12 +1936,16 @@ class CallbackObjectUnwrapper:
                               "codeOnFailure" : CGIndenter(CGGeneric(codeOnFailure)).define() }
 
     def __str__(self):
+        checkObjectType = CGIfWrapper(
+            CGGeneric(self.substitution["codeOnFailure"]),
+            "!IsConvertibleToCallbackInterface(cx, %(source)s)" %
+            self.substitution).define() + "\n\n"
         if self.descriptor.workers:
-            return string.Template(
+            return checkObjectType + string.Template(
                 "${target} = ${source};"
                 ).substitute(self.substitution)
 
-        return string.Template(
+        return checkObjectType + string.Template(
             """nsresult rv;
 XPCCallContext ccx(JS_CALLER, cx);
 if (!ccx.IsValid()) {
@@ -2001,7 +2005,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isClamp=False,
                                     isNullOrUndefined=False,
                                     exceptionCode=None,
-                                    lenientFloatCode=None):
+                                    lenientFloatCode=None,
+                                    allowTreatNonCallableAsNull=False):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -2041,6 +2046,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
     If lenientFloatCode is not None, it should be used in cases when
     we're a non-finite float that's not unrestricted.
+
+    If allowTreatNonCallableAsNull is true, then [TreatNonCallableAsNull]
+    extended attributes on nullable callback functions will be honored.
 
     The return value from this function is a tuple consisting of four things:
 
@@ -2313,9 +2321,6 @@ for (uint32_t i = 0; i < length; ++i) {
             memberType = arrayObjectMemberTypes[0]
             name = memberType.name
             arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${obj}, ${val}, ${valPtr}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
-            # XXX Now we're supposed to check for an array or a platform object
-            # that supports indexed properties... skip that last for now. It's a
-            # bit of a pain.
             arrayObject = CGWrapper(CGIndenter(arrayObject),
                                     pre="if (IsArrayLike(cx, &argObj)) {\n",
                                     post="}")
@@ -2354,14 +2359,6 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             dictionaryObject = None
 
-        if callbackObject or dictionaryObject:
-            nonPlatformObject = CGList([callbackObject, dictionaryObject], "\n")
-            nonPlatformObject = CGWrapper(CGIndenter(nonPlatformObject),
-                                          pre="if (!IsPlatformObject(cx, &argObj)) {\n",
-                                          post="\n}")
-        else:
-            nonPlatformObject = None
-
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
             object = CGGeneric("%s.SetToObject(&argObj);\n"
@@ -2369,32 +2366,32 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             object = None
 
-        hasObjectTypes = interfaceObject or arrayObject or dateObject or nonPlatformObject or object
+        hasObjectTypes = interfaceObject or arrayObject or dateObject or callbackObject or dictionaryObject or object
         if hasObjectTypes:
-            # If we try more specific object types first then we need to check
-            # whether that succeeded before converting to object.
-            if object and (interfaceObject or arrayObject or dateObject or nonPlatformObject):
-                object = CGWrapper(CGIndenter(object), pre="if (!done) {\n",
-                                   post=("\n}"))
-
-            if arrayObject or dateObject or nonPlatformObject:
-                # An object can be both an array object and not a platform
-                # object, but we shouldn't have both in the union's members
+            # "object" is not distinguishable from other types
+            assert not object or not (interfaceObject or arrayObject or dateObject or callbackObject or dictionaryObject)
+            if arrayObject or dateObject or callbackObject or dictionaryObject:
+                # An object can be both an array object and a callback or
+                # dictionary, but we shouldn't have both in the union's members
                 # because they are not distinguishable.
-                assert not (arrayObject and nonPlatformObject)
-                templateBody = CGList([arrayObject, dateObject, nonPlatformObject], " else ")
+                assert not (arrayObject and callbackObject)
+                assert not (arrayObject and dictionaryObject)
+                assert not (dictionaryObject and callbackObject)
+                templateBody = CGList([arrayObject, dateObject, callbackObject,
+                                       dictionaryObject], " else ")
             else:
                 templateBody = None
             if interfaceObject:
+                assert not object
                 if templateBody:
-                    templateBody = CGList([templateBody, object], "\n")
                     templateBody = CGWrapper(CGIndenter(templateBody),
                                              pre="if (!done) {\n", post=("\n}"))
                 templateBody = CGList([interfaceObject, templateBody], "\n")
             else:
                 templateBody = CGList([templateBody, object], "\n")
 
-            if any([arrayObject, dateObject, nonPlatformObject, object]):
+            if any([arrayObject, dateObject, callbackObject, dictionaryObject,
+                    object]):
                 templateBody.prepend(CGGeneric("JSObject& argObj = ${val}.toObject();"))
             templateBody = CGWrapper(CGIndenter(templateBody),
                                      pre="if (${val}.isObject()) {\n",
@@ -2795,7 +2792,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 "%s\n"
                 "  }\n" % (name, CGIndenter(exceptionCodeIndented).define()))
 
-        if type.treatNonCallableAsNull():
+        if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
             if not isDefinitelyObject:
                 haveCallable = "${val}.isObject() && " + haveCallable
@@ -2869,8 +2866,10 @@ for (uint32_t i = 0; i < length; ++i) {
         return (template, declType, None, isOptional)
 
     if type.isDictionary():
-        if failureCode is not None:
-            raise TypeError("Can't handle dictionaries when failureCode is not None")
+        if failureCode is not None and not isDefinitelyObject:
+            raise TypeError("Can't handle dictionaries when failureCode is "
+                            "not None and we don't know we're an object")
+
         # There are no nullable dictionaries
         assert not type.nullable()
         # All optional dictionaries always have default values, so we
@@ -2892,15 +2891,29 @@ for (uint32_t i = 0; i < length; ++i) {
 
         # We do manual default value handling here, because we
         # actually do want a jsval, and we only handle null anyway
-        if defaultValue is not None:
+        # NOTE: if isNullOrUndefined or isDefinitelyObject are true,
+        # we know we have a value, so we don't have to worry about the
+        # default value.
+        if (not isNullOrUndefined and not isDefinitelyObject and
+            defaultValue is not None):
             assert(isinstance(defaultValue, IDLNullValue))
             val = "(${haveValue}) ? ${val} : JSVAL_NULL"
         else:
             val = "${val}"
 
-        template = ("if (!%s.Init(cx, ${obj}, %s)) {\n"
-                    "%s\n"
-                    "}" % (selfRef, val, exceptionCodeIndented.define()))
+        if failureCode is not None:
+            assert isDefinitelyObject
+            # Check that the value we have can in fact be converted to
+            # a dictionary, and return failureCode if not.
+            template = CGIfWrapper(
+                CGGeneric(failureCode),
+                "!IsConvertibleToDictionary(cx, &${val}.toObject())").define() + "\n\n"
+        else:
+            template = ""
+
+        template += ("if (!%s.Init(cx, ${obj}, %s)) {\n"
+                     "%s\n"
+                     "}" % (selfRef, val, exceptionCodeIndented.define()))
 
         return (template, declType, None, False)
 
@@ -3090,7 +3103,8 @@ class CGArgumentConverter(CGThing):
     unwrap the argument to the right native type.
     """
     def __init__(self, argument, index, argv, argc, descriptorProvider,
-                 invalidEnumValueFatal=True, lenientFloatCode=None):
+                 invalidEnumValueFatal=True, lenientFloatCode=None,
+                 allowTreatNonCallableAsNull=False):
         CGThing.__init__(self)
         self.argument = argument
         assert(not argument.defaultValue or argument.optional)
@@ -3120,6 +3134,7 @@ class CGArgumentConverter(CGThing):
             self.argcAndIndex = None
         self.invalidEnumValueFatal = invalidEnumValueFatal
         self.lenientFloatCode = lenientFloatCode
+        self.allowTreatNonCallableAsNull = allowTreatNonCallableAsNull
 
     def define(self):
         typeConversion = getJSToNativeConversionTemplate(
@@ -3134,7 +3149,8 @@ class CGArgumentConverter(CGThing):
             isEnforceRange=self.argument.enforceRange,
             isClamp=self.argument.clamp,
             lenientFloatCode=self.lenientFloatCode,
-            isMember=self.argument.variadic)
+            isMember=self.argument.variadic,
+            allowTreatNonCallableAsNull=self.allowTreatNonCallableAsNull)
 
         if not self.argument.variadic:
             return instantiateJSToNativeConversionTemplate(
@@ -3709,6 +3725,7 @@ class CGPerSignatureCall(CGThing):
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
                                              invalidEnumValueFatal=not setter,
+                                             allowTreatNonCallableAsNull=setter,
                                              lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
 
@@ -4010,19 +4027,17 @@ class CGMethodCall(CGThing):
             # The spec says to check for the following things in order:
             # 1)  A platform object that's not a platform array object, being
             #     passed to an interface or "object" arg.
-            # 2)  A platform array object or Array or platform object with
-            #     indexed properties being passed to an array or sequence or
+            # 2)  A Date object being passed to a Date or "object" arg.
+            # 3)  A RegExp object being passed to a RegExp or "object" arg.
+            # 4)  A callable object being passed to a callback or "object" arg.
+            # 5)  Any non-Date and non-RegExp object being passed to a
+            #     array or sequence or callback interface dictionary or
             #     "object" arg.
-            # 3)  A Date object being passed to a Date or "object" arg
-            # 4)  Some other kind of object being passed to a callback
-            #     interface, callback function, dictionary, or "object" arg.
             #
-            # Unfortunately, we cannot push the "some other kind of object"
-            # check down into case 4, because dictionaries _can_ normally be
-            # initialized from platform objects. But we can coalesce the other
-            # three cases together, as long as we make sure to check whether our
-            # object works as an interface argument before checking whether it
-            # works as an arraylike.
+            # We can can coalesce these five cases together, as long as we make
+            # sure to check whether our object works as an interface argument
+            # before checking whether it works as an arraylike or dictionary or
+            # callback function or callback interface.
 
             # First grab all the overloads that have a non-callback interface
             # (which includes typed arrays and arraybuffers) at the
@@ -4034,14 +4049,21 @@ class CGMethodCall(CGThing):
                 if (distinguishingType(s).isObject() or
                     distinguishingType(s).isNonCallbackInterface()) ]
 
-            # Now append all the overloads that take an array or sequence:
-            objectSigs.extend(s for s in possibleSignatures
-                              if (distinguishingType(s).isArray() or
-                                  distinguishingType(s).isSequence()))
-
             # And all the overloads that take Date
             objectSigs.extend(s for s in possibleSignatures
                               if distinguishingType(s).isDate())
+
+            # And all the overloads that take callbacks
+            objectSigs.extend(s for s in possibleSignatures
+                              if distinguishingType(s).isCallback())
+
+            # Now append all the overloads that take an array or sequence or
+            # dictionary or callback interface:
+            objectSigs.extend(s for s in possibleSignatures
+                              if (distinguishingType(s).isArray() or
+                                  distinguishingType(s).isSequence() or
+                                  distinguishingType(s).isDictionary() or
+                                  distinguishingType(s).isCallbackInterface()))
 
             # There might be more than one thing in objectSigs; we need to check
             # which ones we unwrap to.
@@ -4066,14 +4088,6 @@ class CGMethodCall(CGThing):
                     caseBody.append(CGIndenter(CGGeneric("} while (0);")))
 
                 caseBody.append(CGGeneric("}"))
-
-            # Check for vanilla JS objects
-            # XXXbz Do we need to worry about security wrappers?
-            pickFirstSignature("%s.isObject() && !IsPlatformObject(cx, &%s.toObject())" %
-                               (distinguishingArg, distinguishingArg),
-                               lambda s: (distinguishingType(s).isCallback() or
-                                          distinguishingType(s).isCallbackInterface() or
-                                          distinguishingType(s).isDictionary()))
 
             # The remaining cases are mutually exclusive.  The
             # pickFirstSignature calls are what change caseBody
@@ -4541,11 +4555,14 @@ class CGMemberJITInfo(CGThing):
     def declare(self):
         return ""
 
-    def defineJitInfo(self, infoName, opName, opType, infallible, constant):
+    def defineJitInfo(self, infoName, opName, opType, infallible, constant,
+                      returnTypes):
         protoID = "prototypes::id::%s" % self.descriptor.name
         depth = "PrototypeTraits<%s>::Depth" % protoID
         failstr = toStringBool(infallible)
         conststr = toStringBool(constant)
+        returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
+                            "")
         return ("\n"
                 "const JSJitInfo %s = {\n"
                 "  %s,\n"
@@ -4553,9 +4570,10 @@ class CGMemberJITInfo(CGThing):
                 "  %s,\n"
                 "  JSJitInfo::%s,\n"
                 "  %s,  /* isInfallible. False in setters. */\n"
-                "  %s  /* isConstant. Only relevant for getters. */\n"
+                "  %s,  /* isConstant. Only relevant for getters. */\n"
+                "  %s   /* returnType.  Only relevant for getters/methods. */\n"
                 "};\n" % (infoName, opName, protoID, depth, opType, failstr,
-                          conststr))
+                          conststr, returnType))
 
     def define(self):
         if self.member.isAttr():
@@ -4565,13 +4583,15 @@ class CGMemberJITInfo(CGThing):
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             getterconst = self.member.getExtendedAttribute("Constant")
             result = self.defineJitInfo(getterinfo, getter, "Getter",
-                                        getterinfal, getterconst)
+                                        getterinfal, getterconst,
+                                        [self.member.type])
             if not self.member.readonly or self.member.getExtendedAttribute("PutForwards") is not None:
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
                 setter = ("(JSJitPropertyOp)set_%s" % self.member.identifier.name)
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
-                                             False, False)
+                                             False, False,
+                                             [BuiltinTypes[IDLBuiltinType.Types.void]])
             return result
         if self.member.isMethod():
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
@@ -4593,9 +4613,84 @@ class CGMemberJITInfo(CGThing):
                     methodInfal = True
 
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, False)
+                                        methodInfal, False,
+                                        [s[0] for s in sigs])
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
+
+    @staticmethod
+    def getJSReturnTypeTag(t):
+        if t.nullable():
+            # Sometimes it might return null, sometimes not
+            return "JSVAL_TYPE_UNKNOWN"
+        if t.isVoid():
+            # No return, every time
+            return "JSVAL_TYPE_UNDEFINED"
+        if t.isArray():
+            # No idea yet
+            assert False
+        if t.isSequence():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isGeckoInterface():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isString():
+            return "JSVAL_TYPE_STRING"
+        if t.isEnum():
+            return "JSVAL_TYPE_STRING"
+        if t.isCallback():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isAny():
+            # The whole point is to return various stuff
+            return "JSVAL_TYPE_UNKNOWN"
+        if t.isObject():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isSpiderMonkeyInterface():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isUnion():
+            u = t.unroll();
+            if u.hasNullableType:
+                # Might be null or not
+                return "JSVAL_TYPE_UNKNOWN"
+            return reduce(CGMemberJITInfo.getSingleReturnType,
+                          u.flatMemberTypes, "")
+        if t.isDictionary():
+            return "JSVAL_TYPE_OBJECT"
+        if not t.isPrimitive():
+            raise TypeError("No idea what type " + str(t) + " is.")
+        tag = t.tag()
+        if tag in [IDLType.Tags.int8, IDLType.Tags.uint8,
+                   IDLType.Tags.int16, IDLType.Tags.uint16,
+                   IDLType.Tags.int32, IDLType.Tags.bool]:
+            return "JSVAL_TYPE_INT32"
+        if tag in [IDLType.Tags.int64, IDLType.Tags.uint64,
+                   IDLType.Tags.unrestricted_float, IDLType.Tags.float,
+                   IDLType.Tags.unrestricted_double, IDLType.Tags.double]:
+            # These all use JS_NumberValue, which can return int or double.
+            # But TI treats "double" as meaning "int or double", so we're
+            # good to return JSVAL_TYPE_DOUBLE here.
+            return "JSVAL_TYPE_DOUBLE"
+        if tag != IDLType.Tags.uint32:
+            raise TypeError("No idea what type " + str(t) + " is.")
+        # uint32 is sometimes int and sometimes double.
+        return "JSVAL_TYPE_DOUBLE"
+
+    @staticmethod
+    def getSingleReturnType(existingType, t):
+        type = CGMemberJITInfo.getJSReturnTypeTag(t)
+        if existingType == "":
+            # First element of the list; just return its type
+            return type
+
+        if type == existingType:
+            return existingType
+        if ((type == "JSVAL_TYPE_DOUBLE" and
+             existingType == "JSVAL_TYPE_INT32") or
+            (existingType == "JSVAL_TYPE_DOUBLE" and
+             type == "JSVAL_TYPE_INT32")):
+            # Promote INT32 to DOUBLE as needed
+            return "JSVAL_TYPE_DOUBLE"
+        # Different types
+        return "JSVAL_TYPE_UNKNOWN"
 
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
@@ -6551,8 +6646,8 @@ class CGDictionary(CGThing):
             ("  JSBool found;\n"
              "  JS::Value temp;\n" if len(memberInits) > 0 else "") +
             "  bool isNull = val.isNullOrUndefined();\n"
-            "  if (!isNull && !val.isObject()) {\n"
-            "    return ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n"
+            "  if (!IsConvertibleToDictionary(cx, val)) {\n"
+            "    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
             "  }\n"
             "\n"
             "${initMembers}\n"

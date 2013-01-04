@@ -32,6 +32,10 @@ public:
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                       int32_t aModType) const;
 
+
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
+
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const;
   virtual const gfxMatrix* GetAnimateMotionTransform() const;
@@ -45,7 +49,6 @@ public:
 
 protected:
   // nsSVGElement overrides
-  virtual bool IsEventName(nsIAtom* aName);
 
   nsAutoPtr<mozilla::SVGAnimatedTransformList> mTransforms;
 
