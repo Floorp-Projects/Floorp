@@ -385,22 +385,25 @@ HistoryTracker.prototype = {
     Ci.nsISupportsWeakReference
   ]),
 
-  onBeginUpdateBatch: function HT_onBeginUpdateBatch() {},
-  onEndUpdateBatch: function HT_onEndUpdateBatch() {},
-  onPageChanged: function HT_onPageChanged() {},
-  onTitleChanged: function HT_onTitleChanged() {},
-  onDeleteVisits: function () {},
-  onDeleteURI: function () {},
-
-  /* Every add is worth 1 point.
-   * OnBeforeDeleteURI will triggger a sync for MULTI-DEVICE (see below)
-   * Clearing all history will trigger a sync for MULTI-DEVICE (see below)
-   */
-  _upScoreXLarge: function HT__upScoreXLarge() {
-    this.score += SCORE_INCREMENT_XLARGE;
+  onDeleteAffectsGUID: function (uri, guid, reason, source, increment) {
+    if (this.ignoreAll || reason == Ci.nsINavHistoryObserver.REASON_EXPIRED) {
+      return;
+    }
+    this._log.trace(source + ": " + uri.spec + ", reason " + reason);
+    if (this.addChangedID(guid)) {
+      this.score += increment;
+    }
   },
 
-  onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans, guid) {
+  onDeleteVisits: function (uri, visitTime, guid, reason) {
+    this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteVisits", SCORE_INCREMENT_SMALL);
+  },
+
+  onDeleteURI: function (uri, guid, reason) {
+    this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteURI", SCORE_INCREMENT_XLARGE);
+  },
+
+  onVisit: function (uri, vid, time, session, referrer, trans, guid) {
     if (this.ignoreAll) {
       return;
     }
@@ -410,18 +413,18 @@ HistoryTracker.prototype = {
     }
   },
 
-  onBeforeDeleteURI: function onBeforeDeleteURI(uri, guid, reason) {
-    if (this.ignoreAll || reason == Ci.nsINavHistoryObserver.REASON_EXPIRED) {
-      return;
-    }
-    this._log.trace("onBeforeDeleteURI: " + uri.spec);
-    if (this.addChangedID(guid)) {
-      this._upScoreXLarge();
-    }
+  onClearHistory: function () {
+    this._log.trace("onClearHistory");
+    // Note that we're going to trigger a sync, but none of the cleared
+    // pages are tracked, so the deletions will not be propagated.
+    // See Bug 578694.
+    this.score += SCORE_INCREMENT_XLARGE;
   },
 
-  onClearHistory: function HT_onClearHistory() {
-    this._log.trace("onClearHistory");
-    this._upScoreXLarge();
-  }
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onPageChanged: function () {},
+  onTitleChanged: function () {},
+  onBeforeDeleteURI: function () {},
+  batching: function () {},
 };
