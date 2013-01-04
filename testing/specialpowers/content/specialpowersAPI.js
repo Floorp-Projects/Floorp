@@ -719,6 +719,14 @@ SpecialPowersAPI.prototype = {
     }
   },
 
+  // Disables the app install prompt for the duration of this test. There is
+  // no need to re-enable the prompt at the end of the test.
+  //
+  // The provided callback is invoked once the prompt is disabled.
+  autoConfirmAppInstall: function(cb) {
+    this.pushPrefEnv({set: [['dom.mozApps.auto_confirm_install', true]]}, cb);
+  },
+
   addObserver: function(obs, notification, weak) {
     var obsvc = Cc['@mozilla.org/observer-service;1']
                    .getService(Ci.nsIObserverService);
