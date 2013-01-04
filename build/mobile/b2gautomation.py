@@ -48,7 +48,7 @@ class B2GRemoteAutomation(Automation):
         self._product = "b2g"
         self.lastTestSeen = "b2gautomation.py"
         # Default log finish to mochitest standard
-        self.logFinish = 'INFO SimpleTest FINISHED' 
+        self.logFinish = 'INFO SimpleTest FINISHED'
         Automation.__init__(self)
 
     def setEmulator(self, is_emulator):
@@ -85,7 +85,7 @@ class B2GRemoteAutomation(Automation):
         env['MOZ_HIDE_RESULTS_TABLE'] = '1'
         return env
 
-    def waitForNet(self): 
+    def waitForNet(self):
         active = False
         time_out = 0
         while not active and time_out < 40:
@@ -106,15 +106,20 @@ class B2GRemoteAutomation(Automation):
         self._devicemanager.getDirectory(self._remoteProfile + '/minidumps/', dumpDir)
         crashed = automationutils.checkForCrashes(dumpDir, symbolsPath, self.lastTestSeen)
         try:
-          shutil.rmtree(dumpDir)
+            shutil.rmtree(dumpDir)
         except:
-          print "WARNING: unable to remove directory: %s" % (dumpDir)
+            print "WARNING: unable to remove directory: %s" % (dumpDir)
         return crashed
 
-    def initializeProfile(self, profileDir, extraPrefs = [], useServerLocations = False):
+    def initializeProfile(self,  profileDir, extraPrefs=[],
+                          useServerLocations=False,
+                          initialProfile=None):
         # add b2g specific prefs
         extraPrefs.extend(["browser.manifestURL='dummy (bug 772307)'"])
-        return Automation.initializeProfile(self, profileDir, extraPrefs, useServerLocations)
+        return Automation.initializeProfile(self, profileDir,
+                                            extraPrefs,
+                                            useServerLocations,
+                                            initialProfile)
 
     def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
         # if remote profile is specified, use that instead
@@ -165,7 +170,7 @@ class B2GRemoteAutomation(Automation):
         status = 'unknown'
 
         for line in self._devicemanager._runCmd(['devices']).stdout.readlines():
-            result =  re.match('(.*?)\t(.*)', line)
+            result = re.match('(.*?)\t(.*)', line)
             if result:
                 thisSerial = result.group(1)
                 if not serial or thisSerial == serial:
@@ -223,9 +228,9 @@ class B2GRemoteAutomation(Automation):
         if not self._is_emulator:
             self.rebootDevice()
             time.sleep(5)
-            #wait for wlan to come up 
+            #wait for wlan to come up
             if not self.waitForNet():
-                raise Exception("network did not come up, please configure the network" + 
+                raise Exception("network did not come up, please configure the network" +
                                 " prior to running before running the automation framework")
 
         # stop b2g
@@ -334,10 +339,33 @@ class B2GRemoteAutomation(Automation):
                     break
             return '\n'.join(lines)
 
-        def wait(self, timeout = None):
+        def wait(self, timeout=None):
             # this should never happen
             raise Exception("'wait' called on B2GInstance")
 
         def kill(self):
             # this should never happen
             raise Exception("'kill' called on B2GInstance")
+
+
+class B2GDesktopAutomation(Automation):
+
+    def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
+        """ build the application command line """
+
+        cmd = os.path.abspath(app)
+        args = []
+
+        if debuggerInfo:
+            args.extend(debuggerInfo["args"])
+            args.append(cmd)
+            cmd = os.path.abspath(debuggerInfo["path"])
+
+        if self.IS_MAC:
+            args.append("-foreground")
+
+        profileDirectory = profileDir + "/"
+
+        args.extend(("-profile", profileDirectory))
+        args.extend(extraArgs)
+        return cmd, args
