@@ -99,8 +99,8 @@ parent:
   sync HasSupport()
       returns (bool aHasSupport);
 
-  sync GetNumberOfMessagesForText(nsString aText)
-      returns (uint16_t aNumber);
+  sync GetSegmentInfoForText(nsString aText)
+      returns (SmsSegmentInfoData aResult);
 
   ClearMessageList(int32_t aListId);
 };

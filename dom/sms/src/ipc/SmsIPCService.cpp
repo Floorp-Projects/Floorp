@@ -11,6 +11,7 @@
 #include "mozilla/dom/sms/SmsMessage.h"
 #include "SmsFilter.h"
 #include "SmsRequest.h"
+#include "SmsSegmentInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -57,10 +58,15 @@ SmsIPCService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult)
+SmsIPCService::GetSegmentInfoForText(const nsAString & aText,
+                                     nsIDOMMozSmsSegmentInfo** aResult)
 {
-  GetSmsChild()->SendGetNumberOfMessagesForText(nsString(aText), aResult);
+  SmsSegmentInfoData data;
+  bool ok = GetSmsChild()->SendGetSegmentInfoForText(nsString(aText), &data);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info = new SmsSegmentInfo(data);
+  info.forget(aResult);
   return NS_OK;
 }
 
@@ -90,6 +96,18 @@ SmsIPCService::CreateSmsMessage(int32_t aId,
                             aSender, aReceiver,
                             aBody, aMessageClass, aTimestamp, aRead,
                             aCx, aMessage);
+}
+
+NS_IMETHODIMP
+SmsIPCService::CreateSmsSegmentInfo(int32_t aSegments,
+                                    int32_t aCharsPerSegment,
+                                    int32_t aCharsAvailableInLastSegment,
+                                    nsIDOMMozSmsSegmentInfo** aSegmentInfo)
+{
+  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info =
+      new SmsSegmentInfo(aSegments, aCharsPerSegment, aCharsAvailableInLastSegment);
+  info.forget(aSegmentInfo);
+  return NS_OK;
 }
 
 /*
