@@ -741,7 +741,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   if (tocpy > 0) {
     conduit->SendAudioFrame(samples_tmp, tocpy, rate, 0);
     samples_tmp += tocpy;
-    chunk_remaining = chunk.mDuration - tocpy;
+    chunk_remaining -= tocpy;
   }
   // Copy what remains for the next run
 
