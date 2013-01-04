@@ -8969,8 +8969,11 @@ let ICCRecordHelper = {
           debug("OPL: [" + (opl.length + 1) + "]: " + JSON.stringify(oplElement));
         }
         opl.push(oplElement);
+      } else {
+        Buf.seekIncoming(5 * PDU_HEX_OCTET_SIZE);
       }
       Buf.readStringDelimiter(len);
+
       if (options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
       } else {
