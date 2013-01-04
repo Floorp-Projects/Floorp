@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH           = @DEPTH@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+FAIL_ON_WARNINGS := 1
+
+include $(DEPTH)/config/autoconf.mk
+
+CPPSRCS = \
+  MiniShmChild.cpp \
+  PluginHangUIChild.cpp \
+  $(NULL)
+
+PROGRAM = plugin-hang-ui$(BIN_SUFFIX)
+
+OS_LIBS = comctl32.lib
+
+RCINCLUDE = HangUIDlg.rc
+
+include $(topsrcdir)/config/config.mk
+
+DEFINES += \
+  -DNS_NO_XPCOM \
+  $(NULL)
+
+STL_FLAGS = \
+  -D_HAS_EXCEPTIONS=0 \
+  $(NULL)
+
+MOZ_GLUE_LDFLAGS =
+
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+include $(topsrcdir)/config/rules.mk
+
