@@ -21,6 +21,7 @@ public:
   HTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLPreElement();
 
@@ -52,6 +53,20 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL API
+  int32_t Width() const
+  {
+    return GetIntAttr(nsGkAtoms::width, 0);
+  }
+  void SetWidth(int32_t aWidth, mozilla::ErrorResult& rv)
+  {
+    rv = SetIntAttr(nsGkAtoms::width, aWidth);
+  }
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
