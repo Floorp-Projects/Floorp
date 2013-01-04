@@ -603,6 +603,48 @@ class LiveRangeAllocator : public RegisterAllocator
         LMoveGroup *moves = getMoveGroupAfter(pos);
         return addMove(moves, from, to);
     }
+
+    void addLiveRegistersForInterval(VirtualRegister *reg, LiveInterval *interval)
+    {
+        // Fill in the live register sets for all non-call safepoints.
+        LAllocation *a = interval->getAllocation();
+        if (!a->isRegister())
+            return;
+
+        // Don't add output registers to the safepoint.
+        CodePosition start = interval->start();
+        if (interval->index() == 0 && !reg->isTemp())
+            start = start.next();
+
+        size_t i = findFirstNonCallSafepoint(start);
+        for (; i < graph.numNonCallSafepoints(); i++) {
+            LInstruction *ins = graph.getNonCallSafepoint(i);
+            CodePosition pos = inputOf(ins);
+
+            // Safepoints are sorted, so we can shortcut out of this loop
+            // if we go out of range.
+            if (interval->end() < pos)
+                break;
+
+            if (!interval->covers(pos))
+                continue;
+
+            LSafepoint *safepoint = ins->safepoint();
+            safepoint->addLiveRegister(a->toRegister());
+        }
+    }
+
+    // Finds the first safepoint that is within range of an interval.
+    size_t findFirstSafepoint(LiveInterval *interval, size_t startFrom)
+    {
+        size_t i = startFrom;
+        for (; i < graph.numSafepoints(); i++) {
+            LInstruction *ins = graph.getSafepoint(i);
+            if (interval->start() <= inputOf(ins))
+                break;
+        }
+        return i;
+    }
 };
 
 } // namespace ion
