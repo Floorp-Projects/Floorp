@@ -260,7 +260,7 @@ Toolbox.prototype = {
 
         this._buildDockButtons();
         this._buildTabs();
-        this._buildButtons(this.frame);
+        this._buildButtons();
 
         this.selectTool(this._defaultToolId).then(function(panel) {
           this.emit("ready");
@@ -322,17 +322,14 @@ Toolbox.prototype = {
 
   /**
    * Add buttons to the UI as specified in the devtools.window.toolbarSpec pref
-   *
-   * @param {iframe} frame
-   *        The iframe to contain the buttons
    */
-  _buildButtons: function TBOX_buildButtons(frame) {
-    if (this.target.isRemote) {
+  _buildButtons: function TBOX_buildButtons() {
+    if (!this.target.isLocalTab) {
       return;
     }
 
     let toolbarSpec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
-    let environment = { chromeDocument: frame.ownerDocument };
+    let environment = { chromeDocument: this.target.tab.ownerDocument };
     let requisition = new Requisition(environment);
 
     let buttons = CommandUtils.createButtons(toolbarSpec, this._target, this.doc, requisition);
