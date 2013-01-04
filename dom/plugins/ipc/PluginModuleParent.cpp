@@ -35,7 +35,6 @@
 #include "prsystem.h"
 
 #ifdef XP_WIN
-#include "PluginHangUIParent.h"
 #include "mozilla/widget/AudioSession.h"
 #endif
 #include "sampler.h"
@@ -60,13 +59,6 @@ using namespace CrashReporter;
 static const char kChildTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
 static const char kParentTimeoutPref[] = "dom.ipc.plugins.parentTimeoutSecs";
 static const char kLaunchTimeoutPref[] = "dom.ipc.plugins.processLaunchTimeoutSecs";
-#ifdef XP_WIN
-static const char kHangUITimeoutPref[] = "dom.ipc.plugins.hangUITimeoutSecs";
-static const char kHangUIMinDisplayPref[] = "dom.ipc.plugins.hangUIMinDisplaySecs";
-#define CHILD_TIMEOUT_PREF kHangUITimeoutPref
-#else
-#define CHILD_TIMEOUT_PREF kChildTimeoutPref
-#endif
 
 template<>
 struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
@@ -95,7 +87,7 @@ PluginModuleParent::LoadModule(const char* aFilePath)
     parent->Open(parent->mSubprocess->GetChannel(),
                  parent->mSubprocess->GetChildProcessHandle());
 
-    TimeoutChanged(CHILD_TIMEOUT_PREF, parent);
+    TimeoutChanged(kChildTimeoutPref, parent);
 
 #ifdef MOZ_CRASHREPORTER
     // If this fails, we're having IPC troubles, and we're doomed anyways.
@@ -119,9 +111,6 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mTaskFactory(this)
 #ifdef XP_WIN
     , mPluginCpuUsageOnHang()
-    , mHangUIParent(nullptr)
-    , mHangUIEnabled(true)
-    , mIsTimerReset(true)
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
@@ -134,10 +123,6 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
 
     Preferences::RegisterCallback(TimeoutChanged, kChildTimeoutPref, this);
     Preferences::RegisterCallback(TimeoutChanged, kParentTimeoutPref, this);
-#ifdef XP_WIN
-    Preferences::RegisterCallback(TimeoutChanged, kHangUITimeoutPref, this);
-    Preferences::RegisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
-#endif
 }
 
 PluginModuleParent::~PluginModuleParent()
@@ -165,15 +150,6 @@ PluginModuleParent::~PluginModuleParent()
 
     Preferences::UnregisterCallback(TimeoutChanged, kChildTimeoutPref, this);
     Preferences::UnregisterCallback(TimeoutChanged, kParentTimeoutPref, this);
-#ifdef XP_WIN
-    Preferences::UnregisterCallback(TimeoutChanged, kHangUITimeoutPref, this);
-    Preferences::UnregisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
-
-    if (mHangUIParent) {
-        delete mHangUIParent;
-        mHangUIParent = nullptr;
-    }
-#endif
 }
 
 #ifdef MOZ_CRASHREPORTER
@@ -230,29 +206,16 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
 }
 #endif  // MOZ_CRASHREPORTER
 
-void
-PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout)
-{
-    int32_t timeoutMs = (aChildTimeout > 0) ? (1000 * aChildTimeout) :
-                      SyncChannel::kNoTimeout;
-    SetReplyTimeoutMs(timeoutMs);
-}
-
 int
 PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-#ifndef XP_WIN
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thead!");
     if (!strcmp(aPref, kChildTimeoutPref)) {
       // The timeout value used by the parent for children
       int32_t timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
-      static_cast<PluginModuleParent*>(aModule)->SetChildTimeout(timeoutSecs);
-#else
-    if (!strcmp(aPref, kChildTimeoutPref) ||
-        !strcmp(aPref, kHangUIMinDisplayPref) ||
-        !strcmp(aPref, kHangUITimeoutPref)) {
-      static_cast<PluginModuleParent*>(aModule)->EvaluateHangUIState(true);
-#endif // XP_WIN
+      int32_t timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
+                        SyncChannel::kNoTimeout;
+      static_cast<PluginModuleParent*>(aModule)->SetReplyTimeoutMs(timeoutMs);
     } else if (!strcmp(aPref, kParentTimeoutPref)) {
       // The timeout value used by the child for its parent
       int32_t timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
@@ -345,13 +308,6 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
 }
 
 } // anonymous namespace
-
-void
-PluginModuleParent::ExitedCxxStack()
-{
-    FinishHangUI();
-}
-
 #endif // #ifdef XP_WIN
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
@@ -378,36 +334,10 @@ CreateFlashMinidump(DWORD processId, ThreadId childThread,
 bool
 PluginModuleParent::ShouldContinueFromReplyTimeout()
 {
-#ifdef XP_WIN
-    if (LaunchHangUI()) {
-        return true;
-    }
-    // If LaunchHangUI returned false then we should proceed with the 
-    // original plugin hang behaviour and kill the plugin container.
-    FinishHangUI();
-#endif // XP_WIN
-    TerminateChildProcess(MessageLoop::current());
-    return false;
-}
-
-void
-PluginModuleParent::TerminateChildProcess(MessageLoop* aMsgLoop)
-{
 #ifdef MOZ_CRASHREPORTER
     CrashReporterParent* crashReporter = CrashReporter();
     crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("PluginHang"),
                                        NS_LITERAL_CSTRING("1"));
-#ifdef XP_WIN
-    if (mHangUIParent) {
-        unsigned int hangUIDuration = mHangUIParent->LastShowDurationMs();
-        if (hangUIDuration) {
-            nsPrintfCString strHangUIDuration("%u", hangUIDuration);
-            crashReporter->AnnotateCrashReport(
-                    NS_LITERAL_CSTRING("PluginHangUIDuration"),
-                    strHangUIDuration);
-        }
-    }
-#endif // XP_WIN
     if (crashReporter->GeneratePairedMinidump(this)) {
         mPluginDumpID = crashReporter->ChildDumpID();
         PLUGIN_LOG_DEBUG(
@@ -465,127 +395,16 @@ PluginModuleParent::TerminateChildProcess(MessageLoop* aMsgLoop)
 
     // this must run before the error notification from the channel,
     // or not at all
-    if (aMsgLoop == MessageLoop::current()) {
-        aMsgLoop->PostTask(
-            FROM_HERE,
-            mTaskFactory.NewRunnableMethod(
-                &PluginModuleParent::CleanupFromTimeout));
-    } else {
-        // If we're posting from a different thread we can't create
-        // the task via mTaskFactory
-        aMsgLoop->PostTask(FROM_HERE,
-                           NewRunnableMethod(this,
-                               &PluginModuleParent::CleanupFromTimeout));
-    }
+    MessageLoop::current()->PostTask(
+        FROM_HERE,
+        mTaskFactory.NewRunnableMethod(
+            &PluginModuleParent::CleanupFromTimeout));
 
     if (!KillProcess(OtherProcess(), 1, false))
         NS_WARNING("failed to kill subprocess!");
-}
 
-#ifdef XP_WIN
-void
-PluginModuleParent::EvaluateHangUIState(const bool aReset)
-{
-    int32_t minDispSecs = Preferences::GetInt(kHangUIMinDisplayPref, 10);
-    int32_t autoStopSecs = Preferences::GetInt(kChildTimeoutPref, 0);
-    int32_t timeoutSecs = 0;
-    if (autoStopSecs > 0 && autoStopSecs < minDispSecs) {
-        /* If we're going to automatically terminate the plugin within a 
-           time frame shorter than minDispSecs, there's no point in 
-           showing the hang UI; it would just flash briefly on the screen. */
-        mHangUIEnabled = false;
-    } else {
-        timeoutSecs = Preferences::GetInt(kHangUITimeoutPref, 0);
-        mHangUIEnabled = timeoutSecs > 0;
-    }
-    if (mHangUIEnabled) {
-        if (aReset) {
-            mIsTimerReset = true;
-            SetChildTimeout(timeoutSecs);
-            return;
-        } else if (mIsTimerReset) {
-            /* The Hang UI is being shown, so now we're setting the 
-               timeout to kChildTimeoutPref while we wait for a user 
-               response. ShouldContinueFromReplyTimeout will fire 
-               after (reply timeout / 2) seconds, which is not what 
-               we want. Doubling the timeout value here so that we get 
-               the right result. */
-            autoStopSecs *= 2;
-        }
-    }
-    mIsTimerReset = false;
-    SetChildTimeout(autoStopSecs);
+    return false;
 }
-
-bool
-PluginModuleParent::GetPluginName(nsAString& aPluginName)
-{
-    nsPluginHost* host = nsPluginHost::GetInst();
-    if (!host) {
-        return false;
-    }
-    nsPluginTag* pluginTag = host->TagForPlugin(mPlugin);
-    if (!pluginTag) {
-        return false;
-    }
-    CopyUTF8toUTF16(pluginTag->mName, aPluginName);
-    return true;
-}
-
-bool
-PluginModuleParent::LaunchHangUI()
-{
-    if (!mHangUIEnabled) {
-        return false;
-    }
-    if (mHangUIParent) {
-        if (mHangUIParent->IsShowing()) {
-            // We've already shown the UI but the timeout has expired again.
-            return false;
-        }
-        if (mHangUIParent->DontShowAgain()) {
-            return !mHangUIParent->WasLastHangStopped();
-        }
-        delete mHangUIParent;
-        mHangUIParent = nullptr;
-    }
-    mHangUIParent = new PluginHangUIParent(this);
-    nsAutoString pluginName;
-    if (!GetPluginName(pluginName)) {
-        return false;
-    }
-    bool retval = mHangUIParent->Init(pluginName);
-    if (retval) {
-        /* Once the UI is shown we switch the timeout over to use 
-           kChildTimeoutPref, allowing us to terminate a hung plugin 
-           after kChildTimeoutPref seconds if the user doesn't respond to 
-           the hang UI. */
-        EvaluateHangUIState(false);
-    }
-    return retval;
-}
-
-void
-PluginModuleParent::FinishHangUI()
-{
-    if (mHangUIEnabled && mHangUIParent) {
-        bool needsCancel = mHangUIParent->IsShowing();
-        // If we're still showing, send a Cancel notification
-        if (needsCancel) {
-            mHangUIParent->Cancel();
-        }
-        /* If we cancelled the UI or if the user issued a response,
-           we need to reset the child process timeout. */
-        if (needsCancel ||
-            !mIsTimerReset && mHangUIParent->WasShown()) {
-            /* We changed the timeout to kChildTimeoutPref when the plugin hang
-               UI was displayed. Now that we're finishing the UI, we need to 
-               switch it back to kHangUITimeoutPref. */
-            EvaluateHangUIState(true);
-        }
-    }
-}
-#endif // XP_WIN
 
 #ifdef MOZ_CRASHREPORTER
 CrashReporterParent*
