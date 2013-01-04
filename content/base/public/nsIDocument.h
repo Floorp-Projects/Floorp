@@ -75,6 +75,7 @@ class nsTextNode;
 class nsWindowSizes;
 class nsSmallVoidArray;
 class nsDOMCaretPosition;
+class nsViewportInfo;
 
 namespace mozilla {
 class ErrorResult;
@@ -561,6 +562,10 @@ public:
    * Return the root element for this document.
    */
   Element* GetRootElement() const;
+
+  virtual nsViewportInfo GetViewportInfo(uint32_t aDisplayWidth,
+                                         uint32_t aDisplayHeight) = 0;
+
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;
