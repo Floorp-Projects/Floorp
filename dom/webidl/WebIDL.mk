@@ -21,6 +21,7 @@ webidl_files = \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
+  CharacterData.webidl \
   ClientRectList.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
