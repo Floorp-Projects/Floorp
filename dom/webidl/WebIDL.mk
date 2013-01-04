@@ -102,6 +102,7 @@ webidl_files = \
   SVGPreserveAspectRatio.webidl \
   SVGTransform.webidl \
   SVGTransformList.webidl \
+  Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
   URL.webidl \
