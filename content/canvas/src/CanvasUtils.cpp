@@ -14,7 +14,7 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIHTMLCollection.h"
-#include "nsHTMLCanvasElement.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsIPrincipal.h"
 
 #include "nsGfxCIID.h"
@@ -30,7 +30,7 @@ namespace mozilla {
 namespace CanvasUtils {
 
 void
-DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
+DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
                          nsIPrincipal *aPrincipal,
                          bool forceWriteOnly,
                          bool CORSUsed)

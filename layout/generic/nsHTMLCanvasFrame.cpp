@@ -11,7 +11,7 @@
 #include "nsGkAtoms.h"
 
 #include "nsHTMLCanvasFrame.h"
-#include "nsHTMLCanvasElement.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "Layers.h"
@@ -21,6 +21,7 @@
 #include "gfxContext.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 class nsDisplayCanvas : public nsDisplayItem {
@@ -42,8 +43,8 @@ public:
                                    bool* aSnap) {
     *aSnap = false;
     nsIFrame* f = GetUnderlyingFrame();
-    nsHTMLCanvasElement *canvas =
-      nsHTMLCanvasElement::FromContent(f->GetContent());
+    HTMLCanvasElement *canvas =
+      HTMLCanvasElement::FromContent(f->GetContent());
     nsRegion result;
     if (canvas->GetIsOpaque()) {
       result = GetBounds(aBuilder, aSnap);
@@ -68,7 +69,7 @@ public:
                                    LayerManager* aManager,
                                    const FrameLayerBuilder::ContainerParameters& aParameters)
   {
-    if (nsHTMLCanvasElement::FromContent(mFrame->GetContent())->ShouldForceInactiveLayer(aManager))
+    if (HTMLCanvasElement::FromContent(mFrame->GetContent())->ShouldForceInactiveLayer(aManager))
       return LAYER_INACTIVE;
 
     // If compositing is cheap, just do that
@@ -111,8 +112,8 @@ nsIntSize
 nsHTMLCanvasFrame::GetCanvasSize()
 {
   nsIntSize size(0,0);
-  nsHTMLCanvasElement *canvas =
-    nsHTMLCanvasElement::FromContentOrNull(GetContent());
+  HTMLCanvasElement *canvas =
+    HTMLCanvasElement::FromContentOrNull(GetContent());
   if (canvas) {
     size = canvas->GetSize();
   } else {
@@ -245,7 +246,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                               const ContainerParameters& aContainerParameters)
 {
   nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
-  nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
+  HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
   nsIntSize canvasSize = GetCanvasSize();
 
   nsPresContext* presContext = PresContext();
