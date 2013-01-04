@@ -51,9 +51,6 @@ sync/jpake/JPakeNoActivePairingException.java
 sync/jpake/JPakeNumGenerator.java
 sync/jpake/JPakeNumGeneratorRandom.java
 sync/jpake/JPakeParty.java
-sync/jpake/JPakeRequest.java
-sync/jpake/JPakeRequestDelegate.java
-sync/jpake/JPakeResponse.java
 sync/jpake/stage/CompleteStage.java
 sync/jpake/stage/ComputeFinalStage.java
 sync/jpake/stage/ComputeKeyVerificationStage.java
