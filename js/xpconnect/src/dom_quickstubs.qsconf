@@ -119,13 +119,6 @@ members = [
     # dom/interfaces/geolocation - None.
 
     # dom/interfaces/html
-    'nsIDOMHTMLAnchorElement.href',
-    'nsIDOMHTMLAnchorElement.rel',
-    'nsIDOMHTMLAnchorElement.target',
-    'nsIDOMHTMLAnchorElement.name',
-    'nsIDOMHTMLAnchorElement.text',
-    'nsIDOMHTMLAnchorElement.search',
-    'nsIDOMHTMLAnchorElement.hash',
     'nsIDOMHTMLBaseElement.href',
     'nsIDOMHTMLBaseElement.target',
     'nsIDOMHTMLButtonElement.name',
@@ -143,8 +136,6 @@ members = [
     'nsIDOMHTMLFrameElement.contentDocument',
     'nsIDOMHTMLFrameElement.contentWindow',
     'nsIDOMHTMLFrameElement.name',
-    'nsIDOMHTMLFrameSetElement.rows',
-    'nsIDOMHTMLFrameSetElement.cols',
     'nsIDOMHTMLIFrameElement.src',
     'nsIDOMHTMLIFrameElement.contentDocument',
     'nsIDOMHTMLIFrameElement.contentWindow',

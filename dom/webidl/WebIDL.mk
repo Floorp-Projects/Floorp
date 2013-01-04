@@ -49,6 +49,7 @@ webidl_files = \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
+  HTMLAnchorElement.webidl \
   HTMLBodyElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
