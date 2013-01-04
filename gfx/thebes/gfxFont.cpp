@@ -2658,36 +2658,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         // break into separate ShapedWords when we hit an invalid char,
         // or a boundary space (always handled individually),
         // or the first non-space after a space
-        bool breakHere = boundary || invalid;
-
-        if (!breakHere) {
-            // if we're approaching the max length for shaping, break anyway...
-            if (sizeof(T) == sizeof(uint8_t)) {
-                // in 8-bit text, no clusters or surrogates to worry about
-                if (length >= gfxShapedWord::kMaxLength) {
-                    breakHere = true;
-                }
-            } else {
-                // try to avoid breaking before combining mark or low surrogate
-                if (length >= gfxShapedWord::kMaxLength - 15) {
-                    if (!NS_IS_LOW_SURROGATE(ch)) {
-                        if (!IsClusterExtender(ch)) {
-                            breakHere = true;
-                        }
-                    }
-                    if (!breakHere && length >= gfxShapedWord::kMaxLength - 3) {
-                        if (!NS_IS_LOW_SURROGATE(ch)) {
-                            breakHere = true;
-                        }
-                    }
-                    if (!breakHere && length >= gfxShapedWord::kMaxLength) {
-                        breakHere = true;
-                    }
-                }
-            }
-        }
-
-        if (!breakHere) {
+        if (!boundary && !invalid) {
             if (!IsChar8Bit(ch)) {
                 wordIs8Bit = false;
             }
@@ -2696,10 +2667,21 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
             continue;
         }
 
-        // We've decided to break here (i.e. we're at the end of a "word",
-        // or the word is becoming excessively long): shape the word and
-        // add it to the textrun
-        if (length > 0) {
+        // We've decided to break here (i.e. we're at the end of a "word");
+        // shape the word and add it to the textrun.
+        // For words longer than gfxShapedWord::kMaxLength, we don't use the
+        // font's word cache but just shape directly into the textrun.
+        if (length > gfxShapedWord::kMaxLength) {
+            bool ok = ShapeFragmentWithoutWordCache(aContext,
+                                                    text + wordStart,
+                                                    aRunStart + wordStart,
+                                                    length,
+                                                    aRunScript,
+                                                    aTextRun);
+            if (!ok) {
+                return false;
+            }
+        } else if (length > 0) {
             uint32_t wordFlags = flags;
             // in the 8-bit version of this method, TEXT_IS_8BIT was
             // already set as part of |flags|, so no need for a per-word
@@ -2749,24 +2731,20 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
             break;
         }
 
-        if (invalid) {
-            // word was terminated by an invalid char: skip it,
-            // but record where TAB or NEWLINE occur
-            if (ch == '\t') {
-                aTextRun->SetIsTab(aRunStart + i);
-            } else if (ch == '\n') {
-                aTextRun->SetIsNewline(aRunStart + i);
-            }
-            hash = 0;
-            wordStart = i + 1;
-            wordIs8Bit = true;
-            continue;
+        NS_ASSERTION(invalid,
+                     "how did we get here except via an invalid char?");
+
+        // word was terminated by an invalid char: skip it,
+        // but record where TAB or NEWLINE occur
+        if (ch == '\t') {
+            aTextRun->SetIsTab(aRunStart + i);
+        } else if (ch == '\n') {
+            aTextRun->SetIsNewline(aRunStart + i);
         }
 
-        // word was forcibly broken, so current char will begin next word
-        hash = HashMix(0, ch);
-        wordStart = i;
-        wordIs8Bit = IsChar8Bit(ch);
+        hash = 0;
+        wordStart = i + 1;
+        wordIs8Bit = true;
     }
 
     return true;
