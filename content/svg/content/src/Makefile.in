@@ -45,7 +45,6 @@ CPPSRCS		= \
 		nsSVGClipPathElement.cpp \
 		nsSVGDataParser.cpp \
 		nsSVGDefsElement.cpp \
-		nsSVGDescElement.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
@@ -122,6 +121,7 @@ CPPSRCS		= \
 		nsSVGSetElement.cpp \
 		SVGAttrValueWrapper.cpp \
 		SVGContentUtils.cpp \
+		SVGDescElement.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGMotionSMILType.cpp \
@@ -154,6 +154,7 @@ EXPORTS_mozilla/dom = \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
+	SVGDescElement.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
