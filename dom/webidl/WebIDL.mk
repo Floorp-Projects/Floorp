@@ -23,6 +23,7 @@ webidl_files = \
   CaretPosition.webidl \
   CharacterData.webidl \
   ClientRectList.webidl \
+  Comment.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
