@@ -675,7 +675,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
         break;
       case AUDIO_FORMAT_S16:
         {
-          const short* buf = static_cast<const short *>(chunk.mBuffer->Data());
+          const short* buf = static_cast<const short *>(chunk.mBuffer->Data()) +
+            chunk.mOffset;
           ConvertAudioSamplesWithScale(buf, samples, chunk.mDuration, chunk.mVolume);
         }
         break;
