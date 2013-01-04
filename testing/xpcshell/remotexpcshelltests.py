@@ -151,15 +151,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.device.pushDir(self.testingModulesDir, self.remoteModulesDir)
 
     def setupTestDir(self):
-        push_attempts = 10
-        for retry in range(1, push_attempts+1):
-            print 'pushing', self.xpcDir, '(attempt %s of %s)' % (retry, push_attempts)
-            try:
-                self.device.pushDir(self.xpcDir, self.remoteScriptsDir)
-                break
-            except DMError:
-                if retry == push_attempts:
-                    raise
+        print 'pushing %s' % self.xpcDir
+        self.device.pushDir(self.xpcDir, self.remoteScriptsDir, retryLimit=10)
 
     def buildTestList(self):
         xpcshell.XPCShellTests.buildTestList(self)
