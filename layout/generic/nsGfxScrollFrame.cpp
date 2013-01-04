@@ -2164,11 +2164,6 @@ static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,
 nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
-  // XXX EVIL COMPILER BUG BE CAREFUL WHEN CHANGING THIS METHOD
-  //     There's bugs in the Android compiler :(
-  //     It was first worked around in bug 642205, then it failed
-  //     on armv6 (bug 790624) *in a different way*.
-
   nsPresContext* presContext = mOuter->PresContext();
   if (!presContext->IsDynamic() &&
       !(mIsRoot && presContext->HasPaginatedScrolling())) {
