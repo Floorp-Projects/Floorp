@@ -31,6 +31,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/RangedPtr.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jstypes.h"
@@ -335,6 +336,14 @@ class MOZ_STACK_CLASS CallArgsBase :
      */
     bool hasDefined(unsigned i) const {
         return i < argc_ && !this->argv_[i].isUndefined();
+    }
+
+    /*
+     * Returns thisv and args in a single array. (That is, a pointer to |this|
+     * followed by any provided arguments.)
+     */
+    mozilla::RangedPtr<const Value> thisAndArgs() const {
+        return mozilla::RangedPtr<const Value>(this->argv_ - 1, argc_ + 1);
     }
 
   public:
