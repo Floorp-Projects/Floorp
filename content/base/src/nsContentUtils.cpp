@@ -247,6 +247,25 @@ static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable sEventListenerManagersHash;
+static nsCOMPtr<nsIMemoryReporter> sEventListenerManagersHashReporter;
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(EventListenerManagersHashMallocSizeOf)
+
+static int64_t GetEventListenerManagersHash()
+{
+  // We don't measure the |nsEventListenerManager| objects pointed to by the
+  // entries because those references are non-owning.
+  return PL_DHashTableSizeOfExcludingThis(&sEventListenerManagersHash,
+                                          nullptr,
+                                          EventListenerManagersHashMallocSizeOf);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(EventListenerManagersHash,
+  "explicit/dom/event-listener-managers-hash",
+  KIND_HEAP,
+  UNITS_BYTES,
+  GetEventListenerManagersHash,
+  "Memory used by the event listener manager's hash table.")
 
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
 {
@@ -383,6 +402,10 @@ nsContentUtils::Init()
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    sEventListenerManagersHashReporter =
+      new NS_MEMORY_REPORTER_NAME(EventListenerManagersHash);
+    (void)::NS_RegisterMemoryReporter(sEventListenerManagersHashReporter);
   }
 
   sBlockedScriptRunners = new nsTArray< nsCOMPtr<nsIRunnable> >;
@@ -1464,6 +1487,9 @@ nsContentUtils::Shutdown()
     if (sEventListenerManagersHash.entryCount == 0) {
       PL_DHashTableFinish(&sEventListenerManagersHash);
       sEventListenerManagersHash.ops = nullptr;
+
+      (void)::NS_UnregisterMemoryReporter(sEventListenerManagersHashReporter);
+      sEventListenerManagersHashReporter = nullptr;
     }
   }
 
