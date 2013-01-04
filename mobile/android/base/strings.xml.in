@@ -204,8 +204,9 @@
   <string name="abouthome_apps_bold_name">&abouthome_apps_bold_name2;</string>
   
   <string name="abouthome_topsites_edit">&abouthome_topsites_edit;</string>
-  <string name="abouthome_topsites_clear">&abouthome_topsites_clear;</string>
-  <string name="abouthome_topsites_clearall">&abouthome_topsites_clearall;</string>
+  <string name="abouthome_topsites_pin">&abouthome_topsites_pin;</string>
+  <string name="abouthome_topsites_unpin">&abouthome_topsites_unpin;</string>
+  <string name="abouthome_topsites_unpinall">&abouthome_topsites_unpinall;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
