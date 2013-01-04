@@ -22,7 +22,6 @@ interface NodeIterator;
 interface ProcessingInstruction;
 interface Range;
 interface StyleSheetList;
-interface Text;
 interface Touch;
 interface TouchList;
 interface TreeWalker;
