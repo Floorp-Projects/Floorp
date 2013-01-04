@@ -4,7 +4,7 @@
 // Tests that the addon commands works as they should
 
 let imported = {};
-Components.utils.import("resource:///modules/devtools/CmdAddon.jsm", imported);
+Components.utils.import("resource:///modules/devtools/BuiltinCommands.jsm", imported);
 
 function test() {
   DeveloperToolbarTest.test("about:blank", [ GAT_test ]);
@@ -96,7 +96,7 @@ function GAT_test() {
 
   Services.obs.addObserver(GAT_ready, "gcli_addon_commands_ready", false);
 
-  if (imported.Flags.addonsLoaded) {
+  if (imported.CmdAddonFlags.addonsLoaded) {
     info("The getAllAddons command has already completed and we have missed ");
     info("the notification. Let's send the gcli_addon_commands_ready ");
     info("notification ourselves.");

@@ -19,7 +19,7 @@ function openInspector(callback)
 {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    callback(toolbox.getCurrentPanel());
+    callback(toolbox.getCurrentPanel(), toolbox);
   }).then(null, console.error);
 }
 

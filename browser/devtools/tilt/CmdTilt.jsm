@@ -5,11 +5,11 @@
 
 this.EXPORTED_SYMBOLS = [ ];
 
+Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 Components.utils.import("resource:///modules/devtools/gcli.jsm");
-Components.utils.import("resource:///modules/HUDService.jsm");
-Components.utils.import("resource:///modules/devtools/Tilt.jsm");
 
-
+XPCOMUtils.defineLazyModuleGetter(this, "TiltManager",
+                                  "resource:///modules/devtools/Tilt.jsm");
 /**
  * 'tilt' command
  */

@@ -244,9 +244,14 @@ Toolbox.prototype = {
   open: function TBOX_open() {
     let deferred = Promise.defer();
 
-    this._host.open().then(function(iframe) {
-      let onload = function() {
-        iframe.removeEventListener("DOMContentLoaded", onload, true);
+    this._host.create().then(function(iframe) {
+      let domReady = function() {
+        iframe.removeEventListener("DOMContentLoaded", domReady, true);
+
+        let vbox = this.doc.getElementById("toolbox-panel-" + this._currentToolId);
+        if (vbox) {
+          this.doc.commandDispatcher.advanceFocusIntoSubtree(vbox);
+        }
 
         this.isReady = true;
 
@@ -263,7 +268,7 @@ Toolbox.prototype = {
         }.bind(this));
       }.bind(this);
 
-      iframe.addEventListener("DOMContentLoaded", onload, true);
+      iframe.addEventListener("DOMContentLoaded", domReady, true);
       iframe.setAttribute("src", this._URL);
     }.bind(this));
 
@@ -502,7 +507,7 @@ Toolbox.prototype = {
     }
 
     let newHost = this._createHost(hostType);
-    return newHost.open().then(function(iframe) {
+    return newHost.create().then(function(iframe) {
       // change toolbox document's parent to the new host
       iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
       iframe.swapFrameLoaders(this.frame);
