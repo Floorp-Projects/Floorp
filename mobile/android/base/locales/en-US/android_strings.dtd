@@ -137,7 +137,6 @@ size. -->
 <!ENTITY tools "Tools">
 <!ENTITY new_tab "New Tab">
 <!ENTITY new_private_tab "New Private Tab">
-<!ENTITY synced_tabs "Synced Tabs">
 <!ENTITY close_all_tabs "Close All Tabs">
 <!ENTITY tabs_normal "Tabs">
 <!ENTITY tabs_private "Private">

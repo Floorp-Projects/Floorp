@@ -527,7 +527,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_new_private_tab_small.png \
   res/drawable/ic_menu_new_tab_small.png \
   res/drawable/ic_menu_reload.png \
-  res/drawable/ic_menu_synced_tabs.png \
   res/drawable/ic_menu_quit.xml \
   res/drawable/ic_status_logo.png \
   res/drawable/remote_tabs_off.png \
@@ -617,7 +616,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_new_tab.png \
   res/drawable-hdpi/ic_menu_new_tab_small.png \
   res/drawable-hdpi/ic_menu_reload.png \
-  res/drawable-hdpi/ic_menu_synced_tabs.png \
   res/drawable-hdpi/ic_status_logo.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
@@ -705,7 +703,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_new_tab.png \
   res/drawable-xhdpi/ic_menu_new_tab_small.png \
   res/drawable-xhdpi/ic_menu_reload.png \
-  res/drawable-xhdpi/ic_menu_synced_tabs.png \
   res/drawable-xhdpi/ic_status_logo.png \
   res/drawable-xhdpi/tab_new.png \
   res/drawable-xhdpi/tab_close.png \
