@@ -10,6 +10,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 interface nsIDOMMozVoicemailStatus;
 interface nsISmsRequest;
+interface nsIDOMMozSmsSegmentInfo;
 interface nsIDOMMozCellBroadcastMessage;
 
 [scriptable, uuid(0faabc35-644d-4ed5-b109-425280ff1cdf)]
@@ -285,7 +286,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(f9c586ee-71ce-4172-9b2e-d89f0ff9c6d9)]
+[scriptable, uuid(8526675d-2be7-4289-9d97-71e30c712010)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -332,7 +333,8 @@ interface nsIRadioInterfaceLayer : nsISupports
   /**
    * SMS-related functionality.
    */
-  unsigned short getNumberOfMessagesForText(in DOMString text);
+  nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
+
   void sendSMS(in DOMString number,
                in DOMString message,
                in nsISmsRequest request);
