@@ -1274,6 +1274,11 @@
                 if (t.pinned)
                   tabContainer._handleNewTab(t);
                 else {
+                  if (tabContainer._tabAnimationLoggingEnabled) {
+                    window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils)
+                          .startFrameTimeRecording();
+                  }
                   t._animStartTime = Date.now();
                   t.setAttribute("fadein", "true");
 
@@ -1574,6 +1579,11 @@
               return;
             }
 
+            if (this.tabContainer._tabAnimationLoggingEnabled) {
+              window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils)
+                    .startFrameTimeRecording();
+            }
             aTab._animStartTime = Date.now();
 
             this._blurTab(aTab);
@@ -2880,6 +2890,12 @@
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
           window.addEventListener("load", this, false);
+
+          try {
+            this._tabAnimationLoggingEnabled = Services.prefs.getBoolPref("browser.tabs.animationLogging.enabled");
+          } catch (ex) {
+            this._tabAnimationLoggingEnabled = false;
+          }
         ]]>
       </constructor>
 
@@ -3512,6 +3528,18 @@
                                               "FX_TAB_ANIM_OPEN_MS")
                             .add(Date.now() - tab._animStartTime);
           tab._animStartTime = 0;
+
+          if (this._tabAnimationLoggingEnabled) {
+            let paints = {};
+            let intervals = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindowUtils)
+                                  .stopFrameTimeRecording(paints);
+            let msg = "Tab " + (tab.closing ? "close" : "open") + " (Frame-interval / paint-processing):\n";
+            for (let i = 0; i < intervals.length; i++) {
+              msg += Math.round(intervals[i]) + " / " + Math.round(paints.value[i]) + "\n";
+            }
+            Services.console.logStringMessage(msg);
+          }
         }
 
         if (tab.getAttribute("fadein") == "true") {
