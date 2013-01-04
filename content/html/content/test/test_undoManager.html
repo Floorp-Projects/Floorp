@@ -1,0 +1,852 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=617532
+-->
+<head>
+  <title>Test for Bug 617532</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=617532">Mozilla Bug 617532</a>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 617532 **/
+
+/**
+ * Tests for typical use cases.
+ */
+
+var content = document.getElementById("content");
+
+// Test appending text to a text node.
+
+var textAppend = {
+  label: "textAppend",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.firstChild.appendData(" and more text");
+  }
+};
+
+testTransaction([textAppend],
+                [getTextMatchFunction("box with text"),
+                 getTextMatchFunction("box with text and more text")]);
+
+// Test replacing text in a text node.
+
+var textReplace = {
+  label: "textReplace",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.firstChild.replaceData(0, 3, "div");
+  }
+};
+
+testTransaction([textReplace],
+                [getTextMatchFunction("box with text"),
+                 getTextMatchFunction("div with text")]);
+
+// Test inserting text in a text node.
+
+var textInsert = {
+  label: "textInsert",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.firstChild.insertData(0, "a ");
+  }
+};
+
+testTransaction([textInsert],
+                [getTextMatchFunction("box with text"),
+                 getTextMatchFunction("a box with text")]);
+
+// Test deleting text in a text node.
+
+var textDelete = {
+  label: "textDelete",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.firstChild.deleteData(3, 10);
+  }
+};
+
+testTransaction([textDelete],
+                [getTextMatchFunction("box with text"),
+                 getTextMatchFunction("box")]);
+
+// Test creating a new attribute.
+
+var createAttribute = {
+  label: "createAttribute",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.setAttribute("data-new", "new");
+  }
+};
+
+testTransaction([createAttribute],
+                [getAttrAbsentFunction("data-new"),
+                 getAttrIsFunction("data-new", "new")]);
+
+// Test changing an attribute.
+
+var changeAttribute = {
+  label: "changeAttribute",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.setAttribute("data-test", "change");
+  }
+};
+
+testTransaction([changeAttribute],
+                [getAttrIsFunction("data-test", "test"),
+                 getAttrIsFunction("data-test", "change")]);
+
+// Test remove an attribute.
+
+var removeAttribute = {
+  label: "removeAttribute",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.removeAttribute("data-test");
+  }
+};
+
+testTransaction([removeAttribute],
+                [getAttrIsFunction("data-test", "test"),
+                 getAttrAbsentFunction("data-test")]);
+
+// Test remove an attribute.
+
+var removeAttribute = {
+  label: "removeAttribute",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.removeAttribute("data-test");
+  }
+};
+
+testTransaction([removeAttribute],
+                [getAttrIsFunction("data-test", "test"),
+                 getAttrAbsentFunction("data-test")]);
+
+// Test appending child element to box.
+
+var appendChild = {
+  label: "appendChild",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.appendChild(document.createElement("div"));
+  }
+};
+
+testTransaction([appendChild],
+                [getChildCountFunction(1),
+                 getChildCountFunction(2)]);
+
+// Test appending document fragment with multiple elements to box.
+
+var appendFragment = {
+  label: "appendFragment",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    var fragment = document.createDocumentFragment();
+    fragment.appendChild(document.createElement("div"));
+    fragment.appendChild(document.createElement("div"));
+    fragment.appendChild(document.createElement("div"));
+    box.appendChild(fragment);
+  }
+};
+
+testTransaction([appendFragment],
+                [getChildCountFunction(1),
+                 getChildCountFunction(4)]);
+
+// Test appending a child then removing a child.
+
+var removeChild = {
+  label: "removeChild",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.removeChild(box.firstChild);
+  }
+};
+
+testTransaction([removeChild],
+                [getChildCountFunction(1),
+                 getChildCountFunction(0)]);
+
+// Test appending a child then removing a child.
+
+var applyInnerHTML = {
+  label: "applyInnerHTML",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.innerHTML = "<div>one</div><div>two</div><div>three</div>";
+  }
+};
+
+testTransaction([applyInnerHTML],
+                [getChildCountFunction(1),
+                 getChildCountFunction(3)]);
+
+// Test multiple append children and multiple remove children.
+
+testTransaction([appendChild, appendChild, appendChild, appendChild,
+                 removeChild, removeChild, removeChild],
+                [getChildCountFunction(1),
+                 getChildCountFunction(2),
+                 getChildCountFunction(3),
+                 getChildCountFunction(4),
+                 getChildCountFunction(5),
+                 getChildCountFunction(4),
+                 getChildCountFunction(3),
+                 getChildCountFunction(2)]);
+
+/**
+ * Creates a div element containing the text "box with text".
+ * Has an id of "box". Has an attribute "data-test" with the value of "test".
+ */
+function createTextBoxElement() {
+  var box = document.createElement("div");
+  box.setAttribute("id", "box");
+  box.setAttribute("data-test", "test");
+  box.textContent = "box with text";
+  return box;
+}
+
+function getTextMatchFunction(matchText) {
+  return function(box) {
+    is(box.textContent, matchText, "Text content did not match expected content");
+  }
+}
+
+function getAttrAbsentFunction(attrName) {
+  return function(box) {
+    ok(!box.hasAttribute(attrName), "Element should not have attribute");
+  }
+}
+
+function getAttrIsFunction(attrName, attrValue) {
+  return function(box) {
+    is(box.getAttribute(attrName), attrValue, "Element attribute is not the expected value");
+  }
+}
+
+function getChildCountFunction(count) {
+  return function(box) {
+    is(box.childNodes.length, count, "Element has incorrect number of children");
+  }
+}
+
+/**
+ * Test transactions by applying, undoing and redoing a sequence of transactions.
+ * At each step the state of the host node is evaluated for the expected state.
+ * @param transactions An array of transactions to apply.
+ * @param evaluators An array of functions which take an element as its only argument
+ *                   and evaluates the state of the element for correctness. The
+ *                   nth transaction in the transactions array is evaluated by the
+ *                   n+1th function in the evaluators array. The first element of
+ *                   the evaluators array evaluates the initial state of the host
+ *                   node. Thus there should always be one more element in the
+ *                   evaluators array than the transactions array.
+ * @param merges An optional set of integers indicating which indices in the transactions
+ *               array should be merged with the previous transaction.
+ */
+function testTransaction(transactions, evaluators, merges) {
+  if (!merges) {
+    merges = [];
+  }
+
+  var box = createTextBoxElement();
+  box.undoScope = true;
+  content.appendChild(box);
+  var manager = box.undoManager;
+
+  is(manager.length, 0, "Initial lenght of UndoManager should be 0");
+  is(manager.position, 0, "Initial position of UndoManager should be 0");
+
+  // Apply transactions and ensure the contents of the box have the
+  // expected values.
+  var expectedLength = 0;
+  for (var i = 0; i < transactions.length; i++) {
+    var merge = merges.indexOf(i) == -1 ? false : true;
+    if (!merge || i == 0) {
+      expectedLength++;
+    }
+    manager.transact(transactions[i], merge);
+    evaluators[i+1](box);
+    // Length and position should increase by 1.
+    is(manager.length, expectedLength, "UndoManager length is incorrect after transaction");
+    is(manager.position, 0, "UndoManager position is incorrect after transaction");
+  }
+
+  // Undo all the transactions and make sure the content of box is the
+  // expected content.
+  var expectedPosition = 0;
+  for (var i = transactions.length - 1; i >= 0; i--) {
+    // Don't evaluate if the transaction was merged.
+    if (merges.indexOf(i) == -1) {
+      expectedPosition++;
+      manager.undo();
+      evaluators[i](box);
+      // Length and position should decrease by one.
+      is(manager.length, expectedLength, "UndoManager length should not change after undo");
+      is(manager.position, expectedPosition, "UndoManager position is incorrect after undo");
+    }
+  }
+
+  // Redo all the transactions and make sure the content of the box is
+  // the expected content.
+  for (var i = 0; i < transactions.length; i++) {
+    // Don't evaluate if the next transaction was merged into the current transaction.
+    if (merges.indexOf(i+1) == -1) {
+      expectedPosition--;
+      manager.redo();
+      evaluators[i+1](box);
+      // Length and position should increase by 1.
+      is(manager.length, expectedLength, "UndoManager length should not change after redo");
+      is(manager.position, expectedPosition, "UndoManager position is incorrect after redo");
+    }
+  }
+
+  content.removeChild(box);
+}
+
+testUndoRedoOnEmptyManager(0, 1);
+testUndoRedoOnEmptyManager(1, 0);
+testUndoRedoOnEmptyManager(2, 1);
+testUndoRedoOnEmptyManager(1, 2);
+testUndoRedoOnEmptyManager(2, 2);
+
+/**
+ * Test undo/redo when there is no undo transactions.
+ * Makes sure that nothing bad happens (eg. crash) and that position and length
+ * don't change.
+ */
+function testUndoRedoOnEmptyManager(numUndo, numRedo) {
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  box.undoScope = true;
+  var manager = box.undoManager;
+
+  for (var i = 0; i < numUndo; i++) {
+    manager.undo();
+    is(manager.length, 0, "Undo should not change number of transacstions");
+    is(manager.position, 0, "Undo should not change position");
+  }
+
+  for (var i = 0; i < numRedo; i++) {
+    manager.redo();
+    is(manager.length, 0, "Undo should not change number of transacstions");
+    is(manager.position, 0, "Undo should not change position");
+  }
+
+  content.removeChild(box);
+}
+
+// Test item()
+
+testItem(10, 0);
+testItem(10, 1);
+testItem(10, 10);
+testItem(10, 5);
+testItem(1, 1);
+
+/**
+ * Create a UndoManager with numTxns transactions and calls undo numUndo
+ * times. Ensures that items are in the correct order.
+ */
+function testItem(numTxns, numUndo) {
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  box.undoScope = true;
+  var manager = box.undoManager;
+
+  for (var i = 0; i < numTxns; i++) {
+    var dummyTxn = {label: null, execute: function(){}, value: i};
+    manager.transact(dummyTxn, false);
+  }
+
+  for (var i = 0; i < numUndo; i++) {
+    manager.undo();
+  }
+
+  for (var i = 0; i < manager.length; i++) {
+    var txns = manager.item(i);
+    is(txns[0].value, numTxns - i - 1, "item() returned the incorrect transaction");
+  }
+
+  content.removeChild(box);
+}
+
+testClearUndoRedoGetItem(10, 10, true);
+testClearUndoRedoGetItem(1, 1, true);
+testClearUndoRedoGetItem(1, 0, true);
+testClearUndoRedoGetItem(10, 0, true);
+testClearUndoRedoGetItem(10, 6, true);
+testClearUndoRedoGetItem(10, 10, false);
+testClearUndoRedoGetItem(1, 1, false);
+testClearUndoRedoGetItem(1, 0, false);
+testClearUndoRedoGetItem(10, 0, false);
+testClearUndoRedoGetItem(10, 6, false);
+
+/**
+ * Test clear undo/redo and ensure that item() returns the correct transaction.
+ */
+function testClearUndoRedoGetItem(numTxns, numUndo, clearRedo) {
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  box.undoScope = true;
+  var manager = box.undoManager;
+
+  for (var i = 0; i < numTxns; i++) {
+    var dummyTxn = {label: null, execute: function(){}, value: i};
+    manager.transact(dummyTxn, false);
+  }
+
+  for (var i = 0; i < numUndo; i++) {
+    manager.undo();
+  }
+
+  is(manager.length, numTxns, "UndoManager has incorrect number of transactions");
+  is(manager.position, numUndo, "UndoManager has incorrect position");
+
+  // Check for the correct length and position.
+  if (clearRedo) {
+    manager.clearRedo();
+    is(manager.position, 0, "UndoManager is incorrect position after clearRedo")
+    is(manager.length, numTxns - numUndo, "UndoManager has incorrect number of transactions after clearRedo");
+  } else {
+    manager.clearUndo();
+    is(manager.position, numUndo, "UndoManager should be at position 0 after clearUndo");
+    is(manager.length, numUndo, "UndoManager has incorrect number of transactions after clearUndo");
+  }
+
+  // Check that the most recent transaction (if one exists) is the correct one.
+  if (manager.length > 0) {
+    var newestTxn = manager.item(0)[0];
+    if (clearRedo) {
+      is(newestTxn.value + 1, numTxns - numUndo, "item() returned the incorrect transaction after clearRedo");
+    } else {
+      is(newestTxn.value + 1, numTxns, "item() returned the incorrect transaction after clearUndo");
+    }
+  }
+
+  content.removeChild(box);
+}
+
+testOutOfBoundsItem(0, -1);
+testOutOfBoundsItem(0, 0);
+testOutOfBoundsItem(0, 1);
+testOutOfBoundsItem(1, -1);
+testOutOfBoundsItem(1, 1);
+testOutOfBoundsItem(2, 2);
+testOutOfBoundsItem(2, 3);
+
+/**
+ * Out of bound access to item.
+ */
+function testOutOfBoundsItem(numTxns, itemNum) {
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  box.undoScope = true;
+  var manager = box.undoManager;
+
+  for (var i = 0; i < numTxns; i++) {
+    var dummyTxn = {label: null, execute: function(){}};
+    manager.transact(dummyTxn, false);
+  }
+
+  is(null, manager.item(itemNum), "Accessing out of bounds item should return null.");
+
+  content.removeChild(box);
+}
+
+/**
+ * Should not be able to access undoManager from within a transaction.
+ */
+
+var accessUndoManagerLength = {
+  label: "accessUndoManagerLength",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    is(0, box.undoManager.length, "Length should not change until after transaction is executed.");
+  }
+};
+
+transactExpectNoException(accessUndoManagerLength);
+
+var accessUndoManagerPosition = {
+  label: "accessUndoManagerPosition",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    is(0, box.undoManager.position, "Position should not change until after transaction is executed.");
+  }
+};
+
+transactExpectNoException(accessUndoManagerPosition);
+
+var accessUndoManagerUndo = {
+  label: "accessUndoManagerUndo",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.undoManager.undo();
+  }
+};
+
+transactExpectException(accessUndoManagerUndo);
+
+var accessUndoManagerRedo = {
+  label: "accessUndoManagerRedo",
+  executeAutomatic: function() {
+    var box = document.getElementById("box");
+    box.undoManager.redo();
+  }
+};
+
+transactExpectException(accessUndoManagerRedo);
+
+function transactExpectNoException(transaction) {
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  box.undoScope = true;
+  try {
+    box.undoManager.transact(transaction, false);
+    ok(true, "Transaction should not cause UndoManager to throw an exception.");
+  } catch (ex) {
+    ok(false, "Transaction should not cause UndoManager to throw an exception.");
+  }
+  content.removeChild(box);
+}
+
+function transactExpectException(transaction) {
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  box.undoScope = true;
+  try {
+    box.undoManager.managedTransaction(transaction);
+    ok(false, "Transaction should cause UndoManager to throw an exception.");
+  } catch (ex) {
+    ok(true, "Transaction should cause UndoManager to throw an exception.");
+  }
+  content.removeChild(box);
+}
+
+/**
+ * Should be able to access other undoManager from within a transaction.
+ */
+
+modifyOtherManager(accessUndoManagerLength);
+modifyOtherManager(accessUndoManagerPosition);
+modifyOtherManager(accessUndoManagerUndo);
+modifyOtherManager(accessUndoManagerRedo);
+
+function modifyOtherManager(transaction) {
+  var otherElement = document.createElement('div');
+  var box = createTextBoxElement();
+  content.appendChild(box);
+  content.appendChild(otherElement);
+  otherElement.undoScope = true;
+  box.undoScope = true;
+  try {
+    otherElement.undoManager.transact(transaction, false);
+    ok(true, "Should not throw exception when UndoManager accesses other undo manager");
+  } catch (ex) {
+    ok(false, "Should not throw exception when UndoManager accesses other undo manager");
+  }
+  content.removeChild(box);
+  content.removeChild(otherElement);
+}
+
+/**
+ * Tests for usage of undo manager with modifications to the host node outside
+ * of the manager. Such usage is not supported but it should not cause bad
+ * things to happen (eg. crash).
+ */
+
+// Remove the last characters from text, so that the deleteData range is out of bounds.
+function removeLastCharactersExternal(element) {
+  element.firstChild.deleteData(3, 10);
+}
+
+testExternalMutation(removeLastCharactersExternal, textInsert);
+testExternalMutation(removeLastCharactersExternal, textAppend);
+
+// Change attribute value.
+function changeAttributeExternal(element) {
+  element.setAttribute("data-test", "bad");
+}
+
+testExternalMutation(changeAttributeExternal, createAttribute);
+testExternalMutation(changeAttributeExternal, changeAttribute);
+testExternalMutation(changeAttributeExternal, removeAttribute);
+
+function removeAttributeExternal(element) {
+  element.removeAttribute("data-test");
+}
+
+testExternalMutation(removeAttributeExternal, createAttribute);
+testExternalMutation(removeAttributeExternal, changeAttribute);
+testExternalMutation(removeAttributeExternal, removeAttribute);
+
+// removing children
+function removeAllChildrenExternal(element) {
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+}
+
+testExternalMutation(removeAllChildrenExternal, appendChild);
+testExternalMutation(removeAllChildrenExternal, applyInnerHTML);
+
+// Insert child
+function appendChildExternal(element) {
+  var newElement = document.createElement("span");
+  element.appendChild(newElement);
+}
+
+testExternalMutation(appendChildExternal, appendChild);
+testExternalMutation(appendChildExternal, applyInnerHTML);
+
+function testExternalMutation(externalMutation, transaction) {
+  var box = createTextBoxElement();
+  box.undoScope = true;
+  content.appendChild(box);
+  box.undoManager.transact(transaction, false);
+  externalMutation(box);
+
+  try {
+    box.undoManager.undo();
+    ok(true, "Should not throw exception when undo is called on the transaction manager");
+  } catch (ex) {
+    ok(false, "Should not throw exception when undo is called on the transaction manager");
+  }
+
+  try {
+    box.undoManager.redo();
+    ok(true, "Should not throw exception when redo is called on the transaction manager");
+  } catch (ex) {
+    ok(false, "Should not throw exception when redo is called on the transaction manager");
+  }
+
+  content.removeChild(box);
+}
+
+// Tests for manual transactions.
+var appendChildManual = {
+  label: "appendChild",
+  execute: function() {
+    this.element = document.createElement("div");
+    this.redo();
+  },
+  redo: function() {
+    var box = document.getElementById("box");
+    box.appendChild(this.element);
+  },
+  undo: function() {
+    var box = document.getElementById("box");
+    box.removeChild(this.element);
+  }
+};
+
+testTransaction([appendChildManual],
+                [getChildCountFunction(1),
+                 getChildCountFunction(2)]);
+
+testTransaction([appendChildManual, appendChild],
+                [getChildCountFunction(1),
+                 getChildCountFunction(2),
+                 getChildCountFunction(3)]);
+
+testTransaction([appendChild, appendChildManual, appendChild],
+                [getChildCountFunction(1),
+                 getChildCountFunction(2),
+                 getChildCountFunction(3),
+                 getChildCountFunction(4)]);
+
+// Tests for merge
+
+testTransaction([appendChild, appendChild, appendChild],
+                [getChildCountFunction(1),
+                 getChildCountFunction(2),
+                 getChildCountFunction(3),
+                 getChildCountFunction(4)],
+                 [1]);
+
+// Passing invalid objects to transact.
+
+transactExpectException({});
+transactExpectException({label: "hi"});
+transactExpectException({label: "hi", executeAutomatic: null});
+transactExpectException({label: "hi", execute: null});
+transactExpectException({label: "hi", executeAutomatic: 1});
+transactExpectException({label: "hi", execute: 1});
+transactExpectException({label: "hi", execute: function() {}, redo: null});
+
+// make sure the document undomanager exists.
+
+ok(document.undoManager, "Document should have an undo manager.");
+
+// Make sure that the UndoManager only records transactions within scope.
+
+var parent = document.createElement("div");
+var child = document.createElement("div");
+parent.appendChild(child);
+parent.undoScope = true;
+child.undoScope = true;
+
+var innerHTMLToBye = {
+  label: "hiToBye",
+  executeAutomatic: function() {
+    child.innerHTML = "bye";
+  }
+};
+
+child.innerHTML = "hello";
+parent.undoManager.transact(innerHTMLToBye, false);
+parent.undoManager.undo();
+
+// The parent undo manager should not have recorded transactions for the children.
+// Thus the innerHTML should not have been undone.
+is(child.innerHTML, "bye", "Inner HTML of child should not be undone because it is not in parent scope.");
+
+// Disconnect test.
+var dummyNode = document.createElement("div");
+dummyNode.undoScope = true;
+var dummyManager = dummyNode.undoManager;
+dummyManager.transact({label: null, execute: function() {}}, false);
+dummyNode.undoScope = false;
+is(dummyManager.length, 0, "All transactions should be cleared.");
+
+try {
+  dummyManager.transact({label: null, execute: function() {}}, false);
+  ok(false, "Should not be able to transact in disconnected UndoManager.");
+} catch (ex) {
+  ok(true, "Should not be able to transact in disconnected UndoManager.");
+}
+
+// Undo call before and after undo/redo.
+dummyNode = document.createElement("div");
+dummyNode.undoScope = true;
+dummyNode.innerHTML = "hello";
+
+var undoRedoTransaction = {
+  label: "undoRedoTransaction",
+  undoCall: 0,
+  redoCall: 0,
+  executeAutomatic: function () {
+    dummyNode.innerHTML = "bye";
+  },
+  undo: function() {
+    is(dummyNode.innerHTML, "hello", "redo should be called after transaction is undone.");
+    this.undoCall++;
+  },
+  redo: function() {
+    is(dummyNode.innerHTML, "bye", "redo should be called after transaction is redone.");
+    this.redoCall++;
+  }
+};
+
+dummyNode.undoManager.transact(undoRedoTransaction, false);
+is(undoRedoTransaction.undoCall, 0, "undo should not have been called yet.");
+is(undoRedoTransaction.redoCall, 0, "redo should not have been called yet.");
+dummyNode.undoManager.undo();
+is(undoRedoTransaction.undoCall, 1, "undo should be called once.");
+is(undoRedoTransaction.redoCall, 0, "redo should not have been called yet.");
+dummyNode.undoManager.redo();
+is(undoRedoTransaction.undoCall, 1, "undo should be called once.");
+is(undoRedoTransaction.redoCall, 1, "redo should be called once.");
+
+// Attribute setting.
+var dummyNode = document.createElement("div");
+ok(!dummyNode.undoManager, "UndoManager should not exist for element without undoscope attribute.");
+dummyNode.setAttribute("undoscope", "");
+ok(dummyNode.undoManager, "UndoManager should exist for element with undoscope attribute.");
+dummyNode.removeAttribute("undoscope");
+ok(!dummyNode.undoManager, "UndoManager should not exist for element without undoscope attribute.");
+
+dummyNode = document.createElement("div");
+dummyNode.undoScope = true;
+is(dummyNode.getAttribute("undoscope"), "", "undoscope attribute should reflect undoScope property.");
+dummyNode.undoScope = false;
+ok(!dummyNode.hasAttribute("undoscope"), "undoscope attribute should not exist if undoScope property is false.");
+
+// Event test
+dummyNode = document.createElement("div");
+dummyNode.undoScope = true;
+
+var transactionOne = {
+  transactCount: 0,
+  undoCount: 0,
+  redoCount: 0,
+  label: "transactionOne",
+  execute: function() {},
+};
+
+var transactionTwo = {
+  transactCount: 0,
+  undoCount: 0,
+  redoCount: 0,
+  label: "transactionTwo",
+  execute: function() {},
+};
+
+var transactionThree = {
+  transactCount: 0,
+  undoCount: 0,
+  redoCount: 0,
+  label: "transactionThree",
+  execute: function() {},
+};
+
+dummyNode.addEventListener("DOMTransaction", function(e) { e.transactions[0].transactCount++; });
+dummyNode.addEventListener("undo", function(e) { e.transactions[0].undoCount++; });
+dummyNode.addEventListener("redo", function(e) { e.transactions[0].redoCount++; });
+
+dummyNode.undoManager.transact(transactionOne, false);
+checkTransactionEvents(transactionOne, 1, 0, 0);
+dummyNode.undoManager.transact(transactionTwo, false);
+checkTransactionEvents(transactionTwo, 1, 0, 0);
+dummyNode.undoManager.transact(transactionThree, false);
+checkTransactionEvents(transactionThree, 1, 0, 0);
+
+// Should do nothing, no events dispatched.
+dummyNode.undoManager.redo();
+checkTransactionEvents(transactionThree, 1, 0, 0);
+
+dummyNode.undoManager.undo();
+checkTransactionEvents(transactionThree, 1, 1, 0);
+
+dummyNode.undoManager.redo();
+checkTransactionEvents(transactionThree, 1, 1, 1);
+
+dummyNode.undoManager.undo();
+checkTransactionEvents(transactionThree, 1, 2, 1);
+
+dummyNode.undoManager.undo();
+checkTransactionEvents(transactionTwo, 1, 1, 0);
+
+dummyNode.undoManager.undo();
+checkTransactionEvents(transactionOne, 1, 1, 0);
+
+// Should do nothing, no events dispatched.
+dummyNode.undoManager.undo();
+checkTransactionEvents(transactionOne, 1, 1, 0);
+
+function checkTransactionEvents(transaction, expectedTransact, expectedUndo, expectedRedo) {
+  is(transaction.transactCount, expectedTransact, "DOMTransaction event was dispatched an unexpected number of times.");
+  is(transaction.undoCount, expectedUndo, "undo event was dispatched an unexpected number of times.");
+  is(transaction.redoCount, expectedRedo, "redo event was dispatched an unexpected number of times.");
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -869,7 +869,7 @@ nsEditor::BeginTransaction()
   BeginUpdateViewBatch();
 
   if (mTxnMgr) {
-    mTxnMgr->BeginBatch();
+    mTxnMgr->BeginBatch(nullptr);
   }
 
   return NS_OK;
@@ -879,7 +879,7 @@ NS_IMETHODIMP
 nsEditor::EndTransaction()
 {
   if (mTxnMgr) {
-    mTxnMgr->EndBatch();
+    mTxnMgr->EndBatch(false);
   }
 
   EndUpdateViewBatch();

@@ -9,6 +9,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsTransactionStack.h"
 #include "nsISupportsImpl.h"
 #include "nsITransactionManager.h"
 #include "nsTransactionStack.h"
@@ -51,9 +52,6 @@ public:
   /* nsITransactionManager method implementations. */
   NS_DECL_NSITRANSACTIONMANAGER
 
-  /* nsTransactionManager specific methods. */
-  virtual nsresult ClearUndoStack(void);
-  virtual nsresult ClearRedoStack(void);
   already_AddRefed<nsITransaction> PeekUndoStack();
   already_AddRefed<nsITransaction> PeekRedoStack();
 
@@ -78,8 +76,9 @@ public:
 private:
 
   /* nsTransactionManager specific private methods. */
-  virtual nsresult BeginTransaction(nsITransaction *aTransaction);
-  virtual nsresult EndTransaction(void);
+  virtual nsresult BeginTransaction(nsITransaction *aTransaction,
+                                    nsISupports *aData);
+  virtual nsresult EndTransaction(bool aAllowEmpty);
 };
 
 #endif // nsTransactionManager_h__

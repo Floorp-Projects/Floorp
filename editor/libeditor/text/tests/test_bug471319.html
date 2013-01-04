@@ -55,10 +55,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         // Test 3: Undoing a batched transaction where both end points of the
         // transaction are the bogus node - the bogus node should still be
         // recognized as bogus
-        t1Editor.transactionManager.beginBatch();
+        t1Editor.transactionManager.beginBatch(null);
         t1.value = "mozilla";
         t1.value = "";
-        t1Editor.transactionManager.endBatch();
+        t1Editor.transactionManager.endBatch(false);
         t1Editor.undo(1);
         ok(!t1.value,
            "recreated <br> from undo transaction recognized as bogus");

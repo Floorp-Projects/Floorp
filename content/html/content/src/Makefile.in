@@ -45,7 +45,9 @@ EXPORTS_mozilla/dom = \
 		HTMLSharedListElement.h \
 		HTMLSpanElement.h \
 		HTMLTitleElement.h \
-		HTMLUnknownElement.h
+		HTMLUnknownElement.h \
+		UndoManager.h \
+		$(NULL)
 
 CPPSRCS		= \
 		HTMLPropertiesCollection.cpp \
@@ -111,6 +113,7 @@ CPPSRCS		= \
 		nsIConstraintValidation.cpp \
 		nsRadioVisitor.cpp \
 		nsDOMStringMap.cpp \
+		UndoManager.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA
