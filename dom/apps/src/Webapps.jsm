@@ -1382,14 +1382,8 @@ this.DOMApplicationRegistry = {
           sendError("INVALID_SECURITY_LEVEL");
         } else {
           app.etag = xhr.getResponseHeader("Etag");
-          // We allow bypassing the install confirmation process to facilitate
-          // automation.
-          if (Services.prefs.getBoolPref("dom.mozApps.auto_confirm_install")) {
-            this.confirmInstall(aData);
-          } else {
-            Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                         JSON.stringify(aData));
-          }
+          Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                       JSON.stringify(aData));
         }
       } else {
         sendError("MANIFEST_URL_ERROR");
