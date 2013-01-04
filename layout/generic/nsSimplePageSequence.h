@@ -11,7 +11,7 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
 #include "nsIDateTimeFormat.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
+#include "nsHTMLCanvasElement.h"
 
 //-----------------------------------------------
 // This class maintains all the data that 
@@ -135,7 +135,7 @@ protected:
   int32_t      mFromPageNum;
   int32_t      mToPageNum;
   nsTArray<int32_t> mPageRanges;
-  nsTArray<nsRefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
+  nsTArray<nsRefPtr<nsHTMLCanvasElement> > mCurrentCanvasList;
 
   // Selection Printing Info
   nscoord      mSelectionHeight;

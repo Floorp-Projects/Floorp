@@ -802,7 +802,7 @@ namespace mozilla {
 
 class WebGLContextUserData : public LayerUserData {
 public:
-    WebGLContextUserData(HTMLCanvasElement *aContent)
+    WebGLContextUserData(nsHTMLCanvasElement *aContent)
     : mContent(aContent) {}
 
   /** DidTransactionCallback gets called by the Layers code everytime the WebGL canvas gets composite,
@@ -811,7 +811,7 @@ public:
   static void DidTransactionCallback(void* aData)
   {
     WebGLContextUserData *userdata = static_cast<WebGLContextUserData*>(aData);
-    HTMLCanvasElement *canvas = userdata->mContent;
+    nsHTMLCanvasElement *canvas = userdata->mContent;
     WebGLContext *context = static_cast<WebGLContext*>(canvas->GetContextAtIndex(0));
 
     context->mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
@@ -821,7 +821,7 @@ public:
   }
 
 private:
-  nsRefPtr<HTMLCanvasElement> mContent;
+  nsRefPtr<nsHTMLCanvasElement> mContent;
 };
 
 } // end namespace mozilla

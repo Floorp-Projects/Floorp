@@ -14,7 +14,7 @@
 #include "nsFrameList.h"
 #include "mozilla/Attributes.h"
 #include "nsIWebProgress.h"
-#include "nsIDOMHTMLCanvasElement.h"
+#include "nsHTMLCanvasElement.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
