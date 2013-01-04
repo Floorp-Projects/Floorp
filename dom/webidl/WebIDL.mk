@@ -38,6 +38,7 @@ webidl_files = \
   DOMSettableTokenList.webidl \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
+  DOMTransaction.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \
   EventHandler.webidl \
@@ -111,6 +112,7 @@ webidl_files = \
   TextEncoder.webidl \
   URL.webidl \
   WebSocket.webidl \
+  UndoManager.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \

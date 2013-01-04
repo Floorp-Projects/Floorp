@@ -119,8 +119,8 @@ add_test(function test_create_folder_with_description() {
 
   // This checks that calling undoTransaction on an "empty batch" doesn't
   // undo the previous transaction (getItemTitle will fail)
-  txnManager.beginBatch();
-  txnManager.endBatch();
+  txnManager.beginBatch(null);
+  txnManager.endBatch(false);
   txnManager.undoTransaction();
 
   let folderId = observer._itemAddedId;

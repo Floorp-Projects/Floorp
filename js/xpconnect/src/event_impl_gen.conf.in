@@ -15,6 +15,7 @@ simple_events = [
     'UserProximityEvent',
     'CustomEvent',
     'PageTransitionEvent',
+    'DOMTransactionEvent',
     'PopStateEvent',
     'HashChangeEvent',
     'CloseEvent',

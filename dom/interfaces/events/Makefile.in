@@ -31,6 +31,7 @@ XPIDLSRCS =					\
 	nsIDOMMutationEvent.idl			\
 	nsIDOMDragEvent.idl  			\
 	nsIDOMDataTransfer.idl  			\
+	nsIDOMDOMTransactionEvent.idl  			\
 	nsIDOMPopupBlockedEvent.idl		\
 	nsIDOMBeforeUnloadEvent.idl		\
 	nsIDOMSmartCardEvent.idl                \

@@ -405,7 +405,7 @@ var BookmarkPropertiesPanel = {
     if (this._batching)
       return;
 
-    PlacesUtils.transactionManager.beginBatch();
+    PlacesUtils.transactionManager.beginBatch(null);
     this._batching = true;
   },
 
@@ -413,7 +413,7 @@ var BookmarkPropertiesPanel = {
     if (!this._batching)
       return;
 
-    PlacesUtils.transactionManager.endBatch();
+    PlacesUtils.transactionManager.endBatch(false);
     this._batching = false;
   },
 

@@ -242,6 +242,7 @@ MOCHITEST_FILES = \
 		test_bug677463.html \
 		test_bug682886.html \
 		test_bug717819.html \
+		test_undoManager.html \
 		file_fullscreen-utils.js \
 		file_fullscreen-api.html \
 		file_fullscreen-api-keys.html \
