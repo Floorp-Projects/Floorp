@@ -29,6 +29,8 @@
     rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor).
     getInterface(Ci.nsIDOMWindow);
 
+  SpecialPowers.Services.prefs.setIntPref("browser.startup.page", 0);
+
   var testframes = {
     'samedom':
       {'url':     "http://example.com" + STSPATH + "/verify.sjs",
@@ -56,12 +58,12 @@
     var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad, false);
-      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-        if (win.content.location.href == "about:privatebrowsing") {
+      win.gBrowser.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href != CONTENT_PAGE) {
           win.gBrowser.loadURI(CONTENT_PAGE);
           return;
         }
-        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+        win.gBrowser.removeEventListener("DOMContentLoaded", onInnerLoad, true);
         SimpleTest.executeSoon(function() { aCallback(win); });
       }, true);
       win.gBrowser.loadURI(CONTENT_PAGE);
@@ -216,8 +218,12 @@
     test_sts_after_exiting_private_mode
   ];
 
+  function finish() {
+    SpecialPowers.Services.prefs.clearUserPref("browser.startup.page")
+    SimpleTest.finish();
+  }
   function nextTest() {
-    SimpleTest.executeSoon(tests.length ? tests.shift() : SimpleTest.finish);
+    SimpleTest.executeSoon(tests.length ? tests.shift() : finish);
   }
   window.addEventListener('load', nextTest, false);
   </script>
