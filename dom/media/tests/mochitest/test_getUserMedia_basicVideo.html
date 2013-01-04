@@ -30,7 +30,7 @@ runTest(function () {
     navigator.mozGetUserMedia({video: true, fake: true}, function(stream) {
       var testVideo = document.getElementById('testVideo');
       var videoStreamPlayback = new MediaStreamPlayback(testVideo, stream);
-      videoStreamPlayback.playMedia(5000, function() {
+      videoStreamPlayback.playMedia(10000, function() {
 				stream.stop();
 				SimpleTest.finish();
 			}, unexpectedCallbackAndFinish);
