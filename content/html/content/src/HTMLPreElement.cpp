@@ -3,96 +3,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/dom/HTMLPreElement.h"
 
-#include "nsIDOMHTMLPreElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLPreElement : public nsGenericHTMLElement,
-                         public nsIDOMHTMLPreElement
-{
-public:
-  nsHTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLPreElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLPreElement
-  NS_IMETHOD GetWidth(int32_t* aWidth);
-  NS_IMETHOD SetWidth(int32_t aWidth);
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(Pre)
+DOMCI_NODE_DATA(HTMLPreElement, mozilla::dom::HTMLPreElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLPreElement::nsHTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLPreElement::~HTMLPreElement()
 {
 }
 
-nsHTMLPreElement::~nsHTMLPreElement()
-{
-}
+NS_IMPL_ADDREF_INHERITED(HTMLPreElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLPreElement, Element)
 
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLPreElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLPreElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLPreElement, nsHTMLPreElement)
-
-// QueryInterface implementation for nsHTMLPreElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLPreElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLPreElement, nsIDOMHTMLPreElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLPreElement,
+// QueryInterface implementation for HTMLPreElement
+NS_INTERFACE_TABLE_HEAD(HTMLPreElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLPreElement, nsIDOMHTMLPreElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLPreElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLPreElement)
 
+NS_IMPL_ELEMENT_CLONE(HTMLPreElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLPreElement)
-
-
-NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
-
+NS_IMPL_INT_ATTR(HTMLPreElement, Width, width)
 
 bool
-nsHTMLPreElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
-                                 const nsAString& aValue,
-                                 nsAttrValue& aResult)
+HTMLPreElement::ParseAttribute(int32_t aNamespaceID,
+                               nsIAtom* aAttribute,
+                               const nsAString& aValue,
+                               nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::cols) {
@@ -151,7 +98,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::wrap },
@@ -169,7 +116,10 @@ nsHTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 nsMapRuleToAttributesFunc
-nsHTMLPreElement::GetAttributeMappingFunction() const
+HTMLPreElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla
