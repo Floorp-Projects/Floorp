@@ -480,6 +480,10 @@ class CGHeaders(CGWrapper):
         # Grab all the implementation declaration files we need.
         implementationIncludes = set(d.headerFile for d in descriptors)
 
+        # Grab the includes for the things that involve hasInstanceInterface
+        hasInstanceIncludes = set(d.hasInstanceInterface + ".h" for d
+                                  in descriptors if d.hasInstanceInterface)
+
         # Now find all the things we'll need as arguments because we
         # need to wrap or unwrap them.
         bindingHeaders = set()
@@ -541,6 +545,7 @@ class CGHeaders(CGWrapper):
                            definePre=_includeString(sorted(set(defineIncludes) |
                                                            bindingIncludes |
                                                            bindingHeaders |
+                                                           hasInstanceIncludes |
                                                            implementationIncludes)))
     @staticmethod
     def getDeclarationFilename(decl):

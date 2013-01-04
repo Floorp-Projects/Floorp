@@ -33,7 +33,6 @@ MOCHITEST_FILES := \
   test_attributes.html.json \
   test_case.html.json \
   test_historical.html.json \
-  test_interfaces.html.json \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
