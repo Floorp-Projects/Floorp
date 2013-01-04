@@ -3238,7 +3238,7 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
      * arrays in JSON and script literals and allows setDenseArrayElement to
      * be used without updating the indexed type set for such default arrays.
      */
-    if (!arrayProto->setNewTypeUnknown(cx))
+    if (!JSObject::setNewTypeUnknown(cx, arrayProto))
         return NULL;
 
     if (!LinkConstructorAndPrototype(cx, ctor, arrayProto))

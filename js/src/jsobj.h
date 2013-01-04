@@ -476,7 +476,7 @@ struct JSObject : public js::ObjectImpl
      * Mark an object as requiring its default 'new' type to have unknown
      * properties.
      */
-    bool setNewTypeUnknown(JSContext *cx);
+    static bool setNewTypeUnknown(JSContext *cx, JS::HandleObject obj);
 
     /* Set a new prototype for an object with a singleton type. */
     bool splicePrototype(JSContext *cx, js::Handle<js::TaggedProto> proto);
