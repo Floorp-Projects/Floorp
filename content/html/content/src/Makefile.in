@@ -39,6 +39,7 @@ EXPORTS_mozilla/dom = \
 		HTMLHeadingElement.h \
 		HTMLImageElement.h \
 		HTMLLabelElement.h \
+		HTMLSharedListElement.h \
 		HTMLTitleElement.h \
 		HTMLUnknownElement.h
 
@@ -80,7 +81,6 @@ CPPSRCS		= \
 		nsHTMLMeterElement.cpp \
 		nsHTMLModElement.cpp \
 		nsHTMLObjectElement.cpp \
-		nsHTMLOListElement.cpp \
 		nsHTMLSharedObjectElement.cpp \
 		nsHTMLOptionElement.cpp \
 		nsHTMLOptGroupElement.cpp \
@@ -92,6 +92,7 @@ CPPSRCS		= \
 		nsHTMLSelectElement.cpp \
 		nsHTMLSharedElement.cpp \
 		nsHTMLSpanElement.cpp \
+		HTMLSharedListElement.cpp \
 		nsHTMLStyleElement.cpp \
 		nsHTMLTableElement.cpp \
 		nsHTMLTableCaptionElement.cpp \
