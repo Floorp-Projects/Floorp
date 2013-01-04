@@ -59,7 +59,7 @@
 #include "nsIMozBrowserFrame.h"
 
 #include "nsLayoutUtils.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsAsyncDOMEvent.h"
 
 #include "nsIURI.h"
@@ -801,8 +801,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
                                          scrollbarPrefY);
     }
 
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
     if (presShell) {
       // Ensure root scroll frame is reflowed in case scroll preferences or
       // margins have changed
@@ -815,7 +814,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
     }
   }
 
-  nsIView* view = frame->EnsureInnerView();
+  nsView* view = frame->EnsureInnerView();
   if (!view)
     return false;
 
@@ -847,8 +846,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   // sub-document. This shouldn't be necessary, but given the way our
   // editor works, it is. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIDOMHTMLDocument> doc =
       do_QueryInterface(presShell->GetDocument());
@@ -2454,14 +2452,14 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 }
 
 void
-nsFrameLoader::SetDetachedSubdocView(nsIView* aDetachedViews,
+nsFrameLoader::SetDetachedSubdocView(nsView* aDetachedViews,
                                      nsIDocument* aContainerDoc)
 {
   mDetachedSubdocViews = aDetachedViews;
   mContainerDocWhileDetached = aContainerDoc;
 }
 
-nsIView*
+nsView*
 nsFrameLoader::GetDetachedSubdocView(nsIDocument** aContainerDoc) const
 {
   NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);

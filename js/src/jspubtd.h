@@ -72,13 +72,7 @@ typedef uint16_t  jschar;
  * #if expressions.
  */
 typedef enum JSVersion {
-    JSVERSION_1_0     = 100,
-    JSVERSION_1_1     = 110,
-    JSVERSION_1_2     = 120,
-    JSVERSION_1_3     = 130,
-    JSVERSION_1_4     = 140,
     JSVERSION_ECMA_3  = 148,
-    JSVERSION_1_5     = 150,
     JSVERSION_1_6     = 160,
     JSVERSION_1_7     = 170,
     JSVERSION_1_8     = 180,
@@ -87,9 +81,6 @@ typedef enum JSVersion {
     JSVERSION_UNKNOWN = -1,
     JSVERSION_LATEST  = JSVERSION_ECMA_5
 } JSVersion;
-
-#define JSVERSION_IS_ECMA(version) \
-    ((version) == JSVERSION_DEFAULT || (version) >= JSVERSION_1_3)
 
 /* Result of typeof operator enumeration. */
 typedef enum JSType {

@@ -7,11 +7,12 @@
 interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
+interface nsIDOMMozSmsSegmentInfo;
 
-[scriptable, builtinclass, uuid(1b3b8a3e-7ee6-4192-ae8f-a627b2ece95b)]
+[scriptable, builtinclass, uuid(2bdb02e7-ec3a-47a9-885c-0ab514566801)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
-  unsigned short getNumberOfMessagesForText(in DOMString text);
+  nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
 
   // The first parameter can be either a DOMString (only one number) or an array
   // of DOMStrings.

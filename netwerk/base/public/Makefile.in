@@ -125,7 +125,9 @@ ifdef MOZ_TOOLKIT_SEARCH
 XPIDLSRCS	+= nsIBrowserSearchService.idl
 endif
 
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+XPIDLSRCS	+= nsIPrivateBrowsingServiceObsolete.idl
+else
 XPIDLSRCS	+= nsIPrivateBrowsingService.idl
 endif
 

@@ -36,9 +36,9 @@ DEFINES += \
 
 ifdef LIBXUL_SDK #{
 PREF_JS_EXPORTS += $(srcdir)/profile/channel-prefs.js
+DEFINES += -DLIBXUL_SDK
+endif #} LIBXUL_SDK
 
-include $(topsrcdir)/config/rules.mk
-else
 # Build a binary bootstrapping with XRE_main
 
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
@@ -130,8 +130,6 @@ GARBAGE += $(addprefix $(FINAL_TARGET)/defaults/pref/, firefox.js)
 
 endif
 
-endif #} LIBXUL_SDK
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(FINAL_TARGET)/icons
@@ -188,21 +186,11 @@ libs repackage:: $(PROGRAM) $(libs-preqs)
 	sed -e "s/%APP_VERSION%/$(MOZ_APP_VERSION)/" -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" -e "s/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/" -e "s/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
 	sed -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(dist_dest)/Contents/$(APPFILES)
-ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(dist_dest)/Contents/MacOS/firefox
-else
 	$(RM) $(dist_dest)/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(dist_dest)/Contents/MacOS
-endif
 	cp -RL $(DIST)/branding/firefox.icns $(dist_dest)/Contents/Resources/firefox.icns
 	cp -RL $(DIST)/branding/document.icns $(dist_dest)/Contents/Resources/document.icns
 	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo
-
-else
-ifdef LIBXUL_SDK
-libs::
-	cp $(LIBXUL_DIST)/bin/$(XULRUNNER_STUB_NAME)$(BIN_SUFFIX) $(DIST)/bin/firefox$(BIN_SUFFIX)
-endif
 endif
 
 ifdef LIBXUL_SDK #{

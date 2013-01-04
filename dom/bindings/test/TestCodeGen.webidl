@@ -359,6 +359,8 @@ interface TestInterface {
   void passNullableTreatAsNullCallback(TestTreatAsNullCallback? arg);
   void passOptionalNullableTreatAsNullCallback(optional TestTreatAsNullCallback? arg);
   void passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
+  attribute TestTreatAsNullCallback treatAsNullCallback;
+  attribute TestTreatAsNullCallback? nullableTreatAsNullCallback;
 
   // Any types
   void passAny(any arg);
@@ -430,6 +432,15 @@ interface TestInterface {
   //void overload1(DOMString... strs);
   boolean overload1(TestInterface arg);
   TestInterface overload1(DOMString strs, TestInterface arg);
+  void overload2(TestInterface arg);
+  void overload2(optional Dict arg);
+  void overload2(DOMString arg);
+  void overload3(TestInterface arg);
+  void overload3(TestCallback arg);
+  void overload3(DOMString arg);
+  void overload4(TestInterface arg);
+  void overload4(TestCallbackInterface arg);
+  void overload4(DOMString arg);
 
   // Variadic handling
   void passVariadicThirdArg(DOMString arg1, long arg2, TestInterface... arg3);

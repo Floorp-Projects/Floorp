@@ -2915,7 +2915,7 @@ class FlowGraphSummary : public Vector<size_t> {
 
             if (js_CodeSpec[op].type() == JOF_JUMP) {
                 addEdge(lineno, r.frontOffset() + GET_JUMP_OFFSET(r.frontPC()));
-            } else if (op == JSOP_TABLESWITCH || op == JSOP_LOOKUPSWITCH) {
+            } else if (op == JSOP_TABLESWITCH) {
                 jsbytecode *pc = r.frontPC();
                 size_t offset = r.frontOffset();
                 ptrdiff_t step = JUMP_OFFSET_LEN;
@@ -2923,21 +2923,12 @@ class FlowGraphSummary : public Vector<size_t> {
                 pc += step;
                 addEdge(lineno, defaultOffset);
 
-                int ncases;
-                if (op == JSOP_TABLESWITCH) {
-                    int32_t low = GET_JUMP_OFFSET(pc);
-                    pc += JUMP_OFFSET_LEN;
-                    ncases = GET_JUMP_OFFSET(pc) - low + 1;
-                    pc += JUMP_OFFSET_LEN;
-                } else {
-                    ncases = GET_UINT16(pc);
-                    pc += UINT16_LEN;
-                    JS_ASSERT(ncases > 0);
-                }
+                int32_t low = GET_JUMP_OFFSET(pc);
+                pc += JUMP_OFFSET_LEN;
+                int ncases = GET_JUMP_OFFSET(pc) - low + 1;
+                pc += JUMP_OFFSET_LEN;
 
                 for (int i = 0; i < ncases; i++) {
-                    if (op == JSOP_LOOKUPSWITCH)
-                        pc += UINT32_INDEX_LEN;
                     size_t target = offset + GET_JUMP_OFFSET(pc);
                     addEdge(lineno, target);
                     pc += step;

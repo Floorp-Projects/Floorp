@@ -26,7 +26,7 @@
 
 class nsIURI;
 class nsSubDocumentFrame;
-class nsIView;
+class nsView;
 class nsIInProcessContentFrameMessageManager;
 class AutoResetInShow;
 class nsITabParent;
@@ -296,14 +296,14 @@ public:
    * document has changed during reframe, so we can discard the presentation 
    * in that case.
    */
-  void SetDetachedSubdocView(nsIView* aDetachedView,
+  void SetDetachedSubdocView(nsView* aDetachedView,
                              nsIDocument* aContainerDoc);
 
   /**
    * Retrieves the detached view and the document containing the view,
    * as set by SetDetachedSubdocView().
    */
-  nsIView* GetDetachedSubdocView(nsIDocument** aContainerDoc) const;
+  nsView* GetDetachedSubdocView(nsIDocument** aContainerDoc) const;
 
 private:
 
@@ -392,7 +392,7 @@ public:
 private:
   // Stores the root view of the subdocument while the subdocument is being
   // reframed. Used to restore the presentation after reframing.
-  nsIView* mDetachedSubdocViews;
+  nsView* mDetachedSubdocViews;
   // Stores the containing document of the frame corresponding to this
   // frame loader. This is reference is kept valid while the subframe's
   // presentation is detached and stored in mDetachedSubdocViews. This

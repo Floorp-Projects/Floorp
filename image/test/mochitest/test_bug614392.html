@@ -22,7 +22,7 @@ SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var img = document.getElementsByTagName("img")[0];
+  var img = SpecialPowers.wrap(document.getElementsByTagName("img")[0]);
   var container = img
       .QueryInterface(Components.interfaces.nsIImageLoadingContent)
       .getRequest(Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST)

@@ -14,7 +14,7 @@
 typedef long nsCookieStatus;
 typedef long nsCookiePolicy;
 
-[scriptable, uuid(E9FCB9A4-D376-458f-B720-E65E7DF593BC)]
+[scriptable, uuid(8684966b-1877-4f0f-8155-be4490b96bf7)]
 
 interface nsICookie : nsISupports {
 
@@ -26,7 +26,7 @@ interface nsICookie : nsISupports {
     /**
      * the cookie value
      */
-    readonly attribute ACString value;
+    readonly attribute AUTF8String value;
 
     /**
      * true if the cookie is a domain cookie, false otherwise

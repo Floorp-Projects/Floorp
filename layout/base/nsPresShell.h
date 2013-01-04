@@ -183,7 +183,7 @@ public:
 
   //nsIViewObserver interface
 
-  virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
+  virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                      uint32_t aFlags);
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
@@ -201,7 +201,7 @@ public:
   virtual void DidPaintWindow();
   virtual void ScheduleViewManagerFlush();
   virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange);
-  virtual void ClearMouseCaptureOnView(nsIView* aView);
+  virtual void ClearMouseCaptureOnView(nsView* aView);
   virtual bool IsVisible();
 
   // caret handling
@@ -303,7 +303,7 @@ public:
                                                  nsIFrame* aFrame,
                                                  const nsRect& aBounds);
 
-  virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot);
+  virtual nscolor ComputeBackstopColor(nsView* aDisplayRoot);
 
   virtual NS_HIDDEN_(nsresult) SetIsActive(bool aIsActive);
 
@@ -493,7 +493,7 @@ protected:
   void RemoveSheet(nsStyleSet::sheetType aType, nsISupports* aSheet);
 
   // Hide a view if it is a popup
-  void HideViewIfPopup(nsIView* aView);
+  void HideViewIfPopup(nsView* aView);
 
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();

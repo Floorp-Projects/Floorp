@@ -89,6 +89,8 @@ public:
     SetHTMLAttr(nsGkAtoms::rows, aRows, aError);
   }
 
+  virtual bool IsEventAttributeName(nsIAtom *aName) MOZ_OVERRIDE;
+
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLFrameSetElement.
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */

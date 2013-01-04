@@ -33,7 +33,7 @@
 #include "nsINodeInfo.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"

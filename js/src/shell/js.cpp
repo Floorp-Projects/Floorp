@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
@@ -1715,14 +1716,6 @@ UpdateSwitchTableBounds(JSContext *cx, HandleScript script, unsigned offset,
         n = high - low + 1;
         break;
 
-      case JSOP_LOOKUPSWITCH:
-        jmplen = JUMP_OFFSET_LEN;
-        pc += jmplen;
-        n = GET_UINT16(pc);
-        pc += UINT16_LEN;
-        jmplen += JUMP_OFFSET_LEN;
-        break;
-
       default:
         /* [condswitch] switch does not have any jump or lookup tables. */
         JS_ASSERT(op == JSOP_CONDSWITCH);
@@ -3276,14 +3269,17 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-struct FreeOnReturn {
+struct FreeOnReturn
+{
     JSContext *cx;
     const char *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    FreeOnReturn(JSContext *cx, const char *ptr = NULL JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), ptr(ptr) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    FreeOnReturn(JSContext *cx, const char *ptr = NULL
+                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx), ptr(ptr)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     void init(const char *ptr) {
