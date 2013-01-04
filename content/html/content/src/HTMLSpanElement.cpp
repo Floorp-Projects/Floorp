@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLSpanElement.h"
+#include "mozilla/dom/HTMLSpanElementBinding.h"
+
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIAtom.h"
@@ -31,6 +33,12 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSpanElement)
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLSpanElement)
+
+JSObject*
+HTMLSpanElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLSpanElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 } // namespace dom
 } // namespace mozilla
