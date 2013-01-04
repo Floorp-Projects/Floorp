@@ -187,6 +187,7 @@
 #include "nsFrame.h" 
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsViewportInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1325,6 +1326,7 @@ nsIDocument::nsIDocument()
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
   , mAnimatingImages(true)
+  , mViewportType(Unknown)
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 
@@ -3106,6 +3108,17 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       mAllowDNSPrefetch) {
     // Chromium treats any value other than 'on' (case insensitive) as 'off'.
     mAllowDNSPrefetch = aData.IsEmpty() || aData.LowerCaseEqualsLiteral("on");
+  }
+
+  if (aHeaderField == nsGkAtoms::viewport ||
+      aHeaderField == nsGkAtoms::handheldFriendly ||
+      aHeaderField == nsGkAtoms::viewport_minimum_scale ||
+      aHeaderField == nsGkAtoms::viewport_maximum_scale ||
+      aHeaderField == nsGkAtoms::viewport_initial_scale ||
+      aHeaderField == nsGkAtoms::viewport_height ||
+      aHeaderField == nsGkAtoms::viewport_width ||
+      aHeaderField ==  nsGkAtoms::viewport_user_scalable) {
+    mViewportType = Unknown;
   }
 }
 
@@ -6391,6 +6404,188 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
                "Should still be in the document we just got adopted into");
 
   return adoptedNode;
+}
+
+nsViewportInfo
+nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
+                            uint32_t aDisplayHeight)
+{
+  switch (mViewportType) {
+  case DisplayWidthHeight:
+    return nsViewportInfo(aDisplayWidth, aDisplayHeight);
+  case Unknown:
+  {
+    nsAutoString viewport;
+    GetHeaderData(nsGkAtoms::viewport, viewport);
+    if (viewport.IsEmpty()) {
+      // If the docType specifies that we are on a site optimized for mobile,
+      // then we want to return specially crafted defaults for the viewport info.
+      nsCOMPtr<nsIDOMDocumentType> docType;
+      nsresult rv = GetDoctype(getter_AddRefs(docType));
+      if (NS_SUCCEEDED(rv) && docType) {
+        nsAutoString docId;
+        rv = docType->GetPublicId(docId);
+        if (NS_SUCCEEDED(rv)) {
+          if ((docId.Find("WAP") != -1) ||
+              (docId.Find("Mobile") != -1) ||
+              (docId.Find("WML") != -1))
+          {
+            // We're making an assumption that the docType can't change here
+            mViewportType = DisplayWidthHeight;
+            nsViewportInfo ret(aDisplayWidth, aDisplayHeight);
+            return ret;
+          }
+        }
+      }
+
+      nsAutoString handheldFriendly;
+      GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
+      if (handheldFriendly.EqualsLiteral("true")) {
+        mViewportType = DisplayWidthHeight;
+        nsViewportInfo ret(aDisplayWidth, aDisplayHeight);
+        return ret;
+      }
+    }
+
+    nsAutoString minScaleStr;
+    GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
+
+    nsresult errorCode;
+    mScaleMinFloat = minScaleStr.ToFloat(&errorCode);
+
+    if (NS_FAILED(errorCode)) {
+      mScaleMinFloat = kViewportMinScale;
+    }
+
+    mScaleMinFloat = NS_MIN((double)mScaleMinFloat, kViewportMaxScale);
+    mScaleMinFloat = NS_MAX((double)mScaleMinFloat, kViewportMinScale);
+
+    nsAutoString maxScaleStr;
+    GetHeaderData(nsGkAtoms::viewport_maximum_scale, maxScaleStr);
+
+    // We define a special error code variable for the scale and max scale,
+    // because they are used later (see the width calculations).
+    nsresult scaleMaxErrorCode;
+    mScaleMaxFloat = maxScaleStr.ToFloat(&scaleMaxErrorCode);
+
+    if (NS_FAILED(scaleMaxErrorCode)) {
+      mScaleMaxFloat = kViewportMaxScale;
+    }
+
+    mScaleMaxFloat = NS_MIN((double)mScaleMaxFloat, kViewportMaxScale);
+    mScaleMaxFloat = NS_MAX((double)mScaleMaxFloat, kViewportMinScale);
+
+    nsAutoString scaleStr;
+    GetHeaderData(nsGkAtoms::viewport_initial_scale, scaleStr);
+
+    nsresult scaleErrorCode;
+    mScaleFloat = scaleStr.ToFloat(&scaleErrorCode);
+
+    nsAutoString widthStr, heightStr;
+
+    GetHeaderData(nsGkAtoms::viewport_height, heightStr);
+    GetHeaderData(nsGkAtoms::viewport_width, widthStr);
+
+    mAutoSize = false;
+
+    if (widthStr.EqualsLiteral("device-width")) {
+      mAutoSize = true;
+    }
+
+    if (widthStr.IsEmpty() &&
+        (heightStr.EqualsLiteral("device-height") ||
+         (mScaleFloat /* not adjusted for pixel ratio */ == 1.0)))
+    {
+      mAutoSize = true;
+    }
+
+    nsresult widthErrorCode, heightErrorCode;
+    mViewportWidth = widthStr.ToInteger(&widthErrorCode);
+    mViewportHeight = heightStr.ToInteger(&heightErrorCode);
+
+    // If width or height has not been set to a valid number by this point,
+    // fall back to a default value.
+    mValidWidth = (!widthStr.IsEmpty() && NS_SUCCEEDED(widthErrorCode) && mViewportWidth > 0);
+    mValidHeight = (!heightStr.IsEmpty() && NS_SUCCEEDED(heightErrorCode) && mViewportHeight > 0);
+
+
+    mAllowZoom = true;
+    nsAutoString userScalable;
+    GetHeaderData(nsGkAtoms::viewport_user_scalable, userScalable);
+
+    if ((userScalable.EqualsLiteral("0")) ||
+        (userScalable.EqualsLiteral("no")) ||
+        (userScalable.EqualsLiteral("false"))) {
+      mAllowZoom = false;
+    }
+
+    mScaleStrEmpty = scaleStr.IsEmpty();
+    mWidthStrEmpty = widthStr.IsEmpty();
+    mValidScaleFloat = !scaleStr.IsEmpty() && NS_SUCCEEDED(scaleErrorCode);
+    mValidMaxScale = !maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode);
+  
+    mViewportType = Specified;
+  }
+  case Specified:
+  default:
+    uint32_t width = mViewportWidth, height = mViewportHeight;
+
+    if (!mValidWidth) {
+      if (mValidHeight && aDisplayWidth > 0 && aDisplayHeight > 0) {
+        width = uint32_t((height * aDisplayWidth) / aDisplayHeight);
+      } else {
+        width = Preferences::GetInt("browser.viewport.desktopWidth",
+                                             kViewportDefaultScreenWidth);
+      }
+    }
+
+    if (!mValidHeight) {
+      if (aDisplayWidth > 0 && aDisplayHeight > 0) {
+        height = uint32_t((width * aDisplayHeight) / aDisplayWidth);
+      } else {
+        height = width;
+      }
+    }
+    // Now convert the scale into device pixels per CSS pixel.
+    nsIWidget *widget = nsContentUtils::WidgetForDocument(this);
+    double pixelRatio = widget ? nsContentUtils::GetDevicePixelsPerMetaViewportPixel(widget) : 1.0;
+    float scaleFloat = mScaleFloat * pixelRatio;
+    float scaleMinFloat= mScaleMinFloat * pixelRatio;
+    float scaleMaxFloat = mScaleMaxFloat * pixelRatio;
+
+    if (mAutoSize) {
+      // aDisplayWidth and aDisplayHeight are in device pixels; convert them to
+      // CSS pixels for the viewport size.
+      width = aDisplayWidth / pixelRatio;
+      height = aDisplayHeight / pixelRatio;
+    }
+
+    width = NS_MIN(width, kViewportMaxWidth);
+    width = NS_MAX(width, kViewportMinWidth);
+
+    // Also recalculate the default zoom, if it wasn't specified in the metadata,
+    // and the width is specified.
+    if (mScaleStrEmpty && !mWidthStrEmpty) {
+      scaleFloat = NS_MAX(scaleFloat, float(aDisplayWidth) / float(width));
+    }
+
+    height = NS_MIN(height, kViewportMaxHeight);
+    height = NS_MAX(height, kViewportMinHeight);
+
+    // We need to perform a conversion, but only if the initial or maximum
+    // scale were set explicitly by the user.
+    if (mValidScaleFloat) {
+      width = NS_MAX(width, (uint32_t)(aDisplayWidth / scaleFloat));
+      height = NS_MAX(height, (uint32_t)(aDisplayHeight / scaleFloat));
+    } else if (mValidMaxScale) {
+      width = NS_MAX(width, (uint32_t)(aDisplayWidth / scaleMaxFloat));
+      height = NS_MAX(height, (uint32_t)(aDisplayHeight / scaleMaxFloat));
+    }
+
+    nsViewportInfo ret(scaleFloat, scaleMinFloat, scaleMaxFloat, width, height,
+                       mAutoSize, mAllowZoom);
+    return ret;
+  }
 }
 
 nsEventListenerManager*
