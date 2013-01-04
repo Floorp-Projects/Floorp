@@ -2257,7 +2257,7 @@ protected:
 class gfxShapedWord : public gfxShapedText
 {
 public:
-    static const uint32_t kMaxLength = 0x7fff;
+    static const uint32_t kMaxLength = 32;
 
     // Create a ShapedWord that can hold glyphs for aLength characters,
     // with mCharacterGlyphs sized appropriately.
