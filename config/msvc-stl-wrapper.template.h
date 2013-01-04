@@ -60,10 +60,12 @@
 //#  undef _SECURE_SCL
 #endif
 
-// We know that code won't be able to catch exceptions, but that's OK
-// because we're not throwing them.
+// C4275: When _HAS_EXCEPTIONS is set to 0, system STL header
+//        will generate the warning which we can't modify.
+// C4530: We know that code won't be able to catch exceptions,
+//        but that's OK because we're not throwing them.
 #pragma warning( push )
-#pragma warning( disable : 4530 )
+#pragma warning( disable : 4275 4530 )
 
 #include <${HEADER_PATH}>
 
