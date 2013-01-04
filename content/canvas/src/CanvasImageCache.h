@@ -9,9 +9,9 @@
 namespace mozilla {
 namespace dom {
 class Element;
+class HTMLCanvasElement;
 } // namespace dom
 } // namespace mozilla
-class nsHTMLCanvasElement;
 class imgIRequest;
 class gfxASurface;
 
@@ -27,7 +27,7 @@ public:
    * in aSurface, and the image size is in aSize.
    */
   static void NotifyDrawImage(dom::Element* aImage,
-                              nsHTMLCanvasElement* aCanvas,
+                              dom::HTMLCanvasElement* aCanvas,
                               imgIRequest* aRequest,
                               gfxASurface* aSurface,
                               const gfxIntSize& aSize);
@@ -39,7 +39,7 @@ public:
    * data, and the image size will be returned in aSize.
    */
   static gfxASurface* Lookup(dom::Element* aImage,
-                             nsHTMLCanvasElement* aCanvas,
+                             dom::HTMLCanvasElement* aCanvas,
                              gfxIntSize* aSize);
 };
 

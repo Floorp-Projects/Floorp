@@ -16,7 +16,7 @@
 #include "nsContentUtils.h"
 
 #include "nsIDocument.h"
-#include "nsHTMLCanvasElement.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsSVGEffects.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -621,7 +621,7 @@ CanvasRenderingContext2D::Reset()
 }
 
 static void
-WarnAboutUnexpectedStyle(nsHTMLCanvasElement* canvasElement)
+WarnAboutUnexpectedStyle(HTMLCanvasElement* canvasElement)
 {
   nsContentUtils::ReportToConsole(
     nsIScriptError::warningFlag,
@@ -1400,7 +1400,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
 
   Element* htmlElement;
   if (element.IsHTMLCanvasElement()) {
-    nsHTMLCanvasElement* canvas = element.GetAsHTMLCanvasElement();
+    HTMLCanvasElement* canvas = element.GetAsHTMLCanvasElement();
     htmlElement = canvas;
 
     nsIntSize size = canvas->GetSize();
@@ -2913,7 +2913,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 
   EnsureTarget();
   if (image.IsHTMLCanvasElement()) {
-    nsHTMLCanvasElement* canvas = image.GetAsHTMLCanvasElement();
+    HTMLCanvasElement* canvas = image.GetAsHTMLCanvasElement();
     element = canvas;
     nsIntSize size = canvas->GetSize();
     if (size.width == 0 || size.height == 0) {
