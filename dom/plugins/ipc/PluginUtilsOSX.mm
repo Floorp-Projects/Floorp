@@ -106,6 +106,8 @@ CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
   ::CGContextTranslateCTM(aCGContext, 0, self.bounds.size.height);
   ::CGContextScaleCTM(aCGContext, (CGFloat) 1, (CGFloat) -1);
 
+  mUpdateRect = nsIntRect(0, 0, self.bounds.size.width, self.bounds.size.height);
+
   mDrawFunc(aCGContext, mPluginInstance, mUpdateRect);
 
   ::CGContextRestoreGState(aCGContext);
