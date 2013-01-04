@@ -83,7 +83,7 @@ static PangoLanguage *GuessPangoLanguage(nsIAtom *aLanguage);
 
 static cairo_scaled_font_t *
 CreateScaledFont(FcPattern *aPattern, cairo_font_face_t *aFace);
-static void SetMissingGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8,
+static void SetMissingGlyphs(gfxShapedText *aShapedText, const gchar *aUTF8,
                              uint32_t aUTF8Length, uint32_t *aUTF16Offset,
                              gfxFont *aFont);
 
@@ -286,7 +286,7 @@ gfxFcFontEntry::ShouldUseHarfBuzz(int32_t aRunScript) {
         return true;
     }
 
-    // Mimicing gfxHarfBuzzShaper::ShapeWord
+    // Mimicing gfxHarfBuzzShaper::ShapeText
     hb_script_t script = (aRunScript <= MOZ_SCRIPT_INHERITED) ?
         HB_SCRIPT_LATIN :
         hb_script_t(GetScriptTagForCode(aRunScript));
@@ -804,13 +804,19 @@ public:
     }
 
 protected:
-    virtual bool ShapeWord(gfxContext *aContext,
-                           gfxShapedWord *aShapedWord,
-                           const PRUnichar *aString,
-                           bool aPreferPlatformShaping);
+    virtual bool ShapeText(gfxContext      *aContext,
+                           const PRUnichar *aText,
+                           uint32_t         aOffset,
+                           uint32_t         aLength,
+                           int32_t          aScript,
+                           gfxShapedText   *aShapedText,
+                           bool             aPreferPlatformShaping);
 
-    bool InitGlyphRunWithPango(gfxShapedWord *aTextRun,
-                               const PRUnichar *aString);
+    bool InitGlyphRunWithPango(const PRUnichar *aString,
+                               uint32_t         aOffset,
+                               uint32_t         aLength,
+                               int32_t          aScript,
+                               gfxShapedText   *aShapedText);
 
 private:
     gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
@@ -2247,12 +2253,17 @@ gfxFcFont::~gfxFcFont()
 }
 
 bool
-gfxFcFont::ShapeWord(gfxContext *aContext,
-                     gfxShapedWord *aShapedWord,
-                     const PRUnichar *aString,
-                     bool aPreferPlatformShaping)
+gfxFcFont::ShapeText(gfxContext      *aContext,
+                     const PRUnichar *aText,
+                     uint32_t         aOffset,
+                     uint32_t         aLength,
+                     int32_t          aScript,
+                     gfxShapedText   *aShapedText,
+                     bool             aPreferPlatformShaping)
 {
     gfxFcFontEntry *fontEntry = static_cast<gfxFcFontEntry*>(GetFontEntry());
+
+    bool ok = false;
 
 #ifdef MOZ_GRAPHITE
     if (FontCanSupportGraphite()) {
@@ -2260,32 +2271,37 @@ gfxFcFont::ShapeWord(gfxContext *aContext,
             if (!mGraphiteShaper) {
                 mGraphiteShaper = new gfxGraphiteShaper(this);
             }
-            if (mGraphiteShaper->ShapeWord(aContext, aShapedWord, aString)) {
-                return true;
-            }
+            ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
+                                            aScript, aShapedText);
         }
     }
 #endif
 
-    if (fontEntry->ShouldUseHarfBuzz(aShapedWord->Script())) {
+    if (!ok && fontEntry->ShouldUseHarfBuzz(aScript)) {
         if (!mHarfBuzzShaper) {
             gfxFT2LockedFace face(this);
             mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
             // Used by gfxHarfBuzzShaper, currently only for kerning
             mFUnitsConvFactor = face.XScale();
         }
-        if (mHarfBuzzShaper->ShapeWord(aContext, aShapedWord, aString)) {
-            return true;
+        ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
+                                        aScript, aShapedText);
+        if (!ok) {
+            // Wrong font type for HarfBuzz
+            fontEntry->SkipHarfBuzz();
+            mHarfBuzzShaper = nullptr;
         }
-
-        // Wrong font type for HarfBuzz
-        fontEntry->SkipHarfBuzz();
-        mHarfBuzzShaper = nullptr;
     }
 
-    bool ok = InitGlyphRunWithPango(aShapedWord, aString);
+    if (!ok) {
+        ok = InitGlyphRunWithPango(aText, aOffset, aLength, aScript,
+                                   aShapedText);
+    }
 
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
+
+    PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
+
     return ok;
 }
 
@@ -2786,42 +2802,42 @@ ConvertPangoToAppUnits(int32_t aCoordinate, uint32_t aAppUnitsPerDevUnit)
  */ 
 static nsresult
 SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, uint32_t aGlyphCount,
-                           gfxShapedWord *aShapedWord,
+                           gfxShapedText *aShapedText,
                            const gchar *aUTF8, uint32_t aUTF8Length,
                            uint32_t *aUTF16Offset,
                            PangoGlyphUnit aOverrideSpaceWidth)
 {
     uint32_t utf16Offset = *aUTF16Offset;
-    uint32_t wordLength = aShapedWord->Length();
-    const uint32_t appUnitsPerDevUnit = aShapedWord->AppUnitsPerDevUnit();
+    uint32_t limit = aShapedText->GetLength();
+    const uint32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
+    gfxShapedText::CompressedGlyph *charGlyphs =
+        aShapedText->GetCharacterGlyphs();
+    bool atClusterStart = charGlyphs[utf16Offset].IsClusterStart();
 
     // Override the width of a space, but only for spaces that aren't
     // clustered with something else (like a freestanding diacritical mark)
     PangoGlyphUnit width = aGlyphs[0].geometry.width;
     if (aOverrideSpaceWidth && aUTF8[0] == ' ' &&
-        (utf16Offset + 1 == wordLength ||
-         aShapedWord->IsClusterStart(utf16Offset))) {
+        (utf16Offset + 1 == limit || atClusterStart)) {
         width = aOverrideSpaceWidth;
     }
     int32_t advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
 
-    gfxShapedWord::CompressedGlyph g;
-    bool atClusterStart = aShapedWord->IsClusterStart(utf16Offset);
+    gfxShapedText::CompressedGlyph g;
     // See if we fit in the compressed area.
     if (aGlyphCount == 1 && advance >= 0 && atClusterStart &&
         aGlyphs[0].geometry.x_offset == 0 &&
         aGlyphs[0].geometry.y_offset == 0 &&
         !IS_EMPTY_GLYPH(aGlyphs[0].glyph) &&
-        gfxShapedWord::CompressedGlyph::IsSimpleAdvance(advance) &&
-        gfxShapedWord::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
-        aShapedWord->SetSimpleGlyph(utf16Offset,
-                                    g.SetSimpleGlyph(advance, aGlyphs[0].glyph));
+        gfxShapedText::CompressedGlyph::IsSimpleAdvance(advance) &&
+        gfxShapedText::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
+        charGlyphs[utf16Offset].SetSimpleGlyph(advance, aGlyphs[0].glyph);
     } else {
-        nsAutoTArray<gfxShapedWord::DetailedGlyph,10> detailedGlyphs;
+        nsAutoTArray<gfxShapedText::DetailedGlyph,10> detailedGlyphs;
         if (!detailedGlyphs.AppendElements(aGlyphCount))
             return NS_ERROR_OUT_OF_MEMORY;
 
-        int32_t direction = aShapedWord->IsRightToLeft() ? -1 : 1;
+        int32_t direction = aShapedText->IsRightToLeft() ? -1 : 1;
         uint32_t pangoIndex = direction > 0 ? 0 : aGlyphCount - 1;
         uint32_t detailedIndex = 0;
         for (uint32_t i = 0; i < aGlyphCount; ++i) {
@@ -2832,7 +2848,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, uint32_t aGlyphCount,
             if (IS_EMPTY_GLYPH(glyph.glyph))
                 continue;
 
-            gfxShapedWord::DetailedGlyph *details = &detailedGlyphs[detailedIndex];
+            gfxShapedText::DetailedGlyph *details = &detailedGlyphs[detailedIndex];
             ++detailedIndex;
 
             details->mGlyphID = glyph.glyph;
@@ -2847,7 +2863,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, uint32_t aGlyphCount,
                 float(glyph.geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
         }
         g.SetComplex(atClusterStart, true, detailedIndex);
-        aShapedWord->SetGlyphs(utf16Offset, g, detailedGlyphs.Elements());
+        aShapedText->SetGlyphs(utf16Offset, g, detailedGlyphs.Elements());
     }
 
     // Check for ligatures and set *aUTF16Offset.
@@ -2872,20 +2888,21 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, uint32_t aGlyphCount,
         if (p >= end)
             break;
 
-        if (utf16Offset >= wordLength) {
+        if (utf16Offset >= limit) {
             NS_ERROR("Someone has added too many glyphs!");
             return NS_ERROR_FAILURE;
         }
 
-        g.SetComplex(aShapedWord->IsClusterStart(utf16Offset), false, 0);
-        aShapedWord->SetGlyphs(utf16Offset, g, nullptr);
+        gfxShapedText::CompressedGlyph &g = charGlyphs[utf16Offset];
+        NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
+        g.SetComplex(g.IsClusterStart(), false, 0);
     }
     *aUTF16Offset = utf16Offset;
     return NS_OK;
 }
 
 static nsresult
-SetGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8, uint32_t aUTF8Length,
+SetGlyphs(gfxShapedText *aShapedText, const gchar *aUTF8, uint32_t aUTF8Length,
           uint32_t *aUTF16Offset, PangoGlyphString *aGlyphs,
           PangoGlyphUnit aOverrideSpaceWidth,
           gfxFont *aFont)
@@ -2921,13 +2938,13 @@ SetGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8, uint32_t aUTF8Length,
     }
 
     uint32_t utf16Offset = *aUTF16Offset;
-    uint32_t wordLength = aShapedWord->Length();
+    uint32_t limit = aShapedText->GetLength();
     utf8Index = 0;
     // The next glyph cluster in logical order. 
     gint nextGlyphClusterStart = logGlyphs[utf8Index];
     NS_ASSERTION(nextGlyphClusterStart >= 0, "No glyphs! - NUL in string?");
     while (utf8Index < aUTF8Length) {
-        if (utf16Offset >= wordLength) {
+        if (utf16Offset >= limit) {
           NS_ERROR("Someone has added too many glyphs!");
           return NS_ERROR_FAILURE;
         }
@@ -2935,7 +2952,7 @@ SetGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8, uint32_t aUTF8Length,
         // Find the utf8 text associated with this glyph cluster.
         uint32_t clusterUTF8Start = utf8Index;
         // Check whether we are consistent with pango_break data.
-        NS_WARN_IF_FALSE(aShapedWord->IsClusterStart(utf16Offset),
+        NS_WARN_IF_FALSE(aShapedText->IsClusterStart(utf16Offset),
                          "Glyph cluster not aligned on character cluster.");
         do {
             ++utf8Index;
@@ -2961,12 +2978,12 @@ SetGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8, uint32_t aUTF8Length,
 
         nsresult rv;
         if (haveMissingGlyph) {
-            SetMissingGlyphs(aShapedWord, clusterUTF8, clusterUTF8Length,
+            SetMissingGlyphs(aShapedText, clusterUTF8, clusterUTF8Length,
                              &utf16Offset, aFont);
         } else {
             rv = SetGlyphsForCharacterGroup(&glyphs[glyphClusterStart],
                                             glyphIndex - glyphClusterStart,
-                                            aShapedWord,
+                                            aShapedText,
                                             clusterUTF8, clusterUTF8Length,
                                             &utf16Offset, aOverrideSpaceWidth);
             NS_ENSURE_SUCCESS(rv,rv);
@@ -2977,19 +2994,19 @@ SetGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8, uint32_t aUTF8Length,
 }
 
 static void
-SetMissingGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8,
+SetMissingGlyphs(gfxShapedText *aShapedText, const gchar *aUTF8,
                  uint32_t aUTF8Length, uint32_t *aUTF16Offset,
                  gfxFont *aFont)
 {
     uint32_t utf16Offset = *aUTF16Offset;
-    uint32_t wordLength = aShapedWord->Length();
+    uint32_t limit = aShapedText->GetLength();
     for (uint32_t index = 0; index < aUTF8Length;) {
-        if (utf16Offset >= wordLength) {
+        if (utf16Offset >= limit) {
             NS_ERROR("Someone has added too many glyphs!");
             break;
         }
         gunichar ch = g_utf8_get_char(aUTF8 + index);
-        aShapedWord->SetMissingGlyph(utf16Offset, ch, aFont);
+        aShapedText->SetMissingGlyph(utf16Offset, ch, aFont);
 
         ++utf16Offset;
         NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
@@ -3003,20 +3020,23 @@ SetMissingGlyphs(gfxShapedWord *aShapedWord, const gchar *aUTF8,
 }
 
 static void
-InitGlyphRunWithPangoAnalysis(gfxShapedWord *aShapedWord,
+InitGlyphRunWithPangoAnalysis(gfxShapedText *aShapedText,
+                              uint32_t aOffset, uint32_t aLength,
                               const gchar *aUTF8, uint32_t aUTF8Length,
                               PangoAnalysis *aAnalysis,
                               PangoGlyphUnit aOverrideSpaceWidth,
                               gfxFont *aFont)
 {
-    uint32_t utf16Offset = 0;
+    uint32_t utf16Offset = aOffset;
     PangoGlyphString *glyphString = pango_glyph_string_new();
 
     const gchar *p = aUTF8;
     const gchar *end = p + aUTF8Length;
     while (p < end) {
+        NS_ASSERTION(utf16Offset < aOffset + aLength,
+                     "overrun expected range of aShapedText");
         if (*p == 0) {
-            aShapedWord->SetMissingGlyph(utf16Offset, 0, aFont);
+            aShapedText->SetMissingGlyph(utf16Offset, 0, aFont);
             ++p;
             ++utf16Offset;
             continue;
@@ -3031,7 +3051,7 @@ InitGlyphRunWithPangoAnalysis(gfxShapedWord *aShapedWord,
         gint len = p - text;
 
         pango_shape(text, len, aAnalysis, glyphString);
-        SetGlyphs(aShapedWord, text, len, &utf16Offset, glyphString,
+        SetGlyphs(aShapedText, text, len, &utf16Offset, glyphString,
                   aOverrideSpaceWidth, aFont);
     }
 
@@ -3059,11 +3079,14 @@ typedef union {
 } PangoAnalysisUnion;
 
 bool
-gfxFcFont::InitGlyphRunWithPango(gfxShapedWord *aShapedWord,
-                                 const PRUnichar *aString)
+gfxFcFont::InitGlyphRunWithPango(const PRUnichar *aString,
+                                 uint32_t         aOffset,
+                                 uint32_t         aLength,
+                                 int32_t          aScript,
+                                 gfxShapedText   *aShapedText)
 {
-    const PangoScript script = static_cast<PangoScript>(aShapedWord->Script());
-    NS_ConvertUTF16toUTF8 utf8(aString, aShapedWord->Length());
+    const PangoScript script = static_cast<PangoScript>(aScript);
+    NS_ConvertUTF16toUTF8 utf8(aString, aLength);
 
     PangoFont *font = GetPangoFont();
 
@@ -3169,7 +3192,7 @@ gfxFcFont::InitGlyphRunWithPango(gfxShapedWord *aShapedWord,
         PANGO_ENGINE_LANG(pango_map_get_engine(langMap, script));
 
     analysis.local.font = font;
-    analysis.local.level = aShapedWord->IsRightToLeft() ? 1 : 0;
+    analysis.local.level = aShapedText->IsRightToLeft() ? 1 : 0;
     // gravity and flags are used in Pango 1.14.10 and newer.
     //
     // PANGO_GRAVITY_SOUTH is what we want for upright horizontal text.  The
@@ -3192,7 +3215,8 @@ gfxFcFont::InitGlyphRunWithPango(gfxShapedWord *aShapedWord,
     PangoGlyphUnit spaceWidth =
         moz_pango_units_from_double(GetMetrics().spaceWidth);
 
-    InitGlyphRunWithPangoAnalysis(aShapedWord, utf8.get(), utf8.Length(),
+    InitGlyphRunWithPangoAnalysis(aShapedText, aOffset, aLength,
+                                  utf8.get(), utf8.Length(),
                                   &analysis.pango, spaceWidth, this);
     return true;
 }

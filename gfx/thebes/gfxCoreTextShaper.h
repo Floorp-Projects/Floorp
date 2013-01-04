@@ -22,9 +22,12 @@ public:
 
     virtual ~gfxCoreTextShaper();
 
-    virtual bool ShapeWord(gfxContext *aContext,
-                           gfxShapedWord *aShapedWord,
-                           const PRUnichar *aText);
+    virtual bool ShapeText(gfxContext      *aContext,
+                           const PRUnichar *aText,
+                           uint32_t         aOffset,
+                           uint32_t         aLength,
+                           int32_t          aScript,
+                           gfxShapedText   *aShapedText);
 
     // clean up static objects that may have been cached
     static void Shutdown();
@@ -33,9 +36,11 @@ protected:
     CTFontRef mCTFont;
     CFDictionaryRef mAttributesDict;
 
-    nsresult SetGlyphsFromRun(gfxShapedWord *aShapedWord,
-                              CTRunRef aCTRun,
-                              int32_t aStringOffset);
+    nsresult SetGlyphsFromRun(gfxShapedText *aShapedText,
+                              uint32_t       aOffset,
+                              uint32_t       aLength,
+                              CTRunRef       aCTRun,
+                              int32_t        aStringOffset);
 
     CTFontRef CreateCTFontWithDisabledLigatures(CGFloat aSize);
 
