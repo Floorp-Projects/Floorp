@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
 
 const RESIZE_SCROLL_DELAY = 20;
 
+let HTMLDocument = Ci.nsIDOMHTMLDocument;
+let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
+let HTMLBodyElement = Ci.nsIDOMHTMLBodyElement;
+let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
 let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
 let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
@@ -89,8 +93,10 @@ let FormAssistant = {
 
     switch (evt.type) {
       case "focus":
-        if (this.isTextInputElement(target) && this.isIMEDisabled())
-          return;
+        if (target && isContentEditable(target)) {
+          this.showKeyboard(this.getTopLevelEditable(target));
+          break;
+        }
 
         if (target && this.isFocusableElement(target))
           this.showKeyboard(target);
@@ -193,22 +199,9 @@ let FormAssistant = {
   },
 
   observe: function fa_observe(subject, topic, data) {
-    switch (topic) {
-      case "xpcom-shutdown":
-        Services.obs.removeObserver(this, "xpcom-shutdown");
-        removeMessageListener("Forms:Select:Choice", this);
-        removeMessageListener("Forms:Input:Value", this);
-        break;
-    }
-  },
-
-  isIMEDisabled: function fa_isIMEDisabled() {
-    let disabled = false;
-    try {
-      disabled = domWindowUtils.IMEStatus == domWindowUtils.IME_STATUS_DISABLED;
-    } catch (e) {}
-
-    return disabled;
+    Services.obs.removeObserver(this, "xpcom-shutdown");
+    removeMessageListener("Forms:Select:Choice", this);
+    removeMessageListener("Forms:Input:Value", this);
   },
 
   showKeyboard: function fa_showKeyboard(target) {
@@ -232,10 +225,6 @@ let FormAssistant = {
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
-    if (element.contentEditable && element.contentEditable == "true") {
-      return true;
-    }
-
     if (element instanceof HTMLSelectElement ||
         element instanceof HTMLTextAreaElement)
       return true;
@@ -251,7 +240,31 @@ let FormAssistant = {
   isTextInputElement: function fa_isTextInputElement(element) {
     return element instanceof HTMLInputElement ||
            element instanceof HTMLTextAreaElement ||
-           (element.contentEditable && element.contentEditable == "true");
+           isContentEditable(element);
+  },
+
+  getTopLevelEditable: function fa_getTopLevelEditable(element) {
+    function retrieveTopLevelEditable(element) {
+      // Retrieve the top element that is editable
+      if (element instanceof HTMLHtmlElement)
+        element = element.ownerDocument.body;
+      else if (element instanceof HTMLDocument)
+        element = element.body;
+
+      while (element && !isContentEditable(element))
+        element = element.parentNode;
+
+      // Return the container frame if we are into a nested editable frame
+      if (element &&
+          element instanceof HTMLBodyElement &&
+          element.ownerDocument.defaultView != content.document.defaultView)
+        return element.ownerDocument.defaultView.frameElement;
+    }
+
+    if (element instanceof HTMLIFrameElement)
+      return element;
+
+    return retrieveTopLevelEditable(element) || element;
   },
 
   sendKeyboardState: function(element) {
@@ -270,12 +283,27 @@ let FormAssistant = {
 FormAssistant.init();
 
 
+function isContentEditable(element) {
+  if (element.isContentEditable || element.designMode == "on")
+    return true;
+
+  // If a body element is editable and the body is the child of an
+  // iframe we can assume this is an advanced HTML editor
+  if (element instanceof HTMLIFrameElement &&
+      element.contentDocument &&
+      (element.contentDocument.body.isContentEditable ||
+       element.contentDocument.designMode == "on"))
+    return true;
+
+  return element.ownerDocument && element.ownerDocument.designMode == "on";
+}
+
 function getJSON(element) {
   let type = element.type || "";
   let value = element.value || ""
 
   // Treat contenteditble element as a special text field
-  if (element.contentEditable && element.contentEditable == "true") {
+  if (isContentEditable(element)) {
     type = "text";
     value = element.textContent;
   }
