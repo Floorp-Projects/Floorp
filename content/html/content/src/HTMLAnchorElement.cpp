@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/HTMLAnchorElementBinding.h"
 
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -56,6 +57,11 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAnchorElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 
+JSObject*
+HTMLAnchorElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLAnchorElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMPL_STRING_ATTR(HTMLAnchorElement, Charset, charset)
 NS_IMPL_STRING_ATTR(HTMLAnchorElement, Coords, coords)
@@ -274,12 +280,14 @@ HTMLAnchorElement::SetTarget(const nsAString& aValue)
   NS_IMETHODIMP                                              \
   HTMLAnchorElement::Get##_part(nsAString& a##_part)         \
   {                                                          \
-    return Link::Get##_part(a##_part);                       \
+    Link::Get##_part(a##_part);                              \
+    return NS_OK;                                            \
   }                                                          \
   NS_IMETHODIMP                                              \
   HTMLAnchorElement::Set##_part(const nsAString& a##_part)   \
   {                                                          \
-    return Link::Set##_part(a##_part);                       \
+    Link::Set##_part(a##_part);                              \
+    return NS_OK;                                            \
   }
 
 IMPL_URI_PART(Protocol)

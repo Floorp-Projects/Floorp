@@ -255,12 +255,14 @@ nsHTMLAreaElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   NS_IMETHODIMP                                              \
   nsHTMLAreaElement::Get##_part(nsAString& a##_part)         \
   {                                                          \
-    return Link::Get##_part(a##_part);                       \
+    Link::Get##_part(a##_part);                              \
+    return NS_OK;                                            \
   }                                                          \
   NS_IMETHODIMP                                              \
   nsHTMLAreaElement::Set##_part(const nsAString& a##_part)   \
   {                                                          \
-    return Link::Set##_part(a##_part);                       \
+    Link::Set##_part(a##_part);                              \
+    return NS_OK;                                            \
   }
 
 IMPL_URI_PART(Protocol)

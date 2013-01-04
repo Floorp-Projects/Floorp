@@ -53,20 +53,20 @@ public:
   /**
    * Helper methods for modifying and obtaining parts of the URI of the Link.
    */
-  nsresult SetProtocol(const nsAString &aProtocol);
-  nsresult SetHost(const nsAString &aHost);
-  nsresult SetHostname(const nsAString &aHostname);
-  nsresult SetPathname(const nsAString &aPathname);
-  nsresult SetSearch(const nsAString &aSearch);
-  nsresult SetPort(const nsAString &aPort);
-  nsresult SetHash(const nsAString &aHash);
-  nsresult GetProtocol(nsAString &_protocol);
-  nsresult GetHost(nsAString &_host);
-  nsresult GetHostname(nsAString &_hostname);
-  nsresult GetPathname(nsAString &_pathname);
-  nsresult GetSearch(nsAString &_search);
-  nsresult GetPort(nsAString &_port);
-  nsresult GetHash(nsAString &_hash);
+  void SetProtocol(const nsAString &aProtocol);
+  void SetHost(const nsAString &aHost);
+  void SetHostname(const nsAString &aHostname);
+  void SetPathname(const nsAString &aPathname);
+  void SetSearch(const nsAString &aSearch);
+  void SetPort(const nsAString &aPort);
+  void SetHash(const nsAString &aHash);
+  void GetProtocol(nsAString &_protocol);
+  void GetHost(nsAString &_host);
+  void GetHostname(nsAString &_hostname);
+  void GetPathname(nsAString &_pathname);
+  void GetSearch(nsAString &_search);
+  void GetPort(nsAString &_port);
+  void GetHash(nsAString &_hash);
 
   /**
    * Invalidates any link caching, and resets the state to the default.
