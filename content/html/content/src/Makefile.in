@@ -30,6 +30,7 @@ EXPORTS		= \
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+		HTMLAnchorElement.h \
 		HTMLBodyElement.h \
 		HTMLDataListElement.h \
 		HTMLDivElement.h \
@@ -50,7 +51,7 @@ CPPSRCS		= \
 		nsFormSubmission.cpp \
 		nsTextEditorState.cpp \
 		HTMLElement.cpp \
-		nsHTMLAnchorElement.cpp \
+		HTMLAnchorElement.cpp \
 		nsHTMLAreaElement.cpp \
 		nsHTMLBRElement.cpp \
 		HTMLBodyElement.cpp \
