@@ -4,10 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsILink.h"
-#include "Link.h"
+#include "mozilla/dom/HTMLAnchorElement.h"
 
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -17,90 +14,11 @@
 #include "nsPresContext.h"
 #include "nsHTMLDNSPrefetch.h"
 
-using namespace mozilla::dom;
+NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
+DOMCI_NODE_DATA(HTMLAnchorElement, mozilla::dom::HTMLAnchorElement)
 
-class nsHTMLAnchorElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLAnchorElement,
-                            public nsILink,
-                            public Link
-{
-public:
-  using Element::GetText;
-  using Element::SetText;
-
-  nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLAnchorElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
-  virtual bool Draggable() const MOZ_OVERRIDE;
-
-  // nsIDOMHTMLAnchorElement
-  NS_DECL_NSIDOMHTMLANCHORELEMENT
-
-  // DOM memory reporter participant
-  NS_DECL_SIZEOF_EXCLUDING_THIS
-
-  // nsILink
-  NS_IMETHOD LinkAdded() { return NS_OK; }
-  NS_IMETHOD LinkRemoved() { return NS_OK; }
-
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
-
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual bool IsLink(nsIURI** aURI) const;
-  virtual void GetLinkTarget(nsAString& aTarget);
-  virtual nsLinkState GetLinkState() const;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const;
-
-  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsEventStates IntrinsicState() const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-
-  virtual void OnDNSPrefetchDeferred();
-  virtual void OnDNSPrefetchRequested();
-  virtual bool HasDeferredDNSPrefetchRequest();
-
-protected:
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
-};
+namespace mozilla {
+namespace dom {
 
 #define ANCHOR_ELEMENT_FLAG_BIT(n_) NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
@@ -118,70 +36,58 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
 #undef ANCHOR_ELEMENT_FLAG_BIT
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
-
-nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
-  , Link(this)
+HTMLAnchorElement::~HTMLAnchorElement()
 {
 }
 
-nsHTMLAnchorElement::~nsHTMLAnchorElement()
-{
-}
+NS_IMPL_ADDREF_INHERITED(HTMLAnchorElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLAnchorElement, Element)
 
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLAnchorElement, nsHTMLAnchorElement)
-
-// QueryInterface implementation for nsHTMLAnchorElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLAnchorElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLAnchorElement,
+// QueryInterface implementation for HTMLAnchorElement
+NS_INTERFACE_TABLE_HEAD(HTMLAnchorElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE3(HTMLAnchorElement,
                                    nsIDOMHTMLAnchorElement,
                                    nsILink,
                                    Link)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAnchorElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLAnchorElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAnchorElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLAnchorElement)
+NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Coords, coords)
-NS_IMPL_URI_ATTR(nsHTMLAnchorElement, Href, href)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Hreflang, hreflang)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Name, name)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Download, download)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Charset, charset)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Coords, coords)
+NS_IMPL_URI_ATTR(HTMLAnchorElement, Href, href)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Hreflang, hreflang)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Name, name)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Rel, rel)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Rev, rev)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Shape, shape)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Type, type)
+NS_IMPL_STRING_ATTR(HTMLAnchorElement, Download, download)
 
 int32_t
-nsHTMLAnchorElement::TabIndexDefault()
+HTMLAnchorElement::TabIndexDefault()
 {
   return 0;
 }
 
 void
-nsHTMLAnchorElement::GetItemValueText(nsAString& aValue)
+HTMLAnchorElement::GetItemValueText(nsAString& aValue)
 {
   GetHref(aValue);
 }
 
 void
-nsHTMLAnchorElement::SetItemValueText(const nsAString& aValue)
+HTMLAnchorElement::SetItemValueText(const nsAString& aValue)
 {
   SetHref(aValue);
 }
 
 bool
-nsHTMLAnchorElement::Draggable() const
+HTMLAnchorElement::Draggable() const
 {
   // links can be dragged as long as there is an href and the
   // draggable attribute isn't false
@@ -195,29 +101,29 @@ nsHTMLAnchorElement::Draggable() const
 }
 
 void
-nsHTMLAnchorElement::OnDNSPrefetchRequested()
+HTMLAnchorElement::OnDNSPrefetchRequested()
 {
   UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
   SetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
 }
 
 void
-nsHTMLAnchorElement::OnDNSPrefetchDeferred()
+HTMLAnchorElement::OnDNSPrefetchDeferred()
 {
   UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
   SetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
 }
 
 bool
-nsHTMLAnchorElement::HasDeferredDNSPrefetchRequest()
+HTMLAnchorElement::HasDeferredDNSPrefetchRequest()
 {
   return HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
 }
 
 nsresult
-nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+HTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              bool aCompileEventHandlers)
 {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
@@ -238,7 +144,7 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
+HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // Cancel any DNS prefetches
   // Note: Must come before ResetLinkState.  If called after, it will recreate
@@ -268,8 +174,8 @@ nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 bool
-nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
-                                     bool *aIsFocusable, int32_t *aTabIndex)
+HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
+                                   bool *aIsFocusable, int32_t *aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
@@ -323,25 +229,25 @@ nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
 }
 
 nsresult
-nsHTMLAnchorElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLAnchorElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   return PreHandleEventForAnchors(aVisitor);
 }
 
 nsresult
-nsHTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
 }
 
 bool
-nsHTMLAnchorElement::IsLink(nsIURI** aURI) const
+HTMLAnchorElement::IsLink(nsIURI** aURI) const
 {
   return IsHTMLLink(aURI);
 }
 
 void
-nsHTMLAnchorElement::GetLinkTarget(nsAString& aTarget)
+HTMLAnchorElement::GetLinkTarget(nsAString& aTarget)
 {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
@@ -350,7 +256,7 @@ nsHTMLAnchorElement::GetLinkTarget(nsAString& aTarget)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetTarget(nsAString& aValue)
+HTMLAnchorElement::GetTarget(nsAString& aValue)
 {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
@@ -359,19 +265,19 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
+HTMLAnchorElement::SetTarget(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, true);
 }
 
 #define IMPL_URI_PART(_part)                                 \
   NS_IMETHODIMP                                              \
-  nsHTMLAnchorElement::Get##_part(nsAString& a##_part)       \
+  HTMLAnchorElement::Get##_part(nsAString& a##_part)         \
   {                                                          \
     return Link::Get##_part(a##_part);                       \
   }                                                          \
   NS_IMETHODIMP                                              \
-  nsHTMLAnchorElement::Set##_part(const nsAString& a##_part) \
+  HTMLAnchorElement::Set##_part(const nsAString& a##_part)   \
   {                                                          \
     return Link::Set##_part(a##_part);                       \
   }
@@ -387,44 +293,44 @@ IMPL_URI_PART(Hash)
 #undef IMPL_URI_PART
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetText(nsAString& aText)
+HTMLAnchorElement::GetText(nsAString& aText)
 {
   nsContentUtils::GetNodeTextContent(this, true, aText);
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::SetText(const nsAString& aText)
+HTMLAnchorElement::SetText(const nsAString& aText)
 {
   return nsContentUtils::SetNodeTextContent(this, aText, false);
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::ToString(nsAString& aSource)
+HTMLAnchorElement::ToString(nsAString& aSource)
 {
   return GetHref(aSource);
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPing(nsAString& aValue)
+HTMLAnchorElement::GetPing(nsAString& aValue)
 {
   return GetURIListAttr(nsGkAtoms::ping, aValue);
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetPing(const nsAString& aValue)
+HTMLAnchorElement::SetPing(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
 }
 
 nsLinkState
-nsHTMLAnchorElement::GetLinkState() const
+HTMLAnchorElement::GetLinkState() const
 {
   return Link::GetLinkState();
 }
 
 already_AddRefed<nsIURI>
-nsHTMLAnchorElement::GetHrefURI() const
+HTMLAnchorElement::GetHrefURI() const
 {
   nsIURI* uri = Link::GetCachedURI();
   if (uri) {
@@ -436,9 +342,9 @@ nsHTMLAnchorElement::GetHrefURI() const
 }
 
 nsresult
-nsHTMLAnchorElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                             nsIAtom* aPrefix, const nsAString& aValue,
-                             bool aNotify)
+HTMLAnchorElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           bool aNotify)
 {
   bool reset = false;
   if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
@@ -473,8 +379,8 @@ nsHTMLAnchorElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsHTMLAnchorElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                               bool aNotify)
+HTMLAnchorElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                             bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
@@ -492,25 +398,27 @@ nsHTMLAnchorElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 }
 
 bool
-nsHTMLAnchorElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsAttrValue& aResult)
+HTMLAnchorElement::ParseAttribute(int32_t aNamespaceID,
+                                  nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult)
 {
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
 }
 
 nsEventStates
-nsHTMLAnchorElement::IntrinsicState() const
+HTMLAnchorElement::IntrinsicState() const
 {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
 size_t
-nsHTMLAnchorElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+HTMLAnchorElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   return nsGenericHTMLElement::SizeOfExcludingThis(aMallocSizeOf) +
          Link::SizeOfExcludingThis(aMallocSizeOf);
 }
 
+} // namespace mozilla
+} // namespace dom
