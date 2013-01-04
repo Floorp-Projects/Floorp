@@ -142,6 +142,9 @@ public class HMACAuthHeaderProvider implements AuthHeaderProvider {
     if (nonce == null) {
       throw new IllegalArgumentException("nonce must not be null.");
     }
+    if (nonce.length() == 0) {
+      throw new IllegalArgumentException("nonce must not be empty.");
+    }
     if (!isPlainString(nonce)) {
       throw new IllegalArgumentException("nonce must be a plain-string.");
     }
@@ -151,10 +154,11 @@ public class HMACAuthHeaderProvider implements AuthHeaderProvider {
     // string-value   = ( <"> plain-string <"> ) / plain-string
     // plain-string   = 1*( %x20-21 / %x23-5B / %x5D-7E )
     // We add quotes around the extra string, so input extra must be a plain-string.
+    // We break the spec by allowing ext to be an empty string, i.e. to match 0*(...).
     if (extra == null) {
       throw new IllegalArgumentException("extra must not be null.");
     }
-    if (!isPlainString(extra)) {
+    if (extra.length() > 0 && !isPlainString(extra)) {
       throw new IllegalArgumentException("extra must be a plain-string.");
     }
 
