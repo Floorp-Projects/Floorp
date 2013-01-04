@@ -18,7 +18,6 @@ class nsDisplayItem;
 class nsFontMetrics;
 class nsClientRectList;
 class nsFontFaceList;
-class nsHTMLCanvasElement;
 class nsHTMLVideoElement;
 class nsIImageLoadingContent;
 
@@ -47,6 +46,7 @@ namespace mozilla {
 namespace dom {
 class Element;
 class HTMLImageElement;
+class HTMLCanvasElement;
 } // namespace dom
 } // namespace mozilla
 
@@ -1476,7 +1476,7 @@ public:
   // for HTMLImageElement.
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLImageElement *aElement,
                                                      uint32_t aSurfaceFlags = 0);
-  static SurfaceFromElementResult SurfaceFromElement(nsHTMLCanvasElement *aElement,
+  static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLCanvasElement *aElement,
                                                      uint32_t aSurfaceFlags = 0);
   static SurfaceFromElementResult SurfaceFromElement(nsHTMLVideoElement *aElement,
                                                      uint32_t aSurfaceFlags = 0);
