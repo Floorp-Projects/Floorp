@@ -8,8 +8,8 @@
     <item android:id="@+id/open_new_tab"
           android:title="@string/contextmenu_open_new_tab"/>
 
-    <item android:id="@+id/open_new_private_tab"
-          android:title="@string/contextmenu_open_new_private_tab"/>
+    <item android:id="@+id/open_private_tab"
+          android:title="@string/contextmenu_open_private_tab"/>
 
     <item android:id="@+id/open_in_reader"
           android:title="@string/contextmenu_open_in_reader"/>

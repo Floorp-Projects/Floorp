@@ -328,7 +328,7 @@ var BrowserApp = {
         NativeWindow.toast.show(label, "short");
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInNewPrivateTab"),
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInPrivateTab"),
       NativeWindow.contextmenus.linkOpenableContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
