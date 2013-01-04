@@ -305,9 +305,11 @@ class MochiRemote(Mochitest):
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'workerbootstrap-test@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'special-powers@mozilla.org'))
-            os.remove(os.path.join(options.profilePath, 'tests.jar'))
             os.remove(os.path.join(options.profilePath, 'userChrome.css'))
-            os.remove(os.path.join(options.profilePath, 'tests.manifest'))
+            if os.path.exists(os.path.join(options.profilePath, 'tests.jar')):
+                os.remove(os.path.join(options.profilePath, 'tests.jar'))
+            if os.path.exists(os.path.join(options.profilePath, 'tests.manifest')):
+                os.remove(os.path.join(options.profilePath, 'tests.manifest'))
 
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
