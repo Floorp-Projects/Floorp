@@ -217,7 +217,7 @@ public:
         }
     }
 
-    void SaveGlyphs(gfxShapedWord *aShapedWord) {
+    void SaveGlyphs(gfxShapedText *aShapedText, uint32_t aOffset) {
         uint32_t offsetInRun = mScriptItem->iCharPos;
 
         // XXX We should store this in the item and only fetch it once
@@ -225,15 +225,18 @@ public:
         ScriptFontProperties(&sfp);
 
         uint32_t offset = 0;
-        nsAutoTArray<gfxShapedWord::DetailedGlyph,1> detailedGlyphs;
-        gfxShapedWord::CompressedGlyph g;
-        const uint32_t appUnitsPerDevUnit = aShapedWord->AppUnitsPerDevUnit();
+        nsAutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
+        gfxShapedText::CompressedGlyph g;
+        gfxShapedText::CompressedGlyph *charGlyphs =
+            aShapedText->GetCharacterGlyphs();
+        const uint32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
         while (offset < mItemLength) {
-            uint32_t runOffset = offsetInRun + offset;
-            bool atClusterStart = aShapedWord->IsClusterStart(runOffset);
+            uint32_t runOffset = aOffset + offsetInRun + offset;
+            bool atClusterStart = charGlyphs[runOffset].IsClusterStart();
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
+                gfxShapedText::CompressedGlyph &g = charGlyphs[runOffset];
+                NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
                 g.SetComplex(atClusterStart, false, 0);
-                aShapedWord->SetGlyphs(runOffset, g, nullptr);
             } else {
                 // Count glyphs for this character
                 uint32_t k = mClusters[offset];
@@ -260,21 +263,21 @@ public:
                     if (NS_IS_HIGH_SURROGATE(mItemString[offset]) &&
                         offset + 1 < mItemLength &&
                         NS_IS_LOW_SURROGATE(mItemString[offset + 1])) {
-                        aShapedWord->SetMissingGlyph(runOffset,
+                        aShapedText->SetMissingGlyph(runOffset,
                                                      SURROGATE_TO_UCS4(mItemString[offset],
                                                                        mItemString[offset + 1]),
                                                      mShaper->GetFont());
                     } else {
-                        aShapedWord->SetMissingGlyph(runOffset, mItemString[offset],
+                        aShapedText->SetMissingGlyph(runOffset, mItemString[offset],
                                                      mShaper->GetFont());
                     }
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
-                    gfxShapedWord::CompressedGlyph::IsSimpleAdvance(advance) &&
-                    gfxShapedWord::CompressedGlyph::IsSimpleGlyphID(glyph) &&
+                    gfxShapedText::CompressedGlyph::IsSimpleAdvance(advance) &&
+                    gfxShapedText::CompressedGlyph::IsSimpleGlyphID(glyph) &&
                     atClusterStart)
                 {
-                    aShapedWord->SetSimpleGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
+                    charGlyphs[runOffset].SetSimpleGlyph(advance, glyph);
                 } else {
                     if (detailedGlyphs.Length() < glyphCount) {
                         if (!detailedGlyphs.AppendElements(glyphCount - detailedGlyphs.Length()))
@@ -286,10 +289,10 @@ public:
                         details->mGlyphID = mGlyphs[k + i];
                         details->mAdvance = mAdvances[k + i] * appUnitsPerDevUnit;
                         details->mXOffset = float(mOffsets[k + i].du) * appUnitsPerDevUnit *
-                            aShapedWord->GetDirection();
+                            aShapedText->GetDirection();
                         details->mYOffset = - float(mOffsets[k + i].dv) * appUnitsPerDevUnit;
                     }
-                    aShapedWord->SetGlyphs(runOffset,
+                    aShapedText->SetGlyphs(runOffset,
                                            g.SetComplex(atClusterStart, true,
                                                         glyphCount),
                                            detailedGlyphs.Elements());
@@ -367,8 +370,10 @@ class Uniscribe
 {
 public:
     Uniscribe(const PRUnichar *aString,
-              gfxShapedWord *aShapedWord):
-        mString(aString), mShapedWord(aShapedWord)
+              gfxShapedText *aShapedText,
+              uint32_t aOffset, uint32_t aLength):
+        mString(aString), mShapedText(aShapedText),
+        mOffset(aOffset), mLength(aLength)
     {
     }
 
@@ -377,7 +382,7 @@ public:
         memset(&mState, 0, sizeof(SCRIPT_STATE));
         // Lock the direction. Don't allow the itemizer to change directions
         // based on character type.
-        mState.uBidiLevel = mShapedWord->IsRightToLeft() ? 1 : 0;
+        mState.uBidiLevel = mShapedText->IsRightToLeft() ? 1 : 0;
         mState.fOverrideDirection = true;
     }
 
@@ -394,7 +399,7 @@ public:
         if (!mItems.SetLength(maxItems + 1)) {
             return 0;
         }
-        while ((rv = ScriptItemize(mString, mShapedWord->Length(),
+        while ((rv = ScriptItemize(mString, mLength,
                                    maxItems, &mControl, &mState,
                                    mItems.Elements(), &mNumItems)) == E_OUTOFMEMORY) {
             maxItems *= 2;
@@ -414,7 +419,9 @@ public:
 
 private:
     const PRUnichar *mString;
-    gfxShapedWord   *mShapedWord;
+    gfxShapedText   *mShapedText;
+    uint32_t         mOffset;
+    uint32_t         mLength;
 
     SCRIPT_CONTROL mControl;
     SCRIPT_STATE   mState;
@@ -424,21 +431,24 @@ private:
 
 
 bool
-gfxUniscribeShaper::ShapeWord(gfxContext *aContext,
-                              gfxShapedWord *aShapedWord,
-                              const PRUnichar *aString)
+gfxUniscribeShaper::ShapeText(gfxContext      *aContext,
+                              const PRUnichar *aText,
+                              uint32_t         aOffset,
+                              uint32_t         aLength,
+                              int32_t          aScript,
+                              gfxShapedText   *aShapedText)
 {
     DCFromContext aDC(aContext);
  
     bool result = true;
     HRESULT rv;
 
-    Uniscribe us(aString, aShapedWord);
+    Uniscribe us(aText, aShapedText, aOffset, aLength);
 
     /* itemize the string */
     int numItems = us.Itemize();
 
-    uint32_t length = aShapedWord->Length();
+    uint32_t length = aLength;
     SaveDC(aDC);
     uint32_t ivs = 0;
     for (int i = 0; i < numItems; ++i) {
@@ -454,18 +464,18 @@ gfxUniscribeShaper::ShapeWord(gfxContext *aContext,
         }
 
         if (i+1 < numItems && iCharPosNext <= length - 2
-            && aString[iCharPosNext] == H_SURROGATE(kUnicodeVS17)
-            && uint32_t(aString[iCharPosNext + 1]) - L_SURROGATE(kUnicodeVS17)
+            && aText[iCharPosNext] == H_SURROGATE(kUnicodeVS17)
+            && uint32_t(aText[iCharPosNext + 1]) - L_SURROGATE(kUnicodeVS17)
             <= L_SURROGATE(kUnicodeVS256) - L_SURROGATE(kUnicodeVS17)) {
 
-            ivs = SURROGATE_TO_UCS4(aString[iCharPosNext],
-                                    aString[iCharPosNext + 1]);
+            ivs = SURROGATE_TO_UCS4(aText[iCharPosNext],
+                                    aText[iCharPosNext + 1]);
         } else {
             ivs = 0;
         }
 
         UniscribeItem item(aContext, aDC, this,
-                           aString + iCharPos,
+                           aText + iCharPos,
                            iCharPosNext - iCharPos,
                            us.ScriptItem(i), ivs);
         if (!item.AllocateBuffers()) {
@@ -509,7 +519,7 @@ gfxUniscribeShaper::ShapeWord(gfxContext *aContext,
             break;
         }
 
-        item.SaveGlyphs(aShapedWord);
+        item.SaveGlyphs(aShapedText, aOffset);
     }
 
     RestoreDC(aDC, -1);
