@@ -22,4 +22,6 @@ INSTALL_TARGETS += CRYPTO_MODULE
 
 TEST_DIRS += tests
 
+DIRS += component
+
 include $(topsrcdir)/config/rules.mk
