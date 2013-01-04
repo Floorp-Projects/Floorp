@@ -242,17 +242,18 @@ LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
 }
 
 bool
+LIRGenerator::visitCreateThisWithProto(MCreateThisWithProto *ins)
+{
+    LCreateThisWithProto *lir =
+        new LCreateThisWithProto(useRegisterOrConstantAtStart(ins->getCallee()),
+                                 useRegisterOrConstantAtStart(ins->getPrototype()));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCreateThis(MCreateThis *ins)
 {
-    if (ins->needNativeCheck()) {
-        JS_ASSERT(ins->type() == MIRType_Value);
-        LCreateThisV *lir = new LCreateThisV(useRegisterAtStart(ins->getCallee()),
-                                             useRegisterOrConstantAtStart(ins->getPrototype()));
-        return defineReturn(lir, ins) && assignSafepoint(lir, ins);
-    }
-
-    LCreateThisO *lir = new LCreateThisO(useRegisterOrConstantAtStart(ins->getCallee()),
-                                         useRegisterOrConstantAtStart(ins->getPrototype()));
+    LCreateThis *lir = new LCreateThis(useRegisterOrConstantAtStart(ins->getCallee()));
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
