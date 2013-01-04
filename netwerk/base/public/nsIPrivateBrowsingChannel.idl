@@ -11,7 +11,7 @@
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(424b7efc-5d56-4717-9a71-8db9dcaaa618)]
+[scriptable, uuid(df702bb0-55b8-11e2-bcfd-0800200c9a66)]
 interface nsIPrivateBrowsingChannel : nsISupports
 {
     /**
@@ -36,6 +36,15 @@ interface nsIPrivateBrowsingChannel : nsISupports
      * @param aPrivate whether the channel should be opened in private mode.
      */
     void setPrivate(in boolean aPrivate);
+
+    /**
+     * States whether the channel is in private browsing mode. This may either
+     * happen because the channel is opened from a private mode context or
+     * when the mode is explicitly set with ::setPrivate().
+     *
+     * This attribute is equivalent to NS_UsePrivateBrowsing(), but scriptable.
+     */
+    readonly attribute boolean isChannelPrivate;
 
     /*
      * This function is used to determine whether the channel's private mode
