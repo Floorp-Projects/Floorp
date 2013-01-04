@@ -143,17 +143,7 @@ public abstract class RepositorySession {
   public abstract void wipe(RepositorySessionWipeDelegate delegate);
 
   public void unbundle(RepositorySessionBundle bundle) {
-    this.lastSyncTimestamp = 0;
-    if (bundle == null) {
-      return;
-    }
-    if (bundle.containsKey("timestamp")) {
-      try {
-        this.lastSyncTimestamp = bundle.getLong("timestamp");
-      } catch (Exception e) {
-        // Defaults to 0 above.
-      }
-    }
+    this.lastSyncTimestamp = bundle == null ? 0 : bundle.getTimestamp();
   }
 
   /**
@@ -198,11 +188,10 @@ public abstract class RepositorySession {
    * return from a fetch call.
    */
   protected RepositorySessionBundle getBundle(RepositorySessionBundle optional) {
-    Logger.debug(LOG_TAG, "RepositorySession.getBundle(optional).");
     // Why don't we just persist the old bundle?
-    RepositorySessionBundle bundle = (optional == null) ? new RepositorySessionBundle() : optional;
-    bundle.put("timestamp", this.lastSyncTimestamp);
-    Logger.debug(LOG_TAG, "Setting bundle timestamp to " + this.lastSyncTimestamp);
+    RepositorySessionBundle bundle = (optional == null) ? new RepositorySessionBundle(this.lastSyncTimestamp) : optional;
+    Logger.debug(LOG_TAG, "Setting bundle timestamp to " + this.lastSyncTimestamp + ".");
+
     return bundle;
   }
 

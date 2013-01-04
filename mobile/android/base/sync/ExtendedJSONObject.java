@@ -5,8 +5,6 @@
 package org.mozilla.gecko.sync;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Map;
@@ -28,42 +26,130 @@ public class ExtendedJSONObject {
 
   public JSONObject object;
 
-  private static Object processParseOutput(Object parseOutput) {
-    if (parseOutput instanceof JSONObject) {
-      return new ExtendedJSONObject((JSONObject) parseOutput);
-    } else {
-      return parseOutput;
-    }
-  }
-
-  public static Object parse(String string) throws IOException, ParseException {
-    return processParseOutput(new JSONParser().parse(string));
-  }
-
-  public static Object parse(InputStreamReader reader) throws IOException, ParseException {
-    return processParseOutput(new JSONParser().parse(reader));
-
-  }
-
-  public static Object parse(InputStream stream) throws IOException, ParseException {
-    InputStreamReader reader = new InputStreamReader(stream, "UTF-8");
-    return ExtendedJSONObject.parse(reader);
+  /**
+   * Return a <code>JSONParser</code> instance for immediate use.
+   * <p>
+   * <code>JSONParser</code> is not thread-safe, so we return a new instance
+   * each call. This is extremely inefficient in execution time and especially
+   * memory use -- each instance allocates a 16kb temporary buffer -- and we
+   * hope to improve matters eventually.
+   */
+  protected static JSONParser getJSONParser() {
+    return new JSONParser();
   }
 
   /**
-   * Helper method to get a JSONObject from a String. Input: String containing
-   * JSON. Output: Extracted JSONObject. Throws: Exception if JSON is invalid.
+   * Parse a JSON encoded string.
    *
+   * @param input JSON encoded input string to parse; not necessarily a JSON object.
+   * @return a regular Java <code>Object</code>.
    * @throws ParseException
    * @throws IOException
-   * @throws NonObjectJSONException
-   *           If the object is valid JSON, but not an object.
+   */
+  protected static Object parseRaw(Reader in) throws ParseException, IOException {
+    return getJSONParser().parse(in);
+  }
+
+  /**
+   * Parse a JSON encoded string.
+   * <p>
+   * You should prefer the streaming interface {@link #parseRaw(Reader)}.
+   *
+   * @param input JSON encoded input string to parse; not necessarily a JSON object.
+   * @return a regular Java <code>Object</code>.
+   * @throws ParseException
+   */
+  protected static Object parseRaw(String input) throws ParseException {
+    return getJSONParser().parse(input);
+  }
+
+  /**
+   * Helper method to get a JSON array from a stream.
+   *
+   * @param jsonString input.
+   * @throws ParseException
+   * @throws IOException
+   * @throws NonArrayJSONException if the object is valid JSON, but not an array.
+   */
+  public static JSONArray parseJSONArray(Reader in)
+      throws IOException, ParseException, NonArrayJSONException {
+    Object o = parseRaw(in);
+
+    if (o == null) {
+      return null;
+    }
+
+    if (o instanceof JSONArray) {
+      return (JSONArray) o;
+    }
+
+    throw new NonArrayJSONException(o);
+  }
+
+  /**
+   * Helper method to get a JSON array from a string.
+   * <p>
+   * You should prefer the stream interface {@link #parseJSONArray(Reader)}.
+   *
+   * @param jsonString input.
+   * @throws ParseException
+   * @throws IOException
+   * @throws NonArrayJSONException if the object is valid JSON, but not an array.
+   */
+  public static JSONArray parseJSONArray(String jsonString)
+      throws IOException, ParseException, NonArrayJSONException {
+    Object o = parseRaw(jsonString);
+
+    if (o == null) {
+      return null;
+    }
+
+    if (o instanceof JSONArray) {
+      return (JSONArray) o;
+    }
+
+    throw new NonArrayJSONException(o);
+  }
+
+  /**
+   * Helper method to get a JSON object from a stream.
+   *
+   * @param jsonString input.
+   * @throws ParseException
+   * @throws IOException
+   * @throws NonArrayJSONException if the object is valid JSON, but not an object.
+   */
+  public static ExtendedJSONObject parseJSONObject(Reader in)
+      throws IOException, ParseException, NonObjectJSONException {
+    return new ExtendedJSONObject(in);
+  }
+
+  /**
+   * Helper method to get a JSON object from a string.
+   * <p>
+   * You should prefer the stream interface {@link #parseJSONObject(Reader)}.
+   *
+   * @param jsonString input.
+   * @throws ParseException
+   * @throws IOException
+   * @throws NonObjectJSONException if the object is valid JSON, but not an object.
    */
   public static ExtendedJSONObject parseJSONObject(String jsonString)
-                                                                     throws IOException,
-                                                                     ParseException,
-                                                                     NonObjectJSONException {
+      throws IOException, ParseException, NonObjectJSONException {
     return new ExtendedJSONObject(jsonString);
+  }
+
+  /**
+   * Helper method to get a JSON object from a UTF-8 byte array.
+   *
+   * @param in UTF-8 bytes.
+   * @throws ParseException
+   * @throws NonObjectJSONException if the object is valid JSON, but not an object.
+   * @throws IOException
+   */
+  public static ExtendedJSONObject parseUTF8AsJSONObject(byte[] in)
+      throws ParseException, NonObjectJSONException, IOException {
+    return parseJSONObject(new String(in, "UTF-8"));
   }
 
   public ExtendedJSONObject() {
@@ -74,18 +160,22 @@ public class ExtendedJSONObject {
     this.object = o;
   }
 
-  public ExtendedJSONObject(String jsonString) throws IOException, ParseException, NonObjectJSONException {
-    if (jsonString == null) {
+  public ExtendedJSONObject(Reader in) throws IOException, ParseException, NonObjectJSONException {
+    if (in == null) {
       this.object = new JSONObject();
       return;
     }
-    Reader in = new StringReader(jsonString);
-    Object obj = new JSONParser().parse(in);
+
+    Object obj = parseRaw(in);
     if (obj instanceof JSONObject) {
       this.object = ((JSONObject) obj);
     } else {
       throw new NonObjectJSONException(obj);
     }
+  }
+
+  public ExtendedJSONObject(String jsonString) throws IOException, ParseException, NonObjectJSONException {
+    this(jsonString == null ? null : new StringReader(jsonString));
   }
 
   // Passthrough methods.
@@ -115,7 +205,7 @@ public class ExtendedJSONObject {
       return (Integer) val;
     }
     if (val instanceof Long) {
-      return new Integer(((Long) val).intValue());
+      return Integer.valueOf(((Long) val).intValue());
     }
     if (val instanceof String) {
       return Integer.parseInt((String) val, 10);
@@ -135,11 +225,11 @@ public class ExtendedJSONObject {
     // This is absurd.
     if (val instanceof Double) {
       double millis = ((Double) val).doubleValue() * 1000;
-      return new Double(millis).longValue();
+      return Double.valueOf(millis).longValue();
     }
     if (val instanceof Float) {
       double millis = ((Float) val).doubleValue() * 1000;
-      return new Double(millis).longValue();
+      return Double.valueOf(millis).longValue();
     }
     if (val instanceof Number) {
       // Must be an integral number.
@@ -191,28 +281,6 @@ public class ExtendedJSONObject {
       return new ExtendedJSONObject((JSONObject) o);
     }
     throw new NonObjectJSONException(o);
-  }
-
-  public ExtendedJSONObject clone() {
-    return new ExtendedJSONObject((JSONObject) this.object.clone());
-  }
-
-  /**
-   * Helper method for extracting a JSONObject from its string encoding within
-   * another JSONObject.
-   *
-   * Input: JSONObject and key. Output: JSONObject extracted. Throws: Exception
-   * if JSON is invalid.
-   *
-   * @throws NonObjectJSONException
-   * @throws ParseException
-   * @throws IOException
-   */
-  public ExtendedJSONObject getJSONObject(String key) throws IOException,
-                                                     ParseException,
-                                                     NonObjectJSONException {
-    String val = (String) this.object.get(key);
-    return ExtendedJSONObject.parseJSONObject(val);
   }
 
   @SuppressWarnings("unchecked")

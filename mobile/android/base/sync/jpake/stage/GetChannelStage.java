@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
+import org.json.simple.parser.JSONParser;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
-import org.mozilla.gecko.sync.jpake.JPakeResponse;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
+import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.setup.Constants;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -88,19 +89,36 @@ public class GetChannelStage extends JPakeStage {
       @Override
       public void handleHttpResponse(HttpResponse response) {
         try {
-          JPakeResponse res = new JPakeResponse(response);
-          Object body = null;
+          SyncResponse res = new SyncResponse(response);
+          String channel = null;
           try {
-            body = res.jsonBody();
+            String body = res.body();
+            channel = (String) new JSONParser().parse(body);
           } catch (Exception e) {
             callbackDelegate.handleError(e);
             return;
           }
-          String channel = body instanceof String ? (String) body : null;
+
           if (channel == null) {
+            Logger.warn(LOG_TAG, "Got null channel.");
             callbackDelegate.handleFailure(Constants.JPAKE_ERROR_CHANNEL);
             return;
           }
+
+          // Verify input.
+          // From http://docs.services.mozilla.com/keyexchange/apis.html#apis
+          // Returns in the response body a JSON-encoded random channel id of N chars from [a-z0-9].
+          for (int i = 0; i < channel.length(); i++) {
+            char c = channel.charAt(i);
+            if (('a' <= c && c <= 'z') || ('0' <= c && c <= '9')) {
+              continue;
+            }
+
+            Logger.warn(LOG_TAG, "Got bad channel name: " + channel + ".");
+            callbackDelegate.handleFailure(Constants.JPAKE_ERROR_CHANNEL);
+            return;
+          }
+
           callbackDelegate.handleSuccess(channel);
         } finally {
           BaseResource.consumeEntity(response);
