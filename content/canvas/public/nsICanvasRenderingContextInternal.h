@@ -9,7 +9,7 @@
 #include "nsISupports.h"
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
+#include "nsHTMLCanvasElement.h"
 #include "gfxPattern.h"
 #include "mozilla/RefPtr.h"
 
@@ -46,11 +46,11 @@ public:
     RenderFlagPremultAlpha = 0x1
   };
 
-  void SetCanvasElement(mozilla::dom::HTMLCanvasElement* aParentCanvas)
+  void SetCanvasElement(nsHTMLCanvasElement* aParentCanvas)
   {
     mCanvasElement = aParentCanvas;
   }
-  mozilla::dom::HTMLCanvasElement* GetParentObject() const
+  nsHTMLCanvasElement* GetParentObject() const
   {
     return mCanvasElement;
   }
@@ -125,7 +125,7 @@ public:
   NS_IMETHOD SetIsIPC(bool isIPC) = 0;
 
 protected:
-  nsRefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
+  nsRefPtr<nsHTMLCanvasElement> mCanvasElement;
 };
 
 namespace mozilla {
