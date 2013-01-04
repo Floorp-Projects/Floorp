@@ -101,6 +101,7 @@ webidl_files = \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
+  SVGMPathElement.webidl \
   SVGNumberList.webidl \
   SVGPathSeg.webidl \
   SVGPathSegList.webidl \
@@ -112,6 +113,7 @@ webidl_files = \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformList.webidl \
+  SVGURIReference.webidl \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
