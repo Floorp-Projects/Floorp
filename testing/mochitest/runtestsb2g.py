@@ -230,6 +230,16 @@ class B2GOptions(MochitestOptions):
         if options.xrePath == None:
             options.xrePath = options.utilityPath
 
+        if not os.path.isdir(options.xrePath):
+            self.error("--xre-path '%s' is not a directory" % options.xrePath)
+        xpcshell = os.path.join(options.xrePath, 'xpcshell')
+        if not os.access(xpcshell, os.F_OK):
+            self.error('xpcshell not found at %s' % xpcshell)
+        if automation.elf_arm(xpcshell):
+            self.error('--xre-path points to an ARM version of xpcshell; it '
+                       'should instead point to a version that can run on '
+                       'your desktop')
+
         if options.pidFile != "":
             f = open(options.pidFile, 'w')
             f.write("%s" % os.getpid())
