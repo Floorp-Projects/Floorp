@@ -78,9 +78,7 @@ already_AddRefed<nsDOMMediaStream>
 nsDOMMediaStream::CreateSourceStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
-  stream->SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  stream->mStream = gm->CreateSourceStream(stream);
+  stream->InitSourceStream(aHintContents);
   return stream.forget();
 }
 
@@ -88,9 +86,7 @@ already_AddRefed<nsDOMLocalMediaStream>
 nsDOMLocalMediaStream::CreateSourceStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
-  stream->SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  stream->mStream = gm->CreateSourceStream(stream);
+  stream->InitSourceStream(aHintContents);
   return stream.forget();
 }
 
@@ -98,9 +94,7 @@ already_AddRefed<nsDOMMediaStream>
 nsDOMMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
-  stream->SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  stream->mStream = gm->CreateTrackUnionStream(stream);
+  stream->InitTrackUnionStream(aHintContents);
   return stream.forget();
 }
 
@@ -108,9 +102,7 @@ already_AddRefed<nsDOMLocalMediaStream>
 nsDOMLocalMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
-  stream->SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  stream->mStream = gm->CreateTrackUnionStream(stream);
+  stream->InitTrackUnionStream(aHintContents);
   return stream.forget();
 }
 
