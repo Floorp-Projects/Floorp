@@ -118,7 +118,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(50799877-9ddc-4784-8a58-da7366c1368f)]
+[scriptable, uuid(0d0fd2f7-3250-4092-9340-ca9bcb7be470)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -404,6 +404,8 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     void nukeSandbox(in jsval obj);
+
+    bool isXrayWrapper(in jsval obj);
 };
 
 /**

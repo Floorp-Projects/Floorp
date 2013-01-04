@@ -4514,6 +4514,14 @@ nsXPCComponents_Utils::NukeSandbox(const JS::Value &obj, JSContext *cx)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::IsXrayWrapper(const JS::Value &obj, bool* aRetval)
+{
+    *aRetval =
+        obj.isObject() && xpc::WrapperFactory::IsXrayWrapper(&obj.toObject());
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/

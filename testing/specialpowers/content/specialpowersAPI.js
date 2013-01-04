@@ -90,13 +90,7 @@ function unwrapIfWrapped(x) {
 };
 
 function isXrayWrapper(x) {
-  try {
-    return /XrayWrapper/.exec(x.toString());
-  } catch(e) {
-    // The toString() implementation could theoretically throw. But it never
-    // throws for Xray, so we can just assume non-xray in that case.
-    return false;
-  }
+  return Cu.isXrayWrapper(x);
 }
 
 function callGetOwnPropertyDescriptor(obj, name) {
