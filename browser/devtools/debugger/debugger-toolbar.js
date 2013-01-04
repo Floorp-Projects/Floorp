@@ -113,7 +113,8 @@ ToolbarView.prototype = {
   _onTogglePanesPressed: function DVT__onTogglePanesPressed() {
     DebuggerView.togglePanes({
       visible: DebuggerView.panesHidden,
-      animated: true
+      animated: true,
+      delayed: true
     });
   },
 
