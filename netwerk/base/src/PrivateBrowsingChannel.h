@@ -47,6 +47,13 @@ public:
       return NS_OK;
   }
 
+  NS_IMETHOD GetIsChannelPrivate(bool *aResult)
+  {
+      NS_ENSURE_ARG_POINTER(aResult);
+      *aResult = NS_UsePrivateBrowsing(static_cast<Channel*>(this));
+      return NS_OK;
+  }
+
   NS_IMETHOD IsPrivateModeOverriden(bool* aValue, bool *aResult)
   {
       NS_ENSURE_ARG_POINTER(aValue);
