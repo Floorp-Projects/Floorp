@@ -2618,8 +2618,11 @@ js::SetProto(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, boo
         return true;
     }
 
-    if (proto.isObject() && !proto.toObject()->setNewTypeUnknown(cx))
-        return false;
+    if (proto.isObject()) {
+        RootedObject protoObj(cx, proto.toObject());
+        if (!JSObject::setNewTypeUnknown(cx, protoObj))
+            return false;
+    }
 
     TypeObject *type = cx->compartment->getNewType(cx, proto);
     if (!type)
