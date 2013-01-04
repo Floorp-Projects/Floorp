@@ -91,7 +91,6 @@ public class WebApp extends GeckoApp {
     @Override
     protected void initializeChrome(String uri, boolean isExternalURL) {
         super.initializeChrome(uri, isExternalURL);
-        mDoorHangerPopup = new DoorHangerPopup(this, null);
         Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_PINNED);
     }
 
