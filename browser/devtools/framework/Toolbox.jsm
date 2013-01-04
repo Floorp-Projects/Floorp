@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Hosts",
                                   "resource:///modules/devtools/ToolboxHosts.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommandUtils",
                                   "resource:///modules/devtools/DeveloperToolbar.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function() {
   let bundle = Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
   let l10n = function(name) {
@@ -28,13 +29,12 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function() {
   return l10n;
 });
 
-// DO NOT put Require.jsm or gcli.jsm into lazy getters as this breaks the
-// requisition import a few lines down.
-Cu.import("resource:///modules/devtools/gcli.jsm");
-Cu.import("resource://gre/modules/devtools/Require.jsm");
+XPCOMUtils.defineLazyGetter(this, "Requisition", function() {
+  Cu.import("resource://gre/modules/devtools/Require.jsm");
+  Cu.import("resource:///modules/devtools/gcli.jsm");
 
-let Requisition = require('gcli/cli').Requisition;
-let CommandOutputManager = require('gcli/canon').CommandOutputManager;
+  return require('gcli/cli').Requisition;
+});
 
 this.EXPORTED_SYMBOLS = [ "Toolbox" ];
 
@@ -334,7 +334,6 @@ Toolbox.prototype = {
     let toolbarSpec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
     let environment = { chromeDocument: frame.ownerDocument };
     let requisition = new Requisition(environment);
-    requisition.commandOutputManager = new CommandOutputManager();
 
     let buttons = CommandUtils.createButtons(toolbarSpec, this._target, this.doc, requisition);
 
