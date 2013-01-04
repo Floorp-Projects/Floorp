@@ -203,8 +203,7 @@ class gfxFontEntry {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
-    gfxFontEntry(const nsAString& aName, gfxFontFamily *aFamily = nullptr,
-                 bool aIsStandardFace = false) : 
+    gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false) :
         mName(aName), mItalic(false), mFixedPitch(false),
         mIsProxy(false), mIsValid(true), 
         mIsBadUnderlineFont(false), mIsUserFont(false),

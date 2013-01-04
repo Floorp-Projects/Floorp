@@ -391,7 +391,6 @@ class gfxProxyFontEntry : public gfxFontEntry {
 
 public:
     gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                      gfxMixedFontFamily *aFamily,
                       uint32_t aWeight,
                       uint32_t aStretch,
                       uint32_t aItalicStyle,
