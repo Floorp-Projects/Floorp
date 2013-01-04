@@ -28,6 +28,7 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
     , Link(this)
   {
+    SetIsDOMBinding();
   }
   virtual ~HTMLAnchorElement();
 
@@ -97,9 +98,113 @@ public:
   virtual void OnDNSPrefetchRequested();
   virtual bool HasDeferredDNSPrefetchRequest();
 
+  // WebIDL API
+  void GetHref(nsString& aValue)
+  {
+    GetHTMLURIAttr(nsGkAtoms::href, aValue);
+  }
+  void SetHref(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::href, aValue, rv);
+  }
+  // The XPCOM GetTarget is OK for us
+  void SetTarget(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::target, aValue, rv);
+  }
+  void GetDownload(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::download, aValue);
+  }
+  void SetDownload(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::download, aValue, rv);
+  }
+  // The XPCOM GetPing is OK for us
+  void SetPing(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::ping, aValue, rv);
+  }
+  void GetRel(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::rel, aValue);
+  }
+  void SetRel(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::rel, aValue, rv);
+  }
+  void GetHreflang(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::hreflang, aValue);
+  }
+  void SetHreflang(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::hreflang, aValue, rv);
+  }
+  void GetType(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aValue);
+  }
+  void SetType(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aValue, rv);
+  }
+  // The XPCOM GetText is OK for us
+  void SetText(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    rv = SetText(aValue);
+  }
+  // The XPCOM URI decomposition attributes are fine for us
+  void GetCoords(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::coords, aValue);
+  }
+  void SetCoords(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::coords, aValue, rv);
+  }
+  void GetCharset(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::charset, aValue);
+  }
+  void SetCharset(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::charset, aValue, rv);
+  }
+  void GetName(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aValue);
+  }
+  void SetName(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aValue, rv);
+  }
+  void GetRev(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::rev, aValue);
+  }
+  void SetRev(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::rev, aValue, rv);
+  }
+  void GetShape(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::shape, aValue);
+  }
+  void SetShape(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::shape, aValue, rv);
+  }
+  void Stringify(nsAString& aResult)
+  {
+    GetHref(aResult);
+  }
+
 protected:
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
