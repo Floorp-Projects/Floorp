@@ -3,86 +3,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/dom/HTMLLIElement.h"
 
-#include "nsIDOMHTMLLIElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLLIElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLLIElement
-{
-public:
-  nsHTMLLIElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLLIElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLLIElement
-  NS_DECL_NSIDOMHTMLLIELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(LI)
+DOMCI_NODE_DATA(HTMLLIElement, mozilla::dom::HTMLLIElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLLIElement::nsHTMLLIElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLLIElement::~HTMLLIElement()
 {
 }
 
-nsHTMLLIElement::~nsHTMLLIElement()
-{
-}
+NS_IMPL_ADDREF_INHERITED(HTMLLIElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLLIElement, Element)
 
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLLIElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLLIElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLLIElement, nsHTMLLIElement)
 
 // QueryInterface implementation for nsHTMLLIElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLLIElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLIElement, nsIDOMHTMLLIElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLIElement,
+NS_INTERFACE_TABLE_HEAD(HTMLLIElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLLIElement, nsIDOMHTMLLIElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLIElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLIElement)
 
+NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLLIElement)
-
-
-NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
-NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
+NS_IMPL_STRING_ATTR(HTMLLIElement, Type, type)
+NS_IMPL_INT_ATTR(HTMLLIElement, Value, value)
 
 // values that are handled case-insensitively
 static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {
@@ -104,10 +57,10 @@ static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
 };
 
 bool
-nsHTMLLIElement::ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult)
+HTMLLIElement::ParseAttribute(int32_t aNamespaceID,
+                              nsIAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::type) {
@@ -142,7 +95,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLLIElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLLIElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::type },
@@ -157,10 +110,11 @@ nsHTMLLIElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return FindAttributeDependence(aAttribute, map);
 }
 
-
-
 nsMapRuleToAttributesFunc
-nsHTMLLIElement::GetAttributeMappingFunction() const
+HTMLLIElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace dom
+} // namespace mozilla
