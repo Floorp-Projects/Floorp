@@ -437,18 +437,21 @@ NewStringObject(JSContext *cx, HandleString str)
     return StringObject::create(cx, str);
 }
 
-bool SPSEnter(JSContext *cx, HandleScript script)
+bool
+SPSEnter(JSContext *cx, HandleScript script)
 {
     return cx->runtime->spsProfiler.enter(cx, script, script->function());
 }
 
-bool SPSExit(JSContext *cx, HandleScript script)
+bool
+SPSExit(JSContext *cx, HandleScript script)
 {
     cx->runtime->spsProfiler.exit(cx, script, script->function());
     return true;
 }
 
-bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
+bool
+OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
 {
     RootedValue dummy(cx); // Disregards atomization changes: no way to propagate.
     RootedId id(cx);
@@ -464,9 +467,24 @@ bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
     return true;
 }
 
-bool GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
+bool
+GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
     return cx->global()->getIntrinsicValue(cx, name, rval);
+}
+
+bool
+CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
+{
+    rval.set(MagicValue(JS_IS_CONSTRUCTING));
+
+    if (callee->isFunction()) {
+        JSFunction *fun = callee->toFunction();
+        if (fun->isInterpreted())
+            rval.set(ObjectValue(*js_CreateThisForFunction(cx, callee, false)));
+    }
+
+    return true;
 }
 
 } // namespace ion
