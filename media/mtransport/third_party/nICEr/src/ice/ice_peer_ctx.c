@@ -247,7 +247,27 @@ int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_
       }
     }
 
-    _status =0;
+    /* Start checks if this stream is not checking yet or if it has checked
+       all the available candidates but not had a completed check for all
+       components.
+
+       Note that this is not compliant with RFC 5245, but consistent with
+       the libjingle trickle ICE behavior. Note that we will not restart
+       checks if either (a) the stream has failed or (b) all components
+       have a successful pair because the switch statement above jumps
+       will in both states.
+
+       TODO(ekr@rtfm.com): restart checks.
+       TODO(ekr@rtfm.com): update when the trickle ICE RFC is published
+    */
+    if (!pstream->timer) {
+      if(r=nr_ice_media_stream_start_checks(pctx, pstream)) {
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s), stream(%s) failed to start checks",pctx->ctx->label,pctx->label,stream->label);
+        ABORT(r);
+      }
+    }
+
+    _status=0;
  abort:
     return(_status);
 
@@ -283,14 +303,16 @@ static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     nr_ice_peer_ctx *pctx=cb_arg;
     nr_ice_media_stream *str1,*str2;
 
+    NR_async_timer_cancel(pctx->done_cb_timer);
     RFREE(pctx->label);
     RFREE(pctx->peer_ufrag);
     RFREE(pctx->peer_pwd);
-    
+
     STAILQ_FOREACH_SAFE(str1, &pctx->peer_streams, entry, str2){
       STAILQ_REMOVE(&pctx->peer_streams,str1,nr_ice_media_stream_,entry);
       nr_ice_media_stream_destroy(&str1);
     }
+    STAILQ_REMOVE(&pctx->ctx->peers, pctx, nr_ice_peer_ctx_, entry);
 
     RFREE(pctx);
   }
@@ -393,6 +415,8 @@ static void nr_ice_peer_ctx_fire_done(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_peer_ctx *pctx=cb_arg;
 
+    pctx->done_cb_timer=0;
+
     /* Fire the handler callback to say we're done */
     if (pctx->handler) {
       pctx->handler->vtbl->ice_completed(pctx->handler->obj, pctx);
@@ -433,7 +457,8 @@ int nr_ice_peer_ctx_stream_done(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stre
        IMPORTANT: This is done in a callback because we expect destructors
        of various kinds to be fired from here */
 
-    NR_ASYNC_SCHEDULE(nr_ice_peer_ctx_fire_done,pctx);
+    assert(!pctx->done_cb_timer);
+    NR_ASYNC_TIMER_SET(0,nr_ice_peer_ctx_fire_done,pctx,&pctx->done_cb_timer);
 
   done:
     _status=0;

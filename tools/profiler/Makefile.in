@@ -54,10 +54,6 @@ EXTRA_JS_MODULES = \
   Profiler.jsm \
   $(NULL)
 
-ifdef MOZ_OLD_LINKER
-DEFINES += -DMOZ_OLD_LINKER
-endif
-
 ifneq (,$(filter Android Linux,$(OS_TARGET)))
 CPPSRCS += \
   shared-libraries-linux.cc \

@@ -292,7 +292,7 @@ nsPopupBoxObject::GetOuterScreenRect(nsIDOMClientRect** aRect)
   if (state != ePopupOpen && state != ePopupOpenAndVisible)
     return NS_OK;
 
-  nsIView* view = menuPopupFrame->GetView();
+  nsView* view = menuPopupFrame->GetView();
   if (view) {
     nsIWidget* widget = view->GetWidget();
     if (widget) {

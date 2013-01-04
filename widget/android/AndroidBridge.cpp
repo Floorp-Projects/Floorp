@@ -101,6 +101,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
+    jclass jAndroidSmsMessageClass = jEnv->FindClass("android/telephony/SmsMessage");
+    mAndroidSmsMessageClass = (jclass) jEnv->NewGlobalRef(jAndroidSmsMessageClass);
+
     jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(II)V");
     jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V");
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
@@ -157,7 +160,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jCheckUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
 
-    jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
+    jCalculateLength = (jmethodID) jEnv->GetStaticMethodID(jAndroidSmsMessageClass, "calculateLength", "(Ljava/lang/CharSequence;Z)[I");
     jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
     jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(II)V");
     jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(II)V");
@@ -1656,22 +1659,40 @@ AndroidBridge::MarkURIVisited(const nsAString& aURI)
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkUriVisited, jstrURI);
 }
 
-uint16_t
-AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
+nsresult
+AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
+                                     dom::sms::SmsSegmentInfoData* aData)
 {
-    ALOG_BRIDGE("AndroidBridge::GetNumberOfMessagesForText");
+    ALOG_BRIDGE("AndroidBridge::GetSegmentInfoForText");
+
+    aData->segments() = 0;
+    aData->charsPerSegment() = 0;
+    aData->charsAvailableInLastSegment() = 0;
 
     JNIEnv *env = GetJNIEnv();
     if (!env)
-        return 0;
+        return NS_ERROR_FAILURE;
 
     AutoLocalJNIFrame jniFrame(env);
     jstring jText = NewJavaString(&jniFrame, aText);
-    uint16_t ret = env->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
+    jobject obj = env->CallStaticObjectMethod(mAndroidSmsMessageClass,
+                                              jCalculateLength, jText, JNI_FALSE);
     if (jniFrame.CheckForException())
-        return 0;
+        return NS_ERROR_FAILURE;
 
-    return ret;
+    jintArray arr = static_cast<jintArray>(obj);
+    if (!arr || env->GetArrayLength(arr) != 4)
+        return NS_ERROR_FAILURE;
+
+    jint* info = env->GetIntArrayElements(arr, JNI_FALSE);
+
+    aData->segments() = info[0]; // msgCount
+    aData->charsPerSegment() = info[2]; // codeUnitsRemaining
+    // segmentChars = (codeUnitCount + codeUnitsRemaining) / msgCount
+    aData->charsAvailableInLastSegment() = (info[1] + info[2]) / info[0];
+
+    env->ReleaseIntArrayElements(arr, info, JNI_ABORT);
+    return NS_OK;
 }
 
 void

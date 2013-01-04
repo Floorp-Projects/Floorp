@@ -16,7 +16,7 @@
 #include "nsCopySupport.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIContentIterator.h"
 #include "nsTextFragment.h"
 #include "nsTextFrame.h"
@@ -794,7 +794,7 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
   // a popup but the rootFrame is the document root.
   if (rootWidget != aEvent->widget) {
     NS_PRECONDITION(aEvent->widget, "The event must have the widget");
-    nsIView* view = nsIView::GetViewFor(aEvent->widget);
+    nsView* view = nsView::GetViewFor(aEvent->widget);
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     rootFrame = view->GetFrame();
     NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
@@ -982,7 +982,7 @@ nsContentEventHandler::ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
 {
   NS_ASSERTION(aFrame, "aFrame must not be null");
 
-  nsIView* view = nullptr;
+  nsView* view = nullptr;
   nsPoint posInView;
   aFrame->GetOffsetFromView(posInView, &view);
   if (!view)

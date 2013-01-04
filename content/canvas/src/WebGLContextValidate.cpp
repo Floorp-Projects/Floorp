@@ -858,6 +858,7 @@ WebGLContext::InitAndValidateGL()
     mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
     mDisableExtensions = Preferences::GetBool("webgl.disable-extensions", false);
     mLoseContextOnHeapMinimize = Preferences::GetBool("webgl.lose-context-on-heap-minimize", false);
+    mCanLoseContextInForeground = Preferences::GetBool("webgl.can-lose-context-in-foreground", true);
 
     mActiveTexture = 0;
     mWebGLError = LOCAL_GL_NO_ERROR;

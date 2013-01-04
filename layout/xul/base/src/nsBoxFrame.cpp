@@ -42,7 +42,7 @@
 #include "nsIContent.h"
 #include "nsHTMLParts.h"
 #include "nsIViewManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsIServiceManager.h"

@@ -40,7 +40,7 @@ RootAccessibleWrap::GetNativeWidget(void** aOutView)
 {
   nsIFrame *frame = GetFrame();
   if (frame) {
-    nsIView *view = frame->GetViewExternal();
+    nsView *view = frame->GetViewExternal();
     if (view) {
       nsIWidget *widget = view->GetWidget();
       if (widget) {

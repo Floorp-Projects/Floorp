@@ -80,7 +80,7 @@
             android:excludeFromRecents="true"
             android:icon="@drawable/icon"
             android:label="@string/sync_app_name"
-            android:configChanges="orientation"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:taskAffinity="org.mozilla.gecko.sync.setup"
             android:name="org.mozilla.gecko.sync.setup.activities.SendTabActivity" >

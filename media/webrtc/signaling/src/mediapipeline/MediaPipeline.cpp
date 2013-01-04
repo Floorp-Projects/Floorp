@@ -50,6 +50,17 @@ static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
 nsresult MediaPipeline::Init() {
   ASSERT_ON_THREAD(main_thread_);
+
+  // TODO(ekr@rtfm.com): is there a way to make this async?
+  nsresult ret;
+  RUN_ON_THREAD(sts_thread_,
+		WrapRunnableRet(this, &MediaPipeline::Init_s, &ret),
+		NS_DISPATCH_SYNC);
+  return ret;
+}
+
+nsresult MediaPipeline::Init_s() {
+  ASSERT_ON_THREAD(sts_thread_);
   conduit_->AttachTransport(transport_);
 
   MOZ_ASSERT(rtp_transport_);
@@ -89,6 +100,7 @@ nsresult MediaPipeline::Init() {
 void MediaPipeline::DetachTransport_s() {
   ASSERT_ON_THREAD(sts_thread_);
 
+  disconnect_all();
   transport_->Detach();
   rtp_transport_ = NULL;
   rtcp_transport_ = NULL;
