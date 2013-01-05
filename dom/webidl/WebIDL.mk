@@ -71,6 +71,7 @@ webidl_files = \
   HTMLParagraphElement.webidl \
   HTMLPreElement.webidl \
   HTMLPropertiesCollection.webidl \
+  HTMLScriptElement.webidl \
   HTMLSpanElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \

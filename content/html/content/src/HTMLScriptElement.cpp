@@ -4,12 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIDocument.h"
-#include "nsScriptElement.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -24,6 +22,7 @@
 #include "nsTArray.h"
 #include "nsDOMJSUtils.h"
 #include "mozilla/dom/HTMLScriptElement.h"
+#include "mozilla/dom/HTMLScriptElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
@@ -32,11 +31,18 @@ DOMCI_NODE_DATA(HTMLScriptElement, mozilla::dom::HTMLScriptElement)
 namespace mozilla {
 namespace dom {
 
+JSObject*
+HTMLScriptElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return HTMLScriptElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
 HTMLScriptElement::HTMLScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo)
   , nsScriptElement(aFromParser)
 {
+  SetIsDOMBinding();
   AddMutationObserver(this);
 }
 
@@ -127,7 +133,15 @@ HTMLScriptElement::GetText(nsAString& aValue)
 NS_IMETHODIMP
 HTMLScriptElement::SetText(const nsAString& aValue)
 {
-  return nsContentUtils::SetNodeTextContent(this, aValue, true);
+  ErrorResult rv;
+  SetText(aValue, rv);
+  return rv.ErrorCode();
+}
+
+void
+HTMLScriptElement::SetText(const nsAString& aValue, ErrorResult& rv)
+{
+  rv = nsContentUtils::SetNodeTextContent(this, aValue, true);
 }
 
 
@@ -139,18 +153,80 @@ NS_IMPL_STRING_ATTR(HTMLScriptElement, HtmlFor, _for)
 NS_IMPL_STRING_ATTR(HTMLScriptElement, Event, event)
 NS_IMPL_STRING_ATTR(HTMLScriptElement, CrossOrigin, crossorigin)
 
+void
+HTMLScriptElement::SetCharset(const nsAString& aCharset, ErrorResult& rv)
+{
+  SetHTMLAttr(nsGkAtoms::charset, aCharset, rv);
+}
+
+void
+HTMLScriptElement::SetDefer(bool aDefer, ErrorResult& rv)
+{
+  SetHTMLBoolAttr(nsGkAtoms::defer, aDefer, rv);
+}
+
+bool
+HTMLScriptElement::Defer()
+{
+  return GetBoolAttr(nsGkAtoms::defer);
+}
+
+void
+HTMLScriptElement::SetSrc(const nsAString& aSrc, ErrorResult& rv)
+{
+  rv = SetAttrHelper(nsGkAtoms::src, aSrc);
+}
+
+void
+HTMLScriptElement::SetType(const nsAString& aType, ErrorResult& rv)
+{
+  SetHTMLAttr(nsGkAtoms::type, aType, rv);
+}
+
+void
+HTMLScriptElement::SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& rv)
+{
+  SetHTMLAttr(nsGkAtoms::_for, aHtmlFor, rv);
+}
+
+void
+HTMLScriptElement::SetEvent(const nsAString& aEvent, ErrorResult& rv)
+{
+  SetHTMLAttr(nsGkAtoms::event, aEvent, rv);
+}
+
+void
+HTMLScriptElement::SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& rv)
+{
+  SetHTMLAttr(nsGkAtoms::crossorigin, aCrossOrigin, rv);
+}
+
 nsresult
 HTMLScriptElement::GetAsync(bool* aValue)
 {
-  *aValue = mForceAsync || GetBoolAttr(nsGkAtoms::async);
+  *aValue = Async();
   return NS_OK;
+}
+
+bool
+HTMLScriptElement::Async()
+{
+  return mForceAsync || GetBoolAttr(nsGkAtoms::async);
 }
 
 nsresult
 HTMLScriptElement::SetAsync(bool aValue)
 {
+  ErrorResult rv;
+  SetAsync(aValue, rv);
+  return rv.ErrorCode();
+}
+
+void
+HTMLScriptElement::SetAsync(bool aValue, ErrorResult& rv)
+{
   mForceAsync = false;
-  return SetBoolAttr(nsGkAtoms::async, aValue);
+  SetHTMLBoolAttr(nsGkAtoms::async, aValue, rv);
 }
 
 nsresult
