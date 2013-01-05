@@ -43,6 +43,7 @@
                seltype="multiple"
                id="downloadsRichListBox" context="downloadsContextMenu"
                onkeypress="return this._placesView.onKeyPress(event);"
+               ondblclick="return this._placesView.onDoubleClick(event);"
                oncontextmenu="return this._placesView.onContextMenu(event);"
                onfocus="goUpdateDownloadCommands();"
                onselect="goUpdateDownloadCommands();"
