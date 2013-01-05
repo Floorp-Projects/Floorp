@@ -26,20 +26,14 @@ class nsDeviceContext;
 class nsIPresShell;
 class nsView;
 
-#define NS_IVIEWMANAGER_IID \
-{ 0x540610a6, 0x4fdd, 0x4ae3, \
-  { 0x9b, 0xdb, 0xa6, 0x4d, 0x8b, 0xca, 0x02, 0x0f } }
-
-class nsViewManager : public nsISupports
+class nsViewManager
 {
 public:
   friend class nsView;
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEWMANAGER_IID)
-
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(nsViewManager)
 
   nsViewManager();
   virtual ~nsViewManager();
@@ -428,9 +422,6 @@ private:
   //list of view managers
   static nsVoidArray       *gViewManagers;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsViewManager, NS_IVIEWMANAGER_IID)
-
 
 /**
    Invalidation model:

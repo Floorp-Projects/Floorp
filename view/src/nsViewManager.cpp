@@ -122,8 +122,6 @@ nsViewManager::~nsViewManager()
   mPresShell = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsViewManager, nsViewManager)
-
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
 NS_IMETHODIMP nsViewManager::Init(nsDeviceContext* aContext)
