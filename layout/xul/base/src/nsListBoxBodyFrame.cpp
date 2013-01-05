@@ -22,7 +22,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsScrollbarFrame.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsStyleContext.h"
 #include "nsFontMetrics.h"
 #include "nsITimer.h"

@@ -22,7 +22,7 @@ class nsIURI;
 class nsIContent;
 class nsINodeInfo;
 class nsIParser;
-class nsIViewManager;
+class nsViewManager;
 
 typedef enum {
   eXMLContentSinkState_InProlog,

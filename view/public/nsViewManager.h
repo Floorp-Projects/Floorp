@@ -3,35 +3,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIViewManager_h___
-#define nsIViewManager_h___
+#ifndef nsViewManager_h___
+#define nsViewManager_h___
 
 #include "nscore.h"
 #include "nsView.h"
 #include "nsEvent.h"
+#include "nsCOMPtr.h"
+#include "nsCRT.h"
+#include "nsITimer.h"
+#include "prtime.h"
+#include "prinrval.h"
+#include "nsVoidArray.h"
+#include "nsThreadUtils.h"
+#include "nsIPresShell.h"
+#include "nsDeviceContext.h"
 
 class nsIWidget;
 struct nsRect;
 class nsRegion;
 class nsDeviceContext;
 class nsIPresShell;
+class nsView;
 
 #define NS_IVIEWMANAGER_IID \
 { 0x540610a6, 0x4fdd, 0x4ae3, \
   { 0x9b, 0xdb, 0xa6, 0x4d, 0x8b, 0xca, 0x02, 0x0f } }
 
-class nsIViewManager : public nsISupports
+class nsViewManager : public nsISupports
 {
 public:
+  friend class nsView;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEWMANAGER_IID)
+
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  NS_DECL_ISUPPORTS
+
+  nsViewManager();
+  virtual ~nsViewManager();
+
   /**
    * Initialize the ViewManager
    * Note: this instance does not hold a reference to the presshell
    * because it holds a reference to this instance.
    * @result The result of the initialization, NS_OK if no errors
    */
-  NS_IMETHOD  Init(nsDeviceContext* aContext) = 0;
+  NS_IMETHOD  Init(nsDeviceContext* aContext);
 
   /**
    * Create an ordinary view
@@ -47,13 +66,13 @@ public:
    */
   NS_IMETHOD_(nsView*) CreateView(const nsRect& aBounds,
                                    const nsView* aParent,
-                                   nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
+                                   nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   /**
    * Get the root of the view tree.
    * @result the root view
    */
-  NS_IMETHOD_(nsView*) GetRootView() = 0;
+  NS_IMETHOD_(nsView*) GetRootView() { return mRootView; }
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
@@ -61,7 +80,7 @@ public:
    * aView may have a widget (anything but printing) or may not (printing).
    * @param aView view to set as root
    */
-  NS_IMETHOD  SetRootView(nsView *aView) = 0;
+  NS_IMETHOD  SetRootView(nsView *aView);
 
   /**
    * Get the dimensions of the root window. The dimensions are in
@@ -69,7 +88,7 @@ public:
    * @param aWidth out parameter for width of window in twips
    * @param aHeight out parameter for height of window in twips
    */
-  NS_IMETHOD  GetWindowDimensions(nscoord *aWidth, nscoord *aHeight) = 0;
+  NS_IMETHOD  GetWindowDimensions(nscoord *aWidth, nscoord *aHeight);
 
   /**
    * Set the dimensions of the root window.
@@ -78,19 +97,19 @@ public:
    * @param aWidth of window in twips
    * @param aHeight of window in twips
    */
-  NS_IMETHOD  SetWindowDimensions(nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD  SetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
   /**
    * Do any resizes that are pending.
    */
-  NS_IMETHOD  FlushDelayedResize(bool aDoReflow) = 0;
+  NS_IMETHOD  FlushDelayedResize(bool aDoReflow);
 
   /**
    * Called to inform the view manager that the entire area of a view
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
    */
-  NS_IMETHOD  InvalidateView(nsView *aView) = 0;
+  NS_IMETHOD  InvalidateView(nsView *aView);
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -99,12 +118,12 @@ public:
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
    */
-  NS_IMETHOD  InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect) = 0;
+  NS_IMETHOD  InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect);
 
   /**
    * Called to inform the view manager that it should invalidate all views.
    */
-  NS_IMETHOD  InvalidateAllViews() = 0;
+  NS_IMETHOD  InvalidateAllViews();
 
   /**
    * Called to dispatch an event to the appropriate view. Often called
@@ -115,7 +134,7 @@ public:
    * @param aStatus event handling status
    */
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
-      nsView* aViewTarget, nsEventStatus* aStatus) = 0;
+      nsView* aViewTarget, nsEventStatus* aStatus);
 
   /**
    * Given a parent view, insert another view as its child.
@@ -133,7 +152,9 @@ public:
    * @param aAfter after or before in the document order
    */
   NS_IMETHOD  InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
-                          bool aAfter) = 0;
+                          bool aAfter);
+
+  NS_IMETHOD InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex);
 
   /**
    * Remove a specific child view from its parent. This will NOT remove its placeholder
@@ -142,7 +163,7 @@ public:
    * @param aParent parent view
    * @param aChild child view
    */
-  NS_IMETHOD  RemoveChild(nsView *aChild) = 0;
+  NS_IMETHOD  RemoveChild(nsView *aChild);
 
   /**
    * Move a view to the specified position, provided in parent coordinates.
@@ -153,7 +174,7 @@ public:
    * @param aX x value for new view position
    * @param aY y value for new view position
    */
-  NS_IMETHOD  MoveViewTo(nsView *aView, nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD  MoveViewTo(nsView *aView, nscoord aX, nscoord aY);
 
   /**
    * Resize a view. In addition to setting the width and height, you can
@@ -168,7 +189,7 @@ public:
    *     if false Repaint the union of the old and new rectangles.
    */
   NS_IMETHOD  ResizeView(nsView *aView, const nsRect &aRect,
-                         bool aRepaintExposedAreaOnly = false) = 0;
+                         bool aRepaintExposedAreaOnly = false);
 
   /**
    * Set the visibility of a view. Hidden views have the effect of hiding
@@ -181,7 +202,7 @@ public:
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  NS_IMETHOD  SetViewVisibility(nsView *aView, nsViewVisibility aVisible) = 0;
+  NS_IMETHOD  SetViewVisibility(nsView *aView, nsViewVisibility aVisible);
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view
@@ -199,7 +220,7 @@ public:
    *        true if the view should be topmost when compared with 
    *        other z-index:auto views.
    */
-  NS_IMETHOD  SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false) = 0;
+  NS_IMETHOD  SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false);
 
   /**
    * Set whether the view "floats" above all other views,
@@ -208,24 +229,24 @@ public:
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
    */
-  NS_IMETHOD  SetViewFloating(nsView *aView, bool aFloatingView) = 0;
+  NS_IMETHOD  SetViewFloating(nsView *aView, bool aFloatingView);
 
   /**
    * Set the presshell associated with this manager
    * @param aPresShell - new presshell
    */
-  virtual void SetPresShell(nsIPresShell *aPresShell) = 0;
+  virtual void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
 
   /**
    * Get the pres shell associated with this manager
    */
-  virtual nsIPresShell* GetPresShell() = 0;
+  virtual nsIPresShell* GetPresShell() { return mPresShell; }
 
   /**
    * Get the device context associated with this manager
    * @result device context
    */
-  NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext) = 0;
+  NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
   /**
    * A stack class for disallowing changes that would enter painting. For
@@ -241,7 +262,7 @@ public:
    */
   class NS_STACK_CLASS AutoDisableRefresh {
   public:
-    AutoDisableRefresh(nsIViewManager* aVM) {
+    AutoDisableRefresh(nsViewManager* aVM) {
       if (aVM) {
         mRootVM = aVM->IncrementDisableRefreshCount();
       }
@@ -255,21 +276,21 @@ public:
     AutoDisableRefresh(const AutoDisableRefresh& aOther);
     const AutoDisableRefresh& operator=(const AutoDisableRefresh& aOther);
 
-    nsCOMPtr<nsIViewManager> mRootVM;
+    nsCOMPtr<nsViewManager> mRootVM;
   };
 
 private:
   friend class AutoDisableRefresh;
 
-  virtual nsIViewManager* IncrementDisableRefreshCount() = 0;
-  virtual void DecrementDisableRefreshCount() = 0;
+  virtual nsViewManager* IncrementDisableRefreshCount();
+  virtual void DecrementDisableRefreshCount();
 
 public:
   /**
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
    */
-  NS_IMETHOD GetRootWidget(nsIWidget **aWidget) = 0;
+  NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
 
   /**
    * Indicate whether the viewmanager is currently painting
@@ -277,7 +298,7 @@ public:
    * @param aPainting true if the viewmanager is painting
    *                  false otherwise
    */
-  NS_IMETHOD IsPainting(bool& aIsPainting)=0;
+  NS_IMETHOD IsPainting(bool& aIsPainting);
 
   /**
    * Retrieve the time of the last user event. User events
@@ -286,7 +307,7 @@ public:
    *
    * @param aTime Last user event time in microseconds
    */
-  NS_IMETHOD GetLastUserEventTime(uint32_t& aTime)=0;
+  NS_IMETHOD GetLastUserEventTime(uint32_t& aTime);
 
   /**
    * Find the nearest display root view for the view aView. This is the view for
@@ -298,14 +319,141 @@ public:
    * Flush the accumulated dirty region to the widget and update widget
    * geometry.
    */
-  virtual void ProcessPendingUpdates()=0;
+  virtual void ProcessPendingUpdates();
 
   /**
    * Just update widget geometry without flushing the dirty region
    */
-  virtual void UpdateWidgetGeometry() = 0;
+  virtual void UpdateWidgetGeometry();
+
+  uint32_t AppUnitsPerDevPixel() const
+  {
+    return mContext->AppUnitsPerDevPixel();
+  }
+  nsView* GetRootViewImpl() const { return mRootView; }
+
+private:
+  static uint32_t gLastUserEventTime;
+
+  /* Update the cached RootViewManager pointer on this view manager. */
+  void InvalidateHierarchy();
+  void FlushPendingInvalidates();
+
+  void ProcessPendingUpdatesForView(nsView *aView,
+                                    bool aFlushDirtyRegion = true);
+  void FlushDirtyRegionToWidget(nsView* aView);
+  /**
+   * Call WillPaint() on all view observers under this vm root.
+   */
+  void CallWillPaintOnObservers(bool aWillSendDidPaint);
+  void ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget);
+  void ReparentWidgets(nsView* aView, nsView *aParent);
+  void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
+
+  void InvalidateViews(nsView *aView);
+
+  // aView is the view for aWidget and aRegion is relative to aWidget.
+  void Refresh(nsView *aView, const nsIntRegion& aRegion, bool aWillSendDidPaint);
+
+  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
+  void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
+                                          nscoord aY1, nscoord aY2, bool aInCutOut);
+
+  // Utilities
+
+  bool IsViewInserted(nsView *aView);
+
+  /**
+   * Intersects aRect with aView's bounds and then transforms it from aView's
+   * coordinate system to the coordinate system of the widget attached to
+   * aView.
+   */
+  nsIntRect ViewToWidget(nsView *aView, const nsRect &aRect) const;
+
+  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
+
+  bool IsPainting() const {
+    return RootViewManager()->mPainting;
+  }
+
+  void SetPainting(bool aPainting) {
+    RootViewManager()->mPainting = aPainting;
+  }
+
+  nsresult InvalidateView(nsView *aView, const nsRect &aRect);
+
+  nsViewManager* RootViewManager() const { return mRootViewManager; }
+  bool IsRootVM() const { return this == RootViewManager(); }
+
+  // Whether synchronous painting is allowed at the moment. For example,
+  // widget geometry changes can cause synchronous painting, so they need to
+  // be deferred while refresh is disabled.
+  bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
+
+  void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint);
+  bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
+                   uint32_t aFlags);
+  void DidPaintWindow();
+
+  // Call this when you need to let the viewmanager know that it now has
+  // pending updates.
+  void PostPendingUpdate();
+
+  nsRefPtr<nsDeviceContext> mContext;
+  nsIPresShell   *mPresShell;
+
+  // The size for a resize that we delayed until the root view becomes
+  // visible again.
+  nsSize            mDelayedResize;
+
+  nsView           *mRootView;
+  // mRootViewManager is a strong ref unless it equals |this|.  It's
+  // never null (if we have no ancestors, it will be |this|).
+  nsViewManager   *mRootViewManager;
+
+  // The following members should not be accessed directly except by
+  // the root view manager.  Some have accessor functions to enforce
+  // this, as noted.
+
+  int32_t           mRefreshDisableCount;
+  // Use IsPainting() and SetPainting() to access mPainting.
+  bool              mPainting;
+  bool              mRecursiveRefreshPending;
+  bool              mHasPendingWidgetGeometryChanges;
+  bool              mInScroll;
+
+  //from here to public should be static and locked... MMP
+  static int32_t           mVMCount;        //number of viewmanagers
+
+  //list of view managers
+  static nsVoidArray       *gViewManagers;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsViewManager, NS_IVIEWMANAGER_IID)
 
-#endif  // nsIViewManager_h___
+
+/**
+   Invalidation model:
+
+   1) Callers call into the view manager and ask it to invalidate a view.
+
+   2) The view manager finds the "right" widget for the view, henceforth called
+      the root widget.
+
+   3) The view manager traverses descendants of the root widget and for each
+      one that needs invalidation stores the rect to invalidate on the widget's
+      view (batching).
+
+   4) The dirty region is flushed to the right widget when
+      ProcessPendingUpdates is called from the RefreshDriver.
+
+   It's important to note that widgets associated to views outside this view
+   manager can end up being invalidated during step 3.  Therefore, the end of a
+   view update batch really needs to traverse the entire view tree, to ensure
+   that those invalidates happen.
+
+   To cope with this, invalidation processing and should only happen on the
+   root viewmanager.
+*/
+
+#endif  // nsViewManager_h___

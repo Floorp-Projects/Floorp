@@ -30,7 +30,7 @@
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMXULElement.h"
