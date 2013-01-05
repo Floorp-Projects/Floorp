@@ -232,6 +232,8 @@ richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloa
 #downloads-indicator-notification {
   opacity: 0;
   background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 @keyframes downloadsIndicatorNotificationStartRight {
