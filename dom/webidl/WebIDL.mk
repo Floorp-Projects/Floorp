@@ -96,24 +96,17 @@ webidl_files = \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
-  SVGDescElement.webidl \
   SVGElement.webidl \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
-  SVGMetadataElement.webidl \
-  SVGMPathElement.webidl \
   SVGNumberList.webidl \
   SVGPathSeg.webidl \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
   SVGPreserveAspectRatio.webidl \
-  SVGStopElement.webidl \
-  SVGStyleElement.webidl \
-  SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformList.webidl \
-  SVGURIReference.webidl \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGMPathElement_h
-#define mozilla_dom_SVGMPathElement_h
+#ifndef NS_SVGMPATHELEMENT_H_
+#define NS_SVGMPATHELEMENT_H_
 
 #include "nsIDOMSVGMpathElement.h"
 #include "nsIDOMSVGURIReference.h"
@@ -14,26 +14,20 @@
 #include "nsSVGString.h"
 #include "nsReferencedElement.h"
 
-nsresult NS_NewSVGMPathElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo> aNodeInfo);
 
-typedef nsSVGElement SVGMPathElementBase;
+typedef nsSVGElement nsSVGMpathElementBase;
 
-namespace mozilla {
-namespace dom {
-
-class SVGMPathElement MOZ_FINAL : public SVGMPathElementBase,
-                                  public nsIDOMSVGMpathElement,
-                                  public nsIDOMSVGURIReference,
-                                  public nsStubMutationObserver
+class nsSVGMpathElement : public nsSVGMpathElementBase,
+                          public nsIDOMSVGMpathElement,
+                          public nsIDOMSVGURIReference,
+                          public nsStubMutationObserver
 {
 protected:
-  friend nsresult (::NS_NewSVGMPathElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGMPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  ~SVGMPathElement();
+  friend nsresult NS_NewSVGMpathElement(nsIContent **aResult,
+                                        already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMpathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  ~nsSVGMpathElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
 
 public:
   // interfaces:
@@ -41,15 +35,15 @@ public:
   NS_DECL_NSIDOMSVGMPATHELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGMPathElement,
-                                           SVGMPathElementBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGMpathElement,
+                                           nsSVGMpathElementBase)
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   // Forward interface implementations to base class
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGMPathElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGMpathElementBase::)
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -74,14 +68,10 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
-
-  // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
-
 protected:
   class PathReference : public nsReferencedElement {
   public:
-    PathReference(SVGMPathElement* aMpathElement) :
+    PathReference(nsSVGMpathElement* aMpathElement) :
       mMpathElement(aMpathElement) {}
   protected:
     // We need to be notified when target changes, in order to request a sample
@@ -102,7 +92,7 @@ protected:
     // first time the target changes)
     virtual bool IsPersistent() { return true; }
   private:
-    SVGMPathElement* const mMpathElement;
+    nsSVGMpathElement* const mMpathElement;
   };
 
   virtual StringAttributesInfo GetStringInfo();
@@ -117,7 +107,4 @@ protected:
   PathReference      mHrefTarget;
 };
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_SVGMPathElement_h
+#endif // NS_SVGMPATHELEMENT_H_
