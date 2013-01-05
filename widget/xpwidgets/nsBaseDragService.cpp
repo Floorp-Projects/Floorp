@@ -18,7 +18,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDragEvent.h"
 #include "nsISelection.h"

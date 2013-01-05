@@ -1006,7 +1006,7 @@ nsView::HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents)
   }
 
   if (view) {
-    nsCOMPtr<nsIViewManager> vm = view->GetViewManager();
+    nsCOMPtr<nsViewManager> vm = view->GetViewManager();
     vm->DispatchEvent(aEvent, view, &result);
   }
 

@@ -12,7 +12,7 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
@@ -75,7 +75,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
   if (!shell)
     return;
 
-  nsIViewManager* vm = shell->GetViewManager();
+  nsViewManager* vm = shell->GetViewManager();
   if (!vm)
     return;
  

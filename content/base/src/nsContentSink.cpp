@@ -25,7 +25,7 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMWindow.h"
@@ -1371,7 +1371,7 @@ nsContentSink::DidProcessATokenImpl()
   // Check if there's a pending event
   if (sPendingEventMode != 0 && !mHasPendingEvent &&
       (mDeflectedCount % sEventProbeRate) == 0) {
-    nsIViewManager* vm = shell->GetViewManager();
+    nsViewManager* vm = shell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));
@@ -1518,7 +1518,7 @@ nsContentSink::WillParseImpl(void)
   uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
   if (sEnablePerfMode == 0) {
-    nsIViewManager* vm = shell->GetViewManager();
+    nsViewManager* vm = shell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     uint32_t lastEventTime;
     vm->GetLastUserEventTime(lastEventTime);

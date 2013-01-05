@@ -70,7 +70,7 @@ public:
   // nsIPresShell
   virtual NS_HIDDEN_(nsresult) Init(nsIDocument* aDocument,
                                    nsPresContext* aPresContext,
-                                   nsIViewManager* aViewManager,
+                                   nsViewManager* aViewManager,
                                    nsStyleSet* aStyleSet,
                                    nsCompatibility aCompatMode);
   virtual NS_HIDDEN_(void) Destroy();

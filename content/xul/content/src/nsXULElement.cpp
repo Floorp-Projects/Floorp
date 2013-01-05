@@ -54,7 +54,7 @@
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleSheet.h"
 #include "nsIURL.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"

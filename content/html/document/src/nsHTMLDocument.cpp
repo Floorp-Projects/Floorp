@@ -305,7 +305,7 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 
 nsresult
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
-                            nsIViewManager* aViewManager,
+                            nsViewManager* aViewManager,
                             nsStyleSet* aStyleSet,
                             nsIPresShell** aInstancePtrResult)
 {

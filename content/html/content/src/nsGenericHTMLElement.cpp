@@ -38,7 +38,7 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"

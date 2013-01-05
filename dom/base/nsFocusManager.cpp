@@ -39,7 +39,7 @@
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
 #include "nsIBaseWindow.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsFrameSelection.h"
 #include "mozilla/Selection.h"
 #include "nsXULPopupManager.h"
@@ -1055,7 +1055,7 @@ nsFocusManager::EnsureCurrentWidgetFocused()
   if (docShell) {
     nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
     if (presShell) {
-      nsIViewManager* vm = presShell->GetViewManager();
+      nsViewManager* vm = presShell->GetViewManager();
       if (vm) {
         nsCOMPtr<nsIWidget> widget;
         vm->GetRootWidget(getter_AddRefs(widget));
@@ -1552,7 +1552,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
       if (aAdjustWidgets && objectFrame && !sTestMode) {
         // note that the presshell's widget is being retrieved here, not the one
         // for the object frame.
-        nsIViewManager* vm = presShell->GetViewManager();
+        nsViewManager* vm = presShell->GetViewManager();
         if (vm) {
           nsCOMPtr<nsIWidget> widget;
           vm->GetRootWidget(getter_AddRefs(widget));
@@ -1726,7 +1726,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       objectFrameWidget = objectFrame->GetWidget();
   }
   if (aAdjustWidgets && !objectFrameWidget && !sTestMode) {
-    nsIViewManager* vm = presShell->GetViewManager();
+    nsViewManager* vm = presShell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
@@ -1812,7 +1812,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     if (aAdjustWidgets && objectFrameWidget &&
         mFocusedWindow == aWindow && mFocusedContent == nullptr &&
         !sTestMode) {
-      nsIViewManager* vm = presShell->GetViewManager();
+      nsViewManager* vm = presShell->GetViewManager();
       if (vm) {
         nsCOMPtr<nsIWidget> widget;
         vm->GetRootWidget(getter_AddRefs(widget));
@@ -1974,7 +1974,7 @@ nsFocusManager::RaiseWindow(nsPIDOMWindow* aWindow)
   if (!presShell)
     return;
 
-  nsIViewManager* vm = presShell->GetViewManager();
+  nsViewManager* vm = presShell->GetViewManager();
   if (vm) {
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));

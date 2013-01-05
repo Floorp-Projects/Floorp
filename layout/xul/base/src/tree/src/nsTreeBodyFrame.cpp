@@ -39,7 +39,7 @@
 #include "nsXPIDLString.h"
 #include "nsContainerFrame.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 #include "nsBoxObject.h"

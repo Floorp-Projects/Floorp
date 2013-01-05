@@ -22,7 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
@@ -373,7 +373,7 @@ nsContainerFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
 
 static nsresult
 ReparentFrameViewTo(nsIFrame*       aFrame,
-                    nsIViewManager* aViewManager,
+                    nsViewManager* aViewManager,
                     nsView*        aNewParentView,
                     nsView*        aOldParentView)
 {
@@ -432,7 +432,7 @@ nsContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   nsView* parentView = aFrame->GetParent()->GetClosestView();
   NS_ASSERTION(parentView, "no parent with view");
 
-  nsIViewManager* viewManager = parentView->GetViewManager();
+  nsViewManager* viewManager = parentView->GetViewManager();
   NS_ASSERTION(viewManager, "null view manager");
 
   // Create a view
@@ -480,7 +480,7 @@ nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
     return;
 
   nsView* view = aKidFrame->GetView();
-  nsIViewManager* vm = view->GetViewManager();
+  nsViewManager* vm = view->GetViewManager();
   nsPoint pt;
   nsView* ancestorView = parentFrame->GetClosestView(&pt);
 
@@ -607,7 +607,7 @@ nsContainerFrame::ReparentFrameViewList(nsPresContext*     aPresContext,
   // same view sub-hierarchy. If they are then we don't have to do
   // anything
   if (oldParentView != newParentView) {
-    nsIViewManager* viewManager = oldParentView->GetViewManager();
+    nsViewManager* viewManager = oldParentView->GetViewManager();
 
     // They're not so we need to reparent any child views
     for (nsFrameList::Enumerator e(aChildFrameList); !e.AtEnd(); e.Next()) {
@@ -656,7 +656,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   if (!windowWidget || !IsTopLevelWidget(windowWidget))
     return;
 
-  nsIViewManager* vm = aView->GetViewManager();
+  nsViewManager* vm = aView->GetViewManager();
   nsView* rootView = vm->GetRootView();
 
   if (aView != rootView)
@@ -748,7 +748,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
   }
 
   if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
-    nsIViewManager* vm = aView->GetViewManager();
+    nsViewManager* vm = aView->GetViewManager();
 
     vm->ResizeView(aView, aVisualOverflowArea, true);
   }
@@ -768,7 +768,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
     return;
   }
 
-  nsIViewManager* vm = aView->GetViewManager();
+  nsViewManager* vm = aView->GetViewManager();
 
   if (nullptr == aStyleContext) {
     aStyleContext = aFrame->GetStyleContext();

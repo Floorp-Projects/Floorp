@@ -21,7 +21,7 @@
 #include "nsIDOMDocument.h"
 
 #include "nsIPresShell.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIFrame.h"
 
 #include "nsILayoutDebugger.h"
@@ -55,7 +55,7 @@ pres_shell(nsIDocShell *aDocShell)
     return result.forget();
 }
 
-static nsIViewManager*
+static nsViewManager*
 view_manager(nsIDocShell *aDocShell)
 {
     nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
@@ -433,7 +433,7 @@ DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
 {
 #ifdef DEBUG
     fprintf(out, "docshell=%p \n", static_cast<void*>(aDocShell));
-    nsCOMPtr<nsIViewManager> vm(view_manager(aDocShell));
+    nsCOMPtr<nsViewManager> vm(view_manager(aDocShell));
     if (vm) {
         nsView* root = vm->GetRootView();
         if (root) {
@@ -524,7 +524,7 @@ nsLayoutDebuggingTools::DumpReflowStats()
 
 void nsLayoutDebuggingTools::ForceRefresh()
 {
-    nsCOMPtr<nsIViewManager> vm(view_manager(mDocShell));
+    nsCOMPtr<nsViewManager> vm(view_manager(mDocShell));
     if (!vm)
         return;
     nsView* root = vm->GetRootView();

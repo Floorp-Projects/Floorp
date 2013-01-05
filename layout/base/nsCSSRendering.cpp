@@ -19,7 +19,7 @@
 #include "nsIFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
