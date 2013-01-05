@@ -38,8 +38,8 @@ class SVGPreserveAspectRatio
   friend class SVGAnimatedPreserveAspectRatio;
 public:
   SVGPreserveAspectRatio(uint16_t aAlign, uint16_t aMeetOrSlice, bool aDefer = false)
-    : mAlign(aAlign)
-    , mMeetOrSlice(aMeetOrSlice)
+    : mAlign(static_cast<uint8_t>(aAlign))
+    , mMeetOrSlice(static_cast<uint8_t>(aMeetOrSlice))
     , mDefer(aDefer)
   {}
 
