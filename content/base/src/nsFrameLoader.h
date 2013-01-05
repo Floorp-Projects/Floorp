@@ -381,9 +381,16 @@ private:
     return mOwnerContent->IsXUL() ? nsGkAtoms::type : nsGkAtoms::mozframetype;
   }
 
+  // Update the permission manager's app-id refcount based on mOwnerContent's
+  // own-or-containing-app.
+  void ResetPermissionManagerStatus();
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   mozilla::dom::Element* mOwnerContent; // WEAK
+
+  // Note: this variable must be modified only by ResetPermissionManagerStatus()
+  uint32_t mAppIdSentToPermissionManager;
 
 public:
   // public because a callback needs these.
