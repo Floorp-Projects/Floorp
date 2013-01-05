@@ -14,7 +14,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="ffc42185726384eaa80ea685bd9c95b7dab467c3"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="22629c7597d0d658fb472f76f2bf35e7eaaf98fd"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="167b4c59a82b9130e385de786e8056d89a1cb8c3"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="6ee1f8987ef36d688f97064c003ad57849dfadf2"/>
 
