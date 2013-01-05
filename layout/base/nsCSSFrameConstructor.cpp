@@ -36,7 +36,7 @@
 #include "nsIPresShell.h"
 #include "nsUnicharUtils.h"
 #include "nsStyleSet.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsEventStates.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
@@ -12015,7 +12015,7 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
     return;
 
   // Make sure that the viewmanager will outlive the presshell
-  nsCOMPtr<nsIViewManager> vm = mPresShell->GetViewManager();
+  nsCOMPtr<nsViewManager> vm = mPresShell->GetViewManager();
 
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.

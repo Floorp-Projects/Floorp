@@ -31,7 +31,7 @@
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIFrame.h"
 
 // This sets how opaque the drag image is
@@ -269,7 +269,7 @@ GetGtkWindow(nsIDOMDocument *aDocument)
     if (!presShell)
         return NULL;
 
-    nsCOMPtr<nsIViewManager> vm = presShell->GetViewManager();
+    nsCOMPtr<nsViewManager> vm = presShell->GetViewManager();
     if (!vm)
         return NULL;
 

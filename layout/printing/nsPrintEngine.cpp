@@ -90,7 +90,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsView.h"
 #include "nsRenderingContext.h"
 
@@ -3793,7 +3793,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
     fprintf(out, "docshell=%p \n", aDocShell);
     nsIPresShell* shell = nsPrintEngine::GetPresShellFor(aDocShell);
     if (shell) {
-      nsIViewManager* vm = shell->GetViewManager();
+      nsViewManager* vm = shell->GetViewManager();
       if (vm) {
         nsView* root = vm->GetRootView();
         if (root) {

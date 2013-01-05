@@ -3119,7 +3119,7 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
 }
 
 nsresult
-nsDocument::CreateShell(nsPresContext* aContext, nsIViewManager* aViewManager,
+nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
                         nsStyleSet* aStyleSet,
                         nsIPresShell** aInstancePtrResult)
 {
@@ -3132,7 +3132,7 @@ nsDocument::CreateShell(nsPresContext* aContext, nsIViewManager* aViewManager,
 
 nsresult
 nsDocument::doCreateShell(nsPresContext* aContext,
-                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
+                          nsViewManager* aViewManager, nsStyleSet* aStyleSet,
                           nsCompatibility aCompatMode,
                           nsIPresShell** aInstancePtrResult)
 {

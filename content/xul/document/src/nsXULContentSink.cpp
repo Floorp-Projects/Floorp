@@ -30,7 +30,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIXULDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"

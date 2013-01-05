@@ -22,7 +22,7 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsGkAtoms.h"
 #include "nsStyleCoord.h"

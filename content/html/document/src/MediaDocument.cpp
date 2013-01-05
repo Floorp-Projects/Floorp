@@ -9,7 +9,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIScrollable.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsITextToSubURI.h"
 #include "nsIURL.h"
 #include "nsIContentViewer.h"

@@ -45,7 +45,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIWebBrowserChrome.h"
 #include "nsLayoutUtils.h"
 #include "nsIPluginWidget.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIAppShell.h"
@@ -693,7 +693,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   
 #if defined(XP_WIN) || defined(XP_OS2)
   void** pvalue = (void**)value;
-  nsIViewManager* vm = mObjectFrame->PresContext()->GetPresShell()->GetViewManager();
+  nsViewManager* vm = mObjectFrame->PresContext()->GetPresShell()->GetViewManager();
   if (!vm)
     return NS_ERROR_FAILURE;
 #if defined(XP_WIN)
