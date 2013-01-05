@@ -147,6 +147,8 @@ int nr_ice_ctx_deliver_packet(nr_ice_ctx *ctx, nr_ice_component *comp, nr_transp
 int nr_ice_ctx_is_known_id(nr_ice_ctx *ctx, UCHAR id[12]);
 int nr_ice_ctx_remember_id(nr_ice_ctx *ctx, nr_stun_message *msg);
 int nr_ice_ctx_finalize(nr_ice_ctx *ctx, nr_ice_peer_ctx *pctx);
+int nr_ice_ctx_set_stun_servers(nr_ice_ctx *ctx,nr_ice_stun_server *servers, int ct);
+int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers, int ct);
 
 extern int LOG_ICE;
 

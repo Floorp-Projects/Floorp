@@ -112,6 +112,12 @@ class TransportTestPeer : public sigslot::has_slots<> {
         peer_(nullptr),
         gathering_complete_(false)
  {
+    std::vector<NrIceStunServer> stun_servers;
+    ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
+        std::string((char *)"216.93.246.14"), 3478));
+    stun_servers.push_back(*server);
+    EXPECT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
+
     dtls_->SetIdentity(identity_);
     dtls_->SetRole(name == "P2" ?
                    TransportLayerDtls::CLIENT :
