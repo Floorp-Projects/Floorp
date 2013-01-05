@@ -5051,7 +5051,7 @@ nsDocShell::Repaint(bool aForce)
     nsViewManager* viewManager = presShell->GetViewManager();
     NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(viewManager->InvalidateAllViews(), NS_ERROR_FAILURE);
+    viewManager->InvalidateAllViews();
     return NS_OK;
 }
 

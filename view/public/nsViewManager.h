@@ -24,9 +24,8 @@ struct nsRect;
 class nsRegion;
 class nsDeviceContext;
 class nsIPresShell;
-class nsView;
 
-class nsViewManager
+class nsViewManager MOZ_FINAL
 {
 public:
   friend class nsView;
@@ -36,7 +35,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING(nsViewManager)
 
   nsViewManager();
-  virtual ~nsViewManager();
+  ~nsViewManager();
 
   /**
    * Initialize the ViewManager
@@ -44,7 +43,7 @@ public:
    * because it holds a reference to this instance.
    * @result The result of the initialization, NS_OK if no errors
    */
-  NS_IMETHOD  Init(nsDeviceContext* aContext);
+  nsresult Init(nsDeviceContext* aContext);
 
   /**
    * Create an ordinary view
@@ -58,15 +57,15 @@ public:
    *        XXX We should eliminate this parameter; you can set it after CreateView
    * @result The new view
    */
-  NS_IMETHOD_(nsView*) CreateView(const nsRect& aBounds,
-                                   const nsView* aParent,
-                                   nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+  nsView* CreateView(const nsRect& aBounds,
+                     const nsView* aParent,
+                     nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   /**
    * Get the root of the view tree.
    * @result the root view
    */
-  NS_IMETHOD_(nsView*) GetRootView() { return mRootView; }
+  nsView* GetRootView() { return mRootView; }
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
@@ -74,7 +73,7 @@ public:
    * aView may have a widget (anything but printing) or may not (printing).
    * @param aView view to set as root
    */
-  NS_IMETHOD  SetRootView(nsView *aView);
+  void SetRootView(nsView *aView);
 
   /**
    * Get the dimensions of the root window. The dimensions are in
@@ -82,7 +81,7 @@ public:
    * @param aWidth out parameter for width of window in twips
    * @param aHeight out parameter for height of window in twips
    */
-  NS_IMETHOD  GetWindowDimensions(nscoord *aWidth, nscoord *aHeight);
+  void GetWindowDimensions(nscoord *aWidth, nscoord *aHeight);
 
   /**
    * Set the dimensions of the root window.
@@ -91,19 +90,19 @@ public:
    * @param aWidth of window in twips
    * @param aHeight of window in twips
    */
-  NS_IMETHOD  SetWindowDimensions(nscoord aWidth, nscoord aHeight);
+  void SetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
   /**
    * Do any resizes that are pending.
    */
-  NS_IMETHOD  FlushDelayedResize(bool aDoReflow);
+  void FlushDelayedResize(bool aDoReflow);
 
   /**
    * Called to inform the view manager that the entire area of a view
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
    */
-  NS_IMETHOD  InvalidateView(nsView *aView);
+  void InvalidateView(nsView *aView);
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -112,12 +111,12 @@ public:
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
    */
-  NS_IMETHOD  InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect);
+  void InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect);
 
   /**
    * Called to inform the view manager that it should invalidate all views.
    */
-  NS_IMETHOD  InvalidateAllViews();
+  void InvalidateAllViews();
 
   /**
    * Called to dispatch an event to the appropriate view. Often called
@@ -127,7 +126,7 @@ public:
    * @param aViewTarget dispatch the event to this view
    * @param aStatus event handling status
    */
-  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
+  void DispatchEvent(nsGUIEvent *aEvent,
       nsView* aViewTarget, nsEventStatus* aStatus);
 
   /**
@@ -145,10 +144,10 @@ public:
    * @param aSibling sibling view
    * @param aAfter after or before in the document order
    */
-  NS_IMETHOD  InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
-                          bool aAfter);
+  void InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
+                   bool aAfter);
 
-  NS_IMETHOD InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex);
+  void InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex);
 
   /**
    * Remove a specific child view from its parent. This will NOT remove its placeholder
@@ -157,7 +156,7 @@ public:
    * @param aParent parent view
    * @param aChild child view
    */
-  NS_IMETHOD  RemoveChild(nsView *aChild);
+  void RemoveChild(nsView *aChild);
 
   /**
    * Move a view to the specified position, provided in parent coordinates.
@@ -168,7 +167,7 @@ public:
    * @param aX x value for new view position
    * @param aY y value for new view position
    */
-  NS_IMETHOD  MoveViewTo(nsView *aView, nscoord aX, nscoord aY);
+  void MoveViewTo(nsView *aView, nscoord aX, nscoord aY);
 
   /**
    * Resize a view. In addition to setting the width and height, you can
@@ -182,8 +181,8 @@ public:
    *     if true Repaint only the expanded or contracted region,
    *     if false Repaint the union of the old and new rectangles.
    */
-  NS_IMETHOD  ResizeView(nsView *aView, const nsRect &aRect,
-                         bool aRepaintExposedAreaOnly = false);
+  void ResizeView(nsView *aView, const nsRect &aRect,
+                  bool aRepaintExposedAreaOnly = false);
 
   /**
    * Set the visibility of a view. Hidden views have the effect of hiding
@@ -196,7 +195,7 @@ public:
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  NS_IMETHOD  SetViewVisibility(nsView *aView, nsViewVisibility aVisible);
+  void SetViewVisibility(nsView *aView, nsViewVisibility aVisible);
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view
@@ -214,7 +213,7 @@ public:
    *        true if the view should be topmost when compared with 
    *        other z-index:auto views.
    */
-  NS_IMETHOD  SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false);
+  void SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false);
 
   /**
    * Set whether the view "floats" above all other views,
@@ -223,24 +222,24 @@ public:
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
    */
-  NS_IMETHOD  SetViewFloating(nsView *aView, bool aFloatingView);
+  void SetViewFloating(nsView *aView, bool aFloatingView);
 
   /**
    * Set the presshell associated with this manager
    * @param aPresShell - new presshell
    */
-  virtual void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
+  void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
 
   /**
    * Get the pres shell associated with this manager
    */
-  virtual nsIPresShell* GetPresShell() { return mPresShell; }
+  nsIPresShell* GetPresShell() { return mPresShell; }
 
   /**
    * Get the device context associated with this manager
    * @result device context
    */
-  NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
+  void GetDeviceContext(nsDeviceContext *&aContext);
 
   /**
    * A stack class for disallowing changes that would enter painting. For
@@ -276,15 +275,15 @@ public:
 private:
   friend class AutoDisableRefresh;
 
-  virtual nsViewManager* IncrementDisableRefreshCount();
-  virtual void DecrementDisableRefreshCount();
+  nsViewManager* IncrementDisableRefreshCount();
+  void DecrementDisableRefreshCount();
 
 public:
   /**
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
    */
-  NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
+  void GetRootWidget(nsIWidget **aWidget);
 
   /**
    * Indicate whether the viewmanager is currently painting
@@ -292,7 +291,7 @@ public:
    * @param aPainting true if the viewmanager is painting
    *                  false otherwise
    */
-  NS_IMETHOD IsPainting(bool& aIsPainting);
+  void IsPainting(bool& aIsPainting);
 
   /**
    * Retrieve the time of the last user event. User events
@@ -301,7 +300,7 @@ public:
    *
    * @param aTime Last user event time in microseconds
    */
-  NS_IMETHOD GetLastUserEventTime(uint32_t& aTime);
+  void GetLastUserEventTime(uint32_t& aTime);
 
   /**
    * Find the nearest display root view for the view aView. This is the view for
@@ -313,18 +312,17 @@ public:
    * Flush the accumulated dirty region to the widget and update widget
    * geometry.
    */
-  virtual void ProcessPendingUpdates();
+  void ProcessPendingUpdates();
 
   /**
    * Just update widget geometry without flushing the dirty region
    */
-  virtual void UpdateWidgetGeometry();
+  void UpdateWidgetGeometry();
 
   uint32_t AppUnitsPerDevPixel() const
   {
     return mContext->AppUnitsPerDevPixel();
   }
-  nsView* GetRootViewImpl() const { return mRootView; }
 
 private:
   static uint32_t gLastUserEventTime;
@@ -374,7 +372,7 @@ private:
     RootViewManager()->mPainting = aPainting;
   }
 
-  nsresult InvalidateView(nsView *aView, const nsRect &aRect);
+  void InvalidateView(nsView *aView, const nsRect &aRect);
 
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }

@@ -124,7 +124,8 @@ nsViewManager::~nsViewManager()
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager::Init(nsDeviceContext* aContext)
+nsresult
+nsViewManager::Init(nsDeviceContext* aContext)
 {
   NS_PRECONDITION(nullptr != aContext, "null ptr");
 
@@ -139,7 +140,7 @@ NS_IMETHODIMP nsViewManager::Init(nsDeviceContext* aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsView *)
+nsView*
 nsViewManager::CreateView(const nsRect& aBounds,
                           const nsView* aParent,
                           nsViewVisibility aVisibilityFlag)
@@ -154,7 +155,8 @@ nsViewManager::CreateView(const nsRect& aBounds,
   return v;
 }
 
-NS_IMETHODIMP nsViewManager::SetRootView(nsView *aView)
+void
+nsViewManager::SetRootView(nsView *aView)
 {
   NS_PRECONDITION(!aView || aView->GetViewManager() == this,
                   "Unexpected viewmanager on root view");
@@ -176,11 +178,10 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsView *aView)
     mRootView->SetZIndex(false, 0, false);
   }
   // Else don't touch mRootViewManager
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
+void
+nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
 {
   if (nullptr != mRootView) {
     if (mDelayedResize == nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
@@ -197,7 +198,6 @@ NS_IMETHODIMP nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeig
       *aWidth = 0;
       *aHeight = 0;
     }
-  return NS_OK;
 }
 
 void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
@@ -213,7 +213,8 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   }
 }
 
-NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
+void
+nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   if (mRootView) {
     if (mRootView->IsEffectivelyVisible() && mPresShell && mPresShell->IsVisible()) {
@@ -236,11 +237,10 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
       }
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::FlushDelayedResize(bool aDoReflow)
+void
+nsViewManager::FlushDelayedResize(bool aDoReflow)
 {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
     if (aDoReflow) {
@@ -253,7 +253,6 @@ NS_IMETHODIMP nsViewManager::FlushDelayedResize(bool aDoReflow)
       }
     }
   }
-  return NS_OK;
 }
 
 // Convert aIn from being relative to and in appunits of aFromView, to being
@@ -447,10 +446,11 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
   dirtyRegion->SetEmpty();
 }
 
-NS_IMETHODIMP nsViewManager::InvalidateView(nsView *aView)
+void
+nsViewManager::InvalidateView(nsView *aView)
 {
   // Mark the entire view as damaged
-  return InvalidateView(aView, aView->GetDimensions());
+  InvalidateView(aView, aView->GetDimensions());
 }
 
 static void
@@ -569,19 +569,21 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
   return false;
 }
 
-nsresult nsViewManager::InvalidateView(nsView *aView, const nsRect &aRect)
+void
+nsViewManager::InvalidateView(nsView *aView, const nsRect &aRect)
 {
   // If painting is suppressed in the presshell or an ancestor drop all
   // invalidates, it will invalidate everything when it unsuppresses.
   if (ShouldIgnoreInvalidation(this)) {
-    return NS_OK;
+    return;
   }
 
-  return InvalidateViewNoSuppression(aView, aRect);
+  InvalidateViewNoSuppression(aView, aRect);
 }
 
-NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsView *aView,
-                                                         const nsRect &aRect)
+void
+nsViewManager::InvalidateViewNoSuppression(nsView *aView,
+                                           const nsRect &aRect)
 {
   NS_PRECONDITION(nullptr != aView, "null view");
 
@@ -590,7 +592,7 @@ NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsView *aView,
 
   nsRect damagedRect(aRect);
   if (damagedRect.IsEmpty()) {
-    return NS_OK;
+    return;
   }
 
   nsView* displayRoot = GetDisplayRootFor(aView);
@@ -606,18 +608,16 @@ NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsView *aView,
   // accumulate this rectangle in the view's dirty region, so we can
   // process it later.
   AddDirtyRegion(displayRoot, nsRegion(damagedRect));
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::InvalidateAllViews()
+void
+nsViewManager::InvalidateAllViews()
 {
   if (RootViewManager() != this) {
     return RootViewManager()->InvalidateAllViews();
   }
   
   InvalidateViews(mRootView);
-  return NS_OK;
 }
 
 void nsViewManager::InvalidateViews(nsView *aView)
@@ -708,7 +708,8 @@ void nsViewManager::DidPaintWindow()
   }
 }
 
-nsresult nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* aStatus)
+void
+nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* aStatus)
 {
   SAMPLE_LABEL("event", "nsViewManager::DispatchEvent");
 
@@ -759,13 +760,11 @@ nsresult nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEvent
     // want to cause its destruction in, say, some JavaScript event handler.
     nsCOMPtr<nsIPresShell> shell = view->GetViewManager()->GetPresShell();
     if (shell) {
-      return shell->HandleEvent(frame, aEvent, false, aStatus);
+      shell->HandleEvent(frame, aEvent, false, aStatus);
     }
   }
 
   *aStatus = nsEventStatus_eIgnore;
-
-  return NS_OK;
 }
 
 // Recursively reparent widgets if necessary 
@@ -829,8 +828,9 @@ void nsViewManager::ReparentWidgets(nsView* aView, nsView *aParent)
   }
 }
 
-NS_IMETHODIMP nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
-                                         bool aAfter)
+void
+nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
+                           bool aAfter)
 {
   NS_PRECONDITION(nullptr != aParent, "null ptr");
   NS_PRECONDITION(nullptr != aChild, "null ptr");
@@ -891,20 +891,21 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView
       if (nsViewVisibility_kHide != aChild->GetVisibility())
         aChild->GetViewManagerInternal()->InvalidateView(aChild);
     }
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex)
+void
+nsViewManager::InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex)
 {
   // no-one really calls this with anything other than aZIndex == 0 on a fresh view
   // XXX this method should simply be eliminated and its callers redirected to the real method
   SetViewZIndex(aChild, false, aZIndex, false);
-  return InsertChild(aParent, aChild, nullptr, true);
+  InsertChild(aParent, aChild, nullptr, true);
 }
 
-NS_IMETHODIMP nsViewManager::RemoveChild(nsView *aChild)
+void
+nsViewManager::RemoveChild(nsView *aChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
+  NS_ASSERTION(aChild, "aChild must not be null");
 
   nsView* parent = aChild->GetParent();
 
@@ -914,11 +915,10 @@ NS_IMETHODIMP nsViewManager::RemoveChild(nsView *aChild)
     aChild->GetViewManagerInternal()->InvalidateView(aChild);
     parent->RemoveChild(aChild);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::MoveViewTo(nsView *aView, nscoord aX, nscoord aY)
+void
+nsViewManager::MoveViewTo(nsView *aView, nscoord aX, nscoord aY)
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
   nsPoint oldPt = aView->GetPosition();
@@ -937,7 +937,6 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsView *aView, nscoord aX, nscoord aY)
       }
     }
   }
-  return NS_OK;
 }
 
 void nsViewManager::InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
@@ -971,7 +970,8 @@ void nsViewManager::InvalidateRectDifference(nsView *aView, const nsRect& aRect,
   }
 }
 
-NS_IMETHODIMP nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExposedAreaOnly)
+void
+nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExposedAreaOnly)
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
@@ -1006,20 +1006,18 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool
   // in the case where mClipRect has been optimized away to just be a null
   // pointer, and this resize is implicitly changing the clip rect, it's OK
   // because layout will change it back again if necessary.
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetViewFloating(nsView *aView, bool aFloating)
+void
+nsViewManager::SetViewFloating(nsView *aView, bool aFloating)
 {
   NS_ASSERTION(!(nullptr == aView), "no view");
 
   aView->SetFloating(aFloating);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility aVisible)
+void
+nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility aVisible)
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
@@ -1041,7 +1039,6 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility a
       }
     }
   }
-  return NS_OK;
 }
 
 bool nsViewManager::IsViewInserted(nsView *aView)
@@ -1062,16 +1059,15 @@ bool nsViewManager::IsViewInserted(nsView *aView)
   }
 }
 
-NS_IMETHODIMP nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex, bool aTopMost)
+void
+nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex, bool aTopMost)
 {
-  nsresult  rv = NS_OK;
-
   NS_ASSERTION((aView != nullptr), "no view");
 
   // don't allow the root view's z-index to be changed. It should always be zero.
   // This could be removed and replaced with a style rule, or just removed altogether, with interesting consequences
   if (aView == mRootView) {
-    return rv;
+    return;
   }
 
   bool oldTopMost = aView->IsTopMost();
@@ -1088,15 +1084,13 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int3
       oldIsAuto != aAutoZIndex) {
     InvalidateView(aView);
   }
-
-  return rv;
 }
 
-NS_IMETHODIMP nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
+void
+nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
 {
   aContext = mContext;
   NS_IF_ADDREF(aContext);
-  return NS_OK;
 }
 
 nsViewManager*
@@ -1119,21 +1113,23 @@ nsViewManager::DecrementDisableRefreshCount()
   NS_ASSERTION(mRefreshDisableCount >= 0, "Invalid refresh disable count!");
 }
 
-NS_IMETHODIMP nsViewManager::GetRootWidget(nsIWidget **aWidget)
+void
+nsViewManager::GetRootWidget(nsIWidget **aWidget)
 {
   if (!mRootView) {
     *aWidget = nullptr;
-    return NS_OK;
+    return;
   }
   if (mRootView->HasWidget()) {
     *aWidget = mRootView->GetWidget();
     NS_ADDREF(*aWidget);
-    return NS_OK;
+    return;
   }
-  if (mRootView->GetParent())
-    return mRootView->GetParent()->GetViewManagerInternal()->GetRootWidget(aWidget);
+  if (mRootView->GetParent()) {
+    mRootView->GetParent()->GetViewManagerInternal()->GetRootWidget(aWidget);
+    return;
+  }
   *aWidget = nullptr;
-  return NS_OK;
 }
 
 nsIntRect nsViewManager::ViewToWidget(nsView *aView, const nsRect &aRect) const
@@ -1147,11 +1143,10 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, const nsRect &aRect) const
   return rect.ToOutsidePixels(AppUnitsPerDevPixel());
 }
 
-NS_IMETHODIMP
+void
 nsViewManager::IsPainting(bool& aIsPainting)
 {
   aIsPainting = IsPainting();
-  return NS_OK;
 }
 
 void
@@ -1214,11 +1209,10 @@ nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
   }
 }
 
-NS_IMETHODIMP
+void
 nsViewManager::GetLastUserEventTime(uint32_t& aTime)
 {
   aTime = gLastUserEventTime;
-  return NS_OK;
 }
 
 void
