@@ -953,7 +953,7 @@ nsView::RequestWindowClose(nsIWidget* aWidget)
 void
 nsView::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 {
-  nsCOMPtr<nsViewManager> vm = mViewManager;
+  nsRefPtr<nsViewManager> vm = mViewManager;
   vm->WillPaintWindow(aWidget, aWillSendDidPaint);
 }
 
@@ -963,7 +963,7 @@ nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags)
   NS_ASSERTION(this == nsView::GetViewFor(aWidget), "wrong view for widget?");
 
   mInAlternatePaint = aFlags & PAINT_IS_ALTERNATE;
-  nsCOMPtr<nsViewManager> vm = mViewManager;
+  nsRefPtr<nsViewManager> vm = mViewManager;
   bool result = vm->PaintWindow(aWidget, aRegion, aFlags);
   // PaintWindow can destroy this via WillPaintWindow notification, so we have
   // to re-get the view from the widget.
@@ -977,7 +977,7 @@ nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags)
 void
 nsView::DidPaintWindow()
 {
-  nsCOMPtr<nsViewManager> vm = mViewManager;
+  nsRefPtr<nsViewManager> vm = mViewManager;
   vm->DidPaintWindow();
 }
 
@@ -1006,7 +1006,7 @@ nsView::HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents)
   }
 
   if (view) {
-    nsCOMPtr<nsViewManager> vm = view->GetViewManager();
+    nsRefPtr<nsViewManager> vm = view->GetViewManager();
     vm->DispatchEvent(aEvent, view, &result);
   }
 

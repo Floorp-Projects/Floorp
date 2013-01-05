@@ -2295,7 +2295,7 @@ nsXULMenuCommandEvent::Run()
 
     nsPresContext* presContext = menuFrame->PresContext();
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
-    nsCOMPtr<nsViewManager> kungFuDeathGrip = shell->GetViewManager();
+    nsRefPtr<nsViewManager> kungFuDeathGrip = shell->GetViewManager();
 
     // Deselect ourselves.
     if (mCloseMenuMode != CloseMenuMode_None)

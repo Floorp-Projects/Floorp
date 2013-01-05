@@ -12015,7 +12015,7 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
     return;
 
   // Make sure that the viewmanager will outlive the presshell
-  nsCOMPtr<nsViewManager> vm = mPresShell->GetViewManager();
+  nsRefPtr<nsViewManager> vm = mPresShell->GetViewManager();
 
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.

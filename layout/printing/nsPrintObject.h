@@ -46,7 +46,7 @@ public:
 
   nsRefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
-  nsCOMPtr<nsViewManager> mViewManager;
+  nsRefPtr<nsViewManager> mViewManager;
 
   nsCOMPtr<nsIContent>     mContent;
   PrintObjectType  mFrameType;
