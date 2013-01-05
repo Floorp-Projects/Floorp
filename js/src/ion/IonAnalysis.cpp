@@ -201,11 +201,10 @@ IsPhiObservable(MPhi *phi, Observability observe)
         return true;
 
     // If the Phi is one of the formal argument, and we are using an argument
-    // object in the function.  The phi might be observable after a bailout.
+    // object in the function. The phi might be observable after a bailout.
+    // For inlined frames this is not needed, as they are captured in the inlineResumePoint.
     CompileInfo &info = phi->block()->info();
     if (info.fun() && info.hasArguments()) {
-        // We do not support arguments object inside inline frames yet.
-        JS_ASSERT(!phi->block()->callerResumePoint());
         uint32_t first = info.firstArgSlot();
         if (first <= slot && slot - first < info.nargs())
             return true;
