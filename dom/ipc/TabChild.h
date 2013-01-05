@@ -384,8 +384,18 @@ private:
     void DispatchMessageManagerMessage(const nsAString& aMessageName,
                                        const nsACString& aJSONData);
 
-    // Sends a simulated mouse event from a touch event for compatibility.
-    void DispatchSynthesizedMouseEvent(const nsTouchEvent& aEvent);
+    void DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
+                                       const nsIntPoint& aRefPoint);
+
+    // These methods are used for tracking synthetic mouse events
+    // dispatched for compatibility.  On each touch event, we
+    // UpdateTapState().  If we've detected that the current gesture
+    // isn't a tap, then we CancelTapTracking().  In the meantime, we
+    // may detect a context-menu event, and if so we
+    // FireContextMenuEvent().
+    void FireContextMenuEvent();
+    void CancelTapTracking();
+    void UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus);
 
     nsresult
     BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
@@ -411,6 +421,15 @@ private:
     uint32_t mChromeFlags;
     nsIntRect mOuterRect;
     nsIntSize mInnerSize;
+    // When we're tracking a possible tap gesture, this is the "down"
+    // point of the touchstart.
+    nsIntPoint mGestureDownPoint;
+    // The touch identifier of the active gesture.
+    int32_t mActivePointerId;
+    // A timer task that fires if the tap-hold timeout is exceeded by
+    // the touch we're tracking.  That is, if touchend or a touchmove
+    // that exceeds the gesture threshold doesn't happen.
+    CancelableTask* mTapHoldTimer;
     float mOldViewportWidth;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;

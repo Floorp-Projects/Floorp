@@ -228,7 +228,15 @@ InspectorPanel.prototype = {
 
     request.suspend();
 
-    let notificationBox = this._toolbox.getNotificationBox();
+    let notificationBox = null;
+    if (this.target.isLocalTab) {
+      let gBrowser = this.target.tab.ownerDocument.defaultView.gBrowser;
+      notificationBox = gBrowser.getNotificationBox();
+    }
+    else {
+      notificationBox = this._toolbox.getNotificationBox();
+    }
+
     let notification = notificationBox.
       getNotificationWithValue("inspector-page-navigation");
 
@@ -259,9 +267,7 @@ InspectorPanel.prototype = {
           if (request) {
             request.resume();
             request = null;
-            return true;
           }
-          return false;
         }.bind(this),
       },
       {

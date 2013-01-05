@@ -429,7 +429,7 @@ let gDevToolsBrowser = {
   },
 
   /**
-   * Update the "Toggle Toolbox" checkbox in the developer tools menu. This is
+   * Update the "Toggle Tools" checkbox in the developer tools menu. This is
    * called when a toolbox is created or destroyed.
    */
   _updateMenuCheckbox: function DT_updateMenuCheckbox() {
