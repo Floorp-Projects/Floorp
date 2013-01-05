@@ -1516,6 +1516,11 @@ var gBrowserInit = {
 
     gDevToolsBrowser.forgetBrowserWindow(window);
 
+    let desc = Object.getOwnPropertyDescriptor(window, "DeveloperToolbar");
+    if (desc && !desc.get) {
+      DeveloperToolbar.destroy();
+    }
+
     // First clean up services initialized in gBrowserInit.onLoad (or those whose
     // uninit methods don't depend on the services having been initialized).
     allTabs.uninit();

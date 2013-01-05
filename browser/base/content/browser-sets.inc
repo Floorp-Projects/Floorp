@@ -174,7 +174,7 @@
 
     <!-- DevTools broadcasters -->
     <broadcaster id="devtoolsMenuBroadcaster_DevToolbox"
-                 label="&devToolbarToolsButton.label;"
+                 label="&devToolboxMenuItem.label;"
                  type="checkbox" autocheck="false"
                  command="Tools:DevToolbox"/>
     <broadcaster id="devtoolsMenuBroadcaster_DevToolbar"

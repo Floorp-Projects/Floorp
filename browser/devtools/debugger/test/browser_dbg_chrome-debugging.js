@@ -16,9 +16,6 @@ const DEBUGGER_TAB_URL = EXAMPLE_URL + "browser_dbg_debuggerstatement.html";
 
 function test()
 {
-  // Make sure there is enough time for findAllGlobals.
-  requestLongerTimeout(3);
-
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect(function(aType, aTraits) {

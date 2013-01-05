@@ -46,6 +46,7 @@ const TILT_NOTIFICATIONS = {
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/TiltGL.jsm");
 Cu.import("resource:///modules/devtools/TiltUtils.jsm");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 Cu.import("resource:///modules/devtools/TiltVisualizer.jsm");
 
 this.EXPORTED_SYMBOLS = ["TiltManager"];
@@ -86,6 +87,8 @@ this.Tilt = function Tilt(aWindow)
    * Shortcut for accessing notifications strings.
    */
   this.NOTIFICATIONS = TILT_NOTIFICATIONS;
+
+  EventEmitter.decorate(this);
 
   this.setup();
 }
@@ -128,6 +131,7 @@ Tilt.prototype = {
       return;
     }
 
+    this.emit("change", this.chromeWindow.gBrowser.selectedTab);
     Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.INITIALIZING, null);
   },
 
@@ -183,6 +187,7 @@ Tilt.prototype = {
 
     this._isDestroying = false;
     this.chromeWindow.gBrowser.selectedBrowser.focus();
+    this.emit("change", this.chromeWindow.gBrowser.selectedTab);
     Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
   },
 

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1356125617000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1357164966000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -379,7 +379,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i220" id="pricepeep@getpricepeep.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="2.1.0.19.99" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
@@ -576,14 +576,14 @@
       <pluginItem  blockID="p176">
                   <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="0" maxVersion="10.3.183.18.999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
                   <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.4.402.286.999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>

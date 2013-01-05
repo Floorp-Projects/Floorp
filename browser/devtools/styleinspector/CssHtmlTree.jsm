@@ -62,7 +62,7 @@ UpdateProcess.prototype = {
    */
   schedule: function UP_schedule()
   {
-    if (this.cancelled) {
+    if (this.canceled) {
       return;
     }
     this._timeout = this.win.setTimeout(this._timeoutHandler.bind(this), 0);
@@ -100,7 +100,7 @@ UpdateProcess.prototype = {
   _runBatch: function Y_runBatch()
   {
     let time = Date.now();
-    while(!this.cancelled) {
+    while(!this.canceled) {
       // Continue until iter.next() throws...
       let next = this.iter.next();
       this.onItem(next[1]);
@@ -147,7 +147,6 @@ this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
   this.root = this.styleDocument.getElementById("root");
   this.templateRoot = this.styleDocument.getElementById("templateRoot");
   this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
-  this.panel = aStyleInspector.panel;
 
   // No results text.
   this.noResults = this.styleDocument.getElementById("noResults");
@@ -256,6 +255,13 @@ CssHtmlTree.prototype = {
     this.viewedElement = aElement;
     this._unmatchedProperties = null;
     this._matchedProperties = null;
+
+    if (!aElement) {
+      if (this._refreshProcess) {
+        this._refreshProcess.cancel();
+      }
+      return;
+    }
 
     if (this.htmlComplete) {
       this.refreshSourceFilter();
