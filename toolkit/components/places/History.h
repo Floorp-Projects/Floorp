@@ -103,6 +103,14 @@ public:
     return mDB->GetStatement(aQuery);
   }
 
+  already_AddRefed<mozIStorageStatement>
+  GetStatement(const nsACString& aQuery)
+  {
+    mozIStorageConnection* dbConn = GetDBConn();
+    NS_ENSURE_TRUE(dbConn, nullptr);
+    return mDB->GetStatement(aQuery);
+  }
+
   bool IsShuttingDown() const {
     return mShuttingDown;
   }

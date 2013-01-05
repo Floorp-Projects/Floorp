@@ -15,7 +15,7 @@ interface nsIURI;
  *
  * @note See also: nsINavHistoryObserver
  */
-[scriptable, uuid(3b0953cd-f483-4908-8d91-282b6bda0453)]
+[scriptable, uuid(808cf36c-4c9a-4bdb-91a4-d60a6fc25add)]
 interface nsPIPlacesHistoryListenersNotifier : nsISupports
 {
   /**
@@ -33,10 +33,14 @@ interface nsPIPlacesHistoryListenersNotifier : nsISupports
    * @param aReason
    *        Indicates the reason for the removal.
    *        See nsINavHistoryObserver::REASON_* constants.
+   * @param aTransitionType
+   *        If it's a valid TRANSITION_* value, all visits of the specified type
+   *        have been removed.
    */
   void notifyOnPageExpired(in nsIURI aURI,
                            in PRTime aVisitTime,
                            in boolean aWholeEntry,
                            in ACString aGUID,
-                           in unsigned short aReason);
+                           in unsigned short aReason,
+                           in unsigned long aTransitionType);
 };
