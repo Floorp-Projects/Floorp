@@ -19,7 +19,7 @@ class nsSMILValue;
 
 namespace mozilla {
 
-class SVGAnimatedPreserveAspectRatio
+class SVGAnimatedPreserveAspectRatio MOZ_FINAL
 {
 public:
   void Init() {
@@ -44,7 +44,8 @@ public:
       return NS_ERROR_FAILURE;
     }
     SetBaseValue(SVGPreserveAspectRatio(
-                   aAlign, mBaseVal.GetMeetOrSlice(), mBaseVal.GetDefer()),
+                   static_cast<SVGAlign>(aAlign), mBaseVal.GetMeetOrSlice(),
+                   mBaseVal.GetDefer()),
                  aSVGElement);
     return NS_OK;
   }
@@ -54,7 +55,8 @@ public:
       return NS_ERROR_FAILURE;
     }
     SetBaseValue(SVGPreserveAspectRatio(
-                   mBaseVal.GetAlign(), aMeetOrSlice, mBaseVal.GetDefer()),
+                   mBaseVal.GetAlign(), static_cast<SVGMeetOrSlice>(aMeetOrSlice),
+                   mBaseVal.GetDefer()),
                  aSVGElement);
     return NS_OK;
   }
