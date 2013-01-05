@@ -53,6 +53,12 @@ public:
    */
   virtual bool GetMuted(AudioChannelType aType, bool aElementHidden);
 
+  /**
+   * Return true if there is a content channel active in this process
+   * or one of its subprocesses.
+   */
+  virtual bool ContentChannelIsActive();
+
 protected:
   void Notify();
 
