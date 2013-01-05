@@ -117,16 +117,16 @@
  *   return foo ? F() : NS_ERROR_FAILURE;
  * to fail, because nsresult and nsresult::Enum are two distinct types and
  * either can be converted to the other, so it's ambiguous.  So we have to fall
- * back to a regular enum.  Fortunately, we need to support that anyway for the
- * sake of C, so it's not a big deal.
+ * back to a regular enum.
  */
-#if defined(__cplusplus) && defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
+#if defined(__cplusplus)
+#if defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
   typedef enum class tag_nsresult : uint32_t
-#elif defined(__cplusplus) && defined(MOZ_HAVE_CXX11_ENUM_TYPE)
+#elif defined(MOZ_HAVE_CXX11_ENUM_TYPE)
   /* Need underlying type for workaround of Microsoft compiler (Bug 794734) */
   typedef enum tag_nsresult : uint32_t
 #else
-  /* C, or no strong enums */
+  /* no strong enums */
   typedef enum tag_nsresult
 #endif
   {
@@ -136,11 +136,18 @@
     #undef ERROR
   } nsresult;
 
-#if defined(__cplusplus) && defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
+#if defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
   /* We're using enum classes, so we need #define's to put the constants in
    * global scope for compatibility with old code. */
-  #include "ErrorListDefines.h"
+  #include "ErrorListCxxDefines.h"
 #endif
+#else /* defined(__cplusplus) */
+  /* C enum can't have a value outside the range of 'int'.
+   * C const can't initialize with an expression involving other variables
+   * even if it is const. So we have to fall back to bad old #defines. */
+  typedef uint32_t nsresult;
+  #include "ErrorListCDefines.h"
+#endif /* defined(__cplusplus) */
 
 #undef SUCCESS_OR_FAILURE
 #undef SUCCESS
