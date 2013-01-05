@@ -36,7 +36,7 @@
 #include "nsIDOMWheelEvent.h"
 #include "nsView.h"
 #include "nsGUIEvent.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
@@ -89,7 +89,7 @@ private:
   static void StopPanningCallback(nsITimer *timer, void *closure);
 
   nsCOMPtr<nsIWidget> mWidget;
-  nsCOMPtr<nsIViewManager> mViewManager;
+  nsCOMPtr<nsViewManager> mViewManager;
   nsCOMPtr<nsITimer> mTimer;
 };
 

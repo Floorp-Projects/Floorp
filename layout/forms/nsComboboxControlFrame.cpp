@@ -24,7 +24,7 @@
 #include "nsIPresShell.h"
 #include "nsContentList.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsEventDispatcher.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMNode.h"
@@ -356,7 +356,7 @@ void
 nsComboboxControlFrame::ShowPopup(bool aShowPopup)
 {
   nsView* view = mDropdownFrame->GetView();
-  nsIViewManager* viewManager = view->GetViewManager();
+  nsViewManager* viewManager = view->GetViewManager();
 
   if (aShowPopup) {
     nsRect rect = mDropdownFrame->GetRect();
@@ -510,7 +510,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // ensure we start off hidden
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     nsView* view = mDropdownFrame->GetView();
-    nsIViewManager* viewManager = view->GetViewManager();
+    nsViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
     nsRect emptyRect(0, 0, 0, 0);
     viewManager->ResizeView(view, emptyRect);
