@@ -5,49 +5,56 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGMpathElement.h"
+#include "mozilla/dom/SVGMPathElement.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGAnimateMotionElement.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGMPathElementBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+DOMCI_NODE_DATA(SVGMpathElement, mozilla::dom::SVGMPathElement)
 
-nsSVGElement::StringInfo nsSVGMpathElement::sStringInfo[1] =
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(MPath)
+
+namespace mozilla {
+namespace dom {
+
+JSObject*
+SVGMPathElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGMPathElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+nsSVGElement::StringInfo SVGMPathElement::sStringInfo[1] =
 {
   { &nsGkAtoms::href, kNameSpaceID_XLink, false }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(Mpath)
-
 // Cycle collection magic -- based on nsSVGUseElement
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGMpathElement)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGMpathElement,
-                                                nsSVGMpathElementBase)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGMPathElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGMPathElement,
+                                                SVGMPathElementBase)
   tmp->UnlinkHrefTarget(false);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSVGMpathElement,
-                                                  nsSVGMpathElementBase)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGMPathElement,
+                                                  SVGMPathElementBase)
   tmp->mHrefTarget.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGMpathElement,nsSVGMpathElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGMpathElement,nsSVGMpathElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGMPathElement,SVGMPathElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGMPathElement,SVGMPathElementBase)
 
-DOMCI_NODE_DATA(SVGMpathElement, nsSVGMpathElement)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGMpathElement)
-  NS_NODE_INTERFACE_TABLE6(nsSVGMpathElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGMPathElement)
+  NS_NODE_INTERFACE_TABLE6(SVGMPathElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,  nsIDOMSVGURIReference,
                            nsIDOMSVGMpathElement, nsIMutationObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGMpathElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGMpathElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGMPathElementBase)
 
 // Constructor
 #ifdef _MSC_VER
@@ -57,16 +64,17 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMpathElementBase)
 #pragma warning(push)
 #pragma warning(disable:4355)
 #endif
-nsSVGMpathElement::nsSVGMpathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGMpathElementBase(aNodeInfo),
+SVGMPathElement::SVGMPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGMPathElementBase(aNodeInfo),
     mHrefTarget(this)
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 {
+  SetIsDOMBinding();
 }
 
-nsSVGMpathElement::~nsSVGMpathElement()
+SVGMPathElement::~SVGMPathElement()
 {
   UnlinkHrefTarget(false);
 }
@@ -74,33 +82,42 @@ nsSVGMpathElement::~nsSVGMpathElement()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGMpathElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMPathElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods
 
 /* readonly attribute nsIDOMSVGAnimatedString href; */
-NS_IMETHODIMP
-nsSVGMpathElement::GetHref(nsIDOMSVGAnimatedString** aHref)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGMPathElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
+  nsCOMPtr<nsIDOMSVGAnimatedString> href;
+  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
+  return href.forget();
+}
+
+NS_IMETHODIMP
+SVGMPathElement::GetHref(nsIDOMSVGAnimatedString** aHref)
+{
+  *aHref = Href().get();
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
 // nsIContent methods
 
 nsresult
-nsSVGMpathElement::BindToTree(nsIDocument* aDocument,
-                              nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers)
+SVGMPathElement::BindToTree(nsIDocument* aDocument,
+                            nsIContent* aParent,
+                            nsIContent* aBindingParent,
+                            bool aCompileEventHandlers)
 {
   NS_ABORT_IF_FALSE(!mHrefTarget.get(),
                     "Shouldn't have href-target yet "
                     "(or it should've been cleared)");
-  nsresult rv = nsSVGMpathElementBase::BindToTree(aDocument, aParent,
-                                                  aBindingParent,
-                                                  aCompileEventHandlers);
+  nsresult rv = SVGMPathElementBase::BindToTree(aDocument, aParent,
+                                                aBindingParent,
+                                                aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (aDocument) {
@@ -115,20 +132,20 @@ nsSVGMpathElement::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsSVGMpathElement::UnbindFromTree(bool aDeep, bool aNullParent)
+SVGMPathElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   UnlinkHrefTarget(true);
-  nsSVGMpathElementBase::UnbindFromTree(aDeep, aNullParent);
+  SVGMPathElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
 bool
-nsSVGMpathElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsAttrValue& aResult)
+SVGMPathElement::ParseAttribute(int32_t aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   bool returnVal =
-    nsSVGMpathElementBase::ParseAttribute(aNamespaceID, aAttribute,
+    SVGMPathElementBase::ParseAttribute(aNamespaceID, aAttribute,
                                           aValue, aResult);
   if (aNamespaceID == kNameSpaceID_XLink &&
       aAttribute == nsGkAtoms::href &&
@@ -141,11 +158,11 @@ nsSVGMpathElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsresult
-nsSVGMpathElement::UnsetAttr(int32_t aNamespaceID,
-                             nsIAtom* aAttribute, bool aNotify)
+SVGMPathElement::UnsetAttr(int32_t aNamespaceID,
+                           nsIAtom* aAttribute, bool aNotify)
 {
-  nsresult rv = nsSVGMpathElementBase::UnsetAttr(aNamespaceID, aAttribute,
-                                                 aNotify);
+  nsresult rv = SVGMPathElementBase::UnsetAttr(aNamespaceID, aAttribute,
+                                               aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNamespaceID == kNameSpaceID_XLink &&
@@ -160,7 +177,7 @@ nsSVGMpathElement::UnsetAttr(int32_t aNamespaceID,
 // nsSVGElement methods
 
 nsSVGElement::StringAttributesInfo
-nsSVGMpathElement::GetStringInfo()
+SVGMPathElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
@@ -170,11 +187,11 @@ nsSVGMpathElement::GetStringInfo()
 // nsIMutationObserver methods
 
 void
-nsSVGMpathElement::AttributeChanged(nsIDocument* aDocument,
-                                    Element* aElement,
-                                    int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
-                                    int32_t aModType)
+SVGMPathElement::AttributeChanged(nsIDocument* aDocument,
+                                  Element* aElement,
+                                  int32_t aNameSpaceID,
+                                  nsIAtom* aAttribute,
+                                  int32_t aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::d) {
@@ -187,7 +204,7 @@ nsSVGMpathElement::AttributeChanged(nsIDocument* aDocument,
 // Public helper methods
 
 nsSVGPathElement*
-nsSVGMpathElement::GetReferencedPath()
+SVGMPathElement::GetReferencedPath()
 {
   if (!HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
     NS_ABORT_IF_FALSE(!mHrefTarget.get(),
@@ -207,8 +224,8 @@ nsSVGMpathElement::GetReferencedPath()
 // Protected helper methods
 
 void
-nsSVGMpathElement::UpdateHrefTarget(nsIContent* aParent,
-                                    const nsAString& aHrefStr)
+SVGMPathElement::UpdateHrefTarget(nsIContent* aParent,
+                                  const nsAString& aHrefStr)
 {
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -240,7 +257,7 @@ nsSVGMpathElement::UpdateHrefTarget(nsIContent* aParent,
 }
 
 void
-nsSVGMpathElement::UnlinkHrefTarget(bool aNotifyParent)
+SVGMPathElement::UnlinkHrefTarget(bool aNotifyParent)
 {
   // Stop observing old target (if any)
   if (mHrefTarget.get()) {
@@ -254,7 +271,7 @@ nsSVGMpathElement::UnlinkHrefTarget(bool aNotifyParent)
 }
 
 void
-nsSVGMpathElement::NotifyParentOfMpathChange(nsIContent* aParent)
+SVGMPathElement::NotifyParentOfMpathChange(nsIContent* aParent)
 {
   if (aParent && aParent->IsSVG(nsGkAtoms::animateMotion)) {
 
@@ -265,3 +282,7 @@ nsSVGMpathElement::NotifyParentOfMpathChange(nsIContent* aParent)
     AnimationNeedsResample();
   }
 }
+
+} // namespace dom
+} // namespace mozilla
+
