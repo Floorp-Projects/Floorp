@@ -92,6 +92,7 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mMonitor("AsyncPanZoomController"),
      mLastSampleTime(TimeStamp::Now()),
      mState(NOTHING),
+     mPreviousPaintStartTime(TimeStamp::Now()),
      mLastAsyncScrollTime(TimeStamp::Now()),
      mLastAsyncScrollOffset(0, 0),
      mCurrentAsyncScrollOffset(0, 0),
@@ -674,7 +675,10 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     ScrollBy(gfx::Point(xDisplacement, yDisplacement));
     ScheduleComposite();
 
-    RequestContentRepaint();
+    TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
+    if (timePaintDelta.ToMilliseconds() > PAN_REPAINT_INTERVAL) {
+      RequestContentRepaint();
+    }
   }
 }
 
@@ -708,7 +712,10 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
     mX.GetDisplacementForDuration(inverseResolution, aDelta),
     mY.GetDisplacementForDuration(inverseResolution, aDelta)
   ));
-  RequestContentRepaint();
+  TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
+  if (timePaintDelta.ToMilliseconds() > FLING_REPAINT_INTERVAL) {
+    RequestContentRepaint();
+  }
 
   return true;
 }
