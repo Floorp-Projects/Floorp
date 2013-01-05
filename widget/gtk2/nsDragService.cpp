@@ -269,7 +269,7 @@ GetGtkWindow(nsIDOMDocument *aDocument)
     if (!presShell)
         return NULL;
 
-    nsCOMPtr<nsViewManager> vm = presShell->GetViewManager();
+    nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
     if (!vm)
         return NULL;
 
