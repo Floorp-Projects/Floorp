@@ -40,7 +40,6 @@
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/Preferences.h"
 
-#include "nsViewsCID.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsViewManager.h"
 #include "nsView.h"
@@ -497,8 +496,6 @@ private:
 //------------------------------------------------------------------
 // nsDocumentViewer
 //------------------------------------------------------------------
-// Class IDs
-static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 
 //------------------------------------------------------------------
 nsresult
@@ -2272,14 +2269,11 @@ nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView)
     DetachFromTopLevelWidget();
   }
 
-  nsresult rv;
-  mViewManager = do_CreateInstance(kViewManagerCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  mViewManager = new nsViewManager();
 
   nsDeviceContext *dx = mPresContext->DeviceContext();
 
-  rv = mViewManager->Init(dx);
+  nsresult rv = mViewManager->Init(dx);
   if (NS_FAILED(rv))
     return rv;
 
