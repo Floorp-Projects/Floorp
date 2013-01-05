@@ -565,7 +565,7 @@
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="menu_devToolbox"
                             observes="devtoolsMenuBroadcaster_DevToolbox"
-                            accesskey="&devToolbox.accesskey;"/>
+                            accesskey="&devToolboxMenuItem.accesskey;"/>
                   <menuseparator id="menu_devtools_separator"/>
                   <menuitem id="menu_devToolbar"
                             observes="devtoolsMenuBroadcaster_DevToolbar"
