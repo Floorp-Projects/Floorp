@@ -77,7 +77,7 @@ toolbar[mode="full"] toolbarseparator {
   padding-top: 4px !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.57);
   background-color: -moz-mac-chrome-active;
-  background-image: -moz-linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0)) !important; /* override lwtheme style */
+  background-image: linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0)) !important; /* override lwtheme style */
   background-origin: border-box !important;
 }
 
@@ -371,7 +371,7 @@ toolbarbutton.bookmark-item > menupopup {
   padding: 0 3px;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: @toolbarbuttonCornerRadius@;
-  background: -moz-linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2)) repeat-x;
+  background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2)) repeat-x;
   background-origin: border-box;
   box-shadow: inset 0 1px rgba(255,255,255,0.3), 0 1px rgba(255,255,255,0.2);
 }
@@ -380,7 +380,7 @@ toolbarbutton.bookmark-item > menupopup {
 .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-lwtheme-darktext,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme-darktext,
 #restore-button:-moz-lwtheme-darktext {
-  background-image: -moz-linear-gradient(rgba(255,255,255,0.3), rgba(50,50,50,0.2) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.13));
+  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(50,50,50,0.2) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.13));
 }
 
 .toolbarbutton-1[type="menu-button"] {
@@ -650,7 +650,7 @@ toolbar[mode="icons"] #forward-button {
 @conditionalForwardWithUrlbar@ > #forward-button:not(:-moz-lwtheme) {
   -moz-appearance: none;
   -moz-padding-start: 2px;
-  background: -moz-linear-gradient(hsl(0,0%,99%), hsl(0,0%,67%)) padding-box;
+  background: linear-gradient(hsl(0,0%,99%), hsl(0,0%,67%)) padding-box;
   border: 1px solid;
   border-color: hsl(0,0%,31%) hsla(0,0%,29%,.6) hsl(0,0%,27%);
   box-shadow: inset 0 1px 0 hsla(0,0%,100%,.35),
@@ -672,7 +672,7 @@ toolbar[mode="icons"] #forward-button {
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button:hover:active:not(:-moz-lwtheme) {
-  background-image: -moz-linear-gradient(hsl(0,0%,74%), hsl(0,0%,61%));
+  background-image: linear-gradient(hsl(0,0%,74%), hsl(0,0%,61%));
   box-shadow: inset rgba(0,0,0,.3) 0 -6px 10px,
               inset #000 0 1px 3px,
               inset rgba(0,0,0,.2) 0 1px 3px,
@@ -681,7 +681,7 @@ toolbar[mode="icons"] #forward-button {
 
 @conditionalForwardWithUrlbar@ > #forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
   border-color: hsl(0,0%,64%) hsl(0,0%,65%) hsl(0,0%,66%);
-  background-image: -moz-linear-gradient(hsl(0,0%,99%), hsl(0,0%,82%));
+  background-image: linear-gradient(hsl(0,0%,99%), hsl(0,0%,82%));
   box-shadow: inset 0 1px 0 hsla(0,0%,100%,.35);
 }
 
@@ -691,7 +691,7 @@ toolbar[mode="icons"] #forward-button {
 
 @media (-moz-mac-lion-theme) {
   @conditionalForwardWithUrlbar@ > #forward-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsla(0,0%,100%,.73), hsla(0,0%,100%,.05) 85%);
+    background-image: linear-gradient(hsla(0,0%,100%,.73), hsla(0,0%,100%,.05) 85%);
     border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.2);
     box-shadow: inset 0 1px 0 hsla(0,0%,100%,.2),
                 inset 0 0 1px hsla(0,0%,100%,.1),
@@ -699,7 +699,7 @@ toolbar[mode="icons"] #forward-button {
   }
 
   @conditionalForwardWithUrlbar@ > #forward-button:hover:active:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsla(0,0%,60%,.37), hsla(0,0%,100%,.35) 95%);
+    background-image: linear-gradient(hsla(0,0%,60%,.37), hsla(0,0%,100%,.35) 95%);
     border-color: hsla(0,0%,0%,.43) hsla(0,0%,0%,.25) hsla(0,0%,0%,.37);
     box-shadow: inset 0 1px 0 hsla(0,0%,0%,.02),
                 inset 0 1px 2px hsla(0,0%,0%,.2),
@@ -1126,7 +1126,7 @@ toolbar[mode="icons"] #zoom-in-button {
 @media (-moz-mac-lion-theme) {
   #urlbar,
   .searchbar-textbox {
-    background-image: -moz-linear-gradient(hsl(0,0%,97%), hsl(0,0%,100%));
+    background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,100%));
     border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.15);
     box-shadow: 0 1px 0 hsla(0,0%,100%,.2),
                 inset 0 0 1px hsla(0,0%,0%,.05),
@@ -1257,10 +1257,10 @@ toolbar[mode="icons"] #zoom-in-button {
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: hsl(92,100%,30%);
   -moz-padding-end: 4px;
-  background-image: -moz-linear-gradient(hsla(92,81%,16%,0),
-                                         hsla(92,81%,16%,.2) 25%,
-                                         hsla(92,81%,16%,.2) 75%,
-                                         hsla(92,81%,16%,0));
+  background-image: linear-gradient(hsla(92,81%,16%,0),
+                                    hsla(92,81%,16%,.2) 25%,
+                                    hsla(92,81%,16%,.2) 75%,
+                                    hsla(92,81%,16%,0));
   background-position: right;
   background-size: 1px;
   background-repeat: no-repeat;
@@ -1296,7 +1296,7 @@ toolbar[mode="icons"] #zoom-in-button {
 .urlbar-history-dropmarker[open="true"],
 .urlbar-history-dropmarker:hover:active {
   -moz-image-region: rect(0px, 22px, 14px, 11px);
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
 @media (min-resolution: 2dppx) {
@@ -1325,7 +1325,7 @@ toolbar[mode="icons"] #zoom-in-button {
 
 .urlbar-icon[open="true"],
 .urlbar-icon:hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
 #urlbar-search-splitter {
@@ -1531,7 +1531,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 }
 
 #urlbar > toolbarbutton:not([disabled]):hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
 #go-button {
@@ -2271,27 +2271,27 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tab-background-start[pinned][titlechanged]:not([selected="true"]),
 .tab-background-end[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-linear-gradient(rgba(148,205,253,.2), rgba(148,205,253,.2)) !important;
+  background-image: linear-gradient(rgba(148,205,253,.2), rgba(148,205,253,.2)) !important;
 }
 
 @TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-middle[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-radial-gradient(center 99%, circle cover, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
+  background-image: radial-gradient(circle farthest-corner at 50% 99%, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
 }
 
 @TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-middle[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-radial-gradient(center 2px, circle cover, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
+  background-image: radial-gradient(circle farthest-corner at 50% 2px, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
 }
 
 .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start:-moz-lwtheme-brighttext:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle:-moz-lwtheme-brighttext:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end:-moz-lwtheme-brighttext:not([selected="true"]) {
-  background-image: -moz-linear-gradient(hsla(0,0%,40%,.6), hsla(0,0%,30%,.6) 50%);
+  background-image: linear-gradient(hsla(0,0%,40%,.6), hsla(0,0%,30%,.6) 50%);
 }
 
 .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start:-moz-lwtheme-darktext:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle:-moz-lwtheme-darktext:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end:-moz-lwtheme-darktext:not([selected="true"]) {
-  background-image: -moz-linear-gradient(hsla(0,0%,60%,.5), hsla(0,0%,45%,.5) 50%);
+  background-image: linear-gradient(hsla(0,0%,60%,.5), hsla(0,0%,45%,.5) 50%);
 }
 
 @TABSONTOP_TAB_STACK@ > .tab-content,
@@ -2423,12 +2423,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
   padding-bottom: 2px;
   background: url(chrome://browser/skin/tabbrowser/tabbar-top-bg-active.png),
-              -moz-linear-gradient(bottom, -moz-mac-chrome-active 2px, transparent 2px);
+              linear-gradient(to top, -moz-mac-chrome-active 2px, transparent 2px);
 }
 
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme):-moz-window-inactive {
   background: url(chrome://browser/skin/tabbrowser/tabbar-top-bg-inactive.png),
-              -moz-linear-gradient(bottom, -moz-mac-chrome-inactive 2px, transparent 2px);
+              linear-gradient(to top, -moz-mac-chrome-inactive 2px, transparent 2px);
 }
 
 /* In tabs-on-bottom mode, fill the whole toolbar with the chrome
@@ -2668,7 +2668,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]):not([disabled]):not([open]):hover,
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([disabled]):not([buttonover]):hover > .toolbarbutton-menubutton-dropmarker {
-  background-image: -moz-linear-gradient(transparent, rgba(0,0,0,.15)) !important;
+  background-image: linear-gradient(transparent, rgba(0,0,0,.15)) !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover:active,
@@ -2677,7 +2677,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1[type="menu"][open],
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover:active,
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1[open]:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker {
-  background-image: -moz-linear-gradient(transparent, rgba(0,0,0,.3)) !important;
+  background-image: linear-gradient(transparent, rgba(0,0,0,.3)) !important;
 }
 
 .tabs-newtab-button,
@@ -3347,9 +3347,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #addon-bar[customizing] > #status-bar {
   opacity: .5;
-  background-image: -moz-repeating-linear-gradient(-45deg,
-                                                   rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
-                                                   rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
+  background-image: repeating-linear-gradient(135deg,
+                                              rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
+                                              rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
 }
 
 #status-bar > statusbarpanel {
@@ -3397,7 +3397,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .statuspanel-label {
   margin: 0;
   padding: 2px 4px;
-  background: -moz-linear-gradient(white, #ddd);
+  background: linear-gradient(#fff, #ddd);
   border: 1px none #ccc;
   border-top-style: solid;
   color: #333;
@@ -3470,7 +3470,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   color: hsl(200, 100%, 65%);
   border: 1px solid hsla(210, 19%, 63%, .5);
   border-radius: 3px;
-  background: -moz-linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
+  background: linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
 }
 
 /* Highlighter - Node Infobar - text */
@@ -3555,7 +3555,7 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
   margin-top: 8px;
   border-right-color: hsla(210, 19%, 63%, .5);
   border-top-color: hsla(210, 19%, 63%, .5);
-  background-image: -moz-linear-gradient(bottom left, transparent 50%, hsl(209, 18%, 30%) 50%);
+  background-image: linear-gradient(to top right, transparent 50%, hsl(209, 18%, 30%) 50%);
 }
 
 .highlighter-nodeinfobar-arrow-bottom {
@@ -3563,7 +3563,7 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
   margin-bottom: 8px;
   border-left-color: hsla(210, 19%, 63%, .5);
   border-bottom-color: hsla(210, 19%, 63%, .5);
-  background-image: -moz-linear-gradient(top right, transparent 50%, hsl(210, 24%, 16%) 50%);
+  background-image: linear-gradient(to bottom left, transparent 50%, hsl(210, 24%, 16%) 50%);
 }
 
 .highlighter-nodeinfobar-container[position="top"] > .highlighter-nodeinfobar,
@@ -3789,7 +3789,7 @@ html|*#gcli-output-frame {
   color: #FDF3DE;
   min-width: 16px;
   text-shadow: none;
-  background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
+  background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
 }
 

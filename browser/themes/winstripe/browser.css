@@ -12,9 +12,9 @@
 %define toolbarHighlight rgba(255,255,255,.5)
 %define selectedTabHighlight rgba(255,255,255,.7)
 %define toolbarShadowColor rgba(10%,10%,10%,.4)
-%define toolbarShadowOnTab -moz-linear-gradient(bottom, rgba(10%,10%,10%,.4) 1px, transparent 1px)
-%define bgTabTexture -moz-linear-gradient(transparent, hsla(0,0%,45%,.1) 1px, hsla(0,0%,32%,.2) 80%, hsla(0,0%,0%,.2))
-%define bgTabTextureHover -moz-linear-gradient(hsla(0,0%,100%,.3) 1px, hsla(0,0%,75%,.2) 80%, hsla(0,0%,60%,.2))
+%define toolbarShadowOnTab linear-gradient(to top, rgba(10%,10%,10%,.4) 1px, transparent 1px)
+%define bgTabTexture linear-gradient(transparent, hsla(0,0%,45%,.1) 1px, hsla(0,0%,32%,.2) 80%, hsla(0,0%,0%,.2))
+%define bgTabTextureHover linear-gradient(hsla(0,0%,100%,.3) 1px, hsla(0,0%,75%,.2) 80%, hsla(0,0%,60%,.2))
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define navbarLargeIcons #navigator-toolbox[iconsize=large][mode=icons] > #nav-bar
 %define forwardTransitionLength 150ms
@@ -67,13 +67,13 @@
 @media not all and (-moz-windows-compositor) {
 %endif
   #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
-    background: -moz-linear-gradient(bottom, @toolbarShadowColor@ 1px, transparent 1px),
-                -moz-linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
+    background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
+                linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
     color: CaptionText;
   }
   #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
-    background: -moz-linear-gradient(bottom, @toolbarShadowColor@ 1px, transparent 1px),
-                -moz-linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
+    background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
+                linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
   }
 
@@ -91,7 +91,7 @@
 #nav-bar[tabsontop=true],
 #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
 #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
-  background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
 #personal-bookmarks {
@@ -143,15 +143,15 @@
 
 %ifdef MOZ_OFFICIAL_BRANDING
 #appmenu-button {
-  background-image: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
+  background-image: linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
   border-color: rgba(83,42,6,.9);
   box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
               0 0 0 1px rgba(255,255,255,.25) inset;
 }
 #appmenu-button:hover:not(:active):not([open]) {
-  background-image: -moz-radial-gradient(center bottom, farthest-side, rgba(252,240,89,.5) 10%, rgba(252,240,89,0) 70%),
-                    -moz-radial-gradient(center bottom, farthest-side, rgb(236,133,0), rgba(255,229,172,0)),
-                    -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
+  background-image: radial-gradient(farthest-side at bottom, rgba(252,240,89,.5) 10%, rgba(252,240,89,0) 70%),
+                    radial-gradient(farthest-side at bottom, rgb(236,133,0), rgba(255,229,172,0)),
+                    linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   border-color: rgba(83,42,6,.9);
   box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
               0 0 2px 1px rgba(250,234,169,.7) inset,
@@ -159,22 +159,22 @@
 }
 #appmenu-button:hover:active,
 #appmenu-button[open] {
-  background-image: -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
+  background-image: linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
               0 1px 1px rgba(0,0,0,.2) inset;
 }
 %else
 %if MOZ_UPDATE_CHANNEL == aurora
 #appmenu-button {
-  background-image: -moz-linear-gradient(hsl(208,99%,37%), hsl(214,90%,23%) 95%);
+  background-image: linear-gradient(hsl(208,99%,37%), hsl(214,90%,23%) 95%);
   border-color: hsla(214,89%,21%,.9);
   box-shadow: 0 1px 0 hsla(205,100%,72%,.2) inset,
               0 0 2px 1px hsla(205,100%,72%,.25) inset;
 }
 #appmenu-button:hover:not(:active):not([open]) {
-  background-image: -moz-radial-gradient(center bottom, farthest-side, hsla(202,100%,85%,.5) 10%, hsla(202,100%,85%,0) 70%),
-                    -moz-radial-gradient(center bottom, farthest-side, hsla(205,100%,72%,.7), hsla(205,100%,72%,0)),
-                    -moz-linear-gradient(hsl(208,98%,34%), hsl(213,87%,20%) 95%);
+  background-image: radial-gradient(farthest-side at bottom, hsla(202,100%,85%,.5) 10%, hsla(202,100%,85%,0) 70%),
+                    radial-gradient(farthest-side at bottom, hsla(205,100%,72%,.7), hsla(205,100%,72%,0)),
+                    linear-gradient(hsl(208,98%,34%), hsl(213,87%,20%) 95%);
   border-color: hsla(214,89%,21%,.9);
   box-shadow: 0 1px 0 hsla(205,100%,72%,.15) inset,
               0 0 2px 1px hsla(205,100%,72%,.5) inset,
@@ -182,21 +182,21 @@
 }
 #appmenu-button:hover:active,
 #appmenu-button[open] {
-  background-image: -moz-linear-gradient(hsl(208,95%,30%), hsl(214,85%,17%) 95%);
+  background-image: linear-gradient(hsl(208,95%,30%), hsl(214,85%,17%) 95%);
   box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
               0 1px 1px rgba(0,0,0,.2) inset;
 }
 %else
 #appmenu-button {
-  background-image: -moz-linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
+  background-image: linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
   border-color: hsla(210,59%,13%,.9);
   box-shadow: 0 1px 0 hsla(210,48%,90%,.15) inset,
               0 0 2px 1px hsla(211,65%,85%,.15) inset;
 }
 #appmenu-button:hover:not(:active):not([open]) {
-  background-image: -moz-radial-gradient(center bottom, farthest-side, hsla(210,48%,90%,.5) 10%, hsla(210,48%,90%,0) 70%),
-                    -moz-radial-gradient(center bottom, farthest-side, hsla(211,70%,83%,.5), hsla(211,70%,83%,0)),
-                    -moz-linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
+  background-image: radial-gradient(farthest-side at bottom, hsla(210,48%,90%,.5) 10%, hsla(210,48%,90%,0) 70%),
+                    radial-gradient(farthest-side at bottom, hsla(211,70%,83%,.5), hsla(211,70%,83%,0)),
+                    linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
   border-color: hsla(210,59%,13%,.9);
   box-shadow: 0 1px 0 hsla(210,48%,90%,.15) inset,
               0 0 2px 1px hsla(210,48%,90%,.4) inset,
@@ -204,7 +204,7 @@
 }
 #appmenu-button:hover:active,
 #appmenu-button[open] {
-  background-image: -moz-linear-gradient(hsl(211,33%,26%), hsl(209,53%,6%) 95%);
+  background-image: linear-gradient(hsl(211,33%,26%), hsl(209,53%,6%) 95%);
   box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
               0 1px 1px rgba(0,0,0,.2) inset;
 }
@@ -212,14 +212,14 @@
 %endif
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
-  background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
+  background-image: linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
   border-color: rgba(43,8,65,.9);
 }
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button:hover:not(:active):not([open]) {
-  background-image: -moz-radial-gradient(center bottom, farthest-side, rgba(240,193,255,.5) 10%, rgba(240,193,255,0) 70%),
-                    -moz-radial-gradient(center bottom, farthest-side, rgb(192,81,247), rgba(236,172,255,0)),
-                    -moz-linear-gradient(rgb(144,20,207), rgb(95,0,158) 95%);
+  background-image: radial-gradient(farthest-side at bottom, rgba(240,193,255,.5) 10%, rgba(240,193,255,0) 70%),
+                    radial-gradient(farthest-side at bottom, rgb(192,81,247), rgba(236,172,255,0)),
+                    linear-gradient(rgb(144,20,207), rgb(95,0,158) 95%);
   border-color: rgba(43,8,65,.9);
   box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
               0 0 2px 1px rgba(240,193,255,.7) inset,
@@ -228,7 +228,7 @@
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button:hover:active,
 #main-window[privatebrowsingmode=temporary] #appmenu-button[open] {
-  background-image: -moz-linear-gradient(rgb(144,20,207), rgb(95,0,158) 95%);
+  background-image: linear-gradient(rgb(144,20,207), rgb(95,0,158) 95%);
 }
 
 #appmenu-button > .button-box {
@@ -299,9 +299,9 @@
 %ifdef WINSTRIPE_AERO
   #appmenuPrimaryPane menupopup {
     -moz-appearance: none;
-    background-image: -moz-linear-gradient(left, white 26px, ThreeDLightShadow 26px,
-                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
-                                           ThreeDHighlight 28px, white 28px);
+    background-image: linear-gradient(to right, white 26px, ThreeDLightShadow 26px,
+                                      ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                      ThreeDHighlight 28px, white 28px);
     border: 3px solid;
     -moz-border-top-colors: ThreeDShadow white;
     -moz-border-bottom-colors: ThreeDShadow white;
@@ -313,9 +313,9 @@
   #appmenuSecondaryPane menupopup {
     -moz-appearance: none;
 %ifdef WINSTRIPE_AERO
-    background-image: -moz-linear-gradient(left, #f1f5fb 26px, ThreeDLightShadow 26px,
-                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
-                                           ThreeDHighlight 28px, #f1f5fb 28px);
+    background-image: linear-gradient(to right, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                      ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                      ThreeDHighlight 28px, #f1f5fb 28px);
     border: 3px solid;
     -moz-border-top-colors: ThreeDShadow #f1f5fb;
     -moz-border-bottom-colors: ThreeDShadow #f1f5fb;
@@ -330,14 +330,14 @@
 
 %ifdef WINSTRIPE_AERO
   #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
-    background-image: -moz-linear-gradient(right, white 26px, ThreeDLightShadow 26px,
-                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
-                                           ThreeDHighlight 28px, white 28px);
+    background-image: linear-gradient(to left, white 26px, ThreeDLightShadow 26px,
+                                      ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                      ThreeDHighlight 28px, white 28px);
   }
   #appmenuSecondaryPane menupopup:-moz-locale-dir(rtl) {
-    background-image: -moz-linear-gradient(right, #f1f5fb 26px, ThreeDLightShadow 26px,
-                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
-                                           ThreeDHighlight 28px, #f1f5fb 28px);
+    background-image: linear-gradient(to left, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                      ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                      ThreeDHighlight 28px, #f1f5fb 28px);
   }
 %endif
 
@@ -358,7 +358,7 @@
   .appmenu-edit-button:not([disabled]):hover {
     border: 1px solid #b8d6fb;
     box-shadow: inset 0 0 1px white;
-    background: -moz-linear-gradient(#fafbfd, #ebf3fd);
+    background: linear-gradient(#fafbfd, #ebf3fd);
     transition: .2s ease-in;
   }
 }
@@ -757,7 +757,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 @navbarLargeIcons@ .toolbarbutton-1:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 @navbarLargeIcons@ .toolbarbutton-1:not([disabled]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
   box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
               0 1px hsla(210,54%,20%,.03),
@@ -776,7 +776,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 @navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover:active > .toolbarbutton-icon,
 @navbarLargeIcons@ .toolbarbutton-1[open] > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon,
 @navbarLargeIcons@ .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
   box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
@@ -811,9 +811,9 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover {
-  background-image: -moz-linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.5)),
-                    -moz-linear-gradient(transparent, rgba(0,0,0,.25) 30%),
-                    -moz-linear-gradient(transparent, rgba(0,0,0,.25) 30%);
+  background-image: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.5)),
+                    linear-gradient(transparent, rgba(0,0,0,.25) 30%),
+                    linear-gradient(transparent, rgba(0,0,0,.25) 30%);
   background-position: 1px -1px, 0 -1px, 100% -1px;
   background-size: calc(100% - 2px) 100%, 1px 100%, 1px 100%;
   background-repeat: no-repeat;
@@ -822,9 +822,9 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #addon-bar .toolbarbutton-1:not([disabled]):hover,
 #addon-bar .toolbarbutton-1[open],
 #addon-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover {
-  background-image: -moz-linear-gradient(bottom, transparent, rgba(0,0,0,.15)),
-                    -moz-linear-gradient(bottom, transparent, rgba(0,0,0,.15) 30%),
-                    -moz-linear-gradient(bottom, transparent, rgba(0,0,0,.15) 30%);
+  background-image: linear-gradient(to top, transparent, rgba(0,0,0,.15)),
+                    linear-gradient(to top, transparent, rgba(0,0,0,.15) 30%),
+                    linear-gradient(to top, transparent, rgba(0,0,0,.15) 30%);
   background-position: left, left, right;
   background-size: auto, 1px 100%, 1px 100%;
   background-repeat: no-repeat;
@@ -899,7 +899,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   border-radius: 10000px;
   padding: 5px;
   border: none;
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   box-shadow: 0 1px 0 hsla(0,0%,100%,.3) inset,
               0 0 0 1px hsla(0,0%,100%,.3) inset,
               0 0 0 1px hsla(210,54%,20%,.25),
@@ -1289,12 +1289,12 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 .urlbar-icon:hover {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(200,100%,70%,.3), hsla(200,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(200,100%,70%,.3), hsla(200,100%,70%,0));
 }
 
 .urlbar-icon[open="true"],
 .urlbar-icon:hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(200,100%,70%,.1), hsla(200,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(200,100%,70%,.1), hsla(200,100%,70%,0));
 }
 
 #urlbar-search-splitter {
@@ -1375,10 +1375,10 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: hsl(92,100%,30%);
   -moz-margin-end: 4px;
-  background-image: -moz-linear-gradient(hsla(92,81%,16%,0),
-                                         hsla(92,81%,16%,.2) 25%,
-                                         hsla(92,81%,16%,.2) 75%,
-                                         hsla(92,81%,16%,0));
+  background-image: linear-gradient(hsla(92,81%,16%,0),
+                                    hsla(92,81%,16%,.2) 25%,
+                                    hsla(92,81%,16%,.2) 75%,
+                                    hsla(92,81%,16%,0));
   background-position: right;
   background-size: 1px;
   background-repeat: no-repeat;
@@ -1419,13 +1419,13 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 .urlbar-history-dropmarker:hover {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
   -moz-image-region: rect(0px, 22px, 14px, 11px);
 }
 
 .urlbar-history-dropmarker:hover:active,
 .urlbar-history-dropmarker[open="true"] {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.1), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.1), hsla(205,100%,70%,0));
   -moz-image-region: rect(0px, 33px, 14px, 22px);
 }
 
@@ -1576,12 +1576,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar-reload-button:not([disabled]):hover {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(200,100%,70%,.2), hsla(200,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(200,100%,70%,.2), hsla(200,100%,70%,0));
   -moz-image-region: rect(14px, 14px, 28px, 0);
 }
 
 #urlbar-reload-button:not([disabled]):hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(200,100%,60%,.1), hsla(200,100%,60%,0));
+  background-image: radial-gradient(circle closest-side, hsla(200,100%,60%,.1), hsla(200,100%,60%,0));
   -moz-image-region: rect(28px, 14px, 42px, 0);
 }
 
@@ -1596,13 +1596,13 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #go-button:hover,
 #urlbar-go-button:hover {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(110,70%,50%,.2), hsla(110,70%,50%,0));
+  background-image: radial-gradient(circle closest-side, hsla(110,70%,50%,.2), hsla(110,70%,50%,0));
   -moz-image-region: rect(14px, 42px, 28px, 28px);
 }
 
 #go-button:hover:active,
 #urlbar-go-button:hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(110,70%,50%,.1), hsla(110,70%,50%,0));
+  background-image: radial-gradient(circle closest-side, hsla(110,70%,50%,.1), hsla(110,70%,50%,0));
   -moz-image-region: rect(28px, 42px, 42px, 28px);
 }
 
@@ -1616,12 +1616,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar-stop-button:not([disabled]):hover {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(5,100%,75%,.3), hsla(5,100%,75%,0));
+  background-image: radial-gradient(circle closest-side, hsla(5,100%,75%,.3), hsla(5,100%,75%,0));
   -moz-image-region: rect(14px, 28px, 28px, 14px);
 }
 
 #urlbar-stop-button:hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(5,100%,75%,.1), hsla(5,100%,75%,0));
+  background-image: radial-gradient(circle closest-side, hsla(5,100%,75%,.1), hsla(5,100%,75%,0));
   -moz-image-region: rect(28px, 28px, 42px, 14px);
 }
 
@@ -1694,12 +1694,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #star-button:hover {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(45,100%,73%,.3), hsla(45,100%,73%,0));
+  background-image: radial-gradient(circle closest-side, hsla(45,100%,73%,.3), hsla(45,100%,73%,0));
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 #star-button:hover:active {
-  background-image: -moz-radial-gradient(center, circle closest-side, hsla(45,100%,73%,.1), hsla(45,100%,73%,0));
+  background-image: radial-gradient(circle closest-side, hsla(45,100%,73%,.1), hsla(45,100%,73%,0));
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
@@ -1736,7 +1736,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin: 10px -10px -10px;
   padding: 8px 10px;
   border-top: 1px solid ThreeDShadow;
-  background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
+  background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
 }
@@ -1814,8 +1814,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #TabsToolbar:not(:-moz-lwtheme),
 #TabsToolbar[tabsontop=false] {
-  background-image:
-    -moz-linear-gradient(bottom, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
+  background-image: linear-gradient(to top, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
 }
 
 %ifndef WINSTRIPE_AERO
@@ -1831,7 +1830,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabs-newtab-button {
   -moz-appearance: none;
   background: @toolbarShadowOnTab@, @bgTabTexture@,
-              -moz-linear-gradient(-moz-dialog, -moz-dialog);
+              linear-gradient(-moz-dialog, -moz-dialog);
   background-origin: border-box;
   background-position: 1px 2px;
   background-size: calc(100% - 2px) calc(100% - 2px);
@@ -1847,7 +1846,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-tab:hover,
 .tabs-newtab-button:hover {
   background-image: @toolbarShadowOnTab@, @bgTabTextureHover@,
-                    -moz-linear-gradient(-moz-dialog, -moz-dialog);
+                    linear-gradient(-moz-dialog, -moz-dialog);
 }
 
 %ifndef WINSTRIPE_AERO
@@ -1855,26 +1854,26 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   .tabbrowser-tab,
   .tabs-newtab-button {
     background-image: @toolbarShadowOnTab@,
-                      -moz-linear-gradient(hsla(51,34%,89%,.9), hsla(51,15%,79%,.9) 1px, hsla(51,9%,68%,.9));
+                      linear-gradient(hsla(51,34%,89%,.9), hsla(51,15%,79%,.9) 1px, hsla(51,9%,68%,.9));
   }
 
   .tabbrowser-tab:hover,
   .tabs-newtab-button:hover {
     background-image: @toolbarShadowOnTab@,
-                      -moz-linear-gradient(hsla(51,34%,100%,.9), hsla(51,15%,94%,.9) 1px, hsla(51,9%,83%,.9));
+                      linear-gradient(hsla(51,34%,100%,.9), hsla(51,15%,94%,.9) 1px, hsla(51,9%,83%,.9));
   }
 }
 %endif
 
 .tabbrowser-tab[selected="true"] {
-  background-image: -moz-linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%),
-                    -moz-linear-gradient(-moz-dialog, -moz-dialog);
+  background-image: linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%),
+                    linear-gradient(-moz-dialog, -moz-dialog);
 }
 
 #main-window[tabsontop=false]:not([disablechrome]) .tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
   background-image: @toolbarShadowOnTab@,
-                    -moz-linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%),
-                    -moz-linear-gradient(-moz-dialog, -moz-dialog);
+                    linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%),
+                    linear-gradient(-moz-dialog, -moz-dialog);
 }
 
 .tabbrowser-tab:-moz-lwtheme {
@@ -1882,35 +1881,35 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tabbrowser-tab[selected="true"]:-moz-lwtheme {
-  background-image: -moz-linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%);
+  background-image: linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%);
 }
 
 .tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]),
 .tabs-newtab-button:-moz-lwtheme-brighttext {
-  background-image: -moz-linear-gradient(hsla(0,0%,40%,.6), hsla(0,0%,30%,.6) 80%);
+  background-image: linear-gradient(hsla(0,0%,40%,.6), hsla(0,0%,30%,.6) 80%);
 }
 
 .tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]):hover,
 .tabs-newtab-button:-moz-lwtheme-brighttext:hover {
-  background-image: -moz-linear-gradient(hsla(0,0%,60%,.6), hsla(0,0%,45%,.6) 80%);
+  background-image: linear-gradient(hsla(0,0%,60%,.6), hsla(0,0%,45%,.6) 80%);
 }
 
 .tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]),
 .tabs-newtab-button:-moz-lwtheme-darktext {
-  background-image: -moz-linear-gradient(hsla(0,0%,60%,.5), hsla(0,0%,45%,.5) 80%);
+  background-image: linear-gradient(hsla(0,0%,60%,.5), hsla(0,0%,45%,.5) 80%);
 }
 
 .tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]):hover,
 .tabs-newtab-button:-moz-lwtheme-darktext:hover {
-  background-image: -moz-linear-gradient(hsla(0,0%,80%,.5), hsla(0,0%,60%,.5) 80%);
+  background-image: linear-gradient(hsla(0,0%,80%,.5), hsla(0,0%,60%,.5) 80%);
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-radial-gradient(center 3px, circle cover, rgba(255,255,255,1) 3%, rgba(186,221,251,.75) 40%, rgba(127,179,255,.5) 80%, rgba(127,179,255,.25));
+  background-image: radial-gradient(circle farthest-corner at 50% 3px, rgba(255,255,255,1) 3%, rgba(186,221,251,.75) 40%, rgba(127,179,255,.5) 80%, rgba(127,179,255,.25));
 }
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]):hover {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 80%),
-                    -moz-radial-gradient(center 3px, circle cover, rgba(255,255,255,1) 3%, rgba(186,221,251,.75) 40%, rgba(127,179,255,.5) 80%, rgba(127,179,255,.25));
+  background-image: linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 80%),
+                    radial-gradient(circle farthest-corner at 50% 3px, rgba(255,255,255,1) 3%, rgba(186,221,251,.75) 40%, rgba(127,179,255,.5) 80%, rgba(127,179,255,.25));
 }
 
 .tab-throbber,
@@ -2596,7 +2595,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-top-style: none;
   border-bottom-style: none;
   padding-top: 1px;
-  background-image: -moz-linear-gradient(rgba(0,0,0,.15) 1px, rgba(255,255,255,.15) 1px);
+  background-image: linear-gradient(rgba(0,0,0,.15) 1px, rgba(255,255,255,.15) 1px);
   background-size: 100% 2px;
   background-repeat: no-repeat;
 }
@@ -2610,9 +2609,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #addon-bar[customizing] > #status-bar {
   opacity: .5;
-  background-image: -moz-repeating-linear-gradient(-45deg,
-                                                   rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
-                                                   rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
+  background-image: repeating-linear-gradient(135deg,
+                                              rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
+                                              rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
 }
 
 #status-bar > statusbarpanel {
@@ -2641,7 +2640,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .statuspanel-label {
   margin: 0;
   padding: 2px 4px;
-  background: -moz-linear-gradient(white, #ddd);
+  background: linear-gradient(#fff, #ddd);
   border: 1px none #ccc;
   border-top-style: solid;
   color: #333;
@@ -2691,7 +2690,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   color: hsl(200, 100%, 65%);
   border: 1px solid hsla(210, 19%, 63%, .5);
   border-radius: 3px;
-  background: -moz-linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
+  background: linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
 }
 
 /* Highlighter - Node Infobar - text */
@@ -2776,7 +2775,7 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
   margin-top: 8px;
   border-right-color: hsla(210, 19%, 63%, .5);
   border-top-color: hsla(210, 19%, 63%, .5);
-  background-image: -moz-linear-gradient(bottom left, transparent 50%, hsl(209, 18%, 30%) 50%);
+  background-image: linear-gradient(to top right, transparent 50%, hsl(209, 18%, 30%) 50%);
 }
 
 .highlighter-nodeinfobar-arrow-bottom {
@@ -2784,7 +2783,7 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
   margin-bottom: 8px;
   border-left-color: hsla(210, 19%, 63%, .5);
   border-bottom-color: hsla(210, 19%, 63%, .5);
-  background-image: -moz-linear-gradient(top right, transparent 50%, hsl(210, 24%, 16%) 50%);
+  background-image: linear-gradient(to bottom left, transparent 50%, hsl(210, 24%, 16%) 50%);
 }
 
 .highlighter-nodeinfobar-container[position="top"] > .highlighter-nodeinfobar,
@@ -3015,7 +3014,7 @@ html|*#gcli-output-frame {
   color: #FDF3DE;
   min-width: 16px;
   text-shadow: none;
-  background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
+  background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
   -moz-margin-end: 5px;
 }
