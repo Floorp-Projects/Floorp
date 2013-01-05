@@ -264,8 +264,8 @@ static nsRegion ConvertRegionBetweenViews(const nsRegion& aIn,
   nsRegion out = aIn;
   out.MoveBy(aFromView->GetOffsetTo(aToView));
   out = out.ConvertAppUnitsRoundOut(
-    aFromView->GetViewManagerInternal()->AppUnitsPerDevPixel(),
-    aToView->GetViewManagerInternal()->AppUnitsPerDevPixel());
+    aFromView->GetViewManager()->AppUnitsPerDevPixel(),
+    aToView->GetViewManager()->AppUnitsPerDevPixel());
   return out;
 }
 
@@ -396,7 +396,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
         // have a delayed resize to handle.
         for (nsViewManager *vm = this; vm;
              vm = vm->mRootView->GetParent()
-                    ? vm->mRootView->GetParent()->GetViewManagerInternal()
+                    ? vm->mRootView->GetParent()->GetViewManager()
                     : nullptr) {
           if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
               vm->mRootView->IsEffectivelyVisible() &&
@@ -441,7 +441,7 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
   }
   nsRegion r =
     ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
-  nsViewManager* widgetVM = nearestViewWithWidget->GetViewManagerInternal();
+  nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
   widgetVM->InvalidateWidgetArea(nearestViewWithWidget, r);
   dirtyRegion->SetEmpty();
 }
@@ -564,7 +564,7 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
       return true;
     }
     nsView* view = aVM->GetRootView()->GetParent();
-    aVM = view ? view->GetViewManagerInternal() : nullptr;
+    aVM = view ? view->GetViewManager() : nullptr;
   }
   return false;
 }
@@ -596,7 +596,7 @@ nsViewManager::InvalidateViewNoSuppression(nsView *aView,
   }
 
   nsView* displayRoot = GetDisplayRootFor(aView);
-  nsViewManager* displayRootVM = displayRoot->GetViewManagerInternal();
+  nsViewManager* displayRootVM = displayRoot->GetViewManager();
   // Propagate the update to the displayRoot, since iframes, for example,
   // can overlap each other and be translucent.  So we have to possibly
   // invalidate our rect in each of the widgets we have lying about.
@@ -628,7 +628,7 @@ void nsViewManager::InvalidateViews(nsView *aView)
   // Invalidate all children as well.
   nsView* childView = aView->GetFirstChild();
   while (nullptr != childView)  {
-    childView->GetViewManagerInternal()->InvalidateViews(childView);
+    childView->GetViewManager()->InvalidateViews(childView);
     childView = childView->GetNextSibling();
   }
 }
@@ -640,7 +640,7 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
     // have a delayed resize to handle.
     for (nsViewManager *vm = this; vm;
          vm = vm->mRootView->GetParent()
-                ? vm->mRootView->GetParent()->GetViewManagerInternal()
+                ? vm->mRootView->GetParent()->GetViewManager()
                 : nullptr) {
       if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
           vm->mRootView->IsEffectivelyVisible() &&
@@ -889,7 +889,7 @@ nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
       //and mark this area as dirty if the view is visible...
 
       if (nsViewVisibility_kHide != aChild->GetVisibility())
-        aChild->GetViewManagerInternal()->InvalidateView(aChild);
+        aChild->GetViewManager()->InvalidateView(aChild);
     }
 }
 
@@ -912,7 +912,7 @@ nsViewManager::RemoveChild(nsView *aChild)
   if (nullptr != parent) {
     NS_ASSERTION(aChild->GetViewManager() == this ||
                  parent->GetViewManager() == this, "wrong view manager");
-    aChild->GetViewManagerInternal()->InvalidateView(aChild);
+    aChild->GetViewManager()->InvalidateView(aChild);
     parent->RemoveChild(aChild);
   }
 }
@@ -931,7 +931,7 @@ nsViewManager::MoveViewTo(nsView *aView, nscoord aX, nscoord aY)
     if (aView->GetVisibility() != nsViewVisibility_kHide) {
       nsView* parentView = aView->GetParent();
       if (parentView) {
-        nsViewManager* parentVM = parentView->GetViewManagerInternal();
+        nsViewManager* parentVM = parentView->GetViewManager();
         parentVM->InvalidateView(parentView, oldBounds);
         parentVM->InvalidateView(parentView, aView->GetBoundsInParentUnits());
       }
@@ -988,7 +988,7 @@ nsViewManager::ResizeView(nsView *aView, const nsRect &aRect, bool aRepaintExpos
       }
       nsRect oldBounds = aView->GetBoundsInParentUnits();
       aView->SetDimensions(aRect, true);
-      nsViewManager* parentVM = parentView->GetViewManagerInternal();
+      nsViewManager* parentVM = parentView->GetViewManager();
       if (!aRepaintExposedAreaOnly) {
         // Invalidate the union of the old and new size
         InvalidateView(aView, aRect);
@@ -1029,7 +1029,7 @@ nsViewManager::SetViewVisibility(nsView *aView, nsViewVisibility aVisible)
         if (nsViewVisibility_kHide == aVisible) {
           nsView* parentView = aView->GetParent();
           if (parentView) {
-            parentView->GetViewManagerInternal()->
+            parentView->GetViewManager()->
               InvalidateView(parentView, aView->GetBoundsInParentUnits());
           }
         }
@@ -1126,7 +1126,7 @@ nsViewManager::GetRootWidget(nsIWidget **aWidget)
     return;
   }
   if (mRootView->GetParent()) {
-    mRootView->GetParent()->GetViewManagerInternal()->GetRootWidget(aWidget);
+    mRootView->GetParent()->GetViewManager()->GetRootWidget(aWidget);
     return;
   }
   *aWidget = nullptr;
@@ -1224,7 +1224,7 @@ nsViewManager::InvalidateHierarchy()
     }
     nsView *parent = mRootView->GetParent();
     if (parent) {
-      mRootViewManager = parent->GetViewManagerInternal()->RootViewManager();
+      mRootViewManager = parent->GetViewManager()->RootViewManager();
       NS_ADDREF(mRootViewManager);
       NS_ASSERTION(mRootViewManager != this,
                    "Root view had a parent, but it has the same view manager");
