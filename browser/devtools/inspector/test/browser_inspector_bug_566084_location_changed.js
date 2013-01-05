@@ -25,7 +25,7 @@ function test() {
 
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
-    notificationBox = toolbox.getNotificationBox();
+    notificationBox = gBrowser.getNotificationBox();
     notificationBox.addEventListener("AlertActive", alertActive1, false);
 
     ok(toolbox, "We have access to the notificationBox");
