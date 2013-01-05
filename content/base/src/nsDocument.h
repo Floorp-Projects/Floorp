@@ -568,7 +568,7 @@ public:
    * shared among multiple presentation shell's).
    */
   virtual nsresult CreateShell(nsPresContext* aContext,
-                               nsIViewManager* aViewManager,
+                               nsViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
   virtual void DeleteShell();
@@ -1076,7 +1076,7 @@ public:
 
 protected:
   nsresult doCreateShell(nsPresContext* aContext,
-                         nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
+                         nsViewManager* aViewManager, nsStyleSet* aStyleSet,
                          nsCompatibility aCompatMode,
                          nsIPresShell** aInstancePtrResult);
 

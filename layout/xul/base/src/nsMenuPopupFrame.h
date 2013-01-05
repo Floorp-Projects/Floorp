@@ -90,7 +90,7 @@ enum FlipStyle {
 
 nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsIViewManager;
+class nsViewManager;
 class nsView;
 class nsMenuPopupFrame;
 

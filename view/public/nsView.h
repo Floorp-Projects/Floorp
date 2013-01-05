@@ -20,7 +20,6 @@
 #include "nsIWidgetListener.h"
 #include <stdio.h>
 
-class nsIViewManager;
 class nsViewManager;
 class nsIWidget;
 class nsIFrame;
@@ -59,7 +58,7 @@ enum nsViewVisibility {
  * view manager that owns the views.
  *
  * Most of the methods here are read-only. To set the corresponding properties
- * of a view, go through nsIViewManager.
+ * of a view, go through nsViewManager.
  */
 
 class nsView MOZ_FINAL : public nsIWidgetListener
@@ -75,8 +74,8 @@ public:
    * view manager from somewhere else, do that instead.
    * @result the view manager
    */
-  nsIViewManager* GetViewManager() const
-  { return reinterpret_cast<nsIViewManager*>(mViewManager); }
+  nsViewManager* GetViewManager() const
+  { return reinterpret_cast<nsViewManager*>(mViewManager); }
   nsViewManager* GetViewManagerInternal() const { return mViewManager; }
 
   /**
@@ -460,13 +459,13 @@ private:
   // released if it points to any view in this view hierarchy.
   void InvalidateHierarchy(nsViewManager *aViewManagerParent);
 
-  nsViewManager     *mViewManager;
+  nsViewManager    *mViewManager;
   nsView           *mParent;
-  nsIWidget         *mWindow;
+  nsIWidget        *mWindow;
   nsView           *mNextSibling;
   nsView           *mFirstChild;
-  nsIFrame          *mFrame;
-  nsRegion          *mDirtyRegion;
+  nsIFrame         *mFrame;
+  nsRegion         *mDirtyRegion;
   int32_t           mZIndex;
   nsViewVisibility  mVis;
   // position relative our parent view origin but in our appunits

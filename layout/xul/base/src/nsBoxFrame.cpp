@@ -41,7 +41,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsHTMLParts.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsView.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"

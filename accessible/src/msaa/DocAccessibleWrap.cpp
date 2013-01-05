@@ -21,7 +21,7 @@
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIWebNavigation.h"
 
 using namespace mozilla;

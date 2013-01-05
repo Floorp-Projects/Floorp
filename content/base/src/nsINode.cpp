@@ -74,7 +74,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIWidget.h"
 #include "nsLayoutStatics.h"

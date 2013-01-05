@@ -65,7 +65,7 @@ template<class T> class nsReadingIterator;
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMElement.h"
 #include "nsISelectionController.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsTArray.h"
 #include "nsGUIEvent.h"
 
@@ -3144,7 +3144,7 @@ TestApp::GetWidget(nsIWidget** aWidget)
     return false;
   }
 
-  nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
+  nsCOMPtr<nsViewManager> viewManager = presShell->GetViewManager();
   if (!viewManager) {
     return false;
   }
