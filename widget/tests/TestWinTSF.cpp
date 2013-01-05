@@ -3144,7 +3144,7 @@ TestApp::GetWidget(nsIWidget** aWidget)
     return false;
   }
 
-  nsCOMPtr<nsViewManager> viewManager = presShell->GetViewManager();
+  nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
   if (!viewManager) {
     return false;
   }
