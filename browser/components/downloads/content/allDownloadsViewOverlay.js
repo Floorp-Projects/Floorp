@@ -1185,6 +1185,19 @@ DownloadsPlacesView.prototype = {
           element._shell.doCommand("downloadsCmd_pauseResume");
       }
     }
+  },
+
+  onDoubleClick: function DPV_onDoubleClick(aEvent) {
+    if (aEvent.button != 0)
+      return;
+
+    let selectedElements = this._richlistbox.selectedItems;
+    if (!selectedElements || selectedElements.length != 1)
+      return;
+
+    let element = selectedElements[0];
+    if (element._shell)
+      element._shell.doDefaultCommand();
   }
 };
 
