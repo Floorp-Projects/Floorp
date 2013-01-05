@@ -326,7 +326,7 @@
       </menubar>
 #endif
 
-      <spacer flex="1"/>
+      <spacer id="libraryToolbarSpacer" flex="1"/>
 
       <textbox id="searchFilter"
                clickSelectsAll="true"
