@@ -87,7 +87,6 @@ CPPSRCS		= \
 		nsSVGTextElement.cpp \
 		nsSVGTextPathElement.cpp \
 		nsSVGTextPositioningElement.cpp \
-		nsSVGTitleElement.cpp \
 		nsSVGUnknownElement.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
@@ -110,6 +109,7 @@ CPPSRCS		= \
 		SVGPointList.cpp \
 		SVGPreserveAspectRatio.cpp \
 		SVGStringList.cpp \
+		SVGTitleElement.cpp \
 		SVGTransform.cpp \
 		SVGTransformList.cpp \
 		SVGTransformListParser.cpp \
@@ -155,6 +155,7 @@ EXPORTS_mozilla/dom = \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
 	SVGDescElement.h \
+	SVGTitleElement.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
