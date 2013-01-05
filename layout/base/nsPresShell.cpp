@@ -72,7 +72,6 @@
 #include "nsCaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsViewsCID.h"
 #include "nsFrameManager.h"
 #include "nsEventStateManager.h"
 #include "nsIMEStateManager.h"
@@ -7926,8 +7925,6 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
 #include "nsIURL.h"
 #include "nsILinkHandler.h"
 
-static NS_DEFINE_CID(kViewManagerCID, NS_VIEW_MANAGER_CID);
-
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
 {
@@ -8270,7 +8267,7 @@ PresShell::VerifyIncrementalReflow()
   nsIWidget* parentWidget = rootView->GetWidget();
 
   // Create a new view manager.
-  nsRefPtr<nsViewManager> vm = do_CreateInstance(kViewManagerCID);
+  nsRefPtr<nsViewManager> vm = new nsViewManager();
   NS_ENSURE_TRUE(vm, false);
   rv = vm->Init(dc);
   NS_ENSURE_SUCCESS(rv, false);
