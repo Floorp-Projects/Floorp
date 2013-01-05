@@ -89,7 +89,7 @@ private:
   static void StopPanningCallback(nsITimer *timer, void *closure);
 
   nsCOMPtr<nsIWidget> mWidget;
-  nsCOMPtr<nsViewManager> mViewManager;
+  nsRefPtr<nsViewManager> mViewManager;
   nsCOMPtr<nsITimer> mTimer;
 };
 
