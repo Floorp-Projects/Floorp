@@ -24,7 +24,7 @@ public:
     SetIsDOMBinding();
   }
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableRowElement, nsGkAtoms::tr)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableRowElement, tr)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
