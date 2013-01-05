@@ -276,7 +276,7 @@ public:
     AutoDisableRefresh(const AutoDisableRefresh& aOther);
     const AutoDisableRefresh& operator=(const AutoDisableRefresh& aOther);
 
-    nsCOMPtr<nsViewManager> mRootVM;
+    nsRefPtr<nsViewManager> mRootVM;
   };
 
 private:
