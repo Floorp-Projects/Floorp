@@ -679,6 +679,26 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
   return rv;                                                                 \
 }
 
+#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(_elementName)     \
+nsresult                                                                     \
+NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo,    \
+                                 mozilla::dom::FromParser aFromParser)       \
+{                                                                            \
+  nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
+    new mozilla::dom::SVG##_elementName##Element(aNodeInfo, aFromParser);    \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  if (NS_FAILED(rv)) {                                                       \
+    return rv;                                                               \
+  }                                                                          \
+                                                                             \
+  it.forget(aResult);                                                        \
+                                                                             \
+  return rv;                                                                 \
+}
+
 // No unlinking, we'd need to null out the value pointer (the object it
 // points to is held by the element) and null-check it everywhere.
 #define NS_SVG_VAL_IMPL_CYCLE_COLLECTION(_val, _element)                     \
