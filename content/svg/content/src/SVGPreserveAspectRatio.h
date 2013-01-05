@@ -12,42 +12,47 @@
 
 class nsSVGElement;
 
+namespace mozilla {
 // Alignment Types
-static const unsigned short SVG_PRESERVEASPECTRATIO_UNKNOWN = 0;
-static const unsigned short SVG_PRESERVEASPECTRATIO_NONE = 1;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMINYMIN = 2;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMIDYMIN = 3;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMAXYMIN = 4;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMINYMID = 5;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMIDYMID = 6;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMAXYMID = 7;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMINYMAX = 8;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMIDYMAX = 9;
-static const unsigned short SVG_PRESERVEASPECTRATIO_XMAXYMAX = 10;
+enum SVGAlign MOZ_ENUM_TYPE(uint8_t) {
+  SVG_PRESERVEASPECTRATIO_UNKNOWN = 0,
+  SVG_PRESERVEASPECTRATIO_NONE = 1,
+  SVG_PRESERVEASPECTRATIO_XMINYMIN = 2,
+  SVG_PRESERVEASPECTRATIO_XMIDYMIN = 3,
+  SVG_PRESERVEASPECTRATIO_XMAXYMIN = 4,
+  SVG_PRESERVEASPECTRATIO_XMINYMID = 5,
+  SVG_PRESERVEASPECTRATIO_XMIDYMID = 6,
+  SVG_PRESERVEASPECTRATIO_XMAXYMID = 7,
+  SVG_PRESERVEASPECTRATIO_XMINYMAX = 8,
+  SVG_PRESERVEASPECTRATIO_XMIDYMAX = 9,
+  SVG_PRESERVEASPECTRATIO_XMAXYMAX = 10
+};
 
 // Meet-or-slice Types
-static const unsigned short SVG_MEETORSLICE_UNKNOWN = 0;
-static const unsigned short SVG_MEETORSLICE_MEET = 1;
-static const unsigned short SVG_MEETORSLICE_SLICE = 2;
+enum SVGMeetOrSlice MOZ_ENUM_TYPE(uint8_t) {
+  SVG_MEETORSLICE_UNKNOWN = 0,
+  SVG_MEETORSLICE_MEET = 1,
+  SVG_MEETORSLICE_SLICE = 2
+};
 
-namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
 
-class SVGPreserveAspectRatio
+class SVGPreserveAspectRatio MOZ_FINAL
 {
   friend class SVGAnimatedPreserveAspectRatio;
 public:
-  SVGPreserveAspectRatio(uint16_t aAlign, uint16_t aMeetOrSlice, bool aDefer = false)
-    : mAlign(static_cast<uint8_t>(aAlign))
-    , mMeetOrSlice(static_cast<uint8_t>(aMeetOrSlice))
+  SVGPreserveAspectRatio(SVGAlign aAlign, SVGMeetOrSlice aMeetOrSlice,
+                         bool aDefer = false)
+    : mAlign(aAlign)
+    , mMeetOrSlice(aMeetOrSlice)
     , mDefer(aDefer)
   {}
 
   bool operator==(const SVGPreserveAspectRatio& aOther) const;
 
   explicit SVGPreserveAspectRatio()
-    : mAlign(0)
-    , mMeetOrSlice(0)
+    : mAlign(SVG_PRESERVEASPECTRATIO_UNKNOWN)
+    , mMeetOrSlice(SVG_MEETORSLICE_UNKNOWN)
     , mDefer(false)
   {}
 
@@ -59,8 +64,8 @@ public:
     return NS_OK;
   }
 
-  uint16_t GetAlign() const {
-    return mAlign;
+  SVGAlign GetAlign() const {
+    return static_cast<SVGAlign>(mAlign);
   }
 
   nsresult SetMeetOrSlice(uint16_t aMeetOrSlice) {
@@ -71,8 +76,8 @@ public:
     return NS_OK;
   }
 
-  uint16_t GetMeetOrSlice() const {
-    return mMeetOrSlice;
+  SVGMeetOrSlice GetMeetOrSlice() const {
+    return static_cast<SVGMeetOrSlice>(mMeetOrSlice);
   }
 
   void SetDefer(bool aDefer) {
@@ -84,10 +89,14 @@ public:
   }
 
 private:
+  // We can't use enum types here because some compilers fail to pack them.
   uint8_t mAlign;
   uint8_t mMeetOrSlice;
   bool mDefer;
 };
+
+MOZ_STATIC_ASSERT(sizeof(SVGPreserveAspectRatio) <= 4,
+                  "The compiler didn't pack SVGPreserveAspectRatio well");
 
 namespace dom {
 
