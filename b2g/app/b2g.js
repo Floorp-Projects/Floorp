@@ -544,6 +544,8 @@ pref("hal.processPriorityManager.gonk.masterOomScoreAdjust", 0);
 pref("hal.processPriorityManager.gonk.masterKillUnderMB", 1);
 pref("hal.processPriorityManager.gonk.foregroundOomScoreAdjust", 67);
 pref("hal.processPriorityManager.gonk.foregroundKillUnderMB", 4);
+pref("hal.processPriorityManager.gonk.backgroundPerceivableOomScoreAdjust", 134);
+pref("hal.processPriorityManager.gonk.backgroundPerceivebleKillUnderMB", 5);
 pref("hal.processPriorityManager.gonk.backgroundHomescreenOomScoreAdjust", 200);
 pref("hal.processPriorityManager.gonk.backgroundHomescreenKillUnderMB", 5);
 pref("hal.processPriorityManager.gonk.backgroundOomScoreAdjust", 400);
