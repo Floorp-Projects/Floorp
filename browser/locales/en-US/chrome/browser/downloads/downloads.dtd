@@ -74,3 +74,6 @@
      -->
 <!ENTITY downloadsHistory.label           "Show All Downloads">
 <!ENTITY downloadsHistory.accesskey       "S">
+
+<!ENTITY clearDownloadsButton.label       "Clear Downloads">
+<!ENTITY clearDownloadsButton.tooltip     "Clears completed, canceled and failed downloads">
