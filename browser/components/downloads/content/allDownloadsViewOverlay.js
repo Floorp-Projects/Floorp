@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource:///modules/DownloadsCommon.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -97,10 +98,14 @@ DownloadElementShell.prototype = {
     if ((this._dataItem = aValue)) {
       this._wasDone = this._dataItem.done;
       this._wasInProgress = this._dataItem.inProgress;
+      this._targetFileInfoFetched = false;
+      this._fetchTargetFileInfo();
     }
     else if (this._placesNode) {
       this._wasInProgress = false;
       this._wasDone = this.getDownloadState(true) == nsIDM.DOWNLOAD_FINISHED;
+      this._targetFileInfoFetched = false;
+      this._fetchTargetFileInfo();
     }
 
     this._updateStatusUI();
@@ -117,10 +122,15 @@ DownloadElementShell.prototype = {
         this._annotations = new Map();
       }
       this._placesNode = aNode;
+
+      // We don't need to update the UI if we had a data item, because
+      // the places information isn't used in this case.
       if (!this._dataItem && this._placesNode) {
         this._wasInProgress = false;
         this._wasDone = this.getDownloadState(true) == nsIDM.DOWNLOAD_FINISHED;
+        this._targetFileInfoFetched = false;
         this._updateStatusUI();
+        this._fetchTargetFileInfo();
       }
     }
     return aNode;
@@ -181,14 +191,6 @@ DownloadElementShell.prototype = {
     return value;
   },
 
-  // The uri (as a string) of the target file, if any.
-  get _targetFileURI() {
-    if (this._dataItem)
-      return this._dataItem.file;
-
-    return this._getAnnotation(DESTINATION_FILE_URI_ANNO, "");
-  },
-
   // The label for the download
   get _displayName() {
     if (this._dataItem)
@@ -203,43 +205,70 @@ DownloadElementShell.prototype = {
     return this._placesNode.title || this.downloadURI;
   },
 
-  // If there's a target file for the download, this is its nsIFile object.
-  get _file() {
-    if (!("__file" in this)) {
-      if (this._dataItem) {
-        this.__file = this._dataItem.localFile;
-      }
-      else {
-        this.__file = this._targetFileURI ?
-          GetFileForFileURI(this._targetFileURI) : null;
-      }
-    }
-    return this.__file;
+  // The uri (as a string) of the target file, if any.
+  get _targetFileURI() {
+    if (this._dataItem)
+      return this._dataItem.file;
+
+    return this._getAnnotation(DESTINATION_FILE_URI_ANNO, "");
   },
 
-  // The target's file size in bytes. If there's no target file, or If we
-  // cannot determine its size, 0 is returned.
-  get _fileSize() {
-    if (!("__fileSize" in this)) {
-      if (!this._file || !this._file.exists())
-        this.__fileSize = 0;
-      try {
-        this.__fileSize = this._file.fileSize;
-      }
-      catch(ex) {
-        Cu.reportError(ex);
-        this.__fileSize = 0;
-      }
+  get _targetFilePath() {
+    let fileURI = this._targetFileURI;
+    if (fileURI)
+      return GetFileForFileURI(fileURI).path;
+    return "";
+  },
+
+  _fetchTargetFileInfo: function DES__fetchTargetFileInfo() {
+    if (this._targetFileInfoFetched)
+      throw new Error("_fetchTargetFileInfo should not be called if the information was already fetched");
+
+    let path = this._targetFilePath;
+
+    // In previous version, the target file annotations were not set,
+    // so we cannot where is the file.
+    if (!path) {
+      this._targetFileInfoFetched = true;
+      this._targetFileExists = false;
+      return;
     }
-    return this.__fileSize;
+
+    OS.File.stat(path).then(
+      function onSuccess(fileInfo) {
+        this._targetFileInfoFetched = true;
+        this._targetFileExists = true;
+        this._targetFileSize = fileInfo.size;
+        delete this._state;
+        this._updateDownloadStatusUI();
+      }.bind(this),
+
+      function onFailure(aReason) {
+        if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
+          this._targetFileInfoFetched = true;
+          this._targetFileExists = false;
+        }
+        else {
+          Cu.reportError("Could not fetch info for target file (reason: " +
+                         aReason + ")");
+        }
+
+        this._updateDownloadStatusUI();
+      }.bind(this)
+    );
   },
 
   /**
-   * Get the state of the download
+   * Get the state of the download (see nsIDownloadManager).
+   * For past downloads, for which we don't know the state at first,
+   * |undefined| is returned until we have info for the target file,
+   * indicating the state is unknown. |undefined| is also returned
+   * if the file was not found at last.
+   *
    * @param [optional] aForceUpdate
    *        Whether to force update the cached download state. Default: false.
+   * @return the download state if available, |undefined| otherwise.
    */
-  // The download state (see nsIDownloadManager).
   getDownloadState: function DES_getDownloadState(aForceUpdate = false) {
     if (aForceUpdate || !("_state" in this)) {
       if (this._dataItem) {
@@ -250,19 +279,12 @@ DownloadElementShell.prototype = {
           this._state = this._getAnnotation(DOWNLOAD_STATE_ANNO);
         }
         catch (ex) {
-          // The state annotation didn't exist in past releases.
-          if (!this._file) {
+          if (!this._targetFileInfoFetched || !this._targetFileExists)
+            this._state = undefined;
+          else if (this._targetFileSize > 0)
+            this._state = nsIDM.DOWNLOAD_FINISHED;
+          else
             this._state = nsIDM.DOWNLOAD_FAILED;
-          }
-          else if (this._file.exists()) {
-            this._state = this._fileSize > 0 ?
-              nsIDM.DOWNLOAD_FINISHED : nsIDM.DOWNLOAD_FAILED;
-          }
-          else {
-            // XXXmano I'm not sure if this right. We should probably show no
-            // status text at all in this case.
-            this._state = nsIDM.DOWNLOAD_CANCELED;
-          }
         }
       }
     }
@@ -270,7 +292,7 @@ DownloadElementShell.prototype = {
   },
 
   // The status text for the download
-  get _statusText() {
+  _getStatusText: function DES__getStatusText() {
     let s = DownloadsCommon.strings;
     if (this._dataItem && this._dataItem.inProgress) {
       if (this._dataItem.paused) {
@@ -320,15 +342,15 @@ DownloadElementShell.prototype = {
         return s.stateDirty;
       case nsIDM.DOWNLOAD_FINISHED:{
         // For completed downloads, show the file size (e.g. "1.5 MB")
-        if (this._fileSize > 0) {
-          let [size, unit] = DownloadUtils.convertByteUnits(this._fileSize);
+        if (this._targetFileInfoFetched && this._targetFileExists) {
+          let [size, unit] = DownloadUtils.convertByteUnits(this._targetFileSize);
           return s.sizeWithUnits(size, unit);
         }
         break;
       }
     }
 
-    return "";
+    return s.sizeUnknown;
   },
 
   // The progressmeter element for the download
@@ -346,8 +368,11 @@ DownloadElementShell.prototype = {
   // appropriate buttons and context menu items), the status text label,
   // and the progress meter.
   _updateDownloadStatusUI: function  DES__updateDownloadStatusUI() {
-    this._element.setAttribute("state", this.getDownloadState(true));
-    this._element.setAttribute("status", this._statusText);
+    let state = this.getDownloadState(true);
+    if (state !== undefined)
+      this._element.setAttribute("state", state);
+
+    this._element.setAttribute("status", this._getStatusText());
 
     // For past-downloads, we're done. For session-downloads, we may also need
     // to update the progress-meter.
@@ -378,14 +403,12 @@ DownloadElementShell.prototype = {
       event.initEvent("ValueChange", true, true);
       this._progressElement.dispatchEvent(event);
     }
-
-    goUpdateDownloadCommands();
   },
 
   _updateStatusUI: function DES__updateStatusUI() {
-    this._updateDownloadStatusUI();
-    this._element.setAttribute("image", this._icon);
     this._element.setAttribute("displayName", this._displayName);
+    this._element.setAttribute("image", this._icon);
+    this._updateDownloadStatusUI();
   },
 
   placesNodeIconChanged: function DES_placesNodeIconChanged() {
@@ -410,15 +433,21 @@ DownloadElementShell.prototype = {
       }
       else if (aAnnoName == DOWNLOAD_STATE_ANNO) {
         this._updateDownloadStatusUI();
+        if (this._element.selected)
+          goUpdateDownloadCommands();
       }
     }
   },
 
   /* DownloadView */
   onStateChange: function DES_onStateChange() {
-    // See comment in DVI_onStateChange in downloads.js (the panel-view)
-    if (!this._wasDone && this._dataItem.done)
+    if (!this._wasDone && this._dataItem.done) {
+      // See comment in DVI_onStateChange in downloads.js (the panel-view)
       this._element.setAttribute("image", this._icon + "&state=normal");
+
+      this._targetFileInfoFetched = false;
+      this._fetchTargetFileInfo();
+    }
 
     this._wasDone = this._dataItem.done;
 
@@ -431,6 +460,8 @@ DownloadElementShell.prototype = {
     this._wasInProgress = this._dataItem.inProgress;
 
     this._updateDownloadStatusUI();
+    if (this._element.selected)
+      goUpdateDownloadCommands();
   },
 
   /* DownloadView */
@@ -442,18 +473,37 @@ DownloadElementShell.prototype = {
   isCommandEnabled: function DES_isCommandEnabled(aCommand) {
     switch (aCommand) {
       case "downloadsCmd_open": {
-        return this._file.exists() &&
-               ((this._dataItem && this._dataItem.openable) ||
-                (this.getDownloadState() == nsIDM.DOWNLOAD_FINISHED));
+        // We cannot open a session dowload file unless it's done ("openable").
+        // If it's finished, we need to make sure the file was not removed,
+        // as we do for past downloads.
+        if (this._dataItem && !this._dataItem.openable)
+          return false;
+
+        // Disable the command until we can yet tell whether
+        // or not the file is there.
+        if (!this._targetFileInfoFetched)
+          return false;
+
+        return this._targetFileExists;
       }
       case "downloadsCmd_show": {
-        return this._getTargetFileOrPartFileIfExists() != null;
+        // TODO: Bug 827010 - Handle part-file asynchronously. 
+        if (this._dataItem &&
+            this._dataItem.partFile && this._dataItem.partFile.exists())
+          return true;
+
+        // Disable the command until we can yet tell whether
+        // or not the file is there.
+        if (!this._targetFileInfoFetched)
+          return false;
+
+        return this._targetFileExists;
       }
       case "downloadsCmd_pauseResume":
         return this._dataItem && this._dataItem.inProgress && this._dataItem.resumable;
       case "downloadsCmd_retry":
-        return ((this._dataItem && this._dataItem.canRetry) ||
-                (!this._dataItem && this._file))
+        // Disable the retry command for past downloads until it's fully implemented.
+        return this._dataItem && this._dataItem.canRetry;
       case "downloadsCmd_openReferrer":
         return this._dataItem && !!this._dataItem.referrer;
       case "cmd_delete":
@@ -465,15 +515,6 @@ DownloadElementShell.prototype = {
         return this._dataItem != null;
     }
     return false;
-  },
-
-  _getTargetFileOrPartFileIfExists: function DES__getTargetFileOrPartFileIfExists() {
-    if (this._file && this._file.exists())
-      return this._file;
-    if (this._dataItem &&
-        this._dataItem.partFile && this._dataItem.partFile.exists())
-      return this._dataItem.partFile;
-    return null;
   },
 
   _retryAsHistoryDownload: function DES__retryAsHistoryDownload() {
@@ -488,14 +529,16 @@ DownloadElementShell.prototype = {
         if (this._dateItem)
           this._dataItem.openLocalFile(window);
         else
-          DownloadsCommon.openDownloadedFile(this._file, null, window);
+          DownloadsCommon.openDownloadedFile(
+            GetFileForFileURI(this._targetFileURI), null, window);
         break;
       }
       case "downloadsCmd_show": {
         if (this._dataItem)
           this._dataItem.showLocalFile();
         else
-          DownloadsCommon.showDownloadedFile(this._getTargetFileOrPartFileIfExists());
+          DownloadsCommon.showDownloadedFile(
+            GetFileForFileURI(this._targetFileURI));
         break;
       }
       case "downloadsCmd_openReferrer": {
@@ -1111,7 +1154,12 @@ DownloadsPlacesView.prototype = {
 
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
-    contextMenu.setAttribute("state", element._shell.getDownloadState());
+    let state = element._shell.getDownloadState();
+    if (state !== undefined)
+      contextMenu.setAttribute("state", state);
+    else
+      contextMenu.removeAttribute("state");
+
     return true;
   },
 
