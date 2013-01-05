@@ -30,10 +30,10 @@ WebConsolePanel.prototype = {
    * open is effectively an asynchronous constructor
    */
   open: function StyleEditor_open() {
-    let tab = this._toolbox._getHostTab();
     let parentDoc = this._frameWindow.document.defaultView.parent.document;
     let iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
-    this.hud = HUDService.activateHUDForContext(tab, iframe, this._toolbox.target);
+    this.hud = HUDService.activateHUDForContext(this.target.tab, iframe,
+                                                this._toolbox.target);
 
     let deferred = Promise.defer();
 

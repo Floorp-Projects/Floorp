@@ -6,8 +6,35 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const ContentPanning = {
+  // Are we listening to touch or mouse events?
+  watchedEventsType: '',
+
+  // Are mouse events being delivered to this content along with touch
+  // events, in violation of spec?
+  hybridEvents: false,
+
   init: function cp_init() {
-    ['mousedown', 'mouseup', 'mousemove'].forEach(function(type) {
+    var events;
+    try {
+      content.document.createEvent('TouchEvent');
+      events = ['touchstart', 'touchend', 'touchmove'];
+      this.watchedEventsType = 'touch';
+#ifdef MOZ_WIDGET_GONK
+      // The gonk widget backend does not deliver mouse events per
+      // spec.  Third-party content isn't exposed to this behavior,
+      // but that behavior creates some extra work for us here.
+      let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+      let isParentProcess =
+        !appInfo || appInfo.getService(Ci.nsIXULRuntime)
+                           .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+      this.hybridEvents = isParentProcess;
+#endif
+    } catch(e) {
+      // Touch events aren't supported, so fall back on mouse.
+      events = ['mousedown', 'mouseup', 'mousemove'];
+      this.watchedEventsType = 'mouse';
+    }
+    events.forEach(function(type) {
       addEventListener(type, ContentPanning, false);
     });
 
@@ -16,14 +43,20 @@ const ContentPanning = {
   },
 
   handleEvent: function cp_handleEvent(evt) {
+    if (evt.defaultPrevented)
+      return;
+
     switch (evt.type) {
       case 'mousedown':
+      case 'touchstart':
         this.onTouchStart(evt);
         break;
       case 'mousemove':
+      case 'touchmove':
         this.onTouchMove(evt);
         break;
       case 'mouseup':
+      case 'touchend':
         this.onTouchEnd(evt);
         break;
       case 'click':
@@ -40,21 +73,68 @@ const ContentPanning = {
 
   position: new Point(0 , 0),
 
+  findPrimaryPointer: function cp_findPrimaryPointer(touches) {
+    if (!('primaryPointerId' in this))
+      return null;
+
+    for (let i = 0; i < touches.length; i++) {
+      if (touches[i].identifier === this.primaryPointerId) {
+        return touches[i];
+      }
+    }
+    return null;
+  },
+
   onTouchStart: function cp_onTouchStart(evt) {
+    let screenX, screenY;
+    if (this.watchedEventsType == 'touch') {
+      if ('primaryPointerId' in this) {
+        return;
+      }
+
+      let firstTouch = evt.changedTouches[0];
+      this.primaryPointerId = firstTouch.identifier;
+      this.pointerDownTarget = firstTouch.target;
+      screenX = firstTouch.screenX;
+      screenY = firstTouch.screenY;
+    } else {
+      this.pointerDownTarget = evt.target;
+      screenX = evt.screenX;
+      screenY = evt.screenY;
+    }
     this.dragging = true;
     this.panning = false;
 
     let oldTarget = this.target;
-    [this.target, this.scrollCallback] = this.getPannable(evt.target);
+    [this.target, this.scrollCallback] = this.getPannable(this.pointerDownTarget);
 
     // If we found a target, that means we have found a scrollable subframe. In
     // this case, and if we are using async panning and zooming on the parent
     // frame, inform the pan/zoom controller that it should not attempt to
     // handle any touch events it gets until the next batch (meaning the next
     // time we get a touch end).
-    if (this.target != null && ContentPanning._asyncPanZoomForViewportFrame) {
+    if (this.target != null && this._asyncPanZoomForViewportFrame) {
+      this.detectingScrolling = true;
       var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-      os.notifyObservers(docShell, 'cancel-default-pan-zoom', null);
+      os.notifyObservers(docShell, 'detect-scrollable-subframe', null);
+    }
+
+    // If we have a pointer down target and we're not async
+    // pan/zooming, we may need to fill in for EventStateManager in
+    // setting the active state on the target element.  Set a timer to
+    // ensure the pointer-down target is active.  (If it's already
+    // active, the timer is a no-op.)
+    if (this.pointerDownTarget !== null && !this.detectingScrolling) {
+      // If there's no possibility this is a drag/pan, activate now.
+      // Otherwise wait a little bit to see if the gesture isn't a
+      // tap.
+      if (this.target === null) {
+        this.notify(this._activationTimer);
+      } else {
+        this._activationTimer.initWithCallback(this,
+                                               this._activationDelayMs,
+                                               Ci.nsITimer.TYPE_ONE_SHOT);
+      }
     }
 
     // If there is a pan animation running (from a previous pan gesture) and
@@ -69,19 +149,38 @@ const ContentPanning = {
         this.preventNextClick = true;
     }
 
-
-    this.position.set(evt.screenX, evt.screenY);
+    this.position.set(screenX, screenY);
     KineticPanning.record(new Point(0, 0), evt.timeStamp);
   },
 
   onTouchEnd: function cp_onTouchEnd(evt) {
-    if (!this.dragging)
+    let touch = null;
+    if (!this.dragging ||
+        (this.watchedEventsType == 'touch' &&
+         !(touch = this.findPrimaryPointer(evt.changedTouches)))) {
       return;
-    this.dragging = false;
+    }
 
-    this.onTouchMove(evt);
+    // !isPan() and evt.detail should always give the same answer here
+    // since they use the same heuristics, but use the native gecko
+    // computation when possible.
+    //
+    // NB: when we're using touch events, then !KineticPanning.isPan()
+    // => this.panning, so we'll never attempt to block the click
+    // event.  That's OK however, because we won't fire a synthetic
+    // click when we're using touch events and this touch series
+    // wasn't a "tap" gesture.
+    let click = (this.watchedEventsType == 'mouse') ?
+      evt.detail : !KineticPanning.isPan();
+    // Additionally, if we're seeing non-compliant hybrid events, a
+    // "real" click will be generated if we started and ended on the
+    // same element.
+    if (this.hybridEvents) {
+      let target =
+        content.document.elementFromPoint(touch.clientX, touch.clientY);
+      click |= (target === this.pointerDownTarget);
+    }
 
-    let click = evt.detail;
     if (this.target && click && (this.panning || this.preventNextClick)) {
       let target = this.target;
       let view = target.ownerDocument ? target.ownerDocument.defaultView
@@ -89,31 +188,84 @@ const ContentPanning = {
       view.addEventListener('click', this, true, true);
     }
 
-    if (this.panning)
+    this._resetActive();
+    this.dragging = false;
+    this.detectingScrolling = false;
+    delete this.primaryPointerId;
+    this._activationTimer.cancel();
+
+    if (this.panning) {
       KineticPanning.start(this);
+    }
   },
 
+  // True when there's an async pan-zoom controll watching the
+  // outermost scrollable frame, and we're waiting to see whether
+  // we're going to take over from it and synchronously scroll an
+  // inner scrollable frame.
+  detectingScrolling: false,
+
   onTouchMove: function cp_onTouchMove(evt) {
-    if (!this.dragging || !this.scrollCallback)
+    if (!this.dragging)
       return;
 
+    let screenX, screenY;
+    if (this.watchedEventsType == 'touch') {
+      let primaryTouch = this.findPrimaryPointer(evt.changedTouches);
+      if (evt.touches.length > 1 || !primaryTouch)
+        return;
+      screenX = primaryTouch.screenX;
+      screenY = primaryTouch.screenY;
+    } else {
+      screenX = evt.screenX;
+      screenY = evt.screenY;
+    }
+
     let current = this.position;
-    let delta = new Point(evt.screenX - current.x, evt.screenY - current.y);
-    current.set(evt.screenX, evt.screenY);
+    let delta = new Point(screenX - current.x, screenY - current.y);
+    current.set(screenX, screenY);
 
     KineticPanning.record(delta, evt.timeStamp);
+
+    // There's no possibility of us panning anything.
+    if (!this.scrollCallback) {
+      return;
+    }
+
+    let isPan = KineticPanning.isPan();
+    if (this.detectingScrolling) {
+      this.detectingScrolling = false;
+      // Stop async-pan-zooming if the user is panning the subframe.
+      if (isPan) {
+        // We're going to drive synchronously scrolling an inner frame.
+        Services.obs.notifyObservers(docShell, 'cancel-default-pan-zoom', null);
+      } else {
+        // Let AsyncPanZoomController handle the scrolling gesture.
+        this.scrollCallback = null;
+        return;
+      }
+    }
+
     this.scrollCallback(delta.scale(-1));
 
     // If a pan action happens, cancel the active state of the
     // current target.
-    if (!this.panning && KineticPanning.isPan()) {
+    if (!this.panning && isPan) {
       this.panning = true;
       this._resetActive();
+      this._activationTimer.cancel();
     }
-    evt.stopPropagation();
-    evt.preventDefault();
+
+    if (this.panning) {
+      evt.stopPropagation();
+      evt.preventDefault();
+    }
   },
 
+  // nsITimerCallback
+  notify: function cp_notify(timer) {
+    this._setActive(this.pointerDownTarget);
+  },
 
   onKineticBegin: function cp_onKineticBegin(evt) {
   },
@@ -249,11 +401,27 @@ const ContentPanning = {
                               .getService(Ci.inIDOMUtils);
   },
 
-  _resetActive: function cp_resetActive() {
-    let root = this.target.ownerDocument || this.target.document;
+  get _activationTimer() {
+    delete this._activationTimer;
+    return this._activationTimer = Cc["@mozilla.org/timer;1"]
+                                     .createInstance(Ci.nsITimer);
+  },
 
+  get _activationDelayMs() {
+    let delay = Services.prefs.getIntPref('ui.touch_activation.delay_ms');
+    delete this._activationDelayMs;
+    return this._activationDelayMs = delay;
+  },
+
+  _resetActive: function cp_resetActive() {
+    let elt = this.target || this.pointerDownTarget;
+    let root = elt.ownerDocument || elt.document;
+    this._setActive(root.documentElement);
+  },
+
+  _setActive: function cp_setActive(elt) {
     const kStateActive = 0x00000001;
-    this._domUtils.setContentState(root.documentElement, kStateActive);
+    this._domUtils.setContentState(elt, kStateActive);
   },
 
   get _asyncPanZoomForViewportFrame() {

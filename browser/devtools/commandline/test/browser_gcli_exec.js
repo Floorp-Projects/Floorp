@@ -42,7 +42,7 @@ function test() {
 
 
 var Requisition = require('gcli/cli').Requisition;
-var canon = require('gcli/canon');
+var CommandOutputManager = require('gcli/canon').CommandOutputManager;
 // var mockCommands = require('gclitest/mockCommands');
 var nodetype = require('gcli/types/node');
 
@@ -53,16 +53,22 @@ var actualOutput;
 var hideExec = false;
 var skip = 'skip';
 
-exports.setup = function() {
+var environment = { value: 'example environment data' };
+var commandOutputManager = new CommandOutputManager();
+var requisition = new Requisition(environment, null, commandOutputManager);
+
+exports.setup = function(options) {
   mockCommands.setup();
   mockCommands.onCommandExec.add(commandExeced);
-  canon.commandOutputManager.onOutput.add(commandOutputed);
+
+  commandOutputManager.onOutput.add(commandOutputed);
 };
 
-exports.shutdown = function() {
+exports.shutdown = function(options) {
   mockCommands.shutdown();
   mockCommands.onCommandExec.remove(commandExeced);
-  canon.commandOutputManager.onOutput.remove(commandOutputed);
+
+  commandOutputManager.onOutput.remove(commandOutputed);
 };
 
 function commandExeced(ev) {
@@ -74,9 +80,6 @@ function commandOutputed(ev) {
 }
 
 function exec(command, expectedArgs) {
-  var environment = {};
-
-  var requisition = new Requisition(environment);
   var outputObject = requisition.exec({ typed: command, hidden: hideExec });
 
   assert.is(command.indexOf(actualExec.command.name), 0, 'Command name: ' + command);

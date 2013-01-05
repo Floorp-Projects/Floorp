@@ -109,6 +109,7 @@ protected:
   virtual bool RecvNotifyCompositorTransaction() MOZ_OVERRIDE;
 
   virtual bool RecvCancelDefaultPanZoom() MOZ_OVERRIDE;
+  virtual bool RecvDetectScrollableSubframe() MOZ_OVERRIDE;
 
   virtual PLayersParent* AllocPLayers() MOZ_OVERRIDE;
   virtual bool DeallocPLayers(PLayersParent* aLayers) MOZ_OVERRIDE;
