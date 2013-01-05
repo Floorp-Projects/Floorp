@@ -20,7 +20,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsWidgetsCID.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsContainerFrame.h"
 #include "nsDisplayList.h"
 

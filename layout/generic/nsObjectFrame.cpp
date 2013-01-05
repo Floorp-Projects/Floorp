@@ -14,7 +14,7 @@
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
 #include "nsView.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMDragEvent.h"
 #include "nsPluginHost.h"
@@ -329,7 +329,7 @@ nsObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   if (HasView()) {
     nsView* view = GetView();
-    nsViewManager* vm = view->GetViewManager();
+    nsIViewManager* vm = view->GetViewManager();
     if (vm) {
       nsViewVisibility visibility = 
         IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow;
@@ -365,7 +365,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
     return NS_ERROR_FAILURE;
   }
 
-  nsViewManager* viewMan = view->GetViewManager();
+  nsIViewManager* viewMan = view->GetViewManager();
   // mark the view as hidden since we don't know the (x,y) until Paint
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -593,7 +593,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   r.Deflate(aReflowState.mComputedBorderPadding);
 
   if (mInnerView) {
-    nsViewManager* vm = mInnerView->GetViewManager();
+    nsIViewManager* vm = mInnerView->GetViewManager();
     vm->MoveViewTo(mInnerView, r.x, r.y);
     vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), r.Size()), true);
   }
@@ -884,7 +884,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 
   if (HasView()) {
     nsView* view = GetView();
-    nsViewManager* vm = view->GetViewManager();
+    nsIViewManager* vm = view->GetViewManager();
     if (vm)
       vm->SetViewVisibility(view, IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }

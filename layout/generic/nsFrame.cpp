@@ -22,7 +22,7 @@
 #include "nsStyleContext.h"
 #include "nsTableOuterFrame.h"
 #include "nsView.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsCRT.h"
@@ -5289,7 +5289,7 @@ nsFrame::UpdateOverflow()
 
       if ((flags & NS_FRAME_NO_SIZE_VIEW) == 0) {
         // Make sure the frame's view is properly sized.
-        nsViewManager* vm = view->GetViewManager();
+        nsIViewManager* vm = view->GetViewManager();
         vm->ResizeView(view, overflowAreas.VisualOverflow(), true);
       }
     }

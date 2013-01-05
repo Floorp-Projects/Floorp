@@ -30,7 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsView.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsGkAtoms.h"
 #include "nsStyleCoord.h"
 #include "nsStyleContext.h"
@@ -674,7 +674,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (mInnerView) {
-    nsViewManager* vm = mInnerView->GetViewManager();
+    nsIViewManager* vm = mInnerView->GetViewManager();
     vm->MoveViewTo(mInnerView, offset.x, offset.y);
     vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), innerSize), true);
   }
@@ -958,7 +958,7 @@ InsertViewsInReverseOrder(nsView* aSibling, nsView* aParent)
   NS_PRECONDITION(aParent, "");
   NS_PRECONDITION(!aParent->GetFirstChild(), "inserting into non-empty list");
 
-  nsViewManager* vm = aParent->GetViewManager();
+  nsIViewManager* vm = aParent->GetViewManager();
   while (aSibling) {
     nsView* next = aSibling->GetNextSibling();
     aSibling->SetNextSibling(nullptr);
@@ -1092,7 +1092,7 @@ nsSubDocumentFrame::EnsureInnerView()
   NS_ASSERTION(outerView, "Must have an outer view already");
   nsRect viewBounds(0, 0, 0, 0); // size will be fixed during reflow
 
-  nsViewManager* viewMan = outerView->GetViewManager();
+  nsIViewManager* viewMan = outerView->GetViewManager();
   nsView* innerView = viewMan->CreateView(viewBounds, outerView);
   if (!innerView) {
     NS_ERROR("Could not create inner view");

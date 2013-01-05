@@ -65,7 +65,7 @@ class nsIStyleRule;
 class nsIStyleSheet;
 class nsIURI;
 class nsIVariant;
-class nsViewManager;
+class nsIViewManager;
 class nsPresContext;
 class nsRange;
 class nsScriptLoader;
@@ -478,7 +478,7 @@ public:
    * presshell if the presshell should observe document mutations.
    */
   virtual nsresult CreateShell(nsPresContext* aContext,
-                               nsViewManager* aViewManager,
+                               nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult) = 0;
   virtual void DeleteShell() = 0;

@@ -14,7 +14,8 @@ MODULE		= view
 
 EXPORTS		= \
 		nsView.h \
-		nsViewManager.h \
+		nsIViewManager.h \
+		nsViewsCID.h \
 		nsIScrollPositionListener.h \
 		$(NULL)
 

@@ -55,7 +55,7 @@ public:
                           nsIPrincipal* aPrincipal);
 
   virtual nsresult CreateShell(nsPresContext* aContext,
-                               nsViewManager* aViewManager,
+                               nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
 
