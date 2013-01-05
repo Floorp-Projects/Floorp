@@ -87,7 +87,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
 
-#include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsViewManager.h"
@@ -215,9 +214,6 @@ protected:
   nsRefPtr<nsPrintEngine> mPrintEngine;
   bool                    mSuppressed;
 };
-
-// Class IDs
-static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 
 NS_IMPL_ISUPPORTS3(nsPrintEngine, nsIWebProgressListener,
                    nsISupportsWeakReference, nsIObserver)
@@ -2197,8 +2193,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   nsresult rv = aPO->mPresContext->Init(mPrt->mPrintDC);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aPO->mViewManager = do_CreateInstance(kViewManagerCID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
+  aPO->mViewManager = new nsViewManager();
 
   rv = aPO->mViewManager->Init(mPrt->mPrintDC);
   NS_ENSURE_SUCCESS(rv,rv);
