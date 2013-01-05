@@ -556,20 +556,19 @@ Toolbox.prototype = {
     let radio = this.doc.getElementById("toolbox-tab-" + toolId);
     let panel = this.doc.getElementById("toolbox-panel-" + toolId);
 
-    if (this._currentToolId == toolId) {
-      let nextToolName = null;
-      if (radio.nextSibling) {
-        nextToolName = radio.nextSibling.getAttribute("toolid");
-      }
-      if (radio.previousSibling) {
-        nextToolName = radio.previousSibling.getAttribute("toolid");
-      }
-      if (nextToolName) {
-        this.selectTool(nextToolName);
-      }
-    }
-
     if (radio) {
+      if (this._currentToolId == toolId) {
+        let nextToolName = null;
+        if (radio.nextSibling) {
+          nextToolName = radio.nextSibling.getAttribute("toolid");
+        }
+        if (radio.previousSibling) {
+          nextToolName = radio.previousSibling.getAttribute("toolid");
+        }
+        if (nextToolName) {
+          this.selectTool(nextToolName);
+        }
+      }
       radio.parentNode.removeChild(radio);
     }
 
