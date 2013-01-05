@@ -230,34 +230,45 @@ toolbar[iconsize="large"] > #downloads-indicator[attention] > #downloads-indicat
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
-/*** Event notification ***/
+/*** Download notifications ***/
 
 #downloads-indicator-notification {
   opacity: 0;
-  background: url("chrome://browser/skin/downloads/download-notification.png")
-              center no-repeat;
   background-size: 16px;
 }
 
-@keyframes downloadsIndicatorNotificationRight {
+@keyframes downloadsIndicatorNotificationStartRight {
   from { opacity: 0; transform: translate(-128px, 128px) scale(8); }
   20%  { opacity: .85; animation-timing-function: ease-out; }
   to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
-@keyframes downloadsIndicatorNotificationLeft {
+@keyframes downloadsIndicatorNotificationStartLeft {
   from { opacity: 0; transform: translate(128px, 128px) scale(8); }
   20%  { opacity: .85; animation-timing-function: ease-out; }
   to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
-#downloads-indicator[notification] > #downloads-indicator-anchor > #downloads-indicator-notification {
-  animation-name: downloadsIndicatorNotificationRight;
+#downloads-indicator[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+  background-image: url("chrome://browser/skin/downloads/download-notification-start.png");
+  animation-name: downloadsIndicatorNotificationStartRight;
   animation-duration: 1s;
 }
 
-#downloads-indicator[notification]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
-  animation-name: downloadsIndicatorNotificationLeft;
+#downloads-indicator[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
+  animation-name: downloadsIndicatorNotificationStartLeft;
+}
+
+@keyframes downloadsIndicatorNotificationFinish {
+  from { opacity: 0; transform: scale(1); }
+  20%  { opacity: .65; animation-timing-function: ease-in; }
+  to   { opacity: 0; transform: scale(8); }
+}
+
+#downloads-indicator[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+  background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
+  animation-name: downloadsIndicatorNotificationFinish;
+  animation-duration: 1s;
 }
 
 /*** Progress bar and text ***/
