@@ -42,6 +42,7 @@ EXPORTS_mozilla/dom = \
 		HTMLLIElement.h \
 		HTMLParagraphElement.h \
 		HTMLPreElement.h \
+		HTMLScriptElement.h \
 		HTMLSharedListElement.h \
 		HTMLSpanElement.h \
 		HTMLTitleElement.h \
@@ -94,7 +95,7 @@ CPPSRCS		= \
 		HTMLParagraphElement.cpp \
 		HTMLPreElement.cpp \
 		nsHTMLProgressElement.cpp \
-		nsHTMLScriptElement.cpp \
+		HTMLScriptElement.cpp \
 		nsHTMLSelectElement.cpp \
 		nsHTMLSharedElement.cpp \
 		HTMLSpanElement.cpp \
