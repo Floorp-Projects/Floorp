@@ -201,7 +201,7 @@ nsresult
 NS_NewSVGAnimateMotionElement(nsIContent **aResult,
                               already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGMPathElement(nsIContent **aResult,
+NS_NewSVGMpathElement(nsIContent **aResult,
                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
 NS_NewSVGSetElement(nsIContent **aResult,
@@ -348,7 +348,7 @@ NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
     if (name == nsGkAtoms::animateMotion)
       return NS_NewSVGAnimateMotionElement(aResult, aNodeInfo);
     if (name == nsGkAtoms::mpath)
-      return NS_NewSVGMPathElement(aResult, aNodeInfo);
+      return NS_NewSVGMpathElement(aResult, aNodeInfo);
     if (name == nsGkAtoms::set)
       return NS_NewSVGSetElement(aResult, aNodeInfo);
   }

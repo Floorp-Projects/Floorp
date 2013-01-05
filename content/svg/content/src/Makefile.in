@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsSVGClipPathElement.cpp \
 		nsSVGDataParser.cpp \
 		nsSVGDefsElement.cpp \
+		nsSVGDescElement.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
@@ -63,6 +64,7 @@ CPPSRCS		= \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
 		nsSVGMaskElement.cpp \
+		nsSVGMetadataElement.cpp \
 		nsSVGNumber2.cpp \
 		nsSVGNumberPair.cpp \
 		nsSVGPathDataParser.cpp \
@@ -77,6 +79,8 @@ CPPSRCS		= \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \
+		nsSVGStopElement.cpp \
+		nsSVGStyleElement.cpp \
 		nsSVGSwitchElement.cpp \
 		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
@@ -84,6 +88,7 @@ CPPSRCS		= \
 		nsSVGTextElement.cpp \
 		nsSVGTextPathElement.cpp \
 		nsSVGTextPositioningElement.cpp \
+		nsSVGTitleElement.cpp \
 		nsSVGUnknownElement.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
@@ -106,7 +111,6 @@ CPPSRCS		= \
 		SVGPointList.cpp \
 		SVGPreserveAspectRatio.cpp \
 		SVGStringList.cpp \
-		SVGTitleElement.cpp \
 		SVGTransform.cpp \
 		SVGTransformList.cpp \
 		SVGTransformListParser.cpp \
@@ -114,25 +118,21 @@ CPPSRCS		= \
 		nsSVGAnimateTransformElement.cpp \
 		nsSVGAnimateMotionElement.cpp \
 		nsSVGAnimationElement.cpp \
+		nsSVGMpathElement.cpp \
 		nsSVGSetElement.cpp \
 		SVGAttrValueWrapper.cpp \
 		SVGContentUtils.cpp \
-		SVGDescElement.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
-		SVGMetadataElement.cpp \
 		SVGMotionSMILType.cpp \
 		SVGMotionSMILAttr.cpp \
 		SVGMotionSMILAnimationFunction.cpp \
 		SVGMotionSMILPathUtils.cpp \
-		SVGMPathElement.cpp \
 		SVGNumberListSMILType.cpp \
 		SVGNumberPairSMILType.cpp \
 		SVGOrientSMILType.cpp \
 		SVGPathSegListSMILType.cpp \
 		SVGPointListSMILType.cpp \
-		SVGStopElement.cpp \
-		SVGStyleElement.cpp \
 		SVGTransformListSMILType.cpp \
 		SVGViewBoxSMILType.cpp \
 		$(NULL)
@@ -154,12 +154,6 @@ EXPORTS_mozilla/dom = \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
-	SVGDescElement.h \
-	SVGMetadataElement.h \
-	SVGMPathElement.h \
-	SVGStopElement.h \
-	SVGStyleElement.h \
-	SVGTitleElement.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
