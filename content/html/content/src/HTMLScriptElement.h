@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_HTMLScriptElement_h
 #define mozilla_dom_HTMLScriptElement_h
 
+#include "nsIDOMHTMLScriptElement.h"
+#include "nsScriptElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/Attributes.h"
 
@@ -70,7 +72,23 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  void SetText(const nsAString& aValue, ErrorResult& rv);
+  void SetCharset(const nsAString& aCharset, ErrorResult& rv);
+  void SetDefer(bool aDefer, ErrorResult& rv);
+  bool Defer();
+  void SetSrc(const nsAString& aSrc, ErrorResult& rv);
+  void SetType(const nsAString& aType, ErrorResult& rv);
+  void SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& rv);
+  void SetEvent(const nsAString& aEvent, ErrorResult& rv);
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& rv);
+  bool Async();
+  void SetAsync(bool aValue, ErrorResult& rv);
+
 protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
   // nsScriptElement
   virtual bool HasScriptContent();
 };
