@@ -822,31 +822,15 @@ nsresult MediaPipelineReceiveAudio::Init() {
 }
 
 void MediaPipelineReceiveAudio::PipelineListener::
-NotifyPull(MediaStreamGraph* graph, StreamTime total) {
+NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   MOZ_ASSERT(source_);
   if (!source_) {
     MOZ_MTLOG(PR_LOG_ERROR, "NotifyPull() called from a non-SourceMediaStream");
     return;
   }
 
-  // "total" is absolute stream time.
-  // StreamTime desired = total - played_;
-  played_ = total;
-  //double time_s = MediaTimeToSeconds(desired);
-
-  // Number of 10 ms samples we need
-  //int num_samples = ceil(time_s / .01f);
-
-  // Doesn't matter what was asked for, always give 160 samples per 10 ms.
-  int num_samples = 1;
-
-  MOZ_MTLOG(PR_LOG_DEBUG, "Asking for " << num_samples << "sample from Audio Conduit");
-
-  if (num_samples <= 0) {
-    return;
-  }
-
-  while (num_samples--) {
+  // This comparison is done in total time to avoid accumulated roundoff errors.
+  while (MillisecondsToMediaTime(played_) < desired_time) {
     // TODO(ekr@rtfm.com): Is there a way to avoid mallocating here?
     nsRefPtr<SharedBuffer> samples = SharedBuffer::Create(1000);
     int samples_length;
@@ -870,6 +854,8 @@ NotifyPull(MediaStreamGraph* graph, StreamTime total) {
 
     source_->AppendToTrack(1,  // TODO(ekr@rtfm.com): Track ID
                            &segment);
+
+    played_ += 10;
   }
 }
 
