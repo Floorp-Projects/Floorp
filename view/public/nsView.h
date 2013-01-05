@@ -6,19 +6,13 @@
 #ifndef nsView_h__
 #define nsView_h__
 
-#include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include "nsNativeWidget.h"
-#include "nsIWidget.h"
-#include "nsWidgetInitData.h"
 #include "nsRegion.h"
 #include "nsCRT.h"
-#include "nsIFactory.h"
 #include "nsEvent.h"
 #include "nsIWidgetListener.h"
-#include <stdio.h>
 
 class nsViewManager;
 class nsIWidget;
