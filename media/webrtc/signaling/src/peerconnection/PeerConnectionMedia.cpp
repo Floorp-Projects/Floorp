@@ -78,6 +78,23 @@ nsresult PeerConnectionMedia::Init()
     return NS_ERROR_FAILURE;
   }
 
+  // Temporarily hardwire the ICE server.
+  // TODO(ekr@rtfm.com): Remove this when we have ICE configuration
+  // settings.
+  std::vector<NrIceStunServer> stun_servers;
+  ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
+      std::string((char *)"216.93.246.14"), 3478));
+  MOZ_ASSERT(server);
+  if (!server) {
+    CSFLogErrorS(logTag, __FUNCTION__ << ": Could not parse STUN server string");
+    return NS_ERROR_FAILURE;
+  }
+    
+  stun_servers.push_back(*server);
+  nsresult rv = mIceCtx->SetStunServers(stun_servers);
+  if (NS_FAILED(rv))
+    return rv;
+
   mIceCtx->SignalGatheringCompleted.connect(this,
                                             &PeerConnectionMedia::IceGatheringCompleted);
   mIceCtx->SignalCompleted.connect(this,
