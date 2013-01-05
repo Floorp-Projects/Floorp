@@ -68,9 +68,7 @@ public:
    * view manager from somewhere else, do that instead.
    * @result the view manager
    */
-  nsViewManager* GetViewManager() const
-  { return reinterpret_cast<nsViewManager*>(mViewManager); }
-  nsViewManager* GetViewManagerInternal() const { return mViewManager; }
+  nsViewManager* GetViewManager() const { return mViewManager; }
 
   /**
    * Find the view for the given widget, if there is one.
