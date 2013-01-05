@@ -114,7 +114,6 @@ CPPSRCS		= \
 		nsSVGAnimateTransformElement.cpp \
 		nsSVGAnimateMotionElement.cpp \
 		nsSVGAnimationElement.cpp \
-		nsSVGMpathElement.cpp \
 		nsSVGSetElement.cpp \
 		SVGAttrValueWrapper.cpp \
 		SVGContentUtils.cpp \
@@ -126,6 +125,7 @@ CPPSRCS		= \
 		SVGMotionSMILAttr.cpp \
 		SVGMotionSMILAnimationFunction.cpp \
 		SVGMotionSMILPathUtils.cpp \
+		SVGMPathElement.cpp \
 		SVGNumberListSMILType.cpp \
 		SVGNumberPairSMILType.cpp \
 		SVGOrientSMILType.cpp \
@@ -156,6 +156,7 @@ EXPORTS_mozilla/dom = \
 	SVGAnimatedBoolean.h \
 	SVGDescElement.h \
 	SVGMetadataElement.h \
+	SVGMPathElement.h \
 	SVGStopElement.h \
 	SVGStyleElement.h \
 	SVGTitleElement.h \
