@@ -11,12 +11,7 @@
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsITimer.h"
-#include "prtime.h"
-#include "prinrval.h"
 #include "nsVoidArray.h"
-#include "nsThreadUtils.h"
-#include "nsIPresShell.h"
 #include "nsDeviceContext.h"
 
 class nsIWidget;
