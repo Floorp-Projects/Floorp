@@ -77,6 +77,18 @@
       id = "p";
       gQueue.push(new synthTab(id, new caretMoveChecker(0, id)));
 
+      // Set caret after a child of span element, i.e. after 'text' text.
+      gQueue.push(new moveCaretToDOMPoint("test1", getNode("test1_span"), 1,
+                                           4, "test1"));
+      gQueue.push(new moveCaretToDOMPoint("test2", getNode("test2_span"), 1,
+                                           4, "test2"));
+
+      // empty text element
+      gQueue.push(new moveCaretToDOMPoint("test3", getNode("test3"), 0,
+                                           0, "test3"));
+      gQueue.push(new moveCaretToDOMPoint("test4", getNode("test4_span"), 0,
+                                           0, "test4"));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -90,7 +102,12 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=454377"
      title="Accessible caret move events testing">
-    Mozilla Bug 454377
+    Bug 454377
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=824901"
+     title="HyperTextAccessible::DOMPointToHypertextOffset fails for node and offset equal to node child count">
+    Bug 824901
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -101,6 +118,11 @@
   <textarea id="textarea">text<br>text</textarea>
   <p id="p" contentEditable="true"><span>text</span><br/>text</p>
   <div id="div" contentEditable="true"><p id="p1_in_div">text</p><p id="p2_in_div">text</p></div>
+
+  <p contentEditable="true" id="test1"><span id="test1_span">text</span>ohoho</p>
+  <p contentEditable="true" id="test2"><span><span id="test2_span">text</span></span>ohoho</p>
+  <p contentEditable="true" id="test3"></p>
+  <p contentEditable="true" id="test4"><span id="test4_span"></span></p>
 
   <div id="eventdump"></div>
 </body>
