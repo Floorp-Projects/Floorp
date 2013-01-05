@@ -2378,7 +2378,7 @@ nsDownloadManager::OnPageChanged(nsIURI *aURI,
 NS_IMETHODIMP
 nsDownloadManager::OnDeleteVisits(nsIURI *aURI, PRTime aVisitTime,
                                   const nsACString& aGUID,
-                                  uint16_t aReason)
+                                  uint16_t aReason, uint32_t aTransitionType)
 {
   // Don't bother removing downloads until the page is removed.
   return NS_OK;

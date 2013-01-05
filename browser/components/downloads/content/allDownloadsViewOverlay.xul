@@ -64,6 +64,8 @@
              oncommand="goDoCommand('downloadsCmd_retry')"/>
     <command id="downloadsCmd_openReferrer"
              oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
+    <command id="downloadsCmd_clearDownloads"
+             oncommand="goDoCommand('downloadsCmd_clearDownloads')"/>
   </commandset>
 
   <menupopup id="downloadsContextMenu" class="download-state">
@@ -102,5 +104,11 @@
     <menuitem command="cmd_copy"
               label="&cmd.copyDownloadLink.label;"
               accesskey="&cmd.copyDownloadLink.accesskey;"/>
+
+    <menuseparator/>
+
+    <menuitem command="downloadsCmd_clearDownloads"
+              label="&cmd.clearDownloads.label;"
+              accesskey="&cmd.clearDownloads.accesskey;"/>
   </menupopup>
 </overlay>

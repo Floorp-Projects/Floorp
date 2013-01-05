@@ -12,11 +12,15 @@ let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource:///modules/DownloadsCommon.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -28,7 +32,7 @@ const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
  ["cmd_delete", "cmd_copy", "cmd_paste", "cmd_selectAll",
   "downloadsCmd_pauseResume", "downloadsCmd_cancel",
   "downloadsCmd_open", "downloadsCmd_show", "downloadsCmd_retry",
-  "downloadsCmd_openReferrer"];
+  "downloadsCmd_openReferrer", "downloadsCmd_clearDownloads"];
 
 const NOT_AVAILABLE = Number.MAX_VALUE;
 
@@ -826,7 +830,7 @@ DownloadsPlacesView.prototype = {
       }
       else {
         let before = this._lastSessionDownloadElement ?
-          this._lastSessionDownloadElement.nextSibling : this._richlistbox.firstchild;
+          this._lastSessionDownloadElement.nextSibling : this._richlistbox.firstChild;
         this._richlistbox.insertBefore(shell.element, before);
       }
     }
@@ -965,6 +969,7 @@ DownloadsPlacesView.prototype = {
   sortingChanged: function() {},
   nodeMoved: function() {},
   nodeURIChanged: function() {},
+  batching: function() {},
 
   get controller() this._richlistbox.controller,
 
@@ -1012,6 +1017,8 @@ DownloadsPlacesView.prototype = {
         return true;
       case "cmd_paste":
         return this._canDownloadClipboardURL();
+      case "downloadsCmd_clearDownloads":
+        return !!this._richlistbox.firstChild;
       default:
         return Array.every(selectedElements, function(element) {
           return element._shell.isCommandEnabled(aCommand);
@@ -1072,6 +1079,18 @@ DownloadsPlacesView.prototype = {
         break;
       case "cmd_paste":
         this._downloadURLFromClipboard();
+        break;
+      case "downloadsCmd_clearDownloads":
+        if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+          Services.downloads.cleanUpPrivate();
+        } else {
+          Services.downloads.cleanUp();
+        }
+        if (this.result) {
+          Cc["@mozilla.org/browser/download-history;1"]
+            .getService(Ci.nsIDownloadHistory)
+            .removeAllDownloads();
+        }
         break;
       default: {
         let selectedElements = this._richlistbox.selectedItems;
