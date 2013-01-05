@@ -63,7 +63,6 @@ function reflectString(aParameters)
     img: [ "align" ],
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
     link: [ "crossOrigin" ],
-    script: [ "crossOrigin" ],
     source: [ "media" ],
     table: [ "border", "width" ],
     tbody: [ "align", "vAlign", "ch" ],
