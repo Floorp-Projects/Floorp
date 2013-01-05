@@ -1681,7 +1681,7 @@ function doTestActionOverride(aCallback)
       }
       if (++index == kTests.length) {
         SpecialPowers.setIntPref("mousewheel.default.action", 1);
-        SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
+        SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
         SimpleTest.executeSoon(aCallback);
       } else {
         doIt();
@@ -1696,8 +1696,11 @@ function runTests()
   SpecialPowers.setBoolPref("general.smoothScroll", false);
 
   SpecialPowers.setIntPref("mousewheel.default.action", 1);      // scroll
+  SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
   SpecialPowers.setIntPref("mousewheel.with_shift.action", 2);   // history
+  SpecialPowers.setIntPref("mousewheel.with_shift.action.override_x", -1);
   SpecialPowers.setIntPref("mousewheel.with_control.action", 3); // zoom
+  SpecialPowers.setIntPref("mousewheel.with_control.action.override_x", -1);
 
   const kSettings = [
     { description: "all delta values are not customized",
@@ -1751,8 +1754,11 @@ function finishTests()
   SpecialPowers.clearUserPref("general.smoothScroll");
 
   SpecialPowers.clearUserPref("mousewheel.default.action");
+  SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
   SpecialPowers.clearUserPref("mousewheel.with_shift.action");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action.override_x");
   SpecialPowers.clearUserPref("mousewheel.with_control.action");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action.override_x");
 
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");

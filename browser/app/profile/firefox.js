@@ -536,6 +536,11 @@ pref("mousewheel.with_shift.action", 1);
 // acceleration is the best modifier for zoom-in/out.  However, we should keep
 // the control key setting for backward compatibility.
 pref("mousewheel.with_meta.action", 3); // command key on Mac
+// Disable control-/meta-modified horizontal mousewheel events, since
+// those are used on Mac as part of modified swipe gestures (e.g.
+// Left swipe+Cmd = go back in a new tab).
+pref("mousewheel.with_control.action.override_x", 0);
+pref("mousewheel.with_meta.action.override_x", 0);
 #else
 pref("mousewheel.with_alt.action", 1);
 pref("mousewheel.with_shift.action", 2);
