@@ -650,7 +650,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(eb264079-8766-4e66-b9bf-2c8b586c74d3)]
+[scriptable, uuid(e4d40863-ee3c-4094-9fc0-18c3245d97ef)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -805,11 +805,15 @@ interface nsINavHistoryObserver : nsISupports
    *        anymore visits for it.
    * @param aReason
    *        Indicates the reason for the removal.  see REASON_* constants.
+   * @param aTransitionType
+   *        If it's a valid TRANSITION_* value, all visits of the specified type
+   *        have been removed.
    */
   void onDeleteVisits(in nsIURI aURI,
                       in PRTime aVisitTime,
                       in ACString aGUID,
-                      in unsigned short aReason);
+                      in unsigned short aReason,
+                      in unsigned long aTransitionType);
 };
 
 

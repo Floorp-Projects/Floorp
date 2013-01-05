@@ -2,19 +2,12 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * This file tests the nsIDownloadHistory interface.
+ * This file tests the nsIDownloadHistory Places implementation.
  */
-
-////////////////////////////////////////////////////////////////////////////////
-/// Globals
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
                                    "@mozilla.org/browser/download-history;1",
                                    "nsIDownloadHistory");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gHistory",
-                                   "@mozilla.org/browser/history;1",
-                                   "mozIAsyncHistory");
 
 const DOWNLOAD_URI = NetUtil.newURI("http://www.example.com/");
 const REFERRER_URI = NetUtil.newURI("http://www.example.org/");
@@ -24,7 +17,7 @@ const PRIVATE_URI = NetUtil.newURI("http://www.example.net/");
  * Waits for the first visit notification to be received.
  *
  * @param aCallback
- *        This function is called with the same arguments of onVisit.
+ *        Callback function to be called with the same arguments of onVisit.
  */
 function waitForOnVisit(aCallback) {
   let historyObserver = {
@@ -38,33 +31,38 @@ function waitForOnVisit(aCallback) {
 }
 
 /**
- * Checks to see that a URI is in the database.
+ * Waits for the first onDeleteURI notification to be received.
  *
- * @param aURI
- *        The URI to check.
- * @param aExpected
- *        Boolean result expected from the db lookup.
+ * @param aCallback
+ *        Callback function to be called with the same arguments of onDeleteURI.
  */
-function uri_in_db(aURI, aExpected)
-{
-  let options = PlacesUtils.history.getNewQueryOptions();
-  options.maxResults = 1;
-  options.includeHidden = true;
-
-  let query = PlacesUtils.history.getNewQuery();
-  query.uri = aURI;
-
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;
-
-  do_check_eq(root.childCount, aExpected ? 1 : 0);
-
-  // Close the container explicitly to free resources up earlier.
-  root.containerOpen = false;
+function waitForOnDeleteURI(aCallback) {
+  let historyObserver = {
+    __proto__: NavHistoryObserver.prototype,
+    onDeleteURI: function HO_onDeleteURI() {
+      PlacesUtils.history.removeObserver(this);
+      aCallback.apply(null, arguments);
+    }
+  };
+  PlacesUtils.history.addObserver(historyObserver, false);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Tests
+/**
+ * Waits for the first onDeleteVisits notification to be received.
+ *
+ * @param aCallback
+ *        Callback function to be called with the same arguments of onDeleteVisits.
+ */
+function waitForOnDeleteVisits(aCallback) {
+  let historyObserver = {
+    __proto__: NavHistoryObserver.prototype,
+    onDeleteVisits: function HO_onDeleteVisits() {
+      PlacesUtils.history.removeObserver(this);
+      aCallback.apply(null, arguments);
+    }
+  };
+  PlacesUtils.history.addObserver(historyObserver, false);
+}
 
 function run_test()
 {
@@ -76,18 +74,69 @@ add_test(function test_dh_is_from_places()
   // Test that this nsIDownloadHistory is the one places implements.
   do_check_true(gDownloadHistory instanceof Ci.mozIAsyncHistory);
 
-  promiseClearHistory().then(run_next_test);
+  run_next_test();
 });
 
-add_test(function test_dh_addDownload()
+add_test(function test_dh_addRemoveDownload()
 {
   waitForOnVisit(function DHAD_onVisit(aURI) {
     do_check_true(aURI.equals(DOWNLOAD_URI));
 
     // Verify that the URI is already available in results at this time.
-    uri_in_db(DOWNLOAD_URI, true);
+    do_check_true(!!page_in_database(DOWNLOAD_URI));
 
-    promiseClearHistory().then(run_next_test);
+    waitForOnDeleteURI(function DHRAD_onDeleteURI(aURI) {
+      do_check_true(aURI.equals(DOWNLOAD_URI));
+
+      // Verify that the URI is already available in results at this time.
+      do_check_false(!!page_in_database(DOWNLOAD_URI));
+
+      run_next_test();
+    });
+    gDownloadHistory.removeAllDownloads();
+  });
+
+  gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
+});
+
+add_test(function test_dh_addMultiRemoveDownload()
+{
+  promiseAddVisits({ uri: DOWNLOAD_URI,
+                     transition: TRANSITION_TYPED }).then(function () {
+    waitForOnVisit(function DHAD_onVisit(aURI) {
+      do_check_true(aURI.equals(DOWNLOAD_URI));
+      do_check_true(!!page_in_database(DOWNLOAD_URI));
+
+      waitForOnDeleteVisits(function DHRAD_onDeleteVisits(aURI) {
+        do_check_true(aURI.equals(DOWNLOAD_URI));
+        do_check_true(!!page_in_database(DOWNLOAD_URI));
+
+        promiseClearHistory().then(run_next_test);
+      });
+      gDownloadHistory.removeAllDownloads();
+    });
+
+    gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
+  });
+});
+
+add_test(function test_dh_addBookmarkRemoveDownload()
+{
+  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                       DOWNLOAD_URI,
+                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                       "A bookmark");
+  waitForOnVisit(function DHAD_onVisit(aURI) {
+    do_check_true(aURI.equals(DOWNLOAD_URI));
+    do_check_true(!!page_in_database(DOWNLOAD_URI));
+
+    waitForOnDeleteVisits(function DHRAD_onDeleteVisits(aURI) {
+      do_check_true(aURI.equals(DOWNLOAD_URI));
+      do_check_true(!!page_in_database(DOWNLOAD_URI));
+
+      promiseClearHistory().then(run_next_test);
+    });
+    gDownloadHistory.removeAllDownloads();
   });
 
   gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
@@ -105,7 +154,7 @@ add_test(function test_dh_addDownload_referrer()
       do_check_eq(aReferringID, referrerVisitId);
 
       // Verify that the URI is already available in results at this time.
-      uri_in_db(DOWNLOAD_URI, true);
+      do_check_true(!!page_in_database(DOWNLOAD_URI));
 
       promiseClearHistory().then(run_next_test);
     });
@@ -115,7 +164,7 @@ add_test(function test_dh_addDownload_referrer()
 
   // Note that we don't pass the optional callback argument here because we must
   // ensure that we receive the onVisit notification before we call addDownload.
-  gHistory.updatePlaces({
+  PlacesUtils.asyncHistory.updatePlaces({
     uri: REFERRER_URI,
     visits: [{
       transitionType: Ci.nsINavHistoryService.TRANSITION_TYPED,
@@ -133,8 +182,8 @@ add_test(function test_dh_addDownload_disabledHistory()
     // database access is serialized on the same worker thread.
     do_check_true(aURI.equals(DOWNLOAD_URI));
 
-    uri_in_db(DOWNLOAD_URI, true);
-    uri_in_db(PRIVATE_URI, false);
+    do_check_true(!!page_in_database(DOWNLOAD_URI));
+    do_check_false(!!page_in_database(PRIVATE_URI));
 
     promiseClearHistory().then(run_next_test);
   });
