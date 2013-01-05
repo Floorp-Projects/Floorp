@@ -122,7 +122,7 @@ nsViewManager::~nsViewManager()
   mPresShell = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsViewManager, nsIViewManager)
+NS_IMPL_ISUPPORTS1(nsViewManager, nsViewManager)
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
@@ -154,12 +154,6 @@ nsViewManager::CreateView(const nsRect& aBounds,
     v->SetDimensions(dim, false);
   }
   return v;
-}
-
-NS_IMETHODIMP_(nsView*)
-nsViewManager::GetRootView()
-{
-  return mRootView;
 }
 
 NS_IMETHODIMP nsViewManager::SetRootView(nsView *aView)
@@ -278,7 +272,7 @@ static nsRegion ConvertRegionBetweenViews(const nsRegion& aIn,
   return out;
 }
 
-nsView* nsIViewManager::GetDisplayRootFor(nsView* aView)
+nsView* nsViewManager::GetDisplayRootFor(nsView* aView)
 {
   nsView *displayRoot = aView;
   for (;;) {
@@ -571,7 +565,7 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
     if (!shell || shell->ShouldIgnoreInvalidation()) {
       return true;
     }
-    nsView* view = aVM->GetRootViewImpl()->GetParent();
+    nsView* view = aVM->GetRootView()->GetParent();
     aVM = view ? view->GetViewManagerInternal() : nullptr;
   }
   return false;
@@ -1107,7 +1101,7 @@ NS_IMETHODIMP nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
   return NS_OK;
 }
 
-nsIViewManager*
+nsViewManager*
 nsViewManager::IncrementDisableRefreshCount()
 {
   if (!IsRootVM()) {

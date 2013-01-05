@@ -66,7 +66,7 @@
 #include "nsDOMJSUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsView.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIScriptChannel.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsITimedChannel.h"
@@ -3249,7 +3249,7 @@ PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
   nsCOMPtr<nsIDOMWindow> domwin(doc->GetWindow());
 
   nsCOMPtr<nsIWidget> widget;
-  nsIViewManager* vm = presShell->GetViewManager();
+  nsViewManager* vm = presShell->GetViewManager();
   if (vm) {
     vm->GetWidget(getter_AddRefs(widget));
   }
@@ -5048,7 +5048,7 @@ nsDocShell::Repaint(bool aForce)
     nsCOMPtr<nsIPresShell> presShell =GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-    nsIViewManager* viewManager = presShell->GetViewManager();
+    nsViewManager* viewManager = presShell->GetViewManager();
     NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
     NS_ENSURE_SUCCESS(viewManager->InvalidateAllViews(), NS_ERROR_FAILURE);
@@ -5115,7 +5115,7 @@ nsDocShell::GetVisibility(bool * aVisibility)
         return NS_OK;
 
     // get the view manager
-    nsIViewManager* vm = presShell->GetViewManager();
+    nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
     // get the root view
@@ -7388,7 +7388,7 @@ nsDocShell::RestoreFromHistory()
 
     nsCOMPtr<nsIPresShell> oldPresShell = GetPresShell();
     if (oldPresShell) {
-        nsIViewManager *vm = oldPresShell->GetViewManager();
+        nsViewManager *vm = oldPresShell->GetViewManager();
         if (vm) {
             nsView *oldRootView = vm->GetRootView();
 
@@ -7609,7 +7609,7 @@ nsDocShell::RestoreFromHistory()
 
     nsCOMPtr<nsIPresShell> shell = GetPresShell();
 
-    nsIViewManager *newVM = shell ? shell->GetViewManager() : nullptr;
+    nsViewManager *newVM = shell ? shell->GetViewManager() : nullptr;
     nsView *newRootView = newVM ? newVM->GetRootView() : nullptr;
 
     // Insert the new root view at the correct location in the view tree.
@@ -7625,7 +7625,7 @@ nsDocShell::RestoreFromHistory()
         rootViewSibling = nullptr;
     }
     if (rootViewParent && newRootView && newRootView->GetParent() != rootViewParent) {
-        nsIViewManager *parentVM = rootViewParent->GetViewManager();
+        nsViewManager *parentVM = rootViewParent->GetViewManager();
         if (parentVM) {
             // InsertChild(parent, child, sib, true) inserts the child after
             // sib in content order, which is before sib in view order. BUT
