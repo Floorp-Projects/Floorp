@@ -8,6 +8,6 @@
 <!ENTITY privatebrowsingpage.issueDesc.normal       "You are not in a private tab.">
 
 <!ENTITY privatebrowsingpage.description            "In private tabs, &brandShortName; won't keep any browser history, search history, download history, web form history, cookies, or temporary internet files. However, files you download and bookmarks you make will be kept.">
-<!ENTITY privatebrowsingpage.description.private    "&privatebrowsingpage.issueDesc.private; &privatebrowsingpage.description;"
+<!ENTITY privatebrowsingpage.description.private    "&privatebrowsingpage.issueDesc.private; &privatebrowsingpage.description;">
 
 <!ENTITY privatebrowsingpage.moreInfo               "While this device won't have a record of your browsing history, your internet service provider can still track the pages you visit.">
