@@ -63,8 +63,7 @@ browser.jar:
         skin/classic/browser/webRTC-shareDevice-64.png
         skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
         skin/classic/browser/downloads/download-glow.png             (downloads/download-glow.png)
-        skin/classic/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
-        skin/classic/browser/downloads/download-notification-start.png (downloads/download-notification-start.png)
+        skin/classic/browser/downloads/download-notification.png     (downloads/download-notification.png)
         skin/classic/browser/downloads/download-summary.png          (downloads/download-summary.png)
 *       skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
 *       skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
@@ -284,8 +283,7 @@ browser.jar:
         skin/classic/aero/browser/webRTC-shareDevice-64.png
         skin/classic/aero/browser/downloads/buttons.png              (downloads/buttons-aero.png)
         skin/classic/aero/browser/downloads/download-glow.png        (downloads/download-glow.png)
-        skin/classic/aero/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
-        skin/classic/aero/browser/downloads/download-notification-start.png (downloads/download-notification-start.png)
+        skin/classic/aero/browser/downloads/download-notification.png (downloads/download-notification.png)
         skin/classic/aero/browser/downloads/download-summary.png     (downloads/download-summary.png)
 *       skin/classic/aero/browser/downloads/downloads.css            (downloads/downloads-aero.css)
 *       skin/classic/aero/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay-aero.css)

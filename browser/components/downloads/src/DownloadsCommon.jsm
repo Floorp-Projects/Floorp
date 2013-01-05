@@ -985,12 +985,7 @@ DownloadsDataCtor.prototype = {
 
     if (isNew && !dataItem.newDownloadNotified) {
       dataItem.newDownloadNotified = true;
-      this._notifyDownloadEvent("start");
-    }
-
-    // This is a final state of which we are only notified once.
-    if (dataItem.done) {
-      this._notifyDownloadEvent("finish");
+      this._notifyNewDownload();
     }
   },
 
@@ -1047,13 +1042,10 @@ DownloadsDataCtor.prototype = {
   },
 
   /**
-   * Displays a new or finished download notification in the most recent browser
-   * window, if one is currently available with the required privacy type.
-   *
-   * @param aType
-   *        Set to "start" for new downloads, "finish" for completed downloads.
+   * Displays a new download notification in the most recent browser window, if
+   * one is currently available.
    */
-  _notifyDownloadEvent: function DD_notifyDownloadEvent(aType)
+  _notifyNewDownload: function DD_notifyNewDownload()
   {
     if (DownloadsCommon.useToolkitUI) {
       return;
@@ -1069,7 +1061,7 @@ DownloadsDataCtor.prototype = {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost
       // browser window, if the status indicator is already visible.
-      browserWin.DownloadsIndicatorView.showEventNotification(aType);
+      browserWin.DownloadsIndicatorView.showEventNotification();
       return;
     }
     this.panelHasShownBefore = true;

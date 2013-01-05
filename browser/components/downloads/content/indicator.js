@@ -349,11 +349,8 @@ const DownloadsIndicatorView = {
   /**
    * If the status indicator is visible in its assigned position, shows for a
    * brief time a visual notification of a relevant event, like a new download.
-   *
-   * @param aType
-   *        Set to "start" for new downloads, "finish" for completed downloads.
    */
-  showEventNotification: function DIV_showEventNotification(aType)
+  showEventNotification: function DIV_showEventNotification()
   {
     if (!this._initialized) {
       return;
@@ -369,7 +366,7 @@ const DownloadsIndicatorView = {
       DownloadsButton.updatePosition();
 
       let indicator = this.indicator;
-      indicator.setAttribute("notification", aType);
+      indicator.setAttribute("notification", "true");
       this._notificationTimeout = setTimeout(
         function () indicator.removeAttribute("notification"), 1000);
     }
@@ -489,7 +486,7 @@ const DownloadsIndicatorView = {
     if (this._attention != aValue) {
       this._attention = aValue;
       if (aValue) {
-        this.indicator.setAttribute("attention", "true");
+        this.indicator.setAttribute("attention", "true")
       } else {
         this.indicator.removeAttribute("attention");
       }
