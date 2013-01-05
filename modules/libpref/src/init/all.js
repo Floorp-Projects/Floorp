@@ -3938,3 +3938,8 @@ pref("dom.placeholder.show_on_focus", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
+// If the user puts a finger down on an element and we think the user
+// might be executing a pan gesture, how long do we wait before
+// tentatively deciding the gesture is actually a tap and activating
+// the target element?
+pref("ui.touch_activation.delay_ms", 50);

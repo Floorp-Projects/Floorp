@@ -7142,7 +7142,12 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
     canStoreInRuleTree = false;
     column->mColumnRuleColorIsForeground = false;
     if (parent->mColumnRuleColorIsForeground) {
-      column->mColumnRuleColor = parentContext->GetStyleColor()->mColor;
+      if (parentContext) {
+        column->mColumnRuleColor = parentContext->GetStyleColor()->mColor;
+      } else {
+        nsStyleColor defaultColumnRuleColor(mPresContext);
+        column->mColumnRuleColor = defaultColumnRuleColor.mColor;
+      }
     } else {
       column->mColumnRuleColor = parent->mColumnRuleColor;
     }

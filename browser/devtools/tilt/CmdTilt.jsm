@@ -5,11 +5,11 @@
 
 this.EXPORTED_SYMBOLS = [ ];
 
+Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 Components.utils.import("resource:///modules/devtools/gcli.jsm");
-Components.utils.import("resource:///modules/HUDService.jsm");
-Components.utils.import("resource:///modules/devtools/Tilt.jsm");
 
-
+XPCOMUtils.defineLazyModuleGetter(this, "TiltManager",
+                                  "resource:///modules/devtools/Tilt.jsm");
 /**
  * 'tilt' command
  */
@@ -46,6 +46,22 @@ gcli.addCommand({
   buttonClass: "command-button",
   tooltipText: gcli.lookup("tiltToggleTooltip"),
   hidden: true,
+  state: {
+    isChecked: function(aTarget) {
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      return !!TiltManager.getTiltForBrowser(browserWindow).currentInstance;
+    },
+    onChange: function(aTarget, aChangeHandler) {
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      let tilt = TiltManager.getTiltForBrowser(browserWindow);
+      tilt.on("change", aChangeHandler);
+    },
+    offChange: function(aTarget, aChangeHandler) {
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      let tilt = TiltManager.getTiltForBrowser(browserWindow);
+      tilt.off("change", aChangeHandler);
+    },
+  },
   exec: function(args, context) {
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);

@@ -1683,12 +1683,11 @@ VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
     // Dispatch this action after all the nodes have been drawn, so that
     // the transition efects can take place.
     this.window.setTimeout(function(aTarget) {
-      aTarget.setAttribute("changed", "");
-
       aTarget.addEventListener("transitionend", function onEvent() {
         aTarget.removeEventListener("transitionend", onEvent, false);
         aTarget.removeAttribute("changed");
       }, false);
+      aTarget.setAttribute("changed", "");
     }.bind(this, currVariable.target), LAZY_EMPTY_DELAY + 1);
   }
 };

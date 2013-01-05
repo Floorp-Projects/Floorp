@@ -829,6 +829,15 @@ RenderFrameParent::RecvCancelDefaultPanZoom()
   return true;
 }
 
+bool
+RenderFrameParent::RecvDetectScrollableSubframe()
+{
+  if (mPanZoomController) {
+    mPanZoomController->DetectScrollableSubframe();
+  }
+  return true;
+}
+
 PLayersParent*
 RenderFrameParent::AllocPLayers()
 {

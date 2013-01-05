@@ -394,47 +394,61 @@ let DebuggerView = {
    *        An object containing some of the following boolean properties:
    *        - visible: true if the pane should be shown, false for hidden
    *        - animated: true to display an animation on toggle
+   *        - delayed: true to wait a few cycles before toggle
    *        - callback: a function to invoke when the panes toggle finishes
    */
   togglePanes: function DV__togglePanes(aFlags = {}) {
     // Avoid useless toggles.
     if (aFlags.visible == !this.panesHidden) {
-      aFlags.callback && aFlags.callback();
+      if (aFlags.callback) aFlags.callback();
       return;
     }
 
-    if (aFlags.visible) {
-      this._stackframesAndBreakpoints.style.marginLeft = "0";
-      this._variablesAndExpressions.style.marginRight = "0";
-      this._togglePanesButton.removeAttribute("panesHidden");
-      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
-    } else {
-      let marginL = ~~(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
-      let marginR = ~~(this._variablesAndExpressions.getAttribute("width")) + 1;
-      this._stackframesAndBreakpoints.style.marginLeft = -marginL + "px";
-      this._variablesAndExpressions.style.marginRight = -marginR + "px";
-      this._togglePanesButton.setAttribute("panesHidden", "true");
-      this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
+    // Computes and sets the panes margins in order to hide or show them.
+    function set() {
+      if (aFlags.visible) {
+        this._stackframesAndBreakpoints.style.marginLeft = "0";
+        this._variablesAndExpressions.style.marginRight = "0";
+        this._togglePanesButton.removeAttribute("panesHidden");
+        this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("collapsePanes"));
+      } else {
+        let marginL = ~~(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
+        let marginR = ~~(this._variablesAndExpressions.getAttribute("width")) + 1;
+        this._stackframesAndBreakpoints.style.marginLeft = -marginL + "px";
+        this._variablesAndExpressions.style.marginRight = -marginR + "px";
+        this._togglePanesButton.setAttribute("panesHidden", "true");
+        this._togglePanesButton.setAttribute("tooltiptext", L10N.getStr("expandPanes"));
+      }
+
+      if (aFlags.animated) {
+        // Displaying the panes may have the effect of triggering scrollbars to
+        // appear in the source editor, which would render the currently
+        // highlighted line to appear behind them in some cases.
+        window.addEventListener("transitionend", function onEvent() {
+          window.removeEventListener("transitionend", onEvent, false);
+          DebuggerView.updateEditor();
+
+          // Invoke the callback when the transition ended.
+          if (aFlags.callback) aFlags.callback();
+        }, false);
+      } else {
+        // Invoke the callback immediately since there's no transition.
+        if (aFlags.callback) aFlags.callback();
+      }
     }
 
     if (aFlags.animated) {
       this._stackframesAndBreakpoints.setAttribute("animated", "");
       this._variablesAndExpressions.setAttribute("animated", "");
-
-      // Displaying the panes may have the effect of triggering scrollbars to
-      // appear in the source editor, which would render the currently
-      // highlighted line to appear behind them in some cases.
-      let self = this;
-
-      window.addEventListener("transitionend", function onEvent() {
-        window.removeEventListener("transitionend", onEvent, false);
-        aFlags.callback && aFlags.callback();
-        self.updateEditor();
-      }, false);
     } else {
       this._stackframesAndBreakpoints.removeAttribute("animated");
       this._variablesAndExpressions.removeAttribute("animated");
-      aFlags.callback && aFlags.callback();
+    }
+
+    if (aFlags.delayed) {
+      window.setTimeout(set.bind(this), PANES_APPEARANCE_DELAY);
+    } else {
+      set.call(this);
     }
   },
 
@@ -450,6 +464,7 @@ let DebuggerView = {
       DebuggerView.togglePanes({
         visible: true,
         animated: true,
+        delayed: true,
         callback: aCallback
       });
     }, PANES_APPEARANCE_DELAY);
