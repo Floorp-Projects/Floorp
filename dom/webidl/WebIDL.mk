@@ -96,6 +96,7 @@ webidl_files = \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGDescElement.webidl \
   SVGElement.webidl \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
