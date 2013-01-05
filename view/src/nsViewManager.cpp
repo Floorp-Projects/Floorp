@@ -46,22 +46,6 @@
 
 #undef DEBUG_MOUSE_LOCATION
 
-static bool
-IsRefreshDriverPaintingEnabled()
-{
-  static bool sRefreshDriverPaintingEnabled;
-  static bool sRefreshDriverPaintingPrefCached = false;
-
-  if (!sRefreshDriverPaintingPrefCached) {
-    sRefreshDriverPaintingPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sRefreshDriverPaintingEnabled,
-                                          "viewmanager.refresh-driver-painting.enabled",
-                                          true);
-  }
-
-  return sRefreshDriverPaintingEnabled;
-}
-
 int32_t nsViewManager::mVMCount = 0;
 
 // Weakly held references to all of the view managers
@@ -348,7 +332,6 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
       printf("--COMPOSITE-- %p\n", mPresShell);
 #endif
       mPresShell->Paint(aView, damageRegion,
-                        (IsRefreshDriverPaintingEnabled() ? 0 : nsIPresShell::PAINT_LAYERS) |
                         nsIPresShell::PAINT_COMPOSITE |
                         (aWillSendDidPaint ? nsIPresShell::PAINT_WILL_SEND_DID_PAINT : 0));
 #ifdef DEBUG_INVALIDATIONS
@@ -389,40 +372,38 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   // Push out updates after we've processed the children; ensures that
   // damage is applied based on the final widget geometry
   if (aFlushDirtyRegion) {
-    if (IsRefreshDriverPaintingEnabled()) {
-      nsIWidget *widget = aView->GetWidget();
-      if (widget && widget->NeedsPaint()) {
-        // If an ancestor widget was hidden and then shown, we could
-        // have a delayed resize to handle.
-        for (nsViewManager *vm = this; vm;
-             vm = vm->mRootView->GetParent()
-                    ? vm->mRootView->GetParent()->GetViewManager()
-                    : nullptr) {
-          if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-              vm->mRootView->IsEffectivelyVisible() &&
-              mPresShell && mPresShell->IsVisible()) {
-            vm->FlushDelayedResize(true);
-            vm->InvalidateView(vm->mRootView);
-          }
+    nsIWidget *widget = aView->GetWidget();
+    if (widget && widget->NeedsPaint()) {
+      // If an ancestor widget was hidden and then shown, we could
+      // have a delayed resize to handle.
+      for (nsViewManager *vm = this; vm;
+           vm = vm->mRootView->GetParent()
+                  ? vm->mRootView->GetParent()->GetViewManager()
+                  : nullptr) {
+        if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+            vm->mRootView->IsEffectivelyVisible() &&
+            mPresShell && mPresShell->IsVisible()) {
+          vm->FlushDelayedResize(true);
+          vm->InvalidateView(vm->mRootView);
         }
-
-        NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
-
-        SetPainting(true);
-#ifdef DEBUG_INVALIDATIONS
-        printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
-#endif
-        nsAutoScriptBlocker scriptBlocker;
-        NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
-        mPresShell->Paint(aView, nsRegion(),
-                          nsIPresShell::PAINT_LAYERS |
-                          nsIPresShell::PAINT_WILL_SEND_DID_PAINT);
-#ifdef DEBUG_INVALIDATIONS
-        printf("---- PAINT END ----\n");
-#endif
-        aView->SetForcedRepaint(false);
-        SetPainting(false);
       }
+
+      NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
+
+      SetPainting(true);
+#ifdef DEBUG_INVALIDATIONS
+      printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
+#endif
+      nsAutoScriptBlocker scriptBlocker;
+      NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
+      mPresShell->Paint(aView, nsRegion(),
+                        nsIPresShell::PAINT_LAYERS |
+                        nsIPresShell::PAINT_WILL_SEND_DID_PAINT);
+#ifdef DEBUG_INVALIDATIONS
+      printf("---- PAINT END ----\n");
+#endif
+      aView->SetForcedRepaint(false);
+      SetPainting(false);
     }
     FlushDirtyRegionToWidget(aView);
   }
@@ -635,30 +616,7 @@ void nsViewManager::InvalidateViews(nsView *aView)
 
 void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 {
-  if (!IsRefreshDriverPaintingEnabled() && aWidget && mContext) {
-    // If an ancestor widget was hidden and then shown, we could
-    // have a delayed resize to handle.
-    for (nsViewManager *vm = this; vm;
-         vm = vm->mRootView->GetParent()
-                ? vm->mRootView->GetParent()->GetViewManager()
-                : nullptr) {
-      if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-          vm->mRootView->IsEffectivelyVisible() &&
-          mPresShell && mPresShell->IsVisible()) {
-        vm->FlushDelayedResize(true);
-        vm->InvalidateView(vm->mRootView);
-      }
-    }
-
-    // Flush things like reflows by calling WillPaint on observer presShells.
-    nsRefPtr<nsViewManager> rootVM = RootViewManager();
-    rootVM->CallWillPaintOnObservers(aWillSendDidPaint);
-
-    // Flush view widget geometry updates and invalidations.
-    rootVM->ProcessPendingUpdates();
-  }
-
-  if (aWidget && IsRefreshDriverPaintingEnabled()) {
+  if (aWidget) {
     nsView* view = nsView::GetViewFor(aWidget);
     if (view && view->ForcedRepaint()) {
       ProcessPendingUpdates();
@@ -685,10 +643,6 @@ bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
 
   NS_ASSERTION(IsPaintingAllowed(),
                "shouldn't be receiving paint events while painting is disallowed!");
-
-  if (!(aFlags & nsIWidgetListener::SENT_WILL_PAINT) && !IsRefreshDriverPaintingEnabled()) {
-    WillPaintWindow(aWidget, (aFlags & nsIWidgetListener::WILL_SEND_DID_PAINT));
-  }
 
   // Get the view pointer here since NS_WILL_PAINT might have
   // destroyed it during CallWillPaintOnObservers (bug 378273).
@@ -1052,7 +1006,7 @@ bool nsViewManager::IsViewInserted(nsView *aView)
     while (view != nullptr) {
       if (view == aView) {
         return true;
-      }        
+      }
       view = view->GetNextSibling();
     }
     return false;
@@ -1157,17 +1111,13 @@ nsViewManager::ProcessPendingUpdates()
     return;
   }
 
-  if (IsRefreshDriverPaintingEnabled()) {
-    mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
-      
-    // Flush things like reflows by calling WillPaint on observer presShells.
-    if (mPresShell) {
-      CallWillPaintOnObservers(true);
-    }
-    ProcessPendingUpdatesForView(mRootView, true);
-  } else {
-    ProcessPendingUpdatesForView(mRootView, true);
+  mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
+
+  // Flush things like reflows by calling WillPaint on observer presShells.
+  if (mPresShell) {
+    CallWillPaintOnObservers(true);
   }
+  ProcessPendingUpdatesForView(mRootView, true);
 }
 
 void
@@ -1179,13 +1129,8 @@ nsViewManager::UpdateWidgetGeometry()
   }
 
   if (mHasPendingWidgetGeometryChanges) {
-    if (IsRefreshDriverPaintingEnabled()) {
-      mHasPendingWidgetGeometryChanges = false;
-    }
+    mHasPendingWidgetGeometryChanges = false;
     ProcessPendingUpdatesForView(mRootView, false);
-    if (!IsRefreshDriverPaintingEnabled()) {
-      mHasPendingWidgetGeometryChanges = false;
-    }
   }
 }
 
