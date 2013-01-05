@@ -33,7 +33,7 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 
 #include "nsIDOMHTMLCanvasElement.h"
 #include "gfxContext.h"
@@ -661,7 +661,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
     if (!presShell)
       return NS_ERROR_FAILURE;
-    nsViewManager* viewManager = presShell->GetViewManager();
+    nsIViewManager* viewManager = presShell->GetViewManager();
     if (!viewManager)
       return NS_ERROR_FAILURE;
     nsView* view = viewManager->GetRootView();

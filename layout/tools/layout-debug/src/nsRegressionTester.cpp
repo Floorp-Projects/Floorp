@@ -25,7 +25,7 @@
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsView.h"
 
 

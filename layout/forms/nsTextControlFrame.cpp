@@ -39,7 +39,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
 #include "nsView.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"

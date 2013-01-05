@@ -41,7 +41,7 @@
 #include "nsIURI.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
 #include "nsNetUtil.h"
@@ -883,7 +883,7 @@ TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
   if (content) {
     nsIPresShell* shell = content->OwnerDoc()->GetShell();
     if (shell) {
-      nsViewManager* vm = shell->GetViewManager();
+      nsIViewManager* vm = shell->GetViewManager();
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
       if (widget) {

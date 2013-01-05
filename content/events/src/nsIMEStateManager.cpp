@@ -6,7 +6,7 @@
 
 #include "nsIMEStateManager.h"
 #include "nsCOMPtr.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIPresShell.h"
 #include "nsISupports.h"
 #include "nsPIDOMWindow.h"

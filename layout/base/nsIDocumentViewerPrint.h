@@ -12,7 +12,7 @@ class nsStyleSet;
 class nsIPresShell;
 class nsPresContext;
 class nsIWidget;
-class nsViewManager;
+class nsIViewManager;
 
 // {c6f255cf-cadd-4382-b57f-cd2a9874169b}
 #define NS_IDOCUMENT_VIEWER_PRINT_IID \
@@ -58,7 +58,7 @@ public:
   /**
    * Replaces the current presentation with print preview presentation.
    */
-  virtual void SetPrintPreviewPresentation(nsViewManager* aViewManager,
+  virtual void SetPrintPreviewPresentation(nsIViewManager* aViewManager,
                                            nsPresContext* aPresContext,
                                            nsIPresShell* aPresShell) = 0;
 };
@@ -78,7 +78,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   virtual void     OnDonePrinting(); \
   virtual bool     IsInitializedForPrintPreview(); \
   virtual void     InitializeForPrintPreview(); \
-  virtual void     SetPrintPreviewPresentation(nsViewManager* aViewManager, \
+  virtual void     SetPrintPreviewPresentation(nsIViewManager* aViewManager, \
                                                nsPresContext* aPresContext, \
                                                nsIPresShell* aPresShell);
 

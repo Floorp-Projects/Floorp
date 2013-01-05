@@ -34,7 +34,7 @@ class nsIParser;
 class nsIAtom;
 class nsIChannel;
 class nsIContent;
-class nsViewManager;
+class nsIViewManager;
 class nsNodeInfoManager;
 class nsScriptLoader;
 class nsIApplicationCache;
