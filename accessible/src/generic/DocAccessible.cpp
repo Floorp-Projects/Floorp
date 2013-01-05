@@ -35,7 +35,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsUnicharUtils.h"
 #include "nsIURI.h"
@@ -1253,7 +1253,7 @@ DocAccessible::GetNativeWindow() const
   if (!mPresShell)
     return nullptr;
 
-  nsViewManager* vm = mPresShell->GetViewManager();
+  nsIViewManager* vm = mPresShell->GetViewManager();
   if (!vm)
     return nullptr;
 

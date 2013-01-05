@@ -23,7 +23,7 @@ using mozilla::unused;
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
 #include "nsIWidgetListener.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"

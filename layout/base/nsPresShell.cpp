@@ -72,6 +72,7 @@
 #include "nsCaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMXMLDocument.h"
+#include "nsViewsCID.h"
 #include "nsFrameManager.h"
 #include "nsEventStateManager.h"
 #include "nsIMEStateManager.h"
@@ -787,7 +788,7 @@ PresShell::~PresShell()
 nsresult
 PresShell::Init(nsIDocument* aDocument,
                 nsPresContext* aPresContext,
-                nsViewManager* aViewManager,
+                nsIViewManager* aViewManager,
                 nsStyleSet* aStyleSet,
                 nsCompatibility aCompatMode)
 {
@@ -1856,7 +1857,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<nsViewManager> viewManagerDeathGrip = mViewManager;
+  nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
   // Take this ref after viewManager so it'll make sure to go away first
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
@@ -1896,7 +1897,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
 
         // Kick off a top-down reflow
         AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-        nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
+        nsIViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
         mDirtyRoots.RemoveElement(rootFrame);
         DoReflow(rootFrame, true);
@@ -3734,7 +3735,7 @@ PresShell::IsSafeToFlush() const
 
   if (isSafeToFlush) {
     // Not safe if we are painting
-    nsViewManager* viewManager = GetViewManager();
+    nsIViewManager* viewManager = GetViewManager();
     if (viewManager) {
       bool isPainting = false;
       viewManager->IsPainting(isPainting);
@@ -3807,7 +3808,7 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
   NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
   // Make sure the view manager stays alive.
-  nsRefPtr<nsViewManager> viewManagerDeathGrip = mViewManager;
+  nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
   if (isSafeToFlush && mViewManager) {
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
@@ -5185,7 +5186,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
 
   // We always dispatch the event to the pres shell that contains the view that
   // the mouse is over. pointVM is the VM of that pres shell.
-  nsViewManager *pointVM = nullptr;
+  nsIViewManager *pointVM = nullptr;
 
   // This could be a bit slow (traverses entire view hierarchy)
   // but it's OK to do it once per synthetic mouse event
@@ -7651,7 +7652,7 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
       nsAutoScriptBlocker scriptBlocker;
       WillDoReflow();
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-      nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
+      nsIViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
       do {
         // Send an incremental reflow notification to the target frame.
@@ -7924,6 +7925,8 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
 #ifdef DEBUG
 #include "nsIURL.h"
 #include "nsILinkHandler.h"
+
+static NS_DEFINE_CID(kViewManagerCID, NS_VIEW_MANAGER_CID);
 
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
@@ -8267,7 +8270,7 @@ PresShell::VerifyIncrementalReflow()
   nsIWidget* parentWidget = rootView->GetWidget();
 
   // Create a new view manager.
-  nsRefPtr<nsViewManager> vm = new nsViewManager();
+  nsCOMPtr<nsIViewManager> vm = do_CreateInstance(kViewManagerCID);
   NS_ENSURE_TRUE(vm, false);
   rv = vm->Init(dc);
   NS_ENSURE_SUCCESS(rv, false);

@@ -45,7 +45,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIWebBrowserChrome.h"
 #include "nsLayoutUtils.h"
 #include "nsIPluginWidget.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIAppShell.h"
@@ -693,7 +693,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   
 #if defined(XP_WIN) || defined(XP_OS2)
   void** pvalue = (void**)value;
-  nsViewManager* vm = mObjectFrame->PresContext()->GetPresShell()->GetViewManager();
+  nsIViewManager* vm = mObjectFrame->PresContext()->GetPresShell()->GetViewManager();
   if (!vm)
     return NS_ERROR_FAILURE;
 #if defined(XP_WIN)
@@ -743,14 +743,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 #endif
   // simply return the topmost document window
   nsCOMPtr<nsIWidget> widget;
-  vm->GetRootWidget(getter_AddRefs(widget));
+  nsresult rv = vm->GetRootWidget(getter_AddRefs(widget));            
   if (widget) {
     *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
   } else {
     NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
   }
 
-  return NS_OK;
+  return rv;
 #elif (defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)) && defined(MOZ_X11)
   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
   nsIWidget* win = mObjectFrame->GetNearestWidget();

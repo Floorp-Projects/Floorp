@@ -115,7 +115,7 @@
 #include "nsTextEditorState.h"
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsParserConstants.h"
@@ -6435,11 +6435,11 @@ nsContentUtils::WidgetForDocument(nsIDocument* aDoc)
 {
   nsIPresShell* shell = FindPresShellForDocument(aDoc);
   if (shell) {
-    nsViewManager* VM = shell->GetViewManager();
+    nsIViewManager* VM = shell->GetViewManager();
     if (VM) {
       nsView* rootView = VM->GetRootView();
       if (rootView) {
-        nsView* displayRoot = nsViewManager::GetDisplayRootFor(rootView);
+        nsView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
         if (displayRoot) {
           return displayRoot->GetNearestWidget(nullptr);
         }

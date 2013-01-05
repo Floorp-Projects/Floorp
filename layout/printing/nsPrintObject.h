@@ -12,7 +12,7 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDocShellTreeOwner.h"
@@ -46,7 +46,7 @@ public:
 
   nsRefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
-  nsRefPtr<nsViewManager> mViewManager;
+  nsCOMPtr<nsIViewManager> mViewManager;
 
   nsCOMPtr<nsIContent>     mContent;
   PrintObjectType  mFrameType;

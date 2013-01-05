@@ -61,7 +61,7 @@
 #include "imgIContainer.h"
 #include "nsContextMenuInfo.h"
 #include "nsPresContext.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsView.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMDragEvent.h"
@@ -1443,7 +1443,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
 
     nsIWidget* widget = nullptr;
     if (shell) {
-      nsViewManager* vm = shell->GetViewManager();
+      nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
         nsView* view = vm->GetRootView();
         if (view) {

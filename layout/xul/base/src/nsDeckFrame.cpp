@@ -20,7 +20,7 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
 #include "nsDisplayList.h"

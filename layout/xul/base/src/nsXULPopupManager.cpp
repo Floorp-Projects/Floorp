@@ -20,7 +20,7 @@
 #include "nsEventStateManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsIComponentManager.h"
 #include "nsITimer.h"
 #include "nsFocusManager.h"
@@ -2262,7 +2262,7 @@ nsXULMenuCommandEvent::Run()
   if (!pm)
     return NS_OK;
 
-  // The order of the nsViewManager and nsIPresShell COM pointers is
+  // The order of the nsIViewManager and nsIPresShell COM pointers is
   // important below.  We want the pres shell to get released before the
   // associated view manager on exit from this function.
   // See bug 54233.
@@ -2295,7 +2295,7 @@ nsXULMenuCommandEvent::Run()
 
     nsPresContext* presContext = menuFrame->PresContext();
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
-    nsRefPtr<nsViewManager> kungFuDeathGrip = shell->GetViewManager();
+    nsCOMPtr<nsIViewManager> kungFuDeathGrip = shell->GetViewManager();
 
     // Deselect ourselves.
     if (mCloseMenuMode != CloseMenuMode_None)

@@ -40,7 +40,7 @@
 #include "nsIPresShell.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
-#include "nsViewManager.h"
+#include "nsIViewManager.h"
 #include "nsError.h"
 #include "nsMenuFrame.h"
 
