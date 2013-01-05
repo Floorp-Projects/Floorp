@@ -235,6 +235,8 @@ toolbar[iconsize="large"] > #downloads-indicator[attention] > #downloads-indicat
 #downloads-indicator-notification {
   opacity: 0;
   background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 @keyframes downloadsIndicatorNotificationStartRight {
