@@ -951,7 +951,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 #endif
 
     mViewManagerFlushIsPending = false;
-    nsCOMPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
+    nsRefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
     vm->ProcessPendingUpdates();
 #ifdef DEBUG_INVALIDATIONS
     printf("Ending ProcessPendingUpdates\n");
