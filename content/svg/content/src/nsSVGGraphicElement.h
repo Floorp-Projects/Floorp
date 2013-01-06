@@ -11,10 +11,12 @@
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGElement.h"
 #include "SVGAnimatedTransformList.h"
+#include "DOMSVGTests.h"
 
 typedef nsSVGElement nsSVGGraphicElementBase;
 
 class nsSVGGraphicElement : public nsSVGGraphicElementBase,
+                            public DOMSVGTests,
                             public nsIDOMSVGTransformable // : nsIDOMSVGLocatable
 {
 protected:

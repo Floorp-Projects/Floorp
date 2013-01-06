@@ -51,8 +51,8 @@ NS_IMPL_RELEASE_INHERITED(nsSVGPatternElement,nsSVGPatternElementBase)
 DOMCI_NODE_DATA(SVGPatternElement, nsSVGPatternElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGPatternElement)
-  NS_NODE_INTERFACE_TABLE8(nsSVGPatternElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGTests,
+  NS_NODE_INTERFACE_TABLE7(nsSVGPatternElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
                            nsIDOMSVGFitToViewBox, nsIDOMSVGURIReference,
                            nsIDOMSVGPatternElement, nsIDOMSVGUnitTypes)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPatternElement)

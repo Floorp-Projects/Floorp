@@ -262,7 +262,7 @@ nsSVGMarkerElement::UnsetAttr(int32_t aNamespaceID, nsIAtom* aName,
     }
   }
 
-  return nsSVGMarkerElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+  return nsSVGElement::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 //----------------------------------------------------------------------

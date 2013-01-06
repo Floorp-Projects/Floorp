@@ -36,12 +36,11 @@ NS_IMPL_RELEASE_INHERITED(nsSVGAElement, nsSVGAElementBase)
 DOMCI_NODE_DATA(SVGAElement, nsSVGAElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGAElement)
-  NS_NODE_INTERFACE_TABLE8(nsSVGAElement,
+  NS_NODE_INTERFACE_TABLE7(nsSVGAElement,
                            nsIDOMNode,
                            nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGAElement,
-                           nsIDOMSVGTests,
                            nsIDOMSVGURIReference,
                            nsILink,
                            Link)
@@ -292,7 +291,7 @@ nsresult
 nsSVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                          bool aNotify)
 {
-  nsresult rv = nsSVGAElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);
+  nsresult rv = nsSVGElement::UnsetAttr(aNameSpaceID, aAttr, aNotify);
 
   // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState
   // is important here!  The attribute is not unset until UnsetAttr returns, and
