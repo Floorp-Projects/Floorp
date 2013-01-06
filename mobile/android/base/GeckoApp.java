@@ -2360,6 +2360,8 @@ abstract public class GeckoApp
         if (mTextSelection != null)
             mTextSelection.destroy();
 
+        Tabs.getInstance().detachFromActivity(this);
+
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 if (mFavicons != null)
