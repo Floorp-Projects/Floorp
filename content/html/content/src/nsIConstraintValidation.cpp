@@ -8,7 +8,7 @@
 #include "nsAString.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLFormElement.h"
-#include "nsDOMValidityState.h"
+#include "mozilla/dom/ValidityState.h"
 #include "nsIFormControl.h"
 #include "nsContentUtils.h"
 
@@ -33,7 +33,7 @@ nsresult
 nsIConstraintValidation::GetValidity(nsIDOMValidityState** aValidity)
 {
   if (!mValidity) {
-    mValidity = new nsDOMValidityState(this);
+    mValidity = new mozilla::dom::ValidityState(this);
   }
 
   NS_ADDREF(*aValidity = mValidity);
