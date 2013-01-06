@@ -7,12 +7,19 @@
 this.EXPORTED_SYMBOLS = [
   "getAppInfo",
   "updateAppInfo",
+  "makeFakeAppDir",
+  "createFakeCrash",
 ];
 
 
-const {interfaces: Ci, results: Cr, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/services-common/utils.js");
+
 
 let APP_INFO = {
   vendor: "Mozilla",
@@ -71,3 +78,133 @@ this.updateAppInfo = function (obj) {
 
   registrar.registerFactory(id, "XULAppInfo", cid, factory);
 };
+
+// Reference needed in order for fake app dir provider to be active.
+let gFakeAppDirectoryProvider;
+
+/**
+ * Installs a fake UAppData directory.
+ *
+ * This is needed by tests because a UAppData directory typically isn't
+ * present in the test environment.
+ *
+ * This function is suitable for use in different components. If we ever
+ * establish a central location for convenient test helpers, this should
+ * go there.
+ *
+ * We create the new UAppData directory under the profile's directory
+ * because the profile directory is automatically cleaned as part of
+ * test shutdown.
+ *
+ * This returns a promise that will be resolved once the new directory
+ * is created and installed.
+ */
+this.makeFakeAppDir = function () {
+  let dirMode = OS.Constants.libc.S_IRWXU;
+  let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                     .getService(Ci.nsIProperties);
+  let baseFile = dirService.get("ProfD", Ci.nsIFile);
+  let appD = baseFile.clone();
+  appD.append("UAppData");
+
+  if (gFakeAppDirectoryProvider) {
+    return Promise.resolve(appD.path);
+  }
+
+  function makeDir(f) {
+    if (f.exists()) {
+      return;
+    }
+
+    dump("Creating directory: " + f.path + "\n");
+    f.create(Ci.nsIFile.DIRECTORY_TYPE, dirMode);
+  }
+
+  makeDir(appD);
+
+  let reportsD = appD.clone();
+  reportsD.append("Crash Reports");
+
+  let pendingD = reportsD.clone();
+  pendingD.append("pending");
+  let submittedD = reportsD.clone();
+  submittedD.append("submitted");
+
+  makeDir(reportsD);
+  makeDir(pendingD);
+  makeDir(submittedD);
+
+  let provider = {
+    getFile: function (prop, persistent) {
+      persistent.value = true;
+      if (prop == "UAppData") {
+        return appD.clone();
+      }
+
+      throw Cr.NS_ERROR_FAILURE;
+    },
+
+    QueryInterace: function (iid) {
+      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+          iid.equals(Ci.nsISupports)) {
+        return this;
+      }
+
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    },
+  };
+
+  // Register the new provider.
+  dirService.QueryInterface(Ci.nsIDirectoryService)
+            .registerProvider(provider);
+
+  // And undefine the old one.
+  try {
+    dirService.undefine("UAppData");
+  } catch (ex) {};
+
+  gFakeAppDirectoryProvider = provider;
+
+  dump("Successfully installed fake UAppDir\n");
+  return Promise.resolve(appD.path);
+};
+
+
+/**
+ * Creates a fake crash in the Crash Reports directory.
+ *
+ * Currently, we just create a dummy file. A more robust implementation would
+ * create something that actually resembles a crash report file.
+ *
+ * This is very similar to code in crashreporter/tests/browser/head.js.
+ *
+ * FUTURE consolidate code in a shared JSM.
+ */
+this.createFakeCrash = function (submitted=false, date=new Date()) {
+  let id = CommonUtils.generateUUID();
+  let filename;
+
+  let paths = ["Crash Reports"];
+  let mode;
+
+  if (submitted) {
+    paths.push("submitted");
+    filename = "bp-" + id + ".txt";
+    mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR |
+           OS.Constants.libc.S_IRGRP | OS.Constants.libc.S_IROTH;
+  } else {
+    paths.push("pending");
+    filename = id + ".dmp";
+    mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
+  }
+
+  paths.push(filename);
+
+  let file = FileUtils.getFile("UAppData", paths, true);
+  file.create(file.NORMAL_FILE_TYPE, mode);
+  file.lastModifiedTime = date.getTime();
+  dump("Created fake crash: " + id + "\n");
+
+  return id;
+};
+
