@@ -168,6 +168,34 @@ public:
   nsresult SplitData(uint32_t aOffset, nsIContent** aReturn,
                      bool aCloneAfterOriginal = true);
 
+  // WebIDL API
+  // Our XPCOM GetData is just fine for WebIDL
+  void SetData(const nsAString& aData, mozilla::ErrorResult& rv)
+  {
+    rv = SetData(aData);
+  }
+  // nsINode::Length() returns the right thing for our length attribute
+  void SubstringData(uint32_t aStart, uint32_t aCount, nsAString& aReturn,
+                     mozilla::ErrorResult& rv);
+  void AppendData(const nsAString& aData, mozilla::ErrorResult& rv)
+  {
+    rv = AppendData(aData);
+  }
+  void InsertData(uint32_t aOffset, const nsAString& aData,
+                  mozilla::ErrorResult& rv)
+  {
+    rv = InsertData(aOffset, aData);
+  }
+  void DeleteData(uint32_t aOffset, uint32_t aCount, mozilla::ErrorResult& rv)
+  {
+    rv = DeleteData(aOffset, aCount);
+  }
+  void ReplaceData(uint32_t aOffset, uint32_t aCount, const nsAString& aData,
+                   mozilla::ErrorResult& rv)
+  {
+    rv = ReplaceData(aOffset, aCount, aData);
+  }
+
   //----------------------------------------
 
 #ifdef DEBUG

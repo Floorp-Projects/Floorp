@@ -104,11 +104,11 @@ AssertPresShellsAndContextsSane(nsPrintObject* aPO,
   if (!aPO->mPresShell && aPO->mPresContext) {
     ASSERT_AND_NOTE("print object has pres context but no pres shell");
   }
-  if (aPO->mPresContext && aPO->mPresContext->GetPresShell() != aPO->mPresShell) {
+  if (aPO->mPresContext &&
+      aPO->mPresShell &&
+      aPO->mPresContext->GetPresShell() &&
+      aPO->mPresContext->GetPresShell() != aPO->mPresShell) {
     ASSERT_AND_NOTE("print object has mismatching pres shell and pres context");
-  }
-  if (aPO->mPresContext && !aPO->mPresContext->GetPresShell()) {
-    ASSERT_AND_NOTE("mPresShell->GetPresShell() is null");
   }
 
   for (uint32_t i = 0; i < aPO->mKids.Length(); i++) {

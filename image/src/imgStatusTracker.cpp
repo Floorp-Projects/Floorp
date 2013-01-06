@@ -186,13 +186,14 @@ private:
 
 imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
-    mTrackerObserver(new imgStatusTrackerObserver(this)),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
     mIsMultipart(false),
     mHadLastPart(false),
     mBlockingOnload(false)
-{}
+{
+  mTrackerObserver = new imgStatusTrackerObserver(this);
+}
 
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),

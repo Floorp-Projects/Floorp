@@ -1575,7 +1575,7 @@ AddStringToIDVector(JSContext* cx, JS::AutoIdVector& vector, const char* name)
  */
 bool
 XrayResolveOwnProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
-                       jsid id, bool set, JSPropertyDescriptor* desc);
+                       jsid id, JSPropertyDescriptor* desc, unsigned flags);
 
 /**
  * This resolves operations, attributes and constants of the interfaces for obj.

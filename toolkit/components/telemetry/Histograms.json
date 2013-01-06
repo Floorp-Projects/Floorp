@@ -1463,6 +1463,15 @@
     "n_buckets": 10,
     "description": "Time spent checking if Java is enabled (ms)"
   },
+  "PLUGIN_HANG_UI_USER_RESPONSE": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "User response to Plugin Hang UI"
+  },
+  "PLUGIN_HANG_UI_DONT_ASK": {
+    "kind": "boolean",
+    "description": "Whether the user has requested not to see the Plugin Hang UI again"
+  },
   "PLUGIN_SHUTDOWN_MS": {
     "kind": "exponential",
     "high": "5000",

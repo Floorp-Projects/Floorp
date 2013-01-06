@@ -14,7 +14,11 @@ from mozbuild.compilation.warnings import WarningsDatabase
 
 CLANG_TESTS = [
     ('foobar.cpp:123:10: warning: you messed up [-Wfoo]',
-     'foobar.cpp', 123, 10, 'you messed up', '-Wfoo')
+     'foobar.cpp', 123, 10, 'you messed up', '-Wfoo'),
+    ("c_locale_dummy.c:457:1: warning: (near initialization for "
+     "'full_wmonthname[0]') [-Wpointer-sign]",
+     'c_locale_dummy.c', 457, 1,
+     "(near initialization for 'full_wmonthname[0]')", '-Wpointer-sign')
 ]
 
 MSVC_TESTS = [

@@ -151,6 +151,21 @@
                 onget="return this.getAttribute('autocompletesearchparam') || '';"
                 onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
 
+      <property name="searchCount" readonly="true"
+                onget="return this.sessionCount;"/>
+
+      <method name="getSearchAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var idx = -1;
+          for (var name in this.mSessions)
+            if (++idx == aIndex)
+              return name;
+
+          return null;
+        ]]></body>
+      </method>
+
       <property name="textValue"
                 onget="return this.value;"
                 onset="this.setTextValue(val); return val;"/>
@@ -556,12 +571,11 @@
       <method name="getSession">
         <parameter name="aIndex"/>
         <body><![CDATA[
-          var idx = 0;
-          for (var name in this.mSessions) {
-            if (idx == aIndex)
+          var idx = -1;
+          for (var name in this.mSessions)
+            if (++idx == aIndex)
               return this.mSessions[name];
-            ++idx;
-          }
+
           return null;
         ]]></body>
       </method>
@@ -580,7 +594,7 @@
         <parameter name="aName"/>
         <body><![CDATA[
           ++this.sessionCount;
-          var name = aName || "anon_"+this.sessionCount;
+          var name = aName || ("anon_" + this.sessionCount);
           this.mSessions[name] = aSession;
           this.mListeners[name] = new (this.mAutoCompleteListener)(name);
           this.mLastResults[name] = null;

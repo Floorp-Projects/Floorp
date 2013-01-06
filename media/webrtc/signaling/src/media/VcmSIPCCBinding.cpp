@@ -2665,12 +2665,10 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
         WrapRunnableRet(flow, &TransportFlow::PushLayers, layers, &res),
         NS_DISPATCH_SYNC);
 
-    if (NS_FAILED(rv) || NS_FAILED(res)) {
+    if (NS_FAILED(rv) || NS_FAILED(res) || !pc->media().get()) { // SYNC re-check
       return NULL;
     }
-
     pc->media()->AddTransportFlow(level, rtcp, flow);
   }
-
   return flow;
 }

@@ -57,22 +57,12 @@ function reflectString(aParameters)
   element[idlAttr] = null;
   // TODO: remove this ugly hack when null stringification will work as expected.
   var todoAttrs = {
-    col: [ "align", "vAlign", "ch" ],
-    colgroup: [ "align", "vAlign", "ch" ],
     form: [ "acceptCharset", "name", "target" ],
     img: [ "align" ],
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
     link: [ "crossOrigin" ],
-    script: [ "crossOrigin" ],
     source: [ "media" ],
-    table: [ "border", "width" ],
-    tbody: [ "align", "vAlign", "ch" ],
-    td: [ "align", "vAlign", "ch" ],
     textarea: [ "name", "placeholder" ],
-    tfoot: [ "align", "vAlign", "ch" ],
-    th: [ "align", "vAlign", "ch" ],
-    thead: [ "align", "vAlign", "ch" ],
-    tr: [ "align", "vAlign", "ch" ],
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {
     is(element.getAttribute(contentAttr), "null",

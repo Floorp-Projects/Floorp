@@ -13,11 +13,6 @@
           android:icon="@drawable/ic_menu_new_private_tab"
           android:title="@string/new_private_tab"/>
 
-    <item android:id="@+id/synced_tabs"
-          android:icon="@drawable/ic_menu_synced_tabs"
-          android:title="@string/synced_tabs"
-          android:enabled="false"/>
-
     <item android:id="@+id/close_all_tabs"
           android:icon="@drawable/ic_menu_close_all_tabs"
           android:title="@string/close_all_tabs"/>
