@@ -9,6 +9,7 @@
 #include "nsIDOMSVGTests.h"
 #include "nsStringFwd.h"
 #include "SVGStringList.h"
+#include "nsCOMPtr.h"
 
 class nsAttrValue;
 class nsIAtom;
@@ -83,6 +84,12 @@ public:
   void GetAttrValue(uint8_t aAttrEnum, nsAttrValue &aValue) const;
 
   void MaybeInvalidate();
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGStringList> RequiredFeatures();
+  already_AddRefed<nsIDOMSVGStringList> RequiredExtensions();
+  already_AddRefed<nsIDOMSVGStringList> SystemLanguage();
+  bool HasExtension(const nsAString& aExtension);
 
 private:
   enum { FEATURES, EXTENSIONS, LANGUAGE };

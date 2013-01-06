@@ -14,12 +14,12 @@
 #include "nsGkAtoms.h"
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
+#include "SVGGraphicsElement.h"
 
 using namespace mozilla;
 
@@ -492,7 +492,7 @@ nsSVGPathGeometryFrame::GetCanvasTM(uint32_t aFor)
   NS_ASSERTION(mParent, "null parent");
 
   nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-  nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
+  dom::SVGGraphicsElement *content = static_cast<dom::SVGGraphicsElement*>(mContent);
 
   return content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));
 }

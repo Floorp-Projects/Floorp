@@ -8,7 +8,7 @@
 #include "gfxRect.h"
 #include "nsSVGEffects.h"
 #include "nsSVGGFrame.h"
-#include "nsSVGSwitchElement.h"
+#include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
 
 class nsRenderingContext;
@@ -242,7 +242,7 @@ nsIFrame *
 nsSVGSwitchFrame::GetActiveChildFrame()
 {
   nsIContent *activeChild =
-    static_cast<nsSVGSwitchElement*>(mContent)->GetActiveChild();
+    static_cast<mozilla::dom::SVGSwitchElement*>(mContent)->GetActiveChild();
 
   if (activeChild) {
     for (nsIFrame* kid = mFrames.FirstChild(); kid;

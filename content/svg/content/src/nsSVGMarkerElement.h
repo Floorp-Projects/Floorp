@@ -11,10 +11,10 @@
 #include "nsIDOMSVGMarkerElement.h"
 #include "nsSVGAngle.h"
 #include "nsSVGEnum.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGGraphicsElement.h"
 #include "mozilla/Attributes.h"
 
 class nsSVGOrientType
@@ -68,7 +68,7 @@ private:
   };
 };
 
-typedef nsSVGGraphicElement nsSVGMarkerElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGMarkerElementBase;
 
 class nsSVGMarkerElement : public nsSVGMarkerElementBase,
                            public nsIDOMSVGMarkerElement,

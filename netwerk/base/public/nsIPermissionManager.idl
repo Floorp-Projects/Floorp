@@ -36,7 +36,7 @@ interface nsIObserver;
 interface nsIPrincipal;
 interface nsIDOMWindow;
 
-[scriptable, uuid(ad79e135-6904-4734-8137-a511016d2723)]
+[scriptable, uuid(6c68cd87-4569-4695-8bc8-ad609f624b96)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -172,6 +172,16 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testExactPermissionFromPrincipal(in nsIPrincipal principal,
                                             in string type);
+
+   /**
+    * Increment or decrement our "refcount" of an app id.
+    *
+    * We use this refcount to determine an app's lifetime.  When an app's
+    * refcount goes to 0, we clear the permissions given to the app which are
+    * set to expire at the end of its session.
+    */
+   void addrefAppId(in unsigned long appId);
+   void releaseAppId(in unsigned long appId);
 
   /**
    * Allows enumeration of all stored permissions

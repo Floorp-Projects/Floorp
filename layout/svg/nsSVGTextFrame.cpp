@@ -12,11 +12,11 @@
 #include "nsIDOMSVGTextElement.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsSVGGlyphFrame.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
+#include "SVGGraphicsElement.h"
 #include "SVGLengthList.h"
 
 using namespace mozilla;
@@ -280,7 +280,7 @@ nsSVGTextFrame::GetCanvasTM(uint32_t aFor)
     NS_ASSERTION(mParent, "null parent");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-    nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
+    dom::SVGGraphicsElement *content = static_cast<dom::SVGGraphicsElement*>(mContent);
 
     gfxMatrix tm =
       content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));

@@ -29,6 +29,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIURL.h"
+#include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIProtocolProxyService2.h"
@@ -110,7 +111,6 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIPresShell.h"
 #include "nsIWebNavigation.h"
-#include "nsISupportsArray.h"
 #include "nsIDocShell.h"
 #include "nsPluginNativeWindow.h"
 #include "nsIScriptSecurityManager.h"
@@ -279,23 +279,20 @@ bool ReadSectionHeader(nsPluginManifestLineReader& reader, const char *token)
 // which were shutdown as a result of a plugins.refresh(1)
 class nsPluginDocReframeEvent: public nsRunnable {
 public:
-  nsPluginDocReframeEvent(nsISupportsArray* aDocs) { mDocs = aDocs; }
+  nsPluginDocReframeEvent(nsTArray<nsCOMPtr<nsIDocument> >& aDocs) { mDocs.SwapElements(aDocs); }
 
   NS_DECL_NSIRUNNABLE
 
-  nsCOMPtr<nsISupportsArray> mDocs;
+  nsTArray<nsCOMPtr<nsIDocument> > mDocs;
 };
 
 NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
-  NS_ENSURE_TRUE(mDocs, NS_ERROR_FAILURE);
-
-  uint32_t c;
-  mDocs->Count(&c);
+  uint32_t c = mDocs.Length();
 
   // for each document (which previously had a running instance), tell
   // the frame constructor to rebuild
   for (uint32_t i = 0; i < c; i++) {
-    nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
+    nsIDocument* doc = mDocs[i];
     if (doc) {
       nsIPresShell *shell = doc->GetShell();
 
@@ -319,7 +316,8 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
     }
   }
 
-  return mDocs->Clear();
+  mDocs.Clear();
+  return NS_OK;
 }
 
 static bool UnloadPluginsASAP()
@@ -440,13 +438,12 @@ nsresult nsPluginHost::ReloadPlugins(bool reloadPages)
   if (!pluginschanged)
     return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
 
-  nsCOMPtr<nsISupportsArray> instsToReload;
+  nsTArray<nsCOMPtr<nsIDocument> > instsToReload;
   if (reloadPages) {
-    NS_NewISupportsArray(getter_AddRefs(instsToReload));
 
     // Then stop any running plugin instances but hold on to the documents in the array
     // We are going to need to restart the instances in these documents later
-    DestroyRunningInstances(instsToReload, nullptr);
+    DestroyRunningInstances(&instsToReload, nullptr);
   }
 
   // shutdown plugins and kill the list if there are no running plugins
@@ -485,11 +482,7 @@ nsresult nsPluginHost::ReloadPlugins(bool reloadPages)
   // If we have shut down any plugin instances, we've now got to restart them.
   // Post an event to do the rest as we are going to be destroying the frame tree and we also want
   // any posted unload events to finish
-  uint32_t c;
-  if (reloadPages &&
-      instsToReload &&
-      NS_SUCCEEDED(instsToReload->Count(&c)) &&
-      c > 0) {
+  if (reloadPages && !instsToReload.IsEmpty()){
     nsCOMPtr<nsIRunnable> ev = new nsPluginDocReframeEvent(instsToReload);
     if (ev)
       NS_DispatchToCurrentThread(ev);
@@ -2393,12 +2386,10 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupportsArray> instsToReload;
-  NS_NewISupportsArray(getter_AddRefs(instsToReload));
-  DestroyRunningInstances(instsToReload, aPluginTag);
+  nsTArray<nsCOMPtr<nsIDocument> > instsToReload;
+  DestroyRunningInstances(&instsToReload, aPluginTag);
   
-  uint32_t c;
-  if (instsToReload && NS_SUCCEEDED(instsToReload->Count(&c)) && c > 0) {
+  if (!instsToReload.IsEmpty()) {
     nsCOMPtr<nsIRunnable> ev = new nsPluginDocReframeEvent(instsToReload);
     if (ev)
       NS_DispatchToCurrentThread(ev);
@@ -3825,8 +3816,9 @@ nsPluginHost::InstanceArray()
   return &mInstances;
 }
 
-void
-nsPluginHost::DestroyRunningInstances(nsISupportsArray* aReloadDocs, nsPluginTag* aPluginTag)
+void 
+nsPluginHost::DestroyRunningInstances(nsTArray<nsCOMPtr<nsIDocument> >* aReloadDocs,
+                                      nsPluginTag* aPluginTag)
 {
   for (int32_t i = mInstances.Length(); i > 0; i--) {
     nsNPAPIPluginInstance *instance = mInstances[i - 1];
@@ -3842,7 +3834,7 @@ nsPluginHost::DestroyRunningInstances(nsISupportsArray* aReloadDocs, nsPluginTag
         if (owner) {
           nsCOMPtr<nsIDocument> doc;
           owner->GetDocument(getter_AddRefs(doc));
-          if (doc && aReloadDocs->IndexOf(doc) == -1)  // don't allow for duplicates
+          if (doc && !aReloadDocs->Contains(doc))  // don't allow for duplicates
             aReloadDocs->AppendElement(doc);
         }
       }
