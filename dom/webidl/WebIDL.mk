@@ -106,6 +106,7 @@ webidl_files = \
   SVGDefsElement.webidl \
   SVGDescElement.webidl \
   SVGElement.webidl \
+  SVGForeignObjectElement.webidl \
   SVGGraphicsElement.webidl \
   SVGLengthList.webidl \
   SVGLocatableElement.webidl \
