@@ -569,13 +569,6 @@ RecomputeDirectionality(Element* aElement, bool aNotify)
 {
   MOZ_ASSERT(!aElement->HasDirAuto(),
              "RecomputeDirectionality called with dir=auto");
-  if (aElement->HasDirAutoSet()) {
-    nsINode* setByNode =
-      static_cast<nsINode*>(aElement->GetProperty(nsGkAtoms::dirAutoSetBy));
-    if (setByNode) {
-      nsTextNodeDirectionalityMap::RemoveElementFromMap(setByNode, aElement);
-    }
-  }
 
   Directionality dir = eDir_LTR;
 
@@ -922,6 +915,19 @@ SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent)
   if (!aElement->HasDirAuto()) {
     // if the element doesn't have dir=auto, set its own directionality from
     // the dir attribute or by inheriting from its ancestors.
+    RecomputeDirectionality(aElement, false);
+  }
+}
+
+void ResetDir(mozilla::dom::Element* aElement)
+{
+  if (aElement->HasDirAutoSet()) {
+    nsINode* setByNode =
+      static_cast<nsINode*>(aElement->GetProperty(nsGkAtoms::dirAutoSetBy));
+    nsTextNodeDirectionalityMap::RemoveElementFromMap(setByNode, aElement);
+  }
+
+  if (!aElement->HasDirAuto()) {
     RecomputeDirectionality(aElement, false);
   }
 }
