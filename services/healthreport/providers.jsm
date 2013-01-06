@@ -15,6 +15,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
+  "AddonsProvider",
   "AppInfoProvider",
   "SessionsProvider",
   "SysInfoProvider",
@@ -22,6 +23,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -29,7 +31,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
 
-
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 
@@ -607,6 +610,204 @@ SessionsProvider.prototype = Object.freeze({
     return Cc["@mozilla.org/toolkit/app-startup;1"]
              .getService(Ci.nsIAppStartup)
              .getStartupInfo();
+  },
+});
+
+/**
+ * Stores the set of active addons in storage.
+ *
+ * We do things a little differently than most other measurements. Because
+ * addons are difficult to shoehorn into distinct fields, we simply store a
+ * JSON blob in storage in a text field.
+ */
+function ActiveAddonsMeasurement() {
+  Metrics.Measurement.call(this);
+
+  this._serializers = {};
+  this._serializers[this.SERIALIZE_JSON] = {
+    singular: this._serializeJSONSingular.bind(this),
+    // We don't need a daily serializer because we have none of this data.
+  };
+}
+
+ActiveAddonsMeasurement.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "active",
+  version: 1,
+
+  configureStorage: function () {
+    return this.registerStorageField("addons", this.storage.FIELD_LAST_TEXT);
+  },
+
+  _serializeJSONSingular: function (data) {
+    if (!data.has("addons")) {
+      this._log.warn("Don't have active addons info. Weird.");
+      return null;
+    }
+
+    // Exceptions are caught in the caller.
+    return JSON.parse(data.get("addons")[1]);
+  },
+});
+
+
+function AddonCountsMeasurement() {
+  Metrics.Measurement.call(this);
+}
+
+AddonCountsMeasurement.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "counts",
+  version: 1,
+
+  configureStorage: function () {
+    return Task.spawn(function registerFields() {
+      yield this.registerStorageField("theme", this.storage.FIELD_DAILY_LAST_NUMERIC);
+      yield this.registerStorageField("lwtheme", this.storage.FIELD_DAILY_LAST_NUMERIC);
+      yield this.registerStorageField("plugin", this.storage.FIELD_DAILY_LAST_NUMERIC);
+      yield this.registerStorageField("extension", this.storage.FIELD_DAILY_LAST_NUMERIC);
+    }.bind(this));
+  },
+});
+
+
+this.AddonsProvider = function () {
+  Metrics.Provider.call(this);
+
+  this._prefs = new Preferences({defaultBranch: null});
+};
+
+AddonsProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  // Whenever these AddonListener callbacks are called, we repopulate
+  // and store the set of addons. Note that these events will only fire
+  // for restartless add-ons. For actions that require a restart, we
+  // will catch the change after restart. The alternative is a lot of
+  // state tracking here, which isn't desirable.
+  ADDON_LISTENER_CALLBACKS: [
+    "onEnabled",
+    "onDisabled",
+    "onInstalled",
+    "onUninstalled",
+  ],
+
+  name: "org.mozilla.addons",
+
+  measurementTypes: [
+    ActiveAddonsMeasurement,
+    AddonCountsMeasurement,
+  ],
+
+  onInit: function () {
+    let listener = {};
+
+    for (let method of this.ADDON_LISTENER_CALLBACKS) {
+      listener[method] = this._collectAndStoreAddons.bind(this);
+    }
+
+    this._listener = listener;
+    AddonManager.addAddonListener(this._listener);
+
+    return Promise.resolve();
+  },
+
+  onShutdown: function () {
+    AddonManager.removeAddonListener(this._listener);
+    this._listener = null;
+
+    return Promise.resolve();
+  },
+
+  collectConstantData: function () {
+    return this._collectAndStoreAddons();
+  },
+
+  _collectAndStoreAddons: function () {
+    let deferred = Promise.defer();
+
+    AddonManager.getAllAddons(function onAllAddons(addons) {
+      let data;
+      let addonsField;
+      try {
+        data = this._createDataStructure(addons);
+        addonsField = JSON.stringify(data.addons);
+      } catch (ex) {
+        this._log.warn("Exception when populating add-ons data structure: " +
+                       CommonUtils.exceptionStr(ex));
+        deferred.reject(ex);
+        return;
+      }
+
+      let now = new Date();
+      let active = this.getMeasurement("active", 1);
+      let counts = this.getMeasurement("counts", 1);
+
+      this.enqueueStorageOperation(function storageAddons() {
+        for (let type in data.counts) {
+          try {
+            counts.fieldID(type);
+          } catch (ex) {
+            this._log.warn("Add-on type without field: " + type);
+            continue;
+          }
+
+          counts.setDailyLastNumeric(type, data.counts[type], now);
+        }
+
+        return active.setLastText("addons", addonsField).then(
+          function onSuccess() { deferred.resolve(); },
+          function onError(error) { deferred.reject(error); }
+        );
+      }.bind(this));
+    }.bind(this));
+
+    return deferred.promise;
+  },
+
+  COPY_FIELDS: [
+    "userDisabled",
+    "appDisabled",
+    "version",
+    "type",
+    "scope",
+    "foreignInstall",
+    "hasBinaryComponents",
+  ],
+
+  _createDataStructure: function (addons) {
+    let data = {addons: {}, counts: {}};
+
+    for (let addon of addons) {
+      let optOutPref = "extensions." + addon.id + ".getAddons.cache.enabled";
+      if (!this._prefs.get(optOutPref, true)) {
+        this._log.debug("Ignoring add-on that's opted out of AMO updates: " +
+                        addon.id);
+        continue;
+      }
+
+      let obj = {};
+      for (let field of this.COPY_FIELDS) {
+        obj[field] = addon[field];
+      }
+
+      if (addon.installDate) {
+        obj.installDay = this._dateToDays(addon.installDate);
+      }
+
+      if (addon.updateDate) {
+        obj.updateDay = this._dateToDays(addon.updateDate);
+      }
+
+      data.addons[addon.id] = obj;
+
+      let type = addon.type;
+      data.counts[type] = (data.counts[type] || 0) + 1;
+    }
+
+    return data;
   },
 });
 
