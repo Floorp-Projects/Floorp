@@ -473,9 +473,6 @@
 @BINPATH@/components/HealthReportComponents.manifest
 @BINPATH@/components/HealthReportService.js
 #endif
-#ifdef MOZ_SERVICES_NOTIFICATIONS
-@BINPATH@/components/NotificationsComponents.manifest
-#endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
