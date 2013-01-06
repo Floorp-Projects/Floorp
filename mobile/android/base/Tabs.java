@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -408,7 +409,9 @@ public class Tabs implements GeckoEventListener {
         final Iterable<Tab> tabs = getTabsInOrder();
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
+                boolean syncIsSetup = SyncAccounts.syncAccountsExist(mActivity);
+                if (syncIsSetup)
+                    TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
             }
         });
     }
