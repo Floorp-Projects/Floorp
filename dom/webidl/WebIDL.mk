@@ -124,6 +124,7 @@ webidl_files = \
   SVGPolygonElement.webidl \
   SVGPolylineElement.webidl \
   SVGPreserveAspectRatio.webidl \
+  SVGRectElement.webidl \
   SVGScriptElement.webidl \
   SVGStopElement.webidl \
   SVGStyleElement.webidl \
