@@ -57,6 +57,7 @@ SVGAnimationElement::SVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo
 #pragma warning(pop)
 #endif
 {
+  SetIsDOMBinding();
 }
 
 nsresult
@@ -173,61 +174,91 @@ SVGAnimationElement::TimedElement()
 NS_IMETHODIMP
 SVGAnimationElement::GetTargetElement(nsIDOMSVGElement** aTarget)
 {
+  // We'll just call the other GetTargetElement method, and QI to the right type
+  nsSVGElement* target = GetTargetElement();
+
+  nsCOMPtr<nsIDOMSVGElement> targetSVG = do_QueryInterface(target);
+  targetSVG.forget(aTarget);
+
+  return NS_OK;
+}
+
+nsSVGElement*
+SVGAnimationElement::GetTargetElement()
+{
   FlushAnimations();
 
   // We'll just call the other GetTargetElement method, and QI to the right type
-  nsIContent* targetContent = GetTargetElementContent();
+  nsIContent* target = GetTargetElementContent();
 
-  nsCOMPtr<nsIDOMSVGElement> targetSVG = do_QueryInterface(targetContent);
-  NS_IF_ADDREF(*aTarget = targetSVG);
-
-  return NS_OK;
+  return (target && target->IsSVG()) ? static_cast<nsSVGElement*>(target) : nullptr;
 }
 
 /* float getStartTime() raises( DOMException ); */
 NS_IMETHODIMP
 SVGAnimationElement::GetStartTime(float* retval)
 {
+  ErrorResult rv;
+  *retval = GetStartTime(rv);
+  return rv.ErrorCode();
+}
+
+float
+SVGAnimationElement::GetStartTime(ErrorResult& rv)
+{
   FlushAnimations();
 
   nsSMILTimeValue startTime = mTimedElement.GetStartTime();
-  if (!startTime.IsDefinite())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  if (!startTime.IsDefinite()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return 0.f;
+  }
 
-  *retval = float(double(startTime.GetMillis()) / PR_MSEC_PER_SEC);
-
-  return NS_OK;
+  return float(double(startTime.GetMillis()) / PR_MSEC_PER_SEC);
 }
 
 /* float getCurrentTime(); */
 NS_IMETHODIMP
 SVGAnimationElement::GetCurrentTime(float* retval)
 {
+  *retval = GetCurrentTime();
+  return NS_OK;
+}
+
+float
+SVGAnimationElement::GetCurrentTime()
+{
   // Not necessary to call FlushAnimations() for this
 
   nsSMILTimeContainer* root = GetTimeContainer();
   if (root) {
-    *retval = float(double(root->GetCurrentTime()) / PR_MSEC_PER_SEC);
-  } else {
-    *retval = 0.f;
+    return float(double(root->GetCurrentTime()) / PR_MSEC_PER_SEC);
   }
-  return NS_OK;
+
+  return 0.0f;
 }
 
 /* float getSimpleDuration() raises( DOMException ); */
 NS_IMETHODIMP
 SVGAnimationElement::GetSimpleDuration(float* retval)
 {
+  ErrorResult rv;
+  *retval = GetSimpleDuration(rv);
+  return rv.ErrorCode();
+}
+
+float
+SVGAnimationElement::GetSimpleDuration(ErrorResult& rv)
+{
   // Not necessary to call FlushAnimations() for this
 
   nsSMILTimeValue simpleDur = mTimedElement.GetSimpleDuration();
   if (!simpleDur.IsDefinite()) {
-    *retval = 0.f;
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return 0.f;
   }
 
-  *retval = float(double(simpleDur.GetMillis()) / PR_MSEC_PER_SEC);
-  return NS_OK;
+  return float(double(simpleDur.GetMillis()) / PR_MSEC_PER_SEC);
 }
 
 //----------------------------------------------------------------------
@@ -445,21 +476,27 @@ SVGAnimationElement::BeginElementAt(float offset)
 {
   NS_ENSURE_FINITE(offset, NS_ERROR_ILLEGAL_VALUE);
 
+  ErrorResult rv;
+  BeginElementAt(offset, rv);
+  return rv.ErrorCode();
+}
+
+void
+SVGAnimationElement::BeginElementAt(float offset, ErrorResult& rv)
+{
   // Make sure the timegraph is up-to-date
   FlushAnimations();
 
   // This will fail if we're not attached to a time container (SVG document
   // fragment).
-  nsresult rv = mTimedElement.BeginElementAt(offset);
-  if (NS_FAILED(rv))
-    return rv;
+  rv = mTimedElement.BeginElementAt(offset);
+  if (rv.Failed())
+    return;
 
   AnimationNeedsResample();
   // Force synchronous sample so that events resulting from this call arrive in
   // the expected order and we get an up-to-date paint.
   FlushAnimations();
-
-  return NS_OK;
 }
 
 /* void endElement (); */
@@ -475,18 +512,24 @@ SVGAnimationElement::EndElementAt(float offset)
 {
   NS_ENSURE_FINITE(offset, NS_ERROR_ILLEGAL_VALUE);
 
+  ErrorResult rv;
+  EndElementAt(offset, rv);
+  return rv.ErrorCode();
+}
+
+void
+SVGAnimationElement::EndElementAt(float offset, ErrorResult& rv)
+{
   // Make sure the timegraph is up-to-date
   FlushAnimations();
 
-  nsresult rv = mTimedElement.EndElementAt(offset);
-  if (NS_FAILED(rv))
-    return rv;
+  rv = mTimedElement.EndElementAt(offset);
+  if (rv.Failed())
+    return;
 
   AnimationNeedsResample();
   // Force synchronous sample
   FlushAnimations();
-
-  return NS_OK;
 }
 
 bool

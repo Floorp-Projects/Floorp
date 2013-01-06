@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGAnimateTransformElement.h"
+#include "mozilla/dom/SVGAnimateTransformElementBinding.h"
 
 DOMCI_NODE_DATA(SVGAnimateTransformElement, mozilla::dom::SVGAnimateTransformElement)
 
@@ -11,6 +12,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(AnimateTransform)
 
 namespace mozilla {
 namespace dom {
+
+JSObject*
+SVGAnimateTransformElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGAnimateTransformElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // nsISupports methods

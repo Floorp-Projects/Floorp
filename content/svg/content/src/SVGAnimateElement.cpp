@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGAnimateElement.h"
+#include "mozilla/dom/SVGAnimateElementBinding.h"
 
 DOMCI_NODE_DATA(SVGAnimateElement, mozilla::dom::SVGAnimateElement)
 
@@ -11,6 +12,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Animate)
 
 namespace mozilla {
 namespace dom {
+
+JSObject*
+SVGAnimateElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGAnimateElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // nsISupports methods
