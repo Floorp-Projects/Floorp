@@ -67,7 +67,6 @@ CPPSRCS		= \
 		nsSVGPolyElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
-		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \
 		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
@@ -99,6 +98,7 @@ CPPSRCS		= \
 		SVGPathSegUtils.cpp \
 		SVGPointList.cpp \
 		SVGPreserveAspectRatio.cpp \
+		SVGRectElement.cpp \
 		SVGStringList.cpp \
 		SVGTitleElement.cpp \
 		SVGTransform.cpp \
@@ -167,6 +167,7 @@ EXPORTS_mozilla/dom = \
 	SVGMPathElement.h \
 	SVGPolygonElement.h \
 	SVGPolylineElement.h \
+	SVGRectElement.h \
 	SVGScriptElement.h \
 	SVGStopElement.h \
 	SVGStyleElement.h \
