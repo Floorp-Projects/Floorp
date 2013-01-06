@@ -38,10 +38,6 @@ CPPSRCS		= \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
 		nsSVGAltGlyphElement.cpp \
-		nsSVGAnimateElement.cpp \
-		nsSVGAnimateTransformElement.cpp \
-		nsSVGAnimateMotionElement.cpp \
-		nsSVGAnimationElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGClass.cpp \
@@ -66,7 +62,6 @@ CPPSRCS		= \
 		nsSVGPathGeometryElement.cpp \
 		nsSVGPatternElement.cpp \
 		nsSVGPolyElement.cpp \
-		nsSVGSetElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
 		nsSVGSVGElement.cpp \
@@ -89,6 +84,10 @@ CPPSRCS		= \
 		SVGAnimatedPointList.cpp \
 		SVGAnimatedPreserveAspectRatio.cpp \
 		SVGAnimatedTransformList.cpp \
+		SVGAnimateElement.cpp \
+		SVGAnimateTransformElement.cpp \
+		SVGAnimateMotionElement.cpp \
+		SVGAnimationElement.cpp \
 		SVGAttrValueWrapper.cpp \
 		SVGCircleElement.cpp \
 		SVGContentUtils.cpp \
@@ -126,6 +125,7 @@ CPPSRCS		= \
 		SVGPreserveAspectRatio.cpp \
 		SVGRectElement.cpp \
 		SVGScriptElement.cpp \
+		SVGSetElement.cpp \
 		SVGStopElement.cpp \
 		SVGStringList.cpp \
 		SVGStyleElement.cpp \
@@ -156,6 +156,10 @@ EXPORTS_mozilla/dom = \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
+	SVGAnimateElement.h \
+	SVGAnimateTransformElement.h \
+	SVGAnimateMotionElement.h \
+	SVGAnimationElement.h \
 	SVGCircleElement.h \
 	SVGDefsElement.h \
 	SVGDescElement.h \
@@ -172,6 +176,7 @@ EXPORTS_mozilla/dom = \
 	SVGPolylineElement.h \
 	SVGRectElement.h \
 	SVGScriptElement.h \
+	SVGSetElement.h \
 	SVGStopElement.h \
 	SVGStyleElement.h \
 	SVGSwitchElement.h \
