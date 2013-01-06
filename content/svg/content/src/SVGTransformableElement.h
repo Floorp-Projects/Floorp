@@ -6,8 +6,10 @@
 #ifndef SVGTransformableElement_h
 #define SVGTransformableElement_h
 
-#include "SVGLocatableElement.h"
+#include "mozilla/dom/SVGLocatableElement.h"
 #include "nsIDOMSVGTransformable.h"
+#include "gfxMatrix.h"
+#include "SVGAnimatedTransformList.h"
 
 #define MOZILLA_SVGTRANSFORMABLEELEMENT_IID \
   { 0x77888cba, 0x0b43, 0x4654, \
@@ -31,6 +33,35 @@ public:
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedTransformList> Transform();
+
+  // nsIContent interface
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                      int32_t aModType) const;
+
+
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
+
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                      TransformTypes aWhich = eAllTransforms) const;
+  virtual const gfxMatrix* GetAnimateMotionTransform() const;
+  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
+
+  virtual SVGAnimatedTransformList*
+    GetAnimatedTransformList(uint32_t aFlags = 0);
+  virtual nsIAtom* GetTransformListAttrName() const {
+    return nsGkAtoms::transform;
+  }
+
+protected:
+  // nsSVGElement overrides
+
+  nsAutoPtr<SVGAnimatedTransformList> mTransforms;
+
+  // XXX maybe move this to property table, to save space on un-animated elems?
+  nsAutoPtr<gfxMatrix> mAnimateMotionTransform;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGTransformableElement,
