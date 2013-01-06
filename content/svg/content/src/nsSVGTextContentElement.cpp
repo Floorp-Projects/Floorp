@@ -16,7 +16,6 @@ NS_IMPL_ADDREF_INHERITED(nsSVGTextContentElement, nsSVGTextContentElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTextContentElement, nsSVGTextContentElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextContentElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTests)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTextContentElementBase)
 
 /* readonly attribute nsIDOMSVGAnimatedLength textLength; */

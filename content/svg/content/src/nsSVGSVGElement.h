@@ -6,7 +6,6 @@
 #ifndef __NS_SVGSVGELEMENT_H__
 #define __NS_SVGSVGELEMENT_H__
 
-#include "DOMSVGTests.h"
 #include "mozilla/dom/FromParser.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGLocatable.h"
@@ -100,7 +99,6 @@ public:
 
 class nsSVGSVGElement : public nsSVGSVGElementBase,
                         public nsIDOMSVGSVGElement,
-                        public DOMSVGTests,
                         public nsIDOMSVGFitToViewBox,
                         public nsIDOMSVGZoomAndPan
 {

@@ -89,9 +89,7 @@ nsSVGAnimationElement::AsElement()
 bool
 nsSVGAnimationElement::PassesConditionalProcessingTests()
 {
-  nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(
-    static_cast<nsSVGElement*>(this)));
-  return tests->PassesConditionalProcessingTests();
+  return DOMSVGTests::PassesConditionalProcessingTests();
 }
 
 const nsAttrValue*
