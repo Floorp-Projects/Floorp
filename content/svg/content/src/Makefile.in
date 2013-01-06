@@ -40,7 +40,6 @@ CPPSRCS		= \
 		nsSVGAltGlyphElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGBoolean.cpp \
-		nsSVGCircleElement.cpp \
 		nsSVGClass.cpp \
 		nsSVGClipPathElement.cpp \
 		nsSVGDataParser.cpp \
@@ -110,6 +109,7 @@ CPPSRCS		= \
 		nsSVGAnimationElement.cpp \
 		nsSVGSetElement.cpp \
 		SVGAttrValueWrapper.cpp \
+		SVGCircleElement.cpp \
 		SVGContentUtils.cpp \
 		SVGDefsElement.cpp \
 		SVGDescElement.cpp \
@@ -156,6 +156,7 @@ EXPORTS_mozilla/dom = \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
+	SVGCircleElement.h \
 	SVGDefsElement.h \
 	SVGDescElement.h \
 	SVGForeignObjectElement.h \
