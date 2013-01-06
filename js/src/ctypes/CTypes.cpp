@@ -5789,6 +5789,11 @@ FunctionType::Call(JSContext* cx,
     return false;
   }
 
+  // Let the runtime callback know that we are about to call into C.
+  js::CTypesActivityCallback activityCallback = cx->runtime->ctypesActivityCallback;
+  if (activityCallback)
+    activityCallback(cx, js::CTYPES_CALL_BEGIN);
+
   uintptr_t fn = *reinterpret_cast<uintptr_t*>(CData::GetData(obj));
 
 #if defined(XP_WIN)
@@ -5815,6 +5820,9 @@ FunctionType::Call(JSContext* cx,
 #endif // defined(XP_WIN)
 
   errno = savedErrno;
+
+  if (activityCallback)
+    activityCallback(cx, js::CTYPES_CALL_END);
 
   // Store the error value for later consultation with |ctypes.getStatus|
   JSObject *objCTypes = CType::GetGlobalCTypes(cx, typeObj);

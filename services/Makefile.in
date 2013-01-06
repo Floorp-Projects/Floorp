@@ -9,13 +9,9 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_SERVICES_COMMON
 PARALLEL_DIRS += common
-endif
 
-ifdef MOZ_SERVICES_CRYPTO
 PARALLEL_DIRS += crypto
-endif
 
 ifdef MOZ_SERVICES_AITC
 PARALLEL_DIRS += aitc

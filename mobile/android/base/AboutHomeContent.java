@@ -203,13 +203,13 @@ public class AboutHomeContent extends ScrollView
                 // If nothing is pinned at all, hide both clear items
                 TopSitesCursorWrapper cursor = (TopSitesCursorWrapper)mTopSitesAdapter.getCursor();
                 if (!cursor.hasPinnedSites()) {
-                    menu.findItem(R.id.abouthome_topsites_clearall).setVisible(false);
-                    menu.findItem(R.id.abouthome_topsites_clear).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_unpinall).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 } else {
                     // If there's nothing pinned here, hide the clear item
                     PinnedSite site = cursor.getPinnedSite(info.position);
                     if (site == null) {
-                        menu.findItem(R.id.abouthome_topsites_clear).setVisible(false);
+                        menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                     }
                 }
             }
@@ -916,7 +916,7 @@ public class AboutHomeContent extends ScrollView
         holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
     }
 
-    public void clearAllSites() {
+    public void unpinAllSites() {
         final ContentResolver resolver = mActivity.getContentResolver();
 
         // Clear the view quickly to make things appear responsive
@@ -941,7 +941,7 @@ public class AboutHomeContent extends ScrollView
         }).execute();
     }
 
-    public void clearSite() {
+    public void unpinSite() {
         final int position = mTopSitesGrid.getSelectedPosition();
         View v = mTopSitesGrid.getChildAt(position);
         TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
@@ -963,9 +963,32 @@ public class AboutHomeContent extends ScrollView
         }).execute();
     }
 
+    public void pinSite() {
+        final int position = mTopSitesGrid.getSelectedPosition();
+        View v = mTopSitesGrid.getChildAt(position);
+
+        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+        final String url = holder.url;
+        final String title = holder.titleView.getText().toString();
+        // update the database on a background thread
+        (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+            @Override
+            public Void doInBackground(Void... params) {
+                final ContentResolver resolver = mActivity.getContentResolver();
+                BrowserDB.pinSite(resolver, url, (title == null || TextUtils.isEmpty(title) ? url : title), position);
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void v) {
+                update(EnumSet.of(UpdateFlags.TOP_SITES));
+            }
+        }).execute();
+    }
+
     public void editSite() {
         int position = mTopSitesGrid.getSelectedPosition();
-       View v = mTopSitesGrid.getChildAt(position);
+        View v = mTopSitesGrid.getChildAt(position);
 
         TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
         editSite(holder.url, position);

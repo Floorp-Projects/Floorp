@@ -2890,7 +2890,7 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI,
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime,
                                const nsACString& aGUID,
-                               uint16_t aReason)
+                               uint16_t aReason, uint32_t aTransitionType)
 {
   // Notify "cleartime" only if all visits to the page have been removed.
   if (!aVisitTime) {

@@ -203,26 +203,6 @@ public class TabsPanel extends TabHost
             mMenu.findItem(R.id.close_all_tabs).setEnabled(true); 
 
         mPopupMenu.show();
-
-        final Context context = mContext;
-        new SyncAccounts.AccountsExistTask() {
-            @Override
-            protected void onPostExecute(Boolean result) {
-                if (!result.booleanValue()) {
-                    return;
-                }
-                TabsAccessor.areClientsAvailable(context, new TabsAccessor.OnClientsAvailableListener() {
-                    @Override
-                    public void areAvailable(boolean available) {
-                        TabsPanel.this.enableRemoteTabs(available);
-                    }
-                });
-            }
-        }.execute(context);
-    }
-
-    public void enableRemoteTabs(boolean enable) {
-        mMenu.findItem(R.id.synced_tabs).setEnabled(enable);
     }
 
     public void openTabsSwitcherMenu() {
@@ -244,10 +224,6 @@ public class TabsPanel extends TabHost
 
             case R.id.tabs_synced:
                 mTabsMenuButton.setText(R.string.tabs_synced);
-                show(Panel.REMOTE_TABS);
-                return true;
-
-            case R.id.synced_tabs:
                 show(Panel.REMOTE_TABS);
                 return true;
 

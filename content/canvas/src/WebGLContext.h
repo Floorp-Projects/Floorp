@@ -28,7 +28,7 @@
 
 #include "nsIDOMWebGLRenderingContext.h"
 #include "nsICanvasRenderingContextInternal.h"
-#include "nsHTMLCanvasElement.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIMemoryReporter.h"
 #include "nsIJSNativeInitializer.h"
@@ -332,7 +332,7 @@ public:
     }
 
     // WebIDL WebGLRenderingContext API
-    nsHTMLCanvasElement* GetCanvas() const {
+    dom::HTMLCanvasElement* GetCanvas() const {
         return mCanvasElement;
     }
     WebGLsizei DrawingBufferWidth() const {

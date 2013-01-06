@@ -256,7 +256,7 @@
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
-#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"
@@ -2750,6 +2750,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLScriptElement, nsIDOMHTMLScriptElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIScriptLoaderObserver)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLScriptElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
