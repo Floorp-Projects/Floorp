@@ -14,3 +14,9 @@ do_get_profile();
   ns.initTestLogging();
 }).call(this);
 
+(function createAppInfo() {
+  let ns = {};
+  Components.utils.import("resource://testing-common/services/healthreport/utils.jsm", ns);
+  ns.updateAppInfo();
+}).call(this);
+
