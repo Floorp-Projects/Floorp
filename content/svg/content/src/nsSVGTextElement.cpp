@@ -5,7 +5,7 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsCOMPtr.h"
@@ -19,11 +19,10 @@
 #include "SVGAnimatedNumberList.h"
 #include "DOMSVGAnimatedNumberList.h"
 #include "DOMSVGPoint.h"
-#include "DOMSVGTests.h"
 
 using namespace mozilla;
 
-typedef nsSVGGraphicElement nsSVGTextElementBase;
+typedef dom::SVGGraphicsElement nsSVGTextElementBase;
 
 /**
  * This class does not inherit nsSVGTextPositioningElement - it reimplements it
@@ -38,8 +37,7 @@ typedef nsSVGGraphicElement nsSVGTextElementBase;
  * nsSVGTextPositioningElement in sync (and vice versa).
  */
 class nsSVGTextElement : public nsSVGTextElementBase,
-                         public nsIDOMSVGTextElement, // nsIDOMSVGTextPositioningElement
-                         public DOMSVGTests
+                         public nsIDOMSVGTextElement // nsIDOMSVGTextPositioningElement
 {
 protected:
   friend nsresult NS_NewSVGTextElement(nsIContent **aResult,
@@ -100,11 +98,10 @@ NS_IMPL_RELEASE_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 DOMCI_NODE_DATA(SVGTextElement, nsSVGTextElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGTextElement)
-  NS_NODE_INTERFACE_TABLE7(nsSVGTextElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE6(nsSVGTextElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTextElement,
                            nsIDOMSVGTextPositioningElement,
-                           nsIDOMSVGTextContentElement,
-                           nsIDOMSVGTests)
+                           nsIDOMSVGTextContentElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTextElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTextElementBase)
 

@@ -6,19 +6,17 @@
 #ifndef NS_SVGAELEMENT_H_
 #define NS_SVGAELEMENT_H_
 
-#include "DOMSVGTests.h"
 #include "Link.h"
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGString.h"
+#include "SVGGraphicsElement.h"
 
-typedef nsSVGGraphicElement nsSVGAElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGAElementBase;
 
 class nsSVGAElement : public nsSVGAElementBase,
                       public nsIDOMSVGAElement,
-                      public DOMSVGTests,
                       public nsIDOMSVGURIReference,
                       public nsILink,
                       public mozilla::dom::Link

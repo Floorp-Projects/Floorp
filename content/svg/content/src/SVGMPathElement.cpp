@@ -9,7 +9,7 @@
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsSVGPathElement.h"
-#include "nsSVGAnimateMotionElement.h"
+#include "mozilla/dom/SVGAnimateMotionElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGMPathElementBinding.h"
 
@@ -275,8 +275,8 @@ SVGMPathElement::NotifyParentOfMpathChange(nsIContent* aParent)
 {
   if (aParent && aParent->IsSVG(nsGkAtoms::animateMotion)) {
 
-    nsSVGAnimateMotionElement* animateMotionParent =
-      static_cast<nsSVGAnimateMotionElement*>(aParent);
+    SVGAnimateMotionElement* animateMotionParent =
+      static_cast<SVGAnimateMotionElement*>(aParent);
 
     animateMotionParent->MpathChanged();
     AnimationNeedsResample();

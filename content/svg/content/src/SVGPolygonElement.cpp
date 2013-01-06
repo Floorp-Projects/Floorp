@@ -1,0 +1,82 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/dom/SVGPolygonElement.h"
+#include "mozilla/dom/SVGPolygonElementBinding.h"
+#include "gfxContext.h"
+#include "SVGContentUtils.h"
+
+DOMCI_NODE_DATA(SVGPolygonElement, mozilla::dom::SVGPolygonElement)
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Polygon)
+
+namespace mozilla {
+namespace dom {
+
+JSObject*
+SVGPolygonElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGPolygonElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(SVGPolygonElement,SVGPolygonElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGPolygonElement,SVGPolygonElementBase)
+
+NS_INTERFACE_TABLE_HEAD(SVGPolygonElement)
+  NS_NODE_INTERFACE_TABLE4(SVGPolygonElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
+                           nsIDOMSVGPolygonElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPolygonElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGPolygonElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+SVGPolygonElement::SVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGPolygonElementBase(aNodeInfo)
+{
+
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolygonElement)
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+void
+SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
+{
+  nsSVGPolyElement::GetMarkPoints(aMarks);
+  if (aMarks->Length() > 0) {
+    nsSVGMark *endMark = &aMarks->ElementAt(aMarks->Length()-1);
+    nsSVGMark *startMark = &aMarks->ElementAt(0);
+    float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
+
+    endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);
+    startMark->angle = SVGContentUtils::AngleBisect(angle, startMark->angle);
+    // for a polygon (as opposed to a polyline) there's an implicit extra point
+    // co-located with the start point that nsSVGPolyElement::GetMarkPoints
+    // doesn't return
+    aMarks->AppendElement(nsSVGMark(startMark->x, startMark->y, startMark->angle));
+  }
+}
+
+void
+SVGPolygonElement::ConstructPath(gfxContext *aCtx)
+{
+  SVGPolygonElementBase::ConstructPath(aCtx);
+  // the difference between a polyline and a polygon is that the
+  // polygon is closed:
+  aCtx->ClosePath();
+}
+
+} // namespace dom
+} // namespace mozilla
