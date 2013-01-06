@@ -6,7 +6,7 @@
 #include "DOMSVGTests.h"
 #include "DOMSVGStringList.h"
 #include "nsSVGFeatures.h"
-#include "nsSVGSwitchElement.h"
+#include "mozilla/dom/SVGSwitchElement.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "mozilla/Preferences.h"
@@ -266,6 +266,6 @@ DOMSVGTests::MaybeInvalidate()
 
   if (parent &&
       parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
-    static_cast<nsSVGSwitchElement*>(parent)->MaybeInvalidate();
+    static_cast<dom::SVGSwitchElement*>(parent)->MaybeInvalidate();
   }
 }
