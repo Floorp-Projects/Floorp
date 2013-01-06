@@ -31,6 +31,8 @@ function test()
     gView = gDebugger.DebuggerView;
     resumed = true;
 
+    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
+
     gView.Sources.preferredSource = EXAMPLE_URL + expectedScript;
     startTest();
   });
@@ -42,12 +44,10 @@ function test()
     startTest();
   }
 
-  window.addEventListener("Debugger:SourceShown", onScriptShown);
-
   function startTest()
   {
     if (expectedScriptShown && resumed && !testStarted) {
-      window.removeEventListener("Debugger:SourceShown", onScriptShown);
+      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
