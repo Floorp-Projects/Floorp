@@ -18,6 +18,7 @@ modules := \
 
 testing_modules := \
   mocks.jsm \
+  utils.jsm \
   $(NULL)
 
 TEST_DIRS += tests
