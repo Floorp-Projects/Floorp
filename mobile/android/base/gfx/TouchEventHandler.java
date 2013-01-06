@@ -12,6 +12,7 @@ import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -159,6 +160,11 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
             return true;
         }
 
+        if (isScrollEvent(event)) {
+            dispatchEvent(event);
+            return true;
+        }
+
         if (isDownEvent(event)) {
             // this is the start of a new block of events! whee!
             mHoldInQueue = mWaitForTouchListeners;
@@ -250,6 +256,14 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     private boolean touchFinished(MotionEvent event) {
         int action = (event.getAction() & MotionEvent.ACTION_MASK);
         return (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL);
+    }
+
+    private boolean isScrollEvent(MotionEvent event) {
+        if (Build.VERSION.SDK_INT <= 11) {
+            return false;
+        }
+        int action = (event.getAction() & MotionEvent.ACTION_MASK);
+        return (action == MotionEvent.ACTION_SCROLL);
     }
 
     /**
