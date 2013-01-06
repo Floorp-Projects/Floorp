@@ -15,7 +15,7 @@
 #include "nsIFrame.h"
 #include "nsIScriptError.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGAnimationElement.h"
+#include "SVGAnimationElement.h"
 #include "nsSVGSVGElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
@@ -46,7 +46,7 @@ SVGContentUtils::ActivateByHyperlink(nsIContent *aContent)
   NS_ABORT_IF_FALSE(aContent->IsNodeOfType(nsINode::eANIMATION),
                     "Expecting an animation element");
 
-  static_cast<nsSVGAnimationElement*>(aContent)->ActivateByHyperlink();
+  static_cast<SVGAnimationElement*>(aContent)->ActivateByHyperlink();
 }
 
 float

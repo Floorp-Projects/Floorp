@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SVGANIMATIONELEMENT_H_
-#define NS_SVGANIMATIONELEMENT_H_
+#ifndef mozilla_dom_SVGAnimationElement_h
+#define mozilla_dom_SVGAnimationElement_h
 
 #include "DOMSVGTests.h"
 #include "nsIDOMElementTimeControl.h"
@@ -14,23 +14,26 @@
 #include "nsSMILTimedElement.h"
 #include "nsSVGElement.h"
 
-typedef nsSVGElement nsSVGAnimationElementBase;
+typedef nsSVGElement SVGAnimationElementBase;
 
-class nsSVGAnimationElement : public nsSVGAnimationElementBase,
-                              public DOMSVGTests,
-                              public nsISMILAnimationElement,
-                              public nsIDOMElementTimeControl
+namespace mozilla {
+namespace dom {
+
+class SVGAnimationElement : public SVGAnimationElementBase,
+                            public DOMSVGTests,
+                            public nsISMILAnimationElement,
+                            public nsIDOMElementTimeControl
 {
 protected:
-  nsSVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGAnimationElement,
-                                           nsSVGAnimationElementBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGAnimationElement,
+                                           SVGAnimationElementBase)
   NS_DECL_NSIDOMSVGANIMATIONELEMENT
   NS_DECL_NSIDOMELEMENTTIMECONTROL
 
@@ -81,7 +84,7 @@ protected:
 
   class TargetReference : public nsReferencedElement {
   public:
-    TargetReference(nsSVGAnimationElement* aAnimationElement) :
+    TargetReference(SVGAnimationElement* aAnimationElement) :
       mAnimationElement(aAnimationElement) {}
   protected:
     // We need to be notified when target changes, in order to request a
@@ -96,11 +99,14 @@ protected:
     // first time the target changes)
     virtual bool IsPersistent() { return true; }
   private:
-    nsSVGAnimationElement* const mAnimationElement;
+    SVGAnimationElement* const mAnimationElement;
   };
 
   TargetReference      mHrefTarget;
   nsSMILTimedElement   mTimedElement;
 };
 
-#endif // NS_SVGANIMATIONELEMENT_H_
+} // namespace mozilla
+} // namespace dom
+
+#endif // mozilla_dom_SVGAnimationElement_h

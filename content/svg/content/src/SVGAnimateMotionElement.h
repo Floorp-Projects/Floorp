@@ -3,25 +3,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SVGANIMATEMOTIONELEMENT_H_
-#define NS_SVGANIMATEMOTIONELEMENT_H_
+#ifndef mozilla_dom_SVGAnimateMotionElement_h
+#define mozilla_dom_SVGAnimateMotionElement_h
 
+#include "mozilla/dom/SVGAnimationElement.h"
 #include "nsIDOMSVGAnimateMotionElement.h"
-#include "nsSVGAnimationElement.h"
-#include "nsSVGEnum.h"
 #include "SVGMotionSMILAnimationFunction.h"
 
-typedef nsSVGAnimationElement nsSVGAnimateMotionElementBase;
+nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
 
-class nsSVGAnimateMotionElement : public nsSVGAnimateMotionElementBase,
-                                  public nsIDOMSVGAnimateMotionElement
+namespace mozilla {
+namespace dom {
+
+class SVGAnimateMotionElement MOZ_FINAL : public SVGAnimationElement,
+                                          public nsIDOMSVGAnimateMotionElement
 {
 protected:
-  friend nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
-                                                already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
-  mozilla::SVGMotionSMILAnimationFunction mAnimationFunction;
+  SVGMotionSMILAnimationFunction mAnimationFunction;
+  friend nsresult
+    (::NS_NewSVGAnimateMotionElement(nsIContent **aResult,
+                                     already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
   // interfaces:
@@ -30,8 +34,8 @@ public:
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGAnimateMotionElementBase::)
-  NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(nsSVGAnimateMotionElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGAnimationElement::)
+  NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(SVGAnimationElement::)
 
   // nsIDOMNode specializations
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -56,4 +60,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
-#endif // NS_SVGANIMATEMOTIONELEMENT_H_
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGAnimateMotionElement_h
