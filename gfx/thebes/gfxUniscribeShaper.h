@@ -29,9 +29,12 @@ public:
         MOZ_COUNT_DTOR(gfxUniscribeShaper);
     }
 
-    virtual bool ShapeWord(gfxContext *aContext,
-                           gfxShapedWord *aShapedWord,
-                           const PRUnichar *aString);
+    virtual bool ShapeText(gfxContext      *aContext,
+                           const PRUnichar *aText,
+                           uint32_t         aOffset,
+                           uint32_t         aLength,
+                           int32_t          aScript,
+                           gfxShapedText   *aShapedText);
 
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
 

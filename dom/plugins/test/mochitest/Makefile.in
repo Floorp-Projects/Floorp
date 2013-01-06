@@ -101,6 +101,7 @@ MOCHITEST_CHROME_FILES = \
   test_npruntime.xul   \
   test_wmode.xul \
   test_bug479979.xul \
+  test_refresh_navigator_plugins.html \
   $(NULL)
 
 ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING

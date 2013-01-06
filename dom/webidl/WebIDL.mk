@@ -21,7 +21,9 @@ webidl_files = \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
+  CharacterData.webidl \
   ClientRectList.webidl \
+  Comment.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
@@ -36,6 +38,7 @@ webidl_files = \
   DOMSettableTokenList.webidl \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
+  DOMTransaction.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \
   EventHandler.webidl \
@@ -49,10 +52,12 @@ webidl_files = \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
+  HTMLAnchorElement.webidl \
   HTMLBodyElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDivElement.webidl \
+  HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
   HTMLFontElement.webidl \
@@ -60,9 +65,22 @@ webidl_files = \
   HTMLHeadingElement.webidl \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
+  HTMLLIElement.webidl \
+  HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
+  HTMLParagraphElement.webidl \
+  HTMLPreElement.webidl \
   HTMLPropertiesCollection.webidl \
+  HTMLScriptElement.webidl \
+  HTMLSpanElement.webidl \
+  HTMLTableCaptionElement.webidl \
+  HTMLTableCellElement.webidl \
+  HTMLTableColElement.webidl \
+  HTMLTableElement.webidl \
+  HTMLTableRowElement.webidl \
+  HTMLTableSectionElement.webidl \
   HTMLTitleElement.webidl \
+  HTMLUListElement.webidl \
   ImageData.webidl \
   Location.webidl \
   MutationObserver.webidl \
@@ -85,21 +103,31 @@ webidl_files = \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGDescElement.webidl \
   SVGElement.webidl \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
+  SVGMetadataElement.webidl \
+  SVGMPathElement.webidl \
   SVGNumberList.webidl \
   SVGPathSeg.webidl \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
   SVGPreserveAspectRatio.webidl \
+  SVGScriptElement.webidl \
+  SVGStopElement.webidl \
+  SVGStyleElement.webidl \
+  SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformList.webidl \
+  SVGURIReference.webidl \
+  Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
   URL.webidl \
   WebSocket.webidl \
+  UndoManager.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \

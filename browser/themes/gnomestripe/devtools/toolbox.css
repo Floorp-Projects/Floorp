@@ -72,7 +72,7 @@
 }
 
 #command-button-responsive {
-  list-style-image: url(chrome://browser/skin/devtools/command-responsivemode.png);
+  list-style-image: url("chrome://browser/skin/devtools/command-responsivemode.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 #command-button-responsive:hover {
@@ -86,7 +86,7 @@
 }
 
 #command-button-tilt {
-  list-style-image: url(chrome://browser/skin/devtools/command-tilt.png);
+  list-style-image: url("chrome://browser/skin/devtools/command-tilt.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 #command-button-tilt:hover {
@@ -102,7 +102,7 @@
 }
 
 #command-button-scratchpad {
-  list-style-image: url(chrome://browser/skin/devtools/command-scratchpad.png);
+  list-style-image: url("chrome://browser/skin/devtools/command-scratchpad.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
@@ -119,7 +119,7 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  background-image: url(background-noise-toolbar.png),
+  background-image: url("background-noise-toolbar.png"),
                     linear-gradient(#303840, #2d3640);
   border-top: 1px solid #060a0d;
   box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset,
@@ -173,7 +173,7 @@
   background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
                     linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
                     linear-gradient(hsla(206,37%,4%,.1), hsla(206,37%,4%,.2));
-  background size: 1px 100%,
+  background-size: 1px 100%,
                    1px 100%,
                    100%;
   background-repeat: no-repeat,
@@ -189,8 +189,8 @@
 
 .devtools-tab[selected=true] {
   color: #f5f7fa;
-  background-image: radial-gradient(ellipse farthest-corner at center top, #9fdfff, hsla(200,100%,70%,.3)),
-                    radial-gradient(ellipse farthest-side at center top, hsla(200,100%,70%,.4), hsla(200,100%,70%,0)),
+  background-image: radial-gradient(farthest-corner at center top, #9fdfff, hsla(200,100%,70%,.3)),
+                    radial-gradient(farthest-side at center top, hsla(200,100%,70%,.4), hsla(200,100%,70%,0)),
                     linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
                     linear-gradient(hsla(204,45%,98%,.02), hsla(204,45%,98%,.04)),
                     linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.3));

@@ -10,7 +10,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"
-#include "nsHTMLCanvasElement.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsHTMLVideoElement.h"
 #include "CanvasUtils.h"
 #include "gfxFont.h"
@@ -141,7 +141,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
 
-  nsHTMLCanvasElement* GetCanvas() const
+  HTMLCanvasElement* GetCanvas() const
   {
     // corresponds to changes to the old bindings made in bug 745025
     return mCanvasElement->GetOriginalCanvas();

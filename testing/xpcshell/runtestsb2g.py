@@ -37,19 +37,12 @@ class B2GXPCShellRemote(XPCShellRemote):
         if self.device._useZip:
             return XPCShellRemote.setupTestDir(self)
 
-        push_attempts = 10
         for root, dirs, files in os.walk(self.xpcDir):
             for filename in files:
                 rel_path = os.path.relpath(os.path.join(root, filename), self.xpcDir)
                 test_file = os.path.join(self.remoteScriptsDir, rel_path)
-                for retry in range(1, push_attempts+1):
-                    print 'pushing', test_file, '(attempt %s of %s)' % (retry, push_attempts)
-                    try:
-                        self.device.pushFile(os.path.join(root, filename), test_file)
-                        break
-                    except DMError:
-                        if retry == push_attempts:
-                            raise
+                print 'pushing %s' % test_file
+                self.device.pushFile(os.path.join(root, filename), test_file, retryLimit=10)
 
     # Overridden
     def pushLibs(self):

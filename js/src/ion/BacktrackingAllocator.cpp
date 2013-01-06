@@ -140,7 +140,7 @@ BacktrackingAllocator::go()
     if (IonSpewEnabled(IonSpew_RegAlloc))
         dumpAllocations();
 
-    return resolveControlFlow() && reifyAllocations();
+    return resolveControlFlow() && reifyAllocations() && populateSafepoints();
 }
 
 static bool
@@ -1021,10 +1021,85 @@ BacktrackingAllocator::reifyAllocations()
                     }
                 }
             }
+
+            addLiveRegistersForInterval(reg, interval);
         }
     }
 
     graph.setLocalSlotCount(stackSlotAllocator.stackHeight());
+    return true;
+}
+
+bool
+BacktrackingAllocator::populateSafepoints()
+{
+    size_t firstSafepoint = 0;
+
+    for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
+        BacktrackingVirtualRegister *reg = &vregs[i];
+
+        if (!reg->def() || (!IsTraceable(reg) && !IsNunbox(reg)))
+            continue;
+
+        firstSafepoint = findFirstSafepoint(reg->getInterval(0), firstSafepoint);
+        if (firstSafepoint >= graph.numSafepoints())
+            break;
+
+        // Find the furthest endpoint.
+        CodePosition end = reg->getInterval(0)->end();
+        for (size_t j = 1; j < reg->numIntervals(); j++)
+            end = Max(end, reg->getInterval(j)->end());
+
+        for (size_t j = firstSafepoint; j < graph.numSafepoints(); j++) {
+            LInstruction *ins = graph.getSafepoint(j);
+
+            // Stop processing safepoints if we know we're out of this virtual
+            // register's range.
+            if (end < inputOf(ins))
+                break;
+
+            // Include temps but not instruction outputs. Also make sure MUST_REUSE_INPUT
+            // is not used with gcthings or nunboxes, or we would have to add the input reg
+            // to this safepoint.
+            if (ins == reg->ins() && !reg->isTemp()) {
+                DebugOnly<LDefinition*> def = reg->def();
+                JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
+                             def->type() == LDefinition::GENERAL || def->type() == LDefinition::DOUBLE);
+                continue;
+            }
+
+            LSafepoint *safepoint = ins->safepoint();
+
+            LiveInterval *interval = reg->intervalFor(inputOf(ins));
+            if (!interval)
+                continue;
+
+            LAllocation *a = interval->getAllocation();
+            if (a->isGeneralReg() && ins->isCall())
+                continue;
+
+            switch (reg->type()) {
+              case LDefinition::OBJECT:
+                safepoint->addGcPointer(*a);
+                break;
+#ifdef JS_NUNBOX32
+              case LDefinition::TYPE:
+                safepoint->addNunboxType(i, *a);
+                break;
+              case LDefinition::PAYLOAD:
+                safepoint->addNunboxPayload(i, *a);
+                break;
+#else
+              case LDefinition::BOX:
+                safepoint->addBoxedValue(*a);
+                break;
+#endif
+              default:
+                JS_NOT_REACHED("Bad register type");
+            }
+        }
+    }
+
     return true;
 }
 

@@ -12,11 +12,8 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
-
 #include "mozilla/dom/ContentChild.h"
-
-#include "base/basictypes.h"
-
+#include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;
@@ -82,6 +79,11 @@ AudioChannelServiceChild::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
   if (cc) {
     cc->SendAudioChannelRegisterType(aType);
   }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "audio-channel-agent-changed", nullptr);
+  }
 }
 
 void
@@ -98,5 +100,9 @@ AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   if (cc) {
     cc->SendAudioChannelUnregisterType(type);
   }
-}
 
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "audio-channel-agent-changed", nullptr);
+  }
+}
