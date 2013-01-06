@@ -93,7 +93,7 @@ CPPSRCS		= \
 		nsHTMLMetaElement.cpp \
 		nsHTMLMeterElement.cpp \
 		nsHTMLModElement.cpp \
-		nsHTMLObjectElement.cpp \
+		HTMLObjectElement.cpp \
 		nsHTMLSharedObjectElement.cpp \
 		nsHTMLOptionElement.cpp \
 		nsHTMLOptGroupElement.cpp \
