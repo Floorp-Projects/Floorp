@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655297
 <div id="content" style="display: none">
   
 </div>
-    <p>0</p> <p>1</p> <p>2</p> <p>3</p> <p>4</p>
-    <p>5</p> <p>6</p> <p>7</p> <p>8</p> <p>9</p>
+    <form>0</form> <form>1</form> <form>2</form> <form>3</form> <form>4</form>
+    <form>5</form> <form>6</form> <form>7</form> <form>8</form> <form>9</form>
 <pre id="test">
 <script type="application/javascript">
 
@@ -23,12 +23,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655297
 
 var map = WeakMap();
 function f() {
-    var paras = document.getElementsByTagName("P");
+    var paras = document.getElementsByTagName("form");
     for (var i = 0; i < paras.length; i++)
         map.set(paras[i], "ok");
 }
 function g() {
-    var paras = document.getElementsByTagName("P");
+    var paras = document.getElementsByTagName("form");
     for (var i = 0; i < paras.length; i++) {
         if (map.get(paras[i]) != "ok") {
             return false;

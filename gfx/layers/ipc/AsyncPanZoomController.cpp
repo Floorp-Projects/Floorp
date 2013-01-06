@@ -92,6 +92,7 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mMonitor("AsyncPanZoomController"),
      mLastSampleTime(TimeStamp::Now()),
      mState(NOTHING),
+     mPreviousPaintStartTime(TimeStamp::Now()),
      mLastAsyncScrollTime(TimeStamp::Now()),
      mLastAsyncScrollOffset(0, 0),
      mCurrentAsyncScrollOffset(0, 0),
@@ -245,6 +246,26 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
     rv = mGestureEventListener->HandleInputEvent(aEvent);
     if (rv == nsEventStatus_eConsumeNoDefault)
       return rv;
+  }
+
+  if (mDelayPanning && aEvent.mInputType == MULTITOUCH_INPUT) {
+    const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
+    if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_MOVE) {
+      // Let BrowserElementScrolling perform panning gesture first.
+      SetState(WAITING_LISTENERS);
+      mTouchQueue.AppendElement(multiTouchInput);
+
+      if (!mTouchListenerTimeoutTask) {
+        mTouchListenerTimeoutTask =
+          NewRunnableMethod(this, &AsyncPanZoomController::TimeoutTouchListeners);
+
+        MessageLoop::current()->PostDelayedTask(
+          FROM_HERE,
+          mTouchListenerTimeoutTask,
+          TOUCH_LISTENER_TIMEOUT);
+      }
+      return nsEventStatus_eConsumeNoDefault;
+    }
   }
 
   switch (aEvent.mInputType) {
@@ -674,7 +695,10 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     ScrollBy(gfx::Point(xDisplacement, yDisplacement));
     ScheduleComposite();
 
-    RequestContentRepaint();
+    TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
+    if (timePaintDelta.ToMilliseconds() > PAN_REPAINT_INTERVAL) {
+      RequestContentRepaint();
+    }
   }
 }
 
@@ -708,7 +732,10 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
     mX.GetDisplacementForDuration(inverseResolution, aDelta),
     mY.GetDisplacementForDuration(inverseResolution, aDelta)
   ));
-  RequestContentRepaint();
+  TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
+  if (timePaintDelta.ToMilliseconds() > FLING_REPAINT_INTERVAL) {
+    RequestContentRepaint();
+  }
 
   return true;
 }
@@ -1130,6 +1157,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
 
   mLastContentPaintMetrics = aViewportFrame;
 
+  mFrameMetrics.mMayHaveTouchListeners = aViewportFrame.mMayHaveTouchListeners;
   if (mWaitingForContentToPaint) {
     // Remove the oldest sample we have if adding a new sample takes us over our
     // desired number of samples.
@@ -1223,6 +1251,10 @@ void AsyncPanZoomController::CancelDefaultPanZoom() {
   }
 }
 
+void AsyncPanZoomController::DetectScrollableSubframe() {
+  mDelayPanning = true;
+}
+
 void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
   gfx::Rect zoomToRect(gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height));
 
@@ -1309,7 +1341,7 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
 }
 
 void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
-  if (!mFrameMetrics.mMayHaveTouchListeners) {
+  if (!mFrameMetrics.mMayHaveTouchListeners && !mDelayPanning) {
     mTouchQueue.Clear();
     return;
   }
@@ -1321,12 +1353,21 @@ void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
 
   if (mState == WAITING_LISTENERS) {
     if (!aPreventDefault) {
-      SetState(NOTHING);
+      // Delayed scrolling gesture is pending at TOUCHING state.
+      if (mDelayPanning) {
+        SetState(TOUCHING);
+      } else {
+        SetState(NOTHING);
+      }
     }
 
     mHandlingTouchQueue = true;
 
     while (!mTouchQueue.IsEmpty()) {
+      // we need to reset mDelayPanning before handling scrolling gesture.
+      if (mTouchQueue[0].mType == MultiTouchInput::MULTITOUCH_MOVE) {
+        mDelayPanning = false;
+      }
       if (!aPreventDefault) {
         HandleInputEvent(mTouchQueue[0]);
       }

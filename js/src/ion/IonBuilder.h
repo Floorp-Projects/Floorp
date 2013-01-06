@@ -275,9 +275,8 @@ class IonBuilder : public MIRGenerator
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
-    MDefinition *createThisNative();
     MDefinition *createThisScripted(MDefinition *callee);
-    MDefinition *createThisScriptedSingleton(HandleFunction target, HandleObject proto, MDefinition *callee);
+    MDefinition *createThisScriptedSingleton(HandleFunction target, MDefinition *callee);
     MDefinition *createThis(HandleFunction target, MDefinition *callee);
     MInstruction *createDeclEnvObject(MDefinition *callee, MDefinition *scopeObj);
     MInstruction *createCallObject(MDefinition *callee, MDefinition *scopeObj);

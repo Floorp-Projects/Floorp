@@ -529,22 +529,32 @@ HyperTextAccessible::DOMPointToHypertextOffset(nsINode* aNode,
   } else {
     // findNode could be null if aNodeOffset == # of child nodes, which means
     // one of two things:
-    // 1) we're at the end of the children, keep findNode = null, so that we get
-    //    the last possible offset
-    // 2) there are no children and the passed-in node is mContent, which means
-    //    we're an aempty nsIAccessibleText
-    // 3) there are no children, and the passed-in node is not mContent -- use
+    // 1) there are no children, and the passed-in node is not mContent -- use
     //    parentContent for the node to find
+    // 2) there are no children and the passed-in node is mContent, which means
+    //    we're an empty nsIAccessibleText
+    // 3) there are children and we're at the end of the children
 
     findNode = aNode->GetChildAt(aNodeOffset);
-    if (!findNode && !aNodeOffset) {
-      if (aNode == GetNode()) {
-        // There are no children, which means this is an empty nsIAccessibleText, in which
-        // case we can only be at hypertext offset 0
-        *aHyperTextOffset = 0;
-        return nullptr;
+    if (!findNode) {
+      if (aNodeOffset == 0) {
+        if (aNode == GetNode()) {
+          // Case #1: this accessible has no children and thus has empty text,
+          // we can only be at hypertext offset 0.
+          *aHyperTextOffset = 0;
+          return nullptr;
+        }
+
+        // Case #2: there are no children, we're at this node.
+        findNode = aNode;
+      } else if (aNodeOffset == aNode->GetChildCount()) {
+        // Case #3: we're after the last child, get next node to this one.
+        for (nsINode* tmpNode = aNode;
+             !findNode && tmpNode && tmpNode != mContent;
+             tmpNode = tmpNode->GetParent()) {
+          findNode = tmpNode->GetNextSibling();
+        }
       }
-      findNode = aNode; // Case #2: there are no children
     }
   }
 

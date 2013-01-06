@@ -32,7 +32,7 @@ class Fake_SourceMediaStream;
 
 class Fake_MediaStreamListener
 {
-public:
+ public:
   virtual ~Fake_MediaStreamListener() {}
 
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
@@ -44,7 +44,6 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamListener)
 };
-
 
 // Note: only one listener supported
 class Fake_MediaStream {
@@ -100,6 +99,7 @@ protected:
 class Fake_SourceMediaStream : public Fake_MediaStream {
  public:
   Fake_SourceMediaStream() : mSegmentsAdded(0),
+                             mDesiredTime(0),
                              mPullEnabled(false),
                              mStop(false),
                              mPeriodic(new Fake_MediaPeriodic(this)) {}
@@ -166,6 +166,7 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
 
  protected:
   int mSegmentsAdded;
+  uint64_t mDesiredTime;
   bool mPullEnabled;
   bool mStop;
   nsRefPtr<Fake_MediaPeriodic> mPeriodic;

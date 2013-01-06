@@ -60,8 +60,8 @@ NS_IMPL_RELEASE_INHERITED(nsSVGUseElement,nsSVGUseElementBase)
 DOMCI_NODE_DATA(SVGUseElement, nsSVGUseElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGUseElement)
-  NS_NODE_INTERFACE_TABLE7(nsSVGUseElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGTests,
+  NS_NODE_INTERFACE_TABLE6(nsSVGUseElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
                            nsIDOMSVGURIReference,
                            nsIDOMSVGUseElement, nsIMutationObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGUseElement)

@@ -132,7 +132,7 @@ public:
 
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
                                     JSObject *wrapper, JSObject *holder,
-                                    jsid id, bool set, JSPropertyDescriptor *desc);
+                                    jsid id, JSPropertyDescriptor *desc, unsigned flags);
 
     static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp)
     {
@@ -183,10 +183,10 @@ class XPCWrappedNativeXrayTraits : public XrayTraits
 {
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                      bool set, JSPropertyDescriptor *desc);
+                                      JSPropertyDescriptor *desc, unsigned flags);
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                    JSObject *holder, jsid id, bool set,
-                                    JSPropertyDescriptor *desc);
+                                    JSObject *holder, jsid id, JSPropertyDescriptor *desc,
+                                    unsigned flags);
     static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                JSPropertyDescriptor *desc, bool *defined);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
@@ -198,7 +198,7 @@ public:
     static bool isResolving(JSContext *cx, JSObject *holder, jsid id);
 
     static bool resolveDOMCollectionProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
-                                             jsid id, bool set, PropertyDescriptor *desc);
+                                             jsid id, PropertyDescriptor *desc, unsigned flags);
 
     static XPCWrappedNative* getWN(JSObject *wrapper) {
         return GetWrappedNative(getTargetObject(wrapper));
@@ -223,10 +223,10 @@ class DOMXrayTraits : public XrayTraits
 {
 public:
     static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                      bool set, JSPropertyDescriptor *desc);
+                                      JSPropertyDescriptor *desc, unsigned flags);
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                    JSObject *holder, jsid id, bool set,
-                                    JSPropertyDescriptor *desc);
+                                    JSObject *holder, jsid id, JSPropertyDescriptor *desc,
+                                    unsigned flags);
     static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                                JS::AutoIdVector &props);
     static bool call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp);
@@ -619,8 +619,8 @@ private:
 // any native property.
 bool
 XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, JSObject *wrapper,
-                                                         JSObject *holder, jsid id, bool set,
-                                                         PropertyDescriptor *desc)
+                                                         JSObject *holder, jsid id,
+                                                         PropertyDescriptor *desc, unsigned flags)
 {
     // If we are not currently resolving this id and resolveNative is called
     // we don't do anything. (see defineProperty in case of shadowing is forbidden).
@@ -638,7 +638,6 @@ XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, JSObject
 
     bool retval = true;
     JSObject *pobj = NULL;
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                      flags, &pobj, &retval);
     if (NS_FAILED(rv)) {
@@ -716,17 +715,17 @@ XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
 
 bool
 XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper,
-                                                  JSObject *holder, jsid id, bool set,
-                                                  JSPropertyDescriptor *desc)
+                                                  JSObject *holder, jsid id,
+                                                  JSPropertyDescriptor *desc, unsigned flags)
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (!set &&
+    if (!(flags & JSRESOLVE_ASSIGNING) &&
         id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
         Is<nsIDOMElement>(wrapper))
     {
         // XPC calling mechanism cannot handle call/bind properly in some cases
-        // especially through xray wrappers. This is a temoorary work around for
+        // especially through xray wrappers. This is a temporary work around for
         // this problem for mozMatchesSelector. See: bug 763897.
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE;
@@ -755,7 +754,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
     // check for those.
     if (!JSID_IS_STRING(id)) {
         /* Not found */
-        return resolveDOMCollectionProperty(cx, wrapper, holder, id, set, desc);
+        return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
     }
 
     XPCNativeInterface *iface;
@@ -766,7 +765,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
         !(iface = ccx.GetInterface()) ||
         !(member = ccx.GetMember())) {
         /* Not found */
-        return resolveDOMCollectionProperty(cx, wrapper, holder, id, set, desc);
+        return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
     }
 
     desc->obj = holder;
@@ -912,7 +911,7 @@ nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMut
 bool
 XrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
                                JSObject *wrapper, JSObject *holder, jsid id,
-                               bool set, PropertyDescriptor *desc)
+                               PropertyDescriptor *desc, unsigned flags)
 {
     desc->obj = NULL;
     JSObject *target = getTargetObject(wrapper);
@@ -938,11 +937,11 @@ XrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
 bool
 XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper,
                                                JSObject *wrapper, JSObject *holder, jsid id,
-                                               bool set, PropertyDescriptor *desc)
+                                               PropertyDescriptor *desc, unsigned flags)
 {
     // Call the common code.
     bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
-                                             id, set, desc);
+                                             id, desc, flags);
     if (!ok || desc->obj)
         return ok;
 
@@ -957,7 +956,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
           (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
           Is<nsIDocument>(wrapper)))) {
         bool status;
-        Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
+        Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
         desc->obj = NULL; // default value
         if (!jsWrapper.enter(cx, wrapper, id, action, &status))
             return status;
@@ -976,7 +975,6 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
         return true;
     }
 
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     JSBool hasProp;
     if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
         return false;
@@ -1118,7 +1116,7 @@ XPCWrappedNativeXrayTraits::construct(JSContext *cx, JSObject *wrapper,
 
 bool
 DOMXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                     bool set, JSPropertyDescriptor *desc)
+                                     JSPropertyDescriptor *desc, unsigned flags)
 {
     JSObject *obj = getTargetObject(wrapper);
     if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc))
@@ -1132,16 +1130,17 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject 
 
 bool
 DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                  JSObject *holder, jsid id, bool set, JSPropertyDescriptor *desc)
+                                  JSObject *holder, jsid id, JSPropertyDescriptor *desc,
+                                  unsigned flags)
 {
     // Call the common code.
     bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
-                                             id, set, desc);
+                                             id, desc, flags);
     if (!ok || desc->obj)
         return ok;
 
     JSObject *obj = getTargetObject(wrapper);
-    if (!XrayResolveOwnProperty(cx, wrapper, obj, id, set, desc))
+    if (!XrayResolveOwnProperty(cx, wrapper, obj, id, desc, flags))
         return false;
 
     NS_ASSERTION(!desc->obj || desc->obj == wrapper,
@@ -1302,7 +1301,7 @@ XrayToString(JSContext *cx, unsigned argc, jsval *vp)
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                 bool set, js::PropertyDescriptor *desc)
+                                                 js::PropertyDescriptor *desc, unsigned flags)
 {
     JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
@@ -1311,7 +1310,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     }
 
     bool status;
-    Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
+    Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
     desc->obj = NULL; // default value
     if (!this->enter(cx, wrapper, id, action, &status))
         return status;
@@ -1323,11 +1322,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         JSObject *obj = Traits::getTargetObject(wrapper);
         {
             JSAutoCompartment ac(cx, obj);
-            if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                              (set ? JSRESOLVE_ASSIGNING : 0),
-                                              desc)) {
+            if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
                 return false;
-            }
         }
 
         if (desc->obj)
@@ -1345,7 +1341,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     if (AccessCheck::wrapperSubsumes(wrapper) &&
         id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
         bool status;
-        Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
+        Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
         desc->obj = NULL; // default value
         if (!this->enter(cx, wrapper, id, action, &status))
             return status;
@@ -1359,7 +1355,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
-    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, set, desc))
+    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
         return false;
 
     if (desc->obj)
@@ -1373,7 +1369,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     }
 
     // Nothing in the cache. Call through, and cache the result.
-    if (!Traits::resolveNativeProperty(cx, wrapper, holder, id, set, desc))
+    if (!Traits::resolveNativeProperty(cx, wrapper, holder, id, desc, flags))
         return false;
 
     if (!desc->obj) {
@@ -1393,7 +1389,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
 
     desc->obj = wrapper;
 
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
                                  desc->attrs) &&
            JS_GetPropertyDescriptorById(cx, holder, id, flags, desc);
@@ -1402,7 +1397,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                    bool set, PropertyDescriptor *desc)
+                                                    PropertyDescriptor *desc, unsigned flags)
 {
     JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
@@ -1411,7 +1406,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
     }
 
     bool status;
-    Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
+    Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
     desc->obj = NULL; // default value
     if (!this->enter(cx, wrapper, id, action, &status))
         return status;
@@ -1425,24 +1420,20 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
         JSObject *obj = Traits::getTargetObject(wrapper);
         {
             JSAutoCompartment ac(cx, obj);
-            if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                              (set ? JSRESOLVE_ASSIGNING : 0),
-                                              desc)) {
+            if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
                 return false;
-            }
         }
 
         desc->obj = (desc->obj == obj) ? wrapper : nullptr;
         return JS_WrapPropertyDescriptor(cx, desc);
     }
 
-    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, set, desc))
+    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
         return false;
 
     if (desc->obj)
         return true;
 
-    unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0);
     if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
         return false;
 
@@ -1470,7 +1461,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     }
 
     PropertyDescriptor existing_desc;
-    if (!getOwnPropertyDescriptor(cx, wrapper, id, true, &existing_desc))
+    if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc, JSRESOLVE_ASSIGNING))
         return false;
 
     if (existing_desc.obj && (existing_desc.attrs & JSPROP_PERMANENT))

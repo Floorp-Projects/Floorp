@@ -2575,10 +2575,10 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
   // when aFromContainer is 'this', then aLine->LastChild()'s next sibling
   // is already set correctly.
   aLine->NoteFrameAdded(frame);
+  fromLine->NoteFrameRemoved(frame);
 
-  if (fromLine->GetChildCount() > 1) {
+  if (fromLine->GetChildCount() > 0) {
     // Mark line dirty now that we pulled a child
-    fromLine->NoteFrameRemoved(frame);
     fromLine->MarkDirty();
     fromLine->mFirstChild = newFirstChild;
   } else {
@@ -4464,7 +4464,8 @@ nsBlockFrame::GetOverflowLines() const
   FrameLines* prop =
     static_cast<FrameLines*>(Properties().Get(OverflowLinesProperty()));
   NS_ASSERTION(prop && !prop->mLines.empty() &&
-               prop->mLines.front()->mFirstChild == prop->mFrames.FirstChild(),
+               prop->mLines.front()->GetChildCount() == 0 ? prop->mFrames.IsEmpty() :
+                 prop->mLines.front()->mFirstChild == prop->mFrames.FirstChild(),
                "value should always be stored and non-empty when state set");
   return prop;
 }
@@ -4478,7 +4479,8 @@ nsBlockFrame::RemoveOverflowLines()
   FrameLines* prop =
     static_cast<FrameLines*>(Properties().Remove(OverflowLinesProperty()));
   NS_ASSERTION(prop && !prop->mLines.empty() &&
-               prop->mLines.front()->mFirstChild == prop->mFrames.FirstChild(),
+               prop->mLines.front()->GetChildCount() == 0 ? prop->mFrames.IsEmpty() :
+                 prop->mLines.front()->mFirstChild == prop->mFrames.FirstChild(),
                "value should always be stored and non-empty when state set");
   RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
   return prop;

@@ -109,7 +109,8 @@ SDK_HEADERS     = \
 		nsAutoPtr.h \
 		nsError.h \
 		ErrorList.h \
-		ErrorListDefines.h \
+		ErrorListCxxDefines.h \
+		ErrorListCDefines.h \
 		nsISupportsBase.h \
 		nscore.h \
 		nsAtomicRefcnt.h \
@@ -163,10 +164,16 @@ LOCAL_INCLUDES += \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
 
-# We generate ErrorListDefines.h from ErrorList.h using regex.  The -n option
+# We generate ErrorListCxxDefines.h from ErrorList.h using regex.  The -n option
 # suppresses printing the pattern space, and the p at the end prints it anyway,
 # so we don't print lines that don't match the pattern to start with.
-ErrorListDefines.h: ErrorList.h
+ErrorListCxxDefines.h: ErrorList.h Makefile
 		sed -n 's/.*ERROR(\([A-Z_0-9]*\).*/#define \1 nsresult::\1/p' < $< > $@
 
-GARBAGE += ErrorListDefines.h
+ErrorListCDefines.h: ErrorList.h Makefile
+		sed 's/.*ERROR(\([A-Z_0-9]*\),\( *\)\(.*\))[^)]*/#define \1 \2((nsresult)(\3))/' < $< > $@
+
+GARBAGE += \
+	ErrorListCxxDefines.h \
+	ErrorListCDefines.h \
+	$(NULL)

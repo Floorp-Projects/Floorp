@@ -50,24 +50,24 @@
   .tabbrowser-tab:not(:-moz-lwtheme),
   .tabs-newtab-button:not(:-moz-lwtheme) {
     background-image: @toolbarShadowOnTab@, @bgTabTexture@,
-                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
     background-image: @toolbarShadowOnTab@, @bgTabTextureHover@,
-                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 50%),
-                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+    background-image: linear-gradient(#fff, @toolbarHighlight@ 50%),
+                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   #main-window[tabsontop=false]:not([disablechrome]) .tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
     background-image: @toolbarShadowOnTab@,
-                      -moz-linear-gradient(white, @toolbarHighlight@ 50%),
-                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+                      linear-gradient(#fff, @toolbarHighlight@ 50%),
+                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   #navigator-toolbox:not(:-moz-lwtheme)::after {
@@ -246,7 +246,7 @@
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar:not(:-moz-lwtheme) {
     margin-top: 2px;
     border-top: 1px solid @toolbarShadowColor@;
-    background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+    background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   }
 
   #main-window[sizemode=normal] #TabsToolbar[tabsontop=true] {
@@ -263,7 +263,7 @@
   #main-window[sizemode=normal][disablechrome] #navigator-toolbox[tabsontop=true]:not(:-moz-lwtheme)::after {
     visibility: visible;
     background-color: @customToolbarColor@;
-    background-image: -moz-linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
+    background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
     height: 4px;
   }
 
@@ -331,7 +331,7 @@
 
   #tab-view:-moz-lwtheme {
     background-image: url("chrome://browser/skin/tabview/grain.png"),
-                      -moz-linear-gradient(rgba(255,255,255,0), #CCD9EA 200px, #C7D5E7);
+                      linear-gradient(rgba(255,255,255,0), #CCD9EA 200px, #C7D5E7);
     background-attachment: fixed;
   }
 }
@@ -444,13 +444,13 @@
   .splitmenu-menuitem[_moz-menuactive],
   .splitmenu-menu[_moz-menuactive] {
     background-color: transparent;
-    background-image: -moz-linear-gradient(#fafbfd, #ebf3fd);
+    background-image: linear-gradient(#fafbfd, #ebf3fd);
     border-color: #aeccf1;
   }
 
   .splitmenu-menuitem[disabled][_moz-menuactive],
   .splitmenu-menu[disabled][_moz-menuactive] {
-    background-image: -moz-linear-gradient(#f8f9f9, #eaeaea);
+    background-image: linear-gradient(#f8f9f9, #eaeaea);
     border-color: #d8d7d7;
   }
 

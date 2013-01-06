@@ -35,11 +35,13 @@ function onFailure() {
   ok(false, "in on Failure!");
 }
 
-var wifi  = {"net3g.apn": "internet.mnc012.mcc345.gprs"};
-var wifi2 = {"net3g.apn": "internet.mnc012.mcc345.test"};
+const wifi  = {"net3g.apn": "internet.mnc012.mcc345.gprs"};
+const wifi2 = {"net3g.apn": "internet.mnc012.mcc345.test"};
+var wifi3 = {"net3g.apn2": "internet.mnc012.mcc345.test3"};
 var wifiEnabled = {"wifi.enabled": true};
 var wifiDisabled = {"wifi.enabled": false};
 var screenBright = {"screen.brightness": 0.7};
+var screenBright2 = {"screen.brightness": 0.1};
 var wifiNetworks0 = { "wifi.networks[0]": { ssid: "myfreenetwork", mac: "01:23:45:67:89:ab", passwd: "secret"}};
 var wifiNetworks1 = { "wifi.networks[1]": { ssid: "myfreenetwork2", mac: "01:23:45:67:89:ab", passwd: "secret2"}};
 
@@ -47,7 +49,8 @@ var combination = {
   "wifi.enabled": false,
   "screen.brightness": 0.7,
   "wifi.networks[0]": { ssid: "myfreenetwork", mac: "01:23:45:67:89:ab", passwd: "secret" },
-  "test.test": true
+  "test.test": true,
+  "net3g.apn2": "internet.mnc012.mcc345.gprs"
 }
 
 function equals(o1, o2) {
@@ -101,14 +104,70 @@ var steps = [
     req = lock.clear();
     req.onsuccess = function () {
       ok(true, "Deleted the database");
+      next();
+    };
+  },
+  function () {
+    ok(true, "Setting wifi");
+    var lock = mozSettings.createLock();
+    req = lock.set(wifi);
+    req.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req.onerror = onFailure;
+
+    var lock2 = mozSettings.createLock();
+    req2 = lock2.get("net3g.apn");
+    req2.onsuccess = function () {
+      is(Object.keys(req2.result).length, 1, "length 1");
+      check(wifi, req2.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Change wifi1");
+    var lock = mozSettings.createLock();
+    req = lock.set(wifi2);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
     };
     req.onerror = onFailure;
-    req2 = lock.set(screenBright);
+    ok(true, "Get changed net3g.apn");
+    req2 = lock.get("net3g.apn");
     req2.onsuccess = function () {
+      is(Object.keys(req2.result).length, 1, "length 1");
+      check(wifi2, req2.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Set Combination");
+    var lock = mozSettings.createLock();
+    req3 = lock.set(combination);
+    req3.onsuccess = function () {
       ok(true, "set done");
+      req4 = lock.get("net3g.apn2");
+      req4.onsuccess = function() {
+        ok(true, "Done");
+        check(combination["net3g.apn2"], req4.result["net3g.apn2"]);
+        next();
+      }
+    }
+    req3.onerror = onFailure;
+  },
+  function() {
+    var lock = mozSettings.createLock();
+    req4 = lock.get("net3g.apn2");
+    req4.onsuccess = function() {
+      ok(true, "Done");
+      check(combination["net3g.apn2"], req4.result["net3g.apn2"]);
       next();
     }
-    req2.onerror = onFailure;
+    req4.onerror = onFailure;
   },
   function() {
     ok(true, "Get unknown key");
@@ -293,7 +352,7 @@ var steps = [
     req2.onerror = onFailure;
   },
   function () {
-    ok(true, "Change wifi");
+    ok(true, "Change wifi1");
     var lock = mozSettings.createLock();
     req = lock.set(wifi2);
     req.onsuccess = function () {
@@ -354,34 +413,34 @@ var steps = [
     };
     {
       var lock2 = mozSettings.createLock();
-      req = lock2.get("*");
-      req.onsuccess = function () {
-        is(Object.keys(req.result).length, 32, "length 12");
-        ok(true, JSON.stringify(req.result));
+      req2 = lock2.get("*");
+      req2.onsuccess = function () {
+        is(Object.keys(req2.result).length, 32, "length 12");
+        ok(true, JSON.stringify(req2.result));
         ok(true, "Get all settings Done");
       };
-      req.onerror = onFailure;
+      req2.onerror = onFailure;
     }
     var lock2 = mozSettings.createLock();
     var obj = {};
     obj["wifi.enabled" + 30] = true;
-    req2 = lock2.set( obj );
-    req2.onsuccess = function () {
+    req3 = lock2.set( obj );
+    req3.onsuccess = function () {
       ok(true, "Set12 Done");
     };
-    req2.onerror = onFailure;
+    req3.onerror = onFailure;
 
     var lock3 = mozSettings.createLock();
     // with one lock
     for (var i = 0; i < 30; i++) {
-      req3 = lock3.get("wifi.enabled" + i);
+      req4 = lock3.get("wifi.enabled" + i);
       var testObj = {};
       testObj["wifi.enabled" + i] = true;
-      req3.onsuccess = function () {
+      req4.onsuccess = function () {
         check(this.request.result, this.testObj);
         ok(true, "Get1 Done");
-      }.bind({testObj: testObj, request: req3});
-      req3.onerror = onFailure;
+      }.bind({testObj: testObj, request: req4});
+      req4.onerror = onFailure;
     }
 
     ok(true, "start next2!");
@@ -483,7 +542,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Change wifi");
+    ok(true, "Change wifi2");
     var lock = mozSettings.createLock();
     req = lock.set(wifi2);
     req.onsuccess = function () {

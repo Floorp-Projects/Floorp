@@ -12,7 +12,7 @@
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsMenuFrame.h"
 #include "nsMenuBarFrame.h"
@@ -125,7 +125,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   // so we use the nsView::SetFloating() to tell the view manager
   // about that constraint.
   nsView* ourView = GetView();
-  nsIViewManager* viewManager = ourView->GetViewManager();
+  nsViewManager* viewManager = ourView->GetViewManager();
   viewManager->SetViewFloating(ourView, true);
 
   mPopupType = ePopupTypePanel;
@@ -459,7 +459,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, b
   }
 
   if (isOpen) {
-    nsIViewManager* viewManager = view->GetViewManager();
+    nsViewManager* viewManager = view->GetViewManager();
     nsRect rect = GetRect();
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
@@ -794,7 +794,7 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
   mHFlip = mVFlip = false;
 
   nsView* view = GetView();
-  nsIViewManager* viewManager = view->GetViewManager();
+  nsViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
 
   FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
@@ -1919,7 +1919,7 @@ nsMenuPopupFrame::CreatePopupView()
     return NS_OK;
   }
 
-  nsIViewManager* viewManager = PresContext()->GetPresShell()->GetViewManager();
+  nsViewManager* viewManager = PresContext()->GetPresShell()->GetViewManager();
   NS_ASSERTION(nullptr != viewManager, "null view manager");
 
   // Create a view

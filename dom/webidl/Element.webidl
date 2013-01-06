@@ -169,6 +169,16 @@ partial interface Element {
 /*
 };
 
+// http://dvcs.w3.org/hg/undomanager/raw-file/tip/undomanager.html
+partial interface Element {
+*/
+  [Pref="dom.undo_manager.enabled"]
+  readonly attribute UndoManager? undoManager;
+  [SetterThrows,Pref="dom.undo_manager.enabled"]
+  attribute boolean undoScope;
+/*
+};
+
 // http://domparsing.spec.whatwg.org/#extensions-to-the-element-interface
 partial interface Element {
 */
