@@ -51,7 +51,6 @@ CPPSRCS		= \
 		nsSVGFeatures.cpp \
 		nsSVGFilterElement.cpp \
 		nsSVGFilters.cpp \
-		nsSVGForeignObjectElement.cpp \
 		nsSVGGElement.cpp \
 		nsSVGGradientElement.cpp \
 		nsSVGImageElement.cpp \
@@ -116,6 +115,7 @@ CPPSRCS		= \
 		SVGContentUtils.cpp \
 		SVGDefsElement.cpp \
 		SVGDescElement.cpp \
+		SVGForeignObjectElement.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGLocatableElement.cpp \
@@ -158,6 +158,7 @@ EXPORTS_mozilla/dom = \
 	SVGAnimatedBoolean.h \
 	SVGDefsElement.h \
 	SVGDescElement.h \
+	SVGForeignObjectElement.h \
 	SVGGraphicsElement.h \
 	SVGLocatableElement.h \
 	SVGMetadataElement.h \
