@@ -129,27 +129,14 @@ ProfileCreationTimeAccessor.prototype = {
       function onStatSuccess(info) {
         // OS.File doesn't seem to be behaving. See Bug 827148.
         // Let's do the best we can. This whole function is defensive.
-        let date;
-        if ("winBirthDate" in info) {
-          date = info.winBirthDate;
-        } else if ("macBirthDate" in info) {
-          date = info.macBirthDate;
-        }
-
+        let date = info.winBirthDate || info.macBirthDate;
         if (!date || !date.getTime()) {
-          // Hack: as of this writing, OS.File will only return file
-          // creation times of any kind of Mac and Windows, where birthTime
-          // is defined. That means we're unable to function on Linux.
-          // Use ctime, fall back to mtime.
-          // Oh, and info.macBirthDate doesn't work.
-          self._log.debug("No birth date: using ctime/mtime.");
-          try {
-            date = info.creationDate ||
-                   info.lastModificationDate ||
-                   info.unixLastStatusChangeDate;
-          } catch (ex) {
-            self._log.debug("Exception fetching creation date: " + ex);
-          }
+          // OS.File will only return file creation times of any kind on Mac
+          // and Windows, where birthTime is defined.
+          // That means we're unable to function on Linux, so we use mtime
+          // instead.
+          self._log.debug("No birth date. Using mtime.");
+          date = info.lastModificationDate;
         }
 
         if (date) {
