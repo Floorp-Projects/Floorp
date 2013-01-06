@@ -101,6 +101,7 @@ webidl_files = \
   SVGAnimatedBoolean.webidl \
   SVGAnimatedLengthList.webidl \
   SVGAnimatedNumberList.webidl \
+  SVGAnimatedPoints.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
   SVGDefsElement.webidl \
@@ -120,6 +121,8 @@ webidl_files = \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
+  SVGPolygonElement.webidl \
+  SVGPolylineElement.webidl \
   SVGPreserveAspectRatio.webidl \
   SVGScriptElement.webidl \
   SVGStopElement.webidl \
