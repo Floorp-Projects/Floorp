@@ -303,8 +303,8 @@ SVGContentUtils::GetViewBoxTransform(const nsSVGElement* aElement,
   NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  uint16_t align = aPreserveAspectRatio.GetAlign();
-  uint16_t meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
+  SVGAlign align = aPreserveAspectRatio.GetAlign();
+  SVGMeetOrSlice meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
 
   // default to the defaults
   if (align == SVG_PRESERVEASPECTRATIO_UNKNOWN)

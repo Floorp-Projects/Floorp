@@ -30,7 +30,7 @@ runTest(function () {
     navigator.mozGetUserMedia({audio: true, fake: true}, function(stream) {
       var testAudio = document.getElementById('testAudio');
       var audioStreamPlayback = new MediaStreamPlayback(testAudio, stream);
-      audioStreamPlayback.playMedia(5000, function() {
+      audioStreamPlayback.playMedia(10000, function() {
 				stream.stop();
 				SimpleTest.finish();
 			}, unexpectedCallbackAndFinish);

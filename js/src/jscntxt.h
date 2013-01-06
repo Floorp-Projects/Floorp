@@ -1042,6 +1042,8 @@ struct JSRuntime : js::RuntimeFriendFields
 
     js::ThreadPool threadPool;
 
+    js::CTypesActivityCallback  ctypesActivityCallback;
+
   private:
     // In certain cases, we want to optimize certain opcodes to typed instructions,
     // to avoid carrying an extra register to feed into an unbox. Unfortunately,

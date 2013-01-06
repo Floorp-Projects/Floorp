@@ -94,6 +94,12 @@ ifeq (WINNT,$(OS_ARCH))
 CPPSRCS += \
   COMMessageFilter.cpp \
   PluginSurfaceParent.cpp \
+  MiniShmParent.cpp \
+  PluginHangUIParent.cpp \
+  $(NULL)
+
+DEFINES += \
+  -DMOZ_HANGUI_PROCESS_NAME=\"plugin-hang-ui$(BIN_SUFFIX)\" \
   $(NULL)
 
 EXPORTS_mozilla/plugins += \
@@ -120,6 +126,13 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(topsrcdir)/xpcom/base/ \
   $(NULL)
+
+ifeq (WINNT,$(OS_ARCH))
+LOCAL_INCLUDES += \
+  -I$(srcdir)/hangui \
+  -I$(topsrcdir)/widget/shared \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

@@ -15,10 +15,8 @@
 #include <string.h>
 
 #ifdef XP_WIN
-#error "Windows not supported yet, sorry."
-// XXX: This will be needed when Windows is supported (bug 819839).
-//#include <process.h>
-//#define getpid _getpid
+#include <windows.h>
+#include <process.h>
 #else
 #include <unistd.h>
 #endif
@@ -42,7 +40,21 @@
 // PAGE_SIZE.  Nb: sysconf() is expensive, but it's only used for (the obsolete
 // and rarely used) valloc.
 #define MOZ_REPLACE_ONLY_MEMALIGN 1
+#ifdef XP_WIN
+#define PAGE_SIZE GetPageSize()
+static long GetPageSize()
+{
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  return si.dwPageSize;
+}
+static void* valloc(size_t size)
+{
+  return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+}
+#else
 #define PAGE_SIZE sysconf(_SC_PAGESIZE)
+#endif
 #include "replace_malloc.h"
 #undef MOZ_REPLACE_ONLY_MEMALIGN
 #undef PAGE_SIZE
@@ -275,8 +287,6 @@ static const size_t kNoSize = size_t(-1);
 // MutexBase implements the platform-specific parts of a mutex.
 #ifdef XP_WIN
 
-#include <windows.h>
-
 class MutexBase
 {
   CRITICAL_SECTION mCS;
@@ -407,9 +417,9 @@ public:
 #ifdef XP_WIN
 
 #define DMD_TLS_INDEX_TYPE              DWORD
-#define DMD_CREATE_TLS_INDEX(i_)        PR_BEGIN_MACRO                        \
+#define DMD_CREATE_TLS_INDEX(i_)        do {                                  \
                                           (i_) = TlsAlloc();                  \
-                                        PR_END_MACRO
+                                        } while (0)
 #define DMD_DESTROY_TLS_INDEX(i_)       TlsFree((i_))
 #define DMD_GET_TLS_DATA(i_)            TlsGetValue((i_))
 #define DMD_SET_TLS_DATA(i_, v_)        TlsSetValue((i_), (v_))

@@ -1688,29 +1688,21 @@ class MCreateThisWithTemplate
 
 // Caller-side allocation of |this| for |new|:
 // Given a prototype operand, construct |this| for JSOP_NEW.
-// For native constructors, returns MagicValue(JS_IS_CONSTRUCTING).
-class MCreateThis
-  : public MAryInstruction<2>,
+class MCreateThisWithProto
+  : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
 {
-    bool needNativeCheck_;
-
-    MCreateThis(MDefinition *callee, MDefinition *prototype)
-      : needNativeCheck_(true)
+    MCreateThisWithProto(MDefinition *callee, MDefinition *prototype)
+      : MBinaryInstruction(callee, prototype)
     {
-        initOperand(0, callee);
-        initOperand(1, prototype);
-
-        // Type is mostly object, except for native constructors
-        // therefore the need of Value type.
-        setResultType(MIRType_Value);
+        setResultType(MIRType_Object);
     }
 
   public:
-    INSTRUCTION_HEADER(CreateThis)
-    static MCreateThis *New(MDefinition *callee, MDefinition *prototype)
+    INSTRUCTION_HEADER(CreateThisWithProto)
+    static MCreateThisWithProto *New(MDefinition *callee, MDefinition *prototype)
     {
-        return new MCreateThis(callee, prototype);
+        return new MCreateThisWithProto(callee, prototype);
     }
 
     MDefinition *getCallee() const {
@@ -1719,12 +1711,37 @@ class MCreateThis
     MDefinition *getPrototype() const {
         return getOperand(1);
     }
-    void removeNativeCheck() {
-        needNativeCheck_ = false;
-        setResultType(MIRType_Object);
+
+    // Although creation of |this| modifies global state, it is safely repeatable.
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
-    bool needNativeCheck() const {
-        return needNativeCheck_;
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+// Caller-side allocation of |this| for |new|:
+// Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
+class MCreateThis
+  : public MUnaryInstruction,
+    public ObjectPolicy<0>
+{
+    MCreateThis(MDefinition *callee)
+      : MUnaryInstruction(callee)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CreateThis)
+    static MCreateThis *New(MDefinition *callee)
+    {
+        return new MCreateThis(callee);
+    }
+
+    MDefinition *getCallee() const {
+        return getOperand(0);
     }
 
     // Although creation of |this| modifies global state, it is safely repeatable.

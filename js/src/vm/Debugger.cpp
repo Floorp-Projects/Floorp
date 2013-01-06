@@ -1882,6 +1882,26 @@ Debugger::addDebuggee(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSBool
+Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
+    AutoDebugModeGC dmgc(cx->runtime);
+    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        if (c == dbg->object->compartment())
+            continue;
+        c->scheduledForDestruction = false;
+        GlobalObject *global = c->maybeGlobal();
+        if (global) {
+            Rooted<GlobalObject*> rg(cx, global);
+            dbg->addDebuggeeGlobal(cx, rg, dmgc);
+        }
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
 Debugger::removeDebuggee(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.removeDebuggee", 1);
@@ -1899,8 +1919,9 @@ JSBool
 Debugger::removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "removeAllDebuggees", args, dbg);
+    AutoDebugModeGC dmgc(cx->runtime);
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-        dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), e.front(), NULL, &e);
+        dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), e.front(), dmgc, NULL, &e);
     args.rval().setUndefined();
     return true;
 }
@@ -2027,6 +2048,15 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 {
+    AutoDebugModeGC dmgc(cx->runtime);
+    return addDebuggeeGlobal(cx, global, dmgc);
+}
+
+bool
+Debugger::addDebuggeeGlobal(JSContext *cx,
+                            Handle<GlobalObject*> global,
+                            AutoDebugModeGC &dmgc)
+{
     if (debuggees.has(global))
         return true;
 
@@ -2082,7 +2112,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
         } else {
             if (global->getDebuggers()->length() > 1)
                 return true;
-            if (debuggeeCompartment->addDebuggee(cx, global))
+            if (debuggeeCompartment->addDebuggee(cx, global, dmgc))
                 return true;
 
             /* Maintain consistency on error. */
@@ -2096,6 +2126,16 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 
 void
 Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
+                               GlobalObjectSet::Enum *compartmentEnum,
+                               GlobalObjectSet::Enum *debugEnum)
+{
+    AutoDebugModeGC dmgc(global->compartment()->rt);
+    return removeDebuggeeGlobal(fop, global, dmgc, compartmentEnum, debugEnum);
+}
+
+void
+Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
+                               AutoDebugModeGC &dmgc,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
@@ -2151,7 +2191,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      * global cannot be rooted on the stack without a cx.
      */
     if (v->empty())
-        global->compartment()->removeDebuggee(fop, global, compartmentEnum);
+        global->compartment()->removeDebuggee(fop, global, dmgc, compartmentEnum);
 }
 
 /*
@@ -2538,6 +2578,7 @@ JSPropertySpec Debugger::properties[] = {
 
 JSFunctionSpec Debugger::methods[] = {
     JS_FN("addDebuggee", Debugger::addDebuggee, 1, 0),
+    JS_FN("addAllGlobalsAsDebuggees", Debugger::addAllGlobalsAsDebuggees, 0, 0),
     JS_FN("removeDebuggee", Debugger::removeDebuggee, 1, 0),
     JS_FN("removeAllDebuggees", Debugger::removeAllDebuggees, 0, 0),
     JS_FN("hasDebuggee", Debugger::hasDebuggee, 1, 0),

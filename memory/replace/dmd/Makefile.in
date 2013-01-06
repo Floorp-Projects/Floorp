@@ -35,5 +35,9 @@ MOZ_GLUE_LDFLAGS=
 
 STL_FLAGS 	=
 
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS         += $(call EXPAND_LIBNAME,dbghelp)
+endif
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
