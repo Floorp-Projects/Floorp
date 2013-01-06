@@ -110,8 +110,6 @@ class LinearScanAllocator : public LiveRangeAllocator<LinearScanVirtualRegister>
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     bool moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
     void setIntervalRequirement(LiveInterval *interval);
-    size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
-    size_t findFirstNonCallSafepoint(CodePosition from);
     bool isSpilledAt(LiveInterval *interval, CodePosition pos);
 
 #ifdef DEBUG
