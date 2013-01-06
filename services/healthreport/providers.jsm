@@ -17,6 +17,8 @@
 this.EXPORTED_SYMBOLS = [
   "AddonsProvider",
   "AppInfoProvider",
+  "CrashDirectoryService",
+  "CrashesProvider",
   "SessionsProvider",
   "SysInfoProvider",
 ];
@@ -24,6 +26,7 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -808,6 +811,159 @@ AddonsProvider.prototype = Object.freeze({
     }
 
     return data;
+  },
+});
+
+
+function DailyCrashesMeasurement() {
+  Metrics.Measurement.call(this);
+}
+
+DailyCrashesMeasurement.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "crashes",
+  version: 1,
+
+  configureStorage: function () {
+    this.registerStorageField("pending", this.storage.FIELD_DAILY_COUNTER);
+    this.registerStorageField("submitted", this.storage.FIELD_DAILY_COUNTER);
+  },
+});
+
+this.CrashesProvider = function () {
+  Metrics.Provider.call(this);
+};
+
+CrashesProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.crashes",
+
+  measurementTypes: [DailyCrashesMeasurement],
+
+  collectConstantData: function () {
+    return Task.spawn(this._populateCrashCounts.bind(this));
+  },
+
+  _populateCrashCounts: function () {
+    let now = new Date();
+    let service = new CrashDirectoryService();
+
+    let pending = yield service.getPendingFiles();
+    let submitted = yield service.getSubmittedFiles();
+
+    let lastCheck = yield this.getState("lastCheck");
+    if (!lastCheck) {
+      lastCheck = 0;
+    } else {
+      lastCheck = parseInt(lastCheck, 10);
+      if (Number.isNaN(lastCheck)) {
+        lastCheck = 0;
+      }
+    }
+
+    let m = this.getMeasurement("crashes", 1);
+
+    // FUTURE detect mtimes in the future and react more intelligently.
+    for (let filename in pending) {
+      let modified = pending[filename].modified;
+
+      if (modified.getTime() < lastCheck) {
+        continue;
+      }
+
+      yield m.incrementDailyCounter("pending", modified);
+    }
+
+    for (let filename in submitted) {
+      let modified = submitted[filename].modified;
+
+      if (modified.getTime() < lastCheck) {
+        continue;
+      }
+
+      yield m.incrementDailyCounter("submitted", modified);
+    }
+
+    yield this.setState("lastCheck", "" + now.getTime());
+  },
+});
+
+
+/**
+ * Helper for interacting with the crashes directory.
+ *
+ * FUTURE Extract to JSM alongside crashreporter. Use in about:crashes.
+ */
+this.CrashDirectoryService = function () {
+  let base = Cc["@mozilla.org/file/directory_service;1"]
+               .getService(Ci.nsIProperties)
+               .get("UAppData", Ci.nsIFile);
+
+  let cr = base.clone();
+  cr.append("Crash Reports");
+
+  let submitted = cr.clone();
+  submitted.append("submitted");
+
+  let pending = cr.clone();
+  pending.append("pending");
+
+  this._baseDir = base.path;
+  this._submittedDir = submitted.path;
+  this._pendingDir = pending.path;
+};
+
+CrashDirectoryService.prototype = Object.freeze({
+  RE_SUBMITTED_FILENAME: /^bp-.+\.txt$/,
+  RE_PENDING_FILENAME: /^.+\.dmp$/,
+
+  getPendingFiles: function () {
+    return this._getDirectoryEntries(this._pendingDir,
+                                     this.RE_PENDING_FILENAME);
+  },
+
+  getSubmittedFiles: function () {
+    return this._getDirectoryEntries(this._submittedDir,
+                                     this.RE_SUBMITTED_FILENAME);
+  },
+
+  _getDirectoryEntries: function (path, re) {
+    let files = {};
+
+    return Task.spawn(function iterateDirectory() {
+      if (!(yield OS.File.exists(path))) {
+        throw new Task.Result(files);
+      }
+
+      let iterator = new OS.File.DirectoryIterator(path);
+      try {
+        while (true) {
+          let entry;
+          try {
+            entry = yield iterator.next();
+          } catch (ex if ex == StopIteration) {
+            break;
+          }
+
+          if (!entry.name.match(re)) {
+            continue;
+          }
+
+          let info = yield OS.File.stat(entry.path);
+          files[entry.name] = {
+            created: info.creationDate,
+            modified: info.lastModificationDate,
+            size: info.size,
+          };
+        }
+
+        throw new Task.Result(files);
+      } finally {
+        iterator.close();
+      }
+    });
   },
 });
 
