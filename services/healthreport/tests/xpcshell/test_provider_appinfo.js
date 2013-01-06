@@ -8,6 +8,8 @@ const {interfaces: Ci, results: Cr, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
+Cu.import("resource://testing-common/services/healthreport/utils.jsm");
+
 
 function run_test() {
   run_next_test();
@@ -41,6 +43,60 @@ add_task(function test_collect_smoketest() {
   do_check_eq(d.os, "XPCShell");
   do_check_eq(d.xpcomabi, "noarch-spidermonkey");
 
+  yield provider.shutdown();
   yield storage.close();
 });
 
+add_task(function test_record_version() {
+  let storage = yield Metrics.Storage("record_version");
+
+  let provider = new AppInfoProvider();
+  let now = new Date();
+  yield provider.init(storage);
+
+  // The provider records information on startup.
+  let m = provider.getMeasurement("versions", 1);
+  let data = yield m.getValues();
+
+  do_check_true(data.days.hasDay(now));
+  let day = data.days.getDay(now);
+  do_check_eq(day.size, 1);
+  do_check_true(day.has("version"));
+  let value = day.get("version");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 1);
+  let ai = getAppInfo();
+  do_check_eq(value, ai.version);
+
+  yield provider.shutdown();
+  yield storage.close();
+});
+
+add_task(function test_record_version_change() {
+  let storage = yield Metrics.Storage("record_version_change");
+
+  let provider = new AppInfoProvider();
+  let now = new Date();
+  yield provider.init(storage);
+  yield provider.shutdown();
+
+  let ai = getAppInfo();
+  ai.version = "2";
+  updateAppInfo(ai);
+
+  provider = new AppInfoProvider();
+  yield provider.init(storage);
+
+  // There should be 2 records in the versions history.
+  let m = provider.getMeasurement("versions", 1);
+  let data = yield m.getValues();
+  do_check_true(data.days.hasDay(now));
+  let day = data.days.getDay(now);
+  let value = day.get("version");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 2);
+  do_check_eq(value[1], "2");
+
+  yield provider.shutdown();
+  yield storage.close();
+});
