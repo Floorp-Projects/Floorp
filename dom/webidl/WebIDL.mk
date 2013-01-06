@@ -121,6 +121,7 @@ webidl_files = \
   SVGScriptElement.webidl \
   SVGStopElement.webidl \
   SVGStyleElement.webidl \
+  SVGSwitchElement.webidl \
   SVGTests.webidl \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
