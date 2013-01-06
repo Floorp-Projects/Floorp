@@ -68,9 +68,7 @@ NS_IMETHODIMP SVGCircleElement::GetCx(nsIDOMSVGAnimatedLength * *aCx)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGCircleElement::Cx()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> cx;
-  mLengthAttributes[ATTR_CX].ToDOMAnimatedLength(getter_AddRefs(cx), this);
-  return cx.forget();
+  return mLengthAttributes[ATTR_CX].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength cy; */
@@ -83,9 +81,7 @@ NS_IMETHODIMP SVGCircleElement::GetCy(nsIDOMSVGAnimatedLength * *aCy)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGCircleElement::Cy()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> cy;
-  mLengthAttributes[ATTR_CY].ToDOMAnimatedLength(getter_AddRefs(cy), this);
-  return cy.forget();
+  return mLengthAttributes[ATTR_CY].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength r; */
@@ -98,9 +94,7 @@ NS_IMETHODIMP SVGCircleElement::GetR(nsIDOMSVGAnimatedLength * *aR)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGCircleElement::R()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> r;
-  mLengthAttributes[ATTR_R].ToDOMAnimatedLength(getter_AddRefs(r), this);
-  return r.forget();
+  return mLengthAttributes[ATTR_R].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------

@@ -68,9 +68,7 @@ NS_IMETHODIMP SVGEllipseElement::GetCx(nsIDOMSVGAnimatedLength * *aCx)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGEllipseElement::Cx()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> cx;
-  mLengthAttributes[CX].ToDOMAnimatedLength(getter_AddRefs(cx), this);
-  return cx.forget();
+  return mLengthAttributes[CX].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength cy; */
@@ -83,9 +81,7 @@ NS_IMETHODIMP SVGEllipseElement::GetCy(nsIDOMSVGAnimatedLength * *aCy)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGEllipseElement::Cy()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> cy;
-  mLengthAttributes[CY].ToDOMAnimatedLength(getter_AddRefs(cy), this);
-  return cy.forget();
+  return mLengthAttributes[CY].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength rx; */
@@ -98,9 +94,7 @@ NS_IMETHODIMP SVGEllipseElement::GetRx(nsIDOMSVGAnimatedLength * *aRx)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGEllipseElement::Rx()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> rx;
-  mLengthAttributes[RX].ToDOMAnimatedLength(getter_AddRefs(rx), this);
-  return rx.forget();
+  return mLengthAttributes[RX].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength ry; */
@@ -113,9 +107,7 @@ NS_IMETHODIMP SVGEllipseElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGEllipseElement::Ry()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> ry;
-  mLengthAttributes[RY].ToDOMAnimatedLength(getter_AddRefs(ry), this);
-  return ry.forget();
+  return mLengthAttributes[RY].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------

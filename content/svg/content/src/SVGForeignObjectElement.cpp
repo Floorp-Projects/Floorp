@@ -70,9 +70,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGForeignObjectElement::X()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> x;
-  mLengthAttributes[ATTR_X].ToDOMAnimatedLength(getter_AddRefs(x), this);
-  return x.forget();
+  return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
@@ -85,9 +83,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGForeignObjectElement::Y()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> y;
-  mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(getter_AddRefs(y), this);
-  return y.forget();
+  return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
 
@@ -101,9 +97,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidt
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGForeignObjectElement::Width()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> width;
-  mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(getter_AddRefs(width), this);
-  return width.forget();
+  return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
 
@@ -117,9 +111,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aHei
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGForeignObjectElement::Height()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> height;
-  mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(getter_AddRefs(height), this);
-  return height.forget();
+  return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
