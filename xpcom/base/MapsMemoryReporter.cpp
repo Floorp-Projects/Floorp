@@ -412,7 +412,7 @@ MapsReporter::GetReporterNameAndDescription(
                  "by brk() / sbrk().");
   }
 
-  aName.Append(" [");
+  aName.Append("/[");
   aName.Append(aPerms);
   aName.Append("]");
 

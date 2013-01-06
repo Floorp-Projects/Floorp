@@ -1046,8 +1046,13 @@ EnsureKernelLowMemKillerParamsSet()
   nsAutoCString adjParams;
   nsAutoCString minfreeParams;
 
-  const char* priorityClasses[] =
-    {"master", "foreground", "background", "backgroundHomescreen"};
+  const char* priorityClasses[] = {
+    "master",
+    "foreground",
+    "background",
+    "backgroundHomescreen",
+    "backgroundPerceivable"
+  };
   for (size_t i = 0; i < NS_ARRAY_LENGTH(priorityClasses); i++) {
     int32_t oomScoreAdj;
     if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
@@ -1111,6 +1116,9 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
     break;
   case PROCESS_PRIORITY_BACKGROUND_HOMESCREEN:
     priorityStr = "backgroundHomescreen";
+    break;
+  case PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE:
+    priorityStr = "backgroundPerceivable";
     break;
   case PROCESS_PRIORITY_FOREGROUND:
     priorityStr = "foreground";

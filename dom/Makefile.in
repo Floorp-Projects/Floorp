@@ -78,6 +78,12 @@ PARALLEL_DIRS += \
   audiochannel \
   $(NULL)
 
+ifeq (WINNT,$(OS_ARCH))
+PARALLEL_DIRS += \
+  plugins/ipc/hangui \
+  $(NULL)
+endif
+
 ifdef MOZ_B2G_RIL
 PARALLEL_DIRS += \
   telephony \

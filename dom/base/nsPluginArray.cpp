@@ -186,8 +186,16 @@ nsPluginArray::Refresh(bool aReloadDocuments)
   // NS_ERROR_PLUGINS_PLUGINSNOTCHANGED on reloading plugins indicates
   // that plugins did not change and was not reloaded
   bool pluginsNotChanged = false;
-  if(mPluginHost)
-    pluginsNotChanged = (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == mPluginHost->ReloadPlugins(aReloadDocuments));
+  uint32_t currentPluginCount = 0;
+  if(mPluginHost) {
+    res = GetLength(&currentPluginCount);
+    NS_ENSURE_SUCCESS(res, res);
+    nsresult reloadResult = mPluginHost->ReloadPlugins(aReloadDocuments);
+    // currentPluginCount is as reported by nsPluginHost. mPluginCount is
+    // essentially a cache of this value, and may be out of date.
+    pluginsNotChanged = (reloadResult == NS_ERROR_PLUGINS_PLUGINSNOTCHANGED &&
+                         currentPluginCount == mPluginCount);
+  }
 
   // no need to reload the page if plugins have not been changed
   // in fact, if we do reload we can hit recursive load problem, see bug 93351

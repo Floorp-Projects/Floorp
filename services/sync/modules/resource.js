@@ -631,12 +631,21 @@ ChannelNotificationListener.prototype = {
       if ((flags & Ci.nsIChannelEventSink.REDIRECT_INTERNAL) &&
           newChannel.URI.equals(oldChannel.URI)) {
         this._log.debug("Copying headers for safe internal redirect.");
+
+        // QI the channel so we can set headers on it.
+        try {
+          newChannel.QueryInterface(Ci.nsIHttpChannel);
+        } catch (ex) {
+          this._log.error("Unexpected error: channel is not a nsIHttpChannel!");
+          throw ex;
+        }
+
         for (let header of this._headersToCopy) {
           let value = oldChannel.getRequestHeader(header);
           if (value) {
             let printed = (header == "authorization") ? "****" : value;
             this._log.debug("Header: " + header + " = " + printed);
-            newChannel.setRequestHeader(header, value);
+            newChannel.setRequestHeader(header, value, false);
           } else {
             this._log.warn("No value for header " + header);
           }

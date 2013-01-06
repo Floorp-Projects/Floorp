@@ -50,7 +50,7 @@ namespace dom {
 
 typedef bool
 (* ResolveOwnProperty)(JSContext* cx, JSObject* wrapper, JSObject* obj, jsid id,
-                       bool set, JSPropertyDescriptor* desc);
+                       JSPropertyDescriptor* desc, unsigned flags);
 
 typedef bool
 (* EnumerateOwnProperties)(JSContext* cx, JSObject* wrapper, JSObject* obj,

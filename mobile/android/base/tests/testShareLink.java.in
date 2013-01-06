@@ -1,0 +1,123 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.widget.ListView;
+import android.view.View;
+import android.view.ViewGroup;
+import java.util.ArrayList;
+import java.util.List;
+import android.widget.TextView;
+import android.app.Activity;
+
+public class testShareLink extends BaseTest {
+    ListView list;
+    String url;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testShareLink() {
+        url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        ArrayList<String> shareOptions;
+
+        blockForGeckoReady();
+
+        loadUrl(url);
+        selectMenuItem("Share");
+        mSolo.waitForText("Share Via");
+
+        // Get list of current avaliable share activities
+        shareOptions = getShareOptions();
+        verifyOptions(shareOptions);
+    }
+
+    // Create a SEND intent and get the possible activities offered
+    public ArrayList getShareOptions() {
+        ArrayList<String> shareOptions = new ArrayList();
+        Activity currentActivity = getActivity();
+        final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Robocop Blank 01");
+        shareIntent.setType("text/plain");
+        PackageManager pm = currentActivity.getPackageManager();
+        List<ResolveInfo> activities = pm.queryIntentActivities(shareIntent, 0);
+        for (ResolveInfo activity : activities) {
+            shareOptions.add(activity.loadLabel(pm).toString());
+        }
+        return shareOptions;
+    }
+
+    public void verifyOptions(ArrayList<String> shareOptions) {
+        Device device = new Device();
+        if (device.version.equals("2.x")) {
+            ArrayList<String> displayedOptions = new ArrayList();
+            ListView shareMenu = getDisplayedShareList();
+
+            /* Will have to go in the ListView, get each child, for the child separate the icon and the label
+               and from the label get the label text in a String Array */
+            for (int i = 0; i < shareMenu.getAdapter().getCount();i++) {
+                 View shareItem = shareMenu.getAdapter().getView(i, null, null);
+                 ViewGroup shareItemEntry = (ViewGroup)shareItem;
+                 for (int j = 0; j < shareItemEntry.getChildCount(); j++) {
+                      View shareItemLabel = shareItemEntry.getChildAt(j);
+                      if (shareItemLabel instanceof android.widget.LinearLayout) {
+                          // The Item label is a LinearLayout of LinearLayouts
+                          ViewGroup itemLabel = (ViewGroup)shareItemLabel;
+                          for (int k = 0; k < itemLabel.getChildCount(); k++) {
+                               View shareItemName = itemLabel.getChildAt(k);
+                               if (shareItemName instanceof android.widget.TextView) {
+                                   /* The displayedOptions list array will also contain other elements that make up the
+                                      share item label but we will check the option to be present here so there is no need
+                                      at the moment to try and clean this array up further */
+                                   displayedOptions.add(((android.widget.TextView)shareItemName).getText().toString());
+                               }
+                          }
+                      }
+                  }
+            }
+
+            for (String option:shareOptions) {
+                 // Verify if the option is present in the list of displayed share options
+                 mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option found", option);
+            }
+        }
+        else {
+            // For Honeycomb and newer the share options list is displayed as a menu not as a list pop-up
+            for (String option:shareOptions) {
+                mAsserter.ok(mSolo.searchText(option), "Found the option in the share menu", option);
+            }
+        }
+    }
+
+    private boolean optionDisplayed(String shareOption, ArrayList<String> displayedOptions) {
+        for (String displayedOption: displayedOptions) {
+            if (shareOption.equals(displayedOption)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ListView getDisplayedShareList() {
+        final ArrayList<ListView> views = mSolo.getCurrentListViews();
+
+        list = null;
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+               for (ListView view : views) {
+                   list = view;
+                       return true;
+               }
+               return false;
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(success,"Got the displayed share options?", "Got the share options list");
+        return list;
+    }
+}
