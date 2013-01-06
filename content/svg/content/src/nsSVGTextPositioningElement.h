@@ -7,7 +7,7 @@
 #define __NS_SVGTEXTPOSITIONINGELEMENTBASE_H__
 
 #include "nsIDOMSVGTextPositionElem.h"
-#include "nsSVGTextContentElement.h"
+#include "SVGTextContentElement.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedNumberList.h"
 
@@ -17,7 +17,7 @@ namespace mozilla {
 class SVGAnimatedLengthList;
 }
 
-typedef nsSVGTextContentElement nsSVGTextPositioningElementBase;
+typedef mozilla::dom::SVGTextContentElement nsSVGTextPositioningElementBase;
 
 /**
  * Note that nsSVGTextElement does not inherit this class - it reimplements it
