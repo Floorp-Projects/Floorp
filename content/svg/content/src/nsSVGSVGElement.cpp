@@ -138,10 +138,10 @@ NS_IMPL_RELEASE_INHERITED(nsSVGSVGElement,nsSVGSVGElementBase)
 DOMCI_NODE_DATA(SVGSVGElement, nsSVGSVGElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGSVGElement)
-  NS_NODE_INTERFACE_TABLE8(nsSVGSVGElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE7(nsSVGSVGElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTests,
                            nsIDOMSVGSVGElement,
-                           nsIDOMSVGFitToViewBox, nsIDOMSVGLocatable,
+                           nsIDOMSVGFitToViewBox,
                            nsIDOMSVGZoomAndPan)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
@@ -596,91 +596,6 @@ nsSVGSVGElement::GetPreserveAspectRatio(nsISupports
                                         **aPreserveAspectRatio)
 {
   return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(aPreserveAspectRatio, this);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGLocatable methods
-
-/* readonly attribute nsIDOMSVGElement nearestViewportElement; */
-NS_IMETHODIMP
-nsSVGSVGElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
-{
-  *aNearestViewportElement = SVGContentUtils::GetNearestViewportElement(this).get();
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGElement farthestViewportElement; */
-NS_IMETHODIMP
-nsSVGSVGElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
-{
-  NS_IF_ADDREF(*aFarthestViewportElement = SVGContentUtils::GetOuterSVGElement(this));
-  return NS_OK;
-}
-
-/* nsIDOMSVGRect getBBox (); */
-NS_IMETHODIMP
-nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
-{
-  *_retval = nullptr;
-
-  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
-
-  if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
-    return NS_ERROR_FAILURE;
-
-  nsISVGChildFrame* svgframe = do_QueryFrame(frame);
-  if (svgframe) {
-    return NS_NewSVGRect(_retval, nsSVGUtils::GetBBox(frame));
-  }
-  return NS_ERROR_NOT_IMPLEMENTED; // XXX: outer svg
-}
-
-/* DOMSVGMatrix getCTM (); */
-NS_IMETHODIMP
-nsSVGSVGElement::GetCTM(nsISupports * *aCTM)
-{
-  gfxMatrix m = SVGContentUtils::GetCTM(this, false);
-  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
-  NS_IF_ADDREF(*aCTM);
-  return NS_OK;
-}
-
-/* DOMSVGMatrix getScreenCTM (); */
-NS_IMETHODIMP
-nsSVGSVGElement::GetScreenCTM(nsISupports **aCTM)
-{
-  gfxMatrix m = SVGContentUtils::GetCTM(this, true);
-  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
-  NS_IF_ADDREF(*aCTM);
-  return NS_OK;
-}
-
-/* DOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
-NS_IMETHODIMP
-nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
-                                       nsISupports **_retval)
-{
-  if (!element)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  nsresult rv;
-  *_retval = nullptr;
-  nsCOMPtr<DOMSVGMatrix> ourScreenCTM;
-  nsCOMPtr<DOMSVGMatrix> targetScreenCTM;
-  nsCOMPtr<nsIDOMSVGLocatable> target = do_QueryInterface(element, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // the easiest way to do this (if likely to increase rounding error):
-  GetScreenCTM(getter_AddRefs(ourScreenCTM));
-  if (!ourScreenCTM) return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
-  target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
-  if (!targetScreenCTM) return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
-  ErrorResult result;
-  nsCOMPtr<DOMSVGMatrix> tmp = targetScreenCTM->Inverse(result);
-  if (result.Failed()) return result.ErrorCode();
-  if (NS_FAILED(rv)) return rv;
-  *_retval = tmp->Multiply(*ourScreenCTM).get();  // addrefs, so we don't
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
