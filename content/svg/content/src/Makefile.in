@@ -45,7 +45,6 @@ CPPSRCS		= \
 		nsSVGDataParser.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
-		nsSVGEllipseElement.cpp \
 		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
 		nsSVGFilterElement.cpp \
@@ -113,6 +112,7 @@ CPPSRCS		= \
 		SVGContentUtils.cpp \
 		SVGDefsElement.cpp \
 		SVGDescElement.cpp \
+		SVGEllipseElement.cpp \
 		SVGForeignObjectElement.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
@@ -159,6 +159,7 @@ EXPORTS_mozilla/dom = \
 	SVGCircleElement.h \
 	SVGDefsElement.h \
 	SVGDescElement.h \
+	SVGEllipseElement.h \
 	SVGForeignObjectElement.h \
 	SVGGElement.h \
 	SVGGraphicsElement.h \
