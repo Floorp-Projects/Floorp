@@ -19,6 +19,7 @@
 #include "SVGAnimatedNumberList.h"
 #include "DOMSVGAnimatedNumberList.h"
 #include "DOMSVGPoint.h"
+#include "nsSVGTextContainerFrame.h"
 
 using namespace mozilla;
 
