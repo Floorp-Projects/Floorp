@@ -37,7 +37,6 @@ CPPSRCS		= \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
-		nsSVGAltGlyphElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGClass.cpp \
@@ -70,6 +69,7 @@ CPPSRCS		= \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
 		nsSVGViewElement.cpp \
+		SVGAltGlyphElement.cpp \
 		SVGAngle.cpp \
 		SVGAnimatedAngle.cpp \
 		SVGAnimatedBoolean.cpp \
@@ -153,6 +153,7 @@ EXPORTS =  			\
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+	SVGAltGlyphElement.h \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \

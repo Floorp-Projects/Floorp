@@ -96,6 +96,7 @@ webidl_files = \
   Rect.webidl \
   RGBColor.webidl \
   Screen.webidl \
+  SVGAltGlyphElement.webidl \
   SVGAngle.webidl \
   SVGAnimatedAngle.webidl \
   SVGAnimatedBoolean.webidl \

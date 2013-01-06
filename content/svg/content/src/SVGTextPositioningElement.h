@@ -38,7 +38,6 @@ protected:
   SVGTextPositioningElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGTextPositioningElementBase(aNodeInfo)
   {}
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual NumberListAttributesInfo GetNumberListInfo();
