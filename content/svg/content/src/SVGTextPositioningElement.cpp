@@ -6,7 +6,6 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/SVGTextPositioningElement.h"
-#include "mozilla/dom/SVGTextPositioningElementBinding.h"
 #include "SVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedNumberList.h"
@@ -15,12 +14,6 @@
 
 namespace mozilla {
 namespace dom {
-
-JSObject*
-SVGTextPositioningElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
-{
-  return SVGTextPositioningElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
-}
 
 nsSVGElement::LengthListInfo SVGTextPositioningElement::sLengthListInfo[4] =
 {
