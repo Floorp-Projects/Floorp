@@ -10,37 +10,6 @@ Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
 
 function run_test() {
-  let appInfo = {
-    vendor: "Mozilla",
-    name: "xpcshell",
-    ID: "xpcshell@tests.mozilla.org",
-    version: "1",
-    appBuildID: "20121107",
-    platformVersion: "p-ver",
-    platformBuildID: "20121106",
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
-    invalidateCachesOnRestart: function() {},
-  };
-
-  let factory = {
-    createInstance: function createInstance(outer, iid) {
-      if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      }
-
-      return appInfo.QueryInterface(iid);
-    },
-  };
-
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
-                            "XULAppInfo", "@mozilla.org/xre/app-info;1",
-                            factory);
-
   run_next_test();
 }
 
