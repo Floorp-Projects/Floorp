@@ -3,37 +3,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
+#include "mozilla/dom/SVGTextPathElement.h"
+#include "mozilla/dom/SVGTextPathElementBinding.h"
 #include "nsSVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIFrame.h"
-#include "nsSVGTextPathElement.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla;
+DOMCI_NODE_DATA(SVGTextPathElement, mozilla::dom::SVGTextPathElement)
 
-nsSVGElement::LengthInfo nsSVGTextPathElement::sLengthInfo[1] =
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
+
+namespace mozilla {
+namespace dom {
+
+JSObject*
+SVGTextPathElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGTextPathElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+nsSVGElement::LengthInfo SVGTextPathElement::sLengthInfo[1] =
 {
   { &nsGkAtoms::startOffset, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
 };
 
-nsSVGEnumMapping nsSVGTextPathElement::sMethodMap[] = {
+nsSVGEnumMapping SVGTextPathElement::sMethodMap[] = {
   {&nsGkAtoms::align, nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_ALIGN},
   {&nsGkAtoms::stretch, nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_STRETCH},
   {nullptr, 0}
 };
 
-nsSVGEnumMapping nsSVGTextPathElement::sSpacingMap[] = {
+nsSVGEnumMapping SVGTextPathElement::sSpacingMap[] = {
   {&nsGkAtoms::_auto, nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_AUTO},
   {&nsGkAtoms::exact, nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_EXACT},
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGTextPathElement::sEnumInfo[2] =
+nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[2] =
 {
   { &nsGkAtoms::method,
     sMethodMap,
@@ -45,76 +55,103 @@ nsSVGElement::EnumInfo nsSVGTextPathElement::sEnumInfo[2] =
   }
 };
 
-nsSVGElement::StringInfo nsSVGTextPathElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[1] =
 {
   { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(TextPath)
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGTextPathElement,nsSVGTextPathElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGTextPathElement,nsSVGTextPathElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGTextPathElement,SVGTextPathElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGTextPathElement,SVGTextPathElementBase)
 
-DOMCI_NODE_DATA(SVGTextPathElement, nsSVGTextPathElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGTextPathElement)
-  NS_NODE_INTERFACE_TABLE6(nsSVGTextPathElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD(SVGTextPathElement)
+  NS_NODE_INTERFACE_TABLE6(SVGTextPathElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTextPathElement,
                            nsIDOMSVGTextContentElement,
                            nsIDOMSVGURIReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTextPathElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGTextPathElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGTextPathElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTextPathElement::nsSVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGTextPathElementBase(aNodeInfo)
+SVGTextPathElement::SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGTextPathElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTextPathElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods
 
 /* readonly attribute nsIDOMSVGAnimatedString href; */
-NS_IMETHODIMP nsSVGTextPathElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
+NS_IMETHODIMP SVGTextPathElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
+  *aHref = Href().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGTextPathElement::Href()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> href;
+  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
+  return href.forget();
 }
 
 //----------------------------------------------------------------------
 // nsIDOMSVGTextPathElement methods
 
-NS_IMETHODIMP nsSVGTextPathElement::GetStartOffset(nsIDOMSVGAnimatedLength * *aStartOffset)
+NS_IMETHODIMP SVGTextPathElement::GetStartOffset(nsIDOMSVGAnimatedLength * *aStartOffset)
 {
-  return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(aStartOffset, this);
+  *aStartOffset = StartOffset().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGTextPathElement::StartOffset()
+{
+  return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration method; */
-NS_IMETHODIMP nsSVGTextPathElement::GetMethod(nsIDOMSVGAnimatedEnumeration * *aMethod)
+NS_IMETHODIMP SVGTextPathElement::GetMethod(nsIDOMSVGAnimatedEnumeration * *aMethod)
 {
-  return mEnumAttributes[METHOD].ToDOMAnimatedEnum(aMethod, this);
+  *aMethod = Method().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGTextPathElement::Method()
+{
+  return mEnumAttributes[METHOD].ToDOMAnimatedEnum(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration spacing; */
-NS_IMETHODIMP nsSVGTextPathElement::GetSpacing(nsIDOMSVGAnimatedEnumeration * *aSpacing)
+NS_IMETHODIMP SVGTextPathElement::GetSpacing(nsIDOMSVGAnimatedEnumeration * *aSpacing)
 {
-  return mEnumAttributes[SPACING].ToDOMAnimatedEnum(aSpacing, this);
+  *aSpacing = Spacing().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGTextPathElement::Spacing()
+{
+  return mEnumAttributes[SPACING].ToDOMAnimatedEnum(this);
 }
 
 //----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
+SVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sColorMap,
@@ -123,13 +160,14 @@ nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
     sGraphicsMap,
     sTextContentElementsMap
   };
-  
+
   return FindAttributeDependence(name, map) ||
-    nsSVGTextPathElementBase::IsAttributeMapped(name);
+    SVGTextPathElementBase::IsAttributeMapped(name);
 }
 
+
 bool
-nsSVGTextPathElement::IsEventAttributeName(nsIAtom* aName)
+SVGTextPathElement::IsEventAttributeName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
@@ -138,22 +176,25 @@ nsSVGTextPathElement::IsEventAttributeName(nsIAtom* aName)
 // nsSVGElement overrides
 
 nsSVGElement::LengthAttributesInfo
-nsSVGTextPathElement::GetLengthInfo()
+SVGTextPathElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGTextPathElement::GetEnumInfo()
+SVGTextPathElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGTextPathElement::GetStringInfo()
+SVGTextPathElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
+
+} // namespace dom
+} // namespace mozilla

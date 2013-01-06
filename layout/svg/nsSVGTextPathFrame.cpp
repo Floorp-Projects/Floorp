@@ -12,10 +12,11 @@
 #include "nsSVGEffects.h"
 #include "nsSVGLength2.h"
 #include "nsSVGPathElement.h"
-#include "nsSVGTextPathElement.h"
+#include "mozilla/dom/SVGTextPathElement.h"
 #include "SVGLengthList.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -88,9 +89,9 @@ nsSVGTextPathFrame::GetPathFrame()
     (Properties().Get(nsSVGEffects::HrefProperty()));
 
   if (!property) {
-    nsSVGTextPathElement *tp = static_cast<nsSVGTextPathElement*>(mContent);
+    SVGTextPathElement *tp = static_cast<SVGTextPathElement*>(mContent);
     nsAutoString href;
-    tp->mStringAttributes[nsSVGTextPathElement::HREF].GetAnimValue(href, tp);
+    tp->mStringAttributes[SVGTextPathElement::HREF].GetAnimValue(href, tp);
     if (href.IsEmpty()) {
       return nullptr; // no URL
     }
@@ -127,8 +128,8 @@ nsSVGTextPathFrame::GetFlattenedPath()
 gfxFloat
 nsSVGTextPathFrame::GetStartOffset()
 {
-  nsSVGTextPathElement *tp = static_cast<nsSVGTextPathElement*>(mContent);
-  nsSVGLength2 *length = &tp->mLengthAttributes[nsSVGTextPathElement::STARTOFFSET];
+  SVGTextPathElement *tp = static_cast<SVGTextPathElement*>(mContent);
+  nsSVGLength2 *length = &tp->mLengthAttributes[SVGTextPathElement::STARTOFFSET];
 
   if (length->IsPercentage()) {
     nsRefPtr<gfxFlattenedPath> data = GetFlattenedPath();
