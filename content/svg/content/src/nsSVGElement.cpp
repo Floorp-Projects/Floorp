@@ -1174,19 +1174,16 @@ nsSVGElement::GetOwnerSVGElement(ErrorResult& rv)
 NS_IMETHODIMP
 nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 {
-  nsCOMPtr<nsSVGElement> elem = GetViewportElement();
+  nsSVGElement* elem = GetViewportElement();
   nsCOMPtr<nsIDOMSVGElement> svgElem = do_QueryInterface(elem);
   svgElem.forget(aViewportElement);
   return NS_OK;
 }
 
-already_AddRefed<nsSVGElement>
+nsSVGElement*
 nsSVGElement::GetViewportElement()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem =
-    SVGContentUtils::GetNearestViewportElement(this);
-  nsCOMPtr<nsSVGElement> svgElem = do_QueryInterface(elem);
-  return svgElem.forget();
+  return SVGContentUtils::GetNearestViewportElement(this);
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>

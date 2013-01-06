@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,16 +32,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGElement)
 NS_IMETHODIMP
 SVGLocatableElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  *aNearestViewportElement = SVGContentUtils::GetNearestViewportElement(this).get();
+  nsCOMPtr<nsIDOMSVGElement> domElem = do_QueryInterface(GetNearestViewportElement());
+  domElem.forget(aNearestViewportElement);
   return NS_OK;
 }
 
-already_AddRefed<nsSVGElement>
+nsSVGElement*
 SVGLocatableElement::GetNearestViewportElement()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem = SVGContentUtils::GetNearestViewportElement(this);
-  nsCOMPtr<nsSVGElement> svgElem = do_QueryInterface(elem);
-  return svgElem.forget();
+  return SVGContentUtils::GetNearestViewportElement(this);
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
@@ -53,12 +51,10 @@ SVGLocatableElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestVie
   return NS_OK;
 }
 
-already_AddRefed<nsSVGElement>
+nsSVGElement*
 SVGLocatableElement::GetFarthestViewportElement()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem = SVGContentUtils::GetOuterSVGElement(this);
-  nsCOMPtr<nsSVGElement> svgElem = do_QueryInterface(elem);
-  return svgElem.forget();
+  return SVGContentUtils::GetOuterSVGElement(this);
 }
 
 /* nsIDOMSVGRect getBBox (); */

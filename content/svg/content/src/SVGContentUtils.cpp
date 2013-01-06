@@ -12,7 +12,6 @@
 #include "mozilla/Preferences.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
-#include "nsIDOMSVGElement.h"
 #include "nsIFrame.h"
 #include "nsIScriptError.h"
 #include "nsLayoutUtils.h"
@@ -160,7 +159,7 @@ SVGContentUtils::EstablishesViewport(nsIContent *aContent)
             aContent->Tag() == nsGkAtoms::symbol);
 }
 
-already_AddRefed<nsIDOMSVGElement>
+nsSVGElement*
 SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
 {
   nsIContent *element = aContent->GetFlattenedTreeParent();
@@ -170,7 +169,7 @@ SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
       if (element->Tag() == nsGkAtoms::foreignObject) {
         return nullptr;
       }
-      return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
+      return static_cast<nsSVGElement*>(element);
     }
     element = element->GetFlattenedTreeParent();
   }
