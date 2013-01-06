@@ -103,6 +103,7 @@ webidl_files = \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGDefsElement.webidl \
   SVGDescElement.webidl \
   SVGElement.webidl \
   SVGGraphicsElement.webidl \
