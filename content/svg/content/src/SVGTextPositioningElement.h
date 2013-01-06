@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGTEXTPOSITIONINGELEMENTBASE_H__
-#define __NS_SVGTEXTPOSITIONINGELEMENTBASE_H__
+#ifndef mozilla_dom_SVGTextPositioningElement_h
+#define mozilla_dom_SVGTextPositioningElement_h
 
 #include "nsIDOMSVGTextPositionElem.h"
-#include "SVGTextContentElement.h"
+#include "mozilla/dom/SVGTextContentElement.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedNumberList.h"
 
@@ -15,32 +15,42 @@ class nsSVGElement;
 
 namespace mozilla {
 class SVGAnimatedLengthList;
-}
+class DOMSVGAnimatedLengthList;
+class DOMSVGAnimatedNumberList;
 
-typedef mozilla::dom::SVGTextContentElement nsSVGTextPositioningElementBase;
+namespace dom {
+typedef SVGTextContentElement SVGTextPositioningElementBase;
 
 /**
  * Note that nsSVGTextElement does not inherit this class - it reimplements it
  * instead (see its documenting comment). The upshot is that any changes to
  * this class also need to be made in nsSVGTextElement.
  */
-class nsSVGTextPositioningElement : public nsSVGTextPositioningElementBase
+class SVGTextPositioningElement : public SVGTextPositioningElementBase
 {
 public:
   NS_DECL_NSIDOMSVGTEXTPOSITIONINGELEMENT
 
+  // WebIDL
+  already_AddRefed<DOMSVGAnimatedLengthList> X();
+  already_AddRefed<DOMSVGAnimatedLengthList> Y();
+  already_AddRefed<DOMSVGAnimatedLengthList> Dx();
+  already_AddRefed<DOMSVGAnimatedLengthList> Dy();
+  already_AddRefed<DOMSVGAnimatedNumberList> Rotate();
+
 protected:
 
-  nsSVGTextPositioningElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGTextPositioningElementBase(aNodeInfo)
+  SVGTextPositioningElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGTextPositioningElementBase(aNodeInfo)
   {}
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual NumberListAttributesInfo GetNumberListInfo();
 
   // nsIDOMSVGTextPositioning properties:
 
-  enum { X, Y, DX, DY };
+  enum { ATTR_X, ATTR_Y, ATTR_DX, ATTR_DY };
   SVGAnimatedLengthList mLengthListAttributes[4];
   static LengthListInfo sLengthListInfo[4];
 
@@ -49,4 +59,7 @@ protected:
   static NumberListInfo sNumberListInfo[1];
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGTextPositioningElement_h
