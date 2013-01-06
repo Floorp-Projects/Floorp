@@ -126,6 +126,12 @@ void OnSetDirAttr(mozilla::dom::Element* aElement,
  */
 void SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent);
 
+/**
+ * Called when unbinding an element from the tree, to recompute the
+ * directionality of the element if it doesn't have autodirection, and to
+ * clean up any entries in nsTextDirectionalityMap that refer to it.
+ */
+void ResetDir(mozilla::dom::Element* aElement);
 } // end namespace mozilla
 
 #endif /* DirectionalityUtils_h___ */
