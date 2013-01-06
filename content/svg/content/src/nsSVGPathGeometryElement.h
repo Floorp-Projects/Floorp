@@ -6,7 +6,6 @@
 #ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
 #define __NS_SVGPATHGEOMETRYELEMENT_H__
 
-#include "DOMSVGTests.h"
 #include "gfxMatrix.h"
 #include "nsSVGGraphicElement.h"
 #include "nsTArray.h"
@@ -21,8 +20,7 @@ class gfxContext;
 
 typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
 
-class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase,
-                                 public DOMSVGTests
+class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
 {
 public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);

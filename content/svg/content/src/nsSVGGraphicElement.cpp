@@ -30,6 +30,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGGraphicElement, nsSVGGraphicElementBase)
 NS_INTERFACE_MAP_BEGIN(nsSVGGraphicElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLocatable)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransformable)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTests)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
 
 //----------------------------------------------------------------------

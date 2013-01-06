@@ -6,7 +6,6 @@
 #ifndef __NS_SVGUSEELEMENT_H__
 #define __NS_SVGUSEELEMENT_H__
 
-#include "DOMSVGTests.h"
 #include "mozilla/dom/FromParser.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGUseElement.h"
@@ -33,7 +32,6 @@ typedef nsSVGGraphicElement nsSVGUseElementBase;
 
 class nsSVGUseElement : public nsSVGUseElementBase,
                         public nsIDOMSVGUseElement,
-                        public DOMSVGTests,
                         public nsIDOMSVGURIReference,
                         public nsStubMutationObserver
 {
