@@ -57,7 +57,6 @@ CPPSRCS		= \
 		nsSVGInteger.cpp \
 		nsSVGIntegerPair.cpp \
 		nsSVGLength2.cpp \
-		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
 		nsSVGMaskElement.cpp \
 		nsSVGNumber2.cpp \
@@ -105,6 +104,7 @@ CPPSRCS		= \
 		SVGLength.cpp \
 		SVGLengthList.cpp \
 		SVGLengthListSMILType.cpp \
+		SVGLineElement.cpp \
 		SVGLocatableElement.cpp \
 		SVGMetadataElement.cpp \
 		SVGMotionSMILType.cpp \
@@ -164,6 +164,7 @@ EXPORTS_mozilla/dom = \
 	SVGGElement.h \
 	SVGGraphicsElement.h \
 	SVGImageElement.h \
+	SVGLineElement.h \
 	SVGLocatableElement.h \
 	SVGMetadataElement.h \
 	SVGMPathElement.h \

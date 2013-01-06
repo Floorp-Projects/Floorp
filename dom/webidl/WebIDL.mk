@@ -114,6 +114,7 @@ webidl_files = \
   SVGGraphicsElement.webidl \
   SVGImageElement.webidl \
   SVGLengthList.webidl \
+  SVGLineElement.webidl \
   SVGLocatableElement.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
