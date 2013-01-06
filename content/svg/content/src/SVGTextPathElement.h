@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGTEXTPATHELEMENT_H__
-#define __NS_SVGTEXTPATHELEMENT_H__
+#ifndef mozilla_dom_SVGTextPathElement_h
+#define mozilla_dom_SVGTextPathElement_h
 
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
@@ -22,23 +22,33 @@ class nsIContent;
 class nsINode;
 class nsINodeInfo;
 class nsXPCClassInfo;
+class nsSVGTextPathFrame;
+
+nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
+                                  already_AddRefed<nsINodeInfo> aNodeInfo);
 
 typedef mozilla::dom::SVGTextContentElement nsSVGTextPathElementBase;
 
-class nsSVGTextPathElement : public nsSVGTextPathElementBase, // = nsIDOMSVGTextContentElement
-                             public nsIDOMSVGTextPathElement,
-                             public nsIDOMSVGURIReference
+namespace mozilla {
+namespace dom {
+
+typedef SVGTextContentElement SVGTextPathElementBase;
+
+class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase,
+                                     public nsIDOMSVGTextPathElement,
+                                     public nsIDOMSVGURIReference
 {
-friend class nsSVGTextPathFrame;
+friend class ::nsSVGTextPathFrame;
 
 protected:
-  friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  
+  friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,
+                                              already_AddRefed<nsINodeInfo> aNodeInfo));
+  SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+
 public:
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGTEXTPATHELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
@@ -47,8 +57,8 @@ public:
   // forward here :-(
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(nsSVGTextPathElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGTextPathElementBase::)
+  NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(SVGTextPathElementBase::)
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -61,8 +71,13 @@ public:
 
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedLength> StartOffset();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Method();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Spacing();
+  already_AddRefed<nsIDOMSVGAnimatedString> Href();
 
-protected:
+ protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual EnumAttributesInfo GetEnumInfo();
@@ -84,4 +99,7 @@ protected:
   static StringInfo sStringInfo[1];
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGTextPathElement_h
