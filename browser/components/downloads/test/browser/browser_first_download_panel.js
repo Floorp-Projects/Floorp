@@ -19,7 +19,7 @@ function gen_test()
     DownloadsCommon.getData(window).panelHasShownBefore = false;
 
     prepareForPanelOpen();
-    DownloadsCommon.getData(window)._notifyNewDownload();
+    DownloadsCommon.getData(window)._notifyDownloadEvent("start");
     yield;
 
     // If we got here, that means the panel opened.
@@ -31,7 +31,7 @@ function gen_test()
     // Next, make sure that if we start another download, we don't open
     // the panel automatically.
     panelShouldNotOpen();
-    DownloadsCommon.getData(window)._notifyNewDownload();
+    DownloadsCommon.getData(window)._notifyDownloadEvent("start");
     yield waitFor(2);
   } catch(e) {
     ok(false, e);
