@@ -71,9 +71,7 @@ NS_IMETHODIMP SVGRectElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGRectElement::X()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> x;
-  mLengthAttributes[ATTR_X].ToDOMAnimatedLength(getter_AddRefs(x), this);
-  return x.forget();
+  return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
@@ -86,9 +84,7 @@ NS_IMETHODIMP SVGRectElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGRectElement::Y()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> y;
-  mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(getter_AddRefs(y), this);
-  return y.forget();
+  return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
@@ -101,9 +97,7 @@ NS_IMETHODIMP SVGRectElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGRectElement::Width()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> width;
-  mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(getter_AddRefs(width), this);
-  return width.forget();
+  return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
@@ -116,9 +110,7 @@ NS_IMETHODIMP SVGRectElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGRectElement::Height()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> height;
-  mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(getter_AddRefs(height), this);
-  return height.forget();
+  return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength rx; */
@@ -131,9 +123,7 @@ NS_IMETHODIMP SVGRectElement::GetRx(nsIDOMSVGAnimatedLength * *aRx)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGRectElement::Rx()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> Rx;
-  mLengthAttributes[ATTR_RX].ToDOMAnimatedLength(getter_AddRefs(Rx), this);
-  return Rx.forget();
+  return mLengthAttributes[ATTR_RX].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength ry; */
@@ -146,9 +136,7 @@ NS_IMETHODIMP SVGRectElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
 already_AddRefed<nsIDOMSVGAnimatedLength>
 SVGRectElement::Ry()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLength> Ry;
-  mLengthAttributes[ATTR_RY].ToDOMAnimatedLength(getter_AddRefs(Ry), this);
-  return Ry.forget();
+  return mLengthAttributes[ATTR_RY].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
