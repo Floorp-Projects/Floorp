@@ -65,8 +65,6 @@ CPPSRCS		= \
 		nsSVGPathGeometryElement.cpp \
 		nsSVGPatternElement.cpp \
 		nsSVGPolyElement.cpp \
-		nsSVGPolygonElement.cpp \
-		nsSVGPolylineElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
@@ -130,6 +128,8 @@ CPPSRCS		= \
 		SVGOrientSMILType.cpp \
 		SVGPathSegListSMILType.cpp \
 		SVGPointListSMILType.cpp \
+		SVGPolygonElement.cpp \
+		SVGPolylineElement.cpp \
 		SVGScriptElement.cpp \
 		SVGStopElement.cpp \
 		SVGSwitchElement.cpp \
@@ -165,6 +165,8 @@ EXPORTS_mozilla/dom = \
 	SVGLocatableElement.h \
 	SVGMetadataElement.h \
 	SVGMPathElement.h \
+	SVGPolygonElement.h \
+	SVGPolylineElement.h \
 	SVGScriptElement.h \
 	SVGStopElement.h \
 	SVGStyleElement.h \
