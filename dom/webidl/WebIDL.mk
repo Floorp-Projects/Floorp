@@ -104,6 +104,10 @@ webidl_files = \
   SVGAnimatedPoints.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGAnimateElement.webidl \
+  SVGAnimateMotionElement.webidl \
+  SVGAnimateTransformElement.webidl \
+  SVGAnimationElement.webidl \
   SVGCircleElement.webidl \
   SVGDefsElement.webidl \
   SVGDescElement.webidl \
@@ -129,6 +133,7 @@ webidl_files = \
   SVGPreserveAspectRatio.webidl \
   SVGRectElement.webidl \
   SVGScriptElement.webidl \
+  SVGSetElement.webidl \
   SVGStopElement.webidl \
   SVGStyleElement.webidl \
   SVGSwitchElement.webidl \
