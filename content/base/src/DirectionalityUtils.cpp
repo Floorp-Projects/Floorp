@@ -434,6 +434,9 @@ class nsTextNodeDirectionalityMap
   nsTextNodeDirectionalityMapDtor(void *aObject, nsIAtom* aPropertyName,
                                   void *aPropertyValue, void* aData)
   {
+    nsINode* textNode = static_cast<nsINode * >(aObject);
+    textNode->ClearHasTextNodeDirectionalityMap();
+
     nsTextNodeDirectionalityMap* map =
       reinterpret_cast<nsTextNodeDirectionalityMap * >(aPropertyValue);
     delete map;
