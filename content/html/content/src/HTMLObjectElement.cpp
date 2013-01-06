@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/Util.h"
 
+#include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "nsAutoPtr.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
@@ -37,6 +38,8 @@ HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 
   // By default we're in the loading state
   AddStatesSilently(NS_EVENT_STATE_LOADING);
+
+  SetIsDOMBinding();
 }
 
 HTMLObjectElement::~HTMLObjectElement()
@@ -447,6 +450,24 @@ HTMLObjectElement::CopyInnerTo(Element* aDest)
   }
 
   return rv;
+}
+
+JSObject*
+HTMLObjectElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  JSObject* obj = HTMLObjectElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  if (!obj) {
+    return nullptr;
+  }
+  SetupProtoChain(aCx, obj);
+  return obj;
+}
+
+JSObject*
+HTMLObjectElement::GetCanonicalPrototype(JSContext* aCx, JSObject* aGlobal)
+{
+  return HTMLObjectElementBinding::GetProtoObject(aCx, aGlobal);
 }
 
 } // namespace dom
