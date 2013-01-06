@@ -18,6 +18,9 @@ class nsISMILAnimationElement;
 class nsSMILValue;
 
 namespace mozilla {
+namespace dom {
+class DOMSVGAnimatedPreserveAspectRatio;
+}
 
 class SVGAnimatedPreserveAspectRatio MOZ_FINAL
 {
@@ -72,7 +75,7 @@ public:
     { return mIsAnimated || mIsBaseSet; }
 
   nsresult ToDOMAnimatedPreserveAspectRatio(
-    nsISupports **aResult,
+    mozilla::dom::DOMSVGAnimatedPreserveAspectRatio **aResult,
     nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);

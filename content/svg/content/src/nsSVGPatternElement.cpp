@@ -12,6 +12,7 @@
 #include "nsSVGPatternElement.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //--------------------- Patterns ------------------------
 
@@ -85,7 +86,10 @@ NS_IMETHODIMP
 nsSVGPatternElement::GetPreserveAspectRatio(nsISupports
                                             **aPreserveAspectRatio)
 {
-  return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(aPreserveAspectRatio, this);
+  nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> ratio;
+  mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(getter_AddRefs(ratio), this);
+  ratio.forget(aPreserveAspectRatio);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
