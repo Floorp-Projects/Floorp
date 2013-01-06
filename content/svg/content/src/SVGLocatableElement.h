@@ -30,8 +30,8 @@ public:
   NS_DECL_NSIDOMSVGLOCATABLE
 
   // WebIDL
-  already_AddRefed<nsSVGElement> GetNearestViewportElement();
-  already_AddRefed<nsSVGElement> GetFarthestViewportElement();
+  nsSVGElement* GetNearestViewportElement();
+  nsSVGElement* GetFarthestViewportElement();
   already_AddRefed<nsIDOMSVGRect> GetBBox(ErrorResult& rv);
   already_AddRefed<DOMSVGMatrix> GetCTM();
   already_AddRefed<DOMSVGMatrix> GetScreenCTM();
