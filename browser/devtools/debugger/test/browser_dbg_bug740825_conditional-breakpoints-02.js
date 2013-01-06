@@ -37,6 +37,8 @@ function test()
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gBreakpointsPane = gDebugger.DebuggerView.Breakpoints;
 
+    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
+
     gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
     resumed = true;
 
@@ -56,12 +58,10 @@ function test()
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:SourceShown", onScriptShown);
-
   function startTest()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:SourceShown", onScriptShown);
+      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
@@ -166,7 +166,7 @@ function test()
   function modBreakpoint3()
   {
     write("bamboocha");
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
 
     waitForBreakpoint(14, function() {
       waitForCaretPos(13, function() {
@@ -568,7 +568,7 @@ function test()
     gBreakpointsPane._cbTextbox.focus();
 
     for (let i = 0; i < text.length; i++) {
-      EventUtils.sendChar(text[i]);
+      EventUtils.sendChar(text[i], gDebugger);
     }
   }
 

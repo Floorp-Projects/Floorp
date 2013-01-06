@@ -47,7 +47,7 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should not be expanded");
 
       assertExpansion(1, [true, true, true, true, true]);
-      EventUtils.sendKey("RETURN");
+      EventUtils.sendKey("RETURN", gDebugger);
       aCallback();
     },
     test3: function(aCallback)
@@ -302,7 +302,7 @@ function write(text) {
 
 function backspace(times) {
   for (let i = 0; i < times; i++) {
-    EventUtils.sendKey("BACK_SPACE")
+    EventUtils.sendKey("BACK_SPACE", gDebugger);
   }
 }
 
@@ -310,7 +310,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
 }
 

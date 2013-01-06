@@ -28,21 +28,21 @@ function test()
     gPane = aPane;
     gDebugger = gPane.panelWin;
 
+    gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+      let url = aEvent.detail.url;
+      if (url.indexOf("-02.js") != -1) {
+        scriptShown = true;
+        gDebugger.removeEventListener(aEvent.type, _onEvent);
+        runTest();
+      }
+    });
+
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
       runTest();
     });
 
     gDebuggee.firstCall();
-  });
-
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-02.js") != -1) {
-      scriptShown = true;
-      window.removeEventListener(aEvent.type, _onEvent);
-      runTest();
-    }
   });
 
   function runTest()
@@ -65,13 +65,13 @@ function testScriptSearching() {
 }
 
 function firstSearch() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
     let url = aEvent.detail.url;
     if (url.indexOf("-01.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -91,13 +91,13 @@ function firstSearch() {
 function secondSearch() {
   let token = "deb";
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
     let url = aEvent.detail.url;
     if (url.indexOf("-02.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         append("#" + token);
@@ -117,13 +117,13 @@ function secondSearch() {
 }
 
 function waitForFirstScript() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
     let url = aEvent.detail.url;
     if (url.indexOf("-01.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         thirdSearch();
@@ -136,13 +136,13 @@ function waitForFirstScript() {
 function thirdSearch() {
   let token = "deb";
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
     let url = aEvent.detail.url;
     if (url.indexOf("-02.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -167,7 +167,7 @@ function fourthSearch(i, string, token) {
     "The editor didn't remain at the correct token. (4)");
 
   if (string[i]) {
-    EventUtils.sendChar(string[i]);
+    EventUtils.sendChar(string[i], gDebugger);
     fourthSearch(i + 1, string, token);
     return;
   }
@@ -245,7 +245,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
   info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
 }

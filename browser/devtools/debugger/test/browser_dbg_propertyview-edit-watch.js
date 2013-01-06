@@ -154,8 +154,8 @@ function testModification(aVar, aTest, aCallback, aNewValue, aNewResult, aArgRes
                           aLocalScopeIndex = 1, aDeletionFlag = null)
 {
   function makeChangesAndExitInputMode() {
-    EventUtils.sendString(aNewValue);
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendString(aNewValue, gDebugger);
+    EventUtils.sendKey("RETURN", gDebugger);
   }
 
   EventUtils.sendMouseEvent({ type: "dblclick" },
