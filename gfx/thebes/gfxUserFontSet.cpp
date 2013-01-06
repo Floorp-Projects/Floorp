@@ -44,14 +44,13 @@ static uint64_t sFontSetGeneration = 0;
 // TODO: support for unicode ranges not yet implemented
 
 gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-             gfxMixedFontFamily *aFamily,
              uint32_t aWeight,
              uint32_t aStretch,
              uint32_t aItalicStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              uint32_t aLanguageOverride,
              gfxSparseBitSet *aUnicodeRanges)
-    : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily),
+    : gfxFontEntry(NS_LITERAL_STRING("Proxy")),
       mLoadingState(NOT_LOADING),
       mUnsupportedFormat(false),
       mLoader(nullptr)
@@ -120,7 +119,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     uint32_t languageOverride =
         gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
     proxyEntry =
-        new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch,
+        new gfxProxyFontEntry(aFontFaceSrcList, aWeight, aStretch,
                               aItalicStyle,
                               aFeatureSettings,
                               languageOverride,

@@ -508,7 +508,7 @@ public class AwesomeBar extends GeckoActivity {
 
         switch (item.getItemId()) {
             case R.id.open_new_tab:
-            case R.id.open_new_private_tab: {
+            case R.id.open_private_tab: {
                 if (url == null) {
                     Log.e(LOGTAG, "Can't open in new tab because URL is null");
                     break;
@@ -519,7 +519,7 @@ public class AwesomeBar extends GeckoActivity {
                     newTabUrl = ReaderModeUtils.getAboutReaderForUrl(url, true);
 
                 int flags = Tabs.LOADURL_NEW_TAB;
-                if (item.getItemId() == R.id.open_new_private_tab)
+                if (item.getItemId() == R.id.open_private_tab)
                     flags |= Tabs.LOADURL_PRIVATE;
 
                 Tabs.getInstance().loadUrl(newTabUrl, flags);

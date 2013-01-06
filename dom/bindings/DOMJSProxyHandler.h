@@ -6,12 +6,14 @@
 #ifndef mozilla_dom_DOMJSProxyHandler_h
 #define mozilla_dom_DOMJSProxyHandler_h
 
+#include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsproxy.h"
 #include "xpcpublic.h"
 #include "nsStringGlue.h"
-#include "mozilla/Likely.h"
 
 #define DOM_PROXY_OBJECT_SLOT js::JSSLOT_PROXY_PRIVATE
 
@@ -34,14 +36,14 @@ public:
   {
   }
 
-  bool getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id, bool set,
-                             JSPropertyDescriptor* desc);
+  bool getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id, JSPropertyDescriptor* desc,
+                             unsigned flags) MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JSObject* proxy, jsid id,
-                      JSPropertyDescriptor* desc);
-  bool delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp);
-  bool enumerate(JSContext* cx, JSObject* proxy, JS::AutoIdVector& props);
+                      JSPropertyDescriptor* desc) MOZ_OVERRIDE;
+  bool delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp) MOZ_OVERRIDE;
+  bool enumerate(JSContext* cx, JSObject* proxy, JS::AutoIdVector& props) MOZ_OVERRIDE;
   bool fix(JSContext* cx, JSObject* proxy, JS::Value* vp);
-  bool has(JSContext* cx, JSObject* proxy, jsid id, bool* bp);
+  bool has(JSContext* cx, JSObject* proxy, jsid id, bool* bp) MOZ_OVERRIDE;
   using js::BaseProxyHandler::obj_toString;
 
   static JSObject* GetExpandoObject(JSObject* obj)

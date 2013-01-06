@@ -66,8 +66,6 @@
 #include "nsChannelPolicy.h"
 
 // view stuff
-#include "nsViewsCID.h"
-#include "nsViewManager.h"
 #include "nsContentCreatorFunctions.h"
 
 // DOM includes
@@ -594,8 +592,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
     return rv;                                                                \
 }                                                                             \
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
-
 static nsresult
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -755,7 +751,6 @@ NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JSURI_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOWCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOWCONTROLLER_CID);
-NS_DEFINE_NAMED_CID(NS_VIEW_MANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
 #ifdef MOZ_MEDIA
@@ -1039,7 +1034,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_JSURI_CID, false, NULL, nsJSURIConstructor },
   { &kNS_WINDOWCOMMANDTABLE_CID, false, NULL, CreateWindowCommandTableConstructor },
   { &kNS_WINDOWCONTROLLER_CID, false, NULL, CreateWindowControllerWithSingletonCommandTable },
-  { &kNS_VIEW_MANAGER_CID, false, NULL, nsViewManagerConstructor },
   { &kNS_PLUGINDOCLOADERFACTORY_CID, false, NULL, CreateContentDLF },
   { &kNS_PLUGINDOCUMENT_CID, false, NULL, CreatePluginDocument },
 #ifdef MOZ_MEDIA
@@ -1189,7 +1183,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { CONTENT_DLF_CONTRACTID, &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID },
   { NS_JSPROTOCOLHANDLER_CONTRACTID, &kNS_JSPROTOCOLHANDLER_CID },
   { NS_WINDOWCONTROLLER_CONTRACTID, &kNS_WINDOWCONTROLLER_CID },
-  { "@mozilla.org/view-manager;1", &kNS_VIEW_MANAGER_CID },
   { PLUGIN_DLF_CONTRACTID, &kNS_PLUGINDOCLOADERFACTORY_CID },
   { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
   { TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID, &kTRANSFORMIIX_XSLT_PROCESSOR_CID },

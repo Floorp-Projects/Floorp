@@ -175,7 +175,7 @@ pref("media.dash.enabled", false);
 pref("media.gstreamer.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
-pref("media.navigator.enabled", false);
+pref("media.navigator.enabled", true);
 pref("media.peerconnection.enabled", false);
 pref("media.navigator.permission.disabled", false);
 #else
@@ -1755,11 +1755,22 @@ pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
+#ifdef XP_WIN
+// How long a plugin is allowed to process a synchronous IPC message 
+// before we display the plugin hang UI
+pref("dom.ipc.plugins.hangUITimeoutSecs", 5);
+// Minimum time that the plugin hang UI will be displayed
+pref("dom.ipc.plugins.hangUIMinDisplaySecs", 10);
+#endif
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
 pref("dom.ipc.plugins.parentTimeoutSecs", 0);
+#ifdef XP_WIN
+pref("dom.ipc.plugins.hangUITimeoutSecs", 0);
+pref("dom.ipc.plugins.hangUIMinDisplaySecs", 0);
+#endif
 #endif
 
 #ifdef XP_WIN
@@ -3927,3 +3938,8 @@ pref("dom.placeholder.show_on_focus", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
+// If the user puts a finger down on an element and we think the user
+// might be executing a pan gesture, how long do we wait before
+// tentatively deciding the gesture is actually a tap and activating
+// the target element?
+pref("ui.touch_activation.delay_ms", 50);

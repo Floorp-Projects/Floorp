@@ -8,10 +8,13 @@
     <item android:id="@+id/abouthome_topsites_edit"
           android:title="@string/abouthome_topsites_edit"/>
 
-    <item android:id="@+id/abouthome_topsites_clear"
-          android:title="@string/abouthome_topsites_clear"/>
+    <item android:id="@+id/abouthome_topsites_pin"
+          android:title="@string/abouthome_topsites_pin"/>
 
-    <item android:id="@+id/abouthome_topsites_clearall"
-          android:title="@string/abouthome_topsites_clearall"/>
+    <item android:id="@+id/abouthome_topsites_unpin"
+          android:title="@string/abouthome_topsites_unpin"/>
+
+    <item android:id="@+id/abouthome_topsites_unpinall"
+          android:title="@string/abouthome_topsites_unpinall"/>
 
 </menu>

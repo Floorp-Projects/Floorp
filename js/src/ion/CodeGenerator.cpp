@@ -2010,6 +2010,46 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     return callVM(InitPropInfo, lir);
 }
 
+typedef bool (*CreateThisFn)(JSContext *cx, HandleObject callee, MutableHandleValue rval);
+static const VMFunction CreateThisInfo =
+FunctionInfo<CreateThisFn>(CreateThis);
+
+bool
+CodeGenerator::visitCreateThis(LCreateThis *lir)
+{
+    const LAllocation *callee = lir->getCallee();
+
+    if (callee->isConstant())
+        pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(callee));
+
+    return callVM(CreateThisInfo, lir);
+}
+
+typedef JSObject *(*CreateThisWithProtoFn)(JSContext *cx, HandleObject callee, JSObject *proto);
+static const VMFunction CreateThisWithProtoInfo =
+FunctionInfo<CreateThisWithProtoFn>(js_CreateThisForFunctionWithProto);
+
+bool
+CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto *lir)
+{
+    const LAllocation *callee = lir->getCallee();
+    const LAllocation *proto = lir->getPrototype();
+
+    if (proto->isConstant())
+        pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(proto));
+
+    if (callee->isConstant())
+        pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(callee));
+
+    return callVM(CreateThisWithProtoInfo, lir);
+}
+
 typedef JSObject *(*NewGCThingFn)(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 static const VMFunction NewGCThingInfo =
     FunctionInfo<NewGCThingFn>(js::ion::NewGCThing);
@@ -2036,59 +2076,6 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     masm.initGCThing(objReg, templateObject);
 
     return true;
-}
-
-typedef JSObject *(*CreateThisFn)(JSContext *cx, HandleObject callee, JSObject *proto);
-static const VMFunction CreateThisInfo =
-    FunctionInfo<CreateThisFn>(js_CreateThisForFunctionWithProto);
-
-bool
-CodeGenerator::emitCreateThisVM(LInstruction *lir,
-                                const LAllocation *proto,
-                                const LAllocation *callee)
-{
-    if (proto->isConstant())
-        pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
-    else
-        pushArg(ToRegister(proto));
-
-    if (callee->isConstant())
-        pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
-    else
-        pushArg(ToRegister(callee));
-
-    return callVM(CreateThisInfo, lir);
-}
-
-bool
-CodeGenerator::visitCreateThisV(LCreateThisV *lir)
-{
-    Label done, vm;
-
-    const LAllocation *proto = lir->getPrototype();
-    const LAllocation *callee = lir->getCallee();
-
-    // When callee could be a native, put MagicValue in return operand.
-    // Use the VMCall when callee turns out to not be a native.
-    masm.branchIfInterpreted(ToRegister(callee), &vm);
-    masm.moveValue(MagicValue(JS_IS_CONSTRUCTING), GetValueOutput(lir));
-    masm.jump(&done);
-
-    masm.bind(&vm);
-    if (!emitCreateThisVM(lir, proto, callee))
-        return false;
-
-    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, GetValueOutput(lir));
-
-    masm.bind(&done);
-
-    return true;
-}
-
-bool
-CodeGenerator::visitCreateThisO(LCreateThisO *lir)
-{
-    return emitCreateThisVM(lir, lir->getPrototype(), lir->getCallee());
 }
 
 bool

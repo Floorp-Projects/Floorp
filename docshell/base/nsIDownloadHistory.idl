@@ -13,7 +13,7 @@ interface nsIURI;
  * interface specifically for downloads in case embedders choose to track
  * downloads differently from other types of history.
  */
-[scriptable, uuid(a7a3358c-9af2-41e3-adfe-3bf0b7ac2c38)]
+[scriptable, uuid(4dcd6a12-a091-4f38-8360-022929635746)]
 interface nsIDownloadHistory : nsISupports {
   /**
    * Adds a download to history.  This will also notify observers that the
@@ -35,9 +35,24 @@ interface nsIDownloadHistory : nsISupports {
    *         In a situation where a history implementation is not available,
    *         where 'history implementation' refers to something like
    *         nsIGlobalHistory and friends.
+   * @note This addition is not guaranteed to be synchronous, since it delegates
+   *       the actual addition to the underlying history implementation.  If you
+   *       need to observe the completion of the addition, use the underlying
+   *       history implementation's notifications system (e.g. nsINavHistoryObserver
+   *       for toolkit's implementation of this interface).
    */
   void addDownload(in nsIURI aSource, [optional] in nsIURI aReferrer,
                    [optional] in PRTime aStartTime,
                    [optional] in nsIURI aDestination);
-};
 
+  /**
+   * Remove all downloads from history.
+   *
+   * @note This removal is not guaranteed to be synchronous, since it delegates
+   *       the actual removal to the underlying history implementation.  If you
+   *       need to observe the completion of the removal, use the underlying
+   *       history implementation's notifications system (e.g. nsINavHistoryObserver
+   *       for toolkit's implementation of this interface).
+   */
+  void removeAllDownloads();
+};

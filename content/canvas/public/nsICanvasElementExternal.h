@@ -24,7 +24,7 @@ struct _cairo_surface;
 /*
  * This interface contains methods that are needed outside of the content/layout
  * modules, specifically widget.  It should eventually go away when we support
- * libxul builds, and nsHTMLCanvasElement be used directly.
+ * libxul builds, and HTMLCanvasElement be used directly.
  *
  * Code internal to content/layout should /never/ use this interface; if the
  * same functionality is needed in both places, two separate methods should be

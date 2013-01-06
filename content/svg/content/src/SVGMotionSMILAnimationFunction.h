@@ -17,9 +17,12 @@ class nsIAtom;
 class nsIContent;
 class nsISMILAttr;
 class nsSMILValue;
-class nsSVGMpathElement;
 
 namespace mozilla {
+
+namespace dom {
+class SVGMPathElement;
+}
 
 //----------------------------------------------------------------------
 // SVGMotionSMILAnimationFunction
@@ -72,7 +75,7 @@ protected:
   // Helpers for GetValues
   void     MarkStaleIfAttributeAffectsPath(nsIAtom* aAttribute);
   void     RebuildPathAndVertices(const nsIContent* aContextElem);
-  void     RebuildPathAndVerticesFromMpathElem(nsSVGMpathElement* aMpathElem);
+  void     RebuildPathAndVerticesFromMpathElem(dom::SVGMPathElement* aMpathElem);
   void     RebuildPathAndVerticesFromPathAttr();
   void     RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   bool     GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
