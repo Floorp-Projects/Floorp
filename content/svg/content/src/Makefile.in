@@ -38,6 +38,10 @@ CPPSRCS		= \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
 		nsSVGAltGlyphElement.cpp \
+		nsSVGAnimateElement.cpp \
+		nsSVGAnimateTransformElement.cpp \
+		nsSVGAnimateMotionElement.cpp \
+		nsSVGAnimationElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGClass.cpp \
@@ -63,6 +67,7 @@ CPPSRCS		= \
 		nsSVGPathGeometryElement.cpp \
 		nsSVGPatternElement.cpp \
 		nsSVGPolyElement.cpp \
+		nsSVGSetElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
 		nsSVGSVGElement.cpp \
@@ -85,28 +90,6 @@ CPPSRCS		= \
 		SVGAnimatedPointList.cpp \
 		SVGAnimatedPreserveAspectRatio.cpp \
 		SVGAnimatedTransformList.cpp \
-		SVGFragmentIdentifier.cpp \
-		SVGGElement.cpp \
-		SVGGraphicsElement.cpp \
-		SVGImageElement.cpp \
-		SVGLength.cpp \
-		SVGLengthList.cpp \
-		SVGNumberList.cpp \
-		SVGPathData.cpp \
-		SVGPathSegUtils.cpp \
-		SVGPointList.cpp \
-		SVGPreserveAspectRatio.cpp \
-		SVGRectElement.cpp \
-		SVGStringList.cpp \
-		SVGTitleElement.cpp \
-		SVGTransform.cpp \
-		SVGTransformList.cpp \
-		SVGTransformListParser.cpp \
-		nsSVGAnimateElement.cpp \
-		nsSVGAnimateTransformElement.cpp \
-		nsSVGAnimateMotionElement.cpp \
-		nsSVGAnimationElement.cpp \
-		nsSVGSetElement.cpp \
 		SVGAttrValueWrapper.cpp \
 		SVGCircleElement.cpp \
 		SVGContentUtils.cpp \
@@ -114,7 +97,13 @@ CPPSRCS		= \
 		SVGDescElement.cpp \
 		SVGEllipseElement.cpp \
 		SVGForeignObjectElement.cpp \
+		SVGFragmentIdentifier.cpp \
+		SVGGElement.cpp \
+		SVGGraphicsElement.cpp \
+		SVGImageElement.cpp \
 		SVGIntegerPairSMILType.cpp \
+		SVGLength.cpp \
+		SVGLengthList.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGLocatableElement.cpp \
 		SVGMetadataElement.cpp \
@@ -123,18 +112,29 @@ CPPSRCS		= \
 		SVGMotionSMILAnimationFunction.cpp \
 		SVGMotionSMILPathUtils.cpp \
 		SVGMPathElement.cpp \
+		SVGNumberList.cpp \
 		SVGNumberListSMILType.cpp \
 		SVGNumberPairSMILType.cpp \
 		SVGOrientSMILType.cpp \
+		SVGPathData.cpp \
+		SVGPathSegUtils.cpp \
 		SVGPathSegListSMILType.cpp \
+		SVGPointList.cpp \
 		SVGPointListSMILType.cpp \
 		SVGPolygonElement.cpp \
 		SVGPolylineElement.cpp \
+		SVGPreserveAspectRatio.cpp \
+		SVGRectElement.cpp \
 		SVGScriptElement.cpp \
 		SVGStopElement.cpp \
-		SVGSwitchElement.cpp \
+		SVGStringList.cpp \
 		SVGStyleElement.cpp \
+		SVGSwitchElement.cpp \
+		SVGTitleElement.cpp \
+		SVGTransform.cpp \
 		SVGTransformableElement.cpp \
+		SVGTransformList.cpp \
+		SVGTransformListParser.cpp \
 		SVGTransformListSMILType.cpp \
 		SVGViewBoxSMILType.cpp \
 		$(NULL)
