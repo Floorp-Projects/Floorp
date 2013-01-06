@@ -146,6 +146,7 @@ webidl_files = \
   SVGTransform.webidl \
   SVGTransformableElement.webidl \
   SVGTransformList.webidl \
+  SVGTSpanElement.webidl \
   SVGURIReference.webidl \
   Text.webidl \
   TextDecoder.webidl \
