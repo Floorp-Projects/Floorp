@@ -1355,8 +1355,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // This has to be here, rather than in nsGenericHTMLElement::UnbindFromTree, 
   //  because it has to happen after unsetting the parent pointer, but before
   //  recursively unbinding the kids.
-  if (IsHTML() && !HasDirAuto()) {
-    RecomputeDirectionality(this, false);
+  if (IsHTML()) {
+    ResetDir(this);
   }
 
   if (aDeep) {
