@@ -626,6 +626,11 @@ SetDirectionalityOnDescendants(Element* aElement, Directionality aDir,
   }
 }
 
+/**
+ * Walk the parent chain of a text node whose dir attribute has been removed and
+ * reset the direction of any of its ancestors which have dir=auto and whose
+ * directionality is determined by a text node descendant.
+ */
 void
 WalkAncestorsResetAutoDirection(Element* aElement, bool aNotify)
 {
@@ -893,6 +898,31 @@ OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
     SetDirectionalityOnDescendants(aElement,
                                    RecomputeDirectionality(aElement, aNotify),
                                    aNotify);
+  }
+}
+
+void
+SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent)
+{
+  // Set the AncestorHasDirAuto flag, unless this element shouldn't affect
+  // ancestors that have dir=auto
+  if (!DoesNotParticipateInAutoDirection(aElement) &&
+      !aElement->IsHTML(nsGkAtoms::bdi) &&
+      aParent && aParent->NodeOrAncestorHasDirAuto()) {
+    aElement->SetAncestorHasDirAuto();
+
+    // if we are binding an element to the tree that already has descendants,
+    // and the parent has NodeHasDirAuto or NodeAncestorHasDirAuto, we may
+    // need to reset the direction of an ancestor with dir=auto
+    if (aElement->GetFirstChild()) {
+      WalkAncestorsResetAutoDirection(aElement, true);
+    }
+  }
+
+  if (!aElement->HasDirAuto()) {
+    // if the element doesn't have dir=auto, set its own directionality from
+    // the dir attribute or by inheriting from its ancestors.
+    RecomputeDirectionality(aElement, false);
   }
 }
 

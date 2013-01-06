@@ -79,14 +79,6 @@ void WalkDescendantsSetDirAuto(mozilla::dom::Element* aElement,
 void WalkDescendantsClearAncestorDirAuto(mozilla::dom::Element* aElement);
 
 /**
- * Walk the parent chain of a text node whose dir attribute has been removed and
- * reset the direction of any of its ancestors which have dir=auto and whose
- * directionality is determined by a text node descendant.
- */
-void WalkAncestorsResetAutoDirection(mozilla::dom::Element* aElement,
-                                     bool aNotify = true);
-
-/**
  * When the contents of a text node have changed, deal with any elements whose
  * directionality needs to change
  */
@@ -126,6 +118,13 @@ void OnSetDirAttr(mozilla::dom::Element* aElement,
                   const nsAttrValue* aNewValue,
                   bool hadValidDir,
                   bool aNotify);
+
+/**
+ * Called when binding a new element to the tree, to set the
+ * NodeAncestorHasDirAuto flag and set the direction of the element and its
+ * ancestors if necessary
+ */
+void SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent);
 
 } // end namespace mozilla
 
