@@ -8,12 +8,12 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsSVGSVGElement.h"
-#include "nsSVGTextPositioningElement.h"
+#include "SVGTextPositioningElement.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
 
-typedef nsSVGTextPositioningElement nsSVGTSpanElementBase;
+typedef dom::SVGTextPositioningElement nsSVGTSpanElementBase;
 
 class nsSVGTSpanElement : public nsSVGTSpanElementBase, // = nsIDOMSVGTextPositioningElement
                           public nsIDOMSVGTSpanElement

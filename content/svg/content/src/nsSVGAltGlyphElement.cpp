@@ -9,12 +9,12 @@
 #include "nsIDOMSVGAltGlyphElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGString.h"
-#include "nsSVGTextPositioningElement.h"
+#include "SVGTextPositioningElement.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
 
-typedef nsSVGTextPositioningElement nsSVGAltGlyphElementBase;
+typedef dom::SVGTextPositioningElement nsSVGAltGlyphElementBase;
 
 class nsSVGAltGlyphElement : public nsSVGAltGlyphElementBase, // = nsIDOMSVGTextPositioningElement
                              public nsIDOMSVGAltGlyphElement,

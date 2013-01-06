@@ -46,8 +46,6 @@ protected:
   {}
 
   nsSVGTextContainerFrame* GetTextContainerFrame();
-
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
