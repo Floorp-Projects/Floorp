@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGTextContentElement.h"
-#include "mozilla/dom/SVGTextContentElementBinding.h"
 #include "nsISVGPoint.h"
 #include "nsSVGTextContainerFrame.h"
 #include "nsIDOMSVGAnimatedLength.h"
@@ -13,12 +12,6 @@
 
 namespace mozilla {
 namespace dom {
-
-JSObject*
-SVGTextContentElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
-{
-  return SVGTextContentElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
-}
 
 nsSVGTextContainerFrame*
 SVGTextContentElement::GetTextContainerFrame()

@@ -140,6 +140,7 @@ webidl_files = \
   SVGTests.webidl \
   SVGTextContentElement.webidl \
   SVGTextPathElement.webidl \
+  SVGTextPositioningElement.webidl \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
   SVGTransformableElement.webidl \

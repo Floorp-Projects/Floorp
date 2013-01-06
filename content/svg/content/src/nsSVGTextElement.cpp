@@ -10,7 +10,7 @@
 #include "nsIDOMSVGTextElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGSVGElement.h"
-#include "nsSVGTextPositioningElement.h"
+#include "SVGTextPositioningElement.h"
 #include "nsError.h"
 #include "SVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedLengthList.h"
