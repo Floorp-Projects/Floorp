@@ -76,6 +76,23 @@ AppInfoMeasurement.prototype = Object.freeze({
 });
 
 
+function AppVersionMeasurement() {
+  Metrics.Measurement.call(this);
+}
+
+AppVersionMeasurement.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "versions",
+  version: 1,
+
+  configureStorage: function () {
+    return this.registerStorageField("version",
+                                     this.storage.FIELD_DAILY_DISCRETE_TEXT);
+  },
+});
+
+
 this.AppInfoProvider = function AppInfoProvider() {
   Metrics.Provider.call(this);
 
@@ -86,7 +103,7 @@ AppInfoProvider.prototype = Object.freeze({
 
   name: "org.mozilla.appInfo",
 
-  measurementTypes: [AppInfoMeasurement],
+  measurementTypes: [AppInfoMeasurement, AppVersionMeasurement],
 
   appInfoFields: {
     // From nsIXULAppInfo.
@@ -101,6 +118,46 @@ AppInfoProvider.prototype = Object.freeze({
     // From nsIXULRuntime.
     os: "OS",
     xpcomabi: "XPCOMABI",
+  },
+
+  onInit: function () {
+    return Task.spawn(this._onInit.bind(this));
+  },
+
+  _onInit: function () {
+    // Services.appInfo should always be defined for any reasonably behaving
+    // Gecko app. If it isn't, we insert a empty string sentinel value.
+    let ai;
+    try {
+      ai = Services.appinfo;
+    } catch (ex) {
+      this._log.error("Could not obtain Services.appinfo: " +
+                     CommonUtils.exceptionStr(ex));
+      yield this._setCurrentVersion("");
+      return;
+    }
+
+    if (!ai) {
+      this._log.error("Services.appinfo is unavailable.");
+      yield this._setCurrentVersion("");
+      return;
+    }
+
+    let currentVersion = ai.version;
+    let lastVersion = yield this.getState("lastVersion");
+
+    if (currentVersion == lastVersion) {
+      return;
+    }
+
+    yield this._setCurrentVersion(currentVersion);
+  },
+
+  _setCurrentVersion: function (version) {
+    this._log.info("Recording new application version: " + version);
+    let m = this.getMeasurement("versions", 1);
+    m.addDailyDiscreteText("version", version);
+    return this.setState("lastVersion", version);
   },
 
   collectConstantData: function () {
