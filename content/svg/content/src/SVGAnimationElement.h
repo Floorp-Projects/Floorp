@@ -75,7 +75,17 @@ public:
   // Utility methods for within SVG
   void ActivateByHyperlink();
 
-protected:
+  // WebIDL
+  nsSVGElement* GetTargetElement();
+  float GetStartTime(ErrorResult& rv);
+  float GetCurrentTime();
+  float GetSimpleDuration(ErrorResult& rv);
+  void BeginElement(ErrorResult& rv) { BeginElementAt(0.f, rv); }
+  void BeginElementAt(float offset, ErrorResult& rv);
+  void EndElement(ErrorResult& rv) { EndElementAt(0.f, rv); }
+  void EndElementAt(float offset, ErrorResult& rv);
+
+ protected:
   // nsSVGElement overrides
 
   void UpdateHrefTarget(nsIContent* aNodeForContext,
