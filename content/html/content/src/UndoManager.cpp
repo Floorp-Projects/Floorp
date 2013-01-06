@@ -985,7 +985,7 @@ UndoManager::ItemInternal(uint32_t aIndex,
 
 void
 UndoManager::Item(uint32_t aIndex,
-                  Nullable<nsTArray<nsRefPtr<nsIUndoManagerTransaction>>>& aItems,
+                  Nullable<nsTArray<nsRefPtr<nsIUndoManagerTransaction> > >& aItems,
                   ErrorResult& aRv)
 {
   int32_t numRedo;
@@ -1016,7 +1016,7 @@ UndoManager::Item(uint32_t aIndex,
     return;
   }
 
-  nsTArray<nsRefPtr<nsIUndoManagerTransaction>>& items = aItems.SetValue();
+  nsTArray<nsRefPtr<nsIUndoManagerTransaction> >& items = aItems.SetValue();
   for (uint32_t i = 0; i < transactions.Length(); i++) {
     items.AppendElement(transactions[i]);
   }
