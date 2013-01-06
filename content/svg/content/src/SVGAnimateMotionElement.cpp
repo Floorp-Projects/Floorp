@@ -3,51 +3,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGAnimateMotionElement.h"
+#include "mozilla/dom/SVGAnimateMotionElement.h"
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(AnimateMotion)
+DOMCI_NODE_DATA(SVGAnimateMotionElement, mozilla::dom::SVGAnimateMotionElement)
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(AnimateMotion)
+
+namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGAnimateMotionElement,nsSVGAnimateMotionElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGAnimateMotionElement,nsSVGAnimateMotionElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGAnimateMotionElement, SVGAnimationElement)
+NS_IMPL_RELEASE_INHERITED(SVGAnimateMotionElement, SVGAnimationElement)
 
-DOMCI_NODE_DATA(SVGAnimateMotionElement, nsSVGAnimateMotionElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGAnimateMotionElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGAnimateMotionElement, nsIDOMNode,
+NS_INTERFACE_TABLE_HEAD(SVGAnimateMotionElement)
+  NS_NODE_INTERFACE_TABLE5(SVGAnimateMotionElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
                            nsIDOMSVGAnimationElement,
                            nsIDOMSVGAnimateMotionElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimateMotionElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimateMotionElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGAnimationElement)
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAnimateMotionElement::nsSVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGAnimateMotionElementBase(aNodeInfo)
+SVGAnimateMotionElement::SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGAnimationElement(aNodeInfo)
 {
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGAnimateMotionElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAnimateMotionElement)
 
 //----------------------------------------------------------------------
 // nsISMILAnimationElement methods
 
 nsSMILAnimationFunction&
-nsSVGAnimateMotionElement::AnimationFunction()
+SVGAnimateMotionElement::AnimationFunction()
 {
   return mAnimationFunction;
 }
 
 bool
-nsSVGAnimateMotionElement::GetTargetAttributeName(int32_t *aNamespaceID,
-                                                  nsIAtom **aLocalName) const
+SVGAnimateMotionElement::GetTargetAttributeName(int32_t *aNamespaceID,
+                                                nsIAtom **aLocalName) const
 {
   // <animateMotion> doesn't take an attributeName, since it doesn't target an
   // 'attribute' per se.  We'll use a unique dummy attribute-name so that our
@@ -58,10 +61,14 @@ nsSVGAnimateMotionElement::GetTargetAttributeName(int32_t *aNamespaceID,
 }
 
 nsSMILTargetAttrType
-nsSVGAnimateMotionElement::GetTargetAttributeType() const
+SVGAnimateMotionElement::GetTargetAttributeType() const
 {
   // <animateMotion> doesn't take an attributeType, since it doesn't target an
   // 'attribute' per se.  We'll just return 'XML' for simplicity.  (This just
   // needs to match what we expect in nsSVGElement::GetAnimAttr.)
   return eSMILTargetAttrType_XML;
 }
+
+} // namespace dom
+} // namespace mozilla
+
