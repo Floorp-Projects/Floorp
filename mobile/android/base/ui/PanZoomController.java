@@ -61,6 +61,9 @@ public class PanZoomController
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
 
+    // The maximum amount we would like to scroll with the mouse
+    private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
+
     private enum PanZoomState {
         NOTHING,        /* no touch-start events received */
         FLING,          /* all touches removed, but we're still scrolling page */
@@ -195,6 +198,7 @@ public class PanZoomController
         case MotionEvent.ACTION_MOVE:   return onTouchMove(event);
         case MotionEvent.ACTION_UP:     return onTouchEnd(event);
         case MotionEvent.ACTION_CANCEL: return onTouchCancel(event);
+        case MotionEvent.ACTION_SCROLL: return onScroll(event);
         default:                        return false;
         }
     }
@@ -399,6 +403,18 @@ public class PanZoomController
 
         // ensure we snap back if we're overscrolled
         bounce();
+        return false;
+    }
+
+    private boolean onScroll(MotionEvent event) {
+        if (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING) {
+            float scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+            float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+
+            scrollBy(scrollX * MAX_SCROLL, scrollY * MAX_SCROLL);
+            bounce();
+            return true;
+        }
         return false;
     }
 
