@@ -21,11 +21,6 @@ class DOMSVGAnimatedNumberList;
 namespace dom {
 typedef SVGTextContentElement SVGTextPositioningElementBase;
 
-/**
- * Note that nsSVGTextElement does not inherit this class - it reimplements it
- * instead (see its documenting comment). The upshot is that any changes to
- * this class also need to be made in nsSVGTextElement.
- */
 class SVGTextPositioningElement : public SVGTextPositioningElementBase
 {
 public:
