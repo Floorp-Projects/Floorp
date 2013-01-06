@@ -5,55 +5,59 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGSwitchElement.h"
+#include "mozilla/dom/SVGSwitchElement.h"
 #include "DOMSVGTests.h"
 #include "nsIFrame.h"
 #include "nsSVGUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/SVGSwitchElementBinding.h"
 
-using namespace mozilla;
+DOMCI_NODE_DATA(SVGSwitchElement, mozilla::dom::SVGSwitchElement)
 
-////////////////////////////////////////////////////////////////////////
-// implementation
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Switch)
 
+namespace mozilla {
+namespace dom {
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(Switch)
-
+JSObject*
+SVGSwitchElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGSwitchElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGSwitchElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSVGSwitchElement,
-                                                  nsSVGSwitchElementBase)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGSwitchElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGSwitchElement,
+                                                  SVGSwitchElementBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveChild)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGSwitchElement,
-                                                nsSVGSwitchElementBase)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGSwitchElement,
+                                                SVGSwitchElementBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveChild)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(nsSVGSwitchElement,nsSVGSwitchElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGSwitchElement,nsSVGSwitchElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
 
-DOMCI_NODE_DATA(SVGSwitchElement, nsSVGSwitchElement)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGSwitchElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGSwitchElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGSwitchElement)
+  NS_NODE_INTERFACE_TABLE4(SVGSwitchElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGSwitchElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSwitchElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGSwitchElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGSwitchElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSwitchElement::nsSVGSwitchElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGSwitchElementBase(aNodeInfo)
+SVGSwitchElement::SVGSwitchElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGSwitchElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 void
-nsSVGSwitchElement::MaybeInvalidate()
+SVGSwitchElement::MaybeInvalidate()
 {
   // We must not change mActiveChild until after
   // InvalidateAndScheduleBoundsUpdate has been called, otherwise
@@ -78,17 +82,17 @@ nsSVGSwitchElement::MaybeInvalidate()
 // nsIDOMNode methods
 
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGSwitchElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSwitchElement)
 
 //----------------------------------------------------------------------
 // nsINode methods
 
 nsresult
-nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
-                                  uint32_t aIndex,
-                                  bool aNotify)
+SVGSwitchElement::InsertChildAt(nsIContent* aKid,
+                                uint32_t aIndex,
+                                bool aNotify)
 {
-  nsresult rv = nsSVGSwitchElementBase::InsertChildAt(aKid, aIndex, aNotify);
+  nsresult rv = SVGSwitchElementBase::InsertChildAt(aKid, aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
     MaybeInvalidate();
   }
@@ -96,17 +100,17 @@ nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
 }
 
 void
-nsSVGSwitchElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
+SVGSwitchElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
-  nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
+  SVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
   MaybeInvalidate();
 }
- 
+
 //----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-nsSVGSwitchElement::IsAttributeMapped(const nsIAtom* name) const
+SVGSwitchElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFEFloodMap,
@@ -120,14 +124,14 @@ nsSVGSwitchElement::IsAttributeMapped(const nsIAtom* name) const
   };
 
   return FindAttributeDependence(name, map) ||
-    nsSVGSwitchElementBase::IsAttributeMapped(name);
+    SVGSwitchElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------
 // Implementation Helpers:
 
 nsIContent *
-nsSVGSwitchElement::FindActiveChild() const
+SVGSwitchElement::FindActiveChild() const
 {
   bool allowReorder = AttrValueIs(kNameSpaceID_None,
                                     nsGkAtoms::allowReorder,
@@ -188,3 +192,7 @@ nsSVGSwitchElement::FindActiveChild() const
   }
   return nullptr;
 }
+
+} // namespace dom
+} // namespace mozilla
+
