@@ -104,6 +104,7 @@ webidl_files = \
   SVGAnimatedPoints.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGCircleElement.webidl \
   SVGDefsElement.webidl \
   SVGDescElement.webidl \
   SVGElement.webidl \
