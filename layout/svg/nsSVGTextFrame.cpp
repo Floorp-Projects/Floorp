@@ -114,7 +114,7 @@ nsSVGTextFrame::GetSubStringLength(uint32_t charnum, uint32_t nchars)
 }
 
 int32_t
-nsSVGTextFrame::GetCharNumAtPosition(DOMSVGPoint *point)
+nsSVGTextFrame::GetCharNumAtPosition(nsISVGPoint *point)
 {
   UpdateGlyphPositioning(false);
 

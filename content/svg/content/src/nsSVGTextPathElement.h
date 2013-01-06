@@ -15,7 +15,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "nsSVGTextContentElement.h"
+#include "SVGTextContentElement.h"
 
 class nsIAtom;
 class nsIContent;
@@ -23,7 +23,7 @@ class nsINode;
 class nsINodeInfo;
 class nsXPCClassInfo;
 
-typedef nsSVGTextContentElement nsSVGTextPathElementBase;
+typedef mozilla::dom::SVGTextContentElement nsSVGTextPathElementBase;
 
 class nsSVGTextPathElement : public nsSVGTextPathElementBase, // = nsIDOMSVGTextContentElement
                              public nsIDOMSVGTextPathElement,

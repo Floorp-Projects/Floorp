@@ -67,7 +67,6 @@ CPPSRCS		= \
 		nsSVGSVGElement.cpp \
 		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
-		nsSVGTextContentElement.cpp \
 		nsSVGTextElement.cpp \
 		nsSVGTextPathElement.cpp \
 		nsSVGTextPositioningElement.cpp \
@@ -130,6 +129,7 @@ CPPSRCS		= \
 		SVGStringList.cpp \
 		SVGStyleElement.cpp \
 		SVGSwitchElement.cpp \
+		SVGTextContentElement.cpp \
 		SVGTitleElement.cpp \
 		SVGTransform.cpp \
 		SVGTransformableElement.cpp \
@@ -180,6 +180,7 @@ EXPORTS_mozilla/dom = \
 	SVGStopElement.h \
 	SVGStyleElement.h \
 	SVGSwitchElement.h \
+	SVGTextContentElement.h \
 	SVGTitleElement.h \
 	SVGTransformableElement.h \
 	$(NULL)
