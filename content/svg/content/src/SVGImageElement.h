@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGIMAGEELEMENT_H__
-#define __NS_SVGIMAGEELEMENT_H__
+#ifndef mozilla_dom_SVGImageElement_h
+#define mozilla_dom_SVGImageElement_h
 
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGURIReference.h"
@@ -14,26 +14,34 @@
 #include "nsSVGString.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
-typedef nsSVGPathGeometryElement nsSVGImageElementBase;
+nsresult NS_NewSVGImageElement(nsIContent **aResult,
+                               already_AddRefed<nsINodeInfo> aNodeInfo);
 
-class nsSVGImageElement : public nsSVGImageElementBase,
-                          public nsIDOMSVGImageElement,
-                          public nsIDOMSVGURIReference,
-                          public nsImageLoadingContent
+typedef nsSVGPathGeometryElement SVGImageElementBase;
+
+class nsSVGImageFrame;
+
+namespace mozilla {
+namespace dom {
+class DOMSVGAnimatedPreserveAspectRatio;
+
+class SVGImageElement : public SVGImageElementBase,
+                        public nsIDOMSVGImageElement,
+                        public nsIDOMSVGURIReference,
+                        public nsImageLoadingContent
 {
-  friend class nsSVGImageFrame;
+  friend class ::nsSVGImageFrame;
 
 protected:
-  friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsSVGImageElement();
+  SVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~SVGImageElement();
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
+  friend nsresult (::NS_NewSVGImageElement(nsIContent **aResult,
+                                           already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
-  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
-
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGIMAGEELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
@@ -41,7 +49,7 @@ public:
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGImageElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGImageElementBase::)
 
   // nsIContent interface
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
@@ -72,6 +80,15 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedLength> X();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+
 protected:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 
@@ -79,7 +96,7 @@ protected:
   virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
 
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
@@ -90,4 +107,7 @@ protected:
   static StringInfo sStringInfo[1];
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGImageElement_h
