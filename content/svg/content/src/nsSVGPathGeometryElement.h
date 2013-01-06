@@ -6,9 +6,8 @@
 #ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
 #define __NS_SVGPATHGEOMETRYELEMENT_H__
 
-#include "DOMSVGTests.h"
 #include "gfxMatrix.h"
-#include "nsSVGGraphicElement.h"
+#include "SVGGraphicsElement.h"
 #include "nsTArray.h"
 
 struct nsSVGMark {
@@ -19,10 +18,9 @@ struct nsSVGMark {
 
 class gfxContext;
 
-typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGPathGeometryElementBase;
 
-class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase,
-                                 public DOMSVGTests
+class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
 {
 public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);

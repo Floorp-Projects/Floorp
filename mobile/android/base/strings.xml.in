@@ -140,7 +140,6 @@
   <string name="char_encoding">&char_encoding;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="new_private_tab">&new_private_tab;</string>
-  <string name="synced_tabs">&synced_tabs;</string>
   <string name="close_all_tabs">&close_all_tabs;</string>
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
@@ -161,7 +160,7 @@
   <string name="reader">&reader;</string>
 
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
-  <string name="contextmenu_open_new_private_tab">&contextmenu_open_new_private_tab;</string>
+  <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
   <string name="contextmenu_open_in_reader">&contextmenu_open_in_reader;</string>
   <string name="contextmenu_remove_history">&contextmenu_remove_history;</string>
   <string name="contextmenu_remove_bookmark">&contextmenu_remove_bookmark;</string>
@@ -204,8 +203,9 @@
   <string name="abouthome_apps_bold_name">&abouthome_apps_bold_name2;</string>
   
   <string name="abouthome_topsites_edit">&abouthome_topsites_edit;</string>
-  <string name="abouthome_topsites_clear">&abouthome_topsites_clear;</string>
-  <string name="abouthome_topsites_clearall">&abouthome_topsites_clearall;</string>
+  <string name="abouthome_topsites_pin">&abouthome_topsites_pin;</string>
+  <string name="abouthome_topsites_unpin">&abouthome_topsites_unpin;</string>
+  <string name="abouthome_topsites_unpinall">&abouthome_topsites_unpinall;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
@@ -222,7 +222,7 @@
   <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/android/</string>
 
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
-  <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/mobile</string>
+  <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/products/mobile</string>
   <string name="bookmarkdefaults_favicon_abouthome">chrome/chrome/content/branding/favicon64.png</string>
 
   <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>

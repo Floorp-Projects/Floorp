@@ -300,7 +300,7 @@ public:
 
   // WebIDL
   nsSVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
-  already_AddRefed<nsSVGElement> GetViewportElement();
+  nsSVGElement* GetViewportElement();
   already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
   nsICSSDeclaration* GetStyle(mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
@@ -640,6 +640,25 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
   return rv;                                                                 \
 }
 
+#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(_elementName)                  \
+nsresult                                                                     \
+NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo)    \
+{                                                                            \
+  nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
+    new mozilla::dom::SVG##_elementName##Element(aNodeInfo);                 \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  if (NS_FAILED(rv)) {                                                       \
+    return rv;                                                               \
+  }                                                                          \
+                                                                             \
+  it.forget(aResult);                                                        \
+                                                                             \
+  return rv;                                                                 \
+}
+
 #define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
@@ -648,6 +667,26 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo, aFromParser);                \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  if (NS_FAILED(rv)) {                                                       \
+    return rv;                                                               \
+  }                                                                          \
+                                                                             \
+  it.forget(aResult);                                                        \
+                                                                             \
+  return rv;                                                                 \
+}
+
+#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(_elementName)     \
+nsresult                                                                     \
+NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo,    \
+                                 mozilla::dom::FromParser aFromParser)       \
+{                                                                            \
+  nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
+    new mozilla::dom::SVG##_elementName##Element(aNodeInfo, aFromParser);    \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \

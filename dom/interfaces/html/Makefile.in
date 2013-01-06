@@ -72,7 +72,7 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLTableColElement.idl		\
 	nsIDOMHTMLTableElement.idl		\
 	nsIDOMHTMLTableRowElement.idl		\
-	nsIDOMHTMLTableSectionElem.idl		\
+	nsIDOMHTMLTableSectionElement.idl		\
 	nsIDOMHTMLTextAreaElement.idl		\
 	nsIDOMHTMLTitleElement.idl		\
 	nsIDOMHTMLUListElement.idl		\
@@ -84,6 +84,7 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLVideoElement.idl		\
 	nsIDOMHTMLAudioElement.idl		\
 	nsIDOMValidityState.idl		\
+	nsIUndoManagerTransaction.idl	\
 	nsIDOMMozBrowserFrame.idl		\
 	$(NULL)
 

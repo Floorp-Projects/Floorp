@@ -4,3 +4,13 @@
 
 @import url("chrome://global/skin/inContentUI.css");
 
+.downloadButton {
+  box-shadow: none;
+}
+
+.downloadButton:not([disabled="true"]):hover:active,
+.downloadButton:not([disabled]):hover:active {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}

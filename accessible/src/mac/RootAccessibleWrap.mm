@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsObjCExceptions.h"
 #include "nsIWidget.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 
 using namespace mozilla::a11y;
 

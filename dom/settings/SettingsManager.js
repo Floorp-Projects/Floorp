@@ -4,7 +4,7 @@
 
 "use strict";
 
-const DEBUG = false;
+const DEBUG = true;
 function debug(s) {
   if (DEBUG) dump("-*- SettingsManager: " + s + "\n");
 }
@@ -30,6 +30,7 @@ const nsIDOMSettingsLock      = Ci.nsIDOMSettingsLock;
 function SettingsLock(aSettingsManager)
 {
   this._open = true;
+  this._isBusy = false;
   this._requests = new Queue();
   this._settingsManager = aSettingsManager;
   this._transaction = null;
@@ -48,11 +49,15 @@ SettingsLock.prototype = {
       let request = info.request;
       switch (info.intent) {
         case "clear":
-          let req = store.clear();
-          req.onsuccess = function() { this._open = true;
-                                       Services.DOMRequest.fireSuccess(request, 0);
-                                       this._open = false; }.bind(lock);
-          req.onerror = function() { Services.DOMRequest.fireError(request, 0) };
+          let clearReq = store.clear();
+          clearReq.onsuccess = function() {
+            this._open = true;
+            Services.DOMRequest.fireSuccess(request, 0);
+            this._open = false;
+          }.bind(lock);
+          clearReq.onerror = function() {
+            Services.DOMRequest.fireError(request, 0)
+          };
           break;
         case "set":
           let keys = Object.getOwnPropertyNames(info.settings);
@@ -60,49 +65,64 @@ SettingsLock.prototype = {
             let key = keys[i];
             let last = i === keys.length - 1;
             if (DEBUG) debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
-
+            lock._isBusy = true;
             let checkKeyRequest = store.get(key);
+
             checkKeyRequest.onsuccess = function (event) {
-              if (!event.target.result) {
-                if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database. Please add it to build/settings.js\n");
+              let defaultValue;
+              let userValue = info.settings[key];
+              if (event.target.result) {
+                defaultValue = event.target.result.defaultValue;
+              } else {
+                defaultValue = null;
+                if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database.\n");
               }
+
+              let setReq;
+              if (typeof(info.settings[key]) != 'object') {
+                let obj = {settingName: key, defaultValue: defaultValue, userValue: userValue};
+                if (DEBUG) debug("store1: " + JSON.stringify(obj));
+                setReq = store.put(obj);
+              } else {
+                //Workaround for cloning issues
+                let defaultVal = JSON.parse(JSON.stringify(defaultValue));
+                let userVal = JSON.parse(JSON.stringify(userValue));
+                let obj = {settingName: key, defaultValue: defaultVal, userValue: userVal};
+                if (DEBUG) debug("store2: " + JSON.stringify(obj));
+                setReq = store.put(obj);
+              }
+
+              setReq.onsuccess = function() {
+                lock._isBusy = false;
+                cpmm.sendAsyncMessage("Settings:Changed", { key: key, value: userValue });
+                if (last && !request.error) {
+                  lock._open = true;
+                  Services.DOMRequest.fireSuccess(request, 0);
+                  lock._open = false;
+                  if (!lock._requests.isEmpty()) {
+                    lock.process();
+                  }
+                }
+              };
+
+              setReq.onerror = function() {
+                if (!request.error) {
+                  Services.DOMRequest.fireError(request, setReq.error.name)
+                }
+              };
             }
-
-            if(typeof(info.settings[key]) != 'object') {
-              req = store.put({settingName: key, settingValue: info.settings[key]});
-            } else {
-              //Workaround for cloning issues
-              let obj = JSON.parse(JSON.stringify(info.settings[key]));
-              req = store.put({settingName: key, settingValue: obj});
-            }
-
-            req.onsuccess = function() {
-              if (last && !request.error) {
-                lock._open = true;
-                Services.DOMRequest.fireSuccess(request, 0);
-                lock._open = false;
-              }
-              cpmm.sendAsyncMessage("Settings:Changed", { key: key, value: info.settings[key] });
-            };
-
-            req.onerror = function() {
-              if (!request.error) {
-                Services.DOMRequest.fireError(request, req.error.name)
-              }
-            };
           }
           break;
         case "get":
-          req = (info.name === "*") ? store.mozGetAll()
-                                    : store.mozGetAll(info.name);
+          let getReq = (info.name === "*") ? store.mozGetAll()
+                                           : store.mozGetAll(info.name);
 
-          req.onsuccess = function(event) {
+          getReq.onsuccess = function(event) {
             if (DEBUG) debug("Request for '" + info.name + "' successful. " + 
                   "Record count: " + event.target.result.length);
-            if (DEBUG) debug("result: " + JSON.stringify(event.target.result));
 
             if (event.target.result.length == 0) {
-              if (DEBUG) debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database. Please add it to build/settings.js\n");
+              if (DEBUG) debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database.\n");
             }
 
             let results = {
@@ -113,7 +133,8 @@ SettingsLock.prototype = {
             for (var i in event.target.result) {
               let result = event.target.result[i];
               var name = result.settingName;
-              var value = result.settingValue;
+              if (DEBUG) debug("VAL: " + result.userValue +", " + result.defaultValue + "\n");
+              var value = result.userValue !== undefined ? result.userValue : result.defaultValue;
               results[name] = value;
               results.__exposedProps__[name] = "r";
               // If the value itself is an object, expose the properties.
@@ -129,14 +150,12 @@ SettingsLock.prototype = {
             this._open = false;
           }.bind(lock);
 
-          req.onerror = function() {
+          getReq.onerror = function() {
             Services.DOMRequest.fireError(request, 0)
           };
           break;
       }
     }
-    if (!lock._requests.isEmpty())
-      throw Components.results.NS_ERROR_ABORT;
     lock._open = true;
   },
 
@@ -148,10 +167,15 @@ SettingsLock.prototype = {
           let transactionType = this._settingsManager.hasWritePrivileges ? "readwrite" : "readonly";
           lock._transaction = lock._settingsManager._settingsDB._db.transaction(SETTINGSSTORE_NAME, transactionType);
         }
-        lock.process();
+        if (!lock._isBusy) {
+          lock.process();
+        } else {
+          this._settingsManager._locks.enqueue(lock);
+        }
       }
-      if (!this._requests.isEmpty())
+      if (!this._requests.isEmpty() && !this._isBusy) {
         this.process();
+      }
     }
   },
 
@@ -181,7 +205,8 @@ SettingsLock.prototype = {
     if (this._settingsManager.hasWritePrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       if (DEBUG) debug("send: " + JSON.stringify(aSettings));
-      this._requests.enqueue({request: req, intent: "set", settings: aSettings});
+      let settings = JSON.parse(JSON.stringify(aSettings));
+      this._requests.enqueue({request: req, intent: "set", settings: settings});
       this.createTransactionAndProcess();
       return req;
     } else {
@@ -266,7 +291,7 @@ SettingsManager.prototype = {
     this._locks.enqueue(lock);
     this._settingsDB.ensureDB(
       function() { lock.createTransactionAndProcess(); },
-      function() { dump("ensureDB error cb!\n"); },
+      function() { dump("Cannot open Settings DB. Trying to open an old version?\n"); },
       myGlobal );
     this.nextTick(function() { this._open = false; }, lock);
     return lock;
