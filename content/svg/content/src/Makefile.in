@@ -51,7 +51,6 @@ CPPSRCS		= \
 		nsSVGFeatures.cpp \
 		nsSVGFilterElement.cpp \
 		nsSVGFilters.cpp \
-		nsSVGGElement.cpp \
 		nsSVGGradientElement.cpp \
 		nsSVGImageElement.cpp \
 		nsSVGInteger.cpp \
@@ -93,6 +92,7 @@ CPPSRCS		= \
 		SVGAnimatedPreserveAspectRatio.cpp \
 		SVGAnimatedTransformList.cpp \
 		SVGFragmentIdentifier.cpp \
+		SVGGElement.cpp \
 		SVGGraphicsElement.cpp \
 		SVGLength.cpp \
 		SVGLengthList.cpp \
@@ -159,6 +159,7 @@ EXPORTS_mozilla/dom = \
 	SVGDefsElement.h \
 	SVGDescElement.h \
 	SVGForeignObjectElement.h \
+	SVGGElement.h \
 	SVGGraphicsElement.h \
 	SVGLocatableElement.h \
 	SVGMetadataElement.h \
