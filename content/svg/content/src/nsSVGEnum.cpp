@@ -126,6 +126,13 @@ nsresult
 nsSVGEnum::ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
                              nsSVGElement *aSVGElement)
 {
+  *aResult = ToDOMAnimatedEnum(aSVGElement).get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+nsSVGEnum::ToDOMAnimatedEnum(nsSVGElement* aSVGElement)
+{
   nsRefPtr<DOMAnimatedEnum> domAnimatedEnum =
     sSVGAnimatedEnumTearoffTable.GetTearoff(this);
   if (!domAnimatedEnum) {
@@ -133,8 +140,7 @@ nsSVGEnum::ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
     sSVGAnimatedEnumTearoffTable.AddTearoff(this, domAnimatedEnum);
   }
 
-  domAnimatedEnum.forget(aResult);
-  return NS_OK;
+  return domAnimatedEnum.forget();
 }
 
 nsSVGEnum::DOMAnimatedEnum::~DOMAnimatedEnum()
