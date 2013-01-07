@@ -65,6 +65,14 @@ nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
   return NS_OK;
 }
 
+nsDOMLocalMediaStream::~nsDOMLocalMediaStream()
+{
+  if (mStream) {
+    // Make sure Listeners of this stream know it's going away
+    Stop();
+  }
+}
+
 NS_IMETHODIMP
 nsDOMLocalMediaStream::Stop()
 {
