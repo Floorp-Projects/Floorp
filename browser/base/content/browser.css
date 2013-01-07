@@ -618,6 +618,10 @@ html|*#gcli-output-frame,
   transition: none;
 }
 
+.social-notification-container > .toolbarbutton-1[badge]:not([badge=""])::after {
+  content: attr(badge);
+}
+
 chatbox {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");
 }
