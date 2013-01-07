@@ -1206,6 +1206,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
                "Trying to unlink a context with outstanding requests.");
   tmp->mIsInitialized = false;
   tmp->mGCOnDestruction = false;
+  if (tmp->mContext) {
+    JSAutoRequest ar(tmp->mContext);
+    JS_SetGlobalObject(tmp->mContext, nullptr);
+  }
   tmp->DestroyJSContext();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
