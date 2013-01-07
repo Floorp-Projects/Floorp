@@ -964,11 +964,20 @@ CrashDirectoryService.prototype = Object.freeze({
     let files = {};
 
     return Task.spawn(function iterateDirectory() {
-      if (!(yield OS.File.exists(path))) {
-        throw new Task.Result(files);
-      }
-
+      // The behavior with non-existent dirs is weird.
+      // OS.File.exists() doesn't properly detect directories it appears.
+      // So, we can't use OS.File.exists() to short-circuit operation.
+      //
+      // At the time this was written, the DirectoryIterator constructor did
+      // not throw if the directory did not exist. However, on first .next(),
+      // it will throw. This exception will be uncaught and will cause the
+      // entire Task to be rejected. This is arguably acceptable. Unfortunately,
+      // the exception emitted is not part of OS.File's public API, so we can't
+      // catch it. Sadness.
+      //
+      // We should revisit this behavior once OS.File behaves more sanely.
       let iterator = new OS.File.DirectoryIterator(path);
+
       try {
         while (true) {
           let entry;
