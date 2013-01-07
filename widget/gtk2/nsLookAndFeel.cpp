@@ -37,6 +37,7 @@ using mozilla::LookAndFeel;
 
 nscolor   nsLookAndFeel::sInfoText = 0;
 nscolor   nsLookAndFeel::sInfoBackground = 0;
+nscolor   nsLookAndFeel::sMenuBar = 0;
 nscolor   nsLookAndFeel::sMenuBarText = 0;
 nscolor   nsLookAndFeel::sMenuBarHoverText = 0;
 nscolor   nsLookAndFeel::sMenuText = 0;
@@ -310,6 +311,9 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         break;
     case eColorID__moz_combobox:
         aColor = sComboBoxBackground;
+        break;
+    case eColorID__moz_menubar:
+        aColor = sMenuBar;
         break;
     case eColorID__moz_menubartext:
         aColor = sMenuBarText;
@@ -885,6 +889,7 @@ nsLookAndFeel::InitLookAndFeel()
 
     style = gtk_widget_get_style(menuBar);
     if (style) {
+        sMenuBar = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
         sMenuBarText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
         sMenuBarHoverText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_SELECTED]);
     }
