@@ -782,12 +782,6 @@ StackTrace::Print(const Writer& aWriter, LocationService* aLocService) const
     return;
   }
 
-  if (gMode == Test) {
-    // Don't print anything because there's too much variation.
-    W("   (stack omitted due to test mode)\n");
-    return;
-  }
-
   for (uint32_t i = 0; i < mLength; i++) {
     aLocService->WriteLocation(aWriter, Pc(i));
   }
@@ -812,7 +806,7 @@ StackTrace::Get(Thread* aT)
     // In normal operation, skip=3 gets us past various malloc wrappers into
     // more interesting stuff.  But in test mode we need to skip a bit less to
     // sufficiently differentiate some similar stacks.
-    uint32_t skip = (gMode == Test) ? 2 : 3;
+    uint32_t skip = 2;
     nsresult rv = NS_StackWalk(StackWalkCallback, skip, &tmp, 0, nullptr);
     if (NS_FAILED(rv) || tmp.mLength == 0) {
       tmp.mLength = 0;
@@ -1579,7 +1573,7 @@ NopStackWalkCallback(void* aPc, void* aSp, void* aClosure)
 
 // Note that fopen() can allocate.
 static FILE*
-OpenTestOrStressFile(const char* aFilename)
+OpenOutputFile(const char* aFilename)
 {
   FILE* fp = fopen(aFilename, "w");
   if (!fp) {
@@ -1692,10 +1686,10 @@ Init(const malloc_table_t* aMallocTable)
   gBlockTable->init(8192);
 
   if (gMode == Test) {
-    // OpenTestOrStressFile() can allocate.  So do this before setting
+    // OpenOutputFile() can allocate.  So do this before setting
     // gIsDMDRunning so those allocations don't show up in our results.  Once
     // gIsDMDRunning is set we are intercepting malloc et al. in earnest.
-    FILE* fp = OpenTestOrStressFile("test.dmd");
+    FILE* fp = OpenOutputFile("test.dmd");
     gIsDMDRunning = true;
 
     StatusMsg("running test mode...\n");
@@ -1706,7 +1700,7 @@ Init(const malloc_table_t* aMallocTable)
   }
 
   if (gMode == Stress) {
-    FILE* fp = OpenTestOrStressFile("stress.dmd");
+    FILE* fp = OpenOutputFile("stress.dmd");
     gIsDMDRunning = true;
 
     StatusMsg("running stress mode...\n");
@@ -1826,12 +1820,6 @@ PrintSortedTraceAndFrameRecords(const Writer& aWriter,
 {
   PrintSortedRecords(aWriter, aLocService, aStr, astr, aTraceRecordTable,
                      aCategoryUsableSize, aTotalUsableSize);
-
-  // Frame records are totally dependent on vagaries of stack traces, so we
-  // can't show them in test mode.
-  if (gMode == Test) {
-    return;
-  }
 
   FrameRecordTable frameRecordTable;
   (void)frameRecordTable.init(2048);
