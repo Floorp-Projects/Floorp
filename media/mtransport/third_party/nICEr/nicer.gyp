@@ -204,14 +204,8 @@
 		 
 		 'sources': [
 		 ],
-              }],
-              ['moz_widget_toolkit_gonk==1', {
-                'defines' : [
-                  'WEBRTC_GONK',
-                  'NO_REG_RPC',
-                ],
-             }],
-          ],
+              }]
+          ]
       }]
 }
 

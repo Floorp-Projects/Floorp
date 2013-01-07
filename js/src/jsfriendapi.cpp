@@ -990,3 +990,15 @@ js::SetCTypesActivityCallback(JSRuntime *rt, CTypesActivityCallback cb)
 {
     rt->ctypesActivityCallback = cb;
 }
+
+js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext *cx,
+                                                           js::CTypesActivityType beginType,
+                                                           js::CTypesActivityType endType
+                                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : cx(cx), callback(cx->runtime->ctypesActivityCallback), beginType(beginType), endType(endType)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    if (callback)
+        callback(cx, beginType);
+}
