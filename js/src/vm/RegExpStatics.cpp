@@ -87,7 +87,7 @@ RegExpStatics::executeLazy(JSContext *cx)
     StableCharPtr chars(matchesInput->chars(), length);
 
     /* Execute the full regular expression. */
-    RegExpGuard shared;
+    RegExpGuard shared(cx);
     if (!regexp->getShared(cx, &shared))
         return false;
 

@@ -7014,7 +7014,7 @@ mjit::Compiler::jsop_regexp()
      * between now and construction of that jitcode could purge the shared
      * info, but such activity will also abort compilation.
      */
-    RegExpGuard g;
+    RegExpGuard g(cx);
     if (!reobj->getShared(cx, &g))
         return false;
 
