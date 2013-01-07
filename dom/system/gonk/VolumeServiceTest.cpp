@@ -55,7 +55,7 @@ public:
     obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED);
   }
 
-  void LogVolume(nsIVolume *vol)
+  void LogVolume(nsIVolume* vol)
   {
     nsString volName;
     nsString mountPoint;
@@ -92,9 +92,9 @@ static nsCOMPtr<VolumeTestObserver>  sTestObserver;
 NS_IMPL_ISUPPORTS1(VolumeTestObserver, nsIObserver)
 
 NS_IMETHODIMP
-VolumeTestObserver::Observe(nsISupports *aSubject,
-                            const char *aTopic,
-                            const PRUnichar *aData)
+VolumeTestObserver::Observe(nsISupports* aSubject,
+                            const char* aTopic,
+                            const PRUnichar* aData)
 {
   LOG("TestObserver: topic: %s", aTopic);
 

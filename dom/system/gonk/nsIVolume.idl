@@ -56,7 +56,7 @@ namespace mozilla {
 namespace system {
 
 // Convert a state into a loggable/printable string.
-const char *NS_VolumeStateStr(int32_t aState);
+const char* NS_VolumeStateStr(int32_t aState);
 
 } // system
 } // mozilla
