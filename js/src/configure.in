@@ -55,7 +55,7 @@ NSPR_VERSION=4
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 PERL_VERSION=5.006
-PYTHON_VERSION=2.6
+PYTHON_VERSION=2.7
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 
@@ -665,7 +665,7 @@ else
     AC_MSG_RESULT([yes])
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1404,8 +1404,6 @@ dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
 *mingw*)
-    # we need Python 2.6 on Windows
-    PYTHON_VERSION=2.6
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1465,8 +1463,7 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.4 or newer of Python to build,
-dnl and 2.5 or newer on Windows.
+dnl We require version 2.7 of Python to build.
 AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION but not 3.x])
 changequote(,)
 $PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1] or sys.version[:2] != '2.')" $PYTHON_VERSION
