@@ -103,8 +103,8 @@ public:
   };
 
   static STATE State();
-  static const char *StateStr(STATE aState);
-  static const char *StateStr() { return StateStr(State()); }
+  static const char* StateStr(STATE aState);
+  static const char* StateStr() { return StateStr(State()); }
 
   class StateChangedEvent
   {
@@ -115,8 +115,8 @@ public:
   typedef mozilla::Observer<StateChangedEvent>      StateObserver;
   typedef mozilla::ObserverList<StateChangedEvent>  StateObserverList;
 
-  static void RegisterStateObserver(StateObserver *aObserver);
-  static void UnregisterStateObserver(StateObserver *aObserver);
+  static void RegisterStateObserver(StateObserver* aObserver);
+  static void UnregisterStateObserver(StateObserver* aObserver);
 
   //-----------------------------------------------------------------------
 
@@ -124,10 +124,10 @@ public:
 
   static VolumeArray::size_type NumVolumes();
   static TemporaryRef<Volume> GetVolume(VolumeArray::index_type aIndex);
-  static TemporaryRef<Volume> FindVolumeByName(const nsCSubstring &aName);
-  static TemporaryRef<Volume> FindAddVolumeByName(const nsCSubstring &aName);
+  static TemporaryRef<Volume> FindVolumeByName(const nsCSubstring& aName);
+  static TemporaryRef<Volume> FindAddVolumeByName(const nsCSubstring& aName);
 
-  static void       PostCommand(VolumeCommand *aCommand);
+  static void       PostCommand(VolumeCommand* aCommand);
 
 protected:
 
@@ -144,7 +144,7 @@ private:
 
   void Restart();
   void WriteCommandData();
-  void HandleBroadcast(int aResponseCode, nsCString &aResponseLine);
+  void HandleBroadcast(int aResponseCode, nsCString& aResponseLine);
 
   typedef std::queue<RefPtr<VolumeCommand> > CommandQueue;
 
