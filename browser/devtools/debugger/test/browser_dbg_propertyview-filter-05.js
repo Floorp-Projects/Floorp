@@ -69,7 +69,7 @@ function testVariablesFiltering()
     is(oneItem.expanded, false,
       "The one item in the inner scope should not be expanded");
 
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     is(oneItem.expanded, true,
       "The one item in the inner scope should now be expanded");
   }
@@ -108,7 +108,7 @@ function testVariablesFiltering()
     is(twoItem.expanded, false,
       "The two item in the inner scope should not be expanded");
 
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     is(twoItem.expanded, true,
       "The two item in the inner scope should now be expanded");
   }
@@ -285,7 +285,7 @@ function write(text) {
 
 function backspace(times) {
   for (let i = 0; i < times; i++) {
-    EventUtils.sendKey("BACK_SPACE")
+    EventUtils.sendKey("BACK_SPACE", gDebugger)
   }
 }
 
@@ -293,7 +293,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
 }
 

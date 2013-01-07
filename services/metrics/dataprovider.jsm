@@ -5,489 +5,531 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
-  "MetricsCollectionResult",
-  "MetricsMeasurement",
-  "MetricsProvider",
+  "Measurement",
+  "Provider",
 ];
 
 const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/utils.js");
+
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 
 /**
- * Represents a measurement of data.
+ * Represents a collection of related pieces/fields of data.
  *
- * This is how data is recorded and represented. Each instance of this type
- * represents a related set of data.
+ * This is an abstract base type. Providers implement child types that
+ * implement core functions such as `registerStorage`.
  *
- * Each data set has some basic metadata associated with it. This includes a
- * name and version.
+ * This type provides the primary interface for storing, retrieving, and
+ * serializing data.
  *
- * This type is meant to be an abstract base type. Child types should define
- * a `fields` property which is a mapping of field names to metadata describing
- * that field. This field constitutes the "schema" of the measurement/type.
+ * Each derived type must define a `name` and `version` property. These must be
+ * a string name and integer version, respectively. The `name` is used to
+ * identify the measurement within a `Provider`. The version is to denote the
+ * behavior of the `Measurement` and the composition of its fields over time.
+ * When a new field is added or the behavior of an existing field changes
+ * (perhaps the method for storing it has changed), the version should be
+ * incremented.
  *
- * Data is added to instances by calling `setValue()`. Values are validated
- * against the schema at add time.
+ * Each measurement consists of a set of named fields. Each field is primarily
+ * identified by a string name, which must be unique within the measurement.
  *
- * Field Specification
- * ===================
+ * For fields backed by the SQLite metrics storage backend, fields must have a
+ * strongly defined type. Valid types include daily counters, daily discrete
+ * text values, etc. See `MetricsStorageSqliteBackend.FIELD_*`.
  *
- * The `fields` property is a mapping of string field names to a mapping of
- * metadata describing the field. This mapping can have the following
- * properties:
- *
- *   type -- A string corresponding to the TYPE_* property name describing a
- *           field type. The TYPE_* properties are defined on this type. e.g.
- *           "TYPE_STRING".
- *
- *   optional -- If true, this field is optional. If omitted, the field is
- *               required.
- *
- * @param name
- *        (string) Name of this data set.
- * @param version
- *        (Number) Integer version of the data in this set.
+ * FUTURE: provide hook points for measurements to supplement with custom
+ * storage needs.
  */
-this.MetricsMeasurement = function MetricsMeasurement(name, version) {
-  if (!this.fields) {
-    throw new Error("fields not defined on instance. You are likely using " +
-                    "this type incorrectly.");
+this.Measurement = function () {
+  if (!this.name) {
+    throw new Error("Measurement must have a name.");
   }
 
-  if (!name) {
-    throw new Error("Must define a name for this measurement.");
+  if (!this.version) {
+    throw new Error("Measurement must have a version.");
   }
 
-  if (!version) {
-    throw new Error("Must define a version for this measurement.");
+  if (!Number.isInteger(this.version)) {
+    throw new Error("Measurement's version must be an integer: " + this.version);
   }
 
-  if (!Number.isInteger(version)) {
-    throw new Error("version must be an integer: " + version);
-  }
+  this._log = Log4Moz.repository.getLogger("Services.Metrics.Measurement." + this.name);
 
-  this.name = name;
-  this.version = version;
+  this.id = null;
+  this.storage = null;
+  this._fieldsByName = new Map();
 
-  this.values = new Map();
-}
-
-MetricsMeasurement.prototype = {
-  /**
-   * An unsigned integer field stored in 32 bits.
-   *
-   * This holds values from 0 to 2^32 - 1.
-   */
-  TYPE_UINT32: {
-    validate: function validate(value) {
-      if (!Number.isInteger(value)) {
-        throw new Error("UINT32 field expects an integer. Got " + value);
-      }
-
-      if (value < 0) {
-        throw new Error("UINT32 field expects a positive integer. Got " + value);
-      }
-
-      if (value >= 0xffffffff) {
-        throw new Error("Value is too large to fit within 32 bits: " + value);
-      }
-    },
-  },
-
-  /**
-   * A string field.
-   *
-   * Values must be valid UTF-8 strings.
-   */
-  TYPE_STRING: {
-    validate: function validate(value) {
-      if (typeof(value) != "string") {
-        throw new Error("STRING field expects a string. Got " + typeof(value));
-      }
-    },
-  },
-
-  /**
-   * Set the value of a field.
-   *
-   * This is ultimately how fields are set. All field sets should go through
-   * this function.
-   *
-   * Values are validated when they are set. If the value passed does not
-   * validate against the field's specification, an Error will be thrown.
-   *
-   * @param name
-   *        (string) The name of the field whose value to set.
-   * @param value
-   *        The value to set the field to.
-   */
-  setValue: function setValue(name, value) {
-    if (!this.fields[name]) {
-      throw new Error("Attempting to set unknown field: " + name);
-    }
-
-    let type = this.fields[name].type;
-
-    if (!(type in this)) {
-      throw new Error("Unknown field type: " + type);
-    }
-
-    this[type].validate(value);
-    this.values.set(name, value);
-  },
-
-  /**
-   * Obtain the value of a named field.
-   *
-   * @param name
-   *        (string) The name of the field to retrieve.
-   */
-  getValue: function getValue(name) {
-    return this.values.get(name);
-  },
-
-  /**
-   * Validate that this instance is in conformance with the specification.
-   *
-   * This ensures all required fields are present. Field value validation
-   * occurs when individual fields are set.
-   */
-  validate: function validate() {
-    for (let field in this.fields) {
-      let spec = this.fields[field];
-
-      if (!spec.optional && !(field in this.values)) {
-        throw new Error("Required field not defined: " + field);
-      }
-    }
-  },
-
-  toJSON: function toJSON() {
-    let fields = {};
-    for (let [k, v] of this.values) {
-      fields[k] = v;
-    }
-
-    return {
-      name: this.name,
-      version: this.version,
-      fields: fields,
-    };
-  },
-};
-
-Object.freeze(MetricsMeasurement.prototype);
-
-
-/**
- * Entity which provides metrics data for recording.
- *
- * This essentially provides an interface that different systems must implement
- * to provide collected metrics data.
- *
- * This type consists of various collect* functions. These functions are called
- * by the metrics collector at different points during the application's
- * lifetime. These functions return a `MetricsCollectionResult` instance.
- * This type behaves a lot like a promise. It has a `onFinished()` that can chain
- * deferred events until after the result is populated.
- *
- * Implementations of collect* functions should call `createResult()` to create
- * a new `MetricsCollectionResult` instance. They should then register
- * expected measurements with this instance, define a `populate` function on
- * it, then return the instance.
- *
- * It is important for the collect* functions to just create the empty
- * `MetricsCollectionResult` and nothing more. This is to enable the callee
- * to handle errors gracefully. If the collect* function were to raise, the
- * callee may not receive a `MetricsCollectionResult` instance and it would not
- * know what data is missing.
- *
- * See the documentation for `MetricsCollectionResult` for details on how
- * to perform population.
- *
- * Receivers of created `MetricsCollectionResult` instances should wait
- * until population has finished. They can do this by chaining on to the
- * promise inside that instance by calling `onFinished()`.
- *
- * The collect* functions can return null to signify that they will never
- * provide any data. This is the default implementation. An implemented
- * collect* function should *never* return null. Instead, it should return
- * a `MetricsCollectionResult` with expected measurements that has finished
- * populating (i.e. an empty result).
- *
- * @param name
- *        (string) The name of this provider.
- */
-this.MetricsProvider = function MetricsProvider(name) {
-  if (!name) {
-    throw new Error("MetricsProvider must have a name.");
-  }
-
-  if (typeof(name) != "string") {
-    throw new Error("name must be a string. Got: " + typeof(name));
-  }
-
-  this._log = Log4Moz.repository.getLogger("Services.Metrics.MetricsProvider");
-
-  this.name = name;
-}
-
-MetricsProvider.prototype = {
-  /**
-   * Collects constant measurements.
-   *
-   * Constant measurements are data that doesn't change during the lifetime of
-   * the application/process. The metrics collector only needs to call this
-   * once per `MetricsProvider` instance per process lifetime.
-   */
-  collectConstantMeasurements: function collectConstantMeasurements() {
-    return null;
-  },
-
-  /**
-   * Create a new `MetricsCollectionResult` tied to this provider.
-   */
-  createResult: function createResult() {
-    return new MetricsCollectionResult(this.name);
-  },
-};
-
-Object.freeze(MetricsProvider.prototype);
-
-
-/**
- * Holds the result of metrics collection.
- *
- * This is the type eventually returned by the MetricsProvider.collect*
- * functions. It holds all results and any state/errors that occurred while
- * collecting.
- *
- * This type is essentially a container for `MetricsMeasurement` instances that
- * provides some smarts useful for capturing state.
- *
- * The first things consumers of new instances should do is define the set of
- * expected measurements this result will contain via `expectMeasurement`. If
- * population of this instance is aborted or times out, downstream consumers
- * will know there is missing data.
- *
- * Next, they should define the `populate` property to a function that
- * populates the instance.
- *
- * The `populate` function implementation should add empty `MetricsMeasurement`
- * instances to the result via `addMeasurement`. Then, it should populate these
- * measurements via `setValue`.
- *
- * It is preferred to populate via this type instead of directly on
- * `MetricsMeasurement` instances so errors with data population can be
- * captured and reported.
- *
- * Once population has finished, `finish()` must be called.
- *
- * @param name
- *        (string) The name of the provider this result came from.
- */
-this.MetricsCollectionResult = function MetricsCollectionResult(name) {
-  if (!name || typeof(name) != "string") {
-    throw new Error("Must provide name argument to MetricsCollectionResult.");
-  }
-
-  this._log = Log4Moz.repository.getLogger("Services.Metrics.MetricsCollectionResult");
-
-  this.name = name;
-
-  this.measurements = new Map();
-  this.expectedMeasurements = new Set();
-  this.errors = [];
-
-  this.populate = function populate() {
-    throw new Error("populate() must be defined on MetricsCollectionResult " +
-                    "instance.");
+  this._serializers = {};
+  this._serializers[this.SERIALIZE_JSON] = {
+    singular: this._serializeJSONSingular.bind(this),
+    daily: this._serializeJSONDay.bind(this),
   };
-
-  this._deferred = Promise.defer();
 }
 
-MetricsCollectionResult.prototype = {
-  /**
-   * The Set of `MetricsMeasurement` names currently missing from this result.
-   */
-  get missingMeasurements() {
-    let missing = new Set();
+Measurement.prototype = Object.freeze({
+  SERIALIZE_JSON: "json",
 
-    for (let name of this.expectedMeasurements) {
-      if (this.measurements.has(name)) {
+  /**
+   * Configures the storage backend so that it can store this measurement.
+   *
+   * Implementations must return a promise which is resolved when storage has
+   * been configured.
+   *
+   * Most implementations will typically call into this.registerStorageField()
+   * to configure fields in storage.
+   *
+   * FUTURE: Provide method for upgrading from older measurement versions.
+   */
+  configureStorage: function () {
+    throw new Error("configureStorage() must be implemented.");
+  },
+
+  /**
+   * Obtain a serializer for this measurement.
+   *
+   * Implementations should return an object with the following keys:
+   *
+   *   singular -- Serializer for singular data.
+   *   daily -- Serializer for daily data.
+   *
+   * Each item is a function that takes a single argument: the data to
+   * serialize. The passed data is a subset of that returned from
+   * this.getValues(). For "singular," data.singular is passed. For "daily",
+   * data.days.get(<day>) is passed.
+   *
+   * This function receives a single argument: the serialization format we
+   * are requesting. This is one of the SERIALIZE_* constants on this base type.
+   *
+   * For SERIALIZE_JSON, the function should return an object that
+   * JSON.stringify() knows how to handle. This could be an anonymous object or
+   * array or any object with a property named `toJSON` whose value is a
+   * function. The returned object will be added to a larger document
+   * containing the results of all `serialize` calls.
+   *
+   * The default implementation knows how to serialize built-in types using
+   * very simple logic. If small encoding size is a goal, the default
+   * implementation may not be suitable. If an unknown field type is
+   * encountered, the default implementation will error.
+   *
+   * @param format
+   *        (string) A SERIALIZE_* constant defining what serialization format
+   *        to use.
+   */
+  serializer: function (format) {
+    if (!(format in this._serializers)) {
+      throw new Error("Don't know how to serialize format: " + format);
+    }
+
+    return this._serializers[format];
+  },
+
+  hasField: function (name) {
+    return this._fieldsByName.has(name);
+  },
+
+  fieldID: function (name) {
+    let entry = this._fieldsByName.get(name);
+
+    if (!entry) {
+      throw new Error("Unknown field: " + name);
+    }
+
+    return entry[0];
+  },
+
+  fieldType: function (name) {
+    let entry = this._fieldsByName.get(name);
+
+    if (!entry) {
+      throw new Error("Unknown field: " + name);
+    }
+
+    return entry[1];
+  },
+
+  /**
+   * Register a named field with storage that's attached to this measurement.
+   *
+   * This is typically called during `configureStorage`. The `Measurement`
+   * implementation passes the field name and its type (one of the
+   * storage.FIELD_* constants). The storage backend then allocates space
+   * for this named field. A side-effect of calling this is that the field's
+   * storage ID is stored in this._fieldsByName and subsequent calls to the
+   * storage modifiers below will know how to reference this field in the
+   * storage backend.
+   *
+   * @param name
+   *        (string) The name of the field being registered.
+   * @param type
+   *        (string) A field type name. This is typically one of the
+   *        storage.FIELD_* constants. It could also be a custom type
+   *        (presumably registered by this measurement or provider).
+   */
+  registerStorageField: function (name, type) {
+    this._log.debug("Registering field: " + name + " " + type);
+
+    let deferred = Promise.defer();
+
+    let self = this;
+    this.storage.registerField(this.id, name, type).then(
+      function onSuccess(id) {
+        self._fieldsByName.set(name, [id, type]);
+        deferred.resolve();
+      }, deferred.reject);
+
+    return deferred.promise;
+  },
+
+  incrementDailyCounter: function (field, date=new Date()) {
+    return this.storage.incrementDailyCounterFromFieldID(this.fieldID(field),
+                                                         date);
+  },
+
+  addDailyDiscreteNumeric: function (field, value, date=new Date()) {
+    return this.storage.addDailyDiscreteNumericFromFieldID(
+                          this.fieldID(field), value, date);
+  },
+
+  addDailyDiscreteText: function (field, value, date=new Date()) {
+    return this.storage.addDailyDiscreteTextFromFieldID(
+                          this.fieldID(field), value, date);
+  },
+
+  setLastNumeric: function (field, value, date=new Date()) {
+    return this.storage.setLastNumericFromFieldID(this.fieldID(field), value,
+                                                  date);
+  },
+
+  setLastText: function (field, value, date=new Date()) {
+    return this.storage.setLastTextFromFieldID(this.fieldID(field), value,
+                                               date);
+  },
+
+  setDailyLastNumeric: function (field, value, date=new Date()) {
+    return this.storage.setDailyLastNumericFromFieldID(this.fieldID(field),
+                                                       value, date);
+  },
+
+  setDailyLastText: function (field, value, date=new Date()) {
+    return this.storage.setDailyLastTextFromFieldID(this.fieldID(field),
+                                                    value, date);
+  },
+
+  /**
+   * Obtain all values stored for this measurement.
+   *
+   * The default implementation obtains all known types from storage. If the
+   * measurement provides custom types or stores values somewhere other than
+   * storage, it should define its own implementation.
+   *
+   * This returns a promise that resolves to a data structure which is
+   * understood by the measurement's serialize() function.
+   */
+  getValues: function () {
+    return this.storage.getMeasurementValues(this.id);
+  },
+
+  deleteLastNumeric: function (field) {
+    return this.storage.deleteLastNumericFromFieldID(this.fieldID(field));
+  },
+
+  deleteLastText: function (field) {
+    return this.storage.deleteLastTextFromFieldID(this.fieldID(field));
+  },
+
+  _serializeJSONSingular: function (data) {
+    let result = {};
+
+    for (let [field, data] of data) {
+      // There could be legacy fields in storage we no longer care about.
+      if (!this._fieldsByName.has(field)) {
         continue;
       }
 
-      missing.add(name);
+      let type = this.fieldType(field);
+
+      switch (type) {
+        case this.storage.FIELD_LAST_NUMERIC:
+        case this.storage.FIELD_LAST_TEXT:
+          result[field] = data[1];
+          break;
+
+        case this.storage.FIELD_DAILY_COUNTER:
+        case this.storage.FIELD_DAILY_DISCRETE_NUMERIC:
+        case this.storage.FIELD_DAILY_DISCRETE_TEXT:
+        case this.storage.FIELD_DAILY_LAST_NUMERIC:
+        case this.storage.FIELD_DAILY_LAST_TEXT:
+          continue;
+
+        default:
+          throw new Error("Unknown field type: " + type);
+      }
     }
 
-    return missing;
+    return result;
   },
 
-  /**
-   * Record that this result is expected to provide a named measurement.
-   *
-   * This function should be called ASAP on new `MetricsCollectionResult`
-   * instances. It defines expectations about what data should be present.
-   *
-   * @param name
-   *        (string) The name of the measurement this result should contain.
-   */
-  expectMeasurement: function expectMeasurement(name) {
-    this.expectedMeasurements.add(name);
+  _serializeJSONDay: function (data) {
+    let result = {};
+
+    for (let [field, data] of data) {
+      if (!this._fieldsByName.has(field)) {
+        continue;
+      }
+
+      let type = this.fieldType(field);
+
+      switch (type) {
+        case this.storage.FIELD_DAILY_COUNTER:
+        case this.storage.FIELD_DAILY_DISCRETE_NUMERIC:
+        case this.storage.FIELD_DAILY_DISCRETE_TEXT:
+        case this.storage.FIELD_DAILY_LAST_NUMERIC:
+        case this.storage.FIELD_DAILY_LAST_TEXT:
+          result[field] = data;
+          break;
+
+        case this.storage.FIELD_LAST_NUMERIC:
+        case this.storage.FIELD_LAST_TEXT:
+          continue;
+
+        default:
+          throw new Error("Unknown field type: " + type);
+      }
+    }
+
+    return result;
   },
+});
 
+
+/**
+ * An entity that emits data.
+ *
+ * A `Provider` consists of a string name (must be globally unique among all
+ * known providers) and a set of `Measurement` instances.
+ *
+ * The main role of a `Provider` is to produce metrics data and to store said
+ * data in the storage backend.
+ *
+ * Metrics data collection is initiated either by a collector calling a
+ * `collect*` function on `Provider` instances or by the `Provider` registering
+ * to some external event and then reacting whenever they occur.
+ *
+ * `Provider` implementations interface directly with a storage backend. For
+ * common stored values (daily counters, daily discrete values, etc),
+ * implementations should interface with storage via the various helper
+ * functions on the `Measurement` instances. For custom stored value types,
+ * implementations will interact directly with the low-level storage APIs.
+ *
+ * Because multiple providers exist and could be responding to separate
+ * external events simultaneously and because not all operations performed by
+ * storage can safely be performed in parallel, writing directly to storage at
+ * event time is dangerous. Therefore, interactions with storage must be
+ * deferred until it is safe to perform them.
+ *
+ * This typically looks something like:
+ *
+ *   // This gets called when an external event worthy of recording metrics
+ *   // occurs. The function receives a numeric value associated with the event.
+ *   function onExternalEvent (value) {
+ *     let now = new Date();
+ *     let m = this.getMeasurement("foo", 1);
+ *
+ *     this.enqueueStorageOperation(function storeExternalEvent() {
+ *
+ *       // We interface with storage via the `Measurement` helper functions.
+ *       // These each return a promise that will be resolved when the
+ *       // operation finishes. We rely on behavior of storage where operations
+ *       // are executed single threaded and sequentially. Therefore, we only
+ *       // need to return the final promise.
+ *       m.incrementDailyCounter("foo", now);
+ *       return m.addDailyDiscreteNumericValue("my_value", value, now);
+ *     }.bind(this));
+ *
+ *   }
+ *
+ *
+ * `Provider` is an abstract base class. Implementations must define a few
+ * properties:
+ *
+ *   name
+ *     The `name` property should be a string defining the provider's name. The
+ *     name must be globally unique for the application. The name is used as an
+ *     identifier to distinguish providers from each other.
+ *
+ *   measurementTypes
+ *     This must be an array of `Measurement`-derived types. Note that elements
+ *     in the array are the type functions, not instances. Instances of the
+ *     `Measurement` are created at run-time by the `Provider` and are bound
+ *     to the provider and to a specific storage backend.
+ */
+this.Provider = function () {
+  if (!this.name) {
+    throw new Error("Provider must define a name.");
+  }
+
+  if (!Array.isArray(this.measurementTypes)) {
+    throw new Error("Provider must define measurement types.");
+  }
+
+  this._log = Log4Moz.repository.getLogger("Services.Metrics.Provider." + this.name);
+
+  this.measurements = null;
+  this.storage = null;
+}
+
+Provider.prototype = Object.freeze({
   /**
-   * Add a `MetricsMeasurement` to this result.
+   * Obtain a `Measurement` from its name and version.
+   *
+   * If the measurement is not found, an Error is thrown.
    */
-  addMeasurement: function addMeasurement(data) {
-    if (!(data instanceof MetricsMeasurement)) {
-      throw new Error("addMeasurement expects a MetricsMeasurement instance.");
+  getMeasurement: function (name, version) {
+    if (!Number.isInteger(version)) {
+      throw new Error("getMeasurement expects an integer version. Got: " + version);
     }
 
-    if (!this.expectedMeasurements.has(data.name)) {
-      throw new Error("Not expecting this measurement: " + data.name);
-    }
+    let m = this.measurements.get([name, version].join(":"));
 
-    if (this.measurements.has(data.name)) {
-      throw new Error("Measurement of this name already present: " + data.name);
-    }
-
-    this.measurements.set(data.name, data);
-  },
-
-  /**
-   * Sets the value of a field in a registered measurement instance.
-   *
-   * This is a convenience function to set a field on a measurement. If an
-   * error occurs, it will record that error in the errors container.
-   *
-   * Attempting to set a value on a measurement that does not exist results
-   * in an Error being thrown. Attempting a bad assignment on an existing
-   * measurement will not throw unless `rethrow` is true.
-   *
-   * @param name
-   *        (string) The `MetricsMeasurement` on which to set the value.
-   * @param field
-   *        (string) The field we are setting.
-   * @param value
-   *        The value being set.
-   * @param rethrow
-   *        (bool) Whether to rethrow any errors encountered.
-   *
-   * @return bool
-   *         Whether the assignment was successful.
-   */
-  setValue: function setValue(name, field, value, rethrow=false) {
-    let m = this.measurements.get(name);
     if (!m) {
-      throw new Error("Attempting to operate on an undefined measurement: " +
-                      name);
+      throw new Error("Unknown measurement: " + name + " v" + version);
     }
 
-    try {
-      m.setValue(field, value);
-      return true;
-    } catch (ex) {
-      this.addError(ex);
+    return m;
+  },
 
-      if (rethrow) {
-        throw ex;
+  init: function (storage) {
+    if (this.storage !== null) {
+      throw new Error("Provider() not called. Did the sub-type forget to call it?");
+    }
+
+    if (this.storage) {
+      throw new Error("Provider has already been initialized.");
+    }
+
+    this.measurements = new Map();
+    this.storage = storage;
+
+    let self = this;
+    return Task.spawn(function init() {
+      for (let measurementType of self.measurementTypes) {
+        let measurement = new measurementType();
+
+        measurement.provider = self;
+        measurement.storage = self.storage;
+
+        let id = yield storage.registerMeasurement(self.name, measurement.name,
+                                                   measurement.version);
+
+        measurement.id = id;
+
+        yield measurement.configureStorage();
+
+        self.measurements.set([measurement.name, measurement.version].join(":"),
+                              measurement);
       }
 
-      return false;
-    }
-  },
+      let promise = self.onInit();
 
-  /**
-   * Record an error that was encountered when populating this result.
-   */
-  addError: function addError(error) {
-    this.errors.push(error);
-  },
-
-  /**
-   * Aggregate another MetricsCollectionResult into this one.
-   *
-   * Instances can only be aggregated together if they belong to the same
-   * provider (they have the same name).
-   */
-  aggregate: function aggregate(other) {
-    if (!(other instanceof MetricsCollectionResult)) {
-      throw new Error("aggregate expects a MetricsCollectionResult instance.");
-    }
-
-    if (this.name != other.name) {
-      throw new Error("Can only aggregate MetricsCollectionResult from " +
-                      "the same provider. " + this.name + " != " + other.name);
-    }
-
-    for (let name of other.expectedMeasurements) {
-      this.expectedMeasurements.add(name);
-    }
-
-    for (let [name, m] of other.measurements) {
-      if (this.measurements.has(name)) {
-        throw new Error("Incoming result has same measurement as us: " + name);
+      if (!promise || typeof(promise.then) != "function") {
+        throw new Error("onInit() does not return a promise.");
       }
 
-      this.measurements.set(name, m);
-    }
-
-    this.errors = this.errors.concat(other.errors);
+      yield promise;
+    });
   },
 
-  toJSON: function toJSON() {
-    let o = {
-      measurements: {},
-      missing: [],
-      errors: [],
-    };
+  shutdown: function () {
+    let promise = this.onShutdown();
 
-    for (let [name, value] of this.measurements) {
-      o.measurements[name] = value;
+    if (!promise || typeof(promise.then) != "function") {
+      throw new Error("onShutdown implementation does not return a promise.");
     }
 
-    for (let missing of this.missingMeasurements) {
-      o.missing.push(missing);
-    }
-
-    for (let error of this.errors) {
-      if (error.message) {
-        o.errors.push(error.message);
-      } else {
-        o.errors.push(error);
-      }
-    }
-
-    return o;
+    return promise;
   },
 
   /**
-   * Signal that population of the result has finished.
+   * Hook point for implementations to perform initialization activity.
    *
-   * This will resolve the internal promise.
+   * If a `Provider` instance needs to register observers, etc, it should
+   * implement this function.
+   *
+   * Implementations should return a promise which is resolved when
+   * initialization activities have completed.
    */
-  finish: function finish() {
-    this._deferred.resolve(this);
+  onInit: function () {
+    return Promise.resolve();
   },
 
   /**
-   * Chain deferred behavior until after the result has finished population.
+   * Hook point for shutdown of instances.
    *
-   * This is a wrapped around the internal promise's `then`.
+   * This is the opposite of `onInit`. If a `Provider` needs to unregister
+   * observers, etc, this is where it should do it.
    *
-   * We can't call this "then" because the core promise library will get
-   * confused.
+   * Implementations should return a promise which is resolved when
+   * shutdown activities have completed.
    */
-  onFinished: function onFinished(onFulfill, onError) {
-    return this._deferred.promise.then(onFulfill, onError);
+  onShutdown: function () {
+    return Promise.resolve();
   },
-};
 
-Object.freeze(MetricsCollectionResult.prototype);
+  /**
+   * Collects data that doesn't change during the application's lifetime.
+   *
+   * Implementations should return a promise that resolves when all data has
+   * been collected and storage operations have been finished.
+   */
+  collectConstantData: function () {
+    return Promise.resolve();
+  },
+
+  /**
+   * Queue a deferred storage operation.
+   *
+   * Deferred storage operations are the preferred method for providers to
+   * interact with storage. When collected data is to be added to storage,
+   * the provider creates a function that performs the necessary storage
+   * interactions and then passes that function to this function. Pending
+   * storage operations will be executed sequentially by a coordinator.
+   *
+   * The passed function should return a promise which will be resolved upon
+   * completion of storage interaction.
+   */
+  enqueueStorageOperation: function (func) {
+    return this.storage.enqueueOperation(func);
+  },
+
+  getState: function (key) {
+    let name = this.name;
+    let storage = this.storage;
+    return storage.enqueueOperation(function get() {
+      return storage.getProviderState(name, key);
+    });
+  },
+
+  setState: function (key, value) {
+    let name = this.name;
+    let storage = this.storage;
+    return storage.enqueueOperation(function set() {
+      return storage.setProviderState(name, key, value);
+    });
+  },
+
+  _dateToDays: function (date) {
+    return Math.floor(date.getTime() / MILLISECONDS_PER_DAY);
+  },
+
+  _daysToDate: function (days) {
+    return new Date(days * MILLISECONDS_PER_DAY);
+  },
+});
 
