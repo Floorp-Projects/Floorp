@@ -3379,3 +3379,20 @@ chatbox[minimized="true"] {
 .center-item-button {
   min-width: 0;
 }
+
+%ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#main-window[privatebrowsingmode=temporary] #toolbar-menubar {
+  background-image: url("chrome://browser/skin/privatebrowsing-dark.png");
+  background-position: top right;
+  background-repeat: no-repeat;
+}
+
+#main-window[privatebrowsingmode=temporary] #toolbar-menubar:-moz-locale-dir(rtl) {
+  background-position: top left;
+}
+
+#main-window[privatebrowsingmode=temporary] #appmenu-button {
+  list-style-image: url("chrome://browser/skin/privatebrowsing-light.png");
+}
+%endif
+
