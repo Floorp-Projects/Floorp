@@ -101,7 +101,7 @@ NetworkStatsManager.prototype = {
 
   checkPrivileges: function checkPrivileges() {
     if (!this.hasPrivileges) {
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      throw Components.Exception("Permission denied", Cr.NS_ERROR_FAILURE);
     }
   },
 
@@ -198,8 +198,6 @@ NetworkStatsManager.prototype = {
     if (!Services.prefs.getBoolPref("dom.mozNetworkStats.enabled")) {
       return null;
     }
-    this.initHelper(aWindow, ["NetworkStats:Get:Return",
-                              "NetworkStats:Clear:Return"]);
 
     let principal = aWindow.document.nodePrincipal;
     let secMan = Services.scriptSecurityManager;
@@ -213,6 +211,13 @@ NetworkStatsManager.prototype = {
     if (DEBUG) {
       debug("has privileges: " + this.hasPrivileges);
     }
+
+    if (!this.hasPrivileges) {
+      return null;
+    }
+
+    this.initHelper(aWindow, ["NetworkStats:Get:Return",
+                              "NetworkStats:Clear:Return"]);
   },
 
   // Called from DOMRequestIpcHelper
