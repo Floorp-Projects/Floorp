@@ -15,7 +15,7 @@ const Cc = Components.classes;
 
 let gLoggingEnabled = false;
 let gTestingEnabled = false;
-let gDesist = false;
+let gUseScanning = true;
 
 let gPrivateAccessToken = '';
 let gPrivateAccessTime = 0;
@@ -76,6 +76,10 @@ function WifiGeoPositionProvider() {
     gTestingEnabled = Services.prefs.getBoolPref("geo.wifi.testing");
   } catch (e) {}
 
+  try {
+    gUseScanning = Services.prefs.getBoolPref("geo.wifi.scan");
+  } catch (e) {}
+
   this.wifiService = null;
   this.timer = null;
   this.hasSeenWiFi = false;
@@ -111,20 +115,20 @@ WifiGeoPositionProvider.prototype = {
   watch: function(c, requestPrivate) {
     LOG("watch called");
 
-    let useScanning = true;
-    try {
-      useScanning = Services.prefs.getBoolPref("geo.wifi.scan");
-    } catch (e) {}
-
-    if (!this.wifiService && useScanning) {
+    if (!this.wifiService && gUseScanning) {
       this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
       this.wifiService.startWatching(this);
       this.lastRequestPrivate = requestPrivate;
     }
     if (this.hasSeenWiFi) {
       this.hasSeenWiFi = false;
-      this.wifiService.stopWatching(this);
-      this.wifiService.startWatching(this);
+      if (gUseScanning) {
+        this.wifiService.stopWatching(this);
+        this.wifiService.startWatching(this);
+      } else {
+        // For testing situations, ensure that we always trigger an update.
+        this.timer.initWithCallback(this, 5000, this.timer.TYPE_ONE_SHOT);
+      }
       this.lastRequestPrivate = requestPrivate;
     }
   },
@@ -314,7 +318,7 @@ WifiGeoPositionProvider.prototype = {
   },
 
   notify: function (timer) {
-    if (gTestingEnabled) {
+    if (gTestingEnabled || !gUseScanning) {
       // if we are testing, timer is repeating
       this.onChange(null);
     }
