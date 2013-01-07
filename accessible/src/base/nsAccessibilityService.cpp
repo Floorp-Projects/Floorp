@@ -92,8 +92,8 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
   if (aContent->GetPrimaryFrame()->IsFocusable())
     return true;
 
-  PRUint32 attrCount = aContent->GetAttrCount();
-  for (PRUint32 attrIdx = 0; attrIdx < attrCount; attrIdx++) {
+  uint32_t attrCount = aContent->GetAttrCount();
+  for (uint32_t attrIdx = 0; attrIdx < attrCount; attrIdx++) {
     const nsAttrName* attr = aContent->GetAttrNameAt(attrIdx);
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
       nsIAtom* attrAtom = attr->Atom();
