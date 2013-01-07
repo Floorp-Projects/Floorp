@@ -32,26 +32,10 @@
 <!ENTITY setDefault.label                "Make &brandShortName; the default browser">
 <!ENTITY setDefault.accesskey            "d">
 <!ENTITY isDefault.label                 "&brandShortName; is currently your default browser">
-
-<!ENTITY dataChoicesTab.label            "Data Choices">
-
-<!ENTITY FHRSection.label                "Firefox Health Report">
-<!ENTITY FHRDesc.label                   "Helps you understand your browser performance and shares data with &vendorShortName; about your browser health">
-<!ENTITY enableFHR.label                 "Enable Firefox Health Report">
-<!ENTITY enableFHR.accesskey             "F">
-<!ENTITY FHRLearnMore.label              "Learn More">
-
-<!ENTITY telemetrySection.label          "Telemetry">
-<!ENTITY telemetryDesc.label             "Shares performance, usage, hardware and customization data about your browser with &vendorShortName; to help us make &brandShortName; better">
-<!ENTITY enableTelemetry.label           "Enable Telemetry">
-<!ENTITY enableTelemetry.accesskey       "T">
-<!ENTITY telemetryLearnMore.label        "Learn More">
-
-<!ENTITY crashReporterSection.label      "Crash Reporter">
-<!ENTITY crashReporterDesc.label         "&brandShortName; submits crash reports to help &vendorShortName; make your browser more stable and secure">
-<!ENTITY enableCrashReporter.label       "Enable Crash Reporter">
-<!ENTITY enableCrashReporter.accesskey   "C">
-<!ENTITY crashReporterLearnMore.label    "Learn More">
+<!ENTITY submitCrashes.label             "Submit crash reports">
+<!ENTITY submitCrashes.accesskey         "S">
+<!ENTITY submitTelemetry.label           "Submit performance data">
+<!ENTITY submitTelemetry.accesskey       "P">
 
 <!ENTITY networkTab.label                "Network">
 
