@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import sys
 import unittest
 
-from tempfile import NamedTemporaryFile
+from mozfile.mozfile import NamedTemporaryFile
 
 from mach.config import (
     AbsolutePathType,

@@ -7,7 +7,8 @@ from __future__ import unicode_literals
 import hashlib
 import unittest
 
-from tempfile import NamedTemporaryFile
+from mozfile.mozfile import NamedTemporaryFile
+from mozunit import main
 
 from mozbuild.util import hash_file
 
@@ -42,3 +43,6 @@ class TestHashing(unittest.TestCase):
 
         self.assertEqual(actual, expected)
 
+
+if __name__ == '__main__':
+    main()
