@@ -189,9 +189,27 @@ function checkSet()
                                 + data[1]);
   }
 
+  element.value = "test";
   element.valueAsDate = null;
   is(element.value, "", "valueAsDate should set the value to the empty string");
 
+  element.value = "test";
+  element.valueAsDate = undefined;
+  is(element.value, "", "valueAsDate should set the value to the empty string");
+
+  var illegalValues = [
+    "foobar", 42, {}, function() { return 42; }, function() { return Date(); }
+  ];
+
+  for (value of illegalValues) {
+    try {
+      var caught = false;
+      element.valueAsDate = value;
+    } catch(e) {
+      caught = true;
+    }
+    ok(caught, "Assigning " + value + " to .valueAsDate should throw");
+  }
 }
 
 function checkWithBustedPrototype()

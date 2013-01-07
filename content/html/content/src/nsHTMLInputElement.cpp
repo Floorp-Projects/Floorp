@@ -1325,9 +1325,15 @@ nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
+  if (aDate.isNullOrUndefined()) {
+    return SetValue(EmptyString());
+  }
+
+  // TODO: return TypeError when HTMLInputElement is converted to WebIDL, see
+  // bug 826302.
   if (!aDate.isObject() || !JS_ObjectIsDate(aCtx, &aDate.toObject())) {
     SetValue(EmptyString());
-    return NS_OK;
+    return NS_ERROR_INVALID_ARG;
   }
 
   JSObject& date = aDate.toObject();
