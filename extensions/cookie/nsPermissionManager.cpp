@@ -338,6 +338,8 @@ nsPermissionManager::Init()
   if (NS_SUCCEEDED(rv)) {
     mObserverService->AddObserver(this, "profile-before-change", true);
     mObserverService->AddObserver(this, "profile-do-change", true);
+    mObserverService->AddObserver(this, "webapps-clear-data", true);
+
   }
 
   if (IsChildProcess()) {
@@ -1126,6 +1128,29 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(false);
+  } else if (!nsCRT::strcmp(aTopic, "webapps-clear-data")) {
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+      do_QueryInterface(aSubject);
+    if (!params) {
+      NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    uint32_t appId;
+    nsresult rv = params->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool browserOnly;
+    rv = params->GetBrowserOnly(&browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If browserOnly if false, it probably means that we are disinstalling
+    // the app, so we can just ignore this event.
+    if (!browserOnly) {
+      return NS_OK;
+    }
+
+    return RemovePermissionsForApp(appId, true);
   }
 
   return NS_OK;
@@ -1158,6 +1183,12 @@ nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey
 NS_IMETHODIMP
 nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
 {
+  return RemovePermissionsForApp(aAppId, false);
+}
+
+nsresult
+nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
+{
   ENSURE_NOT_CHILD_PROCESS;
   NS_ENSURE_ARG(aAppId != nsIScriptSecurityManager::NO_APP_ID);
 
@@ -1172,6 +1203,11 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
   nsAutoCString sql;
   sql.AppendLiteral("DELETE FROM moz_hosts WHERE appId=");
   sql.AppendInt(aAppId);
+
+  if (aBrowserOnly) {
+    sql.AppendLiteral(" AND isInBrowserElement=");
+    sql.AppendInt(true);
+  }
 
   nsCOMPtr<mozIStorageAsyncStatement> removeStmt;
   nsresult rv = mDBConn->CreateAsyncStatement(sql, getter_AddRefs(removeStmt));
