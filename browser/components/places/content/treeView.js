@@ -23,20 +23,6 @@ function PlacesTreeView(aFlatList, aOnOpenFlatContainer, aController) {
 PlacesTreeView.prototype = {
   get wrappedJSObject() this,
 
-  _makeAtom: function PTV__makeAtom(aString) {
-    return Cc["@mozilla.org/atom-service;1"].
-           getService(Ci.nsIAtomService).
-           getAtom(aString);
-  },
-
-  _atoms: [],
-  _getAtomFor: function PTV__getAtomFor(aName) {
-    if (!this._atoms[aName])
-      this._atoms[aName] = this._makeAtom(aName);
-
-    return this._atoms[aName];
-  },
-
   __dateService: null,
   get _dateService() {
     if (!this.__dateService) {
@@ -857,9 +843,8 @@ PlacesTreeView.prototype = {
         function (aStatus, aLivemark) {
           if (Components.isSuccessCode(aStatus)) {
             this._controller.cacheLivemarkInfo(aNode, aLivemark);
-            let properties = this._cellProperties.get(aNode, null);
-            if (properties)
-              properties.push(this._getAtomFor("livemark"));
+            let properties = this._cellProperties.get(aNode);
+            this._cellProperties.set(aNode, properties += " livemark ");
 
             // The livemark attribute is set as a cell property on the title cell.
             this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
@@ -1134,49 +1119,50 @@ PlacesTreeView.prototype = {
   get selection() this._selection,
   set selection(val) this._selection = val,
 
-  getRowProperties: function() { },
+  getRowProperties: function() { return ""; },
 
   getCellProperties:
-  function PTV_getCellProperties(aRow, aColumn, aProperties) {
+  function PTV_getCellProperties(aRow, aColumn) {
     // for anonid-trees, we need to add the column-type manually
+    var props = "";
     let columnType = aColumn.element.getAttribute("anonid");
     if (columnType)
-      aProperties.AppendElement(this._getAtomFor(columnType));
+      props += columnType;
     else
       columnType = aColumn.id;
 
     // Set the "ltr" property on url cells
     if (columnType == "url")
-      aProperties.AppendElement(this._getAtomFor("ltr"));
+      props += " ltr";
 
     if (columnType != "title")
-      return;
+      return props;
 
     let node = this._getNodeForRow(aRow);
 
     if (this._cuttingNodes.has(node)) {
-      aProperties.AppendElement(this._getAtomFor("cutting"));
+      props += " cutting";
     }
 
-    let properties = this._cellProperties.get(node, null);
-    if (!properties) {
-      properties = [];
+    let properties = this._cellProperties.get(node);
+    if (properties === undefined) {
+      properties = "";
       let itemId = node.itemId;
       let nodeType = node.type;
       if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
         if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
-          properties.push(this._getAtomFor("query"));
+          properties += " query";
           if (PlacesUtils.nodeIsTagQuery(node))
-            properties.push(this._getAtomFor("tagContainer"));
+            properties += " tagContainer";
           else if (PlacesUtils.nodeIsDay(node))
-            properties.push(this._getAtomFor("dayContainer"));
+            properties += " dayContainer";
           else if (PlacesUtils.nodeIsHost(node))
-            properties.push(this._getAtomFor("hostContainer"));
+            properties += " hostContainer";
         }
         else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
           if (this._controller.hasCachedLivemarkInfo(node)) {
-            properties.push(this._getAtomFor("livemark"));
+            properties += " livemark";
           }
           else {
             PlacesUtils.livemarks.getLivemark(
@@ -1184,7 +1170,7 @@ PlacesTreeView.prototype = {
               function (aStatus, aLivemark) {
                 if (Components.isSuccessCode(aStatus)) {
                   this._controller.cacheLivemarkInfo(node, aLivemark);
-                  properties.push(this._getAtomFor("livemark"));
+                  properties += " livemark";
                   // The livemark attribute is set as a cell property on the title cell.
                   this._invalidateCellValue(node, this.COLUMN_TYPE_TITLE);
                 }
@@ -1196,30 +1182,29 @@ PlacesTreeView.prototype = {
         if (itemId != -1) {
           let queryName = PlacesUIUtils.getLeftPaneQueryNameFromId(itemId);
           if (queryName)
-            properties.push(this._getAtomFor("OrganizerQuery_" + queryName));
+            properties += " OrganizerQuery_" + queryName;
         }
       }
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
-        properties.push(this._getAtomFor("separator"));
+        properties += " separator";
       else if (PlacesUtils.nodeIsURI(node)) {
-        properties.push(this._getAtomFor(PlacesUIUtils.guessUrlSchemeForUI(node.uri)));
+        properties += " " + PlacesUIUtils.guessUrlSchemeForUI(node.uri);
 
         if (this._controller.hasCachedLivemarkInfo(node.parent)) {
-          properties.push(this._getAtomFor("livemarkItem"));
+          properties += " livemarkItem";
           if (node.accessCount) {
-            properties.push(this._getAtomFor("visited"));
+            properties += " visited";
           }
         }
       }
 
       this._cellProperties.set(node, properties);
     }
-    for (let property of properties) {
-      aProperties.AppendElement(property);
-    }
+
+    return props + " " + properties;
   },
 
-  getColumnProperties: function(aColumn, aProperties) { },
+  getColumnProperties: function(aColumn) { return ""; },
 
   isContainer: function PTV_isContainer(aRow) {
     // Only leaf nodes aren't listed in the rows array.
