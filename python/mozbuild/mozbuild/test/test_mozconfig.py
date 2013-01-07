@@ -12,8 +12,11 @@ from shutil import rmtree
 from tempfile import (
     gettempdir,
     mkdtemp,
-    NamedTemporaryFile,
 )
+
+from mozfile.mozfile import NamedTemporaryFile
+
+from mozunit import main
 
 from mozbuild.mozconfig import (
     MozconfigFindException,
@@ -314,3 +317,6 @@ class TestMozconfigLoader(unittest.TestCase):
                 mozconfig.name.replace(os.sep, '/'))
             self.assertEquals(e.exception.output, ['hello world'])
 
+
+if __name__ == '__main__':
+    main()
