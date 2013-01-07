@@ -12,8 +12,13 @@
 #include "cpr_errno.h"
 #include "cpr_stdlib.h"
 #include "cpr_string.h"
+#if defined(WEBRTC_GONK)
+#include <syslog.h>
+#include <linux/fcntl.h>
+#else
 #include <sys/syslog.h>
 #include <sys/fcntl.h>
+#endif
 #include <ctype.h>
 
 
