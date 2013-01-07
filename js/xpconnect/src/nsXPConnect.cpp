@@ -821,10 +821,6 @@ public:
     }
     static NS_METHOD UnlinkImpl(void *n)
     {
-        JSContext *cx = static_cast<JSContext*>(n);
-        JSAutoRequest ar(cx);
-        NS_ASSERTION(JS_GetGlobalObject(cx), "global object NULL before unlinking");
-        JS_SetGlobalObject(cx, NULL);
         return NS_OK;
     }
     static NS_METHOD UnrootImpl(void *n)
