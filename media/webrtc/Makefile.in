@@ -11,15 +11,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = \
   trunk \
-  signaling \
-  $(NULL)
-
-ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
-DIRS += \
-  signalingtest \
   trunk/testing \
-	$(NULL)
-endif
+  signaling \
+  signalingtest \
+  $(NULL)
 
 # These Makefiles don't have corresponding Makefile.ins
 NO_SUBMAKEFILES_RULE = 1
