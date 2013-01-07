@@ -84,6 +84,7 @@ function run_all_tests() {
 
 let gTests;
 function run_test() {
+  do_get_profile();
   do_test_pending();
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/cached", cached_handler);
