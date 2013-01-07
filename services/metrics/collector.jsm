@@ -27,6 +27,8 @@ this.Collector = function (storage) {
   this._providers = new Map();
   this._storage = storage;
 
+  this._providerInitQueue = [];
+  this._providerInitializing = false;
   this.providerErrors = new Map();
 }
 
@@ -49,6 +51,9 @@ Collector.prototype = Object.freeze({
    * The returned value is a promise that will be resolved once registration
    * is complete.
    *
+   * Providers are initialized as part of registration by calling
+   * provider.init().
+   *
    * @param provider
    *        (Metrics.Provider) The provider instance to register.
    *
@@ -63,16 +68,61 @@ Collector.prototype = Object.freeze({
       return Promise.resolve();
     }
 
-    return provider.init(this._storage).then(function afterInit() {
-      this._providers.set(provider.name, {
-        provider: provider,
-        constantsCollected: false,
-      });
+    let deferred = Promise.defer();
+    this._providerInitQueue.push([provider, deferred]);
 
-      this.providerErrors.set(provider.name, []);
+    if (this._providerInitQueue.length == 1) {
+      this._popAndInitProvider();
+    }
 
-      return Promise.resolve();
-    }.bind(this));
+    return deferred.promise;
+  },
+
+  _popAndInitProvider: function () {
+    if (!this._providerInitQueue.length || this._providerInitializing) {
+      return;
+    }
+
+    let [provider, deferred] = this._providerInitQueue.pop();
+    this._providerInitializing = true;
+
+    this._log.info("Initializing provider with storage: " + provider.name);
+    let initPromise;
+    try {
+      initPromise = provider.init(this._storage);
+    } catch (ex) {
+      this._log.warn("Provider failed to initialize: " +
+                     CommonUtils.exceptionStr(ex));
+      this._providerInitializing = false;
+      deferred.reject(ex);
+      this._popAndInitProvider();
+      return;
+    }
+
+    initPromise.then(
+      function onSuccess(result) {
+        this._log.info("Provider finished initialization: " + provider.name);
+        this._providerInitializing = false;
+
+        this._providers.set(provider.name, {
+          provider: provider,
+          constantsCollected: false,
+        });
+
+        this.providerErrors.set(provider.name, []);
+
+        deferred.resolve(result);
+        this._popAndInitProvider();
+      }.bind(this),
+      function onError(error) {
+        this._log.warn("Provider initialization failed: " +
+                       CommonUtils.exceptionStr(error));
+        this._providerInitializing = false;
+        deferred.reject(error);
+        this._popAndInitProvider();
+      }.bind(this)
+    );
+
   },
 
   /**
