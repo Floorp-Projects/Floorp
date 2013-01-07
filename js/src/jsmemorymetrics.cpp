@@ -159,11 +159,9 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         // JSObject::sizeOfExcludingThis() doesn't measure objectsExtraPrivate,
         // so we do it here.
         if (ObjectPrivateVisitor *opv = closure->opv) {
-            js::Class *clazz = js::GetObjectClass(obj);
-            if (clazz->flags & JSCLASS_HAS_PRIVATE &&
-                clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
-            {
-                cStats->objectsExtra.private_ += opv->sizeOfIncludingThis(GetObjectPrivate(obj));
+            nsISupports *iface;
+            if (opv->getISupports(obj, &iface) && iface) {
+                cStats->objectsExtra.private_ += opv->sizeOfIncludingThis(iface);
             }
         }
         break;
