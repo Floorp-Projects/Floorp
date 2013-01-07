@@ -54,7 +54,7 @@
 .command-button:hover {
   background-color: hsla(206,37%,4%,.2);
 }
-.command-button:hover:active {
+.command-button:hover:active, .command-button[checked=true]:not(:hover) {
   background-color: hsla(206,37%,4%,.4);
 }
 
