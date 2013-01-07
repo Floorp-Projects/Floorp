@@ -249,6 +249,8 @@ OpenedConnection.prototype = Object.freeze({
       return Promise.resolve();
     }
 
+    this._log.debug("Closing.");
+
     // Abort in-progress transaction.
     if (this._inProgressTransaction) {
       this._log.warn("Transaction in progress at time of close.");
@@ -285,6 +287,7 @@ OpenedConnection.prototype = Object.freeze({
 
     let deferred = Promise.defer();
 
+    this._log.debug("Calling asyncClose().");
     this._connection.asyncClose({
       complete: function () {
         this._log.info("Closed");
