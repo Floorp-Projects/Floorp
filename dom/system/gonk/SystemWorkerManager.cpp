@@ -95,7 +95,7 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
       return false;
     }
 
-    uint32_t type = JS_GetTypedArrayType(obj);
+    uint32_t type = JS_GetArrayBufferViewType(obj);
     if (type != js::ArrayBufferView::TYPE_INT8 &&
         type != js::ArrayBufferView::TYPE_UINT8 &&
         type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {
@@ -223,7 +223,7 @@ DoNetdCommand(JSContext *cx, unsigned argc, jsval *vp)
       return false;
     }
 
-    uint32_t type = JS_GetTypedArrayType(obj);
+    uint32_t type = JS_GetArrayBufferViewType(obj);
     if (type != js::ArrayBufferView::TYPE_INT8 &&
         type != js::ArrayBufferView::TYPE_UINT8 &&
         type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {

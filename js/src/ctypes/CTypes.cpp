@@ -2138,7 +2138,7 @@ bool CanConvertTypedArrayItemTo(JSObject *baseType, JSObject *valObj, JSContext 
     return true;
   }
   TypeCode elementTypeCode;
-  switch (JS_GetTypedArrayType(valObj)) {
+  switch (JS_GetArrayBufferViewType(valObj)) {
   case TypedArray::TYPE_INT8:
     elementTypeCode = TYPE_int8_t;
     break;
