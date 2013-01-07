@@ -144,41 +144,42 @@ richlistitem[type="download"][state="1"]:hover {
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
-.downloadButton.downloadCancel:hover {
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
-.downloadButton.downloadCancel:active {
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
-.downloadButton.downloadShow:hover {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
+  -moz-image-region: rect(16px, 96px, 32px, 80px);
 }
-.downloadButton.downloadShow:active {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
+richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
+  -moz-image-region: rect(16px, 112px, 32px, 96px);
 }
+richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
+  -moz-image-region: rect(16px, 128px, 32px, 112px);
+}
+
+/** TODO: state="1"**/
 
 .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 16px, 48px, 0px);
 }
-.downloadButton.downloadRetry:hover {
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 32px, 48px, 16px);
 }
-.downloadButton.downloadRetry:active {
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:hover {
   -moz-image-region: rect(32px, 48px, 48px, 32px);
 }
-
-richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
-  -moz-image-region: rect(48px, 16px, 64px, 0px);
-}
-richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
-  -moz-image-region: rect(48px, 32px, 64px, 16px);
-}
-richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
-  -moz-image-region: rect(48px, 48px, 64px, 32px);
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:active {
+  -moz-image-region: rect(32px, 64px, 48px, 48px);
 }
 
 /*** Status and progress indicator ***/
