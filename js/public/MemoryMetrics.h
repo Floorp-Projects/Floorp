@@ -19,6 +19,8 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 
+class nsISupports;      // This is needed for ObjectPrivateVisitor.
+
 namespace js {
 
 // In memory reporting, we have concept of "sundries", line items which are too
@@ -391,8 +393,17 @@ class ObjectPrivateVisitor
 {
 public:
     // Within CollectRuntimeStats, this method is called for each JS object
-    // that has a private slot containing an nsISupports pointer.
-    virtual size_t sizeOfIncludingThis(void *aSupports) = 0;
+    // that has an nsISupports pointer.
+    virtual size_t sizeOfIncludingThis(nsISupports *aSupports) = 0;
+
+    // A callback that gets a JSObject's nsISupports pointer, if it has one.
+    // Note: this function does *not* addref |iface|.
+    typedef JSBool(*GetISupportsFun)(JSObject *obj, nsISupports **iface);
+    GetISupportsFun getISupports;
+
+    ObjectPrivateVisitor(GetISupportsFun getISupports)
+      : getISupports(getISupports)
+    {}
 };
 
 extern JS_PUBLIC_API(bool)
