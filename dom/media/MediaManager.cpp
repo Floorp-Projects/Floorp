@@ -241,12 +241,22 @@ public:
 
   virtual ~nsDOMUserMediaStream()
   {
+    Stop();
+
     if (mPort) {
       mPort->Destroy();
     }
     if (mSourceStream) {
       mSourceStream->Destroy();
     }
+  }
+
+  NS_IMETHODIMP Stop()
+  {
+    if (mSourceStream) {
+      mSourceStream->EndAllTrackAndFinish();
+    }
+    return NS_OK;
   }
 
   // The actual MediaStream is a TrackUnionStream. But these resources need to be
