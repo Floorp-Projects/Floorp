@@ -5,7 +5,7 @@
 MOZ_APP_BASENAME=Fennec
 MOZ_APP_VENDOR=Mozilla
 
-MOZ_APP_VERSION=20.0a1
+MOZ_APP_VERSION=21.0a1
 
 MOZ_BRANDING_DIRECTORY=mobile/xul/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/xul/branding/official
