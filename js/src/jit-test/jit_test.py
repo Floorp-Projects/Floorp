@@ -443,7 +443,7 @@ def main(argv):
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
                   help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
     op.add_option('--ion', dest='ion', action='store_true',
-                  help='Run tests with --ion flag (ignores --jitflags)')
+                  help='Run tests once with --ion-eager and once with --no-jm (ignores --jitflags)')
     op.add_option('--tbpl', dest='tbpl', action='store_true',
                   help='Run tests with all IonMonkey option combinations (ignores --jitflags)')
     (OPTIONS, args) = op.parse_args(argv)
