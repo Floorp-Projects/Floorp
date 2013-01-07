@@ -94,6 +94,8 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
+== mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
+== mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
@@ -111,3 +113,6 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == whitespace-trim-3.html whitespace-trim-3-ref.html
 fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == whitespace-trim-5.html whitespace-trim-5-ref.html
+== operator-1.xhtml operator-1-ref.xhtml
+== scriptshift-1.xhtml scriptshift-1-ref.xhtml
+== number-size-1.xhtml number-size-1-ref.xhtml
