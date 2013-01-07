@@ -2088,8 +2088,7 @@ ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
 static int
 GetUpdateFileName(NS_tchar *fileName, int maxChars)
 {
-#if defined(MOZ_WIDGET_GONK)
-  // If an update.link file exists, then it will contain the name
+#if defined(MOZ_WIDGET_GONK)  // If an update.link file exists, then it will contain the name
   // of the update file (terminated by a newline).
 
   NS_tchar linkFileName[MAXPATHLEN];
