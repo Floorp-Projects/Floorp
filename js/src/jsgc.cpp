@@ -3824,7 +3824,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             c->scheduledForDestruction = false;
 
-            if (c->activeAnalysis && !c->gcTypesMarked) {
+            if (c->isGCMarking() && c->activeAnalysis && !c->gcTypesMarked) {
                 AutoCopyFreeListToArenas copy(rt);
                 gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP);
                 gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_MARK);
