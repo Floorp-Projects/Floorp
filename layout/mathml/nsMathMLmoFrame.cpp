@@ -396,10 +396,10 @@ nsMathMLmoFrame::ProcessOperatorData()
   // values: length
   // default: set by dictionary (thickmathspace) 
   //
-  // XXXfredw Should we allow negative values? (bug 411227) They will be made
-  // positive by the rounding below.
-  // XXXfredw Should we allow relative values? They will give a multiple of the
-  // current leading space, which is not necessarily the default one.
+  // XXXfredw Support for negative and relative values is not implemented
+  // (bug 805926).
+  // Relative values will give a multiple of the current leading space,
+  // which is not necessarily the default one.
   //
   nscoord leadingSpace = mEmbellishData.leadingSpace;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::lspace_,
@@ -423,10 +423,10 @@ nsMathMLmoFrame::ProcessOperatorData()
   // values: length
   // default: set by dictionary (thickmathspace) 
   //
-  // XXXfredw Should we allow negative values? (bug 411227) They will be made
-  // positive by the rounding below.
-  // XXXfredw Should we allow relative values? They will give a multiple of the
-  // current trailing space, which is not necessarily the default one.
+  // XXXfredw Support for negative and relative values is not implemented
+  // (bug 805926).
+  // Relative values will give a multiple of the current leading space,
+  // which is not necessarily the default one.
   //
   nscoord trailingSpace = mEmbellishData.trailingSpace;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::rspace_,

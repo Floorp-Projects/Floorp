@@ -408,13 +408,18 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
   if (unit.IsEmpty()) {
     if (aFlags & PARSE_ALLOW_UNITLESS) {
       // no explicit unit, this is a number that will act as a multiplier
-      cssUnit = eCSSUnit_Number;
       if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
         nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                         "MathML", aDocument,
                                         nsContentUtils::eMATHML_PROPERTIES,
                                         "UnitlessValuesAreDeprecated");
       }
+      if (aFlags & CONVERT_UNITLESS_TO_PERCENT) {
+        aCSSValue.SetPercentValue(floatValue);
+        return true;
+      }
+      else
+        cssUnit = eCSSUnit_Number;
     } else {
       // We are supposed to have a unit, but there isn't one.
       // If the value is 0 we can just call it "pixels" otherwise
@@ -496,15 +501,20 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // default: 8pt
     //
     // We don't allow negative values.
-    // XXXfredw Should we allow unitless values? (bug 411227)
-    // XXXfredw Does a relative unit give a multiple of the default value?
+    // Unitless and percent values give a multiple of the default value.
     //
     value = aAttributes->GetAttr(nsGkAtoms::scriptminsize_);
     nsCSSValue* scriptMinSize = aData->ValueForScriptMinSize();
     if (value && value->Type() == nsAttrValue::eString &&
         scriptMinSize->GetUnit() == eCSSUnit_Null) {
-      ParseNumericValue(value->GetStringValue(), *scriptMinSize, 0,
+      ParseNumericValue(value->GetStringValue(), *scriptMinSize,
+                        PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
                         aData->mPresContext->Document());
+
+      if (scriptMinSize->GetUnit() == eCSSUnit_Percent) {
+        scriptMinSize->SetFloatValue(8.0 * scriptMinSize->GetPercentValue(),
+                                     eCSSUnit_Point);
+      }
     }
 
     // scriptlevel
@@ -565,8 +575,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // default: inherited
     //
     // In both cases, we don't allow negative values.
-    // XXXfredw Should we allow unitless values? (bug 411227)
-    // XXXfredw Does a relative unit give a multiple of the default value?
+    // Unitless values give a multiple of the default value.
     //  
     bool parseSizeKeywords = true;
     value = aAttributes->GetAttr(nsGkAtoms::mathsize_);
@@ -583,7 +592,9 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value && value->Type() == nsAttrValue::eString &&
         fontSize->GetUnit() == eCSSUnit_Null) {
       nsAutoString str(value->GetStringValue());
-      if (!ParseNumericValue(str, *fontSize, PARSE_SUPPRESS_WARNINGS, nullptr)
+      if (!ParseNumericValue(str, *fontSize, PARSE_SUPPRESS_WARNINGS |
+                             PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
+                             nullptr)
           && parseSizeKeywords) {
         static const char sizes[3][7] = { "small", "normal", "big" };
         static const int32_t values[NS_ARRAY_LENGTH(sizes)] = {
