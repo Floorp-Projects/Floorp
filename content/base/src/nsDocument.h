@@ -738,10 +738,6 @@ public:
   nsRadioGroupStruct* GetRadioGroup(const nsAString& aName) const;
   nsRadioGroupStruct* GetOrCreateRadioGroup(const nsAString& aName);
 
-  virtual nsViewportInfo GetViewportInfo(uint32_t aDisplayWidth,
-                                         uint32_t aDisplayHeight);
-
-
 private:
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
 
@@ -1362,20 +1358,6 @@ private:
   nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
 
   nsRefPtr<mozilla::dom::UndoManager> mUndoManager;
-
-  enum ViewportType {
-    DisplayWidthHeight,
-    Specified,
-    Unknown
-  };
-
-  ViewportType mViewportType;
-
-  // These member variables cache information about the viewport so we don't have to
-  // recalculate it each time.
-  float mScaleMinFloat, mScaleMaxFloat, mScaleFloat, mPixelRatio;
-  bool mAutoSize, mAllowZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
-  uint32_t mViewportWidth, mViewportHeight;
 
 #ifdef DEBUG
 protected:
