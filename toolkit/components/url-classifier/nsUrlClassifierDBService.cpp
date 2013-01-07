@@ -30,6 +30,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMStrings.h"
 #include "nsProxyRelease.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -1506,7 +1507,7 @@ nsUrlClassifierDBService::Shutdown()
     prefs->RemoveObserver(CONFIRM_AGE_PREF, this);
   }
 
-  nsresult rv;
+  DebugOnly<nsresult> rv;
   // First close the db connection.
   if (mWorker) {
     rv = mWorkerProxy->CancelUpdate();
