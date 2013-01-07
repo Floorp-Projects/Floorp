@@ -26,6 +26,7 @@ add_task(function test_collect_smoketest() {
   let provider = new AppInfoProvider();
   yield provider.init(storage);
 
+  let now = new Date();
   yield provider.collectConstantData();
 
   let m = provider.getMeasurement("appinfo", 1);
@@ -42,6 +43,15 @@ add_task(function test_collect_smoketest() {
   do_check_eq(d.platformBuildID, "20121106");
   do_check_eq(d.os, "XPCShell");
   do_check_eq(d.xpcomabi, "noarch-spidermonkey");
+
+  do_check_eq(data.days.size, 1);
+  do_check_true(data.days.hasDay(now));
+  let day = data.days.getDay(now);
+  do_check_eq(day.size, 1);
+  do_check_true(day.has("isDefaultBrowser"));
+
+  // Underlying shell service is not available in xpcshell tests.
+  do_check_eq(day.get("isDefaultBrowser"), -1);
 
   yield provider.shutdown();
   yield storage.close();

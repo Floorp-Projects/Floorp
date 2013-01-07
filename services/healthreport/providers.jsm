@@ -78,6 +78,9 @@ AppInfoMeasurement.prototype = Object.freeze({
       for (let field of self.LAST_TEXT_FIELDS) {
         yield self.registerStorageField(field, self.storage.FIELD_LAST_TEXT);
       }
+
+      yield self.registerStorageField("isDefaultBrowser",
+                                      self.storage.FIELD_DAILY_LAST_NUMERIC);
     });
   },
 });
@@ -220,6 +223,34 @@ AppInfoProvider.prototype = Object.freeze({
       this._log.warn("Could not obtain application locale: " +
                      CommonUtils.exceptionStr(ex));
     }
+
+    // FUTURE this should be retrieved periodically or at upload time.
+    yield this._recordDefaultBrowser(m);
+  },
+
+  _recordDefaultBrowser: function (m) {
+    let shellService;
+    try {
+      shellService = Cc["@mozilla.org/browser/shell-service;1"]
+                       .getService(Ci.nsIShellService);
+    } catch (ex) {
+      this._log.warn("Could not obtain shell service: " +
+                     CommonUtils.exceptionStr(ex));
+    }
+
+    let isDefault = -1;
+
+    if (shellService) {
+      try {
+        // This uses the same set of flags used by the pref pane.
+        isDefault = shellService.isDefaultBrowser(false, true) ? 1 : 0;
+      } catch (ex) {
+        this._log.warn("Could not determine if default browser: " +
+                       CommonUtils.exceptionStr(ex));
+      }
+    }
+
+    return m.setDailyLastNumeric("isDefaultBrowser", isDefault);
   },
 });
 
