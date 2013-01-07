@@ -1501,7 +1501,10 @@ IDBObjectStore::ConvertBlobsToActors(
 
       BlobParent* actor =
         aContentParent->GetOrCreateActorForBlob(blob);
-      NS_ASSERTION(actor, "This should never fail without aborting!");
+      if (!actor) {
+        // This can only fail if the child has crashed.
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
 
       aActors.AppendElement(actor);
     }
