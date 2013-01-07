@@ -23,19 +23,19 @@ class VolumeServiceIOThread : public VolumeManager::StateObserver,
                               public RefCounted<VolumeServiceIOThread>
 {
 public:
-  VolumeServiceIOThread(nsVolumeService *aVolumeService);
+  VolumeServiceIOThread(nsVolumeService* aVolumeService);
   ~VolumeServiceIOThread();
 
 private:
   void  UpdateAllVolumes();
 
-  virtual void Notify(const VolumeManager::StateChangedEvent &aEvent);
-  virtual void Notify(Volume * const &aVolume);
+  virtual void Notify(const VolumeManager::StateChangedEvent& aEvent);
+  virtual void Notify(Volume* const & aVolume);
 
   RefPtr<nsVolumeService>   mVolumeService;
 };
 
-void InitVolumeServiceIOThread(nsVolumeService * const &aVolumeService);
+void InitVolumeServiceIOThread(nsVolumeService* const & aVolumeService);
 void ShutdownVolumeServiceIOThread();
 
 } // system

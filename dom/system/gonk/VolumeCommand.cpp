@@ -39,10 +39,10 @@ namespace system {
 *
 ***************************************************************************/
 
-VolumeActionCommand::VolumeActionCommand(Volume *aVolume,
-                                         const char *aAction,
-                                         const char *aExtraArgs,
-                                         VolumeResponseCallback *aCallback)
+VolumeActionCommand::VolumeActionCommand(Volume* aVolume,
+                                         const char* aAction,
+                                         const char* aExtraArgs,
+                                         VolumeResponseCallback* aCallback)
   : VolumeCommand(aCallback),
     mVolume(aVolume)
 {
@@ -75,7 +75,7 @@ VolumeActionCommand::VolumeActionCommand(Volume *aVolume,
 *
 ***************************************************************************/
 
-VolumeListCommand::VolumeListCommand(VolumeResponseCallback *aCallback)
+VolumeListCommand::VolumeListCommand(VolumeResponseCallback* aCallback)
   : VolumeCommand(NS_LITERAL_CSTRING("volume list"), aCallback)
 {
 }
