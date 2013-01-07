@@ -291,7 +291,6 @@ def main(args=sys.argv[1:]):
             if setuptools:
                 sys.modules['setuptools'] = setuptools
         checkout(src, 'HEAD')
-        current_package_info['mozprocess']['version'] = '0.9'
         check_consistency(*current_package_info.values())
 
         # copy mozbase directories to m-c
