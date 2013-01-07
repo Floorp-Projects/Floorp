@@ -302,7 +302,7 @@ static const int32_t kResizableBorderMinSize = 3;
  *
  **************************************************************/
 
-nsWindow::nsWindow() : nsBaseWidget()
+nsWindow::nsWindow() : nsWindowBase()
 {
 #ifdef PR_LOGGING
   if (!gWindowsLog) {
