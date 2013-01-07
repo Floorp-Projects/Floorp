@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS3(nsVolumeMountLock, nsIVolumeMountLock,
 
 // static
 already_AddRefed<nsVolumeMountLock>
-nsVolumeMountLock::Create(const nsAString &aVolumeName)
+nsVolumeMountLock::Create(const nsAString& aVolumeName)
 {
   DBG("nsVolumeMountLock::Create called");
 
@@ -38,7 +38,7 @@ nsVolumeMountLock::Create(const nsAString &aVolumeName)
   return mountLock.forget();
 }
 
-nsVolumeMountLock::nsVolumeMountLock(const nsAString &aVolumeName)
+nsVolumeMountLock::nsVolumeMountLock(const nsAString& aVolumeName)
   : mVolumeName(aVolumeName),
     mVolumeGeneration(-1),
     mUnlocked(false)
@@ -92,7 +92,7 @@ NS_IMETHODIMP nsVolumeMountLock::Unlock()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolumeMountLock::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+NS_IMETHODIMP nsVolumeMountLock::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
 {
   if (strcmp(aTopic, NS_VOLUME_STATE_CHANGED) != 0) {
     return NS_OK;

@@ -40,7 +40,7 @@ NS_VolumeStateStr(int32_t aState)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsVolume, nsIVolume)
 
-nsVolume::nsVolume(const Volume *aVolume)
+nsVolume::nsVolume(const Volume* aVolume)
   : mName(NS_ConvertUTF8toUTF16(aVolume->Name())),
     mMountPoint(NS_ConvertUTF8toUTF16(aVolume->MountPoint())),
     mState(aVolume->State()),
@@ -49,19 +49,19 @@ nsVolume::nsVolume(const Volume *aVolume)
 {
 }
 
-NS_IMETHODIMP nsVolume::GetName(nsAString &aName)
+NS_IMETHODIMP nsVolume::GetName(nsAString& aName)
 {
   aName = mName;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolume::GetMountGeneration(int32_t *aMountGeneration)
+NS_IMETHODIMP nsVolume::GetMountGeneration(int32_t* aMountGeneration)
 {
   *aMountGeneration = mMountGeneration;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolume::GetMountLockName(nsAString &aMountLockName)
+NS_IMETHODIMP nsVolume::GetMountLockName(nsAString& aMountLockName)
 {
   aMountLockName = NS_LITERAL_STRING("volume-") + Name();
   aMountLockName.AppendPrintf("-%d", mMountGeneration);
@@ -69,13 +69,13 @@ NS_IMETHODIMP nsVolume::GetMountLockName(nsAString &aMountLockName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolume::GetMountPoint(nsAString &aMountPoint)
+NS_IMETHODIMP nsVolume::GetMountPoint(nsAString& aMountPoint)
 {
   aMountPoint = mMountPoint;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolume::GetState(int32_t *aState)
+NS_IMETHODIMP nsVolume::GetState(int32_t* aState)
 {
   *aState = mState;
   return NS_OK;
@@ -104,7 +104,7 @@ nsVolume::LogState() const
   LOG("nsVolume: %s state %s", NameStr(), StateStr());
 }
 
-void nsVolume::Set(const nsVolume *aVolume)
+void nsVolume::Set(const nsVolume* aVolume)
 {
   mName = aVolume->mName;
   mMountPoint = aVolume->mMountPoint;
@@ -137,7 +137,7 @@ void nsVolume::Set(const nsVolume *aVolume)
 }
 
 void
-nsVolume::UpdateMountLock(const nsAString &aMountLockState)
+nsVolume::UpdateMountLock(const nsAString& aMountLockState)
 {
   // There are 3 states, unlocked, locked-background, and locked-foreground
   // I figured it was easier to use negtive logic and compare for unlocked.
