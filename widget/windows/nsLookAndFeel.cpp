@@ -205,6 +205,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = COLOR_INFOTEXT;
       break;
     case eColorID_menu:
+    case eColorID__moz_menubar:
       idx = COLOR_MENU;
       break;
     case eColorID_menutext:
