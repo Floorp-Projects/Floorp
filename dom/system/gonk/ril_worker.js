@@ -5531,6 +5531,49 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Write GSM 8-bit unpacked octets.
+   *
+   * @param numOctets   Number of total octets to be writen, including trailing
+   *                    0xff.
+   * @param str         String to be written. Could be null.
+   */
+  writeStringTo8BitUnpacked: function writeStringTo8BitUnpacked(numOctets, str) {
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+
+    // If the character is GSM extended alphabet, two octets will be written.
+    // So we need to keep track of number of octets to be written.
+    let i, j;
+    let len = str ? str.length : 0;
+    for (i = 0, j = 0; i < len && j < numOctets; i++) {
+      let c = str.charAt(i);
+      let octet = langTable.indexOf(c);
+
+      if (octet == -1) {
+        // Make sure we still have enough space to write two octets.
+        if (j + 2 > numOctets) {
+          break;
+        }
+
+        octet = langShiftTable.indexOf(c);
+        if (octet == -1) {
+          // Fallback to ASCII space.
+          octet = langTable.indexOf(' ');
+        }
+        this.writeHexOctet(PDU_NL_EXTENDED_ESCAPE);
+        j++;
+      }
+      this.writeHexOctet(octet);
+      j++;
+    }
+
+    // trailing 0xff
+    while (j++ < numOctets) {
+      this.writeHexOctet(0xff);
+    }
+  },
+
+  /**
    * Read user data and decode as a UCS2 string.
    *
    * @param numOctets
@@ -5913,39 +5956,85 @@ let GsmPDUHelper = {
   },
 
   /**
-   *  Read Alpha Id and Dialling number from TS 131.102
+   * Read Alpha Id and Dialling number from TS TS 151.011 clause 10.5.1
    *
-   *  @param options
-   *         The 'options' object passed from RIL.iccIO
+   * @param recordSize  The size of linear fixed record.
    */
-  readAlphaIdDiallingNumber: function readAlphaIdDiallingNumber(options) {
-    let contact = null;
-    let ffLen; // The length of trailing 0xff to be read.
+  readAlphaIdDiallingNumber: function readAlphaIdDiallingNumber(recordSize) {
     let length = Buf.readUint32();
 
-    let alphaLen = options.recordSize - MSISDN_FOOTER_SIZE_BYTES;
+    let alphaLen = recordSize - ADN_FOOTER_SIZE_BYTES;
     let alphaId = this.readAlphaIdentifier(alphaLen);
 
+    let number;
     let numLen = this.readHexOctet();
     if (numLen != 0xff) {
-      // +1 for TON/NPI
-      if (numLen > MSISDN_MAX_NUMBER_SIZE_BYTES + 1) {
+      if (numLen > ADN_MAX_BCD_NUMBER_BYTES) {
         throw new Error("invalid length of BCD number/SSC contents - " + numLen);
       }
 
-      contact = {alphaId: alphaId,
-                 number: this.readDiallingNumber(numLen)};
-
-      ffLen = length / 2 - alphaLen - numLen - 1; // Minus 1 for the numLen field.
+      number = this.readDiallingNumber(numLen);
+      Buf.seekIncoming((ADN_MAX_BCD_NUMBER_BYTES - numLen) * PDU_HEX_OCTET_SIZE);
     } else {
-      ffLen = MSISDN_FOOTER_SIZE_BYTES - 1; // Minus 1 for the numLen field.
+      Buf.seekIncoming(ADN_MAX_BCD_NUMBER_BYTES * PDU_HEX_OCTET_SIZE);
     }
 
-    // Consumes the remaining 0xff
-    Buf.seekIncoming(ffLen * PDU_HEX_OCTET_SIZE);
+    // Skip 2 unused octets, CCP and EXT1.
+    Buf.seekIncoming(2 * PDU_HEX_OCTET_SIZE);
     Buf.readStringDelimiter(length);
 
+    let contact = null;
+    if (alphaId || number) {
+      contact = {alphaId: alphaId,
+                 number: number};
+    }
     return contact;
+  },
+
+  /**
+   * Write Alpha Identifier and Dialling number from TS 151.011 clause 10.5.1
+   *
+   * @param recordSize  The size of linear fixed record.
+   * @param alphaId     Alpha Identifier to be written.
+   * @param number      Dialling Number to be written.
+   */
+  writeAlphaIdDiallingNumber: function writeAlphaIdDiallingNumber(recordSize,
+                                                                  alphaId,
+                                                                  number) {
+    // Write String length
+    let length = recordSize * 2;
+    Buf.writeUint32(length);
+
+    let alphaLen = recordSize - ADN_FOOTER_SIZE_BYTES;
+    this.writeAlphaIdentifier(alphaLen, alphaId);
+
+    if (number) {
+      let numStart = number[0] == "+" ? 1 : 0;
+      let numDigits = number.length - numStart;
+      if (numDigits > ADN_MAX_NUMBER_DIGITS) {
+        number = number.substring(0, ADN_MAX_NUMBER_DIGITS + numStart);
+        numDigits = number.length - numStart;
+      }
+
+      // +1 for TON/NPI
+      let numLen = Math.ceil(numDigits / 2) + 1;
+      this.writeHexOctet(numLen);
+      this.writeDiallingNumber(number);
+      // Write trailing 0xff of Dialling Number.
+      for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES - numLen; i++) {
+        this.writeHexOctet(0xff);
+      }
+    } else {
+      // +1 for numLen
+      for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES + 1; i++) {
+        this.writeHexOctet(0xff);
+      }
+    }
+
+    // Write unused octets 0xff, CCP and EXT1.
+    this.writeHexOctet(0xff);
+    this.writeHexOctet(0xff);
+    Buf.writeStringDelimiter(length);
   },
 
   /**
@@ -5963,8 +6052,11 @@ let GsmPDUHelper = {
    * Unused bytes should be set to 0xff.
    */
   readAlphaIdentifier: function readAlphaIdentifier(numOctets) {
-    let temp;
+    if (numOctets === 0) {
+      return "";
+    }
 
+    let temp;
     // Read the 1st octet to determine the encoding.
     if ((temp = GsmPDUHelper.readHexOctet()) == 0x80 ||
          temp == 0x81 ||
@@ -5974,6 +6066,40 @@ let GsmPDUHelper = {
     } else {
       Buf.seekIncoming(-1 * PDU_HEX_OCTET_SIZE);
       return this.read8BitUnpackedToString(numOctets);
+    }
+  },
+
+  /**
+   * Write Alpha Identifier.
+   *
+   * @param numOctets
+   *        Total number of octets to be written. This includes the length of
+   *        alphaId and the length of trailing unused octets(0xff).
+   * @param alphaId
+   *        Alpha Identifier to be written.
+   *
+   * Unused octets will be written as 0xff.
+   */
+  writeAlphaIdentifier: function writeAlphaIdentifier(numOctets, alphaId) {
+    if (numOctets === 0) {
+      return;
+    }
+
+    // If alphaId is empty or it's of GSM 8 bit.
+    if (!alphaId || ICCUtilsHelper.isGsm8BitAlphabet(alphaId)) {
+      this.writeStringTo8BitUnpacked(numOctets, alphaId);
+    } else {
+      // Currently only support UCS2 coding scheme 0x80.
+      this.writeHexOctet(0x80);
+      numOctets--;
+      // Now the alphaId is UCS2 string, each character will take 2 octets.
+      if (alphaId.length * 2 > numOctets) {
+        alphaId = alphaId.substring(0, Math.floor(numOctets / 2));
+      }
+      this.writeUCS2String(alphaId);
+      for (let i = alphaId.length * 2; i < numOctets; i++) {
+        this.writeHexOctet(0xff);
+      }
     }
   },
 
@@ -8465,7 +8591,7 @@ let ICCRecordHelper = {
    */
   getMSISDN: function getMSISDN() {
     function callback(options) {
-      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options);
+      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (!contact || RIL.iccInfo.msisdn === contact.number) {
         return;
       }
@@ -8616,7 +8742,7 @@ let ICCRecordHelper = {
    */
   getFDN: function getFDN(options) {
     function callback(options) {
-      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options);
+      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (contact) {
         RIL.iccInfo.fdn.push(contact);
       }
@@ -8657,7 +8783,7 @@ let ICCRecordHelper = {
    */
   getADN: function getADN(options) {
     function callback(options) {
-      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options);
+      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (contact) {
         RIL.iccInfo.adn.push(contact);
       }
@@ -8701,7 +8827,7 @@ let ICCRecordHelper = {
    */
   getMBDN: function getMBDN() {
     function callback(options) {
-      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options);
+      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (!contact || RIL.iccInfo.mbdn === contact.number){
         return;
       }
@@ -9286,6 +9412,34 @@ let ICCUtilsHelper = {
     return (serviceTable &&
            (index < serviceTable.length) &&
            (serviceTable[index] & bitmask)) != 0;
+  },
+
+  /**
+   * Check if the string is of GSM default 7-bit coded alphabets with bit 8
+   * set to 0.
+   *
+   * @param str  String to be checked.
+   */
+  isGsm8BitAlphabet: function isGsm8BitAlphabet(str) {
+    if (!str) {
+      return false;
+    }
+
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+
+    for (let i = 0; i < str.length; i++) {
+      let c = str.charAt(i);
+      let octet = langTable.indexOf(c);
+      if (octet == -1) {
+        octet = langShiftTable.indexOf(c);
+        if (octet == -1) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   },
 };
 

@@ -151,6 +151,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = SYSCLR_WINDOWTEXT;
       break;
     case eColorID_menu:
+    case eColorID__moz_menubar:
       idx = SYSCLR_MENU;
       break;
     case eColorID_menutext:

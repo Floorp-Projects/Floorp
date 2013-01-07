@@ -426,5 +426,4 @@ HistoryTracker.prototype = {
   onPageChanged: function () {},
   onTitleChanged: function () {},
   onBeforeDeleteURI: function () {},
-  batching: function () {},
 };

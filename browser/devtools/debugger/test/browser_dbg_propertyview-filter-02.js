@@ -444,7 +444,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
 }
 

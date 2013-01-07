@@ -45,8 +45,8 @@ function testVariablesFiltering()
       "There should be 0 variables displayed in the test scope");
     is(loadScope.querySelectorAll(".variable:not([non-match])").length, 1,
       "There should be 1 variable displayed in the load scope");
-    is(globalScope.querySelectorAll(".variable:not([non-match])").length, 5,
-      "There should be 5 variables displayed in the global scope");
+    is(globalScope.querySelectorAll(".variable:not([non-match])").length, 8,
+      "There should be 8 variables displayed in the global scope");
 
     is(innerScope.querySelectorAll(".property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the inner scope");
@@ -69,7 +69,7 @@ function testVariablesFiltering()
     is(oneItem.expanded, false,
       "The one item in the inner scope should not be expanded");
 
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     is(oneItem.expanded, true,
       "The one item in the inner scope should now be expanded");
   }
@@ -108,7 +108,7 @@ function testVariablesFiltering()
     is(twoItem.expanded, false,
       "The two item in the inner scope should not be expanded");
 
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     is(twoItem.expanded, true,
       "The two item in the inner scope should now be expanded");
   }
@@ -285,7 +285,7 @@ function write(text) {
 
 function backspace(times) {
   for (let i = 0; i < times; i++) {
-    EventUtils.sendKey("BACK_SPACE")
+    EventUtils.sendKey("BACK_SPACE", gDebugger)
   }
 }
 
@@ -293,7 +293,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
 }
 

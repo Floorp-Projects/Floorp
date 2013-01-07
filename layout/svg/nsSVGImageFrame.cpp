@@ -9,17 +9,19 @@
 #include "gfxPlatform.h"
 #include "imgIContainer.h"
 #include "nsIDOMSVGImageElement.h"
+#include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "nsRenderingContext.h"
 #include "imgINotificationObserver.h"
 #include "nsSVGEffects.h"
-#include "nsSVGImageElement.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
+#include "mozilla/dom/SVGImageElement.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class nsSVGImageFrame;
 
@@ -201,9 +203,9 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
     if (nsContentUtils::IsImageSrcSetDisabled()) {
       return NS_OK;
     }
-    nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
+    SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
 
-    if (element->mStringAttributes[nsSVGImageElement::HREF].IsExplicitlySet()) {
+    if (element->mStringAttributes[SVGImageElement::HREF].IsExplicitlySet()) {
       element->LoadSVGImage(true, true);
     } else {
       element->CancelImageRequests(true);
@@ -220,7 +222,7 @@ nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
                                          uint32_t aFor)
 {
   float x, y, width, height;
-  nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
+  SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   gfxMatrix viewBoxTM =
@@ -236,7 +238,7 @@ gfxMatrix
 nsSVGImageFrame::GetVectorImageTransform(uint32_t aFor)
 {
   float x, y, width, height;
-  nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
+  SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   // No viewBoxTM needed here -- our height/width overrides any concept of
@@ -289,7 +291,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     return NS_OK;
 
   float x, y, width, height;
-  nsSVGImageElement *imgElem = static_cast<nsSVGImageElement*>(mContent);
+  SVGImageElement *imgElem = static_cast<SVGImageElement*>(mContent);
   imgElem->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
   NS_ASSERTION(width > 0 && height > 0,
                "Should only be painting things with valid width/height");

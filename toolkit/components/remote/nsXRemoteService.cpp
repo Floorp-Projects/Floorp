@@ -278,8 +278,7 @@ nsXRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
                                     &desktopStartupID);
 
     const char* argv[3] = {"dummyappname", "-remote", aCommand};
-    rv = cmdline->Init(3, const_cast<char**>(argv), nullptr,
-                       nsICommandLine::STATE_REMOTE_EXPLICIT);
+    rv = cmdline->Init(3, argv, nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
     if (NS_FAILED(rv))
       return "509 internal error";
 

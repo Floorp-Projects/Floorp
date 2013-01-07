@@ -40,7 +40,12 @@ GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 
 GARBAGE		+= greprefs.js
 
-GREPREF_FILES = $(topsrcdir)/netwerk/base/public/security-prefs.js $(srcdir)/init/all.js
+# TODO bug 813259 external files should be defined near their location in the source tree.
+grepref_files = $(topsrcdir)/netwerk/base/public/security-prefs.js $(srcdir)/init/all.js
+
+ifdef MOZ_SERVICES_HEALTHREPORT
+grepref_files += $(topsrcdir)/services/healthreport/healthreport-prefs.js
+endif
 
 # Optimizer bug with GCC 3.2.2 on OS/2
 ifeq ($(OS_ARCH), OS2)
@@ -51,7 +56,7 @@ nsPrefService.$(OBJ_SUFFIX): nsPrefService.cpp
 endif
 
 
-greprefs.js: $(GREPREF_FILES)
+greprefs.js: $(grepref_files)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $^ > $@
 
 libs:: greprefs.js
