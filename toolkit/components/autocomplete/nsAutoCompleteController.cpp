@@ -728,28 +728,24 @@ nsAutoCompleteController::GetRowCount(int32_t *aRowCount)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetRowProperties(int32_t index, nsISupportsArray *properties)
+nsAutoCompleteController::GetRowProperties(int32_t index, nsAString& aProps)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetCellProperties(int32_t row, nsITreeColumn* col, nsISupportsArray* properties)
+nsAutoCompleteController::GetCellProperties(int32_t row, nsITreeColumn* col,
+                                            nsAString& aProps)
 {
   if (row >= 0) {
-    nsAutoString className;
-    GetStyleAt(row, className);
-    if (!className.IsEmpty()) {
-      nsCOMPtr<nsIAtom> atom(do_GetAtom(className));
-      properties->AppendElement(atom);
-    }
+    GetStyleAt(row, aProps);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetColumnProperties(nsITreeColumn* col, nsISupportsArray* properties)
+nsAutoCompleteController::GetColumnProperties(nsITreeColumn* col, nsAString& aProps)
 {
   return NS_OK;
 }

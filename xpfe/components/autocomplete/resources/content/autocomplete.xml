@@ -1430,16 +1430,6 @@
               this.mTree.rowCountChanged(row, count);
           },
           
-          createAtom: function(aVal)
-          {
-            try {
-              var i = Components.interfaces.nsIAtomService;
-              var svc = Components.classes["@mozilla.org/atom-service;1"].getService(i);
-              return svc.getAtom(aVal);
-            } catch(ex) { }
-            return null; // XXX equivalent to falling off the end?
-          },
-
           //////////////////////////////////////////////////////////
           // nsIAutoCompleteController interface
 
@@ -1475,30 +1465,31 @@
             return aCol.id == "treecolAutoCompleteValue" ? result.value : (aCol.id == "treecolAutoCompleteComment" ? result.comment : "");
           },
 
-          getRowProperties: function(aIndex, aProperties) 
+          getRowProperties: function(aIndex) 
           {
+            return "";
           },
 
-          getCellProperties: function(aIndex, aCol, aProperties)
+          getCellProperties: function(aIndex, aCol)
           {
             // for the value column, append nsIAutoCompleteItem::className
             // to the property list so that we can style this column
             // using that property
             try { 
               if (aCol.id == "treecolAutoCompleteValue") {
-                var className = this.mTextbox.getResultAt(aIndex).className;
-                  if ( className ) {
-                    aProperties.AppendElement(this.createAtom(className));
-                  }
+                return this.mTextbox.getResultAt(aIndex).className;
               }
             } catch (ex) {
               // the ability to style here is a frill, so don't abort
               // if there's a problem
             } 
+
+            return "";
           },
 
-          getColumnProperties: function(aCol, aProperties) 
+          getColumnProperties: function(aCol)
           {
+            return "";
           },
           
           getParentIndex: function(aRowIndex) { },
