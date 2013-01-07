@@ -132,7 +132,7 @@ let SocialUI = {
           break;
       }
     } catch (e) {
-      Components.utils.reportError(e + e.stack);
+      Components.utils.reportError(e + "\n" + e.stack);
       throw e;
     }
   },
@@ -719,6 +719,8 @@ var SocialToolbar = {
     if (!Social.provider)
       return;
     this.button.style.listStyleImage = "url(" + Social.provider.iconURL + ")";
+    this.button.setAttribute("label", Social.provider.name);
+    this.button.setAttribute("tooltiptext", Social.provider.name);
     this.updateButton();
     this.updateProfile();
     this.populateProviderMenus();
@@ -779,7 +781,6 @@ var SocialToolbar = {
     let provider = Social.provider;
     let icons = provider.ambientNotificationIcons;
     let iconNames = Object.keys(icons);
-    let iconBox = document.getElementById("social-toolbar-item");
     let panel = document.getElementById("social-notification-panel");
     panel.hidden = false;
 
@@ -824,7 +825,7 @@ var SocialToolbar = {
                                      str);
     }
 
-    let iconContainers = document.createDocumentFragment();
+    let toolbarButtons = document.createDocumentFragment();
 
     let createdFrames = [];
 
@@ -835,7 +836,6 @@ var SocialToolbar = {
       let notificationFrame = document.getElementById(notificationFrameId);
 
       if (!notificationFrame) {
-
         notificationFrame = SharedFrame.createFrame(
           notificationFrameId, /* frame name */
           panel, /* parent */
@@ -860,56 +860,41 @@ var SocialToolbar = {
         SharedFrame.updateURL(notificationFrameId, icon.contentPanel);
       }
 
-      let iconId = "social-notification-icon-" + icon.name;
-      let imageId = iconId + "-image";
-      let labelId = iconId + "-label";
-      let stackId = iconId + "-stack";
-      let stack = document.getElementById(stackId);
-      let image, label;
-      if (stack) {
-        image = document.getElementById(imageId);
-        label = document.getElementById(labelId);
-      } else {
-        let box = document.createElement("box");
-        box.classList.add("toolbarbutton-1");
-        box.setAttribute("id", iconId);
-        // Use the accessibility menuitem label as tooltiptext.
-        if (icon.label)
-          box.setAttribute("tooltiptext", icon.label);
-        box.addEventListener("mousedown", function (e) {
-          if (e.button == 0)
-            SocialToolbar.showAmbientPopup(box);
-        }, false);
-        box.setAttribute("notificationFrameId", notificationFrameId);
-        stack = document.createElement("stack");
-        stack.setAttribute("id", stackId);
-        stack.classList.add("social-notification-icon-stack");
-        stack.classList.add("toolbarbutton-icon");
-        image = document.createElement("image");
-        image.setAttribute("id", imageId);
-        image.classList.add("social-notification-icon-image");
-        image = stack.appendChild(image);
-        label = document.createElement("label");
-        label.setAttribute("id", labelId);
-        label.classList.add("social-notification-icon-label");
-        let hbox = document.createElement("hbox");
-        hbox.classList.add("social-notification-icon-hbox");
-        hbox.setAttribute("align", "start");
-        hbox.setAttribute("pack", "end");
-        label = hbox.appendChild(label);
-        stack.appendChild(hbox);
-        box.appendChild(stack);
-        iconContainers.appendChild(box);
+      let toolbarButtonContainerId = "social-notification-container-" + icon.name;
+      let toolbarButtonId = "social-notification-icon-" + icon.name;
+      let toolbarButtonContainer = document.getElementById(toolbarButtonContainerId);
+      let toolbarButton = document.getElementById(toolbarButtonId);
+      if (!toolbarButtonContainer) {
+        // The container is used to fix an issue with position:absolute on
+        // generated content not being constrained to the bounding box of a
+        // parent toolbarbutton that has position:relative.
+        toolbarButtonContainer = document.createElement("toolbaritem");
+        toolbarButtonContainer.classList.add("social-notification-container");
+        toolbarButtonContainer.setAttribute("id", toolbarButtonContainerId);
+
+        toolbarButton = document.createElement("toolbarbutton");
+        toolbarButton.classList.add("toolbarbutton-1");
+        toolbarButton.setAttribute("id", toolbarButtonId);
+        toolbarButton.setAttribute("notificationFrameId", notificationFrameId);
+        toolbarButton.addEventListener("mousedown", function (event) {
+          if (event.button == 0)
+            SocialToolbar.showAmbientPopup(toolbarButton);
+        });
+
+        toolbarButtonContainer.appendChild(toolbarButton);
+        toolbarButtons.appendChild(toolbarButtonContainer);
       }
 
-      let labelValue = icon.counter || "";
-      // Only update the value attribute if it has changed to reduce layout changes.
-      if (!label.hasAttribute("value") || label.getAttribute("value") != labelValue)
-        label.setAttribute("value", labelValue);
+      toolbarButton.style.listStyleImage = "url(" + icon.iconURL + ")";
+      toolbarButton.setAttribute("label", icon.label);
+      toolbarButton.setAttribute("tooltiptext", icon.label);
 
-      image.style.listStyleImage = "url(" + icon.iconURL + ")";
+      let badge = icon.counter || "";
+      if (toolbarButton.getAttribute("badge") != badge)
+        toolbarButton.setAttribute("badge", badge);
     }
-    iconBox.appendChild(iconContainers);
+    let socialToolbarItem = document.getElementById("social-toolbar-item");
+    socialToolbarItem.appendChild(toolbarButtons);
 
     for (let frame of createdFrames) {
       if (frame.docShell) {
@@ -923,12 +908,12 @@ var SocialToolbar = {
     }
   },
 
-  showAmbientPopup: function SocialToolbar_showAmbientPopup(aToolbarButtonBox) {
+  showAmbientPopup: function SocialToolbar_showAmbientPopup(aToolbarButton) {
     // Hide any other social panels that may be open.
     SocialFlyout.panel.hidePopup();
 
     let panel = document.getElementById("social-notification-panel");
-    let notificationFrameId = aToolbarButtonBox.getAttribute("notificationFrameId");
+    let notificationFrameId = aToolbarButton.getAttribute("notificationFrameId");
     let notificationFrame = document.getElementById(notificationFrameId);
 
     let wasAlive = SharedFrame.isGroupAlive(notificationFrameId);
@@ -951,7 +936,8 @@ var SocialToolbar = {
     let dynamicResizer = this._dynamicResizer;
     panel.addEventListener("popuphidden", function onpopuphiding() {
       panel.removeEventListener("popuphidden", onpopuphiding);
-      aToolbarButtonBox.removeAttribute("open");
+      aToolbarButton.removeAttribute("open");
+      aToolbarButton.parentNode.removeAttribute("open");
       dynamicResizer.stop();
       notificationFrame.docShell.isActive = false;
       dispatchPanelEvent("socialFrameHide");
@@ -959,7 +945,13 @@ var SocialToolbar = {
 
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
-      aToolbarButtonBox.setAttribute("open", "true");
+      // This attribute is needed on both the button and the
+      // containing toolbaritem since the buttons on OS X have
+      // moz-appearance:none, while their container gets
+      // moz-appearance:toolbarbutton due to the way that toolbar buttons
+      // get combined on OS X.
+      aToolbarButton.setAttribute("open", "true");
+      aToolbarButton.parentNode.setAttribute("open", "true");
       notificationFrame.docShell.isActive = true;
       notificationFrame.docShell.isAppTab = true;
       if (notificationFrame.contentDocument.readyState == "complete" && wasAlive) {
@@ -977,9 +969,8 @@ var SocialToolbar = {
       }
     });
 
-    let imageId = aToolbarButtonBox.getAttribute("id") + "-image";
-    let toolbarButtonImage = document.getElementById(imageId);
-    panel.openPopup(toolbarButtonImage, "bottomcenter topright", 0, 0, false, false);
+    let toolbarButtonIcon = document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-icon");
+    panel.openPopup(toolbarButtonIcon, "bottomcenter topright", 0, 0, false, false);
   },
 
   setPanelErrorMessage: function SocialToolbar_setPanelErrorMessage(aNotificationFrame) {
