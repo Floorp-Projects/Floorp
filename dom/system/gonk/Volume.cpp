@@ -52,7 +52,7 @@ static int32_t sMountGeneration = 0;
 
 // We don't get media inserted/removed events at startup. So we
 // assume it's present, and we'll be told that it's missing.
-Volume::Volume(const nsCSubstring &aName)
+Volume::Volume(const nsCSubstring& aName)
   : mMediaPresent(true),
     mState(nsIVolume::STATE_INIT),
     mName(aName),
@@ -125,7 +125,7 @@ Volume::SetState(Volume::STATE aNewState)
 }
 
 void
-Volume::SetMountPoint(const nsCSubstring &aMountPoint)
+Volume::SetMountPoint(const nsCSubstring& aMountPoint)
 {
   if (mMountPoint.Equals(aMountPoint)) {
     return;
@@ -135,38 +135,38 @@ Volume::SetMountPoint(const nsCSubstring &aMountPoint)
 }
 
 void
-Volume::StartMount(VolumeResponseCallback *aCallback)
+Volume::StartMount(VolumeResponseCallback* aCallback)
 {
   StartCommand(new VolumeActionCommand(this, "mount", "", aCallback));
 }
 
 void
-Volume::StartUnmount(VolumeResponseCallback *aCallback)
+Volume::StartUnmount(VolumeResponseCallback* aCallback)
 {
   StartCommand(new VolumeActionCommand(this, "unmount", "force", aCallback));
 }
 
 void
-Volume::StartShare(VolumeResponseCallback *aCallback)
+Volume::StartShare(VolumeResponseCallback* aCallback)
 {
   StartCommand(new VolumeActionCommand(this, "share", "ums", aCallback));
 }
 
 void
-Volume::StartUnshare(VolumeResponseCallback *aCallback)
+Volume::StartUnshare(VolumeResponseCallback* aCallback)
 {
   StartCommand(new VolumeActionCommand(this, "unshare", "ums", aCallback));
 }
 
 void
-Volume::StartCommand(VolumeCommand *aCommand)
+Volume::StartCommand(VolumeCommand* aCommand)
 {
   VolumeManager::PostCommand(aCommand);
 }
 
 //static
 void
-Volume::RegisterObserver(Volume::EventObserver *aObserver)
+Volume::RegisterObserver(Volume::EventObserver* aObserver)
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
@@ -181,7 +181,7 @@ Volume::RegisterObserver(Volume::EventObserver *aObserver)
 
 //static
 void
-Volume::UnregisterObserver(Volume::EventObserver *aObserver)
+Volume::UnregisterObserver(Volume::EventObserver* aObserver)
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
@@ -190,9 +190,9 @@ Volume::UnregisterObserver(Volume::EventObserver *aObserver)
 
 //static
 void
-Volume::UpdateMountLock(const nsACString &aVolumeName,
-                        const int32_t &aMountGeneration,
-                        const bool &aMountLocked)
+Volume::UpdateMountLock(const nsACString& aVolumeName,
+                        const int32_t& aMountGeneration,
+                        const bool& aMountLocked)
 {
   RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
   if (!vol || (vol->mMountGeneration != aMountGeneration)) {
@@ -206,7 +206,7 @@ Volume::UpdateMountLock(const nsACString &aVolumeName,
 }
 
 void
-Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer &aTokenizer)
+Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer)
 {
   // The volume name will have already been parsed, and the tokenizer will point
   // to the token after the volume name

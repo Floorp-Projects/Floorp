@@ -108,13 +108,13 @@ nsVolumeService::~nsVolumeService()
 }
 
 // Callback for nsIDOMMozWakeLockListener
-NS_IMETHODIMP nsVolumeService::Callback(const nsAString &aTopic, const nsAString &aState)
+NS_IMETHODIMP nsVolumeService::Callback(const nsAString& aTopic, const nsAString& aState)
 {
   CheckMountLock(aTopic, aState);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolumeService::BroadcastVolume(const nsAString &aVolName)
+NS_IMETHODIMP nsVolumeService::BroadcastVolume(const nsAString& aVolName)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   nsRefPtr<nsVolume> vol = FindVolumeByName(aVolName);
@@ -133,7 +133,7 @@ NS_IMETHODIMP nsVolumeService::BroadcastVolume(const nsAString &aVolName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString &aVolName, nsIVolume **aResult)
+NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString& aVolName, nsIVolume **aResult)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   nsRefPtr<nsVolume> vol = FindVolumeByName(aVolName);
@@ -147,7 +147,7 @@ NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString &aVolName, nsIVol
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolumeService::GetVolumeByPath(const nsAString &aPath, nsIVolume **aResult)
+NS_IMETHODIMP nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   nsCString utf8Path = NS_ConvertUTF16toUTF8(aPath);
@@ -190,7 +190,7 @@ NS_IMETHODIMP nsVolumeService::GetVolumeByPath(const nsAString &aPath, nsIVolume
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolumeService::CreateMountLock(const nsAString &aVolumeName, nsIVolumeMountLock **aResult)
+NS_IMETHODIMP nsVolumeService::CreateMountLock(const nsAString& aVolumeName, nsIVolumeMountLock **aResult)
 {
   nsRefPtr<nsVolumeMountLock> mountLock = nsVolumeMountLock::Create(aVolumeName);
   if (!mountLock) {
@@ -200,8 +200,8 @@ NS_IMETHODIMP nsVolumeService::CreateMountLock(const nsAString &aVolumeName, nsI
   return NS_OK;
 }
 
-void nsVolumeService::CheckMountLock(const nsAString &aMountLockName,
-                                     const nsAString &aMountLockState)
+void nsVolumeService::CheckMountLock(const nsAString& aMountLockName,
+                                     const nsAString& aMountLockState)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
@@ -219,7 +219,7 @@ void nsVolumeService::CheckMountLock(const nsAString &aMountLockName,
   }
 }
 
-already_AddRefed<nsVolume> nsVolumeService::FindVolumeByName(const nsAString &aName)
+already_AddRefed<nsVolume> nsVolumeService::FindVolumeByName(const nsAString& aName)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
@@ -236,7 +236,7 @@ already_AddRefed<nsVolume> nsVolumeService::FindVolumeByName(const nsAString &aN
 }
 
 //static
-already_AddRefed<nsVolume> nsVolumeService::FindAddVolumeByName(const nsAString &aName)
+already_AddRefed<nsVolume> nsVolumeService::FindAddVolumeByName(const nsAString& aName)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
@@ -252,7 +252,7 @@ already_AddRefed<nsVolume> nsVolumeService::FindAddVolumeByName(const nsAString 
   return vol.forget();
 }
 
-void nsVolumeService::UpdateVolume(const nsVolume *aVolume)
+void nsVolumeService::UpdateVolume(const nsVolume* aVolume)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
@@ -278,7 +278,7 @@ void nsVolumeService::UpdateVolume(const nsVolume *aVolume)
 class UpdateVolumeRunnable : public nsRunnable
 {
 public:
-  UpdateVolumeRunnable(nsVolumeService *aVolumeService, const Volume *aVolume)
+  UpdateVolumeRunnable(nsVolumeService* aVolumeService, const Volume* aVolume)
     : mVolumeService(aVolumeService),
       mVolume(new nsVolume(aVolume))
   {
@@ -303,7 +303,7 @@ private:
   nsRefPtr<nsVolume>        mVolume;
 };
 
-void nsVolumeService::UpdateVolumeIOThread(const Volume *aVolume)
+void nsVolumeService::UpdateVolumeIOThread(const Volume* aVolume)
 {
   DBG("UpdateVolumeIOThread: Volume '%s' state %s mount '%s' gen %d locked %d",
       aVolume->NameStr(), aVolume->StateStr(), aVolume->MountPoint().get(),

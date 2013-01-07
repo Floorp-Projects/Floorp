@@ -31,12 +31,12 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIVOLUMEMOUNTLOCK
 
-  static already_AddRefed<nsVolumeMountLock> Create(const nsAString &volumeName);
+  static already_AddRefed<nsVolumeMountLock> Create(const nsAString& volumeName);
 
-  const nsString &VolumeName() const  { return mVolumeName; }
+  const nsString& VolumeName() const  { return mVolumeName; }
 
 private:
-  nsVolumeMountLock(const nsAString &aVolumeName);
+  nsVolumeMountLock(const nsAString& aVolumeName);
   ~nsVolumeMountLock();
 
   nsresult Init();
