@@ -30,7 +30,9 @@
 #include "nsContentUtils.h"
 #include "nsEmbedCID.h"
 #include "nsEventListenerManager.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 #include "mozilla/dom/Element.h"
 #include "nsIAppsService.h"
 #include "nsIBaseWindow.h"
