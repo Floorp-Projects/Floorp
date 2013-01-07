@@ -2557,6 +2557,12 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
 void
 nsFrameLoader::ResetPermissionManagerStatus()
 {
+  // The resetting of the permissions status can run only
+  // in the main process.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return;
+  }
+
   // Finding the new app Id:
   // . first we check if the owner is an app frame
   // . second, we check if the owner is a browser frame
