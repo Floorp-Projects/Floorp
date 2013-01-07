@@ -40,7 +40,6 @@ private:
   bool                    mLinkUp;
   bool                    mNetworkManagerActive;
   bool                    mOK;
-  bool                    mManageIOService;
 };
 
 #endif /*NSNETWORKMANAGERLISTENER_H_*/

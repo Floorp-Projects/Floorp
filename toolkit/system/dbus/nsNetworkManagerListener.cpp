@@ -28,7 +28,7 @@
 
 nsNetworkManagerListener::nsNetworkManagerListener() :
     mLinkUp(true), mNetworkManagerActive(false),
-    mOK(true), mManageIOService(true)
+    mOK(true)
 {
 }
 
