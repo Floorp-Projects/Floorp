@@ -486,6 +486,13 @@ nsresult
 nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
                                   nsSVGElement *aSVGElement)
 {
+  *aResult = ToDOMAnimatedLength(aSVGElement).get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+nsSVGLength2::ToDOMAnimatedLength(nsSVGElement* aSVGElement)
+{
   nsRefPtr<DOMAnimatedLength> domAnimatedLength =
     sSVGAnimatedLengthTearoffTable.GetTearoff(this);
   if (!domAnimatedLength) {
@@ -493,8 +500,7 @@ nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
     sSVGAnimatedLengthTearoffTable.AddTearoff(this, domAnimatedLength);
   }
 
-  domAnimatedLength.forget(aResult);
-  return NS_OK;
+  return domAnimatedLength.forget();
 }
 
 nsSVGLength2::DOMAnimatedLength::~DOMAnimatedLength()

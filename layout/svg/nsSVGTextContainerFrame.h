@@ -22,7 +22,7 @@ class nsSVGGlyphFrame;
 class nsSVGTextFrame;
 
 namespace mozilla {
-class DOMSVGPoint;
+class nsISVGPoint;
 }
 
 class nsSVGTextContainerFrame : public nsSVGDisplayContainerFrame
@@ -70,7 +70,7 @@ public:
   /*
    * Get the character at the specified position
    */
-  virtual int32_t GetCharNumAtPosition(mozilla::DOMSVGPoint *point);
+  virtual int32_t GetCharNumAtPosition(mozilla::nsISVGPoint *point);
   void GetEffectiveXY(nsTArray<float> &aX, nsTArray<float> &aY);
   void GetEffectiveDxDy(nsTArray<float> &aDx, nsTArray<float> &aDy);
   void GetEffectiveRotate(nsTArray<float> &aRotate);

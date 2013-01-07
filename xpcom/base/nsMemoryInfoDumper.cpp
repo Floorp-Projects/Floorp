@@ -561,6 +561,12 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   rv = writer->Init(mrTmpFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Clear DMD's reportedness state before running the reporters, to avoid
+  // spurious twice-reported warnings.
+#ifdef MOZ_DMD
+  dmd::ClearReports();
+#endif
+
   // Dump the memory reports to the file.
 
   // Increment this number if the format changes.
@@ -656,7 +662,7 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
 
   DMDWriteState state(dmdWriter);
   dmd::Writer w(DMDWrite, &state);
-  mozilla::dmd::Dump(w);
+  dmd::Dump(w);
 
   rv = dmdWriter->Finish();
   NS_ENSURE_SUCCESS(rv, rv);

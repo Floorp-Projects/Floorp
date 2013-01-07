@@ -7,10 +7,14 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.OnAccountsUpdateListener;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
@@ -34,6 +38,9 @@ public class Tabs implements GeckoEventListener {
 
     // Keeps track of how much has happened since we last updated our persistent tab store.
     private volatile int mScore = 0;
+
+    private AccountManager mAccountManager;
+    private OnAccountsUpdateListener mAccountListener = null;
 
     public static final int LOADURL_NONE = 0;
     public static final int LOADURL_NEW_TAB = 1;
@@ -69,6 +76,21 @@ public class Tabs implements GeckoEventListener {
 
     public void attachToActivity(GeckoApp activity) {
         mActivity = activity;
+        mAccountManager = AccountManager.get(mActivity);
+
+        // The listener will run on the background thread (see 2nd argument)
+        mAccountManager.addOnAccountsUpdatedListener(mAccountListener = new OnAccountsUpdateListener() {
+            public void onAccountsUpdated(Account[] accounts) {
+                persistAllTabs();
+            }
+        }, GeckoAppShell.getHandler(), false);
+    }
+
+    public void detachFromActivity(GeckoApp activity) {
+        if (mAccountListener != null) {
+            mAccountManager.removeOnAccountsUpdatedListener(mAccountListener);
+            mAccountListener = null;
+        }
     }
 
     public int getCount() {
@@ -408,7 +430,9 @@ public class Tabs implements GeckoEventListener {
         final Iterable<Tab> tabs = getTabsInOrder();
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
+                boolean syncIsSetup = SyncAccounts.syncAccountsExist(mActivity);
+                if (syncIsSetup)
+                    TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
             }
         });
     }

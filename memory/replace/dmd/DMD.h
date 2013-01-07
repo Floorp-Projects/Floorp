@@ -39,6 +39,15 @@ private:
   void*     mWriteState;
 };
 
+// Clears existing reportedness data from any prior runs of the memory
+// reporters.  The following sequence should be used.
+// - ClearReports()
+// - run the memory reporters
+// - Dump()
+// This sequence avoids spurious twice-reported warnings.
+MOZ_EXPORT void
+ClearReports();
+
 // Checks which heap blocks have been reported, and dumps a human-readable
 // summary (via |aWrite|).  If |aWrite| is nullptr it will dump to stderr.
 // Beware:  this output may have very long lines.

@@ -96,16 +96,31 @@ webidl_files = \
   Rect.webidl \
   RGBColor.webidl \
   Screen.webidl \
+  SVGAltGlyphElement.webidl \
   SVGAngle.webidl \
   SVGAnimatedAngle.webidl \
   SVGAnimatedBoolean.webidl \
   SVGAnimatedLengthList.webidl \
   SVGAnimatedNumberList.webidl \
+  SVGAnimatedPoints.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGAnimateElement.webidl \
+  SVGAnimateMotionElement.webidl \
+  SVGAnimateTransformElement.webidl \
+  SVGAnimationElement.webidl \
+  SVGCircleElement.webidl \
+  SVGDefsElement.webidl \
   SVGDescElement.webidl \
   SVGElement.webidl \
+  SVGEllipseElement.webidl \
+  SVGForeignObjectElement.webidl \
+  SVGGElement.webidl \
+  SVGGraphicsElement.webidl \
+  SVGImageElement.webidl \
   SVGLengthList.webidl \
+  SVGLineElement.webidl \
+  SVGLocatableElement.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
   SVGMPathElement.webidl \
@@ -114,13 +129,25 @@ webidl_files = \
   SVGPathSegList.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
+  SVGPolygonElement.webidl \
+  SVGPolylineElement.webidl \
   SVGPreserveAspectRatio.webidl \
+  SVGRectElement.webidl \
   SVGScriptElement.webidl \
+  SVGSetElement.webidl \
   SVGStopElement.webidl \
   SVGStyleElement.webidl \
+  SVGSwitchElement.webidl \
+  SVGTests.webidl \
+  SVGTextContentElement.webidl \
+  SVGTextElement.webidl \
+  SVGTextPathElement.webidl \
+  SVGTextPositioningElement.webidl \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
+  SVGTransformableElement.webidl \
   SVGTransformList.webidl \
+  SVGTSpanElement.webidl \
   SVGURIReference.webidl \
   Text.webidl \
   TextDecoder.webidl \
