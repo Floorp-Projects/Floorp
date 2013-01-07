@@ -2348,18 +2348,17 @@ this.DOMApplicationRegistry = {
 #elifdef XP_UNIX
     let env = Cc["@mozilla.org/process/environment;1"]
                 .getService(Ci.nsIEnvironment);
-    let xdg_data_home_env = env.get("XDG_DATA_HOME");
+    let xdg_data_home_env;
+    try {
+      xdg_data_home_env = env.get("XDG_DATA_HOME");
+    } catch(ex) {
+    }
 
     let desktopINI;
-    if (xdg_data_home_env != "") {
-      desktopINI = Cc["@mozilla.org/file/local;1"]
-                     .createInstance(Ci.nsIFile);
-      desktopINI.initWithPath(xdg_data_home_env);
-    }
-    else {
-      desktopINI = Services.dirsvc.get("Home", Ci.nsIFile);
-      desktopINI.append(".local");
-      desktopINI.append("share");
+    if (xdg_data_home_env) {
+      desktopINI = new FileUtils.File(xdg_data_home_env);
+    } else {
+      desktopINI = FileUtils.getFile("Home", [".local", "share"]);
     }
     desktopINI.append("applications");
 
