@@ -593,9 +593,6 @@
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/defaults/pref/services-sync.js
 #endif
-#ifdef MOZ_SERVICES_HEALTHREPORT
-@BINPATH@/defaults/pref/healthreport-prefs.js
-#endif
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 
