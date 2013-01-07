@@ -557,12 +557,12 @@ static void NotifyDataChannel_m(nsRefPtr<nsIDOMDataChannel> aChannel,
 #endif
 
 void
-PeerConnectionImpl::NotifyDataChannel(mozilla::DataChannel *aChannel)
+PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aChannel)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aChannel.get());
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": channel: " << static_cast<void*>(aChannel));
+  CSFLogDebugS(logTag, __FUNCTION__ << ": channel: " << static_cast<void*>(aChannel.get()));
 
 #ifdef MOZILLA_INTERNAL_API
    nsCOMPtr<nsIDOMDataChannel> domchannel;
