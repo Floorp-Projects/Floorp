@@ -126,7 +126,7 @@ GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
   return NS_OK;
 }
 
-class AppUninstallObserver MOZ_FINAL : public nsIObserver {
+class AppClearDataObserver MOZ_FINAL : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
@@ -134,24 +134,29 @@ public:
   NS_IMETHODIMP
   Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
   {
-    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-uninstall"));
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-clear-data"));
 
-    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
-    nsCOMPtr<mozIApplication> app;
-
-    appsService->GetAppFromObserverMessage(nsAutoString(data), getter_AddRefs(app));
-    NS_ENSURE_TRUE(app, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+      do_QueryInterface(aSubject);
+    if (!params) {
+      NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
+      return NS_ERROR_UNEXPECTED;
+    }
 
     uint32_t appId;
-    app->GetLocalId(&appId);
-    MOZ_ASSERT(appId != nsIScriptSecurityManager::NO_APP_ID);
+    nsresult rv = params->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool browserOnly;
+    rv = params->GetBrowserOnly(&browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPermissionManager> permManager = do_GetService("@mozilla.org/permissionmanager;1");
-    return permManager->RemovePermissionsForApp(appId);
+    return permManager->RemovePermissionsForApp(appId, browserOnly);
   }
 };
 
-NS_IMPL_ISUPPORTS1(AppUninstallObserver, nsIObserver)
+NS_IMPL_ISUPPORTS1(AppClearDataObserver, nsIObserver)
 
 } // anonymous namespace
 
@@ -271,10 +276,10 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
 }
 
 /* static */ void
-nsPermissionManager::AppUninstallObserverInit()
+nsPermissionManager::AppClearDataObserverInit()
 {
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  observerService->AddObserver(new AppUninstallObserver(), "webapps-uninstall", /* holdsWeak= */ false);
+  observerService->AddObserver(new AppClearDataObserver(), "webapps-clear-data", /* holdsWeak= */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1156,7 +1161,7 @@ nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey
 }
 
 NS_IMETHODIMP
-nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
+nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
 {
   ENSURE_NOT_CHILD_PROCESS;
   NS_ENSURE_ARG(aAppId != nsIScriptSecurityManager::NO_APP_ID);
@@ -1172,6 +1177,10 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
   nsAutoCString sql;
   sql.AppendLiteral("DELETE FROM moz_hosts WHERE appId=");
   sql.AppendInt(aAppId);
+
+  if (aBrowserOnly) {
+    sql.AppendLiteral(" AND isInBrowserElement=1");
+  }
 
   nsCOMPtr<mozIStorageAsyncStatement> removeStmt;
   nsresult rv = mDBConn->CreateAsyncStatement(sql, getter_AddRefs(removeStmt));
