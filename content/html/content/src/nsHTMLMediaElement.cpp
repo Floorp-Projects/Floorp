@@ -459,6 +459,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsHTMLMediaElement)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 // nsIDOMHTMLMediaElement
@@ -3598,6 +3599,8 @@ void nsHTMLMediaElement::UpdateAudioChannelPlayingState()
 /* void canPlayChanged (in boolean canPlay); */
 NS_IMETHODIMP nsHTMLMediaElement::CanPlayChanged(bool canPlay)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   UpdateChannelMuteState(canPlay);
   return NS_OK;
 }
