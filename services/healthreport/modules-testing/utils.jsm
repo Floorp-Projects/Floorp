@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [
   "updateAppInfo",
   "makeFakeAppDir",
   "createFakeCrash",
+  "InspectedHealthReporter",
 ];
 
 
@@ -19,6 +20,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services-common/utils.js");
+Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
 
 
 let APP_INFO = {
@@ -206,5 +208,52 @@ this.createFakeCrash = function (submitted=false, date=new Date()) {
   dump("Created fake crash: " + id + "\n");
 
   return id;
+};
+
+
+/**
+ * A HealthReporter that is probed with various callbacks and counters.
+ *
+ * The purpose of this type is to aid testing of startup and shutdown.
+ */
+this.InspectedHealthReporter = function (branch) {
+  HealthReporter.call(this, branch);
+
+  this.onStorageCreated = null;
+  this.onCollectorInitialized = null;
+  this.collectorShutdownCount = 0;
+  this.storageCloseCount = 0;
+}
+
+InspectedHealthReporter.prototype = {
+  __proto__: HealthReporter.prototype,
+
+  _onStorageCreated: function (storage) {
+    if (this.onStorageCreated) {
+      this.onStorageCreated(storage);
+    }
+
+    return HealthReporter.prototype._onStorageCreated.call(this, storage);
+  },
+
+  _onCollectorInitialized: function () {
+    if (this.onCollectorInitialized) {
+      this.onCollectorInitialized();
+    }
+
+    return HealthReporter.prototype._onCollectorInitialized.call(this);
+  },
+
+  _onCollectorShutdown: function () {
+    this.collectorShutdownCount++;
+
+    return HealthReporter.prototype._onCollectorShutdown.call(this);
+  },
+
+  _onStorageClose: function () {
+    this.storageCloseCount++;
+
+    return HealthReporter.prototype._onStorageClose.call(this);
+  },
 };
 

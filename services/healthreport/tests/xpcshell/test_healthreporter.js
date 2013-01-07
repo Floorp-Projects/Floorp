@@ -14,6 +14,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://testing-common/services-common/bagheeraserver.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
+Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 
 
 const SERVER_HOSTNAME = "localhost";
@@ -32,14 +33,19 @@ function defineNow(policy, now) {
   });
 }
 
-function getReporter(name, uri=SERVER_URI) {
+function getJustReporter(name, uri=SERVER_URI, inspected=false) {
   let branch = "healthreport.testing. " + name + ".";
 
   let prefs = new Preferences(branch);
   prefs.set("documentServerURI", uri);
   prefs.set("dbName", name);
 
-  let reporter = new HealthReporter(branch);
+  let type = inspected ? InspectedHealthReporter : HealthReporter;
+  return new type(branch);
+}
+
+function getReporter(name, uri, inspected) {
+  let reporter = getJustReporter(name, uri, inspected);
   return reporter.onInit();
 }
 
@@ -91,6 +97,44 @@ add_task(function test_constructor() {
   }
 
   reporter._shutdown();
+});
+
+add_task(function test_shutdown_normal() {
+  let reporter = yield getReporter("shutdown_normal");
+
+  // We can't send "quit-application" notification because the xpcshell runner
+  // will shut down!
+  reporter._initiateShutdown();
+  reporter._waitForShutdown();
+});
+
+add_task(function test_shutdown_storage_in_progress() {
+  let reporter = yield getJustReporter("shutdown_storage_in_progress", SERVER_URI, true);
+
+  reporter.onStorageCreated = function () {
+    print("Faking shutdown during storage initialization.");
+    reporter._initiateShutdown();
+  };
+
+  reporter._waitForShutdown();
+  do_check_eq(reporter.collectorShutdownCount, 0);
+  do_check_eq(reporter.storageCloseCount, 1);
+});
+
+// Ensure that a shutdown triggered while collector is initializing results in
+// shutdown and storage closure.
+add_task(function test_shutdown_collector_in_progress() {
+  let reporter = yield getJustReporter("shutdown_collect_in_progress", SERVER_URI, true);
+
+  reporter.onCollectorInitialized = function () {
+    print("Faking shutdown during collector initialization.");
+    reporter._initiateShutdown();
+  };
+
+  // This will hang if shutdown logic is busted.
+  reporter._waitForShutdown();
+  do_check_eq(reporter.collectorShutdownCount, 1);
+  do_check_eq(reporter.storageCloseCount, 1);
 });
 
 add_task(function test_register_providers_from_category_manager() {
