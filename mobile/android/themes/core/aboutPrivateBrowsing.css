@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 14px;
+}
+
+body.normal  .showPrivate,
+body.private .showNormal {
+  display: none;
+}
+
+div.contentSection {
+  width: 92%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+body.private {
+  color: #9ba3ab;
+  background-image: url("chrome://browser/skin/images/privatebrowsing-bg-textured.png");
+}
+
+body.normal {
+  color: #222;
+  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 100;
+  text-align: center;
+  margin: 0;
+}
+
+body.private h1 {
+  color: #d06bff;
+}
+
+img {
+  display: block;
+  width: 125px;
+  height: 125px;
+  margin: -30px auto;
+}
+
+@media all and (max-height: 399px) {
+  body {
+    margin-top: 25px;
+  }
+}
+
+@media all and (min-height: 400px) and (max-height: 599px) {
+  body {
+    margin-top: 50px;
+  }
+}
+
+@media all and (min-height: 600px) and (max-height: 799px) {
+  body {
+    margin-top: 150px;
+  }
+}
+
+@media all and (min-height: 800px) {
+  body {
+    margin-top: 250px;
+  }
+}
