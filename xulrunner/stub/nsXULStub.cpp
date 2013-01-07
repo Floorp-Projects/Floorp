@@ -485,7 +485,5 @@ main(int argc, char **argv)
 
   NS_LogTerm();
 
-  XPCOMGlueShutdown();
-
   return retval;
 }

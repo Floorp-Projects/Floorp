@@ -109,15 +109,6 @@ XPCOMGlueLoadDependentLibs(const char *xpcomDir, DependentLibsCallback cb)
     fclose(flist);
 }
 
-extern "C"
-nsresult XPCOMGlueShutdown()
-{
-    XPCOMGlueUnload();
-    
-    memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
-    return NS_OK;
-}
-
 XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager* *result, 
               nsIFile* binDirectory,
