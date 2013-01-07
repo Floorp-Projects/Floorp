@@ -38,6 +38,11 @@ NS_VolumeStateStr(int32_t aState)
   return "???";
 }
 
+// While nsVolumes can only be used on the main thread, in the
+// UpdateVolumeRunnable constructor (which is called from IOThread) we
+// allocate an nsVolume which is then passed to MainThread. Since we
+// have a situation where we allocate on one thread and free on another
+// we use a thread safe AddRef implementation.
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsVolume, nsIVolume)
 
 nsVolume::nsVolume(const Volume* aVolume)
@@ -106,6 +111,8 @@ nsVolume::LogState() const
 
 void nsVolume::Set(const nsVolume* aVolume)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mName = aVolume->mName;
   mMountPoint = aVolume->mMountPoint;
   mState = aVolume->mState;
@@ -139,6 +146,8 @@ void nsVolume::Set(const nsVolume* aVolume)
 void
 nsVolume::UpdateMountLock(const nsAString& aMountLockState)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // There are 3 states, unlocked, locked-background, and locked-foreground
   // I figured it was easier to use negtive logic and compare for unlocked.
   UpdateMountLock(!aMountLockState.EqualsLiteral("unlocked"));
@@ -147,6 +156,8 @@ nsVolume::UpdateMountLock(const nsAString& aMountLockState)
 void
 nsVolume::UpdateMountLock(bool aMountLocked)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (aMountLocked == mMountLocked) {
     return;
   }
