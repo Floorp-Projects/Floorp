@@ -988,6 +988,36 @@ Cell::isAligned() const
 }
 #endif
 
+inline bool
+InFreeList(ArenaHeader *aheader, void *thing)
+{
+    if (!aheader->hasFreeThings())
+        return false;
+
+    FreeSpan firstSpan(aheader->getFirstFreeSpan());
+    uintptr_t addr = reinterpret_cast<uintptr_t>(thing);
+
+    for (const FreeSpan *span = &firstSpan;;) {
+        /* If the thing comes before the current span, it's not free. */
+        if (addr < span->first)
+            return false;
+
+        /*
+         * If we find it inside the span, it's dead. We use here "<=" and not
+         * "<" even for the last span as we know that thing is inside the
+         * arena. Thus, for the last span thing < span->end.
+         */
+        if (addr <= span->last)
+            return true;
+
+        /*
+         * The last possible empty span is an the end of the arena. Here
+         * span->end < thing < thingsEnd and so we must have more spans.
+         */
+        span = span->nextSpan();
+    }
+}
+
 } /* namespace gc */
 } /* namespace js */
 

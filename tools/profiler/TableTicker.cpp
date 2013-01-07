@@ -796,10 +796,7 @@ static
 void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 {
   PCArray* array = static_cast<PCArray*>(aClosure);
-  if (array->count >= array->size) {
-    // too many frames, ignore
-    return;
-  }
+  MOZ_ASSERT(array->count < array->size);
   array->sp_array[array->count] = aSP;
   array->array[array->count] = aPC;
   array->count++;
@@ -828,6 +825,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   platformData = aSample->context;
 #endif
 
+  uint32_t maxFrames = array.size - array.count;
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(platform_data());
   void *stackEnd = reinterpret_cast<void*>(-1);
@@ -835,9 +833,12 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
   nsresult rv = NS_OK;
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)
-    rv = FramePointerStackWalk(StackWalkCallback, 0, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
+    rv = FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0,
+                               maxFrames, &array,
+                               reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
-  nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread, platformData);
+  nsresult rv = NS_StackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
+                             &array, thread, platformData);
 #endif
   if (NS_SUCCEEDED(rv)) {
     aProfile.addTag(ProfileEntry('s', "(root)"));

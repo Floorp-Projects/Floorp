@@ -120,6 +120,12 @@
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'defines' : [
+          'WEBRTC_GONK',
+        ],
+      }],
+  
       ['build_with_chromium==1', {
         'defines': [
           # Changes settings for Chromium build.
@@ -173,6 +179,13 @@
         ],
       }],
       ['OS=="linux"', {
+        'conditions': [
+          ['moz_have_clock_monotonic==1', {
+            'defines': [
+              'WEBRTC_CLOCK_TYPE_REALTIME',
+            ],
+          }],
+        ],
         'defines': [
           'WEBRTC_LINUX',
           'WEBRTC_THREAD_RR',

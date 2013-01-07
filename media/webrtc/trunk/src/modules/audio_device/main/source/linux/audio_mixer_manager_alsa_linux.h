@@ -16,7 +16,11 @@
 #include "critical_section_wrapper.h"
 #include "alsasymboltable_linux.h"
 
+#if defined (WEBRTC_GONK)
+#include <tinyalsa/asoundlib.h>
+#else
 #include <alsa/asoundlib.h>
+#endif
 
 namespace webrtc
 {
