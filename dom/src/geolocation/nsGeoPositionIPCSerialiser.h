@@ -9,15 +9,14 @@
 #include "nsGeoPosition.h"
 #include "nsIDOMGeoPosition.h"
 
-typedef nsGeoPositionCoords       *GeoPositionCoords;
-typedef nsIDOMGeoPosition         *GeoPosition;
+typedef nsIDOMGeoPosition* GeoPosition;
 
 namespace IPC {
 
 template <>
-struct ParamTraits<GeoPositionCoords>
+struct ParamTraits<nsIDOMGeoPositionCoords*>
 {
-  typedef GeoPositionCoords paramType;
+  typedef nsIDOMGeoPositionCoords* paramType;
 
   // Function to serialize a geoposition
   static void Write(Message *aMsg, const paramType& aParam)
@@ -96,9 +95,9 @@ struct ParamTraits<GeoPositionCoords>
 };
 
 template <>
-struct ParamTraits<GeoPosition>
+struct ParamTraits<nsIDOMGeoPosition*>
 {
-  typedef GeoPosition paramType;
+  typedef nsIDOMGeoPosition* paramType;
 
   // Function to serialize a geoposition
   static void Write(Message *aMsg, const paramType& aParam)
@@ -114,8 +113,7 @@ struct ParamTraits<GeoPosition>
 
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aParam->GetCoords(getter_AddRefs(coords));
-    GeoPositionCoords simpleCoords = static_cast<GeoPositionCoords>(coords.get());
-    WriteParam(aMsg, simpleCoords);
+    WriteParam(aMsg, coords.get());
   }
 
   // Function to de-serialize a geoposition
@@ -131,16 +129,14 @@ struct ParamTraits<GeoPosition>
     }
 
     DOMTimeStamp timeStamp;
-    GeoPositionCoords coords = nullptr;
+    nsIDOMGeoPositionCoords* coords = nullptr;
 
     // It's not important to us where it fails, but rather if it fails
-    if (!(   ReadParam(aMsg, aIter, &timeStamp)
-          && ReadParam(aMsg, aIter, &coords   ))) {
-          // note it is fine to do "delete nullptr" in case coords hasn't
-          // been allocated
-          delete coords;
-          return false;
-      }
+    if (!ReadParam(aMsg, aIter, &timeStamp) ||
+        !ReadParam(aMsg, aIter, &coords)) {
+      nsCOMPtr<nsIDOMGeoPositionCoords> tmpcoords = coords;
+      return false;
+    }
 
     *aResult = new nsGeoPosition(coords, timeStamp);
 
