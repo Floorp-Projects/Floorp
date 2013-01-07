@@ -8853,32 +8853,29 @@ ResetFullScreen(nsIDocument* aDocument, void* aData)
   return true;
 }
 
-NS_IMETHODIMP
-nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
+already_AddRefed<nsDOMCaretPosition>
+nsIDocument::CaretPositionFromPoint(float aX, float aY)
 {
-  NS_ENSURE_ARG_POINTER(aCaretPos);
-  *aCaretPos = nullptr;
-
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
   nsPoint pt(x, y);
 
   nsIPresShell *ps = GetShell();
   if (!ps) {
-    return NS_OK;
+    return nullptr;
   }
 
   nsIFrame *rootFrame = ps->GetRootFrame();
 
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame) {
-    return NS_OK; // return null to premature XUL callers as a reminder to wait
+    return nullptr;
   }
 
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, true,
                                                       false);
   if (!ptFrame) {
-    return NS_OK;
+    return nullptr;
   }
 
   // GetContentOffsetsFromPoint requires frame-relative coordinates, so we need
@@ -8906,8 +8903,15 @@ nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
     }
   }
 
-  *aCaretPos = new nsDOMCaretPosition(node, offset);
-  NS_ADDREF(*aCaretPos);
+  nsRefPtr<nsDOMCaretPosition> aCaretPos = new nsDOMCaretPosition(node, offset);
+  return aCaretPos.forget();
+}
+
+NS_IMETHODIMP
+nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
+{
+  NS_ENSURE_ARG_POINTER(aCaretPos);
+  *aCaretPos = nsIDocument::CaretPositionFromPoint(aX, aY).get();
   return NS_OK;
 }
 
