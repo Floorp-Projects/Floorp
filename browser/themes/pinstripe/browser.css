@@ -3002,11 +3002,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-#notification-popup .text-link, .panel-arrowcontent .text-link {
-  color: #0073e6;
-  text-decoration: none;
-}
-
 #geolocation-learnmore-link {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
