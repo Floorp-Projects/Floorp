@@ -368,6 +368,8 @@ class MarionetteTestRunner(object):
                 print e
 
         if self.xml_output:
+            if not os.path.exists(os.path.dirname(self.xml_output)):
+                os.makedirs(os.path.dirname(self.xml_output))
             with open(self.xml_output, 'w') as f:
                 f.write(self.generate_xml(self.results))
 
