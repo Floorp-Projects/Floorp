@@ -12,6 +12,7 @@
 #include "nsSVGPatternElement.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //--------------------- Patterns ------------------------
 
@@ -51,8 +52,8 @@ NS_IMPL_RELEASE_INHERITED(nsSVGPatternElement,nsSVGPatternElementBase)
 DOMCI_NODE_DATA(SVGPatternElement, nsSVGPatternElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGPatternElement)
-  NS_NODE_INTERFACE_TABLE8(nsSVGPatternElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGTests,
+  NS_NODE_INTERFACE_TABLE7(nsSVGPatternElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
                            nsIDOMSVGFitToViewBox, nsIDOMSVGURIReference,
                            nsIDOMSVGPatternElement, nsIDOMSVGUnitTypes)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPatternElement)
@@ -85,7 +86,10 @@ NS_IMETHODIMP
 nsSVGPatternElement::GetPreserveAspectRatio(nsISupports
                                             **aPreserveAspectRatio)
 {
-  return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(aPreserveAspectRatio, this);
+  nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> ratio;
+  mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(getter_AddRefs(ratio), this);
+  ratio.forget(aPreserveAspectRatio);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -58,7 +58,6 @@ function reflectString(aParameters)
   // TODO: remove this ugly hack when null stringification will work as expected.
   var todoAttrs = {
     form: [ "acceptCharset", "name", "target" ],
-    img: [ "align" ],
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
     link: [ "crossOrigin" ],
     source: [ "media" ],

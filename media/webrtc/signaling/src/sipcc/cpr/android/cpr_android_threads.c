@@ -9,6 +9,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/resource.h>
+#include "thread_monitor.h"
+#include "prtypes.h"
+#include "mozilla/Assertions.h"
 
 #define ANDROID_MIN_THREAD_PRIORITY (-20)	/* tbd: check MV linux: current val from Larry port */
 #define ANDROID_MAX_THREAD_PRIORITY (+19)	/* tbd: check MV linux. current val from Larry port */
@@ -99,6 +102,19 @@ cprCreateThread (const char *name,
     return (cprThread_t)NULL;
 }
 
+/*
+ * cprJoinThread
+ *
+ * wait for thread termination
+ */
+void cprJoinThread(cprThread_t thread)
+{
+    cpr_thread_t *cprThreadPtr;
+
+    cprThreadPtr = (cpr_thread_t *) thread;
+    MOZ_ASSERT(cprThreadPtr);
+    pthread_join(cprThreadPtr->u.handleInt, NULL);
+}
 
 /**
  * cprDestroyThread
@@ -118,29 +134,28 @@ cprCreateThread (const char *name,
 cprRC_t
 cprDestroyThread (cprThread_t thread)
 {
-    static const char fname[] = "cprDestroyThread";
     cpr_thread_t *cprThreadPtr;
 
     cprThreadPtr = (cpr_thread_t *) thread;
-    if (cprThreadPtr != NULL) {
+    if (cprThreadPtr) {
         /*
          * Make sure thread is trying to destroy itself.
          */
         if ((pthread_t) cprThreadPtr->u.handleInt == pthread_self()) {
-            cprThreadPtr->threadId = 0;
-            cpr_free(cprThreadPtr);
+            CPR_INFO("%s: Destroying Thread %d", __FUNCTION__, cprThreadPtr->threadId);
             pthread_exit(NULL);
             return CPR_SUCCESS;
         }
 
-        CPR_ERROR("%s: Thread attempted to destroy another thread, not itself.\n",
-                  fname);
+        CPR_ERROR("%s: Thread attempted to destroy another thread, not itself.",
+                  __FUNCTION__);
+        MOZ_ASSERT(PR_FALSE);
         errno = EINVAL;
         return CPR_FAILURE;
     }
 
-    /* Bad application! */
-    CPR_ERROR("%s - NULL pointer passed in.\n", fname);
+    CPR_ERROR("%s - NULL pointer passed in.", __FUNCTION__);
+    MOZ_ASSERT(PR_FALSE);
     errno = EINVAL;
     return CPR_FAILURE;
 }

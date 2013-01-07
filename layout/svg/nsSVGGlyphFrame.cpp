@@ -1600,7 +1600,7 @@ nsSVGGlyphFrame::GetSubStringLength(uint32_t charnum, uint32_t fragmentChars)
 }
 
 int32_t
-nsSVGGlyphFrame::GetCharNumAtPosition(DOMSVGPoint *point)
+nsSVGGlyphFrame::GetCharNumAtPosition(nsISVGPoint *point)
 {
   float xPos = point->X(), yPos = point->Y();
 

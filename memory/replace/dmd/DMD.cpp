@@ -1928,11 +1928,12 @@ SizeOf(Sizes* aSizes)
   SizeOfInternal(aSizes);
 }
 
-static void
-ClearGlobalState()
+MOZ_EXPORT void
+ClearReports()
 {
-  // Unreport all blocks, except those that were reported on allocation,
-  // because they need to keep their reported marking.
+  // Unreport all blocks that were marked reported by a memory reporter.  This
+  // excludes those that were reported on allocation, because they need to keep
+  // their reported marking.
   for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
     r.front().UnreportIfNotReportedOnAlloc();
   }
@@ -2126,7 +2127,7 @@ Dump(Writer aWriter)
 
   InfallibleAllocPolicy::delete_(locService);
 
-  ClearGlobalState();
+  ClearReports();
 
   StatusMsg("}\n");
 }
