@@ -619,9 +619,8 @@ pref("memory.free_dirty_pages", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
-// Enable native identitity (persona/browserid)
+// Enable native identity (persona/browserid)
 pref("dom.identity.enabled", true);
-
 
 // Wait up to this much milliseconds when orientation changed
 pref("layers.orientation.sync.timeout", 1000);
