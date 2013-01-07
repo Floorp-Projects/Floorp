@@ -1596,7 +1596,7 @@ class JS_FRIEND_API(AutoCTypesActivityCallback) {
     void DoEndCallback() {
         if (callback) {
             callback(cx, endType);
-            callback = nullptr;
+            callback = NULL;
         }
     }
 };
