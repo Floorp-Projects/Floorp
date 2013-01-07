@@ -92,6 +92,12 @@ MOCHITEST_FILES += \
     test_prompt.html \
     $(NULL)
 endif
+
+else
+MOCHITEST_FILES += \
+    privbrowsing_perwindowpb_iframe.html \
+    test_privbrowsing_perwindowpb.html \
+    $(NULL)
 endif
 
 # This test doesn't pass because we can't ensure a cross-platform
