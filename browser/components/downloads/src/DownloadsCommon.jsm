@@ -437,7 +437,7 @@ this.DownloadsCommon = {
       }
 
       if (showAlert) {
-        let name = this.dataItem.target;
+        let name = aFile.leafName;
         let message =
           DownloadsCommon.strings.fileExecutableSecurityWarning(name, name);
         let title =
