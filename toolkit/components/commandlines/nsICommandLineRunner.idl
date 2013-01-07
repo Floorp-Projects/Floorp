@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsICommandLine.idl"
 
-[ptr] native nsCharPtrArray(char*);
+[ptr] native nsArgvArray(const char* const);
 
 /**
  * Extension of nsICommandLine that allows for initialization of new command lines
@@ -17,7 +17,7 @@
  *                    Smedberg <benjamin@smedbergs.us>.
  */
 
-[uuid(c1f4cfbf-a41f-4628-aa6c-9fb914478af8)]
+[uuid(c9f2996c-b25a-4d3d-821f-4cd0c4bc8afb)]
 interface nsICommandLineRunner : nsICommandLine
 {
   /**
@@ -31,7 +31,7 @@ interface nsICommandLineRunner : nsICommandLine
    * @param workingDir The working directory for resolving file and URI paths.
    * @param state      The nsICommandLine.state flag.
    */
-  void init(in long argc, in nsCharPtrArray argv,
+  void init(in long argc, in nsArgvArray argv,
             in nsIFile workingDir, in unsigned long state);
 
   /**

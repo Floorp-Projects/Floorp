@@ -16,6 +16,7 @@ LIBRARY_NAME = urlclassifier_s
 XPIDL_MODULE = url-classifier
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
+FAIL_ON_WARNINGS = 1
 
 # Normally the "client ID" sent in updates is appinfo.name, but for
 # official Firefox releases from Mozilla we use a special identifier.

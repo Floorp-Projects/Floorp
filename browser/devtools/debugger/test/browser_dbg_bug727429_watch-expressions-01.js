@@ -116,7 +116,7 @@ function test()
     addAndCheckExpressions(total, index, "", true);
 
     for (let i = 0; i < string.length; i++) {
-      EventUtils.sendChar(string[i]);
+      EventUtils.sendChar(string[i], gDebugger);
     }
 
     gDebugger.editor.focus();

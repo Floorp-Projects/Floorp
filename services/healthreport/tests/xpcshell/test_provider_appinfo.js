@@ -5,42 +5,13 @@
 
 const {interfaces: Ci, results: Cr, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
-Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
+Cu.import("resource://testing-common/services/healthreport/utils.jsm");
+
 
 function run_test() {
-  let appInfo = {
-    vendor: "Mozilla",
-    name: "xpcshell",
-    ID: "xpcshell@tests.mozilla.org",
-    version: "1",
-    appBuildID: "20121107",
-    platformVersion: "p-ver",
-    platformBuildID: "20121106",
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
-    invalidateCachesOnRestart: function() {},
-  };
-
-  let factory = {
-    createInstance: function createInstance(outer, iid) {
-      if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      }
-
-      return appInfo.QueryInterface(iid);
-    },
-  };
-
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
-                            "XULAppInfo", "@mozilla.org/xre/app-info;1",
-                            factory);
-
   run_next_test();
 }
 
@@ -50,32 +21,93 @@ add_test(function test_constructor() {
   run_next_test();
 });
 
-add_test(function test_collect_smoketest() {
+add_task(function test_collect_smoketest() {
+  let storage = yield Metrics.Storage("collect_smoketest");
   let provider = new AppInfoProvider();
+  yield provider.init(storage);
 
-  let result = provider.collectConstantMeasurements();
-  do_check_true(result instanceof MetricsCollectionResult);
+  let now = new Date();
+  yield provider.collectConstantData();
 
-  result.onFinished(function onFinished() {
-    do_check_eq(result.expectedMeasurements.size, 1);
-    do_check_true(result.expectedMeasurements.has("appinfo"));
-    do_check_eq(result.measurements.size, 1);
-    do_check_true(result.measurements.has("appinfo"));
-    do_check_eq(result.errors.length, 0);
+  let m = provider.getMeasurement("appinfo", 1);
+  let data = yield storage.getMeasurementValues(m.id);
+  let serializer = m.serializer(m.SERIALIZE_JSON);
+  let d = serializer.singular(data.singular);
 
-    let ai = result.measurements.get("appinfo");
-    do_check_eq(ai.getValue("vendor"), "Mozilla");
-    do_check_eq(ai.getValue("name"), "xpcshell");
-    do_check_eq(ai.getValue("id"), "xpcshell@tests.mozilla.org");
-    do_check_eq(ai.getValue("version"), "1");
-    do_check_eq(ai.getValue("appBuildID"), "20121107");
-    do_check_eq(ai.getValue("platformVersion"), "p-ver");
-    do_check_eq(ai.getValue("platformBuildID"), "20121106");
-    do_check_eq(ai.getValue("os"), "XPCShell");
-    do_check_eq(ai.getValue("xpcomabi"), "noarch-spidermonkey");
+  do_check_eq(d.vendor, "Mozilla");
+  do_check_eq(d.name, "xpcshell");
+  do_check_eq(d.id, "xpcshell@tests.mozilla.org");
+  do_check_eq(d.version, "1");
+  do_check_eq(d.appBuildID, "20121107");
+  do_check_eq(d.platformVersion, "p-ver");
+  do_check_eq(d.platformBuildID, "20121106");
+  do_check_eq(d.os, "XPCShell");
+  do_check_eq(d.xpcomabi, "noarch-spidermonkey");
 
-    run_next_test();
-  });
+  do_check_eq(data.days.size, 1);
+  do_check_true(data.days.hasDay(now));
+  let day = data.days.getDay(now);
+  do_check_eq(day.size, 1);
+  do_check_true(day.has("isDefaultBrowser"));
 
-  result.populate(result);
+  // TODO Bug 827189 Actually test this properly. On some local builds, this
+  // is always -1 (the service throws). On buildbot, it seems to always be 0.
+  do_check_neq(day.get("isDefaultBrowser"), 1);
+
+  yield provider.shutdown();
+  yield storage.close();
+});
+
+add_task(function test_record_version() {
+  let storage = yield Metrics.Storage("record_version");
+
+  let provider = new AppInfoProvider();
+  let now = new Date();
+  yield provider.init(storage);
+
+  // The provider records information on startup.
+  let m = provider.getMeasurement("versions", 1);
+  let data = yield m.getValues();
+
+  do_check_true(data.days.hasDay(now));
+  let day = data.days.getDay(now);
+  do_check_eq(day.size, 1);
+  do_check_true(day.has("version"));
+  let value = day.get("version");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 1);
+  let ai = getAppInfo();
+  do_check_eq(value, ai.version);
+
+  yield provider.shutdown();
+  yield storage.close();
+});
+
+add_task(function test_record_version_change() {
+  let storage = yield Metrics.Storage("record_version_change");
+
+  let provider = new AppInfoProvider();
+  let now = new Date();
+  yield provider.init(storage);
+  yield provider.shutdown();
+
+  let ai = getAppInfo();
+  ai.version = "2";
+  updateAppInfo(ai);
+
+  provider = new AppInfoProvider();
+  yield provider.init(storage);
+
+  // There should be 2 records in the versions history.
+  let m = provider.getMeasurement("versions", 1);
+  let data = yield m.getValues();
+  do_check_true(data.days.hasDay(now));
+  let day = data.days.getDay(now);
+  let value = day.get("version");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 2);
+  do_check_eq(value[1], "2");
+
+  yield provider.shutdown();
+  yield storage.close();
 });

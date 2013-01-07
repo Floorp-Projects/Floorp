@@ -887,8 +887,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     ionActivation(NULL),
     ionPcScriptCache(NULL),
     threadPool(this),
-    ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     ctypesActivityCallback(NULL),
+    ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
     requestedHelperThreadCount(-1)
 {

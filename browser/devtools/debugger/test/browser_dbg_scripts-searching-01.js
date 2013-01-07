@@ -26,18 +26,18 @@ function test()
     gPane = aPane;
     gDebugger = gPane.panelWin;
 
+    gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
+      scriptShown = true;
+      runTest();
+    });
+
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
       runTest();
     });
 
     gDebuggee.simpleCall();
-  });
-
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
-    scriptShown = true;
-    runTest();
   });
 
   function runTest()
@@ -63,35 +63,35 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line.");
 
-    EventUtils.synthesizeKey("g", { metaKey: true });
+    EventUtils.synthesizeKey("g", { metaKey: true }, gDebugger);
     ok(gEditor.getCaretPosition().line == 12 &&
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line after Meta+G");
 
-    EventUtils.synthesizeKey("n", { ctrlKey: true });
+    EventUtils.synthesizeKey("n", { ctrlKey: true }, gDebugger);
     ok(gEditor.getCaretPosition().line == 13 &&
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line after Ctrl+N");
 
-    EventUtils.synthesizeKey("G", { metaKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("G", { metaKey: true, shiftKey: true }, gDebugger);
     ok(gEditor.getCaretPosition().line == 12 &&
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line after Meta+Shift+G");
 
-    EventUtils.synthesizeKey("p", { ctrlKey: true });
+    EventUtils.synthesizeKey("p", { ctrlKey: true }, gDebugger);
     ok(gEditor.getCaretPosition().line == 11 &&
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line after Ctrl+P");
 
     for (let i = 0; i < 100; i++) {
-      EventUtils.sendKey("DOWN");
+      EventUtils.sendKey("DOWN", gDebugger);
     }
     ok(gEditor.getCaretPosition().line == 32 &&
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line after multiple DOWN keys");
 
     for (let i = 0; i < 100; i++) {
-      EventUtils.sendKey("UP");
+      EventUtils.sendKey("UP", gDebugger);
     }
     ok(gEditor.getCaretPosition().line == 0 &&
        gEditor.getCaretPosition().col == 0,
@@ -104,27 +104,27 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (1)");
 
-    EventUtils.sendKey("DOWN");
+    EventUtils.sendKey("DOWN", gDebugger);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (2)");
 
-    EventUtils.sendKey("DOWN");
+    EventUtils.sendKey("DOWN", gDebugger);
     ok(gEditor.getCaretPosition().line == 12 &&
        gEditor.getCaretPosition().col == 8 + token.length,
       "The editor didn't jump to the correct token. (3)");
 
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't jump to the correct token. (4)");
 
-    EventUtils.sendKey("ENTER");
+    EventUtils.sendKey("ENTER", gDebugger);
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (5)");
 
-    EventUtils.sendKey("UP");
+    EventUtils.sendKey("UP", gDebugger);
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't jump to the correct token. (5.1)");
@@ -227,14 +227,14 @@ function testScriptSearching() {
       "The menulist should not display a notice that matches are found.");
 
     clear();
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor shouldn't jump to another token. (12.2)");
     isnot(gMenulist.getAttribute("label"), noMatchingScripts,
       "The menulist should not display a notice that matches are found.");
 
-    EventUtils.sendKey("ENTER");
+    EventUtils.sendKey("ENTER", gDebugger);
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor shouldn't jump to another token. (12.3)");
@@ -252,27 +252,27 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (14)");
 
-    EventUtils.sendKey("DOWN");
+    EventUtils.sendKey("DOWN", gDebugger);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (15)");
 
-    EventUtils.sendKey("DOWN");
+    EventUtils.sendKey("DOWN", gDebugger);
     ok(gEditor.getCaretPosition().line == 12 &&
        gEditor.getCaretPosition().col == 8 + token.length,
       "The editor didn't jump to the correct token. (16)");
 
-    EventUtils.sendKey("RETURN");
+    EventUtils.sendKey("RETURN", gDebugger);
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't jump to the correct token. (17)");
 
-    EventUtils.sendKey("ENTER");
+    EventUtils.sendKey("ENTER", gDebugger);
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (18)");
 
-    EventUtils.sendKey("UP");
+    EventUtils.sendKey("UP", gDebugger);
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't jump to the correct token. (18.1)");
@@ -305,7 +305,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
   info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
 }

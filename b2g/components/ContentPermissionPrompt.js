@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/permissionSettings;1",
                                    "nsIDOMPermissionSettings");
 
-function rememberPermission(aPermission, aPrincipal)
+function rememberPermission(aPermission, aPrincipal, aSession)
 {
   function convertPermToAllow(aPerm, aPrincipal)
   {
@@ -44,9 +44,16 @@ function rememberPermission(aPermission, aPrincipal)
     if (type == Ci.nsIPermissionManager.PROMPT_ACTION ||
         (type == Ci.nsIPermissionManager.UNKNOWN_ACTION &&
         PROMPT_FOR_UNKNOWN.indexOf(aPermission) >= 0)) {
-      permissionManager.addFromPrincipal(aPrincipal,
-                                         aPerm,
-                                         Ci.nsIPermissionManager.ALLOW_ACTION);
+      if (!aSession) {
+        permissionManager.addFromPrincipal(aPrincipal,
+                                           aPerm,
+                                           Ci.nsIPermissionManager.ALLOW_ACTION);
+      } else {
+        permissionManager.addFromPrincipal(aPrincipal,
+                                           aPerm,
+                                           Ci.nsIPermissionManager.ALLOW_ACTION,
+                                           Ci.nsIPermissionManager.EXPIRE_SESSION, 0);
+      }
     }
   }
 
@@ -102,10 +109,7 @@ ContentPermissionPrompt.prototype = {
       evt.target.removeEventListener(evt.type, contentEvent);
 
       if (evt.detail.type == "permission-allow") {
-        if (evt.detail.remember) {
-          rememberPermission(request.type, request.principal);
-        }
-
+        rememberPermission(request.type, request.principal, !evt.detail.remember);
         request.allow();
         return;
       }
@@ -113,6 +117,10 @@ ContentPermissionPrompt.prototype = {
       if (evt.detail.remember) {
         Services.perms.addFromPrincipal(request.principal, access,
                                         Ci.nsIPermissionManager.DENY_ACTION);
+      } else {
+        Services.perms.addFromPrincipal(request.principal, access,
+                                        Ci.nsIPermissionManager.DENY_ACTION,
+                                        Ci.nsIPermissionManager.EXPIRE_SESSION, 0);
       }
 
       request.cancel();

@@ -183,6 +183,8 @@ let FormAssistant = {
     addEventListener("focus", this, true, false);
     addEventListener("blur", this, true, false);
     addEventListener("resize", this, true, false);
+    addEventListener("submit", this, true, false);
+    addEventListener("pagehide", this, true, false);
     addMessageListener("Forms:Select:Choice", this);
     addMessageListener("Forms:Input:Value", this);
     addMessageListener("Forms:Select:Blur", this);
@@ -246,6 +248,8 @@ let FormAssistant = {
         break;
 
       case "blur":
+      case "submit":
+      case "pagehide":
         if (this.focusedElement)
           this.hideKeyboard();
         break;

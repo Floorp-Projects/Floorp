@@ -69,23 +69,31 @@ class GetUserMediaNotificationEvent: public nsRunnable
 class GetUserMediaCallbackMediaStreamListener : public MediaStreamListener
 {
 public:
+  // Create in an inactive state
   GetUserMediaCallbackMediaStreamListener(nsIThread *aThread,
-    already_AddRefed<SourceMediaStream> aStream,
-    already_AddRefed<MediaInputPort> aPort,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource)
+    uint64_t aWindowID)
     : mMediaThread(aThread)
-    , mAudioSource(aAudioSource)
-    , mVideoSource(aVideoSource)
-    , mStream(aStream)
-    , mPort(aPort)
-    , mLastEndTimeAudio(0)
-    , mLastEndTimeVideo(0) {}
+    , mWindowID(aWindowID) {}
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
     // It's OK to release mStream and mPort on any thread; they have thread-safe
     // refcounts.
+  }
+
+  void Activate(already_AddRefed<SourceMediaStream> aStream,
+    already_AddRefed<MediaInputPort> aPort,
+    MediaEngineSource* aAudioSource,
+    MediaEngineSource* aVideoSource)
+  {
+    mStream = aStream; // also serves as IsActive();
+    mPort = aPort;
+    mAudioSource = aAudioSource;
+    mVideoSource = aVideoSource;
+    mLastEndTimeAudio = 0;
+    mLastEndTimeVideo = 0;
+
+    mStream->AddListener(this);
   }
 
   MediaStream *Stream()
@@ -94,18 +102,20 @@ public:
   }
   SourceMediaStream *GetSourceStream()
   {
+    MOZ_ASSERT(mStream);
     return mStream->AsSourceStream();
   }
 
-  void
-  Invalidate(); // implement in .cpp to avoid circular dependency with MediaOperationRunnable
+  // implement in .cpp to avoid circular dependency with MediaOperationRunnable
+  void Invalidate(bool aNeedsFinish);
 
   void
   Remove()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     // Caller holds strong reference to us, so no death grip required
-    mStream->RemoveListener(this);
+    if (mStream) // allow even if inactive for easier cleanup
+      mStream->RemoveListener(this);
   }
 
   // Proxy NotifyPull() to sources
@@ -123,14 +133,11 @@ public:
   }
 
   void
-  NotifyFinished(MediaStreamGraph* aGraph)
-  {
-    Invalidate();
-    // XXX right now this calls Finish, which isn't ideal but doesn't hurt
-  }
+  NotifyFinished(MediaStreamGraph* aGraph);
 
 private:
   nsCOMPtr<nsIThread> mMediaThread;
+  uint64_t mWindowID;
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   nsRefPtr<SourceMediaStream> mStream;
@@ -154,11 +161,13 @@ public:
   MediaOperationRunnable(MediaOperation aType,
     GetUserMediaCallbackMediaStreamListener* aListener,
     MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource)
+    MediaEngineSource* aVideoSource,
+    bool aNeedsFinish)
     : mType(aType)
     , mAudioSource(aAudioSource)
     , mVideoSource(aVideoSource)
     , mListener(aListener)
+    , mFinish(aNeedsFinish)
     {}
 
   ~MediaOperationRunnable()
@@ -218,7 +227,9 @@ public:
             mVideoSource->Deallocate();
           }
           // Do this after stopping all tracks with EndTrack()
-          source->Finish();
+          if (mFinish) {
+            source->Finish();
+          }
           // the TrackUnion destination of the port will autofinish
 
           nsRefPtr<GetUserMediaNotificationEvent> event =
@@ -240,6 +251,7 @@ private:
   nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe
   nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
+  bool mFinish;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
@@ -309,9 +321,15 @@ public:
 
     return mActiveWindows.Get(aWindowId);
   }
+  void RemoveWindowID(uint64_t aWindowId) {
+    mActiveWindows.Remove(aWindowId);
+  }
   bool IsWindowStillActive(uint64_t aWindowId) {
     return !!GetWindowListeners(aWindowId);
   }
+  // Note: also calls aListener->Remove(), even if inactive
+  void RemoveFromWindowList(uint64_t aWindowID,
+    GetUserMediaCallbackMediaStreamListener *aListener);
 
   nsresult GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
     nsIMediaStreamOptions* aParams,
