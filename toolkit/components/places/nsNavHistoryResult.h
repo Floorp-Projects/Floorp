@@ -382,9 +382,6 @@ public:
 
   // Hidden status of the page.  Valid only for URI nodes.
   bool mHidden;
-
-  // Transition type used when this node represents a single visit.
-  int32_t mTransitionType;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResultNode, NS_NAVHISTORYRESULTNODE_IID)
@@ -752,9 +749,6 @@ public:
   nsresult NotifyIfTagsChanged(nsIURI* aURI);
 
   uint32_t mBatchChanges;
-
-  // Tracks transition type filters shared by all mQueries.
-  nsTArray<uint32_t> mTransitions;
 };
 
 

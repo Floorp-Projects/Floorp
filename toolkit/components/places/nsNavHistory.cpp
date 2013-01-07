@@ -894,6 +894,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
 
   bool nonTimeBasedItems = false;
   bool domainBasedItems = false;
+  bool queryContainsTransitions = false;
 
   for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
@@ -903,6 +904,9 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
         query->Tags().Length() > 0) {
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
     }
+
+    if (query->Transitions().Length() > 0)
+      queryContainsTransitions = true;
 
     // Note: we don't currently have any complex non-bookmarked items, but these
     // are expected to be added. Put detection of these items here.
@@ -919,6 +923,9 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
       nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
     return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
 
+  if (queryContainsTransitions)
+    return QUERYUPDATE_COMPLEX;
+
   // Whenever there is a maximum number of results, 
   // and we are not a bookmark query we must requery. This
   // is because we can't generally know if any given addition/change causes
@@ -930,7 +937,6 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
     return QUERYUPDATE_HOST;
   if (aQueries.Count() == 1 && !nonTimeBasedItems)
     return QUERYUPDATE_TIME;
-
   return QUERYUPDATE_SIMPLE;
 }
 
@@ -1053,14 +1059,6 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
         if (! nodeUriString.Equals(queryUriString))
           continue; // prefixes don't match
       }
-    }
-
-    // Transitions matching.
-    const nsTArray<uint32_t>& transitions = query->Transitions();
-    if (aNode->mTransitionType > 0 &&
-        transitions.Length() &&
-        !transitions.Contains(aNode->mTransitionType)) {
-      continue; // transition doesn't match.
     }
 
     // If we ever make it to the bottom of this loop, that means it passed all
