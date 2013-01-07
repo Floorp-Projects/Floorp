@@ -1048,6 +1048,16 @@ nsFrameScriptExecutor::Traverse(nsFrameScriptExecutor *tmp,
   }
 }
 
+// static
+void
+nsFrameScriptExecutor::Unlink(nsFrameScriptExecutor* aTmp)
+{
+  if (aTmp->mCx) {
+    JSAutoRequest ar(aTmp->mCx);
+    JS_SetGlobalObject(aTmp->mCx, nullptr);
+  }
+}
+
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 
 nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
