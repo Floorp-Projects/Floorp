@@ -74,6 +74,7 @@ class nsStyleSet;
 class nsTextNode;
 class nsWindowSizes;
 class nsSmallVoidArray;
+class nsDOMCaretPosition;
 
 namespace mozilla {
 class ErrorResult;
@@ -1916,6 +1917,19 @@ public:
   virtual nsIDOMDOMStringList* StyleSheetSets() = 0;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) = 0;
   Element* ElementFromPoint(float aX, float aY);
+
+  /**
+   * Retrieve the location of the caret position (DOM node and character
+   * offset within that node), given a point.
+   *
+   * @param aX Horizontal point at which to determine the caret position, in
+   *           page coordinates.
+   * @param aY Vertical point at which to determine the caret position, in
+   *           page coordinates.
+   */
+  already_AddRefed<nsDOMCaretPosition>
+    CaretPositionFromPoint(float aX, float aY);
+
   // QuerySelector and QuerySelectorAll already defined on nsINode
   nsINodeList* GetAnonymousNodes(Element& aElement);
   Element* GetAnonymousElementByAttribute(Element& aElement,
