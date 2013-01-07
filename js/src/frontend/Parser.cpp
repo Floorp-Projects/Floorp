@@ -5370,7 +5370,7 @@ Parser::generatorExpr(ParseNode *kid)
      * Our result is a call expression that invokes the anonymous generator
      * function object.
      */
-    ParseNode *result = ListNode::create(PNK_CALL, this);
+    ParseNode *result = ListNode::create(PNK_GENEXP, this);
     if (!result)
         return NULL;
     result->setOp(JSOP_CALL);
