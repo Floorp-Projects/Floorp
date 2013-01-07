@@ -343,11 +343,15 @@ HealthReporter.prototype = Object.freeze({
       return;
     }
 
+    this._log.warn("Initiating main shutdown procedure.");
+
     // Everything from here must only be performed once or else race conditions
     // could occur.
     this._shutdownInitiated = true;
 
-    Services.obs.removeObserver(this, "idle-daily");
+    if (this._initialized) {
+      Services.obs.removeObserver(this, "idle-daily");
+    }
 
     // If we have collectors, we need to shut down providers.
     if (this._collector) {
@@ -357,10 +361,12 @@ HealthReporter.prototype = Object.freeze({
       return;
     }
 
-    this._onCollectorShutdown();
+    this._log.warn("Don't have collector. Proceeding to storage shutdown.");
+    this._shutdownStorage();
   },
 
   _shutdownCollector: function () {
+    this._log.info("Shutting down collector.");
     for (let provider of this._collector.providers) {
       try {
         yield provider.shutdown();
@@ -372,24 +378,35 @@ HealthReporter.prototype = Object.freeze({
   },
 
   _onCollectorShutdown: function () {
+    this._log.info("Collector shut down.");
     this._collector = null;
+    this._shutdownStorage();
+  },
 
-    if (this._storage) {
-      let onClose = this._onStorageClose.bind(this);
-      this._storage.close().then(onClose, onClose);
-      return;
+  _shutdownStorage: function () {
+    if (!this._storage) {
+      this._onShutdownComplete();
     }
 
-    this._onStorageClose();
+    this._log.info("Shutting down storage.");
+    let onClose = this._onStorageClose.bind(this);
+    this._storage.close().then(onClose, onClose);
   },
 
   _onStorageClose: function (error) {
+    this._log.info("Storage has been closed.");
+
     if (error) {
       this._log.warn("Error when closing storage: " +
                      CommonUtils.exceptionStr(error));
     }
 
     this._storage = null;
+    this._onShutdownComplete();
+  },
+
+  _onShutdownComplete: function () {
+    this._log.warn("Shutdown complete.");
     this._shutdownComplete = true;
 
     if (this._shutdownCompleteCallback) {
