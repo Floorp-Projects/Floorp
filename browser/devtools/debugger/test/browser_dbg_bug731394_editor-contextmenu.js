@@ -31,6 +31,8 @@ function test()
     gDebugger = gPane.panelWin;
     resumed = true;
 
+    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
+
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
       executeSoon(startTest);
@@ -46,13 +48,11 @@ function test()
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:SourceShown", onScriptShown);
-
   function startTest()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
       testStarted = true;
-      window.removeEventListener("Debugger:SourceShown", onScriptShown);
+      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }
