@@ -28,7 +28,8 @@ class JSLinearString;
 class JSStableString;
 class JSInlineString;
 class JSRope;
-class JSAtom;
+ForwardDeclareJS(FlatString);
+ForwardDeclareJS(Atom);
 
 namespace js {
 
