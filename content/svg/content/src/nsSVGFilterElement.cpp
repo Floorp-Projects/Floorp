@@ -53,8 +53,8 @@ NS_IMPL_RELEASE_INHERITED(nsSVGFilterElement,nsSVGFilterElementBase)
 DOMCI_NODE_DATA(SVGFilterElement, nsSVGFilterElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFilterElement)
-  NS_NODE_INTERFACE_TABLE6(nsSVGFilterElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGTests,
+  NS_NODE_INTERFACE_TABLE5(nsSVGFilterElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
                            nsIDOMSVGFilterElement,
                            nsIDOMSVGURIReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFilterElement)
@@ -166,7 +166,7 @@ nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
   return FindAttributeDependence(name, map) ||
-    nsSVGGraphicElementBase::IsAttributeMapped(name);
+    nsSVGFilterElementBase::IsAttributeMapped(name);
 }
 
 void

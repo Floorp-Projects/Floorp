@@ -149,6 +149,7 @@ let profilerDefinition = {
   killswitch: "devtools.profiler.enabled",
   url: "chrome://browser/content/profiler.xul",
   label: l10n("profiler.label", profilerStrings),
+  icon: "chrome://browser/skin/devtools/tool-profiler.png",
   tooltip: l10n("profiler.tooltip", profilerStrings),
 
   isTargetSupported: function (target) {

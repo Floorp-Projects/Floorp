@@ -139,6 +139,11 @@ this.DOMApplicationRegistry = {
             if (this.webapps[id].installerIsBrowser === undefined) {
               this.webapps[id].installerIsBrowser = false;
             }
+
+            // Default installState to "installed".
+            if (this.webapps[id].installState === undefined) {
+              this.webapps[id].installState = "installed";
+            }
           };
         }
         aNext();

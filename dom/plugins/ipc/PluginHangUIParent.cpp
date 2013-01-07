@@ -116,7 +116,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
 
   nsresult rv;
   rv = mMiniShm.Init(this, ::IsDebuggerPresent() ? INFINITE : kTimeout);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, false);
   nsCOMPtr<nsIProperties>
     directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   if (!directoryService) {

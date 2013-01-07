@@ -105,7 +105,7 @@ class nsDOMLocalMediaStream : public nsDOMMediaStream,
 {
 public:
   nsDOMLocalMediaStream() {}
-  virtual ~nsDOMLocalMediaStream() {}
+  virtual ~nsDOMLocalMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMLocalMediaStream, nsDOMMediaStream)

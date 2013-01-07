@@ -82,8 +82,6 @@ SessionStartup.prototype = {
     if (pbs.lastChangedByCommandLine)
       return;
 #endif
-    // Session state is unknown until we read the file.
-    this._sessionType = null;
     _SessionFile.read().then(
       this._onSessionFileRead.bind(this)
     );

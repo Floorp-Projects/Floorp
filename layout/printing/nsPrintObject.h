@@ -56,7 +56,6 @@ public:
   bool             mHasBeenPrinted;
   bool             mDontPrint;
   bool             mPrintAsIs;
-  bool             mSharedPresShell;
   bool             mInvisible;        // Indicates PO is set to not visible by CSS
   bool             mPrintPreview;
   bool             mDidCreateDocShell;
