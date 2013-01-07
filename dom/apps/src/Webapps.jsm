@@ -1035,6 +1035,12 @@ this.DOMApplicationRegistry = {
       tmpDir.remove(true);
     } catch(e) { }
 
+    // Flush the zip reader cache to make sure we use the new application.zip
+    // when re-launching the application.
+    let zipFile = dir.clone();
+    zipFile.append("application.zip");
+    Services.obs.notifyObservers(zipFile, "flush-cache-entry", null);
+
     // Get the manifest, and set properties.
     this.getManifestFor(app.origin, (function(aData) {
       app.downloading = false;
