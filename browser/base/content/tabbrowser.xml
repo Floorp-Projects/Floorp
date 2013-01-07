@@ -2533,6 +2533,21 @@
           if (aEvent.altKey)
             return;
 
+          if (aEvent.ctrlKey && aEvent.shiftKey && !aEvent.metaKey) {
+            switch (aEvent.keyCode) {
+              case aEvent.DOM_VK_PAGE_UP:
+                this.moveTabBackward();
+                aEvent.stopPropagation();
+                aEvent.preventDefault();
+                return;
+              case aEvent.DOM_VK_PAGE_DOWN:
+                this.moveTabForward();
+                aEvent.stopPropagation();
+                aEvent.preventDefault();
+                return;
+            }
+          }
+
           // We need to take care of FAYT-watching as long as the findbar
           // isn't initialized.  The checks on aEvent are copied from
           // _shouldFastFind (see findbar.xml).
