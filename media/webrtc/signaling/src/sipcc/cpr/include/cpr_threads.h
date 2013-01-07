@@ -70,6 +70,13 @@ cprThread_t cprCreateThread(const char *name,
                             void *data);
 
 
+/*
+ * cprJoinThread
+ *
+ * wait for thread termination
+ */
+void cprJoinThread(cprThread_t thread);
+
 /**
  * cprDestroyThread
  *

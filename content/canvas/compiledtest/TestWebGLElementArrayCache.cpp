@@ -115,6 +115,13 @@ void CheckSanity()
   MOZ_ASSERT(numElems > 10);
   VERIFY( c.Validate(type, numElems - 10, 10, numElems - 10));
   VERIFY(!c.Validate(type, numElems - 11, 10, numElems - 10));
+
+  // bug 825205
+  if (sizeof(T) < sizeof(uint32_t)) {
+    uint32_t bigValWrappingToZero = uint32_t(T(-1)) + 1;
+    VERIFY(c.Validate(type, bigValWrappingToZero,     0, numElems));
+    VERIFY(c.Validate(type, bigValWrappingToZero - 1, 0, numElems));
+  }
 }
 
 int main(int argc, char *argv[])
