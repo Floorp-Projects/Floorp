@@ -1,0 +1,48 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker privileged properties</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  var workerFilename = "content_worker.js";
+  var worker = new Worker(workerFilename);
+
+  var props = {
+    'ctypes': 1,
+    'OS': 1
+  };
+
+  worker.onmessage = function(event) {
+    if (event.data.testfinished) {
+      SimpleTest.finish();
+      return;
+    }
+    var prop = event.data.prop;
+    ok(prop in props, "checking " + prop);
+    is(event.data.value, undefined, prop + " should be undefined");
+  };
+
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.message);
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
