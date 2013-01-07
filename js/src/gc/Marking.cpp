@@ -144,7 +144,14 @@ CheckMarkedThing(JSTracer *trc, T *thing)
                  thing->compartment()->isGCMarkingGray() ||
                  thing->compartment() == rt->atomsCompartment);
 
-    JS_ASSERT(!IsThingPoisoned(thing));
+    /*
+     * Try to assert that the thing is allocated.  This is complicated by the
+     * fact that allocated things may still contain the poison pattern if that
+     * part has not been overwritten, and that the free span list head in the
+     * ArenaHeader may not be synced with the real one in ArenaLists.
+     */
+    JS_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
+                 !InFreeList(thing->arenaHeader(), thing));
 }
 
 static GCMarker *

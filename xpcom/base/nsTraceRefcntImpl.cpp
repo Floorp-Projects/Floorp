@@ -854,7 +854,8 @@ static void PrintStackFrame(void *aPC, void *aSP, void *aClosure)
 void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
-  NS_StackWalk(PrintStackFrame, 2, aStream, 0, nullptr);
+  NS_StackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream,
+               0, nullptr);
 }
 
 //----------------------------------------------------------------------
