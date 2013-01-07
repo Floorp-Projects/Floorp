@@ -389,14 +389,6 @@ CTypesActivityCallback(JSContext* aCx,
       worker->EndCTypesCall();
       break;
 
-    case js::CTYPES_CALLBACK_BEGIN:
-      worker->BeginCTypesCallback();
-      break;
-
-    case js::CTYPES_CALLBACK_END:
-      worker->EndCTypesCallback();
-      break;
-
     default:
       MOZ_NOT_REACHED("Unknown type flag!");
   }
