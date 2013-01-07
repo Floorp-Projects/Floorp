@@ -55,22 +55,36 @@ SettingsServiceLock.prototype = {
           let message = info.message;
           if(typeof(value) == 'object')
             debug("object name:" + name + ", val: " + JSON.stringify(value));
-          req = store.put({ settingName: name, settingValue: value });
+          let checkKeyRequest = store.get(name);
 
-          req.onsuccess = function() {
-            debug("set on success");
-            lock._open = true;
-            if (callback)
-              callback.handle(name, value);
-            Services.obs.notifyObservers(lock, "mozsettings-changed", JSON.stringify({
-              key: name,
-              value: value,
-              message: message
-            }));
-            lock._open = false;
-          };
+          checkKeyRequest.onsuccess = function (event) {
+            let defaultValue;
+            if (event.target.result) {
+              defaultValue = event.target.result.defaultValue;
+            } else {
+              defaultValue = null;
+              if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database.\n");
+            }
 
-          req.onerror = function(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
+            req = store.put({ settingName: name, defaultValue: defaultValue, userValue: value });
+
+            req.onsuccess = function() {
+              if (DEBUG) debug("set on success");
+              lock._open = true;
+              if (callback)
+                callback.handle(name, value);
+              Services.obs.notifyObservers(lock, "mozsettings-changed", JSON.stringify({
+                key: name,
+                value: value,
+                message: message
+              }));
+              lock._open = false;
+            };
+
+            req.onerror = function(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
+          }
+
+          checkKeyRequest.onerror = function(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
           break;
         case "get":
           req = store.mozGetAll(name);
@@ -83,7 +97,11 @@ SettingsServiceLock.prototype = {
                 if (event.target.result.length > 1) {
                   debug("Warning: overloaded setting:" + name);
                 }
-                callback.handle(name, event.target.result[0].settingValue);
+                let result = event.target.result[0];
+                let value = result.userValue !== undefined
+                            ? result.userValue
+                            : result.defaultValue;
+                callback.handle(name, value);
               } else
                 callback.handle(name, null);
             } else {
