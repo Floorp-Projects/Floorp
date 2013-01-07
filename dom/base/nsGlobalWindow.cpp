@@ -226,7 +226,6 @@
 #include "TimeChangeObserver.h"
 #include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
-#include "mozilla/dom/FunctionBinding.h"
 
 // Apple system headers seem to have a check() macro.  <sigh>
 #ifdef check
@@ -1387,12 +1386,8 @@ nsGlobalWindow::UnmarkGrayTimers()
        timeout;
        timeout = timeout->getNext()) {
     if (timeout->mScriptHandler) {
-      Function* f = timeout->mScriptHandler->GetCallback();
-      if (f) {
-        // Callable() already does xpc_UnmarkGrayObject.
-        DebugOnly<JSObject*> o = f->Callable();
-        MOZ_ASSERT(!xpc_IsGrayGCThing(o), "Should have been unmarked");
-      }
+      JSObject* o = timeout->mScriptHandler->GetScriptObject();
+      xpc_UnmarkGrayObject(o);
     }
   }
 }
@@ -9740,8 +9735,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
   }
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler(timeout->mScriptHandler);
-  nsRefPtr<Function> callback = handler->GetCallback();
-  if (!callback) {
+  JSObject* scriptObject = handler->GetScriptObject();
+  if (!scriptObject) {
     // Evaluate the timeout expression.
     const PRUnichar* script = handler->GetHandlerText();
     NS_ASSERTION(script, "timeout has no script nor handler text!");
@@ -9756,17 +9751,18 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
                          filename, lineNo, JSVERSION_DEFAULT, nullptr,
                          &is_undefined);
   } else {
-    // Hold strong ref to ourselves while we call the callback.
+    nsCOMPtr<nsIVariant> dummy;
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
-    ErrorResult ignored;
-    // Need the .get() because the first argument is a template, and C++ can't
-    // decide between it being a ParentObject& and a void* if we pass in the
-    // nsCOMPtr.
-    callback->Call(me.get(), handler->GetArgs(), ignored);
+    aScx->CallEventHandler(me, FastGetGlobalJSObject(),
+                           scriptObject, handler->GetArgv(),
+                           // XXXmarkh - consider allowing CallEventHandler to
+                           // accept nullptr?
+                           getter_AddRefs(dummy));
+
   }
 
-  // We ignore any failures from calling EvaluateString() on the context or
-  // Call() on a Function here since we're in a loop
+  // We ignore any failures from calling EvaluateString() or
+  // CallEventHandler() on the context here since we're in a loop
   // where we're likely to be running timeouts whose OS timers
   // didn't fire in time and we don't want to not fire those timers
   // now just because execution of one timer failed. We can't
