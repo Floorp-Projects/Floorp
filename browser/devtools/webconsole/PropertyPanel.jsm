@@ -318,9 +318,9 @@ PropertyTreeView.prototype = {
   performAction: function(action) { },
   performActionOnCell: function(action, index, column) { },
   performActionOnRow: function(action, row) { },
-  getRowProperties: function(idx, column, prop) { },
-  getCellProperties: function(idx, column, prop) { },
-  getColumnProperties: function(column, element, prop) { },
+  getRowProperties: function(idx) { return ""; },
+  getCellProperties: function(idx, column) { return ""; },
+  getColumnProperties: function(column, element) { return ""; },
 
   setCellValue: function(row, col, value)               { },
   setCellText: function(row, col, value)                { },
