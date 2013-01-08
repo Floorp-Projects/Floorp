@@ -342,11 +342,11 @@ class nsStyleSet
   
   // Enumerate the rules in a way that cares about the order of the
   // rules.
-  // aContent is the node the rules are for.  It might be null.  aData
+  // aElement is the element the rules are for.  It might be null.  aData
   // is the closure to pass to aCollectorFunc.  If aContent is not null,
   // aData must be a RuleProcessorData*
   void FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
-                 RuleProcessorData* aData, nsIContent* aContent,
+                 RuleProcessorData* aData, mozilla::dom::Element* aElement,
                  nsRuleWalker* aRuleWalker);
 
   // Enumerate all the rules in a way that doesn't care about the order
