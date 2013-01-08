@@ -3598,3 +3598,13 @@ Element::GetEditorInternal()
   nsCOMPtr<nsITextControlElement> textCtrl = do_QueryInterface(this);
   return textCtrl ? textCtrl->GetTextEditor() : nullptr;
 }
+
+nsresult
+Element::SetBoolAttr(nsIAtom* aAttr, bool aValue)
+{
+  if (aValue) {
+    return SetAttr(kNameSpaceID_None, aAttr, EmptyString(), true);
+  }
+
+  return UnsetAttr(kNameSpaceID_None, aAttr, true);
+}
