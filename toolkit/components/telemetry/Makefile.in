@@ -50,6 +50,8 @@ CPPSRCS = \
   Telemetry.cpp \
   $(NULL)
 
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
+
 EXTRA_DSO_LDOPTS += \
   $(MOZ_COMPONENT_LIBS) \
   $(MOZ_JS_LIBS) \
