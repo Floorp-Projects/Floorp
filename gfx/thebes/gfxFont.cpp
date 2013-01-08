@@ -44,6 +44,7 @@
 #include "gfxFontTest.h"
 
 #include "harfbuzz/hb.h"
+#include "harfbuzz/hb-ot.h"
 
 #include "nsCRT.h"
 #include "GeckoProfiler.h"
@@ -1492,6 +1493,54 @@ gfxFont::GetFontTable(uint32_t aTag) {
                                                 haveTable ? &buffer : nullptr);
 }
 
+static hb_blob_t *
+HBGetTable(hb_face_t *face, hb_tag_t aTag, void *aUserData)
+{
+    gfxFont* font = static_cast<gfxFont*>(aUserData);
+    return font->GetFontTable(aTag);
+}
+
+static bool
+HasLayoutFeatureInvolving(hb_face_t *aFace, hb_tag_t aTag, uint16_t aGlyph)
+{
+    hb_set_t *lookups = hb_set_create();
+    hb_set_t *glyphs = hb_set_create();
+
+    hb_ot_layout_collect_lookups(aFace, aTag, nullptr, nullptr, nullptr,
+                                 lookups);
+
+    hb_codepoint_t index = -1;
+    while (hb_set_next(lookups, &index)) {
+        hb_ot_layout_lookup_collect_glyphs(aFace, aTag, index,
+                                           glyphs, glyphs, glyphs,
+                                           glyphs);
+    }
+
+    bool result = hb_set_has(glyphs, aGlyph);
+
+    hb_set_destroy(glyphs);
+    hb_set_destroy(lookups);
+
+    return result;
+}
+
+bool
+gfxFont::CheckForFeaturesInvolvingSpace()
+{
+    hb_face_t *face = hb_face_create_for_tables(HBGetTable, this, nullptr);
+
+    bool result = (hb_ot_layout_has_substitution(face) &&
+                   HasLayoutFeatureInvolving(face, HB_OT_TAG_GSUB,
+                                             GetSpaceGlyph())) ||
+                  (hb_ot_layout_has_positioning(face) &&
+                   HasLayoutFeatureInvolving(face, HB_OT_TAG_GPOS,
+                                             GetSpaceGlyph()));
+
+    hb_face_destroy(face);
+
+    return result;
+}
+
 /**
  * A helper function in case we need to do any rounding or other
  * processing here.
@@ -2710,12 +2759,18 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         return true;
     }
 
+    uint32_t flags = aTextRun->GetFlags();
+    if (BypassShapedWordCache(flags)) {
+        return ShapeTextWithoutWordCache(aContext, aString + aRunStart,
+                                         aRunStart, aRunLength, aRunScript,
+                                         aTextRun);
+    }
+
     InitWordCache();
 
     // the only flags we care about for ShapedWord construction/caching
-    uint32_t flags = aTextRun->GetFlags() &
-        (gfxTextRunFactory::TEXT_IS_RTL |
-         gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES);
+    flags &= (gfxTextRunFactory::TEXT_IS_RTL |
+              gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES);
     if (sizeof(T) == sizeof(uint8_t)) {
         flags |= gfxTextRunFactory::TEXT_IS_8BIT;
     }
