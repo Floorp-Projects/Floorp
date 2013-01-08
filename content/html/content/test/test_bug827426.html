@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=827426
+-->
+<head>
+  <title>Test for Bug 827426</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827426">Mozilla Bug 827426</a>
+<p id="display"></p>
+<div id="content">foo</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 827426 **/
+
+var elem = document.getElementById("content");
+
+var undoManager = document.undoManager;
+var transaction = {
+  executeAutomatic: function() {
+    elem.childNodes[0].appendData("bar");
+  },
+};
+
+// Perform transaction
+undoManager.transact(transaction, false);
+
+// Make mutation external to UndoManager.
+elem.childNodes[0].deleteData(0, 6);
+
+// Call undo/redo a few times and make sure nothing bad happens.
+undoManager.undo();
+undoManager.redo();
+undoManager.undo();
+undoManager.redo();
+undoManager.undo();
+
+ok(true, "Nothing bad happened with external mutation.");
+
+</script>
+</pre>
+</body>
+</html>
