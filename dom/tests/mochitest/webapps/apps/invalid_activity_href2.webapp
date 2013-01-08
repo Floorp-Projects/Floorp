@@ -1,0 +1,14 @@
+{
+  "name": "data:URI Activity Href App",
+  "description": "App with an invalid activity href",
+  "installs_allowed_from": [ "*" ],
+  "activities": {
+    "without_href": { },
+    "valid_href": {
+      "href": "/transfer.html"
+    },
+    "invalid_href": {
+      "href": "data:text/html;base64,PGh0bWw+DQo8aGVhZD4NCjwvaGVhZD4NCjxib2R5Pg0KPGI+SGFoITwvYj4NCjwvYm9keT4NCjwvaHRtbD4="
+    }
+  }
+}

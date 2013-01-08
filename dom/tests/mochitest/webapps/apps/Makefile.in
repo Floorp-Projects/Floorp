@@ -34,6 +34,12 @@ MOCHITEST_CHROME_FILES	= \
     invalid_entry_point.webapp^headers^ \
     invalid_locale_entry_point.webapp \
     invalid_locale_entry_point.webapp^headers^ \
+    invalid_activity_href.webapp \
+    invalid_activity_href.webapp^headers^ \
+    invalid_activity_href2.webapp \
+    invalid_activity_href2.webapp^headers^ \
+    invalid_message.webapp \
+    invalid_message.webapp^headers^ \
     launch_paths.webapp \
     launch_paths.webapp^headers^ \
     $(NULL)
