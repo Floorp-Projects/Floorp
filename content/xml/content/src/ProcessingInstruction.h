@@ -3,21 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIXMLProcessingInstruction_h___
-#define nsIXMLProcessingInstruction_h___
+#ifndef mozilla_dom_ProcessingInstruction_h
+#define mozilla_dom_ProcessingInstruction_h
 
 #include "nsIDOMProcessingInstruction.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsAString.h"
 
+namespace mozilla {
+namespace dom {
 
-class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
-                                   public nsIDOMProcessingInstruction
+class ProcessingInstruction : public nsGenericDOMDataNode,
+                              public nsIDOMProcessingInstruction
 {
 public:
-  nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
-                             const nsAString& aData);
-  virtual ~nsXMLProcessingInstruction();
+  ProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
+                        const nsAString& aData);
+  virtual ~ProcessingInstruction();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -59,4 +61,7 @@ protected:
   bool GetAttrValue(nsIAtom *aName, nsAString& aValue);
 };
 
-#endif //nsIXMLProcessingInstruction_h___
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_ProcessingInstruction_h
