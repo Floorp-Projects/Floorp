@@ -405,3 +405,44 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
 
   return NS_OK;
 }
+
+void
+nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
+{
+  if (!mStyleSheet) {
+    return;
+  }
+
+  nsRefPtr<nsCSSStyleSheet> cssStyleSheet = do_QueryObject(mStyleSheet);
+  NS_ASSERTION(cssStyleSheet, "should only call UpdateStyleSheetScope for "
+                              "an nsCSSStyleSheet");
+
+  nsCOMPtr<nsIContent> thisContent;
+  CallQueryInterface(this, getter_AddRefs(thisContent));
+
+  Element* oldScopeElement = cssStyleSheet->GetScopeElement();
+  Element* newScopeElement = aIsNowScoped ?
+                               thisContent->GetParentElement() :
+                               nullptr;
+
+  if (oldScopeElement == newScopeElement) {
+    return;
+  }
+
+  nsIDocument* document = thisContent->GetOwnerDocument();
+
+  document->BeginUpdate(UPDATE_STYLE);
+  document->RemoveStyleSheet(mStyleSheet);
+
+  cssStyleSheet->SetScopeElement(newScopeElement);
+
+  document->AddStyleSheet(mStyleSheet);
+  document->EndUpdate(UPDATE_STYLE);
+
+  if (oldScopeElement) {
+    UpdateIsElementInStyleScopeFlagOnSubtree(oldScopeElement);
+  }
+  if (newScopeElement) {
+    SetIsElementInStyleScopeFlagOnSubtree(newScopeElement);
+  }
+}
