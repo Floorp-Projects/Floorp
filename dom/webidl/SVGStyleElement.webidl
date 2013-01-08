@@ -13,11 +13,9 @@
 interface SVGStyleElement : SVGElement {
   [SetterThrows]
   attribute DOMString xmlspace; // Spec claims this should be on SVGElement
-  [SetterThrows]
   attribute DOMString type;
-  [SetterThrows]
   attribute DOMString media;
-  [SetterThrows]
   attribute DOMString title;
+  attribute bool scoped;
 };
 
