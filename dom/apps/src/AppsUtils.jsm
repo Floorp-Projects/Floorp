@@ -25,13 +25,6 @@ function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
 }
 
-function isAbsoluteURI(aURI) {
-  let foo = Services.io.newURI("http://foo", null, null);
-  let bar = Services.io.newURI("http://bar", null, null);
-  return Services.io.newURI(aURI, null, foo).prePath != foo.prePath ||
-         Services.io.newURI(aURI, null, bar).prePath != bar.prePath;
-}
-
 this.AppsUtils = {
   // Clones a app, without the manifest.
   cloneAppObject: function cloneAppObject(aApp) {
@@ -168,13 +161,21 @@ this.AppsUtils = {
     if (aManifest.name == undefined)
       return false;
 
-    // launch_path, entry_points launch paths, message hrefs, and activity hrefs can't be absolute
-    if (aManifest.launch_path && isAbsoluteURI(aManifest.launch_path))
+    function isAbsolute(uri) {
+      // See bug 810551
+      let foo = Services.io.newURI("http://foo", null, null);
+      let bar = Services.io.newURI("http://bar", null, null);
+      return Services.io.newURI(uri, null, foo).prePath != foo.prePath ||
+             Services.io.newURI(uri, null, bar).prePath != bar.prePath;
+    }
+
+    // launch_path and entry_points launch paths can't be absolute
+    if (aManifest.launch_path && isAbsolute(aManifest.launch_path))
       return false;
 
     function checkAbsoluteEntryPoints(entryPoints) {
       for (let name in entryPoints) {
-        if (entryPoints[name].launch_path && isAbsoluteURI(entryPoints[name].launch_path)) {
+        if (entryPoints[name].launch_path && isAbsolute(entryPoints[name].launch_path)) {
           return true;
         }
       }
@@ -187,35 +188,6 @@ this.AppsUtils = {
     for (let localeName in aManifest.locales) {
       if (checkAbsoluteEntryPoints(aManifest.locales[localeName].entry_points)) {
         return false;
-      }
-    }
-
-    if (aManifest.activities) {
-      for (let activityName in aManifest.activities) {
-        let activity = aManifest.activities[activityName];
-        if (activity.href && isAbsoluteURI(activity.href)) {
-          return false;
-        }
-      }
-    }
-
-    // |messages| is an array of items, where each item is either a string or
-    // a {name: href} object.
-    let messages = aManifest.messages;
-    if (messages) {
-      if (!Array.isArray(messages)) {
-        return false;
-      }
-      for (let item of aManifest.messages) {
-        if (typeof item == "object") {
-          let keys = Object.keys(item);
-          if (keys.length != 1) {
-            return false;
-          }
-          if (isAbsoluteURI(item[keys[0]])) {
-            return false;
-          }
-        }
       }
     }
 
@@ -333,6 +305,10 @@ this.AppsUtils = {
       let dev2 = aRoot2.developer;
       if ((dev1 && !dev2) || (dev2 && !dev1)) {
         return false;
+      }
+
+      if (!dev1 && !dev2) {
+        return true;
       }
 
       return (dev1.name === dev2.name && dev1.url === dev2.url);
@@ -468,10 +444,6 @@ ManifestHelper.prototype = {
   },
 
   resolveFromOrigin: function(aURI) {
-    // This should be enforced higher up, but check it here just in case.
-    if (!isAbsoluteURI(aURI)) {
-      throw new Error("Webapps.jsm: non-relative URI passed to resolveFromOrigin");
-    }
     return this._origin.resolve(aURI);
   },
 
