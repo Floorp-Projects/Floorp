@@ -187,15 +187,18 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool processGroup(VirtualRegisterGroup *group);
     bool setIntervalRequirement(LiveInterval *interval);
     bool tryAllocateRegister(PhysicalRegister &r, LiveInterval *interval,
-                             bool *success, LiveInterval **pconflicting);
+                             bool *success, bool *pfixed, LiveInterval **pconflicting);
     bool tryAllocateGroupRegister(PhysicalRegister &r, VirtualRegisterGroup *group,
-                                  bool *psuccess, LiveInterval **pconflicting);
+                                  bool *psuccess, bool *pfixed, LiveInterval **pconflicting);
     bool evictInterval(LiveInterval *interval);
+    bool distributeUses(LiveInterval *interval, const LiveIntervalVector &newIntervals);
     bool split(LiveInterval *interval, const LiveIntervalVector &newIntervals);
     bool requeueIntervals(const LiveIntervalVector &newIntervals);
     void spill(LiveInterval *interval);
 
     bool isReusedInput(LUse *use, LInstruction *ins, bool considerCopy = false);
+    bool isRegisterUse(LUse *use, LInstruction *ins);
+    bool isRegisterDefinition(LiveInterval *interval);
     bool addLiveInterval(LiveIntervalVector &intervals, uint32_t vreg,
                          CodePosition from, CodePosition to);
 
@@ -226,6 +229,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
     bool trySplitAfterLastRegisterUse(LiveInterval *interval, bool *success);
     bool splitAtAllRegisterUses(LiveInterval *interval);
+    bool splitAcrossCalls(LiveInterval *interval);
 };
 
 } // namespace ion
