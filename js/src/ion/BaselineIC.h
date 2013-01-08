@@ -271,6 +271,13 @@ class ICEntry
     _(TypeMonitor_TypeObject)   \
                                 \
     _(TypeUpdate_Fallback)      \
+    _(TypeUpdate_Int32)         \
+    _(TypeUpdate_Double)        \
+    _(TypeUpdate_Boolean)       \
+    _(TypeUpdate_String)        \
+    _(TypeUpdate_Null)          \
+    _(TypeUpdate_Undefined)     \
+    _(TypeUpdate_TypeObject)    \
                                 \
     _(This_Fallback)            \
                                 \
@@ -631,6 +638,7 @@ class ICUpdatedStub : public ICStub
     // Pointer to the start of the type updating stub chain.
     ICStub *firstUpdateStub_;
 
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
     uint32_t numOptimizedStubs_;
 
     ICUpdatedStub(Kind kind, IonCode *stubCode)
@@ -641,6 +649,8 @@ class ICUpdatedStub : public ICStub
 
   public:
     bool initUpdatingChain(JSContext *cx, ICStubSpace *space);
+
+    bool addUpdateStubForValue(JSContext *cx, ICStubSpace *space, HandleValue val);
 
     void addOptimizedUpdateStub(ICStub *stub) {
         if (firstUpdateStub_->isTypeUpdate_Fallback()) {
@@ -1024,6 +1034,93 @@ class ICTypeUpdate_Fallback : public ICStub
 
         ICTypeUpdate_Fallback *getStub(ICStubSpace *space) {
             return ICTypeUpdate_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Type update stub to handle a primitive type.
+class ICTypeUpdate_Type : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICTypeUpdate_Type(Kind kind, IonCode *stubCode)
+        : ICStub(kind, stubCode)
+    { }
+
+  public:
+    static inline ICTypeUpdate_Type *New(ICStubSpace *space, Kind kind, IonCode *code) {
+        return space->allocate<ICTypeUpdate_Type>(kind, code);
+    }
+
+    static Kind KindFromType(JSValueType type) {
+        switch (type) {
+          case JSVAL_TYPE_INT32:     return TypeUpdate_Int32;
+          case JSVAL_TYPE_DOUBLE:    return TypeUpdate_Double;
+          case JSVAL_TYPE_BOOLEAN:   return TypeUpdate_Boolean;
+          case JSVAL_TYPE_STRING:    return TypeUpdate_String;
+          case JSVAL_TYPE_NULL:      return TypeUpdate_Null;
+          case JSVAL_TYPE_UNDEFINED: return TypeUpdate_Undefined;
+          default: JS_NOT_REACHED("Invalid type");
+        }
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        JSValueType type_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSValueType type)
+          : ICStubCompiler(cx, ICTypeUpdate_Type::KindFromType(type)),
+            type_(type)
+        { }
+
+        ICTypeUpdate_Type *getStub(ICStubSpace *space) {
+            return ICTypeUpdate_Type::New(space, kind, getStubCode());
+        }
+    };
+};
+
+// Type update stub to handle a single TypeObject.
+class ICTypeUpdate_TypeObject : public ICStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrTypeObject type_;
+
+    ICTypeUpdate_TypeObject(IonCode *stubCode, HandleTypeObject type)
+      : ICStub(TypeUpdate_TypeObject, stubCode),
+        type_(type)
+    { }
+
+  public:
+    static inline ICTypeUpdate_TypeObject *New(ICStubSpace *space, IonCode *code,
+                                               HandleTypeObject type)
+    {
+        return space->allocate<ICTypeUpdate_TypeObject>(code, type);
+    }
+
+    HeapPtrTypeObject &type() {
+        return type_;
+    }
+
+    static size_t offsetOfType() {
+        return offsetof(ICTypeUpdate_TypeObject, type_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        HandleTypeObject type_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, HandleTypeObject type)
+          : ICStubCompiler(cx, TypeUpdate_TypeObject),
+            type_(type)
+        { }
+
+        ICTypeUpdate_TypeObject *getStub(ICStubSpace *space) {
+            return ICTypeUpdate_TypeObject::New(space, getStubCode(), type_);
         }
     };
 };
