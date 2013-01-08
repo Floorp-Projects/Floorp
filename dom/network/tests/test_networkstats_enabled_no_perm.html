@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to ensure NetworkStats enabled and no networkstats-manage perm does not allow open</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+// Test to ensure NetworkStats is enabled but mozNetworkStats.connectionTypes
+// does not work in content.
+
+SpecialPowers.setBoolPref("dom.mozNetworkStats.enabled", true);
+SpecialPowers.removePermission("networkstats-manage", document);
+
+ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should be accessible if dom.mozNetworkStats.enabled is true");
+
+var error;
+try {
+  navigator.mozNetworkStats.connectionTypes;
+  ok(false, "Accessing navigator.mozNetworkStats.connectionTypes should have thrown!");
+} catch (ex) {
+  error = ex;
+}
+ok(error, "Got an exception accessing navigator.mozNetworkStats.connectionTypes");
+
+</script>
+</pre>
+</body>
+</html>

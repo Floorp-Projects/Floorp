@@ -240,6 +240,11 @@ public:
     return style;
   }
 
+  /**
+   * Determine whether an attribute is an event (onclick, etc.)
+   * @param aName the attribute
+   * @return whether the name is an event handler name
+   */
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
@@ -773,13 +778,6 @@ private:
   void RegUnRegAccessKey(bool aDoReg);
 
 protected:
-  /**
-   * Determine whether an attribute is an event (onclick, etc.)
-   * @param aName the attribute
-   * @return whether the name is an event handler name
-   */
-  bool IsEventName(nsIAtom* aName);
-
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify);

@@ -272,24 +272,12 @@ template <typename T>
 class MutableHandle : public js::MutableHandleBase<T>
 {
   public:
-    template <typename S>
-    MutableHandle(MutableHandle<S> handle,
-                  typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
-    {
-        this->ptr = reinterpret_cast<const T *>(handle.address());
-    }
-
-    template <typename S>
-    inline MutableHandle(js::Rooted<S> *root,
-                         typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
+    inline MutableHandle(js::Rooted<T> *root);
 
     void set(T v) {
         JS_ASSERT(!js::RootMethods<T>::poisoned(v));
         *ptr = v;
     }
-
-    template <typename S>
-    inline void set(const js::Unrooted<S> &v);
 
     /*
      * This may be called only if the location of the T is guaranteed
@@ -859,19 +847,11 @@ Handle<T>::Handle(MutableHandle<S> &root,
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
-template <typename T> template <typename S>
+template <typename T>
 inline
-MutableHandle<T>::MutableHandle(js::Rooted<S> *root,
-                                typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
+MutableHandle<T>::MutableHandle(js::Rooted<T> *root)
 {
     ptr = root->address();
-}
-
-template <typename T> template <typename S>
-inline void MutableHandle<T>::set(const js::Unrooted<S> &v)
-{
-    JS_ASSERT(!js::RootMethods<T>::poisoned(v));
-    *ptr = static_cast<S>(v);
 }
 
 /*

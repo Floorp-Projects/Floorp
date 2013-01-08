@@ -139,7 +139,7 @@ class js::AutoRendezvous
     }
 };
 
-PRUintn ForkJoinSlice::ThreadPrivateIndex;
+unsigned ForkJoinSlice::ThreadPrivateIndex;
 
 class js::AutoSetForkJoinSlice
 {

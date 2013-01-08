@@ -153,7 +153,7 @@ sip_platform_task_init (void)
  * @return            The length of the written output not including the NULL
  *                    terminator, or -1 if an error occurs.
  */
-static PRUint32 sip_get_sock_dir_tmpl(char *out, PRUint32 outlen,
+static uint32_t sip_get_sock_dir_tmpl(char *out, uint32_t outlen,
                                       const char *suffix) {
 
     char *tmpdir;
