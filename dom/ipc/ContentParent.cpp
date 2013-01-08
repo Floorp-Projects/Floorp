@@ -102,7 +102,6 @@
 #ifdef MOZ_WIDGET_GONK
 #include "nsIVolume.h"
 #include "nsIVolumeService.h"
-using namespace mozilla::system;
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -236,9 +235,9 @@ ContentParent::MaybeTakePreallocatedAppProcess()
 /*static*/ void
 ContentParent::FirstIdle(void)
 {
-    // The parent has gone idle for the first time. This would be a good
-    // time to preallocate an app process.
-    ScheduleDelayedPreallocateAppProcess();
+  // The parent has gone idle for the first time. This would be a good
+  // time to preallocate an app process.
+  ScheduleDelayedPreallocateAppProcess();
 }
 
 /*static*/ void
@@ -1134,22 +1133,6 @@ ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType)
     return true;
 }
 
-bool
-ContentParent::RecvBroadcastVolume(const nsString& aVolumeName)
-{
-#ifdef MOZ_WIDGET_GONK
-    nsresult rv;
-    nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
-    if (vs) {
-        vs->BroadcastVolume(aVolumeName);
-    }
-    return true;
-#else
-    NS_WARNING("ContentParent::RecvBroadcastVolume shouldn't be called when MOZ_WIDGET_GONK is not defined");
-    return false;
-#endif
-}
-
 NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
                               nsIObserver,
                               nsIThreadObserver,
@@ -1229,15 +1212,12 @@ ContentParent::Observe(nsISupports* aSubject,
         nsString volName;
         nsString mountPoint;
         int32_t  state;
-        int32_t  mountGeneration;
 
         vol->GetName(volName);
         vol->GetMountPoint(mountPoint);
         vol->GetState(&state);
-        vol->GetMountGeneration(&mountGeneration);
 
-        unused << SendFileSystemUpdate(volName, mountPoint, state,
-                                       mountGeneration);
+        unused << SendFileSystemUpdate(volName, mountPoint, state);
     }
 #endif
 #ifdef ACCESSIBILITY
