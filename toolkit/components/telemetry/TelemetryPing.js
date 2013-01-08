@@ -518,6 +518,7 @@ TelemetryPing.prototype = {
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
       slowSQL: Telemetry.slowSQL,
       chromeHangs: Telemetry.chromeHangs,
+      lateWrites: Telemetry.lateWrites,
       addonHistograms: this.getAddonHistograms()
     };
 
