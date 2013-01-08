@@ -21,6 +21,7 @@ webidl_files = \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
+  CDATASection.webidl \
   CharacterData.webidl \
   ClientRectList.webidl \
   Comment.webidl \

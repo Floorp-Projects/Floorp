@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CDATASection.h"
+#include "mozilla/dom/CDATASectionBinding.h"
 
 nsresult
 NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
@@ -50,6 +51,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
 NS_IMPL_ADDREF_INHERITED(CDATASection, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(CDATASection, nsGenericDOMDataNode)
+
+JSObject*
+CDATASection::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return CDATASectionBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 bool
 CDATASection::IsNodeOfType(uint32_t aFlags) const
