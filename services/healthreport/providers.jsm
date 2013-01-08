@@ -728,6 +728,13 @@ AddonsProvider.prototype = Object.freeze({
     "onUninstalled",
   ],
 
+  // Add-on types for which full details are uploaded in the
+  // ActiveAddonsMeasurement. All other types are ignored.
+  FULL_DETAIL_TYPES: [
+    "plugin",
+    "extension",
+  ],
+
   name: "org.mozilla.addons",
 
   measurementTypes: [
@@ -815,6 +822,13 @@ AddonsProvider.prototype = Object.freeze({
     let data = {addons: {}, counts: {}};
 
     for (let addon of addons) {
+      let type = addon.type;
+      data.counts[type] = (data.counts[type] || 0) + 1;
+
+      if (this.FULL_DETAIL_TYPES.indexOf(addon.type) == -1) {
+        continue;
+      }
+
       let optOutPref = "extensions." + addon.id + ".getAddons.cache.enabled";
       if (!this._prefs.get(optOutPref, true)) {
         this._log.debug("Ignoring add-on that's opted out of AMO updates: " +
@@ -837,8 +851,6 @@ AddonsProvider.prototype = Object.freeze({
 
       data.addons[addon.id] = obj;
 
-      let type = addon.type;
-      data.counts[type] = (data.counts[type] || 0) + 1;
     }
 
     return data;
