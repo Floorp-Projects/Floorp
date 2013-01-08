@@ -852,15 +852,12 @@ class TokenStream
     void updateFlagsForEOL();
 
     Token               tokens[ntokens];/* circular token buffer */
-    js::SkipRoot        tokensRoot;     /* prevent overwriting of token buffer */
     unsigned            cursor;         /* index of last parsed token */
     unsigned            lookahead;      /* count of lookahead tokens */
     unsigned            lineno;         /* current line number */
     unsigned            flags;          /* flags -- see above */
     const jschar        *linebase;      /* start of current line;  points into userbuf */
     const jschar        *prevLinebase;  /* start of previous line;  NULL if on the first line */
-    js::SkipRoot        linebaseRoot;
-    js::SkipRoot        prevLinebaseRoot;
     TokenBuf            userbuf;        /* user input buffer */
     const char          *filename;      /* input filename or null */
     jschar              *sourceMap;     /* source map's filename or null */
@@ -876,6 +873,13 @@ class TokenStream
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */
     Position            lastFunctionKeyword; /* used as a starting point for reparsing strict functions */
+
+    /*
+     * The tokens array stores pointers to JSAtoms. These are rooted by the
+     * atoms table using AutoKeepAtoms in the Parser. This SkipRoot tells the
+     * exact rooting analysis to ignore the atoms in the tokens array.
+     */
+    SkipRoot            tokenSkip;
 };
 
 struct KeywordInfo {
