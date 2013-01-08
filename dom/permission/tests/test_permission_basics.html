@@ -41,7 +41,7 @@ var mozPermissions = window.navigator.mozPermissionSettings;
 
 function permissionTest() {
   // Any permission explicit for privileged and implicit for certified serves
-  var testPerm = "geolocation";
+  var testPerm = "contacts-read";
 
   // Simulate than the app request the permissions
   SpecialPowers.addPermission(testPerm, true, testPrivApp);
