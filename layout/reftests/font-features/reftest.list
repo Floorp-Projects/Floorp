@@ -3,8 +3,6 @@
 # These rely on the Linux Libertine font (loaded via @font-face)
 # to ensure that features are present.
 
-# Feature support is currently enabled only on Mac OS X by default
-
 # check that Turkish language causes a change in rendering (no fi ligature)
 # (also works via Pango)
 skip-if(B2G) HTTP(..) != font-features-turkish.html font-features-ref.html # bug 773482
@@ -52,3 +50,7 @@ skip-if(B2G) HTTP(..) == font-features-turkish-override-5.html font-features-tur
 # check that last value wins if a feature is repeated
 HTTP(..) == font-features-order-1.html font-features-ref.html
 HTTP(..) == font-features-order-2.html font-features-noliga.html
+
+# OpenType features should work across inter-word spaces
+HTTP(..) == font-features-across-space-1.html font-features-across-space-1-ref.html
+HTTP(..) == font-features-across-space-2.html font-features-across-space-2-ref.html
