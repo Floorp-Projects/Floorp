@@ -49,6 +49,7 @@ hb_shape_plan_plan (hb_shape_plan_t    *shape_plan,
 	    HB_SHAPER_DATA (shaper, shape_plan) = \
 	      HB_SHAPER_DATA_CREATE_FUNC (shaper, shape_plan) (shape_plan, user_features, num_user_features); \
 	    shape_plan->shaper_func = _hb_##shaper##_shape; \
+	    shape_plan->shaper_name = #shaper; \
 	    return; \
 	  } \
 	} HB_STMT_END
@@ -120,6 +121,7 @@ hb_shape_plan_get_empty (void)
     HB_SEGMENT_PROPERTIES_DEFAULT, /* props */
 
     NULL, /* shaper_func */
+    NULL, /* shaper_name */
 
     {
 #define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
@@ -297,4 +299,10 @@ retry:
   hb_face_destroy (face);
 
   return hb_shape_plan_reference (shape_plan);
+}
+
+const char *
+hb_shape_plan_get_shaper (hb_shape_plan_t *shape_plan)
+{
+  return shape_plan->shaper_name;
 }

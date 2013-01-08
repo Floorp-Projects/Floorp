@@ -24,7 +24,7 @@ for def in $defs; do
 		echo "Checking that $so has the same symbol list as $def"
 		{
 			echo EXPORTS
-			nm "$so" | grep ' [BCDGINRSTVW] ' | grep -v ' T _fini\>\| T _init\>' | cut -d' ' -f3
+			nm "$so" | grep ' [BCDGINRSTVW] ' | grep -v ' T _fini\>\| T _init\>\| __bss_start\>\| __bss_start__\>\| __bss_end__\>\| _edata\>\| _end\>\| _bss_end__\>\| __end__\>' | cut -d' ' -f3
 			stat=1
 			# cheat: copy the last line from the def file!
 			tail -n1 "$def"
