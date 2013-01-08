@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/Element.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDocument.h"
@@ -18,7 +17,6 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
 
 class nsXMLStylesheetPI : public nsXMLProcessingInstruction,
                           public nsStyleLinkElement
@@ -59,7 +57,6 @@ protected:
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
-                         bool* aIsScoped,
                          bool* aIsAlternate);
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
@@ -180,13 +177,11 @@ void
 nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
                                      nsAString& aType,
                                      nsAString& aMedia,
-                                     bool* aIsScoped,
                                      bool* aIsAlternate)
 {
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
-  *aIsScoped = false;
   *aIsAlternate = false;
 
   // xml-stylesheet PI is special only in prolog

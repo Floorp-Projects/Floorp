@@ -440,8 +440,6 @@ protected:
   void ShowEventTargetDebug();
 #endif
 
-  void RecordStyleSheetChange(nsIStyleSheet* aStyleSheet);
-
     /**
     * methods that manage rules that are used to implement the associated preferences
     *  - initially created for bugs 31816, 20760, 22963

@@ -32,12 +32,6 @@ class nsIStyleSheetLinkingElement;
 class nsCycleCollectionTraversalCallback;
 
 namespace mozilla {
-namespace dom {
-class Element;
-}
-}
-
-namespace mozilla {
 
 class URIPrincipalAndCORSModeHashKey : public nsURIHashKey
 {
@@ -166,7 +160,6 @@ public:
                            uint32_t aLineNumber,
                            const nsAString& aTitle,
                            const nsAString& aMedia,
-                           mozilla::dom::Element* aScopeElement,
                            nsICSSLoaderObserver* aObserver,
                            bool* aCompleted,
                            bool* aIsAlternate);
@@ -402,7 +395,6 @@ private:
                         const nsAString& aTitle,
                         const nsAString& aMediaString,
                         nsMediaList* aMediaList,
-                        mozilla::dom::Element* aScopeElement,
                         bool isAlternate);
 
   nsresult InsertSheetInDoc(nsCSSStyleSheet* aSheet,

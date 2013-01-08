@@ -12,10 +12,9 @@
 
 #include "nsStyleLinkElement.h"
 
-#include "mozilla/css/Loader.h"
-#include "mozilla/dom/Element.h"
-#include "nsCSSStyleSheet.h"
 #include "nsIContent.h"
+#include "mozilla/css/Loader.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIDocument.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMNode.h"
@@ -26,9 +25,6 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 #include "nsContentUtils.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
 
 nsStyleLinkElement::nsStyleLinkElement()
   : mDontLoadStyle(false)
@@ -207,87 +203,6 @@ nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument *aOldDocument,
                             aForceUpdate);
 }
 
-static bool
-IsScopedStyleElement(nsIContent* aContent)
-{
-  // This is quicker than, say, QIing aContent to nsStyleLinkElement
-  // and then calling its virtual GetStyleSheetInfo method to find out
-  // if it is scoped.
-  return aContent->IsHTML(nsGkAtoms::style) &&
-         aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::scoped);
-}
-
-static void
-SetIsElementInStyleScopeFlagOnSubtree(Element* aElement)
-{
-  if (aElement->IsElementInStyleScope()) {
-    return;
-  }
-
-  aElement->SetIsElementInStyleScope();
-
-  nsIContent* n = aElement->GetNextNode(aElement);
-  while (n) {
-    if (n->IsElementInStyleScope()) {
-      n = n->GetNextNonChildNode(aElement);
-    } else {
-      if (n->IsElement()) {
-        n->SetIsElementInStyleScope();
-      }
-      n = n->GetNextNode(aElement);
-    }
-  }
-}
-
-static bool
-HasScopedStyleSheetChild(nsIContent* aContent)
-{
-  for (nsIContent* n = aContent->GetFirstChild(); n; n = n->GetNextSibling()) {
-    if (IsScopedStyleElement(n)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Called when aElement has had a <style scoped> child removed.
-static void
-UpdateIsElementInStyleScopeFlagOnSubtree(Element* aElement)
-{
-  NS_ASSERTION(aElement->IsElementInStyleScope(),
-               "only call UpdateIsElementInStyleScopeFlagOnSubtree on a "
-               "subtree that has IsElementInStyleScope boolean flag set");
-
-  if (HasScopedStyleSheetChild(aElement)) {
-    return;
-  }
-
-  aElement->ClearIsElementInStyleScope();
-
-  nsIContent* n = aElement->GetNextNode(aElement);
-  while (n) {
-    if (HasScopedStyleSheetChild(n)) {
-      n = n->GetNextNonChildNode(aElement);
-    } else {
-      if (n->IsElement()) {
-        n->ClearIsElementInStyleScope();
-      }
-      n = n->GetNextNode(aElement);
-    }
-  }
-}
-
-static Element*
-GetScopeElement(nsIStyleSheet* aSheet)
-{
-  nsRefPtr<nsCSSStyleSheet> cssStyleSheet = do_QueryObject(aSheet);
-  if (!cssStyleSheet) {
-    return nullptr;
-  }
-
-  return cssStyleSheet->GetScopeElement();
-}
-
 nsresult
 nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
                                        nsICSSLoaderObserver* aObserver,
@@ -296,11 +211,6 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
                                        bool aForceUpdate)
 {
   *aWillNotify = false;
-
-  nsCOMPtr<nsIContent> thisContent;
-  CallQueryInterface(this, getter_AddRefs(thisContent));
-
-  Element* oldScopeElement = GetScopeElement(mStyleSheet);
 
   if (mStyleSheet && aOldDocument) {
     // We're removing the link element from the document, unload the
@@ -311,14 +221,14 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     aOldDocument->RemoveStyleSheet(mStyleSheet);
     aOldDocument->EndUpdate(UPDATE_STYLE);
     nsStyleLinkElement::SetStyleSheet(nullptr);
-    if (oldScopeElement) {
-      UpdateIsElementInStyleScopeFlagOnSubtree(oldScopeElement);
-    }
   }
 
   if (mDontLoadStyle || !mUpdatesEnabled) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsIContent> thisContent;
+  QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(thisContent));
 
   NS_ENSURE_TRUE(thisContent, NS_ERROR_FAILURE);
 
@@ -354,19 +264,12 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
   }
 
   nsAutoString title, type, media;
-  bool isScoped;
   bool isAlternate;
 
-  GetStyleSheetInfo(title, type, media, &isScoped, &isAlternate);
+  GetStyleSheetInfo(title, type, media, &isAlternate);
 
   if (!type.LowerCaseEqualsLiteral("text/css")) {
     return NS_OK;
-  }
-
-  Element* scopeElement = isScoped ? thisContent->GetParentElement() : nullptr;
-  if (scopeElement) {
-    NS_ASSERTION(isInline, "non-inline style must not have scope element");
-    SetIsElementInStyleScopeFlagOnSubtree(scopeElement);
   }
 
   bool doneLoading = false;
@@ -378,7 +281,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     // Parse the style sheet.
     rv = doc->CSSLoader()->
       LoadInlineStyle(thisContent, text, mLineNumber, title, media,
-                      scopeElement, aObserver, &doneLoading, &isAlternate);
+                      aObserver, &doneLoading, &isAlternate);
   }
   else {
     // XXXbz clone the URI here to work around content policies modifying URIs.
@@ -404,45 +307,4 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
   *aIsAlternate = isAlternate;
 
   return NS_OK;
-}
-
-void
-nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
-{
-  if (!mStyleSheet) {
-    return;
-  }
-
-  nsRefPtr<nsCSSStyleSheet> cssStyleSheet = do_QueryObject(mStyleSheet);
-  NS_ASSERTION(cssStyleSheet, "should only call UpdateStyleSheetScope for "
-                              "an nsCSSStyleSheet");
-
-  nsCOMPtr<nsIContent> thisContent;
-  CallQueryInterface(this, getter_AddRefs(thisContent));
-
-  Element* oldScopeElement = cssStyleSheet->GetScopeElement();
-  Element* newScopeElement = aIsNowScoped ?
-                               thisContent->GetParentElement() :
-                               nullptr;
-
-  if (oldScopeElement == newScopeElement) {
-    return;
-  }
-
-  nsIDocument* document = thisContent->GetOwnerDocument();
-
-  document->BeginUpdate(UPDATE_STYLE);
-  document->RemoveStyleSheet(mStyleSheet);
-
-  cssStyleSheet->SetScopeElement(newScopeElement);
-
-  document->AddStyleSheet(mStyleSheet);
-  document->EndUpdate(UPDATE_STYLE);
-
-  if (oldScopeElement) {
-    UpdateIsElementInStyleScopeFlagOnSubtree(oldScopeElement);
-  }
-  if (newScopeElement) {
-    SetIsElementInStyleScopeFlagOnSubtree(newScopeElement);
-  }
 }

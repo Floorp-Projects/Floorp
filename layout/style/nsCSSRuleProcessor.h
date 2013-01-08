@@ -43,11 +43,7 @@ class nsCSSRuleProcessor: public nsIStyleRuleProcessor {
 public:
   typedef nsTArray<nsRefPtr<nsCSSStyleSheet> > sheet_array_type;
 
-  // aScopeElement must be non-null iff aSheetType is
-  // nsStyleSet::eScopedDocSheet.
-  nsCSSRuleProcessor(const sheet_array_type& aSheets,
-                     uint8_t aSheetType,
-                     mozilla::dom::Element* aScopeElement);
+  nsCSSRuleProcessor(const sheet_array_type& aSheets, uint8_t aSheetType);
   virtual ~nsCSSRuleProcessor();
 
   NS_DECL_ISUPPORTS
@@ -128,13 +124,6 @@ public:
   bool AppendPageRules(nsPresContext* aPresContext,
                        nsTArray<nsCSSPageRule*>& aArray);
 
-  /**
-   * Returns the scope element for the scoped style sheets this rule
-   * processor is for.  If this is not a rule processor for scoped style
-   * sheets, it returns null.
-   */
-  mozilla::dom::Element* GetScopeElement() const { return mScopeElement; }
-
 #ifdef DEBUG
   void AssertQuirksChangeOK() {
     NS_ASSERTION(!mRuleCascades, "can't toggle quirks style sheet without "
@@ -174,11 +163,7 @@ private:
 
   // The last pres context for which GetRuleCascades was called.
   nsPresContext *mLastPresContext;
-
-  // The scope element for this rule processor's scoped style sheets.
-  // Only used if mSheetType == nsStyleSet::eScopedDocSheet.
-  nsRefPtr<mozilla::dom::Element> mScopeElement;
-
+  
   // type of stylesheet using this processor
   uint8_t mSheetType;  // == nsStyleSet::sheetType
 
