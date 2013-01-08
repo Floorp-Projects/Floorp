@@ -33,12 +33,14 @@ class SVGViewElement : public SVGViewElementBase,
                        public nsIDOMSVGFitToViewBox,
                        public nsIDOMSVGZoomAndPan
 {
+protected:
   friend class mozilla::SVGFragmentIdentifier;
   friend class ::nsSVGSVGElement;
   friend class ::nsSVGOuterSVGFrame;
   SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo> aNodeInfo));
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   // interfaces:
@@ -59,6 +61,14 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  uint16_t ZoomAndPan() { return mEnumAttributes[ZOOMANDPAN].GetAnimValue(); }
+  void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
+  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  already_AddRefed<nsIDOMSVGStringList> ViewTarget();
+
 private:
 
   // nsSVGElement overrides
