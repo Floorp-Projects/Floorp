@@ -19,12 +19,13 @@ EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
   CDATASection.h \
+  ProcessingInstruction.h \
   $(NULL)
 
 CPPSRCS		= \
 		nsXMLElement.cpp \
 		CDATASection.cpp \
-		nsXMLProcessingInstruction.cpp \
+		ProcessingInstruction.cpp \
 		nsXMLStylesheetPI.cpp \
 		$(NULL)
 
