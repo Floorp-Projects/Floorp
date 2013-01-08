@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h" 
+#include "base/basictypes.h"
 
 #include "BluetoothHfpManager.h"
 
@@ -24,8 +24,6 @@
 #include "nsISettingsService.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsRadioInterfaceLayer.h"
-
-#include <unistd.h> /* usleep() */
 
 #define AUDIO_VOLUME_BT_SCO "audio.volume.bt_sco"
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
@@ -300,6 +298,19 @@ CloseScoSocket()
     return;
   }
   sco->Disconnect();
+}
+
+bool
+IsValidDtmf(const char aChar) {
+  // Valid DTMF: [*#0-9ABCD]
+  if (aChar == '*' || aChar == '#') {
+    return true;
+  } else if (aChar >= '0' && aChar <= '9') {
+    return true;
+  } else if (aChar >= 'A' && aChar <= 'D') {
+    return true;
+  }
+  return false;
 }
 
 BluetoothHfpManager::BluetoothHfpManager()
@@ -616,6 +627,18 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
      * SLC establishment is done when AT+CMER has been received.
      * Do nothing but respond with "OK".
      */
+  } else if (msg.Find("AT+VTS=") != -1) {
+    ParseAtCommand(msg, 7, atCommandValues);
+    if (atCommandValues.Length() != 1) {
+      NS_WARNING("Couldn't get the value of command [AT+VTS=]");
+      goto respond_with_ok;
+    }
+
+    if (IsValidDtmf(atCommandValues[0].get()[0])) {
+      nsAutoCString message("VTS=");
+      message += atCommandValues[0].get()[0];
+      NotifyDialer(NS_ConvertUTF8toUTF16(message));
+    }
   } else if (msg.Find("AT+VGM=") != -1) {
     ParseAtCommand(msg, 7, atCommandValues);
 
