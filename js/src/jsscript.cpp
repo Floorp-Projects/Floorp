@@ -1192,9 +1192,12 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
     const jschar *chars;
 #if USE_ZLIB
     Rooted<JSStableString *> cached(cx, NULL);
+#ifdef JS_THREADSAFE
     if (!ready()) {
         chars = cx->runtime->sourceCompressorThread.currentChars();
-    } else if (compressed()) {
+    } else
+#endif
+    if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
         if (!cached) {
             const size_t nbytes = sizeof(jschar) * (length_ + 1);
