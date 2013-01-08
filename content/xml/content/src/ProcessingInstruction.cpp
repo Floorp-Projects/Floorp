@@ -6,6 +6,7 @@
 #include "nsGkAtoms.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 
@@ -63,6 +64,8 @@ ProcessingInstruction::ProcessingInstruction(already_AddRefed<nsINodeInfo> aNode
   SetTextInternal(0, mText.GetLength(),
                   aData.BeginReading(), aData.Length(),
                   false);  // Don't notify (bug 420429).
+
+  SetIsDOMBinding();
 }
 
 ProcessingInstruction::~ProcessingInstruction()
@@ -85,6 +88,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 NS_IMPL_ADDREF_INHERITED(ProcessingInstruction, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(ProcessingInstruction, nsGenericDOMDataNode)
 
+JSObject*
+ProcessingInstruction::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return ProcessingInstructionBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMETHODIMP
 ProcessingInstruction::GetTarget(nsAString& aTarget)

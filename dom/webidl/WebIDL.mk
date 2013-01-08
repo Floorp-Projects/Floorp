@@ -94,6 +94,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  ProcessingInstruction.webidl \
   Rect.webidl \
   RGBColor.webidl \
   Screen.webidl \
