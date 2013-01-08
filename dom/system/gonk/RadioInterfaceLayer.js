@@ -1613,7 +1613,8 @@ RadioInterfaceLayer.prototype = {
     this._sendTargetMessage("mobileconnection", "RIL:IccInfoChanged", message);
 
     // If spn becomes available, we should check roaming again.
-    if (!oldIcc.spn && message.spn) {
+    let oldSpn = oldIcc ? oldIcc.spn : null;
+    if (!oldSpn && message.spn) {
       let voice = this.rilContext.voice;
       let data = this.rilContext.data;
       let voiceRoaming = voice.roaming;
