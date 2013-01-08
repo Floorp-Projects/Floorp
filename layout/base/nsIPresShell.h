@@ -1424,9 +1424,6 @@ protected:
   // re-use old pixels.
   RenderFlags               mRenderFlags;
 
-  // Indicates that the whole document must be restyled.  Changes to scoped
-  // style sheets are recorded in mChangedScopeStyleRoots rather than here
-  // in mStylesHaveChanged.
   bool                      mStylesHaveChanged : 1;
   bool                      mDidInitialize : 1;
   bool                      mIsDestroying : 1;
@@ -1449,15 +1446,6 @@ protected:
 
   bool                      mSuppressInterruptibleReflows : 1;
   bool                      mScrollPositionClampingScrollPortSizeSet : 1;
-
-  // List of subtrees rooted at style scope roots that need to be restyled.
-  // When a change to a scoped style sheet is made, we add the style scope
-  // root to this array rather than setting mStylesHaveChanged = true, since
-  // we know we don't need to restyle the whole document.  However, if in the
-  // same update block we have already had other changes that require
-  // the whole document to be restyled (i.e., mStylesHaveChanged is already
-  // true), then we don't bother adding the scope root here.
-  nsAutoTArray<nsRefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
 
   static nsIContent*        gKeyDownTarget;
 

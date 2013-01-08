@@ -1155,9 +1155,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
                // And the restyle bits
                ELEMENT_ALL_RESTYLE_FLAGS);
-
-    // Propagate scoped style sheet tracking bit.
-    SetIsElementInStyleScope(mParent->IsElementInStyleScope());
   } else {
     // If we're not in the doc, update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());
@@ -3597,14 +3594,4 @@ Element::GetEditorInternal()
 {
   nsCOMPtr<nsITextControlElement> textCtrl = do_QueryInterface(this);
   return textCtrl ? textCtrl->GetTextEditor() : nullptr;
-}
-
-nsresult
-Element::SetBoolAttr(nsIAtom* aAttr, bool aValue)
-{
-  if (aValue) {
-    return SetAttr(kNameSpaceID_None, aAttr, EmptyString(), true);
-  }
-
-  return UnsetAttr(kNameSpaceID_None, aAttr, true);
 }

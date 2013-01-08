@@ -69,13 +69,10 @@ protected:
   nsresult UpdateStyleSheetInternal(nsIDocument *aOldDocument,
                                     bool aForceUpdate = false);
 
-  void UpdateStyleSheetScopedness(bool aIsNowScoped);
-
   virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
-                                 bool* aIsScoped,
                                  bool* aIsAlternate) = 0;
 
   nsIStyleSheet* GetStyleSheet() { return mStyleSheet; }

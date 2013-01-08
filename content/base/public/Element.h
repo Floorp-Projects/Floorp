@@ -873,29 +873,6 @@ public:
    */
   nsIEditor* GetEditorInternal();
 
-  /**
-   * Helper method for NS_IMPL_BOOL_ATTR macro.
-   * Gets value of boolean attribute. Only works for attributes in null
-   * namespace.
-   *
-   * @param aAttr    name of attribute.
-   * @param aValue   Boolean value of attribute.
-   */
-  NS_HIDDEN_(bool) GetBoolAttr(nsIAtom* aAttr) const
-  {
-    return HasAttr(kNameSpaceID_None, aAttr);
-  }
-
-  /**
-   * Helper method for NS_IMPL_BOOL_ATTR macro.
-   * Sets value of boolean attribute by removing attribute or setting it to
-   * the empty string. Only works for attributes in null namespace.
-   *
-   * @param aAttr    name of attribute.
-   * @param aValue   Boolean value of attribute.
-   */
-  NS_HIDDEN_(nsresult) SetBoolAttr(nsIAtom* aAttr, bool aValue);
-
 protected:
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
@@ -1236,24 +1213,6 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   _class::Set##_method(const nsAString& aValue)                         \
   {                                                                     \
     return SetAttr(kNameSpaceID_None, nsGkAtoms::_atom, nullptr, aValue, true); \
-  }
-
-/**
- * A macro to implement the getter and setter for a given boolean
- * valued content property. The method uses the GetBoolAttr and
- * SetBoolAttr methods.
- */
-#define NS_IMPL_BOOL_ATTR(_class, _method, _atom)                     \
-  NS_IMETHODIMP                                                       \
-  _class::Get##_method(bool* aValue)                                  \
-  {                                                                   \
-    *aValue = GetBoolAttr(nsGkAtoms::_atom);                          \
-    return NS_OK;                                                     \
-  }                                                                   \
-  NS_IMETHODIMP                                                       \
-  _class::Set##_method(bool aValue)                                   \
-  {                                                                   \
-    return SetBoolAttr(nsGkAtoms::_atom, aValue);                     \
   }
 
 #define NS_FORWARD_NSIDOMELEMENT_TO_GENERIC                                   \
