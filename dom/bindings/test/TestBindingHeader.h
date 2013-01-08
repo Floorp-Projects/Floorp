@@ -19,22 +19,6 @@
 namespace mozilla {
 namespace dom {
 
-// IID for the TestNonCastableInterface
-#define NS_TEST_NONCASTABLE_INTERFACE_IID \
-{ 0x7c9f8ee2, 0xc9bf, 0x46ca, \
- { 0xa0, 0xa9, 0x03, 0xa8, 0xd6, 0x30, 0x0e, 0xde } }
-
-class TestNonCastableInterface : public nsISupports,
-                                 public nsWrapperCache
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_NONCASTABLE_INTERFACE_IID)
-  NS_DECL_ISUPPORTS
-
-  // We need a GetParentObject to make binding codegen happy
-  virtual nsISupports* GetParentObject();
-};
-
 // IID for nsRenamedInterface
 #define NS_RENAMED_INTERFACE_IID \
 { 0xd4b19ef3, 0xe68b, 0x4e3f, \
@@ -125,7 +109,7 @@ public:
     Constructor(const GlobalObject&, TestInterface*, ErrorResult&);
   static
   already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, TestNonCastableInterface&, ErrorResult&);
+    Constructor(const GlobalObject&, uint32_t, IndirectlyImplementedInterface&, ErrorResult&);
   /*  static
   already_AddRefed<TestInterface>
     Constructor(const GlobalObject&, uint32_t, uint32_t,
@@ -260,20 +244,20 @@ public:
   void ReceiveNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&);
   void ReceiveNullableNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&);
 
-  already_AddRefed<TestNonCastableInterface> ReceiveOther();
-  already_AddRefed<TestNonCastableInterface> ReceiveNullableOther();
-  TestNonCastableInterface* ReceiveWeakOther();
-  TestNonCastableInterface* ReceiveWeakNullableOther();
-  void PassOther(TestNonCastableInterface&);
-  void PassOther2(NonNull<TestNonCastableInterface>&);
-  void PassNullableOther(TestNonCastableInterface*);
-  already_AddRefed<TestNonCastableInterface> NonNullOther();
-  void SetNonNullOther(TestNonCastableInterface&);
-  already_AddRefed<TestNonCastableInterface> GetNullableOther();
-  void SetNullableOther(TestNonCastableInterface*);
-  void PassOptionalOther(const Optional<TestNonCastableInterface*>&);
-  void PassOptionalNonNullOther(const Optional<NonNull<TestNonCastableInterface> >&);
-  void PassOptionalOtherWithDefault(TestNonCastableInterface*);
+  already_AddRefed<IndirectlyImplementedInterface> ReceiveOther();
+  already_AddRefed<IndirectlyImplementedInterface> ReceiveNullableOther();
+  IndirectlyImplementedInterface* ReceiveWeakOther();
+  IndirectlyImplementedInterface* ReceiveWeakNullableOther();
+  void PassOther(IndirectlyImplementedInterface&);
+  void PassOther2(NonNull<IndirectlyImplementedInterface>&);
+  void PassNullableOther(IndirectlyImplementedInterface*);
+  already_AddRefed<IndirectlyImplementedInterface> NonNullOther();
+  void SetNonNullOther(IndirectlyImplementedInterface&);
+  already_AddRefed<IndirectlyImplementedInterface> GetNullableOther();
+  void SetNullableOther(IndirectlyImplementedInterface*);
+  void PassOptionalOther(const Optional<IndirectlyImplementedInterface*>&);
+  void PassOptionalNonNullOther(const Optional<NonNull<IndirectlyImplementedInterface> >&);
+  void PassOptionalOtherWithDefault(IndirectlyImplementedInterface*);
 
   already_AddRefed<TestExternalInterface> ReceiveExternal();
   already_AddRefed<TestExternalInterface> ReceiveNullableExternal();
@@ -624,8 +608,8 @@ private:
   void PassOptionalUnsignedLongLong(Optional<uint64_t>&) MOZ_DELETE;
   void PassOptionalSelf(Optional<TestInterface*> &) MOZ_DELETE;
   void PassOptionalNonNullSelf(Optional<NonNull<TestInterface> >&) MOZ_DELETE;
-  void PassOptionalOther(Optional<TestNonCastableInterface*>&);
-  void PassOptionalNonNullOther(Optional<NonNull<TestNonCastableInterface> >&);
+  void PassOptionalOther(Optional<IndirectlyImplementedInterface*>&);
+  void PassOptionalNonNullOther(Optional<NonNull<IndirectlyImplementedInterface> >&);
   void PassOptionalExternal(Optional<TestExternalInterface*>&) MOZ_DELETE;
   void PassOptionalNonNullExternal(Optional<TestExternalInterface*>&) MOZ_DELETE;
   void PassOptionalSequence(Optional<Sequence<int32_t> >&) MOZ_DELETE;
