@@ -6270,6 +6270,13 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id, types::StackTypeS
         return true;
     }
 
+    // Don't call the getter with a primitive value.
+    if (unaryTypes.inTypes->getKnownTypeTag() != JSVAL_TYPE_OBJECT) {
+        MGuardObject *guardObj = MGuardObject::New(obj);
+        current->add(guardObj);
+        obj = guardObj;
+    }
+
     // Spoof stack to expected state for call.
     pushConstant(ObjectValue(*commonGetter));
 
@@ -6421,6 +6428,13 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             current->push(value);
 
             return resumeAfter(set);
+        }
+
+        // Don't call the setter with a primitive value.
+        if (types->getKnownTypeTag() != JSVAL_TYPE_OBJECT) {
+            MGuardObject *guardObj = MGuardObject::New(obj);
+            current->add(guardObj);
+            obj = guardObj;
         }
 
         // Dummy up the stack, as in getprop
