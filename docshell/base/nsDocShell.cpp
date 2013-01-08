@@ -8651,6 +8651,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         return NS_ERROR_FAILURE;
     }
 
+    NS_ENSURE_STATE(!HasUnloadedParent());
+
     rv = CheckLoadingPermissions();
     if (NS_FAILED(rv)) {
         return rv;
@@ -12439,4 +12441,24 @@ nsDocShell::GetAsyncPanZoomEnabled(bool* aOut)
     }
     *aOut = false;
     return NS_OK;
+}
+
+bool
+nsDocShell::HasUnloadedParent()
+{
+    nsCOMPtr<nsIDocShellTreeItem> currentTreeItem = this;
+    while (currentTreeItem) {
+        nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+        currentTreeItem->GetParent(getter_AddRefs(parentTreeItem));
+        nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentTreeItem);
+        if (parent) {
+            bool inUnload = false;
+            parent->GetIsInUnload(&inUnload);
+            if (inUnload) {
+                return true;
+            }
+        }
+        currentTreeItem.swap(parentTreeItem);
+    }
+    return false;
 }
