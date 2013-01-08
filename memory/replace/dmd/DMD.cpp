@@ -48,10 +48,6 @@ static long GetPageSize()
   GetSystemInfo(&si);
   return si.dwPageSize;
 }
-static void* valloc(size_t size)
-{
-  return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-}
 #else
 #define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif
@@ -2331,12 +2327,13 @@ RunTestMode(FILE* fp)
   // XXX: no memalign on Mac
 //void* x = memalign(64, 65);           // rounds up to 128
 //UseItOrLoseIt(x);
-  // XXX: posix_memalign doesn't work on B2G, apparently
+  // XXX: posix_memalign doesn't work on B2G
 //void* y;
 //posix_memalign(&y, 128, 129);         // rounds up to 256
 //UseItOrLoseIt(y);
-  void* z = valloc(1);                  // rounds up to 4096
-  UseItOrLoseIt(z);
+  // XXX: valloc doesn't work on Windows.
+//void* z = valloc(1);                  // rounds up to 4096
+//UseItOrLoseIt(z);
 //aligned_alloc(64, 256);               // XXX: C11 only
 
   // 1st Dump.
@@ -2352,7 +2349,7 @@ RunTestMode(FILE* fp)
   free(e3);
 //free(x);
 //free(y);
-  free(z);
+//free(z);
 
   // 2nd Dump.
   Dump(writer);
