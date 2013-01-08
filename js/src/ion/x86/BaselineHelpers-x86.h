@@ -37,11 +37,7 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 
     // Load stubcode pointer from BaselineStubEntry into BaselineTailCallReg
     // BaselineTailCallReg will always be unused in the contexts where ICs are called.
-    masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
-              BaselineTailCallReg);
-
-    // Call the stubcode.
-    masm.call(BaselineTailCallReg);
+    masm.call(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));
 }
 
 inline void
@@ -217,12 +213,8 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
     masm.movl(Operand(BaselineStubReg, (int32_t) ICUpdatedStub::offsetOfFirstUpdateStub()),
               BaselineStubReg);
 
-    // Load stubcode pointer from BaselineStubReg into BaselineTailCallReg.
-    masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
-              BaselineTailCallReg);
-
     // Call the stubcode.
-    masm.call(BaselineTailCallReg);
+    masm.call(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));
 
     // Restore the old stub reg.
     masm.pop(BaselineStubReg);
