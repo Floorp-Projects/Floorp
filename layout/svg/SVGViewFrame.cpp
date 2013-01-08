@@ -8,7 +8,7 @@
 #include "nsGkAtoms.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGSVGElement.h"
-#include "nsSVGViewElement.h"
+#include "mozilla/dom/SVGViewElement.h"
 
 typedef nsFrame SVGViewFrameBase;
 

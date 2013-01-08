@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGVIEWELEMENT_H__
-#define __NS_SVGVIEWELEMENT_H__
+#ifndef mozilla_dom_SVGViewElement_h
+#define mozilla_dom_SVGViewElement_h
 
 #include "nsIDOMSVGViewElement.h"
 #include "nsIDOMSVGFitToViewBox.h"
@@ -15,27 +15,34 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGStringList.h"
 
+typedef nsSVGElement SVGViewElementBase;
+
+class nsSVGSVGElement;
+class nsSVGOuterSVGFrame;
+
+nsresult NS_NewSVGViewElement(nsIContent **aResult,
+                              already_AddRefed<nsINodeInfo> aNodeInfo);
+
 namespace mozilla {
-  class SVGFragmentIdentifier;
-}
+class SVGFragmentIdentifier;
 
-typedef nsSVGElement nsSVGViewElementBase;
+namespace dom {
 
-class nsSVGViewElement : public nsSVGViewElementBase,
-                         public nsIDOMSVGViewElement,
-                         public nsIDOMSVGFitToViewBox,
-                         public nsIDOMSVGZoomAndPan
+class SVGViewElement : public SVGViewElementBase,
+                       public nsIDOMSVGViewElement,
+                       public nsIDOMSVGFitToViewBox,
+                       public nsIDOMSVGZoomAndPan
 {
   friend class mozilla::SVGFragmentIdentifier;
-  friend class nsSVGSVGElement;
-  friend class nsSVGOuterSVGFrame;
-  friend nsresult NS_NewSVGViewElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  
+  friend class ::nsSVGSVGElement;
+  friend class ::nsSVGOuterSVGFrame;
+  SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,
+                                          already_AddRefed<nsINodeInfo> aNodeInfo));
+
 public:
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGVIEWELEMENT
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
@@ -45,7 +52,7 @@ public:
   // forward here :-(
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGViewElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGViewElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -76,4 +83,7 @@ private:
   static StringListInfo sStringListInfo[1];
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGViewElement_h
