@@ -52,7 +52,7 @@ hb_bool_t
 hb_feature_from_string (const char *str, int len,
 			hb_feature_t *feature);
 
-/* something like 128 bytes is more than enough.
+/* Something like 128 bytes is more than enough.
  * nul-terminates. */
 void
 hb_feature_to_string (hb_feature_t *feature,

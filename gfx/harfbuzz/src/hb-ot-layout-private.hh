@@ -49,6 +49,14 @@
  * GDEF
  */
 
+typedef enum {
+  HB_OT_LAYOUT_GLYPH_PROPS_UNCLASSIFIED	= 0x0001,
+  HB_OT_LAYOUT_GLYPH_PROPS_BASE_GLYPH	= 0x0002,
+  HB_OT_LAYOUT_GLYPH_PROPS_LIGATURE	= 0x0004,
+  HB_OT_LAYOUT_GLYPH_PROPS_MARK		= 0x0008,
+  HB_OT_LAYOUT_GLYPH_PROPS_COMPONENT	= 0x0010
+} hb_ot_layout_glyph_class_mask_t;
+
 
 
 /*
@@ -115,7 +123,7 @@ get_lig_comp (const hb_glyph_info_t &info)
 static inline unsigned int
 get_lig_num_comps (const hb_glyph_info_t &info)
 {
-  if ((info.glyph_props() & HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE) && is_a_ligature (info))
+  if ((info.glyph_props() & HB_OT_LAYOUT_GLYPH_PROPS_LIGATURE) && is_a_ligature (info))
     return info.lig_props() & 0x0F;
   else
     return 1;

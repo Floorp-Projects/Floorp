@@ -23,7 +23,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
- * Google Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod, Roozbeh Pournader
  */
 
 #include "hb-private.hh"
@@ -169,7 +169,9 @@ typedef struct {
  * Draft OpenType 1.5 spec, with with the ISO 639-3 codes from
  * 2008/08/04, matching on name, and finally adjusted manually.
  *
- * Many items still missing.  Those are commented out at the end.
+ * Updated on 2012/12/07 with more research into remaining codes.
+ *
+ * Some items still missing.  Those are commented out at the end.
  * Keep sorted for bsearch.
  */
 
@@ -177,43 +179,63 @@ static const LangTag ot_languages[] = {
   {"aa",	HB_TAG('A','F','R',' ')},	/* Afar */
   {"ab",	HB_TAG('A','B','K',' ')},	/* Abkhazian */
   {"abq",	HB_TAG('A','B','A',' ')},	/* Abaza */
+  {"ada",	HB_TAG('D','N','G',' ')},	/* Dangme */
   {"ady",	HB_TAG('A','D','Y',' ')},	/* Adyghe */
   {"af",	HB_TAG('A','F','K',' ')},	/* Afrikaans */
+  {"aii",	HB_TAG('S','W','A',' ')},	/* Swadaya Aramaic */
   {"aiw",	HB_TAG('A','R','I',' ')},	/* Aari */
+  {"alt",	HB_TAG('A','L','T',' ')},	/* [Southern] Altai */
   {"am",	HB_TAG('A','M','H',' ')},	/* Amharic */
+  {"amf",	HB_TAG('H','B','N',' ')},	/* Hammer-Banna */
   {"ar",	HB_TAG('A','R','A',' ')},	/* Arabic */
   {"arn",	HB_TAG('M','A','P',' ')},	/* Mapudungun */
   {"as",	HB_TAG('A','S','M',' ')},	/* Assamese */
+  {"ath",	HB_TAG('A','T','H',' ')},	/* Athapaskan [family] */
+  {"atv",	HB_TAG('A','L','T',' ')},	/* [Northern] Altai */
   {"av",	HB_TAG('A','V','R',' ')},	/* Avaric */
   {"awa",	HB_TAG('A','W','A',' ')},	/* Awadhi */
   {"ay",	HB_TAG('A','Y','M',' ')},	/* Aymara */
   {"az",	HB_TAG('A','Z','E',' ')},	/* Azerbaijani */
   {"ba",	HB_TAG('B','S','H',' ')},	/* Bashkir */
+  {"bai",	HB_TAG('B','M','L',' ')},	/* Bamileke [family] */
   {"bal",	HB_TAG('B','L','I',' ')},	/* Baluchi */
+  {"bci",	HB_TAG('B','A','U',' ')},	/* Baule */
   {"bcq",	HB_TAG('B','C','H',' ')},	/* Bench */
+  {"be",	HB_TAG('B','E','L',' ')},  	/* Belarussian */
   {"bem",	HB_TAG('B','E','M',' ')},	/* Bemba (Zambia) */
+  {"ber",	HB_TAG('B','E','R',' ')},  	/* Berber [family] */
   {"bfq",	HB_TAG('B','A','D',' ')},	/* Badaga */
   {"bft",	HB_TAG('B','L','T',' ')},	/* Balti */
+  {"bfy",	HB_TAG('B','A','G',' ')},	/* Baghelkhandi */
   {"bg",	HB_TAG('B','G','R',' ')},	/* Bulgarian */
   {"bhb",	HB_TAG('B','H','I',' ')},	/* Bhili */
   {"bho",	HB_TAG('B','H','O',' ')},	/* Bhojpuri */
   {"bik",	HB_TAG('B','I','K',' ')},	/* Bikol */
   {"bin",	HB_TAG('E','D','O',' ')},	/* Bini */
+  {"bjt",	HB_TAG('B','L','N',' ')},	/* Balanta-Ganja */
+  {"bla",	HB_TAG('B','K','F',' ')},	/* Blackfoot */
+  {"ble",	HB_TAG('B','L','N',' ')},	/* Balanta-Kentohe */
   {"bm",	HB_TAG('B','M','B',' ')},	/* Bambara */
   {"bn",	HB_TAG('B','E','N',' ')},	/* Bengali */
   {"bo",	HB_TAG('T','I','B',' ')},	/* Tibetan */
   {"br",	HB_TAG('B','R','E',' ')},	/* Breton */
+  {"bra",	HB_TAG('B','R','I',' ')},	/* Braj Bhasha */
   {"brh",	HB_TAG('B','R','H',' ')},	/* Brahui */
   {"bs",	HB_TAG('B','O','S',' ')},	/* Bosnian */
   {"btb",	HB_TAG('B','T','I',' ')},	/* Beti (Cameroon) */
+  {"bxr",	HB_TAG('R','B','U',' ')},	/* Russian Buriat */
+  {"byn",	HB_TAG('B','I','L',' ')},	/* Bilen */
   {"ca",	HB_TAG('C','A','T',' ')},	/* Catalan */
   {"ce",	HB_TAG('C','H','E',' ')},	/* Chechen */
   {"ceb",	HB_TAG('C','E','B',' ')},	/* Cebuano */
   {"chp",	HB_TAG('C','H','P',' ')},	/* Chipewyan */
   {"chr",	HB_TAG('C','H','R',' ')},	/* Cherokee */
+  {"ckt",	HB_TAG('C','H','K',' ')},	/* Chukchi */
   {"cop",	HB_TAG('C','O','P',' ')},	/* Coptic */
   {"cr",	HB_TAG('C','R','E',' ')},	/* Cree */
   {"crh",	HB_TAG('C','R','T',' ')},	/* Crimean Tatar */
+  {"crj",	HB_TAG('E','C','R',' ')},	/* [Southern] East Cree */
+  {"crl",	HB_TAG('E','C','R',' ')},	/* [Northern] East Cree */
   {"crm",	HB_TAG('M','C','R',' ')},	/* Moose Cree */
   {"crx",	HB_TAG('C','R','R',' ')},	/* Carrier */
   {"cs",	HB_TAG('C','S','Y',' ')},	/* Czech */
@@ -226,10 +248,12 @@ static const LangTag ot_languages[] = {
   {"dar",	HB_TAG('D','A','R',' ')},	/* Dargwa */
   {"de",	HB_TAG('D','E','U',' ')},	/* German */
   {"din",	HB_TAG('D','N','K',' ')},	/* Dinka */
+  {"dje",	HB_TAG('D','J','R',' ')},	/* Djerma */
   {"dng",	HB_TAG('D','U','N',' ')},	/* Dungan */
   {"doi",	HB_TAG('D','G','R',' ')},	/* Dogri */
   {"dsb",	HB_TAG('L','S','B',' ')},	/* Lower Sorbian */
   {"dv",	HB_TAG('D','I','V',' ')},	/* Dhivehi */
+  {"dyu",	HB_TAG('J','U','L',' ')},	/* Jula */
   {"dz",	HB_TAG('D','Z','N',' ')},	/* Dzongkha */
   {"ee",	HB_TAG('E','W','E',' ')},	/* Ewe */
   {"efi",	HB_TAG('E','F','I',' ')},	/* Efik */
@@ -257,20 +281,27 @@ static const LangTag ot_languages[] = {
   {"gag",	HB_TAG('G','A','G',' ')},	/* Gagauz */
   {"gbm",	HB_TAG('G','A','W',' ')},	/* Garhwali */
   {"gd",	HB_TAG('G','A','E',' ')},	/* Scottish Gaelic */
+  {"gez",	HB_TAG('G','E','Z',' ')},	/* Ge'ez */
   {"gl",	HB_TAG('G','A','L',' ')},	/* Galician */
   {"gld",	HB_TAG('N','A','N',' ')},	/* Nanai */
   {"gn",	HB_TAG('G','U','A',' ')},	/* Guarani */
   {"gon",	HB_TAG('G','O','N',' ')},	/* Gondi */
   {"grt",	HB_TAG('G','R','O',' ')},	/* Garo */
+  {"gru",	HB_TAG('S','O','G',' ')},	/* Sodo Gurage */
   {"gu",	HB_TAG('G','U','J',' ')},	/* Gujarati */
   {"guk",	HB_TAG('G','M','Z',' ')},	/* Gumuz */
   {"gv",	HB_TAG('M','N','X',' ')},	/* Manx Gaelic */
   {"ha",	HB_TAG('H','A','U',' ')},	/* Hausa */
   {"har",	HB_TAG('H','R','I',' ')},	/* Harari */
+  {"haw",	HB_TAG('H','A','W',' ')},  	/* Hawaiin */
   {"he",	HB_TAG('I','W','R',' ')},	/* Hebrew */
   {"hi",	HB_TAG('H','I','N',' ')},	/* Hindi */
   {"hil",	HB_TAG('H','I','L',' ')},	/* Hiligaynon */
+  {"hnd",	HB_TAG('H','N','D',' ')},	/* [Southern] Hindko */
+  {"hne",	HB_TAG('C','H','H',' ')},	/* Chattisgarhi */
+  {"hno",	HB_TAG('H','N','D',' ')},	/* [Northern] Hindko */
   {"hoc",	HB_TAG('H','O',' ',' ')},	/* Ho */
+  {"hoj",	HB_TAG('H','A','R',' ')},	/* Harauti */
   {"hr",	HB_TAG('H','R','V',' ')},	/* Croatian */
   {"hsb",	HB_TAG('U','S','B',' ')},	/* Upper Sorbian */
   {"ht",	HB_TAG('H','A','I',' ')},	/* Haitian */
@@ -279,6 +310,8 @@ static const LangTag ot_languages[] = {
   {"id",	HB_TAG('I','N','D',' ')},	/* Indonesian */
   {"ig",	HB_TAG('I','B','O',' ')},	/* Igbo */
   {"igb",	HB_TAG('E','B','I',' ')},	/* Ebira */
+  {"ijo",	HB_TAG('I','J','O',' ')},	/* Ijo [family] */
+  {"ilo",	HB_TAG('I','L','O',' ')},	/* Ilokano */
   {"inh",	HB_TAG('I','N','G',' ')},	/* Ingush */
   {"is",	HB_TAG('I','S','L',' ')},	/* Icelandic */
   {"it",	HB_TAG('I','T','A',' ')},	/* Italian */
@@ -286,19 +319,25 @@ static const LangTag ot_languages[] = {
   {"ja",	HB_TAG('J','A','N',' ')},	/* Japanese */
   {"jv",	HB_TAG('J','A','V',' ')},	/* Javanese */
   {"ka",	HB_TAG('K','A','T',' ')},	/* Georgian */
+  {"kaa",	HB_TAG('K','R','K',' ')},	/* Karakalpak */
   {"kam",	HB_TAG('K','M','B',' ')},	/* Kamba (Kenya) */
+  {"kar",	HB_TAG('K','R','N',' ')},	/* Karen [family] */
   {"kbd",	HB_TAG('K','A','B',' ')},	/* Kabardian */
   {"kdr",	HB_TAG('K','R','M',' ')},	/* Karaim */
   {"kdt",	HB_TAG('K','U','Y',' ')},	/* Kuy */
+  {"kex",	HB_TAG('K','K','N',' ')},	/* Kokni */
   {"kfr",	HB_TAG('K','A','C',' ')},	/* Kachchi */
   {"kfy",	HB_TAG('K','M','N',' ')},	/* Kumaoni */
   {"kha",	HB_TAG('K','S','I',' ')},	/* Khasi */
+  {"khb",	HB_TAG('X','B','D',' ')},	/* Tai Lue */
   {"khw",	HB_TAG('K','H','W',' ')},	/* Khowar */
   {"ki",	HB_TAG('K','I','K',' ')},	/* Kikuyu */
+  {"kjh",	HB_TAG('K','H','A',' ')},	/* Khakass */
   {"kk",	HB_TAG('K','A','Z',' ')},	/* Kazakh */
   {"kl",	HB_TAG('G','R','N',' ')},	/* Kalaallisut */
   {"kln",	HB_TAG('K','A','L',' ')},	/* Kalenjin */
   {"km",	HB_TAG('K','H','M',' ')},	/* Central Khmer */
+  {"kmb",	HB_TAG('M','B','N',' ')},	/* [North] Mbundu */
   {"kmw",	HB_TAG('K','M','O',' ')},	/* Komo (Democratic Republic of Congo) */
   {"kn",	HB_TAG('K','A','N',' ')},	/* Kannada */
   {"ko",	HB_TAG('K','O','R',' ')},	/* Korean */
@@ -316,6 +355,7 @@ static const LangTag ot_languages[] = {
   {"ku",	HB_TAG('K','U','R',' ')},	/* Kurdish */
   {"kum",	HB_TAG('K','U','M',' ')},	/* Kumyk */
   {"kvd",	HB_TAG('K','U','I',' ')},	/* Kui (Indonesia) */
+  {"kxc",	HB_TAG('K','M','S',' ')},	/* Komso */
   {"kxu",	HB_TAG('K','U','I',' ')},	/* Kui (India) */
   {"ky",	HB_TAG('K','I','R',' ')},	/* Kirghiz */
   {"la",	HB_TAG('L','A','T',' ')},	/* Latin */
@@ -323,13 +363,19 @@ static const LangTag ot_languages[] = {
   {"lb",	HB_TAG('L','T','Z',' ')},	/* Luxembourgish */
   {"lbe",	HB_TAG('L','A','K',' ')},	/* Lak */
   {"lbj",	HB_TAG('L','D','K',' ')},	/* Ladakhi */
+  {"lez",	HB_TAG('L','E','Z',' ')},	/* Lezgi */
+  {"lg",	HB_TAG('L','U','G',' ')},	/* Luganda */
   {"lif",	HB_TAG('L','M','B',' ')},	/* Limbu */
   {"lld",	HB_TAG('L','A','D',' ')},	/* Ladin */
+  {"lmn",	HB_TAG('L','A','M',' ')},	/* Lambani */
   {"ln",	HB_TAG('L','I','N',' ')},	/* Lingala */
   {"lo",	HB_TAG('L','A','O',' ')},	/* Lao */
   {"lt",	HB_TAG('L','T','H',' ')},	/* Lithuanian */
+  {"lu",	HB_TAG('L','U','B',' ')},	/* Luba-Katanga */
+  {"lua",	HB_TAG('L','U','B',' ')},	/* Luba-Kasai */
   {"luo",	HB_TAG('L','U','O',' ')},	/* Luo (Kenya and Tanzania) */
-  {"luw",	HB_TAG('L','U','O',' ')},	/* Luo (Cameroon) */
+  {"lus",	HB_TAG('M','I','Z',' ')},	/* Mizo */
+  {"luy",	HB_TAG('L','U','H',' ')},	/* Luhya [macrolanguage] */
   {"lv",	HB_TAG('L','V','I',' ')},	/* Latvian */
   {"lzz",	HB_TAG('L','A','Z',' ')},	/* Laz */
   {"mai",	HB_TAG('M','T','H',' ')},	/* Maithili */
@@ -338,6 +384,7 @@ static const LangTag ot_languages[] = {
   {"mdy",	HB_TAG('M','L','E',' ')},	/* Male (Ethiopia) */
   {"men",	HB_TAG('M','D','E',' ')},	/* Mende (Sierra Leone) */
   {"mg",	HB_TAG('M','L','G',' ')},	/* Malagasy */
+  {"mhr",	HB_TAG('L','M','A',' ')},	/* Low Mari */
   {"mi",	HB_TAG('M','R','I',' ')},	/* Maori */
   {"mk",	HB_TAG('M','K','D',' ')},	/* Macedonian */
   {"ml",	HB_TAG('M','L','R',' ')},	/* Malayalam */
@@ -351,14 +398,17 @@ static const LangTag ot_languages[] = {
   {"moh",	HB_TAG('M','O','H',' ')},	/* Mohawk */
   {"mpe",	HB_TAG('M','A','J',' ')},	/* Majang */
   {"mr",	HB_TAG('M','A','R',' ')},	/* Marathi */
+  {"mrj",	HB_TAG('H','M','A',' ')},	/* High Mari */
   {"ms",	HB_TAG('M','L','Y',' ')},	/* Malay */
   {"mt",	HB_TAG('M','T','S',' ')},	/* Maltese */
   {"mwr",	HB_TAG('M','A','W',' ')},	/* Marwari */
   {"my",	HB_TAG('B','R','M',' ')},	/* Burmese */
   {"mym",	HB_TAG('M','E','N',' ')},	/* Me'en */
   {"myv",	HB_TAG('E','R','Z',' ')},	/* Erzya */
+  {"nag",	HB_TAG('N','A','G',' ')},	/* Naga-Assamese */
   {"nb",	HB_TAG('N','O','R',' ')},	/* Norwegian Bokmål */
   {"nco",	HB_TAG('S','I','B',' ')},	/* Sibe */
+  {"nd",	HB_TAG('N','D','B',' ')},	/* [North] Ndebele */
   {"ne",	HB_TAG('N','E','P',' ')},	/* Nepali */
   {"new",	HB_TAG('N','E','W',' ')},	/* Newari */
   {"ng",	HB_TAG('N','D','G',' ')},	/* Ndonga */
@@ -368,33 +418,45 @@ static const LangTag ot_languages[] = {
   {"nl",	HB_TAG('N','L','D',' ')},	/* Dutch */
   {"nn",	HB_TAG('N','Y','N',' ')},	/* Norwegian Nynorsk */
   {"no",	HB_TAG('N','O','R',' ')},	/* Norwegian (deprecated) */
+  {"nod",	HB_TAG('N','T','A',' ')},	/* Northern Tai */
   {"nog",	HB_TAG('N','O','G',' ')},	/* Nogai */
   {"nqo",	HB_TAG('N','K','O',' ')},	/* N'Ko */
+  {"nr",	HB_TAG('N','D','B',' ')},	/* [South] Ndebele */
   {"nsk",	HB_TAG('N','A','S',' ')},	/* Naskapi */
+  {"nso",	HB_TAG('S','O','T',' ')},	/* [Northern] Sotho */
   {"ny",	HB_TAG('C','H','I',' ')},	/* Nyanja */
+  {"nyn",	HB_TAG('N','K','L',' ')},	/* Nkole */
   {"oc",	HB_TAG('O','C','I',' ')},	/* Occitan (post 1500) */
   {"oj",	HB_TAG('O','J','B',' ')},	/* Ojibwa */
+  {"ojs",	HB_TAG('O','C','R',' ')},	/* Oji-Cree */
   {"om",	HB_TAG('O','R','O',' ')},	/* Oromo */
   {"or",	HB_TAG('O','R','I',' ')},	/* Oriya */
   {"os",	HB_TAG('O','S','S',' ')},	/* Ossetian */
   {"pa",	HB_TAG('P','A','N',' ')},	/* Panjabi */
+  {"pce",	HB_TAG('P','L','G',' ')},	/* [Ruching] Palaung */
   {"pi",	HB_TAG('P','A','L',' ')},	/* Pali */
   {"pl",	HB_TAG('P','L','K',' ')},	/* Polish */
+  {"pll",	HB_TAG('P','L','G',' ')},	/* [Shwe] Palaung */
   {"plp",	HB_TAG('P','A','P',' ')},	/* Palpa */
   {"prs",	HB_TAG('D','R','I',' ')},	/* Dari */
   {"ps",	HB_TAG('P','A','S',' ')},	/* Pushto */
   {"pt",	HB_TAG('P','T','G',' ')},	/* Portuguese */
   {"raj",	HB_TAG('R','A','J',' ')},	/* Rajasthani */
+  {"rbb",	HB_TAG('P','L','G',' ')},	/* [Rumai] Palaung */
   {"ria",	HB_TAG('R','I','A',' ')},	/* Riang (India) */
   {"ril",	HB_TAG('R','I','A',' ')},	/* Riang (Myanmar) */
+  {"rki",	HB_TAG('A','R','K',' ')},	/* Arakanese */
+  {"rm",	HB_TAG('R','M','S',' ')},	/* Rhaeto-Romanic */
   {"ro",	HB_TAG('R','O','M',' ')},	/* Romanian */
   {"rom",	HB_TAG('R','O','Y',' ')},	/* Romany */
   {"ru",	HB_TAG('R','U','S',' ')},	/* Russian */
   {"rue",	HB_TAG('R','S','Y',' ')},	/* Rusyn */
+  {"rw",	HB_TAG('R','U','A',' ')},	/* Ruanda */
   {"sa",	HB_TAG('S','A','N',' ')},	/* Sanskrit */
   {"sah",	HB_TAG('Y','A','K',' ')},	/* Yakut */
   {"sat",	HB_TAG('S','A','T',' ')},	/* Santali */
   {"sck",	HB_TAG('S','A','D',' ')},	/* Sadri */
+  {"scs",	HB_TAG('S','L','A',' ')},	/* [North] Slavey */
   {"sd",	HB_TAG('S','N','D',' ')},	/* Sindhi */
   {"se",	HB_TAG('N','S','M',' ')},	/* Northern Sami */
   {"seh",	HB_TAG('S','N','A',' ')},	/* Sena */
@@ -417,6 +479,8 @@ static const LangTag ot_languages[] = {
   {"sq",	HB_TAG('S','Q','I',' ')},	/* Albanian */
   {"sr",	HB_TAG('S','R','B',' ')},	/* Serbian */
   {"srr",	HB_TAG('S','R','R',' ')},	/* Serer */
+  {"ss",	HB_TAG('S','W','Z',' ')},	/* Swazi */
+  {"st",	HB_TAG('S','O','T',' ')},	/* [Southern] Sotho */
   {"suq",	HB_TAG('S','U','R',' ')},	/* Suri */
   {"sv",	HB_TAG('S','V','E',' ')},	/* Swedish */
   {"sva",	HB_TAG('S','V','A',' ')},	/* Svan */
@@ -424,31 +488,34 @@ static const LangTag ot_languages[] = {
   {"swb",	HB_TAG('C','M','R',' ')},	/* Comorian */
   {"syr",	HB_TAG('S','Y','R',' ')},	/* Syriac */
   {"ta",	HB_TAG('T','A','M',' ')},	/* Tamil */
+  {"tab",	HB_TAG('T','A','B',' ')},	/* Tabasaran */
   {"tcy",	HB_TAG('T','U','L',' ')},	/* Tulu */
   {"te",	HB_TAG('T','E','L',' ')},	/* Telugu */
+  {"tem",	HB_TAG('T','M','N',' ')},	/* Temne */
   {"tg",	HB_TAG('T','A','J',' ')},	/* Tajik */
   {"th",	HB_TAG('T','H','A',' ')},	/* Thai */
   {"ti",	HB_TAG('T','G','Y',' ')},	/* Tigrinya */
   {"tig",	HB_TAG('T','G','R',' ')},	/* Tigre */
   {"tk",	HB_TAG('T','K','M',' ')},	/* Turkmen */
   {"tn",	HB_TAG('T','N','A',' ')},	/* Tswana */
-  {"tnz",	HB_TAG('T','N','G',' ')},	/* Tonga (Thailand) */
-  {"to",	HB_TAG('T','N','G',' ')},	/* Tonga (Tonga Islands) */
-  {"tog",	HB_TAG('T','N','G',' ')},	/* Tonga (Nyasa) */
-  {"toi",	HB_TAG('T','N','G',' ')},	/* Tonga (Zambia) */
+  {"to",	HB_TAG('T','G','N',' ')},	/* Tonga (Tonga Islands) */
   {"tr",	HB_TAG('T','R','K',' ')},	/* Turkish */
+  {"tru",	HB_TAG('T','U','A',' ')},	/* Turoyo Aramaic */
   {"ts",	HB_TAG('T','S','G',' ')},	/* Tsonga */
   {"tt",	HB_TAG('T','A','T',' ')},	/* Tatar */
   {"tw",	HB_TAG('T','W','I',' ')},	/* Twi */
   {"ty",	HB_TAG('T','H','T',' ')},	/* Tahitian */
+  {"tyv",	HB_TAG('T','U','V',' ')},	/* Tuvin */
   {"udm",	HB_TAG('U','D','M',' ')},	/* Udmurt */
   {"ug",	HB_TAG('U','Y','G',' ')},	/* Uighur */
   {"uk",	HB_TAG('U','K','R',' ')},	/* Ukrainian */
+  {"umb",	HB_TAG('M','B','N',' ')},	/* [South] Mbundu */
   {"unr",	HB_TAG('M','U','N',' ')},	/* Mundari */
   {"ur",	HB_TAG('U','R','D',' ')},	/* Urdu */
   {"uz",	HB_TAG('U','Z','B',' ')},	/* Uzbek */
   {"ve",	HB_TAG('V','E','N',' ')},	/* Venda */
   {"vi",	HB_TAG('V','I','T',' ')},	/* Vietnamese */
+  {"vmw",	HB_TAG('M','A','K',' ')},	/* Makua */
   {"wbm",	HB_TAG('W','A',' ',' ')},	/* Wa */
   {"wbr",	HB_TAG('W','A','G',' ')},	/* Wagdi */
   {"wo",	HB_TAG('W','L','F',' ')},	/* Wolof */
@@ -462,115 +529,56 @@ static const LangTag ot_languages[] = {
   {"zne",	HB_TAG('Z','N','D',' ')},	/* Zande */
   {"zu",	HB_TAG('Z','U','L',' ')} 	/* Zulu */
 
-  /* I couldn't find the language id for these */
+  /* The corresponding languages IDs for the following IDs are unclear,
+   * overlap, or are architecturally weird. Needs more research. */
 
-/*{"??",	HB_TAG('A','G','W',' ')},*/	/* Agaw */
-/*{"??",	HB_TAG('A','L','S',' ')},*/	/* Alsatian */
-/*{"??",	HB_TAG('A','L','T',' ')},*/	/* Altai */
-/*{"??",	HB_TAG('A','R','K',' ')},*/	/* Arakanese */
-/*{"??",	HB_TAG('A','T','H',' ')},*/	/* Athapaskan */
-/*{"??",	HB_TAG('B','A','G',' ')},*/	/* Baghelkhandi */
-/*{"??",	HB_TAG('B','A','L',' ')},*/	/* Balkar */
-/*{"??",	HB_TAG('B','A','U',' ')},*/	/* Baule */
-/*{"??",	HB_TAG('B','B','R',' ')},*/	/* Berber */
+/*{"ahg/awn/xan?",	HB_TAG('A','G','W',' ')},*/	/* Agaw */
+/*{"gsw?/gsw-FR?",	HB_TAG('A','L','S',' ')},*/	/* Alsatian */
+/*{"krc",	HB_TAG('B','A','L',' ')},*/	/* Balkar */
 /*{"??",	HB_TAG('B','C','R',' ')},*/	/* Bible Cree */
-/*{"??",	HB_TAG('B','E','L',' ')},*/	/* Belarussian */
-/*{"??",	HB_TAG('B','I','L',' ')},*/	/* Bilen */
-/*{"??",	HB_TAG('B','K','F',' ')},*/	/* Blackfoot */
-/*{"??",	HB_TAG('B','L','N',' ')},*/	/* Balante */
-/*{"??",	HB_TAG('B','M','L',' ')},*/	/* Bamileke */
-/*{"??",	HB_TAG('B','R','I',' ')},*/	/* Braj Bhasha */
-/*{"??",	HB_TAG('C','H','G',' ')},*/	/* Chaha Gurage */
-/*{"??",	HB_TAG('C','H','H',' ')},*/	/* Chattisgarhi */
-/*{"??",	HB_TAG('C','H','K',' ')},*/	/* Chukchi */
-/*{"??",	HB_TAG('D','J','R',' ')},*/	/* Djerma */
-/*{"??",	HB_TAG('D','N','G',' ')},*/	/* Dangme */
-/*{"??",	HB_TAG('E','C','R',' ')},*/	/* Eastern Cree */
-/*{"??",	HB_TAG('F','A','N',' ')},*/	/* French Antillean */
-/*{"??",	HB_TAG('F','L','E',' ')},*/	/* Flemish */
-/*{"??",	HB_TAG('F','N','E',' ')},*/	/* Forest Nenets */
-/*{"??",	HB_TAG('F','T','A',' ')},*/	/* Futa */
-/*{"??",	HB_TAG('G','A','R',' ')},*/	/* Garshuni */
-/*{"??",	HB_TAG('G','E','Z',' ')},*/	/* Ge'ez */
-/*{"??",	HB_TAG('H','A','L',' ')},*/	/* Halam */
-/*{"??",	HB_TAG('H','A','R',' ')},*/	/* Harauti */
-/*{"??",	HB_TAG('H','A','W',' ')},*/	/* Hawaiin */
-/*{"??",	HB_TAG('H','B','N',' ')},*/	/* Hammer-Banna */
-/*{"??",	HB_TAG('H','M','A',' ')},*/	/* High Mari */
-/*{"??",	HB_TAG('H','N','D',' ')},*/	/* Hindko */
-/*{"??",	HB_TAG('I','J','O',' ')},*/	/* Ijo */
-/*{"??",	HB_TAG('I','L','O',' ')},*/	/* Ilokano */
-/*{"??",	HB_TAG('I','R','T',' ')},*/	/* Irish Traditional */
-/*{"??",	HB_TAG('J','U','L',' ')},*/	/* Jula */
-/*{"??",	HB_TAG('K','A','R',' ')},*/	/* Karachay */
-/*{"??",	HB_TAG('K','E','B',' ')},*/	/* Kebena */
-/*{"??",	HB_TAG('K','G','E',' ')},*/	/* Khutsuri Georgian */
-/*{"??",	HB_TAG('K','H','A',' ')},*/	/* Khakass */
-/*{"??",	HB_TAG('K','H','K',' ')},*/	/* Khanty-Kazim */
-/*{"??",	HB_TAG('K','H','S',' ')},*/	/* Khanty-Shurishkar */
-/*{"??",	HB_TAG('K','H','V',' ')},*/	/* Khanty-Vakhi */
-/*{"??",	HB_TAG('K','I','S',' ')},*/	/* Kisii */
-/*{"??",	HB_TAG('K','K','N',' ')},*/	/* Kokni */
-/*{"??",	HB_TAG('K','M','S',' ')},*/	/* Komso */
-/*{"??",	HB_TAG('K','O','D',' ')},*/	/* Kodagu */
-/*{"??",	HB_TAG('K','O','H',' ')},*/	/* Korean Old Hangul */
-/*{"??",	HB_TAG('K','O','N',' ')},*/	/* Kikongo */
-/*{"??",	HB_TAG('K','R','K',' ')},*/	/* Karakalpak */
-/*{"??",	HB_TAG('K','R','N',' ')},*/	/* Karen */
-/*{"??",	HB_TAG('K','U','L',' ')},*/	/* Kulvi */
+/*{"sgw?",	HB_TAG('C','H','G',' ')},*/	/* Chaha Gurage */
+/*{"acf/gcf?",	HB_TAG('F','A','N',' ')},*/	/* French Antillean */
+/*{"vls/nl-be",	HB_TAG('F','L','E',' ')},*/	/* Flemish */
+/*{"enf?/yrk?",	HB_TAG('F','N','E',' ')},*/	/* Forest Nenets */
+/*{"fuf?",	HB_TAG('F','T','A',' ')},*/	/* Futa */
+/*{"ar-Syrc?",	HB_TAG('G','A','R',' ')},*/	/* Garshuni */
+/*{"cfm/rnl?",	HB_TAG('H','A','L',' ')},*/	/* Halam */
+/*{"ga-Latg?/Latg?",	HB_TAG('I','R','T',' ')},*/	/* Irish Traditional */
+/*{"krc",	HB_TAG('K','A','R',' ')},*/	/* Karachay */
+/*{"alw?/ktb?",	HB_TAG('K','E','B',' ')},*/	/* Kebena */
+/*{"Geok",	HB_TAG('K','G','E',' ')},*/	/* Khutsuri Georgian */
+/*{"kca",	HB_TAG('K','H','K',' ')},*/	/* Khanty-Kazim */
+/*{"kca",	HB_TAG('K','H','S',' ')},*/	/* Khanty-Shurishkar */
+/*{"kca",	HB_TAG('K','H','V',' ')},*/	/* Khanty-Vakhi */
+/*{"guz?/kqs?/kss?",	HB_TAG('K','I','S',' ')},*/	/* Kisii */
+/*{"kfa/kfi?/kpb?/xua?/xuj?",	HB_TAG('K','O','D',' ')},*/	/* Kodagu */
+/*{"okm?/oko?",	HB_TAG('K','O','H',' ')},*/	/* Korean Old Hangul */
+/*{"kon?/ktu?/...",	HB_TAG('K','O','N',' ')},*/	/* Kikongo */
+/*{"kfx?",	HB_TAG('K','U','L',' ')},*/	/* Kulvi */
 /*{"??",	HB_TAG('L','A','H',' ')},*/	/* Lahuli */
-/*{"??",	HB_TAG('L','A','M',' ')},*/	/* Lambani */
 /*{"??",	HB_TAG('L','C','R',' ')},*/	/* L-Cree */
-/*{"??",	HB_TAG('L','E','Z',' ')},*/	/* Lezgi */
-/*{"??",	HB_TAG('L','M','A',' ')},*/	/* Low Mari */
-/*{"??",	HB_TAG('L','U','B',' ')},*/	/* Luba */
-/*{"??",	HB_TAG('L','U','G',' ')},*/	/* Luganda */
-/*{"??",	HB_TAG('L','U','H',' ')},*/	/* Luhya */
-/*{"??",	HB_TAG('M','A','K',' ')},*/	/* Makua */
 /*{"??",	HB_TAG('M','A','L',' ')},*/	/* Malayalam Traditional */
-/*{"??",	HB_TAG('M','B','N',' ')},*/	/* Mbundu */
-/*{"??",	HB_TAG('M','I','Z',' ')},*/	/* Mizo */
-/*{"??",	HB_TAG('M','L','N',' ')},*/	/* Malinke */
-/*{"??",	HB_TAG('M','N','K',' ')},*/	/* Maninka */
+/*{"mnk?/mlq?/...",	HB_TAG('M','L','N',' ')},*/	/* Malinke */
+/*{"man?/myq?/mku?/msc?/...",	HB_TAG('M','N','K',' ')},*/	/* Maninka */
 /*{"??",	HB_TAG('M','O','R',' ')},*/	/* Moroccan */
-/*{"??",	HB_TAG('N','A','G',' ')},*/	/* Naga-Assamese */
 /*{"??",	HB_TAG('N','C','R',' ')},*/	/* N-Cree */
-/*{"??",	HB_TAG('N','D','B',' ')},*/	/* Ndebele */
-/*{"??",	HB_TAG('N','G','R',' ')},*/	/* Nagari */
 /*{"??",	HB_TAG('N','H','C',' ')},*/	/* Norway House Cree */
-/*{"??",	HB_TAG('N','K','L',' ')},*/	/* Nkole */
-/*{"??",	HB_TAG('N','T','A',' ')},*/	/* Northern Tai */
-/*{"??",	HB_TAG('O','C','R',' ')},*/	/* Oji-Cree */
-/*{"??",	HB_TAG('P','A','A',' ')},*/	/* Palestinian Aramaic */
-/*{"??",	HB_TAG('P','G','R',' ')},*/	/* Polytonic Greek */
-/*{"??",	HB_TAG('P','L','G',' ')},*/	/* Palaung */
-/*{"??",	HB_TAG('Q','I','N',' ')},*/	/* Chin */
-/*{"??",	HB_TAG('R','B','U',' ')},*/	/* Russian Buriat */
+/*{"jpa?/sam?",	HB_TAG('P','A','A',' ')},*/	/* Palestinian Aramaic */
+/*{"polyton",	HB_TAG('P','G','R',' ')},*/	/* Polytonic Greek */
+/*{"??",	HB_TAG('Q','I','N',' ')},*/	/* Asho Chin */
 /*{"??",	HB_TAG('R','C','R',' ')},*/	/* R-Cree */
-/*{"??",	HB_TAG('R','M','S',' ')},*/	/* Rhaeto-Romanic */
-/*{"??",	HB_TAG('R','U','A',' ')},*/	/* Ruanda */
-/*{"??",	HB_TAG('S','A','Y',' ')},*/	/* Sayisi */
-/*{"??",	HB_TAG('S','E','K',' ')},*/	/* Sekota */
-/*{"??",	HB_TAG('S','I','G',' ')},*/	/* Silte Gurage */
-/*{"??",	HB_TAG('S','L','A',' ')},*/	/* Slavey */
-/*{"??",	HB_TAG('S','O','G',' ')},*/	/* Sodo Gurage */
-/*{"??",	HB_TAG('S','O','T',' ')},*/	/* Sotho */
-/*{"??",	HB_TAG('S','W','A',' ')},*/	/* Swadaya Aramaic */
-/*{"??",	HB_TAG('S','W','Z',' ')},*/	/* Swazi */
-/*{"??",	HB_TAG('S','X','T',' ')},*/	/* Sutu */
-/*{"??",	HB_TAG('T','A','B',' ')},*/	/* Tabasaran */
+/*{"chp?",	HB_TAG('S','A','Y',' ')},*/	/* Sayisi */
+/*{"xan?",	HB_TAG('S','E','K',' ')},*/	/* Sekota */
+/*{"stv/wle?/xst?",	HB_TAG('S','I','G',' ')},*/	/* Silte Gurage */
+/*{"ngo?",	HB_TAG('S','X','T',' ')},*/	/* Sutu */
 /*{"??",	HB_TAG('T','C','R',' ')},*/	/* TH-Cree */
-/*{"??",	HB_TAG('T','G','N',' ')},*/	/* Tongan */
-/*{"??",	HB_TAG('T','M','N',' ')},*/	/* Temne */
-/*{"??",	HB_TAG('T','N','E',' ')},*/	/* Tundra Nenets */
+/*{"tnz?/tog?/toi?",	HB_TAG('T','N','G',' ')},*/	/* Tonga */
+/*{"enh?/yrk?",	HB_TAG('T','N','E',' ')},*/	/* Tundra Nenets */
 /*{"??",	HB_TAG('T','O','D',' ')},*/	/* Todo */
-/*{"??",	HB_TAG('T','U','A',' ')},*/	/* Turoyo Aramaic */
-/*{"??",	HB_TAG('T','U','V',' ')},*/	/* Tuvin */
 /*{"??",	HB_TAG('W','C','R',' ')},*/	/* West-Cree */
-/*{"??",	HB_TAG('X','B','D',' ')},*/	/* Tai Lue */
 /*{"??",	HB_TAG('Y','C','R',' ')},*/	/* Y-Cree */
 /*{"??",	HB_TAG('Y','I','C',' ')},*/	/* Yi Classic */
-/*{"??",	HB_TAG('Y','I','M',' ')},*/	/* Yi Modern */
+/*{"ii?/Yiii?",	HB_TAG('Y','I','M',' ')},*/	/* Yi Modern */
 /*{"??",	HB_TAG('Z','H','P',' ')},*/	/* Chinese Phonetic */
 };
 

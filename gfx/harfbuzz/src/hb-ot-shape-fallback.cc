@@ -161,8 +161,8 @@ recategorize_combining_class (hb_codepoint_t u,
 }
 
 void
-_hb_ot_shape_fallback_position_recategorize_marks (const hb_ot_shape_plan_t *plan,
-						   hb_font_t *font,
+_hb_ot_shape_fallback_position_recategorize_marks (const hb_ot_shape_plan_t *plan HB_UNUSED,
+						   hb_font_t *font HB_UNUSED,
 						   hb_buffer_t  *buffer)
 {
   unsigned int count = buffer->len;
