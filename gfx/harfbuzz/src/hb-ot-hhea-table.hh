@@ -45,7 +45,7 @@ struct hhea
   static const hb_tag_t Tag	= HB_OT_TAG_hhea;
 
   inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE ();
+    TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) && likely (version.major == 1));
   }
 
@@ -91,7 +91,7 @@ struct hhea
 };
 
 
-} // namespace OT
+} /* namespace OT */
 
 
 #endif /* HB_OT_HHEA_TABLE_HH */

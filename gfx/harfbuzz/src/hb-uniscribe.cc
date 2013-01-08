@@ -188,6 +188,22 @@ _hb_uniscribe_shaper_font_data_destroy (hb_uniscribe_shaper_font_data_t *data)
   free (data);
 }
 
+LOGFONTW *
+hb_uniscribe_font_get_logfontw (hb_font_t *font)
+{
+  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return NULL;
+  hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
+  return &font_data->log_font;
+}
+
+HFONT
+hb_uniscribe_font_get_hfont (hb_font_t *font)
+{
+  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return NULL;
+  hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
+  return font_data->hfont;
+}
+
 
 /*
  * shaper shape_plan data
@@ -212,23 +228,6 @@ _hb_uniscribe_shaper_shape_plan_data_destroy (hb_uniscribe_shaper_shape_plan_dat
 /*
  * shaper
  */
-
-LOGFONTW *
-hb_uniscribe_font_get_logfontw (hb_font_t *font)
-{
-  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return NULL;
-    return NULL;
-  hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
-  return &font_data->log_font;
-}
-
-HFONT
-hb_uniscribe_font_get_hfont (hb_font_t *font)
-{
-  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return NULL;
-  hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
-  return font_data->hfont;
-}
 
 
 hb_bool_t

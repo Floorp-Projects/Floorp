@@ -57,7 +57,7 @@ struct NameRecord
   }
 
   inline bool sanitize (hb_sanitize_context_t *c, void *base) {
-    TRACE_SANITIZE ();
+    TRACE_SANITIZE (this);
     /* We can check from base all the way up to the end of string... */
     return TRACE_RETURN (c->check_struct (this) && c->check_range ((char *) base, (unsigned int) length + offset));
   }
@@ -99,7 +99,7 @@ struct name
   }
 
   inline bool sanitize_records (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE ();
+    TRACE_SANITIZE (this);
     char *string_pool = (char *) this + stringOffset;
     unsigned int _count = count;
     for (unsigned int i = 0; i < _count; i++)
@@ -108,7 +108,7 @@ struct name
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE ();
+    TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) &&
 			 likely (format == 0 || format == 1) &&
 			 c->check_array (nameRecord, nameRecord[0].static_size, count) &&
@@ -126,7 +126,7 @@ struct name
 };
 
 
-} // namespace OT
+} /* namespace OT */
 
 
 #endif /* HB_OT_NAME_TABLE_HH */

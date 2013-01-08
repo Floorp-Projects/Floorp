@@ -35,13 +35,13 @@
 struct hb_fallback_shaper_face_data_t {};
 
 hb_fallback_shaper_face_data_t *
-_hb_fallback_shaper_face_data_create (hb_face_t *face)
+_hb_fallback_shaper_face_data_create (hb_face_t *face HB_UNUSED)
 {
   return (hb_fallback_shaper_face_data_t *) HB_SHAPER_DATA_SUCCEEDED;
 }
 
 void
-_hb_fallback_shaper_face_data_destroy (hb_fallback_shaper_face_data_t *data)
+_hb_fallback_shaper_face_data_destroy (hb_fallback_shaper_face_data_t *data HB_UNUSED)
 {
 }
 
@@ -53,13 +53,13 @@ _hb_fallback_shaper_face_data_destroy (hb_fallback_shaper_face_data_t *data)
 struct hb_fallback_shaper_font_data_t {};
 
 hb_fallback_shaper_font_data_t *
-_hb_fallback_shaper_font_data_create (hb_font_t *font)
+_hb_fallback_shaper_font_data_create (hb_font_t *font HB_UNUSED)
 {
   return (hb_fallback_shaper_font_data_t *) HB_SHAPER_DATA_SUCCEEDED;
 }
 
 void
-_hb_fallback_shaper_font_data_destroy (hb_fallback_shaper_font_data_t *data)
+_hb_fallback_shaper_font_data_destroy (hb_fallback_shaper_font_data_t *data HB_UNUSED)
 {
 }
 
@@ -89,7 +89,7 @@ _hb_fallback_shaper_shape_plan_data_destroy (hb_fallback_shaper_shape_plan_data_
  */
 
 hb_bool_t
-_hb_fallback_shape (hb_shape_plan_t    *shape_plan,
+_hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
 		    hb_font_t          *font,
 		    hb_buffer_t        *buffer,
 		    const hb_feature_t *features HB_UNUSED,

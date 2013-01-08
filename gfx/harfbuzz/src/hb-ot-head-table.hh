@@ -52,7 +52,7 @@ struct head
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE ();
+    TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) && likely (version.major == 1));
   }
 
@@ -143,7 +143,7 @@ struct head
 };
 
 
-} // namespace OT
+} /* namespace OT */
 
 
 #endif /* HB_OT_HEAD_TABLE_HH */
