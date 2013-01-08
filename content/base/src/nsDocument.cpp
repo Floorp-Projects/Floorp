@@ -46,7 +46,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
-#include "nsIDOMProcessingInstruction.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 #include "nsDOMString.h"
 #include "nsNodeUtils.h"
 #include "nsLayoutUtils.h" // for GetFrameForPoint
@@ -170,7 +170,6 @@
 #include "mozilla/dom/DOMImplementation.h"
 #include "mozilla/dom/Comment.h"
 #include "nsTextNode.h"
-#include "nsXMLProcessingInstruction.h"
 #include "mozilla/dom/Link.h"
 #include "nsXULAppAPI.h"
 #include "nsDOMTouchEvent.h"
@@ -4648,7 +4647,7 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsXMLProcessingInstruction>
+already_AddRefed<ProcessingInstruction>
 nsIDocument::CreateProcessingInstruction(const nsAString& aTarget,
                                          const nsAString& aData,
                                          mozilla::ErrorResult& rv) const
@@ -4672,7 +4671,7 @@ nsIDocument::CreateProcessingInstruction(const nsAString& aTarget,
     return nullptr;
   }
 
-  return static_cast<nsXMLProcessingInstruction*>(content.forget().get());
+  return static_cast<ProcessingInstruction*>(content.forget().get());
 }
 
 NS_IMETHODIMP

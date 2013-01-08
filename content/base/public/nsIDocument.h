@@ -46,7 +46,6 @@ class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMDocumentType;
-class nsXMLProcessingInstruction;
 class nsIDOMElement;
 class nsIDOMEventTarget;
 class nsIDOMNodeList;
@@ -92,6 +91,7 @@ class DocumentType;
 class DOMImplementation;
 class Element;
 class Link;
+class ProcessingInstruction;
 class UndoManager;
 template<typename> class Sequence;
 } // namespace dom
@@ -1827,7 +1827,7 @@ public:
                                               mozilla::ErrorResult& rv) const;
   already_AddRefed<mozilla::dom::Comment>
     CreateComment(const nsAString& aData, mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsXMLProcessingInstruction>
+  already_AddRefed<mozilla::dom::ProcessingInstruction>
     CreateProcessingInstruction(const nsAString& target, const nsAString& data,
                                 mozilla::ErrorResult& rv) const;
   already_AddRefed<nsINode>
