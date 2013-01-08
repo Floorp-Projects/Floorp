@@ -16,7 +16,9 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
+NS_IMPL_NS_NEW_HTML_ELEMENT(OList)
+NS_IMPL_NS_NEW_HTML_ELEMENT(DList)
+NS_IMPL_NS_NEW_HTML_ELEMENT(UList)
 DOMCI_DATA(HTMLOListElement, mozilla::dom::HTMLSharedListElement)
 DOMCI_DATA(HTMLDListElement, mozilla::dom::HTMLSharedListElement)
 DOMCI_DATA(HTMLUListElement, mozilla::dom::HTMLSharedListElement)
@@ -62,7 +64,9 @@ NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)
+NS_IMPL_ELEMENT_CLONE(HTMLOListElement)
+NS_IMPL_ELEMENT_CLONE(HTMLDListElement)
+NS_IMPL_ELEMENT_CLONE(HTMLUListElement)
 
 
 NS_IMPL_BOOL_ATTR(HTMLSharedListElement, Compact, compact)

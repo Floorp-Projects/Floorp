@@ -1076,7 +1076,7 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
           return false;
         }
 
-        break;
+        return true;
       }
     case NS_FORM_INPUT_DATE:
       {
@@ -1091,32 +1091,40 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         }
 
         JSObject* date = JS_NewDateObjectMsec(ctx, 0);
+        if (!date) {
+          JS_ClearPendingException(ctx);
+          return false;
+        }
+
         jsval rval;
         jsval fullYear[3];
         fullYear[0].setInt32(year);
         fullYear[1].setInt32(month-1);
         fullYear[2].setInt32(day);
         if (!JS::Call(ctx, date, "setUTCFullYear", 3, fullYear, &rval)) {
+          JS_ClearPendingException(ctx);
           return false;
         }
 
         jsval timestamp;
         if (!JS::Call(ctx, date, "getTime", 0, nullptr, &timestamp)) {
+          JS_ClearPendingException(ctx);
           return false;
         }
 
-        if (!timestamp.isNumber()) {
+        if (!timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
           return false;
         }
 
         aResultValue = timestamp.toNumber();
+        return true;
       }
-      break;
     default:
       return false;
   }
 
-  return true;
+  MOZ_NOT_REACHED();
+  return false;
 }
 
 double
@@ -1242,6 +1250,7 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
 
         JSObject* date = JS_NewDateObjectMsec(ctx, aValue);
         if (!date) {
+          JS_ClearPendingException(ctx);
           return false;
         }
 
@@ -1249,6 +1258,14 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
         if (!JS::Call(ctx, date, "getUTCFullYear", 0, nullptr, &year) ||
             !JS::Call(ctx, date, "getUTCMonth", 0, nullptr, &month) ||
             !JS::Call(ctx, date, "getUTCDate", 0, nullptr, &day)) {
+          JS_ClearPendingException(ctx);
+          return false;
+        }
+
+        if (!year.isNumber() || !month.isNumber() || !day.isNumber() ||
+            MOZ_DOUBLE_IS_NaN(year.toNumber()) ||
+            MOZ_DOUBLE_IS_NaN(month.toNumber()) ||
+            MOZ_DOUBLE_IS_NaN(day.toNumber())) {
           return false;
         }
 
@@ -1280,12 +1297,19 @@ nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
   }
 
   JSObject* date = JS_NewDateObjectMsec(aCtx, 0);
+  if (!date) {
+    JS_ClearPendingException(aCtx);
+    aDate->setNull();
+    return NS_OK;
+  }
+
   jsval rval;
   jsval fullYear[3];
   fullYear[0].setInt32(year);
   fullYear[1].setInt32(month-1);
   fullYear[2].setInt32(day);
   if(!JS::Call(aCtx, date, "setUTCFullYear", 3, fullYear, &rval)) {
+    JS_ClearPendingException(aCtx);
     aDate->setNull();
     return NS_OK;
   }
@@ -1301,15 +1325,22 @@ nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
+  if (aDate.isNullOrUndefined()) {
+    return SetValue(EmptyString());
+  }
+
+  // TODO: return TypeError when HTMLInputElement is converted to WebIDL, see
+  // bug 826302.
   if (!aDate.isObject() || !JS_ObjectIsDate(aCtx, &aDate.toObject())) {
     SetValue(EmptyString());
-    return NS_OK;
+    return NS_ERROR_INVALID_ARG;
   }
 
   JSObject& date = aDate.toObject();
   jsval timestamp;
-  bool ret = JS::Call(aCtx, &date, "getTime", 0, nullptr, &timestamp);
-  if (!ret || !timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
+  if (!JS::Call(aCtx, &date, "getTime", 0, nullptr, &timestamp) ||
+      !timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
+    JS_ClearPendingException(aCtx);
     SetValue(EmptyString());
     return NS_OK;
   }

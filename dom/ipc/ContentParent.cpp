@@ -17,7 +17,7 @@
 
 #include "chrome/common/process_watcher.h"
 
-#include "AppProcessPermissions.h"
+#include "AppProcessChecker.h"
 #include "AudioChannelService.h"
 #include "CrashReporterParent.h"
 #include "IHistory.h"
@@ -712,8 +712,17 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                 CrashReporterParent* crashReporter =
                     static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
 
-                crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("URL"),
-                                                   NS_ConvertUTF16toUTF8(mAppManifestURL));
+                // If we're an app process, always stomp the latest URI
+                // loaded in the child process with our manifest URL.  We
+                // would rather associate the crashes with apps than
+                // random child windows loaded in them.
+                //
+                // XXX would be nice if we could get both ...
+                if (!mAppManifestURL.IsEmpty()) {
+                    crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("URL"),
+                                                       NS_ConvertUTF16toUTF8(mAppManifestURL));
+                }
+
                 crashReporter->GenerateCrashReport(this, NULL);
 
                 nsAutoString dumpID(crashReporter->ChildDumpID());
@@ -2147,6 +2156,11 @@ ContentParent::CheckPermission(const nsAString& aPermission)
   return AssertAppProcessPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
+bool
+ContentParent::CheckManifestURL(const nsAString& aManifestURL)
+{
+  return AssertAppProcessManifestURL(this, NS_ConvertUTF16toUTF8(aManifestURL).get());
+}
 
 } // namespace dom
 } // namespace mozilla
