@@ -808,7 +808,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcSweepPhase(0),
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
-    gcAbortSweepAfterCurrentGroup(false),
     gcArenasAllocatedDuringSweep(NULL),
 #ifdef DEBUG
     gcMarkingValidator(NULL),
