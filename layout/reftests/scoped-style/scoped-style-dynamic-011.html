@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<body onload="f()">
+  <p>
+    <style scoped>
+      p { color: green }
+    </style>
+    First
+  </p>
+  <p>Second</p>
+  <script>
+    function f() {
+      var style = document.getElementsByTagName("style")[0];
+      var p = document.getElementsByTagName("p")[1];
+      p.appendChild(style);
+    }
+  </script>
+</body>
