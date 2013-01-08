@@ -20,13 +20,7 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
-const uint8_t gfxUtils::sPremultiplyTable[256*256] = {
-#include "sPremultiplyTable.h"
-};
-
-const uint8_t gfxUtils::sUnpremultiplyTable[256*256] = {
-#include "sUnpremultiplyTable.h"
-};
+#include "PremultiplyTables.h"
 
 static const uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
     return gfxUtils::sPremultiplyTable[a*256+v];
