@@ -37,7 +37,6 @@ class nsHTMLFormElement;
 class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
-class nsIDOMDOMStringMap;
 
 namespace mozilla {
 namespace dom{
