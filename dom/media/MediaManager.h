@@ -73,21 +73,23 @@ public:
   GetUserMediaCallbackMediaStreamListener(nsIThread *aThread,
     uint64_t aWindowID)
     : mMediaThread(aThread)
-    , mWindowID(aWindowID) {}
+    , mWindowID(aWindowID)
+    , mFinished(false)
+    , mLock("mozilla::GUMCMSL")
+    , mRemoved(false) {}
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
-    // It's OK to release mStream and mPort on any thread; they have thread-safe
+    // It's OK to release mStream on any thread; they have thread-safe
     // refcounts.
   }
 
   void Activate(already_AddRefed<SourceMediaStream> aStream,
-    already_AddRefed<MediaInputPort> aPort,
     MediaEngineSource* aAudioSource,
     MediaEngineSource* aVideoSource)
   {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     mStream = aStream; // also serves as IsActive();
-    mPort = aPort;
     mAudioSource = aAudioSource;
     mVideoSource = aVideoSource;
     mLastEndTimeAudio = 0;
@@ -107,20 +109,26 @@ public:
   }
 
   // implement in .cpp to avoid circular dependency with MediaOperationRunnable
-  void Invalidate(bool aNeedsFinish);
+  // Can be invoked from EITHER MainThread or MSG thread
+  void Invalidate();
 
   void
   Remove()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    // allow calling even if inactive (!mStream) for easier cleanup
     // Caller holds strong reference to us, so no death grip required
-    if (mStream) // allow even if inactive for easier cleanup
+    MutexAutoLock lock(mLock); // protect access to mRemoved
+    if (mStream && !mRemoved) {
+      MM_LOG(("Listener removed on purpose, mFinished = %d", (int) mFinished));
+      mRemoved = true; // RemoveListener is async, avoid races
       mStream->RemoveListener(this);
+    }
   }
 
   // Proxy NotifyPull() to sources
-  void
-  NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime)
+  virtual void
+  NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) MOZ_OVERRIDE
   {
     // Currently audio sources ignore NotifyPull, but they could
     // watch it especially for fake audio.
@@ -132,18 +140,31 @@ public:
     }
   }
 
-  void
-  NotifyFinished(MediaStreamGraph* aGraph);
+  virtual void
+  NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
+
+  virtual void
+  NotifyRemoved(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
 
 private:
+  // Set at construction
   nsCOMPtr<nsIThread> mMediaThread;
   uint64_t mWindowID;
-  nsRefPtr<MediaEngineSource> mAudioSource;
-  nsRefPtr<MediaEngineSource> mVideoSource;
-  nsRefPtr<SourceMediaStream> mStream;
-  nsRefPtr<MediaInputPort> mPort;
+
+  // Set at Activate on MainThread
+
+  // Accessed from MediaStreamGraph thread, MediaManager thread, and MainThread
+  // No locking needed as they're only addrefed except on the MediaManager thread
+  nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe refcnt
+  nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe refcnt
+  nsRefPtr<SourceMediaStream> mStream; // threadsafe refcnt
   TrackTicks mLastEndTimeAudio;
   TrackTicks mLastEndTimeVideo;
+  bool mFinished;
+
+  // Accessed from MainThread and MSG thread
+  Mutex mLock; // protects mRemoved access from MainThread
+  bool mRemoved;
 };
 
 typedef enum {
