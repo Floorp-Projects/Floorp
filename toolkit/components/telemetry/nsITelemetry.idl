@@ -87,6 +87,18 @@ interface nsITelemetry : nsISupports
   [implicit_jscontext]
   readonly attribute jsval chromeHangs;
 
+  /*
+   * An object with two fields: memoryMap and stacks.
+   * * memoryMap is a list of loaded libraries.
+   * * stacks is a list of stacks. Each stack is a list of pairs of the form
+   *   [moduleIndex, offset]. The moduleIndex is an index into the memoryMap and
+   *   offset is an offset in the library at memoryMap[moduleIndex].
+   * This format is used to make it easier to send the stacks to the
+   * symbolication server.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval lateWrites;
+
   /**
    * An object whose properties are the names of histograms defined in
    * TelemetryHistograms.h and whose corresponding values are the textual
@@ -193,8 +205,9 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval addonHistogramSnapshots;
 
   /**
-   * Read data from the previous run. After the callback is called, the data is
-   * available in lastShutdownDuration.
+   * Read data from the previous run. After the callback is called, the last
+   * shutdown time is available in lastShutdownDuration and any late
+   * writes in lateWrites.
    */
   void asyncFetchTelemetryData(in nsIFetchTelemetryDataCallback aCallback);
 };
