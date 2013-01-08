@@ -1504,6 +1504,11 @@ this.DOMApplicationRegistry = {
     let id = app.syncId || this._appId(app.origin);
     let localId = this.getAppLocalIdByManifestURL(manifestURL);
 
+    // For packaged apps, we need to get the id from the manifestURL.
+    if (localId && !id) {
+      id = this._appIdForManifestURL(manifestURL);
+    }
+
     // Installing an application again is considered as an update.
     if (id) {
       isReinstall = true;
