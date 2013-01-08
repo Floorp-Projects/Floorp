@@ -120,11 +120,11 @@ class RegExpShared
 #endif
 
     /*
-     * Source to the RegExp. Safe to hold: if the RegExpShared is active,
-     * then at least one RegExpObject must be referencing the RegExpShared,
-     * and the RegExpObject keeps alive the source JSAtom.
+     * Source to the RegExp. The RegExpShared must either be protected by a
+     * RegExpGuard, which handles rooting for stacky RegExpShareds,
+     * or trace() must be explicitly called during marking.
      */
-    JSAtom *           source;
+    HeapPtrAtom        source;
     RegExpFlag         flags;
     unsigned           parenCount;
 
@@ -148,6 +148,8 @@ class RegExpShared
   public:
     RegExpShared(JSRuntime *rt, JSAtom *source, RegExpFlag flags);
     ~RegExpShared();
+
+    void trace(JSTracer *trc);
 
     /* Static functions to expose some Yarr logic. */
     static inline bool isJITRuntimeEnabled(JSContext *cx);
@@ -198,22 +200,41 @@ class RegExpShared
 class RegExpGuard
 {
     RegExpShared *re_;
+
+    /*
+     * Prevent the RegExp source from being collected:
+     * because RegExpShared objects compile at execution time, the source
+     * must remain rooted for the active lifetime of the RegExpShared.
+     */
+    RootedAtom source_;
+
     RegExpGuard(const RegExpGuard &) MOZ_DELETE;
     void operator=(const RegExpGuard &) MOZ_DELETE;
+
   public:
-    RegExpGuard() : re_(NULL) {}
-    RegExpGuard(RegExpShared &re) : re_(&re) {
+    RegExpGuard(JSContext *cx)
+      : re_(NULL), source_(cx)
+    { }
+
+    RegExpGuard(JSContext *cx, RegExpShared &re)
+      : re_(&re), source_(cx, re.source)
+    {
         re_->incRef();
     }
-    void init(RegExpShared &re) {
-        JS_ASSERT(!re_);
-        re_ = &re;
-        re_->incRef();
-    }
+
     ~RegExpGuard() {
         if (re_)
             re_->decRef();
     }
+
+  public:
+    void init(RegExpShared &re) {
+        JS_ASSERT(!re_);
+        re_ = &re;
+        re_->incRef();
+        source_ = re.source;
+    }
+
     bool initialized() const { return !!re_; }
     RegExpShared *re() const { JS_ASSERT(initialized()); return re_; }
     RegExpShared *operator->() { return re(); }

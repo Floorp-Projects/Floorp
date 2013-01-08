@@ -80,6 +80,12 @@ richlistitem[type="download"] {
   list-style-image: url("chrome://browser/skin/downloads/download-summary.png");
 }
 
+@media (min-resolution: 2dppx) {
+  #downloadsSummary > .downloadTypeIcon {
+    list-style-image: url("chrome://browser/skin/downloads/download-summary@2x.png");
+  }
+}
+
 #downloadsSummaryDescription {
   color: -moz-nativehyperlinktext;
 }
@@ -163,22 +169,85 @@ richlistitem[type="download"][state="1"]:hover {
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
 
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  -moz-image-region: rect(16px, 96px, 32px, 80px);
 }
 richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
+  -moz-image-region: rect(16px, 112px, 32px, 96px);
 }
 richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
-  -moz-image-region: rect(16px, 64px, 32px, 48px);
+  -moz-image-region: rect(16px, 128px, 32px, 112px);
 }
 
 .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
+}
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:hover {
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
+}
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:active {
+  -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+
+@media (min-resolution: 2dppx) {
+  .downloadButton {
+    list-style-image: url("chrome://browser/skin/downloads/buttons@2x.png");
+  }
+
+  .downloadButton.downloadCancel {
+    -moz-image-region: rect(0px, 32px, 32px, 0px);
+  }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
+    -moz-image-region: rect(0px, 64px, 32px, 32px);
+  }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
+    -moz-image-region: rect(0px, 96px, 32px, 64px);
+  }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
+    -moz-image-region: rect(0px, 128px, 32px, 96px);
+  }
+
+  .downloadButton.downloadShow {
+    -moz-image-region: rect(32px, 32px, 64px, 0px);
+  }
+  richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
+    -moz-image-region: rect(32px, 192px, 64px, 160px);
+  }
+  richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
+    -moz-image-region: rect(32px, 224px, 64px, 192px);
+  }
+  richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
+    -moz-image-region: rect(32px, 256px, 64px, 224px);
+  }
+
+  .downloadButton.downloadRetry {
+    -moz-image-region: rect(64px, 32px, 96px, 0px);
+  }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry {
+    -moz-image-region: rect(64px, 64px, 96px, 32px);
+  }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:hover {
+    -moz-image-region: rect(64px, 96px, 96px, 64px);
+  }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:active {
+    -moz-image-region: rect(64px, 128px, 96px, 96px);
+  }
 }
 
 /*** Status and progress indicator ***/
@@ -238,34 +307,47 @@ richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloa
   }
 }
 
-/*** Event notification ***/
+/*** Download notifications ***/
 
 #downloads-indicator-notification {
   opacity: 0;
-  background: url("chrome://browser/skin/downloads/download-notification.png")
-              center no-repeat;
   background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-@keyframes downloadsIndicatorNotificationRight {
+@keyframes downloadsIndicatorNotificationStartRight {
   from { opacity: 0; transform: translate(-128px, 128px) scale(8); }
   20%  { opacity: .85; animation-timing-function: ease-out; }
   to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
-@keyframes downloadsIndicatorNotificationLeft {
+@keyframes downloadsIndicatorNotificationStartLeft {
   from { opacity: 0; transform: translate(128px, 128px) scale(8); }
   20%  { opacity: .85; animation-timing-function: ease-out; }
   to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
-#downloads-indicator[notification] > #downloads-indicator-anchor > #downloads-indicator-notification {
-  animation-name: downloadsIndicatorNotificationRight;
+#downloads-indicator[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+  background-image: url("chrome://browser/skin/downloads/download-notification-start.png");
+  animation-name: downloadsIndicatorNotificationStartRight;
   animation-duration: 1s;
 }
 
-#downloads-indicator[notification]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
-  animation-name: downloadsIndicatorNotificationLeft;
+#downloads-indicator[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
+  animation-name: downloadsIndicatorNotificationStartLeft;
+}
+
+@keyframes downloadsIndicatorNotificationFinish {
+  from { opacity: 0; transform: scale(1); }
+  20%  { opacity: .65; animation-timing-function: ease-in; }
+  to   { opacity: 0; transform: scale(8); }
+}
+
+#downloads-indicator[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+  background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
+  animation-name: downloadsIndicatorNotificationFinish;
+  animation-duration: 1s;
 }
 
 /*** Progress bar and text ***/

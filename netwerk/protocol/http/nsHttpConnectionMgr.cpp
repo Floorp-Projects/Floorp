@@ -2520,13 +2520,8 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     // IPv6 on the backup connection gives them a much better user experience
     // with dual-stack hosts, though they still pay the 250ms delay for each new
     // connection. This strategy is also known as "happy eyeballs".
-    if (mEnt->mPreferIPv6) {
-        tmpFlags |= nsISocketTransport::DISABLE_IPV4;
-    }
-    else if (mEnt->mPreferIPv4 ||
-             (isBackup && gHttpHandler->FastFallbackToIPv4())) {
+    if (isBackup && gHttpHandler->FastFallbackToIPv4())
         tmpFlags |= nsISocketTransport::DISABLE_IPV6;
-    }
 
     socketTransport->SetConnectionFlags(tmpFlags);
 
@@ -2718,7 +2713,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     LOG(("nsHalfOpenSocket::OnOutputStreamReady "
          "Created new nshttpconnection %p\n", conn.get()));
 
-    NetAddr peeraddr;
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
     if (out == mStreamOut) {
@@ -2728,9 +2722,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
                         mSocketTransport, mStreamIn, mStreamOut,
                         callbacks,
                         PR_MillisecondsToInterval(rtt.ToMilliseconds()));
-
-        if (NS_SUCCEEDED(mSocketTransport->GetPeerAddr(&peeraddr)))
-            mEnt->RecordIPFamilyPreference(peeraddr.raw.family);
 
         // The nsHttpConnection object now owns these streams and sockets
         mStreamOut = nullptr;
@@ -2744,9 +2735,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
                         mBackupTransport, mBackupStreamIn, mBackupStreamOut,
                         callbacks,
                         PR_MillisecondsToInterval(rtt.ToMilliseconds()));
-
-        if (NS_SUCCEEDED(mBackupTransport->GetPeerAddr(&peeraddr)))
-            mEnt->RecordIPFamilyPreference(peeraddr.raw.family);
 
         // The nsHttpConnection object now owns these streams and sockets
         mBackupStreamOut = nullptr;
@@ -2960,8 +2948,6 @@ nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     , mUsingSpdy(false)
     , mTestedSpdy(false)
     , mSpdyPreferred(false)
-    , mPreferIPv4(false)
-    , mPreferIPv6(false)
 {
     NS_ADDREF(mConnInfo);
     if (gHttpHandler->GetPipelineAggressive()) {
@@ -3117,8 +3103,7 @@ nsConnectionEntry::SetYellowConnection(nsHttpConnection *conn)
 }
 
 void
-nsHttpConnectionMgr::
-nsConnectionEntry::OnYellowComplete()
+nsHttpConnectionMgr::nsConnectionEntry::OnYellowComplete()
 {
     if (mPipelineState == PS_YELLOW) {
         if (mYellowGoodEvents && !mYellowBadEvents) {
@@ -3141,8 +3126,7 @@ nsConnectionEntry::OnYellowComplete()
 }
 
 void
-nsHttpConnectionMgr::
-nsConnectionEntry::CreditPenalty()
+nsHttpConnectionMgr::nsConnectionEntry::CreditPenalty()
 {
     if (mLastCreditTime.IsNull())
         return;
@@ -3238,17 +3222,8 @@ nsHttpConnectionMgr::GetConnectionData(nsTArray<mozilla::net::HttpRetParams> *aA
     return true;
 }
 
-void
-nsHttpConnectionMgr::ResetIPFamillyPreference(nsHttpConnectionInfo *ci)
-{
-    nsConnectionEntry *ent = LookupConnectionEntry(ci, nullptr, nullptr);
-    if (ent)
-        ent->ResetIPFamilyPreference();
-}
-
 uint32_t
-nsHttpConnectionMgr::
-nsConnectionEntry::UnconnectedHalfOpens()
+nsHttpConnectionMgr::nsConnectionEntry::UnconnectedHalfOpens()
 {
     uint32_t unconnectedHalfOpens = 0;
     for (uint32_t i = 0; i < mHalfOpens.Length(); ++i) {
@@ -3273,23 +3248,4 @@ nsConnectionEntry::RemoveHalfOpen(nsHalfOpenSocket *halfOpen)
         // use the PostEvent version of processpendingq to avoid
         // altering the pending q vector from an arbitrary stack
         gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
-}
-
-void
-nsHttpConnectionMgr::
-nsConnectionEntry::RecordIPFamilyPreference(uint16_t family)
-{
-  if (family == PR_AF_INET && !mPreferIPv6)
-    mPreferIPv4 = true;
-
-  if (family == PR_AF_INET6 && !mPreferIPv4)
-    mPreferIPv6 = true;
-}
-
-void
-nsHttpConnectionMgr::
-nsConnectionEntry::ResetIPFamilyPreference()
-{
-  mPreferIPv4 = false;
-  mPreferIPv6 = false;
 }

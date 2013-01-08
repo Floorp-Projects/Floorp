@@ -408,7 +408,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
-    RootedScript script(cx, fun->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!script)
         return false;
 
@@ -1364,6 +1364,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
+ADD_EMPTY_CASE(JSOP_UNUSED0)
 ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_UNUSED2)
 ADD_EMPTY_CASE(JSOP_UNUSED3)
@@ -2397,7 +2398,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RootedScript funScript(cx, fun->getOrCreateScript(cx));
+    RootedScript funScript(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!funScript)
         goto error;
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))
@@ -2643,73 +2644,6 @@ BEGIN_CASE(JSOP_TABLESWITCH)
         if (off)
             len = off;
     }
-}
-END_VARLEN_CASE
-}
-
-{
-BEGIN_CASE(JSOP_LOOKUPSWITCH)
-{
-    int32_t off;
-    off = JUMP_OFFSET_LEN;
-
-    /*
-     * JSOP_LOOKUPSWITCH are never used if any atom index in it would exceed
-     * 64K limit.
-     */
-    jsbytecode *pc2 = regs.pc;
-
-    Value lval = regs.sp[-1];
-    regs.sp--;
-
-    int npairs;
-    if (!lval.isPrimitive())
-        goto end_lookup_switch;
-
-    pc2 += off;
-    npairs = GET_UINT16(pc2);
-    pc2 += UINT16_LEN;
-    JS_ASSERT(npairs);  /* empty switch uses JSOP_TABLESWITCH */
-
-    bool match;
-#define SEARCH_PAIRS(MATCH_CODE)                                              \
-    for (;;) {                                                                \
-        Value rval = script->getConst(GET_UINT32_INDEX(pc2));                 \
-        MATCH_CODE                                                            \
-        pc2 += UINT32_INDEX_LEN;                                              \
-        if (match)                                                            \
-            break;                                                            \
-        pc2 += off;                                                           \
-        if (--npairs == 0) {                                                  \
-            pc2 = regs.pc;                                                    \
-            break;                                                            \
-        }                                                                     \
-    }
-
-    if (lval.isString()) {
-        JSLinearString *str = lval.toString()->ensureLinear(cx);
-        if (!str)
-            goto error;
-        JSLinearString *str2;
-        SEARCH_PAIRS(
-            match = (rval.isString() &&
-                     ((str2 = &rval.toString()->asLinear()) == str ||
-                      EqualStrings(str2, str)));
-        )
-    } else if (lval.isNumber()) {
-        double ldbl = lval.toNumber();
-        SEARCH_PAIRS(
-            match = rval.isNumber() && ldbl == rval.toNumber();
-        )
-    } else {
-        SEARCH_PAIRS(
-            match = (lval == rval);
-        )
-    }
-#undef SEARCH_PAIRS
-
-  end_lookup_switch:
-    len = GET_JUMP_OFFSET(pc2);
 }
 END_VARLEN_CASE
 }

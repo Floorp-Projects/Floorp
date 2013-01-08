@@ -70,7 +70,6 @@ class IonBuilder : public MIRGenerator
             FOR_LOOP_BODY,      // for (; ;) { x }
             FOR_LOOP_UPDATE,    // for (; ; x) { }
             TABLE_SWITCH,       // switch() { x }
-            LOOKUP_SWITCH,      // switch() { x }
             COND_SWITCH_CASE,   // switch() { case X: ... }
             COND_SWITCH_BODY,   // switch() { case ...: X }
             AND_OR              // && x, || x
@@ -124,19 +123,6 @@ class IonBuilder : public MIRGenerator
 
             } tableswitch;
             struct {
-                // pc immediately after the switch.
-                jsbytecode *exitpc;
-
-                // Deferred break and continue targets.
-                DeferredEdge *breaks;
-
-                // Vector of body blocks to process
-                FixedList<MBasicBlock *> *bodies;
-
-                // The number of current successor that get mapped into a block. 
-                uint32_t currentBlock;
-            } lookupswitch;
-            struct {
                 // Vector of body blocks to process after the cases.
                 FixedList<MBasicBlock *> *bodies;
 
@@ -174,7 +160,6 @@ class IonBuilder : public MIRGenerator
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
         static CFGState AndOr(jsbytecode *join, MBasicBlock *joinStart);
         static CFGState TableSwitch(jsbytecode *exitpc, MTableSwitch *ins);
-        static CFGState LookupSwitch(jsbytecode *exitpc);
         static CFGState CondSwitch(jsbytecode *exitpc, jsbytecode *defaultTarget);
     };
 
@@ -223,7 +208,6 @@ class IonBuilder : public MIRGenerator
     ControlStatus processForBodyEnd(CFGState &state);
     ControlStatus processForUpdateEnd(CFGState &state);
     ControlStatus processNextTableSwitchCase(CFGState &state);
-    ControlStatus processNextLookupSwitchCase(CFGState &state);
     ControlStatus processCondSwitchCase(CFGState &state);
     ControlStatus processCondSwitchBody(CFGState &state);
     ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
@@ -271,7 +255,6 @@ class IonBuilder : public MIRGenerator
     ControlStatus whileOrForInLoop(JSOp op, jssrcnote *sn);
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
     ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
-    ControlStatus lookupSwitch(JSOp op, jssrcnote *sn);
     ControlStatus condSwitch(JSOp op, jssrcnote *sn);
 
     // Please see the Big Honkin' Comment about how resume points work in
@@ -292,9 +275,8 @@ class IonBuilder : public MIRGenerator
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
-    MDefinition *createThisNative();
     MDefinition *createThisScripted(MDefinition *callee);
-    MDefinition *createThisScriptedSingleton(HandleFunction target, HandleObject proto, MDefinition *callee);
+    MDefinition *createThisScriptedSingleton(HandleFunction target, MDefinition *callee);
     MDefinition *createThis(HandleFunction target, MDefinition *callee);
     MInstruction *createDeclEnvObject(MDefinition *callee, MDefinition *scopeObj);
     MInstruction *createCallObject(MDefinition *callee, MDefinition *scopeObj);
@@ -419,6 +401,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathMinMax(bool max, uint32_t argc, bool constructing);
     InliningStatus inlineMathPow(uint32_t argc, bool constructing);
     InliningStatus inlineMathRandom(uint32_t argc, bool constructing);
+    InliningStatus inlineMathImul(uint32_t argc, bool constructing);
     InliningStatus inlineMathFunction(MMathFunction::Function function, uint32_t argc,
                                       bool constructing);
 
@@ -492,8 +475,11 @@ class IonBuilder : public MIRGenerator
     CodeGenerator *backgroundCodegen() const { return backgroundCodegen_; }
     void setBackgroundCodegen(CodeGenerator *codegen) { backgroundCodegen_ = codegen; }
 
+    AbortReason abortReason() { return abortReason_; }
+
   private:
     JSContext *cx;
+    AbortReason abortReason_;
 
     jsbytecode *pc;
     MBasicBlock *current;

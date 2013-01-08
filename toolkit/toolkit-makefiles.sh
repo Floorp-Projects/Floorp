@@ -491,6 +491,8 @@ MAKEFILES_xulapp="
   toolkit/forgetaboutsite/test/browser/Makefile
   toolkit/identity/Makefile
   toolkit/locales/Makefile
+  toolkit/modules/Makefile
+  toolkit/modules/tests/Makefile
   toolkit/mozapps/downloads/Makefile
   toolkit/mozapps/extensions/Makefile
   toolkit/mozapps/handling/Makefile

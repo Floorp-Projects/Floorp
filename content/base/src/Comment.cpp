@@ -9,7 +9,8 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/Element.h" // DOMCI_NODE_DATA
-#include "Comment.h"
+#include "mozilla/dom/Comment.h"
+#include "mozilla/dom/CommentBinding.h"
 
 using namespace mozilla;
 using namespace dom;
@@ -40,13 +41,6 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult,
 
 namespace mozilla {
 namespace dom {
-
-Comment::Comment(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericDOMDataNode(aNodeInfo)
-{
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
-                    "Bad NodeType in aNodeInfo");
-}
 
 Comment::~Comment()
 {
@@ -98,6 +92,12 @@ Comment::List(FILE* out, int32_t aIndent) const
   fputs("-->\n", out);
 }
 #endif
+
+JSObject*
+Comment::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return CommentBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 } // namespace dom
 } // namespace mozilla

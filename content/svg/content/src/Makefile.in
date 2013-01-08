@@ -37,34 +37,23 @@ CPPSRCS		= \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
-		nsSVGAltGlyphElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGBoolean.cpp \
-		nsSVGCircleElement.cpp \
 		nsSVGClass.cpp \
 		nsSVGClipPathElement.cpp \
 		nsSVGDataParser.cpp \
-		nsSVGDefsElement.cpp \
-		nsSVGDescElement.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
-		nsSVGEllipseElement.cpp \
 		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
 		nsSVGFilterElement.cpp \
 		nsSVGFilters.cpp \
-		nsSVGForeignObjectElement.cpp \
-		nsSVGGElement.cpp \
 		nsSVGGradientElement.cpp \
-		nsSVGGraphicElement.cpp \
-		nsSVGImageElement.cpp \
 		nsSVGInteger.cpp \
 		nsSVGIntegerPair.cpp \
 		nsSVGLength2.cpp \
-		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
 		nsSVGMaskElement.cpp \
-		nsSVGMetadataElement.cpp \
 		nsSVGNumber2.cpp \
 		nsSVGNumberPair.cpp \
 		nsSVGPathDataParser.cpp \
@@ -72,27 +61,14 @@ CPPSRCS		= \
 		nsSVGPathGeometryElement.cpp \
 		nsSVGPatternElement.cpp \
 		nsSVGPolyElement.cpp \
-		nsSVGPolygonElement.cpp \
-		nsSVGPolylineElement.cpp \
-		nsSVGScriptElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
-		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \
-		nsSVGStopElement.cpp \
-		nsSVGStyleElement.cpp \
-		nsSVGSwitchElement.cpp \
 		nsSVGSymbolElement.cpp \
-		nsSVGTSpanElement.cpp \
-		nsSVGTextContentElement.cpp \
-		nsSVGTextElement.cpp \
-		nsSVGTextPathElement.cpp \
-		nsSVGTextPositioningElement.cpp \
-		nsSVGTitleElement.cpp \
 		nsSVGUnknownElement.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
-		nsSVGViewElement.cpp \
+		SVGAltGlyphElement.cpp \
 		SVGAngle.cpp \
 		SVGAnimatedAngle.cpp \
 		SVGAnimatedBoolean.cpp \
@@ -102,39 +78,65 @@ CPPSRCS		= \
 		SVGAnimatedPointList.cpp \
 		SVGAnimatedPreserveAspectRatio.cpp \
 		SVGAnimatedTransformList.cpp \
+		SVGAnimateElement.cpp \
+		SVGAnimateTransformElement.cpp \
+		SVGAnimateMotionElement.cpp \
+		SVGAnimationElement.cpp \
+		SVGAttrValueWrapper.cpp \
+		SVGCircleElement.cpp \
+		SVGContentUtils.cpp \
+		SVGDefsElement.cpp \
+		SVGDescElement.cpp \
+		SVGEllipseElement.cpp \
+		SVGForeignObjectElement.cpp \
 		SVGFragmentIdentifier.cpp \
+		SVGGElement.cpp \
+		SVGGraphicsElement.cpp \
+		SVGImageElement.cpp \
+		SVGIntegerPairSMILType.cpp \
 		SVGLength.cpp \
 		SVGLengthList.cpp \
-		SVGNumberList.cpp \
-		SVGPathData.cpp \
-		SVGPathSegUtils.cpp \
-		SVGPointList.cpp \
-		SVGPreserveAspectRatio.cpp \
-		SVGStringList.cpp \
-		SVGTransform.cpp \
-		SVGTransformList.cpp \
-		SVGTransformListParser.cpp \
-		nsSVGAnimateElement.cpp \
-		nsSVGAnimateTransformElement.cpp \
-		nsSVGAnimateMotionElement.cpp \
-		nsSVGAnimationElement.cpp \
-		nsSVGMpathElement.cpp \
-		nsSVGSetElement.cpp \
-		SVGAttrValueWrapper.cpp \
-		SVGContentUtils.cpp \
-		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
+		SVGLineElement.cpp \
+		SVGLocatableElement.cpp \
+		SVGMetadataElement.cpp \
 		SVGMotionSMILType.cpp \
 		SVGMotionSMILAttr.cpp \
 		SVGMotionSMILAnimationFunction.cpp \
 		SVGMotionSMILPathUtils.cpp \
+		SVGMPathElement.cpp \
+		SVGNumberList.cpp \
 		SVGNumberListSMILType.cpp \
 		SVGNumberPairSMILType.cpp \
 		SVGOrientSMILType.cpp \
+		SVGPathData.cpp \
+		SVGPathSegUtils.cpp \
 		SVGPathSegListSMILType.cpp \
+		SVGPointList.cpp \
 		SVGPointListSMILType.cpp \
+		SVGPolygonElement.cpp \
+		SVGPolylineElement.cpp \
+		SVGPreserveAspectRatio.cpp \
+		SVGRectElement.cpp \
+		SVGScriptElement.cpp \
+		SVGSetElement.cpp \
+		SVGStopElement.cpp \
+		SVGStringList.cpp \
+		SVGStyleElement.cpp \
+		SVGSwitchElement.cpp \
+		SVGTextContentElement.cpp \
+		SVGTextElement.cpp \
+		SVGTextPathElement.cpp \
+		SVGTextPositioningElement.cpp \
+		SVGTitleElement.cpp \
+		SVGTransform.cpp \
+		SVGTransformableElement.cpp \
+		SVGTransformList.cpp \
+		SVGTransformListParser.cpp \
 		SVGTransformListSMILType.cpp \
+		SVGTSpanElement.cpp \
 		SVGViewBoxSMILType.cpp \
+		SVGViewElement.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -151,9 +153,42 @@ EXPORTS =  			\
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+	SVGAltGlyphElement.h \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
+	SVGAnimateElement.h \
+	SVGAnimateTransformElement.h \
+	SVGAnimateMotionElement.h \
+	SVGAnimationElement.h \
+	SVGCircleElement.h \
+	SVGDefsElement.h \
+	SVGDescElement.h \
+	SVGEllipseElement.h \
+	SVGForeignObjectElement.h \
+	SVGGElement.h \
+	SVGGraphicsElement.h \
+	SVGImageElement.h \
+	SVGLineElement.h \
+	SVGLocatableElement.h \
+	SVGMetadataElement.h \
+	SVGMPathElement.h \
+	SVGPolygonElement.h \
+	SVGPolylineElement.h \
+	SVGRectElement.h \
+	SVGScriptElement.h \
+	SVGSetElement.h \
+	SVGStopElement.h \
+	SVGStyleElement.h \
+	SVGSwitchElement.h \
+	SVGTextContentElement.h \
+	SVGTextElement.h \
+	SVGTextPathElement.h \
+	SVGTextPositioningElement.h \
+	SVGTitleElement.h \
+	SVGTransformableElement.h \
+	SVGTSpanElement.h \
+	SVGViewElement.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

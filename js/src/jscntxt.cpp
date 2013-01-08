@@ -10,6 +10,7 @@
  */
 
 #include <limits.h>
+#include <locale.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -263,8 +264,6 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
      */
     bool first = rt->contextList.isEmpty();
     rt->contextList.insertBack(cx);
-
-    js_InitRandom(cx);
 
     /*
      * If cx is the first context on this runtime, initialize well-known atoms,
@@ -1097,6 +1096,7 @@ JSContext::JSContext(JSRuntime *rt)
     throwing(false),
     exception(UndefinedValue()),
     runOptions(0),
+    defaultLocale(NULL),
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     localeCallbacks(NULL),
     resolvingList(NULL),
@@ -1115,7 +1115,6 @@ JSContext::JSContext(JSRuntime *rt)
     outstandingRequests(0),
 #endif
     resolveFlags(0),
-    rngSeed(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
 #ifdef JS_METHODJIT
     methodJitEnabled(false),
@@ -1144,10 +1143,55 @@ JSContext::JSContext(JSRuntime *rt)
 JSContext::~JSContext()
 {
     /* Free the stuff hanging off of cx. */
+    js_free(defaultLocale);
     if (parseMapPool_)
         js_delete(parseMapPool_);
 
     JS_ASSERT(!resolvingList);
+}
+
+bool
+JSContext::setDefaultLocale(const char *locale)
+{
+    if (!locale)
+        return false;
+    resetDefaultLocale();
+    defaultLocale = JS_strdup(this, locale);
+    return defaultLocale != NULL;
+}
+
+void
+JSContext::resetDefaultLocale()
+{
+    js_free(defaultLocale);
+    defaultLocale = NULL;
+}
+
+const char *
+JSContext::getDefaultLocale()
+{
+    if (defaultLocale)
+        return defaultLocale;
+
+    char *locale, *lang, *p;
+#ifdef HAVE_SETLOCALE
+    locale = setlocale(LC_ALL, NULL);
+#else
+    locale = getenv("LANG");
+#endif
+    // convert to a well-formed BCP 47 language tag
+    if (!locale || !strcmp(locale, "C"))
+        locale = (char *) "und";
+    lang = JS_strdup(this, locale);
+    if (!lang)
+        return NULL;
+    if ((p = strchr(lang, '.')))
+        *p = '\0';
+    while ((p = strchr(lang, '_')))
+        *p = '-';
+
+    defaultLocale = lang;
+    return defaultLocale;
 }
 
 /*

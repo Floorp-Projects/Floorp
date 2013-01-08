@@ -1123,18 +1123,6 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
         return NS_ERROR_ABORT;
     }
 
-    nsAutoCString contentType;
-    rv = channel->GetContentType(contentType);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!contentType.EqualsLiteral("text/cache-manifest")) {
-        LOG(("Rejected cache manifest with Content-Type %s (expecting text/cache-manifest)",
-             contentType.get()));
-        LogToConsole("Offline cache manifest not served with text/cache-manifest", this);
-        mParserState = PARSE_ERROR;
-        return NS_ERROR_ABORT;
-    }
-
     rv = GetOldManifestContentHash(aRequest);
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -2,10 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import with_statement
 __all__ = ['check_for_crashes']
 
-import os, sys, glob, urllib2, tempfile, subprocess, shutil, urlparse, zipfile
+import os, sys, glob, urllib2, tempfile, re, subprocess, shutil, urlparse, zipfile
 import mozlog
 
 def is_url(thing):
@@ -13,7 +12,11 @@ def is_url(thing):
   Return True if thing looks like a URL.
   """
   # We want to download URLs like http://... but not Windows paths like c:\...
-  return len(urlparse.urlparse(thing).scheme) >= 2
+  parsed = urlparse.urlparse(thing)
+  if 'scheme' in parsed:
+      return len(parsed.scheme) >= 2
+  else:
+      return len(parsed[0]) >= 2
 
 def extractall(zip, path = None):
     """
@@ -33,29 +36,38 @@ def extractall(zip, path = None):
             path = os.path.split(filename)[0]
             if not os.path.isdir(path):
                 os.makedirs(path)
-        with open(filename, "wb") as dest:
-            dest.write(zip.read(name))
+
+        try:
+            f = open(filename, "wb")
+            f.write(zip.read(name))
+        finally:
+            f.close()
 
 def check_for_crashes(dump_directory, symbols_path,
                       stackwalk_binary=None,
                       dump_save_path=None,
                       test_name=None):
     """
-    Print a stack trace for minidumps left behind by a crashing program.
+    Print a stack trace for minidump files left behind by a crashing program.
 
-    Arguments:
-    dump_directory: The directory in which to look for minidumps.
-    symbols_path: The path to symbols to use for dump processing.
-                  This can either be a path to a directory
-                  containing Breakpad-format symbols, or a URL
-                  to a zip file containing a set of symbols.
-    stackwalk_binary: The path to the minidump_stackwalk binary.
-                      If not set, the environment variable
-                      MINIDUMP_STACKWALK will be checked.
-    dump_save_path: A directory in which to copy minidump files
-                    for safekeeping. If not set, the environment
-                    variable MINIDUMP_SAVE_PATH will be checked.
-    test_name: The test name to be used in log output.
+    `dump_directory` will be searched for minidump files. Any minidump files found will
+    have `stackwalk_binary` executed on them, with `symbols_path` passed as an extra
+    argument.
+
+    `stackwalk_binary` should be a path to the minidump_stackwalk binary.
+    If `stackwalk_binary` is not set, the MINIDUMP_STACKWALK environment variable
+    will be checked and its value used if it is not empty.
+
+    `symbols_path` should be a path to a directory containing symbols to use for
+    dump processing. This can either be a path to a directory containing Breakpad-format
+    symbols, or a URL to a zip file containing a set of symbols.
+                  
+    If `dump_save_path` is set, it should be a path to a directory in which to copy minidump
+    files for safekeeping after a stack trace has been printed. If not set, the environment
+    variable MINIDUMP_SAVE_PATH will be checked and its value used if it is not empty.
+                    
+    If `test_name` is set it will be used as the test name in log output. If not set the
+    filename of the calling function will be used.
 
     Returns True if any minidumps were found, False otherwise.
     """
@@ -75,10 +87,9 @@ def check_for_crashes(dump_directory, symbols_path,
     if len(dumps) == 0:
         return False
 
-    found_crash = False
     remove_symbols = False 
     # If our symbols are at a remote URL, download them now
-    if is_url(symbols_path):
+    if symbols_path and is_url(symbols_path):
         log.info("Downloading symbols from: %s", symbols_path)
         remove_symbols = True
         # Get the symbols and write them to a temporary zipfile
@@ -94,8 +105,9 @@ def check_for_crashes(dump_directory, symbols_path,
 
     try:
         for d in dumps:
-            log.info("PROCESS-CRASH | %s | application crashed (minidump found)", test_name)
-            log.info("Crash dump filename: %s", d)
+            stackwalk_output = []
+            stackwalk_output.append("Crash dump filename: " + d)
+            top_frame = None
             if symbols_path and stackwalk_binary and os.path.exists(stackwalk_binary):
                 # run minidump_stackwalk
                 p = subprocess.Popen([stackwalk_binary, d, symbols_path],
@@ -105,19 +117,36 @@ def check_for_crashes(dump_directory, symbols_path,
                 if len(out) > 3:
                     # minidump_stackwalk is chatty,
                     # so ignore stderr when it succeeds.
-                    print out
+                    stackwalk_output.append(out)
+                    # The top frame of the crash is always the line after "Thread N (crashed)"
+                    # Examples:
+                    #  0  libc.so + 0xa888
+                    #  0  libnss3.so!nssCertificate_Destroy [certificate.c : 102 + 0x0]
+                    #  0  mozjs.dll!js::GlobalObject::getDebuggers() [GlobalObject.cpp:89df18f9b6da : 580 + 0x0]
+                    #  0  libxul.so!void js::gc::MarkInternal<JSObject>(JSTracer*, JSObject**) [Marking.cpp : 92 + 0x28]
+                    lines = out.splitlines()
+                    for i, line in enumerate(lines):
+                        if "(crashed)" in line:
+                            match = re.search(r"^ 0  (?:.*!)?(?:void )?([^\[]+)", lines[i+1])
+                            if match:
+                                top_frame = "@ %s" % match.group(1).strip()
+                            break
                 else:
-                    print "stderr from minidump_stackwalk:"
-                    print err
+                    stackwalk_output.append("stderr from minidump_stackwalk:")
+                    stackwalk_output.append(err)
                 if p.returncode != 0:
-                    log.error("minidump_stackwalk exited with return code %d", p.returncode)
+                    stackwalk_output.append("minidump_stackwalk exited with return code %d" % p.returncode)
             else:
                 if not symbols_path:
-                    log.warn("No symbols path given, can't process dump.")
+                    stackwalk_output.append("No symbols path given, can't process dump.")
                 if not stackwalk_binary:
-                    log.warn("MINIDUMP_STACKWALK not set, can't process dump.")
+                    stackwalk_output.append("MINIDUMP_STACKWALK not set, can't process dump.")
                 elif stackwalk_binary and not os.path.exists(stackwalk_binary):
-                    log.warn("MINIDUMP_STACKWALK binary not found: %s", stackwalk_binary)
+                    stackwalk_output.append("MINIDUMP_STACKWALK binary not found: %s" % stackwalk_binary)
+            if not top_frame:
+                top_frame = "Unknown top frame"
+            log.error("PROCESS-CRASH | %s | application crashed [%s]", test_name, top_frame)
+            print '\n'.join(stackwalk_output)
             if dump_save_path is None:
                 dump_save_path = os.environ.get('MINIDUMP_SAVE_PATH', None)
             if dump_save_path:
@@ -129,9 +158,8 @@ def check_for_crashes(dump_directory, symbols_path,
             extra = os.path.splitext(d)[0] + ".extra"
             if os.path.exists(extra):
                 os.remove(extra)
-            found_crash = True
     finally:
         if remove_symbols:
             shutil.rmtree(symbols_path)
 
-    return found_crash
+    return True

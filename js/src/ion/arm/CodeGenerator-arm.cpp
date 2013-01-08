@@ -378,6 +378,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
     const LAllocation *rhs = ins->getOperand(1);
     const LDefinition *dest = ins->getDef(0);
     MMul *mul = ins->mir();
+    JS_ASSERT_IF(mul->mode() == MMul::Integer, !mul->canBeNegativeZero() && !mul->canOverflow());
 
     if (rhs->isConstant()) {
         // Bailout when this condition is met.
@@ -1162,7 +1163,7 @@ CodeGeneratorARM::visitCompareD(LCompareD *comp)
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(lhs, rhs);
     emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
-    return false;
+    return true;
 }
 
 bool

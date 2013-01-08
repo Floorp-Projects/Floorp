@@ -13,21 +13,24 @@
 #include "nsCRT.h"
 
 bool
-gfxDWriteShaper::ShapeWord(gfxContext *aContext,
-                           gfxShapedWord *aShapedWord,
-                           const PRUnichar *aString)
+gfxDWriteShaper::ShapeText(gfxContext      *aContext,
+                           const PRUnichar *aText,
+                           uint32_t         aOffset,
+                           uint32_t         aLength,
+                           int32_t          aScript,
+                           gfxShapedText   *aShapedText)
 {
     HRESULT hr;
-    // TODO: Handle TEST_DISABLE_OPTIONAL_LIGATURES
+    // TODO: Handle TEXT_DISABLE_OPTIONAL_LIGATURES
 
     DWRITE_READING_DIRECTION readingDirection = 
-        aShapedWord->IsRightToLeft()
+        aShapedText->IsRightToLeft()
             ? DWRITE_READING_DIRECTION_RIGHT_TO_LEFT
             : DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
 
     gfxDWriteFont *font = static_cast<gfxDWriteFont*>(mFont);
 
-    gfxShapedWord::CompressedGlyph g;
+    gfxShapedText::CompressedGlyph g;
 
     IDWriteTextAnalyzer *analyzer =
         gfxWindowsPlatform::GetPlatform()->GetDWriteAnalyzer();
@@ -37,12 +40,12 @@ gfxDWriteShaper::ShapeWord(gfxContext *aContext,
 
     /**
      * There's an internal 16-bit limit on some things inside the analyzer,
-     * but we never attempt to shape a word longer than 64K characters
-     * in a single gfxShapedWord, so we cannot exceed that limit.
+     * but we never attempt to shape a word longer than 32K characters
+     * in a single call, so we cannot exceed that limit.
      */
-    UINT32 length = aShapedWord->Length();
+    UINT32 length = aLength;
 
-    TextAnalysis analysis(aString, length, NULL, readingDirection);
+    TextAnalysis analysis(aText, length, NULL, readingDirection);
     TextAnalysis::Run *runHead;
     hr = analysis.GenerateResults(analyzer, &runHead);
 
@@ -51,7 +54,7 @@ gfxDWriteShaper::ShapeWord(gfxContext *aContext,
         return false;
     }
 
-    uint32_t appUnitsPerDevPixel = aShapedWord->AppUnitsPerDevUnit();
+    uint32_t appUnitsPerDevPixel = aShapedText->GetAppUnitsPerDevUnit();
 
     UINT32 maxGlyphs = 0;
 trymoreglyphs:
@@ -77,7 +80,7 @@ trymoreglyphs:
 
     UINT32 actualGlyphs;
 
-    hr = analyzer->GetGlyphs(aString, length,
+    hr = analyzer->GetGlyphs(aText, length,
             font->GetFontFace(), FALSE, 
             readingDirection == DWRITE_READING_DIRECTION_RIGHT_TO_LEFT,
             &runHead->mScript, NULL, NULL, NULL, NULL, 0,
@@ -104,7 +107,7 @@ trymoreglyphs:
 
     if (!static_cast<gfxDWriteFont*>(mFont)->mUseSubpixelPositions) {
         hr = analyzer->GetGdiCompatibleGlyphPlacements(
-                                          aString,
+                                          aText,
                                           clusters.Elements(),
                                           textProperties.Elements(),
                                           length,
@@ -126,7 +129,7 @@ trymoreglyphs:
                                           advances.Elements(),
                                           glyphOffsets.Elements());
     } else {
-        hr = analyzer->GetGlyphPlacements(aString,
+        hr = analyzer->GetGlyphPlacements(aText,
                                           clusters.Elements(),
                                           textProperties.Elements(),
                                           length,
@@ -150,16 +153,19 @@ trymoreglyphs:
         return false;
     }
 
-    nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
+    nsAutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
+    gfxShapedText::CompressedGlyph *charGlyphs =
+        aShapedText->GetCharacterGlyphs();
 
     for (unsigned int c = 0; c < length; c++) {
         uint32_t k = clusters[c];
-        uint32_t absC = c;
+        uint32_t absC = aOffset + c;
 
         if (c > 0 && k == clusters[c - 1]) {
-            g.SetComplex(aShapedWord->IsClusterStart(absC), false, 0);
-            aShapedWord->SetGlyphs(absC, g, nullptr);
             // This is a cluster continuation. No glyph here.
+            gfxShapedText::CompressedGlyph &g = charGlyphs[absC];
+            NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
+            g.SetComplex(g.IsClusterStart(), false, 0);
             continue;
         }
 
@@ -177,12 +183,10 @@ trymoreglyphs:
         if (glyphCount == 1 && advance >= 0 &&
             glyphOffsets[k].advanceOffset == 0 &&
             glyphOffsets[k].ascenderOffset == 0 &&
-            aShapedWord->IsClusterStart(absC) &&
-            gfxShapedWord::CompressedGlyph::IsSimpleAdvance(advance) &&
-            gfxShapedWord::CompressedGlyph::IsSimpleGlyphID(indices[k])) {
-              aShapedWord->SetSimpleGlyph(absC, 
-                                          g.SetSimpleGlyph(advance, 
-                                                           indices[k]));
+            charGlyphs[absC].IsClusterStart() &&
+            gfxShapedText::CompressedGlyph::IsSimpleAdvance(advance) &&
+            gfxShapedText::CompressedGlyph::IsSimpleGlyphID(indices[k])) {
+              charGlyphs[absC].SetSimpleGlyph(advance, indices[k]);
         } else {
             if (detailedGlyphs.Length() < glyphCount) {
                 if (!detailedGlyphs.AppendElements(
@@ -212,9 +216,9 @@ trymoreglyphs:
                     appUnitsPerDevPixel;
                 totalAdvance += advances[k + z];
             }
-            aShapedWord->SetGlyphs(
+            aShapedText->SetGlyphs(
                 absC,
-                g.SetComplex(aShapedWord->IsClusterStart(absC),
+                g.SetComplex(charGlyphs[absC].IsClusterStart(),
                              true,
                              glyphCount),
                 detailedGlyphs.Elements());

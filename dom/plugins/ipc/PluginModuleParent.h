@@ -45,6 +45,10 @@ namespace plugins {
 
 class BrowserStreamParent;
 
+#ifdef XP_WIN
+class PluginHangUIParent;
+#endif
+
 /**
  * PluginModuleParent
  *
@@ -129,6 +133,13 @@ public:
     GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifier);
 
     void ProcessRemoteNativeEventsInRPCCall();
+
+    void TerminateChildProcess(MessageLoop* aMsgLoop);
+
+#ifdef XP_WIN
+    void
+    ExitedCxxStack() MOZ_OVERRIDE;
+#endif // XP_WIN
 
 protected:
     virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
@@ -286,6 +297,7 @@ private:
     void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
 #endif
     void CleanupFromTimeout();
+    void SetChildTimeout(const int32_t aChildTimeout);
     static int TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();
 
@@ -304,6 +316,31 @@ private:
     nsString mHangID;
 #ifdef XP_WIN
     InfallibleTArray<float> mPluginCpuUsageOnHang;
+    PluginHangUIParent *mHangUIParent;
+    bool mHangUIEnabled;
+    bool mIsTimerReset;
+
+    void
+    EvaluateHangUIState(const bool aReset);
+
+    bool
+    GetPluginName(nsAString& aPluginName);
+
+    /**
+     * Launches the Plugin Hang UI.
+     *
+     * @return true if plugin-hang-ui.exe has been successfully launched.
+     *         false if the Plugin Hang UI is disabled, already showing,
+     *               or the launch failed.
+     */
+    bool
+    LaunchHangUI();
+
+    /**
+     * Finishes the Plugin Hang UI and cancels if it is being shown to the user.
+     */
+    void
+    FinishHangUI();
 #endif
 
 #ifdef MOZ_X11

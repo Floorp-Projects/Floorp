@@ -115,7 +115,7 @@
 #include "nsTextEditorState.h"
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsParserConstants.h"
@@ -247,6 +247,25 @@ static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable sEventListenerManagersHash;
+static nsCOMPtr<nsIMemoryReporter> sEventListenerManagersHashReporter;
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(EventListenerManagersHashMallocSizeOf)
+
+static int64_t GetEventListenerManagersHash()
+{
+  // We don't measure the |nsEventListenerManager| objects pointed to by the
+  // entries because those references are non-owning.
+  return PL_DHashTableSizeOfExcludingThis(&sEventListenerManagersHash,
+                                          nullptr,
+                                          EventListenerManagersHashMallocSizeOf);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(EventListenerManagersHash,
+  "explicit/dom/event-listener-managers-hash",
+  KIND_HEAP,
+  UNITS_BYTES,
+  GetEventListenerManagersHash,
+  "Memory used by the event listener manager's hash table.")
 
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
 {
@@ -383,6 +402,10 @@ nsContentUtils::Init()
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    sEventListenerManagersHashReporter =
+      new NS_MEMORY_REPORTER_NAME(EventListenerManagersHash);
+    (void)::NS_RegisterMemoryReporter(sEventListenerManagersHashReporter);
   }
 
   sBlockedScriptRunners = new nsTArray< nsCOMPtr<nsIRunnable> >;
@@ -780,20 +803,14 @@ nsContentUtils::IsJavaScriptLanguage(const nsString& aName, uint32_t *aFlags)
 
   if (aName.LowerCaseEqualsLiteral("javascript") ||
       aName.LowerCaseEqualsLiteral("livescript") ||
-      aName.LowerCaseEqualsLiteral("mocha")) {
+      aName.LowerCaseEqualsLiteral("mocha") ||
+      aName.LowerCaseEqualsLiteral("javascript1.0") ||
+      aName.LowerCaseEqualsLiteral("javascript1.1") ||
+      aName.LowerCaseEqualsLiteral("javascript1.2") ||
+      aName.LowerCaseEqualsLiteral("javascript1.3") ||
+      aName.LowerCaseEqualsLiteral("javascript1.4") ||
+      aName.LowerCaseEqualsLiteral("javascript1.5")) {
     version = JSVERSION_DEFAULT;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.0")) {
-    version = JSVERSION_1_0;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.1")) {
-    version = JSVERSION_1_1;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.2")) {
-    version = JSVERSION_1_2;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.3")) {
-    version = JSVERSION_1_3;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.4")) {
-    version = JSVERSION_1_4;
-  } else if (aName.LowerCaseEqualsLiteral("javascript1.5")) {
-    version = JSVERSION_1_5;
   } else if (aName.LowerCaseEqualsLiteral("javascript1.6")) {
     version = JSVERSION_1_6;
   } else if (aName.LowerCaseEqualsLiteral("javascript1.7")) {
@@ -818,12 +835,12 @@ nsContentUtils::ParseJavascriptVersion(const nsAString& aVersionStr)
   }
 
   switch (aVersionStr[2]) {
-  case '0': return JSVERSION_1_0;
-  case '1': return JSVERSION_1_1;
-  case '2': return JSVERSION_1_2;
-  case '3': return JSVERSION_1_3;
-  case '4': return JSVERSION_1_4;
-  case '5': return JSVERSION_1_5;
+  case '0': /* fall through */
+  case '1': /* fall through */
+  case '2': /* fall through */
+  case '3': /* fall through */
+  case '4': /* fall through */
+  case '5': return JSVERSION_DEFAULT;
   case '6': return JSVERSION_1_6;
   case '7': return JSVERSION_1_7;
   case '8': return JSVERSION_1_8;
@@ -1470,6 +1487,9 @@ nsContentUtils::Shutdown()
     if (sEventListenerManagersHash.entryCount == 0) {
       PL_DHashTableFinish(&sEventListenerManagersHash);
       sEventListenerManagersHash.ops = nullptr;
+
+      (void)::NS_UnregisterMemoryReporter(sEventListenerManagersHashReporter);
+      sEventListenerManagersHashReporter = nullptr;
     }
   }
 
@@ -6398,8 +6418,7 @@ nsContentUtils::FindPresShellForDocument(nsIDocument* aDoc)
     // Walk the docshell tree to find the nearest container that has a presshell,
     // and return that.
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
-    nsCOMPtr<nsIPresShell> presShell;
-    docShell->GetPresShell(getter_AddRefs(presShell));
+    nsIPresShell* presShell = docShell->GetPresShell();
     if (presShell) {
       return presShell;
     }
@@ -6416,11 +6435,11 @@ nsContentUtils::WidgetForDocument(nsIDocument* aDoc)
 {
   nsIPresShell* shell = FindPresShellForDocument(aDoc);
   if (shell) {
-    nsIViewManager* VM = shell->GetViewManager();
+    nsViewManager* VM = shell->GetViewManager();
     if (VM) {
-      nsIView* rootView = VM->GetRootView();
+      nsView* rootView = VM->GetRootView();
       if (rootView) {
-        nsIView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
+        nsView* displayRoot = nsViewManager::GetDisplayRootFor(rootView);
         if (displayRoot) {
           return displayRoot->GetNearestWidget(nullptr);
         }

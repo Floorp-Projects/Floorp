@@ -21,9 +21,9 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     virtual ~WaiveXrayWrapper();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                       bool set, js::PropertyDescriptor *desc) MOZ_OVERRIDE;
+                                       js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                          bool set, js::PropertyDescriptor *desc) MOZ_OVERRIDE;
+                                          js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
                      js::Value *vp) MOZ_OVERRIDE;
 

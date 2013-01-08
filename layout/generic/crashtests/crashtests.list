@@ -312,7 +312,7 @@ load 514800-1.html
 load 515811-1.html
 load 517968.html
 load 519031.xhtml
-asserts(3-7) load 520340.html # bug 734777
+load 520340.html
 load 522170-1.html
 load 533379-1.html
 load 533379-2.html
@@ -388,6 +388,7 @@ load 700031.xhtml
 load 718516.html
 load first-letter-638937.html
 load first-letter-638937-2.html
+load 734777.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-1.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-2.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-3.html

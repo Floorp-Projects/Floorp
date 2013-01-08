@@ -266,7 +266,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         container->SortChildrenBy3DZOrder(children);
 
         //FIXME/bug 810334
-        for (PRUint32 i = 0; i < children.Length(); i++) {
+        for (uint32_t i = 0; i < children.Length(); i++) {
             if (!PrepareLayerList(children[i], aClip)) {
                 return false;
             }

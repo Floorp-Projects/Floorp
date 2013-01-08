@@ -1,0 +1,174 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>selection preventDefault test</title>
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<style type="text/css">
+  #fixedDiv1 {
+    position: fixed;
+    right: 0;
+    overflow: scroll;
+    width: 200px;
+    top: 0;
+  }
+  input {
+    font-size: 16px;
+    height: 16px;
+    width: 80px;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
+</head>
+<body>
+<input id="input" type="text" value="iiiiiiiii iiiiiiiii iiiiiiiii">
+<div id="fixedDiv1" class="testingDiv">
+dddddd dddddd dddddd
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var fixedDiv1 = document.getElementById("fixedDiv1");
+var input = document.getElementById("input");
+
+function test()
+{
+  function getSelectionForEditor(aEditorElement)
+  {
+    const nsIDOMNSEditableElement =
+      Components.interfaces.nsIDOMNSEditableElement;
+    return aEditorElement.QueryInterface(nsIDOMNSEditableElement).editor.selection;
+  }
+
+  function clear()
+  {
+    var sel = window.getSelection();
+    if (sel.rangeCount > 0)
+      sel.collapseToEnd();
+    sel = getSelectionForEditor(input);
+    if (sel.rangeCount > 0)
+      sel.collapseToEnd();
+  }
+
+  const kFalse = 0;
+  const kTrue  = 1;
+  const kToDo  = 2;
+
+  function check(aFixedDiv1ShouldBeSelected,
+                 aInputShouldBeSelected,
+                 aTestingDescription)
+  {
+    function checkCharacter(aSelectedText,
+                            aShouldBeIncludedCharacter,
+                            aSouldBeSelected,
+                            aElementName)
+    {
+      var boolvalue = aSouldBeSelected & kTrue;
+      var f = aSouldBeSelected & kToDo ? todo : ok;
+      var str = aSelectedText.replace('\n', '\\n');
+      if (boolvalue) {
+        f(aSelectedText.indexOf(aShouldBeIncludedCharacter) >= 0,
+          "The contents of " + aElementName +
+          " aren't selected (" + aTestingDescription +
+          "): Selected String: \"" + str + "\"");
+      } else {
+        f(aSelectedText.indexOf(aShouldBeIncludedCharacter) < 0,
+          "The contents of " + aElementName +
+          " are selected (" + aTestingDescription +
+          "): Selected String: \"" + str + "\"");
+      }
+    }
+
+    var sel = window.getSelection().toString();
+    checkCharacter(sel, "d", aFixedDiv1ShouldBeSelected, "fixedDiv1");
+
+    // input contents must not be included on the parent
+    // selection.
+    checkCharacter(sel, "i", false, "input (checking on parent)");
+
+    var selInput = getSelectionForEditor(input).toString();
+    checkCharacter(selInput, "i", aInputShouldBeSelected, "input");
+  }
+
+  function eventHandler(evt) {
+    evt.preventDefault();
+  }
+
+  // prevent default action on mousedown should prevent selection
+  fixedDiv1.addEventListener("mousedown", eventHandler);
+  synthesizeMouse(fixedDiv1, 30, 5, { type: "mousedown" });
+  synthesizeMouse(fixedDiv1, 40, 5, { type: "mousemove" });
+  synthesizeMouse(fixedDiv1, 40, 5, { type: "mouseup" });
+  check(kFalse, kFalse, "fixedDiv1-fixedDiv1-mousedown");
+  clear();
+
+  input.addEventListener("mousedown", eventHandler);
+  synthesizeMouse(input, 20, 5, { type: "mousedown" });
+  synthesizeMouse(input, 40, 5, { type: "mousemove" });
+  synthesizeMouse(input, 40, 5, { type: "mouseup" });
+  check(kFalse, kFalse, "input-input-mousedown");
+  clear();
+
+  // clean up mousedown listener
+  [fixedDiv1, input].forEach(function(element) {
+     element.removeEventListener("mousedown", eventHandler);
+  });
+
+  // prevent default action on mouseup should not affect the selection state
+  fixedDiv1.addEventListener("mouseup", eventHandler);
+  synthesizeMouse(fixedDiv1, 30, 5, { type: "mousedown" });
+  synthesizeMouse(fixedDiv1, 40, 5, { type: "mousemove" });
+  synthesizeMouse(fixedDiv1, 40, 5, { type: "mouseup" });
+  check(kTrue, kFalse, "fixedDiv1-fixedDiv1-mouseup");
+  clear();
+
+  input.addEventListener("mouseup", eventHandler);
+  synthesizeMouse(input, 20, 5, { type: "mousedown" });
+  synthesizeMouse(input, 40, 5, { type: "mousemove" });
+  synthesizeMouse(input, 40, 5, { type: "mouseup" });
+  check(kFalse, kTrue, "input-input-mouseup");
+  clear();
+
+  [fixedDiv1, input].forEach(function(element) {
+     element.removeEventListener("mouseup", eventHandler);
+  });
+
+  // touchmove event should not affect the selection state
+  synthesizeTouch(fixedDiv1, 30, 5, { type: "touchstart" });
+  synthesizeTouch(fixedDiv1, 40, 5, { type: "touchmove" });
+  check(kFalse, kFalse, "fixedDiv1-fixedDiv1-touchmove");
+  synthesizeTouch(fixedDiv1, 40, 5, { type: "touchend" });
+  clear();
+
+  synthesizeTouch(input, 20, 5, { type: "touchstart" });
+  synthesizeTouch(input, 40, 5, { type: "touchmove" });
+  check(kFalse, kFalse, "input-input-touchmove");
+  synthesizeTouch(input, 40, 5, { type: "touchend" });
+  clear();
+
+  fixedDiv1.addEventListener("touchmove", eventHandler);
+  synthesizeTouch(fixedDiv1, 30, 5, { type: "touchstart" });
+  synthesizeTouch(fixedDiv1, 40, 5, { type: "touchmove" });
+  check(kFalse, kFalse, "fixedDiv1-fixedDiv1-touchmove-preventDefault");
+  synthesizeTouch(fixedDiv1, 40, 5, { type: "touchend" });
+  clear();
+
+  input.addEventListener("touchmove", eventHandler);
+  synthesizeTouch(input, 20, 5, { type: "touchstart" });
+  synthesizeTouch(input, 40, 5, { type: "touchmove" });
+  check(kFalse, kFalse, "input-input-touchmove-preventDefault");
+  synthesizeTouch(input, 40, 5, { type: "touchend" });
+  clear();
+
+  SimpleTest.finish();
+}
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

@@ -126,7 +126,7 @@ function test()
     });
     executeSoon(function() {
       gWatch.addExpression("a = 5");
-      EventUtils.sendKey("RETURN");
+      EventUtils.sendKey("RETURN", gDebugger);
     });
   }
 
@@ -138,7 +138,7 @@ function test()
     });
     executeSoon(function() {
       gWatch.addExpression("encodeURI(\"\\\")");
-      EventUtils.sendKey("RETURN");
+      EventUtils.sendKey("RETURN", gDebugger);
     });
   }
 
@@ -150,7 +150,7 @@ function test()
     })
     executeSoon(function() {
       gWatch.addExpression("decodeURI(\"\\\")");
-      EventUtils.sendKey("RETURN");
+      EventUtils.sendKey("RETURN", gDebugger);
     });
   }
 
@@ -162,7 +162,7 @@ function test()
     });
     executeSoon(function() {
       gWatch.addExpression("?");
-      EventUtils.sendKey("RETURN");
+      EventUtils.sendKey("RETURN", gDebugger);
     });
   }
 
@@ -174,7 +174,7 @@ function test()
     });
     executeSoon(function() {
       gWatch.addExpression("a");
-      EventUtils.sendKey("RETURN");
+      EventUtils.sendKey("RETURN", gDebugger);
     });
   }
 

@@ -1516,6 +1516,11 @@ var gBrowserInit = {
 
     gDevToolsBrowser.forgetBrowserWindow(window);
 
+    let desc = Object.getOwnPropertyDescriptor(window, "DeveloperToolbar");
+    if (desc && !desc.get) {
+      DeveloperToolbar.destroy();
+    }
+
     // First clean up services initialized in gBrowserInit.onLoad (or those whose
     // uninit methods don't depend on the services having been initialized).
     allTabs.uninit();
@@ -6920,6 +6925,12 @@ let gPrivateBrowsingUI = {
       return;
     }
 
+#ifdef XP_MACOSX
+    if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      document.documentElement.setAttribute("drawintitlebar", true);
+    }
+#endif
+
     // Disable the Clear Recent History... menu item when in PB mode
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
@@ -6931,7 +6942,8 @@ let gPrivateBrowsingUI = {
         docElement.getAttribute("title_privatebrowsing"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing"));
-      docElement.setAttribute("privatebrowsingmode", "temporary");
+      docElement.setAttribute("privatebrowsingmode",
+        PrivateBrowsingUtils.permanentPrivateBrowsing ? "permanent" : "temporary");
       gBrowser.updateTitlebar();
     }
 

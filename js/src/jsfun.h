@@ -181,25 +181,26 @@ class JSFunction : public JSObject
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
-    js::UnrootedScript getOrCreateScript(JSContext *cx) {
-        JS_ASSERT(isInterpreted());
-        if (isInterpretedLazy()) {
-            js::RootedFunction self(cx, this);
+    static js::UnrootedScript getOrCreateScript(JSContext *cx, JS::HandleFunction fun) {
+        JS_ASSERT(fun->isInterpreted());
+        if (fun->isInterpretedLazy()) {
             js::MaybeCheckStackRoots(cx);
-            if (!initializeLazyScript(cx))
+            if (!fun->initializeLazyScript(cx))
                 return js::UnrootedScript(NULL);
         }
-        JS_ASSERT(hasScript());
-        return JS::HandleScript::fromMarkedLocation(&u.i.script_);
+        JS_ASSERT(fun->hasScript());
+        return fun->u.i.script_;
     }
 
-    bool maybeGetOrCreateScript(JSContext *cx, js::MutableHandle<JSScript*> script) {
-        if (isNative()) {
+    static bool maybeGetOrCreateScript(JSContext *cx, js::HandleFunction fun,
+                                       js::MutableHandle<JSScript*> script)
+    {
+        if (fun->isNative()) {
             script.set(NULL);
             return true;
         }
-        script.set(getOrCreateScript(cx));
-        return hasScript();
+        script.set(getOrCreateScript(cx, fun));
+        return fun->hasScript();
     }
 
     js::UnrootedScript nonLazyScript() const {

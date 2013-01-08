@@ -10,6 +10,7 @@
 
 /*global ToObject: false, ToInteger: false, IsCallable: false, ThrowError: false,
          AssertionFailed: false, MakeConstructible: false, DecompileArg: false,
+         RuntimeDefaultLocale: false,
          callFunction: false,
          IS_UNDEFINED: false, TO_UINT32: false,
          JSMSG_NOT_FUNCTION: false, JSMSG_MISSING_FUN_ARG: false,
@@ -18,13 +19,35 @@
 
 
 /* cache built-in functions before applications can change them */
-var std_ArrayIndexOf = ArrayIndexOf;
-var std_ArrayJoin = Array.prototype.join;
-var std_ArrayPush = Array.prototype.push;
-var std_ArraySlice = Array.prototype.slice;
-var std_ArraySort = Array.prototype.sort;
-var std_ObjectCreate = Object.create;
-var std_String = String;
+var std_isFinite = isFinite;
+var std_isNaN = isNaN;
+var std_Array_indexOf = ArrayIndexOf;
+var std_Array_join = Array.prototype.join;
+var std_Array_push = Array.prototype.push;
+var std_Array_shift = Array.prototype.shift;
+var std_Array_slice = Array.prototype.slice;
+var std_Array_sort = Array.prototype.sort;
+var std_Boolean_toString = Boolean.prototype.toString;
+var Std_Date = Date;
+var std_Date_now = Date.now;
+var std_Function_bind = Function.prototype.bind;
+var std_Math_floor = Math.floor;
+var std_Math_max = Math.max;
+var std_Math_min = Math.min;
+var std_Object_create = Object.create;
+var std_Object_defineProperty = Object.defineProperty;
+var std_Object_getOwnPropertyNames = Object.getOwnPropertyNames;
+var std_Object_hasOwnProperty = Object.prototype.hasOwnProperty;
+var std_RegExp_test = RegExp.prototype.test;
+var Std_String = String;
+var std_String_indexOf = String.prototype.indexOf;
+var std_String_lastIndexOf = String.prototype.lastIndexOf;
+var std_String_match = String.prototype.match;
+var std_String_replace = String.prototype.replace;
+var std_String_split = String.prototype.split;
+var std_String_substring = String.prototype.substring;
+var std_String_toLowerCase = String.prototype.toLowerCase;
+var std_String_toUpperCase = String.prototype.toUpperCase;
 
 
 /********** List specification type **********/
@@ -33,12 +56,12 @@ var std_String = String;
 /* Spec: ECMAScript Language Specification, 5.1 edition, 8.8 */
 function List() {
     if (IS_UNDEFINED(List.prototype)) {
-        var proto = std_ObjectCreate(null);
-        proto.indexOf = std_ArrayIndexOf;
-        proto.join = std_ArrayJoin;
-        proto.push = std_ArrayPush;
-        proto.slice = std_ArraySlice;
-        proto.sort = std_ArraySort;
+        var proto = std_Object_create(null);
+        proto.indexOf = std_Array_indexOf;
+        proto.join = std_Array_join;
+        proto.push = std_Array_push;
+        proto.slice = std_Array_slice;
+        proto.sort = std_Array_sort;
         List.prototype = proto;
     }
 }
@@ -50,7 +73,7 @@ MakeConstructible(List);
 
 /* Spec: ECMAScript Internationalization API Specification, draft, 5 */
 function Record() {
-    return std_ObjectCreate(null);
+    return std_Object_create(null);
 }
 MakeConstructible(Record);
 
@@ -79,7 +102,7 @@ function ToNumber(v) {
 /* Spec: ECMAScript Language Specification, 5.1 edition, 9.8 and 15.2.1.1 */
 function ToString(v) {
     assert(arguments.length > 0, "__toString");
-    return std_String(v);
+    return Std_String(v);
 }
 
 

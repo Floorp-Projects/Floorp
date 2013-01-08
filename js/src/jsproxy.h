@@ -73,10 +73,9 @@ class JS_FRIEND_API(BaseProxyHandler) {
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
-                                       bool set, PropertyDescriptor *desc) = 0;
+                                       PropertyDescriptor *desc, unsigned flags) = 0;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, bool set,
-                                          PropertyDescriptor *desc) = 0;
+                                          jsid id, PropertyDescriptor *desc, unsigned flags) = 0;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) = 0;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
@@ -128,11 +127,10 @@ public:
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
-                                       bool set,
-                                       PropertyDescriptor *desc) MOZ_OVERRIDE;
+                                       PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, bool set,
-                                          PropertyDescriptor *desc) MOZ_OVERRIDE;
+                                          jsid id, PropertyDescriptor *desc,
+                                          unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
@@ -178,12 +176,13 @@ public:
 class Proxy {
   public:
     /* ES5 Harmony fundamental proxy traps. */
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                                      PropertyDescriptor *desc);
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set, Value *vp);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                                         PropertyDescriptor *desc);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                      PropertyDescriptor *desc, unsigned flags);
+    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, unsigned flags, jsid id,
+                                      Value *vp);
+    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+                                         PropertyDescriptor *desc, unsigned flags);
+    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, unsigned flags, jsid id,
                                          Value *vp);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v);

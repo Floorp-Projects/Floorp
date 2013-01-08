@@ -6,7 +6,7 @@
 #include "SVGFragmentIdentifier.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsSVGSVGElement.h"
-#include "nsSVGViewElement.h"
+#include "mozilla/dom/SVGViewElement.h"
 #include "SVGAnimatedTransformList.h"
 
 using namespace mozilla;
@@ -27,12 +27,12 @@ IgnoreWhitespace(PRUnichar aChar)
   return false;
 }
 
-static nsSVGViewElement*
+static dom::SVGViewElement*
 GetViewElement(nsIDocument *aDocument, const nsAString &aId)
 {
   dom::Element* element = aDocument->GetElementById(aId);
   return (element && element->IsSVG(nsGkAtoms::view)) ?
-            static_cast<nsSVGViewElement*>(element) : nullptr;
+            static_cast<dom::SVGViewElement*>(element) : nullptr;
 }
 
 void 
@@ -236,7 +236,7 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument *aDocument,
     SaveOldZoomAndPan(rootElement);
   }
 
-  const nsSVGViewElement *viewElement = GetViewElement(aDocument, aAnchorName);
+  const dom::SVGViewElement *viewElement = GetViewElement(aDocument, aAnchorName);
 
   if (viewElement) {
     if (!rootElement->mCurrentViewID) {

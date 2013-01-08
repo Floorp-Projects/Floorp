@@ -440,6 +440,7 @@ public:
   NS_IMETHOD        OnIMEFocusChange(bool aFocus);
 
   // nsIPluginWidget
+  // outClipRect and outOrigin are in display pixels (not device pixels)
   NS_IMETHOD        GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, bool& outWidgetVisible);
   NS_IMETHOD        StartDrawPlugin();
   NS_IMETHOD        EndDrawPlugin();

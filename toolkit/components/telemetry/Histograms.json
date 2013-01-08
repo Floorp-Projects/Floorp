@@ -507,6 +507,12 @@
     "n_buckets": 50,
     "description": "Decode count"
   },
+  "IMAGE_MAX_DECODE_COUNT": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 100,
+    "description": "Max decode count over all images"
+  },
   "IMAGE_DECODE_SPEED_JPEG": {
     "kind": "exponential",
     "low": 500,
@@ -1020,11 +1026,17 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_CLOSEINTERNAL"
   },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_DESTRUCTOR": {
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_RELEASE": {
     "kind": "exponential",
     "high": "10 * 1000",
     "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_DESTRUCTOR"
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_RELEASE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCOMPRESSOUTPUTSTREAMWRAPPER_RELEASE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCOMPRESSOUTPUTSTREAMWRAPPER_RELEASE"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_LAZYINIT": {
     "kind": "exponential",
@@ -1038,11 +1050,17 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_CLOSEINTERNAL"
   },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_DESTRUCTOR": {
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_RELEASE": {
     "kind": "exponential",
     "high": "10 * 1000",
     "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_DESTRUCTOR"
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_RELEASE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDECOMPRESSINPUTSTREAMWRAPPER_RELEASE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDECOMPRESSINPUTSTREAMWRAPPER_RELEASE"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSEVICTDISKCACHEENTRIESEVENT_RUN": {
     "kind": "exponential",
@@ -1444,6 +1462,15 @@
     "high": "3000",
     "n_buckets": 10,
     "description": "Time spent checking if Java is enabled (ms)"
+  },
+  "PLUGIN_HANG_UI_USER_RESPONSE": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "User response to Plugin Hang UI"
+  },
+  "PLUGIN_HANG_UI_DONT_ASK": {
+    "kind": "boolean",
+    "description": "Whether the user has requested not to see the Plugin Hang UI again"
   },
   "PLUGIN_SHUTDOWN_MS": {
     "kind": "exponential",

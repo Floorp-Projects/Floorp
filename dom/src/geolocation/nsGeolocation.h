@@ -53,9 +53,9 @@ class nsGeolocationRequest
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
+                       mozilla::dom::GeoPositionOptions* aOptions,
                        bool watchPositionRequest = false,
                        int32_t watchId = 0);
-  nsresult Init(JSContext* aCx, const jsval& aOptions);
   void Shutdown();
 
   // Called by the geolocation device to notify that a location has changed.
@@ -67,6 +67,7 @@ class nsGeolocationRequest
   bool IsActive() {return !mCleared;}
   bool Allowed() {return mAllowed;}
   void SetTimeoutTimer();
+  nsIPrincipal* GetPrincipal();
 
   ~nsGeolocationRequest();
 
@@ -74,7 +75,6 @@ class nsGeolocationRequest
   void IPDLRelease() { Release(); }
 
   int32_t WatchId() { return mWatchId; }
-
  private:
 
   void NotifyError(int16_t errorCode);
@@ -125,7 +125,7 @@ public:
   PRBool IsBetterPosition(nsIDOMGeoPosition *aSomewhere);
 
   // Find and startup a geolocation device (gps, nmea, etc.)
-  nsresult StartDevice(bool aRequestPrivate);
+  nsresult StartDevice(nsIPrincipal* aPrincipal, bool aRequestPrivate);
 
   // Stop the started geolocation device (gps, nmea, etc.)
   void     StopDevice();
@@ -201,6 +201,14 @@ public:
   // Notification from the service:
   void ServiceReady();
 
+  // Versions of the DOM APIs that don't require JS option values
+  nsresult WatchPosition(nsIDOMGeoPositionCallback *callback,
+                         nsIDOMGeoPositionErrorCallback *errorCallback,
+                         mozilla::dom::GeoPositionOptions *options,
+                         int32_t *_retval);
+  nsresult GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
+                              nsIDOMGeoPositionErrorCallback *errorCallback,
+                              mozilla::dom::GeoPositionOptions *options);
 private:
 
   ~nsGeolocation();

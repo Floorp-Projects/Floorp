@@ -14,21 +14,24 @@
  **********************************************************************/
 
 bool
-gfxGDIShaper::ShapeWord(gfxContext *aContext,
-                        gfxShapedWord *aShapedWord,
-                        const PRUnichar *aString)
+gfxGDIShaper::ShapeText(gfxContext      *aContext,
+                        const PRUnichar *aText,
+                        uint32_t         aOffset,
+                        uint32_t         aLength,
+                        int32_t          aScript,
+                        gfxShapedText   *aShapedText)
 {
     DCFromContext dc(aContext);
     AutoSelectFont selectFont(dc, static_cast<gfxGDIFont*>(mFont)->GetHFONT());
 
-    uint32_t length = aShapedWord->Length();
+    uint32_t length = aLength;
     nsAutoTArray<WORD,500> glyphArray;
     if (!glyphArray.SetLength(length)) {
         return false;
     }
     WORD *glyphs = glyphArray.Elements();
 
-    DWORD ret = ::GetGlyphIndicesW(dc, aString, length,
+    DWORD ret = ::GetGlyphIndicesW(dc, aText, length,
                                    glyphs, GGI_MARK_NONEXISTING_GLYPHS);
     if (ret == GDI_ERROR) {
         return false;
@@ -57,32 +60,33 @@ gfxGDIShaper::ShapeWord(gfxContext *aContext,
     }
 
     gfxTextRun::CompressedGlyph g;
+    gfxTextRun::CompressedGlyph *charGlyphs =
+        aShapedText->GetCharacterGlyphs();
     uint32_t i;
     int32_t lastWidth = 0;
-    uint32_t appUnitsPerDevPixel = aShapedWord->AppUnitsPerDevUnit();
+    uint32_t appUnitsPerDevPixel = aShapedText->GetAppUnitsPerDevUnit();
     for (i = 0; i < length; ++i) {
-        uint32_t offset = i;
+        uint32_t offset = aOffset + i;
         int32_t advancePixels = partialWidthArray[i] - lastWidth;
         lastWidth = partialWidthArray[i];
         int32_t advanceAppUnits = advancePixels * appUnitsPerDevPixel;
         WCHAR glyph = glyphs[i];
-        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(aShapedWord->GetCharAt(offset)),
+        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(aText[i]),
                      "Invalid character detected!");
-        bool atClusterStart = aShapedWord->IsClusterStart(offset);
+        bool atClusterStart = charGlyphs[offset].IsClusterStart();
         if (advanceAppUnits >= 0 &&
             gfxShapedWord::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
             gfxShapedWord::CompressedGlyph::IsSimpleGlyphID(glyph) &&
             atClusterStart)
         {
-            aShapedWord->SetSimpleGlyph(offset,
-                                        g.SetSimpleGlyph(advanceAppUnits, glyph));
+            charGlyphs[offset].SetSimpleGlyph(advanceAppUnits, glyph);
         } else {
-            gfxShapedWord::DetailedGlyph details;
+            gfxShapedText::DetailedGlyph details;
             details.mGlyphID = glyph;
             details.mAdvance = advanceAppUnits;
             details.mXOffset = 0;
             details.mYOffset = 0;
-            aShapedWord->SetGlyphs(offset,
+            aShapedText->SetGlyphs(offset,
                                    g.SetComplex(atClusterStart, true, 1),
                                    &details);
         }

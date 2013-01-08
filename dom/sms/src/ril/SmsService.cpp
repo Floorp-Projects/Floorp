@@ -8,6 +8,7 @@
 #include "SystemWorkerManager.h"
 #include "jsapi.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "SmsSegmentInfo.h"
 
 using mozilla::dom::gonk::SystemWorkerManager;
 
@@ -36,15 +37,12 @@ SmsService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult)
+SmsService::GetSegmentInfoForText(const nsAString & aText,
+                                  nsIDOMMozSmsSegmentInfo** aResult)
 {
-  if (!mRIL) {
-    *aResult = 0;
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(mRIL, NS_ERROR_FAILURE);
 
-  mRIL->GetNumberOfMessagesForText(aText, aResult);
-  return NS_OK;
+  return mRIL->GetSegmentInfoForText(aText, aResult);
 }
 
 NS_IMETHODIMP
@@ -76,6 +74,18 @@ SmsService::CreateSmsMessage(int32_t aId,
                             aSender, aReceiver,
                             aBody, aMessageClass, aTimestamp, aRead,
                             aCx, aMessage);
+}
+
+NS_IMETHODIMP
+SmsService::CreateSmsSegmentInfo(int32_t aSegments,
+                                 int32_t aCharsPerSegment,
+                                 int32_t aCharsAvailableInLastSegment,
+                                 nsIDOMMozSmsSegmentInfo** aSegmentInfo)
+{
+  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info =
+      new SmsSegmentInfo(aSegments, aCharsPerSegment, aCharsAvailableInLastSegment);
+  info.forget(aSegmentInfo);
+  return NS_OK;
 }
 
 } // namespace sms

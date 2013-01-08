@@ -9,6 +9,7 @@
 #define ObjectImpl_h___
 
 #include "mozilla/Assertions.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/StandardInteger.h"
 
 #include "jsfriendapi.h"
@@ -298,10 +299,10 @@ struct PropDesc {
     {
       public:
         explicit AutoRooter(JSContext *cx, PropDesc *pd_
-                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
           : AutoGCRooter(cx, PROPDESC), pd(pd_), skip(cx, pd_)
         {
-            JS_GUARD_OBJECT_NOTIFIER_INIT;
+            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         }
 
         friend void AutoGCRooter::trace(JSTracer *trc);
@@ -309,7 +310,7 @@ struct PropDesc {
       private:
         PropDesc *pd;
         SkipRoot skip;
-        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
      };
 };
 

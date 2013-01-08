@@ -25,12 +25,13 @@ function test()
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.panelWin;
+
+    gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
+      Services.tm.currentThread.dispatch({ run: testScriptSearching }, 0);
+    });
   });
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
-    Services.tm.currentThread.dispatch({ run: testScriptSearching }, 0);
-  });
 }
 
 function testScriptSearching() {
@@ -44,8 +45,8 @@ function testScriptSearching() {
 }
 
 function firstSearch() {
-  window.addEventListener("popupshown", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("popupshown", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -107,13 +108,13 @@ function secondSearch() {
   let popupshown = false;
   let proceeded = false;
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent1(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent1);
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent1(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent1);
     sourceshown = true;
     executeSoon(proceed);
   });
-  window.addEventListener("popupshown", function _onEvent2(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent2);
+  gDebugger.addEventListener("popupshown", function _onEvent2(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent2);
     popupshown = true;
     executeSoon(proceed);
   });
@@ -184,13 +185,13 @@ function thirdSearch() {
   let popupshown = false;
   let proceeded = false;
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent1(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent1);
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent1(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent1);
     sourceshown = true;
     executeSoon(proceed);
   });
-  window.addEventListener("popupshown", function _onEvent2(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent2);
+  gDebugger.addEventListener("popupshown", function _onEvent2(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent2);
     popupshown = true;
     executeSoon(proceed);
   });
@@ -257,7 +258,7 @@ function thirdSearch() {
 }
 
 function goDown() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -275,7 +276,7 @@ function goDown() {
 
     let url = gScripts.selectedValue;
     if (url.indexOf("test-editor-mode") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -291,11 +292,11 @@ function goDown() {
       ok(false, "How did you get here?");
     }
   });
-  EventUtils.sendKey("DOWN");
+  EventUtils.sendKey("DOWN", gDebugger);
 }
 
 function goDownAgain() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -313,7 +314,7 @@ function goDownAgain() {
 
     let url = gScripts.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -329,11 +330,11 @@ function goDownAgain() {
       ok(false, "How did you get here?");
     }
   });
-  EventUtils.synthesizeKey("g", { metaKey: true });
+  EventUtils.synthesizeKey("g", { metaKey: true }, gDebugger);
 }
 
 function goDownAndWrap() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -351,7 +352,7 @@ function goDownAndWrap() {
 
     let url = gScripts.selectedValue;
     if (url.indexOf("update-editor-mode.html") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -367,11 +368,11 @@ function goDownAndWrap() {
       ok(false, "How did you get here?");
     }
   });
-  EventUtils.synthesizeKey("n", { ctrlKey: true });
+  EventUtils.synthesizeKey("n", { ctrlKey: true }, gDebugger);
 }
 
 function goUpAndWrap() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -389,7 +390,7 @@ function goUpAndWrap() {
 
     let url = gScripts.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -405,11 +406,11 @@ function goUpAndWrap() {
       ok(false, "How did you get here?");
     }
   });
-  EventUtils.sendKey("UP");
+  EventUtils.sendKey("UP", gDebugger);
 }
 
 function clickAndSwitch() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -427,7 +428,7 @@ function clickAndSwitch() {
 
     let url = gScripts.selectedValue;
     if (url.indexOf("update-editor-mode.html") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -447,7 +448,7 @@ function clickAndSwitch() {
 }
 
 function clickAndSwitchAgain() {
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -465,7 +466,7 @@ function clickAndSwitchAgain() {
 
     let url = gScripts.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
-      window.removeEventListener(aEvent.type, _onEvent);
+      gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
@@ -485,8 +486,8 @@ function clickAndSwitchAgain() {
 }
 
 function switchFocusWithEscape() {
-  window.addEventListener("popuphidden", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("popuphidden", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
 
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
@@ -508,12 +509,12 @@ function switchFocusWithEscape() {
       ok(false, "How did you get here?");
     }
   });
-  EventUtils.sendKey("ESCAPE");
+  EventUtils.sendKey("ESCAPE", gDebugger);
 }
 
 function focusAgainAfterEscape() {
-  window.addEventListener("popupshown", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("popupshown", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
 
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
@@ -539,8 +540,8 @@ function focusAgainAfterEscape() {
 }
 
 function switchFocusWithReturn() {
-  window.addEventListener("popuphidden", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("popuphidden", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
 
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
@@ -562,7 +563,7 @@ function switchFocusWithReturn() {
       ok(false, "How did you get here?");
     }
   });
-  EventUtils.sendKey("RETURN");
+  EventUtils.sendKey("RETURN", gDebugger);
 }
 
 function clear() {
@@ -577,7 +578,7 @@ function write(text) {
 
 function backspace(times) {
   for (let i = 0; i < times; i++) {
-    EventUtils.sendKey("BACK_SPACE")
+    EventUtils.sendKey("BACK_SPACE", gDebugger);
   }
 }
 
@@ -585,7 +586,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
   info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
 }

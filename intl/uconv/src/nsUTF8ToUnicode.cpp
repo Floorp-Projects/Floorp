@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -271,10 +272,10 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
           // mState == 2 && mBytes == 3 ||
           // mState == 2 && mBytes == 4 ||
           // mState == 3 && mBytes == 4
-          if (mBytes == 3 && (!mUcs4 && c < 0xA0 ||  // E0 80..9F
-                              mUcs4 == 0xD000 && c > 0x9F) ||  // ED A0..BF
-              mState == 3 && (!mUcs4 && c < 0x90 ||  // F0 80..8F
-                              mUcs4 == 0x100000 && c > 0x8F)) {  // F4 90..BF
+          if ((mBytes == 3 && ((!mUcs4 && c < 0xA0) ||             // E0 80..9F
+                               (mUcs4 == 0xD000 && c > 0x9F))) ||  // ED A0..BF
+              (mState == 3 && ((!mUcs4 && c < 0x90) ||             // F0 80..8F
+                               (mUcs4 == 0x100000 && c > 0x8F)))) {// F4 90..BF
             // illegal sequences or sequences converted into illegal ranges.
             in--;
             if (mErrBehavior == kOnError_Signal) {
@@ -322,7 +323,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
         }
       } else {
         /* ((0xC0 & c != 0x80) && (mState != 0))
-         * 
+         *
          * Incomplete multi-octet sequence. Unconsume this
          * octet and return an error condition. Caller is responsible
          * for flushing and refilling the buffer and resetting state.

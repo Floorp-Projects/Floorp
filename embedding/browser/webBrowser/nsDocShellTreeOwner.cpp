@@ -33,8 +33,7 @@
 #include "nsIDOMElement.h"
 #include "Link.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGTitleElement.h"
+#include "mozilla/dom/SVGTitleElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIFormControl.h"
@@ -61,8 +60,8 @@
 #include "imgIContainer.h"
 #include "nsContextMenuInfo.h"
 #include "nsPresContext.h"
-#include "nsIViewManager.h"
-#include "nsIView.h"
+#include "nsViewManager.h"
+#include "nsView.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
@@ -1015,19 +1014,11 @@ DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 static bool
 UseSVGTitle(nsIDOMElement *currElement)
 {
-  nsCOMPtr<nsIDOMSVGElement> svgContent(do_QueryInterface(currElement));
-  if (!svgContent)
+  nsCOMPtr<dom::Element> element(do_QueryInterface(currElement));
+  if (!element || !element->IsSVG() || !element->GetParentNode())
     return false;
 
-  nsCOMPtr<nsIDOMNode> parent;
-  currElement->GetParentNode(getter_AddRefs(parent));
-  if (!parent)
-    return false;
-
-  uint16_t nodeType;
-  nsresult rv = parent->GetNodeType(&nodeType);
-
-  return NS_SUCCEEDED(rv) && nodeType != nsIDOMNode::DOCUMENT_NODE;
+  return element->GetParentNode()->NodeType() != nsIDOMNode::DOCUMENT_NODE;
 }
 
 /* void getNodeText (in nsIDOMNode aNode, out wstring aText); */
@@ -1037,8 +1028,10 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
 {
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_ARG_POINTER(aText);
-    
+
   nsString outText;
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
 
   bool lookingForSVGTitle = true;
   bool found = false;
@@ -1096,16 +1089,12 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
                 lookingForSVGTitle = UseSVGTitle(currElement);
               }
               if (lookingForSVGTitle) {
-                nsCOMPtr<nsIDOMNodeList>childNodes;
-                aNode->GetChildNodes(getter_AddRefs(childNodes));
-                uint32_t childNodeCount;
-                childNodes->GetLength(&childNodeCount);
+                nsINodeList* childNodes = node->ChildNodes();
+                uint32_t childNodeCount = childNodes->Length();
                 for (uint32_t i = 0; i < childNodeCount; i++) {
-                  nsCOMPtr<nsIDOMNode>childNode;
-                  childNodes->Item(i, getter_AddRefs(childNode));
-                  nsCOMPtr<nsIDOMSVGTitleElement> titleElement(do_QueryInterface(childNode));
-                  if (titleElement) {
-                    titleElement->GetTextContent(outText);
+                  nsIContent* child = childNodes->Item(i);
+                  if (child->IsSVG(nsGkAtoms::title)) {
+                    static_cast<dom::SVGTitleElement*>(child)->GetTextContent(outText);
                     if ( outText.Length() )
                       found = true;
                     break;
@@ -1117,7 +1106,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
         }
       }
     }
-    
+
     // not found here, walk up to the parent and keep trying
     if ( !found ) {
       nsCOMPtr<nsIDOMNode> temp ( current );
@@ -1438,14 +1427,14 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
       do_GetInterface(static_cast<nsIWebBrowser*>(self->mWebBrowser));
     nsCOMPtr<nsIPresShell> shell;
     if (docShell) {
-      docShell->GetPresShell(getter_AddRefs(shell));
+      shell = docShell->GetPresShell();
     }
 
     nsIWidget* widget = nullptr;
     if (shell) {
-      nsIViewManager* vm = shell->GetViewManager();
+      nsViewManager* vm = shell->GetViewManager();
       if (vm) {
-        nsIView* view = vm->GetRootView();
+        nsView* view = vm->GetRootView();
         if (view) {
           nsPoint offset;
           widget = view->GetNearestWidget(&offset);

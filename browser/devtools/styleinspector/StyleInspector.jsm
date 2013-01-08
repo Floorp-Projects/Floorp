@@ -80,6 +80,7 @@ this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
                                      this._cssLinkHandler);
 
   this._onSelect = this.onSelect.bind(this);
+  this.inspector.selection.on("detached", this._onSelect);
   this.inspector.selection.on("new-node", this._onSelect);
   this.refresh = this.refresh.bind(this);
   this.inspector.on("layout-change", this.refresh);
@@ -159,6 +160,7 @@ this.ComputedViewTool = function CVT_ComputedViewTool(aInspector, aWindow, aIFra
   this.view = new CssHtmlTree(this);
 
   this._onSelect = this.onSelect.bind(this);
+  this.inspector.selection.on("detached", this._onSelect);
   this.inspector.selection.on("new-node", this._onSelect);
   if (this.inspector.highlighter) {
     this.inspector.highlighter.on("locked", this._onSelect);
@@ -179,7 +181,7 @@ ComputedViewTool.prototype = {
   {
     if (!this.inspector.selection.isConnected() ||
         !this.inspector.selection.isElementNode()) {
-      // FIXME: We should hide view's content
+      this.view.highlight(null);
       return;
     }
 

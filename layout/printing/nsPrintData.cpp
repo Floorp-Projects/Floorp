@@ -104,17 +104,77 @@ AssertPresShellsAndContextsSane(nsPrintObject* aPO,
   if (!aPO->mPresShell && aPO->mPresContext) {
     ASSERT_AND_NOTE("print object has pres context but no pres shell");
   }
-  if (aPO->mPresContext && aPO->mPresContext->GetPresShell() != aPO->mPresShell) {
+  if (aPO->mPresContext &&
+      aPO->mPresShell &&
+      aPO->mPresContext->GetPresShell() &&
+      aPO->mPresContext->GetPresShell() != aPO->mPresShell) {
     ASSERT_AND_NOTE("print object has mismatching pres shell and pres context");
-  }
-  if (aPO->mPresContext && !aPO->mPresContext->GetPresShell()) {
-    ASSERT_AND_NOTE("mPresShell->GetPresShell() is null");
   }
 
   for (uint32_t i = 0; i < aPO->mKids.Length(); i++) {
     AssertPresShellsAndContextsSane(aPO->mKids[i], aPresShells, aPresContexts);
   }
 }
+
+#ifdef MOZ_CRASHREPORTER
+static void
+AppendBoolean(nsCString& aString, bool aValue)
+{
+  if (aValue) {
+    aString.AppendLiteral("true");
+  } else {
+    aString.AppendLiteral("false");
+  }
+}
+
+static void
+NotePrintObjectTree(nsPrintObject* aPO, int32_t aDepth)
+{
+  nsCString note;
+  for (int32_t i = 0; i < aDepth; i++) {
+    note.AppendLiteral("  ");
+  }
+  note.AppendInt(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(aPO)), 16);
+  note.AppendLiteral(" = { mFrameType = ");
+  note.AppendInt(aPO->mFrameType);
+  note.AppendLiteral(", mHasBeenPrinted = ");
+  AppendBoolean(note, aPO->mHasBeenPrinted);
+  note.AppendLiteral(", mDontPrint = ");
+  AppendBoolean(note, aPO->mDontPrint);
+  note.AppendLiteral(", mPrintAsIs = ");
+  AppendBoolean(note, aPO->mPrintAsIs);
+  note.AppendLiteral(", mInvisible = ");
+  AppendBoolean(note, aPO->mInvisible);
+  note.AppendLiteral(", mPrintPreview = ");
+  AppendBoolean(note, aPO->mPrintPreview);
+  note.AppendLiteral(", mDidCreateDocShell = ");
+  AppendBoolean(note, aPO->mDidCreateDocShell);
+  note.AppendLiteral(", mShrinkRatio = ");
+  note.AppendFloat(aPO->mShrinkRatio);
+  note.AppendLiteral(", mZoomRatio = ");
+  note.AppendFloat(aPO->mZoomRatio);
+  note.AppendLiteral(", mContent = ");
+  if (aPO->mContent) {
+    nsString tag;
+    aPO->mContent->Tag()->ToString(tag);
+    LossyAppendUTF16toASCII(tag, note);
+  } else {
+    note.AppendLiteral("null");
+  }
+  note.AppendLiteral(" }\n");
+  CrashReporter::AppendAppNotesToCrashReport(note);
+  for (uint32_t i = 0; i < aPO->mKids.Length(); i++) {
+    NotePrintObjectTree(aPO->mKids[i], aDepth + 1);
+  }
+}
+
+static void
+NotePrintObjectTree(nsPrintObject* aPO)
+{
+  CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("Print object tree:\n"));
+  NotePrintObjectTree(aPO, 1);
+}
+#endif
 
 #undef ASSERT_AND_NOTE
 
@@ -160,6 +220,9 @@ nsPrintData::~nsPrintData()
   }
 
   AssertPresShellsAndContextsSane(mPrintObject);
+#ifdef MOZ_CRASHREPORTER
+  NotePrintObjectTree(mPrintObject);
+#endif
   delete mPrintObject;
 
   if (mBrandName) {

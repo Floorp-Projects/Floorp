@@ -1052,9 +1052,7 @@ struct ScriptSource
     // possible to get source at all.
     bool sourceRetrievable_:1;
     bool argumentsNotIncluded_:1;
-#ifdef DEBUG
     bool ready_:1;
-#endif
 
   public:
     ScriptSource()
@@ -1063,10 +1061,8 @@ struct ScriptSource
         compressedLength_(0),
         sourceMap_(NULL),
         sourceRetrievable_(false),
-        argumentsNotIncluded_(false)
-#ifdef DEBUG
-       ,ready_(true)
-#endif
+        argumentsNotIncluded_(false),
+        ready_(true)
     {
         data.source = NULL;
     }
@@ -1082,12 +1078,10 @@ struct ScriptSource
                        bool argumentsNotIncluded,
                        SourceCompressionToken *tok);
     void setSource(const jschar *src, uint32_t length);
-#ifdef DEBUG
     bool ready() const { return ready_; }
-#endif
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
-    bool hasSourceData() const { return !!data.source; }
+    bool hasSourceData() const { return !!data.source || !ready(); }
     uint32_t length() const {
         JS_ASSERT(hasSourceData());
         return length_;
@@ -1189,6 +1183,7 @@ class SourceCompressorThread
     void compress(SourceCompressionToken *tok);
     void waitOnCompression(SourceCompressionToken *userTok);
     void abort(SourceCompressionToken *userTok);
+    const jschar *currentChars() const;
 };
 #endif
 

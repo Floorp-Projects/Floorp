@@ -7,12 +7,12 @@
 #ifndef jsfriendapi_h___
 #define jsfriendapi_h___
 
+#include "mozilla/GuardObjects.h"
+
 #include "jsclass.h"
 #include "jscpucfg.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
-
-#include "mozilla/GuardObjects.h"
 
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
@@ -220,10 +220,11 @@ class JS_FRIEND_API(AutoSwitchCompartment) {
     JSCompartment *oldCompartment;
   public:
     AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    AutoSwitchCompartment(JSContext *cx, JSHandleObject target JS_GUARD_OBJECT_NOTIFIER_PARAM);
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    AutoSwitchCompartment(JSContext *cx, JSHandleObject target
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~AutoSwitchCompartment();
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #ifdef OLD_GETTER_SETTER_METHODS
@@ -1082,6 +1083,12 @@ enum ViewType {
      */
     TYPE_UINT8_CLAMPED,
 
+    /*
+     * Type returned for a DataView. Note that there is no single element type
+     * in this case.
+     */
+    TYPE_DATAVIEW,
+
     TYPE_MAX
 };
 
@@ -1255,14 +1262,14 @@ extern JS_FRIEND_API(JSObject *)
 JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data);
 
 /*
- * Get the type of elements in a typed array.
+ * Get the type of elements in a typed array, or TYPE_DATAVIEW if a DataView.
  *
- * |obj| must have passed a JS_IsTypedArrayObject/JS_Is*Array test, or somehow
- * be known that it would pass such a test: it is a typed array or a wrapper of
- * a typed array, and the unwrapping will succeed.
+ * |obj| must have passed a JS_IsArrayBufferView/JS_Is*Array test, or somehow
+ * be known that it would pass such a test: it is an ArrayBufferView or a
+ * wrapper of an ArrayBufferView, and the unwrapping will succeed.
  */
 extern JS_FRIEND_API(JSArrayBufferViewType)
-JS_GetTypedArrayType(JSObject *obj);
+JS_GetArrayBufferViewType(JSObject *obj);
 
 /*
  * Check whether obj supports the JS_GetArrayBuffer* APIs. Note that this may
@@ -1446,8 +1453,9 @@ struct JSJitInfo {
     uint32_t protoID;
     uint32_t depth;
     OpType type;
-    bool isInfallible;    /* Is op fallible? False in setters. */
-    bool isConstant;      /* Getting a construction-time constant? */
+    bool isInfallible;      /* Is op fallible? False in setters. */
+    bool isConstant;        /* Getting a construction-time constant? */
+    JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
 };
 
 static JS_ALWAYS_INLINE const JSJitInfo *
@@ -1558,6 +1566,21 @@ IsReadOnlyDateMethod(JS::IsAcceptableThis test, JS::NativeImpl method);
 
 extern JS_FRIEND_API(bool)
 IsTypedArrayThisCheck(JS::IsAcceptableThis test);
+
+enum CTypesActivityType {
+    CTYPES_CALL_BEGIN,
+    CTYPES_CALL_END
+};
+
+typedef void
+(* CTypesActivityCallback)(JSContext *cx, CTypesActivityType type);
+
+/*
+ * Sets a callback that is run whenever js-ctypes is about to be used when
+ * calling into C.
+ */
+JS_FRIEND_API(void)
+SetCTypesActivityCallback(JSRuntime *rt, CTypesActivityCallback cb);
 
 } /* namespace js */
 

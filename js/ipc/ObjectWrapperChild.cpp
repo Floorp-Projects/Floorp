@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/GuardObjects.h"
+
 #include "base/basictypes.h"
 
 #include "mozilla/jsipc/ContextWrapperChild.h"
@@ -28,18 +30,18 @@ namespace {
         JSAutoRequest mRequest;
         JSContext* const mContext;
         const uint32_t mSavedOptions;
-        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     public:
 
         AutoContextPusher(JSContext* cx
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
             : mRequest(cx)
             , mContext(cx)
             , mSavedOptions(JS_SetOptions(cx, (JS_GetOptions(cx) |
                                                JSOPTION_DONT_REPORT_UNCAUGHT)))
         {
-            JS_GUARD_OBJECT_NOTIFIER_INIT;
+            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
             mStack.Push(cx, false);
         }
 
@@ -76,14 +78,14 @@ namespace {
 
     class AutoCheckOperation : public ACOBase
     {
-        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
     public:
         AutoCheckOperation(ObjectWrapperChild* owc,
                            OperationStatus* statusPtr
-                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
             : ACOBase(NULL, owc)
         {
-            JS_GUARD_OBJECT_NOTIFIER_INIT;
+            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
             SetStatusPtr(statusPtr);
         }
     };

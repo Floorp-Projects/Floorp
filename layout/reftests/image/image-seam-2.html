@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<style>
+body {
+  background-color:black;
+}
+div {
+  transform: scale(0.3);
+  transform-origin: 0 0;
+}
+</style>
+<div>
+<!-- Test that drawing of nonuniform images is snapped -->
+<!-- This is a 2x2 image where the top row is white and the bottom row is transpraent -->
+<img style="width:256px; height:256px"
+ src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII="
+><img style="width:256px; height:256px"
+  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+</div>

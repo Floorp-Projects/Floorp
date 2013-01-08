@@ -57,6 +57,8 @@ class Build(MachCommandBase):
             {'count': len(warnings_collector.database)},
             '{count} compiler warnings present.')
 
+        warnings_database.prune()
+
         warnings_database.save_to_file(warnings_path)
 
         return status

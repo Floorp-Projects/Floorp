@@ -15,7 +15,7 @@ class nsIDocument;
 struct nsIntRect;
 class nsIPresShell;
 class nsPresContext;
-class nsIView;
+class nsView;
 class nsDOMNavigationTiming;
 %}
 
@@ -24,7 +24,7 @@ class nsDOMNavigationTiming;
 [ref] native nsIntRectRef(nsIntRect);
 [ptr] native nsIPresShellPtr(nsIPresShell);
 [ptr] native nsPresContextPtr(nsPresContext);
-[ptr] native nsIViewPtr(nsIView);
+[ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 
 [scriptable, builtinclass, uuid(b9d92b8b-5623-4079-ae11-36bb341f322e)]
@@ -171,7 +171,7 @@ interface nsIContentViewer : nsISupports
    * case, if mParentWidget is null then this document should not even
    * be displayed.
    */
-  [noscript,notxpcom,nostdcall] nsIViewPtr findContainerView();
+  [noscript,notxpcom,nostdcall] nsViewPtr findContainerView();
   /**
    * Set collector for navigation timing data (load, unload events).
    */
