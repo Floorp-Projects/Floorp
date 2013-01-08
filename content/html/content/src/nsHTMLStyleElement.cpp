@@ -86,6 +86,7 @@ protected:
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
+                         bool* aIsScoped,
                          bool* aIsAlternate);
   /**
    * Common method to call from the various mutation observer methods.
@@ -298,6 +299,7 @@ void
 nsHTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
                                       nsAString& aType,
                                       nsAString& aMedia,
+                                      bool* aIsScoped,
                                       bool* aIsAlternate)
 {
   aTitle.Truncate();
@@ -316,6 +318,8 @@ nsHTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   nsContentUtils::ASCIIToLower(aMedia);
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
+
+  *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
