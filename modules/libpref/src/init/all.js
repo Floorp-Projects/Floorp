@@ -2664,12 +2664,12 @@ pref("font.name-list.monospace.x-western", "Courier,Courier New");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
-pref("font.name.serif.zh-CN", "STSong");
-pref("font.name.sans-serif.zh-CN", "STHeiti");
-pref("font.name.monospace.zh-CN", "STHeiti");
-pref("font.name-list.serif.zh-CN", "STSong,Heiti SC");
-pref("font.name-list.sans-serif.zh-CN", "STHeiti,Heiti SC");
-pref("font.name-list.monospace.zh-CN", "STHeiti,Heiti SC");
+pref("font.name.serif.zh-CN", "Times");
+pref("font.name.sans-serif.zh-CN", "Helvetica");
+pref("font.name.monospace.zh-CN", "Courier");
+pref("font.name-list.serif.zh-CN", "Times,STSong,Heiti SC");
+pref("font.name-list.sans-serif.zh-CN", "Helvetica,STHeiti,Heiti SC");
+pref("font.name-list.monospace.zh-CN", "Courier,STHeiti,Heiti SC");
 
 pref("font.name.serif.zh-TW", "Times"); 
 pref("font.name.sans-serif.zh-TW", "Helvetica");  
