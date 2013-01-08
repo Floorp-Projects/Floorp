@@ -23,12 +23,12 @@ public:
     nsCString mac;
   };
 
-  ProtocolParser(uint32_t aHashKey);
+  ProtocolParser();
   ~ProtocolParser();
 
   nsresult Status() const { return mUpdateStatus; }
 
-  nsresult Init(nsICryptoHash* aHasher, bool mPerClientRandomize);
+  nsresult Init(nsICryptoHash* aHasher);
 
   nsresult InitHMAC(const nsACString& aClientKey,
                     const nsACString& aServerMAC);
@@ -93,8 +93,6 @@ private:
   };
   ChunkState mChunkState;
 
-  uint32_t mHashKey;
-  bool mPerClientRandomize;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
   nsresult mUpdateStatus;

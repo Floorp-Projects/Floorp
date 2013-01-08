@@ -34,84 +34,12 @@ namespace safebrowsing {
 
 Classifier::Classifier()
   : mFreshTime(45 * 60)
-  , mPerClientRandomize(true)
 {
 }
 
 Classifier::~Classifier()
 {
   Close();
-}
-
-/*
- * Generate a unique 32-bit key for this user, which we will
- * use to rehash all prefixes. This ensures that different users
- * will get hash collisions on different prefixes, which in turn
- * avoids that "unlucky" URLs get mysterious slowdowns, and that
- * the servers get spammed if any such URL should get slashdotted.
- * https://bugzilla.mozilla.org/show_bug.cgi?id=669407#c10
- */
-nsresult
-Classifier::InitKey()
-{
-  nsCOMPtr<nsIFile> storeFile;
-  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = storeFile->AppendNative(NS_LITERAL_CSTRING("classifier.hashkey"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists;
-  rv = storeFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!exists) {
-    // generate and store key
-    nsCOMPtr<nsIRandomGenerator> rg =
-      do_GetService("@mozilla.org/security/random-generator;1");
-    NS_ENSURE_STATE(rg);
-
-    uint8_t *temp;
-    nsresult rv = rg->GenerateRandomBytes(sizeof(mHashKey), &temp);
-    NS_ENSURE_SUCCESS(rv, rv);
-    memcpy(&mHashKey, temp, sizeof(mHashKey));
-    NS_Free(temp);
-
-    nsCOMPtr<nsIOutputStream> out;
-    rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out), storeFile,
-                                       -1, -1, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t written;
-    rv = out->Write(reinterpret_cast<char*>(&mHashKey), sizeof(uint32_t), &written);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISafeOutputStream> safeOut = do_QueryInterface(out);
-    rv = safeOut->Finish();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("Initialized classifier, key = %X", mHashKey));
-  } else {
-    // read key
-    nsCOMPtr<nsIInputStream> inputStream;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), storeFile,
-                                    -1, -1, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(inputStream);
-    nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    void *buffer = &mHashKey;
-    rv = NS_ReadInputStreamToBuffer(inputStream,
-                                    &buffer,
-                                    sizeof(uint32_t));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("Loaded classifier key = %X", mHashKey));
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -197,13 +125,6 @@ Classifier::Open(nsIFile& aCacheDirectory)
 
   mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = InitKey();
-  if (NS_FAILED(rv)) {
-    // Without a usable key the database is useless
-    Reset();
-    return NS_ERROR_FAILURE;
-  }
 
   mTableFreshness.Init();
 
@@ -321,9 +242,7 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
       LookupCache *cache = cacheArray[i];
       bool has, complete;
-      Prefix codedPrefix;
-      rv = cache->Has(lookupHash, hostKey, mHashKey,
-                      &has, &complete, &codedPrefix);
+      rv = cache->Has(lookupHash, &has, &complete);
       NS_ENSURE_SUCCESS(rv, rv);
       if (has) {
         LookupResult *result = aResults.AppendElement();
@@ -345,7 +264,6 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
              age));
 
         result->hash.complete = lookupHash;
-        result->mCodedPrefix = codedPrefix;
         result->mComplete = complete;
         result->mFresh = (age < mFreshTime);
         result->mTableName.Assign(cache->TableName());
@@ -758,8 +676,7 @@ Classifier::GetLookupCache(const nsACString& aTable)
     }
   }
 
-  LookupCache *cache = new LookupCache(aTable, mStoreDirectory,
-                                       mPerClientRandomize);
+  LookupCache *cache = new LookupCache(aTable, mStoreDirectory);
   nsresult rv = cache->Init();
   if (NS_FAILED(rv)) {
     return nullptr;
