@@ -1,0 +1,8 @@
+{
+  "name": "Absolute Message Href App",
+  "description": "App with an invalid message href",
+  "installs_allowed_from": [ "*" ],
+  "messages": [
+    { "absolute_href": "http://www.mozilla.org" }
+  ]
+}

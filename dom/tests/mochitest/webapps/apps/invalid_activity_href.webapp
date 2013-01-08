@@ -1,0 +1,14 @@
+{
+  "name": "Absolute Activity Href App",
+  "description": "App with an invalid activity href",
+  "installs_allowed_from": [ "*" ],
+  "activities": {
+    "without_href": { },
+    "absolute_href": {
+      "href": "http://www.mozilla.org"
+    },
+    "valid_href": {
+      "href": "/transfer.html"
+    }
+  }
+}
