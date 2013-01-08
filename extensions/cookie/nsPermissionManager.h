@@ -202,7 +202,7 @@ public:
    * That way, we can prevent have nsPermissionManager created at startup just
    * to be able to clear data when an application is uninstalled.
    */
-  static void AppClearDataObserverInit();
+  static void AppUninstallObserverInit();
 
 private:
   int32_t GetTypeIndex(const char *aTypeString,
