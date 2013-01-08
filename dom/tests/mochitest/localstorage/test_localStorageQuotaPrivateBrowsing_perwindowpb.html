@@ -6,10 +6,12 @@
 <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 
 <script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+
 const Ci = Components.interfaces;
 const CONTENT_PAGE = "http://mochi.test:8888/chrome/dom/tests/mochitest/localstorage/page_blank.html";
 const slavePath = "/tests/dom/tests/mochitest/localstorage/";
@@ -19,17 +21,15 @@ var quota;
 try {
   quota = Services.prefs.getIntPref("dom.storage.default_quota");
 } catch (ex) {
-  quota = 5*1024;
+  quota = 5 * 1024;
 }
+Services.prefs.setIntPref("browser.startup.page", 0);
 Services.prefs.setIntPref("dom.storage.default_quota", 1);
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIDocShellTreeItem)
-                      .rootTreeItem
-                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindow);
-
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor).
+  getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).
+  rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor).
+  getInterface(Ci.nsIDOMWindow);
 var slaveLoadsPending = 1;
 var slaveOrigin = "";
 var slave = null;
@@ -37,10 +37,11 @@ var failureRegExp = new RegExp("^FAILURE");
 
 function startTest() {
   testOnWindow(true, function(aWindow) {
+    info("Private window loaded");
     var frame = aWindow.content.document.createElement("iframe");
     aWindow.content.document.body.appendChild(frame);
-    aWindow.content.addEventListener("message", function(aEvt) {
-      onMessageReceived(aEvt, aWindow)
+    aWindow.content.addEventListener("message", function(aEvent) {
+      onMessageReceived(aEvent, aWindow)
     }, false);
     slave = aWindow.content.frames[0];
 
@@ -51,6 +52,7 @@ function startTest() {
 function doNextTest(aWindow) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+  info("Running test: " + currentTest);
   switch (currentTest) {
     // Initialy setup the quota to testing value of 1024B and
     // set a 500 bytes key with name length 1 (allocate 501 bytes)
@@ -125,6 +127,7 @@ function doNextTest(aWindow) {
       break;
 
     default:
+      Services.prefs.clearUserPref("browser.startup.page")
       Services.prefs.setIntPref("dom.storage.default_quota", quota);
       aWindow.close();
       SimpleTest.finish();
@@ -134,29 +137,23 @@ function doNextTest(aWindow) {
 }
 
 function onMessageReceived(event, aWindow) {
+  info("Message received: " + event.data);
   switch (event.data) {
     // Indication of the frame onload event
     case "frame loaded":
       if (--slaveLoadsPending)
         break;
-
       // Just fall through...
-
     // Indication of successfully finished step of a test
     case "perf":
-      if (event.data == "perf")
-        doStep();
-
       slave.postMessage("step", slaveOrigin);
       break;
-
     // Indication of all test parts finish (from any of the frames)
     case "done":
       aWindow.content.localStorage.clear();
       slaveLoadsPending = 1;
       doNextTest(aWindow);
       break;
-
     // Any other message indicates error or succes message of a test
     default:
       SimpleTest.ok(!event.data.match(failureRegExp), event.data);
@@ -169,7 +166,7 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      if (win.content.location.href == "about:privatebrowsing") {
+      if (win.content.location.href != CONTENT_PAGE) {
         win.gBrowser.loadURI(CONTENT_PAGE);
         return;
       }
@@ -179,11 +176,6 @@ function testOnWindow(aIsPrivate, aCallback) {
     win.gBrowser.loadURI(CONTENT_PAGE);
   }, true);
 }
-
-function doStep() {
-}
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </head>
