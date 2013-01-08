@@ -78,6 +78,9 @@ class IonJSFrameLayout : public IonCommonFrameLayout
         return offsetOfActualArgs() + arg * sizeof(Value);
     }
 
+    Value thisv() {
+        return argv()[0];
+    }
     Value *argv() {
         return (Value *)(this + 1);
     }

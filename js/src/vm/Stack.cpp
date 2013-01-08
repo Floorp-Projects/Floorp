@@ -1802,7 +1802,9 @@ StackIter::thisv() const
         break;
       case ION:
 #ifdef JS_ION
-        return ObjectValue(*ionInlineFrames_.thisObject());
+        if (ionFrames_.isOptimizedJS())
+            return ObjectValue(*ionInlineFrames_.thisObject());
+        return ionFrames_.baselineThisValue();
 #else
         break;
 #endif

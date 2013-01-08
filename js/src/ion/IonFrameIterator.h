@@ -143,6 +143,7 @@ class IonFrameIterator
     bool isFunctionFrame() const;
 
     bool isConstructing() const;
+    Value baselineThisValue() const;
 
     bool isEntryJSFrame() const;
 
