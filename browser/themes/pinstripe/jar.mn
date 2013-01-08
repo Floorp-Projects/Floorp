@@ -71,6 +71,7 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-16@2x.png
   skin/classic/browser/webRTC-shareDevice-64.png
+  skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-glow@2x.png       (downloads/download-glow@2x.png)
