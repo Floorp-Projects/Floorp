@@ -68,6 +68,10 @@ Notification.prototype = {
                       iconBox;
 
     return anchorElement;
+  },
+
+  reshow: function() {
+    this.owner.reshow(this.anchorElement);
   }
 };
 
@@ -625,6 +629,10 @@ PopupNotifications.prototype = {
     while (anchor && anchor.parentNode != this.iconBox)
       anchor = anchor.parentNode;
 
+    this.reshow(anchor);
+  },
+
+  reshow: function PopupNotifications_reshow(anchor) {
     // Mark notifications anchored to this anchor as un-dismissed
     this._currentNotifications.forEach(function (n) {
       if (n.anchorElement == anchor)
