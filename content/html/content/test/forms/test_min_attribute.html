@@ -31,7 +31,7 @@ var types = [
   [ 'date',           true ],
   [ 'month',          true,  true ],
   [ 'week',           true,  true ],
-  [ 'time',           true,  true ],
+  [ 'time',           true ],
   [ 'datetime-local', true,  true ],
   [ 'number',         true ],
   [ 'range',          true,  true ],
@@ -85,6 +85,10 @@ for (var data of types) {
 
   if (data[2]) {
     todo_is(input.type, data[0], data[0] + " isn't implemented yet");
+    continue;
+  }
+
+  if (input.type == 'time') {
     continue;
   }
 
