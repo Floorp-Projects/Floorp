@@ -13,6 +13,7 @@ chrome.jar:
 * skin/aboutDownloads.css                   (aboutDownloads.css)
   skin/aboutFeedback.css                    (aboutFeedback.css)
   skin/aboutMemory.css                      (aboutMemory.css)
+* skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)
   skin/aboutSupport.css                     (aboutSupport.css)
 * skin/browser.css                          (browser.css)
@@ -123,3 +124,5 @@ chrome.jar:
   skin/images/reader-toolbar-bg-port-xhdpi.png   (images/reader-toolbar-bg-port-xhdpi.png)
   skin/images/reader-toolbar-bg-land-xhdpi.png   (images/reader-toolbar-bg-land-xhdpi.png)
   skin/images/reader-toolbar-bg-xlarge-xhdpi.png (images/reader-toolbar-bg-xlarge-xhdpi.png)
+  skin/images/privatebrowsing-mask.png           (images/privatebrowsing-mask.png)
+  skin/images/privatebrowsing-bg-textured.png    (images/privatebrowsing-bg-textured.png)

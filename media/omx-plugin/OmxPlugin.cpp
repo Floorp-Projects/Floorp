@@ -84,6 +84,11 @@ ssize_t MediaStreamSource::readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size
     if (!mPluginHost->Read(mDecoder, ptr, offset, todo, &bytesRead)) {
       return ERROR_IO;
     }
+
+    if (bytesRead == 0) {
+      return size - todo;
+    }
+
     offset += bytesRead;
     todo -= bytesRead;
     ptr += bytesRead;

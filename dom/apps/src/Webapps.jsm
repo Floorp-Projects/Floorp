@@ -1035,6 +1035,12 @@ this.DOMApplicationRegistry = {
       tmpDir.remove(true);
     } catch(e) { }
 
+    // Flush the zip reader cache to make sure we use the new application.zip
+    // when re-launching the application.
+    let zipFile = dir.clone();
+    zipFile.append("application.zip");
+    Services.obs.notifyObservers(zipFile, "flush-cache-entry", null);
+
     // Get the manifest, and set properties.
     this.getManifestFor(app.origin, (function(aData) {
       app.downloading = false;
@@ -1127,6 +1133,12 @@ this.DOMApplicationRegistry = {
         aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
         return;
       }
+
+      // Store the new update manifest.
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+      let manFile = dir.clone();
+      manFile.append("update.webapp");
+      this._writeFile(manFile, JSON.stringify(aManifest), function() { });
 
       let manifest = new ManifestHelper(aManifest, app.manifestURL);
       // A package is available: set downloadAvailable to fire the matching
@@ -1284,7 +1296,7 @@ this.DOMApplicationRegistry = {
           app.etag = xhr.getResponseHeader("Etag");
           app.lastCheckedUpdate = Date.now();
           if (app.origin.startsWith("app://")) {
-            updatePackagedApp(manifest);
+            updatePackagedApp.call(this, manifest);
           } else {
             updateHostedApp.call(this, manifest);
           }
@@ -2336,18 +2348,17 @@ this.DOMApplicationRegistry = {
 #elifdef XP_UNIX
     let env = Cc["@mozilla.org/process/environment;1"]
                 .getService(Ci.nsIEnvironment);
-    let xdg_data_home_env = env.get("XDG_DATA_HOME");
+    let xdg_data_home_env;
+    try {
+      xdg_data_home_env = env.get("XDG_DATA_HOME");
+    } catch(ex) {
+    }
 
     let desktopINI;
-    if (xdg_data_home_env != "") {
-      desktopINI = Cc["@mozilla.org/file/local;1"]
-                     .createInstance(Ci.nsIFile);
-      desktopINI.initWithPath(xdg_data_home_env);
-    }
-    else {
-      desktopINI = Services.dirsvc.get("Home", Ci.nsIFile);
-      desktopINI.append(".local");
-      desktopINI.append("share");
+    if (xdg_data_home_env) {
+      desktopINI = new FileUtils.File(xdg_data_home_env);
+    } else {
+      desktopINI = FileUtils.getFile("Home", [".local", "share"]);
     }
     desktopINI.append("applications");
 

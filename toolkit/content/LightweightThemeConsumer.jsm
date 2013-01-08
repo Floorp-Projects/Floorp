@@ -9,11 +9,18 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/LightweightThemeImageOptimizer.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 this.LightweightThemeConsumer =
  function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
   this._footerId = aDocument.documentElement.getAttribute("lightweightthemesfooter");
+
+  if (PrivateBrowsingUtils.isWindowPrivate(this._win)) {
+    return;
+  }
 
   let screen = this._win.screen;
   this._lastScreenWidth = screen.width;

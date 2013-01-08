@@ -98,12 +98,9 @@ SVGFEImageFrame::Init(nsIContent* aContent,
                         nsIFrame* aParent,
                         nsIFrame* aPrevInFlow)
 {
-#ifdef DEBUG
-  nsCOMPtr<nsIDOMSVGFEImageElement> elem = do_QueryInterface(aContent);
-  NS_ASSERTION(elem,
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::feImage),
                "Trying to construct an SVGFEImageFrame for a "
                "content element that doesn't support the right interfaces");
-#endif /* DEBUG */
 
   SVGFEImageFrameBase::Init(aContent, aParent, aPrevInFlow);
   nsCOMPtr<nsIImageLoadingContent> imageLoader =

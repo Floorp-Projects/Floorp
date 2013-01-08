@@ -88,12 +88,32 @@ ContentPermissionPrompt.prototype = {
     return false;
   },
 
-  _id: 0,
   prompt: function(request) {
     // returns true if the request was handled
     if (this.handleExistingPermission(request))
        return;
 
+    // If the request was initiated from a hidden iframe
+    // we don't forward it to content and cancel it right away
+    let frame = request.element;
+
+    if (!frame) {
+      this.delegatePrompt(request);
+    }
+
+    var self = this;
+    frame.wrappedJSObject.getVisible().onsuccess = function gv_success(evt) {
+      if (!evt.target.result) {
+        request.cancel();
+        return;
+      }
+
+      self.delegatePrompt(request);
+    };
+  },
+
+  _id: 0,
+  delegatePrompt: function(request) {
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     let content = browser.getContentWindow();
     if (!content)

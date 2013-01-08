@@ -821,8 +821,8 @@ void MediaDecoder::PlaybackEnded()
   PlaybackPositionChanged();
   ChangeState(PLAY_STATE_ENDED);
 
+  UpdateReadyStateForData();
   if (mOwner)  {
-    UpdateReadyStateForData();
     mOwner->PlaybackEnded();
   }
 
