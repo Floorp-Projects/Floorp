@@ -374,7 +374,12 @@ class nsStyleSet
   // sheet last.
   nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
 
+  // mRuleProcessors[eScopedDocSheet] is always null; rule processors
+  // for scoped style sheets are stored in mScopedDocSheetRuleProcessors.
   nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessors[eSheetTypeCount];
+
+  // Rule processors for HTML5 scoped style sheets, one per scope.
+  nsTArray<nsCOMPtr<nsIStyleRuleProcessor> > mScopedDocSheetRuleProcessors;
 
   // cached instance for enabling/disabling
   nsCOMPtr<nsIStyleSheet> mQuirkStyleSheet;
