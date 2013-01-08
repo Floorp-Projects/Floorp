@@ -100,6 +100,7 @@ static const nsStyleSet::sheetType gCSSSheetTypes[] = {
   nsStyleSet::eAgentSheet,
   nsStyleSet::eUserSheet,
   nsStyleSet::eDocSheet,
+  nsStyleSet::eScopedDocSheet,
   nsStyleSet::eOverrideSheet
 };
 
@@ -261,6 +262,15 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
   return NS_OK;
 }
 
+static bool
+IsScopedStyleSheet(nsIStyleSheet* aSheet)
+{
+  nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(aSheet);
+  NS_ASSERTION(cssSheet, "expected aSheet to be an nsCSSStyleSheet");
+
+  return cssSheet->GetScopeElement();
+}
+
 nsresult
 nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
@@ -376,18 +386,21 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
-  nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
+  sheetType type = IsScopedStyleSheet(aSheet) ?
+                     eScopedDocSheet :
+                     eDocSheet;
+  nsCOMArray<nsIStyleSheet>& sheets = mSheets[type];
 
-  docSheets.RemoveObject(aSheet);
+  sheets.RemoveObject(aSheet);
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first
   int32_t newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
 
-  int32_t count = docSheets.Count();
+  int32_t count = sheets.Count();
   int32_t index;
   for (index = 0; index < count; index++) {
-    nsIStyleSheet* sheet = docSheets.ObjectAt(index);
+    nsIStyleSheet* sheet = sheets.ObjectAt(index);
     int32_t sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);
     if (sheetDocIndex > newDocIndex)
       break;
@@ -402,13 +415,21 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
         sheet == aDocument->FirstAdditionalAuthorSheet()))
         break;
   }
-  if (!docSheets.InsertObjectAt(aSheet, index))
+  if (!sheets.InsertObjectAt(aSheet, index))
     return NS_ERROR_OUT_OF_MEMORY;
   if (!mBatching)
-    return GatherRuleProcessors(eDocSheet);
+    return GatherRuleProcessors(type);
 
-  mDirty |= 1 << eDocSheet;
+  mDirty |= 1 << type;
   return NS_OK;
+}
+
+nsresult
+nsStyleSet::RemoveDocStyleSheet(nsIStyleSheet *aSheet)
+{
+  nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(aSheet);
+  bool isScoped = cssSheet && cssSheet->GetScopeElement();
+  return RemoveStyleSheet(isScoped ? eScopedDocSheet : eDocSheet, aSheet);
 }
 
 // Batching
@@ -1259,6 +1280,8 @@ nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
   NS_ENSURE_FALSE(mInShutdown, false);
 
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
+    if (gCSSSheetTypes[i] == eScopedDocSheet)
+      continue;
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc && !ruleProc->AppendFontFaceRules(aPresContext, aArray))
@@ -1274,6 +1297,8 @@ nsStyleSet::AppendKeyframesRules(nsPresContext* aPresContext,
   NS_ENSURE_FALSE(mInShutdown, false);
 
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
+    if (gCSSSheetTypes[i] == eScopedDocSheet)
+      continue;
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc && !ruleProc->AppendKeyframesRules(aPresContext, aArray))
@@ -1289,6 +1314,8 @@ nsStyleSet::AppendPageRules(nsPresContext* aPresContext,
   NS_ENSURE_FALSE(mInShutdown, false);
 
   for (uint32_t i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+    if (gCSSSheetTypes[i] == eScopedDocSheet)
+      continue;
     nsCSSRuleProcessor* ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc && !ruleProc->AppendPageRules(aPresContext, aArray))
