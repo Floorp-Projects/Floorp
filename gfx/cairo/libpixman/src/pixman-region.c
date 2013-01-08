@@ -2041,10 +2041,10 @@ PREFIX (_subtract) (region_type_t *reg_d,
  *
  *-----------------------------------------------------------------------
  */
-pixman_bool_t
-PIXMAN_EXPORT PREFIX (_inverse) (region_type_t *new_reg,  /* Destination region */
-                                 region_type_t *reg1,     /* Region to invert */
-                                 box_type_t *   inv_rect) /* Bounding box for inversion */
+PIXMAN_EXPORT pixman_bool_t
+PREFIX (_inverse) (region_type_t *new_reg,  /* Destination region */
+		   region_type_t *reg1,     /* Region to invert */
+		   box_type_t *   inv_rect) /* Bounding box for inversion */
 {
     region_type_t inv_reg; /* Quick and dirty region made from the
 			    * bounding box */
@@ -2137,9 +2137,9 @@ find_box_for_y (box_type_t *begin, box_type_t *end, int y)
  *   partially in the region) or is outside the region (we reached a band
  *   that doesn't overlap the box at all and part_in is false)
  */
-pixman_region_overlap_t
-PIXMAN_EXPORT PREFIX (_contains_rectangle) (region_type_t *  region,
-                                            box_type_t *     prect)
+PIXMAN_EXPORT pixman_region_overlap_t
+PREFIX (_contains_rectangle) (region_type_t *  region,
+			      box_type_t *     prect)
 {
     box_type_t *     pbox;
     box_type_t *     pbox_end;

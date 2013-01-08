@@ -29,10 +29,10 @@
  */
 
 #define MUL_UN8(a, b, t)						\
-    ((t) = (a) * (b) + ONE_HALF, ((((t) >> G_SHIFT ) + (t) ) >> G_SHIFT ))
+    ((t) = (a) * (uint16_t)(b) + ONE_HALF, ((((t) >> G_SHIFT ) + (t) ) >> G_SHIFT ))
 
 #define DIV_UN8(a, b)							\
-    (((uint16_t) (a) * MASK) / (b))
+    (((uint16_t) (a) * MASK + ((b) / 2)) / (b))
 
 #define ADD_UN8(x, y, t)				     \
     ((t) = (x) + (y),					     \
