@@ -378,7 +378,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     // Parse the style sheet.
     rv = doc->CSSLoader()->
       LoadInlineStyle(thisContent, text, mLineNumber, title, media,
-                      aObserver, &doneLoading, &isAlternate);
+                      scopeElement, aObserver, &doneLoading, &isAlternate);
   }
   else {
     // XXXbz clone the URI here to work around content policies modifying URIs.
