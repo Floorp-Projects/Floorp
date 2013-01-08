@@ -380,21 +380,6 @@ NotificationController::CoalesceEvents()
       }
     } break; // case eCoalesceOfSameType
 
-    case AccEvent::eRemoveDupes:
-    {
-      // Check for repeat events, coalesce newly appended event by more older
-      // event.
-      for (uint32_t index = tail - 1; index < tail; index--) {
-        AccEvent* accEvent = mEvents[index];
-        if (accEvent->mEventType == tailEvent->mEventType &&
-            accEvent->mEventRule == tailEvent->mEventRule &&
-            accEvent->mAccessible == tailEvent->mAccessible) {
-          tailEvent->mEventRule = AccEvent::eDoNotEmit;
-          return;
-        }
-      }
-    } break; // case eRemoveDupes
-
     case AccEvent::eCoalesceSelectionChange:
     {
       AccSelChangeEvent* tailSelChangeEvent = downcast_accEvent(tailEvent);
@@ -413,6 +398,43 @@ NotificationController::CoalesceEvents()
       }
 
     } break; // eCoalesceSelectionChange
+
+    case AccEvent::eCoalesceStateChange:
+    {
+      // If state change event is duped then ignore previous event. If state
+      // change event is opposite to previous event then no event is emitted
+      // (accessible state wasn't changed).
+      for (uint32_t index = tail - 1; index < tail; index--) {
+        AccEvent* thisEvent = mEvents[index];
+        if (thisEvent->mEventRule != AccEvent::eDoNotEmit &&
+            thisEvent->mEventType == tailEvent->mEventType &&
+            thisEvent->mAccessible == tailEvent->mAccessible) {
+          AccStateChangeEvent* thisSCEvent = downcast_accEvent(thisEvent);
+          AccStateChangeEvent* tailSCEvent = downcast_accEvent(tailEvent);
+          if (thisSCEvent->mState == tailSCEvent->mState) {
+            thisEvent->mEventRule = AccEvent::eDoNotEmit;
+            if (thisSCEvent->mIsEnabled != tailSCEvent->mIsEnabled)
+              tailEvent->mEventRule = AccEvent::eDoNotEmit;
+          }
+        }
+      }
+      break; // eCoalesceStateChange
+    }
+
+    case AccEvent::eRemoveDupes:
+    {
+      // Check for repeat events, coalesce newly appended event by more older
+      // event.
+      for (uint32_t index = tail - 1; index < tail; index--) {
+        AccEvent* accEvent = mEvents[index];
+        if (accEvent->mEventType == tailEvent->mEventType &&
+          accEvent->mEventRule == tailEvent->mEventRule &&
+          accEvent->mAccessible == tailEvent->mAccessible) {
+          tailEvent->mEventRule = AccEvent::eDoNotEmit;
+          return;
+        }
+      }
+    } break; // case eRemoveDupes
 
     default:
       break; // case eAllowDupes, eDoNotEmit

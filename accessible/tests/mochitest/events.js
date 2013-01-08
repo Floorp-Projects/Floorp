@@ -186,12 +186,17 @@ const DO_NOT_FINISH_TEST = 1;
  *     // [optional] Invoker's check before the next invoker is proceeded.
  *     finalCheck: function(aEvent){},
  *
- *     // [optional] Is called when event of registered type is handled.
+ *     // [optional] Is called when event of any registered type is handled.
  *     debugCheck: function(aEvent){},
  *
  *     // [ignored if 'eventSeq' is defined] DOM node event is generated for
  *     // (used in the case when invoker expects single event).
  *     DOMNode getter: function() {},
+ *
+ *     // [optional] if true then event sequences are ignored (no failure if
+ *     // sequences are empty). Use you need to invoke an action, do some check
+ *     // after timeout and proceed a next invoker.
+ *     noEventsOnAction getter: function() {},
  *
  *     // Array of checker objects defining expected events on invoker's action.
  *     //
@@ -235,6 +240,11 @@ const DO_NOT_FINISH_TEST = 1;
  *     getID: function(){} // returns invoker ID
  *   };
  *
+ *   // Used to add a possible scenario of expected/unexpected events on
+ *   // invoker's action.
+ *  defineScenario(aInvokerObj, aEventSeq, aUnexpectedEventSeq)
+ *
+ *
  * @param  aEventType  [in, optional] the default event type (isn't used if
  *                      invoker defines eventSeq property).
  */
@@ -277,7 +287,15 @@ function eventQueue(aEventType)
    */
   this.processNextInvoker = function eventQueue_processNextInvoker()
   {
-    // Finish processing of the current invoker.
+    // Some scenario was matched, we wait on next invoker processing.
+    if (this.mNextInvokerStatus == kInvokerCanceled) {
+      this.mNextInvokerStatus = kInvokerNotScheduled;
+      return;
+    }
+
+    this.mNextInvokerStatus = kInvokerNotScheduled;
+
+    // Finish processing of the current invoker if any.
     var testFailed = false;
 
     var invoker = this.getInvoker();
@@ -285,38 +303,74 @@ function eventQueue(aEventType)
       if ("finalCheck" in invoker)
         invoker.finalCheck();
 
-      if (invoker.wasCaught) {
-        for (var idx = 0; idx < invoker.wasCaught.length; idx++) {
-          var id = this.getEventID(idx);
-          var type = this.getEventType(idx);
-          var unexpected = this.mEventSeq[idx].unexpected;
+      if (this.mScenarios && this.mScenarios.length) {
+        var matchIdx = -1;
+        for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+          var eventSeq = this.mScenarios[scnIdx];
+          if (!this.areExpectedEventsLeft(eventSeq)) {
+            for (var idx = 0; idx < eventSeq.length; idx++) {
+              var checker = eventSeq[idx];
+              if (checker.unexpected && checker.wasCaught ||
+                  !checker.unexpected && checker.wasCaught != 1) {
+                break;
+              }
+            }
 
-          var typeStr = this.getEventTypeAsString(idx);
+            // Ok, we have matched scenario. Report it was completed ok. In
+            // case of empty scenario guess it was matched but if later we
+            // find out that non empty scenario was matched then it will be
+            // a final match.
+            if (idx == eventSeq.length) {
+              if (matchIdx != -1 && eventSeq.length > 0 &&
+                  this.mScenarios[matchIdx].length > 0) {
+                ok(false,
+                   "We have a matched scenario at index " + matchIdx + " already.");
+              }
 
-          var msg = "test with ID = '" + id + "' failed. ";
-          if (unexpected) {
-            var wasCaught = invoker.wasCaught[idx];
-            if (!testFailed)
-              testFailed = wasCaught;
+              if (matchIdx == -1 || eventSeq.length > 0)
+                matchIdx = scnIdx;
 
-            ok(!wasCaught,
-               msg + "There is unexpected " + typeStr + " event.");
+              // Report everythign is ok.
+              for (var idx = 0; idx < eventSeq.length; idx++) {
+                var checker = eventSeq[idx];
 
-          } else {
-            var wasCaught = invoker.wasCaught[idx];
-            if (!testFailed)
-              testFailed = !wasCaught;
+                var typeStr = eventQueue.getEventTypeAsString(checker);
+                var msg = "Test with ID = '" + this.getEventID(checker) +
+                  "' succeed. ";
 
-            ok(wasCaught,
-               msg + "No " + typeStr + " event.");
+                if (checker.unexpected)
+                  ok(true, msg + "There's no unexpected " + typeStr + " event.");
+                else
+                  ok(true, msg + "Event " + typeStr + " was handled.");
+              }
+            }
           }
         }
-      } else {
-        testFailed = true;
-        for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-          var id = this.getEventID(idx);
-          ok(false,
-             "test with ID = '" + id + "' failed. No events were registered.");
+
+        // We don't have completely matched scenario. Report each failure/success
+        // for every scenario.
+        if (matchIdx == -1) {
+          testFailed = true;
+          for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+            var eventSeq = this.mScenarios[scnIdx];
+            for (var idx = 0; idx < eventSeq.length; idx++) {
+              var checker = eventSeq[idx];
+
+              var typeStr = eventQueue.getEventTypeAsString(checker);
+              var msg = "Scenario #" + scnIdx + " of test with ID = '" +
+                this.getEventID(checker) + "' failed. ";
+
+              if (checker.wasCaught > 1)
+                ok(false, msg + "Dupe " + typeStr + " event.");
+
+              if (checker.unexpected) {
+                if (checker.wasCaught)
+                  ok(false, msg + "There's unexpected " + typeStr + " event.");
+              } else if (!checker.wasCaught) {
+                ok(false, msg + typeStr + " event was missed.");
+              }
+            }
+          }
         }
       }
     }
@@ -337,7 +391,11 @@ function eventQueue(aEventType)
     // Start processing of next invoker.
     invoker = this.getNextInvoker();
 
-    this.setEventHandler(invoker);
+    // Set up event listeners. Process a next invoker if no events were added.
+    if (!this.setEventHandler(invoker)) {
+      this.processNextInvoker();
+      return;
+    }
 
     if (gLogger.isEnabled()) {
       gLogger.logToConsole("Event queue: \n  invoke: " + invoker.getID());
@@ -345,9 +403,15 @@ function eventQueue(aEventType)
     }
 
     var infoText = "Invoke the '" + invoker.getID() + "' test { ";
-    for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-      infoText += this.isEventUnexpected(idx) ? "un" : "";
-      infoText += "expected '" + this.getEventTypeAsString(idx) + "' event; ";
+    var scnCount = this.mScenarios ? this.mScenarios.length : 0;
+    for (var scnIdx = 0; scnIdx < scnCount; scnIdx++) {
+      infoText += "scenario #" + scnIdx + ": ";
+      var eventSeq = this.mScenarios[scnIdx];
+      for (var idx = 0; idx < eventSeq.length; idx++) {
+        infoText += eventSeq[idx].unexpected ? "un" : "" +
+          "expected '" + eventQueue.getEventTypeAsString(eventSeq[idx]) +
+          "' event; ";
+      }
     }
     infoText += " }";
     info(infoText);
@@ -358,12 +422,17 @@ function eventQueue(aEventType)
       return;
     }
 
-    if (this.areAllEventsUnexpected())
+    if (this.hasUnexpectedEventsScenario())
       this.processNextInvokerInTimeout(true);
   }
 
-  this.processNextInvokerInTimeout = function eventQueue_processNextInvokerInTimeout(aUncondProcess)
+  this.processNextInvokerInTimeout =
+    function eventQueue_processNextInvokerInTimeout(aUncondProcess)
   {
+    this.mNextInvokerStatus = kInvokerPending;
+
+    // No need to wait extra timeout when a) we know we don't need to do that
+    // and b) there's no any single unexpected event.
     if (!aUncondProcess && this.areAllEventsExpected()) {
       // We need delay to avoid events coalesce from different invokers.
       var queue = this;
@@ -385,7 +454,7 @@ function eventQueue(aEventType)
     if (!invoker) // skip events before test was started
       return;
 
-    if (!this.mEventSeq) {
+    if (!this.mScenarios) {
       // Bad invoker object, error will be reported before processing of next
       // invoker in the queue.
       this.processNextInvoker();
@@ -395,98 +464,172 @@ function eventQueue(aEventType)
     if ("debugCheck" in invoker)
       invoker.debugCheck(aEvent);
 
-    // Search through handled expected events to report error if one of them is
-    // handled for a second time.
-    var idx = 0;
-    for (; idx < this.mEventSeq.length; idx++) {
-      if (this.isEventExpected(idx) && (invoker.wasCaught[idx] == true) &&
-          this.isSameEvent(idx, aEvent)) {
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
+      for (var idx = 0; idx < eventSeq.length; idx++) {
+        var checker = eventSeq[idx];
 
-        var msg = "Doubled event { event type: " +
-          this.getEventTypeAsString(idx) + ", target: " +
-          this.getEventTargetDescr(idx) + "} in test with ID = '" +
-          this.getEventID(idx) + "'.";
-        ok(false, msg);
-      }
-    }
+        // Search through handled expected events to report error if one of them
+        // is handled for a second time.
+        if (!checker.unexpected && (checker.wasCaught > 0) &&
+            eventQueue.isSameEvent(checker, aEvent)) {
+          checker.wasCaught++;
+          continue;
+        }
 
-    // Search through unexpected events, any matches result in error report
-    // after this invoker processing.
-    for (idx = 0; idx < this.mEventSeq.length; idx++) {
-      if (this.isEventUnexpected(idx) && this.compareEvents(idx, aEvent))
-        invoker.wasCaught[idx] = true;
-    }
+        // Search through unexpected events, any match results in error report
+        // after this invoker processing (in case of matched scenario only).
+        if (checker.unexpected && eventQueue.compareEvents(checker, aEvent)) {
+          checker.wasCaught++;
+          continue;
+        }
 
-    // Nothing left, proceed next invoker in timeout. Otherwise check if
-    // handled event is matched.
-    var idxObj = {};
-    if (!this.prepareForExpectedEvent(invoker, idxObj))
-      return;
+        // Report an error if we hanlded not expected event of unique type
+        // (i.e. event types are matched, targets differs).
+        if (!checker.unexptected && checker.unique &&
+            eventQueue.compareEventTypes(checker, aEvent)) {
+          var isExppected = false;
+          for (var jdx = 0; jdx < eventSeq.length; jdx++) {
+            isExpected = eventQueue.compareEvents(eventSeq[jdx], aEvent);
+            if (isExpected)
+              break;
+          }
 
-    // Check if handled event matches expected sync event.
-    var matched = false;
-    idx = idxObj.value;
-    if (idx < this.mEventSeq.length) {
-      matched = this.compareEvents(idx, aEvent);
-      if (matched)
-        this.mEventSeqIdx = idx;
-    }
-
-    // Check if handled event matches any expected async events.
-    if (!matched) {
-      for (idx = 0; idx < this.mEventSeq.length; idx++) {
-        if (this.mEventSeq[idx].async) {
-          matched = this.compareEvents(idx, aEvent);
-          if (matched)
-            break;
+          if (!isExpected) {
+            ok(false,
+               "Unique type " +
+               eventQueue.getEventTypeAsString(checker) + " event was handled.");
+          }
         }
       }
     }
-    this.dumpEventToDOM(aEvent, idx, matched);
 
-    if (matched) {
-      this.checkEvent(idx, aEvent);
-      invoker.wasCaught[idx] = true;
+    var matchedChecker = null;
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
 
-      this.prepareForExpectedEvent(invoker);
+      // Check if handled event matches expected sync event.
+      var nextChecker = this.getNextExpectedEvent(eventSeq);
+      if (nextChecker) {
+        if (eventQueue.compareEvents(nextChecker, aEvent)) {
+          matchedChecker = nextChecker;
+          matchedChecker.wasCaught++;
+          break;
+        }
+      }
+
+      // Check if handled event matches any expected async events.
+      for (idx = 0; idx < eventSeq.length; idx++) {
+        if (!eventSeq[idx].unexpected && eventSeq[idx].async) {
+          if (eventQueue.compareEvents(eventSeq[idx], aEvent)) {
+            matchedChecker = eventSeq[idx];
+            matchedChecker.wasCaught++;
+            break;
+          }
+        }
+      }
     }
+
+    // Call 'check' functions on invoker's side.
+    if (matchedChecker) {
+      if ("check" in matchedChecker)
+        matchedChecker.check(aEvent);
+
+      var invoker = this.getInvoker();
+      if ("check" in invoker)
+        invoker.check(aEvent);
+    }
+
+    // Dump handled event.
+    eventQueue.logEvent(aEvent, matchedChecker, this.areExpectedEventsLeft(),
+                        this.mNextInvokerStatus);
+
+    // If we don't have more events to wait then schedule next invoker.
+    if (!this.areExpectedEventsLeft() &&
+        (this.mNextInvokerStatus == kInvokerNotScheduled)) {
+      this.processNextInvokerInTimeout();
+      return;
+    }
+
+    // If we have scheduled a next invoker then cancel in case of match.
+    if ((this.mNextInvokerStatus == kInvokerPending) && matchedChecker)
+      this.mNextInvokerStatus = kInvokerCanceled;
   }
 
   // Helpers
-  this.prepareForExpectedEvent =
-    function eventQueue_prepareForExpectedEvent(aInvoker, aIdxObj)
+  this.getNextExpectedEvent =
+    function eventQueue_getNextExpectedEvent(aEventSeq)
   {
-    // Nothing left, wait for next invoker.
-    if (this.mEventSeqFinished)
-      return false;
+    if (!("idx" in aEventSeq))
+      aEventSeq.idx = 0;
 
-    // Compute next expected sync event index.
-    for (var idx = this.mEventSeqIdx + 1;
-         idx < this.mEventSeq.length &&
-         (this.mEventSeq[idx].unexpected || this.mEventSeq[idx].async);
-         idx++);
+    while (aEventSeq.idx < aEventSeq.length &&
+           (aEventSeq[aEventSeq.idx].unexpected ||
+            aEventSeq[aEventSeq.idx].async ||
+            aEventSeq[aEventSeq.idx].wasCaught > 0)) {
+      aEventSeq.idx++;
+    }
 
-    // If no expected events were left, proceed to next invoker in timeout
-    // to make sure unexpected events for current invoker aren't be handled.
-    if (idx == this.mEventSeq.length) {
-      var allHandled = true;
-      for (var jdx = 0; jdx < this.mEventSeq.length; jdx++) {
-        if (this.isEventExpected(jdx) && !aInvoker.wasCaught[jdx])
-          allHandled = false;
+    return aEventSeq.idx != aEventSeq.length ? aEventSeq[aEventSeq.idx] : null;
+  }
+
+  this.areExpectedEventsLeft =
+    function eventQueue_areExpectedEventsLeft(aScenario)
+  {
+    function scenarioHasUnhandledExpectedEvent(aEventSeq)
+    {
+      // Check if we have unhandled async (can be anywhere in the sequance) or
+      // sync expcected events yet.
+      for (var idx = 0; idx < aEventSeq.length; idx++) {
+        if (!aEventSeq[idx].unexpected && !aEventSeq[idx].wasCaught)
+          return true;
       }
 
-      if (allHandled) {
-        this.mEventSeqIdx = this.mEventSeq.length;
-        this.mEventFinished = true;
-        this.processNextInvokerInTimeout();
-        return false;
+      return false;
+    }
+
+    if (aScenario)
+      return scenarioHasUnhandledExpectedEvent(aScenario);
+
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
+      if (scenarioHasUnhandledExpectedEvent(eventSeq))
+        return true;
+    }
+    return false;
+  }
+
+  this.areAllEventsExpected =
+    function eventQueue_areAllEventsExpected()
+  {
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
+      for (var idx = 0; idx < eventSeq.length; idx++) {
+        if (eventSeq[idx].unexpected)
+          return false;
       }
     }
 
-    if (aIdxObj)
-      aIdxObj.value = idx;
-
     return true;
+  }
+
+  this.hasUnexpectedEventsScenario =
+    function eventQueue_hasUnexpectedEventsScenario()
+  {
+    if (this.getInvoker().noEventsOnAction)
+      return true;
+
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
+      for (var idx = 0; idx < eventSeq.length; idx++) {
+        if (!eventSeq[idx].unexpected)
+          break;
+      }
+      if (idx == eventSeq.length)
+        return true;
+    }
+
+    return false;
   }
 
   this.getInvoker = function eventQueue_getInvoker()
@@ -501,95 +644,73 @@ function eventQueue(aEventType)
 
   this.setEventHandler = function eventQueue_setEventHandler(aInvoker)
   {
-    // Create unified event sequence concatenating expected and unexpected
-    // events.
-    this.mEventSeq = ("eventSeq" in aInvoker) ? aInvoker.eventSeq : [ ];
-    if (!this.mEventSeq.length && this.mDefEventType) {
-      this.mEventSeq.push(new invokerChecker(this.mDefEventType,
-                                             aInvoker.DOMNode));
+    if (!("scenarios" in aInvoker) || aInvoker.scenarios.length == 0) {
+      var eventSeq = aInvoker.eventSeq;
+      var unexpectedEventSeq = aInvoker.unexpectedEventSeq;
+      if (!eventSeq && !unexpectedEventSeq && this.mDefEventType)
+        eventSeq = [ new invokerChecker(this.mDefEventType, aInvoker.DOMNode) ];
+
+      if (eventSeq || unexpectedEventSeq)
+        defineScenario(aInvoker, eventSeq, unexpectedEventSeq);
     }
 
-    var len = this.mEventSeq.length;
-    for (var idx = 0; idx < len; idx++) {
-      var seqItem = this.mEventSeq[idx];
-      // Allow unexpected events in primary event sequence.
-      if (!("unexpected" in this.mEventSeq[idx]))
-        seqItem.unexpected = false;
+    if (aInvoker.noEventsOnAction)
+      return true;
 
-      if (!("async" in this.mEventSeq[idx]))
-        seqItem.async = false;
-
-      // If the event is of unique type (regardless whether it's expected or
-      // not) then register additional unexpected event that matches to any
-      // event of the same type with any target different from registered
-      // expected events.
-      if (("unique" in seqItem) && seqItem.unique) {
-        var uniquenessChecker = {
-          type: seqItem.type,
-          unexpected: true,
-          match: function uniquenessChecker_match(aEvent)
-          {
-            // The handled event is matched if its target doesn't match to any
-            // registered expected event.
-            var matched = true;
-            for (var idx = 0; idx < this.queue.mEventSeq.length; idx++) {
-              if (this.queue.isEventExpected(idx) &&
-                  this.queue.compareEvents(idx, aEvent)) {
-                matched = false;
-                break;
-              }
-            }
-            return matched;
-          },
-          targetDescr: "any target different from expected events",
-          queue: this
-        };
-        this.mEventSeq.push(uniquenessChecker);
-      }
+    this.mScenarios = aInvoker.scenarios;
+    if (!this.mScenarios || !this.mScenarios.length) {
+      ok(false, "Broken invoker '" + aInvoker.getID() + "'");
+      return false;
     }
 
-    var unexpectedSeq = aInvoker.unexpectedEventSeq;
-    if (unexpectedSeq) {
-      for (var idx = 0; idx < unexpectedSeq.length; idx++) {
-        unexpectedSeq[idx].unexpected = true;
-        unexpectedSeq[idx].async = false;
+    // Register event listeners.
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
+
+      if (gLogger.isEnabled()) {
+        var msg = "scenario #" + scnIdx +
+          ", registered events number: " + eventSeq.length;
+        gLogger.logToConsole(msg);
+        gLogger.logToDOM(msg, true);
       }
 
-      this.mEventSeq = this.mEventSeq.concat(unexpectedSeq);
-    }
+      // Do not warn about empty event sequances when more than one scenario
+      // was registered.
+      if (this.mScenarios.length == 1 && eventSeq.length == 0) {
+        ok(false,
+           "Broken scenario #" + scnIdx + " of invoker '" + aInvoker.getID() +
+           "'. No registered events");
+        return false;
+      }
 
-    this.mEventSeqIdx = -1;
-    this.mEventSeqFinished = false;
+      for (var idx = 0; idx < eventSeq.length; idx++)
+        eventSeq[idx].wasCaught = 0;
 
-    // Register event listeners
-    if (this.mEventSeq) {
-      aInvoker.wasCaught = new Array(this.mEventSeq.length);
-
-      for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-        var eventType = this.getEventType(idx);
-
+      for (var idx = 0; idx < eventSeq.length; idx++) {
         if (gLogger.isEnabled()) {
           var msg = "registered";
-          if (this.isEventUnexpected(idx))
+          if (eventSeq[idx].unexpected)
             msg += " unexpected";
-          if (this.mEventSeq[idx].async)
+          if (eventSeq[idx].async)
             msg += " async";
 
-          msg += ": event type: " + this.getEventTypeAsString(idx) +
-            ", target: " + this.getEventTargetDescr(idx, true);
+          msg += ": event type: " +
+            eventQueue.getEventTypeAsString(eventSeq[idx]) +
+            ", target: " + eventQueue.getEventTargetDescr(eventSeq[idx], true);
 
           gLogger.logToConsole(msg);
           gLogger.logToDOM(msg, true);
         }
 
+        var eventType = eventSeq[idx].type;
         if (typeof eventType == "string") {
           // DOM event
-          var target = this.getEventTarget(idx);
+          var target = eventSeq[idx].target;
           if (!target) {
             ok(false, "no target for DOM event!");
-            return;
+            return false;
           }
-          var phase = this.getEventPhase(idx);
+          var phase = eventQueue.getEventPhase(eventSeq[idx]);
           target.ownerDocument.addEventListener(eventType, this, phase);
 
         } else {
@@ -598,17 +719,23 @@ function eventQueue(aEventType)
         }
       }
     }
+
+    return true;
   }
 
   this.clearEventHandler = function eventQueue_clearEventHandler()
   {
-    if (this.mEventSeq) {
-      for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-        var eventType = this.getEventType(idx);
+    if (!this.mScenarios)
+      return;
+
+    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+      var eventSeq = this.mScenarios[scnIdx];
+      for (var idx = 0; idx < eventSeq.length; idx++) {
+        var eventType = eventSeq[idx].type;
         if (typeof eventType == "string") {
           // DOM event
-          var target = this.getEventTarget(idx);
-          var phase = this.getEventPhase(idx);
+          var target = eventSeq[idx].target;
+          var phase = eventQueue.getEventPhase(eventSeq[idx]);
           target.ownerDocument.removeEventListener(eventType, this, phase);
 
         } else {
@@ -616,184 +743,162 @@ function eventQueue(aEventType)
           removeA11yEventListener(eventType, this);
         }
       }
-
-      this.mEventSeq = null;
     }
+    this.mScenarios = null;
   }
 
-  this.getEventType = function eventQueue_getEventType(aIdx)
+  this.getEventID = function eventQueue_getEventID(aChecker)
   {
-    return this.mEventSeq[aIdx].type;
-  }
+    if ("getID" in aChecker)
+      return aChecker.getID();
 
-  this.getEventTypeAsString = function eventQueue_getEventTypeAsString(aIdx)
-  {
-    var type = this.mEventSeq[aIdx].type;
-    return (typeof type == "string") ? type : eventTypeToString(type);
-  }
-
-  this.getEventTarget = function eventQueue_getEventTarget(aIdx)
-  {
-    return this.mEventSeq[aIdx].target;
-  }
-
-  this.getEventTargetDescr =
-    function eventQueue_getEventTargetDescr(aIdx, aDontForceTarget)
-  {
-    var descr = this.mEventSeq[aIdx].targetDescr;
-    if (descr)
-      return descr;
-
-    if (aDontForceTarget)
-      return "no target description";
-
-    var target = ("target" in this.mEventSeq[aIdx]) ?
-      this.mEventSeq[aIdx].target : null;
-    return prettyName(target);
-  }
-
-  this.getEventPhase = function eventQueue_getEventPhase(aIdx)
-  {
-     var eventItem = this.mEventSeq[aIdx];
-    if ("phase" in eventItem)
-      return eventItem.phase;
-
-    return true;
-  }
-
-  this.getEventID = function eventQueue_getEventID(aIdx)
-  {
-    var eventItem = this.mEventSeq[aIdx];
-    if ("getID" in eventItem)
-      return eventItem.getID();
-    
     var invoker = this.getInvoker();
     return invoker.getID();
-  }
-
-  this.isEventUnexpected = function eventQueue_isEventUnexpected(aIdx)
-  {
-    return this.mEventSeq[aIdx].unexpected;
-  }
-  this.isEventExpected = function eventQueue_isEventExpected(aIdx)
-  {
-    return !this.mEventSeq[aIdx].unexpected;
-  }
-
-  this.compareEventTypes = function eventQueue_compareEventTypes(aIdx, aEvent)
-  {
-    var eventType1 = this.getEventType(aIdx);
-    var eventType2 = (aEvent instanceof nsIDOMEvent) ?
-      aEvent.type : aEvent.eventType;
-
-    return eventType1 == eventType2;
-  }
-
-  this.compareEvents = function eventQueue_compareEvents(aIdx, aEvent)
-  {
-    if (!this.compareEventTypes(aIdx, aEvent))
-      return false;
-
-    // If checker provides "match" function then allow the checker to decide
-    // whether event is matched.
-    if ("match" in this.mEventSeq[aIdx])
-      return this.mEventSeq[aIdx].match(aEvent);
-
-    var target1 = this.getEventTarget(aIdx);
-    if (target1 instanceof nsIAccessible) {
-      var target2 = (aEvent instanceof nsIDOMEvent) ?
-        getAccessible(aEvent.target) : aEvent.accessible;
-
-      return target1 == target2;
-    }
-
-    // If original target isn't suitable then extend interface to support target
-    // (original target is used in test_elm_media.html).
-    var target2 = (aEvent instanceof nsIDOMEvent) ?
-      aEvent.originalTarget : aEvent.DOMNode;
-    return target1 == target2;
-  }
-
-  this.isSameEvent = function eventQueue_isSameEvent(aIdx, aEvent)
-  {
-    // We don't have stored info about handled event other than its type and
-    // target, thus we should filter text change and state change events since
-    // they may occur on the same element because of complex changes.
-    return this.compareEvents(aIdx, aEvent) &&
-      !(aEvent instanceof nsIAccessibleTextChangeEvent) &&
-      !(aEvent instanceof nsIAccessibleStateChangeEvent);
-  }
-
-  this.checkEvent = function eventQueue_checkEvent(aIdx, aEvent)
-  {
-    var eventItem = this.mEventSeq[aIdx];
-    if ("check" in eventItem)
-      eventItem.check(aEvent);
-
-    var invoker = this.getInvoker();
-    if ("check" in invoker)
-      invoker.check(aEvent);
-  }
-
-  this.areAllEventsExpected = function eventQueue_areAllEventsExpected()
-  {
-    for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-      if (this.mEventSeq[idx].unexpected)
-        return false;
-    }
-
-    return true;
-  }
-
-  this.areAllEventsUnexpected = function eventQueue_areAllEventsUnxpected()
-  {
-    for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-      if (!this.mEventSeq[idx].unexpected)
-        return false;
-    }
-
-    return true;
-  }
-
-  this.dumpEventToDOM = function eventQueue_dumpEventToDOM(aOrigEvent,
-                                                           aExpectedEventIdx,
-                                                           aMatch)
-  {
-    if (!gLogger.isEnabled()) // debug stuff
-      return;
-
-    // Dump DOM event information. Skip a11y event since it is dumped by
-    // gA11yEventObserver.
-    if (aOrigEvent instanceof nsIDOMEvent) {
-      var info = "Event type: " + aOrigEvent.type;
-      info += ". Target: " + prettyName(aOrigEvent.originalTarget);
-      gLogger.logToDOM(info);
-    }
-
-    if (!aMatch)
-      return;
-
-    var msg = "EQ: ";
-    var emphText = "matched ";
-
-    var currType = this.getEventTypeAsString(aExpectedEventIdx);
-    var currTargetDescr = this.getEventTargetDescr(aExpectedEventIdx);
-    var consoleMsg = "*****\nEQ matched: " + currType + "\n*****";
-    gLogger.logToConsole(consoleMsg);
-
-    msg += " event, type: " + currType + ", target: " + currTargetDescr;
-
-    gLogger.logToDOM(msg, true, emphText);
   }
 
   this.mDefEventType = aEventType;
 
   this.mInvokers = new Array();
   this.mIndex = -1;
+  this.mScenarios = null;
 
-  this.mEventSeq = null;
-  this.mEventSeqIdx = -1;
-  this.mEventSeqFinished = false;
+  this.mNextInvokerStatus = kInvokerNotScheduled;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// eventQueue static members and constants
+
+const kInvokerNotScheduled = 0;
+const kInvokerPending = 1;
+const kInvokerCanceled = 2;
+
+eventQueue.getEventTypeAsString =
+  function eventQueue_getEventTypeAsString(aEventOrChecker)
+{
+  if (aEventOrChecker instanceof nsIDOMEvent)
+    return aEventOrChecker.type;
+
+  if (aEventOrChecker instanceof nsIAccessibleEvent)
+    return eventTypeToString(aEventOrChecker.eventType);
+
+  return (typeof aEventOrChecker.type == "string") ?
+    aEventOrChecker.type : eventTypeToString(aEventOrChecker.type);
+}
+
+eventQueue.getEventTargetDescr =
+  function eventQueue_getEventTargetDescr(aEventOrChecker, aDontForceTarget)
+{
+  if (aEventOrChecker instanceof nsIDOMEvent)
+    return prettyName(aEventOrChecker.originalTarget);
+
+  if (aEventOrChecker instanceof nsIDOMEvent)
+    return prettyName(aEventOrChecker.accessible);
+
+  var descr = aEventOrChecker.targetDescr;
+  if (descr)
+    return descr;
+
+  if (aDontForceTarget)
+    return "no target description";
+
+  var target = ("target" in aEventOrChecker) ? aEventOrChecker.target : null;
+  return prettyName(target);
+}
+
+eventQueue.getEventPhase = function eventQueue_getEventPhase(aChecker)
+{
+  return ("phase" in aChecker) ? aChecker.phase : true;
+}
+
+eventQueue.compareEventTypes =
+  function eventQueue_compareEventTypes(aChecker, aEvent)
+{
+  var eventType = (aEvent instanceof nsIDOMEvent) ?
+    aEvent.type : aEvent.eventType;
+  return aChecker.type == eventType;
+}
+
+eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent)
+{
+  if (!eventQueue.compareEventTypes(aChecker, aEvent))
+    return false;
+
+  // If checker provides "match" function then allow the checker to decide
+  // whether event is matched.
+  if ("match" in aChecker)
+    return aChecker.match(aEvent);
+
+  var target1 = aChecker.target;
+  if (target1 instanceof nsIAccessible) {
+    var target2 = (aEvent instanceof nsIDOMEvent) ?
+      getAccessible(aEvent.target) : aEvent.accessible;
+
+    return target1 == target2;
+  }
+
+  // If original target isn't suitable then extend interface to support target
+  // (original target is used in test_elm_media.html).
+  var target2 = (aEvent instanceof nsIDOMEvent) ?
+    aEvent.originalTarget : aEvent.DOMNode;
+  return target1 == target2;
+}
+
+eventQueue.isSameEvent = function eventQueue_isSameEvent(aChecker, aEvent)
+{
+  // We don't have stored info about handled event other than its type and
+  // target, thus we should filter text change and state change events since
+  // they may occur on the same element because of complex changes.
+  return this.compareEvents(aChecker, aEvent) &&
+    !(aEvent instanceof nsIAccessibleTextChangeEvent) &&
+    !(aEvent instanceof nsIAccessibleStateChangeEvent);
+}
+
+eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
+                                                   aAreExpectedEventsLeft,
+                                                   aInvokerStatus)
+{
+  if (!gLogger.isEnabled()) // debug stuff
+    return;
+
+  // Dump DOM event information. Skip a11y event since it is dumped by
+  // gA11yEventObserver.
+  if (aOrigEvent instanceof nsIDOMEvent) {
+    var info = "Event type: " + eventQueue.getEventTypeAsString(aOrigEvent);
+    info += ". Target: " + eventQueue.getEventTargetDescr(aOrigEvent);
+    gLogger.logToDOM(info);
+  }
+
+  var msg = "unhandled expected events: " + aAreExpectedEventsLeft +
+    ", invoker status: ";
+  switch (aInvokerStatus) {
+    case kInvokerNotScheduled:
+      msg += "not scheduled";
+      break;
+    case kInvokerPending:
+      msg += "pending";
+      break;
+    case kInvokerCanceled:
+      msg += "canceled";
+      break;
+  }
+
+  gLogger.logToConsole(msg);
+  gLogger.logToDOM(msg);
+
+  if (!aMatchedChecker)
+    return;
+
+  var msg = "EQ: ";
+  var emphText = "matched ";
+
+  var currType = eventQueue.getEventTypeAsString(aMatchedChecker);
+  var currTargetDescr = eventQueue.getEventTargetDescr(aMatchedChecker);
+  var consoleMsg = "*****\nEQ matched: " + currType + "\n*****";
+  gLogger.logToConsole(consoleMsg);
+
+  msg += " event, type: " + currType + ", target: " + currTargetDescr;
+
+  gLogger.logToDOM(msg, true, emphText);
 }
 
 
@@ -849,6 +954,38 @@ function sequence()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Event queue invokers
+
+/**
+ * Defines a scenario of expected/unexpected events. Each invoker can have
+ * one or more scenarios of events. Only one scenario must be completed.
+ */
+function defineScenario(aInvoker, aEventSeq, aUnexpectedEventSeq)
+{
+  if (!("scenarios" in aInvoker))
+    aInvoker.scenarios = new Array();
+
+  // Create unified event sequence concatenating expected and unexpected
+  // events.
+  if (!aEventSeq)
+    aEventSeq = [];
+
+  for (var idx = 0; idx < aEventSeq.length; idx++) {
+    aEventSeq[idx].unexpected |= false;
+    aEventSeq[idx].async |= false;
+  }
+
+  if (aUnexpectedEventSeq) {
+    for (var idx = 0; idx < aUnexpectedEventSeq.length; idx++) {
+      aUnexpectedEventSeq[idx].unexpected = true;
+      aUnexpectedEventSeq[idx].async = false;
+    }
+
+    aEventSeq = aEventSeq.concat(aUnexpectedEventSeq);
+  }
+
+  aInvoker.scenarios.push(aEventSeq);
+}
+
 
 /**
  * Invokers defined below take a checker object (or array of checker objects).
