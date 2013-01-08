@@ -10,9 +10,6 @@ typedef TestInterface? NullableTestInterface;
 
 interface TestExternalInterface;
 
-interface TestNonCastableInterface {
-};
-
 interface TestRenamedInterface {
 };
 
@@ -92,7 +89,7 @@ interface OnlyForUseInConstructor {
  Constructor(DOMString str),
  Constructor(unsigned long num, boolean? boolArg),
  Constructor(TestInterface? iface),
- Constructor(TestNonCastableInterface iface)
+ Constructor(long arg1, IndirectlyImplementedInterface iface)
  // , Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3)
  ]
 interface TestInterface {
@@ -224,21 +221,21 @@ interface TestInterface {
   sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
   // Non-castable interface types
-  TestNonCastableInterface receiveOther();
-  TestNonCastableInterface? receiveNullableOther();
-  TestNonCastableInterface receiveWeakOther();
-  TestNonCastableInterface? receiveWeakNullableOther();
-  // A verstion to test for casting to TestNonCastableInterface&
-  void passOther(TestNonCastableInterface arg);
+  IndirectlyImplementedInterface receiveOther();
+  IndirectlyImplementedInterface? receiveNullableOther();
+  IndirectlyImplementedInterface receiveWeakOther();
+  IndirectlyImplementedInterface? receiveWeakNullableOther();
+  // A verstion to test for casting to IndirectlyImplementedInterface&
+  void passOther(IndirectlyImplementedInterface arg);
   // A version we can use to test for the exact type passed in
-  void passOther2(TestNonCastableInterface arg);
-  void passNullableOther(TestNonCastableInterface? arg);
-  attribute TestNonCastableInterface nonNullOther;
-  attribute TestNonCastableInterface? nullableOther;
+  void passOther2(IndirectlyImplementedInterface arg);
+  void passNullableOther(IndirectlyImplementedInterface? arg);
+  attribute IndirectlyImplementedInterface nonNullOther;
+  attribute IndirectlyImplementedInterface? nullableOther;
   // Optional arguments
-  void passOptionalOther(optional TestNonCastableInterface? arg);
-  void passOptionalNonNullOther(optional TestNonCastableInterface arg);
-  void passOptionalOtherWithDefault(optional TestNonCastableInterface? arg = null);
+  void passOptionalOther(optional IndirectlyImplementedInterface? arg);
+  void passOptionalNonNullOther(optional IndirectlyImplementedInterface arg);
+  void passOptionalOtherWithDefault(optional IndirectlyImplementedInterface? arg = null);
 
   // External interface types
   TestExternalInterface receiveExternal();

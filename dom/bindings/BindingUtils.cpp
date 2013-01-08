@@ -1492,5 +1492,35 @@ WorkerGlobalObject::WorkerGlobalObject(JSContext* aCx, JSObject* aObject)
   mGlobalJSObject = GetGlobalObject<false>(aCx, aObject, ac);
 }
 
+JSBool
+InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSObject* instance,
+                     JSBool* bp)
+{
+  const DOMIfaceAndProtoJSClass* clasp =
+    DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj));
+
+  const DOMClass* domClass = GetDOMClass(instance);
+
+  MOZ_ASSERT(!domClass || clasp->mPrototypeID != prototypes::id::_ID_Count,
+             "Why do we have a hasInstance hook if we don't have a prototype "
+             "ID?");
+  *bp = domClass &&
+        domClass->mInterfaceChain[clasp->mDepth] == clasp->mPrototypeID;
+
+  return true;
+}
+
+JSBool
+InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
+                     JSBool* bp)
+{
+  if (!vp.isObject()) {
+    *bp = false;
+    return true;
+  }
+
+  return InterfaceHasInstance(cx, obj, js::UnwrapObject(&vp.toObject()), bp);
+}
+
 } // namespace dom
 } // namespace mozilla
