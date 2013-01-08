@@ -13,6 +13,7 @@
 #include "base/pickle.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIXPConnect.h"
@@ -323,7 +324,7 @@ private:
 
   bool mCachedTelemetryData;
   uint32_t mLastShutdownTime;
-  std::vector<nsCOMPtr<nsIFetchTelemetryDataCallback> > mCallbacks;
+  nsCOMArray<nsIFetchTelemetryDataCallback> mCallbacks;
   friend class nsFetchTelemetryData;
 };
 
@@ -729,10 +730,10 @@ private:
 public:
   void MainThread() {
     mTelemetry->mCachedTelemetryData = true;
-    for (unsigned int i = 0, n = mTelemetry->mCallbacks.size(); i < n; ++i) {
+    for (unsigned int i = 0, n = mTelemetry->mCallbacks.Count(); i < n; ++i) {
       mTelemetry->mCallbacks[i]->Complete();
     }
-    mTelemetry->mCallbacks.clear();
+    mTelemetry->mCallbacks.Clear();
   }
 
   NS_IMETHOD Run() {
@@ -799,8 +800,8 @@ TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
   }
 
   // We already have a read request running, just remember the callback.
-  if (!mCallbacks.empty()) {
-    mCallbacks.push_back(aCallback);
+  if (mCallbacks.Count() != 0) {
+    mCallbacks.AppendObject(aCallback);
     return NS_OK;
   }
 
@@ -831,7 +832,7 @@ TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
     return NS_OK;
   }
 
-  mCallbacks.push_back(aCallback);
+  mCallbacks.AppendObject(aCallback);
   nsCOMPtr<nsIRunnable> event = new nsFetchTelemetryData(filename);
 
   targetThread->Dispatch(event, NS_DISPATCH_NORMAL);

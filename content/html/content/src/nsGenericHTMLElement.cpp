@@ -37,8 +37,8 @@
 #include "nsEscape.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
+#include "nsView.h"
+#include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
@@ -87,6 +87,7 @@
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/UndoManager.h"
 #include "mozilla/BloomFilter.h"
 
 #include "HTMLPropertiesCollection.h"
@@ -797,13 +798,7 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    uint32_t eventType = EventNameType_HTML;
-    if (mNodeInfo->Equals(nsGkAtoms::body) ||
-        mNodeInfo->Equals(nsGkAtoms::frameset)) {
-      eventType |= EventNameType_HTMLBodyOrFramesetOnly;
-    }
-    if (nsContentUtils::IsEventAttributeName(aName, eventType) &&
-        aValue) {
+    if (IsEventAttributeName(aName) && aValue) {
       NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
         "Expected string value for script body");
       nsresult rv = SetEventHandler(aName, aValue->GetStringValue());
@@ -987,6 +982,8 @@ nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 {
   bool contentEditable = aNameSpaceID == kNameSpaceID_None &&
                            aName == nsGkAtoms::contenteditable;
+  bool undoScope = aNameSpaceID == kNameSpaceID_None &&
+                           aName == nsGkAtoms::undoscope;
   bool accessKey = aName == nsGkAtoms::accesskey && 
                      aNameSpaceID == kNameSpaceID_None;
 
@@ -1010,6 +1007,11 @@ nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     }
 
     ChangeEditableState(change);
+  }
+
+  if (undoScope) {
+    rv = SetUndoScopeInternal(true);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (accessKey && !aValue.IsEmpty()) {
@@ -1038,13 +1040,16 @@ nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
       contentEditable = true;
       contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
     }
+    else if (aAttribute == nsGkAtoms::undoscope) {
+      nsresult rv = SetUndoScopeInternal(false);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     else if (aAttribute == nsGkAtoms::accesskey) {
       // Have to unregister before clearing flag. See UnregAccessKey
       UnregAccessKey();
       UnsetFlags(NODE_HAS_ACCESSKEY);
     }
-    else if (nsContentUtils::IsEventAttributeName(aAttribute,
-                                                  EventNameType_HTML)) {
+    else if (IsEventAttributeName(aAttribute)) {
       nsEventListenerManager* manager = GetListenerManager(false);
       if (manager) {
         manager->RemoveEventHandler(aAttribute);
@@ -2072,6 +2077,78 @@ nsGenericHTMLElement::IsLabelable() const
          Tag() == nsGkAtoms::meter;
 }
 
+already_AddRefed<UndoManager>
+nsGenericHTMLElement::GetUndoManager()
+{
+  nsDOMSlots* slots = GetExistingDOMSlots();
+  if (slots && slots->mUndoManager) {
+    nsRefPtr<UndoManager> undoManager = slots->mUndoManager;
+    return undoManager.forget();
+  } else {
+    return nullptr;
+  }
+}
+
+bool
+nsGenericHTMLElement::UndoScope()
+{
+  nsDOMSlots* slots = GetExistingDOMSlots();
+  return slots && slots->mUndoManager;
+}
+
+void
+nsGenericHTMLElement::SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError)
+{
+  nsresult rv = SetUndoScopeInternal(aUndoScope);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  // The undoScope property must reflect the undoscope boolean attribute.
+  if (aUndoScope) {
+    rv = SetAttr(kNameSpaceID_None, nsGkAtoms::undoscope,
+                 NS_LITERAL_STRING(""), true);
+  } else {
+    rv = UnsetAttr(kNameSpaceID_None, nsGkAtoms::undoscope, true);
+  }
+
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+}
+
+nsresult
+nsGenericHTMLElement::SetUndoScopeInternal(bool aUndoScope)
+{
+  if (aUndoScope) {
+    nsDOMSlots* slots = DOMSlots();
+    if (!slots->mUndoManager) {
+      slots->mUndoManager = new UndoManager(this);
+    }
+  } else {
+    nsDOMSlots* slots = GetExistingDOMSlots();
+    if (slots && slots->mUndoManager) {
+      // Clear transaction history and disconnect.
+      ErrorResult rv;
+      slots->mUndoManager->ClearRedo(rv);
+      if (rv.Failed()) {
+        return rv.ErrorCode();
+      }
+
+      slots->mUndoManager->ClearUndo(rv);
+      if (rv.Failed()) {
+        return rv.ErrorCode();
+      }
+
+      slots->mUndoManager->Disconnect();
+      slots->mUndoManager = nullptr;
+    }
+  }
+  return NS_OK;
+}
+
 // static
 bool
 nsGenericHTMLElement::PrefEnabled()
@@ -3008,7 +3085,7 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
         }
 
         nsIAtom *attr = name->Atom();
-        if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_HTML)) {
+        if (!IsEventAttributeName(attr)) {
             continue;
         }
 
@@ -3294,4 +3371,10 @@ nsGenericHTMLElement::GetWidthHeightForImage(imgIRequest *aImageRequest)
   NS_ASSERTION(size.width >= 0, "negative width");
   NS_ASSERTION(size.height >= 0, "negative height");
   return size;
+}
+
+bool
+nsGenericHTMLElement::IsEventAttributeName(nsIAtom *aName)
+{
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML);
 }

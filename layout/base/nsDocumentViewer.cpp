@@ -40,10 +40,9 @@
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/Preferences.h"
 
-#include "nsViewsCID.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsIViewManager.h"
-#include "nsIView.h"
+#include "nsViewManager.h"
+#include "nsView.h"
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -323,12 +322,12 @@ private:
    * @param aContainerView the container view to hook our root view up
    * to as a child, or null if this will be the root view manager
    */
-  nsresult MakeWindow(const nsSize& aSize, nsIView* aContainerView);
+  nsresult MakeWindow(const nsSize& aSize, nsView* aContainerView);
 
   /**
    * Create our device context
    */
-  nsresult CreateDeviceContext(nsIView* aContainerView);
+  nsresult CreateDeviceContext(nsView* aContainerView);
 
   /**
    * If aDoCreation is true, this creates the device context, creates a
@@ -379,7 +378,7 @@ protected:
   // These return the current shell/prescontext etc.
   nsIPresShell* GetPresShell();
   nsPresContext* GetPresContext();
-  nsIViewManager* GetViewManager();
+  nsViewManager* GetViewManager();
 
   void DetachFromTopLevelWidget();
 
@@ -397,7 +396,7 @@ protected:
   // so they will be destroyed in the reverse order (pinkerton, scc)
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // may be null
-  nsCOMPtr<nsIViewManager> mViewManager;
+  nsRefPtr<nsViewManager> mViewManager;
   nsRefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
 
@@ -497,8 +496,6 @@ private:
 //------------------------------------------------------------------
 // nsDocumentViewer
 //------------------------------------------------------------------
-// Class IDs
-static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 
 //------------------------------------------------------------------
 nsresult
@@ -806,7 +803,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
 static nsPresContext*
 CreatePresContext(nsIDocument* aDocument,
                   nsPresContext::nsPresContextType aType,
-                  nsIView* aContainerView)
+                  nsView* aContainerView)
 {
   if (aContainerView)
     return new nsPresContext(aDocument, aType);
@@ -842,7 +839,7 @@ nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
 
-  nsIView* containerView = FindContainerView();
+  nsView* containerView = FindContainerView();
 
   bool makeCX = false;
   if (aDoCreation) {
@@ -1399,9 +1396,9 @@ nsDocumentViewer::Open(nsISupports *aState, nsISHEntry *aSHEntry)
     // If the old view is already attached to our parent, detach
     DetachFromTopLevelWidget();
 
-    nsIViewManager *vm = GetViewManager();
+    nsViewManager *vm = GetViewManager();
     NS_ABORT_IF_FALSE(vm, "no view manager");
-    nsIView* v = vm->GetRootView();
+    nsView* v = vm->GetRootView();
     NS_ABORT_IF_FALSE(v, "no root view");
     NS_ABORT_IF_FALSE(mParentWidget, "no mParentWidget to set");
     v->AttachToTopLevelWidget(mParentWidget);
@@ -1546,9 +1543,9 @@ nsDocumentViewer::Destroy()
 
     // Remove our root view from the view hierarchy.
     if (mPresShell) {
-      nsIViewManager *vm = mPresShell->GetViewManager();
+      nsViewManager *vm = mPresShell->GetViewManager();
       if (vm) {
-        nsIView *rootView = vm->GetRootView();
+        nsView *rootView = vm->GetRootView();
 
         if (rootView) {
           // The invalidate that removing this view causes is dropped because
@@ -1557,9 +1554,9 @@ nsDocumentViewer::Destroy()
           vm->InvalidateViewNoSuppression(rootView,
             rootView->GetBounds() - rootView->GetPosition());
 
-          nsIView *rootViewParent = rootView->GetParent();
+          nsView *rootViewParent = rootView->GetParent();
           if (rootViewParent) {
-            nsIViewManager *parentVM = rootViewParent->GetViewManager();
+            nsViewManager *parentVM = rootViewParent->GetViewManager();
             if (parentVM) {
               parentVM->RemoveChild(rootView);
             }
@@ -1806,7 +1803,7 @@ nsDocumentViewer::GetPresContext()
   return mPresContext;
 }
 
-nsIViewManager*
+nsViewManager*
 nsDocumentViewer::GetViewManager()
 {
   return mViewManager;
@@ -1982,7 +1979,7 @@ nsDocumentViewer::Show(void)
       }
     }
 
-    nsIView* containerView = FindContainerView();
+    nsView* containerView = FindContainerView();
 
     nsresult rv = CreateDeviceContext(containerView);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2260,7 +2257,7 @@ nsDocumentViewer::ClearHistoryEntry()
 //-------------------------------------------------------
 
 nsresult
-nsDocumentViewer::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
+nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView)
 {
   if (GetIsPrintPreview())
     return NS_OK;
@@ -2272,21 +2269,18 @@ nsDocumentViewer::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
     DetachFromTopLevelWidget();
   }
 
-  nsresult rv;
-  mViewManager = do_CreateInstance(kViewManagerCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  mViewManager = new nsViewManager();
 
   nsDeviceContext *dx = mPresContext->DeviceContext();
 
-  rv = mViewManager->Init(dx);
+  nsresult rv = mViewManager->Init(dx);
   if (NS_FAILED(rv))
     return rv;
 
   // The root view is always at 0,0.
   nsRect tbounds(nsPoint(0, 0), aSize);
   // Create a view
-  nsIView* view = mViewManager->CreateView(tbounds, aContainerView);
+  nsView* view = mViewManager->CreateView(tbounds, aContainerView);
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2342,7 +2336,7 @@ void
 nsDocumentViewer::DetachFromTopLevelWidget()
 {
   if (mViewManager) {
-    nsIView* oldView = mViewManager->GetRootView();
+    nsView* oldView = mViewManager->GetRootView();
     if (oldView && oldView->IsAttachedToTopLevel()) {
       oldView->DetachFromTopLevelWidget();
     }
@@ -2350,10 +2344,10 @@ nsDocumentViewer::DetachFromTopLevelWidget()
   mAttachedToParent = false;
 }
 
-nsIView*
+nsView*
 nsDocumentViewer::FindContainerView()
 {
-  nsIView* containerView = nullptr;
+  nsView* containerView = nullptr;
 
   if (mContainer) {
     nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
@@ -2369,7 +2363,7 @@ nsDocumentViewer::FindContainerView()
         docShellItem->GetParent(getter_AddRefs(parentDocShellItem));
         if (parentDocShellItem) {
           nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
-          parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+          parentPresShell = parentDocShell->GetPresShell();
         }
       }
       if (!parentPresShell) {
@@ -2390,7 +2384,7 @@ nsDocumentViewer::FindContainerView()
           // displayed.
           if (subdocFrame->GetType() == nsGkAtoms::subDocumentFrame) {
             NS_ASSERTION(subdocFrame->GetView(), "Subdoc frames must have views");
-            nsIView* innerView =
+            nsView* innerView =
               static_cast<nsSubDocumentFrame*>(subdocFrame)->EnsureInnerView();
             containerView = innerView;
           } else {
@@ -2407,7 +2401,7 @@ nsDocumentViewer::FindContainerView()
 }
 
 nsresult
-nsDocumentViewer::CreateDeviceContext(nsIView* aContainerView)
+nsDocumentViewer::CreateDeviceContext(nsView* aContainerView)
 {
   NS_PRECONDITION(!mPresShell && !mWindow,
                   "This will screw up our existing presentation");
@@ -4388,7 +4382,7 @@ nsDocumentViewer::InitializeForPrintPreview()
 }
 
 void
-nsDocumentViewer::SetPrintPreviewPresentation(nsIViewManager* aViewManager,
+nsDocumentViewer::SetPrintPreviewPresentation(nsViewManager* aViewManager,
                                                 nsPresContext* aPresContext,
                                                 nsIPresShell* aPresShell)
 {

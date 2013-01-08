@@ -743,7 +743,7 @@ js_ThrowStopIteration(JSContext *cx)
     RootedValue v(cx);
     if (js_FindClassObject(cx, JSProto_StopIteration, &v))
         cx->setPendingException(v);
-    return JS_FALSE;
+    return false;
 }
 
 /*** Iterator objects ****************************************************************************/
@@ -1038,7 +1038,7 @@ js::CloseIterator(JSContext *cx, HandleObject obj)
         return CloseGenerator(cx, obj);
     }
 #endif
-    return JS_TRUE;
+    return true;
 }
 
 bool
@@ -1298,7 +1298,7 @@ static JSBool
 stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBool *bp)
 {
     *bp = IsStopIteration(v);
-    return JS_TRUE;
+    return true;
 }
 
 Class js::StopIterationClass = {
@@ -1511,7 +1511,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
 
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NESTING_GENERATOR);
-        return JS_FALSE;
+        return false;
     }
 
     /*
@@ -1559,7 +1559,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         GeneratorFrameGuard gfg;
         if (!cx->stack.pushGeneratorFrame(cx, gen, &gfg)) {
             SetGeneratorClosed(cx, gen);
-            return JS_FALSE;
+            return false;
         }
 
         /*
@@ -1584,14 +1584,15 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
     }
 
     if (gen->fp->isYielding()) {
-        /* Yield cannot fail, throw or be called on closing. */
-        JS_ASSERT(ok);
-        JS_ASSERT(!cx->isExceptionPending());
+        /*
+         * Yield is ordinarily infallible, but ok can be false here if a
+         * Debugger.Frame.onPop hook fails.
+         */
         JS_ASSERT(gen->state == JSGEN_RUNNING);
         JS_ASSERT(op != JSGENOP_CLOSE);
         gen->fp->clearYielding();
         gen->state = JSGEN_OPEN;
-        return JS_TRUE;
+        return ok;
     }
 
     gen->fp->clearReturnValue();
@@ -1599,7 +1600,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
     if (ok) {
         /* Returned, explicitly or by falling off the end. */
         if (op == JSGENOP_CLOSE)
-            return JS_TRUE;
+            return true;
         return js_ThrowStopIteration(cx);
     }
 
@@ -1607,7 +1608,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
      * An error, silent termination by operation callback or an exception.
      * Propagate the condition to the caller.
      */
-    return JS_FALSE;
+    return false;
 }
 
 static JSBool
@@ -1618,11 +1619,11 @@ CloseGenerator(JSContext *cx, HandleObject obj)
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {
         /* Generator prototype object. */
-        return JS_TRUE;
+        return true;
     }
 
     if (gen->state == JSGEN_CLOSED)
-        return JS_TRUE;
+        return true;
 
     return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
 }

@@ -32,7 +32,7 @@ runTest(function () {
       var testVideoAudio = document.getElementById('testVideoAudio');
       var videoAudioStreamPlayback = new MediaStreamPlayback(testVideoAudio,
         stream);
-      videoAudioStreamPlayback.playMedia(5000, function() {
+      videoAudioStreamPlayback.playMedia(10000, function() {
 				stream.stop();
 				SimpleTest.finish();
 			}, unexpectedCallbackAndFinish);

@@ -50,6 +50,17 @@ static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
 nsresult MediaPipeline::Init() {
   ASSERT_ON_THREAD(main_thread_);
+
+  // TODO(ekr@rtfm.com): is there a way to make this async?
+  nsresult ret;
+  RUN_ON_THREAD(sts_thread_,
+		WrapRunnableRet(this, &MediaPipeline::Init_s, &ret),
+		NS_DISPATCH_SYNC);
+  return ret;
+}
+
+nsresult MediaPipeline::Init_s() {
+  ASSERT_ON_THREAD(sts_thread_);
   conduit_->AttachTransport(transport_);
 
   MOZ_ASSERT(rtp_transport_);
@@ -89,6 +100,7 @@ nsresult MediaPipeline::Init() {
 void MediaPipeline::DetachTransport_s() {
   ASSERT_ON_THREAD(sts_thread_);
 
+  disconnect_all();
   transport_->Detach();
   rtp_transport_ = NULL;
   rtcp_transport_ = NULL;
@@ -663,7 +675,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
         break;
       case AUDIO_FORMAT_S16:
         {
-          const short* buf = static_cast<const short *>(chunk.mBuffer->Data());
+          const short* buf = static_cast<const short *>(chunk.mBuffer->Data()) +
+            chunk.mOffset;
           ConvertAudioSamplesWithScale(buf, samples, chunk.mDuration, chunk.mVolume);
         }
         break;
@@ -679,8 +692,66 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
     }
   }
 
-  MOZ_MTLOG(PR_LOG_DEBUG, "Sending an audio frame");
-  conduit->SendAudioFrame(samples.get(), chunk.mDuration, rate, 0);
+  MOZ_ASSERT(!(rate%100)); // rate should be a multiple of 100
+
+  // Check if the rate has changed since the last time we came through
+  // I realize it may be overkill to check if the rate has changed, but
+  // I believe it is possible (e.g. if we change sources) and it costs us
+  // very little to handle this case
+
+  if (samplenum_10ms_ !=  rate/100) {
+    // Determine number of samples in 10 ms from the rate:
+    samplenum_10ms_ = rate/100;
+    // If we switch sample rates (e.g. if we switch codecs),
+    // we throw away what was in the sample_10ms_buffer at the old rate
+    samples_10ms_buffer_ = new int16_t[samplenum_10ms_];
+    buffer_current_ = 0;
+  }
+
+  // Vars to handle the non-sunny-day case (where the audio chunks
+  // we got are not multiples of 10ms OR there were samples left over
+  // from the last run)
+  int64_t chunk_remaining;
+  int64_t tocpy;
+  int16_t *samples_tmp = samples.get();
+
+  chunk_remaining = chunk.mDuration;
+
+  MOZ_ASSERT(chunk_remaining >= 0);
+
+  if (buffer_current_) {
+    tocpy = std::min(chunk_remaining, samplenum_10ms_ - buffer_current_);
+    memcpy(&samples_10ms_buffer_[buffer_current_], samples_tmp, tocpy * sizeof(int16_t));
+    buffer_current_ += tocpy;
+    samples_tmp += tocpy;
+    chunk_remaining -= tocpy;
+
+    if (buffer_current_ == samplenum_10ms_) {
+      // Send out the audio buffer we just finished filling
+      conduit->SendAudioFrame(samples_10ms_buffer_, samplenum_10ms_, rate, 0);
+      buffer_current_ = 0;
+    } else {
+      // We still don't have enough data to send a buffer
+      return;
+    }
+  }
+
+  // Now send (more) frames if there is more than 10ms of input left
+  tocpy = (chunk_remaining / samplenum_10ms_) * samplenum_10ms_;
+  if (tocpy > 0) {
+    conduit->SendAudioFrame(samples_tmp, tocpy, rate, 0);
+    samples_tmp += tocpy;
+    chunk_remaining -= tocpy;
+  }
+  // Copy what remains for the next run
+
+  MOZ_ASSERT(chunk_remaining < samplenum_10ms_);
+
+  if (chunk_remaining) {
+    memcpy(samples_10ms_buffer_, samples_tmp, chunk_remaining * sizeof(int16_t));
+    buffer_current_ = chunk_remaining;
+  }
+
 }
 
 #ifdef MOZILLA_INTERNAL_API
@@ -751,31 +822,15 @@ nsresult MediaPipelineReceiveAudio::Init() {
 }
 
 void MediaPipelineReceiveAudio::PipelineListener::
-NotifyPull(MediaStreamGraph* graph, StreamTime total) {
+NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   MOZ_ASSERT(source_);
   if (!source_) {
     MOZ_MTLOG(PR_LOG_ERROR, "NotifyPull() called from a non-SourceMediaStream");
     return;
   }
 
-  // "total" is absolute stream time.
-  // StreamTime desired = total - played_;
-  played_ = total;
-  //double time_s = MediaTimeToSeconds(desired);
-
-  // Number of 10 ms samples we need
-  //int num_samples = ceil(time_s / .01f);
-
-  // Doesn't matter what was asked for, always give 160 samples per 10 ms.
-  int num_samples = 1;
-
-  MOZ_MTLOG(PR_LOG_DEBUG, "Asking for " << num_samples << "sample from Audio Conduit");
-
-  if (num_samples <= 0) {
-    return;
-  }
-
-  while (num_samples--) {
+  // This comparison is done in total time to avoid accumulated roundoff errors.
+  while (MillisecondsToMediaTime(played_) < desired_time) {
     // TODO(ekr@rtfm.com): Is there a way to avoid mallocating here?
     nsRefPtr<SharedBuffer> samples = SharedBuffer::Create(1000);
     int samples_length;
@@ -799,6 +854,8 @@ NotifyPull(MediaStreamGraph* graph, StreamTime total) {
 
     source_->AppendToTrack(1,  // TODO(ekr@rtfm.com): Track ID
                            &segment);
+
+    played_ += 10;
   }
 }
 

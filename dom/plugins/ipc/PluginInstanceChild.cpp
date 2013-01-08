@@ -264,9 +264,9 @@ PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
 
         // Make sure that the current actor returned by the parent matches our
         // cached actor!
-        NS_ASSERTION(static_cast<PluginScriptableObjectChild*>(currentActor) ==
+        NS_ASSERTION(!currentActor ||
+                     static_cast<PluginScriptableObjectChild*>(currentActor) ==
                      actor, "Cached actor is out of date!");
-        NS_ASSERTION(currentResult == result, "Results don't match?!");
     }
 #endif
 

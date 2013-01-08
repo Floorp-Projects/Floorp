@@ -117,8 +117,8 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
+#include "nsView.h"
+#include "nsViewManager.h"
 #include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsIPrompt.h"
@@ -226,6 +226,12 @@
 #include "TimeChangeObserver.h"
 #include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
+
+// Apple system headers seem to have a check() macro.  <sigh>
+#ifdef check
+#undef check
+#endif // check
+#include "AccessCheck.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -525,8 +531,10 @@ public:
   virtual bool isOuterWindow() {
     return true;
   }
-  JSString *obj_toString(JSContext *cx, JSObject *wrapper);
-  void finalize(JSFreeOp *fop, JSObject *proxy);
+  virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
+  virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
+  virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
+                   jsid id, js::Value *vp) MOZ_OVERRIDE;
 
   static nsOuterWindowProxy singleton;
 };
@@ -550,6 +558,19 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
     CallQueryInterface(global, &cache);
     cache->ClearWrapper();
   }
+}
+
+bool
+nsOuterWindowProxy::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
+                        jsid id, js::Value *vp)
+{
+  if (id == nsDOMClassInfo::sWrappedJSObject_id &&
+      xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
+    *vp = JS::ObjectValue(*wrapper);
+    return true;
+  }
+
+  return js::Wrapper::get(cx, wrapper, receiver, id, vp);
 }
 
 nsOuterWindowProxy
@@ -720,7 +741,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   if (!PR_GetEnv("MOZ_QUIET")) {
     printf("++DOMWINDOW == %d (%p) [serial = %d] [outer = %p]\n", gRefCnt,
            static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-           gSerialCounter, static_cast<void*>(aOuterWindow));
+           gSerialCounter,
+           static_cast<void*>(static_cast<nsIScriptGlobalObject*>(aOuterWindow)));
   }
 #endif
 
@@ -795,9 +817,10 @@ nsGlobalWindow::~nsGlobalWindow()
       }
     }
 
+    nsGlobalWindow* outer = static_cast<nsGlobalWindow*>(mOuterWindow.get());
     printf("--DOMWINDOW == %d (%p) [serial = %d] [outer = %p] [url = %s]\n",
            gRefCnt, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-           mSerial, static_cast<void*>(mOuterWindow.get()), url.get());
+           mSerial, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(outer)), url.get());
   }
 #endif
 
@@ -1520,8 +1543,7 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
   GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal);
   mDoc->SetIsInitialDocument(true);
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetDocShell()->GetPresShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIPresShell> shell = GetDocShell()->GetPresShell();
 
   if (shell && !shell->DidInitialize()) {
     // Ensure that if someone plays with this document they will get
@@ -3644,8 +3666,7 @@ nsGlobalWindow::SetInnerWidth(int32_t aInnerWidth)
                     NS_ERROR_FAILURE);
 
 
-  nsRefPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (presShell && presShell->GetIsViewportOverridden())
   {
@@ -3711,8 +3732,7 @@ nsGlobalWindow::SetInnerHeight(int32_t aInnerHeight)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nullptr, &aInnerHeight),
                     NS_ERROR_FAILURE);
 
-  nsRefPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (presShell && presShell->GetIsViewportOverridden())
   {
@@ -3866,8 +3886,7 @@ nsGlobalWindow::GetInnerScreenRect()
     rootWindow->FlushPendingNotifications(Flush_Layout);
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (!presShell)
     return nsRect();
   nsIFrame* rootFrame = presShell->GetRootFrame();
@@ -3927,8 +3946,7 @@ nsGlobalWindow::GetMozPaintCount(uint64_t* aResult)
   if (!mDocShell)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (!presShell)
     return NS_OK;
 
@@ -4467,8 +4485,7 @@ nsGlobalWindow::GetNearestWidget()
 {
   nsIDocShell* docShell = GetDocShell();
   NS_ENSURE_TRUE(docShell, nullptr);
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
   nsIFrame* rootFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, nullptr);
@@ -4655,8 +4672,7 @@ nsGlobalWindow::EnsureReflowFlushAndPaint()
   if (!mDocShell)
     return;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell)
     return;
@@ -7401,8 +7417,7 @@ nsGlobalWindow::GetSelection(nsISelection** aSelection)
   if (!mDocShell)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell)
     return NS_OK;
@@ -8231,8 +8246,7 @@ nsGlobalWindow::UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent)
       return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell || !mDocument)
     return;
 
@@ -8299,8 +8313,7 @@ nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell) {
     // Try flushing frames on our parent in case there's a pending
@@ -8318,8 +8331,7 @@ nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
       return NS_OK;
     }
 
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-
+    presShell = mDocShell->GetPresShell();
     if (!presShell) {
       return NS_OK;
     }
@@ -9545,11 +9557,11 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   // Now clamp the actual interval we will use for the timer based on
   uint32_t nestingLevel = sNestingLevel + 1;
-  int32_t realInterval = interval;
+  uint32_t realInterval = interval;
   if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
-    realInterval = NS_MAX(realInterval, DOMMinTimeoutValue());
+    realInterval = NS_MAX(realInterval, uint32_t(DOMMinTimeoutValue()));
   }
 
   // Get principal of currently executing code, save for execution of timeout.
@@ -10329,8 +10341,7 @@ nsGlobalWindow::GetScrollFrame()
     return nullptr;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (presShell) {
     return presShell->GetRootScrollFrameAsScrollable();
   }
@@ -11008,14 +11019,13 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
 
   if (presContext) {
     // Need root widget.
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-    nsIViewManager* vm = presShell->GetViewManager();
+    nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-    nsIView* rootView = vm->GetRootView();
+    nsView* rootView = vm->GetRootView();
     NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
     nsIWidget* widget = rootView->GetNearestWidget(nullptr);

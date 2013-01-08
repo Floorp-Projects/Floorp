@@ -972,9 +972,6 @@ nsSVGGlyphFrame::SetupCairoStroke(gfxContext *aContext,
     return false;
   }
 
-  gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
-  aContext->IdentityMatrix();
-
   nsSVGUtils::SetupCairoStrokeHitGeometry(this, aContext, aOuterObjectPaint);
   float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
                                          style->mStrokeOpacity,
@@ -1600,7 +1597,7 @@ nsSVGGlyphFrame::GetSubStringLength(uint32_t charnum, uint32_t fragmentChars)
 }
 
 int32_t
-nsSVGGlyphFrame::GetCharNumAtPosition(DOMSVGPoint *point)
+nsSVGGlyphFrame::GetCharNumAtPosition(nsISVGPoint *point)
 {
   float xPos = point->X(), yPos = point->Y();
 

@@ -44,6 +44,8 @@ browser.jar:
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
         skin/classic/browser/Privacy-16.png
         skin/classic/browser/Privacy-48.png
+        skin/classic/browser/privatebrowsing-light.png
+        skin/classic/browser/privatebrowsing-dark.png
         skin/classic/browser/reload-stop-go.png
         skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
@@ -63,7 +65,8 @@ browser.jar:
         skin/classic/browser/webRTC-shareDevice-64.png
         skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
         skin/classic/browser/downloads/download-glow.png             (downloads/download-glow.png)
-        skin/classic/browser/downloads/download-notification.png     (downloads/download-notification.png)
+        skin/classic/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
+        skin/classic/browser/downloads/download-notification-start.png (downloads/download-notification-start.png)
         skin/classic/browser/downloads/download-summary.png          (downloads/download-summary.png)
 *       skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
 *       skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
@@ -207,6 +210,7 @@ browser.jar:
         skin/classic/browser/devtools/tool-debugger.png             (devtools/tool-debugger.png)
         skin/classic/browser/devtools/tool-inspector.png            (devtools/tool-inspector.png)
         skin/classic/browser/devtools/tool-styleeditor.png          (devtools/tool-styleeditor.png)
+        skin/classic/browser/devtools/tool-profiler.png             (devtools/tool-profiler.png)
         skin/classic/browser/devtools/close.png                     (devtools/close.png)
         skin/classic/browser/devtools/undock.png                    (devtools/undock.png)
 #ifdef MOZ_SERVICES_SYNC
@@ -264,6 +268,8 @@ browser.jar:
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/Privacy-16.png                     (Privacy-16-aero.png)
         skin/classic/aero/browser/Privacy-48.png                     (Privacy-48-aero.png)
+        skin/classic/aero/browser/privatebrowsing-light.png
+        skin/classic/aero/browser/privatebrowsing-dark.png
         skin/classic/aero/browser/reload-stop-go.png
         skin/classic/aero/browser/searchbar.css
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
@@ -283,7 +289,8 @@ browser.jar:
         skin/classic/aero/browser/webRTC-shareDevice-64.png
         skin/classic/aero/browser/downloads/buttons.png              (downloads/buttons-aero.png)
         skin/classic/aero/browser/downloads/download-glow.png        (downloads/download-glow.png)
-        skin/classic/aero/browser/downloads/download-notification.png (downloads/download-notification.png)
+        skin/classic/aero/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
+        skin/classic/aero/browser/downloads/download-notification-start.png (downloads/download-notification-start.png)
         skin/classic/aero/browser/downloads/download-summary.png     (downloads/download-summary.png)
 *       skin/classic/aero/browser/downloads/downloads.css            (downloads/downloads-aero.css)
 *       skin/classic/aero/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay-aero.css)
@@ -427,6 +434,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/tool-debugger.png         (devtools/tool-debugger.png)
         skin/classic/aero/browser/devtools/tool-inspector.png        (devtools/tool-inspector.png)
         skin/classic/aero/browser/devtools/tool-styleeditor.png      (devtools/tool-styleeditor.png)
+        skin/classic/aero/browser/devtools/tool-profiler.png         (devtools/tool-profiler.png)
         skin/classic/aero/browser/devtools/close.png                 (devtools/close.png)
         skin/classic/aero/browser/devtools/undock.png                (devtools/undock.png)
 #ifdef MOZ_SERVICES_SYNC

@@ -7,6 +7,9 @@
 
 function test() {
   // initialization
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
+                   "privatebrowsing/test/browser/perwindow/" + 
+                   "browser_privatebrowsing_cookieacceptdialog.html";
   let cp = Cc["@mozilla.org/embedcomp/cookieprompt-service;1"].
            getService(Ci.nsICookiePromptService);
 
@@ -69,6 +72,39 @@ function test() {
     cp.cookieDialog(aWindow, cookie, "mozilla.org", 10, false, remember);
   }
 
+  function checkSettingDialog(aIsPrivateWindow, aWindow, aCallback) {
+    aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
+    let selectedBrowser = aWindow.gBrowser.selectedBrowser;
+
+    function onLoad() {
+      selectedBrowser.removeEventListener("load", onLoad, true);
+      Services.ww.unregisterNotification(observer);
+
+      ok(aIsPrivateWindow, "Confirm setting dialog is not displayed for private window");
+
+      executeSoon(aCallback);
+    }
+    selectedBrowser.addEventListener("load", onLoad, true);
+
+    function observer(aSubject, aTopic, aData) {
+      if (aTopic != "domwindowopened")
+        return;
+      selectedBrowser.removeEventListener("load", onLoad, true);
+      Services.ww.unregisterNotification(observer);
+
+      ok(!aIsPrivateWindow, "Confirm setting dialog is displayed for normal window");
+
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      executeSoon(function () {
+        win.close();
+        executeSoon(aCallback);
+      });
+    }
+    Services.ww.registerNotification(observer);
+
+    selectedBrowser.loadURI(TEST_URL);
+  }
+
   var windowsToClose = [];
   function testOnWindow(options, callback) {
     var win = OpenBrowserWindow(options);
@@ -81,14 +117,22 @@ function test() {
 
   registerCleanupFunction(function() {
     windowsToClose.forEach(function(win) {
+      Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
       win.close();
     });
   });
 
-  testOnWindow({private: true}, function(win) {
-    checkRememberOption(true, win, function() {
-      testOnWindow(undefined, function(win) {
-        checkRememberOption(false, win, finish);
+  // ask all cookies
+  Services.prefs.setIntPref("network.cookie.lifetimePolicy", 1);
+
+  testOnWindow({private: true}, function(aPrivWin) {
+    checkRememberOption(true, aPrivWin, function() {
+      checkSettingDialog(true, aPrivWin, function() {
+        testOnWindow(undefined, function(aWin) {
+          checkRememberOption(false, aWin, function() {
+            checkSettingDialog(false, aWin, finish);
+          });
+        });
       });
     });
   });

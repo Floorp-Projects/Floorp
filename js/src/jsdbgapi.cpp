@@ -452,10 +452,11 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
     if (fun->isNative())
         return NULL;
-    RawScript script;
+    UnrootedScript script;
     if (fun->isInterpretedLazy()) {
-       AutoCompartment funCompartment(cx, fun);
-       script = fun->getOrCreateScript(cx);
+        RootedFunction rootedFun(cx, fun);
+        AutoCompartment funCompartment(cx, rootedFun);
+        script = JSFunction::getOrCreateScript(cx, rootedFun);
         if (!script)
             MOZ_CRASH();
     } else {

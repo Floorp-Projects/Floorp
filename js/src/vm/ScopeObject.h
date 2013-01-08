@@ -8,6 +8,8 @@
 #ifndef ScopeObject_h___
 #define ScopeObject_h___
 
+#include "mozilla/GuardObjects.h"
+
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jsweakmap.h"
@@ -414,33 +416,33 @@ class ScopeIter
   public:
     /* The default constructor leaves ScopeIter totally invalid */
     explicit ScopeIter(JSContext *cx
-                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Constructing from a copy of an existing ScopeIter. */
     explicit ScopeIter(const ScopeIter &si, JSContext *cx
-                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Constructing from StackFrame places ScopeIter on the innermost scope. */
     explicit ScopeIter(StackFrame *fp, JSContext *cx
-                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /*
      * Without a StackFrame, the resulting ScopeIter is done() with
      * enclosingScope() as given.
      */
     explicit ScopeIter(JSObject &enclosingScope, JSContext *cx
-                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /*
      * For the special case of generators, copy the given ScopeIter, with 'fp'
      * as the StackFrame instead of si.fp(). Not for general use.
      */
     ScopeIter(const ScopeIter &si, StackFrame *fp, JSContext *cx
-              JS_GUARD_OBJECT_NOTIFIER_PARAM);
+              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Like ScopeIter(StackFrame *) except start at 'scope'. */
     ScopeIter(StackFrame *fp, ScopeObject &scope, JSContext *cx
-              JS_GUARD_OBJECT_NOTIFIER_PARAM);
+              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     bool done() const { return !fp_; }
 
@@ -459,7 +461,7 @@ class ScopeIter
 
     StaticBlockObject &staticBlock() const { JS_ASSERT(type() == Block); return *block_; }
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class ScopeIterKey

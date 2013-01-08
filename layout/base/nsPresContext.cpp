@@ -43,7 +43,7 @@
 #include "nsThreadUtils.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleChangeList.h"
@@ -826,7 +826,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       // Re-fetch the view manager's window dimensions in case there's a deferred
       // resize which hasn't affected our mVisibleArea yet
       nscoord oldWidthAppUnits, oldHeightAppUnits;
-      nsIViewManager* vm = mShell->GetViewManager();
+      nsViewManager* vm = mShell->GetViewManager();
       vm->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
       float oldWidthDevPixels = oldWidthAppUnits/oldAppUnitsPerDevPixel;
       float oldHeightDevPixels = oldHeightAppUnits/oldAppUnitsPerDevPixel;
@@ -2518,7 +2518,7 @@ nsPresContext::IsRootContentDocument()
     return false;
   }
   // We may not have a root frame, so use views.
-  nsIView* view = PresShell()->GetViewManager()->GetRootView();
+  nsView* view = PresShell()->GetViewManager()->GetRootView();
   if (!view) {
     return false;
   }

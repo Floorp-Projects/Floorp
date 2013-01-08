@@ -134,15 +134,14 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance>
       }
 
       // Make sure to resize and re-place the window if required.
+      SetAllocation();
       // Need to reset "window" each time as nsObjectFrame::DidReflow sets it
       // to the ancestor window.
       if (GTK_IS_XTBIN(mSocketWidget)) {
-        gtk_xtbin_resize(mSocketWidget, width, height);
         // Point the NPWindow structures window to the actual X window
         SetWindow(GTK_XTBIN(mSocketWidget)->xtwindow);
       }
       else { // XEmbed or OOP&Xt
-        SetAllocation();
         SetWindow(gtk_socket_get_id(GTK_SOCKET(mSocketWidget)));
       }
 #ifdef DEBUG

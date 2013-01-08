@@ -9,9 +9,9 @@
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
 #include "nsIServiceManager.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsIScrollable.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsContainerFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsGkAtoms.h"
@@ -1633,7 +1633,7 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
 // we don't want to invalidate views that have moved.
 static void AdjustViews(nsIFrame* aFrame)
 {
-  nsIView* view = aFrame->GetView();
+  nsView* view = aFrame->GetView();
   if (view) {
     nsPoint pt;
     aFrame->GetParent()->GetClosestView(&pt);
@@ -2164,11 +2164,6 @@ static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,
 nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
-  // XXX EVIL COMPILER BUG BE CAREFUL WHEN CHANGING THIS METHOD
-  //     There's bugs in the Android compiler :(
-  //     It was first worked around in bug 642205, then it failed
-  //     on armv6 (bug 790624) *in a different way*.
-
   nsPresContext* presContext = mOuter->PresContext();
   if (!presContext->IsDynamic() &&
       !(mIsRoot && presContext->HasPaginatedScrolling())) {

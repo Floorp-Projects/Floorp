@@ -4,11 +4,12 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MetricsCollector"];
+this.EXPORTED_SYMBOLS = ["Collector"];
 
 const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
@@ -17,44 +18,111 @@ Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
 /**
  * Handles and coordinates the collection of metrics data from providers.
  *
- * This provides an interface for managing `MetricsProvider` instances. It
+ * This provides an interface for managing `Metrics.Provider` instances. It
  * provides APIs for bulk collection of data.
  */
-this.MetricsCollector = function MetricsCollector() {
-  this._log = Log4Moz.repository.getLogger("Metrics.MetricsCollector");
+this.Collector = function (storage) {
+  this._log = Log4Moz.repository.getLogger("Services.Metrics.Collector");
 
-  this._providers = [];
-  this.collectionResults = new Map();
+  this._providers = new Map();
+  this._storage = storage;
+
+  this._providerInitQueue = [];
+  this._providerInitializing = false;
   this.providerErrors = new Map();
 }
 
-MetricsCollector.prototype = {
+Collector.prototype = Object.freeze({
+  get providers() {
+    let providers = [];
+    for (let [name, entry] of this._providers) {
+      providers.push(entry.provider);
+    }
+
+    return providers;
+  },
+
   /**
    * Registers a `MetricsProvider` with this collector.
    *
    * Once a `MetricsProvider` is registered, data will be collected from it
    * whenever we collect data.
    *
+   * The returned value is a promise that will be resolved once registration
+   * is complete.
+   *
+   * Providers are initialized as part of registration by calling
+   * provider.init().
+   *
    * @param provider
-   *        (MetricsProvider) The provider instance to register.
+   *        (Metrics.Provider) The provider instance to register.
+   *
+   * @return Promise<null>
    */
-  registerProvider: function registerProvider(provider) {
-    if (!(provider instanceof MetricsProvider)) {
-      throw new Error("argument must be a MetricsProvider instance.");
+  registerProvider: function (provider) {
+    if (!(provider instanceof Provider)) {
+      throw new Error("Argument must be a Provider instance.");
     }
 
-    for (let p of this._providers) {
-      if (p.provider == provider) {
-        return;
-      }
+    if (this._providers.has(provider.name)) {
+      return Promise.resolve();
     }
 
-    this._providers.push({
-      provider: provider,
-      constantsCollected: false,
-    });
+    let deferred = Promise.defer();
+    this._providerInitQueue.push([provider, deferred]);
 
-    this.providerErrors.set(provider.name, []);
+    if (this._providerInitQueue.length == 1) {
+      this._popAndInitProvider();
+    }
+
+    return deferred.promise;
+  },
+
+  _popAndInitProvider: function () {
+    if (!this._providerInitQueue.length || this._providerInitializing) {
+      return;
+    }
+
+    let [provider, deferred] = this._providerInitQueue.pop();
+    this._providerInitializing = true;
+
+    this._log.info("Initializing provider with storage: " + provider.name);
+    let initPromise;
+    try {
+      initPromise = provider.init(this._storage);
+    } catch (ex) {
+      this._log.warn("Provider failed to initialize: " +
+                     CommonUtils.exceptionStr(ex));
+      this._providerInitializing = false;
+      deferred.reject(ex);
+      this._popAndInitProvider();
+      return;
+    }
+
+    initPromise.then(
+      function onSuccess(result) {
+        this._log.info("Provider finished initialization: " + provider.name);
+        this._providerInitializing = false;
+
+        this._providers.set(provider.name, {
+          provider: provider,
+          constantsCollected: false,
+        });
+
+        this.providerErrors.set(provider.name, []);
+
+        deferred.resolve(result);
+        this._popAndInitProvider();
+      }.bind(this),
+      function onError(error) {
+        this._log.warn("Provider initialization failed: " +
+                       CommonUtils.exceptionStr(error));
+        this._providerInitializing = false;
+        deferred.reject(error);
+        this._popAndInitProvider();
+      }.bind(this)
+    );
+
   },
 
   /**
@@ -63,55 +131,41 @@ MetricsCollector.prototype = {
    * Returns a Promise that will be fulfilled once all data providers have
    * provided their constant data. A side-effect of this promise fulfillment
    * is that the collector is populated with the obtained collection results.
-   * The resolved value to the promise is this `MetricsCollector` instance.
+   * The resolved value to the promise is this `Collector` instance.
    */
-  collectConstantMeasurements: function collectConstantMeasurements() {
+  collectConstantData: function () {
     let promises = [];
 
-    for (let provider of this._providers) {
-      let name = provider.provider.name;
-
-      if (provider.constantsCollected) {
+    for (let [name, entry] of this._providers) {
+      if (entry.constantsCollected) {
         this._log.trace("Provider has already provided constant data: " +
                         name);
         continue;
       }
 
-      let result;
+      let collectPromise;
       try {
-        result = provider.provider.collectConstantMeasurements();
+        collectPromise = entry.provider.collectConstantData();
       } catch (ex) {
         this._log.warn("Exception when calling " + name +
-                       ".collectConstantMeasurements: " +
+                       ".collectConstantData: " +
                        CommonUtils.exceptionStr(ex));
         this.providerErrors.get(name).push(ex);
         continue;
       }
 
-      if (!result) {
-        this._log.trace("Provider does not provide constant data: " + name);
-        continue;
+      if (!collectPromise) {
+        throw new Error("Provider does not return a promise from " +
+                        "collectConstantData():" + name);
       }
 
-      try {
-        this._log.debug("Populating constant measurements: " + name);
-        result.populate(result);
-      } catch (ex) {
-        this._log.warn("Exception when calling " + name + ".populate(): " +
-                       CommonUtils.exceptionStr(ex));
-        result.addError(ex);
-        promises.push(Promise.resolve(result));
-        continue;
-      }
-
-      // Chain an invisible promise that updates state.
-      let promise = result.onFinished(function onFinished(result) {
-        provider.constantsCollected = true;
+      let promise = collectPromise.then(function onCollected(result) {
+        entry.constantsCollected = true;
 
         return Promise.resolve(result);
       });
 
-      promises.push(promise);
+      promises.push([name, promise]);
     }
 
     return this._handleCollectionPromises(promises);
@@ -122,8 +176,11 @@ MetricsCollector.prototype = {
    *
    * This consumes the data resolved by the promises and returns a new promise
    * that will be resolved once all promises have been resolved.
+   *
+   * The promise is resolved even if one of the underlying collection
+   * promises is rejected.
    */
-  _handleCollectionPromises: function _handleCollectionPromises(promises) {
+  _handleCollectionPromises: function (promises) {
     if (!promises.length) {
       return Promise.resolve(this);
     }
@@ -131,36 +188,24 @@ MetricsCollector.prototype = {
     let deferred = Promise.defer();
     let finishedCount = 0;
 
-    let onResult = function onResult(result) {
-      try {
-        this._log.debug("Got result for " + result.name);
-
-        if (this.collectionResults.has(result.name)) {
-          this.collectionResults.get(result.name).aggregate(result);
-        } else {
-          this.collectionResults.set(result.name, result);
-        }
-      } finally {
-        finishedCount++;
-        if (finishedCount >= promises.length) {
-          deferred.resolve(this);
-        }
+    let onComplete = function () {
+      finishedCount++;
+      if (finishedCount >= promises.length) {
+        deferred.resolve(this);
       }
     }.bind(this);
 
-    let onError = function onError(error) {
-      this._log.warn("Error when handling result: " +
-                     CommonUtils.exceptionStr(error));
-      deferred.reject(error);
-    }.bind(this);
-
-    for (let promise of promises) {
-      promise.then(onResult, onError);
+    for (let [name, promise] of promises) {
+      let onError = function (error) {
+        this._log.warn("Collection promise was rejected: " +
+                       CommonUtils.exceptionStr(error));
+        this.providerErrors.get(name).push(error);
+        onComplete();
+      }.bind(this);
+      promise.then(onComplete, onError);
     }
 
     return deferred.promise;
   },
-};
-
-Object.freeze(MetricsCollector.prototype);
+});
 

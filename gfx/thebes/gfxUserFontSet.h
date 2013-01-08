@@ -193,6 +193,12 @@ public:
                                 bool& aNeedsBold,
                                 bool& aWaitForUserFont);
 
+    // Find a family (possibly one of several!) that owns the given entry.
+    // This may be somewhat expensive, as it enumerates all the fonts in
+    // the set. Currently used only by the Linux (gfxPangoFontGroup) backend,
+    // which does not directly track families in the font group's list.
+    gfxFontFamily *FindFamilyFor(gfxFontEntry *aFontEntry) const;
+
     // check whether the given source is allowed to be loaded
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
                                    nsIPrincipal **aPrincipal) = 0;
@@ -385,7 +391,6 @@ class gfxProxyFontEntry : public gfxFontEntry {
 
 public:
     gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                      gfxMixedFontFamily *aFamily,
                       uint32_t aWeight,
                       uint32_t aStretch,
                       uint32_t aItalicStyle,

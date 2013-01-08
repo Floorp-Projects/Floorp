@@ -15,6 +15,15 @@ LIBRARY_NAME = privatebrowsing_s
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+
+EXTRA_COMPONENTS = \
+  nsPrivateBrowsingServiceObsolete.manifest \
+  nsPrivateBrowsingServiceObsolete.js \
+  $(NULL)
+
+else
+
 CPPSRCS = \
 	nsPrivateBrowsingServiceWrapper.cpp \
 	$(NULL)
@@ -28,5 +37,7 @@ EXTRA_COMPONENTS = \
 EXTRA_PP_COMPONENTS = \
 	nsPrivateBrowsingService.js \
 	$(NULL)
+
+endif
 
 include $(topsrcdir)/config/rules.mk

@@ -174,7 +174,7 @@ FontPrefsObserver::Observe(nsISupports *aSubject,
     return NS_OK;
 }
 
-class OrientationSyncPrefsObserver : public nsIObserver
+class OrientationSyncPrefsObserver MOZ_FINAL : public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -1601,8 +1601,7 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
         return;
     }
 
-    gfxShapedWord::SetupClusterBoundaries(aTextRun->GetCharacterGlyphs(),
-                                          aString, aTextRun->GetLength());
+    aTextRun->SetupClusterBoundaries(0, aString, aTextRun->GetLength());
 }
 
 int32_t

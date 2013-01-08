@@ -9,14 +9,13 @@
 // Keep others in (case-insensitive) order:
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGTextElement.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsSVGGlyphFrame.h"
-#include "nsSVGGraphicElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
+#include "SVGGraphicsElement.h"
 #include "SVGLengthList.h"
 
 using namespace mozilla;
@@ -40,8 +39,8 @@ nsSVGTextFrame::Init(nsIContent* aContent,
                      nsIFrame* aParent,
                      nsIFrame* aPrevInFlow)
 {
-  nsCOMPtr<nsIDOMSVGTextElement> text = do_QueryInterface(aContent);
-  NS_ASSERTION(text, "Content is not an SVG text");
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::text),
+               "Content is not an SVG text");
 
   return nsSVGTextFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
@@ -114,7 +113,7 @@ nsSVGTextFrame::GetSubStringLength(uint32_t charnum, uint32_t nchars)
 }
 
 int32_t
-nsSVGTextFrame::GetCharNumAtPosition(DOMSVGPoint *point)
+nsSVGTextFrame::GetCharNumAtPosition(nsISVGPoint *point)
 {
   UpdateGlyphPositioning(false);
 
@@ -280,7 +279,7 @@ nsSVGTextFrame::GetCanvasTM(uint32_t aFor)
     NS_ASSERTION(mParent, "null parent");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-    nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
+    dom::SVGGraphicsElement *content = static_cast<dom::SVGGraphicsElement*>(mContent);
 
     gfxMatrix tm =
       content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));

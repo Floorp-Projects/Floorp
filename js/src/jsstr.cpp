@@ -1548,7 +1548,9 @@ class StringRegExpGuard
     }
 
   public:
-    StringRegExpGuard(JSContext *cx) : fm(cx) {}
+    StringRegExpGuard(JSContext *cx)
+      : re_(cx), fm(cx)
+    { }
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool init(JSContext *cx, CallArgs args, bool convertVoid = false)
@@ -1632,7 +1634,7 @@ class StringRegExpGuard
             opt = NULL;
         }
 
-        JSAtom *patstr;
+        Rooted<JSAtom *> patstr(cx);
         if (flat) {
             patstr = flattenPattern(cx, fm.patstr);
             if (!patstr)
@@ -2784,7 +2786,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 8. */
-    RegExpGuard re;
+    RegExpGuard re(cx);
     JSLinearString *sepstr = NULL;
     bool sepDefined = args.hasDefined(0);
     if (sepDefined) {

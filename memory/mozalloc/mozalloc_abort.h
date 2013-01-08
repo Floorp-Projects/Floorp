@@ -27,7 +27,7 @@
  * Terminate this process in such a way that breakpad is triggered, if
  * at all possible.
  */
-MOZ_NORETURN MOZALLOC_EXPORT void mozalloc_abort(const char* const msg);
+MOZALLOC_EXPORT void mozalloc_abort(const char* const msg);
 
 
 #endif  /* ifndef mozilla_mozalloc_abort_h */

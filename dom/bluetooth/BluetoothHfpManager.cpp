@@ -604,7 +604,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
   // For more information, please refer to 4.34.1 "Bluetooth Defined AT
   // Capabilities" in Bluetooth hands-free profile 1.6
   if (msg.Find("AT+BRSF=") != -1) {
-    SendCommand("+BRSF: ", 23);
+    SendCommand("+BRSF: ", 33);
   } else if (msg.Find("AT+CIND=?") != -1) {
     // Asking for CIND range
     SendCommand("+CIND: ", 0);
@@ -616,6 +616,23 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
      * SLC establishment is done when AT+CMER has been received.
      * Do nothing but respond with "OK".
      */
+  } else if (msg.Find("AT+VGM=") != -1) {
+    ParseAtCommand(msg, 7, atCommandValues);
+
+    if (atCommandValues.IsEmpty()) {
+      NS_WARNING("Couldn't get the value of command [AT+VGM]");
+      goto respond_with_ok;
+    }
+
+    nsresult rv;
+    int vgm = atCommandValues[0].ToInteger(&rv);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to extract microphone volume from bluetooth headset!");
+      goto respond_with_ok;
+    }
+
+    NS_ASSERTION(vgm >= 0 && vgm <= 15, "Received invalid VGM value");
+    mCurrentVgm = vgm;
   } else if (msg.Find("AT+CHLD=?") != -1) {
     SendLine("+CHLD: (1,2)");
   } else if (msg.Find("AT+CHLD=") != -1) {
@@ -831,6 +848,7 @@ BluetoothHfpManager::Disconnect()
     return;
   }
 
+  CloseScoSocket();
   CloseSocket();
 }
 

@@ -67,6 +67,10 @@ static bool gHQDownscaling = false;
 // This is interpreted as a floating-point value / 1000
 static uint32_t gHQDownscalingMinFactor = 1000;
 
+// The maximum number of times any one RasterImage was decoded.  This is only
+// used for statistics.
+static int32_t sMaxDecodeCount = 0;
+
 static void
 InitPrefCaches()
 {
@@ -146,8 +150,9 @@ DiscardingEnabled()
   return enabled;
 }
 
-struct ScaleRequest
+class ScaleRequest
 {
+public:
   ScaleRequest(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame)
     : scale(aScale)
     , dstLocked(false)
@@ -360,7 +365,16 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mLoopCount(-1),
   mLockCount(0),
   mDecoder(nullptr),
+// We know DecodeRequest won't touch members of RasterImage
+// until this constructor completes
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4355)
+#endif
   mDecodeRequest(this),
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
   mBytesDecoded(0),
   mDecodeCount(0),
 #ifdef DEBUG
@@ -838,10 +852,12 @@ RasterImage::GetCurrentImgFrameEndTime() const
     // doesn't work correctly if we have a negative timeout value. The reason
     // this positive infinity was chosen was because it works with the loop in
     // RequestRefresh() above.
-    return TimeStamp() + TimeDuration::FromMilliseconds(UINT64_MAX);
+    return TimeStamp() +
+           TimeDuration::FromMilliseconds(static_cast<double>(UINT64_MAX));
   }
 
-  TimeDuration durationOfTimeout = TimeDuration::FromMilliseconds(timeout);
+  TimeDuration durationOfTimeout =
+    TimeDuration::FromMilliseconds(static_cast<double>(timeout));
   TimeStamp currentFrameEndTime = currentFrameTime + durationOfTimeout;
 
   return currentFrameEndTime;
@@ -2573,6 +2589,16 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Subtract(mDecodeCount);
     mDecodeCount++;
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(mDecodeCount);
+
+    if (mDecodeCount > sMaxDecodeCount) {
+      // Don't subtract out 0 from the histogram, because that causes its count
+      // to go negative, which is not kosher.
+      if (sMaxDecodeCount > 0) {
+        Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Subtract(sMaxDecodeCount);
+      }
+      sMaxDecodeCount = mDecodeCount;
+      Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Add(sMaxDecodeCount);
+    }
   }
 
   return NS_OK;

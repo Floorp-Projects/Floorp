@@ -147,9 +147,9 @@ struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
   nsrefcnt Release();
   nsrefcnt AddRef();
 
-  nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
-    return mTimer->InitWithFuncCallback(aFunc, this,
-                                        static_cast<uint32_t>(delay),
+  nsresult InitTimer(nsTimerCallbackFunc aFunc, uint32_t aDelay)
+  {
+    return mTimer->InitWithFuncCallback(aFunc, this, aDelay,
                                         nsITimer::TYPE_ONE_SHOT);
   }
 

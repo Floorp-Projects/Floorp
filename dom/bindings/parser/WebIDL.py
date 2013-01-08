@@ -1287,14 +1287,14 @@ class IDLSequenceType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDictionary() or other.isDate() or
-                other.isNonCallbackInterface())
+                other.isDate() or other.isNonCallbackInterface())
 
 class IDLUnionType(IDLType):
     def __init__(self, location, memberTypes):
         IDLType.__init__(self, location, "")
         self.memberTypes = memberTypes
         self.hasNullableType = False
+        self.hasDictionaryType = False
         self.flatMemberTypes = None
         self.builtin = False
 
@@ -1345,11 +1345,24 @@ class IDLUnionType(IDLType):
                 if self.hasNullableType:
                     raise WebIDLError("Can't have more than one nullable types in a union",
                                       [nullableType.location, self.flatMemberTypes[i].location])
+                if self.hasDictionaryType:
+                    raise WebIDLError("Can't have a nullable type and a "
+                                      "dictionary type in a union",
+                                      [dictionaryType.location,
+                                       self.flatMemberTypes[i].location])
                 self.hasNullableType = True
                 nullableType = self.flatMemberTypes[i]
                 self.flatMemberTypes[i] = self.flatMemberTypes[i].inner
                 continue
-            if self.flatMemberTypes[i].isUnion():
+            if self.flatMemberTypes[i].isDictionary():
+                if self.hasNullableType:
+                    raise WebIDLError("Can't have a nullable type and a "
+                                      "dictionary type in a union",
+                                      [nullableType.location,
+                                       self.flatMemberTypes[i].location])
+                self.hasDictionaryType = True
+                dictionaryType = self.flatMemberTypes[i]
+            elif self.flatMemberTypes[i].isUnion():
                 self.flatMemberTypes[i:i + 1] = self.flatMemberTypes[i].memberTypes
                 continue
             i += 1
@@ -1452,8 +1465,7 @@ class IDLArrayType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDictionary() or other.isDate() or
-                other.isNonCallbackInterface())
+                other.isDate() or other.isNonCallbackInterface())
 
 class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
     def __init__(self, location, innerType, name):
@@ -1618,16 +1630,14 @@ class IDLWrapperType(IDLType):
                     other.isCallback() or other.isDictionary() or
                     other.isSequence() or other.isArray() or
                     other.isDate())
+        if self.isDictionary() and other.nullable():
+            return False
         if other.isPrimitive() or other.isString() or other.isEnum() or other.isDate():
             return True
         if self.isDictionary():
-            return (not other.nullable() and
-                    (other.isNonCallbackInterface() or other.isSequence() or
-                     other.isArray()))
+            return other.isNonCallbackInterface()
 
         assert self.isInterface()
-        # XXXbz need to check that the interfaces can't be implemented
-        # by the same object
         if other.isInterface():
             if other.isSpiderMonkeyInterface():
                 # Just let |other| handle things
@@ -2146,6 +2156,9 @@ class IDLAttribute(IDLInterfaceMember):
             if not self.readonly:
                 raise WebIDLError("[Unforgeable] is only allowed on readonly "
                                   "attributes", [attr.location, self.location])
+            if self.isStatic():
+                raise WebIDLError("[Unforgeable] is only allowed on non-static "
+                                  "attributes", [attr.location, self.location])
             self._unforgeable = True
         elif identifier == "Constant" and not self.readonly:
             raise WebIDLError("[Constant] only allowed on readonly attributes",
@@ -2536,27 +2549,26 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 argument.complete(scope)
                 assert argument.type.isComplete()
 
-                if argument.type.isDictionary():
-                    # Dictionaries at the end of the list or followed by
-                    # optional arguments must be optional.
+                if (argument.type.isDictionary() or
+                    (argument.type.isUnion() and
+                     argument.type.unroll().hasDictionaryType)):
+                    # Dictionaries and unions containing dictionaries at the
+                    # end of the list or followed by optional arguments must be
+                    # optional.
                     if (not argument.optional and
                         (idx == len(arguments) - 1 or arguments[idx+1].optional)):
-                        raise WebIDLError("Dictionary argument not followed by "
-                                          "a required argument must be "
-                                          "optional", [argument.location])
+                        raise WebIDLError("Dictionary argument or union "
+                                          "argument containing a dictionary "
+                                          "not followed by a required argument "
+                                          "must be optional",
+                                          [argument.location])
 
                     # An argument cannot be a Nullable Dictionary
                     if argument.type.nullable():
-                        raise WebIDLError("An argument cannot be a nullable dictionary",
+                        raise WebIDLError("An argument cannot be a nullable "
+                                          "dictionary or nullable union "
+                                          "containing a dictionary",
                                           [argument.location])
-
-                # An argument cannot be a nullable union containing a dictionary
-                if argument.type.isUnion() and argument.type.nullable():
-                    for memberType in argument.type.inner.flatMemberTypes:
-                        if memberType.isDictionary():
-                            raise WebIDLError("An argument cannot be a nullable union "
-                                              "containing a dictionary",
-                                              [argument.location, memberType.location])
 
                 # Only the last argument can be variadic
                 if variadicArgument:

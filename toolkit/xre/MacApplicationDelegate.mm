@@ -225,7 +225,7 @@ ProcessPendingGetURLAppleEvents()
     return NO;
 
   const char *argv[3] = {nullptr, "-file", filePath.get()};
-  rv = cmdLine->Init(3, const_cast<char**>(argv), workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  rv = cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
   if (NS_FAILED(rv))
     return NO;
 
@@ -367,7 +367,7 @@ ProcessPendingGetURLAppleEvents()
     if (NS_FAILED(rv))
       return;
     const char *argv[3] = {nullptr, "-url", [urlString UTF8String]};
-    rv = cmdLine->Init(3, const_cast<char**>(argv), workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+    rv = cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
     if (NS_FAILED(rv))
       return;
     rv = cmdLine->Run();

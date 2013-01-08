@@ -239,6 +239,14 @@ public:
     }
     return style;
   }
+
+  /**
+   * Determine whether an attribute is an event (onclick, etc.)
+   * @param aName the attribute
+   * @return whether the name is an event handler name
+   */
+  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
 // The using nsINode::Get/SetOn* are to avoid warnings about shadowing the XPCOM
 // getter and setter on nsINode.
@@ -320,6 +328,9 @@ protected:
   nsresult SetTokenList(nsIAtom* aAtom, nsIVariant* aValue);
 public:
   nsresult SetContentEditable(const nsAString &aContentEditable);
+  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager();
+  virtual bool UndoScope();
+  virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError);
   nsresult GetDataset(nsISupports** aDataset);
   // Callback for destructor of of dataset to ensure to null out weak pointer.
   nsresult ClearDataset();
@@ -767,13 +778,6 @@ private:
   void RegUnRegAccessKey(bool aDoReg);
 
 protected:
-  /**
-   * Determine whether an attribute is an event (onclick, etc.)
-   * @param aName the attribute
-   * @return whether the name is an event handler name
-   */
-  bool IsEventName(nsIAtom* aName);
-
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify);
@@ -820,6 +824,13 @@ protected:
     }
   }
   void SetHTMLIntAttr(nsIAtom* aName, int32_t aValue, mozilla::ErrorResult& aError)
+  {
+    nsAutoString value;
+    value.AppendInt(aValue);
+
+    SetHTMLAttr(aName, value, aError);
+  }
+  void SetHTMLUnsignedIntAttr(nsIAtom* aName, uint32_t aValue, mozilla::ErrorResult& aError)
   {
     nsAutoString value;
     value.AppendInt(aValue);
@@ -1012,6 +1023,8 @@ protected:
    */
   bool IsEditableRoot() const;
 
+  nsresult SetUndoScopeInternal(bool aUndoScope);
+
 private:
   void ChangeEditableState(int32_t aChange);
 };
@@ -1178,7 +1191,7 @@ protected:
                               void* aData);
 
   // Returns true if the event should not be handled from PreHandleEvent
-  virtual bool IsElementDisabledForEvents(uint32_t aMessage, nsIFrame* aFrame);
+  bool IsElementDisabledForEvents(uint32_t aMessage, nsIFrame* aFrame);
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
@@ -1895,7 +1908,6 @@ NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Anchor)
@@ -1910,6 +1922,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Canvas)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Mod)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(DataList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Div)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(DList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(FieldSet)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Font)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Form)
@@ -1932,6 +1945,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(MenuItem)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meta)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meter)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Object)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(OList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(OptGroup)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Option)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Output)
@@ -1956,6 +1970,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(TextArea)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Tfoot)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Thead)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Title)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(UList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Unknown)
 #if defined(MOZ_MEDIA)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Video)

@@ -247,12 +247,12 @@ void nsComposerCommandsUpdater::TimerCallback()
 {
   // if the selection state has changed, update stuff
   bool isCollapsed = SelectionIsCollapsed();
-  if (isCollapsed != mSelectionCollapsed)
+  if (static_cast<int8_t>(isCollapsed) != mSelectionCollapsed)
   {
     UpdateCommandGroup(NS_LITERAL_STRING("select"));
     mSelectionCollapsed = isCollapsed;
   }
-  
+
   // isn't this redundant with the UpdateCommandGroup above?
   // can we just nuke the above call? or create a meta command group?
   UpdateCommandGroup(NS_LITERAL_STRING("style"));
@@ -261,14 +261,14 @@ void nsComposerCommandsUpdater::TimerCallback()
 nsresult
 nsComposerCommandsUpdater::UpdateDirtyState(bool aNowDirty)
 {
-  if (mDirtyState != aNowDirty)
+  if (mDirtyState != static_cast<int8_t>(aNowDirty))
   {
     UpdateCommandGroup(NS_LITERAL_STRING("save"));
     UpdateCommandGroup(NS_LITERAL_STRING("undo"));
     mDirtyState = aNowDirty;
   }
-  
-  return NS_OK;  
+
+  return NS_OK;
 }
 
 nsresult

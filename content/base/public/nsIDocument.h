@@ -65,7 +65,7 @@ class nsIStyleRule;
 class nsIStyleSheet;
 class nsIURI;
 class nsIVariant;
-class nsIViewManager;
+class nsViewManager;
 class nsPresContext;
 class nsRange;
 class nsScriptLoader;
@@ -74,6 +74,7 @@ class nsStyleSet;
 class nsTextNode;
 class nsWindowSizes;
 class nsSmallVoidArray;
+class nsDOMCaretPosition;
 
 namespace mozilla {
 class ErrorResult;
@@ -90,6 +91,7 @@ class DocumentType;
 class DOMImplementation;
 class Element;
 class Link;
+class UndoManager;
 template<typename> class Sequence;
 } // namespace dom
 } // namespace mozilla
@@ -477,7 +479,7 @@ public:
    * presshell if the presshell should observe document mutations.
    */
   virtual nsresult CreateShell(nsPresContext* aContext,
-                               nsIViewManager* aViewManager,
+                               nsViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult) = 0;
   virtual void DeleteShell() = 0;
@@ -1647,6 +1649,8 @@ public:
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
+  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() = 0;
+
   nsresult ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
                                         int32_t *aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
@@ -1913,6 +1917,19 @@ public:
   virtual nsIDOMDOMStringList* StyleSheetSets() = 0;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) = 0;
   Element* ElementFromPoint(float aX, float aY);
+
+  /**
+   * Retrieve the location of the caret position (DOM node and character
+   * offset within that node), given a point.
+   *
+   * @param aX Horizontal point at which to determine the caret position, in
+   *           page coordinates.
+   * @param aY Vertical point at which to determine the caret position, in
+   *           page coordinates.
+   */
+  already_AddRefed<nsDOMCaretPosition>
+    CaretPositionFromPoint(float aX, float aY);
+
   // QuerySelector and QuerySelectorAll already defined on nsINode
   nsINodeList* GetAnonymousNodes(Element& aElement);
   Element* GetAnonymousElementByAttribute(Element& aElement,

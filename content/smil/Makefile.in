@@ -22,13 +22,25 @@ EXPORTS	= \
 	nsISMILAttr.h \
 	nsISMILType.h \
 	nsSMILAnimationController.h \
+	nsSMILAnimationFunction.h \
 	nsSMILCompositorTable.h \
 	nsSMILCSSProperty.h \
+	nsSMILInstanceTime.h \
+	nsSMILInterval.h \
 	nsSMILKeySpline.h \
 	nsSMILMappedAttribute.h \
 	nsSMILMilestone.h \
+	nsSMILNullType.h \
+	nsSMILRepeatCount.h \
+	nsSMILSetAnimationFunction.h \
+	nsSMILTargetIdentifier.h \
 	nsSMILTimeContainer.h \
+	nsSMILTimedElement.h \
+	nsSMILTimeValue.h \
+	nsSMILTimeValueSpec.h \
+	nsSMILTimeValueSpecParams.h \
 	nsSMILTypes.h \
+	nsSMILValue.h \
 	$(NULL)
 
 CPPSRCS	= \

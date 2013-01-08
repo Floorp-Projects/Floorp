@@ -78,6 +78,7 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
+@BINPATH@/plugin-hang-ui@BIN_SUFFIX@
 #ifndef MOZ_DEBUG
 #if MOZ_MSVC_REDIST == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
@@ -342,7 +343,10 @@
 @BINPATH@/components/DownloadsUI.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+@BINPATH@/components/nsPrivateBrowsingServiceObsolete.manifest
+@BINPATH@/components/nsPrivateBrowsingServiceObsolete.js
+#else
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
 #endif
@@ -469,9 +473,6 @@
 @BINPATH@/components/HealthReportComponents.manifest
 @BINPATH@/components/HealthReportService.js
 #endif
-#ifdef MOZ_SERVICES_NOTIFICATIONS
-@BINPATH@/components/NotificationsComponents.manifest
-#endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
@@ -591,9 +592,6 @@
 #endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/defaults/pref/services-sync.js
-#endif
-#ifdef MOZ_SERVICES_HEALTHREPORT
-@BINPATH@/defaults/pref/healthreport-prefs.js
 #endif
 
 ; [Layout Engine Resources]

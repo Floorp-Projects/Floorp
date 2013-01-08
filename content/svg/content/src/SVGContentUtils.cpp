@@ -12,11 +12,10 @@
 #include "mozilla/Preferences.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
-#include "nsIDOMSVGElement.h"
 #include "nsIFrame.h"
 #include "nsIScriptError.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGAnimationElement.h"
+#include "SVGAnimationElement.h"
 #include "nsSVGSVGElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
@@ -47,7 +46,7 @@ SVGContentUtils::ActivateByHyperlink(nsIContent *aContent)
   NS_ABORT_IF_FALSE(aContent->IsNodeOfType(nsINode::eANIMATION),
                     "Expecting an animation element");
 
-  static_cast<nsSVGAnimationElement*>(aContent)->ActivateByHyperlink();
+  static_cast<SVGAnimationElement*>(aContent)->ActivateByHyperlink();
 }
 
 float
@@ -160,7 +159,7 @@ SVGContentUtils::EstablishesViewport(nsIContent *aContent)
             aContent->Tag() == nsGkAtoms::symbol);
 }
 
-already_AddRefed<nsIDOMSVGElement>
+nsSVGElement*
 SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
 {
   nsIContent *element = aContent->GetFlattenedTreeParent();
@@ -170,7 +169,7 @@ SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
       if (element->Tag() == nsGkAtoms::foreignObject) {
         return nullptr;
       }
-      return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
+      return static_cast<nsSVGElement*>(element);
     }
     element = element->GetFlattenedTreeParent();
   }
@@ -303,8 +302,8 @@ SVGContentUtils::GetViewBoxTransform(const nsSVGElement* aElement,
   NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  uint16_t align = aPreserveAspectRatio.GetAlign();
-  uint16_t meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
+  SVGAlign align = aPreserveAspectRatio.GetAlign();
+  SVGMeetOrSlice meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
 
   // default to the defaults
   if (align == SVG_PRESERVEASPECTRATIO_UNKNOWN)

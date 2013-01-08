@@ -164,8 +164,7 @@ public class TabsPanel extends TabHost
         mAddTab = (ImageButton) mToolbar.findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                mActivity.addTab();
-                mActivity.autoHideTabs();
+                TabsPanel.this.addTab();
             }
         });
 
@@ -188,6 +187,15 @@ public class TabsPanel extends TabHost
         mPopupMenu.setAnchor(mMenuButton);
     }
 
+    public void addTab() {
+        if (mCurrentPanel == Panel.NORMAL_TABS)
+           mActivity.addTab();
+        else
+           mActivity.addPrivateTab();
+
+        mActivity.autoHideTabs();
+    }
+
     public void openTabsMenu() {
         if (mCurrentPanel == Panel.REMOTE_TABS)
             mMenu.findItem(R.id.close_all_tabs).setEnabled(false);
@@ -195,26 +203,6 @@ public class TabsPanel extends TabHost
             mMenu.findItem(R.id.close_all_tabs).setEnabled(true); 
 
         mPopupMenu.show();
-
-        final Context context = mContext;
-        new SyncAccounts.AccountsExistTask() {
-            @Override
-            protected void onPostExecute(Boolean result) {
-                if (!result.booleanValue()) {
-                    return;
-                }
-                TabsAccessor.areClientsAvailable(context, new TabsAccessor.OnClientsAvailableListener() {
-                    @Override
-                    public void areAvailable(boolean available) {
-                        TabsPanel.this.enableRemoteTabs(available);
-                    }
-                });
-            }
-        }.execute(context);
-    }
-
-    public void enableRemoteTabs(boolean enable) {
-        mMenu.findItem(R.id.synced_tabs).setEnabled(enable);
     }
 
     public void openTabsSwitcherMenu() {
@@ -236,10 +224,6 @@ public class TabsPanel extends TabHost
 
             case R.id.tabs_synced:
                 mTabsMenuButton.setText(R.string.tabs_synced);
-                show(Panel.REMOTE_TABS);
-                return true;
-
-            case R.id.synced_tabs:
                 show(Panel.REMOTE_TABS);
                 return true;
 
@@ -395,6 +379,11 @@ public class TabsPanel extends TabHost
 
         mPanel = (PanelView) getTabContentView().getChildAt(index);
         mPanel.show();
+
+        if (mCurrentPanel == Panel.REMOTE_TABS)
+            mAddTab.setVisibility(View.INVISIBLE);
+        else
+            mAddTab.setVisibility(View.VISIBLE);
 
         if (isSideBar()) {
             if (showAnimation)

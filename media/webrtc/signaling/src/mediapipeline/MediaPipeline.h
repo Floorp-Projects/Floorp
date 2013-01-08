@@ -207,6 +207,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   std::string description_;
 
  private:
+  nsresult Init_s();
   void DetachTransport();
   void DetachTransport_s();
 
@@ -252,9 +253,10 @@ class MediaPipelineTransmit : public MediaPipeline {
   class PipelineListener : public MediaStreamListener {
    public:
     PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
-        : conduit_(conduit), active_(false) {}
+      : conduit_(conduit), active_(false), samples_10ms_buffer_(nullptr),  
+        buffer_current_(0), samplenum_10ms_(0){}
 
-    // XXX. This is not thread-safe but the hazard is just 
+    // XXX. This is not thread-safe but the hazard is just
     // that active_ = true takes a while to propagate. Revisit
     // when 823600 lands.
     void SetActive(bool active) { active_ = active; }
@@ -276,6 +278,15 @@ class MediaPipelineTransmit : public MediaPipeline {
 #endif
     RefPtr<MediaSessionConduit> conduit_;
     volatile bool active_;
+
+    // These vars handle breaking audio samples into exact 10ms chunks:
+    // The buffer of 10ms audio samples that we will send once full
+    // (can be carried over from one call to another).
+    nsAutoArrayPtr<int16_t> samples_10ms_buffer_;
+    // The location of the pointer within that buffer (in units of samples).
+    int64_t buffer_current_;
+    // The number of samples in a 10ms audio chunk.
+    int64_t samplenum_10ms_;
   };
 
  private:
@@ -360,7 +371,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
    private:
     SourceMediaStream *source_;
     RefPtr<MediaSessionConduit> conduit_;
-    StreamTime played_;
+    uint64_t played_;  // Amount of media played in milliseconds.
   };
 
   RefPtr<PipelineListener> listener_;

@@ -186,6 +186,9 @@ public:
 
     void Unlink();
 
+    // Trace all scripts held by this element and its children.
+    void TraceAllScripts(JSTracer* aTrc);
+
     nsPrototypeArray         mChildren;
 
     nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
@@ -417,6 +420,9 @@ public:
     virtual nsXPCClassInfo* GetClassInfo();
 
     virtual nsIDOMNode* AsDOMNode() { return this; }
+
+    virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+
 protected:
 
     // This can be removed if EnsureContentsGenerated dies.

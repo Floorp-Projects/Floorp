@@ -783,31 +783,6 @@ MakeJITScript(JSContext *cx, HandleScript script)
                 }
             }
 
-            if (op == JSOP_LOOKUPSWITCH) {
-                unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-                jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-                unsigned npairs = GET_UINT16(pc2);
-                pc2 += UINT16_LEN;
-
-                CrossChunkEdge edge;
-                edge.source = offset;
-                edge.target = defaultOffset;
-                if (!currentEdges.append(edge))
-                    return NULL;
-
-                while (npairs) {
-                    pc2 += UINT32_INDEX_LEN;
-                    unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                    CrossChunkEdge edge;
-                    edge.source = offset;
-                    edge.target = targetOffset;
-                    if (!currentEdges.append(edge))
-                        return NULL;
-                    pc2 += JUMP_OFFSET_LEN;
-                    npairs--;
-                }
-            }
-
             if (unsigned(offset - chunkStart) > CHUNK_LIMIT)
                 finishChunk = true;
 
@@ -2309,6 +2284,9 @@ mjit::Compiler::generateMethod()
         if (script_->hasScriptCounts && JOF_OPTYPE(op) == JOF_JUMP)
             updatePCCounts(PC, &countsUpdated);
 
+        /* Use a common root to avoid frequent re-rooting. */
+        RootedPropertyName name0(cx);
+
     /**********************
      * BEGIN COMPILER OPS *
      **********************/
@@ -2654,10 +2632,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DELNAME)
           {
             uint32_t index = GET_UINT32_INDEX(PC);
-            PropertyName *name = script_->getName(index);
+            name0 = script_->getName(index);
 
             prepareStubCall(Uses(0));
-            masm.move(ImmPtr(name), Registers::ArgReg1);
+            masm.move(ImmPtr(name0), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DelName, REJOIN_FALLTHROUGH);
             pushSyncedEntry(0);
           }
@@ -2666,10 +2644,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DELPROP)
           {
             uint32_t index = GET_UINT32_INDEX(PC);
-            PropertyName *name = script_->getName(index);
+            name0 = script_->getName(index);
 
             prepareStubCall(Uses(1));
-            masm.move(ImmPtr(name), Registers::ArgReg1);
+            masm.move(ImmPtr(name0), Registers::ArgReg1);
             INLINE_STUBCALL(STRICT_VARIANT(script_, stubs::DelProp), REJOIN_FALLTHROUGH);
             frame.pop();
             pushSyncedEntry(0);
@@ -2698,7 +2676,8 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETPROP)
           BEGIN_CASE(JSOP_CALLPROP)
           BEGIN_CASE(JSOP_LENGTH)
-            if (!jsop_getprop(script_->getName(GET_UINT32_INDEX(PC)), knownPushedType(0)))
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            if (!jsop_getprop(name0, knownPushedType(0)))
                 return Compile_Error;
           END_CASE(JSOP_GETPROP)
 
@@ -2775,19 +2754,19 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NAME)
           BEGIN_CASE(JSOP_CALLNAME)
           {
-            PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
-            jsop_name(name, knownPushedType(0));
-            frame.extra(frame.peek(-1)).name = name;
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            jsop_name(name0, knownPushedType(0));
+            frame.extra(frame.peek(-1)).name = name0;
           }
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_GETINTRINSIC)
           BEGIN_CASE(JSOP_CALLINTRINSIC)
           {
-            PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
-            if (!jsop_intrinsic(name, knownPushedType(0)))
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            if (!jsop_intrinsic(name0, knownPushedType(0)))
                 return Compile_Error;
-            frame.extra(frame.peek(-1)).name = name;
+            frame.extra(frame.peek(-1)).name = name0;
           }
           END_CASE(JSOP_GETINTRINSIC)
 
@@ -2871,21 +2850,6 @@ mjit::Compiler::generateMethod()
             PC += js_GetVariableBytecodeLength(PC);
             break;
           END_CASE(JSOP_TABLESWITCH)
-
-          BEGIN_CASE(JSOP_LOOKUPSWITCH)
-            if (script_->hasScriptCounts)
-                updatePCCounts(PC, &countsUpdated);
-            frame.syncAndForgetEverything();
-            masm.move(ImmPtr(PC), Registers::ArgReg1);
-
-            /* prepareStubCall() is not needed due to syncAndForgetEverything() */
-            INLINE_STUBCALL(stubs::LookupSwitch, REJOIN_NONE);
-            frame.pop();
-
-            masm.jump(Registers::ReturnReg);
-            PC += js_GetVariableBytecodeLength(PC);
-            break;
-          END_CASE(JSOP_LOOKUPSWITCH)
 
           BEGIN_CASE(JSOP_CASE)
             // X Y
@@ -3065,14 +3029,16 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_INITELEM)
 
           BEGIN_CASE(JSOP_BINDNAME)
-            jsop_bindname(script_->getName(GET_UINT32_INDEX(PC)));
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            jsop_bindname(name0);
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETPROP)
           {
             jsbytecode *next = &PC[JSOP_SETPROP_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            if (!jsop_setprop(script_->getName(GET_UINT32_INDEX(PC)), pop))
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            if (!jsop_setprop(name0, pop))
                 return Compile_Error;
           }
           END_CASE(JSOP_SETPROP)
@@ -3081,7 +3047,8 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_SETNAME_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            if (!jsop_setprop(script_->getName(GET_UINT32_INDEX(PC)), pop))
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            if (!jsop_setprop(name0, pop))
                 return Compile_Error;
           }
           END_CASE(JSOP_SETNAME)
@@ -3159,20 +3126,20 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DEFVAR)
           BEGIN_CASE(JSOP_DEFCONST)
           {
-            PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
 
             prepareStubCall(Uses(0));
-            masm.move(ImmPtr(name), Registers::ArgReg1);
+            masm.move(ImmPtr(name0), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DefVarOrConst, REJOIN_FALLTHROUGH);
           }
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_CASE(JSOP_SETCONST)
           {
-            PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
 
             prepareStubCall(Uses(1));
-            masm.move(ImmPtr(name), Registers::ArgReg1);
+            masm.move(ImmPtr(name0), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::SetConst, REJOIN_FALLTHROUGH);
           }
           END_CASE(JSOP_SETCONST)
@@ -3217,7 +3184,8 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_SETGNAME_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            if (!jsop_setgname(script_->getName(GET_UINT32_INDEX(PC)), pop))
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            if (!jsop_setgname(name0, pop))
                 return Compile_Error;
           }
           END_CASE(JSOP_SETGNAME)
@@ -3248,7 +3216,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STOP)
 
           BEGIN_CASE(JSOP_GETXPROP)
-            if (!jsop_xname(script_->getName(GET_UINT32_INDEX(PC))))
+            name0 = script_->getName(GET_UINT32_INDEX(PC));
+            if (!jsop_xname(name0))
                 return Compile_Error;
           END_CASE(JSOP_GETXPROP)
 
@@ -4966,7 +4935,7 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 }
 
 void
-mjit::Compiler::jsop_setprop_slow(PropertyName *name)
+mjit::Compiler::jsop_setprop_slow(HandlePropertyName name)
 {
     JS_ASSERT(*PC == JSOP_SETPROP || *PC == JSOP_SETNAME);
 
@@ -4985,7 +4954,7 @@ mjit::Compiler::jsop_setprop_slow(PropertyName *name)
 }
 
 void
-mjit::Compiler::jsop_getprop_slow(PropertyName *name, bool forPrototype)
+mjit::Compiler::jsop_getprop_slow(HandlePropertyName name, bool forPrototype)
 {
     /* See ::jsop_getprop */
     RejoinState rejoin = forPrototype ? REJOIN_THIS_PROTOTYPE : REJOIN_GETTER;
@@ -5020,7 +4989,7 @@ mjit::Compiler::passICAddress(BaseICInfo *ic)
 }
 
 bool
-mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
+mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType,
                              bool doTypeCheck, bool forPrototype)
 {
     FrameEntry *top = frame.peek(-1);
@@ -5477,7 +5446,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *t
 }
 
 bool
-mjit::Compiler::jsop_getprop_dispatch(PropertyName *name)
+mjit::Compiler::jsop_getprop_dispatch(HandlePropertyName name)
 {
     /*
      * Check for a CALLPROP which is a dynamic dispatch: every value it can
@@ -5623,7 +5592,7 @@ mjit::Compiler::jsop_getprop_dispatch(PropertyName *name)
 }
 
 bool
-mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
+mjit::Compiler::jsop_setprop(HandlePropertyName name, bool popGuaranteed)
 {
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
@@ -5812,7 +5781,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
 }
 
 bool
-mjit::Compiler::jsop_intrinsic(PropertyName *name, JSValueType type)
+mjit::Compiler::jsop_intrinsic(HandlePropertyName name, JSValueType type)
 {
     if (type == JSVAL_TYPE_UNKNOWN) {
         prepareStubCall(Uses(0));
@@ -5831,7 +5800,7 @@ mjit::Compiler::jsop_intrinsic(PropertyName *name, JSValueType type)
 }
 
 void
-mjit::Compiler::jsop_name(PropertyName *name, JSValueType type)
+mjit::Compiler::jsop_name(HandlePropertyName name, JSValueType type)
 {
     PICGenInfo pic(ic::PICInfo::NAME, PC);
 
@@ -5887,7 +5856,7 @@ mjit::Compiler::jsop_name(PropertyName *name, JSValueType type)
 }
 
 bool
-mjit::Compiler::jsop_xname(PropertyName *name)
+mjit::Compiler::jsop_xname(HandlePropertyName name)
 {
     PICGenInfo pic(ic::PICInfo::XNAME, PC);
 
@@ -5949,7 +5918,7 @@ mjit::Compiler::jsop_xname(PropertyName *name)
 }
 
 void
-mjit::Compiler::jsop_bindname(PropertyName *name)
+mjit::Compiler::jsop_bindname(HandlePropertyName name)
 {
     PICGenInfo pic(ic::PICInfo::BIND, PC);
 
@@ -6001,7 +5970,7 @@ mjit::Compiler::jsop_bindname(PropertyName *name)
 #else /* !JS_POLYIC */
 
 void
-mjit::Compiler::jsop_name(PropertyName *name, JSValueType type, bool isCall)
+mjit::Compiler::jsop_name(HandlePropertyName name, JSValueType type, bool isCall)
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(isCall ? stubs::CallName : stubs::Name, REJOIN_FALLTHROUGH);
@@ -6012,13 +5981,13 @@ mjit::Compiler::jsop_name(PropertyName *name, JSValueType type, bool isCall)
 }
 
 bool
-mjit::Compiler::jsop_xname(PropertyName *name)
+mjit::Compiler::jsop_xname(HandlePropertyName name)
 {
     return jsop_getprop(name, knownPushedType(0), pushedTypeSet(0));
 }
 
 bool
-mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType, types::TypeSet *typeSet,
+mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType, types::TypeSet *typeSet,
                              bool typecheck, bool forPrototype)
 {
     jsop_getprop_slow(name, forPrototype);
@@ -6026,14 +5995,14 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType, types::T
 }
 
 bool
-mjit::Compiler::jsop_setprop(PropertyName *name)
+mjit::Compiler::jsop_setprop(HandlePropertyName name)
 {
     jsop_setprop_slow(name);
     return true;
 }
 
 void
-mjit::Compiler::jsop_bindname(PropertyName *name)
+mjit::Compiler::jsop_bindname(HandlePropertyName name)
 {
     RegisterID reg = frame.allocReg();
     Address scopeChain(JSFrameReg, StackFrame::offsetOfScopeChain());
@@ -6607,7 +6576,7 @@ mjit::Compiler::jsop_getgname(uint32_t index)
 }
 
 void
-mjit::Compiler::jsop_setgname_slow(PropertyName *name)
+mjit::Compiler::jsop_setgname_slow(HandlePropertyName name)
 {
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(name), Registers::ArgReg1);
@@ -6617,7 +6586,7 @@ mjit::Compiler::jsop_setgname_slow(PropertyName *name)
 }
 
 bool
-mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
+mjit::Compiler::jsop_setgname(HandlePropertyName name, bool popGuaranteed)
 {
     if (monitored(PC)) {
         if (script_ == outerScript)
@@ -7054,7 +7023,7 @@ mjit::Compiler::jsop_regexp()
      * between now and construction of that jitcode could purge the shared
      * info, but such activity will also abort compilation.
      */
-    RegExpGuard g;
+    RegExpGuard g(cx);
     if (!reobj->getShared(cx, &g))
         return false;
 

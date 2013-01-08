@@ -183,8 +183,8 @@ nsSVGMaskFrame::Init(nsIContent* aContent,
                      nsIFrame* aParent,
                      nsIFrame* aPrevInFlow)
 {
-  nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(aContent);
-  NS_ASSERTION(mask, "Content is not an SVG mask");
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::mask),
+               "Content is not an SVG mask");
 
   return nsSVGMaskFrameBase::Init(aContent, aParent, aPrevInFlow);
 }

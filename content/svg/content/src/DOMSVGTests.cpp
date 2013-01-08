@@ -6,7 +6,7 @@
 #include "DOMSVGTests.h"
 #include "DOMSVGStringList.h"
 #include "nsSVGFeatures.h"
-#include "nsSVGSwitchElement.h"
+#include "mozilla/dom/SVGSwitchElement.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "mozilla/Preferences.h"
@@ -31,38 +31,62 @@ DOMSVGTests::DOMSVGTests()
 NS_IMETHODIMP
 DOMSVGTests::GetRequiredFeatures(nsIDOMSVGStringList * *aRequiredFeatures)
 {
-  nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
-  *aRequiredFeatures = DOMSVGStringList::GetDOMWrapper(
-                         &mStringListAttributes[FEATURES], element, true, FEATURES).get();
+  *aRequiredFeatures = RequiredFeatures().get();
   return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGStringList>
+DOMSVGTests::RequiredFeatures()
+{
+  nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
+  return DOMSVGStringList::GetDOMWrapper(
+           &mStringListAttributes[FEATURES], element, true, FEATURES).get();
 }
 
 /* readonly attribute nsIDOMSVGStringList requiredExtensions; */
 NS_IMETHODIMP
 DOMSVGTests::GetRequiredExtensions(nsIDOMSVGStringList * *aRequiredExtensions)
 {
-  nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
-  *aRequiredExtensions = DOMSVGStringList::GetDOMWrapper(
-                           &mStringListAttributes[EXTENSIONS], element, true, EXTENSIONS).get();
+  *aRequiredExtensions = RequiredExtensions().get();
   return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGStringList>
+DOMSVGTests::RequiredExtensions()
+{
+  nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
+  return DOMSVGStringList::GetDOMWrapper(
+           &mStringListAttributes[EXTENSIONS], element, true, EXTENSIONS).get();
 }
 
 /* readonly attribute nsIDOMSVGStringList systemLanguage; */
 NS_IMETHODIMP
 DOMSVGTests::GetSystemLanguage(nsIDOMSVGStringList * *aSystemLanguage)
 {
-  nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
-  *aSystemLanguage = DOMSVGStringList::GetDOMWrapper(
-                       &mStringListAttributes[LANGUAGE], element, true, LANGUAGE).get();
+  *aSystemLanguage = SystemLanguage().get();
   return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGStringList>
+DOMSVGTests::SystemLanguage()
+{
+  nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
+  return DOMSVGStringList::GetDOMWrapper(
+           &mStringListAttributes[LANGUAGE], element, true, LANGUAGE).get();
 }
 
 /* boolean hasExtension (in DOMString extension); */
 NS_IMETHODIMP
 DOMSVGTests::HasExtension(const nsAString & extension, bool *_retval)
 {
-  *_retval = nsSVGFeatures::HasExtension(extension);
+  *_retval = HasExtension(extension);
   return NS_OK;
+}
+
+bool
+DOMSVGTests::HasExtension(const nsAString& aExtension)
+{
+  return nsSVGFeatures::HasExtension(aExtension);
 }
 
 bool
@@ -242,6 +266,6 @@ DOMSVGTests::MaybeInvalidate()
 
   if (parent &&
       parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
-    static_cast<nsSVGSwitchElement*>(parent)->MaybeInvalidate();
+    static_cast<dom::SVGSwitchElement*>(parent)->MaybeInvalidate();
   }
 }

@@ -16,6 +16,7 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_concurrent.js \
 		browser_privatebrowsing_concurrent_page.html \
 		browser_privatebrowsing_cookieacceptdialog.js \
+		browser_privatebrowsing_cookieacceptdialog.html \
 		browser_privatebrowsing_crh.js \
 		browser_privatebrowsing_downloadLastDir.js \
 		browser_privatebrowsing_downloadLastDir_c.js \

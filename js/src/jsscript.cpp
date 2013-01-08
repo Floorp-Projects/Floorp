@@ -946,6 +946,13 @@ SourceCompressorThread::finish()
         PR_DestroyLock(lock);
 }
 
+const jschar *
+SourceCompressorThread::currentChars() const
+{
+    JS_ASSERT(tok);
+    return tok->chars;
+}
+
 bool
 SourceCompressorThread::internalCompress()
 {
@@ -1052,6 +1059,7 @@ SourceCompressorThread::compress(SourceCompressionToken *sct)
     JS_ASSERT(!tok);
     stop = false;
     PR_Lock(lock);
+    sct->ss->ready_ = false;
     tok = sct;
     state = COMPRESSING;
     PR_NotifyCondVar(wakeup);
@@ -1071,9 +1079,7 @@ SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
     PR_Unlock(lock);
 
     JS_ASSERT(!saveTok->ss->ready());
-#ifdef DEBUG
     saveTok->ss->ready_ = true;
-#endif
 
     // Update memory accounting.
     if (!saveTok->oom)
@@ -1184,10 +1190,14 @@ SourceDataCache::purge()
 JSFlatString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
-    JS_ASSERT(ready());
     const jschar *chars;
 #if USE_ZLIB
     Rooted<JSStableString *> cached(cx, NULL);
+#ifdef JS_THREADSAFE
+    if (!ready()) {
+        chars = cx->runtime->sourceCompressorThread.currentChars();
+    } else
+#endif
     if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
         if (!cached) {
@@ -1230,9 +1240,6 @@ ScriptSource::setSourceCopy(JSContext *cx, StableCharPtr src, uint32_t length,
 
 #ifdef JS_THREADSAFE
     if (tok && cx->runtime->useHelperThreads()) {
-#ifdef DEBUG
-        ready_ = false;
-#endif
         tok->ss = this;
         tok->chars = src.get();
         cx->runtime->sourceCompressorThread.compress(tok);
@@ -1288,9 +1295,7 @@ ScriptSource::destroy(JSRuntime *rt)
     JS_ASSERT(ready());
     adjustDataSize(0);
     js_free(sourceMap_);
-#ifdef DEBUG
     ready_ = false;
-#endif
     js_free(this);
 }
 
@@ -1374,10 +1379,8 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         sourceMap_[sourceMapLen] = '\0';
     }
 
-#ifdef DEBUG
     if (mode == XDR_DECODE)
         ready_ = true;
-#endif
 
     return true;
 }

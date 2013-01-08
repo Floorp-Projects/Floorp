@@ -57,9 +57,10 @@
 #include "nsIEditor.h"
 #include "nsIEditorDocShell.h"
 #include "nsIMozBrowserFrame.h"
+#include "nsIPermissionManager.h"
 
 #include "nsLayoutUtils.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsAsyncDOMEvent.h"
 
 #include "nsIURI.h"
@@ -76,7 +77,7 @@
 
 #include "Layers.h"
 
-#include "AppProcessPermissions.h"
+#include "AppProcessChecker.h"
 #include "ContentParent.h"
 #include "TabParent.h"
 #include "mozilla/GuardObjects.h"
@@ -282,6 +283,7 @@ NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
+  , mAppIdSentToPermissionManager(nsIScriptSecurityManager::NO_APP_ID)
   , mDetachedSubdocViews(nullptr)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
@@ -303,6 +305,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mRenderMode(RENDER_MODE_DEFAULT)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
 {
+  ResetPermissionManagerStatus();
 }
 
 nsFrameLoader*
@@ -801,8 +804,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
                                          scrollbarPrefY);
     }
 
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
     if (presShell) {
       // Ensure root scroll frame is reflowed in case scroll preferences or
       // margins have changed
@@ -815,7 +817,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
     }
   }
 
-  nsIView* view = frame->EnsureInnerView();
+  nsView* view = frame->EnsureInnerView();
   if (!view)
     return false;
 
@@ -847,8 +849,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   // sub-document. This shouldn't be necessary, but given the way our
   // editor works, it is. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIDOMHTMLDocument> doc =
       do_QueryInterface(presShell->GetDocument());
@@ -1406,6 +1407,8 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
   if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
+
+  ResetPermissionManagerStatus();
 }
 
 bool
@@ -2311,6 +2314,13 @@ nsFrameLoader::CheckPermission(const nsAString& aPermission)
                                     NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
+bool
+nsFrameLoader::CheckManifestURL(const nsAString& aManifestURL)
+{
+  return AssertAppProcessManifestURL(GetRemoteBrowser(),
+                                     NS_ConvertUTF16toUTF8(aManifestURL).get());
+}
+
 NS_IMETHODIMP
 nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
 {
@@ -2454,14 +2464,14 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 }
 
 void
-nsFrameLoader::SetDetachedSubdocView(nsIView* aDetachedViews,
+nsFrameLoader::SetDetachedSubdocView(nsView* aDetachedViews,
                                      nsIDocument* aContainerDoc)
 {
   mDetachedSubdocViews = aDetachedViews;
   mContainerDocWhileDetached = aContainerDoc;
 }
 
-nsIView*
+nsView*
 nsFrameLoader::GetDetachedSubdocView(nsIDocument** aContainerDoc) const
 {
   NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);
@@ -2543,3 +2553,65 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
                                        is_targetable, value);
   }
 }
+
+void
+nsFrameLoader::ResetPermissionManagerStatus()
+{
+  // The resetting of the permissions status can run only
+  // in the main process.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return;
+  }
+
+  // Finding the new app Id:
+  // . first we check if the owner is an app frame
+  // . second, we check if the owner is a browser frame
+  // in both cases we populate the appId variable.
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  if (OwnerIsAppFrame()) {
+    // You can't be both an app and a browser frame.
+    MOZ_ASSERT(!OwnerIsBrowserFrame());
+
+    nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
+    MOZ_ASSERT(ownApp);
+    uint32_t ownAppId = nsIScriptSecurityManager::NO_APP_ID;
+    if (ownApp && NS_SUCCEEDED(ownApp->GetLocalId(&ownAppId))) {
+      appId = ownAppId;
+    }
+  }
+
+  if (OwnerIsBrowserFrame()) {
+    // You can't be both a browser and an app frame.
+    MOZ_ASSERT(!OwnerIsAppFrame());
+
+    nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
+    uint32_t containingAppId = nsIScriptSecurityManager::NO_APP_ID;
+    if (containingApp && NS_SUCCEEDED(containingApp->GetLocalId(&containingAppId))) {
+      appId = containingAppId;
+    }
+  }
+
+  // Nothing changed.
+  if (appId == mAppIdSentToPermissionManager) {
+    return;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permMgr) {
+    NS_ERROR("No PermissionManager available!");
+    return;
+  }
+
+  // If previously we registered an appId, we have to unregister it.
+  if (mAppIdSentToPermissionManager != nsIScriptSecurityManager::NO_APP_ID) {
+    permMgr->ReleaseAppId(mAppIdSentToPermissionManager);
+    mAppIdSentToPermissionManager = nsIScriptSecurityManager::NO_APP_ID;
+  }
+
+  // Register the new AppId.
+  if (appId != nsIScriptSecurityManager::NO_APP_ID) {
+    mAppIdSentToPermissionManager = appId;
+    permMgr->AddrefAppId(mAppIdSentToPermissionManager);
+  }
+}
+

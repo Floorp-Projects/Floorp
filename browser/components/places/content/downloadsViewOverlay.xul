@@ -4,6 +4,11 @@
 
 <?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
 
+<!DOCTYPE overlay [
+<!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
+%downloadsDTD;
+]>
+
 <overlay id="downloadsViewOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -15,7 +20,8 @@
 
     ContentArea.setContentViewForQueryString(DOWNLOADS_QUERY,
       function() new DownloadsPlacesView(document.getElementById("downloadsRichListBox")),
-      { showDetailsPane: false });
+      { showDetailsPane: false,
+        toolbarSet: "back-button, forward-button, organizeButton, clearDownloadsButton, libraryToolbarSpacer, searchFilter" });
   ]]></script>
 
   <window id="places">
@@ -26,4 +32,13 @@
   <deck id="placesViewsDeck">
     <richlistbox id="downloadsRichListBox"/>
   </deck>
+
+  <toolbar id="placesToolbar">
+    <toolbarbutton id="clearDownloadsButton"
+                   insertbefore="libraryToolbarSpacer"
+                   label="&clearDownloadsButton.label;"
+                   command="downloadsCmd_clearDownloads"
+                   tooltiptext="&clearDownloadsButton.tooltip;"/>
+  </toolbar>
+
 </overlay>
