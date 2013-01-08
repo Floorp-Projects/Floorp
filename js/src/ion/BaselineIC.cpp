@@ -77,6 +77,11 @@ ICStub::trace(JSTracer *trc)
         MarkTypeObject(trc, &monitorStub->type(), "baseline-monitor-typeobject");
         break;
       }
+      case ICStub::TypeUpdate_TypeObject: {
+        ICTypeUpdate_TypeObject *updateStub = toTypeUpdate_TypeObject();
+        MarkTypeObject(trc, &updateStub->type(), "baseline-update-typeobject");
+        break;
+      }
       case ICStub::GetName_Global: {
         ICGetName_Global *globalStub = toGetName_Global();
         MarkShape(trc, &globalStub->shape(), "baseline-global-stub-shape");
@@ -451,25 +456,56 @@ ICTypeMonitor_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+bool
+ICUpdatedStub::addUpdateStubForValue(JSContext *cx, ICStubSpace *space, HandleValue val)
+{
+    if (numOptimizedStubs_ >= MAX_OPTIMIZED_STUBS) {
+        // TODO: if the TypeSet becomes unknown or has the AnyObject type,
+        // replace stubs with a single stub to handle these.
+        return true;
+    }
+
+    if (val.isPrimitive()) {
+        JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
+        ICTypeUpdate_Type::Compiler compiler(cx, type);
+        ICStub *stub = compiler.getStub(space);
+        if (!stub)
+            return false;
+        addOptimizedUpdateStub(stub);
+    } else {
+        RootedTypeObject type(cx, val.toObject().getType(cx));
+        if (!type)
+            return false;
+        ICTypeUpdate_TypeObject::Compiler compiler(cx, type);
+        ICStub *stub = compiler.getStub(space);
+        if (!stub)
+            return false;
+        addOptimizedUpdateStub(stub);
+    }
+
+    return true;
+}
+
 //
 // TypeUpdate_Fallback
 //
-
-bool
+static bool
 DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue value)
 {
-    /*
+    RootedScript script(cx, GetTopIonJSScript(cx));
+
     switch(stub->kind()) {
-      case ICStub::SetElem_Dense:
-        RootedTypeObject type(cx, stub->type());
-        ///// update typeset on |type|
+      case ICStub::SetElem_Dense: {
+        RootedTypeObject type(cx, stub->toSetElem_Dense()->type());
+        type->addPropertyType(cx, JSID_VOID, value);
         break;
+      }
       default:
-        break;
+        JS_NOT_REACHED("Invalid stub");
+        return false;
     }
-    ///// create and add new type-update stub for |value|
-    */
-    return true;
+
+    return stub->addUpdateStubForValue(cx, ICStubSpace::StubSpaceFor(script), value);
 }
 
 typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, ICUpdatedStub *, HandleValue);
@@ -482,6 +518,65 @@ ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Just store false into R1.scratchReg() and return.
     masm.move32(Imm32(0), R1.scratchReg());
     EmitReturnFromIC(masm);
+    return true;
+}
+
+bool
+ICTypeUpdate_Type::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    switch (type_) {
+      case JSVAL_TYPE_INT32:
+        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_DOUBLE:
+        // TI double type implies int32.
+        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_BOOLEAN:
+        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_STRING:
+        masm.branchTestString(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_NULL:
+        masm.branchTestNull(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_UNDEFINED:
+        masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected type");
+    }
+
+    // Type matches, load true into R1.scratchReg() and return.
+    masm.mov(Imm32(1), R1.scratchReg());
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICTypeUpdate_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    // Guard on the object's TypeObject.
+    Register obj = masm.extractObject(R0, R1.scratchReg());
+    masm.loadPtr(Address(obj, JSObject::offsetOfType()), R1.scratchReg());
+
+    Address expectedType(BaselineStubReg, ICTypeUpdate_TypeObject::offsetOfType());
+    masm.branchPtr(Assembler::NotEqual, expectedType, R1.scratchReg(), &failure);
+
+    // Type matches, load true into R1.scratchReg() and return.
+    masm.mov(Imm32(1), R1.scratchReg());
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
     return true;
 }
 

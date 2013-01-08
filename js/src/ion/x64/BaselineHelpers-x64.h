@@ -35,13 +35,8 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
     masm.movq(Operand(BaselineStubReg, (int32_t) ICEntry::offsetOfFirstStub()),
               BaselineStubReg);
 
-    // Load stubcode pointer from BaselineStubEntry into BaselineTailCallReg
-    // BaselineTailCallReg will always be unused in the contexts where ICs are called.
-    masm.movq(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
-              BaselineTailCallReg);
-
     // Call the stubcode.
-    masm.call(BaselineTailCallReg);
+    masm.call(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));
 }
 
 inline void
@@ -213,12 +208,8 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
     masm.movq(Operand(BaselineStubReg, (int32_t) ICUpdatedStub::offsetOfFirstUpdateStub()),
               BaselineStubReg);
 
-    // Load stubcode pointer from BaselineStubReg into BaselineTailCallReg.
-    masm.movq(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
-              BaselineTailCallReg);
-
     // Call the stubcode.
-    masm.call(BaselineTailCallReg);
+    masm.call(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));
 
     // Restore the old stub reg.
     masm.pop(BaselineStubReg);
@@ -226,7 +217,7 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
     // The update IC will store 0 or 1 in R1.scratchReg() reflecting if the
     // value in R0 type-checked properly or not.
     Label success;
-    masm.cmpPtr(R1.scratchReg(), ImmWord(1));
+    masm.cmp32(R1.scratchReg(), Imm32(1));
     masm.j(Assembler::Equal, &success);
 
     // If the IC failed, then call the update fallback function.
