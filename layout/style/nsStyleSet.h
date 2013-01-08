@@ -233,6 +233,7 @@ class nsStyleSet
     eUserSheet, // CSS
     ePresHintSheet,
     eDocSheet, // CSS
+    eScopedDocSheet,
     eStyleAttrSheet,
     eOverrideSheet, // CSS
     eAnimationSheet,
@@ -253,7 +254,7 @@ class nsStyleSet
   nsresult InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
                                   nsIStyleSheet *aReferenceSheet);
 
-  // Enable/Disable entire author style level (Doc & PresHint levels)
+  // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
   bool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
 
@@ -265,6 +266,7 @@ class nsStyleSet
     return mSheets[aType].ObjectAt(aIndex);
   }
 
+  nsresult RemoveDocStyleSheet(nsIStyleSheet* aSheet);
   nsresult AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument);
 
   void     BeginUpdate();
@@ -388,7 +390,7 @@ class nsStyleSet
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
-  unsigned mDirty : 8;  // one dirty bit is used per sheet type
+  unsigned mDirty : 9;  // one dirty bit is used per sheet type
 
   uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
