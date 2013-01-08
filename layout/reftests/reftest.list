@@ -238,9 +238,6 @@ include position-dynamic-changes/reftest.list
 include printing/reftest.list
 include pagination/reftest.list
 
-# <style scoped>
-include scoped-style/reftest.list
-
 # scrolling
 include scrolling/reftest.list
 

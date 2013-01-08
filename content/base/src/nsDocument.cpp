@@ -2028,25 +2028,6 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 }
 
 void
-nsDocument::RemoveDocStyleSheetsFromStyleSets()
-{
-  // The stylesheets should forget us
-  int32_t indx = mStyleSheets.Count();
-  while (--indx >= 0) {
-    nsIStyleSheet* sheet = mStyleSheets[indx];
-    sheet->SetOwningDocument(nullptr);
-
-    if (sheet->IsApplicable()) {
-      nsCOMPtr<nsIPresShell> shell = GetShell();
-      if (shell) {
-        shell->StyleSet()->RemoveDocStyleSheet(sheet);
-      }
-    }
-    // XXX Tell observers?
-  }
-}
-
-void
 nsDocument::RemoveStyleSheetsFromStyleSets(nsCOMArray<nsIStyleSheet>& aSheets, nsStyleSet::sheetType aType)
 {
   // The stylesheets should forget us
@@ -2073,7 +2054,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   NS_PRECONDITION(aURI, "Null URI passed to ResetStylesheetsToURI");
 
   mozAutoDocUpdate upd(this, UPDATE_STYLE, true);
-  RemoveDocStyleSheetsFromStyleSets();
+  RemoveStyleSheetsFromStyleSets(mStyleSheets, nsStyleSet::eDocSheet);
   RemoveStyleSheetsFromStyleSets(mCatalogSheets, nsStyleSet::eAgentSheet);
   RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], nsStyleSet::eAgentSheet);
   RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], nsStyleSet::eUserSheet);
@@ -3522,7 +3503,7 @@ nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 {
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
-    shell->StyleSet()->RemoveDocStyleSheet(aSheet);
+    shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eDocSheet, aSheet);
   }
 }
 

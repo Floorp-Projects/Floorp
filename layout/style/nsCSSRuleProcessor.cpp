@@ -1051,17 +1051,12 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 //
 
 nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
-                                       uint8_t aSheetType,
-                                       Element* aScopeElement)
+                                       uint8_t aSheetType)
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
   , mLastPresContext(nullptr)
   , mSheetType(aSheetType)
-  , mScopeElement(aScopeElement)
 {
-  NS_ASSERTION(!!mScopeElement == (aSheetType == nsStyleSet::eScopedDocSheet),
-               "aScopeElement must be specified iff aSheetType is "
-               "eScopedDocSheet");
   for (sheet_array_type::size_type i = mSheets.Length(); i-- != 0; ) {
     mSheets[i]->AddRuleProcessor(this);
   }
@@ -2202,13 +2197,6 @@ static bool SelectorMatchesTree(Element* aPrevElement,
                  selector->mNext->mOperator != PRUnichar(0),
                  "compound selector without combinator");
 
-    // If after the previous selector match we are now outside the
-    // current style scope, we don't need to match any further.
-    if (aTreeMatchContext.mForScopedStyle &&
-        !aTreeMatchContext.IsWithinStyleScopeForSelectorMatching()) {
-      return false;
-    }
-
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
     Element* element = nullptr;
@@ -2239,13 +2227,6 @@ static bool SelectorMatchesTree(Element* aPrevElement,
       // element parents.
       if (content && content->IsElement()) {
         element = content->AsElement();
-        if (aTreeMatchContext.mForScopedStyle) {
-          // We are moving up to the parent element; tell the
-          // TreeMatchContext, so that in case this element is the
-          // style scope element, selector matching stops before we
-          // traverse further up the tree.
-          aTreeMatchContext.PopStyleScopeForSelectorMatching(element);
-        }
       }
     }
     if (!element) {
@@ -2315,12 +2296,6 @@ void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
       !ancestorFilter->MightHaveMatchingAncestor<RuleValue::eMaxAncestorHashes>(
           value.mAncestorSelectorHashes)) {
     // We won't match; nothing else to do here
-    return;
-  }
-  if (!data->mTreeMatchContext.SetStyleScopeForSelectorMatching(data->mElement,
-                                                                data->mScope)) {
-    // The selector is for a rule in a scoped style sheet, and the subject
-    // of the selector matching is not in its scope.
     return;
   }
   if (SelectorMatches(data->mElement, aSelector, nodeContext,
@@ -2506,13 +2481,6 @@ static void
 AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
 {
   AttributeRuleProcessorData *data = aData->data;
-
-  if (!data->mTreeMatchContext.SetStyleScopeForSelectorMatching(data->mElement,
-                                                                data->mScope)) {
-    // The selector is for a rule in a scoped style sheet, and the subject
-    // of the selector matching is not in its scope.
-    return;
-  }
 
   nsRestyleHint possibleChange = RestyleHintForOp(aSelector->mOperator);
 
@@ -3288,14 +3256,14 @@ nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
   return false;
 }
 
-// TreeMatchContext and AncestorFilter out of line methods
+// AncestorFilter out of line methods
 void
-TreeMatchContext::InitAncestors(Element *aElement)
+AncestorFilter::Init(Element *aElement)
 {
-  MOZ_ASSERT(!mAncestorFilter.mFilter);
-  MOZ_ASSERT(mAncestorFilter.mHashes.IsEmpty());
+  MOZ_ASSERT(!mFilter);
+  MOZ_ASSERT(mHashes.IsEmpty());
 
-  mAncestorFilter.mFilter = new AncestorFilter::Filter();
+  mFilter = new Filter();
 
   if (MOZ_LIKELY(aElement)) {
     MOZ_ASSERT(aElement->IsInDoc(),
@@ -3316,8 +3284,7 @@ TreeMatchContext::InitAncestors(Element *aElement)
 
     // Now push them in reverse order.
     for (uint32_t i = ancestors.Length(); i-- != 0; ) {
-      mAncestorFilter.PushAncestor(ancestors[i]);
-      PushStyleScope(ancestors[i]);
+      PushAncestor(ancestors[i]);
     }
   }
 }

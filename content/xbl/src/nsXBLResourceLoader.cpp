@@ -167,8 +167,7 @@ nsXBLResourceLoader::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
     // All stylesheets are loaded.  
     mResources->mRuleProcessor =
       new nsCSSRuleProcessor(mResources->mStyleSheetList, 
-                             nsStyleSet::eDocSheet,
-                             nullptr);
+                             nsStyleSet::eDocSheet);
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)

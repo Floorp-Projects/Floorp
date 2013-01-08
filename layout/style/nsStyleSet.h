@@ -233,7 +233,6 @@ class nsStyleSet
     eUserSheet, // CSS
     ePresHintSheet,
     eDocSheet, // CSS
-    eScopedDocSheet,
     eStyleAttrSheet,
     eOverrideSheet, // CSS
     eAnimationSheet,
@@ -254,7 +253,7 @@ class nsStyleSet
   nsresult InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
                                   nsIStyleSheet *aReferenceSheet);
 
-  // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
+  // Enable/Disable entire author style level (Doc & PresHint levels)
   bool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
 
@@ -266,7 +265,6 @@ class nsStyleSet
     return mSheets[aType].ObjectAt(aIndex);
   }
 
-  nsresult RemoveDocStyleSheet(nsIStyleSheet* aSheet);
   nsresult AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument);
 
   void     BeginUpdate();
@@ -344,11 +342,11 @@ class nsStyleSet
   
   // Enumerate the rules in a way that cares about the order of the
   // rules.
-  // aElement is the element the rules are for.  It might be null.  aData
+  // aContent is the node the rules are for.  It might be null.  aData
   // is the closure to pass to aCollectorFunc.  If aContent is not null,
   // aData must be a RuleProcessorData*
   void FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
-                 RuleProcessorData* aData, mozilla::dom::Element* aElement,
+                 RuleProcessorData* aData, nsIContent* aContent,
                  nsRuleWalker* aRuleWalker);
 
   // Enumerate all the rules in a way that doesn't care about the order
@@ -374,12 +372,7 @@ class nsStyleSet
   // sheet last.
   nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
 
-  // mRuleProcessors[eScopedDocSheet] is always null; rule processors
-  // for scoped style sheets are stored in mScopedDocSheetRuleProcessors.
   nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessors[eSheetTypeCount];
-
-  // Rule processors for HTML5 scoped style sheets, one per scope.
-  nsTArray<nsCOMPtr<nsIStyleRuleProcessor> > mScopedDocSheetRuleProcessors;
 
   // cached instance for enabling/disabling
   nsCOMPtr<nsIStyleSheet> mQuirkStyleSheet;
@@ -395,7 +388,7 @@ class nsStyleSet
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
-  unsigned mDirty : 9;  // one dirty bit is used per sheet type
+  unsigned mDirty : 8;  // one dirty bit is used per sheet type
 
   uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent

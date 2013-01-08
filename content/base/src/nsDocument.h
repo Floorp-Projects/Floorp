@@ -1080,7 +1080,6 @@ protected:
                          nsCompatibility aCompatMode,
                          nsIPresShell** aInstancePtrResult);
 
-  void RemoveDocStyleSheetsFromStyleSets();
   void RemoveStyleSheetsFromStyleSets(nsCOMArray<nsIStyleSheet>& aSheets, 
                                       nsStyleSet::sheetType aType);
   nsresult ResetStylesheetsToURI(nsIURI* aURI);

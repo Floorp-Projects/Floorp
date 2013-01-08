@@ -645,7 +645,7 @@ public:
   nsRuleNode* GetParent() const { return mParent; }
   bool IsRoot() const { return mParent == nullptr; }
 
-  // These uint8_ts are really nsStyleSet::sheetType values.
+  // These PRUint8s are really nsStyleSet::sheetType values.
   uint8_t GetLevel() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");
     return (mDependentBits & NS_RULE_NODE_LEVEL_MASK) >>
