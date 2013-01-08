@@ -370,8 +370,8 @@ NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
       if (PL_strnstr(requestedPath.BeginReading(), "/../",
                      requestedPath.Length())) {
         printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
-                      "FATAL error: requested file URI contains '/../' "
-                      "KILLING CHILD PROCESS\n");
+                      "FATAL error: requested file URI '%s' contains '/../' "
+                      "KILLING CHILD PROCESS\n", requestedPath.get());
         return nullptr;
       }
     } else {
@@ -391,8 +391,10 @@ NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
                                 NS_LossyConvertUTF16toASCII(uuid).get());
       if (!requestedPath.Equals(mustMatch)) {
         printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
-                      "FATAL error: requesting file other than application.zip: "
-                      "KILLING CHILD PROCESS\n");
+                      "FATAL error: app without webapps-manage permission is "
+                      "requesting file '%s' but is only allowed to open its "
+                      "own application.zip: KILLING CHILD PROCESS\n",
+                      requestedPath.get());
         return nullptr;
       }
     }
