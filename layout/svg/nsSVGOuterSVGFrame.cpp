@@ -11,7 +11,6 @@
 #include "gfxMatrix.h"
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectLoadingContent.h"
@@ -150,10 +149,8 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
-#ifdef DEBUG
-  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(aContent);
-  NS_ASSERTION(svgElement, "Content is not an SVG 'svg' element!");
-#endif
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::svg),
+               "Content is not an SVG 'svg' element!");
 
   AddStateBits(NS_STATE_IS_OUTER_SVG |
                NS_FRAME_FONT_INFLATION_CONTAINER |
