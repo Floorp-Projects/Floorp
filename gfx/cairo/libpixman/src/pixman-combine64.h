@@ -29,10 +29,10 @@
  */
 
 #define MUL_UN16(a, b, t)						\
-    ((t) = (a) * (b) + ONE_HALF, ((((t) >> G_SHIFT ) + (t) ) >> G_SHIFT ))
+    ((t) = (a) * (uint32_t)(b) + ONE_HALF, ((((t) >> G_SHIFT ) + (t) ) >> G_SHIFT ))
 
 #define DIV_UN16(a, b)							\
-    (((uint32_t) (a) * MASK) / (b))
+    (((uint32_t) (a) * MASK + ((b) / 2)) / (b))
 
 #define ADD_UN16(x, y, t)				     \
     ((t) = (x) + (y),					     \

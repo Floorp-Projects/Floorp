@@ -883,16 +883,38 @@ _pixman_image_get_solid (pixman_implementation_t *imp,
                          pixman_format_code_t     format)
 {
     uint32_t result;
-    pixman_iter_t iter;
 
-    _pixman_implementation_src_iter_init (
-	imp, &iter, image, 0, 0, 1, 1,
-	(uint8_t *)&result, ITER_NARROW);
+    if (image->type == SOLID)
+    {
+	result = image->solid.color_32;
+    }
+    else if (image->type == BITS)
+    {
+	if (image->bits.format == PIXMAN_a8r8g8b8)
+	    result = image->bits.bits[0];
+	else if (image->bits.format == PIXMAN_x8r8g8b8)
+	    result = image->bits.bits[0] | 0xff000000;
+	else if (image->bits.format == PIXMAN_a8)
+	    result = (*(uint8_t *)image->bits.bits) << 24;
+	else
+	    goto otherwise;
+    }
+    else
+    {
+	pixman_iter_t iter;
 
-    result = *iter.get_scanline (&iter, NULL);
+    otherwise:
+	_pixman_implementation_src_iter_init (
+	    imp, &iter, image, 0, 0, 1, 1,
+	    (uint8_t *)&result,
+	    ITER_NARROW, image->common.flags);
+	
+	result = *iter.get_scanline (&iter, NULL);
+    }
 
     /* If necessary, convert RGB <--> BGR. */
-    if (PIXMAN_FORMAT_TYPE (format) != PIXMAN_TYPE_ARGB)
+    if (PIXMAN_FORMAT_TYPE (format) != PIXMAN_TYPE_ARGB
+	&& PIXMAN_FORMAT_TYPE (format) != PIXMAN_TYPE_ARGB_SRGB)
     {
 	result = (((result & 0xff000000) >>  0) |
 	          ((result & 0x00ff0000) >> 16) |
