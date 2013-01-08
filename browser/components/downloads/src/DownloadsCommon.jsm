@@ -437,7 +437,7 @@ this.DownloadsCommon = {
       }
 
       if (showAlert) {
-        let name = this.dataItem.target;
+        let name = aFile.leafName;
         let message =
           DownloadsCommon.strings.fileExecutableSecurityWarning(name, name);
         let title =
@@ -773,6 +773,11 @@ DownloadsDataCtor.prototype = {
   ensurePersistentDataLoaded:
   function DD_ensurePersistentDataLoaded(aActiveOnly)
   {
+    if (this == PrivateDownloadsData) {
+      Cu.reportError("ensurePersistentDataLoaded should not be called on PrivateDownloadsData");
+      return;
+    }
+
     if (this._pendingStatement) {
       // We are already in the process of reloading all downloads.
       return;
@@ -787,9 +792,7 @@ DownloadsDataCtor.prototype = {
 
         // Reload the list using the Download Manager service.  The list is
         // returned in no particular order.
-        let downloads = this._isPrivate ?
-                          Services.downloads.activePrivateDownloads :
-                          Services.downloads.activeDownloads;
+        let downloads = Services.downloads.activeDownloads;
         while (downloads.hasMoreElements()) {
           let download = downloads.getNext().QueryInterface(Ci.nsIDownload);
           this._getOrAddDataItem(download, true);
@@ -807,9 +810,7 @@ DownloadsDataCtor.prototype = {
         // columns are read in the _initFromDataRow method of DownloadsDataItem.
         // Order by descending download identifier so that the most recent
         // downloads are notified first to the listening views.
-        let dbConnection = this._isPrivate ?
-                             Services.downloads.privateDBConnection :
-                             Services.downloads.DBConnection;
+        let dbConnection = Services.downloads.DBConnection;
         let statement = dbConnection.createAsyncStatement(
           "SELECT guid, target, name, source, referrer, state, "
         +        "startTime, endTime, currBytes, maxBytes "
@@ -985,7 +986,12 @@ DownloadsDataCtor.prototype = {
 
     if (isNew && !dataItem.newDownloadNotified) {
       dataItem.newDownloadNotified = true;
-      this._notifyNewDownload();
+      this._notifyDownloadEvent("start");
+    }
+
+    // This is a final state of which we are only notified once.
+    if (dataItem.done) {
+      this._notifyDownloadEvent("finish");
     }
   },
 
@@ -1042,10 +1048,13 @@ DownloadsDataCtor.prototype = {
   },
 
   /**
-   * Displays a new download notification in the most recent browser window, if
-   * one is currently available.
+   * Displays a new or finished download notification in the most recent browser
+   * window, if one is currently available with the required privacy type.
+   *
+   * @param aType
+   *        Set to "start" for new downloads, "finish" for completed downloads.
    */
-  _notifyNewDownload: function DD_notifyNewDownload()
+  _notifyDownloadEvent: function DD_notifyDownloadEvent(aType)
   {
     if (DownloadsCommon.useToolkitUI) {
       return;
@@ -1061,7 +1070,7 @@ DownloadsDataCtor.prototype = {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost
       // browser window, if the status indicator is already visible.
-      browserWin.DownloadsIndicatorView.showEventNotification();
+      browserWin.DownloadsIndicatorView.showEventNotification(aType);
       return;
     }
     this.panelHasShownBefore = true;

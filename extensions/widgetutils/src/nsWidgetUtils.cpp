@@ -34,9 +34,9 @@
 #include "nsIDOMTextListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWheelEvent.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsGUIEvent.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
@@ -89,7 +89,7 @@ private:
   static void StopPanningCallback(nsITimer *timer, void *closure);
 
   nsCOMPtr<nsIWidget> mWidget;
-  nsCOMPtr<nsIViewManager> mViewManager;
+  nsRefPtr<nsViewManager> mViewManager;
   nsCOMPtr<nsITimer> mTimer;
 };
 
@@ -230,7 +230,7 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
   if(g_lastX == MIN_INT || g_lastY == MIN_INT)
     return NS_OK;
 
-  nsIView* aView = mViewManager->GetRootView();
+  nsView* aView = mViewManager->GetRootView();
   if (!aView)
     if (NS_FAILED(UpdateFromEvent(aDOMEvent)))
       return NS_OK;

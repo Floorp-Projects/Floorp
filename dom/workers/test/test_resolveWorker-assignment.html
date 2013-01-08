@@ -16,11 +16,9 @@
       ok(typeof desc === "object" && desc !== null, "Worker property must exist");
 
       is(desc.value, 17, "Overwrite didn't work correctly");
-      // The JSRESOLVE_ASSIGNING flag-check around the "Resolve special classes"
-      // block in nsWindowSH::NewResolve needs to die to enable this.
-      todo_is(desc.enumerable, false,
-              "Initial descriptor was non-enumerable, and [[Put]] changes the " +
-              "property value but not its enumerability");
+      is(desc.enumerable, false,
+         "Initial descriptor was non-enumerable, and [[Put]] changes the " +
+         "property value but not its enumerability");
       is(desc.configurable, true,
          "Initial descriptor was configurable, and [[Put]] changes the " +
          "property value but not its configurability");

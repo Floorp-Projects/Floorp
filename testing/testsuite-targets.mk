@@ -327,6 +327,23 @@ peptest:
 	$(RUN_PEPTEST)
 	$(CHECK_TEST_ERROR)
 
+REMOTE_CPPUNITTESTS = \
+	$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
+	  --xre-path=$(DEPTH)/dist/bin \
+	  --localLib=$(DEPTH)/dist/fennec \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  $(TEST_PATH) $(EXTRA_TEST_ARGS)
+
+# Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] cppunittests-remote|.
+cppunittests-remote: DM_TRANS?=adb
+cppunittests-remote:
+	@if [ "${TEST_DEVICE}" != "" -o "$(DM_TRANS)" = "adb" ]; \
+          then $(call REMOTE_CPPUNITTESTS); \
+        else \
+          echo "please prepare your host with environment variables for TEST_DEVICE"; \
+        fi
+
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 

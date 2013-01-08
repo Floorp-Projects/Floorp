@@ -210,8 +210,6 @@ gtk_xtbin_init (GtkXtBin *xtbin)
   xtbin->xtdisplay = NULL;
   xtbin->parent_window = NULL;
   xtbin->xtwindow = 0;
-  xtbin->x = 0;
-  xtbin->y = 0;
 }
 
 static void
@@ -239,17 +237,13 @@ gtk_xtbin_realize (GtkWidget *widget)
   printf("initial allocation %d %d %d %d\n", x, y, w, h);
 #endif
 
-  xtbin->width = widget->allocation.width;
-  xtbin->height = widget->allocation.height;
-
   /* use GtkSocket's realize */
   (*GTK_WIDGET_CLASS(parent_class)->realize)(widget);
 
   /* create the Xt client widget */
   xt_client_create(&(xtbin->xtclient), 
        gtk_socket_get_id(GTK_SOCKET(xtbin)), 
-       xtbin->height, 
-       xtbin->width);
+       h, w);
   xtbin->xtwindow = XtWindow(xtbin->xtclient.child_widget);
 
   gdk_flush();
@@ -314,54 +308,6 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
   gdk_window_set_back_pixmap(GTK_WIDGET(xtbin)->window, NULL, FALSE);
 
   return GTK_WIDGET (xtbin);
-}
-
-void
-gtk_xtbin_set_position (GtkXtBin *xtbin,
-                        gint       x,
-                        gint       y)
-{
-  xtbin->x = x;
-  xtbin->y = y;
-
-  if (GTK_WIDGET_REALIZED (xtbin))
-    gdk_window_move (GTK_WIDGET (xtbin)->window, x, y);
-}
-
-void
-gtk_xtbin_resize (GtkWidget *widget,
-                  gint       width,
-                  gint       height)
-{
-  Arg args[2];
-  GtkXtBin *xtbin = GTK_XTBIN (widget);
-  GtkAllocation allocation;
-
-#ifdef DEBUG_XTBIN
-  printf("gtk_xtbin_resize %p %d %d\n", (void *)widget, width, height);
-#endif
-
-  xtbin->height = height;
-  xtbin->width  = width;
-
-  /* Avoid BadValue errors in XtSetValues */
-  if (height <= 0 || width <=0) {
-    height = 1;
-    width = 1;
-  }
-  XtSetArg(args[0], XtNheight, height);
-  XtSetArg(args[1], XtNwidth,  width);
-  if (xtbin->xtclient.top_widget)
-    XtSetValues(xtbin->xtclient.top_widget, args, 2);
-
-  /* we need to send a size allocate so the socket knows about the
-     size changes */
-  allocation.x = xtbin->x;
-  allocation.y = xtbin->y;
-  allocation.width = xtbin->width;
-  allocation.height = xtbin->height;
-
-  gtk_widget_size_allocate(widget, &allocation);
 }
 
 static void
@@ -596,8 +542,8 @@ xt_client_create ( XtClient* xtclient ,
 
   /* listen to all Xt events */
   XSelectInput(xtclient->xtdisplay, 
-               XtWindow(top_widget), 
-               0x0FFFFF);
+               embedderid, 
+               XtBuildEventMask(top_widget));
   xt_client_set_info (child_widget, 0);
 
   XtManageChild(child_widget);
@@ -605,12 +551,12 @@ xt_client_create ( XtClient* xtclient ,
 
   /* set the event handler */
   XtAddEventHandler(child_widget,
-                    0x0FFFFF & ~ResizeRedirectMask,
+                    StructureNotifyMask | KeyPressMask,
                     TRUE, 
                     (XtEventHandler)xt_client_event_handler, xtclient);
   XtAddEventHandler(child_widget, 
                     SubstructureNotifyMask | ButtonReleaseMask, 
-                    TRUE, 
+                    FALSE,
                     (XtEventHandler)xt_client_focus_listener, 
                     xtclient);
   XSync(xtclient->xtdisplay, FALSE);
@@ -639,7 +585,9 @@ void
 xt_client_destroy   (XtClient* xtclient)
 {
   if(xtclient->top_widget) {
-    XtRemoveEventHandler(xtclient->child_widget, 0x0FFFFF, TRUE, 
+    XtRemoveEventHandler(xtclient->child_widget,
+                         StructureNotifyMask | KeyPressMask,
+                         TRUE, 
                          (XtEventHandler)xt_client_event_handler, xtclient);
     XtDestroyWidget(xtclient->top_widget);
     xtclient->top_widget = NULL;
@@ -745,12 +693,6 @@ xt_client_event_handler( Widget w, XtPointer client_data, XEvent *event)
       break;
     case UnmapNotify:
       xt_client_set_info (w, 0);
-      break;
-    case FocusIn:
-      send_xembed_message ( xtplug,
-                            XEMBED_REQUEST_FOCUS, 0, 0, 0, 0);
-      break;
-    case FocusOut:
       break;
     case KeyPress:
 #ifdef DEBUG_XTBIN
@@ -871,21 +813,12 @@ xt_client_focus_listener( Widget w, XtPointer user_data, XEvent *event)
 static void
 xt_add_focus_listener( Widget w, XtPointer user_data)
 {
-  XWindowAttributes attr;
-  long eventmask;
   XtClient *xtclient = user_data;
-  int errorcode;
 
   trap_errors ();
-  XGetWindowAttributes(XtDisplay(w), XtWindow(w), &attr);
-  eventmask = attr.your_event_mask | SubstructureNotifyMask | ButtonReleaseMask;
-  XSelectInput(XtDisplay(w),
-               XtWindow(w), 
-               eventmask);
-
   XtAddEventHandler(w, 
                     SubstructureNotifyMask | ButtonReleaseMask, 
-                    TRUE, 
+                    FALSE, 
                     (XtEventHandler)xt_client_focus_listener, 
                     xtclient);
   untrap_error();
@@ -894,10 +827,8 @@ xt_add_focus_listener( Widget w, XtPointer user_data)
 static void
 xt_remove_focus_listener(Widget w, XtPointer user_data)
 {
-  int errorcode;
-
   trap_errors ();
-  XtRemoveEventHandler(w, SubstructureNotifyMask | ButtonReleaseMask, TRUE, 
+  XtRemoveEventHandler(w, SubstructureNotifyMask | ButtonReleaseMask, FALSE, 
                       (XtEventHandler)xt_client_focus_listener, user_data);
 
   untrap_error();

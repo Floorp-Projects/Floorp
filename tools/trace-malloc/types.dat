@@ -3496,7 +3496,7 @@ nsViewManager::nsViewManager(void)
 
 <nsViewManager2>
 __builtin_new
-nsViewManager2::AddToDisplayList(int *, nsIView *, nsRect &, nsRect &, unsigned int, int, int)
+nsViewManager2::AddToDisplayList(int *, nsView *, nsRect &, nsRect &, unsigned int, int, int)
 
 # ----------------------------------------------------------------------
 #

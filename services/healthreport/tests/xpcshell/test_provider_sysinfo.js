@@ -5,9 +5,9 @@
 
 const {interfaces: Ci, results: Cr, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
-Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
 
 
 function run_test() {
@@ -20,26 +20,21 @@ add_test(function test_constructor() {
   run_next_test();
 });
 
-add_test(function test_collect_smoketest() {
+add_task(function test_collect_smoketest() {
+  let storage = yield Metrics.Storage("collect_smoketest");
   let provider = new SysInfoProvider();
+  yield provider.init(storage);
 
-  let result = provider.collectConstantMeasurements();
-  do_check_true(result instanceof MetricsCollectionResult);
+  yield provider.collectConstantData();
 
-  result.onFinished(function onFinished() {
-    do_check_eq(result.expectedMeasurements.size, 1);
-    do_check_true(result.expectedMeasurements.has("sysinfo"));
-    do_check_eq(result.measurements.size, 1);
-    do_check_true(result.measurements.has("sysinfo"));
-    do_check_eq(result.errors.length, 0);
+  let m = provider.getMeasurement("sysinfo", 1);
+  let data = yield storage.getMeasurementValues(m.id);
+  let serializer = m.serializer(m.SERIALIZE_JSON);
+  let d = serializer.singular(data.singular);
 
-    let si = result.measurements.get("sysinfo");
-    do_check_true(si.getValue("cpuCount") > 0);
-    do_check_neq(si.getValue("name"), null);
+  do_check_true(d.cpuCount > 0);
+  do_check_neq(d.name, null);
 
-    run_next_test();
-  });
-
-  result.populate(result);
+  yield storage.close();
 });
 

@@ -869,7 +869,7 @@ nsEditor::BeginTransaction()
   BeginUpdateViewBatch();
 
   if (mTxnMgr) {
-    mTxnMgr->BeginBatch();
+    mTxnMgr->BeginBatch(nullptr);
   }
 
   return NS_OK;
@@ -879,7 +879,7 @@ NS_IMETHODIMP
 nsEditor::EndTransaction()
 {
   if (mTxnMgr) {
-    mTxnMgr->EndBatch();
+    mTxnMgr->EndBatch(false);
   }
 
   EndUpdateViewBatch();
@@ -2606,18 +2606,18 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
           break;
       }
       break;
-  
+
     case eDocumentStateChanged:
       {
         bool docIsDirty;
         rv = GetDocumentModified(&docIsDirty);
         NS_ENSURE_SUCCESS(rv, rv);
-        
-        if (docIsDirty == mDocDirtyState)
+
+        if (static_cast<int8_t>(docIsDirty) == mDocDirtyState)
           return NS_OK;
-        
-        mDocDirtyState = (int8_t)docIsDirty;
-        
+
+        mDocDirtyState = docIsDirty;
+
         for (i = 0; i < numListeners;i++)
         {
           rv = listeners[i]->NotifyDocumentStateChanged(mDocDirtyState);

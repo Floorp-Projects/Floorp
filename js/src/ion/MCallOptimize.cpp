@@ -49,6 +49,8 @@ IonBuilder::inlineNativeCall(JSNative native, uint32_t argc, bool constructing)
         return inlineMathPow(argc, constructing);
     if (native == js_math_random)
         return inlineMathRandom(argc, constructing);
+    if (native == js::math_imul)
+        return inlineMathImul(argc, constructing);
     if (native == js::math_sin)
         return inlineMathFunction(MMathFunction::Sin, argc, constructing);
     if (native == js::math_cos)
@@ -640,20 +642,51 @@ IonBuilder::inlineMathRandom(uint32_t argc, bool constructing)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineMathImul(uint32_t argc, bool constructing)
+{
+    if (argc != 2 || constructing)
+        return InliningStatus_NotInlined;
+
+    MIRType returnType = getInlineReturnType();
+    if (returnType != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    if (!IsNumberType(getInlineArgType(argc, 1)))
+        return InliningStatus_NotInlined;
+    if (!IsNumberType(getInlineArgType(argc, 2)))
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MInstruction *first = MTruncateToInt32::New(argv[1]);
+    current->add(first);
+
+    MInstruction *second = MTruncateToInt32::New(argv[2]);
+    current->add(second);
+
+    MMul *ins = MMul::New(first, second, MIRType_Int32, MMul::Integer);
+    current->add(ins);
+    current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineMathMinMax(bool max, uint32_t argc, bool constructing)
 {
     if (argc != 2 || constructing)
         return InliningStatus_NotInlined;
 
     MIRType returnType = getInlineReturnType();
-    if (returnType != MIRType_Double && returnType != MIRType_Int32)
+    if (!IsNumberType(returnType))
         return InliningStatus_NotInlined;
 
     MIRType arg1Type = getInlineArgType(argc, 1);
-    if (arg1Type != MIRType_Double && arg1Type != MIRType_Int32)
+    if (!IsNumberType(arg1Type))
         return InliningStatus_NotInlined;
     MIRType arg2Type = getInlineArgType(argc, 2);
-    if (arg2Type != MIRType_Double && arg2Type != MIRType_Int32)
+    if (!IsNumberType(arg2Type))
         return InliningStatus_NotInlined;
 
     if (returnType == MIRType_Int32 &&

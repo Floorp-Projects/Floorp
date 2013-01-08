@@ -12,7 +12,7 @@
 class nsSVGGlyphFrame;
 
 namespace mozilla {
-class DOMSVGPoint;
+class nsISVGPoint;
 }
 
 class nsISVGGlyphFragmentNode : public nsQueryFrame
@@ -23,7 +23,7 @@ public:
   virtual uint32_t GetNumberOfChars()=0;
   virtual float GetComputedTextLength()=0;
   virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars)=0;
-  virtual int32_t GetCharNumAtPosition(mozilla::DOMSVGPoint *point)=0;
+  virtual int32_t GetCharNumAtPosition(mozilla::nsISVGPoint *point)=0;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame()=0;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame()=0;
   NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace)=0;

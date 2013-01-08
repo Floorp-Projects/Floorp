@@ -137,7 +137,8 @@ GetChromeHangReport(Telemetry::ProcessedStack &aStack)
   DWORD ret = ::SuspendThread(winMainThreadHandle);
   if (ret == -1)
     return;
-  NS_StackWalk(ChromeStackWalker, 0, reinterpret_cast<void*>(&rawStack),
+  NS_StackWalk(ChromeStackWalker, /* skipFrames */ 0, /* maxFrames */ 0,
+               reinterpret_cast<void*>(&rawStack),
                reinterpret_cast<uintptr_t>(winMainThreadHandle), nullptr);
   ret = ::ResumeThread(winMainThreadHandle);
   if (ret == -1)

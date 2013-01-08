@@ -43,7 +43,11 @@
                seltype="multiple"
                id="downloadsRichListBox" context="downloadsContextMenu"
                onkeypress="return this._placesView.onKeyPress(event);"
-               oncontextmenu="return this._placesView.onContextMenu(event);"/>
+               ondblclick="return this._placesView.onDoubleClick(event);"
+               oncontextmenu="return this._placesView.onContextMenu(event);"
+               onfocus="goUpdateDownloadCommands();"
+               onselect="goUpdateDownloadCommands();"
+               onblur="goUpdateDownloadCommands();"/>
 
   <commandset id="downloadCommands"
               commandupdater="true"
@@ -61,6 +65,8 @@
              oncommand="goDoCommand('downloadsCmd_retry')"/>
     <command id="downloadsCmd_openReferrer"
              oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
+    <command id="downloadsCmd_clearDownloads"
+             oncommand="goDoCommand('downloadsCmd_clearDownloads')"/>
   </commandset>
 
   <menupopup id="downloadsContextMenu" class="download-state">
@@ -99,5 +105,11 @@
     <menuitem command="cmd_copy"
               label="&cmd.copyDownloadLink.label;"
               accesskey="&cmd.copyDownloadLink.accesskey;"/>
+
+    <menuseparator/>
+
+    <menuitem command="downloadsCmd_clearDownloads"
+              label="&cmd.clearDownloads.label;"
+              accesskey="&cmd.clearDownloads.accesskey;"/>
   </menupopup>
 </overlay>

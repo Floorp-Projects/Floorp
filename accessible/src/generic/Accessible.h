@@ -28,7 +28,7 @@ struct nsRect;
 class nsIContent;
 class nsIFrame;
 class nsIAtom;
-class nsIView;
+class nsView;
 
 namespace mozilla {
 namespace a11y {

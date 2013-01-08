@@ -925,12 +925,6 @@ nsSocketTransport::ResolveHost()
         dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
     if (mConnectionFlags & nsSocketTransport::DISABLE_IPV6)
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
-    if (mConnectionFlags & nsSocketTransport::DISABLE_IPV4)
-        dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV4;
-
-    NS_ASSERTION(!(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
-                 !(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
-                 "Setting both RESOLVE_DISABLE_IPV6 and RESOLVE_DISABLE_IPV4");
 
     SendStatus(NS_NET_STATUS_RESOLVING_HOST);
     rv = dns->AsyncResolve(SocketHost(), dnsFlags, this, nullptr,
@@ -1272,12 +1266,12 @@ nsSocketTransport::RecoverFromError()
 
     bool tryAgain = false;
 
-    if (mConnectionFlags & (DISABLE_IPV6 | DISABLE_IPV4) &&
+    if (mConnectionFlags & DISABLE_IPV6 &&
         mCondition == NS_ERROR_UNKNOWN_HOST &&
         mState == STATE_RESOLVING &&
         !mProxyTransparentResolvesHost) {
         SOCKET_LOG(("  trying lookup again with both ipv4/ipv6 enabled\n"));
-        mConnectionFlags &= ~(DISABLE_IPV6 | DISABLE_IPV4);
+        mConnectionFlags &= ~DISABLE_IPV6;
         tryAgain = true;
     }
 
@@ -1290,15 +1284,14 @@ nsSocketTransport::RecoverFromError()
             SOCKET_LOG(("  trying again with next ip address\n"));
             tryAgain = true;
         }
-        else if (mConnectionFlags & (DISABLE_IPV6 | DISABLE_IPV4)) {
+        else if (mConnectionFlags & DISABLE_IPV6) {
             // Drop state to closed.  This will trigger new round of DNS
             // resolving bellow.
-            // XXX Could be optimized to only switch the flags to save duplicate
-            // connection attempts.
-            SOCKET_LOG(("  failed to connect all ipv4-only or ipv6-only hosts,"
+            // XXX Here should idealy be set now non-existing flag DISABLE_IPV4
+            SOCKET_LOG(("  failed to connect all ipv4 hosts,"
                         " trying lookup/connect again with both ipv4/ipv6\n"));
             mState = STATE_CLOSED;
-            mConnectionFlags &= ~(DISABLE_IPV6 | DISABLE_IPV4);
+            mConnectionFlags &= ~DISABLE_IPV6;
             tryAgain = true;
         }
     }

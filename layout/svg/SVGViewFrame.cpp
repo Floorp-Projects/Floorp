@@ -8,7 +8,7 @@
 #include "nsGkAtoms.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGSVGElement.h"
-#include "nsSVGViewElement.h"
+#include "mozilla/dom/SVGViewElement.h"
 
 typedef nsFrame SVGViewFrameBase;
 
@@ -81,8 +81,8 @@ SVGViewFrame::Init(nsIContent* aContent,
                    nsIFrame* aParent,
                    nsIFrame* aPrevInFlow)
 {
-  nsCOMPtr<nsIDOMSVGViewElement> elem = do_QueryInterface(aContent);
-  NS_ASSERTION(elem, "Content is not an SVG view");
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::view),
+               "Content is not an SVG view");
 
   return SVGViewFrameBase::Init(aContent, aParent, aPrevInFlow);
 }

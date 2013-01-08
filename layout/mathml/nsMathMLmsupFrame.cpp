@@ -63,16 +63,14 @@ nsMathMLmsupFrame::Place(nsRenderingContext& aRenderingContext,
   // default: automatic
   //
   // We use 0 as the default value so unitless values can be ignored.
-  // XXXfredw Should we forbid negative values? (bug 411227)
+  // As a minimum, negative values can be ignored.
   //
   nsAutoString value;
   nscoord supScriptShift = 0;
   GetAttribute(mContent, mPresentationData.mstyle,
                nsGkAtoms::superscriptshift_, value);
   if (!value.IsEmpty()) {
-    ParseNumericValue(value, &supScriptShift,
-                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
-                      PresContext(), mStyleContext);
+    ParseNumericValue(value, &supScriptShift, 0, PresContext(), mStyleContext);
   }
 
   return nsMathMLmsupFrame::PlaceSuperScript(PresContext(), 

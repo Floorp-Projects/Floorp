@@ -1882,6 +1882,26 @@ Debugger::addDebuggee(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSBool
+Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
+    AutoDebugModeGC dmgc(cx->runtime);
+    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        if (c == dbg->object->compartment())
+            continue;
+        c->scheduledForDestruction = false;
+        GlobalObject *global = c->maybeGlobal();
+        if (global) {
+            Rooted<GlobalObject*> rg(cx, global);
+            dbg->addDebuggeeGlobal(cx, rg, dmgc);
+        }
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
 Debugger::removeDebuggee(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.removeDebuggee", 1);
@@ -1899,8 +1919,9 @@ JSBool
 Debugger::removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "removeAllDebuggees", args, dbg);
+    AutoDebugModeGC dmgc(cx->runtime);
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-        dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), e.front(), NULL, &e);
+        dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), e.front(), dmgc, NULL, &e);
     args.rval().setUndefined();
     return true;
 }
@@ -2027,6 +2048,15 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 {
+    AutoDebugModeGC dmgc(cx->runtime);
+    return addDebuggeeGlobal(cx, global, dmgc);
+}
+
+bool
+Debugger::addDebuggeeGlobal(JSContext *cx,
+                            Handle<GlobalObject*> global,
+                            AutoDebugModeGC &dmgc)
+{
     if (debuggees.has(global))
         return true;
 
@@ -2082,7 +2112,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
         } else {
             if (global->getDebuggers()->length() > 1)
                 return true;
-            if (debuggeeCompartment->addDebuggee(cx, global))
+            if (debuggeeCompartment->addDebuggee(cx, global, dmgc))
                 return true;
 
             /* Maintain consistency on error. */
@@ -2096,6 +2126,16 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 
 void
 Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
+                               GlobalObjectSet::Enum *compartmentEnum,
+                               GlobalObjectSet::Enum *debugEnum)
+{
+    AutoDebugModeGC dmgc(global->compartment()->rt);
+    return removeDebuggeeGlobal(fop, global, dmgc, compartmentEnum, debugEnum);
+}
+
+void
+Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
+                               AutoDebugModeGC &dmgc,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
@@ -2151,7 +2191,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      * global cannot be rooted on the stack without a cx.
      */
     if (v->empty())
-        global->compartment()->removeDebuggee(fop, global, compartmentEnum);
+        global->compartment()->removeDebuggee(fop, global, dmgc, compartmentEnum);
 }
 
 /*
@@ -2272,18 +2312,18 @@ class Debugger::ScriptQuery {
      * Search all relevant compartments and the stack for scripts matching
      * this query, and append the matching scripts to |vector|.
      */
-    bool findScripts(AutoScriptVector *vector) {
-        AutoAssertNoGC nogc;
-
+    bool findScripts(AutoScriptVector *v) {
         if (!prepareQuery())
             return false;
 
         /* Search each compartment for debuggee scripts. */
+        vector = v;
+        oom = false;
         for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
-            for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-                RawScript script = i.get<JSScript>();
-                if (!consider(script, vector))
-                    return false;
+            IterateCells(cx->runtime, r.front(), gc::FINALIZE_SCRIPT, this, considerCell);
+            if (oom) {
+                js_ReportOutOfMemory(cx);
+                return false;
             }
         }
 
@@ -2297,7 +2337,7 @@ class Debugger::ScriptQuery {
             for (CompartmentToScriptMap::Range r = innermostForCompartment.all();
                  !r.empty();
                  r.popFront()) {
-                if (!vector->append(r.front().value)) {
+                if (!v->append(r.front().value)) {
                     js_ReportOutOfMemory(cx);
                     return false;
                 }
@@ -2345,6 +2385,12 @@ class Debugger::ScriptQuery {
      */
     CompartmentToScriptMap innermostForCompartment;
 
+    /* The vector to which to append the scripts found. */
+    AutoScriptVector *vector;
+
+    /* Indicates whether OOM has occurred while matching. */
+    bool oom;
+
     /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
     bool matchSingleGlobal(GlobalObject *global) {
         JS_ASSERT(compartments.count() == 0);
@@ -2385,22 +2431,30 @@ class Debugger::ScriptQuery {
         return true;
     }
 
+    static void considerCell(JSRuntime *rt, void *data, void *thing,
+                             JSGCTraceKind traceKind, size_t thingSize) {
+        ScriptQuery *self = static_cast<ScriptQuery *>(data);
+        self->consider(static_cast<JSScript *>(thing));
+    }
+
     /*
      * If |script| matches this query, append it to |vector| or place it in
-     * |innermostForCompartment|, as appropriate. Return true if no error
-     * occurs, false if an error occurs.
+     * |innermostForCompartment|, as appropriate. Set |oom| if an out of memory
+     * condition occurred.
      */
-    bool consider(JSScript *script, AutoScriptVector *vector) {
+    void consider(JSScript *script) {
+        if (oom)
+            return;
         JSCompartment *compartment = script->compartment();
         if (!compartments.has(compartment))
-            return true;
+            return;
         if (urlCString.ptr()) {
             if (!script->filename || strcmp(script->filename, urlCString.ptr()) != 0)
-                return true;
+                return;
         }
         if (hasLine) {
             if (line < script->lineno || script->lineno + js_GetScriptLineExtent(script) < line)
-                return true;
+                return;
         }
         if (innermost) {
             /*
@@ -2427,19 +2481,19 @@ class Debugger::ScriptQuery {
                  * compartment, so it is thus the innermost such script.
                  */
                 if (!innermostForCompartment.add(p, compartment, script)) {
-                    js_ReportOutOfMemory(cx);
-                    return false;
+                    oom = true;
+                    return;
                 }
             }
         } else {
             /* Record this matching script in the results vector. */
             if (!vector->append(script)) {
-                js_ReportOutOfMemory(cx);
-                return false;
+                oom = true;
+                return;
             }
         }
 
-        return true;
+        return;
     }
 };
 
@@ -2538,6 +2592,7 @@ JSPropertySpec Debugger::properties[] = {
 
 JSFunctionSpec Debugger::methods[] = {
     JS_FN("addDebuggee", Debugger::addDebuggee, 1, 0),
+    JS_FN("addAllGlobalsAsDebuggees", Debugger::addAllGlobalsAsDebuggees, 0, 0),
     JS_FN("removeDebuggee", Debugger::removeDebuggee, 1, 0),
     JS_FN("removeAllDebuggees", Debugger::removeAllDebuggees, 0, 0),
     JS_FN("hasDebuggee", Debugger::hasDebuggee, 1, 0),
@@ -2915,7 +2970,7 @@ class FlowGraphSummary : public Vector<size_t> {
 
             if (js_CodeSpec[op].type() == JOF_JUMP) {
                 addEdge(lineno, r.frontOffset() + GET_JUMP_OFFSET(r.frontPC()));
-            } else if (op == JSOP_TABLESWITCH || op == JSOP_LOOKUPSWITCH) {
+            } else if (op == JSOP_TABLESWITCH) {
                 jsbytecode *pc = r.frontPC();
                 size_t offset = r.frontOffset();
                 ptrdiff_t step = JUMP_OFFSET_LEN;
@@ -2923,21 +2978,12 @@ class FlowGraphSummary : public Vector<size_t> {
                 pc += step;
                 addEdge(lineno, defaultOffset);
 
-                int ncases;
-                if (op == JSOP_TABLESWITCH) {
-                    int32_t low = GET_JUMP_OFFSET(pc);
-                    pc += JUMP_OFFSET_LEN;
-                    ncases = GET_JUMP_OFFSET(pc) - low + 1;
-                    pc += JUMP_OFFSET_LEN;
-                } else {
-                    ncases = GET_UINT16(pc);
-                    pc += UINT16_LEN;
-                    JS_ASSERT(ncases > 0);
-                }
+                int32_t low = GET_JUMP_OFFSET(pc);
+                pc += JUMP_OFFSET_LEN;
+                int ncases = GET_JUMP_OFFSET(pc) - low + 1;
+                pc += JUMP_OFFSET_LEN;
 
                 for (int i = 0; i < ncases; i++) {
-                    if (op == JSOP_LOOKUPSWITCH)
-                        pc += UINT32_INDEX_LEN;
                     size_t target = offset + GET_JUMP_OFFSET(pc);
                     addEdge(lineno, target);
                     pc += step;

@@ -336,6 +336,17 @@ class RegisterAllocator
     LMoveGroup *getMoveGroupAfter(CodePosition pos) {
         return getMoveGroupAfter(pos.ins());
     }
+
+    size_t findFirstNonCallSafepoint(CodePosition from)
+    {
+        size_t i = 0;
+        for (; i < graph.numNonCallSafepoints(); i++) {
+            LInstruction *ins = graph.getNonCallSafepoint(i);
+            if (from <= inputOf(ins))
+                break;
+        }
+        return i;
+    }
 };
 
 } // namespace ion

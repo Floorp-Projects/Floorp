@@ -14,7 +14,7 @@
 #include "nsFrameList.h"
 #include "mozilla/Attributes.h"
 #include "nsIWebProgress.h"
-#include "nsHTMLCanvasElement.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
@@ -287,7 +287,7 @@ protected:
                        bool& aDoReturn,
                        bool& aDocumentIsTopLevel,
                        nsSize& aAdjSize);
-  nsIView* GetParentViewForRoot();
+  nsView* GetParentViewForRoot();
   bool DoSetPixelScale();
   void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
   nsresult ReconstructAndReflow(bool aDoSetPixelScale);

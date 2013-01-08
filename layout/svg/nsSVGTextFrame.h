@@ -73,7 +73,7 @@ public:
   virtual uint32_t GetNumberOfChars();
   virtual float GetComputedTextLength();
   virtual float GetSubStringLength(uint32_t charnum, uint32_t nchars);
-  virtual int32_t GetCharNumAtPosition(mozilla::DOMSVGPoint *point);
+  virtual int32_t GetCharNumAtPosition(mozilla::nsISVGPoint *point);
 
   NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
   NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);

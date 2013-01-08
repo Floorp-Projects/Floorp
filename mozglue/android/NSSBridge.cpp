@@ -11,9 +11,7 @@
 #include <android/log.h>
 #endif
 
-#ifndef MOZ_OLD_LINKER
 #include "ElfLoader.h"
-#endif
 
 #ifdef DEBUG
 #define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)

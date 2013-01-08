@@ -33,8 +33,8 @@
 #include "nsINodeInfo.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
+#include "nsView.h"
+#include "nsViewManager.h"
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 #include "mozilla/Preferences.h"
@@ -1653,7 +1653,7 @@ AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
       nsIWidget* widget = frame->GetNearestWidget();
       if (widget && widget->IsVisible()) {
         nsIPresShell* shell = document->PresShell();
-        nsIViewManager* vm = shell->GetViewManager();
+        nsViewManager* vm = shell->GetViewManager();
         if (vm) {
           nsCOMPtr<nsIWidget> rootWidget;
           vm->GetRootWidget(getter_AddRefs(rootWidget));

@@ -10,20 +10,20 @@
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMSVGForeignObjectElem.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutUtils.h"
 #include "nsRegion.h"
 #include "nsRenderingContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
-#include "nsSVGForeignObjectElement.h"
+#include "mozilla/dom/SVGForeignObjectElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGUtils.h"
 #include "mozilla/AutoRestore.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -57,10 +57,8 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
                               nsIFrame*   aParent,
                               nsIFrame*   aPrevInFlow)
 {
-#ifdef DEBUG
-  nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(aContent);
-  NS_ASSERTION(foreignObject, "Content is not an SVG foreignObject!");
-#endif
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::foreignObject),
+               "Content is not an SVG foreignObject!");
 
   nsresult rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(aParent->GetStateBits() &
@@ -357,7 +355,7 @@ NS_IMETHODIMP_(nsRect)
 nsSVGForeignObjectFrame::GetCoveredRegion()
 {
   float x, y, w, h;
-  static_cast<nsSVGForeignObjectElement*>(mContent)->
+  static_cast<SVGForeignObjectElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
@@ -383,7 +381,7 @@ nsSVGForeignObjectFrame::ReflowSVG()
   // correct dimensions:
 
   float x, y, w, h;
-  static_cast<nsSVGForeignObjectElement*>(mContent)->
+  static_cast<SVGForeignObjectElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
 
   // If mRect's width or height are negative, reflow blows up! We must clamp!
@@ -433,19 +431,19 @@ nsSVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags)
   bool needNewCanvasTM = false;
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
-    nsSVGForeignObjectElement *fO =
-      static_cast<nsSVGForeignObjectElement*>(mContent);
+    SVGForeignObjectElement *fO =
+      static_cast<SVGForeignObjectElement*>(mContent);
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
-    if (fO->mLengthAttributes[nsSVGForeignObjectElement::X].IsPercentage() ||
-        fO->mLengthAttributes[nsSVGForeignObjectElement::Y].IsPercentage()) {
+    if (fO->mLengthAttributes[SVGForeignObjectElement::ATTR_X].IsPercentage() ||
+        fO->mLengthAttributes[SVGForeignObjectElement::ATTR_Y].IsPercentage()) {
       needNewBounds = true;
       needNewCanvasTM = true;
     }
     // Our coordinate context's width/height has changed. If we have a
     // percentage width/height our dimensions will change so we must reflow.
-    if (fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].IsPercentage() ||
-        fO->mLengthAttributes[nsSVGForeignObjectElement::HEIGHT].IsPercentage()) {
+    if (fO->mLengthAttributes[SVGForeignObjectElement::ATTR_WIDTH].IsPercentage() ||
+        fO->mLengthAttributes[SVGForeignObjectElement::ATTR_HEIGHT].IsPercentage()) {
       needNewBounds = true;
       needReflow = true;
     }
@@ -496,8 +494,8 @@ SVGBBox
 nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                              uint32_t aFlags)
 {
-  nsSVGForeignObjectElement *content =
-    static_cast<nsSVGForeignObjectElement*>(mContent);
+  SVGForeignObjectElement *content =
+    static_cast<SVGForeignObjectElement*>(mContent);
 
   float x, y, w, h;
   content->GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
@@ -527,8 +525,8 @@ nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor)
     NS_ASSERTION(mParent, "null parent");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-    nsSVGForeignObjectElement *content =
-      static_cast<nsSVGForeignObjectElement*>(mContent);
+    SVGForeignObjectElement *content =
+      static_cast<SVGForeignObjectElement*>(mContent);
 
     gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));
 

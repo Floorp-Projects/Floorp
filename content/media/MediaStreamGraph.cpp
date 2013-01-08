@@ -1777,8 +1777,20 @@ MediaStream::FinishOnGraphThread()
 }
 
 void
+MediaStream::RemoveAllListenersImpl()
+{
+  for (int32_t i = mListeners.Length() - 1; i >= 0; --i) {
+    nsRefPtr<MediaStreamListener> listener = mListeners[i].forget();
+    listener->NotifyRemoved(GraphImpl());
+  }
+  mListeners.Clear();
+}
+
+void
 MediaStream::DestroyImpl()
 {
+  RemoveAllListenersImpl();
+
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     mConsumers[i]->Disconnect();
   }
@@ -1959,6 +1971,15 @@ MediaStream::AddListener(MediaStreamListener* aListener)
     nsRefPtr<MediaStreamListener> mListener;
   };
   GraphImpl()->AppendMessage(new Message(this, aListener));
+}
+
+void
+MediaStream::RemoveListenerImpl(MediaStreamListener* aListener)
+{ 
+  // wouldn't need this if we could do it in the opposite order
+  nsRefPtr<MediaStreamListener> listener(aListener);
+  mListeners.RemoveElement(aListener);
+  listener->NotifyRemoved(GraphImpl());
 }
 
 void

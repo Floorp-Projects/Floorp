@@ -81,15 +81,13 @@ function MediaStreamPlayback(mediaElement, mediaStream) {
       var timeUpdateFired = false;
 
       var timeUpdateCallback = function() {
-        timeUpdateFired = true;
-        self.mediaElement.removeEventListener('timeupdate', timeUpdateCallback,
-          false);
-
-        ok(self.mediaStream.currentTime > 0,
-           "Stream's time should be greater than zero");
-        ok(self.mediaElement.currentTime > 0,
-           "MediaElement time shall be greater than zero");
-        onSuccess();
+        if(self.mediaStream.currentTime > 0 &&
+           self.mediaElement.currentTime > 0) {
+          timeUpdateFired = true;
+          self.mediaElement.removeEventListener('timeupdate', timeUpdateCallback,
+            false);
+          onSuccess();
+        }
       };
 
       // When timeupdate fires, we validate time has passed and move
@@ -100,6 +98,8 @@ function MediaStreamPlayback(mediaElement, mediaStream) {
       // If timeupdate doesn't fire in enough time, we fail the test
       setTimeout(function() {
         if(!timeUpdateFired) {
+          self.mediaElement.removeEventListener('timeupdate',
+            timeUpdateCallback, false);
           ok(false, "timeUpdate event never fired");
           onError();
         }
@@ -118,6 +118,8 @@ function MediaStreamPlayback(mediaElement, mediaStream) {
     // If canplaythrough doesn't fire in enough time, we fail the test
     setTimeout(function() {
       if(!canPlayThroughFired) {
+        self.mediaElement.removeEventListener('canplaythrough',
+          canPlayThroughCallback, false);
         ok(false, "canplaythrough event never fired");
         onError();
       }

@@ -52,7 +52,6 @@ ActivitiesDb.prototype = {
    *  id:                  String
    *  manifest:            String
    *  name:                String
-   *  title:               String
    *  icon:                String
    *  description:         jsval
    * }
@@ -94,7 +93,6 @@ ActivitiesDb.prototype = {
         let object = {
           manifest: aObject.manifest,
           name: aObject.name,
-          title: aObject.title || "",
           icon: aObject.icon || "",
           description: aObject.description
         };
@@ -140,7 +138,6 @@ ActivitiesDb.prototype = {
 
           txn.result.options.push({
             manifest: result.manifest,
-            title: result.title,
             icon: result.icon,
             description: result.description
           });

@@ -31,21 +31,21 @@ function test()
     gDebugger = gPane.panelWin;
     gDebugger.SourceResults.prototype.alwaysExpand = false;
 
+    gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+      let url = aEvent.detail.url;
+      if (url.indexOf("-02.js") != -1) {
+        scriptShown = true;
+        gDebugger.removeEventListener(aEvent.type, _onEvent);
+        runTest();
+      }
+    });
+
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
       runTest();
     });
 
     gDebuggee.firstCall();
-  });
-
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-02.js") != -1) {
-      scriptShown = true;
-      window.removeEventListener(aEvent.type, _onEvent);
-      runTest();
-    }
   });
 
   function runTest()
@@ -68,8 +68,8 @@ function testScriptSearching() {
 }
 
 function doSearch() {
-  window.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -170,8 +170,8 @@ function testClickLineToJump(scriptResults, callbacks) {
   is(firstHeaderItem.instance.expanded, true,
     "The first script results should be expanded after direct function call.");
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -205,8 +205,8 @@ function testClickMatchToJump(scriptResults, callbacks) {
   is(secondHeaderItem.instance.expanded, true,
     "The second script results should be expanded after direct function call.");
 
-  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    window.removeEventListener(aEvent.type, _onEvent);
+  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent);
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -246,7 +246,7 @@ function append(text) {
   gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
-    EventUtils.sendChar(text[i]);
+    EventUtils.sendChar(text[i], gDebugger);
   }
   info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
 }

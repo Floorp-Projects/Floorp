@@ -328,7 +328,7 @@ var BrowserApp = {
         NativeWindow.toast.show(label, "short");
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInNewPrivateTab"),
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInPrivateTab"),
       NativeWindow.contextmenus.linkOpenableContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
@@ -1063,101 +1063,154 @@ var BrowserApp = {
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
 
-    if (aTopic == "Session:Back") {
-      browser.goBack();
-    } else if (aTopic == "Session:Forward") {
-      browser.goForward();
-    } else if (aTopic == "Session:Reload") {
-      browser.reload();
-    } else if (aTopic == "Session:Stop") {
-      browser.stop();
-    } else if (aTopic == "Tab:Load") {
-      let data = JSON.parse(aData);
+    switch (aTopic) {
 
-      // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
-      // inheriting the currently loaded document's principal.
-      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-      if (data.userEntered)
-        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+      case "Session:Back":
+        browser.goBack();
+        break;
 
-      let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
-      let params = {
-        selected: !delayLoad,
-        parentId: ("parentId" in data) ? data.parentId : -1,
-        flags: flags,
-        tabID: data.tabID,
-        isPrivate: (data.isPrivate == true),
-        pinned: (data.pinned == true),
-        delayLoad: (delayLoad == true),
-        desktopMode: (data.desktopMode == true)
-      };
+      case "Session:Forward":
+        browser.goForward();
+        break;
 
-      let url = data.url;
-      if (data.engine) {
-        let engine = Services.search.getEngineByName(data.engine);
-        if (engine) {
-          let submission = engine.getSubmission(url);
-          url = submission.uri.spec;
-          params.postData = submission.postData;
+      case "Session:Reload":
+        browser.reload();
+        break;
+
+      case "Session:Stop":
+        browser.stop();
+        break;
+
+      case "Tab:Load": {
+        let data = JSON.parse(aData);
+
+        // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
+        // inheriting the currently loaded document's principal.
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+        if (data.userEntered) {
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
         }
+
+        let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
+        let params = {
+          selected: !delayLoad,
+          parentId: ("parentId" in data) ? data.parentId : -1,
+          flags: flags,
+          tabID: data.tabID,
+          isPrivate: (data.isPrivate === true),
+          pinned: (data.pinned === true),
+          delayLoad: (delayLoad === true),
+          desktopMode: (data.desktopMode === true)
+        };
+
+        let url = data.url;
+        if (data.engine) {
+          let engine = Services.search.getEngineByName(data.engine);
+          if (engine) {
+            let submission = engine.getSubmission(url);
+            url = submission.uri.spec;
+            params.postData = submission.postData;
+          }
+        }
+
+        // Don't show progress throbber for about:home or about:reader
+        if (!shouldShowProgress(url))
+          params.showProgress = false;
+
+        if (data.newTab)
+          this.addTab(url, params);
+        else
+          this.loadURI(url, browser, params);
+        break;
       }
 
-      // Don't show progress throbber for about:home or about:reader
-      if (!shouldShowProgress(url))
-        params.showProgress = false;
+      case "Tab:Selected":
+        this._handleTabSelected(this.getTabForId(parseInt(aData)));
+        break;
 
-      if (data.newTab)
-        this.addTab(url, params);
-      else
-        this.loadURI(url, browser, params);
-    } else if (aTopic == "Tab:Selected") {
-      this._handleTabSelected(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Tab:Closed") {
-      this._handleTabClosed(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Browser:Quit") {
-      this.quit();
-    } else if (aTopic == "SaveAs:PDF") {
-      this.saveAsPDF(browser);
-    } else if (aTopic == "Preferences:Get") {
-      this.getPreferences(aData);
-    } else if (aTopic == "Preferences:Set") {
-      this.setPreferences(aData);
-    } else if (aTopic == "ScrollTo:FocusedInput") {
-      this.scrollToFocusedInput(browser);
-    } else if (aTopic == "Sanitize:ClearData") {
-      this.sanitize(aData);
-    } else if (aTopic == "FullScreen:Exit") {
-      browser.contentDocument.mozCancelFullScreen();
-    } else if (aTopic == "Viewport:Change") {
-      if (this.isBrowserContentDocumentDisplayed())
-        this.selectedTab.setViewport(JSON.parse(aData));
-    } else if (aTopic == "Viewport:Flush") {
-      this.displayedDocumentChanged();
-    } else if (aTopic == "Passwords:Init") {
-      let storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
-        getService(Components.interfaces.nsILoginManagerStorage);
-      storage.init();
+      case "Tab:Closed":
+        this._handleTabClosed(this.getTabForId(parseInt(aData)));
+        break;
 
-      sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
-      Services.obs.removeObserver(this, "Passwords:Init", false);
-    } else if (aTopic == "FormHistory:Init") {
-      let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-      // Force creation/upgrade of formhistory.sqlite
-      let db = fh.DBConnection;
-      sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
-      Services.obs.removeObserver(this, "FormHistory:Init", false);
-    } else if (aTopic == "sessionstore-state-purge-complete") {
-      sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
-    } else if (aTopic == "ToggleProfiling") {
-      let profiler = Cc["@mozilla.org/tools/profiler;1"].
+      case "Browser:Quit":
+        this.quit();
+        break;
+
+      case "SaveAs:PDF":
+        this.saveAsPDF(browser);
+        break;
+
+      case "Preferences:Get":
+        this.getPreferences(aData);
+        break;
+
+      case "Preferences:Set":
+        this.setPreferences(aData);
+        break;
+
+      case "ScrollTo:FocusedInput":
+        this.scrollToFocusedInput(browser);
+        break;
+
+      case "Sanitize:ClearData":
+        this.sanitize(aData);
+        break;
+
+      case "FullScreen:Exit":
+        browser.contentDocument.mozCancelFullScreen();
+        break;
+
+      case "Viewport:Change":
+        if (this.isBrowserContentDocumentDisplayed())
+          this.selectedTab.setViewport(JSON.parse(aData));
+        break;
+
+      case "Viewport:Flush":
+        this.displayedDocumentChanged();
+        break;
+
+      case "Passwords:Init": {
+        let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
+                      getService(Ci.nsILoginManagerStorage);
+        storage.init();
+
+        sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
+        Services.obs.removeObserver(this, "Passwords:Init", false);
+        break;
+      }
+
+      case "FormHistory:Init": {
+        let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+        // Force creation/upgrade of formhistory.sqlite
+        let db = fh.DBConnection;
+        sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
+        Services.obs.removeObserver(this, "FormHistory:Init", false);
+        break;
+      }
+
+      case "sessionstore-state-purge-complete":
+        sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
+        break;
+
+      case "ToggleProfiling": {
+        let profiler = Cc["@mozilla.org/tools/profiler;1"].
                        getService(Ci.nsIProfiler);
-      if (profiler.IsActive()) {
-        profiler.StopProfiler();
-      } else {
-        profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
+        if (profiler.IsActive()) {
+          profiler.StopProfiler();
+        } else {
+          profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
+        }
+        break;
       }
-    } else if (aTopic == "gather-telemetry") {
-      sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+
+      case "gather-telemetry":
+        sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+        break;
+
+      default:
+        dump('BrowserApp.observe: unexpected topic "' + aTopic + '"\n');
+        break;
+
     }
   },
 
@@ -1328,6 +1381,7 @@ var NativeWindow = {
   },
   contextmenus: {
     items: {}, //  a list of context menu items that we may show
+    _nativeItemsSeparator: 0, // the index to insert native context menu items at
     _contextId: 0, // id to assign to new context menu items if they are added
 
     init: function() {
@@ -1499,6 +1553,62 @@ var NativeWindow = {
       else this._targetRef = null;
     },
 
+    _addHTMLContextMenuItems: function cm_addContextMenuItems(aMenu, aParent) {
+      for (let i = 0; i < aMenu.childNodes.length; i++) {
+        let item = aMenu.childNodes[i];
+        if (!item.label || item.hasAttribute("hidden"))
+          continue;
+
+        let id = this._contextId++;
+        let menuitem = {
+          id: id,
+          isGroup: false,
+          callback: (function(aTarget, aX, aY) {
+            // If this is a menu item, show a new context menu with the submenu in it
+            if (item instanceof Ci.nsIDOMHTMLMenuElement) {
+              this.menuitems = [];
+              this._nativeItemsSeparator = 0;
+
+              this._addHTMLContextMenuItems(item, id);
+              this._innerShow(aTarget, aX, aY);
+            } else {
+              // oltherwise just click the item
+              item.click();
+            }
+          }).bind(this),
+
+          getValue: function(aElt) {
+            return {
+              icon: item.icon,
+              label: item.label,
+              id: id,
+              isGroup: false,
+              inGroup: false,
+              disabled: item.disabled,
+              isParent: item instanceof Ci.nsIDOMHTMLMenuElement
+            }
+          }
+        };
+
+        this.menuitems.splice(this._nativeItemsSeparator, 0, menuitem);
+        this._nativeItemsSeparator++;
+      }
+    },
+
+    _getMenuItemForId: function(aId) {
+      if (!this.menuitems)
+        return null;
+
+      for (let i = 0; i < this.menuitems.length; i++) {
+        if (this.menuitems[i].id == aId)
+          return this.menuitems[i];
+      }
+      return null;
+    },
+
+    // Checks if there are context menu items to show, and if it finds them
+    // sends a contextmenu event to content. We also send showing events to
+    // any html5 context menus we are about to show
     _sendToContent: function(aX, aY) {
       // find and store the top most element this context menu is being shown for
       // use the highlighted element if possible, otherwise look for nearby clickable elements
@@ -1513,27 +1623,37 @@ var NativeWindow = {
       // store a weakref to the target to be used when the context menu event returns
       this._target = target;
 
-      this.menuitems = {};
+      this.menuitems = [];
       let menuitemsSet = false;
 
       // now walk up the tree and for each node look for any context menu items that apply
       let element = target;
-
+      this._nativeItemsSeparator = 0;
       while (element) {
-        for each (let item in this.items) {
-          if (!this.menuitems[item.id] && item.matches(element, aX, aY)) {
-            this.menuitems[item.id] = item;
-            menuitemsSet = true;
+        // first check for any html5 context menus that might exist
+        let contextmenu = element.contextMenu;
+        if (contextmenu) {
+          // send this before we build the list to make sure the site can update the menu
+          contextmenu.QueryInterface(Components.interfaces.nsIHTMLMenu);
+          contextmenu.sendShowEvent();
+          this._addHTMLContextMenuItems(contextmenu, null);
+        }
+
+        // then check for any context menu items registered in the ui
+         for each (let item in this.items) {
+          if (!this._getMenuItemForId(item.id) && item.matches(element, aX, aY)) {
+            this.menuitems.push(item);
           }
         }
 
+        // if we reach a link or a text node, stop digging up through the node hierarchy
         if (this.linkOpenableContext.matches(element) || this.textContext.matches(element))
           break;
         element = element.parentNode;
       }
 
       // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
-      if (menuitemsSet) {
+      if (this.menuitems.length > 0) {
         let event = target.ownerDocument.createEvent("MouseEvent");
         event.initMouseEvent("contextmenu", true, true, content,
                              0, aX, aY, aX, aY, false, false, false, false,
@@ -1549,21 +1669,26 @@ var NativeWindow = {
       }
     },
 
+    // Actually shows the native context menu by passing a list of context menu items to
+    // show to the Java.
     _show: function(aEvent) {
       let popupNode = this._target;
       this._target = null;
       if (aEvent.defaultPrevented || !popupNode) {
         return;
       }
+      this._innerShow(popupNode, aEvent.clientX, aEvent.clientY);
+    },
 
+    _innerShow: function(aTarget, aX, aY) {
       Haptic.performSimpleAction(Haptic.LongPress);
 
       // spin through the tree looking for a title for this context menu
-      let node = popupNode;
+      let node = aTarget;
       let title ="";
       while(node && !title) {
         if (node.hasAttribute && node.hasAttribute("title")) {
-          title = node.getAttribute("title")
+          title = node.getAttribute("title");
         } else if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
                 (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
           title = this._getLinkURL(node);
@@ -1577,8 +1702,8 @@ var NativeWindow = {
 
       // convert this.menuitems object to an array for sending to native code
       let itemArray = [];
-      for each (let item in this.menuitems) {
-        itemArray.push(item.getValue(popupNode));
+      for (let i = 0; i < this.menuitems.length; i++) {
+        itemArray.push(this.menuitems[i].getValue(aTarget));
       }
 
       let msg = {
@@ -1590,18 +1715,25 @@ var NativeWindow = {
       };
       let data = JSON.parse(sendMessageToJava(msg));
       let selectedId = itemArray[data.button].id;
-      let selectedItem = this.menuitems[selectedId];
+      let selectedItem = this._getMenuItemForId(selectedId);
 
+      this.menuitems = null;
       if (selectedItem && selectedItem.callback) {
-        while (popupNode) {
-          if (selectedItem.matches(popupNode, aEvent.clientX, aEvent.clientY)) {
-            selectedItem.callback.call(selectedItem, popupNode, aEvent.clientX, aEvent.clientY);
-            break;
+        if (selectedItem.matches) {
+          // for menuitems added using the native UI, pass the dom element that matched that item to the callback
+          while (aTarget) {
+            if (selectedItem.matches(aTarget, aX, aY)) {
+              selectedItem.callback.call(selectedItem, aTarget, aX, aY);
+              foundNode = true;
+              break;
+            }
+            aTarget = aTarget.parentNode;
           }
-          popupNode = popupNode.parentNode;
+        } else {
+          // if this was added using the html5 context menu api, just click on the context menu item
+          selectedItem.callback.call(selectedItem, aTarget, aX, aY);
         }
       }
-      this.menuitems = null;
     },
 
     handleEvent: function(aEvent) {
@@ -2318,38 +2450,7 @@ var LightWeightThemeWebInstaller = {
   },
 
   _install: function (newLWTheme) {
-    let previousLWTheme = this._manager.currentTheme;
-
-    let listener = {
-      onEnabled: function(aAddon) {
-        LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
-      }
-    };
-
-    AddonManager.addAddonListener(listener);
     this._manager.currentTheme = newLWTheme;
-    AddonManager.removeAddonListener(listener);
-  },
-
-  _postInstallNotification: function (newTheme, previousTheme) {
-    let buttons = [{
-      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.undoButton"),
-      callback: function () {
-        LightWeightThemeWebInstaller._manager.forgetUsedTheme(newTheme.id);
-        LightWeightThemeWebInstaller._manager.currentTheme = previousTheme;
-      }
-    }, {
-      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.manageButton"),
-      callback: function () {
-        BrowserApp.addTab("about:addons", {
-          showProgress: false,
-          selected: true
-        });
-      }
-    }];
-
-    let message = Strings.browser.GetStringFromName("lwthemePostInstallNotification.message"); 
-    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
   },
 
   _previewWindow: null,
@@ -3902,77 +4003,103 @@ var BrowserEventHandler = {
   },
 
   handleUserEvent: function(aTopic, aData) {
-    if (aTopic == "Gesture:Scroll") {
-      // If we've lost our scrollable element, return. Don't cancel the
-      // override, as we probably don't want Java to handle panning until the
-      // user releases their finger.
-      if (this._scrollableElement == null)
-        return;
+    switch (aTopic) {
 
-      // If this is the first scroll event and we can't scroll in the direction
-      // the user wanted, and neither can any non-root sub-frame, cancel the
-      // override so that Java can handle panning the main document.
-      let data = JSON.parse(aData);
-
-      // round the scroll amounts because they come in as floats and might be
-      // subject to minor rounding errors because of zoom values. I've seen values
-      // like 0.99 come in here and get truncated to 0; this avoids that problem.
-      let zoom = BrowserApp.selectedTab._zoom;
-      data.x = Math.round(data.x / zoom);
-      data.y = Math.round(data.y / zoom);
-
-      if (this._firstScrollEvent) {
-        while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
-          this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
-
-        let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement == null || this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
-          sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
+      case "Gesture:Scroll": {
+        // If we've lost our scrollable element, return. Don't cancel the
+        // override, as we probably don't want Java to handle panning until the
+        // user releases their finger.
+        if (this._scrollableElement == null)
           return;
-        }
 
-        this._firstScrollEvent = false;
-      }
+        // If this is the first scroll event and we can't scroll in the direction
+        // the user wanted, and neither can any non-root sub-frame, cancel the
+        // override so that Java can handle panning the main document.
+        let data = JSON.parse(aData);
 
-      // Scroll the scrollable element
-      if (this._elementCanScroll(this._scrollableElement, data.x, data.y)) {
-        this._scrollElementBy(this._scrollableElement, data.x, data.y);
-        sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
-        SelectionHandler.subdocumentScrolled(this._scrollableElement);
-      } else {
-        sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
-      }
-    } else if (aTopic == "Gesture:CancelTouch") {
-      this._cancelTapHighlight();
-    } else if (aTopic == "Gesture:SingleTap") {
-      let element = this._highlightElement;
-      if (element) {
-        try {
-          let data = JSON.parse(aData);
-          if (ElementTouchHelper.isElementClickable(element)) {
-            [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
-            element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
+        // round the scroll amounts because they come in as floats and might be
+        // subject to minor rounding errors because of zoom values. I've seen values
+        // like 0.99 come in here and get truncated to 0; this avoids that problem.
+        let zoom = BrowserApp.selectedTab._zoom;
+        let x = Math.round(data.x / zoom);
+        let y = Math.round(data.y / zoom);
+
+        if (this._firstScrollEvent) {
+          while (this._scrollableElement != null &&
+                 !this._elementCanScroll(this._scrollableElement, x, y))
+            this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
+
+          let doc = BrowserApp.selectedBrowser.contentDocument;
+          if (this._scrollableElement == null ||
+              this._scrollableElement == doc.body ||
+              this._scrollableElement == doc.documentElement) {
+            sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
+            return;
           }
 
-          this._sendMouseEvent("mousemove", element, data.x, data.y);
-          this._sendMouseEvent("mousedown", element, data.x, data.y);
-          this._sendMouseEvent("mouseup",   element, data.x, data.y);
-
-          // See if its a input element
-          if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) || (element instanceof HTMLTextAreaElement))
-             SelectionHandler.showThumb(element);
-        } catch(e) {
-          Cu.reportError(e);
+          this._firstScrollEvent = false;
         }
+
+        // Scroll the scrollable element
+        if (this._elementCanScroll(this._scrollableElement, x, y)) {
+          this._scrollElementBy(this._scrollableElement, x, y);
+          sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+          SelectionHandler.subdocumentScrolled(this._scrollableElement);
+        } else {
+          sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
+        }
+
+        break;
       }
-      this._cancelTapHighlight();
-    } else if (aTopic == "Gesture:DoubleTap") {
-      this._cancelTapHighlight();
-      this.onDoubleTap(aData);
-    } else if (aTopic == "MozMagnifyGestureStart" || aTopic == "MozMagnifyGestureUpdate") {
-      this.onPinch(aData);
-    } else if (aTopic == "MozMagnifyGesture") {
-      this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
+
+      case "Gesture:CancelTouch":
+        this._cancelTapHighlight();
+        break;
+
+      case "Gesture:SingleTap": {
+        let element = this._highlightElement;
+        if (element) {
+          try {
+            let data = JSON.parse(aData);
+            let [x, y] = [data.x, data.y];
+            if (ElementTouchHelper.isElementClickable(element)) {
+              [x, y] = this._moveClickPoint(element, x, y);
+              element = ElementTouchHelper.anyElementFromPoint(x, y);
+            }
+
+            this._sendMouseEvent("mousemove", element, x, y);
+            this._sendMouseEvent("mousedown", element, x, y);
+            this._sendMouseEvent("mouseup",   element, x, y);
+
+            // See if its a input element
+            if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) ||
+                (element instanceof HTMLTextAreaElement))
+               SelectionHandler.showThumb(element);
+          } catch(e) {
+            Cu.reportError(e);
+          }
+        }
+        this._cancelTapHighlight();
+        break;
+      }
+
+      case"Gesture:DoubleTap":
+        this._cancelTapHighlight();
+        this.onDoubleTap(aData);
+        break;
+
+      case "MozMagnifyGestureStart":
+      case "MozMagnifyGestureUpdate":
+        this.onPinch(aData);
+        break;
+
+      case "MozMagnifyGesture":
+        this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
+        break;
+
+      default:
+        dump('BrowserEventHandler.handleUserEvent: unexpected topic "' + aTopic + '"');
+        break;
     }
   },
 

@@ -56,6 +56,7 @@
 #include "nsLayoutUtils.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsObjectFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -91,8 +92,8 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
   if (aContent->GetPrimaryFrame()->IsFocusable())
     return true;
 
-  PRUint32 attrCount = aContent->GetAttrCount();
-  for (PRUint32 attrIdx = 0; attrIdx < attrCount; attrIdx++) {
+  uint32_t attrCount = aContent->GetAttrCount();
+  for (uint32_t attrIdx = 0; attrIdx < attrCount; attrIdx++) {
     const nsAttrName* attr = aContent->GetAttrNameAt(attrIdx);
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
       nsIAtom* attrAtom = attr->Atom();
@@ -196,9 +197,7 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
       treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
       if (treeItem != rootTreeItem) {
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootTreeItem));
-        nsCOMPtr<nsIPresShell> presShell;
-        docShell->GetPresShell(getter_AddRefs(presShell));
-        ps = presShell;
+        ps = docShell->GetPresShell();
       }
 
       return aCanCreate ? GetDocAccessible(ps) : ps->GetDocAccessible();
@@ -912,8 +911,16 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   if (!newAcc) {
-    if (content->IsSVG(nsGkAtoms::svg)) {
-      newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
+    if (content->IsSVG()) {
+      nsSVGPathGeometryFrame* pathGeometryFrame = do_QueryFrame(frame);
+      if (pathGeometryFrame) {
+        // A graphic elements: rect, circle, ellipse, line, path, polygon,
+        // polyline and image. A 'use' and 'text' graphic elements require
+        // special support.
+        newAcc = new EnumRoleAccessible(content, document, roles::GRAPHIC);
+      } else if (content->Tag() == nsGkAtoms::svg) {
+        newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
+      }
     } else if (content->IsMathML(nsGkAtoms::math)) {
       newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
     }

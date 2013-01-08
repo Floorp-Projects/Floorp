@@ -56,7 +56,14 @@ function reflectString(aParameters)
 
   element[idlAttr] = null;
   // TODO: remove this ugly hack when null stringification will work as expected.
-  if (element.localName == "textarea" && idlAttr == "wrap") {
+  var todoAttrs = {
+    form: [ "acceptCharset", "name", "target" ],
+    input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
+    link: [ "crossOrigin" ],
+    source: [ "media" ],
+    textarea: [ "name", "placeholder" ],
+  };
+  if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {
     is(element.getAttribute(contentAttr), "null",
        "null should have been stringified to 'null'");
     is(element[idlAttr], "null", "null should have been stringified to 'null'");

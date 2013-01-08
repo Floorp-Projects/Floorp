@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=816340
+-->
+<window title="Mozilla Bug 816340"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start();">
+  <label value="Mozilla Bug 816340"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    function ok(val, msg) {
+      opener.wrappedJSObject.ok(val, msg);
+    }
+
+    var elems = 
+      [
+        "input",
+        "textarea",
+        "select",
+        "fieldset",
+        "button",
+      ];
+
+    var chromeDidGetEvent = false;
+    function chromeListener() {
+      chromeDidGetEvent = true;
+    }
+
+    function testElement(el, disabled, contentShouldGetEvent) {
+      chromeDidGetEvent = false;
+      var b = document.getElementById("browser");
+      b.contentDocument.body.innerHTML = null;
+      var e = b.contentDocument.createElement(el);
+      if (disabled) {
+        e.setAttribute("disabled", "true");
+      }
+      b.contentDocument.body.appendChild(e);
+      var contentDidGetEvent = false;
+      b.contentDocument.body.addEventListener("foo",
+        function() { contentDidGetEvent = true }, true);
+
+      b.addEventListener("foo", chromeListener, true);
+      e.dispatchEvent(new Event("foo"));
+      b.removeEventListener("foo", chromeListener, true);
+      ok(contentDidGetEvent == contentShouldGetEvent, "content: " + el + (disabled ? " disabled" : ""));
+      ok(chromeDidGetEvent, "chrome: " + el + (disabled ? " disabled" : ""));
+    }
+      
+    function start() {
+      // Test common element.
+      testElement("div", false, true);
+      testElement("div", true, true);
+
+      for (var i = 0; i < elems.length; ++i) {
+        testElement(elems[i], false, true);
+        testElement(elems[i], true, false);
+      }
+      ok(true, "done");
+      opener.setTimeout("done()", 0);
+      window.close();
+    }
+
+  ]]></script>
+
+  <browser id="browser" type="content" src="about:blank"/>
+</window>

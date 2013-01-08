@@ -787,5 +787,11 @@ function test_exists_file()
   info("test_exists_file: starting");
   ok(OS.File.exists(file_name), "test_exists_file: file exists (OS.File.exists)");
   ok(!OS.File.exists(file_name + ".tmp"), "test_exists_file: file does not exists (OS.File.exists)");
+
+  let dir_name = OS.Path.join("chrome", "toolkit", "components" ,"osfile",
+                               "tests", "mochi");
+  ok(OS.File.exists(dir_name), "test_exists_file: directory exists");
+  ok(!OS.File.exists(dir_name) + ".tmp", "test_exists_file: directory does not exist");
+
   info("test_exists_file: complete");
 }

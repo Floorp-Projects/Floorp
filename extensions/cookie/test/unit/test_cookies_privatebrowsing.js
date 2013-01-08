@@ -27,18 +27,6 @@ function do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
-  // Make sure the private browsing service is available.
-  try {
-    Services.pb;
-  } catch (e) {
-    finish_test();
-    return;
-  }
-
-  // Tell the private browsing service to not attempt to restore window state.
-  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session",
-    true);
-
   // Test with cookies enabled.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 
@@ -126,4 +114,3 @@ function do_run_test() {
 
   finish_test();
 }
-

@@ -305,7 +305,7 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 
 nsresult
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
-                            nsIViewManager* aViewManager,
+                            nsViewManager* aViewManager,
                             nsStyleSet* aStyleSet,
                             nsIPresShell** aInstancePtrResult)
 {
@@ -2760,9 +2760,7 @@ static bool HasPresShell(nsPIDOMWindow *aWindow)
   nsIDocShell *docShell = aWindow->GetDocShell();
   if (!docShell)
     return false;
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  return presShell != nullptr;
+  return docShell->GetPresShell() != nullptr;
 }
 
 nsresult

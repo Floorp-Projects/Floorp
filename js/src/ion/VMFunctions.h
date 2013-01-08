@@ -410,7 +410,7 @@ class AutoDetectInvalidation
     }
 };
 
-bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32_t argc, Value *argv, Value *rval);
+bool InvokeFunction(JSContext *cx, HandleFunction fun, uint32_t argc, Value *argv, Value *rval);
 JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 
 bool CheckOverRecursed(JSContext *cx);
@@ -464,6 +464,7 @@ bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out);
 
 bool GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval);
 
+bool CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval);
 } // namespace ion
 } // namespace js
 

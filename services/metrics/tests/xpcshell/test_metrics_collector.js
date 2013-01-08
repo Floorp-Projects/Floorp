@@ -5,158 +5,123 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/services/metrics/collector.jsm");
-Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
+Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
-
 
 function run_test() {
   run_next_test();
 };
 
-add_test(function test_constructor() {
-  let collector = new MetricsCollector();
+add_task(function test_constructor() {
+  let storage = yield Metrics.Storage("constructor");
+  let collector = new Metrics.Collector(storage);
 
-  run_next_test();
+  yield storage.close();
 });
 
-add_test(function test_register_provider() {
-  let collector = new MetricsCollector();
+add_task(function test_register_provider() {
+  let storage = yield Metrics.Storage("register_provider");
+
+  let collector = new Metrics.Collector(storage);
   let dummy = new DummyProvider();
 
-  collector.registerProvider(dummy);
-  do_check_eq(collector._providers.length, 1);
-  collector.registerProvider(dummy);
-  do_check_eq(collector._providers.length, 1);
+  yield collector.registerProvider(dummy);
+  do_check_eq(collector._providers.size, 1);
+  yield collector.registerProvider(dummy);
+  do_check_eq(collector._providers.size, 1);
   do_check_eq(collector.providerErrors.size, 1);
 
   let failed = false;
   try {
     collector.registerProvider({});
   } catch (ex) {
-    do_check_true(ex.message.startsWith("argument must be a MetricsProvider"));
+    do_check_true(ex.message.startsWith("Argument must be a Provider"));
     failed = true;
   } finally {
     do_check_true(failed);
     failed = false;
   }
 
-  run_next_test();
+  yield storage.close();
 });
 
-add_test(function test_collect_constant_measurements() {
-  let collector = new MetricsCollector();
+add_task(function test_collect_constant_data() {
+  let storage = yield Metrics.Storage("collect_constant_data");
+  let collector = new Metrics.Collector(storage);
   let provider = new DummyProvider();
-  collector.registerProvider(provider);
+  yield collector.registerProvider(provider);
 
   do_check_eq(provider.collectConstantCount, 0);
 
-  collector.collectConstantMeasurements().then(function onResult() {
-    do_check_eq(provider.collectConstantCount, 1);
-    do_check_eq(collector.collectionResults.size, 1);
-    do_check_true(collector.collectionResults.has("DummyProvider"));
+  yield collector.collectConstantData();
+  do_check_eq(provider.collectConstantCount, 1);
 
-    let result = collector.collectionResults.get("DummyProvider");
-    do_check_true(result instanceof MetricsCollectionResult);
+  do_check_true(collector._providers.get("DummyProvider").constantsCollected);
+  do_check_eq(collector.providerErrors.get("DummyProvider").length, 0);
 
-    do_check_true(collector._providers[0].constantsCollected);
-    do_check_eq(collector.providerErrors.get("DummyProvider").length, 0);
-
-    run_next_test();
-  });
+  yield storage.close();
 });
 
-add_test(function test_collect_constant_throws() {
-  let collector = new MetricsCollector();
+add_task(function test_collect_constant_throws() {
+  let storage = yield Metrics.Storage("collect_constant_throws");
+  let collector = new Metrics.Collector(storage);
   let provider = new DummyProvider();
-  provider.throwDuringCollectConstantMeasurements = "Fake error during collect";
-  collector.registerProvider(provider);
+  provider.throwDuringCollectConstantData = "Fake error during collect";
+  yield collector.registerProvider(provider);
 
-  collector.collectConstantMeasurements().then(function onResult() {
-    do_check_eq(collector.providerErrors.get("DummyProvider").length, 1);
-    do_check_eq(collector.providerErrors.get("DummyProvider")[0].message,
-                provider.throwDuringCollectConstantMeasurements);
+  yield collector.collectConstantData();
+  do_check_true(collector.providerErrors.has(provider.name));
+  let errors = collector.providerErrors.get(provider.name);
+  do_check_eq(errors.length, 1);
+  do_check_eq(errors[0].message, provider.throwDuringCollectConstantData);
 
-    run_next_test();
-  });
+  yield storage.close();
 });
 
-add_test(function test_collect_constant_populate_throws() {
-  let collector = new MetricsCollector();
+add_task(function test_collect_constant_populate_throws() {
+  let storage = yield Metrics.Storage("collect_constant_populate_throws");
+  let collector = new Metrics.Collector(storage);
   let provider = new DummyProvider();
   provider.throwDuringConstantPopulate = "Fake error during constant populate";
-  collector.registerProvider(provider);
+  yield collector.registerProvider(provider);
 
-  collector.collectConstantMeasurements().then(function onResult() {
-    do_check_eq(collector.collectionResults.size, 1);
-    do_check_true(collector.collectionResults.has("DummyProvider"));
+  yield collector.collectConstantData();
 
-    let result = collector.collectionResults.get("DummyProvider");
-    do_check_eq(result.errors.length, 1);
-    do_check_eq(result.errors[0].message, provider.throwDuringConstantPopulate);
+  let errors = collector.providerErrors.get(provider.name);
+  do_check_eq(errors.length, 1);
+  do_check_eq(errors[0].message, provider.throwDuringConstantPopulate);
+  do_check_false(collector._providers.get(provider.name).constantsCollected);
 
-    do_check_false(collector._providers[0].constantsCollected);
-    do_check_eq(collector.providerErrors.get("DummyProvider").length, 0);
-
-    run_next_test();
-  });
+  yield storage.close();
 });
 
-add_test(function test_collect_constant_onetime() {
-  let collector = new MetricsCollector();
+add_task(function test_collect_constant_onetime() {
+  let storage = yield Metrics.Storage("collect_constant_onetime");
+  let collector = new Metrics.Collector(storage);
   let provider = new DummyProvider();
-  collector.registerProvider(provider);
+  yield collector.registerProvider(provider);
 
-  collector.collectConstantMeasurements().then(function onResult() {
-    do_check_eq(provider.collectConstantCount, 1);
+  yield collector.collectConstantData();
+  do_check_eq(provider.collectConstantCount, 1);
 
-    collector.collectConstantMeasurements().then(function onResult() {
-      do_check_eq(provider.collectConstantCount, 1);
+  yield collector.collectConstantData();
+  do_check_eq(provider.collectConstantCount, 1);
 
-      run_next_test();
-    });
-  });
+  yield storage.close();
 });
 
-add_test(function test_collect_multiple() {
-  let collector = new MetricsCollector();
+add_task(function test_collect_multiple() {
+  let storage = yield Metrics.Storage("collect_multiple");
+  let collector = new Metrics.Collector(storage);
 
   for (let i = 0; i < 10; i++) {
-    collector.registerProvider(new DummyProvider("provider" + i));
+    yield collector.registerProvider(new DummyProvider("provider" + i));
   }
 
-  do_check_eq(collector._providers.length, 10);
+  do_check_eq(collector._providers.size, 10);
 
-  collector.collectConstantMeasurements().then(function onResult(innerCollector) {
-    do_check_eq(collector, innerCollector);
-    do_check_eq(collector.collectionResults.size, 10);
+  yield collector.collectConstantData();
 
-    run_next_test();
-  });
-});
-
-add_test(function test_collect_aggregate() {
-  let collector = new MetricsCollector();
-
-  let dummy1 = new DummyProvider();
-  dummy1.constantMeasurementName = "measurement1";
-
-  let dummy2 = new DummyProvider();
-  dummy2.constantMeasurementName = "measurement2";
-
-  collector.registerProvider(dummy1);
-  collector.registerProvider(dummy2);
-  do_check_eq(collector._providers.length, 2);
-
-  collector.collectConstantMeasurements().then(function onResult() {
-    do_check_eq(collector.collectionResults.size, 1);
-
-    let measurements = collector.collectionResults.get("DummyProvider").measurements;
-    do_check_eq(measurements.size, 2);
-    do_check_true(measurements.has("measurement1"));
-    do_check_true(measurements.has("measurement2"));
-
-    run_next_test();
-  });
+  yield storage.close();
 });
 

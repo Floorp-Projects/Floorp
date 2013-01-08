@@ -13,12 +13,12 @@ richlistitem.download {
 .download-state:not(:-moz-any([state="2"], /* Failed             */
                               [state="4"]) /* Paused             */)
                                            .downloadCancelMenuItem,
-.download-state:not(:-moz-any([state="1"], /* Finished           */
-                              [state="2"], /* Failed             */
-                              [state="3"], /* Canceled           */
-                              [state="6"], /* Blocked (parental) */
-                              [state="8"], /* Blocked (dirty)    */
-                              [state="9"]) /* Blocked (policy)   */)
+.download-state[state]:not(:-moz-any([state="1"], /* Finished           */
+                                     [state="2"], /* Failed             */
+                                     [state="3"], /* Canceled           */
+                                     [state="6"], /* Blocked (parental) */
+                                     [state="8"], /* Blocked (dirty)    */
+                                     [state="9"]) /* Blocked (policy)   */)
                                            .downloadRemoveFromHistoryMenuItem,
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="0"], /* Downloading        */
@@ -26,9 +26,7 @@ richlistitem.download {
                               [state="4"], /* Paused             */
                               [state="5"]) /* Starting (queued)  */)
                                            .downloadShowMenuItem,
-
 .download-state[state="7"]                 .downloadCommandsSeparator
-
 {
   display: none;
 }

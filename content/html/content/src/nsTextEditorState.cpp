@@ -8,7 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
-#include "nsIView.h"
+#include "nsView.h"
 #include "nsCaret.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"

@@ -110,9 +110,9 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef DEBUG
-    if (argc > 0) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() > 0) {
         // try to dump the informative string
         JSString *str = ToString(cx, args[0]);
         if (str) {
@@ -165,6 +165,27 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/**
+ * Returns the default locale as a well-formed, but not necessarily canonicalized,
+ * BCP-47 language tag.
+ */
+static JSBool
+intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    const char *locale = cx->getDefaultLocale();
+    if (!locale)
+        return false;
+
+    RootedString jslocale(cx, JS_NewStringCopyZ(cx, locale));
+    if (!jslocale)
+        return false;
+
+    args.rval().setString(jslocale);
+    return true;
+}
+
 JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToObject",           intrinsic_ToObject,             1,0),
     JS_FN("ToInteger",          intrinsic_ToInteger,            1,0),
@@ -173,6 +194,7 @@ JSFunctionSpec intrinsic_functions[] = {
     JS_FN("AssertionFailed",    intrinsic_AssertionFailed,      1,0),
     JS_FN("MakeConstructible",  intrinsic_MakeConstructible,    1,0),
     JS_FN("DecompileArg",       intrinsic_DecompileArg,         2,0),
+    JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0,0),
     JS_FS_END
 };
 
