@@ -73,6 +73,7 @@ protected:
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
+                                 bool* aIsScoped,
                                  bool* aIsAlternate) = 0;
 
   nsIStyleSheet* GetStyleSheet() { return mStyleSheet; }
