@@ -21,7 +21,7 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
-#include "nsSVGViewElement.h"
+#include "mozilla/dom/SVGViewElement.h"
 #include "nsSubDocumentFrame.h"
 
 namespace dom = mozilla::dom;
@@ -286,7 +286,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     return ratio;
   }
 
-  nsSVGViewElement* viewElement = content->GetCurrentViewElement();
+  dom::SVGViewElement* viewElement = content->GetCurrentViewElement();
   const nsSVGViewBoxRect* viewbox = nullptr;
 
   // The logic here should match HasViewBox().
