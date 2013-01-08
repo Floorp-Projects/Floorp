@@ -295,6 +295,12 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
   mRuleProcessors[aType] = nullptr;
   if (aType == eScopedDocSheet) {
+    for (int i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
+      nsIStyleRuleProcessor* processor = mScopedDocSheetRuleProcessors[i].get();
+      Element* scope =
+        static_cast<nsCSSRuleProcessor*>(processor)->GetScopeElement();
+      scope->ClearIsScopedStyleRoot();
+    }
     mScopedDocSheetRuleProcessors.Clear();
   }
   if (mAuthorStyleDisabled && (aType == eDocSheet || 
@@ -347,6 +353,8 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
         while (end < count && sheets[end]->GetScopeElement() == scope) {
           end++;
         }
+
+        scope->SetIsScopedStyleRoot();
 
         // Create a rule processor for the scope.
         nsTArray< nsRefPtr<nsCSSStyleSheet> > sheetsForScope;
