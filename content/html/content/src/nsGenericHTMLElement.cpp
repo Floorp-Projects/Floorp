@@ -1870,16 +1870,6 @@ nsGenericHTMLElement::SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue)
   return SetAttr(kNameSpaceID_None, aAttr, aValue, true);
 }
 
-nsresult
-nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, bool aValue)
-{
-  if (aValue) {
-    return SetAttr(kNameSpaceID_None, aAttr, EmptyString(), true);
-  }
-
-  return UnsetAttr(kNameSpaceID_None, aAttr, true);
-}
-
 int32_t
 nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, int32_t aDefault) const
 {
