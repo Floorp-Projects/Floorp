@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGStyleElement.h"
 #include "nsContentUtils.h"
 #include "nsStubMutationObserver.h"
@@ -274,8 +275,10 @@ void
 SVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
                                    nsAString& aType,
                                    nsAString& aMedia,
+                                   bool* aIsScoped,
                                    bool* aIsAlternate)
 {
+  *aIsScoped = false;
   *aIsAlternate = false;
 
   nsAutoString title;
