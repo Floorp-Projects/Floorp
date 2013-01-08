@@ -965,11 +965,13 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
       aRuleWalker->SetLevel(eScopedDocSheet, false, true);
       nsCSSRuleProcessor* processor =
         static_cast<nsCSSRuleProcessor*>(mScopedDocSheetRuleProcessors[i].get());
+      aData->mScope = processor->GetScopeElement();
       (*aCollectorFunc)(mScopedDocSheetRuleProcessors[i], aData);
       lastScopedRNs[i] = aRuleWalker->CurrentNode();
       haveImportantScopedRules[i] = !aRuleWalker->GetCheckForImportantRules();
       haveAnyImportantScopedRules = haveAnyImportantScopedRules || haveImportantScopedRules[i];
     }
+    aData->mScope = nullptr;
   }
   nsRuleNode* lastScopedRN = aRuleWalker->CurrentNode();
   aRuleWalker->SetLevel(eStyleAttrSheet, false, true);
