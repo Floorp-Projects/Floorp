@@ -2019,6 +2019,10 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
          ("Reflow() for nsFlexContainerFrame %p\n", this));
 
+  if (IsFrameTreeTooDeep(aReflowState, aDesiredSize, aStatus)) {
+    return NS_OK;
+  }
+
   // We (and our children) can only depend on our ancestor's height if we have
   // a percent-height.  (There are actually other cases, too -- e.g. if our
   // parent is itself a vertical flex container and we're flexible -- but we'll
