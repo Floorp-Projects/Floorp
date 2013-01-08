@@ -544,7 +544,15 @@ hb_font_set_funcs
 hb_font_set_ppem
 hb_font_set_scale
 hb_language_from_string
+hb_ot_layout_collect_lookups
+hb_ot_layout_has_positioning
+hb_ot_layout_has_substitution
+hb_ot_layout_lookup_collect_glyphs
 hb_ot_tag_to_language
+hb_set_create
+hb_set_destroy
+hb_set_has
+hb_set_next
 hb_shape
 hb_unicode_funcs_create
 hb_unicode_funcs_get_empty

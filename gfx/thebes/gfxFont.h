@@ -216,6 +216,7 @@ public:
         mIgnoreGSUB(false),
         mSVGInitialized(false),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+        mHasSpaceFeaturesInitialized(false),
         mCheckedForGraphiteTables(false),
         mHasCmapTable(false),
         mUVSOffset(0), mUVSData(nullptr),
@@ -348,6 +349,9 @@ public:
     uint16_t         mWeight;
     int16_t          mStretch;
 
+    bool             mHasSpaceFeatures;
+    bool             mHasSpaceFeaturesInitialized;
+
     bool             mHasGraphiteTables;
     bool             mCheckedForGraphiteTables;
     bool             mHasCmapTable;
@@ -379,6 +383,7 @@ protected:
         mIgnoreGSUB(false),
         mSVGInitialized(false),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+        mHasSpaceFeaturesInitialized(false),
         mCheckedForGraphiteTables(false),
         mHasCmapTable(false),
         mUVSOffset(0), mUVSData(nullptr),
@@ -1561,6 +1566,26 @@ public:
     { return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this); }
 
 protected:
+    bool BypassShapedWordCache(uint32_t aRunFlags) {
+        // When creating a textrun in optimizeSpeed mode, we always use the
+        // word cache (which means we do not support features that span
+        // inter-word spaces)
+        if (aRunFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED) {
+            return false;
+        }
+        // We record the presence of space-dependent features in the font entry
+        // so that subsequent instantiations for the same font face won't
+        // require us to re-check the tables; however, the actual check is done
+        // by gfxFont because not all font entry subclasses know how to create
+        // a harfbuzz face for introspection.
+        gfxFontEntry *fe = GetFontEntry();
+        if (!fe->mHasSpaceFeaturesInitialized) {
+            fe->mHasSpaceFeaturesInitialized = true;
+            fe->mHasSpaceFeatures = CheckForFeaturesInvolvingSpace();
+        }
+        return fe->mHasSpaceFeatures;
+    }
+
     // For 8-bit text, expand to 16-bit and then call the following method.
     bool ShapeText(gfxContext    *aContext,
                    const uint8_t *aText,
@@ -1616,6 +1641,8 @@ protected:
                                        uint32_t    aLength,
                                        int32_t     aScript,
                                        gfxTextRun *aTextRun);
+
+    bool CheckForFeaturesInvolvingSpace();
 
     nsRefPtr<gfxFontEntry> mFontEntry;
 
