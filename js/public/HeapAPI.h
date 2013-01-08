@@ -157,6 +157,13 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
         js::IncrementalReferenceBarrier(thing);
 }
 
+static JS_ALWAYS_INLINE void
+ExposeValueToActiveJS(const Value &v)
+{
+    if (v.isMarkable())
+        ExposeGCThingToActiveJS(v.toGCThing(), v.gcKind());
+}
+
 } /* namespace JS */
 
 #endif /* js_heap_api_h___ */
