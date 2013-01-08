@@ -60,7 +60,6 @@ public:
   nsresult CacheCompletions(const CacheResultArray& aResults);
   uint32_t GetHashKey(void) { return mHashKey; }
   void SetFreshTime(uint32_t aTime) { mFreshTime = aTime; }
-  void SetPerClientRandomize(bool aRandomize) { mPerClientRandomize = aRandomize; }
   /*
    * Get a bunch of extra prefixes to query for completion
    * and mask the real entry being requested
@@ -84,7 +83,6 @@ private:
                              const nsACString& aTable);
 
   LookupCache *GetLookupCache(const nsACString& aTable);
-  nsresult InitKey();
 
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;
@@ -101,7 +99,6 @@ private:
   // Stores the last time a given table was updated (seconds).
   nsDataHashtable<nsCStringHashKey, int64_t> mTableFreshness;
   uint32_t mFreshTime;
-  bool mPerClientRandomize;
 };
 
 }

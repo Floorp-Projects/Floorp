@@ -65,9 +65,8 @@ ParseChunkRange(nsACString::const_iterator& aBegin,
   return false;
 }
 
-ProtocolParser::ProtocolParser(uint32_t aHashKey)
+ProtocolParser::ProtocolParser()
     : mState(PROTOCOL_STATE_CONTROL)
-  , mHashKey(aHashKey)
   , mUpdateStatus(NS_OK)
   , mUpdateWait(0)
   , mResetRequested(false)
@@ -81,10 +80,9 @@ ProtocolParser::~ProtocolParser()
 }
 
 nsresult
-ProtocolParser::Init(nsICryptoHash* aHasher, bool aPerClientRandomize)
+ProtocolParser::Init(nsICryptoHash* aHasher)
 {
   mCryptoHash = aHasher;
-  mPerClientRandomize = aPerClientRandomize;
   return NS_OK;
 }
 
@@ -426,7 +424,6 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
   nsTArray<nsCString> lines;
   ParseString(PromiseFlatCString(aChunk), '\n', lines);
 
@@ -441,18 +438,9 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         mTableUpdate->NewAddComplete(mChunkState.num, hash);
       } else {
         NS_ASSERTION(mChunkState.hashSize == 4, "Only 32- or 4-byte hashes can be used for add chunks.");
-        Completion hash;
-        Completion domHash;
-        Prefix newHash;
-        rv = LookupCache::GetKey(line, &domHash, mCryptoHash);
-        NS_ENSURE_SUCCESS(rv, rv);
+        Prefix hash;
         hash.FromPlaintext(line, mCryptoHash);
-        uint32_t codedHash;
-        rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
-                                    &codedHash, !mPerClientRandomize);
-        NS_ENSURE_SUCCESS(rv, rv);
-        newHash.FromUint32(codedHash);
-        mTableUpdate->NewAddPrefix(mChunkState.num, newHash);
+        mTableUpdate->NewAddPrefix(mChunkState.num, hash);
       }
     } else {
       nsCString::const_iterator begin, iter, end;
@@ -474,21 +462,8 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
       } else {
         NS_ASSERTION(mChunkState.hashSize == 4, "Only 32- or 4-byte hashes can be used for add chunks.");
         Prefix hash;
-        Completion domHash;
-        rv = LookupCache::GetKey(Substring(iter, end), &domHash, mCryptoHash);
-        NS_ENSURE_SUCCESS(rv, rv);
         hash.FromPlaintext(Substring(iter, end), mCryptoHash);
-        uint32_t codedHash;
-        rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
-                                    &codedHash, !mPerClientRandomize);
-        NS_ENSURE_SUCCESS(rv, rv);
-        Prefix newHash;
-        newHash.FromUint32(codedHash);
-        mTableUpdate->NewSubPrefix(addChunk, newHash, mChunkState.num);
-        // Needed to knock out completes
-        // Fake chunk nr, will cause it to be removed next update
-        mTableUpdate->NewSubPrefix(addChunk, hash, 0);
-        mTableUpdate->NewSubChunk(0);
+        mTableUpdate->NewSubPrefix(addChunk, hash, mChunkState.num);
       }
     }
   }
@@ -539,16 +514,8 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostAdd should only be called for prefix hashes.");
 
-  uint32_t codedHash;
-  uint32_t domHash = aDomain.ToUint32();
-
   if (aNumEntries == 0) {
-    nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash,
-                                         !mPerClientRandomize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    Prefix newHash;
-    newHash.FromUint32(codedHash);
-    mTableUpdate->NewAddPrefix(mChunkState.num, newHash);
+    mTableUpdate->NewAddPrefix(mChunkState.num, aDomain);
     return NS_OK;
   }
 
@@ -560,12 +527,7 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
   for (uint8_t i = 0; i < aNumEntries; i++) {
     Prefix hash;
     hash.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
-    nsresult rv = LookupCache::KeyedHash(hash.ToUint32(), domHash, mHashKey, &codedHash,
-                                         !mPerClientRandomize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    Prefix newHash;
-    newHash.FromUint32(codedHash);
-    mTableUpdate->NewAddPrefix(mChunkState.num, newHash);
+    mTableUpdate->NewAddPrefix(mChunkState.num, hash);
     *aStart += PREFIX_SIZE;
   }
 
@@ -578,9 +540,6 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
 {
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostSub should only be called for prefix hashes.");
-
-  uint32_t codedHash;
-  uint32_t domHash = aDomain.ToUint32();
 
   if (aNumEntries == 0) {
     if ((*aStart) + 4 > aChunk.Length()) {
@@ -595,17 +554,7 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
 
-    nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash,
-                                         !mPerClientRandomize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    Prefix newHash;
-    newHash.FromUint32(codedHash);
-
-    mTableUpdate->NewSubPrefix(addChunk, newHash, mChunkState.num);
-    // Needed to knock out completes
-    // Fake chunk nr, will cause it to be removed next update
-    mTableUpdate->NewSubPrefix(addChunk, aDomain, 0);
-    mTableUpdate->NewSubChunk(0);
+    mTableUpdate->NewSubPrefix(addChunk, aDomain, mChunkState.num);
     return NS_OK;
   }
 
@@ -626,17 +575,7 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
     prefix.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
     *aStart += PREFIX_SIZE;
 
-    nsresult rv = LookupCache::KeyedHash(prefix.ToUint32(), domHash, mHashKey,
-                                         &codedHash, !mPerClientRandomize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    Prefix newHash;
-    newHash.FromUint32(codedHash);
-
-    mTableUpdate->NewSubPrefix(addChunk, newHash, mChunkState.num);
-    // Needed to knock out completes
-    // Fake chunk nr, will cause it to be removed next update
-    mTableUpdate->NewSubPrefix(addChunk, prefix, 0);
-    mTableUpdate->NewSubChunk(0);
+    mTableUpdate->NewSubPrefix(addChunk, prefix, mChunkState.num);
   }
 
   return NS_OK;
