@@ -335,7 +335,7 @@ js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
     }
 
     if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, fp);
+        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, fp, false);
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled) {
@@ -2428,7 +2428,7 @@ BEGIN_CASE(JSOP_FUNCALL)
     }
 
     if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, regs.fp());
+        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, regs.fp(), newType);
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {

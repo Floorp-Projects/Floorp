@@ -62,11 +62,6 @@ class AutoDestroyAllocator
 static bool
 CheckFrame(StackFrame *fp)
 {
-    if (fp->isConstructing()) {
-        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: constructor frame!");
-        return false;
-    }
-
     if (fp->isEvalFrame()) {
         // Eval frames are not yet supported.
         IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: eval frame!");
@@ -212,7 +207,7 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 }
 
 MethodStatus
-ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
+ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 {
     // Skip if baseline compilation is disabledf in options.
     JS_ASSERT(ion::IsBaselineEnabled(cx));
@@ -224,6 +219,15 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: Not compiling in debug mode!");
         return Method_CantCompile;
+    }
+
+    // If constructing, allocate a new |this| object.
+    if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
+        RootedObject callee(cx, &fp->callee());
+        RootedObject obj(cx, js_CreateThisForFunction(cx, callee, newType));
+        if (!obj)
+            return Method_Skipped;
+        fp->functionThis().setObject(*obj);
     }
 
     if (!CheckFrame(fp))
