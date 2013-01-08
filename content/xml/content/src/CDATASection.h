@@ -21,6 +21,7 @@ public:
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
                       "Bad NodeType in aNodeInfo");
+    SetIsDOMBinding();
   }
   virtual ~CDATASection();
 
@@ -52,6 +53,10 @@ public:
   virtual void List(FILE* out, int32_t aIndent) const;
   virtual void DumpContent(FILE* out, int32_t aIndent,bool aDumpAll) const;
 #endif
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom

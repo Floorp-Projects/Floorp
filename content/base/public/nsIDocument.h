@@ -85,6 +85,7 @@ class ImageLoader;
 } // namespace css
 
 namespace dom {
+class CDATASection;
 class Comment;
 class DocumentFragment;
 class DocumentType;
@@ -1843,7 +1844,7 @@ public:
                      nsIDOMNodeFilter* aFilter, mozilla::ErrorResult& rv) const;
 
   // Deprecated WebIDL bits
-  already_AddRefed<nsIDOMCDATASection>
+  already_AddRefed<mozilla::dom::CDATASection>
     CreateCDATASection(const nsAString& aData, mozilla::ErrorResult& rv);
   already_AddRefed<nsIDOMAttr>
     CreateAttribute(const nsAString& aName, mozilla::ErrorResult& rv);

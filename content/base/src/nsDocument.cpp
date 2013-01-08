@@ -45,7 +45,7 @@
 #include "nsIDOMDocumentXBL.h"
 #include "mozilla/dom/Element.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMCDATASection.h"
+#include "mozilla/dom/CDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsDOMString.h"
 #include "nsNodeUtils.h"
@@ -4610,7 +4610,7 @@ nsDocument::CreateCDATASection(const nsAString& aData,
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsIDOMCDATASection>
+already_AddRefed<CDATASection>
 nsIDocument::CreateCDATASection(const nsAString& aData,
                                 ErrorResult& rv)
 {
@@ -4635,8 +4635,7 @@ nsIDocument::CreateCDATASection(const nsAString& aData,
   // Don't notify; this node is still being created.
   content->SetText(aData, false);
 
-  nsCOMPtr<nsIDOMCDATASection> section = do_QueryInterface(content);
-  return section.forget();
+  return static_cast<CDATASection*>(content.forget().get());
 }
 
 NS_IMETHODIMP
