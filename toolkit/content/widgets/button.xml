@@ -340,6 +340,17 @@
       </method>
 
     </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN">
+        if (event.originalTarget == this)
+          this.open = true;
+      </handler>
+      <handler event="keypress" key=" ">
+        if (event.originalTarget == this)
+          this.open = true;
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="menu-button" display="xul:menu"
