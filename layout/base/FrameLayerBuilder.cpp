@@ -2782,6 +2782,8 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   aLayer->SetBaseTransform(transform);
   aLayer->SetPreScale(1.0f/float(scale.width),
                       1.0f/float(scale.height));
+  aLayer->SetInheritedScale(aIncomingScale.mXScale,
+                            aIncomingScale.mYScale);
 
   FrameLayerBuilder::ContainerParameters
     result(scale.width, scale.height, -offset, aIncomingScale);
