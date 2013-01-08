@@ -815,6 +815,74 @@ add_test(function test_stk_proactive_command_event_list() {
   run_next_test();
 });
 
+/**
+ * Verify Proactive Command : Get Input
+ */
+add_test(function test_stk_proactive_command_get_input() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+  let stkCmdHelper = worker.StkCommandParamsFactory;
+
+  let get_input_1 = [
+    0xD0,
+    0x1E,
+    0x81, 0x03, 0x01, 0x23, 0x8F,
+    0x82, 0x02, 0x81, 0x82,
+    0x8D, 0x05, 0x04, 0x54, 0x65, 0x78, 0x74,
+    0x91, 0x02, 0x01, 0x10,
+    0x17, 0x08, 0x04, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6C, 0x74];
+
+  for (let i = 0; i < get_input_1.length; i++) {
+    pduHelper.writeHexOctet(get_input_1[i]);
+  }
+
+  let berTlv = berHelper.decode(get_input_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_GET_INPUT);
+
+  let input = stkCmdHelper.createParam(tlv.value, ctlvs);
+  do_check_eq(input.text, "Text");
+  do_check_eq(input.isAlphabet, true);
+  do_check_eq(input.isUCS2, true);
+  do_check_eq(input.hideInput, true);
+  do_check_eq(input.isPacked, true);
+  do_check_eq(input.isHelpAvailable, true);
+  do_check_eq(input.minLength, 0x01);
+  do_check_eq(input.maxLength, 0x10);
+  do_check_eq(input.defaultText, "Default");
+
+  let get_input_2 = [
+    0xD0,
+    0x11,
+    0x81, 0x03, 0x01, 0x23, 0x00,
+    0x82, 0x02, 0x81, 0x82,
+    0x8D, 0x00,
+    0x91, 0x02, 0x01, 0x10,
+    0x17, 0x00];
+
+  for (let i = 0; i < get_input_2.length; i++) {
+    pduHelper.writeHexOctet(get_input_2[i]);
+  }
+
+  berTlv = berHelper.decode(get_input_2.length);
+  ctlvs = berTlv.value;
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_GET_INPUT);
+
+  input = stkCmdHelper.createParam(tlv.value, ctlvs);
+  do_check_eq(input.text, null);
+  do_check_eq(input.minLength, 0x01);
+  do_check_eq(input.maxLength, 0x10);
+  do_check_eq(input.defaultText, null);
+
+  run_next_test();
+});
+
 add_test(function test_spn_display_condition() {
   let worker = newWorker({
     postRILMessage: function fakePostRILMessage(data) {
