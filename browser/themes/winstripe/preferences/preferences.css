@@ -59,11 +59,11 @@ radio[pane=paneSync] {
 /* styles for the link elements copied from .text-link in global.css */
 .inline-link {
   color: -moz-nativehyperlinktext;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
-.inline-link:not(:focus) {
-  outline: 1px dotted transparent;
+.inline-link:hover {
+  text-decoration: underline;
 }
 
 /* Modeless Window Dialogs */
