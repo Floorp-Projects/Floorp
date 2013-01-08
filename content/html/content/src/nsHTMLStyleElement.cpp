@@ -165,6 +165,7 @@ nsHTMLStyleElement::SetDisabled(bool aDisabled)
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
+NS_IMPL_BOOL_ATTR(nsHTMLStyleElement, Scoped, scoped)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
 void
