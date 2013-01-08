@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<body onload="f()">
+  <p>First</p>
+  <p>Second</p>
+  <p>Third</p>
+  <script>
+    function f() {
+      var p = document.getElementsByTagName("p")[1];
+      var style = document.createElement("style");
+      style.setAttribute("scoped", "");
+      style.textContent = "p { color: green }";
+      p.appendChild(style);
+    }
+  </script>
+</body>
