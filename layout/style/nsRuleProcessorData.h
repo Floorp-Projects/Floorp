@@ -26,6 +26,7 @@ class nsIStyleSheet;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
+struct TreeMatchContext;
 
 /**
  * An AncestorFilter is used to keep track of ancestors so that we can
@@ -33,43 +34,11 @@ class nsAttrValue;
  * element.
  */
 class NS_STACK_CLASS AncestorFilter {
+  friend struct TreeMatchContext;
  public:
-  /**
-   * Initialize the filter.  If aElement is not null, it and all its
-   * ancestors will be passed to PushAncestor, starting from the root
-   * and going down the tree.
-   */
-  void Init(mozilla::dom::Element *aElement);
-
   /* Maintenance of our ancestor state */
   void PushAncestor(mozilla::dom::Element *aElement);
   void PopAncestor();
-
-  /* Helper class for maintaining the ancestor state */
-  class NS_STACK_CLASS AutoAncestorPusher {
-  public:
-    AutoAncestorPusher(bool aDoPush,
-                       AncestorFilter &aFilter,
-                       mozilla::dom::Element *aElement
-                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mPushed(aDoPush && aElement), mFilter(aFilter)
-    {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      if (mPushed) {
-        mFilter.PushAncestor(aElement);
-      }
-    }
-    ~AutoAncestorPusher() {
-      if (mPushed) {
-        mFilter.PopAncestor();
-      }
-    }
-
-  private:
-    bool mPushed;
-    AncestorFilter &mFilter;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  };
 
   /* Check whether we might have an ancestor matching one of the given
      atom hashes.  |hashes| must have length hashListLength */
@@ -164,10 +133,65 @@ struct NS_STACK_CLASS TreeMatchContext {
     return mHaveSpecifiedScope;
   }
 
+  /**
+   * Initialize the ancestor filter and list of style scopes.  If aElement is
+   * not null, it and all its ancestors will be passed to
+   * mAncestorFilter.PushAncestor and PushStyleScope, starting from the root and
+   * going down the tree.
+   */
+  void InitAncestors(mozilla::dom::Element *aElement);
+
+  void PushStyleScope(mozilla::dom::Element* aElement)
+  {
+    NS_PRECONDITION(aElement, "aElement must not be null");
+    if (aElement->IsScopedStyleRoot()) {
+      mStyleScopes.AppendElement(aElement);
+    }
+  }
+
+  void PopStyleScope(mozilla::dom::Element* aElement)
+  {
+    NS_PRECONDITION(aElement, "aElement must not be null");
+    if (mStyleScopes.SafeLastElement(nullptr) == aElement) {
+      mStyleScopes.TruncateLength(mStyleScopes.Length() - 1);
+    }
+  }
+ 
   // Is this matching operation for the creation of a style context?
   // (If it is, we need to set slow selector bits on nodes indicating
   // that certain restyling needs to happen.)
   const bool mForStyling;
+
+  /* Helper class for maintaining the ancestor state */
+  class NS_STACK_CLASS AutoAncestorPusher {
+  public:
+    AutoAncestorPusher(bool aDoPush,
+                       TreeMatchContext &aTreeMatchContext,
+                       mozilla::dom::Element *aElement
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mPushed(aDoPush && aElement),
+        mTreeMatchContext(aTreeMatchContext),
+        mElement(aElement)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      if (mPushed) {
+        mTreeMatchContext.mAncestorFilter.PushAncestor(aElement);
+        mTreeMatchContext.PushStyleScope(aElement);
+      }
+    }
+    ~AutoAncestorPusher() {
+      if (mPushed) {
+        mTreeMatchContext.mAncestorFilter.PopAncestor();
+        mTreeMatchContext.PopStyleScope(mElement);
+      }
+    }
+
+  private:
+    bool mPushed;
+    TreeMatchContext& mTreeMatchContext;
+    mozilla::dom::Element* mElement;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
 
  private:
   // When mVisitedHandling is eRelevantLinkUnvisited, this is set to true if a
@@ -217,6 +241,10 @@ struct NS_STACK_CLASS TreeMatchContext {
     eNeverMatchVisited,
     eMatchVisitedDefault
   };
+
+  // List of ancestor elements that define a style scope (due to having a
+  // <style scoped> child).
+  nsAutoTArray<mozilla::dom::Element*, 1> mStyleScopes;
 
   // Constructor to use when creating a tree match context for styling
   TreeMatchContext(bool aForStyling,
