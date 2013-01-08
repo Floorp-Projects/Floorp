@@ -26,8 +26,10 @@ parent:
   __delete__();
 
 child:
-  // success/failure code, and if NS_SUCCEEDED(rv), an open file descriptor
-  FileOpened(FileDescriptor fd, nsresult rv);
+  // Your file handle is ready, Sir...
+  FileOpened(FileDescriptor fd);
+  // Trying to send invalid fd crashes, so we need separate method for failure
+  FileDidNotOpen();
 };
 
 

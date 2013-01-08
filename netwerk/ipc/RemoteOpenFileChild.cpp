@@ -138,26 +138,39 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 //-----------------------------------------------------------------------------
 
 bool
-RemoteOpenFileChild::RecvFileOpened(const FileDescriptor& aFD,
-                                    const nsresult& aRV)
+RemoteOpenFileChild::RecvFileOpened(const FileDescriptor& aFD)
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   NS_NOTREACHED("osX and Windows shouldn't be doing IPDL here");
 #else
-  if (NS_SUCCEEDED(aRV)) {
-    mNSPRFileDesc = PR_AllocFileDesc(aFD.PlatformHandle(), PR_GetFileMethods());
-  }
+  mNSPRFileDesc = PR_AllocFileDesc(aFD.PlatformHandle(), PR_GetFileMethods());
 
   MOZ_ASSERT(mListener);
-
-  mListener->OnRemoteFileOpenComplete(aRV);
-
+  mListener->OnRemoteFileOpenComplete(NS_OK);
   mListener = nullptr;     // release ref to listener
 
   // This calls NeckoChild::DeallocPRemoteOpenFile(), which deletes |this| if
   // IPDL holds the last reference.  Don't rely on |this| existing after here!
   Send__delete__(this);
+#endif
 
+  return true;
+}
+
+bool
+RemoteOpenFileChild::RecvFileDidNotOpen()
+{
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
+  NS_NOTREACHED("osX and Windows shouldn't be doing IPDL here");
+#else
+  MOZ_ASSERT(mListener);
+  printf_stderr("RemoteOpenFileChild: file was not opened!\n");
+  mListener->OnRemoteFileOpenComplete(NS_ERROR_FILE_NOT_FOUND);
+  mListener = nullptr;     // release ref to listener
+
+  // This calls NeckoChild::DeallocPRemoteOpenFile(), which deletes |this| if
+  // IPDL holds the last reference.  Don't rely on |this| existing after here!
+  Send__delete__(this);
 #endif
 
   return true;
