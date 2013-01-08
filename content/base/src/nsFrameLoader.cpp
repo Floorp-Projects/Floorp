@@ -77,7 +77,7 @@
 
 #include "Layers.h"
 
-#include "AppProcessPermissions.h"
+#include "AppProcessChecker.h"
 #include "ContentParent.h"
 #include "TabParent.h"
 #include "mozilla/GuardObjects.h"
@@ -2314,6 +2314,13 @@ nsFrameLoader::CheckPermission(const nsAString& aPermission)
                                     NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
+bool
+nsFrameLoader::CheckManifestURL(const nsAString& aManifestURL)
+{
+  return AssertAppProcessManifestURL(GetRemoteBrowser(),
+                                     NS_ConvertUTF16toUTF8(aManifestURL).get());
+}
+
 NS_IMETHODIMP
 nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
 {
@@ -2550,6 +2557,12 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
 void
 nsFrameLoader::ResetPermissionManagerStatus()
 {
+  // The resetting of the permissions status can run only
+  // in the main process.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return;
+  }
+
   // Finding the new app Id:
   // . first we check if the owner is an app frame
   // . second, we check if the owner is a browser frame
