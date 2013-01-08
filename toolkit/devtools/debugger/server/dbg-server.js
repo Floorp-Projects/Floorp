@@ -185,9 +185,11 @@ var DebuggerServer = {
    */
   addBrowserActors: function DS_addBrowserActors() {
     this.addActors("chrome://global/content/devtools/dbg-browser-actors.js");
+#ifndef MOZ_B2G
     this.addActors("chrome://global/content/devtools/dbg-webconsole-actors.js");
     this.addTabActor(this.WebConsoleActor, "consoleActor");
     this.addGlobalActor(this.WebConsoleActor, "consoleActor");
+#endif
     if ("nsIProfiler" in Ci)
       this.addActors("chrome://global/content/devtools/dbg-profiler-actors.js");
   },
