@@ -486,7 +486,7 @@ function eventQueue(aEventType)
 
         // Report an error if we hanlded not expected event of unique type
         // (i.e. event types are matched, targets differs).
-        if (!checker.unexptected && checker.unique &&
+        if (!checker.unexpected && checker.unique &&
             eventQueue.compareEventTypes(checker, aEvent)) {
           var isExppected = false;
           for (var jdx = 0; jdx < eventSeq.length; jdx++) {
