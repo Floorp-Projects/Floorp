@@ -34,6 +34,7 @@ GestureEventListener::GestureEventListener(AsyncPanZoomController* aAsyncPanZoom
   : mAsyncPanZoomController(aAsyncPanZoomController),
     mState(GESTURE_NONE),
     mSpanChange(0.0f),
+    mTapStartTime(0),
     mLastTapEndTime(0),
     mLastTouchInput(MultiTouchInput::MULTITOUCH_START, 0)
 {
