@@ -338,7 +338,10 @@ waitFor(
         # setup DNS fix for networking
         self._run_adb(['shell', 'setprop', 'net.dns1', '10.0.2.3'])
 
-    def setup(self, marionette, gecko_path=None, load_early=False):
+    def setup(self, marionette, gecko_path=None, load_early=False, busybox=None):
+        if busybox:
+            self.install_busybox(busybox)
+
         if gecko_path:
             if load_early:
                 # Inject prefs into the profile now, since we have to restart
