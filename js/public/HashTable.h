@@ -721,11 +721,9 @@ class HashTable : private AllocPolicy
 
     // A Range whose lifetime delimits a mutating enumeration of a hash table.
     // Since rehashing when elements were removed during enumeration would be
-    // bad, it is postponed until |endEnumeration()| is called. If
-    // |endEnumeration()| is not called before an Enum's constructor, it will
-    // be called automatically. Since |endEnumeration()| touches the hash
-    // table, the user must ensure that the hash table is still alive when this
-    // happens.
+    // bad, it is postponed until the Enum is destructed.  Since the Enum's
+    // destructor touches the hash table, the user must ensure that the hash
+    // table is still alive when the destructor runs.
     class Enum : public Range
     {
         friend class HashTable;
