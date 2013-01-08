@@ -1319,6 +1319,9 @@ private:
     NodeHasDirAuto,
     // Set if a node in the node's parent chain has dir=auto.
     NodeAncestorHasDirAuto,
+    // Set if the element is in the scope of a scoped style sheet; this flag is
+    // only accurate for elements bounds to a document
+    ElementIsInStyleScope,
     // Guard value
     BooleanFlagCount
   };
@@ -1435,6 +1438,20 @@ public:
 
   bool NodeOrAncestorHasDirAuto() const
     { return HasDirAuto() || AncestorHasDirAuto(); }
+
+  void SetIsElementInStyleScope(bool aValue) {
+    MOZ_ASSERT(IsElement(), "SetIsInStyleScope on a non-Element node");
+    SetBoolFlag(ElementIsInStyleScope, aValue);
+  }
+  void SetIsElementInStyleScope() {
+    MOZ_ASSERT(IsElement(), "SetIsInStyleScope on a non-Element node");
+    SetBoolFlag(ElementIsInStyleScope);
+  }
+  void ClearIsElementInStyleScope() {
+    MOZ_ASSERT(IsElement(), "ClearIsInStyleScope on a non-Element node");
+    ClearBoolFlag(ElementIsInStyleScope);
+  }
+  bool IsElementInStyleScope() const { return GetBoolFlag(ElementIsInStyleScope); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
@@ -1455,7 +1472,7 @@ protected:
   bool HasLockedStyleStates() const
     { return GetBoolFlag(ElementHasLockedStyleStates); }
 
-    void SetSubtreeRootPointer(nsINode* aSubtreeRoot)
+  void SetSubtreeRootPointer(nsINode* aSubtreeRoot)
   {
     NS_ASSERTION(aSubtreeRoot, "aSubtreeRoot can never be null!");
     NS_ASSERTION(!(IsNodeOfType(eCONTENT) && IsInDoc()), "Shouldn't be here!");
