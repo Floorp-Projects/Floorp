@@ -100,6 +100,7 @@ namespace ion {
     _(JSOP_LENGTH)             \
     _(JSOP_DEFVAR)             \
     _(JSOP_DEFCONST)           \
+    _(JSOP_DEFFUN)             \
     _(JSOP_GETLOCAL)           \
     _(JSOP_CALLLOCAL)          \
     _(JSOP_SETLOCAL)           \
