@@ -21,10 +21,13 @@
 #include "mozilla/Attributes.h"
 
 class nsSMILTimeContainer;
-class nsSVGViewElement;
 namespace mozilla {
   class DOMSVGMatrix;
   class SVGFragmentIdentifier;
+
+  namespace dom {
+    class SVGViewElement;
+  }
 }
 
 typedef mozilla::dom::SVGGraphicsElement nsSVGSVGElementBase;
@@ -261,7 +264,7 @@ private:
 
   // implementation helpers:
 
-  nsSVGViewElement* GetCurrentViewElement() const;
+  mozilla::dom::SVGViewElement* GetCurrentViewElement() const;
 
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
   // These are private so that only our friends (nsSVGImageFrame in

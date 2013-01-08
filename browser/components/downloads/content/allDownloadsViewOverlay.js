@@ -154,8 +154,13 @@ DownloadElementShell.prototype = {
   get _icon() {
     if (this._targetFileURI)
       return "moz-icon://" + this._targetFileURI + "?size=32";
-    if (this._placesNode)
-      return this.placesNode.icon;
+    if (this._placesNode) {
+      // Try to extract an extension from the uri.
+      let ext = this._downloadURIObj.QueryInterface(Ci.nsIURL).fileExtension;
+      if (ext)
+        return "moz-icon://." + ext + "?size=32";
+      return this._placesNode.icon || "moz-icon://.unknown?size=32";
+    }
     if (this._dataItem)
       throw new Error("Session-download items should always have a target file uri");
     throw new Error("Unexpected download element state");

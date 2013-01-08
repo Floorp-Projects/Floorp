@@ -390,7 +390,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
-    RootedScript script(cx, fun->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!script)
         return false;
 
@@ -2380,7 +2380,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RootedScript funScript(cx, fun->getOrCreateScript(cx));
+    RootedScript funScript(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!funScript)
         goto error;
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))

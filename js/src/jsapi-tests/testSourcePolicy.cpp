@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "tests.h"
+#include "jsscript.h"
 
 BEGIN_TEST(testBug795104)
 {
@@ -21,3 +22,26 @@ BEGIN_TEST(testBug795104)
     return true;
 }
 END_TEST(testBug795104)
+
+const char *simpleSource = "var x = 4;";
+
+static void
+newScriptHook(JSContext *cx, const char *fn, unsigned lineno,
+              JSScript *script, JSFunction *fun, void *data)
+{
+    if (!JS_StringEqualsAscii(cx, script->sourceData(cx), simpleSource, (JSBool *)data))
+        *((JSBool *)data) = JS_FALSE;
+}
+
+BEGIN_TEST(testScriptSourceReentrant)
+{
+    JS::CompileOptions opts(cx);
+    JSBool match = false;
+    JS_SetNewScriptHook(rt, newScriptHook, &match);
+    CHECK(JS::Evaluate(cx, global, opts, simpleSource, strlen(simpleSource), NULL));
+    CHECK(match);
+    JS_SetNewScriptHook(rt, NULL, NULL);
+
+    return true;
+}
+END_TEST(testScriptSourceReentrant)

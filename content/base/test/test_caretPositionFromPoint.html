@@ -64,6 +64,16 @@
     checkOffsetsFromPoint(test4Rect.left + 1, test4Rect.top + 1, 0);
     checkOffsetsFromPoint(Math.round(test4Rect.left + convertEmToPx(3)), Math.round(test4Rect.top + 10), 3);
 
+    // Check to make sure that x or y outside the viewport returns null.
+    var nullCp1 = document.caretPositionFromPoint(-10, 0);
+    ok(!nullCp1, "caret position with negative x should be null");
+    var nullCp2 = document.caretPositionFromPoint(0, -10);
+    ok(!nullCp2, "caret position with negative y should be null");
+    var nullCp3 = document.caretPositionFromPoint(9000, 0);
+    ok(!nullCp3, "caret position with x > viewport width should be null");
+    var nullCp4 = document.caretPositionFromPoint(0, 9000);
+    ok(!nullCp4, "caret position with x > viewport height should be null");
+
     // Check the first and last characters of the marquee.
     SimpleTest.finish();
   }

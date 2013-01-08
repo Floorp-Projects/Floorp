@@ -114,6 +114,7 @@ webidl_files = \
   SVGDescElement.webidl \
   SVGElement.webidl \
   SVGEllipseElement.webidl \
+  SVGFitToViewBox.webidl \
   SVGForeignObjectElement.webidl \
   SVGGElement.webidl \
   SVGGraphicsElement.webidl \
@@ -149,6 +150,8 @@ webidl_files = \
   SVGTransformList.webidl \
   SVGTSpanElement.webidl \
   SVGURIReference.webidl \
+  SVGViewElement.webidl \
+  SVGZoomAndPan.webidl \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \

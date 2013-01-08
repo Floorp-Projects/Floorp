@@ -1083,6 +1083,12 @@ enum ViewType {
      */
     TYPE_UINT8_CLAMPED,
 
+    /*
+     * Type returned for a DataView. Note that there is no single element type
+     * in this case.
+     */
+    TYPE_DATAVIEW,
+
     TYPE_MAX
 };
 
@@ -1256,14 +1262,14 @@ extern JS_FRIEND_API(JSObject *)
 JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data);
 
 /*
- * Get the type of elements in a typed array.
+ * Get the type of elements in a typed array, or TYPE_DATAVIEW if a DataView.
  *
- * |obj| must have passed a JS_IsTypedArrayObject/JS_Is*Array test, or somehow
- * be known that it would pass such a test: it is a typed array or a wrapper of
- * a typed array, and the unwrapping will succeed.
+ * |obj| must have passed a JS_IsArrayBufferView/JS_Is*Array test, or somehow
+ * be known that it would pass such a test: it is an ArrayBufferView or a
+ * wrapper of an ArrayBufferView, and the unwrapping will succeed.
  */
 extern JS_FRIEND_API(JSArrayBufferViewType)
-JS_GetTypedArrayType(JSObject *obj);
+JS_GetArrayBufferViewType(JSObject *obj);
 
 /*
  * Check whether obj supports the JS_GetArrayBuffer* APIs. Note that this may
