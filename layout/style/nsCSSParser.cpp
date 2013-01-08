@@ -579,7 +579,7 @@ protected:
   bool ParseCursor();
   bool ParseFont();
   bool ParseFontWeight(nsCSSValue& aValue);
-  bool ParseOneFamily(nsAString& aValue);
+  bool ParseOneFamily(nsAString& aFamily, bool& aOneKeyword);
   bool ParseFamily(nsCSSValue& aValue);
   bool ParseFontFeatureSettings(nsCSSValue& aValue);
   bool ParseFontSrc(nsCSSValue& aValue);
@@ -8356,20 +8356,23 @@ CSSParserImpl::ParseFontWeight(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseOneFamily(nsAString& aFamily)
+CSSParserImpl::ParseOneFamily(nsAString& aFamily, bool& aOneKeyword)
 {
   if (!GetToken(true))
     return false;
 
   nsCSSToken* tk = &mToken;
 
+  aOneKeyword = false;
   if (eCSSToken_Ident == tk->mType) {
+    aOneKeyword = true;
     aFamily.Append(tk->mIdent);
     for (;;) {
       if (!GetToken(false))
         break;
 
       if (eCSSToken_Ident == tk->mType) {
+        aOneKeyword = false;
         aFamily.Append(tk->mIdent);
       } else if (eCSSToken_WhiteSpace == tk->mType) {
         // Lookahead one token and drop whitespace if we are ending the
@@ -8404,14 +8407,24 @@ CSSParserImpl::ParseOneFamily(nsAString& aFamily)
 bool
 CSSParserImpl::ParseFamily(nsCSSValue& aValue)
 {
-  if (!GetToken(true))
+  nsAutoString family;
+  bool single;
+
+  // keywords only have meaning in the first position
+  if (!ParseOneFamily(family, single))
     return false;
 
-  if (eCSSToken_Ident == mToken.mType) {
-    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+  // check for keywords, but only when keywords appear by themselves
+  // i.e. not in compounds such as font-family: default blah;
+  if (single) {
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(family);
     if (keyword == eCSSKeyword_inherit) {
       aValue.SetInheritValue();
       return true;
+    }
+    // 605231 - don't parse unquoted 'default' reserved keyword
+    if (keyword == eCSSKeyword_default) {
+      return false;
     }
     if (keyword == eCSSKeyword__moz_initial || keyword == eCSSKeyword_initial) {
       aValue.SetInitialValue();
@@ -8424,17 +8437,33 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
     }
   }
 
-  UngetToken();
-
-  nsAutoString family;
   for (;;) {
-    if (!ParseOneFamily(family))
-      return false;
-
     if (!ExpectSymbol(',', true))
       break;
 
     family.Append(PRUnichar(','));
+
+    nsAutoString nextFamily;
+    if (!ParseOneFamily(nextFamily, single))
+      return false;
+
+    // at this point unquoted keywords are not allowed
+    // as font family names but can appear within names
+    if (single) {
+      nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(nextFamily);
+      switch (keyword) {
+        case eCSSKeyword_inherit:
+        case eCSSKeyword_initial:
+        case eCSSKeyword_default:
+        case eCSSKeyword__moz_initial:
+        case eCSSKeyword__moz_use_system_font:
+          return false;
+        default:
+          break;
+      }
+    }
+
+    family.Append(nextFamily);
   }
 
   if (family.IsEmpty()) {
@@ -8473,7 +8502,8 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
       // <family-name>, possibly surrounded by whitespace.
 
       nsAutoString family;
-      if (!ParseOneFamily(family)) {
+      bool single;
+      if (!ParseOneFamily(family, single)) {
         SkipUntil(')');
         return false;
       }
