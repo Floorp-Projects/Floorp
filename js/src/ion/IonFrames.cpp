@@ -1196,6 +1196,15 @@ IonFrameIterator::isConstructing() const
     return activation_->entryfp()->isConstructing();
 }
 
+Value
+IonFrameIterator::baselineThisValue() const
+{
+    JS_ASSERT(isBaselineJS());
+
+    IonJSFrameLayout *layout = jsFrame();
+    return layout->thisv();
+}
+
 JSObject *
 InlineFrameIterator::scopeChain() const
 {

@@ -135,7 +135,7 @@ inline bool IsBaselineEnabled(JSContext *cx)
 }
 
 MethodStatus
-CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp);
+CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp, bool newType);
 
 IonExecStatus
 EnterBaselineMethod(JSContext *cx, StackFrame *fp);
