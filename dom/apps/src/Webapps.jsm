@@ -241,7 +241,6 @@ this.DOMApplicationRegistry = {
 
     // We copy this app to DIRECTORY_NAME/$aId, and set the base path as needed.
     let destDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
-    destDir.permissions = FileUtils.PERMS_DIRECTORY;
 
     ["application.zip", "update.webapp"]
       .forEach(function(aFile) {
@@ -250,7 +249,6 @@ this.DOMApplicationRegistry = {
         file.copyTo(destDir, aFile);
         let newFile = destDir.clone();
         newFile.append(aFile);
-        newFile.permissions = FileUtils.PERMS_FILE;
       });
 
     app.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true)
@@ -272,7 +270,6 @@ this.DOMApplicationRegistry = {
       let manifestFile = destDir.clone();
       manifestFile.append("manifest.webapp");
       zipReader.extract("manifest.webapp", manifestFile);
-      manifestFile.permissions = FileUtils.PERMS_FILE;
     } catch(e) {
       // If we are unable to extract the manifest, cleanup and remove this app.
       debug("Cleaning up: " + e);
@@ -408,16 +405,6 @@ this.DOMApplicationRegistry = {
         this.installSystemApps(onAppsLoaded);
       else
         onAppsLoaded();
-
-      // XXX: To be removed as soon as the app:// protocol is remoted.
-      // See Bug 819061
-      let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      dir.initWithPath("/data");
-      dir.permissions = parseInt("755", 8);
-      dir.append("local");
-      dir.permissions = parseInt("755", 8);
-      dir.append("webapps");
-      dir.permissions = parseInt("755", 8);
 #else
       onAppsLoaded();
 #endif
@@ -1550,7 +1537,6 @@ this.DOMApplicationRegistry = {
     appObject.localId = localId;
     appObject.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true).path;
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
-    dir.permissions = FileUtils.PERMS_DIRECTORY;
     let manFile = dir.clone();
     manFile.append(manifestName);
     let jsonManifest = aData.isPackage ? app.updateManifest : app.manifest;
@@ -1630,7 +1616,6 @@ this.DOMApplicationRegistry = {
         let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
         let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
         zipFile.moveTo(dir, "application.zip");
-        zipFile.permissions = FileUtils.PERMS_FILE;
         let tmpDir = FileUtils.getDir("TmpD", ["webapps", aId], true, true);
         try {
           tmpDir.remove(true);
