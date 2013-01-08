@@ -102,7 +102,8 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mDPI(72),
      mWaitingForContentToPaint(false),
      mDisableNextTouchBatch(false),
-     mHandlingTouchQueue(false)
+     mHandlingTouchQueue(false),
+     mDelayPanning(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (aGestures == USE_GESTURE_DETECTOR) {
