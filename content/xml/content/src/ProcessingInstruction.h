@@ -47,6 +47,12 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL API
+  void GetTarget(nsString& aTarget)
+  {
+    aTarget = NodeName();
+  }
 protected:
   /**
    * This will parse the content of the PI, to extract the value of the pseudo
@@ -59,6 +65,9 @@ protected:
    *                     aAttribute. Empty if the attribute isn't present.
    */
   bool GetAttrValue(nsIAtom *aName, nsAString& aValue);
+
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
