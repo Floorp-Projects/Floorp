@@ -827,9 +827,8 @@ function test21a() {
   }
 
   // we have to actually show the panel to get the bindings to instantiate
-  notification.options.dismissed = false;
   notification.options.eventCallback = test21b;
-  PopupNotifications._showPanel([notification], notification.anchorElement);
+  notification.reshow();
 }
 
 function test21b() {
@@ -887,9 +886,8 @@ function test21c() {
   }
 
   // we have to actually show the panel to get the bindings to instantiate
-  notification.options.dismissed = false;
   notification.options.eventCallback = test21d;
-  PopupNotifications._showPanel([notification], notification.anchorElement);
+  notification.reshow();
 }
 
 function test21d() {

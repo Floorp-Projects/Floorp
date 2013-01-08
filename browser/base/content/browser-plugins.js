@@ -280,8 +280,7 @@ var gPluginHandler = {
 
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
     if (notification && plugins.length > 0 && !haveVisibleCTPPlugin && !this._notificationDisplayedOnce) {
-      notification.dismissed = false;
-      PopupNotifications._update(notification.anchorElement);
+      notification.reshow();
       this._notificationDisplayedOnce = true;
     }
 
