@@ -81,7 +81,7 @@ GlobalPCList.prototype = {
                topic == "network:offline-about-to-go-offline") {
       // Delete all peerconnections on shutdown - synchronously (we need
       // them to be done deleting transports before we return)!
-      // Also kill them if "Work Offline" is selected - more can be created 
+      // Also kill them if "Work Offline" is selected - more can be created
       // while offline, but attempts to connect them should fail.
       let array;
       while ((array = this._list.pop()) != undefined) {
@@ -390,10 +390,6 @@ PeerConnection.prototype = {
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
-    if (this._onSetLocalDescriptionSuccess) {
-      throw new Error("setLocalDescription already called");
-    }
-
     this._onSetLocalDescriptionSuccess = onSuccess;
     this._onSetLocalDescriptionFailure = onError;
 
@@ -420,10 +416,6 @@ PeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
-    if (this._onSetRemoteDescriptionSuccess) {
-      throw new Error("setRemoteDescription already called");
-    }
-
     this._onSetRemoteDescriptionSuccess = onSuccess;
     this._onSetRemoteDescriptionFailure = onError;
 
