@@ -1171,6 +1171,26 @@ BaselineCompiler::emit_JSOP_DEFCONST()
     return emit_JSOP_DEFVAR();
 }
 
+typedef bool (*DefFunOperationFn)(JSContext *, HandleScript, HandleObject, HandleFunction);
+static const VMFunction DefFunOperationInfo = FunctionInfo<DefFunOperationFn>(DefFunOperation);
+
+bool
+BaselineCompiler::emit_JSOP_DEFFUN()
+{
+    RootedFunction fun(cx, script->getFunction(GET_UINT32_INDEX(pc)));
+
+    frame.syncStack(0);
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(ImmGCPtr(fun));
+    pushArg(R0.scratchReg());
+    pushArg(ImmGCPtr(script));
+
+    return callVM(DefFunOperationInfo);
+}
+
 bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
