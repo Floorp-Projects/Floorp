@@ -193,10 +193,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsISecurityUITelemetry.h"
 
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-#include "nsIAppShellService.h"
-#include "nsAppShellCID.h"
-#else
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 #include "nsIPrivateBrowsingService.h"
 #endif
 
@@ -223,9 +220,9 @@ static uint32_t gNumberOfPrivateDocShells = 0;
 
 // Global count of private docshells which will always remain open
 #ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-static uint32_t gNumberOfAlwaysOpenPrivateDocShells = 0; // the private hidden window
+static const uint32_t kNumberOfAlwaysOpenPrivateDocShells = 1; // the private hidden window
 #else
-static const uint32_t gNumberOfAlwaysOpenPrivateDocShells = 0;
+static const uint32_t kNumberOfAlwaysOpenPrivateDocShells = 0;
 #endif
 
 // Global reference to the URI fixup service.
@@ -692,26 +689,10 @@ ConvertLoadTypeToNavigationType(uint32_t aLoadType)
 static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 
 static void
-AdjustAlwaysOpenPrivateDocShellCount()
-{
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    nsCOMPtr<nsIAppShellService> appShell
-      (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    bool hasHiddenPrivateWindow = false;
-    if (appShell) {
-      appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
-    }
-    gNumberOfAlwaysOpenPrivateDocShells = hasHiddenPrivateWindow ? 1 : 0;
-#endif
-}
-
-static void
 IncreasePrivateDocShellCount()
 {
-    AdjustAlwaysOpenPrivateDocShellCount();
-
     gNumberOfPrivateDocShells++;
-    if (gNumberOfPrivateDocShells > gNumberOfAlwaysOpenPrivateDocShells + 1 ||
+    if (gNumberOfPrivateDocShells > kNumberOfAlwaysOpenPrivateDocShells + 1 ||
         XRE_GetProcessType() != GeckoProcessType_Content) {
         return;
     }
@@ -723,11 +704,9 @@ IncreasePrivateDocShellCount()
 static void
 DecreasePrivateDocShellCount()
 {
-    AdjustAlwaysOpenPrivateDocShellCount();
-
     MOZ_ASSERT(gNumberOfPrivateDocShells > 0);
     gNumberOfPrivateDocShells--;
-    if (gNumberOfPrivateDocShells == gNumberOfAlwaysOpenPrivateDocShells)
+    if (gNumberOfPrivateDocShells == kNumberOfAlwaysOpenPrivateDocShells)
     {
         if (XRE_GetProcessType() == GeckoProcessType_Content) {
             mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
