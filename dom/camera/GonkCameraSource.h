@@ -102,7 +102,7 @@ protected:
                  Size videoSize, int32_t frameRate,
                  bool storeMetaDataInVideoBuffers = false);
 
-    virtual void startCameraRecording();
+    virtual int startCameraRecording();
     virtual void stopCameraRecording();
     virtual void releaseRecordingFrame(const sp<IMemory>& frame);
 
