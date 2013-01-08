@@ -709,6 +709,15 @@ class ReentrancyGuard
     }
 };
 
+template <class T>
+JS_ALWAYS_INLINE static void
+Swap(T &t, T &u)
+{
+    T tmp(Move(t));
+    t = Move(u);
+    u = Move(tmp);
+}
+
 /*
  * Round x up to the nearest power of 2.  This function assumes that the most
  * significant bit of x is not set, which would lead to overflow.
