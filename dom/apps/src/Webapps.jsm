@@ -496,7 +496,6 @@ this.DOMApplicationRegistry = {
       if (aRunUpdate) {
         activitiesToRegister.push({ "manifest": aApp.manifestURL,
                                     "name": activity,
-                                    "title": manifest.name,
                                     "icon": manifest.iconURLForSize(128),
                                     "description": description });
       }

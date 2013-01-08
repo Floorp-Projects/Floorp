@@ -30,6 +30,7 @@
 #include "nsContentUtils.h"
 #include "nsEmbedCID.h"
 #include "nsEventListenerManager.h"
+#include "nsExceptionHandler.h"
 #include "mozilla/dom/Element.h"
 #include "nsIAppsService.h"
 #include "nsIBaseWindow.h"
@@ -1088,6 +1089,10 @@ TabChild::RecvLoadURL(const nsCString& uri)
     if (NS_FAILED(rv)) {
         NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
     }
+
+#ifdef MOZ_CRASHREPORTER
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("URL"), uri);
+#endif
 
     return true;
 }

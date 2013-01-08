@@ -282,12 +282,56 @@ File(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static JSBool
+Blob(JSContext *cx, unsigned argc, jsval *vp)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISupports> native;
+    rv = nsDOMMultipartFile::NewBlob(getter_AddRefs(native));
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+
+    nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+    NS_ASSERTION(initializer, "what?");
+
+    rv = initializer->Initialize(nullptr, cx, nullptr, argc, JS_ARGV(cx, vp));
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if (!xpc) {
+        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
+        return false;
+    }
+
+    JSObject* glob = JS_GetGlobalForScopeChain(cx);
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    jsval retval;
+    rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
+                                &NS_GET_IID(nsISupports),
+                                true, &retval, nullptr);
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+
+    JS_SET_RVAL(cx, vp, retval);
+    return true;
+}
+
 static JSFunctionSpec gGlobalFun[] = {
     JS_FS("dump",    Dump,   1,0),
     JS_FS("debug",   Debug,  1,0),
     JS_FS("atob",    Atob,   1,0),
     JS_FS("btoa",    Btoa,   1,0),
     JS_FS("File",    File,   1,JSFUN_CONSTRUCTOR),
+    JS_FS("Blob",    Blob,   2,JSFUN_CONSTRUCTOR),
     JS_FS_END
 };
 

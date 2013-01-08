@@ -51,7 +51,7 @@ protected:
 public:
   virtual void    OnNewFrame() MOZ_OVERRIDE;
 
-  static void     ReleaseHandle(uint32_t aHwHandle);
+  static void     ReleaseHandle(uint32_t aHwHandle, bool aUnregisterTarget);
   static uint32_t GetHandle(GonkCamera* aTarget, uint32_t aCamera);
 
   /**
