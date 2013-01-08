@@ -513,12 +513,14 @@ GonkCameraSource::~GonkCameraSource() {
     }
 }
 
-void GonkCameraSource::startCameraRecording() {
+int GonkCameraSource::startCameraRecording() {
     LOGV("startCameraRecording");
-    CHECK_EQ(OK, GonkCameraHardware::StartRecording(mCameraHandle));
+    return GonkCameraHardware::StartRecording(mCameraHandle);
 }
 
 status_t GonkCameraSource::start(MetaData *meta) {
+    int rv;
+
     LOGV("start");
     CHECK(!mStarted);
     if (mInitCheck != OK) {
@@ -542,10 +544,10 @@ status_t GonkCameraSource::start(MetaData *meta) {
     // Register a listener with GonkCameraHardware so that we can get callbacks
     GonkCameraHardware::SetListener(mCameraHandle, new GonkCameraSourceListener(this));
 
-    startCameraRecording();
+    rv = startCameraRecording();
 
-    mStarted = true;
-    return OK;
+    mStarted = (rv == OK);
+    return rv;
 }
 
 void GonkCameraSource::stopCameraRecording() {
