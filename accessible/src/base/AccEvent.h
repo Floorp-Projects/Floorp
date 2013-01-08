@@ -58,6 +58,9 @@ public:
     // eCoalesceSelectionChange: coalescence of selection change events.
     eCoalesceSelectionChange,
 
+    // eCoalesceStateChange: coalesce state change events.
+    eCoalesceStateChange,
+
      // eRemoveDupes : For repeat events, only the newest event in queue
      //    will be emitted.
     eRemoveDupes,
@@ -135,12 +138,12 @@ public:
                       bool aIsEnabled,
                       EIsFromUserInput aIsFromUserInput = eAutoDetect) :
     AccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible,
-             aIsFromUserInput, eAllowDupes),
+             aIsFromUserInput, eCoalesceStateChange),
              mState(aState), mIsEnabled(aIsEnabled) { }
 
   AccStateChangeEvent(Accessible* aAccessible, uint64_t aState) :
     AccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible,
-             eAutoDetect, eAllowDupes), mState(aState)
+             eAutoDetect, eCoalesceStateChange), mState(aState)
     { mIsEnabled = (mAccessible->State() & mState) != 0; }
 
   // AccEvent
@@ -159,6 +162,8 @@ public:
 private:
   uint64_t mState;
   bool mIsEnabled;
+
+  friend class NotificationController;
 };
 
 
