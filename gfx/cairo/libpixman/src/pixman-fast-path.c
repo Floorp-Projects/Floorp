@@ -810,6 +810,48 @@ fast_composite_add_8_8 (pixman_implementation_t *imp,
 }
 
 static void
+fast_composite_add_0565_0565 (pixman_implementation_t *imp,
+                              pixman_composite_info_t *info)
+{
+    PIXMAN_COMPOSITE_ARGS (info);
+    uint16_t    *dst_line, *dst;
+    uint32_t	d;
+    uint16_t    *src_line, *src;
+    uint32_t	s;
+    int dst_stride, src_stride;
+    int32_t w;
+
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint16_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    if (s)
+	    {
+		d = *dst;
+		s = CONVERT_0565_TO_8888 (s);
+		if (d)
+		{
+		    d = CONVERT_0565_TO_8888 (d);
+		    UN8x4_ADD_UN8x4 (s, d);
+		}
+		*dst = CONVERT_8888_TO_0565 (s);
+	    }
+	    dst++;
+	}
+    }
+}
+
+static void
 fast_composite_add_8888_8888 (pixman_implementation_t *imp,
                               pixman_composite_info_t *info)
 {
@@ -1215,8 +1257,8 @@ scaled_bilinear_scanline_8888_565_OVER (uint16_t *       dst,
 	d = *dst;
 	src = bilinear_interpolation (tl, tr,
 				      bl, br,
-				      interpolation_coord(vx),
-				      wb >> (8 - INTERPOLATION_PRECISION_BITS));
+				      pixman_fixed_to_bilinear_weight(vx),
+				      wb);
 	vx += unit_x;
 	result = over (src, CONVERT_0565_TO_0888 (d));
 	*dst++ = CONVERT_8888_TO_0565(result);
@@ -1248,8 +1290,8 @@ scaled_bilinear_scanline_8888_8888_OVER (uint32_t *       dst,
 	d = *dst;
 	src = bilinear_interpolation (tl, tr,
 				      bl, br,
-				      interpolation_coord(vx),
-				      wb >> (8 - INTERPOLATION_PRECISION_BITS));
+				      pixman_fixed_to_bilinear_weight(vx),
+				      wb);
 	vx += unit_x;
 	*dst++ = over (src, d);
     }
@@ -1281,8 +1323,8 @@ scaled_bilinear_scanline_565_565_SRC (uint16_t *       dst,
 				   CONVERT_0565_TO_8888(tr),
 				   CONVERT_0565_TO_8888(bl),
 				   CONVERT_0565_TO_8888(br),
-				   interpolation_coord(vx),
-				   wb >> (8 - INTERPOLATION_PRECISION_BITS));
+				   pixman_fixed_to_bilinear_weight(vx),
+				   wb);
 	vx += unit_x;
 	*dst++ = CONVERT_8888_TO_0565(d);
     }
@@ -1352,7 +1394,9 @@ scaled_bilinear_scanline_565_565_SRC (uint16_t *       dst,
 	uint16_t bl = src_bottom [pixman_fixed_to_int (vx)];
 	uint16_t br = src_bottom [pixman_fixed_to_int (vx) + 1];
 
-        uint16_t d = bilinear_interpolation_565 (tl, tr, bl, br, (vx >> 12) & 0xf, wb >> 4);
+        uint16_t d = bilinear_interpolation_565 (tl, tr, bl, br,
+						 pixman_fixed_to_bilinear_weight(vx),
+						 wb);
         vx += unit_x;
         *dst++ = d;
     }
@@ -1458,8 +1502,9 @@ fast_composite_tiled_repeat (pixman_implementation_t *imp,
 
 	src_bpp = PIXMAN_FORMAT_BPP (src_image->bits.format);
 
-	if (src_image->bits.width < REPEAT_MIN_WIDTH &&
-	    (src_bpp == 32 || src_bpp == 16 || src_bpp == 8))
+	if (src_image->bits.width < REPEAT_MIN_WIDTH		&&
+	    (src_bpp == 32 || src_bpp == 16 || src_bpp == 8)	&&
+	    !src_image->bits.indexed)
 	{
 	    sx = src_x;
 	    sx = MOD (sx, src_image->bits.width);
@@ -2056,6 +2101,8 @@ static const pixman_fast_path_t c_fast_paths[] =
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, a8b8g8r8, fast_composite_over_8888_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, x8b8g8r8, fast_composite_over_8888_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, b5g6r5, fast_composite_over_8888_0565),
+    PIXMAN_STD_FAST_PATH (ADD, r5g6b5, null, r5g6b5, fast_composite_add_0565_0565),
+    PIXMAN_STD_FAST_PATH (ADD, b5g6r5, null, b5g6r5, fast_composite_add_0565_0565),
     PIXMAN_STD_FAST_PATH (ADD, a8r8g8b8, null, a8r8g8b8, fast_composite_add_8888_8888),
     PIXMAN_STD_FAST_PATH (ADD, a8b8g8r8, null, a8b8g8r8, fast_composite_add_8888_8888),
     PIXMAN_STD_FAST_PATH (ADD, a8, null, a8, fast_composite_add_8_8),
