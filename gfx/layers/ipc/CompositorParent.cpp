@@ -893,7 +893,9 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
 }
 
 void
-CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform)
+CompositorParent::TransformScrollableLayer(Layer* aLayer,
+                                           const gfx3DMatrix& aRootTransform,
+                                           bool aPrimaryLayer)
 {
   ShadowLayer* shadow = aLayer->AsShadowLayer();
   ContainerLayer* container = aLayer->AsContainerLayer();
@@ -949,9 +951,11 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   displayPortDevPixels.x += scrollOffsetDevPixels.x;
   displayPortDevPixels.y += scrollOffsetDevPixels.y;
 
-  SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
-                   mScrollOffset, mXScale, mYScale);
-  mLayersUpdated = false;
+  if (aPrimaryLayer) {
+    SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
+                     mScrollOffset, mXScale, mYScale);
+    mLayersUpdated = false;
+  }
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -1038,7 +1042,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     mLayerManager->GetScrollableLayers(scrollableLayers);
 
     for (uint32_t i = 0; i < scrollableLayers.Length(); i++) {
-      TransformScrollableLayer(scrollableLayers[i], rootTransform);
+      TransformScrollableLayer(scrollableLayers[i], rootTransform, i == 0);
     }
   }
 
