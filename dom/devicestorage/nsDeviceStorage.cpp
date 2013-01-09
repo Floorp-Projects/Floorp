@@ -1558,6 +1558,18 @@ public:
           return NS_ERROR_FAILURE;
         }
 
+        DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile) ||
+            !typeChecker->Check(mFile->mStorageType, mBlob)) {
+          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          NS_DispatchToMainThread(r);
+          return NS_OK;
+        }
+
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
 
           BlobChild* actor = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
@@ -1582,6 +1594,17 @@ public:
       case DEVICE_STORAGE_REQUEST_READ:
       case DEVICE_STORAGE_REQUEST_WRITE:
       {
+        DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile)) {
+          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          NS_DispatchToMainThread(r);
+          return NS_OK;
+        }
+
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
           DeviceStorageGetParams params(mFile->mStorageType, mFile->mPath, fullpath);
@@ -1595,6 +1618,17 @@ public:
 
       case DEVICE_STORAGE_REQUEST_DELETE:
       {
+        DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile)) {
+          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          NS_DispatchToMainThread(r);
+          return NS_OK;
+        }
+
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
           DeviceStorageDeleteParams params(mFile->mStorageType, fullpath);

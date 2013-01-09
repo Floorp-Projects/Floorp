@@ -30,6 +30,7 @@ MOCHITEST_FILES	= \
 		test_stat.html \
 		test_watch.html \
 		test_watchOther.html \
+		test_823965.html \
 		devicestorage_common.js \
 		$(NULL)
 
