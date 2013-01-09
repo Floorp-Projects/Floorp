@@ -124,9 +124,6 @@ TabParent::Destroy()
     frame->Destroy();
   }
   mIsDestroyed = true;
-
-  ContentParent* cp = static_cast<ContentParent*>(Manager());
-  cp->NotifyTabDestroying(this);
 }
 
 bool
