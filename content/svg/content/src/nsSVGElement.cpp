@@ -120,25 +120,6 @@ nsSVGElement::GetStyle(ErrorResult& rv)
   return style;
 }
 
-/* nsIDOMCSSValue getPresentationAttribute (in DOMString name); */
-NS_IMETHODIMP
-nsSVGElement::GetPresentationAttribute(const nsAString& aName,
-                                       nsIDOMCSSValue** aReturn)
-{
-  // Let's not implement this just yet. The CSSValue interface has been
-  // deprecated by the CSS WG.
-  // http://lists.w3.org/Archives/Public/www-style/2003Oct/0347.html
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-already_AddRefed<CSSValue>
-nsSVGElement::GetPresentationAttribute(const nsAString& aName, ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 

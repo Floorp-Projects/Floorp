@@ -22,15 +22,13 @@ interface SVGSVGElement : SVGGraphicsElement {
   readonly attribute SVGAnimatedLength y;
   readonly attribute SVGAnimatedLength width;
   readonly attribute SVGAnimatedLength height;
-  [Throws] // because not implemented
-  readonly attribute SVGRect viewport;
+  // readonly attribute SVGRect viewport;
   readonly attribute float pixelUnitToMillimeterX;
   readonly attribute float pixelUnitToMillimeterY;
   readonly attribute float screenPixelToMillimeterX;
   readonly attribute float screenPixelToMillimeterY;
   readonly attribute boolean useCurrentView;
-  [Throws] // because not implemented
-  readonly attribute SVGViewSpec currentView;
+  // readonly attribute SVGViewSpec currentView;
            attribute float currentScale;
   readonly attribute SVGPoint currentTranslate;
 
@@ -49,16 +47,11 @@ interface SVGSVGElement : SVGGraphicsElement {
   float getCurrentTime();
   [Throws]
   void setCurrentTime(float seconds);
-  [Throws] // because not implemented
-  NodeList getIntersectionList(SVGRect rect, SVGElement referenceElement);
-  [Throws] // because not implemented
-  NodeList getEnclosureList(SVGRect rect, SVGElement referenceElement);
-  [Throws] // because not implemented
-  boolean checkIntersection(SVGElement element, SVGRect rect);
-  [Throws] // because not implemented
-  boolean checkEnclosure(SVGElement element, SVGRect rect);
-  [Throws] // because not implemented
-  void deselectAll();
+  // NodeList getIntersectionList(SVGRect rect, SVGElement referenceElement);
+  // NodeList getEnclosureList(SVGRect rect, SVGElement referenceElement);
+  // boolean checkIntersection(SVGElement element, SVGRect rect);
+  // boolean checkEnclosure(SVGElement element, SVGRect rect);
+  // void deselectAll();
   [Creator]
   SVGNumber createSVGNumber();
   [Creator]

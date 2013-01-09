@@ -124,7 +124,6 @@ public:
   NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
   NS_IMETHOD GetClassName(nsIDOMSVGAnimatedString** aClassName);
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  NS_IMETHOD GetPresentationAttribute(const nsAString& aName, nsIDOMCSSValue** aReturn);
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
