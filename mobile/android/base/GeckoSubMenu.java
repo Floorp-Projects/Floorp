@@ -4,21 +4,12 @@
 
 package org.mozilla.gecko;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GeckoSubMenu extends GeckoMenu 
                           implements SubMenu {
