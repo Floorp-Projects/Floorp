@@ -824,7 +824,7 @@ SourceEditor.prototype = {
    */
   _linesRulerClick: function SE__linesRulerClick(aLineIndex, aEvent)
   {
-    if (aLineIndex === undefined) {
+    if (aLineIndex === undefined || aLineIndex == -1) {
       return;
     }
 
@@ -839,7 +839,11 @@ SourceEditor.prototype = {
                    selection.end : this.getLineEnd(aLineIndex);
       this.setSelection(newStart, newEnd);
     } else {
-      this.setCaretPosition(aLineIndex);
+      if (this._annotationRuler) {
+        this._annotationRulerClick(aLineIndex, aEvent);
+      } else {
+        this.setCaretPosition(aLineIndex);
+      }
     }
   },
 
