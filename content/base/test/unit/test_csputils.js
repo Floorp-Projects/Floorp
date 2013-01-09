@@ -756,7 +756,7 @@ test(
                     Ci.nsIContentPolicy.TYPE_IMAGE));
 
       // fold in the first policy
-      cspObj.refinePolicy(firstPolicy, selfURI);
+      cspObj.refinePolicy(firstPolicy, selfURI, false);
 
       // script-src and img-src are limited to self after the first policy
       do_check_true(testPermits(URI("http://self.com/foo.js"),
@@ -769,7 +769,7 @@ test(
                      Ci.nsIContentPolicy.TYPE_IMAGE));
 
       // fold in the second policy
-      cspObj.refinePolicy(secondPolicy, selfURI);
+      cspObj.refinePolicy(secondPolicy, selfURI, false);
 
       // script-src is self and img-src is none after the merge
       do_check_true(testPermits(URI("http://self.com/foo.js"),
