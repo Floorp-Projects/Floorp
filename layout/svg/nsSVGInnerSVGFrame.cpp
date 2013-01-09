@@ -114,11 +114,11 @@ nsSVGInnerSVGFrame::NotifySVGChanged(uint32_t aFlags)
     SVGSVGElement *svg = static_cast<SVGSVGElement*>(mContent);
 
     bool xOrYIsPercentage =
-      svg->mLengthAttributes[SVGSVGElement::X].IsPercentage() ||
-      svg->mLengthAttributes[SVGSVGElement::Y].IsPercentage();
+      svg->mLengthAttributes[SVGSVGElement::ATTR_X].IsPercentage() ||
+      svg->mLengthAttributes[SVGSVGElement::ATTR_Y].IsPercentage();
     bool widthOrHeightIsPercentage =
-      svg->mLengthAttributes[SVGSVGElement::WIDTH].IsPercentage() ||
-      svg->mLengthAttributes[SVGSVGElement::HEIGHT].IsPercentage();
+      svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH].IsPercentage() ||
+      svg->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT].IsPercentage();
 
     if (xOrYIsPercentage || widthOrHeightIsPercentage) {
       // Ancestor changes can't affect how we render from the perspective of
