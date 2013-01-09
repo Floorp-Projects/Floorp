@@ -36,7 +36,7 @@ public:
   /**
    * Return true if this type + this mozHidden should be muted.
    */
-  virtual bool GetMuted(AudioChannelType aType, bool aMozHidden);
+  virtual bool GetMuted(AudioChannelAgent* aAgent, bool aMozHidden);
 
 protected:
   AudioChannelServiceChild();
