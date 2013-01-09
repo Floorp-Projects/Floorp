@@ -276,7 +276,12 @@ function test() {
         is(inspector.highlighter.nodeInfo.classesBox.textContent, "",
           "No classes in the infobar before edit.");
       },
-      execute: function() {
+      execute: function(after) {
+        inspector.once("markupmutation", function() {
+          // needed because we need to make sure the infobar is updated
+          // not just the markupview (which happens in this event loop)
+          executeSoon(after);
+        });
         let editor = markup.getContainer(doc.querySelector("#node18")).editor;
         let attr = editor.attrs["id"].querySelector(".editable");
         editField(attr, attr.textContent + ' class="newclass" style="color:green"');
@@ -310,7 +315,8 @@ function test() {
         is(doc.querySelector("#retag-me-2").parentNode, node,
           "retag-me-2 should be a child of the old element.");
       },
-      execute: function() {
+      execute: function(after) {
+        inspector.once("markupmutation", after);
         let node = doc.querySelector("#retag-me");
         let editor = markup.getContainer(node).editor;
         let field = editor.tag;
@@ -367,9 +373,10 @@ function test() {
 
     inspector.selection.once("new-node", function BIMET_testAsyncSetupNewNode() {
       test.before();
-      test.execute();
-      test.after();
-      undoRedo(test, callback);
+      test.execute(function() {
+        test.after();
+        undoRedo(test, callback);
+      });
     });
     executeSoon(function BIMET_setNode2() {
       test.setup();
