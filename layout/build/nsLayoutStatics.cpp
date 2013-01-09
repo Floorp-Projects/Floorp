@@ -260,7 +260,7 @@ nsLayoutStatics::Initialize()
 
   InitProcessPriorityManager();
 
-  nsPermissionManager::AppUninstallObserverInit();
+  nsPermissionManager::AppClearDataObserverInit();
   nsCookieService::AppClearDataObserverInit();
   nsApplicationCacheService::AppClearDataObserverInit();
 

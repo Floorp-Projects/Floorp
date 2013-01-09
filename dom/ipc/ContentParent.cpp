@@ -359,7 +359,7 @@ PrivilegesForApp(mozIApplication* aApp)
     const SpecialPermission specialPermissions[] = {
         // FIXME/bug 785592: implement a CameraBridge so we don't have
         // to hack around with OS permissions
-        { "camera", base::PRIVILEGES_INHERIT },
+        { "camera", base::PRIVILEGES_CAMERA },
         // FIXME/bug 793034: change our video architecture so that we
         // can stream video from remote processes
         { "deprecated-hwvideo", base::PRIVILEGES_VIDEO }
@@ -507,6 +507,9 @@ ContentParent::Init()
         unused << SendActivateA11y();
     }
 #endif
+
+    DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
+    NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 }
 
 void
@@ -1967,6 +1970,25 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
                         aMsg, false, &cloneData, nullptr, nullptr);
   }
   return true;
+}
+
+bool
+ContentParent::RecvFilePathUpdateNotify(const nsString& aType, const nsString& aFilePath, const nsCString& aReason)
+{
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_NewLocalFile(aFilePath, false, getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+        // ignore
+        return true;
+    }
+    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aType, file);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (!obs) {
+        return false;
+    }
+    obs->NotifyObservers(dsf, "file-watcher-update", NS_ConvertASCIItoUTF16(aReason).get());
+    return true;
 }
 
 bool

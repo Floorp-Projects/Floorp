@@ -36,7 +36,7 @@ interface nsIObserver;
 interface nsIPrincipal;
 interface nsIDOMWindow;
 
-[scriptable, uuid(6c68cd87-4569-4695-8bc8-ad609f624b96)]
+[scriptable, uuid(9b6ffbb9-5536-4216-afcf-1b7cd7b54005)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -192,8 +192,12 @@ interface nsIPermissionManager : nsISupports
 
   /**
    * Remove all permissions associated with a given app id.
+   * @param aAppId       The appId of the app
+   * @param aBrowserOnly Whether we should remove permissions associated with
+   *                     a browser element (true) or all permissions (false).
    */
-  void removePermissionsForApp(in unsigned long appId);
+  void removePermissionsForApp(in unsigned long appId,
+                               in boolean browserOnly);
 };
 
 %{ C++
