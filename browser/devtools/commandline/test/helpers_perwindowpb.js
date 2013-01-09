@@ -393,7 +393,6 @@ DeveloperToolbarTestPW.test = function DTTPW_test(aWindow, uri, target, isGcli, 
     if (appMenuItem) {
       appMenuItem.hidden = true;
     }
-
     // leakHunt({ DeveloperToolbar: DeveloperToolbar });
   };
 
@@ -408,13 +407,12 @@ DeveloperToolbarTestPW.test = function DTTPW_test(aWindow, uri, target, isGcli, 
     appMenuItem.hidden = false;
   }
 
-  aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
-  aWindow.content.location = uri;
-
-  let tab = aWindow.gBrowser.selectedTab;
-  let browser = aWindow.gBrowser.getBrowserForTab(tab);
-
-  var onTabLoad = function() {
+  let browser = aWindow.gBrowser.selectedBrowser;
+  browser.addEventListener("load", function onTabLoad() {
+    if (aWindow.content.location.href != uri) {
+      browser.loadURI(uri);
+      return;
+    }
     browser.removeEventListener("load", onTabLoad, true);
 
     DeveloperToolbarTestPW.show(aWindow, function() {
@@ -430,35 +428,41 @@ DeveloperToolbarTestPW.test = function DTTPW_test(aWindow, uri, target, isGcli, 
 
       if (Array.isArray(target)) {
         try {
-          target.forEach(function(func) {
-            var args = isGcli ? [ options ] : [ aWindow ];
-            func.apply(null, args);
-          });
-          cleanup();
-          aCallback();
-        }
-        catch (ex) {
+          var args = isGcli ? options : aWindow;
+          var targetCount = 0;
+          function callTarget() {
+            if (targetCount < target.length) {
+              info("Running target test: " + targetCount);
+              target[targetCount++](args, callTarget);
+            } else {
+              info("Clean up and continue test");
+              cleanup();
+              aCallback();
+            }
+          }
+          callTarget();
+        } catch (ex) {
           ok(false, "" + ex);
           DeveloperToolbarTestPW._finish(aWindow);
           throw ex;
         }
-      }
-      else {
+      } else {
         try {
-          target(aWindow);
-          cleanup();
-          aCallback();
-        }
-        catch (ex) {
+          target(aWindow, function() {
+            info("Clean up and continue test");
+            cleanup();
+            aCallback();
+          });
+        } catch (ex) {
           ok(false, "" + ex);
           DeveloperToolbarTestPW._finish(aWindow);
           throw ex;
         }
       }
     });
-  }
+  }, true);
 
-  browser.addEventListener("load", onTabLoad, true);
+  browser.loadURI(uri);
 };
 
 DeveloperToolbarTestPW._outstanding = [];
