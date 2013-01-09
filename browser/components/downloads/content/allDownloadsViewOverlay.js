@@ -95,14 +95,17 @@ DownloadElementShell.prototype = {
    * without a dataItem are inactive, thus their UI is not updated.  They must
    * be activated when entering the visible area.  Session downloads are
    * always active since they always have a dataItem.
+   *
+   * @return whether the element was updated.
    */
   ensureActive: function DES_ensureActive() {
     if (this._active)
-      return;
+      return false;
     this._active = true;
     this._element.setAttribute("active", true);
     this._updateStatusUI();
     this._fetchTargetFileInfo();
+    return true;
   },
   get active() !!this._active,
 
@@ -112,19 +115,25 @@ DownloadElementShell.prototype = {
 
   set dataItem(aValue) {
     this._dataItem = aValue;
+    let shouldUpdate = false;
     if (this._dataItem) {
-      this._active = true;
       this._targetFileInfoFetched = false;
-      this._fetchTargetFileInfo();
+      // The dataItem can be replaced, in such a case the shell is already
+      // active but must be updated regardless.
+      shouldUpdate = !this.ensureActive();
     }
     else if (this._placesNode) {
       this._targetFileInfoFetched = false;
-      if (this.active)
-        this._fetchTargetFileInfo();
+      shouldUpdate = this.active;
+    }
+    else {
+      throw new Error("Should always have either a dataItem or a placesNode");
     }
 
-    if (this.active)
+    if (shouldUpdate) {
+      this._fetchTargetFileInfo();
       this._updateStatusUI();
+    }
     return aValue;
   },
 
@@ -141,7 +150,9 @@ DownloadElementShell.prototype = {
 
       // We don't need to update the UI if we had a data item, because
       // the places information isn't used in this case.
-      if (!this._dataItem && this._placesNode) {
+      if (!this._dataItem) {
+        if (!this._placesNode)
+          throw new Error("Should always have either a dataItem or a placesNode");
         this._targetFileInfoFetched = false;
         if (this.active) {
           this._updateStatusUI();
@@ -904,7 +915,6 @@ DownloadsPlacesView.prototype = {
       shells.delete(shell);
       if (shells.size == 0)
         this._downloadElementsShellsForURI.delete(aDataItem.uri);
-      return;
     }
     else {
       shell.dataItem = null;
