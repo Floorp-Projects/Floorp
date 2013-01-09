@@ -5,8 +5,8 @@
 #ifndef DOM_CAMERA_CAMERACONTROLIMPL_H
 #define DOM_CAMERA_CAMERACONTROLIMPL_H
 
+#include "nsCOMPtr.h"
 #include "nsDOMFile.h"
-#include "nsProxyRelease.h"
 #include "DictionaryHelpers.h"
 #include "nsIDOMDeviceStorage.h"
 #include "DOMCameraManager.h"
@@ -143,13 +143,13 @@ protected:
    */
   DOMCameraPreview*   mDOMPreview;
 
-  nsMainThreadPtrHandle<nsICameraAutoFocusCallback>   mAutoFocusOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback>       mAutoFocusOnErrorCb;
-  nsMainThreadPtrHandle<nsICameraTakePictureCallback> mTakePictureOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback>       mTakePictureOnErrorCb;
-  nsMainThreadPtrHandle<nsICameraShutterCallback>     mOnShutterCb;
-  nsMainThreadPtrHandle<nsICameraClosedCallback>      mOnClosedCb;
-  nsMainThreadPtrHandle<nsICameraRecorderStateChange> mOnRecorderStateChangeCb;
+  nsCOMPtr<nsICameraAutoFocusCallback>      mAutoFocusOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback>          mAutoFocusOnErrorCb;
+  nsCOMPtr<nsICameraTakePictureCallback>    mTakePictureOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback>          mTakePictureOnErrorCb;
+  nsCOMPtr<nsICameraShutterCallback>        mOnShutterCb;
+  nsCOMPtr<nsICameraClosedCallback>         mOnClosedCb;
+  nsCOMPtr<nsICameraRecorderStateChange>    mOnRecorderStateChangeCb;
 
 private:
   CameraControlImpl(const CameraControlImpl&) MOZ_DELETE;
@@ -161,7 +161,7 @@ class CameraErrorResult : public nsRunnable
 {
 public:
   CameraErrorResult(nsICameraErrorCallback* onError, const nsString& aErrorMsg, uint64_t aWindowId)
-    : mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    : mOnErrorCb(onError)
     , mErrorMsg(aErrorMsg)
     , mWindowId(aWindowId)
   { }
@@ -170,14 +170,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mOnErrorCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+    if (mOnErrorCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
       mOnErrorCb->HandleEvent(mErrorMsg);
     }
     return NS_OK;
   }
 
 protected:
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
   const nsString mErrorMsg;
   uint64_t mWindowId;
 };
@@ -186,7 +186,7 @@ protected:
 class GetPreviewStreamResult : public nsRunnable
 {
 public:
-  GetPreviewStreamResult(CameraControlImpl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint32_t aFramesPerSecond, nsMainThreadPtrHandle<nsICameraPreviewStreamCallback>& onSuccess, uint64_t aWindowId)
+  GetPreviewStreamResult(CameraControlImpl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint32_t aFramesPerSecond, nsICameraPreviewStreamCallback* onSuccess, uint64_t aWindowId)
     : mCameraControl(aCameraControl)
     , mWidth(aWidth)
     , mHeight(aHeight)
@@ -210,7 +210,7 @@ protected:
   uint32_t mWidth;
   uint32_t mHeight;
   uint32_t mFramesPerSecond;
-  nsMainThreadPtrHandle<nsICameraPreviewStreamCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
   uint64_t mWindowId;
 };
 
@@ -221,8 +221,8 @@ public:
   GetPreviewStreamTask(CameraControlImpl* aCameraControl, dom::CameraSize aSize, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
     : mSize(aSize)
     , mCameraControl(aCameraControl)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraPreviewStreamCallback>(onSuccess))
-    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
@@ -236,7 +236,7 @@ public:
   {
     nsresult rv = mCameraControl->GetPreviewStreamImpl(this);
 
-    if (NS_FAILED(rv) && mOnErrorCb.get()) {
+    if (NS_FAILED(rv) && mOnErrorCb) {
       rv = NS_DispatchToMainThread(new CameraErrorResult(mOnErrorCb, NS_LITERAL_STRING("FAILURE"), mCameraControl->GetWindowId()));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -245,8 +245,8 @@ public:
 
   dom::CameraSize mSize;
   nsRefPtr<CameraControlImpl> mCameraControl;
-  nsMainThreadPtrHandle<nsICameraPreviewStreamCallback> mOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
 
 // Return the autofocus status to JS.  Runs on the main thread.
@@ -255,7 +255,7 @@ class AutoFocusResult : public nsRunnable
 public:
   AutoFocusResult(bool aSuccess, nsICameraAutoFocusCallback* onSuccess, uint64_t aWindowId)
     : mSuccess(aSuccess)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraAutoFocusCallback>(onSuccess))
+    , mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   { }
 
@@ -265,7 +265,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mOnSuccessCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+    if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
       mOnSuccessCb->HandleEvent(mSuccess);
     }
     return NS_OK;
@@ -273,7 +273,7 @@ public:
 
 protected:
   bool mSuccess;
-  nsMainThreadPtrHandle<nsICameraAutoFocusCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraAutoFocusCallback> mOnSuccessCb;
   uint64_t mWindowId;
 };
 
@@ -283,8 +283,8 @@ class AutoFocusTask : public nsRunnable
 public:
   AutoFocusTask(CameraControlImpl* aCameraControl, nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraAutoFocusCallback>(onSuccess))
-    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
@@ -300,7 +300,7 @@ public:
     nsresult rv = mCameraControl->AutoFocusImpl(this);
     DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
-    if (NS_FAILED(rv) && mOnErrorCb.get()) {
+    if (NS_FAILED(rv) && mOnErrorCb) {
       rv = NS_DispatchToMainThread(new CameraErrorResult(mOnErrorCb, NS_LITERAL_STRING("FAILURE"), mCameraControl->GetWindowId()));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -308,19 +308,17 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
-  nsMainThreadPtrHandle<nsICameraAutoFocusCallback> mOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraAutoFocusCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
 
 // Return the captured picture to JS.  Runs on the main thread.
 class TakePictureResult : public nsRunnable
 {
 public:
-  TakePictureResult(uint8_t* aData, uint64_t aLength, const nsAString& aMimeType, nsICameraTakePictureCallback* onSuccess, uint64_t aWindowId)
-    : mData(aData)
-    , mLength(aLength)
-    , mMimeType(aMimeType)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraTakePictureCallback>(onSuccess))
+  TakePictureResult(nsIDOMBlob* aImage, nsICameraTakePictureCallback* onSuccess, uint64_t aWindowId)
+    : mImage(aImage)
+    , mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -336,21 +334,16 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-    if (mOnSuccessCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
-      nsCOMPtr<nsIDOMBlob> image = new nsDOMMemoryFile(static_cast<void*>(mData), static_cast<uint64_t>(mLength), mMimeType);
-      mOnSuccessCb->HandleEvent(image);
-    } else {
-      delete[] mData;
+    if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+      mOnSuccessCb->HandleEvent(mImage);
     }
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
     return NS_OK;
   }
 
 protected:
-  uint8_t* mData;
-  uint64_t mLength;
-  nsString mMimeType;
-  nsMainThreadPtrHandle<nsICameraTakePictureCallback> mOnSuccessCb;
+  nsCOMPtr<nsIDOMBlob> mImage;
+  nsCOMPtr<nsICameraTakePictureCallback> mOnSuccessCb;
   uint64_t mWindowId;
 };
 
@@ -364,8 +357,8 @@ public:
     , mRotation(aRotation)
     , mFileFormat(aFileFormat)
     , mPosition(aPosition)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraTakePictureCallback>(onSuccess))
-    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
@@ -381,7 +374,7 @@ public:
     nsresult rv = mCameraControl->TakePictureImpl(this);
     DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
-    if (NS_FAILED(rv) && mOnErrorCb.get()) {
+    if (NS_FAILED(rv) && mOnErrorCb) {
       rv = NS_DispatchToMainThread(new CameraErrorResult(mOnErrorCb, NS_LITERAL_STRING("FAILURE"), mCameraControl->GetWindowId()));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -393,8 +386,8 @@ public:
   int32_t mRotation;
   nsString mFileFormat;
   dom::CameraPosition mPosition;
-  nsMainThreadPtrHandle<nsICameraTakePictureCallback> mOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraTakePictureCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
 
 // Return the result of starting recording.  Runs on the main thread.
@@ -402,7 +395,7 @@ class StartRecordingResult : public nsRunnable
 {
 public:
   StartRecordingResult(nsICameraStartRecordingCallback* onSuccess, uint64_t aWindowId)
-    : mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraStartRecordingCallback>(onSuccess))
+    : mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   { }
 
@@ -412,14 +405,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mOnSuccessCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+    if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
       mOnSuccessCb->HandleEvent();
     }
     return NS_OK;
   }
 
 protected:
-  nsMainThreadPtrHandle<nsICameraStartRecordingCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraStartRecordingCallback> mOnSuccessCb;
   uint64_t mWindowId;
 };
 
@@ -432,8 +425,8 @@ public:
     , mOptions(aOptions)
     , mFolder(aFolder)
     , mFilename(aFilename)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraStartRecordingCallback>(onSuccess))
-    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
     , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -468,8 +461,8 @@ public:
   dom::CameraStartRecordingOptions mOptions;
   nsCOMPtr<nsIFile> mFolder;
   nsString mFilename;
-  nsMainThreadPtrHandle<nsICameraStartRecordingCallback> mOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraStartRecordingCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
   uint64_t mWindowId;
 };
 
@@ -563,8 +556,8 @@ class GetPreviewStreamVideoModeResult : public nsRunnable
 {
 public:
   GetPreviewStreamVideoModeResult(nsIDOMMediaStream* aStream, nsICameraPreviewStreamCallback* onSuccess)
-    : mStream(new nsMainThreadPtrHolder<nsIDOMMediaStream>(aStream))
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraPreviewStreamCallback>(onSuccess))
+     : mStream(aStream)
+     , mOnSuccessCb(onSuccess)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
@@ -578,15 +571,15 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mOnSuccessCb.get()) {
+    if (mOnSuccessCb) {
       mOnSuccessCb->HandleEvent(mStream);
     }
     return NS_OK;
   }
 
 protected:
-  nsMainThreadPtrHandle<nsIDOMMediaStream> mStream;
-  nsMainThreadPtrHandle<nsICameraPreviewStreamCallback> mOnSuccessCb;
+  nsCOMPtr<nsIDOMMediaStream> mStream;
+  nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
 };
 
 // Get the video mode preview stream.
@@ -596,8 +589,8 @@ public:
   GetPreviewStreamVideoModeTask(CameraControlImpl* aCameraControl, dom::CameraRecorderOptions aOptions,  nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
     , mOptions(aOptions)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraPreviewStreamCallback>(onSuccess))
-    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
   { }
 
   NS_IMETHOD Run()
@@ -606,7 +599,7 @@ public:
     nsresult rv = mCameraControl->GetPreviewStreamVideoModeImpl(this);
     DOM_CAMERA_LOGI("%s:%d -- AFTER IMPL : rv = %d\n", __func__, __LINE__, rv);
 
-    if (NS_FAILED(rv) && mOnErrorCb.get()) {
+    if (NS_FAILED(rv) && mOnErrorCb) {
       rv = NS_DispatchToMainThread(new CameraErrorResult(mOnErrorCb, NS_LITERAL_STRING("FAILURE"), mCameraControl->GetWindowId()));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -615,8 +608,8 @@ public:
 
   nsRefPtr<CameraControlImpl> mCameraControl;
   dom::CameraRecorderOptions mOptions;
-  nsMainThreadPtrHandle<nsICameraPreviewStreamCallback> mOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
 
 // Return the result of releasing the camera hardware.  Runs on the main thread.
@@ -624,7 +617,7 @@ class ReleaseHardwareResult : public nsRunnable
 {
 public:
   ReleaseHardwareResult(nsICameraReleaseCallback* onSuccess, uint64_t aWindowId)
-    : mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraReleaseCallback>(onSuccess))
+    : mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -639,14 +632,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mOnSuccessCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+    if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
       mOnSuccessCb->HandleEvent();
     }
     return NS_OK;
   }
 
 protected:
-  nsMainThreadPtrHandle<nsICameraReleaseCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraReleaseCallback> mOnSuccessCb;
   uint64_t mWindowId;
 };
 
@@ -656,8 +649,8 @@ class ReleaseHardwareTask : public nsRunnable
 public:
   ReleaseHardwareTask(CameraControlImpl* aCameraControl, nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraReleaseCallback>(onSuccess))
-    , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+    , mOnSuccessCb(onSuccess)
+    , mOnErrorCb(onError)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   }
@@ -673,7 +666,7 @@ public:
     nsresult rv = mCameraControl->ReleaseHardwareImpl(this);
     DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
-    if (NS_FAILED(rv) && mOnErrorCb.get()) {
+    if (NS_FAILED(rv) && mOnErrorCb) {
       rv = NS_DispatchToMainThread(new CameraErrorResult(mOnErrorCb, NS_LITERAL_STRING("FAILURE"), mCameraControl->GetWindowId()));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -681,8 +674,8 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
-  nsMainThreadPtrHandle<nsICameraReleaseCallback> mOnSuccessCb;
-  nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
+  nsCOMPtr<nsICameraReleaseCallback> mOnSuccessCb;
+  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 };
 
 // Report that the video recorder state has changed.
@@ -690,7 +683,7 @@ class CameraRecorderStateChange : public nsRunnable
 {
 public:
   CameraRecorderStateChange(nsICameraRecorderStateChange* onStateChange, const nsString& aStateMsg, int32_t aStatus, int32_t aTrackNumber, uint64_t aWindowId)
-    : mOnStateChangeCb(new nsMainThreadPtrHolder<nsICameraRecorderStateChange>(onStateChange))
+    : mOnStateChangeCb(onStateChange)
     , mStateMsg(aStateMsg)
     , mStatus(aStatus)
     , mTrackNumber(aTrackNumber)
@@ -701,7 +694,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mOnStateChangeCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+    if (mOnStateChangeCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
       // For now, just pass the state message and swallow mStatus and mTrackNumber
       mOnStateChangeCb->HandleStateChange(mStateMsg);
     }
@@ -709,7 +702,7 @@ public:
   }
 
 protected:
-  nsMainThreadPtrHandle<nsICameraRecorderStateChange> mOnStateChangeCb;
+  nsCOMPtr<nsICameraRecorderStateChange> mOnStateChangeCb;
   const nsString mStateMsg;
   int32_t mStatus;
   int32_t mTrackNumber;
