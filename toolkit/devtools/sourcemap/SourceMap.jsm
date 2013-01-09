@@ -15,7 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-this.EXPORTED_SYMBOLS = [ "SourceMapConsumer", "SourceMapGenerator", "SourceNode" ];
+var EXPORTED_SYMBOLS = [ "SourceMapConsumer", "SourceMapGenerator", "SourceNode" ];
 
 Components.utils.import('resource://gre/modules/devtools/Require.jsm');
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -24,7 +24,7 @@ Components.utils.import('resource://gre/modules/devtools/Require.jsm');
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'source-map/util', 'source-map/binary-search', 'source-map/array-set', 'source-map/base64-vlq'], function(require, exports, module) {
+define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'source-map/util', 'source-map/binary-search', 'source-map/array-set', 'source-map/base64-vlq'], function(require, exports, module) {
 
   var util = require('source-map/util');
   var binarySearch = require('source-map/binary-search');
@@ -79,6 +79,8 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
 
     this._names = ArraySet.fromArray(names);
     this._sources = ArraySet.fromArray(sources);
+    this._sourceRoot = sourceRoot;
+    this.file = file;
 
     // `this._generatedMappings` and `this._originalMappings` hold the parsed
     // mapping coordinates from the source map's "mappings" attribute. Each
@@ -112,6 +114,17 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
    * The version of the source mapping spec that we are consuming.
    */
   SourceMapConsumer.prototype._version = 3;
+
+  /**
+   * The list of original sources.
+   */
+  Object.defineProperty(SourceMapConsumer.prototype, 'sources', {
+    get: function () {
+      return this._sources.toArray().map(function (s) {
+        return this._sourceRoot ? util.join(this._sourceRoot, s) : s;
+      }, this);
+    }
+  });
 
   /**
    * Parse the mappings in a string in to a data structure which we can easily
@@ -338,6 +351,46 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
       };
     };
 
+  SourceMapConsumer.GENERATED_ORDER = 1;
+  SourceMapConsumer.ORIGINAL_ORDER = 2;
+
+  /**
+   * Iterate over each mapping between an original source/line/column and a
+   * generated line/column in this source map.
+   *
+   * @param Function aCallback
+   *        The function that is called with each mapping. This function should
+   *        not mutate the mapping.
+   * @param Object aContext
+   *        Optional. If specified, this object will be the value of `this` every
+   *        time that `aCallback` is called.
+   * @param aOrder
+   *        Either `SourceMapConsumer.GENERATED_ORDER` or
+   *        `SourceMapConsumer.ORIGINAL_ORDER`. Specifies whether you want to
+   *        iterate over the mappings sorted by the generated file's line/column
+   *        order or the original's source/line/column order, respectively. Defaults to
+   *        `SourceMapConsumer.GENERATED_ORDER`.
+   */
+  SourceMapConsumer.prototype.eachMapping =
+    function SourceMapConsumer_eachMapping(aCallback, aContext, aOrder) {
+      var context = aContext || null;
+      var order = aOrder || SourceMapConsumer.GENERATED_ORDER;
+
+      var mappings;
+      switch (order) {
+      case SourceMapConsumer.GENERATED_ORDER:
+        mappings = this._generatedMappings;
+        break;
+      case SourceMapConsumer.ORIGINAL_ORDER:
+        mappings = this._originalMappings;
+        break;
+      default:
+        throw new Error("Unknown order of iteration.");
+      }
+
+      mappings.forEach(aCallback, context);
+    };
+
   exports.SourceMapConsumer = SourceMapConsumer;
 
 });
@@ -347,7 +400,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' , 'sour
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/util', ['require', 'exports', 'module' ], function(require, exports, module) {
+define('source-map/util', ['require', 'exports', 'module' , ], function(require, exports, module) {
 
   /**
    * This is a helper function for getting values from parameter/options
@@ -384,7 +437,7 @@ define('source-map/util', ['require', 'exports', 'module' ], function(require, e
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/binary-search', ['require', 'exports', 'module' ], function(require, exports, module) {
+define('source-map/binary-search', ['require', 'exports', 'module' , ], function(require, exports, module) {
 
   /**
    * Recursive implementation of binary search.
@@ -462,7 +515,7 @@ define('source-map/binary-search', ['require', 'exports', 'module' ], function(r
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/array-set', ['require', 'exports', 'module' ], function(require, exports, module) {
+define('source-map/array-set', ['require', 'exports', 'module' , ], function(require, exports, module) {
 
   /**
    * A data structure which is a combination of an array and a set. Adding a new
@@ -487,9 +540,22 @@ define('source-map/array-set', ['require', 'exports', 'module' ], function(requi
   };
 
   /**
+   * Because behavior goes wacky when you set `__proto__` on `this._set`, we
+   * have to prefix all the strings in our set with an arbitrary character.
+   *
+   * See https://github.com/mozilla/source-map/pull/31 and
+   * https://github.com/mozilla/source-map/issues/30
+   *
+   * @param String aStr
+   */
+  ArraySet.prototype._toSetString = function ArraySet__toSetString (aStr) {
+    return "$" + aStr;
+  };
+
+  /**
    * Add the given string to this set.
    *
-   * @param String str
+   * @param String aStr
    */
   ArraySet.prototype.add = function ArraySet_add(aStr) {
     if (this.has(aStr)) {
@@ -498,26 +564,27 @@ define('source-map/array-set', ['require', 'exports', 'module' ], function(requi
     }
     var idx = this._array.length;
     this._array.push(aStr);
-    this._set[aStr] = idx;
+    this._set[this._toSetString(aStr)] = idx;
   };
 
   /**
    * Is the given string a member of this set?
    *
-   * @param String str
+   * @param String aStr
    */
   ArraySet.prototype.has = function ArraySet_has(aStr) {
-    return Object.prototype.hasOwnProperty.call(this._set, aStr);
+    return Object.prototype.hasOwnProperty.call(this._set,
+                                                this._toSetString(aStr));
   };
 
   /**
    * What is the index of the given string in the array?
    *
-   * @param String str
+   * @param String aStr
    */
   ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
     if (this.has(aStr)) {
-      return this._set[aStr];
+      return this._set[this._toSetString(aStr)];
     }
     throw new Error('"' + aStr + '" is not in the set.');
   };
@@ -525,7 +592,7 @@ define('source-map/array-set', ['require', 'exports', 'module' ], function(requi
   /**
    * What is the element at the given index?
    *
-   * @param Number idx
+   * @param Number aIdx
    */
   ArraySet.prototype.at = function ArraySet_at(aIdx) {
     if (aIdx >= 0 && aIdx < this._array.length) {
@@ -582,7 +649,7 @@ define('source-map/array-set', ['require', 'exports', 'module' ], function(requi
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define('source-map/base64-vlq', ['require', 'exports', 'module' , 'source-map/base64'], function(require, exports, module) {
+define('source-map/base64-vlq', ['require', 'exports', 'module' ,  'source-map/base64'], function(require, exports, module) {
 
   var base64 = require('source-map/base64');
 
@@ -693,7 +760,7 @@ define('source-map/base64-vlq', ['require', 'exports', 'module' , 'source-map/ba
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/base64', ['require', 'exports', 'module' ], function(require, exports, module) {
+define('source-map/base64', ['require', 'exports', 'module' , ], function(require, exports, module) {
 
   var charToIntMap = {};
   var intToCharMap = {};
@@ -732,7 +799,7 @@ define('source-map/base64', ['require', 'exports', 'module' ], function(require,
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/source-map-generator', ['require', 'exports', 'module' , 'source-map/base64-vlq', 'source-map/util', 'source-map/array-set'], function(require, exports, module) {
+define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'source-map/base64-vlq', 'source-map/util', 'source-map/array-set'], function(require, exports, module) {
 
   var base64VLQ = require('source-map/base64-vlq');
   var util = require('source-map/util');
@@ -897,10 +964,10 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' , 'sou
     };
 
   /**
-   * Render the source map being generated to a string.
+   * Externalize the source map.
    */
-  SourceMapGenerator.prototype.toString =
-    function SourceMapGenerator_toString() {
+  SourceMapGenerator.prototype.toJSON =
+    function SourceMapGenerator_toJSON() {
       var map = {
         version: this._version,
         file: this._file,
@@ -911,7 +978,15 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' , 'sou
       if (this._sourceRoot) {
         map.sourceRoot = this._sourceRoot;
       }
-      return JSON.stringify(map);
+      return map;
+    };
+
+  /**
+   * Render the source map being generated to a string.
+   */
+  SourceMapGenerator.prototype.toString =
+    function SourceMapGenerator_toString() {
+      return JSON.stringify(this);
     };
 
   exports.SourceMapGenerator = SourceMapGenerator;
@@ -923,7 +998,7 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' , 'sou
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/source-node', ['require', 'exports', 'module' , 'source-map/source-map-generator'], function(require, exports, module) {
+define('source-map/source-node', ['require', 'exports', 'module' ,  'source-map/source-map-generator'], function(require, exports, module) {
 
   var SourceMapGenerator = require('source-map/source-map-generator').SourceMapGenerator;
 
