@@ -30,10 +30,13 @@ class nsSVGInnerSVGFrame;
 class nsSVGImageFrame;
 
 namespace mozilla {
+class DOMSVGAnimatedPreserveAspectRatio;
 class DOMSVGMatrix;
+class DOMSVGTransform;
 class SVGFragmentIdentifier;
 
 namespace dom {
+class SVGAngle;
 class SVGViewElement;
 
 class SVGSVGElement;
@@ -118,6 +121,7 @@ class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase,
 
   SVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                 FromParser aFromParser);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
                                          already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -258,6 +262,53 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedLength> X();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+  already_AddRefed<nsIDOMSVGRect> GetViewport(ErrorResult& rv);
+  float PixelUnitToMillimeterX();
+  float PixelUnitToMillimeterY();
+  float ScreenPixelToMillimeterX();
+  float ScreenPixelToMillimeterY();
+  bool UseCurrentView();
+  already_AddRefed<nsIDOMSVGViewSpec> GetCurrentView(ErrorResult& rv);
+  // XPIDL SetCurrentScale and SetCurrentTranslate are alright to use because
+  // they only throw on non-finite floats and we don't allow those.
+  float CurrentScale();
+  already_AddRefed<nsISVGPoint> CurrentTranslate();
+  uint32_t SuspendRedraw(uint32_t max_wait_milliseconds);
+  // XPIDL UnSuspendRedraw(All) can be used because it's a no-op.
+  void ForceRedraw(ErrorResult& rv);
+  void PauseAnimations(ErrorResult& rv);
+  void UnpauseAnimations(ErrorResult& rv);
+  bool AnimationsPaused(ErrorResult& rv);
+  float GetCurrentTime(ErrorResult& rv);
+  void SetCurrentTime(float seconds, ErrorResult& rv);
+  already_AddRefed<nsINodeList> GetIntersectionList(nsIDOMSVGRect* rect,
+                                                    nsSVGElement& element,
+                                                    ErrorResult& rv);
+  already_AddRefed<nsINodeList> GetEnclosureList(nsIDOMSVGRect *rect,
+                                                 nsSVGElement& referenceElement,
+                                                 ErrorResult& rv);
+  bool CheckIntersection(nsSVGElement& element, nsIDOMSVGRect* rect, ErrorResult& rv);
+  bool CheckEnclosure(nsSVGElement& element, nsIDOMSVGRect* rect, ErrorResult& rv);
+  bool DeselectAll(ErrorResult& rv);
+  already_AddRefed<nsIDOMSVGNumber> CreateSVGNumber();
+  already_AddRefed<nsIDOMSVGLength> CreateSVGLength();
+  already_AddRefed<SVGAngle> CreateSVGAngle();
+  already_AddRefed<nsISVGPoint> CreateSVGPoint();
+  already_AddRefed<DOMSVGMatrix> CreateSVGMatrix();
+  already_AddRefed<nsIDOMSVGRect> CreateSVGRect();
+  already_AddRefed<DOMSVGTransform> CreateSVGTransform();
+  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix);
+  Element* GetElementById(const nsAString& elementId, ErrorResult& rv);
+  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  uint16_t ZoomAndPan();
+  void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
+
 private:
   // nsSVGElement overrides
 
@@ -339,7 +390,7 @@ private:
 
   virtual LengthAttributesInfo GetLengthInfo();
 
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
