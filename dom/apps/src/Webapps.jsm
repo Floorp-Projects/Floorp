@@ -1899,6 +1899,11 @@ this.DOMApplicationRegistry = {
           bufferedOutputStream.close();
           outputStream.close();
 
+          if (!Components.isSuccessCode(aStatusCode)) {
+            cleanup("NETWORK_ERROR");
+            return;
+          }
+
           if (requestChannel.responseStatus == 304) {
             // The package's Etag has not changed.
             // We send a "applied" event right away.
@@ -1917,11 +1922,6 @@ this.DOMApplicationRegistry = {
             if (file && file.exists()) {
               file.remove(true);
             }
-            return;
-          }
-
-          if (!Components.isSuccessCode(aStatusCode)) {
-            cleanup("NETWORK_ERROR");
             return;
           }
 
