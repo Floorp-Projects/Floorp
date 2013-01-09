@@ -9,7 +9,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const RIL_MMSSERVICE_CONTRACTID = "@mozilla.org/mms/rilmmsservice;1";
@@ -20,14 +19,6 @@ const DEBUG = false;
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
 const kPrefenceChangedObserverTopic      = "nsPref:changed";
-
-// File modes for saving MMS attachments.
-const FILE_OPEN_MODE = FileUtils.MODE_CREATE
-                     | FileUtils.MODE_WRONLY
-                     | FileUtils.MODE_TRUNCATE;
-
-// Size of each segment in a nsIStorageStream. Must be a power of two.
-const STORAGE_STREAM_SEGMENT_SIZE = 4096;
 
 // HTTP status codes:
 // @see http://tools.ietf.org/html/rfc2616#page-39
@@ -447,79 +438,6 @@ MmsService.prototype = {
   },
 
   /**
-   * @param file
-   *        A nsIFile object indicating where to save the data.
-   * @param data
-   *        An array of raw octets.
-   * @param callback
-   *        Callback function when I/O is done.
-   *
-   * @return An nsIRequest representing the copy operation returned by
-   *         NetUtil.asyncCopy().
-   */
-  saveContentToFile: function saveContentToFile(file, data, callback) {
-    // Write to a StorageStream for NetUtil.asyncCopy()
-    let sstream = Cc["@mozilla.org/storagestream;1"]
-                  .createInstance(Ci.nsIStorageStream);
-    sstream.init(STORAGE_STREAM_SEGMENT_SIZE, data.length, null);
-    let bostream = Cc["@mozilla.org/binaryoutputstream;1"]
-                   .createInstance(Ci.nsIBinaryOutputStream);
-    bostream.setOutputStream(sstream.getOutputStream(0));
-    bostream.writeByteArray(data, data.length);
-    bostream.close();
-
-    // Write message body to file
-    let ofstream = FileUtils.openSafeFileOutputStream(file, FILE_OPEN_MODE);
-    return NetUtil.asyncCopy(sstream.newInputStream(0), ofstream, callback);
-  },
-
-  /**
-   * @param msg
-   *        A MMS message object.
-   * @param callback
-   *        A callback function that accepts one argument as retrieved message.
-   */
-  saveMessageContent: function saveMessageContent(msg, callback) {
-    function saveCallback(obj, counter, status) {
-      obj.saved = Components.isSuccessCode(status);
-      debug("saveMessageContent: " + obj.file.path + ", saved: " + obj.saved);
-
-      // The async copy callback may not be invoked in order, so we only
-      // callback after all of them were done.
-      counter.count++;
-      if (counter.count >= counter.max) {
-        if (callback) {
-          callback(msg);
-        }
-      }
-    }
-
-    let tid = msg.headers["x-mms-transaction-id"];
-    if (msg.parts) {
-      let counter = {max: msg.parts.length, count: 0};
-
-      msg.parts.forEach((function (part, index) {
-        part.file = FileUtils.getFile("ProfD", ["mms", tid, index], true);
-        if (!part.content) {
-          saveCallback(part, counter, Cr.NS_ERROR_NOT_AVAILABLE);
-        } else {
-          this.saveContentToFile(part.file, part.content,
-                                 saveCallback.bind(null, part, counter));
-        }
-      }).bind(this));
-    } else if (msg.content) {
-      msg.file = FileUtils.getFile("ProfD", ["mms", tid, "content"], true);
-      this.saveContentToFile(msg.file, msg.content,
-                             saveCallback.bind(null, msg, {max: 1, count: 0}));
-    } else {
-      // Nothing to save here.
-      if (callback) {
-        callback(msg);
-      }
-    }
-  },
-
-  /**
    * @param data
    *        A wrapped object containing raw PDU data.
    * @param options
@@ -650,8 +568,9 @@ MmsService.prototype = {
       callbackIfValid(status, msg);
       return;
     }
-
-    this.saveMessageContent(msg, callbackIfValid.bind(null, MMS.MMS_PDU_ERROR_OK));
+    // Todo: Please add code for inserting msg into database
+    //   right here.
+    // see bug id: 811252 - B2G MMS: implement MMS database
   },
 
   /**
