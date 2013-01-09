@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(9472bf0f-2d1c-415c-90fd-f4260678b73b)]
+[scriptable, uuid(79de76e5-994e-4f6b-81aa-42d9adb6e67e)]
 interface nsIDOMLocation : nsISupports
 {
            /**
@@ -21,6 +21,8 @@ interface nsIDOMLocation : nsISupports
            attribute DOMString        port;
            attribute DOMString        protocol;
            attribute DOMString        search;
+
+  readonly attribute DOMString        origin;
 
   void                      reload([optional] in boolean forceget);
   void                      replace(in DOMString url);
