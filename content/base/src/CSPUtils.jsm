@@ -519,6 +519,19 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
         // process dirs, and enforce that 'self' is defined.
         var dv = CSPSourceList.fromString(dirvalue, aCSPR, self, true);
         if (dv) {
+          // Check for unsafe-inline in style-src
+          if (sdi === "style-src" && dv._allowUnsafeInline) {
+             aCSPR._allowInlineStyles = true;
+          } else if (sdi === "script-src") {
+            // Check for unsafe-inline and unsafe-eval in script-src
+            if (dv._allowUnsafeInline) {
+              aCSPR._allowInlineScripts = true;
+            } else if (dv._allowUnsafeEval) {
+              // TODO: eval
+              // aCSPR._allowEvilEval = true;
+            }
+          }
+
           aCSPR._directives[sdi] = dv;
           continue directive;
         }
@@ -913,6 +926,9 @@ this.CSPSourceList = function CSPSourceList() {
   // Set to true when this list is created using "makeExplicit()"
   // It's useful to know this when reporting the directive that was violated.
   this._isImplicit = false;
+
+  // When this is true, the source list contains 'unsafe-inline'.
+  this._allowUnsafeInline = false;
 }
 
 /**
@@ -965,6 +981,11 @@ CSPSourceList.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
                                         [tokens[i]]));
       continue;
     }
+
+    // if a source allows unsafe-inline, set our flag to indicate this.
+    if (src._allowUnsafeInline)
+      slObj._allowUnsafeInline = true;
+
     // if a source is a *, then we can permit all sources
     if (src.permitAll) {
       slObj._permitAllSources = true;
@@ -1152,6 +1173,9 @@ this.CSPSource = function CSPSource() {
 
   // when set to true, this source represents 'self'
   this._isSelf = false;
+
+  // when set to true, this source allows inline scripts or styles
+  this._allowUnsafeInline = false;
 }
 
 /**
@@ -1378,6 +1402,15 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     sObj._isSelf = true;
     return sObj;
   }
+
+  // check for 'unsafe-inline' (case insensitive)
+  if (aStr.toUpperCase() === "'UNSAFE-INLINE'"){
+    sObj._allowUnsafeInline = true;
+    return sObj;
+  }
+
+  // TODO : unsafe-eval
+
   cspError(aCSPRep, CSPLocalizer.getFormatStr("couldntParseInvalidSource",
                                               [aStr]));
   return null;
