@@ -2008,7 +2008,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     detail = eRulePartialMixed; // Treat as though some data is specified to avoid
                                 // the optimizations and force data computation.
 
-  if (detail == eRuleNone && startStruct && !ruleData.mPostResolveCallback) {
+  if (detail == eRuleNone && startStruct) {
     // We specified absolutely no rule information, but a parent rule in the tree
     // specified all the rule information.  We set a bit along the branch from our
     // node in the tree to the node that specified the data that tells nodes on that
@@ -2017,7 +2017,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     PropagateDependentBit(aSID, ruleNode, startStruct);
     return startStruct;
   }
-  // FIXME Do we need to check for mPostResolveCallback?
   if ((!startStruct && !isReset &&
        (detail == eRuleNone || detail == eRulePartialInherited)) ||
       detail == eRuleFullInherited) {
@@ -2071,10 +2070,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_TEST
-
-  // If we have a post-resolve callback, handle that now.
-  if (ruleData.mPostResolveCallback && (MOZ_LIKELY(res != nullptr)))
-    (*ruleData.mPostResolveCallback)(const_cast<void*>(res), &ruleData);
 
   // Now return the result.
   return res;
@@ -3449,11 +3444,6 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     nsRuleNode::SetFont(aPresContext, context,
                         aGenericFontID, &ruleData, &parentFont, aFont,
                         false, dummy);
-
-    // XXX Not sure if we need to do this here
-    // If we have a post-resolve callback, handle that now.
-    if (ruleData.mPostResolveCallback)
-      (ruleData.mPostResolveCallback)(aFont, &ruleData);
 
     parentFont = *aFont;
   }
