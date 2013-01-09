@@ -28,10 +28,10 @@ function test()
 
           // Make sure that lazily-created actors are created only once.
           let connections = Object.keys(DebuggerServer._connections);
-          is(connections.length, 1, "Only one connection is established.");
-          let connPrefix = connections[0];
+          info(connections.length + " connections are established.");
+          let connPrefix = connections[connections.length - 1];
           ok(DebuggerServer._connections[connPrefix],
-             connPrefix + " is the only connection.");
+             connPrefix + " is a valid connection.");
           // First we look for the pool of global actors.
           let extraPools = DebuggerServer._connections[connPrefix]._extraPools;
           let globalPool;
