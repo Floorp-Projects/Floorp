@@ -267,7 +267,7 @@ AudioChannelService::SendAudioChannelChangedNotification()
     if (mCurrentHigherChannel != AUDIO_CHANNEL_LAST) {
       channelName.AssignASCII(ChannelName(mCurrentHigherChannel));
     } else {
-      channelName = NS_LITERAL_STRING("default");
+      channelName.AssignLiteral("none");
     }
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
