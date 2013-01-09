@@ -133,7 +133,6 @@ public class Tabs implements GeckoEventListener {
         mSelectedTab = tab;
         mActivity.runOnUiThread(new Runnable() { 
             public void run() {
-                mActivity.hideFormAssistPopup();
                 if (isSelectedTab(tab)) {
                     notifyListeners(tab, TabEvents.SELECTED);
 
