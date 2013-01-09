@@ -351,7 +351,7 @@ test(
 
       var cspr;
       var cspr_allowval;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
 
       // check default policy "allow *"
       cspr = CSPRep.fromString("allow *", URI("http://self.com:80"));
@@ -373,7 +373,7 @@ test(
 test(
     function test_CSPRep_defaultSrc() {
       var cspr, cspr_default_val, cspr_allow;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
 
       // apply policy of "default-src *" (e.g. "allow *")
       cspr = CSPRep.fromString("default-src *", URI("http://self.com:80"));
@@ -405,7 +405,7 @@ test(
     function test_CSPRep_fromString_oneDir() {
 
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC, SD.FRAME_SRC];
 
       // check one-directive policies
@@ -431,7 +431,7 @@ test(
 test(
     function test_CSPRep_fromString_twodir() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.FRAME_SRC];
 
       // check two-directive policies
@@ -465,7 +465,7 @@ test(
 
 test(function test_CSPRep_fromString_withself() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "https://self.com:34";
 
       // check one-directive policies
@@ -487,7 +487,7 @@ test(function test_CSPRep_fromString_withself() {
 // (see bug 555068)
 test(function test_FrameAncestor_defaults() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "http://self.com:34";
 
       cspr = CSPRep.fromString("allow 'none'", URI(self));
@@ -511,7 +511,7 @@ test(function test_FrameAncestor_defaults() {
 
 test(function test_FrameAncestor_TLD_defaultPorts() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "http://self"; //TLD only, no .com or anything.
 
       cspr = CSPRep.fromString("allow 'self'; frame-ancestors 'self' http://foo:80 bar:80 http://three", URI(self));
@@ -533,7 +533,7 @@ test(function test_FrameAncestor_TLD_defaultPorts() {
 
 test(function test_CSP_ReportURI_parsing() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "http://self.com:34";
       var parsedURIs = [];
 
@@ -593,7 +593,7 @@ test(function test_CSP_ReportURI_parsing() {
 test(
      function test_bug634778_duplicateDirective_Detection() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "http://self.com:34";
       var firstDomain = "http://first.com";
       var secondDomain = "http://second.com";

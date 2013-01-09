@@ -143,12 +143,13 @@ CSPPolicyURIListener.prototype = {
     if (Components.isSuccessCode(status)) {
       // send the policy we received back to the parent document's CSP
       // for parsing
-      this._csp.refinePolicy(this._policy, this._docURI, this._docRequest);
+      this._csp.refinePolicy(this._policy, this._docURI,
+                             this._csp._specCompliant);
     }
     else {
       // problem fetching policy so fail closed
-      this._csp.refinePolicy("allow 'none'", this._docURI, this._docRequest);
-      this._csp.refinePolicy("default-src 'none'", this._docURI, this._docRequest);
+      this._csp.refinePolicy("default-src 'none'", this._docURI,
+                             this._csp._specCompliant);
     }
     // resume the parent document request
     this._docRequest.resume();
@@ -159,8 +160,13 @@ CSPPolicyURIListener.prototype = {
 
 /**
  * Class that represents a parsed policy structure.
+ *
+ * @param aSpecCompliant: true: this policy is a CSP 1.0 spec
+ *                   compliant policy and should be parsed as such.
+ *                   false or undefined: this is a policy using
+ *                   our original implementation's CSP syntax.
  */
-this.CSPRep = function CSPRep() {
+this.CSPRep = function CSPRep(aSpecCompliant) {
   // this gets set to true when the policy is done parsing, or when a
   // URI-borne policy has finished loading.
   this._isInitialized = false;
@@ -170,9 +176,15 @@ this.CSPRep = function CSPRep() {
 
   // don't auto-populate _directives, so it is easier to find bugs
   this._directives = {};
+
+  // Is this a 1.0 spec compliant CSPRep ?
+  // Default to false if not specified.
+  this._specCompliant = (aSpecCompliant !== undefined) ? aSpecCompliant : false;
 }
 
-CSPRep.SRC_DIRECTIVES = {
+// Source directives for our original CSP implementation.
+// These can be removed when the original implementation is deprecated.
+CSPRep.SRC_DIRECTIVES_OLD = {
   DEFAULT_SRC:      "default-src",
   SCRIPT_SRC:       "script-src",
   STYLE_SRC:        "style-src",
@@ -185,11 +197,28 @@ CSPRep.SRC_DIRECTIVES = {
   XHR_SRC:          "xhr-src"
 };
 
+// Source directives for our CSP 1.0 spec compliant implementation.
+CSPRep.SRC_DIRECTIVES_NEW = {
+  DEFAULT_SRC:      "default-src",
+  SCRIPT_SRC:       "script-src",
+  STYLE_SRC:        "style-src",
+  MEDIA_SRC:        "media-src",
+  IMG_SRC:          "img-src",
+  OBJECT_SRC:       "object-src",
+  FRAME_SRC:        "frame-src",
+  FRAME_ANCESTORS:  "frame-ancestors",
+  FONT_SRC:         "font-src",
+  CONNECT_SRC:      "connect-src"
+};
+
 CSPRep.URI_DIRECTIVES = {
   REPORT_URI:       "report-uri", /* list of URIs */
   POLICY_URI:       "policy-uri"  /* single URI */
 };
 
+// These directives no longer exist in CSP 1.0 and
+// later and will eventually be removed when we no longer
+// support our original implementation's syntax.
 CSPRep.OPTIONS_DIRECTIVE = "options";
 CSPRep.ALLOW_DIRECTIVE   = "allow";
 
@@ -209,7 +238,7 @@ CSPRep.ALLOW_DIRECTIVE   = "allow";
   *        an instance of CSPRep
   */
 CSPRep.fromString = function(aStr, self, docRequest, csp) {
-  var SD = CSPRep.SRC_DIRECTIVES;
+  var SD = CSPRep.SRC_DIRECTIVES_OLD;
   var UD = CSPRep.URI_DIRECTIVES;
   var aCSPR = new CSPRep();
   aCSPR._originalText = aStr;
@@ -429,6 +458,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
 
   } // end directive: loop
 
+  // TODO : clean this up using patch in bug 780978
   // if makeExplicit fails for any reason, default to default-src 'none'.  This
   // includes the case where "default-src" is not present.
   if (aCSPR.makeExplicit())
@@ -452,8 +482,187 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
   * @returns
   *        an instance of CSPRep
   */
+// When we deprecate our original CSP implementation, we rename this to
+// CSPRep.fromString and remove the existing CSPRep.fromString above.
 CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
-  // bug #746878 goes here
+  var SD = CSPRep.SRC_DIRECTIVES_NEW;
+  var UD = CSPRep.URI_DIRECTIVES;
+  var aCSPR = new CSPRep(true);
+  aCSPR._originalText = aStr;
+  aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
+
+  var selfUri = null;
+  if (self instanceof Ci.nsIURI)
+    selfUri = self.clone();
+
+  var dirs = aStr.split(";");
+
+  directive:
+  for each(var dir in dirs) {
+    dir = dir.trim();
+    if (dir.length < 1) continue;
+
+    var dirname = dir.split(/\s+/)[0];
+    var dirvalue = dir.substring(dirname.length).trim();
+
+    if (aCSPR._directives.hasOwnProperty(dirname)) {
+      // Check for (most) duplicate directives
+      cspError(aCSPR, CSPLocalizer.getFormatStr("duplicateDirective",
+                                                [dirname]));
+      CSPdebug("Skipping duplicate directive: \"" + dir + "\"");
+      continue directive;
+    }
+
+    // SOURCE DIRECTIVES ////////////////////////////////////////////////
+    for each(var sdi in SD) {
+      if (dirname === sdi) {
+        // process dirs, and enforce that 'self' is defined.
+        var dv = CSPSourceList.fromString(dirvalue, aCSPR, self, true);
+        if (dv) {
+          aCSPR._directives[sdi] = dv;
+          continue directive;
+        }
+      }
+    }
+
+    // REPORT URI ///////////////////////////////////////////////////////
+    if (dirname === UD.REPORT_URI) {
+      // might be space-separated list of URIs
+      var uriStrings = dirvalue.split(/\s+/);
+      var okUriStrings = [];
+
+      for (let i in uriStrings) {
+        var uri = null;
+        try {
+          // Relative URIs are okay, but to ensure we send the reports to the
+          // right spot, the relative URIs are expanded here during parsing.
+          // The resulting CSPRep instance will have only absolute URIs.
+          uri = gIoService.newURI(uriStrings[i],null,selfUri);
+
+          // if there's no host, don't do the ETLD+ check.  This will throw
+          // NS_ERROR_FAILURE if the URI doesn't have a host, causing a parse
+          // failure.
+          uri.host;
+
+          // Verify that each report URI is in the same etld + 1 and that the
+          // scheme and port match "self" if "self" is defined, and just that
+          // it's valid otherwise.
+          if (self) {
+            if (gETLDService.getBaseDomain(uri) !==
+                gETLDService.getBaseDomain(selfUri)) {
+              cspWarn(aCSPR, 
+                      CSPLocalizer.getFormatStr("notETLDPlus1",
+                                            [gETLDService.getBaseDomain(uri)]));
+              continue;
+            }
+            if (!uri.schemeIs(selfUri.scheme)) {
+              cspWarn(aCSPR, 
+                      CSPLocalizer.getFormatStr("notSameScheme",
+                                                [uri.asciiSpec]));
+              continue;
+            }
+            if (uri.port && uri.port !== selfUri.port) {
+              cspWarn(aCSPR, 
+                      CSPLocalizer.getFormatStr("notSamePort",
+                                                [uri.asciiSpec]));
+              continue;
+            }
+          }
+        } catch(e) {
+          switch (e.result) {
+            case Components.results.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS:
+            case Components.results.NS_ERROR_HOST_IS_IP_ADDRESS:
+              if (uri.host !== selfUri.host) {
+                cspWarn(aCSPR, CSPLocalizer.getFormatStr("pageCannotSendReportsTo",
+                                                         [selfUri.host, uri.host]));
+                continue;
+              }
+              break;
+
+            default:
+              cspWarn(aCSPR, CSPLocalizer.getFormatStr("couldNotParseReportURI", 
+                                                       [uriStrings[i]]));
+              continue;
+          }
+        }
+        // all verification passed: same ETLD+1, scheme, and port.
+       okUriStrings.push(uri.asciiSpec);
+      }
+      aCSPR._directives[UD.REPORT_URI] = okUriStrings.join(' ');
+      continue directive;
+    }
+
+    // POLICY URI //////////////////////////////////////////////////////////
+    if (dirname === UD.POLICY_URI) {
+      // POLICY_URI can only be alone
+      if (aCSPR._directives.length > 0 || dirs.length > 1) {
+        cspError(aCSPR, CSPLocalizer.getStr("policyURINotAlone"));
+        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+      }
+      // if we were called without a reference to the parent document request
+      // we won't be able to suspend it while we fetch the policy -> fail closed
+      if (!docRequest || !csp) {
+        cspError(aCSPR, CSPLocalizer.getStr("noParentRequest"));
+        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+      }
+
+      var uri = '';
+      try {
+        uri = gIoService.newURI(dirvalue, null, selfUri);
+      } catch(e) {
+        cspError(aCSPR, CSPLocalizer.getFormatStr("policyURIParseError", [dirvalue]));
+        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+      }
+
+      // Verify that policy URI comes from the same origin
+      if (selfUri) {
+        if (selfUri.host !== uri.host){
+          cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingHost", [uri.host]));
+          return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        }
+        if (selfUri.port !== uri.port){
+          cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingPort", [uri.port.toString()]));
+          return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        }
+        if (selfUri.scheme !== uri.scheme){
+          cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingScheme", [uri.scheme]));
+          return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        }
+      }
+
+      // suspend the parent document request while we fetch the policy-uri
+      try {
+        docRequest.suspend();
+        var chan = gIoService.newChannel(uri.asciiSpec, null, null);
+        // make request anonymous (no cookies, etc.) so the request for the
+        // policy-uri can't be abused for CSRF
+        chan.loadFlags |= Components.interfaces.nsIChannel.LOAD_ANONYMOUS;
+        chan.loadGroup = docRequest.loadGroup;
+        chan.asyncOpen(new CSPPolicyURIListener(uri, docRequest, csp), null);
+      }
+      catch (e) {
+        // resume the document request and apply most restrictive policy
+        docRequest.resume();
+        cspError(aCSPR, CSPLocalizer.getFormatStr("errorFetchingPolicy", [e.toString()]));
+        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+      }
+
+      // return a fully-open policy to be intersected with the contents of the
+      // policy-uri when it returns
+      return CSPRep.fromStringSpecCompliant("default-src *");
+    }
+
+    // UNIDENTIFIED DIRECTIVE /////////////////////////////////////////////
+    cspWarn(aCSPR, CSPLocalizer.getFormatStr("couldNotProcessUnknownDirective", [dirname]));
+
+  } // end directive: loop
+
+  // TODO : clean this up using patch in bug 780978
+  // if makeExplicit fails for any reason, default to default-src 'none'.  This
+  // includes the case where "default-src" is not present.
+  if (aCSPR.makeExplicit())
+    return aCSPR;
+  return CSPRep.fromStringSpecCompliant("default-src 'none'", self);
 };
 
 CSPRep.prototype = {
@@ -521,11 +730,14 @@ CSPRep.prototype = {
       return true;
 
     // make sure the context is valid
-    for (var i in CSPRep.SRC_DIRECTIVES) {
-      if (CSPRep.SRC_DIRECTIVES[i] === aContext) {
+    let DIRS = this._specCompliant ? CSPRep.SRC_DIRECTIVES_NEW : CSPRep.SRC_DIRECTIVES_OLD;
+
+    for (var i in DIRS) {
+      if (DIRS[i] === aContext) {
         return this._directives[aContext].permits(aURI);
       }
     }
+
     return false;
   },
 
@@ -541,8 +753,11 @@ CSPRep.prototype = {
   function cspsd_intersectWith(aCSPRep) {
     var newRep = new CSPRep();
 
-    for (var dir in CSPRep.SRC_DIRECTIVES) {
-      var dirv = CSPRep.SRC_DIRECTIVES[dir];
+    let DIRS = aCSPRep._specCompliant ? CSPRep.SRC_DIRECTIVES_NEW :
+                                        CSPRep.SRC_DIRECTIVES_OLD;
+
+    for (var dir in DIRS) {
+      var dirv = DIRS[dir];
       if (this._directives.hasOwnProperty(dirv))
         newRep._directives[dirv] = this._directives[dirv].intersectWith(aCSPRep._directives[dirv]);
       else
@@ -569,7 +784,7 @@ CSPRep.prototype = {
 
     newRep._allowInlineScripts = this.allowsInlineScripts
                            && aCSPRep.allowsInlineScripts;
- 
+
     newRep._innerWindowID = this._innerWindowID ?
                               this._innerWindowID : aCSPRep._innerWindowID;
 
@@ -584,9 +799,15 @@ CSPRep.prototype = {
    */
   makeExplicit:
   function cspsd_makeExplicit() {
-    var SD = CSPRep.SRC_DIRECTIVES;
+    let SD = this._specCompliant ? CSPRep.SRC_DIRECTIVES_NEW : CSPRep.SRC_DIRECTIVES_OLD;
+
     var defaultSrcDir = this._directives[SD.DEFAULT_SRC];
-    if (!defaultSrcDir) {
+
+    // It's ok for a 1.0 spec compliant policy to not have a default source,
+    // in this case it should use default-src *
+    // However, our original CSP implementation required a default src
+    // or an allow directive.
+    if (!defaultSrcDir && !this._specCompliant) {
       this.warn(CSPLocalizer.getStr("allowOrDefaultSrcRequired"));
       return false;
     }
@@ -604,6 +825,7 @@ CSPRep.prototype = {
         this._directives[dirv]._isImplicit = true;
       }
     }
+
     this._isInitialized = true;
     return true;
   },
