@@ -70,11 +70,11 @@ HealthReportService.prototype = {
 
     switch (topic) {
       case "app-startup":
-        os.addObserver(this, "final-ui-startup", true);
+        os.addObserver(this, "sessionstore-windows-restored", true);
         break;
 
-      case "final-ui-startup":
-        os.removeObserver(this, "final-ui-startup");
+      case "sessionstore-windows-restored":
+        os.removeObserver(this, "sessionstore-windows-restored");
 
         let delayInterval = this._prefs.get("service.loadDelayMsec") ||
                             DEFAULT_LOAD_DELAY_MSEC;
