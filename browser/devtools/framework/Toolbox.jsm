@@ -390,6 +390,10 @@ Toolbox.prototype = {
    *        The id of the tool to switch to
    */
   selectTool: function TBOX_selectTool(id) {
+    if (this._currentToolId == id) {
+      return;
+    }
+
     let deferred = Promise.defer();
 
     if (!this.isReady) {
@@ -419,6 +423,8 @@ Toolbox.prototype = {
     deck.selectedIndex = index;
 
     let definition = gDevTools.getToolDefinitions().get(id);
+
+    this._currentToolId = id;
 
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
     if (!iframe) {
@@ -458,8 +464,6 @@ Toolbox.prototype = {
     }
 
     Services.prefs.setCharPref(this._prefs.LAST_TOOL, id);
-
-    this._currentToolId = id;
 
     return deferred.promise;
   },
