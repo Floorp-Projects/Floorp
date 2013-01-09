@@ -1584,7 +1584,6 @@
             aTab._animStartTime = Date.now();
 
             this._blurTab(aTab);
-            aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
 
             setTimeout(function (tab, tabbrowser) {
@@ -3075,9 +3074,18 @@
         document.getAnonymousElementByAttribute(this, "anonid", "closing-tabs-spacer");
       </field>
 
-      <field name="_tabDefaultMaxWidth">NaN</field>
       <field name="_lastTabClosedByMouse">false</field>
-      <field name="_hasTabTempMaxWidth">false</field>
+
+      <field name="_delayResizingRule" readonly="true"><![CDATA[
+        const href = "chrome://browser/content/browser.css";
+        const selector = ".tabbrowser-tabs[dontresize] > .tabbrowser-tab[fadein]:not([pinned])";
+
+        // XXX: document.styleSheets is not iterable (see bug 738196)
+        for (let sheet of Array.slice(document.styleSheets))
+          if (sheet.href == href)
+            for (let rule of Array.slice(sheet.cssRules))
+              if (rule.selectorText == selector) { rule; break; }
+      ]]></field>
 
       <!-- Try to keep the active tab's close button under the mouse cursor -->
       <method name="_lockTabSizing">
@@ -3090,9 +3098,6 @@
           var isEndTab = (aTab._tPos > tabs[tabs.length-1]._tPos);
           var tabWidth = aTab.getBoundingClientRect().width;
 
-          if (!this._tabDefaultMaxWidth)
-            this._tabDefaultMaxWidth =
-              parseFloat(window.getComputedStyle(aTab).maxWidth);
           this._lastTabClosedByMouse = true;
 
           if (this.getAttribute("overflow") == "true") {
@@ -3110,30 +3115,31 @@
             this._expandSpacerBy(tabWidth);
           } else { // non-overflow mode
             // Locking is neither in effect nor needed, so let tabs expand normally.
-            if (isEndTab && !this._hasTabTempMaxWidth)
+            if (isEndTab && !this.hasAttribute("dontresize"))
               return;
 
-            let numPinned = this.tabbrowser._numPinnedTabs;
-            // Force tabs to stay the same width, unless we're closing the last tab,
-            // which case we need to let them expand just enough so that the overall
-            // tabbar width is the same.
+            // Let spacer grow to the maximum and lock it, then let tabs expand normally
             if (isEndTab) {
-              let numNormalTabs = tabs.length - numPinned;
-              tabWidth = tabWidth * (numNormalTabs + 1) / numNormalTabs;
-              if (tabWidth > this._tabDefaultMaxWidth)
-                tabWidth = this._tabDefaultMaxWidth;
+              let spacer = this._closingTabsSpacer;
+              spacer.style.MozBoxFlex = 1;
+              spacer.style.minWidth = getComputedStyle(spacer).width;
+              spacer.style.MozBoxFlex = "";
+
+              this.setAttribute("dontanimate", "true");
+              this.removeAttribute("dontresize");
+              this.clientTop;
+              this.removeAttribute("dontanimate");
+              return;
             }
-            tabWidth += "px";
-            for (let i = numPinned; i < tabs.length; i++) {
-              let tab = tabs[i];
-              tab.style.setProperty("max-width", tabWidth, "important");
-              if (!isEndTab) { // keep tabs the same width
-                tab.style.transition = "none";
-                tab.clientTop; // flush styles to skip animation; see bug 649247
-                tab.style.transition = "";
-              }
-            }
-            this._hasTabTempMaxWidth = true;
+
+            if (this.hasAttribute("dontresize"))
+              return;
+
+            this._delayResizingRule.style.setProperty("max-width", tabWidth + "px", "important");
+            this.setAttribute("dontanimate", "true");
+            this.setAttribute("dontresize", "true");
+            this.clientTop; // flush styles to skip animation; see bug 649247
+            this.removeAttribute("dontanimate");
             this.tabbrowser.addEventListener("mousemove", this, false);
             window.addEventListener("mouseout", this, false);
           }
@@ -3156,17 +3162,12 @@
           this.tabbrowser.removeEventListener("mousemove", this, false);
           window.removeEventListener("mouseout", this, false);
 
-          if (this._hasTabTempMaxWidth) {
-            this._hasTabTempMaxWidth = false;
-            let tabs = this.tabbrowser.visibleTabs;
-            for (let i = 0; i < tabs.length; i++)
-              tabs[i].style.maxWidth = "";
-          }
-
           if (this.hasAttribute("using-closing-tabs-spacer")) {
             this.removeAttribute("using-closing-tabs-spacer");
             this._closingTabsSpacer.style.width = 0;
           }
+          this._closingTabsSpacer.style.minWidth = "";
+          this.removeAttribute("dontresize");
         ]]></body>
       </method>
 
