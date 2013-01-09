@@ -29,21 +29,16 @@ XULTreeGridAccessibleWrap::Shutdown()
 // XULTreeGridCellAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-XULTreeGridCellAccessibleWrap::
-  XULTreeGridCellAccessibleWrap(nsIContent* aContent,
-                                DocAccessible* aDoc,
-                                XULTreeGridRowAccessible* aRowAcc,
-                                nsITreeBoxObject* aTree,
-                                nsITreeView* aTreeView,
-                                int32_t aRow, nsITreeColumn* aColumn) :
-  XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView,
-                            aRow, aColumn)
-{
-}
-
 NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridCellAccessibleWrap,
                              XULTreeGridCellAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(XULTreeGridCellAccessibleWrap,
                          AccessibleWrap,
                          ia2AccessibleTableCell)
+
+void
+XULTreeGridCellAccessibleWrap::Shutdown()
+{
+  ia2AccessibleTableCell::mTableCell = nullptr;
+  XULTreeGridCellAccessible::Shutdown();
+}

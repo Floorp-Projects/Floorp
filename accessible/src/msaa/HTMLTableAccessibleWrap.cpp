@@ -38,6 +38,12 @@ IMPL_IUNKNOWN_INHERITED1(HTMLTableCellAccessibleWrap,
                          HyperTextAccessibleWrap,
                          ia2AccessibleTableCell)
 
+void
+HTMLTableCellAccessibleWrap::Shutdown()
+{
+  ia2AccessibleTableCell::mTableCell = nullptr;
+  HTMLTableCellAccessible::Shutdown();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessibleWrap
@@ -49,3 +55,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableHeaderCellAccessibleWrap,
 IMPL_IUNKNOWN_INHERITED1(HTMLTableHeaderCellAccessibleWrap,
                          HyperTextAccessibleWrap,
                          ia2AccessibleTableCell)
+
+void
+HTMLTableHeaderCellAccessibleWrap::Shutdown()
+{
+  ia2AccessibleTableCell::mTableCell = nullptr;
+  HTMLTableHeaderCellAccessible::Shutdown();
+}

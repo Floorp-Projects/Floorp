@@ -46,13 +46,15 @@ class HTMLTableCellAccessibleWrap : public HTMLTableCellAccessible,
 {
 public:
   HTMLTableCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    HTMLTableCellAccessible(aContent, aDoc) {}
+    HTMLTableCellAccessible(aContent, aDoc), ia2AccessibleTableCell(this) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 
@@ -66,13 +68,16 @@ class HTMLTableHeaderCellAccessibleWrap : public HTMLTableHeaderCellAccessible,
 public:
   HTMLTableHeaderCellAccessibleWrap(nsIContent* aContent,
                                     DocAccessible* aDoc) :
-    HTMLTableHeaderCellAccessible(aContent, aDoc) {}
+    HTMLTableHeaderCellAccessible(aContent, aDoc), ia2AccessibleTableCell(this)
+  {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 } // namespace a11y
