@@ -11,12 +11,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.ArrayList;

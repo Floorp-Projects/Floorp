@@ -8,9 +8,6 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.util.Log;
-
-import java.io.FileOutputStream;
 
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
