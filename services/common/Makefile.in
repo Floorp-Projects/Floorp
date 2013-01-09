@@ -30,10 +30,6 @@ testing_modules := \
   utils.js \
   $(NULL)
 
-EXTRA_COMPONENTS := \
-  servicesComponents.manifest \
-  $(NULL)
-
 TEST_DIRS += tests
 
 PREF_JS_EXPORTS = $(srcdir)/services-common.js

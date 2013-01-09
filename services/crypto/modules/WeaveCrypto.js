@@ -57,11 +57,7 @@ WeaveCrypto.prototype = {
             this.prefBranch = Services.prefs.getBranch("services.sync.log.");
             this.prefBranch.addObserver("cryptoDebug", this.observer, false);
             this.observer._self = this;
-            try {
-              this.debug = this.prefBranch.getBoolPref("cryptoDebug");
-            } catch (x) {
-              this.debug = false;
-            }
+            this.debug = this.prefBranch.getBoolPref("cryptoDebug");
 
             this.initNSS();
             this.initAlgorithmSettings();   // Depends on NSS.
