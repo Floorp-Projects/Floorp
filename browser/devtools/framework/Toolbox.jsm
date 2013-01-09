@@ -469,6 +469,13 @@ Toolbox.prototype = {
   },
 
   /**
+   * Raise the toolbox host.
+   */
+  raise: function TBOX_raise() {
+    this._host.raise();
+  },
+
+  /**
    * Create a host object based on the given host type.
    *
    * @param {string} hostType
