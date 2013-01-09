@@ -17,7 +17,6 @@
 
 typedef nsSVGElement SVGViewElementBase;
 
-class nsSVGSVGElement;
 class nsSVGOuterSVGFrame;
 
 nsresult NS_NewSVGViewElement(nsIContent **aResult,
@@ -27,6 +26,7 @@ namespace mozilla {
 class SVGFragmentIdentifier;
 
 namespace dom {
+class SVGSVGElement;
 
 class SVGViewElement : public SVGViewElementBase,
                        public nsIDOMSVGViewElement,
@@ -35,7 +35,7 @@ class SVGViewElement : public SVGViewElementBase,
 {
 protected:
   friend class mozilla::SVGFragmentIdentifier;
-  friend class ::nsSVGSVGElement;
+  friend class SVGSVGElement;
   friend class ::nsSVGOuterSVGFrame;
   SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,

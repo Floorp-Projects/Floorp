@@ -8,7 +8,7 @@
 
 #include "nsSVGElement.h"
 
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsIDocument.h"
 #include "nsRange.h"
 #include "nsIDOMAttr.h"
@@ -1156,10 +1156,10 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
   return rv.ErrorCode();
 }
 
-nsSVGSVGElement*
+SVGSVGElement*
 nsSVGElement::GetOwnerSVGElement(ErrorResult& rv)
 {
-  nsSVGSVGElement* ownerSVGElement = GetCtx();
+  SVGSVGElement* ownerSVGElement = GetCtx();
 
   // If we didn't find anything and we're not the outermost SVG element,
   // we've got an invalid structure
@@ -1330,7 +1330,7 @@ nsSVGElement::UpdateContentStyleRule()
       // Special case: we don't want <svg> 'width'/'height' mapped into style
       // if the attribute value isn't a valid <length> according to SVG (which
       // only supports a subset of the CSS <length> values). We don't enforce
-      // this by checking the attribute value in nsSVGSVGElement::
+      // this by checking the attribute value in SVGSVGElement::
       // IsAttributeMapped since we don't want that method to depend on the
       // value of the attribute that is being checked. Rather we just prevent
       // the actual mapping here, as necessary.
@@ -1588,7 +1588,7 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
   return aAttr;
 }
 
-nsSVGSVGElement *
+SVGSVGElement *
 nsSVGElement::GetCtx() const
 {
   nsIContent* ancestor = GetFlattenedTreeParent();
@@ -1599,7 +1599,7 @@ nsSVGElement::GetCtx() const
       return nullptr;
     }
     if (tag == nsGkAtoms::svg) {
-      return static_cast<nsSVGSVGElement*>(ancestor);
+      return static_cast<SVGSVGElement*>(ancestor);
     }
     ancestor = ancestor->GetFlattenedTreeParent();
   }
@@ -1702,7 +1702,7 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   NS_ASSERTION(info.mLengthCount > 0,
                "GetAnimatedLengthValues on element with no length attribs");
 
-  nsSVGSVGElement *ctx = nullptr;
+  SVGSVGElement *ctx = nullptr;
 
   float *f = aFirst;
   uint32_t i = 0;
