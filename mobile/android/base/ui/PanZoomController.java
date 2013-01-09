@@ -226,7 +226,6 @@ public class PanZoomController
             // transitions.
             synchronized (mTarget.getLock()) {
                 mTarget.setViewportMetrics(getValidViewportMetrics());
-                mTarget.forceRedraw();
             }
             break;
         }
