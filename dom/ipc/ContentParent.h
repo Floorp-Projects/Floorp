@@ -302,6 +302,10 @@ private:
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData);
 
+    virtual bool RecvFilePathUpdateNotify(const nsString& aType,
+                                          const nsString& aFilePath,
+                                          const nsCString& aReason);
+
     virtual bool RecvAddGeolocationListener(const IPC::Principal& aPrincipal);
     virtual bool RecvRemoveGeolocationListener();
     virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable);

@@ -343,6 +343,9 @@ ContentChild::InitXPCOM()
     bool isOffline;
     SendGetXPCOMProcessAttributes(&isOffline);
     RecvSetOffline(isOffline);
+
+    DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
+    NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 }
 
 PMemoryReportRequestChild*
@@ -1010,7 +1013,7 @@ ContentChild::RecvFlushMemory(const nsString& reason)
         mozilla::services::GetObserverService();
     if (os)
         os->NotifyObservers(nullptr, "memory-pressure", reason.get());
-  return true;
+    return true;
 }
 
 bool

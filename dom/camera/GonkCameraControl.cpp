@@ -916,7 +916,7 @@ public:
     nsString data;
     CopyASCIItoUTF16(mType, data);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(mFile, "file-watcher-update", data.get());
+    obs->NotifyObservers(mFile, "file-watcher-notify", data.get());
     return NS_OK;
   }
 
