@@ -1285,7 +1285,7 @@ BluetoothOppManager::OnDisconnect()
 
         nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
         if (obs) {
-          obs->NotifyObservers(mDsFile, "file-watcher-update", data.get());
+          obs->NotifyObservers(mDsFile, "file-watcher-notify", data.get());
         }
       }
     }
