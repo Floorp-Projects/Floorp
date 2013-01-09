@@ -312,10 +312,6 @@ function editableTextTest(aID)
       invoker.eventSeq.push(checker);
     }
 
-    // Claim that we don't want to fail when no events are expected.
-    if (!aRemoveTriple && !aInsertTriple)
-      invoker.noEventsOnAction = true;
-
     this.mEventQueue.mInvokers[this.mEventQueue.mIndex + 1] = invoker;
   }
 
