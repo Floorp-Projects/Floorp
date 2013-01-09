@@ -2,6 +2,7 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=166235
+https://bugzilla.mozilla.org/show_bug.cgi?id=816298
 -->
 <head>
   <title>Test for Bug 166235</title>
@@ -9,16 +10,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235 and Bug 816298</a>
 <p id="test0">This text should be copied.</p>
 <p id="test1">This text should<span style="-moz-user-select: none;"> NOT</span> be copied.</p>
-<p id="test2">This<span style="-moz-user-select: -moz-none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test2">This<span style="-moz-user-select: none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test3">This text should<span style="-moz-user-select: -moz-none;"> NOT</span> be copied.</p>
+<p id="test4">This<span style="-moz-user-select: -moz-none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test5">This<span style="-moz-user-select: all"> text<span style="-moz-user-select: none"> should</span></span> be copied.</p>
 <div id="content" style="display: none">
   
 </div>
 <textarea id="input"></textarea>
 <pre id="test">
 <script type="application/javascript">
+  "use strict";
 
 /** Test for Bug 166235 **/
   var Cc = SpecialPowers.Cc;
@@ -87,17 +92,26 @@ var originalStrings = [
   'This text should be copied.',
   'This text should be copied.',
   'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.'
 ];
 
 // expected results for clipboard text/html
 var clipboardHTML = [
   '<p id=\"test0\">This text should be copied.</p>',
   '<p id=\"test1\">This text should be copied.</p>',
-  '<p id=\"test2\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>'
+  '<p id=\"test2\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>',
+  '<p id=\"test3\">This text should be copied.</p>',
+  '<p id=\"test4\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>',
+  '<p id=\"test5\">This<span style=\"-moz-user-select: all\"> text<span style=\"-moz-user-select: none\"> should</span></span> be copied.</p>',
 ];
 
 // expected results for clipboard text/unicode
 var clipboardUnicode = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
   'This text should be copied.',
   'This text should be copied.',
   'This text should be copied.'
@@ -107,17 +121,23 @@ var clipboardUnicode = [
 var innerHTMLStrings = [
   'This text should be copied.',
   'This text should<span style=\"-moz-user-select: none;\"> NOT</span> be copied.',
-  'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.'
+  'This<span style=\"-moz-user-select: none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.',
+  'This text should<span style=\"-moz-user-select: -moz-none;\"> NOT</span> be copied.',
+  'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.',
+  'This<span style=\"-moz-user-select: all\"> text<span style=\"-moz-user-select: none\"> should</span></span> be copied.',
 ];
 
 // expected results for pasting into a TEXTAREA
 var textareaStrings = [
   'This text should be copied.',
   'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
   'This text should be copied.'
 ];
 
-for (var i = 0; i < 3; i++) {
+for (var i = 0; i < originalStrings.length; i++) {
   var id = 'test' + i;
   copyChildrenToClipboard(id);
   is(window.getSelection().toString(), originalStrings[i], id + ' Selection.toString()');
