@@ -527,8 +527,7 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
             if (dv._allowUnsafeInline) {
               aCSPR._allowInlineScripts = true;
             } else if (dv._allowUnsafeEval) {
-              // TODO: eval
-              // aCSPR._allowEvilEval = true;
+              aCSPR._allowEval = true;
             }
           }
 
@@ -929,6 +928,9 @@ this.CSPSourceList = function CSPSourceList() {
 
   // When this is true, the source list contains 'unsafe-inline'.
   this._allowUnsafeInline = false;
+
+  // When this is true, the source list contains 'unsafe-eval'.
+  this._allowUnsafeEval = false;
 }
 
 /**
@@ -985,6 +987,10 @@ CSPSourceList.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     // if a source allows unsafe-inline, set our flag to indicate this.
     if (src._allowUnsafeInline)
       slObj._allowUnsafeInline = true;
+
+    // if a source allows unsafe-eval, set our flag to indicate this.
+    if (src._allowUnsafeEval)
+      slObj._allowUnsafeEval = true;
 
     // if a source is a *, then we can permit all sources
     if (src.permitAll) {
@@ -1176,6 +1182,9 @@ this.CSPSource = function CSPSource() {
 
   // when set to true, this source allows inline scripts or styles
   this._allowUnsafeInline = false;
+
+  // when set to true, this source allows eval to be used
+  this._allowUnsafeEval = false;
 }
 
 /**
@@ -1409,7 +1418,11 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     return sObj;
   }
 
-  // TODO : unsafe-eval
+  // check for 'unsafe-eval' (case insensitive)
+  if (aStr.toUpperCase() === "'UNSAFE-EVAL'"){
+    sObj._allowUnsafeEval = true;
+    return sObj;
+  }
 
   cspError(aCSPRep, CSPLocalizer.getFormatStr("couldntParseInvalidSource",
                                               [aStr]));
