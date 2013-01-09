@@ -6,7 +6,6 @@
 package org.mozilla.gecko.updater;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.GeckoApp;
 
 import org.mozilla.apache.commons.codec.binary.Hex;
 
@@ -20,28 +19,19 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-
-import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
-
 import android.util.Log;
-
-import android.widget.RemoteViews;
 
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -49,20 +39,14 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import java.security.MessageDigest;
-
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Locale;
-import java.util.Random;
 import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
 
 public class UpdateService extends IntentService {
     private static final int BUFSIZE = 8192;
