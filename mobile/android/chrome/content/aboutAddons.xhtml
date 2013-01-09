@@ -52,6 +52,12 @@
 </head>
 
 <body dir="&locale.dir;" onload="init();" onunload="uninit();">
+  <menu type="context" id="addonmenu">
+    <menuitem id="contextmenu-enable" label="&addonAction.enable;" onclick="ContextMenus.enable();"></menuitem>
+    <menuitem id="contextmenu-disable" label="&addonAction.disable;" onclick="ContextMenus.disable();"></menuitem>
+    <menuitem id="contextmenu-uninstall" label="&addonAction.uninstall;" onclick="ContextMenus.uninstall();"></menuitem>
+  </menu>
+
   <div id="addons-header">
     <div>
       <div>&aboutAddons.header2;</div>
