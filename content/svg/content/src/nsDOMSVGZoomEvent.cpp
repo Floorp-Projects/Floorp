@@ -89,27 +89,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 //----------------------------------------------------------------------
 // nsIDOMSVGZoomEvent methods:
 
-/* readonly attribute SVGRect zoomRectScreen; */
-NS_IMETHODIMP nsDOMSVGZoomEvent::GetZoomRectScreen(nsIDOMSVGRect **aZoomRectScreen)
-{
-  // The spec says about this attribute:
-  //
-  //   The specified zoom rectangle in screen units.
-  //   The object itself and its contents are both readonly.
-  //
-  // This is so badly underspecified we don't implement it. It was probably
-  // thrown in without much thought as a way of finding the zoom box ASV style
-  // zooming uses. I don't see how this is useful though since SVGZoom event's
-  // get dispatched *after* the zoom level has changed.
-  //
-  // Be sure to use NS_NewSVGReadonlyRect and not NS_NewSVGRect if we
-  // eventually do implement this!
-
-  *aZoomRectScreen = nullptr;
-  NS_NOTYETIMPLEMENTED("nsDOMSVGZoomEvent::GetZoomRectScreen");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* readonly attribute float previousScale; */
 NS_IMETHODIMP
 nsDOMSVGZoomEvent::GetPreviousScale(float *aPreviousScale)

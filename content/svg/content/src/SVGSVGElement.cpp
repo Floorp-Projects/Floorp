@@ -257,21 +257,6 @@ SVGSVGElement::Height()
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGRect viewport; */
-NS_IMETHODIMP
-SVGSVGElement::GetViewport(nsIDOMSVGRect * *aViewport)
-{
-  // XXX
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-already_AddRefed<nsIDOMSVGRect>
-SVGSVGElement::GetViewport(ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
 /* readonly attribute float pixelUnitToMillimeterX; */
 NS_IMETHODIMP
 SVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
@@ -338,21 +323,6 @@ bool
 SVGSVGElement::UseCurrentView()
 {
   return mUseCurrentView;
-}
-
-/* readonly attribute nsIDOMSVGViewSpec currentView; */
-NS_IMETHODIMP
-SVGSVGElement::GetCurrentView(nsIDOMSVGViewSpec * *aCurrentView)
-{
-  NS_NOTYETIMPLEMENTED("SVGSVGElement::GetCurrentView");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-already_AddRefed<nsIDOMSVGViewSpec>
-SVGSVGElement::GetCurrentView(ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
 }
 
 /* attribute float currentScale; */
@@ -576,111 +546,6 @@ SVGSVGElement::SetCurrentTime(float seconds, ErrorResult &rv)
   }
   NS_NOTYETIMPLEMENTED("SVGSVGElement::SetCurrentTime");
   rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-/* nsIDOMNodeList getIntersectionList (in nsIDOMSVGRect rect, in nsIDOMSVGElement referenceElement); */
-NS_IMETHODIMP
-SVGSVGElement::GetIntersectionList(nsIDOMSVGRect *rect,
-                                   nsIDOMSVGElement *referenceElement,
-                                   nsIDOMNodeList **_retval)
-{
-  // null check when implementing - this method can be used by scripts!
-  // if (!rect || !referenceElement)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  NS_NOTYETIMPLEMENTED("SVGSVGElement::GetIntersectionList");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-already_AddRefed<nsINodeList>
-SVGSVGElement::GetIntersectionList(nsIDOMSVGRect* rect, nsSVGElement& element, ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
-/* nsIDOMNodeList getEnclosureList (in nsIDOMSVGRect rect, in nsIDOMSVGElement referenceElement); */
-NS_IMETHODIMP
-SVGSVGElement::GetEnclosureList(nsIDOMSVGRect *rect,
-                                nsIDOMSVGElement *referenceElement,
-                                nsIDOMNodeList **_retval)
-{
-  // null check when implementing - this method can be used by scripts!
-  // if (!rect || !referenceElement)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  NS_NOTYETIMPLEMENTED("SVGSVGElement::GetEnclosureList");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-already_AddRefed<nsINodeList>
-SVGSVGElement::GetEnclosureList(nsIDOMSVGRect *rect,
-                                nsSVGElement& referenceElement,
-                                ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
-/* boolean checkIntersection (in nsIDOMSVGElement element, in nsIDOMSVGRect rect); */
-NS_IMETHODIMP
-SVGSVGElement::CheckIntersection(nsIDOMSVGElement *element,
-                                 nsIDOMSVGRect *rect,
-                                 bool *_retval)
-{
-  // null check when implementing - this method can be used by scripts!
-  // if (!element || !rect)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  NS_NOTYETIMPLEMENTED("SVGSVGElement::CheckIntersection");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-bool
-SVGSVGElement::CheckIntersection(nsSVGElement& element,
-                                 nsIDOMSVGRect* rect,
-                                 ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
-/* boolean checkEnclosure (in nsIDOMSVGElement element, in nsIDOMSVGRect rect); */
-NS_IMETHODIMP
-SVGSVGElement::CheckEnclosure(nsIDOMSVGElement *element,
-                              nsIDOMSVGRect *rect,
-                              bool *_retval)
-{
-  // null check when implementing - this method can be used by scripts!
-  // if (!element || !rect)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  NS_NOTYETIMPLEMENTED("SVGSVGElement::CheckEnclosure");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-bool
-SVGSVGElement::CheckEnclosure(nsSVGElement& element,
-                              nsIDOMSVGRect* rect,
-                              ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
-/* void deSelectAll (); */
-NS_IMETHODIMP
-SVGSVGElement::DeSelectAll()
-{
-  NS_NOTYETIMPLEMENTED("SVGSVGElement::DeSelectAll");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-bool
-SVGSVGElement::DeselectAll(ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
 }
 
 /* nsIDOMSVGNumber createSVGNumber (); */
