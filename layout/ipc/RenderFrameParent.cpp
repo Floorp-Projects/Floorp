@@ -725,6 +725,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     ClearContainer(mContainer);
     mContainer->SetPreScale(1.0f, 1.0f);
     mContainer->SetPostScale(1.0f, 1.0f);
+    mContainer->SetInheritedScale(1.0f, 1.0f);
   }
 
   ContainerLayer* shadowRoot = GetRootLayer();

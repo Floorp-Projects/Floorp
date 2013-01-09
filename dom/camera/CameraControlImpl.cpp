@@ -196,7 +196,7 @@ CameraControlImpl::Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue)
 nsresult
 CameraControlImpl::Set(nsICameraShutterCallback* aOnShutter)
 {
-  mOnShutterCb = aOnShutter;
+  mOnShutterCb = new nsMainThreadPtrHolder<nsICameraShutterCallback>(aOnShutter);
   return NS_OK;
 }
 
@@ -210,7 +210,7 @@ CameraControlImpl::Get(nsICameraShutterCallback** aOnShutter)
 nsresult
 CameraControlImpl::Set(nsICameraClosedCallback* aOnClosed)
 {
-  mOnClosedCb = aOnClosed;
+  mOnClosedCb = new nsMainThreadPtrHolder<nsICameraClosedCallback>(aOnClosed);
   return NS_OK;
 }
 
@@ -224,7 +224,7 @@ CameraControlImpl::Get(nsICameraClosedCallback** aOnClosed)
 nsresult
 CameraControlImpl::Set(nsICameraRecorderStateChange* aOnRecorderStateChange)
 {
-  mOnRecorderStateChangeCb = aOnRecorderStateChange;
+  mOnRecorderStateChangeCb = new nsMainThreadPtrHolder<nsICameraRecorderStateChange>(aOnRecorderStateChange);
   return NS_OK;
 }
 
@@ -258,7 +258,7 @@ void
 CameraControlImpl::OnShutterInternal()
 {
   DOM_CAMERA_LOGI("** SNAP **\n");
-  if (mOnShutterCb) {
+  if (mOnShutterCb.get()) {
     mOnShutterCb->HandleEvent();
   }
 }
@@ -277,7 +277,7 @@ void
 CameraControlImpl::OnClosedInternal()
 {
   DOM_CAMERA_LOGI("Camera hardware was closed\n");
-  if (mOnClosedCb) {
+  if (mOnClosedCb.get()) {
     mOnClosedCb->HandleEvent();
   }
 }
@@ -390,9 +390,10 @@ GetPreviewStreamResult::Run()
    */
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mOnSuccessCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+  nsCOMPtr<nsICameraPreviewStreamCallback> onSuccess = mOnSuccessCb.get();
+  if (onSuccess && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
     nsCOMPtr<nsIDOMMediaStream> stream = new DOMCameraPreview(mCameraControl, mWidth, mHeight, mFramesPerSecond);
-    mOnSuccessCb->HandleEvent(stream);
+    onSuccess->HandleEvent(stream);
   }
   return NS_OK;
 }

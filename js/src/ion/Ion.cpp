@@ -1072,8 +1072,8 @@ public:
         return SequentialExecution;
     }
 
-    bool compile(IonBuilder *builder, MIRGraph *graph,
-                 AutoDestroyAllocator &autoDestroy);
+    AbortReason compile(IonBuilder *builder, MIRGraph *graph,
+                        AutoDestroyAllocator &autoDestroy);
 };
 
 void
@@ -1139,7 +1139,7 @@ AttachFinishedCompilations(JSContext *cx)
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
 template <typename CompileContext>
-static bool
+static AbortReason
 IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing,
            CompileContext &compileContext)
 {
@@ -1153,50 +1153,74 @@ IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *o
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)
-        return false;
+        return AbortReason_Alloc;
 
     AutoDestroyAllocator autoDestroy(alloc);
 
     TempAllocator *temp = alloc->new_<TempAllocator>(alloc);
     if (!temp)
-        return false;
+        return AbortReason_Alloc;
 
     IonContext ictx(cx, cx->compartment, temp);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
-        return false;
+        return AbortReason_Alloc;
 
     MIRGraph *graph = alloc->new_<MIRGraph>(temp);
     ExecutionMode executionMode = compileContext.executionMode();
     CompileInfo *info = alloc->new_<CompileInfo>(script, fun, osrPc, constructing,
                                                  executionMode);
     if (!info)
-        return false;
+        return AbortReason_Alloc;
 
     types::AutoEnterTypeInference enter(cx, true);
     TypeInferenceOracle oracle;
 
     if (!oracle.init(cx, script))
-        return false;
+        return AbortReason_Disable;
 
     AutoFlushCache afc("IonCompile");
 
     types::AutoEnterCompilation enterCompiler(cx, CompilerOutputKind(executionMode));
     if (!enterCompiler.init(script, false, 0))
-        return false;
+        return AbortReason_Disable;
 
     AutoTempAllocatorRooter root(cx, temp);
 
     IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &oracle, info);
-    if (!compileContext.compile(builder, graph, autoDestroy)) {
-        IonSpew(IonSpew_Abort, "IM Compilation failed.");
-        return false;
-    }
+    if (!builder)
+        return AbortReason_Alloc;
 
-    return true;
+    AbortReason abortReason  = compileContext.compile(builder, graph, autoDestroy);
+    if (abortReason != AbortReason_NoAbort)
+        IonSpew(IonSpew_Abort, "IM Compilation failed.");
+
+    return abortReason;
 }
 
-bool
+static inline bool
+OffThreadCompilationEnabled(JSContext *cx)
+{
+    return js_IonOptions.parallelCompilation
+        && cx->runtime->useHelperThreads()
+        && cx->runtime->helperThreadCount() != 0;
+}
+
+static inline bool
+OffThreadCompilationAvailable(JSContext *cx)
+{
+    // Even if off thread compilation is enabled, compilation must still occur
+    // on the main thread in some cases. Do not compile off thread during an
+    // incremental GC, as this may trip incremental read barriers. Also skip
+    // off thread compilation if script execution is being profiled, as
+    // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
+    // when running off thread.
+    return OffThreadCompilationEnabled(cx)
+        && cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL
+        && !cx->runtime->profilingScripts;
+}
+
+AbortReason
 SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
                                   AutoDestroyAllocator &autoDestroy)
 {
@@ -1208,38 +1232,30 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
 
     if (!builder->build()) {
         IonSpew(IonSpew_Abort, "Builder failed to build.");
-        return false;
+        return builder->abortReason();
     }
     builder->clearForBackEnd();
 
-    // Try to compile the script off thread, if possible. Compilation cannot be
-    // performed off thread during an incremental GC, as doing so may trip
-    // incremental read barriers. Also skip off thread compilation if script
-    // execution is being profiled, as CodeGenerator::maybeCreateScriptCounts
-    // will not attach script profiles when running off thread.
-    if (js_IonOptions.parallelCompilation &&
-        OffThreadCompilationAvailable(cx) &&
-        cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL &&
-        !cx->runtime->profilingScripts)
-    {
+    // If possible, compile the script off thread.
+    if (OffThreadCompilationAvailable(cx)) {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 
         if (!StartOffThreadIonCompile(cx, builder)) {
             IonSpew(IonSpew_Abort, "Unable to start off-thread ion compilation.");
-            return false;
+            return AbortReason_Alloc;
         }
 
         // The allocator and associated data will be destroyed after being
         // processed in the finishedOffThreadCompilations list.
         autoDestroy.cancel();
 
-        return true;
+        return AbortReason_NoAbort;
     }
 
     CodeGenerator *codegen = CompileBackEnd(builder);
     if (!codegen) {
         IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
-        return false;
+        return AbortReason_Disable;
     }
 
     bool success = codegen->link();
@@ -1247,19 +1263,30 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
 
     IonSpewEndFunction();
 
-    return success;
+    return success ? AbortReason_NoAbort : AbortReason_Disable;
 }
 
-bool
+MethodStatus
 TestIonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing)
 {
     SequentialCompileContext compileContext;
-    if (!IonCompile(cx, script, fun, osrPc, constructing, compileContext)) {
+
+    AbortReason reason = IonCompile(cx, script, fun, osrPc, constructing, compileContext);
+
+    if (reason == AbortReason_Alloc)
+        return Method_Skipped;
+
+    if (reason == AbortReason_Inlining)
+        return Method_Skipped;
+
+    if (reason == AbortReason_Disable) {
         if (!cx->isExceptionPending())
             ForbidCompilation(cx, script);
-        return false;
+        return Method_CantCompile;
     }
-    return true;
+
+    JS_ASSERT(reason == AbortReason_NoAbort);
+    return Method_Compiled;
 }
 
 static bool
@@ -1319,27 +1346,47 @@ CheckScript(UnrootedScript script)
     return true;
 }
 
-static bool
-CheckScriptSize(UnrootedScript script)
+static MethodStatus
+CheckScriptSize(JSContext *cx, UnrootedScript script)
 {
     if (!js_IonOptions.limitScriptSize)
-        return true;
+        return Method_Compiled;
 
-    static const uint32_t MAX_SCRIPT_SIZE = 2000;
+    // Longer scripts can only be compiled off thread, as these compilations
+    // can be expensive and stall the main thread for too long.
+    static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2000;
+    static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 20000;
     static const uint32_t MAX_LOCALS_AND_ARGS = 256;
 
-    if (script->length > MAX_SCRIPT_SIZE) {
+    if (script->length > MAX_OFF_THREAD_SCRIPT_SIZE) {
         IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
-        return false;
+        return Method_CantCompile;
+    }
+
+    if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE) {
+        if (OffThreadCompilationEnabled(cx)) {
+            // Even if off thread compilation is enabled, there are cases where
+            // compilation must still occur on the main thread. Don't compile
+            // in these cases (except when profiling scripts, as compilations
+            // occurring with profiling should reflect those without), but do
+            // not forbid compilation so that the script may be compiled later.
+            if (!OffThreadCompilationAvailable(cx) && !cx->runtime->profilingScripts) {
+                IonSpew(IonSpew_Abort, "Script too large for main thread, skipping (%u bytes)", script->length);
+                return Method_Skipped;
+            }
+        } else {
+            IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
+            return Method_CantCompile;
+        }
     }
 
     uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
     if (numLocalsAndArgs > MAX_LOCALS_AND_ARGS) {
         IonSpew(IonSpew_Abort, "Too many locals and arguments (%u)", numLocalsAndArgs);
-        return false;
+        return Method_CantCompile;
     }
 
-    return true;
+    return Method_Compiled;
 }
 
 static MethodStatus
@@ -1353,9 +1400,15 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
         return Method_CantCompile;
     }
 
-    if (!CheckScript(script) || !CheckScriptSize(script)) {
+    if (!CheckScript(script)) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
         return Method_CantCompile;
+    }
+
+    MethodStatus status = CheckScriptSize(cx, script);
+    if (status != Method_Compiled) {
+        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
+        return status;
     }
 
     if (script->ion) {
@@ -1375,10 +1428,12 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
     }
 
     SequentialCompileContext compileContext;
-    if (!IonCompile(cx, script, fun, osrPc, constructing, compileContext))
+
+    AbortReason reason = IonCompile(cx, script, fun, osrPc, constructing, compileContext);
+    if (reason == AbortReason_Disable)
         return Method_CantCompile;
 
-    // Compilation succeeded, but we invalidated right away.
+    // Compilation succeeded or we invalidated right away or an inlining/alloc abort
     return script->hasIonScript() ? Method_Compiled : Method_Skipped;
 }
 

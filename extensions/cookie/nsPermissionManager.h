@@ -44,6 +44,7 @@ public:
      , mExpireType(aExpireType)
      , mExpireTime(aExpireTime)
      , mNonSessionPermission(aPermission)
+     , mNonSessionExpireType(aExpireType)
     {}
 
     int64_t  mID;
@@ -52,6 +53,7 @@ public:
     uint32_t mExpireType;
     int64_t  mExpireTime;
     uint32_t mNonSessionPermission;
+    uint32_t mNonSessionExpireType;
   };
 
   /**

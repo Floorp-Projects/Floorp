@@ -67,6 +67,10 @@ let modules = {
   feedback: {
     uri: "chrome://browser/content/aboutFeedback.xhtml",
     privileged: true
+  },
+  privatebrowsing: {
+    uri: "chrome://browser/content/aboutPrivateBrowsing.xhtml",
+    privileged: true
   }
 }
 

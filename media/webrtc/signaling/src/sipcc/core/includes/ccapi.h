@@ -5,7 +5,9 @@
 #ifndef _CCAPI_H_
 #define _CCAPI_H_
 
-#include "prtypes.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Util.h"
+
 #include "cpr_types.h"
 #include "cpr_memory.h"
 #include "phone_types.h"
@@ -106,7 +108,7 @@ typedef enum {
 /* please update the following cc_feature_names whenever this feature list is changed */
 
 #ifdef __CC_FEATURE_STRINGS__
-static const char *cc_feature_names[] = {
+static const char *const cc_feature_names[] = {
     "NONE",
     "HOLD",
     "RESUME",
@@ -170,7 +172,8 @@ static const char *cc_feature_names[] = {
 /* This checks at compile-time that the cc_feature_names list
  * is the same size as the cc_group_feature_t enum
  */
-PR_STATIC_ASSERT(PR_ARRAY_SIZE(cc_feature_names) == CC_FEATURE_MAX + 1);
+MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(cc_feature_names) == CC_FEATURE_MAX + 1,
+                  "cc_feature_names size == cc_group_feature_t size?");
 
 #endif
 
@@ -250,7 +253,7 @@ typedef enum cc_msgs_t_ {
 } cc_msgs_t;
 
 #ifdef __CC_MESSAGES_STRINGS__
-static const char *cc_msg_names[] = {
+static const char *const cc_msg_names[] = {
     "SETUP",
     "SETUP_ACK",
     "PROCEEDING",
@@ -292,7 +295,8 @@ static const char *cc_msg_names[] = {
 /* This checks at compile-time that the cc_msg_names list
  * is the same size as the cc_msgs_t enum
  */
-PR_STATIC_ASSERT(PR_ARRAY_SIZE(cc_msg_names) == CC_MSG_MAX + 1);
+MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(cc_msg_names) == CC_MSG_MAX + 1,
+                  "cc_msg_names size == cc_msgs_t size?");
 
 #endif //__CC_MESSAGES_STRINGS__
 

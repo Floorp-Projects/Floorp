@@ -970,7 +970,7 @@ CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir)
     return callVM(GetIntrinsicValueInfo, lir);
 }
 
-typedef bool (*InvokeFunctionFn)(JSContext *, JSFunction *, uint32_t, Value *, Value *);
+typedef bool (*InvokeFunctionFn)(JSContext *, HandleFunction, uint32_t, Value *, Value *);
 static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 bool
@@ -1106,7 +1106,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
-    JSFunction *target = call->getSingleTarget();
+    RootedFunction target(cx, call->getSingleTarget());
     Label end, invoke;
 
     // Native single targets are handled by LCallNative.
@@ -1117,7 +1117,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.checkStackAlignment();
 
     // Make sure the function has a JSScript
-    if (target->isInterpretedLazy() && !target->getOrCreateScript(cx))
+    if (target->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, target))
         return false;
 
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.

@@ -1459,7 +1459,7 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
         return UnrootedScript(NULL);
 
     RootedScript script(cx);
-    fun->maybeGetOrCreateScript(cx, &script);
+    JSFunction::maybeGetOrCreateScript(cx, fun, &script);
     if (!script)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_SCRIPTS_ONLY);
 
@@ -1916,9 +1916,9 @@ DisassembleScript(JSContext *cx, HandleScript script, JSFunction *fun, bool line
             RawObject obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
-                RawFunction fun = obj->toFunction();
+                RootedFunction fun(cx, obj->toFunction());
                 RootedScript script(cx);
-                fun->maybeGetOrCreateScript(cx, &script);
+                JSFunction::maybeGetOrCreateScript(cx, fun, &script);
                 if (!DisassembleScript(cx, script, fun, lines, recursive, sp))
                     return false;
             }
@@ -4977,12 +4977,17 @@ BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     return true;
 }
 
+// This function is currently only called from "#if defined(JS_ION)" chunks,
+// so we're guarding the function definition with an #ifdef, too, to avoid
+// build warning for unused function in non-ion-enabled builds:
+#if defined(JS_ION)
 static int
 OptionFailure(const char *option, const char *str)
 {
     fprintf(stderr, "Unrecognized option for %s: %s\n", option, str);
     return EXIT_FAILURE;
 }
+#endif /* JS_ION */
 
 static int
 ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)

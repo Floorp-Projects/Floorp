@@ -736,9 +736,6 @@ pref("urlclassifier.alternate_error_page", "blocked");
 // The number of random entries to send with a gethash request.
 pref("urlclassifier.gethashnoise", 4);
 
-// Randomize all UrlClassifier data with a per-client key.
-pref("urlclassifier.randomizeclient", false);
-
 // The list of tables that use the gethash request to confirm partial results.
 pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 

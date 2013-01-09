@@ -1083,6 +1083,12 @@ enum ViewType {
      */
     TYPE_UINT8_CLAMPED,
 
+    /*
+     * Type returned for a DataView. Note that there is no single element type
+     * in this case.
+     */
+    TYPE_DATAVIEW,
+
     TYPE_MAX
 };
 
@@ -1256,14 +1262,14 @@ extern JS_FRIEND_API(JSObject *)
 JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data);
 
 /*
- * Get the type of elements in a typed array.
+ * Get the type of elements in a typed array, or TYPE_DATAVIEW if a DataView.
  *
- * |obj| must have passed a JS_IsTypedArrayObject/JS_Is*Array test, or somehow
- * be known that it would pass such a test: it is a typed array or a wrapper of
- * a typed array, and the unwrapping will succeed.
+ * |obj| must have passed a JS_IsArrayBufferView/JS_Is*Array test, or somehow
+ * be known that it would pass such a test: it is an ArrayBufferView or a
+ * wrapper of an ArrayBufferView, and the unwrapping will succeed.
  */
 extern JS_FRIEND_API(JSArrayBufferViewType)
-JS_GetTypedArrayType(JSObject *obj);
+JS_GetArrayBufferViewType(JSObject *obj);
 
 /*
  * Check whether obj supports the JS_GetArrayBuffer* APIs. Note that this may
@@ -1563,7 +1569,9 @@ IsTypedArrayThisCheck(JS::IsAcceptableThis test);
 
 enum CTypesActivityType {
     CTYPES_CALL_BEGIN,
-    CTYPES_CALL_END
+    CTYPES_CALL_END,
+    CTYPES_CALLBACK_BEGIN,
+    CTYPES_CALLBACK_END
 };
 
 typedef void
@@ -1575,6 +1583,29 @@ typedef void
  */
 JS_FRIEND_API(void)
 SetCTypesActivityCallback(JSRuntime *rt, CTypesActivityCallback cb);
+
+class JS_FRIEND_API(AutoCTypesActivityCallback) {
+  private:
+    JSContext *cx;
+    CTypesActivityCallback callback;
+    CTypesActivityType beginType;
+    CTypesActivityType endType;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoCTypesActivityCallback(JSContext *cx, CTypesActivityType beginType,
+                               CTypesActivityType endType
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoCTypesActivityCallback() {
+        DoEndCallback();
+    }
+    void DoEndCallback() {
+        if (callback) {
+            callback(cx, endType);
+            callback = NULL;
+        }
+    }
+};
 
 } /* namespace js */
 

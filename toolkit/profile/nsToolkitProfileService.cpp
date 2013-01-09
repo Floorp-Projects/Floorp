@@ -859,7 +859,7 @@ nsToolkitProfileService::CreateTimesInternal(nsIFile* aProfileDir)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We don't care about microsecond resolution.
-    PRInt64 msec;
+    int64_t msec;
     LL_DIV(msec, PR_Now(), PR_USEC_PER_MSEC);
 
     // Write it out.

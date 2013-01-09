@@ -79,8 +79,8 @@ nsSVGSwitchFrame::Init(nsIContent* aContent,
                        nsIFrame* aParent,
                        nsIFrame* aPrevInFlow)
 {
-  nsCOMPtr<nsIDOMSVGSwitchElement> svgSwitch = do_QueryInterface(aContent);
-  NS_ASSERTION(svgSwitch, "Content is not an SVG switch\n");
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::svgSwitch),
+               "Content is not an SVG switch\n");
 
   return nsSVGSwitchFrameBase::Init(aContent, aParent, aPrevInFlow);
 }

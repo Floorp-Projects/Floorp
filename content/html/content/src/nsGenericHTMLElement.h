@@ -37,7 +37,6 @@ class nsHTMLFormElement;
 class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
-class nsIDOMDOMStringMap;
 
 namespace mozilla {
 namespace dom{
@@ -240,6 +239,11 @@ public:
     return style;
   }
 
+  /**
+   * Determine whether an attribute is an event (onclick, etc.)
+   * @param aName the attribute
+   * @return whether the name is an event handler name
+   */
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
@@ -773,13 +777,6 @@ private:
   void RegUnRegAccessKey(bool aDoReg);
 
 protected:
-  /**
-   * Determine whether an attribute is an event (onclick, etc.)
-   * @param aName the attribute
-   * @return whether the name is an event handler name
-   */
-  bool IsEventName(nsIAtom* aName);
-
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify);
@@ -850,29 +847,6 @@ protected:
    * @param aResult  result value [out]
    */
   NS_HIDDEN_(nsresult) SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue);
-
-  /**
-   * Helper method for NS_IMPL_BOOL_ATTR macro.
-   * Gets value of boolean attribute. Only works for attributes in null
-   * namespace.
-   *
-   * @param aAttr    name of attribute.
-   * @param aValue   Boolean value of attribute.
-   */
-  NS_HIDDEN_(bool) GetBoolAttr(nsIAtom* aAttr) const
-  {
-    return HasAttr(kNameSpaceID_None, aAttr);
-  }
-
-  /**
-   * Helper method for NS_IMPL_BOOL_ATTR macro.
-   * Sets value of boolean attribute by removing attribute or setting it to
-   * the empty string. Only works for attributes in null namespace.
-   *
-   * @param aAttr    name of attribute.
-   * @param aValue   Boolean value of attribute.
-   */
-  NS_HIDDEN_(nsresult) SetBoolAttr(nsIAtom* aAttr, bool aValue);
 
   /**
    * Helper method for NS_IMPL_INT_ATTR macro.
@@ -1234,24 +1208,6 @@ protected:
   _class::Set##_method(const nsAString& aValue)                              \
   {                                                                          \
     return SetAttrHelper(nsGkAtoms::_atom, aValue);                          \
-  }
-
-/**
- * A macro to implement the getter and setter for a given boolean
- * valued content property. The method uses the generic GetAttr and
- * SetAttr methods.
- */
-#define NS_IMPL_BOOL_ATTR(_class, _method, _atom)                     \
-  NS_IMETHODIMP                                                       \
-  _class::Get##_method(bool* aValue)                                \
-  {                                                                   \
-    *aValue = GetBoolAttr(nsGkAtoms::_atom);                          \
-    return NS_OK;                                                     \
-  }                                                                   \
-  NS_IMETHODIMP                                                       \
-  _class::Set##_method(bool aValue)                                 \
-  {                                                                   \
-    return SetBoolAttr(nsGkAtoms::_atom, aValue);                   \
   }
 
 /**
@@ -1910,7 +1866,6 @@ NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Anchor)
@@ -1925,6 +1880,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Canvas)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Mod)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(DataList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Div)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(DList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(FieldSet)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Font)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Form)
@@ -1947,6 +1903,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(MenuItem)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meta)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meter)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Object)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(OList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(OptGroup)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Option)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Output)
@@ -1971,6 +1928,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(TextArea)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Tfoot)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Thead)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Title)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(UList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Unknown)
 #if defined(MOZ_MEDIA)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Video)

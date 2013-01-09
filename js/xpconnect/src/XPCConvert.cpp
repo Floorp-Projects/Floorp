@@ -1524,7 +1524,8 @@ CheckTargetAndPopulate(const nsXPTType& type,
 // are not accepted; create a properly typed array view on them
 // first. The element type of array must match the XPCOM
 // type in size, type and signedness exactly. As an exception,
-// Uint8ClampedArray is allowed for arrays of uint8_t.
+// Uint8ClampedArray is allowed for arrays of uint8_t. DataViews
+// are not supported.
 
 // static
 JSBool
@@ -1550,7 +1551,7 @@ XPCConvert::JSTypedArray2Native(void** d,
 
     void* output = nullptr;
 
-    switch (JS_GetTypedArrayType(jsArray)) {
+    switch (JS_GetArrayBufferViewType(jsArray)) {
     case js::ArrayBufferView::TYPE_INT8:
         if (!CheckTargetAndPopulate(nsXPTType::T_I8, type,
                                     sizeof(int8_t), count,

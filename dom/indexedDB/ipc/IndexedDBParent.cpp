@@ -12,7 +12,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 
-#include "mozilla/AppProcessPermissions.h"
+#include "mozilla/AppProcessChecker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"

@@ -302,7 +302,7 @@ static const int32_t kResizableBorderMinSize = 3;
  *
  **************************************************************/
 
-nsWindow::nsWindow() : nsBaseWidget()
+nsWindow::nsWindow() : nsWindowBase()
 {
 #ifdef PR_LOGGING
   if (!gWindowsLog) {
@@ -5046,7 +5046,9 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_APPCOMMAND:
     {
       uint32_t appCommand = GET_APPCOMMAND_LPARAM(lParam);
-
+      uint32_t contentCommandMessage = NS_EVENT_NULL;
+      // XXX After we implement KeyboardEvent.key, we should dispatch the
+      //     key event if (GET_DEVICE_LPARAM(lParam) == FAPPCOMMAND_KEY) is.
       switch (appCommand)
       {
         case APPCOMMAND_BROWSER_BACKWARD:
@@ -5075,6 +5077,31 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
             result = true;
           }
           break;
+
+        // Use content command for following commands:
+        case APPCOMMAND_COPY:
+          contentCommandMessage = NS_CONTENT_COMMAND_COPY;
+          break;
+        case APPCOMMAND_CUT:
+          contentCommandMessage = NS_CONTENT_COMMAND_CUT;
+          break;
+        case APPCOMMAND_PASTE:
+          contentCommandMessage = NS_CONTENT_COMMAND_PASTE;
+          break;
+        case APPCOMMAND_REDO:
+          contentCommandMessage = NS_CONTENT_COMMAND_REDO;
+          break;
+        case APPCOMMAND_UNDO:
+          contentCommandMessage = NS_CONTENT_COMMAND_UNDO;
+          break;
+      }
+
+      if (contentCommandMessage) {
+        nsContentCommandEvent contentCommand(true, contentCommandMessage, this);
+        DispatchWindowEvent(&contentCommand);
+        // tell the driver that we handled the event
+        *aRetValue = 1;
+        result = true;
       }
       // default = false - tell the driver that the event was not handled
     }

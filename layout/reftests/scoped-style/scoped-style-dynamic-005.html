@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<body onload="f()">
+  <p>First</p>
+  <p>
+    <style scoped>
+      p { color: green }
+    </style>
+    Second
+  </p>
+  <p>Third</p>
+  <script>
+    function f() {
+      var style = document.getElementsByTagName("style")[0];
+      style.removeAttribute("scoped");
+    }
+  </script>
+</body>

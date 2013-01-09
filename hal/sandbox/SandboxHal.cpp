@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Hal.h"
-#include "mozilla/AppProcessPermissions.h"
+#include "mozilla/AppProcessChecker.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/hal_sandbox/PHalParent.h"

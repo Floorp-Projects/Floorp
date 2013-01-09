@@ -48,6 +48,7 @@ browser.jar:
   skin/classic/browser/pageInfo.css
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
+  skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/reload-stop-go.png
   skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar-dropmarker.png
@@ -70,6 +71,7 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-16@2x.png
   skin/classic/browser/webRTC-shareDevice-64.png
+  skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
   skin/classic/browser/downloads/download-glow@2x.png       (downloads/download-glow@2x.png)

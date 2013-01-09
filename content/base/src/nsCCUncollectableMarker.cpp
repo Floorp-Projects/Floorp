@@ -368,12 +368,16 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
       MarkDocShell(shellTreeNode, cleanupJS, prepareForCC);
     }
 #ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    appShell->GetHiddenPrivateWindow(getter_AddRefs(hw));
-    if (hw) {
-      nsCOMPtr<nsIDocShell> shell;
-      hw->GetDocShell(getter_AddRefs(shell));
-      nsCOMPtr<nsIDocShellTreeNode> shellTreeNode = do_QueryInterface(shell);
-      MarkDocShell(shellTreeNode, cleanupJS, prepareForCC);
+    bool hasHiddenPrivateWindow = false;
+    appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
+    if (hasHiddenPrivateWindow) {
+      appShell->GetHiddenPrivateWindow(getter_AddRefs(hw));
+      if (hw) {
+        nsCOMPtr<nsIDocShell> shell;
+        hw->GetDocShell(getter_AddRefs(shell));
+        nsCOMPtr<nsIDocShellTreeNode> shellTreeNode = do_QueryInterface(shell);
+        MarkDocShell(shellTreeNode, cleanupJS, prepareForCC);
+      }
     }
 #endif
   }

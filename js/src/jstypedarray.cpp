@@ -3771,13 +3771,18 @@ JS_GetTypedArrayByteLength(JSObject *obj)
 }
 
 JS_FRIEND_API(JSArrayBufferViewType)
-JS_GetTypedArrayType(JSObject *obj)
+JS_GetArrayBufferViewType(JSObject *obj)
 {
     obj = UnwrapObjectChecked(obj);
     if (!obj)
         return ArrayBufferView::TYPE_MAX;
-    JS_ASSERT(obj->isTypedArray());
-    return static_cast<JSArrayBufferViewType>(TypedArray::type(obj));
+
+    if (obj->isTypedArray())
+        return static_cast<JSArrayBufferViewType>(TypedArray::type(obj));
+    else if (obj->isDataView())
+        return ArrayBufferView::TYPE_DATAVIEW;
+    JS_NOT_REACHED("invalid ArrayBufferView type");
+    return ArrayBufferView::TYPE_MAX;
 }
 
 JS_FRIEND_API(int8_t *)

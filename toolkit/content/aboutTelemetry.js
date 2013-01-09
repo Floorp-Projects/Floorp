@@ -734,7 +734,29 @@ function onLoad() {
 
   // Get the Telemetry Ping payload
   Telemetry.asyncFetchTelemetryData(displayPingData);
-}
+};
+
+let LateWritesSingleton = {
+  renderLateWrites: function LateWritesSingleton_renderLateWrites(lateWrites) {
+    let writesDiv = document.getElementById("late-writes-data");
+    clearDivData(writesDiv);
+    // FIXME: Add symbolication support. Refactor with the chrome hang one.
+
+    let stacks = lateWrites.stacks;
+    if (stacks.length == 0) {
+      showEmptySectionMessage("late-writes-section");
+      return;
+    }
+
+    let memoryMap = lateWrites.memoryMap;
+    StackRenderer.renderMemoryMap(writesDiv, memoryMap);
+
+    for (let i = 0; i < stacks.length; ++i) {
+      let stack = stacks[i];
+      StackRenderer.renderStack(writesDiv, stack);
+    }
+  }
+};
 
 function displayPingData() {
   let ping = TelemetryPing.getPayload();
@@ -745,6 +767,8 @@ function displayPingData() {
   } else {
     showEmptySectionMessage("simple-measurements-section");
   }
+
+  LateWritesSingleton.renderLateWrites(ping.lateWrites);
 
   // Show basic system info gathered
   if (Object.keys(ping.info).length) {
