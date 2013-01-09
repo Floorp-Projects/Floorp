@@ -49,6 +49,7 @@ function any_unit_to_num(str)
 }
 
 var FUNC_NEGATIVE = "cubic-bezier(0.25, -2, 0.75, 1)";
+var FUNC_OVERONE = "cubic-bezier(0.25, 0, 0.75, 3)";
 
 var supported_properties = {
     "border-bottom-left-radius": [ test_radius_transition ],
@@ -1131,38 +1132,74 @@ function test_rect_transition(prop) {
 }
 
 function test_visibility_transition(prop) {
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "visible", "");
-  is(cs.getPropertyValue(prop), "visible",
-     "visibility property " + prop + ": computed value before transition");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "hidden", "");
-  is(cs.getPropertyValue(prop), "visible",
-     "visibility property " + prop + ": interpolation of visibility");
+  function do_test(from_value, to_value, interp_value) {
+    div.style.setProperty("transition-property", "none", "");
+    div.style.setProperty(prop, from_value, "");
+    is(cs.getPropertyValue(prop), from_value,
+       "visibility property " + prop + ": computed value before transition");
+    div.style.setProperty("transition-property", prop, "");
+    div.style.setProperty(prop, to_value, "");
+    is(cs.getPropertyValue(prop), interp_value,
+       "visibility property " + prop + ": interpolation of visibility");
+  }
+
+  do_test("visible", "hidden", "visible");
+  do_test("hidden", "visible", "visible");
+  do_test("hidden", "collapse", "collapse"); /* not interpolable */
+  do_test("collapse", "hidden", "hidden"); /* not interpolable */
+  do_test("visible", "collapse", "visible");
+  do_test("collapse", "visible", "visible");
+
   isnot(get_distance(prop, "visible", "hidden"), 0,
         "distance between visible and hidden should not be zero");
+  isnot(get_distance(prop, "visible", "collapse"), 0,
+        "distance between visible and collapse should not be zero");
   is(get_distance(prop, "visible", "visible"), 0,
      "distance between visible and visible should not be zero");
   is(get_distance(prop, "hidden", "hidden"), 0,
      "distance between hidden and hidden should not be zero");
+  is(get_distance(prop, "collapse", "collapse"), 0,
+     "distance between collapse and collapse should not be zero");
 
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "visible", "");
-  is(cs.getPropertyValue(prop), "visible",
-     "visibility property " + prop + ": flush before clamping test");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "hidden", "");
-  is(cs.getPropertyValue(prop), "visible",
-     "visibility property " + prop + ": clamping of negatives");
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "hidden", "");
-  is(cs.getPropertyValue(prop), "hidden",
-     "visibility property " + prop + ": flush before clamping test");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "visible", "");
-  is(cs.getPropertyValue(prop), "hidden",
-     "visibility property " + prop + ": clamping of negatives");
+  function do_negative_test(from_value, to_value, interpolable) {
+    div.style.setProperty("transition-property", "none", "");
+    div.style.setProperty(prop, from_value, "");
+    is(cs.getPropertyValue(prop), from_value,
+       "visibility property " + prop + ": flush before clamping test");
+    div.style.setProperty("transition-property", prop, "");
+    div.style.setProperty(prop, to_value, "");
+    is(cs.getPropertyValue(prop), interpolable ? from_value : to_value,
+       "visibility property " + prop + ": clamping of negatives");
+  }
+  do_negative_test("visible", "hidden", true);
+  do_negative_test("hidden", "visible", true);
+  do_negative_test("hidden", "collapse", false);
+  do_negative_test("collapse", "hidden", false);
+  do_negative_test("visible", "collapse", true);
+  do_negative_test("collapse", "visible", true);
+
+  div.style.setProperty("transition-delay", "-3s", "");
+  div.style.setProperty("transition-timing-function", FUNC_OVERONE, "");
+
+  function do_overone_test(from_value, to_value) {
+    div.style.setProperty("transition-property", "none", "");
+    div.style.setProperty(prop, from_value, "");
+    is(cs.getPropertyValue(prop), from_value,
+       "visibility property " + prop + ": flush before clamping test");
+    div.style.setProperty("transition-property", prop, "");
+    div.style.setProperty(prop, to_value, "");
+    is(cs.getPropertyValue(prop), to_value,
+       "visibility property " + prop + ": clamping of over-ones");
+  }
+  do_overone_test("visible", "hidden");
+  do_overone_test("hidden", "visible");
+  do_overone_test("hidden", "collapse");
+  do_overone_test("collapse", "hidden");
+  do_overone_test("visible", "collapse");
+  do_overone_test("collapse", "visible");
+
+  div.style.setProperty("transition-delay", "-1s", "");
   div.style.setProperty("transition-timing-function", "linear", "");
 }
 
