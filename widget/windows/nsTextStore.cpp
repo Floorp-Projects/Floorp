@@ -354,7 +354,7 @@ nsTextStore::~nsTextStore()
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore instance is destroyed, "
      "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p",
-     this, mWidget, mDocumentMgr, mContext));
+     this, mWidget.get(), mDocumentMgr.get(), mContext.get()));
 
   if (mCompositionTimer) {
     mCompositionTimer->Cancel();
@@ -1978,7 +1978,7 @@ nsTextStore::GetWnd(TsViewCookie vcView,
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::GetWnd(vcView=%ld, phwnd=0x%p), "
           "mWidget=0x%p",
-          this, vcView, phwnd, mWidget));
+          this, vcView, phwnd, mWidget.get()));
 
   if (vcView != TEXTSTORE_DEFAULT_VIEW) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2234,7 +2234,8 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
          ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() succeeded: "
           "mWidget=0x%p, mWidget->Destroyed()=%s, aTextChange={ acpStart=%ld, "
           "acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, mWidget, GetBoolName(mWidget ? mWidget->Destroyed() : true),
+          this, mWidget.get(),
+          GetBoolName(mWidget ? mWidget->Destroyed() : true),
           aTextChange ? aTextChange->acpStart : 0,
           aTextChange ? aTextChange->acpOldEnd : 0,
           aTextChange ? aTextChange->acpNewEnd : 0));
