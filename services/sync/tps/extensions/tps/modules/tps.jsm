@@ -682,13 +682,6 @@ let TPS = {
     frame.runTestFile(mozmillfile.path, false);
   },
 
-  SetPrivateBrowsing: function TPS__SetPrivateBrowsing(options) {
-    let PBSvc = CC["@mozilla.org/privatebrowsing;1"].
-                getService(CI.nsIPrivateBrowsingService);
-    PBSvc.privateBrowsingEnabled = options;
-    Logger.logInfo("set privateBrowsingEnabled: " + options);
-  },
-
   /**
    * Synchronously wait for the named event to be observed.
    *
