@@ -359,7 +359,7 @@ PrivilegesForApp(mozIApplication* aApp)
     const SpecialPermission specialPermissions[] = {
         // FIXME/bug 785592: implement a CameraBridge so we don't have
         // to hack around with OS permissions
-        { "camera", base::PRIVILEGES_INHERIT },
+        { "camera", base::PRIVILEGES_CAMERA },
         // FIXME/bug 793034: change our video architecture so that we
         // can stream video from remote processes
         { "deprecated-hwvideo", base::PRIVILEGES_VIDEO }
