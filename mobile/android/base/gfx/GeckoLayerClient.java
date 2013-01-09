@@ -477,9 +477,9 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations
             // that are in progress and send an updated display port request to browser.js as soon
-            // as possible. We accomplish this by passing true to abortPanZoomAnimation, which
-            // sends the request after aborting the animation. The display port request is actually
-            // a full viewport update, which is fine because if browser.js has somehow moved to
+            // as possible. The call to PanZoomController.abortAnimation accomplishes this by calling the
+            // forceRedraw function, which sends the viewport to gecko. The display port request is
+            // actually a full viewport update, which is fine because if browser.js has somehow moved to
             // be out of sync with this first-paint viewport, then we force them back in sync.
             abortPanZoomAnimation();
 
@@ -690,7 +690,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of PanZoomTarget */
-    public void setForceRedraw() {
+    public void forceRedraw() {
         mForceRedraw = true;
         if (mGeckoIsReady) {
             geometryChanged();

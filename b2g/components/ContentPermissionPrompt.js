@@ -148,9 +148,10 @@ ContentPermissionPrompt.prototype = {
 
     let principal = request.principal;
     let isApp = principal.appStatus != Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED;
-    let remember = principal.appStatus == Ci.nsIPrincipal.APP_STATUS_PRIVILEGED
-                   ? true
-                   : request.remember;
+    let remember = (principal.appStatus == Ci.nsIPrincipal.APP_STATUS_PRIVILEGED ||
+                    principal.appStatus == Ci.nsIPrincipal.APP_STATUS_CERTIFIED)
+                    ? true
+                    : request.remember;
 
     let details = {
       type: "permission-prompt",

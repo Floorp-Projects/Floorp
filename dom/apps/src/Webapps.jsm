@@ -217,8 +217,8 @@ this.DOMApplicationRegistry = {
     });
   },
 
-  // Installs a 3rd party packaged app.
-  installPreinstalledPackage: function installPreinstalledPackage(aId) {
+  // Installs a 3rd party app.
+  installPreinstalledApp: function installPreinstalledApp(aId) {
 #ifdef MOZ_WIDGET_GONK
     let app = this.webapps[aId];
     let baseDir;
@@ -229,30 +229,46 @@ this.DOMApplicationRegistry = {
       return;
     }
 
+    let filesToMove;
+    let isPackage;
+
     let updateFile = baseDir.clone();
     updateFile.append("update.webapp");
     if (!updateFile.exists()) {
-      // The update manifest is missing, bail out.
-      return;
+      // The update manifest is missing, this is a hosted app only if there is
+      // no application.zip
+      let appFile = baseDir.clone();
+      appFile.append("application.zip");
+      if (appFile.exists()) {
+        return;
+      }
+
+      isPackage = false;
+      filesToMove = ["manifest.webapp"];
+    } else {
+      isPackage = true;
+      filesToMove = ["application.zip", "update.webapp"];
     }
 
-    debug("Installing 3rd party packaged app : " + aId +
+    debug("Installing 3rd party app : " + aId +
           " from " + baseDir.path);
 
     // We copy this app to DIRECTORY_NAME/$aId, and set the base path as needed.
     let destDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
 
-    ["application.zip", "update.webapp"]
-      .forEach(function(aFile) {
+    filesToMove.forEach(function(aFile) {
         let file = baseDir.clone();
         file.append(aFile);
         file.copyTo(destDir, aFile);
-        let newFile = destDir.clone();
-        newFile.append(aFile);
       });
 
     app.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true)
                             .path;
+
+    if (!isPackage) {
+      return;
+    }
+
     app.origin = "app://" + aId;
     app.removable = true;
 
@@ -311,7 +327,7 @@ this.DOMApplicationRegistry = {
           let localId = this.webapps[id].localId;
           let permMgr = Cc["@mozilla.org/permissionmanager;1"]
                           .getService(Ci.nsIPermissionManager);
-          permMgr.RemovePermissionsForApp(localId);
+          permMgr.RemovePermissionsForApp(localId, false);
           Services.cookies.removeCookiesForApp(localId, false);
           this._clearPrivateData(localId, false);
         }
@@ -384,7 +400,7 @@ this.DOMApplicationRegistry = {
       if (runUpdate) {
         // At first run, install preloaded apps and set up their permissions.
         for (let id in this.webapps) {
-          this.installPreinstalledPackage(id);
+          this.installPreinstalledApp(id);
           if (!this.webapps[id]) {
             continue;
           }
@@ -392,7 +408,7 @@ this.DOMApplicationRegistry = {
           this.updatePermissionsForApp(id);
         }
         // Need to update the persisted list of apps since
-        // installPreinstalledPackage() removes the ones failing to install.
+        // installPreinstalledApp() removes the ones failing to install.
         this._saveApps();
       }
       this.registerAppsHandlers(runUpdate);
@@ -1221,8 +1237,15 @@ this.DOMApplicationRegistry = {
                                               true);
     }
 
-    // For non-removable hosted apps, we just check the appcache.
-    if (!app.removable) {
+    // For non-removable hosted apps, we only check the appcache.
+    let onlyCheckAppCache = false;
+
+#ifdef MOZ_WIDGET_GONK
+      let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
+      onlyCheckAppCache = (app.basePath == appDir.path);
+#endif
+
+    if (onlyCheckAppCache) {
       // Bail out for packaged apps.
       if (app.origin.startsWith("app://")) {
         aData.error = "NOT_UPDATABLE";
@@ -1259,6 +1282,7 @@ this.DOMApplicationRegistry = {
         updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
                                  app.localId, false, updateObserver);
       });
+
       return;
     }
 
@@ -1275,6 +1299,7 @@ this.DOMApplicationRegistry = {
       this.createLoadContext(app.installerAppId, app.installerIsBrowser);
 
     xhr.addEventListener("load", (function() {
+      debug("Got http status=" + xhr.status + " for " + aData.manifestURL);
       if (xhr.status == 200) {
         let manifest = xhr.response;
         if (manifest == null) {
@@ -1313,6 +1338,7 @@ this.DOMApplicationRegistry = {
       sendError("NETWORK_ERROR");
     }).bind(this), false);
 
+    debug("Checking manifest at " + aData.manifestURL);
     xhr.send(null);
   },
 
@@ -1873,6 +1899,11 @@ this.DOMApplicationRegistry = {
           bufferedOutputStream.close();
           outputStream.close();
 
+          if (!Components.isSuccessCode(aStatusCode)) {
+            cleanup("NETWORK_ERROR");
+            return;
+          }
+
           if (requestChannel.responseStatus == 304) {
             // The package's Etag has not changed.
             // We send a "applied" event right away.
@@ -1891,11 +1922,6 @@ this.DOMApplicationRegistry = {
             if (file && file.exists()) {
               file.remove(true);
             }
-            return;
-          }
-
-          if (!Components.isSuccessCode(aStatusCode)) {
-            cleanup("NETWORK_ERROR");
             return;
           }
 

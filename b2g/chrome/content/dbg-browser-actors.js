@@ -51,16 +51,7 @@ DeviceRootActor.prototype.disconnect = function DRA_disconnect() {
  * until at least the next listTabs request.
  */
 DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
-  let actor = this._tabActors.get(this.browser);
-  if (!actor) {
-    actor = new DeviceTabActor(this.conn, this.browser);
-    // this.actorID is set by ActorPool when an actor is put into one.
-    actor.parentID = this.actorID;
-    this._tabActors.set(this.browser, actor);
-  }
-
   let actorPool = new ActorPool(this.conn);
-  actorPool.addActor(actor);
 
   this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
 
@@ -75,7 +66,7 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let response = {
     'from': 'root',
     'selected': 0,
-    'tabs': [actor.grip()]
+    'tabs': []
   };
   this._appendExtraActors(response);
   return response;

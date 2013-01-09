@@ -203,7 +203,7 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
   Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
   // This preference is consulted during startup
   Services.prefs.savePrefFile(null);
-  value ? startDebugger() : stopDebugger();
+  value ? RemoteDebugger.start() : RemoteDebugger.stop();
 });
 
 SettingsListener.observe('debug.log-animations.enabled', false, function(value) {

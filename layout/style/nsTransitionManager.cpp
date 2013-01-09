@@ -314,12 +314,6 @@ nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
   // We also need it for processing of the changes.
   nsChangeHint styleChange =
     oldStyle->CalcStyleDifference(newStyle, nsChangeHint(0));
-  // This isn't particularly dangerous, but I want to catch if it happens:
-  NS_ABORT_IF_FALSE(NS_IsHintSubset(styleChange,
-                                    NS_CombineHint(nsChangeHint_UpdateOpacityLayer,
-                                      NS_CombineHint(nsChangeHint_UpdateTransformLayer,
-                                                     nsChangeHint_UpdateOverflow))),
-                    "unexpected change hint");
   aChangeList.AppendChange(primaryFrame, primaryFrame->GetContent(),
                            styleChange);
 

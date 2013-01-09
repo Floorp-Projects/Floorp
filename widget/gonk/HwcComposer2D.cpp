@@ -27,6 +27,7 @@
 #include "nsIScreenManager.h"
 #include "nsMathUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "cutils/properties.h"
 
 #define LOG_TAG "HWComposer"
 
@@ -47,6 +48,14 @@ enum {
     HWC_USE_GPU = HWC_FRAMEBUFFER,
     HWC_USE_OVERLAY = HWC_OVERLAY,
     HWC_USE_COPYBIT
+};
+
+// HWC layer flags
+enum {
+    // Draw a solid color rectangle
+    // The color should be set on the transform member of the hwc_layer_t struct
+    // The expected format is a 32 bit ABGR with 8 bits per component
+    HWC_COLOR_FILL = 0x8
 };
 
 namespace mozilla {
@@ -78,6 +87,10 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur)
     mozilla::Framebuffer::GetSize(&screenSize);
     mScreenWidth  = screenSize.width;
     mScreenHeight = screenSize.height;
+
+    char propValue[PROPERTY_VALUE_MAX];
+    property_get("ro.display.colorfill", propValue, "0");
+    mColorFill = (atoi(propValue) == 1) ? true : false;
 
     mDpy = dpy;
     mSur = sur;
@@ -232,7 +245,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     // that require intermediate surfaces.  That means all the
     // GetEffective*() coordinates are relative to the framebuffer.
 
-    const bool TESTING = true;
+    bool fillColor = false;
 
     const nsIntRegion& visibleRegion = aLayer->GetEffectiveVisibleRegion();
     if (visibleRegion.IsEmpty()) {
@@ -249,8 +262,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return false;
     }
 
-    if (!TESTING &&
-        visibleRegion.GetNumRects() > 1) {
+    if (visibleRegion.GetNumRects() > 1) {
         // FIXME/bug 808339
         LOGD("Layer has nontrivial visible region");
         return false;
@@ -279,8 +291,12 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     if (!state.mSurface ||
         state.mSurface->type() != SurfaceDescriptor::TSurfaceDescriptorGralloc) {
-        LOGD("Layer doesn't have a gralloc buffer");
-        return false;
+        if (aLayer->AsColorLayer() && mColorFill) {
+            fillColor = true;
+        } else {
+            LOGD("Layer doesn't have a gralloc buffer");
+            return false;
+        }
     }
     if (state.BufferRotated()) {
         LOGD("Layer has a rotated buffer");
@@ -304,12 +320,18 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         }
     }
 
-    sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(*state.mSurface);
+    sp<GraphicBuffer> buffer = fillColor ? nullptr : GrallocBufferActor::GetFrom(*state.mSurface);
 
     nsIntRect visibleRect = visibleRegion.GetBounds();
 
-    nsIntRect bufferRect = nsIntRect(0, 0, int(buffer->getWidth()),
-        int(buffer->getHeight()));
+    nsIntRect bufferRect;
+    if (fillColor) {
+        bufferRect = nsIntRect(0, 0, visibleRect.width,
+            visibleRect.height);
+    } else {
+        bufferRect = nsIntRect(0, 0, int(buffer->getWidth()),
+            int(buffer->getHeight()));
+    }
 
     hwc_layer_t& hwcLayer = mList->hwLayers[current];
 
@@ -319,43 +341,42 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return true;
     }
 
-    buffer_handle_t handle = buffer->getNativeBuffer()->handle;
+    buffer_handle_t handle = fillColor ? nullptr : buffer->getNativeBuffer()->handle;
     hwcLayer.handle = handle;
 
-    hwcLayer.blending = HWC_BLENDING_NONE;
     hwcLayer.flags = 0;
     hwcLayer.hints = 0;
-
-
+    hwcLayer.blending = HWC_BLENDING_NONE;
     hwcLayer.compositionType = HWC_USE_COPYBIT;
 
-    if (transform.xx == 0) {
-        if (transform.xy < 0) {
-            hwcLayer.transform = HWC_TRANSFORM_ROT_90;
-            LOGD("Layer buffer rotated 90 degrees");
+    if (!fillColor) {
+        if (transform.xx == 0) {
+            if (transform.xy < 0) {
+                hwcLayer.transform = HWC_TRANSFORM_ROT_90;
+                LOGD("Layer buffer rotated 90 degrees");
+            } else {
+                hwcLayer.transform = HWC_TRANSFORM_ROT_270;
+                LOGD("Layer buffer rotated 270 degrees");
+            }
+        } else if (transform.xx < 0) {
+            hwcLayer.transform = HWC_TRANSFORM_ROT_180;
+            LOGD("Layer buffer rotated 180 degrees");
+        } else {
+            hwcLayer.transform = 0;
         }
-        else {
-            hwcLayer.transform = HWC_TRANSFORM_ROT_270;
-            LOGD("Layer buffer rotated 270 degrees");
-        }
-    }
-    else if (transform.xx < 0) {
-        hwcLayer.transform = HWC_TRANSFORM_ROT_180;
-        LOGD("Layer buffer rotated 180 degrees");
-    }
-    else {
-        hwcLayer.transform = 0;
-    }
 
-    hwcLayer.transform |= state.YFlipped() ? HWC_TRANSFORM_FLIP_V : 0;
-
-    hwc_region_t region;
-    region.numRects = 1;
-    region.rects = &(hwcLayer.displayFrame);
-    hwcLayer.visibleRegionScreen = region;
+        hwcLayer.transform |= state.YFlipped() ? HWC_TRANSFORM_FLIP_V : 0;
+        hwc_region_t region;
+        region.numRects = 1;
+        region.rects = &(hwcLayer.displayFrame);
+        hwcLayer.visibleRegionScreen = region;
+    } else {
+        hwcLayer.flags |= HWC_COLOR_FILL;
+        ColorLayer* colorLayer = static_cast<ColorLayer*>(layerGL->GetLayer());
+        hwcLayer.transform = colorLayer->GetColor().Packed();
+    }
 
     mList->numHwLayers++;
-
     return true;
 }
 

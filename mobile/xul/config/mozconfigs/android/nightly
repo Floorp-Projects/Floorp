@@ -1,8 +1,5 @@
 . "$topsrcdir/mobile/xul/config/mozconfigs/android/common"
 
-# Nightlies only since this has a cost in performance
-ac_add_options --enable-js-diagnostics
-
 # Build Fennec
 ac_add_options --enable-application=mobile
 

@@ -1470,7 +1470,11 @@ let RIL = {
       debug("Setting manual network selection: " + options.mcc + options.mnc);
     }
 
-    let numeric = String(options.mcc) + options.mnc;
+    // TODO: Bug 828307 - B2G RIL: Change to store MNC/MCC values from integer to string
+    let mnc = options.mnc.toString();
+    if (mnc.length == 1)
+      mnc = "0" + mnc;
+    let numeric = options.mcc.toString() + mnc;
     Buf.newParcel(REQUEST_SET_NETWORK_SELECTION_MANUAL, options);
     Buf.writeString(numeric);
     Buf.sendParcel();
@@ -7693,7 +7697,7 @@ let StkProactiveCmdHelper = {
   retrieveTextString: function retrieveTextString(length) {
     if (!length) {
       // null string.
-      return null;
+      return {textString: null};
     }
 
     let text = {
@@ -9120,7 +9124,10 @@ let ICCRecordHelper = {
   getPNN: function getPNN() {
     let pnn = [];
     function callback(options) {
-      let pnnElement = RIL.iccInfoPrivate.PNN = {};
+      let pnnElement = {
+        fullName: "",
+        shortName: ""
+      };
       let len = Buf.readUint32();
       let readLen = 0;
       while (len > readLen) {

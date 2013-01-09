@@ -201,21 +201,13 @@ protected:
             mStart(start), mOldEnd(oldEnd), mNewEnd(newEnd)
         {
         }
-        IMEChange(int32_t start, int32_t end) :
-            mStart(start), mOldEnd(end), mNewEnd(-1)
-        {
-        }
         bool IsEmpty()
         {
             return mStart < 0;
         }
-        bool IsTextChange()
-        {
-            return mNewEnd >= 0;
-        }
     };
     nsAutoTArray<IMEChange, 4> mIMETextChanges;
-    IMEChange mIMESelectionChange;
+    bool mIMESelectionChanged;
 
     InputContext mInputContext;
 
