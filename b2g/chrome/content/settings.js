@@ -210,10 +210,6 @@ SettingsListener.observe('debug.log-animations.enabled', false, function(value) 
   Services.prefs.setBoolPref('layers.offmainthreadcomposition.log-animations', value);
 });
 
-SettingsListener.observe('debug.dev-mode', false, function(value) {
-  Services.prefs.setBoolPref('dom.mozApps.dev_mode', value);
-});
-
 // =================== Privacy ====================
 SettingsListener.observe('privacy.donottrackheader.enabled', false, function(value) {
   Services.prefs.setBoolPref('privacy.donottrackheader.enabled', value);
