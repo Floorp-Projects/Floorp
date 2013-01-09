@@ -10,7 +10,6 @@
 #include "AccessibleHyperlink_i.c"
 
 #include "AccessibleWrap.h"
-#include "nsIWinAccessNode.h"
 
 using namespace mozilla::a11y;
 
