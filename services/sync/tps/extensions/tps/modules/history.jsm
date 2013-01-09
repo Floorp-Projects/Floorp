@@ -108,16 +108,33 @@ var HistoryEntry = {
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
     let uri = Services.io.newURI(item.uri, null, null);
+    let place = {
+      uri: uri,
+      visits: []
+    };
     for each (visit in item.visits) {
-      let visitId = PlacesUtils.history.addVisit(
-                    uri,
-                    usSinceEpoch + (visit.date * 60 * 60 * 1000 * 1000),
-                    null, visit.type,
-                    visit.type == 5 || visit.type == 6, 0);
-      Logger.AssertTrue(visitId, "Error adding history entry");
-      if ("title" in item)
-        PlacesUtils.history.setPageTitle(uri, item.title);
+      place.visits.push({
+        visitDate: usSinceEpoch + (visit.date * 60 * 60 * 1000 * 1000),
+        transitionType: visit.type
+      });
     }
+    if ("title" in item) {
+      place.title = item.title;
+    }
+    let cb = Async.makeSpinningCallback();
+    PlacesUtils.asyncHistory.updatePlaces(place, {
+        handleError: function Add_handleError() {
+          cb(new Error("Error adding history entry"));
+        },
+        handleResult: function Add_handleResult() {
+          cb();
+        },
+        handleCompletion: function Add_handleCompletion() {
+          // Nothing to do
+        }
+    });
+    // Spin the event loop to embed this async call in a sync API
+    cb.wait();
   },
 
   /**
