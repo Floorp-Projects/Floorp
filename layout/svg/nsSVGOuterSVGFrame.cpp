@@ -216,7 +216,7 @@ nsSVGOuterSVGFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   DISPLAY_PREF_WIDTH(this, result);
 
   SVGSVGElement *svg = static_cast<SVGSVGElement*>(mContent);
-  nsSVGLength2 &width = svg->mLengthAttributes[SVGSVGElement::WIDTH];
+  nsSVGLength2 &width = svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
 
   if (width.IsPercentage()) {
     // It looks like our containing block's width may depend on our width. In
@@ -242,8 +242,8 @@ nsSVGOuterSVGFrame::GetIntrinsicSize()
   IntrinsicSize intrinsicSize;
 
   SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
-  nsSVGLength2 &width  = content->mLengthAttributes[SVGSVGElement::WIDTH];
-  nsSVGLength2 &height = content->mLengthAttributes[SVGSVGElement::HEIGHT];
+  nsSVGLength2 &width  = content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
+  nsSVGLength2 &height = content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
   if (!width.IsPercentage()) {
     nscoord val = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(content));
@@ -268,8 +268,8 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
   // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
 
   SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
-  nsSVGLength2 &width  = content->mLengthAttributes[SVGSVGElement::WIDTH];
-  nsSVGLength2 &height = content->mLengthAttributes[SVGSVGElement::HEIGHT];
+  nsSVGLength2 &width  = content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
+  nsSVGLength2 &height = content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
   if (!width.IsPercentage() && !height.IsPercentage()) {
     nsSize ratio(NSToCoordRoundWithClamp(width.GetAnimValue(content)),
@@ -347,7 +347,7 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     SVGSVGElement* content = static_cast<SVGSVGElement*>(mContent);
 
     nsSVGLength2 &width =
-      content->mLengthAttributes[SVGSVGElement::WIDTH];
+      content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
     if (width.IsPercentage()) {
       NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
                         "GetIntrinsicSize should have reported no "
@@ -358,7 +358,7 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     }
 
     nsSVGLength2 &height =
-      content->mLengthAttributes[SVGSVGElement::HEIGHT];
+      content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
     NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
                  "root should not have auto-height containing block");
     if (height.IsPercentage()) {
@@ -910,7 +910,7 @@ bool
 nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
 {
   nsSVGLength2 &height = static_cast<SVGSVGElement*>(mContent)->
-                           mLengthAttributes[SVGSVGElement::HEIGHT];
+                           mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
   return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;
 }
 
