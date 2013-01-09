@@ -17,7 +17,7 @@
 
 #include "chrome/common/process_watcher.h"
 
-#include "AppProcessPermissions.h"
+#include "AppProcessChecker.h"
 #include "AudioChannelService.h"
 #include "CrashReporterParent.h"
 #include "IHistory.h"
@@ -712,8 +712,17 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                 CrashReporterParent* crashReporter =
                     static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
 
-                crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("URL"),
-                                                   NS_ConvertUTF16toUTF8(mAppManifestURL));
+                // If we're an app process, always stomp the latest URI
+                // loaded in the child process with our manifest URL.  We
+                // would rather associate the crashes with apps than
+                // random child windows loaded in them.
+                //
+                // XXX would be nice if we could get both ...
+                if (!mAppManifestURL.IsEmpty()) {
+                    crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("URL"),
+                                                       NS_ConvertUTF16toUTF8(mAppManifestURL));
+                }
+
                 crashReporter->GenerateCrashReport(this, NULL);
 
                 nsAutoString dumpID(crashReporter->ChildDumpID());
@@ -1090,14 +1099,16 @@ ContentParent::RecvFirstIdle()
 
 bool
 ContentParent::RecvAudioChannelGetMuted(const AudioChannelType& aType,
-                                        const bool& aMozHidden,
+                                        const bool& aElementHidden,
+                                        const bool& aElementWasHidden,
                                         bool* aValue)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     *aValue = false;
     if (service) {
-        *aValue = service->GetMuted(aType, aMozHidden);
+        *aValue = service->GetMutedInternal(aType, mChildID,
+                                            aElementHidden, aElementWasHidden);
     }
     return true;
 }
@@ -1114,12 +1125,24 @@ ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType)
 }
 
 bool
-ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType)
+ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType,
+                                              const bool& aElementHidden)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->UnregisterType(aType, mChildID);
+        service->UnregisterType(aType, aElementHidden, mChildID);
+    }
+    return true;
+}
+
+bool
+ContentParent::RecvAudioChannelChangedNotification()
+{
+    nsRefPtr<AudioChannelService> service =
+        AudioChannelService::GetAudioChannelService();
+    if (service) {
+       service->SendAudioChannelChangedNotification();
     }
     return true;
 }
@@ -2147,6 +2170,11 @@ ContentParent::CheckPermission(const nsAString& aPermission)
   return AssertAppProcessPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
 }
 
+bool
+ContentParent::CheckManifestURL(const nsAString& aManifestURL)
+{
+  return AssertAppProcessManifestURL(this, NS_ConvertUTF16toUTF8(aManifestURL).get());
+}
 
 } // namespace dom
 } // namespace mozilla

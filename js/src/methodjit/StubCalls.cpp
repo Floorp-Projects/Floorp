@@ -100,9 +100,15 @@ stubs::Name(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::IntrinsicName(VMFrame &f, PropertyName *name)
+stubs::IntrinsicName(VMFrame &f, PropertyName *nameArg)
 {
     RootedValue rval(f.cx);
+
+    // PropertyNames are atoms and will never be allocated from the nursery,
+    // and the ones passed to this stub are referenced by the script so it will
+    // root them. The compacting GC will discard methodjit code.
+    SkipRoot skip(f.cx, &nameArg);
+    HandlePropertyName name = HandlePropertyName::fromMarkedLocation(&nameArg);
     if (!f.cx->global().get()->getIntrinsicValue(f.cx, name, &rval))
         THROW();
     f.regs.sp[0] = rval;
@@ -839,7 +845,10 @@ stubs::TriggerIonCompile(VMFrame &f)
             osrPC = NULL;
 
         RootedFunction scriptFunction(f.cx, script->function());
-        if (!ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing())) {
+        ion::MethodStatus compileStatus =
+            ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing());
+
+        if (compileStatus != ion::Method_Compiled) {
             if (f.cx->isExceptionPending())
                 THROW();
         }

@@ -573,10 +573,6 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 {
   status_t err;
 
-  if (!mAudioBuffer) {
-    return false;
-  }
-
   if (mAudioMetadataRead && aSeekTimeUs == -1) {
     // Use the data read into the buffer during metadata time
     err = OK;
@@ -595,7 +591,7 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 
   aSeekTimeUs = -1;
 
-  if (err == OK && mAudioBuffer->range_length() != 0) {
+  if (err == OK && mAudioBuffer && mAudioBuffer->range_length() != 0) {
     int64_t timeUs;
     if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs))
       return false;

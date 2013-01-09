@@ -150,9 +150,8 @@ class Marionette(object):
 
         if emulator:
             self.emulator.setup(self, gecko_path=gecko_path,
-                                load_early=load_early)
-            if busybox:
-                self.emulator.install_busybox(busybox)
+                                load_early=load_early,
+                                busybox=busybox)
 
     def __del__(self):
         if self.emulator:

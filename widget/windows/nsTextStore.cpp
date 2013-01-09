@@ -13,6 +13,9 @@
 #include "nscore.h"
 #include "nsTextStore.h"
 #include "nsWindow.h"
+#ifdef MOZ_METRO
+#include "winrt/MetroWidget.h"
+#endif
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
 #include "mozilla/Preferences.h"
@@ -339,7 +342,6 @@ nsTextStore::nsTextStore()
   mRefCnt = 1;
   mEditCookie = 0;
   mSinkMask = 0;
-  mWindow = nullptr;
   mLock = 0;
   mLockQueued = 0;
   mTextChange.acpStart = INT32_MAX;
@@ -351,8 +353,8 @@ nsTextStore::~nsTextStore()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore instance is destroyed, "
-     "mWindow=0x%p, mDocumentMgr=0x%p, mContext=0x%p",
-     this, mWindow, mDocumentMgr.get(), mContext.get()));
+     "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p",
+     this, mWidget, mDocumentMgr, mContext));
 
   if (mCompositionTimer) {
     mCompositionTimer->Cancel();
@@ -362,12 +364,12 @@ nsTextStore::~nsTextStore()
 }
 
 bool
-nsTextStore::Create(nsWindow* aWindow,
+nsTextStore::Create(nsWindowBase* aWidget,
                     IMEState::Enabled aIMEEnabled)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore::Create(aWindow=0x%p, aIMEEnabled=%s)",
-     this, aWindow, GetIMEEnabledName(aIMEEnabled)));
+    ("TSF: 0x%p nsTextStore::Create(aWidget=0x%p, aIMEEnabled=%s)",
+     this, aWidget, GetIMEEnabledName(aIMEEnabled)));
 
   if (mDocumentMgr) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -385,7 +387,8 @@ nsTextStore::Create(nsWindow* aWindow,
        "(0x%08X)", this, hr));
     return false;
   }
-  mWindow = aWindow;
+  mWidget = aWidget;
+
   // Create context and add it to document manager
   hr = mDocumentMgr->CreateContext(sTsfClientId, 0,
                                    static_cast<ITextStoreACP*>(this),
@@ -425,13 +428,13 @@ nsTextStore::Destroy(void)
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore::Destroy()", this));
 
-  if (mWindow) {
+  if (mWidget) {
     // When blurred, Tablet Input Panel posts "blur" messages
     // and try to insert text when the message is retrieved later.
     // But by that time the text store is already destroyed,
     // so try to get the message early
     MSG msg;
-    if (::PeekMessageW(&msg, mWindow->GetWindowHandle(),
+    if (::PeekMessageW(&msg, mWidget->GetWindowHandle(),
                        sFlushTIPInputMessage, sFlushTIPInputMessage,
                        PM_REMOVE)) {
       ::DispatchMessageW(&msg);
@@ -443,7 +446,7 @@ nsTextStore::Destroy(void)
     mDocumentMgr = NULL;
   }
   mSink = NULL;
-  mWindow = NULL;
+  mWidget = nullptr;
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p   nsTextStore::Destroy() succeeded", this));
@@ -756,9 +759,9 @@ nsTextStore::GetSelectionInternal(TS_SELECTION_ACP &aSelectionACP)
             "try to get normal selection...", this));
 
     // Construct and initialize an event to get selection info
-    nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, mWindow);
-    mWindow->InitEvent(event);
-    mWindow->DispatchWindowEvent(&event);
+    nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, mWidget);
+    mWidget->InitEvent(event);
+    mWidget->DispatchWindowEvent(&event);
     if (!event.mSucceeded) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::GetSelectionInternal() FAILED to "
@@ -1087,8 +1090,8 @@ nsTextStore::SendTextEventForCompositionString()
   }
 
   // Use NS_TEXT_TEXT to set composition string
-  nsTextEvent event(true, NS_TEXT_TEXT, mWindow);
-  mWindow->InitEvent(event);
+  nsTextEvent event(true, NS_TEXT_TEXT, mWidget);
+  mWidget->InitEvent(event);
 
   nsRefPtr<ITfRange> composingRange;
   hr = mCompositionView->GetRange(getter_AddRefs(composingRange));
@@ -1218,18 +1221,18 @@ nsTextStore::SendTextEventForCompositionString()
            ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
             "dispatching compositionupdate event...", this));
     nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                         mWindow);
-    mWindow->InitEvent(compositionUpdate);
+                                         mWidget);
+    mWidget->InitEvent(compositionUpdate);
     compositionUpdate.data = mCompositionString;
     mLastDispatchedCompositionString = mCompositionString;
-    mWindow->DispatchWindowEvent(&compositionUpdate);
+    mWidget->DispatchWindowEvent(&compositionUpdate);
   }
 
-  if (mWindow && !mWindow->Destroyed()) {
+  if (mWidget && !mWidget->Destroyed()) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
             "dispatching text event...", this));
-    mWindow->DispatchWindowEvent(&event);
+    mWidget->DispatchWindowEvent(&event);
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
@@ -1282,12 +1285,12 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     }
     return S_OK;
   } else {
-    nsSelectionEvent event(true, NS_SELECTION_SET, mWindow);
+    nsSelectionEvent event(true, NS_SELECTION_SET, mWidget);
     event.mOffset = pSelection->acpStart;
     event.mLength = uint32_t(pSelection->acpEnd - pSelection->acpStart);
     event.mReversed = pSelection->style.ase == TS_AE_START;
-    mWindow->InitEvent(event);
-    mWindow->DispatchWindowEvent(&event);
+    mWidget->InitEvent(event);
+    mWidget->DispatchWindowEvent(&event);
     if (!event.mSucceeded) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
          ("TSF: 0x%p   nsTextStore::SetSelectionInternal() FAILED due to "
@@ -1415,10 +1418,10 @@ nsTextStore::GetText(LONG acpStart,
       }
     }
     // Send NS_QUERY_TEXT_CONTENT to get text content
-    nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, mWindow);
-    mWindow->InitEvent(event);
+    nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, mWidget);
+    mWidget->InitEvent(event);
     event.InitForQueryTextContent(uint32_t(acpStart), length);
-    mWindow->DispatchWindowEvent(&event);
+    mWidget->DispatchWindowEvent(&event);
     if (!event.mSucceeded) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::GetText() FAILED due to "
@@ -1693,11 +1696,11 @@ nsTextStore::GetEndACP(LONG *pacp)
   }
 
   // Flattened text is retrieved and its length returned
-  nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, mWindow);
-  mWindow->InitEvent(event);
+  nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  mWidget->InitEvent(event);
   // Return entire text
   event.InitForQueryTextContent(0, INT32_MAX);
-  mWindow->DispatchWindowEvent(&event);
+  mWidget->DispatchWindowEvent(&event);
   if (!event.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::GetEndACP() FAILED due to "
@@ -1801,10 +1804,10 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   }
 
   // use NS_QUERY_TEXT_RECT to get rect in system, screen coordinates
-  nsQueryContentEvent event(true, NS_QUERY_TEXT_RECT, mWindow);
-  mWindow->InitEvent(event);
+  nsQueryContentEvent event(true, NS_QUERY_TEXT_RECT, mWidget);
+  mWidget->InitEvent(event);
   event.InitForQueryTextRect(acpStart, acpEnd - acpStart);
-  mWindow->DispatchWindowEvent(&event);
+  mWidget->DispatchWindowEvent(&event);
   if (!event.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::GetTextExt() FAILED due to "
@@ -1817,19 +1820,21 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   if (event.mReply.mRect.height <= 0)
     event.mReply.mRect.height = 1;
 
-  // convert to unclipped screen rect
-  nsWindow* refWindow = static_cast<nsWindow*>(
-      event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWindow);
-  // Result rect is in top level widget coordinates
-  refWindow = refWindow->GetTopLevelWindow(false);
-  if (!refWindow) {
-    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::GetTextExt() FAILED due to "
-            "no top level window", this));
-    return E_FAIL;
-  }
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+    // convert to unclipped screen rect
+    nsWindow* refWindow = static_cast<nsWindow*>(
+      event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWidget);
+    // Result rect is in top level widget coordinates
+    refWindow = refWindow->GetTopLevelWindow(false);
+    if (!refWindow) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::GetTextExt() FAILED due to "
+              "no top level window", this));
+      return E_FAIL;
+    }
 
-  event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
+    event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
+  }
 
   // get bounding screen rect to test for clipping
   if (!GetScreenExtInternal(*prc)) {
@@ -1902,9 +1907,9 @@ nsTextStore::GetScreenExtInternal(RECT &aScreenExt)
          ("TSF: 0x%p   nsTextStore::GetScreenExtInternal()", this));
 
   // use NS_QUERY_EDITOR_RECT to get rect in system, screen coordinates
-  nsQueryContentEvent event(true, NS_QUERY_EDITOR_RECT, mWindow);
-  mWindow->InitEvent(event);
-  mWindow->DispatchWindowEvent(&event);
+  nsQueryContentEvent event(true, NS_QUERY_EDITOR_RECT, mWidget);
+  mWidget->InitEvent(event);
+  mWidget->DispatchWindowEvent(&event);
   if (!event.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
@@ -1912,35 +1917,50 @@ nsTextStore::GetScreenExtInternal(RECT &aScreenExt)
     return false;
   }
 
-  nsWindow* refWindow = static_cast<nsWindow*>(
-      event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWindow);
-  // Result rect is in top level widget coordinates
-  refWindow = refWindow->GetTopLevelWindow(false);
-  if (!refWindow) {
-    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
-            "no top level window", this));
-    return false;
-  }
-
-  nsIntRect boundRect;
-  if (NS_FAILED(refWindow->GetClientBounds(boundRect))) {
-    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
-            "failed to get the client bounds", this));
-    return false;
-  }
-
-  boundRect.MoveTo(0, 0);
-
-  // Clip frame rect to window rect
-  boundRect.IntersectRect(event.mReply.mRect, boundRect);
-  if (!boundRect.IsEmpty()) {
-    boundRect.MoveBy(refWindow->WidgetToScreenOffset());
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+    nsIntRect boundRect;
+    if (NS_FAILED(mWidget->GetClientBounds(boundRect))) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
+              "failed to get the client bounds", this));
+      return false;
+    }
     ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
               boundRect.XMost(), boundRect.YMost());
   } else {
-    ::SetRectEmpty(&aScreenExt);
+    NS_ASSERTION(XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop,
+                 "environment isn't WindowsEnvironmentType_Desktop!");
+    nsWindow* refWindow = static_cast<nsWindow*>(
+      event.mReply.mFocusedWidget ?
+        event.mReply.mFocusedWidget : mWidget);
+    // Result rect is in top level widget coordinates
+    refWindow = refWindow->GetTopLevelWindow(false);
+    if (!refWindow) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
+              "no top level window", this));
+      return false;
+    }
+
+    nsIntRect boundRect;
+    if (NS_FAILED(refWindow->GetClientBounds(boundRect))) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
+              "failed to get the client bounds", this));
+      return false;
+    }
+
+    boundRect.MoveTo(0, 0);
+
+    // Clip frame rect to window rect
+    boundRect.IntersectRect(event.mReply.mRect, boundRect);
+    if (!boundRect.IsEmpty()) {
+      boundRect.MoveBy(refWindow->WidgetToScreenOffset());
+      ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
+                boundRect.XMost(), boundRect.YMost());
+    } else {
+      ::SetRectEmpty(&aScreenExt);
+    }
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -1956,8 +1976,9 @@ nsTextStore::GetWnd(TsViewCookie vcView,
                     HWND *phwnd)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p nsTextStore::GetWnd(vcView=%ld, phwnd=0x%p), mWindow=0x%p",
-          this, vcView, phwnd, mWindow));
+         ("TSF: 0x%p nsTextStore::GetWnd(vcView=%ld, phwnd=0x%p), "
+          "mWidget=0x%p",
+          this, vcView, phwnd, mWidget));
 
   if (vcView != TEXTSTORE_DEFAULT_VIEW) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -1973,7 +1994,7 @@ nsTextStore::GetWnd(TsViewCookie vcView,
     return E_INVALIDARG;
   }
 
-  *phwnd = mWindow->GetWindowHandle();
+  *phwnd = mWidget->GetWindowHandle();
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::GetWnd() succeeded: *phwnd=0x%p",
@@ -2135,10 +2156,11 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
             "dispatching a compositionstart event...", this));
-    nsCompositionEvent compStartEvent(true, NS_COMPOSITION_START, mWindow);
-    mWindow->InitEvent(compStartEvent);
-    mWindow->DispatchWindowEvent(&compStartEvent);
-    if (!mWindow || mWindow->Destroyed()) {
+    nsCompositionEvent compStartEvent(true, NS_COMPOSITION_START,
+                                      mWidget);
+    mWidget->InitEvent(compStartEvent);
+    mWidget->DispatchWindowEvent(&compStartEvent);
+    if (!mWidget || mWidget->Destroyed()) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
               "due to the widget destroyed by compositionstart event", this));
@@ -2149,10 +2171,11 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
             "dispatching a compositionupdate event...", this));
-      nsCompositionEvent compUpdateEvent(true, NS_COMPOSITION_UPDATE, mWindow);
+      nsCompositionEvent compUpdateEvent(true, NS_COMPOSITION_UPDATE,
+                                         mWidget);
       compUpdateEvent.data = aInsertStr;
-      mWindow->DispatchWindowEvent(&compUpdateEvent);
-      if (!mWindow || mWindow->Destroyed()) {
+      mWidget->DispatchWindowEvent(&compUpdateEvent);
+      if (!mWidget || mWidget->Destroyed()) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
                ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
                 "FAILED due to the widget destroyed by compositionupdate event",
@@ -2164,13 +2187,13 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
             "dispatching a text event...", this));
-    nsTextEvent textEvent(true, NS_TEXT_TEXT, mWindow);
-    mWindow->InitEvent(textEvent);
+    nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+    mWidget->InitEvent(textEvent);
     textEvent.theText = aInsertStr;
     textEvent.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
                                        NS_LITERAL_STRING("\n"));
-    mWindow->DispatchWindowEvent(&textEvent);
-    if (!mWindow || mWindow->Destroyed()) {
+    mWidget->DispatchWindowEvent(&textEvent);
+    if (!mWidget || mWidget->Destroyed()) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
               "due to the widget destroyed by text event", this));
@@ -2180,10 +2203,10 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
             "dispatching a compositionend event...", this));
-    nsCompositionEvent compEndEvent(true, NS_COMPOSITION_END, mWindow);
+    nsCompositionEvent compEndEvent(true, NS_COMPOSITION_END, mWidget);
     compEndEvent.data = aInsertStr;
-    mWindow->DispatchWindowEvent(&compEndEvent);
-    if (!mWindow || mWindow->Destroyed()) {
+    mWidget->DispatchWindowEvent(&compEndEvent);
+    if (!mWidget || mWidget->Destroyed()) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
              ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
               "due to the widget destroyed by compositionend event", this));
@@ -2209,9 +2232,9 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() succeeded: "
-          "mWindow=0x%p, mWindow->Destroyed()=%s, aTextChange={ acpStart=%ld, "
+          "mWidget=0x%p, mWidget->Destroyed()=%s, aTextChange={ acpStart=%ld, "
           "acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, mWindow, GetBoolName(mWindow ? mWindow->Destroyed() : true),
+          this, mWidget, GetBoolName(mWidget ? mWidget->Destroyed() : true),
           aTextChange ? aTextChange->acpStart : 0,
           aTextChange ? aTextChange->acpOldEnd : 0,
           aTextChange ? aTextChange->acpNewEnd : 0));
@@ -2264,12 +2287,12 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
           "dispatching selectionset event..."));
 
   // Select composition range so the new composition replaces the range
-  nsSelectionEvent selEvent(true, NS_SELECTION_SET, mWindow);
-  mWindow->InitEvent(selEvent);
+  nsSelectionEvent selEvent(true, NS_SELECTION_SET, mWidget);
+  mWidget->InitEvent(selEvent);
   selEvent.mOffset = uint32_t(mCompositionStart);
   selEvent.mLength = uint32_t(mCompositionLength);
   selEvent.mReversed = false;
-  mWindow->DispatchWindowEvent(&selEvent);
+  mWidget->DispatchWindowEvent(&selEvent);
   if (!selEvent.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
@@ -2278,9 +2301,9 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   }
 
   // Set up composition
-  nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, mWindow);
-  mWindow->InitEvent(queryEvent);
-  mWindow->DispatchWindowEvent(&queryEvent);
+  nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, mWidget);
+  mWidget->InitEvent(queryEvent);
+  mWidget->DispatchWindowEvent(&queryEvent);
   if (!queryEvent.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
@@ -2299,9 +2322,9 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
     mCompositionSelection.style.ase = TS_AE_END;
     mCompositionSelection.style.fInterimChar = FALSE;
   }
-  nsCompositionEvent event(true, NS_COMPOSITION_START, mWindow);
-  mWindow->InitEvent(event);
-  mWindow->DispatchWindowEvent(&event);
+  nsCompositionEvent event(true, NS_COMPOSITION_START, mWidget);
+  mWidget->InitEvent(event);
+  mWidget->DispatchWindowEvent(&event);
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() succeeded: "
@@ -2476,12 +2499,12 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
            ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
             "dispatching compositionupdate event...", this));
     nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                         mWindow);
-    mWindow->InitEvent(compositionUpdate);
+                                         mWidget);
+    mWidget->InitEvent(compositionUpdate);
     compositionUpdate.data = mCompositionString;
     mLastDispatchedCompositionString = mCompositionString;
-    mWindow->DispatchWindowEvent(&compositionUpdate);
-    if (!mWindow || mWindow->Destroyed()) {
+    mWidget->DispatchWindowEvent(&compositionUpdate);
+    if (!mWidget || mWidget->Destroyed()) {
       PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
              ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
               "succeeded, but the widget has gone", this));
@@ -2494,14 +2517,14 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
           "dispatching text event...", this));
 
   // Use NS_TEXT_TEXT to commit composition string
-  nsTextEvent textEvent(true, NS_TEXT_TEXT, mWindow);
-  mWindow->InitEvent(textEvent);
+  nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+  mWidget->InitEvent(textEvent);
   textEvent.theText = mCompositionString;
   textEvent.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
                                      NS_LITERAL_STRING("\n"));
-  mWindow->DispatchWindowEvent(&textEvent);
+  mWidget->DispatchWindowEvent(&textEvent);
 
-  if (!mWindow || mWindow->Destroyed()) {
+  if (!mWidget || mWidget->Destroyed()) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
             "succeeded, but the widget has gone", this));
@@ -2512,12 +2535,12 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
          ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
           "dispatching compositionend event...", this));
 
-  nsCompositionEvent event(true, NS_COMPOSITION_END, mWindow);
+  nsCompositionEvent event(true, NS_COMPOSITION_END, mWidget);
   event.data = mLastDispatchedCompositionString;
-  mWindow->InitEvent(event);
-  mWindow->DispatchWindowEvent(&event);
+  mWidget->InitEvent(event);
+  mWidget->DispatchWindowEvent(&event);
 
-  if (!mWindow || mWindow->Destroyed()) {
+  if (!mWidget || mWidget->Destroyed()) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
             "succeeded, but the widget has gone", this));
@@ -2538,22 +2561,24 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
 
 // static
 nsresult
-nsTextStore::OnFocusChange(bool aFocus,
-                           nsWindow* aWindow,
+nsTextStore::OnFocusChange(bool aGotFocus,
+                           nsWindowBase* aFocusedWidget,
                            IMEState::Enabled aIMEEnabled)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: nsTextStore::OnFocusChange(aFocus=%s, aWindow=0x%p, "
-          "aIMEEnabled=%s), sTsfThreadMgr=0x%p, sTsfTextStore=0x%p",
-          GetBoolName(aFocus), aWindow, GetIMEEnabledName(aIMEEnabled),
-          sTsfThreadMgr, sTsfTextStore));
+         ("TSF: nsTextStore::OnFocusChange(aGotFocus=%s, "
+          "aFocusedWidget=0x%p, aIMEEnabled=%s), sTsfThreadMgr=0x%p, "
+          "sTsfTextStore=0x%p",
+          GetBoolName(aGotFocus), aFocusedWidget,
+          GetIMEEnabledName(aIMEEnabled), sTsfThreadMgr, sTsfTextStore));
 
   // no change notifications if TSF is disabled
-  if (!sTsfThreadMgr || !sTsfTextStore)
+  if (!sTsfThreadMgr || !sTsfTextStore) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  if (aFocus) {
-    bool bRet = sTsfTextStore->Create(aWindow, aIMEEnabled);
+  if (aGotFocus) {
+    bool bRet = sTsfTextStore->Create(aFocusedWidget, aIMEEnabled);
     NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(sTsfTextStore->mDocumentMgr, NS_ERROR_FAILURE);
     HRESULT hr = sTsfThreadMgr->SetFocus(sTsfTextStore->mDocumentMgr);
@@ -2594,7 +2619,7 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
     mTextChange.acpStart = NS_MIN(mTextChange.acpStart, LONG(aStart));
     mTextChange.acpOldEnd = NS_MAX(mTextChange.acpOldEnd, LONG(aOldEnd));
     mTextChange.acpNewEnd = NS_MAX(mTextChange.acpNewEnd, LONG(aNewEnd));
-    ::PostMessageW(mWindow->GetWindowHandle(),
+    ::PostMessageW(mWidget->GetWindowHandle(),
                    WM_USER_TSF_TEXTCHANGE, 0, 0);
   }
   return NS_OK;

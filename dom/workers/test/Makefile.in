@@ -106,6 +106,8 @@ MOCHITEST_FILES = \
   transferable_worker.js \
   test_errorwarning.html \
   errorwarning_worker.js \
+  test_contentWorker.html \
+  content_worker.js \
   $(NULL)
 
 _SUBDIRMOCHITEST_FILES = \

@@ -176,6 +176,9 @@ function checkSet()
     // the corresponding date string is the empty string
     [ -62135596800001,   "" ],
     // Invalid dates.
+    // We set the value to something different than the empty string because
+    // NaN should set the value to the empty string.
+    [ 86400000,          "1970-01-02" ],
     [ NaN,               "" ],
   ];
 
@@ -186,9 +189,61 @@ function checkSet()
                                 + data[1]);
   }
 
+  element.value = "test";
   element.valueAsDate = null;
   is(element.value, "", "valueAsDate should set the value to the empty string");
 
+  element.value = "test";
+  element.valueAsDate = undefined;
+  is(element.value, "", "valueAsDate should set the value to the empty string");
+
+  var illegalValues = [
+    "foobar", 42, {}, function() { return 42; }, function() { return Date(); }
+  ];
+
+  for (value of illegalValues) {
+    try {
+      var caught = false;
+      element.valueAsDate = value;
+    } catch(e) {
+      caught = true;
+    }
+    ok(caught, "Assigning " + value + " to .valueAsDate should throw");
+  }
+}
+
+function checkWithBustedPrototype()
+{
+  var element = document.createElement('input');
+  element.type = 'date';
+
+  var witnessDate = new Date();
+
+  Date.prototype.getUTCFullYear = function() { return {}; };
+  Date.prototype.getUTCMonth = function() { return {}; };
+  Date.prototype.getUTCDate = function() { return {}; };
+  Date.prototype.getTime = function() { return {}; };
+  Date.prototype.setUTCFullYear = function(y,m,d) { };
+
+  element.valueAsDate = new Date();
+
+  todo_isnot(element.valueAsDate, null, ".valueAsDate should not return null");
+  // TODO: check the Date object value (UTCFullYear, UTCMonth and UTCDate)
+  // when .valueAsDate will stop returning null.
+
+  // Same test as above but using NaN instead of {}.
+
+  Date.prototype.getUTCFullYear = function() { return NaN; };
+  Date.prototype.getUTCMonth = function() { return NaN; };
+  Date.prototype.getUTCDate = function() { return NaN; };
+  Date.prototype.getTime = function() { return NaN; };
+  Date.prototype.setUTCFullYear = function(y,m,d) { };
+
+  element.valueAsDate = new Date();
+
+  todo_isnot(element.valueAsDate, null, ".valueAsDate should not return null");
+  // TODO: check the Date object value (UTCFullYear, UTCMonth and UTCDate)
+  // when .valueAsDate will stop returning null.
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -196,6 +251,7 @@ SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function(
 checkAvailability();
 checkGet();
 checkSet();
+checkWithBustedPrototype();
 
 SimpleTest.finish();
 });

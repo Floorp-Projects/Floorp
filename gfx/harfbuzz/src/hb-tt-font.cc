@@ -68,7 +68,7 @@ _hb_tt_font_destroy (hb_tt_font_t *tt)
 static inline const hhea&
 _get_hhea (hb_face_t *face)
 {
-//  return likely (face->tt && face->tt->hhea) ? *face->tt->hhea : Null(hhea);
+  return likely (face->tt && face->tt->hhea) ? *face->tt->hhea : Null(hhea);
 }
 
 

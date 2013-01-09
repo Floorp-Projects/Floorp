@@ -1,0 +1,110 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=820506
+-->
+<head>
+  <title>Test pointer events with clipPath</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var svgDoc = document.getElementById('svg');
+  var div = document.getElementById("div");
+  // Get the coords of the origin of the SVG canvas:
+  var originX = div.offsetLeft;
+  var originY = div.offsetTop;
+  var r1 = document.getElementById('r1');
+  var r2 = document.getElementById('r2');
+  var element;
+
+  // Test r1 just outsite the clip area:
+
+  element = document.elementFromPoint(originX + 19, originY + 19);
+  is(element, background, 'Should not hit top-left of r1');
+
+  element = document.elementFromPoint(originX + 101, originY + 19);
+  is(element, background, 'Should not hit top-right of r1');
+
+  element = document.elementFromPoint(originX + 101, originY + 101);
+  is(element, background, 'Should not hit bottom-right of r1');
+
+  element = document.elementFromPoint(originX + 19, originY + 101);
+  is(element, background, 'Should not hit bottom-left of r1');
+
+  // Test r1 just inside the clip area:
+
+  element = document.elementFromPoint(originX + 21, originY + 21);
+  is(element, r1, 'Should hit top-left of r1');
+
+  element = document.elementFromPoint(originX + 99, originY + 21);
+  is(element, r1, 'Should hit top-right of r1');
+
+  element = document.elementFromPoint(originX + 99, originY + 99);
+  is(element, r1, 'Should hit bottom-right of r1');
+
+  element = document.elementFromPoint(originX + 21, originY + 99);
+  is(element, r1, 'Should hit bottom-left of r1');
+
+  // Test r2 just outsite the clip area:
+
+  element = document.elementFromPoint(originX + 109, originY + 19);
+  is(element, background, 'Should not hit top-left of r2');
+
+  element = document.elementFromPoint(originX + 201, originY + 19);
+  is(element, background, 'Should not hit top-right of r2');
+
+  element = document.elementFromPoint(originX + 201, originY + 101);
+  is(element, background, 'Should not hit bottom-right of r2');
+
+  element = document.elementFromPoint(originX + 109, originY + 101);
+  is(element, background, 'Should not hit bottom-left of r2');
+
+  // Test r2 just inside the clip area:
+
+  element = document.elementFromPoint(originX + 121, originY + 21);
+  is(element, r2, 'Should hit top-left of r2');
+
+  element = document.elementFromPoint(originX + 199, originY + 21);
+  is(element, r2, 'Should hit top-right of r2');
+
+  element = document.elementFromPoint(originX + 199, originY + 99);
+  is(element, r2, 'Should hit bottom-right of r2');
+
+  element = document.elementFromPoint(originX + 121, originY + 99);
+  is(element, r2, 'Should hit bottom-left of r2');
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500174">Mozilla Bug 500174</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div">
+  </div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg">
+    <clipPath id="cp1" clipPathUnits="userSpaceOnUse">
+      <rect x="20" y="20" width="80" height="80"/>
+    </clipPath>
+    <clipPath id="cp2" clipPathUnits="objectBoundingBox">
+      <rect x="0.1" y="0.1" width="0.8" height="0.8"/>
+    </clipPath>
+    <rect id="background" width="100%" height="100%" fill="blue"/>
+    <rect id="r1" x="10" y="10" width="100" height="100" clip-path="url(#cp1)"/>
+    <rect id="r2" x="110" y="10" width="100" height="100" clip-path="url(#cp2)"/>
+  </svg>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

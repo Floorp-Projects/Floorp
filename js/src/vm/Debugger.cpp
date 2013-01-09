@@ -2312,18 +2312,18 @@ class Debugger::ScriptQuery {
      * Search all relevant compartments and the stack for scripts matching
      * this query, and append the matching scripts to |vector|.
      */
-    bool findScripts(AutoScriptVector *vector) {
-        AutoAssertNoGC nogc;
-
+    bool findScripts(AutoScriptVector *v) {
         if (!prepareQuery())
             return false;
 
         /* Search each compartment for debuggee scripts. */
+        vector = v;
+        oom = false;
         for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
-            for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-                RawScript script = i.get<JSScript>();
-                if (!consider(script, vector))
-                    return false;
+            IterateCells(cx->runtime, r.front(), gc::FINALIZE_SCRIPT, this, considerCell);
+            if (oom) {
+                js_ReportOutOfMemory(cx);
+                return false;
             }
         }
 
@@ -2337,7 +2337,7 @@ class Debugger::ScriptQuery {
             for (CompartmentToScriptMap::Range r = innermostForCompartment.all();
                  !r.empty();
                  r.popFront()) {
-                if (!vector->append(r.front().value)) {
+                if (!v->append(r.front().value)) {
                     js_ReportOutOfMemory(cx);
                     return false;
                 }
@@ -2385,6 +2385,12 @@ class Debugger::ScriptQuery {
      */
     CompartmentToScriptMap innermostForCompartment;
 
+    /* The vector to which to append the scripts found. */
+    AutoScriptVector *vector;
+
+    /* Indicates whether OOM has occurred while matching. */
+    bool oom;
+
     /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
     bool matchSingleGlobal(GlobalObject *global) {
         JS_ASSERT(compartments.count() == 0);
@@ -2425,22 +2431,30 @@ class Debugger::ScriptQuery {
         return true;
     }
 
+    static void considerCell(JSRuntime *rt, void *data, void *thing,
+                             JSGCTraceKind traceKind, size_t thingSize) {
+        ScriptQuery *self = static_cast<ScriptQuery *>(data);
+        self->consider(static_cast<JSScript *>(thing));
+    }
+
     /*
      * If |script| matches this query, append it to |vector| or place it in
-     * |innermostForCompartment|, as appropriate. Return true if no error
-     * occurs, false if an error occurs.
+     * |innermostForCompartment|, as appropriate. Set |oom| if an out of memory
+     * condition occurred.
      */
-    bool consider(JSScript *script, AutoScriptVector *vector) {
+    void consider(JSScript *script) {
+        if (oom)
+            return;
         JSCompartment *compartment = script->compartment();
         if (!compartments.has(compartment))
-            return true;
+            return;
         if (urlCString.ptr()) {
             if (!script->filename || strcmp(script->filename, urlCString.ptr()) != 0)
-                return true;
+                return;
         }
         if (hasLine) {
             if (line < script->lineno || script->lineno + js_GetScriptLineExtent(script) < line)
-                return true;
+                return;
         }
         if (innermost) {
             /*
@@ -2467,19 +2481,19 @@ class Debugger::ScriptQuery {
                  * compartment, so it is thus the innermost such script.
                  */
                 if (!innermostForCompartment.add(p, compartment, script)) {
-                    js_ReportOutOfMemory(cx);
-                    return false;
+                    oom = true;
+                    return;
                 }
             }
         } else {
             /* Record this matching script in the results vector. */
             if (!vector->append(script)) {
-                js_ReportOutOfMemory(cx);
-                return false;
+                oom = true;
+                return;
             }
         }
 
-        return true;
+        return;
     }
 };
 

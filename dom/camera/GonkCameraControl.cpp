@@ -282,6 +282,7 @@ nsGonkCameraControl::Init()
 nsGonkCameraControl::~nsGonkCameraControl()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, mHwHandle = %d\n", __func__, __LINE__, this, mHwHandle);
+
   ReleaseHardwareImpl(nullptr);
   if (mRwLock) {
     PRRWLock* lock = mRwLock;
@@ -622,7 +623,8 @@ nsGonkCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStrea
   SetPreviewSize(aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height);
   DOM_CAMERA_LOGI("picture preview: wanted %d x %d, got %d x %d (%d fps, format %d)\n", aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height, mWidth, mHeight, mFps, mFormat);
 
-  nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = new GetPreviewStreamResult(this, mWidth, mHeight, mFps, aGetPreviewStream->mOnSuccessCb, mWindowId);
+  nsMainThreadPtrHandle<nsICameraPreviewStreamCallback> onSuccess = aGetPreviewStream->mOnSuccessCb;
+  nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = new GetPreviewStreamResult(this, mWidth, mHeight, mFps, onSuccess, mWindowId);
   return NS_DispatchToMainThread(getPreviewStreamResult);
 }
 
@@ -678,16 +680,16 @@ nsGonkCameraControl::StopPreviewImpl(StopPreviewTask* aStopPreview)
 nsresult
 nsGonkCameraControl::AutoFocusImpl(AutoFocusTask* aAutoFocus)
 {
-  nsCOMPtr<nsICameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb;
-  if (cb) {
+  nsMainThreadPtrHandle<nsICameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb;
+  if (cb.get()) {
     /**
      * We already have a callback, so someone has already
      * called autoFocus() -- cancel it.
      */
     mAutoFocusOnSuccessCb = nullptr;
-    nsCOMPtr<nsICameraErrorCallback> ecb = mAutoFocusOnErrorCb;
+    nsMainThreadPtrHandle<nsICameraErrorCallback> ecb = mAutoFocusOnErrorCb;
     mAutoFocusOnErrorCb = nullptr;
-    if (ecb) {
+    if (ecb.get()) {
       nsresult rv = NS_DispatchToMainThread(new CameraErrorResult(ecb, NS_LITERAL_STRING("CANCELLED"), mWindowId));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -746,16 +748,16 @@ nsGonkCameraControl::SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHei
 nsresult
 nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
 {
-  nsCOMPtr<nsICameraTakePictureCallback> cb = mTakePictureOnSuccessCb;
-  if (cb) {
+  nsMainThreadPtrHandle<nsICameraTakePictureCallback> cb = mTakePictureOnSuccessCb;
+  if (cb.get()) {
     /**
      * We already have a callback, so someone has already
      * called TakePicture() -- cancel it.
      */
     mTakePictureOnSuccessCb = nullptr;
-    nsCOMPtr<nsICameraErrorCallback> ecb = mTakePictureOnErrorCb;
+    nsMainThreadPtrHandle<nsICameraErrorCallback> ecb = mTakePictureOnErrorCb;
     mTakePictureOnErrorCb = nullptr;
-    if (ecb) {
+    if (ecb.get()) {
       nsresult rv = NS_DispatchToMainThread(new CameraErrorResult(ecb, NS_LITERAL_STRING("CANCELLED"), mWindowId));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -889,6 +891,8 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
 
   if (mRecorder->start() != OK) {
     DOM_CAMERA_LOGE("mRecorder->start() failed\n");
+    // important: we MUST destroy the recorder if start() fails!
+    mRecorder = nullptr;
     return NS_ERROR_FAILURE;
   }
 
@@ -928,7 +932,6 @@ nsGonkCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
   NS_ENSURE_TRUE(mRecorder, NS_OK);
 
   mRecorder->stop();
-  delete mRecorder;
   mRecorder = nullptr;
 
   // notify DeviceStorage that the new video file is closed and ready
@@ -974,8 +977,7 @@ nsGonkCameraControl::TakePictureComplete(uint8_t* aData, uint32_t aLength)
   memcpy(data, aData, aLength);
 
   // TODO: see bug 779144.
-  nsIDOMBlob* blob = new nsDOMMemoryFile(static_cast<void*>(data), static_cast<uint64_t>(aLength), NS_LITERAL_STRING("image/jpeg"));
-  nsCOMPtr<nsIRunnable> takePictureResult = new TakePictureResult(blob, mTakePictureOnSuccessCb, mWindowId);
+  nsCOMPtr<nsIRunnable> takePictureResult = new TakePictureResult(data, aLength, NS_LITERAL_STRING("image/jpeg"), mTakePictureOnSuccessCb, mWindowId);
   /**
    * Remember to set these to null so that we don't hold any extra
    * references to our document's window.
@@ -1331,9 +1333,9 @@ nsGonkCameraControl::ReleaseHardwareImpl(ReleaseHardwareTask* aReleaseHardware)
   StopPreviewInternal(true /* forced */);
 
   // release the hardware handle
-  GonkCameraHardware::ReleaseHandle(mHwHandle);
+  GonkCameraHardware::ReleaseHandle(mHwHandle, true /* unregister */);
 
-  if (aReleaseHardware && aReleaseHardware->mOnSuccessCb) {
+  if (aReleaseHardware && aReleaseHardware->mOnSuccessCb.get()) {
     nsCOMPtr<nsIRunnable> releaseHardwareResult = new ReleaseHardwareResult(aReleaseHardware->mOnSuccessCb, mWindowId);
     return NS_DispatchToMainThread(releaseHardwareResult);
   }

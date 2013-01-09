@@ -674,6 +674,12 @@
       <property name="ownerWindow"
                 readonly="true"
                 onget="return window;"/>
+
+      <field name="_active">true</field>
+      <property name="active"
+                onget="return this._active"
+                onset="return this._active = val"/>
+
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[

@@ -1379,8 +1379,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     if (checkUndisplayed && mUndisplayedMap) {
       UndisplayedNode* undisplayed =
         mUndisplayedMap->GetFirstNode(undisplayedParent);
-      for (AncestorFilter::AutoAncestorPusher
-             pushAncestor(undisplayed, aTreeMatchContext.mAncestorFilter,
+      for (TreeMatchContext::AutoAncestorPusher
+             pushAncestor(undisplayed, aTreeMatchContext,
                           undisplayedParent ? undisplayedParent->AsElement()
                                             : nullptr);
            undisplayed; undisplayed = undisplayed->mNext) {
@@ -1536,9 +1536,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 
       // now do children
       nsIFrame::ChildListIterator lists(aFrame);
-      for (AncestorFilter::AutoAncestorPusher
+      for (TreeMatchContext::AutoAncestorPusher
              pushAncestor(!lists.IsDone(),
-                          aTreeMatchContext.mAncestorFilter,
+                          aTreeMatchContext,
                           content && content->IsElement() ? content->AsElement()
                                                           : nullptr);
            !lists.IsDone(); lists.Next()) {
@@ -1680,7 +1680,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
   nsIContent *parent = content ? content->GetParent() : nullptr;
   Element *parentElement =
     parent && parent->IsElement() ? parent->AsElement() : nullptr;
-  treeMatchContext.mAncestorFilter.Init(parentElement);
+  treeMatchContext.InitAncestors(parentElement);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   do {
     // Outer loop over special siblings

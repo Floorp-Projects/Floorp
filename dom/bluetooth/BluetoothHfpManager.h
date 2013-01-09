@@ -59,6 +59,7 @@ private:
   int mCurrentVgm;
   int mCurrentCallIndex;
   bool mCLIP;
+  bool mCMER;
   bool mReceiveVgsFlag;
   nsString mDevicePath;
   nsString mMsisdn;

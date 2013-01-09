@@ -316,26 +316,17 @@ CellBroadcastEtwsInfo.prototype = {
 };
 
 function RILContentHelper() {
-  this.iccInfo = new MobileICCInfo();
-  this.voiceConnectionInfo = new MobileConnectionInfo();
-  this.dataConnectionInfo = new MobileConnectionInfo();
+  this.rilContext = {
+    cardState:            RIL.GECKO_CARDSTATE_UNAVAILABLE,
+    iccInfo:              new MobileICCInfo(),
+    voiceConnectionInfo:  new MobileConnectionInfo(),
+    dataConnectionInfo:   new MobileConnectionInfo()
+  };
   this.voicemailInfo = new VoicemailInfo();
 
   this.initRequests();
   this.initMessageListener(RIL_IPC_MSG_NAMES);
   Services.obs.addObserver(this, "xpcom-shutdown", false);
-
-  // Request initial context.
-  let rilContext = cpmm.sendSyncMessage("RIL:GetRilContext")[0];
-
-  if (!rilContext) {
-    debug("Received null rilContext from chrome process.");
-    return;
-  }
-  this.cardState = rilContext.cardState;
-  this.updateICCInfo(rilContext.icc, this.iccInfo);
-  this.updateConnectionInfo(rilContext.voice, this.voiceConnectionInfo);
-  this.updateConnectionInfo(rilContext.data, this.dataConnectionInfo);
 }
 
 RILContentHelper.prototype = {
@@ -404,11 +395,46 @@ RILContentHelper.prototype = {
 
   // nsIRILContentHelper
 
-  cardState:            RIL.GECKO_CARDSTATE_UNAVAILABLE,
-  iccInfo:              null,
-  voiceConnectionInfo:  null,
-  dataConnectionInfo:   null,
   networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
+
+  rilContext: null,
+
+  getRilContext: function getRilContext() {
+    // Update ril context by sending IPC message to chrome only when the first
+    // time we require it. The information will be updated by following info
+    // changed messages.
+    this.getRilContext = function getRilContext() {
+      return this.rilContext;
+    };
+
+    let rilContext = cpmm.sendSyncMessage("RIL:GetRilContext")[0];
+    if (!rilContext) {
+      debug("Received null rilContext from chrome process.");
+      return;
+    }
+    this.rilContext.cardState = rilContext.cardState;
+    this.updateICCInfo(rilContext.icc, this.rilContext.iccInfo);
+    this.updateConnectionInfo(rilContext.voice, this.rilContext.voiceConnectionInfo);
+    this.updateConnectionInfo(rilContext.data, this.rilContext.dataConnectionInfo);
+
+    return this.rilContext;
+  },
+
+  get iccInfo() {
+    return this.getRilContext().iccInfo;
+  },
+
+  get voiceConnectionInfo() {
+    return this.getRilContext().voiceConnectionInfo;
+  },
+
+  get dataConnectionInfo() {
+    return this.getRilContext().dataConnectionInfo;
+  },
+
+  get cardState() {
+    return this.getRilContext().cardState;
+  },
 
   /**
    * The network that is currently trying to be selected (or "automatic").
@@ -457,7 +483,7 @@ RILContentHelper.prototype = {
     let requestId = this.getRequestId(request);
 
     if (this.networkSelectionMode == RIL.GECKO_NETWORK_SELECTION_MANUAL
-        && this.voiceConnectionInfo.network === network) {
+        && this.rilContext.voiceConnectionInfo.network === network) {
 
       // Already manually selected this network, so schedule
       // onsuccess to be fired on the next tick
@@ -876,26 +902,26 @@ RILContentHelper.prototype = {
     debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
     switch (msg.name) {
       case "RIL:CardStateChanged":
-        if (this.cardState != msg.json.cardState) {
-          this.cardState = msg.json.cardState;
+        if (this.rilContext.cardState != msg.json.cardState) {
+          this.rilContext.cardState = msg.json.cardState;
           Services.obs.notifyObservers(null, kCardStateChangedTopic, null);
         }
         break;
       case "RIL:IccInfoChanged":
-        this.updateICCInfo(msg.json, this.iccInfo);
-        if (this.iccInfo.mcc) {
+        this.updateICCInfo(msg.json, this.rilContext.iccInfo);
+        if (this.rilContext.iccInfo.mcc) {
           try {
-            Services.prefs.setIntPref("ril.lastKnownMcc", this.iccInfo.mcc);
+            Services.prefs.setIntPref("ril.lastKnownMcc", this.rilContext.iccInfo.mcc);
           } catch (e) {}
         }
         Services.obs.notifyObservers(null, kIccInfoChangedTopic, null);
         break;
       case "RIL:VoiceInfoChanged":
-        this.updateConnectionInfo(msg.json, this.voiceConnectionInfo);
+        this.updateConnectionInfo(msg.json, this.rilContext.voiceConnectionInfo);
         Services.obs.notifyObservers(null, kVoiceChangedTopic, null);
         break;
       case "RIL:DataInfoChanged":
-        this.updateConnectionInfo(msg.json, this.dataConnectionInfo);
+        this.updateConnectionInfo(msg.json, this.rilContext.dataConnectionInfo);
         Services.obs.notifyObservers(null, kDataChangedTopic, null);
         break;
       case "RIL:EnumerateCalls":
@@ -972,7 +998,7 @@ RILContentHelper.prototype = {
         Services.obs.notifyObservers(null, kStkSessionEndTopic, null);
         break;
       case "RIL:DataError":
-        this.updateConnectionInfo(msg.json, this.dataConnectionInfo);
+        this.updateConnectionInfo(msg.json, this.rilContext.dataConnectionInfo);
         Services.obs.notifyObservers(null, kDataErrorTopic, msg.json.error);
         break;
       case "RIL:GetCallForwardingOption":

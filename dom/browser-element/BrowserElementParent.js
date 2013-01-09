@@ -224,6 +224,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   addMessageListener('fullscreen-origin-change', this._remoteFullscreenOriginChange);
   addMessageListener('rollback-fullscreen', this._remoteFrameFullscreenReverted);
   addMessageListener('exit-fullscreen', this._exitFullscreen);
+  addMessageListener('got-visible', this._gotDOMRequestResult);
 
   let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   os.addObserver(this, 'ask-children-to-exit-fullscreen', /* ownsWeak = */ true);
@@ -247,6 +248,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
 
   // Define methods on the frame element.
   defineMethod('setVisible', this._setVisible);
+  defineDOMRequestMethod('getVisible', 'get-visible');
   defineMethod('sendMouseEvent', this._sendMouseEvent);
 
   // 0 = disabled, 1 = enabled, 2 - auto detect

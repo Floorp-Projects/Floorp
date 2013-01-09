@@ -356,7 +356,7 @@ public:
     nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
       AllocateInputPort(stream, MediaInputPort::FLAG_BLOCK_OUTPUT);
     trackunion->mSourceStream = stream;
-    trackunion->mPort = port;
+    trackunion->mPort = port.forget();
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
@@ -368,8 +368,7 @@ public:
     // Activate our listener. We'll call Start() on the source when get a callback
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
-    mListener->Activate(stream.forget(), port.forget(),
-                        mAudioSource, mVideoSource);
+    mListener->Activate(stream.forget(), mAudioSource, mVideoSource);
 
     // Dispatch to the media thread to ask it to start the sources,
     // because that can take a while
@@ -1069,7 +1068,9 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   for (uint32_t i = 0; i < length; i++) {
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
       listeners->ElementAt(i);
-    listener->Invalidate(true);
+    if (listener->Stream()) { // aka HasBeenActivate()ed
+      listener->Invalidate();
+    }
     listener->Remove();
   }
   listeners->Clear();
@@ -1232,9 +1233,11 @@ MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray **aArray)
   return NS_OK;
 }
 
+// Can be invoked from EITHER MainThread or MSG thread
 void
-GetUserMediaCallbackMediaStreamListener::Invalidate(bool aNeedsFinish)
+GetUserMediaCallbackMediaStreamListener::Invalidate()
 {
+
   nsRefPtr<MediaOperationRunnable> runnable;
   // We can't take a chance on blocking here, so proxy this to another
   // thread.
@@ -1242,15 +1245,33 @@ GetUserMediaCallbackMediaStreamListener::Invalidate(bool aNeedsFinish)
   // source stream info.
   runnable = new MediaOperationRunnable(MEDIA_STOP,
                                         this, mAudioSource, mVideoSource,
-                                        aNeedsFinish);
+                                        mFinished);
   mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
+// Called from the MediaStreamGraph thread
 void
 GetUserMediaCallbackMediaStreamListener::NotifyFinished(MediaStreamGraph* aGraph)
 {
-  Invalidate(false);
+  mFinished = true;
+  Invalidate(); // we know it's been activated
   NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, this));
+}
+
+// Called from the MediaStreamGraph thread
+// this can be in response to our own RemoveListener() (via ::Remove()), or
+// because the DOM GC'd the DOMLocalMediaStream/etc we're attached to.
+void
+GetUserMediaCallbackMediaStreamListener::NotifyRemoved(MediaStreamGraph* aGraph)
+{
+  {
+    MutexAutoLock lock(mLock); // protect access to mRemoved
+    MM_LOG(("Listener removed by DOM Destroy(), mFinished = %d", (int) mFinished));
+    mRemoved = true;
+  }
+  if (!mFinished) {
+    NotifyFinished(aGraph);
+  }
 }
 
 } // namespace mozilla
