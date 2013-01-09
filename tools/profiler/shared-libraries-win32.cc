@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <dbghelp.h>
+#include <sstream>
 
 #include "shared-libraries.h"
 #include "nsWindowsHelpers.h"
@@ -75,6 +76,11 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge, char*
   return true;
 }
 
+static bool IsDashOrBraces(char c)
+{
+  return c == '-' || c == '{' || c == '}';
+}
+
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
   SharedLibraryInfo sharedLibraryInfo;
@@ -106,13 +112,20 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
           sizeof(vmemInfo) == VirtualQuery(module.modBaseAddr, &vmemInfo, sizeof(vmemInfo)) &&
           vmemInfo.State == MEM_COMMIT &&
           GetPdbInfo((uintptr_t)module.modBaseAddr, pdbSig, pdbAge, &pdbName)) {
+        std::ostringstream stream;
+        stream << pdbSig.ToString() << std::hex << pdbAge;
+        std::string breakpadId = stream.str();
+        std::string::iterator end =
+          std::remove_if(breakpadId.begin(), breakpadId.end(), IsDashOrBraces);
+        breakpadId.erase(end, breakpadId.end());
+        std::transform(breakpadId.begin(), breakpadId.end(),
+                       breakpadId.begin(), toupper);
+
         SharedLibrary shlib((uintptr_t)module.modBaseAddr,
                             (uintptr_t)module.modBaseAddr+module.modBaseSize,
                             0, // DLLs are always mapped at offset 0 on Windows
-                            pdbSig,
-                            pdbAge,
-                            pdbName,
-                            module.szModule);
+                            breakpadId,
+                            pdbName);
         sharedLibraryInfo.AddSharedLibrary(shlib);
       }
       FreeLibrary(handleLock); // ok to free null handles
