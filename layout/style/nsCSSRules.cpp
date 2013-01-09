@@ -2595,7 +2595,11 @@ void
 nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
 {
   mImportantRule = nullptr;
-  mDeclaration = aDeclaration;
+  // Be careful to not assign to an nsAutoPtr if we would be assigning
+  // the thing it already holds.
+  if (aDeclaration != mDeclaration) {
+    mDeclaration = aDeclaration;
+  }
 
   nsCSSStyleSheet* sheet = GetStyleSheet();
   if (sheet) {
