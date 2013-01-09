@@ -87,7 +87,7 @@ function ContentSecurityPolicy() {
 }
 
 ContentSecurityPolicy.prototype = {
-  classID:          Components.ID("{AB36A2BF-CB32-4AA6-AB41-6B4E4444A221}"),
+  classID:          Components.ID("{d1680bb4-1ac0-4772-9437-1188375e44f2}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentSecurityPolicy]),
 
   get isInitialized() {
@@ -197,9 +197,10 @@ ContentSecurityPolicy.prototype = {
    * the effective policy has to be refined.
    */
   refinePolicy:
-  function csp_refinePolicy(aPolicy, selfURI) {
+  function csp_refinePolicy(aPolicy, selfURI, aSpecCompliant) {
     CSPdebug("REFINE POLICY: " + aPolicy);
     CSPdebug("         SELF: " + selfURI.asciiSpec);
+    CSPdebug("CSP 1.0 COMPLIANT : " + aSpecCompliant);
     // For nested schemes such as view-source: make sure we are taking the
     // innermost URI to use as 'self' since that's where we will extract the
     // scheme, host and port from
@@ -215,10 +216,22 @@ ContentSecurityPolicy.prototype = {
     // (1) parse and create a CSPRep object
     // Note that we pass the full URI since when it's parsed as 'self' to construct a
     // CSPSource only the scheme, host, and port are kept.
-    var newpolicy = CSPRep.fromString(aPolicy,
-				      selfURI,
-                                      this._docRequest,
-                                      this);
+
+    // If we want to be CSP 1.0 spec compliant, use the new parser.
+    // The old one will be deprecated in the future and will be
+    // removed at that time.
+    var newpolicy;
+    if (aSpecCompliant) {
+      newpolicy = CSPRep.fromStringSpecCompliant(aPolicy,
+                                                 selfURI,
+                                                 this._docRequest,
+                                                 this);
+    } else {
+      newpolicy = CSPRep.fromString(aPolicy,
+                                    selfURI,
+                                    this._docRequest,
+                                    this);
+    }
 
     // (2) Intersect the currently installed CSPRep object with the new one
     var intersect = this._policy.intersectWith(newpolicy);

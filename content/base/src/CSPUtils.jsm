@@ -436,6 +436,26 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
   return CSPRep.fromString("default-src 'none'", self);
 };
 
+/**
+  * Factory to create a new CSPRep, parsed from a string, compliant
+  * with the CSP 1.0 spec.
+  *
+  * @param aStr
+  *        string rep of a CSP
+  * @param self (optional)
+  *        URI representing the "self" source
+  * @param docRequest (optional)
+  *        request for the parent document which may need to be suspended
+  *        while the policy-uri is asynchronously fetched
+  * @param csp (optional)
+  *        the CSP object to update once the policy has been fetched
+  * @returns
+  *        an instance of CSPRep
+  */
+CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
+  // bug #746878 goes here
+};
+
 CSPRep.prototype = {
   /**
    * Returns a space-separated list of all report uris defined, or 'none' if there are none.
