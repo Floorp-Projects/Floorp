@@ -3603,9 +3603,11 @@ TypeObject::clearNewScript(JSContext *cx)
 void
 TypeObject::print()
 {
+    TaggedProto tagged(proto);
     printf("%s : %s",
            TypeObjectString(this),
-           proto ? TypeString(Type::ObjectType(proto)) : "(null)");
+           tagged.isObject() ? TypeString(Type::ObjectType(proto))
+                            : (tagged.isLazy() ? "(lazy)" : "(null)"));
 
     if (unknownProperties()) {
         printf(" unknown");
