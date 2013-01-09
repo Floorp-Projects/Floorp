@@ -245,7 +245,6 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     // that require intermediate surfaces.  That means all the
     // GetEffective*() coordinates are relative to the framebuffer.
 
-    const bool TESTING = true;
     bool fillColor = false;
 
     const nsIntRegion& visibleRegion = aLayer->GetEffectiveVisibleRegion();
@@ -263,8 +262,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return false;
     }
 
-    if (!TESTING &&
-        visibleRegion.GetNumRects() > 1) {
+    if (visibleRegion.GetNumRects() > 1) {
         // FIXME/bug 808339
         LOGD("Layer has nontrivial visible region");
         return false;
