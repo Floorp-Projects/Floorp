@@ -5943,6 +5943,18 @@ JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, JSFunction *fun_, b
         if (obj->isXML() && !type->unknownProperties())
             type->flags |= OBJECT_FLAG_UNKNOWN_MASK;
 #endif
+
+        if (obj->isRegExp()) {
+            AddTypeProperty(cx, type, "source", types::Type::StringType());
+            AddTypeProperty(cx, type, "global", types::Type::BooleanType());
+            AddTypeProperty(cx, type, "ignoreCase", types::Type::BooleanType());
+            AddTypeProperty(cx, type, "multiline", types::Type::BooleanType());
+            AddTypeProperty(cx, type, "sticky", types::Type::BooleanType());
+            AddTypeProperty(cx, type, "lastIndex", types::Type::Int32Type());
+        }
+
+        if (obj->isString())
+            AddTypeProperty(cx, type, "length", Type::Int32Type());
     }
 
     /*
