@@ -832,6 +832,8 @@ this.DOMApplicationRegistry = {
   // Webapps:Install:Return:OK
   // Webapps:Uninstall:Return:OK
   // Webapps:OfflineCache
+  // Webapps:checkForUpdate:Return:OK
+  // Webapps:PackageEvent
   broadcastMessage: function broadcastMessage(aMsgName, aContent) {
     if (!(aMsgName in this.children)) {
       return;
@@ -1152,7 +1154,7 @@ this.DOMApplicationRegistry = {
         updateManifest: aManifest
       }
       DOMApplicationRegistry._saveApps(function() {
-        aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+        DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK", aData);
         delete aData.app.updateManifest;
       });
     }
@@ -1205,7 +1207,8 @@ this.DOMApplicationRegistry = {
         app.manifest = aManifest;
         if (!manifest.appcache_path) {
           aData.event = "downloadapplied";
-          aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+          DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
+                                                  aData);
         } else {
           // Check if the appcache is updatable, and send "downloadavailable" or
           // "downloadapplied".
@@ -1214,7 +1217,8 @@ this.DOMApplicationRegistry = {
               aData.event =
                 aTopic == "offline-cache-update-available" ? "downloadavailable"
                                                            : "downloadapplied";
-              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+              DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
+                                                      aData);
             }
           }
           updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
@@ -1257,7 +1261,8 @@ this.DOMApplicationRegistry = {
             debug("appcache result: " + aTopic);
             if (aData.event == "offline-cache-update-available") {
               aData.event = "downloadavailable";
-              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
+              DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
+                                                      aData);
             } else {
               aData.error = "NOT_UPDATABLE";
               aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
