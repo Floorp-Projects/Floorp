@@ -320,11 +320,15 @@ private:
     virtual bool RecvFirstIdle();
 
     virtual bool RecvAudioChannelGetMuted(const AudioChannelType& aType,
-                                          const bool& aMozHidden,
+                                          const bool& aElementHidden,
+                                          const bool& aElementWasHidden,
                                           bool* aValue);
 
     virtual bool RecvAudioChannelRegisterType(const AudioChannelType& aType);
-    virtual bool RecvAudioChannelUnregisterType(const AudioChannelType& aType);
+    virtual bool RecvAudioChannelUnregisterType(const AudioChannelType& aType,
+                                                const bool& aElementHidden);
+
+    virtual bool RecvAudioChannelChangedNotification();
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 

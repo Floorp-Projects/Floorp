@@ -1099,14 +1099,16 @@ ContentParent::RecvFirstIdle()
 
 bool
 ContentParent::RecvAudioChannelGetMuted(const AudioChannelType& aType,
-                                        const bool& aMozHidden,
+                                        const bool& aElementHidden,
+                                        const bool& aElementWasHidden,
                                         bool* aValue)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     *aValue = false;
     if (service) {
-        *aValue = service->GetMuted(aType, aMozHidden);
+        *aValue = service->GetMutedInternal(aType, mChildID,
+                                            aElementHidden, aElementWasHidden);
     }
     return true;
 }
@@ -1123,12 +1125,24 @@ ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType)
 }
 
 bool
-ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType)
+ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType,
+                                              const bool& aElementHidden)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->UnregisterType(aType, mChildID);
+        service->UnregisterType(aType, aElementHidden, mChildID);
+    }
+    return true;
+}
+
+bool
+ContentParent::RecvAudioChannelChangedNotification()
+{
+    nsRefPtr<AudioChannelService> service =
+        AudioChannelService::GetAudioChannelService();
+    if (service) {
+       service->SendAudioChannelChangedNotification();
     }
     return true;
 }

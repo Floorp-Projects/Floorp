@@ -104,7 +104,10 @@ public:
   }
   SourceMediaStream *GetSourceStream()
   {
-    MOZ_ASSERT(mStream);
+    NS_ASSERTION(mStream,"Getting stream from never-activated GUMCMSListener");
+    if (!mStream) {
+      return nullptr;
+    }
     return mStream->AsSourceStream();
   }
 
@@ -202,9 +205,8 @@ public:
     SourceMediaStream *source = mListener->GetSourceStream();
     // No locking between these is required as all the callbacks for the
     // same MediaStream will occur on the same thread.
-    MOZ_ASSERT(source);
-    if (!source)  // paranoia
-      return NS_ERROR_FAILURE;
+    if (!source) // means the stream was never Activated()
+      return NS_OK;
 
     switch (mType) {
       case MEDIA_START:

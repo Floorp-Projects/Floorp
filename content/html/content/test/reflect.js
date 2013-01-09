@@ -62,6 +62,7 @@ function reflectString(aParameters)
     link: [ "crossOrigin" ],
     source: [ "media" ],
     textarea: [ "name", "placeholder" ],
+    style: [ "media", "type" ]
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {
     is(element.getAttribute(contentAttr), "null",

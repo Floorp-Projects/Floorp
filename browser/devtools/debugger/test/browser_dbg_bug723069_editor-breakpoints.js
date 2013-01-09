@@ -219,7 +219,6 @@ function test()
       info("switch to the second script");
 
       gScripts._container.selectedIndex = 0;
-      gDebugger.DebuggerController.SourceScripts.onChange({ target: gScripts._container });
     });
   }
 

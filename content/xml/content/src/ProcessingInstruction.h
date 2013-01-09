@@ -3,21 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIXMLProcessingInstruction_h___
-#define nsIXMLProcessingInstruction_h___
+#ifndef mozilla_dom_ProcessingInstruction_h
+#define mozilla_dom_ProcessingInstruction_h
 
 #include "nsIDOMProcessingInstruction.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsAString.h"
 
+namespace mozilla {
+namespace dom {
 
-class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
-                                   public nsIDOMProcessingInstruction
+class ProcessingInstruction : public nsGenericDOMDataNode,
+                              public nsIDOMProcessingInstruction
 {
 public:
-  nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
-                             const nsAString& aData);
-  virtual ~nsXMLProcessingInstruction();
+  ProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
+                        const nsAString& aData);
+  virtual ~ProcessingInstruction();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -45,6 +47,12 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL API
+  void GetTarget(nsString& aTarget)
+  {
+    aTarget = NodeName();
+  }
 protected:
   /**
    * This will parse the content of the PI, to extract the value of the pseudo
@@ -57,6 +65,12 @@ protected:
    *                     aAttribute. Empty if the attribute isn't present.
    */
   bool GetAttrValue(nsIAtom *aName, nsAString& aValue);
+
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 };
 
-#endif //nsIXMLProcessingInstruction_h___
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_ProcessingInstruction_h

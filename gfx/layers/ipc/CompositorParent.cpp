@@ -813,6 +813,11 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     case eCSSProperty_transform:
     {
       gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
+      if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+        matrix.ScalePost(c->GetInheritedXScale(),
+                         c->GetInheritedYScale(),
+                         1);
+      }
       shadow->SetShadowTransform(matrix);
       break;
     }

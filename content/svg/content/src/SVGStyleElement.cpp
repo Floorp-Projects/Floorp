@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGStyleElement.h"
 #include "nsContentUtils.h"
 #include "nsStubMutationObserver.h"
@@ -98,12 +99,14 @@ SVGStyleElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 {
   nsresult rv = SVGStyleElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                              aValue, aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nullptr,
-                             aNameSpaceID == kNameSpaceID_None &&
-                             (aName == nsGkAtoms::title ||
-                              aName == nsGkAtoms::media ||
-                              aName == nsGkAtoms::type));
+  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::title ||
+        aName == nsGkAtoms::media ||
+        aName == nsGkAtoms::type) {
+      UpdateStyleSheetInternal(nullptr, true);
+    } else if (aName == nsGkAtoms::scoped) {
+      UpdateStyleSheetScopedness(true);
+    }
   }
 
   return rv;
@@ -115,12 +118,14 @@ SVGStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 {
   nsresult rv = SVGStyleElementBase::UnsetAttr(aNameSpaceID, aAttribute,
                                                aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nullptr,
-                             aNameSpaceID == kNameSpaceID_None &&
-                             (aAttribute == nsGkAtoms::title ||
-                              aAttribute == nsGkAtoms::media ||
-                              aAttribute == nsGkAtoms::type));
+  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::title ||
+        aAttribute == nsGkAtoms::media ||
+        aAttribute == nsGkAtoms::type) {
+      UpdateStyleSheetInternal(nullptr, true);
+    } else if (aAttribute == nsGkAtoms::scoped) {
+      UpdateStyleSheetScopedness(false);
+    }
   }
 
   return rv;
@@ -209,53 +214,39 @@ SVGStyleElement::SetXmlspace(const nsAString & aXmlspace, ErrorResult& rv)
   rv = SetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace, true);
 }
 
-/* attribute DOMString type; */
-NS_IMETHODIMP SVGStyleElement::GetType(nsAString & aType)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
-
-  return NS_OK;
-}
-NS_IMETHODIMP SVGStyleElement::SetType(const nsAString & aType)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
-}
-void
-SVGStyleElement::SetType(const nsAString & aType, ErrorResult& rv)
-{
-  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
-}
-
 /* attribute DOMString media; */
-NS_IMETHODIMP SVGStyleElement::GetMedia(nsAString & aMedia)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
-
-  return NS_OK;
-}
-NS_IMETHODIMP SVGStyleElement::SetMedia(const nsAString & aMedia)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia, true);
-}
+NS_IMPL_STRING_ATTR(SVGStyleElement, Media, media)
 void
-SVGStyleElement::SetMedia(const nsAString & aMedia, ErrorResult& rv)
+SVGStyleElement::SetMedia(const nsAString& aMedia, ErrorResult& rv)
 {
   rv = SetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia, true);
 }
 
-/* attribute DOMString title; */
-NS_IMETHODIMP SVGStyleElement::GetTitle(nsAString & aTitle)
+/* attribute boolean scoped; */
+NS_IMPL_BOOL_ATTR(SVGStyleElement, Scoped, scoped)
+bool
+SVGStyleElement::Scoped() const
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
-
-  return NS_OK;
-}
-NS_IMETHODIMP SVGStyleElement::SetTitle(const nsAString & aTitle)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, true);
+  return GetBoolAttr(nsGkAtoms::scoped);
 }
 void
-SVGStyleElement::SetTitle(const nsAString & aTitle, ErrorResult& rv)
+SVGStyleElement::SetScoped(bool aScoped, ErrorResult& rv)
+{
+  rv = SetBoolAttr(nsGkAtoms::scoped, aScoped);
+}
+
+/* attribute DOMString type; */
+NS_IMPL_STRING_ATTR(SVGStyleElement, Type, type)
+void
+SVGStyleElement::SetType(const nsAString& aType, ErrorResult& rv)
+{
+  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
+}
+
+/* attribute DOMString title; */
+NS_IMPL_STRING_ATTR(SVGStyleElement, Title, title)
+void
+SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv)
 {
   rv = SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, true);
 }
@@ -274,6 +265,7 @@ void
 SVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
                                    nsAString& aType,
                                    nsAString& aMedia,
+                                   bool* aIsScoped,
                                    bool* aIsAlternate)
 {
   *aIsAlternate = false;
@@ -292,6 +284,8 @@ SVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   if (aType.IsEmpty()) {
     aType.AssignLiteral("text/css");
   }
+
+  *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped);
 
   return;
 }

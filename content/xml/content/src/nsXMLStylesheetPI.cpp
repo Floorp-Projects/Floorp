@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/Element.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDocument.h"
@@ -10,15 +11,16 @@
 #include "nsIURI.h"
 #include "nsStyleLinkElement.h"
 #include "nsNetUtil.h"
-#include "nsXMLProcessingInstruction.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace dom;
 
-class nsXMLStylesheetPI : public nsXMLProcessingInstruction,
+class nsXMLStylesheetPI : public ProcessingInstruction,
                           public nsStyleLinkElement
 {
 public:
@@ -30,7 +32,7 @@ public:
 
   // CC
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLStylesheetPI,
-                                           nsXMLProcessingInstruction)
+                                           ProcessingInstruction)
 
   // nsIDOMNode
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
@@ -57,6 +59,7 @@ protected:
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
+                         bool* aIsScoped,
                          bool* aIsAlternate);
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
@@ -71,25 +74,25 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXMLStylesheetPI)
                            nsIDOMProcessingInstruction, nsIDOMLinkStyle,
                            nsIStyleSheetLinkingElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLStylesheetProcessingInstruction)
-NS_INTERFACE_MAP_END_INHERITING(nsXMLProcessingInstruction)
+NS_INTERFACE_MAP_END_INHERITING(ProcessingInstruction)
 
-NS_IMPL_ADDREF_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
-NS_IMPL_RELEASE_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
+NS_IMPL_ADDREF_INHERITED(nsXMLStylesheetPI, ProcessingInstruction)
+NS_IMPL_RELEASE_INHERITED(nsXMLStylesheetPI, ProcessingInstruction)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLStylesheetPI)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLStylesheetPI,
-                                                  nsXMLProcessingInstruction)
+                                                  ProcessingInstruction)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLStylesheetPI,
-                                                nsXMLProcessingInstruction)
+                                                ProcessingInstruction)
   tmp->nsStyleLinkElement::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 nsXMLStylesheetPI::nsXMLStylesheetPI(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      const nsAString& aData)
-  : nsXMLProcessingInstruction(aNodeInfo, aData)
+  : ProcessingInstruction(aNodeInfo, aData)
 {
 }
 
@@ -104,9 +107,9 @@ nsXMLStylesheetPI::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers)
 {
-  nsresult rv = nsXMLProcessingInstruction::BindToTree(aDocument, aParent,
-                                                       aBindingParent,
-                                                       aCompileEventHandlers);
+  nsresult rv = ProcessingInstruction::BindToTree(aDocument, aParent,
+                                                  aBindingParent,
+                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   void (nsXMLStylesheetPI::*update)() = &nsXMLStylesheetPI::UpdateStyleSheetInternal;
@@ -120,7 +123,7 @@ nsXMLStylesheetPI::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
-  nsXMLProcessingInstruction::UnbindFromTree(aDeep, aNullParent);
+  ProcessingInstruction::UnbindFromTree(aDeep, aNullParent);
   UpdateStyleSheetInternal(oldDoc);
 }
 
@@ -177,11 +180,13 @@ void
 nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
                                      nsAString& aType,
                                      nsAString& aMedia,
+                                     bool* aIsScoped,
                                      bool* aIsAlternate)
 {
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
+  *aIsScoped = false;
   *aIsAlternate = false;
 
   // xml-stylesheet PI is special only in prolog
