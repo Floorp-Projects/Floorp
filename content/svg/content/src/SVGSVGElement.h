@@ -267,13 +267,11 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedLength> Y();
   already_AddRefed<nsIDOMSVGAnimatedLength> Width();
   already_AddRefed<nsIDOMSVGAnimatedLength> Height();
-  already_AddRefed<nsIDOMSVGRect> GetViewport(ErrorResult& rv);
   float PixelUnitToMillimeterX();
   float PixelUnitToMillimeterY();
   float ScreenPixelToMillimeterX();
   float ScreenPixelToMillimeterY();
   bool UseCurrentView();
-  already_AddRefed<nsIDOMSVGViewSpec> GetCurrentView(ErrorResult& rv);
   // XPIDL SetCurrentScale and SetCurrentTranslate are alright to use because
   // they only throw on non-finite floats and we don't allow those.
   float CurrentScale();
@@ -286,15 +284,6 @@ public:
   bool AnimationsPaused(ErrorResult& rv);
   float GetCurrentTime(ErrorResult& rv);
   void SetCurrentTime(float seconds, ErrorResult& rv);
-  already_AddRefed<nsINodeList> GetIntersectionList(nsIDOMSVGRect* rect,
-                                                    nsSVGElement& element,
-                                                    ErrorResult& rv);
-  already_AddRefed<nsINodeList> GetEnclosureList(nsIDOMSVGRect *rect,
-                                                 nsSVGElement& referenceElement,
-                                                 ErrorResult& rv);
-  bool CheckIntersection(nsSVGElement& element, nsIDOMSVGRect* rect, ErrorResult& rv);
-  bool CheckEnclosure(nsSVGElement& element, nsIDOMSVGRect* rect, ErrorResult& rv);
-  bool DeselectAll(ErrorResult& rv);
   already_AddRefed<nsIDOMSVGNumber> CreateSVGNumber();
   already_AddRefed<nsIDOMSVGLength> CreateSVGLength();
   already_AddRefed<SVGAngle> CreateSVGAngle();

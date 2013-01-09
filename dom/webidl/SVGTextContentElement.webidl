@@ -20,10 +20,8 @@ interface SVGTextContentElement : SVGGraphicsElement {
   const unsigned short LENGTHADJUST_SPACING = 1;
   const unsigned short LENGTHADJUST_SPACINGANDGLYPHS = 2;
 
-  [Throws] // because not implemented
-  readonly attribute SVGAnimatedLength textLength;
-  [Throws] // because not implemented
-  readonly attribute SVGAnimatedEnumeration lengthAdjust;
+  // readonly attribute SVGAnimatedLength textLength;
+  // readonly attribute SVGAnimatedEnumeration lengthAdjust;
 
   long getNumberOfChars();
   float getComputedTextLength();
@@ -38,7 +36,6 @@ interface SVGTextContentElement : SVGGraphicsElement {
   [Throws]
   float getRotationOfChar(unsigned long charnum);
   long getCharNumAtPosition(SVGPoint point);
-  [Throws]
-  void selectSubString(unsigned long charnum, unsigned long nchars);
+  // void selectSubString(unsigned long charnum, unsigned long nchars);
 };
 
