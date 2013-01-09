@@ -160,14 +160,15 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             } else if (type.equals("time")) {
                 TimePicker input = new TimePicker(GeckoApp.mAppContext);
                 input.setIs24HourView(DateFormat.is24HourFormat(GeckoApp.mAppContext));
+
+                GregorianCalendar calendar = new GregorianCalendar();
                 if (!value.equals("")) {
                     try {
-                        GregorianCalendar calendar = new GregorianCalendar();
                         calendar.setTime(new SimpleDateFormat("kk:mm").parse(value));
-                        input.setCurrentHour(calendar.get(GregorianCalendar.HOUR_OF_DAY));
-                        input.setCurrentMinute(calendar.get(GregorianCalendar.MINUTE));
                     } catch (Exception e) { }
                 }
+                input.setCurrentHour(calendar.get(GregorianCalendar.HOUR_OF_DAY));
+                input.setCurrentMinute(calendar.get(GregorianCalendar.MINUTE));
                 view = (View)input;
             } else if (type.equals("datetime-local") || type.equals("datetime")) {
                 DateTimePicker input = new DateTimePicker(GeckoApp.mAppContext, "yyyy-MM-dd kk:mm", value,
