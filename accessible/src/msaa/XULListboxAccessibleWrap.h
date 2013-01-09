@@ -42,13 +42,16 @@ class XULListCellAccessibleWrap : public XULListCellAccessible,
                                   public ia2AccessibleTableCell
 {
 public:
-  XULListCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
+  XULListCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+    XULListCellAccessible(aContent, aDoc), ia2AccessibleTableCell(this) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 } // namespace a11y
