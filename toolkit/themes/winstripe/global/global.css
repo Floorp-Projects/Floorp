@@ -282,9 +282,12 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
 
 .text-link {
   color: -moz-nativehyperlinktext;
-  text-decoration: underline;
   border: 1px solid transparent;
   cursor: pointer;
+}
+
+.text-link:hover {
+  text-decoration: underline;
 }
 
 .text-link:-moz-focusring {

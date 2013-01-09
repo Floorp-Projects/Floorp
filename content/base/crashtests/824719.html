@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<div id='console'></div>
+<div id='parentDiv'>
+<div id='right-to-left1' dir=auto class=testElement>
+<input type=text value="a">a
+</div>
+<div id='right-to-left2' dir=auto class=testElement>
+</div>
+</div>
+
+<script type="text/javascript"> 
+
+document.getElementById("right-to-left2").appendChild(document.createElement("p"))
+var test5=document.getElementById("right-to-left1")
+var test6=document.getElementById("console").appendChild(document.createElement("dl"))
+
+test6.appendChild(document.createElement("img"))
+
+test5.parentNode.removeChild(test5)
+test5.innerHTML=''
+test5.appendChild(test6.cloneNode(true))
+</script>
+
+</body>
+</html>

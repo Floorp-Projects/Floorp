@@ -11,7 +11,6 @@
 #include "gfxMatrix.h"
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectLoadingContent.h"
@@ -21,7 +20,7 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
-#include "nsSVGViewElement.h"
+#include "mozilla/dom/SVGViewElement.h"
 #include "nsSubDocumentFrame.h"
 
 namespace dom = mozilla::dom;
@@ -150,10 +149,8 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
-#ifdef DEBUG
-  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(aContent);
-  NS_ASSERTION(svgElement, "Content is not an SVG 'svg' element!");
-#endif
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::svg),
+               "Content is not an SVG 'svg' element!");
 
   AddStateBits(NS_STATE_IS_OUTER_SVG |
                NS_FRAME_FONT_INFLATION_CONTAINER |
@@ -286,7 +283,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     return ratio;
   }
 
-  nsSVGViewElement* viewElement = content->GetCurrentViewElement();
+  dom::SVGViewElement* viewElement = content->GetCurrentViewElement();
   const nsSVGViewBoxRect* viewbox = nullptr;
 
   // The logic here should match HasViewBox().

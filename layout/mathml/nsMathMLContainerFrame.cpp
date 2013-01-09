@@ -1522,7 +1522,7 @@ nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
 nsresult
 nsMathMLContainerFrame::ReportErrorToConsole(const char*       errorMsgId,
                                              const PRUnichar** aParams,
-                                             PRUint32          aParamCount)
+                                             uint32_t          aParamCount)
 {
   return nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                          "MathML", mContent->OwnerDoc(),

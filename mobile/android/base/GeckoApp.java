@@ -629,52 +629,8 @@ abstract public class GeckoApp
         if (ReaderModeUtils.isAboutReader(url))
             url = ReaderModeUtils.getUrlFromAboutReader(url);
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            final Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
-            shareIntent.setType("text/plain");
-
-            PackageManager pm = getPackageManager();
-            List<ResolveInfo> activities = pm.queryIntentActivities(shareIntent, 0);
-            Collections.sort(activities, new Comparator<ResolveInfo>() {
-                @Override
-                public int compare(ResolveInfo one, ResolveInfo two) {
-                    return one.preferredOrder - two.preferredOrder;
-                }
-
-                @Override
-                public boolean equals(Object info) {
-                    return this.equals(info);
-                }
-            });
-
-            GeckoSubMenu menu = new GeckoSubMenu(mAppContext, null);
-
-            GeckoMenu parent = (GeckoMenu) mMenu;
-            menu.setCallback(parent.getCallback());
-            menu.setMenuPresenter(parent.getMenuPresenter());
-
-            for (ResolveInfo activity : activities) {
-                 final ActivityInfo activityInfo = activity.activityInfo;
-
-                 MenuItem item = menu.add(activity.loadLabel(pm));
-                 item.setIcon(activity.loadIcon(pm));
-                 item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                     @Override
-                     public boolean onMenuItemClick(MenuItem item) {
-                         shareIntent.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
-                         startActivity(shareIntent);
-                         return true;
-                     }
-                 });
-            }
-
-            showMenu(menu);
-        } else {
-            GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                          Intent.ACTION_SEND, tab.getDisplayTitle());
-        }
+        GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                      Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
     protected void onSaveInstanceState(Bundle outState) {

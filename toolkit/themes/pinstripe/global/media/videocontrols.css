@@ -10,46 +10,44 @@
   background-color: rgba(35,31,32,.74);
 }
 
-.playButton {
-  background: url(chrome://global/skin/media/pauseButton.png) no-repeat center;
-  /* Remove the native button appearance and styling */
-  -moz-appearance: none;
-  margin: 0;
-  padding: 0;
-  min-height: 28px;
-  min-width: 28px;
-  margin-right: -22px; /* 1/2 of scrubber thumb width, for overhang. */
-  position: relative; /* Trick to work around negative margin interfering with clicking on the button. */
-}
-.playButton[paused] {
-  background: url(chrome://global/skin/media/playButton.png) no-repeat center;
-}
-
-.muteButton {
-  background: url(chrome://global/skin/media/muteButton.png) no-repeat center;
-  /* Remove the native button appearance and styling */
-  -moz-appearance: none;
-  margin: 0;
-  padding: 0;
-  min-height: 28px;
-  min-width: 33px;
-}
-.muteButton[muted] {
-  background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
-}
-
-.muteButton[noAudio] {
-  background: url(chrome://global/skin/media/noAudio.png) no-repeat center;
-}
-
+.playButton,
+.muteButton,
 .fullscreenButton {
-  background: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 16, 16, 0) no-repeat center;
-  -moz-appearance: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-appearance: none;   /* Remove the native button appearance and styling */
   margin: 0;
   padding: 0;
   min-height: 28px;
   min-width: 28px;
   border: none;
+}
+
+.playButton {
+  background-image: url(chrome://global/skin/media/pauseButton.png);
+  margin-right: -22px; /* 1/2 of scrubber thumb width, for overhang. */
+  position: relative; /* Trick to work around negative margin interfering with clicking on the button. */
+}
+
+.playButton[paused] {
+  background-image: url(chrome://global/skin/media/playButton.png);
+}
+
+.muteButton {
+  background-image: url(chrome://global/skin/media/muteButton.png);
+  min-width: 33px;
+}
+.muteButton[muted] {
+  background-image: url(chrome://global/skin/media/unmuteButton.png);
+}
+
+.muteButton[noAudio] {
+  background-image: url(chrome://global/skin/media/noAudio.png);
+}
+
+.fullscreenButton {
+  background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 16, 16, 0);
 }
 
 .fullscreenButton[fullscreened] {
@@ -168,7 +166,7 @@
 }
 
 .timeThumb[showhours="true"] {
-  background: url(chrome://global/skin/media/scrubberThumbWide.png) no-repeat center;
+  background-image: url(chrome://global/skin/media/scrubberThumbWide.png);
 }
 
 .timeLabel {

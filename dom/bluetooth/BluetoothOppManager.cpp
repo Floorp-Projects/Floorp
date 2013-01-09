@@ -1010,6 +1010,12 @@ BluetoothOppManager::SendAbortRequest()
   SendSocketData(s);
 }
 
+bool
+BluetoothOppManager::IsTransferring()
+{
+  return (mConnected && !mSendTransferCompleteFlag);
+}
+
 void
 BluetoothOppManager::ReplyToConnect()
 {

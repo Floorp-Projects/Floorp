@@ -21,7 +21,7 @@ interface nsIDOMDeviceProximityEvent : nsIDOMEvent
 
 dictionary DeviceProximityEventInit : EventInit
 {
-   double value;
-   double min;
-   double max;
+   double value = Infinity;
+   double min = -Infinity;
+   double max = Infinity;
 };

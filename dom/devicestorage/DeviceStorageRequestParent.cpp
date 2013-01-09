@@ -11,7 +11,7 @@
 #include "mozilla/dom/ipc/Blob.h"
 #include "ContentParent.h"
 #include "nsProxyRelease.h"
-#include "AppProcessPermissions.h"
+#include "AppProcessChecker.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {

@@ -2664,12 +2664,12 @@ pref("font.name-list.monospace.x-western", "Courier,Courier New");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
-pref("font.name.serif.zh-CN", "STSong");
-pref("font.name.sans-serif.zh-CN", "STHeiti");
-pref("font.name.monospace.zh-CN", "STHeiti");
-pref("font.name-list.serif.zh-CN", "STSong,Heiti SC");
-pref("font.name-list.sans-serif.zh-CN", "STHeiti,Heiti SC");
-pref("font.name-list.monospace.zh-CN", "STHeiti,Heiti SC");
+pref("font.name.serif.zh-CN", "Times");
+pref("font.name.sans-serif.zh-CN", "Helvetica");
+pref("font.name.monospace.zh-CN", "Courier");
+pref("font.name-list.serif.zh-CN", "Times,STSong,Heiti SC");
+pref("font.name-list.sans-serif.zh-CN", "Helvetica,STHeiti,Heiti SC");
+pref("font.name-list.monospace.zh-CN", "Courier,STHeiti,Heiti SC");
 
 pref("font.name.serif.zh-TW", "Times"); 
 pref("font.name.sans-serif.zh-TW", "Helvetica");  
@@ -3914,6 +3914,18 @@ pref("dom.mozApps.dev_mode", false);
 
 // Lowest localId for apps.
 pref("dom.mozApps.maxLocalId", 1000);
+
+// XXX Security: You CANNOT safely add a new app store for
+// installing privileged apps just by modifying this pref and
+// adding the signing cert for that store to the cert trust
+// database. *Any* origin listed can install apps signed with
+// *any* certificate trusted; we don't try to maintain a strong
+// association between certificate with installOrign. The
+// expectation here is that in production builds the pref will
+// contain exactly one origin. However, in custom development
+// builds it may contain more than one origin so we can test
+// different stages (dev, staging, prod) of the same app store.
+pref("dom.mozApps.signed_apps_installable_from", "https://marketplace.firefox.com");
 
 // Minimum delay in milliseconds between network activity notifications (0 means
 // no notifications). The delay is the same for both download and upload, though

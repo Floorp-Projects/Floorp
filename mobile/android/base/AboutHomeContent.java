@@ -163,7 +163,10 @@ public class AboutHomeContent extends ScrollView
         mRemoteTabClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Tabs.getInstance().loadUrl((String) v.getTag(), Tabs.LOADURL_NEW_TAB);
+                int flags = Tabs.LOADURL_NEW_TAB;
+                if (Tabs.getInstance().getSelectedTab().isPrivate())
+                    flags |= Tabs.LOADURL_PRIVATE;
+                Tabs.getInstance().loadUrl((String) v.getTag(), flags);
             }
         };
 
@@ -676,7 +679,10 @@ public class AboutHomeContent extends ScrollView
 
                         container.setOnClickListener(new View.OnClickListener() {
                             public void onClick(View v) {
-                                Tabs.getInstance().loadUrlInTab(url);
+                                int flags = Tabs.LOADURL_NEW_TAB;
+                                if (Tabs.getInstance().getSelectedTab().isPrivate())
+                                    flags |= Tabs.LOADURL_PRIVATE;
+                                Tabs.getInstance().loadUrl(url, flags);
                             }
                         });
 
@@ -694,8 +700,11 @@ public class AboutHomeContent extends ScrollView
                         mLastTabs.showMoreText();
                         mLastTabs.setOnMoreTextClickListener(new View.OnClickListener() {
                             public void onClick(View v) {
+                                int flags = Tabs.LOADURL_NEW_TAB;
+                                if (Tabs.getInstance().getSelectedTab().isPrivate())
+                                    flags |= Tabs.LOADURL_PRIVATE;
                                 for (String url : lastTabUrlsList) {
-                                    Tabs.getInstance().loadUrlInTab(url);
+                                    Tabs.getInstance().loadUrl(url, flags);
                                 }
                             }
                         });

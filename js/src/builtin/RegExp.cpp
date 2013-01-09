@@ -143,7 +143,7 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
                         Handle<JSStableString*> input, StableCharPtr chars, size_t length,
                         size_t *lastIndex, JSBool test, jsval *rval)
 {
-    RegExpGuard shared;
+    RegExpGuard shared(cx);
     if (!reobj.getShared(cx, &shared))
         return false;
 
@@ -252,7 +252,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          */
         RegExpFlag flags;
         {
-            RegExpGuard g;
+            RegExpGuard g(cx);
             if (!RegExpToShared(cx, *sourceObj, &g))
                 return false;
 
@@ -533,17 +533,6 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineProperties(cx, ctor, regexp_static_props))
         return NULL;
 
-    /* Capture normal data properties pregenerated for RegExp objects. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    AddTypeProperty(cx, type, "source", Type::StringType());
-    AddTypeProperty(cx, type, "global", Type::BooleanType());
-    AddTypeProperty(cx, type, "ignoreCase", Type::BooleanType());
-    AddTypeProperty(cx, type, "multiline", Type::BooleanType());
-    AddTypeProperty(cx, type, "sticky", Type::BooleanType());
-    AddTypeProperty(cx, type, "lastIndex", Type::Int32Type());
-
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
         return NULL;
 
@@ -556,7 +545,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string, Match
     /* Step 1 (b) was performed by CallNonGenericMethod. */
     Rooted<RegExpObject*> reobj(cx, &regexp->asRegExp());
 
-    RegExpGuard re;
+    RegExpGuard re(cx);
     if (!reobj->getShared(cx, &re))
         return RegExpRunStatus_Error;
 

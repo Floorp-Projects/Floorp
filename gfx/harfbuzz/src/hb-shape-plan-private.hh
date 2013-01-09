@@ -43,6 +43,7 @@ struct hb_shape_plan_t
   hb_segment_properties_t props;
 
   hb_shape_func_t *shaper_func;
+  const char *shaper_name;
 
   struct hb_shaper_data_t shaper_data;
 };

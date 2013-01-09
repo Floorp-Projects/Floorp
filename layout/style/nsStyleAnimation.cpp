@@ -391,11 +391,17 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           return false;
       }
    case eUnit_Visibility: {
-      int32_t startVal =
-        aStartValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      int32_t endVal =
-        aEndValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      aDistance = std::abs(startVal - endVal);
+      int32_t startEnum = aStartValue.GetIntValue();
+      int32_t endEnum = aEndValue.GetIntValue();
+      if (startEnum == endEnum) {
+        aDistance = 0;
+        return true;
+      }
+      if ((startEnum == NS_STYLE_VISIBILITY_VISIBLE) ==
+          (endEnum == NS_STYLE_VISIBILITY_VISIBLE)) {
+        return false;
+      }
+      aDistance = 1;
       return true;
     }
     case eUnit_Integer: {
@@ -1706,11 +1712,21 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           return false;
       }
     case eUnit_Visibility: {
-      int32_t val1 = aValue1.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      int32_t val2 = aValue2.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      int32_t enum1 = aValue1.GetIntValue();
+      int32_t enum2 = aValue2.GetIntValue();
+      if (enum1 == enum2) {
+        aResultValue.SetIntValue(enum1, eUnit_Visibility);
+        return true;
+      }
+      if ((enum1 == NS_STYLE_VISIBILITY_VISIBLE) ==
+          (enum2 == NS_STYLE_VISIBILITY_VISIBLE)) {
+        return false;
+      }
+      int32_t val1 = enum1 == NS_STYLE_VISIBILITY_VISIBLE;
+      int32_t val2 = enum2 == NS_STYLE_VISIBILITY_VISIBLE;
       double interp = aCoeff1 * val1 + aCoeff2 * val2;
       int32_t result = interp > 0.0 ? NS_STYLE_VISIBILITY_VISIBLE
-                                    : NS_STYLE_VISIBILITY_HIDDEN;
+                                    : (val1 ? enum2 : enum1);
       aResultValue.SetIntValue(result, eUnit_Visibility);
       return true;
     }

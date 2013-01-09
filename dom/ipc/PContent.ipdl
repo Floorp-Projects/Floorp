@@ -433,11 +433,15 @@ parent:
     async FirstIdle();
 
     // Get Muted from the main AudioChannelService.
-    sync AudioChannelGetMuted(AudioChannelType aType, bool aMozHidden)
+    sync AudioChannelGetMuted(AudioChannelType aType, bool aElementHidden,
+                              bool aElementWasHidden)
         returns (bool value);
 
-    async AudioChannelRegisterType(AudioChannelType aType);
-    async AudioChannelUnregisterType(AudioChannelType aType);
+    sync AudioChannelRegisterType(AudioChannelType aType);
+    sync AudioChannelUnregisterType(AudioChannelType aType,
+                                    bool aElementHidden);
+
+    async AudioChannelChangedNotification();
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);

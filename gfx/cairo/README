@@ -198,6 +198,10 @@ dwrite-font-match-robustness.patch: bug 717178, don't crash when _name_tables_ma
 
 handle-multi-path-clip.patch: bug 813124, handle multiple clip paths correctly
 
+win32-gdi-font-cache.patch: Bug 717178, cache GDI font faces to reduce usage of GDI resources
+
+win32-gdi-font-cache-no-HFONT.patch: Bug 717178, don't cache GDI font faces when an HFONT belonging to the caller is passed in
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

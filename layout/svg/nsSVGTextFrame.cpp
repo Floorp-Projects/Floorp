@@ -9,7 +9,6 @@
 // Keep others in (case-insensitive) order:
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGTextElement.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGIntegrationUtils.h"
@@ -40,8 +39,8 @@ nsSVGTextFrame::Init(nsIContent* aContent,
                      nsIFrame* aParent,
                      nsIFrame* aPrevInFlow)
 {
-  nsCOMPtr<nsIDOMSVGTextElement> text = do_QueryInterface(aContent);
-  NS_ASSERTION(text, "Content is not an SVG text");
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::text),
+               "Content is not an SVG text");
 
   return nsSVGTextFrameBase::Init(aContent, aParent, aPrevInFlow);
 }

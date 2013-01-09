@@ -90,114 +90,115 @@ compose_default (const hb_ot_shape_normalize_context_t *c,
 		 hb_codepoint_t *ab)
 {
   /* Hebrew presentation-form shaping.
-   * https://bugzilla.mozilla.org/show_bug.cgi?id=728866 */
-  // Hebrew presentation forms with dagesh, for characters 0x05D0..0x05EA;
-  // note that some letters do not have a dagesh presForm encoded
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=728866
+   * Hebrew presentation forms with dagesh, for characters 0x05D0..0x05EA;
+   * Note that some letters do not have a dagesh presForm encoded.
+   */
   static const hb_codepoint_t sDageshForms[0x05EA - 0x05D0 + 1] = {
-    0xFB30, // ALEF
-    0xFB31, // BET
-    0xFB32, // GIMEL
-    0xFB33, // DALET
-    0xFB34, // HE
-    0xFB35, // VAV
-    0xFB36, // ZAYIN
-    0, // HET
-    0xFB38, // TET
-    0xFB39, // YOD
-    0xFB3A, // FINAL KAF
-    0xFB3B, // KAF
-    0xFB3C, // LAMED
-    0, // FINAL MEM
-    0xFB3E, // MEM
-    0, // FINAL NUN
-    0xFB40, // NUN
-    0xFB41, // SAMEKH
-    0, // AYIN
-    0xFB43, // FINAL PE
-    0xFB44, // PE
-    0, // FINAL TSADI
-    0xFB46, // TSADI
-    0xFB47, // QOF
-    0xFB48, // RESH
-    0xFB49, // SHIN
-    0xFB4A // TAV
+    0xFB30, /* ALEF */
+    0xFB31, /* BET */
+    0xFB32, /* GIMEL */
+    0xFB33, /* DALET */
+    0xFB34, /* HE */
+    0xFB35, /* VAV */
+    0xFB36, /* ZAYIN */
+    0x0000, /* HET */
+    0xFB38, /* TET */
+    0xFB39, /* YOD */
+    0xFB3A, /* FINAL KAF */
+    0xFB3B, /* KAF */
+    0xFB3C, /* LAMED */
+    0x0000, /* FINAL MEM */
+    0xFB3E, /* MEM */
+    0x0000, /* FINAL NUN */
+    0xFB40, /* NUN */
+    0xFB41, /* SAMEKH */
+    0x0000, /* AYIN */
+    0xFB43, /* FINAL PE */
+    0xFB44, /* PE */
+    0x0000, /* FINAL TSADI */
+    0xFB46, /* TSADI */
+    0xFB47, /* QOF */
+    0xFB48, /* RESH */
+    0xFB49, /* SHIN */
+    0xFB4A /* TAV */
   };
 
   bool found = c->unicode->compose (a, b, ab);
 
   if (!found && (b & ~0x7F) == 0x0580) {
-      // special-case Hebrew presentation forms that are excluded from
-      // standard normalization, but wanted for old fonts
+      /* Special-case Hebrew presentation forms that are excluded from
+       * standard normalization, but wanted for old fonts. */
       switch (b) {
-      case 0x05B4: // HIRIQ
-	  if (a == 0x05D9) { // YOD
+      case 0x05B4: /* HIRIQ */
+	  if (a == 0x05D9) { /* YOD */
 	      *ab = 0xFB1D;
 	      found = true;
 	  }
 	  break;
-      case 0x05B7: // patah
-	  if (a == 0x05F2) { // YIDDISH YOD YOD
+      case 0x05B7: /* patah */
+	  if (a == 0x05F2) { /* YIDDISH YOD YOD */
 	      *ab = 0xFB1F;
 	      found = true;
-	  } else if (a == 0x05D0) { // ALEF
+	  } else if (a == 0x05D0) { /* ALEF */
 	      *ab = 0xFB2E;
 	      found = true;
 	  }
 	  break;
-      case 0x05B8: // QAMATS
-	  if (a == 0x05D0) { // ALEF
+      case 0x05B8: /* QAMATS */
+	  if (a == 0x05D0) { /* ALEF */
 	      *ab = 0xFB2F;
 	      found = true;
 	  }
 	  break;
-      case 0x05B9: // HOLAM
-	  if (a == 0x05D5) { // VAV
+      case 0x05B9: /* HOLAM */
+	  if (a == 0x05D5) { /* VAV */
 	      *ab = 0xFB4B;
 	      found = true;
 	  }
 	  break;
-      case 0x05BC: // DAGESH
+      case 0x05BC: /* DAGESH */
 	  if (a >= 0x05D0 && a <= 0x05EA) {
 	      *ab = sDageshForms[a - 0x05D0];
 	      found = (*ab != 0);
-	  } else if (a == 0xFB2A) { // SHIN WITH SHIN DOT
+	  } else if (a == 0xFB2A) { /* SHIN WITH SHIN DOT */
 	      *ab = 0xFB2C;
 	      found = true;
-	  } else if (a == 0xFB2B) { // SHIN WITH SIN DOT
+	  } else if (a == 0xFB2B) { /* SHIN WITH SIN DOT */
 	      *ab = 0xFB2D;
 	      found = true;
 	  }
 	  break;
-      case 0x05BF: // RAFE
+      case 0x05BF: /* RAFE */
 	  switch (a) {
-	  case 0x05D1: // BET
+	  case 0x05D1: /* BET */
 	      *ab = 0xFB4C;
 	      found = true;
 	      break;
-	  case 0x05DB: // KAF
+	  case 0x05DB: /* KAF */
 	      *ab = 0xFB4D;
 	      found = true;
 	      break;
-	  case 0x05E4: // PE
+	  case 0x05E4: /* PE */
 	      *ab = 0xFB4E;
 	      found = true;
 	      break;
 	  }
 	  break;
-      case 0x05C1: // SHIN DOT
-	  if (a == 0x05E9) { // SHIN
+      case 0x05C1: /* SHIN DOT */
+	  if (a == 0x05E9) { /* SHIN */
 	      *ab = 0xFB2A;
 	      found = true;
-	  } else if (a == 0xFB49) { // SHIN WITH DAGESH
+	  } else if (a == 0xFB49) { /* SHIN WITH DAGESH */
 	      *ab = 0xFB2C;
 	      found = true;
 	  }
 	  break;
-      case 0x05C2: // SIN DOT
-	  if (a == 0x05E9) { // SHIN
+      case 0x05C2: /* SIN DOT */
+	  if (a == 0x05E9) { /* SHIN */
 	      *ab = 0xFB2B;
 	      found = true;
-	  } else if (a == 0xFB49) { // SHIN WITH DAGESH
+	  } else if (a == 0xFB49) { /* SHIN WITH DAGESH */
 	      *ab = 0xFB2D;
 	      found = true;
 	  }

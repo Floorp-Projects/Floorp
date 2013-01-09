@@ -28,8 +28,9 @@ const nsISettingsServiceLock         = Ci.nsISettingsServiceLock;
 
 function SettingsServiceLock(aSettingsService)
 {
-  debug("settingsServiceLock constr!");
+  if (DEBUG) debug("settingsServiceLock constr!");
   this._open = true;
+  this._busy = false;
   this._requests = new Queue();
   this._settingsService = aSettingsService;
   this._transaction = null;
@@ -44,17 +45,21 @@ SettingsServiceLock.prototype = {
     let store = lock._transaction.objectStore(SETTINGSSTORE_NAME);
 
     while (!lock._requests.isEmpty()) {
+      if (lock._isBusy) {
+        return;
+      }
       let info = lock._requests.dequeue();
-      debug("info:" + info.intent);
+      if (DEBUG) debug("info:" + info.intent);
       let callback = info.callback;
-      let req;
       let name = info.name;
       switch (info.intent) {
         case "set":
           let value = info.value;
           let message = info.message;
-          if(typeof(value) == 'object')
+          if(DEBUG && typeof(value) == 'object') {
             debug("object name:" + name + ", val: " + JSON.stringify(value));
+          }
+          lock._isBusy = true;
           let checkKeyRequest = store.get(name);
 
           checkKeyRequest.onsuccess = function (event) {
@@ -63,13 +68,12 @@ SettingsServiceLock.prototype = {
               defaultValue = event.target.result.defaultValue;
             } else {
               defaultValue = null;
-              if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database.\n");
+              if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + name + " is not in the database.\n");
             }
+            let setReq = store.put({ settingName: name, defaultValue: defaultValue, userValue: value });
 
-            req = store.put({ settingName: name, defaultValue: defaultValue, userValue: value });
-
-            req.onsuccess = function() {
-              if (DEBUG) debug("set on success");
+            setReq.onsuccess = function() {
+              lock._isBusy = false;
               lock._open = true;
               if (callback)
                 callback.handle(name, value);
@@ -79,61 +83,77 @@ SettingsServiceLock.prototype = {
                 message: message
               }));
               lock._open = false;
+              lock.process();
             };
 
-            req.onerror = function(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
+            setReq.onerror = function(event) {
+              lock._isBusy = false;
+              callback ? callback.handleError(event.target.errorMessage) : null;
+              lock.process();
+            };
           }
 
-          checkKeyRequest.onerror = function(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
+          checkKeyRequest.onerror = function(event) {
+            lock._isBusy = false;
+            callback ? callback.handleError(event.target.errorMessage) : null;
+            lock.process();
+          };
           break;
         case "get":
-          req = store.mozGetAll(name);
-          req.onsuccess = function(event) {
-            debug("Request successful. Record count:" + event.target.result.length);
-            debug("result: " + JSON.stringify(event.target.result));
+          let getReq = store.mozGetAll(name);
+          getReq.onsuccess = function(event) {
+            if (DEBUG) {
+              debug("Request successful. Record count:" + event.target.result.length);
+              debug("result: " + JSON.stringify(event.target.result));
+            }
             this._open = true;
             if (callback) {
               if (event.target.result[0]) {
                 if (event.target.result.length > 1) {
-                  debug("Warning: overloaded setting:" + name);
+                  if (DEBUG) debug("Warning: overloaded setting:" + name);
                 }
                 let result = event.target.result[0];
                 let value = result.userValue !== undefined
                             ? result.userValue
                             : result.defaultValue;
                 callback.handle(name, value);
-              } else
+              } else {
                 callback.handle(name, null);
+              }
             } else {
-              debug("no callback defined!");
+              if (DEBUG) debug("no callback defined!");
             }
             this._open = false;
           }.bind(lock);
-          req.onerror = function error(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
+          getReq.onerror = function error(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
           break;
       }
     }
-    if (!lock._requests.isEmpty())
-      throw Components.results.NS_ERROR_ABORT;
     lock._open = true;
   },
 
-  createTransactionAndProcess: function createTransactionAndProcess() {
+  createTransactionAndProcess: function() {
     if (this._settingsService._settingsDB._db) {
-      var lock;
+      let lock;
       while (lock = this._settingsService._locks.dequeue()) {
         if (!lock._transaction) {
           lock._transaction = lock._settingsService._settingsDB._db.transaction(SETTINGSSTORE_NAME, "readwrite");
         }
-        lock.process();
+        if (!lock._isBusy) {
+          lock.process();
+        } else {
+          this._settingsService._locks.enqueue(lock);
+          return;
+        }
       }
-      if (!this._requests.isEmpty())
+      if (!this._requests.isEmpty() && !this._isBusy) {
         this.process();
+      }
     }
   },
 
   get: function get(aName, aCallback) {
-    debug("get: " + aName + ", " + aCallback);
+    if (DEBUG) debug("get: " + aName + ", " + aCallback);
     this._requests.enqueue({ callback: aCallback, intent:"get", name: aName });
     this.createTransactionAndProcess();
   },
@@ -186,12 +206,11 @@ SettingsService.prototype = {
   },
 
   createLock: function createLock() {
-    debug("get lock!");
     var lock = new SettingsServiceLock(this);
     this._locks.enqueue(lock);
     this._settingsDB.ensureDB(
       function() { lock.createTransactionAndProcess(); },
-      function() { dump("ensureDB error cb!\n"); },
+      function() { dump("SettingsService failed to open DB!\n"); },
       myGlobal );
     this.nextTick(function() { this._open = false; }, lock);
     return lock;

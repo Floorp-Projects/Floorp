@@ -382,13 +382,12 @@ class GlobalObject : public JSObject
         return &getSlotRef(INTRINSICS).toObject();
     }
 
-    bool getIntrinsicValue(JSContext *cx, PropertyName *name, MutableHandleValue value) {
+    bool getIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue value) {
         RootedObject holder(cx, intrinsicsHolder());
         RootedId id(cx, NameToId(name));
         if (HasDataProperty(cx, holder, id, value.address()))
             return true;
-        Rooted<PropertyName*> rootedName(cx, name);
-        if (!cx->runtime->cloneSelfHostedValue(cx, rootedName, value))
+        if (!cx->runtime->cloneSelfHostedValue(cx, name, value))
             return false;
         mozilla::DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, id, value, NULL, NULL, 0);
         JS_ASSERT(ok);

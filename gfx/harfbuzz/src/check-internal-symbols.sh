@@ -19,7 +19,7 @@ for suffix in .so; do
 	so=`echo .libs/libharfbuzz$suffix`
 	if test -f "$so"; then
 		echo "Checking that we are not exposing internal symbols"
-		if nm "$so" | grep ' [BCDGINRSTVW] ' | grep -v ' T _fini\>\| T _init\>\| T hb_'; then
+		if nm "$so" | grep ' [BCDGINRSTVW] ' | grep -v ' T _fini\>\| T _init\>\| T hb_\| __bss_start\>\| __bss_start__\>\| __bss_end__\>\| _edata\>\| _end\>\| _bss_end__\>\| __end__\>'; then
 			echo "Ouch, internal symbols exposed"
 			stat=1
 		fi

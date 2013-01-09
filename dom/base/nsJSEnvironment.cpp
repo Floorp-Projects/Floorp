@@ -3308,6 +3308,12 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 
     PRTime now = PR_Now();
     if (sCCLockedOutTime == 0) {
+      // Reset sCCTimerFireCount so that we run forgetSkippable
+      // often enough before CC. Because of reduced ccDelay
+      // forgetSkippable will be called just a few times.
+      // NS_MAX_CC_LOCKEDOUT_TIME limit guarantees that we end up calling
+      // forgetSkippable and CycleCollectNow eventually.
+      sCCTimerFireCount = 0;
       sCCLockedOutTime = now;
       return;
     }
