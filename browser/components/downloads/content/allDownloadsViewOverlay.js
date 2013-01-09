@@ -114,20 +114,16 @@ DownloadElementShell.prototype = {
     this._dataItem = aValue;
     if (this._dataItem) {
       this._active = true;
-      this._wasDone = this._dataItem.done;
-      this._wasInProgress = this._dataItem.inProgress;
       this._targetFileInfoFetched = false;
       this._fetchTargetFileInfo();
     }
     else if (this._placesNode) {
-      this._wasInProgress = false;
-      this._wasDone = this.getDownloadState(true) == nsIDM.DOWNLOAD_FINISHED;
       this._targetFileInfoFetched = false;
       if (this.active)
         this._fetchTargetFileInfo();
     }
 
-    it (this.active)
+    if (this.active)
       this._updateStatusUI();
     return aValue;
   },
@@ -146,8 +142,6 @@ DownloadElementShell.prototype = {
       // We don't need to update the UI if we had a data item, because
       // the places information isn't used in this case.
       if (!this._dataItem && this._placesNode) {
-        this._wasInProgress = false;
-        this._wasDone = this.getDownloadState(true) == nsIDM.DOWNLOAD_FINISHED;
         this._targetFileInfoFetched = false;
         if (this.active) {
           this._updateStatusUI();
@@ -471,8 +465,9 @@ DownloadElementShell.prototype = {
   },
 
   /* DownloadView */
-  onStateChange: function DES_onStateChange() {
-    if (!this._wasDone && this._dataItem.done) {
+  onStateChange: function DES_onStateChange(aOldState) {
+    if (aOldState != nsIDM.DOWNLOAD_FINISHED &&
+        aOldState != this.dataItem.state) {
       // See comment in DVI_onStateChange in downloads.js (the panel-view)
       this._element.setAttribute("image", this._icon + "&state=normal");
 
@@ -480,16 +475,6 @@ DownloadElementShell.prototype = {
       if (this.active)
         this._fetchTargetFileInfo();
     }
-
-    this._wasDone = this._dataItem.done;
-
-    // Update the end time using the current time if required.
-    if (this._wasInProgress && !this._dataItem.inProgress) {
-      this._endTime = Date.now();
-    }
-
-    this._wasDone = this._dataItem.done;
-    this._wasInProgress = this._dataItem.inProgress;
 
     this._updateDownloadStatusUI();
     if (this._element.selected)
