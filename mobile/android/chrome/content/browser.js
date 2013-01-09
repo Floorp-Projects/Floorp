@@ -1556,7 +1556,7 @@ var NativeWindow = {
     _addHTMLContextMenuItems: function cm_addContextMenuItems(aMenu, aParent) {
       for (let i = 0; i < aMenu.childNodes.length; i++) {
         let item = aMenu.childNodes[i];
-        if (!item.label || item.hasAttribute("hidden"))
+        if (!item.label)
           continue;
 
         let id = this._contextId++;
@@ -1578,6 +1578,9 @@ var NativeWindow = {
           }).bind(this),
 
           getValue: function(aElt) {
+            if (item.hasAttribute("hidden"))
+              return null;
+
             return {
               icon: item.icon,
               label: item.label,
@@ -1703,8 +1706,15 @@ var NativeWindow = {
       // convert this.menuitems object to an array for sending to native code
       let itemArray = [];
       for (let i = 0; i < this.menuitems.length; i++) {
-        itemArray.push(this.menuitems[i].getValue(aTarget));
+        let val = this.menuitems[i].getValue(aTarget);
+
+        // hidden menu items will return null from getValue
+        if (val)
+          itemArray.push(val);
       }
+
+      if (itemArray.length == 0)
+        return;
 
       let msg = {
         gecko: {
