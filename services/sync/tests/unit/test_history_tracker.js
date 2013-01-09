@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/history.js");
@@ -30,7 +31,27 @@ tracker.persistChangedIDs = false;
 let _counter = 0;
 function addVisit() {
   let uri = Utils.makeURI("http://getfirefox.com/" + _counter);
-  PlacesUtils.history.addVisit(uri, Date.now() * 1000, null, 1, false, 0);
+  let place = {
+    uri: uri,
+    visits: [ {
+      visitDate: Date.now() * 1000,
+      transitionType: PlacesUtils.history.TRANSITION_LINK
+    } ]
+  };
+  let cb = Async.makeSpinningCallback();
+  PlacesUtils.asyncHistory.updatePlaces(place, {
+    handleError: function Add_handleError() {
+      cb(new Error("Error adding history entry"));
+    },
+    handleResult: function Add_handleResult() {
+      cb();
+    },
+    handleCompletion: function Add_handleCompletion() {
+       // Nothing to do
+     }
+   });
+  // Spin the event loop to embed this async call in a sync API
+  cb.wait();
   _counter++;
   return uri;
 }
