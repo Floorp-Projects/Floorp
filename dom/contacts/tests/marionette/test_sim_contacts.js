@@ -4,6 +4,13 @@
 MARIONETTE_TIMEOUT = 30000;
 
 SpecialPowers.addPermission("contacts-read", true, document);
+// TODO: see bug 804623, We are preventing "read" operations
+// even if just "write" has been set to DENY_ACTION.
+// Bug 816900: Because PermissionPromptHelper.jsm will expand the
+// contacts-read to contacts-read, contacts-write, contacts-create,
+// we add the other two permissions here.
+SpecialPowers.addPermission("contacts-write", true, document);
+SpecialPowers.addPermission("contacts-create", true, document);
 
 let mozContacts = window.navigator.mozContacts;
 ok(mozContacts);
@@ -53,6 +60,8 @@ function runNextTest() {
 
 function cleanUp() {
   SpecialPowers.removePermission("contacts-read", document);
+  SpecialPowers.removePermission("contacts-write", document);
+  SpecialPowers.removePermission("contacts-create", document);
   finish();
 }
 
