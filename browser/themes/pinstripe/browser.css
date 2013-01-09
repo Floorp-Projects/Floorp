@@ -24,7 +24,8 @@
 }
 
 #PersonalToolbar:-moz-lwtheme,
-#nav-bar:-moz-lwtheme {
+#nav-bar:-moz-lwtheme,
+#main-window[privatebrowsingmode=temporary] #nav-bar[tabsontop=false] {
   -moz-appearance: none !important;
   background: none !important;
   /* Switching to a lightweight theme shouldn't move the content area,
