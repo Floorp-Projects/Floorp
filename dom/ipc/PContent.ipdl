@@ -443,6 +443,9 @@ parent:
 
     async AudioChannelChangedNotification();
 
+    async FilePathUpdateNotify(nsString aType,
+                               nsString aFilepath,
+                               nsCString aReason);
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };

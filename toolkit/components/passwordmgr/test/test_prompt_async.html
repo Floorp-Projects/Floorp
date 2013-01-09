@@ -266,7 +266,15 @@
                 ok(true, "doTest testNum 4");
                 expectedLoads = 1;
                 expectedDialogs = 2;
-                iframe1Doc.location.reload();
+                iframe1.src = exampleCom + "authenticate.sjs?"+
+                    "user=user4name&"+
+                    "pass=user4pass&"+
+                    "realm=mochirealm4&"+
+                    "proxy_user=proxy_user3&"+
+                    "proxy_pass=proxy_pass3&"+
+                    "proxy_realm=proxy_realm3";
+
+
                 break;
 
             case 5:
@@ -295,7 +303,14 @@
                 ok(true, "doTest testNum 6");
                 expectedLoads = 1;
                 expectedDialogs = 2;
-                iframe1Doc.location.reload();
+                iframe1.src = exampleCom + "authenticate.sjs?"+
+                    "user=user5name&"+
+                    "pass=user5pass&"+
+                    "realm=mochirealm5&"+
+                    "proxy_user=proxy_user4&"+
+                    "proxy_pass=proxy_pass4&"+
+                    "proxy_realm=proxy_realm4&"+
+                    "huge=1";
                 break;
 
             case 7:
@@ -346,6 +361,7 @@
 
                 case 3:
                     dialog.cancelDialog();
+                    setTimeout(onFrameLoad(), 10); // there are no successful frames for test 3
                     break;
 
                 case 4:
@@ -357,6 +373,7 @@
 
                 case 5:
                     dialog.cancelDialog();
+                    setTimeout(onFrameLoad(), 10); // there are no successful frames for test 5
                     break;
 
                 case 6:
@@ -435,11 +452,9 @@
                 case 3:
                     ok(true, "doCheck testNum 3");
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
-                    is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
-                    is(proxyok1, "FAIL", "Proxy Authorization FAILED, frame1");
+                    // ensure that the page content is not displayed on failed proxy auth
+                    is(iframe1Doc.getElementById("ok"), undefined, "frame did not load");
                     break;
 
                 case 4:
@@ -455,14 +470,9 @@
                 case 5:
                     ok(true, "doCheck testNum 5");
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-                    var footnote = iframe1Doc.getElementById("footnote").textContent;
 
-                    is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
-                    is(proxyok1, "FAIL", "Proxy Authorization FAILED, frame1");
-                    is(footnote, "This is a footnote after the huge content fill",
-                        "Footnote present and loaded completely");
+                    // ensure that the page content is not displayed on failed proxy auth
+                    is(iframe1Doc.getElementById("footnote"), undefined, "frame did not load");
                     break;
 
                 case 6:
