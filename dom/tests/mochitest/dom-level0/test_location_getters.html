@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MessageEvent tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="test()">
+  <p id="display"></p>
+  <pre id="test">
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  function test()
+  {
+    var loc = window.location;
+    is(loc.hash, '', 'Unexpected hash.');
+    is(loc.host, 'mochi.test:8888', 'Unexpected host.');
+    is(loc.hostname, 'mochi.test', 'Unexpected hostname.');
+    is(loc.origin, 'http://mochi.test:8888', 'Unexpected origin.');
+    is(loc.pathname, '/tests/dom/tests/mochitest/dom-level0/test_location_getters.html', 'Unexpected pathname.');
+    is(loc.port, '8888', 'Unexpected port.');
+    is(loc.protocol, 'http:', 'Unexpected protocol.');
+    SimpleTest.finish();
+  }
+  </script>
+  </pre>
+</body>
+</html>

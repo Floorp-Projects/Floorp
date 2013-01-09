@@ -1,0 +1,11 @@
+<script>
+  window.parent.postMessage({
+    "hash": window.location.hash,
+    "host": window.location.host,
+    "hostname": window.location.hostname,
+    "origin": window.location.origin,
+    "pathname": window.location.pathname,
+    "port": window.location.port,
+    "protocol": window.location.protocol,
+  }, "*");
+</script>
