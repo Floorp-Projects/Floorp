@@ -5,7 +5,8 @@
 
 #include "nsGkAtoms.h"
 #include "nsUnicharUtils.h"
-#include "nsXMLProcessingInstruction.h"
+#include "mozilla/dom/ProcessingInstruction.h"
+#include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 
@@ -15,6 +16,8 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsAString& aTarget,
                                const nsAString& aData)
 {
+  using mozilla::dom::ProcessingInstruction;
+
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
 
   nsCOMPtr<nsIAtom> target = do_GetAtom(aTarget);
@@ -34,8 +37,8 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                      target);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-  nsXMLProcessingInstruction *instance =
-    new nsXMLProcessingInstruction(ni.forget(), aData);
+  ProcessingInstruction *instance =
+    new ProcessingInstruction(ni.forget(), aData);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -45,8 +48,13 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                                       const nsAString& aData)
+DOMCI_NODE_DATA(ProcessingInstruction, mozilla::dom::ProcessingInstruction)
+
+namespace mozilla {
+namespace dom {
+
+ProcessingInstruction::ProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                             const nsAString& aData)
   : nsGenericDOMDataNode(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
@@ -56,21 +64,20 @@ nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsINodeI
   SetTextInternal(0, mText.GetLength(),
                   aData.BeginReading(), aData.Length(),
                   false);  // Don't notify (bug 420429).
+
+  SetIsDOMBinding();
 }
 
-nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
+ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-
-DOMCI_NODE_DATA(ProcessingInstruction, nsXMLProcessingInstruction)
-
-// QueryInterface implementation for nsXMLProcessingInstruction
-NS_INTERFACE_TABLE_HEAD(nsXMLProcessingInstruction)
-  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXMLProcessingInstruction)
-    NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction, nsIDOMNode)
-    NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction, nsIDOMCharacterData)
-    NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction,
+// QueryInterface implementation for ProcessingInstruction
+NS_INTERFACE_TABLE_HEAD(ProcessingInstruction)
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(ProcessingInstruction)
+    NS_INTERFACE_TABLE_ENTRY(ProcessingInstruction, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(ProcessingInstruction, nsIDOMCharacterData)
+    NS_INTERFACE_TABLE_ENTRY(ProcessingInstruction,
                              nsIDOMProcessingInstruction)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
@@ -78,12 +85,17 @@ NS_INTERFACE_TABLE_HEAD(nsXMLProcessingInstruction)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
 
-NS_IMPL_ADDREF_INHERITED(nsXMLProcessingInstruction, nsGenericDOMDataNode)
-NS_IMPL_RELEASE_INHERITED(nsXMLProcessingInstruction, nsGenericDOMDataNode)
+NS_IMPL_ADDREF_INHERITED(ProcessingInstruction, nsGenericDOMDataNode)
+NS_IMPL_RELEASE_INHERITED(ProcessingInstruction, nsGenericDOMDataNode)
 
+JSObject*
+ProcessingInstruction::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return ProcessingInstructionBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
+ProcessingInstruction::GetTarget(nsAString& aTarget)
 {
   aTarget = NodeName();
 
@@ -91,7 +103,7 @@ nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
 }
 
 bool
-nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
+ProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
 {
   nsAutoString data;
 
@@ -100,24 +112,24 @@ nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
 }
 
 bool
-nsXMLProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
+ProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*
-nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
-                                          bool aCloneText) const
+ProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
+                                     bool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  return new nsXMLProcessingInstruction(ni.forget(), data);
+  return new ProcessingInstruction(ni.forget(), data);
 }
 
 #ifdef DEBUG
 void
-nsXMLProcessingInstruction::List(FILE* out, int32_t aIndent) const
+ProcessingInstruction::List(FILE* out, int32_t aIndent) const
 {
   int32_t index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -133,8 +145,11 @@ nsXMLProcessingInstruction::List(FILE* out, int32_t aIndent) const
 }
 
 void
-nsXMLProcessingInstruction::DumpContent(FILE* out, int32_t aIndent,
-                                        bool aDumpAll) const
+ProcessingInstruction::DumpContent(FILE* out, int32_t aIndent,
+                                   bool aDumpAll) const
 {
 }
 #endif
+
+} // namespace dom
+} // namespace mozilla

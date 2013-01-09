@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozIThirdPartyUtil.h"
 #include "nscore.h"
 #include "nsScriptSecurityManager.h"
 #include "nsString.h"
@@ -441,7 +442,7 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrinc
       nsScriptSecurityManager::ReportError(
         nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
     }
-    
+
     return NS_ERROR_DOM_BAD_URI;
   }
 
@@ -485,7 +486,7 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
   mDomainImmutable = URIIsImmutable(mDomain);
-  
+
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nullptr);
 
@@ -553,6 +554,29 @@ NS_IMETHODIMP
 nsPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
 {
   *aIsNullPrincipal = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
+{
+  // For a file URI, we return the file path.
+  if (URIIsLocalFile(mCodebase)) {
+    nsCOMPtr<nsIURL> url = do_QueryInterface(mCodebase);
+
+    if (url) {
+      return url->GetFilePath(aBaseDomain);
+    }
+  }
+
+  // For everything else, we ask the TLD service via
+  // the ThirdPartyUtil.
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+    do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  if (thirdPartyUtil) {
+    return thirdPartyUtil->GetBaseDomain(mCodebase, aBaseDomain);
+  }
+
   return NS_OK;
 }
 
@@ -688,20 +712,20 @@ nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr <nsIPrincipal> > &aWh
 nsExpandedPrincipal::~nsExpandedPrincipal()
 { }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsExpandedPrincipal::GetDomain(nsIURI** aDomain)
 {
   *aDomain = nullptr;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsExpandedPrincipal::SetDomain(nsIURI* aDomain)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsExpandedPrincipal::GetOrigin(char** aOrigin)
 {
   *aOrigin = ToNewCString(NS_LITERAL_CSTRING(EXPANDED_PRINCIPAL_SPEC));
@@ -713,10 +737,10 @@ typedef nsresult (NS_STDCALL nsIPrincipal::*nsIPrincipalMemFn)(nsIPrincipal* aOt
 #define CALL_MEMBER_FUNCTION(THIS,MEM_FN)  ((THIS)->*(MEM_FN))
 
 // nsExpandedPrincipal::Equals and nsExpandedPrincipal::EqualsIgnoringDomain
-// shares the same logic. The difference only that Equals requires 'this' 
-// and 'aOther' to Subsume each other while EqualsIgnoringDomain requires 
+// shares the same logic. The difference only that Equals requires 'this'
+// and 'aOther' to Subsume each other while EqualsIgnoringDomain requires
 // bidirectional SubsumesIgnoringDomain.
-static nsresult 
+static nsresult
 Equals(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
        bool* aResult)
 {
@@ -750,14 +774,14 @@ nsExpandedPrincipal::EqualsIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
 // nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesIgnoringDomain
 // shares the same logic. The difference only that Subsumes calls are replaced
 //with SubsumesIgnoringDomain calls in the second case.
-static nsresult 
-Subsumes(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther, 
+static nsresult
+Subsumes(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
          bool* aResult)
 {
   nsresult rv;
-  nsCOMPtr<nsIExpandedPrincipal> expanded = do_QueryInterface(aOther);  
+  nsCOMPtr<nsIExpandedPrincipal> expanded = do_QueryInterface(aOther);
   if (expanded) {
-    // If aOther is an ExpandedPrincipal too, check if all of its 
+    // If aOther is an ExpandedPrincipal too, check if all of its
     // principals are subsumed.
     nsTArray< nsCOMPtr<nsIPrincipal> >* otherList;
     expanded->GetWhiteList(&otherList);
@@ -766,7 +790,7 @@ Subsumes(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther
       NS_ENSURE_SUCCESS(rv, rv);
       if (!*aResult) {
         // If we don't subsume at least one principal of aOther, return false.
-        return NS_OK;    
+        return NS_OK;
       }
     }
   } else {
@@ -826,7 +850,7 @@ nsExpandedPrincipal::GetURI(nsIURI** aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsExpandedPrincipal::GetWhiteList(nsTArray<nsCOMPtr<nsIPrincipal> >** aWhiteList)
 {
   *aWhiteList = &mPrincipals;
@@ -872,6 +896,12 @@ nsExpandedPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
 {
   *aIsNullPrincipal = false;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
+{
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 void

@@ -20,12 +20,6 @@ using mozilla::DebugOnly;
 #ifdef JS_PARALLEL_COMPILATION
 
 bool
-js::OffThreadCompilationAvailable(JSContext *cx)
-{
-    return cx->runtime->useHelperThreads() && cx->runtime->helperThreadCount() > 0;
-}
-
-bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 {
     JSRuntime *rt = cx->runtime;
@@ -358,12 +352,6 @@ js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
-}
-
-bool
-js::OffThreadCompilationAvailable(JSContext *cx)
-{
-    return false;
 }
 
 #endif /* JS_PARALLEL_COMPILATION */
