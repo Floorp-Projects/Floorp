@@ -16,10 +16,8 @@
  */
 
 interface Attr;
-interface CDATASection;
 interface Comment;
 interface NodeIterator;
-interface ProcessingInstruction;
 interface Range;
 interface StyleSheetList;
 interface Touch;

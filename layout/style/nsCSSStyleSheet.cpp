@@ -11,6 +11,7 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsCSSRuleProcessor.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/ImportRule.h"
@@ -41,6 +42,7 @@
 #include "mozilla/Likely.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 
 // -------------------------------
@@ -1033,6 +1035,7 @@ nsCSSStyleSheet::nsCSSStyleSheet(CORSMode aCORSMode)
     mOwningNode(nullptr),
     mDisabled(false),
     mDirty(false),
+    mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
 
@@ -1051,6 +1054,7 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
     mOwningNode(aOwningNodeToUse),
     mDisabled(aCopy.mDisabled),
     mDirty(aCopy.mDirty),
+    mScopeElement(nullptr),
     mInner(aCopy.mInner),
     mRuleProcessors(nullptr)
 {
@@ -1197,12 +1201,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSStyleSheet)
   // unlinked before it does.
   tmp->DropRuleCollection();
   tmp->UnlinkInner();
+  tmp->mScopeElement = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSStyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
   // We do not traverse mNext; our parent will handle that.  See
   // comments in Unlink for why.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleCollection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
   tmp->TraverseInner(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

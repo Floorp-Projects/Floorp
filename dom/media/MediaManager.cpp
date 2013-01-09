@@ -1068,7 +1068,9 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   for (uint32_t i = 0; i < length; i++) {
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
       listeners->ElementAt(i);
-    listener->Invalidate();
+    if (listener->Stream()) { // aka HasBeenActivate()ed
+      listener->Invalidate();
+    }
     listener->Remove();
   }
   listeners->Clear();
@@ -1252,7 +1254,7 @@ void
 GetUserMediaCallbackMediaStreamListener::NotifyFinished(MediaStreamGraph* aGraph)
 {
   mFinished = true;
-  Invalidate();
+  Invalidate(); // we know it's been activated
   NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, this));
 }
 

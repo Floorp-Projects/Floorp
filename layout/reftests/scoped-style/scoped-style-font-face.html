@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<body>
+  <style>
+    @font-face {
+      font-family: Ahem;
+      url: src(../fonts/Ahem.ttf);
+    }
+    #a { font-family: Ahem }
+    #c { font-family: Ahem2 }
+  </style>
+  <p id=a>First</p>
+  <p>
+    <style scoped>
+      @font-face {
+        font-family: Ahem2;
+        url: src(../fonts/Ahem.ttf);
+      }
+      p { font-family: Ahem2; color: blue }
+    </style>
+    Second
+  </p>
+  <p id=c>Third</p>
+</body>
