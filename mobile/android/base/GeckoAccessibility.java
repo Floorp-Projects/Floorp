@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.gfx.LayerView;
 
 import android.view.accessibility.*;

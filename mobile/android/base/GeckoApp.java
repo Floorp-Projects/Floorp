@@ -17,7 +17,6 @@ import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
-import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.updater.UpdateService;
 
