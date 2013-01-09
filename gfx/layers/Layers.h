@@ -288,12 +288,6 @@ public:
   Layer* GetPrimaryScrollableLayer();
 
   /**
-   * Returns a list of all descendant layers for which 
-   * GetFrameMetrics().IsScrollable() is true.
-   */
-  void GetScrollableLayers(nsTArray<Layer*>& aArray);
-
-  /**
    * CONSTRUCTION PHASE ONLY
    * Called when a managee has mutated.
    * Subclasses overriding this method must first call their
