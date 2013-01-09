@@ -6,7 +6,7 @@
 #include "nsDOMSVGZoomEvent.h"
 #include "nsSVGRect.h"
 #include "DOMSVGPoint.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/Element.h"
@@ -48,20 +48,20 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
         // non-SVGDocument), then the "New" and "Previous"
         // properties will be left null which is probably what we want.
         if (rootElement->IsSVG(nsGkAtoms::svg)) {
-          nsSVGSVGElement *SVGSVGElement =
-            static_cast<nsSVGSVGElement*>(rootElement);
+          SVGSVGElement *SVGSVGElem =
+            static_cast<SVGSVGElement*>(rootElement);
 
-          mNewScale = SVGSVGElement->GetCurrentScale();
-          mPreviousScale = SVGSVGElement->GetPreviousScale();
+          mNewScale = SVGSVGElem->GetCurrentScale();
+          mPreviousScale = SVGSVGElem->GetPreviousScale();
 
           const nsSVGTranslatePoint& translate =
-            SVGSVGElement->GetCurrentTranslate();
+            SVGSVGElem->GetCurrentTranslate();
           mNewTranslate =
             new DOMSVGPoint(translate.GetX(), translate.GetY());
           mNewTranslate->SetReadonly(true);
 
           const nsSVGTranslatePoint& prevTranslate =
-            SVGSVGElement->GetPreviousTranslate();
+            SVGSVGElem->GetPreviousTranslate();
           mPreviousTranslate =
             new DOMSVGPoint(prevTranslate.GetX(), prevTranslate.GetY());
           mPreviousTranslate->SetReadonly(true);
