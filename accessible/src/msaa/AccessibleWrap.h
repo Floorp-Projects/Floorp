@@ -138,11 +138,6 @@ public: // construction, destruction
   // Return the registered OLE class ID of this object's CfDataObj.
     CLSID GetClassID() const;
 
-  // IServiceProvider
-  virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID aGuidService,
-                                                 REFIID aIID,
-                                                 void** aInstancePtr);
-
   public: // COM interface IAccessible
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent( 
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
