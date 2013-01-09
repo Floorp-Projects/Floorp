@@ -533,17 +533,6 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineProperties(cx, ctor, regexp_static_props))
         return NULL;
 
-    /* Capture normal data properties pregenerated for RegExp objects. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    AddTypeProperty(cx, type, "source", Type::StringType());
-    AddTypeProperty(cx, type, "global", Type::BooleanType());
-    AddTypeProperty(cx, type, "ignoreCase", Type::BooleanType());
-    AddTypeProperty(cx, type, "multiline", Type::BooleanType());
-    AddTypeProperty(cx, type, "sticky", Type::BooleanType());
-    AddTypeProperty(cx, type, "lastIndex", Type::Int32Type());
-
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
         return NULL;
 
