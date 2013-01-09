@@ -249,6 +249,8 @@ abstract public class GeckoApp
                 // Fall through...
             case SELECTED:
                 invalidateOptionsMenu();
+                if (mFormAssistPopup != null)
+                    mFormAssistPopup.hide();
                 break;
         }
     }
@@ -644,11 +646,6 @@ abstract public class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, inBackground);
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
-    }
-
-    public void hideFormAssistPopup() {
-        if (mFormAssistPopup != null)
-            mFormAssistPopup.hide();
     }
 
     void handleSecurityChange(final int tabId, final JSONObject identityData) {
