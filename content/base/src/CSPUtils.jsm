@@ -712,7 +712,7 @@ CSPRep.prototype = {
   function csp_toString() {
     var dirs = [];
 
-    if (this._allowEval || this._allowInlineScripts) {
+    if (!this._specCompliant && (this._allowEval || this._allowInlineScripts)) {
       dirs.push("options" + (this._allowEval ? " eval-script" : "")
                            + (this._allowInlineScripts ? " inline-script" : ""));
     }
@@ -1491,6 +1491,12 @@ CSPSource.prototype = {
   function() {
     if (this._isSelf)
       return this._self.toString();
+
+    if (this._allowUnsafeInline)
+      return "unsafe-inline";
+
+    if (this._allowUnsafeEval)
+      return "unsafe-eval";
 
     var s = "";
     if (this.scheme)
