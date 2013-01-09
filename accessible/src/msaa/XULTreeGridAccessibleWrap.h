@@ -47,13 +47,17 @@ public:
                                 XULTreeGridRowAccessible* aRowAcc,
                                 nsITreeBoxObject* aTree,
                                 nsITreeView* aTreeView,
-                                int32_t aRow, nsITreeColumn* aColumn);
+                                int32_t aRow, nsITreeColumn* aColumn) :
+    XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView, aRow,
+                              aColumn), ia2AccessibleTableCell(this) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 } // namespace a11y
