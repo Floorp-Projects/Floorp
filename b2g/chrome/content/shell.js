@@ -269,6 +269,7 @@ var shell = {
     WebappsHelper.init();
     AccessFu.attach(window);
     UserAgentOverrides.init();
+    IndexedDBPromptHelper.init();
 
     // XXX could factor out into a settings->pref map.  Not worth it yet.
     SettingsListener.observe("debug.fps.enabled", false, function(value) {
@@ -306,6 +307,7 @@ var shell = {
     delete Services.audioManager;
 #endif
     UserAgentOverrides.uninit();
+    IndexedDBPromptHelper.uninit();
   },
 
   // If this key event actually represents a hardware button, filter it here
@@ -833,6 +835,37 @@ var WebappsHelper = {
         });
         break;
     }
+  }
+}
+
+let IndexedDBPromptHelper = {
+  _quotaPrompt: "indexedDB-quota-prompt",
+  _quotaResponse: "indexedDB-quota-response",
+
+  init:
+  function IndexedDBPromptHelper_init() {
+    Services.obs.addObserver(this, this._quotaPrompt, false);
+  },
+
+  uninit:
+  function IndexedDBPromptHelper_uninit() {
+    Services.obs.removeObserver(this, this._quotaPrompt, false);
+  },
+
+  observe:
+  function IndexedDBPromptHelper_observe(subject, topic, data) {
+    if (topic != this._quotaPrompt) {
+      throw new Error("Unexpected topic!");
+    }
+
+    let observer = subject.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIObserver);
+    let responseTopic = this._quotaResponse;
+
+    setTimeout(function() {
+      observer.observe(null, responseTopic,
+                       Ci.nsIPermissionManager.DENY_ACTION);
+    }, 0);
   }
 }
 
