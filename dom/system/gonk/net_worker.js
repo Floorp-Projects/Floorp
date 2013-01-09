@@ -383,9 +383,9 @@ function getTxBytes(params, callback) {
 function setAccessPoint(params, callback) {
   let command = "softap set " + params.ifname +
                 " " + params.wifictrlinterfacename +
-                " " + params.ssid +
+                " \"" + params.ssid + "\"" +
                 " " + params.security +
-                " " + params.key +
+                " \"" + params.key + "\"" +
                 " " + "6 0 8";
   return doCommand(command, callback);
 }
