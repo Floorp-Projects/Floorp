@@ -90,8 +90,6 @@ public:
 
   virtual nsEventStates IntrinsicState() const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   virtual void OnDNSPrefetchDeferred();

@@ -66,8 +66,6 @@ NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new mozilla::dom::HTMLImageElement(nodeInfo.forget());
 }
 
-DOMCI_NODE_DATA(HTMLImageElement, mozilla::dom::HTMLImageElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -98,7 +96,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLImageElement)
                                    imgINotificationObserver)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLImageElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLImageElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)

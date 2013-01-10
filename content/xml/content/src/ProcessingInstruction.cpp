@@ -48,8 +48,6 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-DOMCI_NODE_DATA(ProcessingInstruction, mozilla::dom::ProcessingInstruction)
-
 namespace mozilla {
 namespace dom {
 
@@ -72,21 +70,9 @@ ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-// QueryInterface implementation for ProcessingInstruction
-NS_INTERFACE_TABLE_HEAD(ProcessingInstruction)
-  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(ProcessingInstruction)
-    NS_INTERFACE_TABLE_ENTRY(ProcessingInstruction, nsIDOMNode)
-    NS_INTERFACE_TABLE_ENTRY(ProcessingInstruction, nsIDOMCharacterData)
-    NS_INTERFACE_TABLE_ENTRY(ProcessingInstruction,
+NS_IMPL_ISUPPORTS_INHERITED3(ProcessingInstruction, nsGenericDOMDataNode,
+                             nsIDOMNode, nsIDOMCharacterData,
                              nsIDOMProcessingInstruction)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ProcessingInstruction)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
-
-
-NS_IMPL_ADDREF_INHERITED(ProcessingInstruction, nsGenericDOMDataNode)
-NS_IMPL_RELEASE_INHERITED(ProcessingInstruction, nsGenericDOMDataNode)
 
 JSObject*
 ProcessingInstruction::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)

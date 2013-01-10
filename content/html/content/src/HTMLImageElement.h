@@ -84,7 +84,6 @@ public:
   nsresult CopyInnerTo(Element* aDest);
 
   void MaybeLoadImage();
-  virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   bool IsMap()

@@ -729,15 +729,12 @@ nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
 ////////////////////////////////////////////////////////////////////////////
 // nsDOMFileList implementation
 
-DOMCI_DATA(FileList, nsDOMFileList)
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsDOMFileList)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMFileList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFileList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileList)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FileList)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMFileList)

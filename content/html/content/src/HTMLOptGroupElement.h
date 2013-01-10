@@ -46,8 +46,6 @@ public:
  
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 

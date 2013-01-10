@@ -56,8 +56,6 @@ NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new mozilla::dom::HTMLOptionElement(nodeInfo.forget());
 }
 
-DOMCI_NODE_DATA(HTMLOptionElement, mozilla::dom::HTMLOptionElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -90,7 +88,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLOptionElement)
                                    nsIDOMHTMLOptionElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOptionElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOptionElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)

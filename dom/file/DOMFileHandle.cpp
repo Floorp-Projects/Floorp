@@ -66,12 +66,3 @@ DOMFileHandle::CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize)
 
   return file.forget();
 }
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMFileHandle)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMFileHandle)
-NS_INTERFACE_MAP_END_INHERITING(FileHandle)
-
-NS_IMPL_ADDREF_INHERITED(DOMFileHandle, FileHandle)
-NS_IMPL_RELEASE_INHERITED(DOMFileHandle, FileHandle)
-
-DOMCI_DATA(DOMFileHandle, DOMFileHandle)
