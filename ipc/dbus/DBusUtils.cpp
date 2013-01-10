@@ -95,13 +95,32 @@ dbus_bool_t dbus_func_send_async(DBusConnection *conn,
   reply = dbus_connection_send_with_reply(conn, msg,
                                           &call,
                                           timeout_ms);
-  if (reply) {
+  if (!reply) {
+    goto done;
+  }
+
+  /*
+   * Workaround bug 827888
+   *
+   * When we set the notify callback, the call might have already been
+   * completed. In this case the call never gets handled. To workaround
+   * the problem, we test if the call has been completed and if so, run
+   * the notify handler explicitly.
+   *
+   * To fix bug 827888, we'd need to do this atomically; or make dbus
+   * run the notifier function automatically if the call has been
+   * completed meanwhile.
+   */
+  if (dbus_pending_call_get_completed(call)) {
+    dbus_func_args_async_callback(call, pending);
+  } else {
     dbus_pending_call_set_notify(call,
                                  dbus_func_args_async_callback,
                                  pending,
                                  NULL);
   }
 
+done:
   if (msg) dbus_message_unref(msg);
   return reply;
 }
