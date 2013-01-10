@@ -221,8 +221,20 @@ var shell = {
       let androidVersion = libcutils.property_get("ro.build.version.sdk") +
                            "(" + libcutils.property_get("ro.build.version.codename") + ")";
       cr.annotateCrashReport("Android_Version", androidVersion);
+
+      SettingsListener.observe("deviceinfo.os", "", function(value) {
+        try {
+          let cr = Cc["@mozilla.org/xre/app-info;1"]
+                     .getService(Ci.nsICrashReporter);
+          cr.annotateCrashReport("B2G_OS_Version", value);
+        } catch(e) {
+          dump("exception: " + e);
+        }
+      });
 #endif
-    } catch(e) { }
+    } catch(e) {
+      dump("exception: " + e);
+    }
 
     let homeURL = this.homeURL;
     if (!homeURL) {
