@@ -50,17 +50,29 @@ public:
 
   FileDescriptor();
 
-  FileDescriptor(PlatformHandleType aHandle)
-  : mHandle(aHandle)
-  { }
+  FileDescriptor(const FileDescriptor& aOther)
+  {
+    *this = aOther;
+  }
+
+  FileDescriptor(PlatformHandleType aHandle);
 
   FileDescriptor(const IPDLPrivate&, const PickleType& aPickle)
 #ifdef XP_WIN
-  : mHandle(aPickle)
+  : mHandle(aPickle), mMustCloseHandle(false)
 #else
-  : mHandle(aPickle.fd)
+  : mHandle(aPickle.fd), mMustCloseHandle(false)
 #endif
   { }
+
+  ~FileDescriptor();
+
+  FileDescriptor&
+  operator=(const FileDescriptor& aOther)
+  {
+    DuplicateInCurrentProcess(aOther.mHandle);
+    return *this;
+  }
 
   // Performs platform-specific actions to duplicate mHandle in the other
   // process (e.g. dup() on POSIX, DuplicateHandle() on Windows). Returns a
@@ -86,7 +98,11 @@ public:
   }
 
 private:
+  void
+  DuplicateInCurrentProcess(PlatformHandleType aHandle);
+
   PlatformHandleType mHandle;
+  bool mMustCloseHandle;
 };
 
 } // namespace ipc
