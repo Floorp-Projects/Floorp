@@ -734,6 +734,12 @@ pref("browser.safebrowsing.reportMalwareErrorURL", "http://%LOCALE%.malware-erro
 pref("browser.safebrowsing.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 
+#ifdef MOZILLA_OFFICIAL
+// Normally the "client ID" sent in updates is appinfo.name, but for
+// official Firefox releases from Mozilla we use a special identifier.
+pref("browser.safebrowsing.id", "navclient-auto-ffox");
+#endif
+
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.  (bug 399233)
 pref("urlclassifier.alternate_error_page", "blocked");
