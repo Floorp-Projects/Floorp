@@ -940,8 +940,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             // Since we might have prevented one or more draw events from
             // occurring while the compositor was paused, we need to schedule
             // a draw event now.
-            sCompositorPaused = false;
-            win->RedrawAll();
+            if (!sCompositorPaused) {
+                win->RedrawAll();
+            }
             break;
 
         case AndroidGeckoEvent::GECKO_EVENT_SYNC:
@@ -2312,8 +2313,8 @@ nsWindow::SchedulePauseComposition()
 void
 nsWindow::ScheduleResumeComposition(int width, int height)
 {
-    if (sCompositorParent) {
-        sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
+    if (sCompositorParent && sCompositorParent->ScheduleResumeOnCompositorThread(width, height)) {
+        sCompositorPaused = false;
     }
 }
 
