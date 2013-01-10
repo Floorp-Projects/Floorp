@@ -35,6 +35,13 @@
 
 #include <user_route.h> /* was <net/route.h> */
 
+#if defined(ANDROID)
+#include <arpa/inet.h>
+#include <netinet/in.h>
+/* missing defines in Android bionic libc/NDK */
+typedef uint16_t                in_port_t;
+#endif
+
 #define	in6pcb		inpcb	/* for KAME src sync over BSD*'s */
 #define	in6p_sp		inp_sp	/* for KAME src sync over BSD*'s */
 struct inpcbpolicy;
