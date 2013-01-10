@@ -14,34 +14,32 @@ richlistitem.download button {
 .download-state:-moz-any(     [state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */
-                                           .downloadTypeIcon:not(.blockedIcon),
+                                           > .downloadTypeIcon:not(.blockedIcon),
 
 .download-state:not(:-moz-any([state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */)
-                                           .downloadTypeIcon.blockedIcon,
+                                           > .downloadTypeIcon.blockedIcon,
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
                               [state="0"], /* Downloading        */
                               [state="4"], /* Paused             */
                               [state="7"]) /* Scanning           */)
-                                           .downloadProgress,
+                                           > vbox > .downloadProgress,
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
                               [state="0"], /* Downloading        */
                               [state="4"]) /* Paused             */)
-                                           .downloadCancel,
+                                           > .downloadCancel,
 
-.download-state:not(:-moz-any([state="2"], /* Failed             */
-                              [state="3"]) /* Canceled           */)
-                                           .downloadRetry,
+.download-state[state]:not(:-moz-any([state="2"], /* Failed             */
+                                     [state="3"]) /* Canceled           */)
+                                                  > .downloadRetry,
 
 .download-state:not(          [state="1"]  /* Finished           */)
-                                           .downloadShow,
-
-.download-state:not([state]) > button
+                                           > .downloadShow
 {
   display: none;
 }

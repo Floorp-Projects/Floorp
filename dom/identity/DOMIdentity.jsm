@@ -127,6 +127,12 @@ RPWatchContext.prototype = {
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnReady", message);
   },
 
+  doCancel: function RPWatchContext_oncancel() {
+    log("doCancel: " + this.id);
+    let message = new IDDOMMessage({id: this.id});
+    this._mm.sendAsyncMessage("Identity:RP:Watch:OnCancel", message);
+  },
+
   doError: function RPWatchContext_onerror(aMessage) {
     log("doError: " + aMessage);
   }
