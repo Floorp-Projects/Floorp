@@ -69,6 +69,11 @@ class B2GRemoteAutomation(Automation):
     def setRemoteLog(self, logfile):
         self._remoteLog = logfile
 
+    def installExtension(self, extensionSource, profileDir, extensionID=None):
+        # Bug 827504 - installing special-powers extension separately causes problems in B2G
+        if extensionID != "special-powers@mozilla.org":
+            Automation.installExtension(self, extensionSource, profileDir, extensionID)
+
     # Set up what we need for the remote environment
     def environment(self, env=None, xrePath=None, crashreporter=True):
         # Because we are running remote, we don't want to mimic the local env
