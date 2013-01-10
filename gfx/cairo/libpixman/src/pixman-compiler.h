@@ -96,10 +96,6 @@
 
 #endif
 
-/* member offsets */
-#define CONTAINER_OF(type, member, data)				\
-    ((type *)(((uint8_t *)data) - offsetof (type, member)))
-
 /* TLS */
 #if defined(PIXMAN_NO_TLS)
 
