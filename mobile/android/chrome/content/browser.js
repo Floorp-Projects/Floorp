@@ -3116,8 +3116,13 @@ Tab.prototype = {
     let viewportHeight = gScreenHeight / zoom;
     let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument,
                                                    viewportWidth, viewportHeight);
-    let scrollPortWidth = Math.min(viewportWidth, pageWidth);
-    let scrollPortHeight = Math.min(viewportHeight, pageHeight);
+
+    // Make sure the aspect ratio of the screen is maintained when setting
+    // the clamping scroll-port size.
+    let factor = Math.min(viewportWidth / gScreenWidth, pageWidth / gScreenWidth,
+                          viewportHeight / gScreenHeight, pageHeight / gScreenHeight);
+    let scrollPortWidth = gScreenWidth * factor;
+    let scrollPortHeight = gScreenHeight * factor;
 
     let win = this.browser.contentWindow;
     win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).
