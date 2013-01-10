@@ -3343,6 +3343,30 @@ Snarf(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static JSBool
+System(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSString *str;
+
+    if (argc != 1) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "system");
+        return false;
+    }
+
+    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
+    if (!str)
+        return false;
+    JSAutoByteString command(cx, str);
+    if (!command)
+        return false;
+
+    int result = system(command.ptr());
+
+    *vp = Int32Value(result);
+    return true;
+}
+
 static bool
 DecompileFunctionSomehow(JSContext *cx, unsigned argc, Value *vp,
                          JSString *(*decompiler)(JSContext *, JSFunction *, unsigned))
@@ -3838,13 +3862,17 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  Sleep for dt seconds."),
 
 #endif
-    JS_FN_HELP("snarf", Snarf, 0, 0,
+    JS_FN_HELP("snarf", Snarf, 1, 0,
 "snarf(filename)",
 "  Read filename into returned string."),
 
-    JS_FN_HELP("read", Snarf, 0, 0,
+    JS_FN_HELP("read", Snarf, 1, 0,
 "read(filename)",
 "  Synonym for snarf."),
+
+    JS_FN_HELP("system", System, 1, 0,
+"system(command)",
+"  Execute command on the current host, returning result code."),
 
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
