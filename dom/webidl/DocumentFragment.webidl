@@ -19,13 +19,10 @@ interface DocumentFragment : Node {
   void prepend((Node or DOMString)... nodes);
   void append((Node or DOMString)... nodes);
   */
-
-/*
 };
 
-http://www.w3.org/TR/2012/WD-selectors-api-20120628/#interface-definitions
+// http://www.w3.org/TR/2012/WD-selectors-api-20120628/#interface-definitions
 partial interface DocumentFragment {
-*/
   [Throws]
   Element?  querySelector(DOMString selectors);
   [Throws]

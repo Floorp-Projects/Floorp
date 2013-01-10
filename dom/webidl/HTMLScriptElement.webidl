@@ -23,12 +23,10 @@ interface HTMLScriptElement : HTMLElement {
   attribute DOMString crossOrigin;
   [SetterThrows]
   attribute DOMString text;
-/*
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLScriptElement {
-*/
   [SetterThrows]
   attribute DOMString event;
   [SetterThrows]
