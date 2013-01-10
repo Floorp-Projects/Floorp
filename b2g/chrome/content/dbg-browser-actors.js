@@ -53,6 +53,17 @@ DeviceRootActor.prototype.disconnect = function DRA_disconnect() {
 DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let actorPool = new ActorPool(this.conn);
 
+#ifndef MOZ_WIDGET_GONK
+  let actor = this._tabActors.get(this.browser);
+  if (!actor) {
+    actor = new DeviceTabActor(this.conn, this.browser);
+    // this.actorID is set by ActorPool when an actor is put into one.
+    actor.parentID = this.actorID;
+    this._tabActors.set(this.browser, actor);
+  }
+  actorPool.addActor(actor);
+#endif
+
   this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
 
   // Now drop the old actorID -> actor map. Actors that still mattered were
@@ -66,7 +77,11 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let response = {
     'from': 'root',
     'selected': 0,
+#ifndef MOZ_WIDGET_GONK
+    'tabs': [actor.grip()]
+#else
     'tabs': []
+#endif
   };
   this._appendExtraActors(response);
   return response;
