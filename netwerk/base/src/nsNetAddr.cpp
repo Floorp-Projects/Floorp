@@ -7,6 +7,7 @@
 #include "nsNetAddr.h"
 #include "nsString.h"
 #include "prnetdb.h"
+#include "mozilla/net/DNS.h"
 
 using namespace mozilla::net;
 
@@ -117,6 +118,26 @@ NS_IMETHODIMP nsNetAddr::GetScope(uint32_t *aScope)
   switch(mAddr.raw.family) {
   case AF_INET6:
     *aScope = ntohl(mAddr.inet6.scope_id);
+    break;
+  case AF_INET:
+#if defined(XP_UNIX) || defined(XP_OS2)
+  case AF_LOCAL:
+#endif
+    // only for IPv6
+    return NS_ERROR_NOT_AVAILABLE;
+  default:
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+/* readonly attribute boolean isV4Mapped; */
+NS_IMETHODIMP nsNetAddr::GetIsV4Mapped(bool *aIsV4Mapped)
+{
+  switch(mAddr.raw.family) {
+  case AF_INET6:
+    *aIsV4Mapped = IPv6ADDR_IS_V4MAPPED(&mAddr.inet6.ip);
     break;
   case AF_INET:
 #if defined(XP_UNIX) || defined(XP_OS2)
