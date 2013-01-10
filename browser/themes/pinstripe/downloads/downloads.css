@@ -354,6 +354,12 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
   animation-duration: 1s;
 }
 
+@media (min-resolution: 2dppx) {
+  #downloads-indicator[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+    background-image: url("chrome://browser/skin/downloads/download-notification-start@2x.png");
+  }
+}
+
 #downloads-indicator[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
   animation-name: downloadsIndicatorNotificationStartLeft;
 }
@@ -368,6 +374,12 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
   background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
   animation-name: downloadsIndicatorNotificationFinish;
   animation-duration: 1s;
+}
+
+@media (min-resolution: 2dppx) {
+  #downloads-indicator[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+    background-image: url("chrome://browser/skin/downloads/download-notification-finish@2x.png");
+  }
 }
 
 /*** Progress bar and text ***/
