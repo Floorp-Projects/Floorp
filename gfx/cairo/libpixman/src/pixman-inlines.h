@@ -81,12 +81,26 @@ repeat (pixman_repeat_t repeat, int *c, int size)
     return TRUE;
 }
 
-static force_inline int
-pixman_fixed_to_bilinear_weight (pixman_fixed_t x)
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+#define LOW_QUALITY_INTERPOLATION
+#define LOWER_QUALITY_INTERPOLATION
+#endif
+
+#ifdef LOW_QUALITY_INTERPOLATION
+#define INTERPOLATION_PRECISION_BITS 4
+#else
+#define INTERPOLATION_PRECISION_BITS 8
+#endif
+static force_inline int32_t
+interpolation_coord(pixman_fixed_t t)
 {
-    return (x >> (16 - BILINEAR_INTERPOLATION_BITS)) &
-	   ((1 << BILINEAR_INTERPOLATION_BITS) - 1);
+#ifdef LOW_QUALITY_INTERPOLATION
+    return (t >> 12) & 0xf;
+#else
+    return (t >> 8) & 0xff;
+#endif
 }
+
 
 #if SIZEOF_LONG > 4
 
@@ -98,9 +112,6 @@ bilinear_interpolation (uint32_t tl, uint32_t tr,
     uint64_t distxy, distxiy, distixy, distixiy;
     uint64_t tl64, tr64, bl64, br64;
     uint64_t f, r;
-
-    distx <<= (8 - BILINEAR_INTERPOLATION_BITS);
-    disty <<= (8 - BILINEAR_INTERPOLATION_BITS);
 
     distxy = distx * disty;
     distxiy = distx * (256 - disty);
@@ -172,9 +183,6 @@ bilinear_interpolation (uint32_t tl, uint32_t tr,
 {
     int distxy, distxiy, distixy, distixiy;
     uint32_t f, r;
-
-    distx <<= (8 - BILINEAR_INTERPOLATION_BITS);
-    disty <<= (8 - BILINEAR_INTERPOLATION_BITS);
 
     distxy = distx * disty;
     distxiy = (distx << 8) - distxy;	/* distx * (256 - disty) */
@@ -806,14 +814,12 @@ bilinear_pad_repeat_get_scanline_bounds (int32_t         source_image_width,
  *                        all source pixels are fetched from zero padding
  *                        zone for NONE repeat
  *
- * Note: normally the sum of 'weight_top' and 'weight_bottom' is equal to
- *       BILINEAR_INTERPOLATION_RANGE, but sometimes it may be less than that
- *       for NONE repeat when handling fuzzy antialiased top or bottom image
- *       edges. Also both top and bottom weight variables are guaranteed to
- *       have value, which is less than BILINEAR_INTERPOLATION_RANGE.
- *       For example, the weights can fit into unsigned byte or be used
- *       with 8-bit SIMD multiplication instructions for 8-bit interpolation
- *       precision.
+ * Note: normally the sum of 'weight_top' and 'weight_bottom' is equal to 256,
+ *       but sometimes it may be less than that for NONE repeat when handling
+ *       fuzzy antialiased top or bottom image edges. Also both top and
+ *       bottom weight variables are guaranteed to have value in 0-255
+ *       range and can fit into unsigned byte or be used with 8-bit SIMD
+ *       multiplication instructions.
  */
 
 /* Replace a single "scanline_func" with "fetch_func" & "op_func" to allow optional
@@ -968,18 +974,18 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	}											\
 												\
 	y1 = pixman_fixed_to_int (vy);								\
-	weight2 = pixman_fixed_to_bilinear_weight (vy);						\
+	weight2 = (vy >> 8) & 0xff;								\
 	if (weight2)										\
 	{											\
-	    /* both weight1 and weight2 are smaller than BILINEAR_INTERPOLATION_RANGE */	\
+	    /* normal case, both row weights are in 0-255 range and fit unsigned byte */	\
 	    y2 = y1 + 1;									\
-	    weight1 = BILINEAR_INTERPOLATION_RANGE - weight2;					\
+	    weight1 = 256 - weight2;								\
 	}											\
 	else											\
 	{											\
-	    /* set both top and bottom row to the same scanline and tweak weights */		\
+	    /* set both top and bottom row to the same scanline, and weights to 128+128 */	\
 	    y2 = y1;										\
-	    weight1 = weight2 = BILINEAR_INTERPOLATION_RANGE / 2;				\
+	    weight1 = weight2 = 128;								\
 	}											\
 	vy += unit_y;										\
 	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_PAD)					\
