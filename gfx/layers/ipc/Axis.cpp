@@ -6,6 +6,7 @@
 
 #include "Axis.h"
 #include "AsyncPanZoomController.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace layers {
@@ -18,18 +19,18 @@ static const float EPSILON = 0.0001f;
  * or we get a touch point very far away from the previous position for some
  * reason.
  */
-static const float MAX_EVENT_ACCELERATION = 999.0f;
+static float gMaxEventAcceleration = 999.0f;
 
 /**
  * Amount of friction applied during flings.
  */
-static const float FLING_FRICTION = 0.007f;
+static float gFlingFriction = 0.007f;
 
 /**
  * Threshold for velocity beneath which we turn off any acceleration we had
  * during repeated flings.
  */
-static const float VELOCITY_THRESHOLD = 0.14f;
+static float gVelocityThreshold = 0.14f;
 
 /**
  * Amount of acceleration we multiply in each time the user flings in one
@@ -39,14 +40,47 @@ static const float VELOCITY_THRESHOLD = 0.14f;
  * slow down enough, or if they put their finger down without moving it for a
  * moment (or in the opposite direction).
  */
-static const float ACCELERATION_MULTIPLIER = 1.125f;
+static float gAccelerationMultiplier = 1.125f;
 
 /**
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
  * velocity and rerendering unnecessarily.
  */
-static const float FLING_STOPPED_THRESHOLD = 0.01f;
+static float gFlingStoppedThreshold = 0.01f;
+
+static void ReadAxisPrefs()
+{
+  Preferences::AddFloatVarCache(&gMaxEventAcceleration, "gfx.axis.max_event_acceleration", gMaxEventAcceleration);
+  Preferences::AddFloatVarCache(&gFlingFriction, "gfx.axis.fling_friction", gFlingFriction);
+  Preferences::AddFloatVarCache(&gVelocityThreshold, "gfx.axis.velocity_threshold", gVelocityThreshold);
+  Preferences::AddFloatVarCache(&gAccelerationMultiplier, "gfx.axis.acceleration_multiplier", gAccelerationMultiplier);
+  Preferences::AddFloatVarCache(&gFlingStoppedThreshold, "gfx.axis.fling_stopped_threshold", gFlingStoppedThreshold);
+}
+
+class ReadAxisPref MOZ_FINAL : public nsRunnable {
+public:
+  NS_IMETHOD Run()
+  {
+    ReadAxisPrefs();
+    return NS_OK;
+  }
+};
+
+static void InitAxisPrefs()
+{
+  static bool sInitialized = false;
+  if (sInitialized)
+    return;
+
+  sInitialized = true;
+  if (NS_IsMainThread()) {
+    ReadAxisPrefs();
+  } else {
+    // We have to dispatch an event to the main thread to read the pref.
+    NS_DispatchToMainThread(new ReadAxisPref());
+  }
+}
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0.0f),
@@ -54,14 +88,14 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAcceleration(0),
     mAsyncPanZoomController(aAsyncPanZoomController)
 {
-
+  InitAxisPrefs();
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
   float newVelocity = (mPos - aPos) / aTimeDelta.ToMilliseconds();
 
   bool curVelocityIsLow = fabsf(newVelocity) < 0.01f;
-  bool curVelocityBelowThreshold = fabsf(newVelocity) < VELOCITY_THRESHOLD;
+  bool curVelocityBelowThreshold = fabsf(newVelocity) < gVelocityThreshold;
   bool directionChange = (mVelocity > 0) != (newVelocity > 0);
 
   // If we've changed directions, or the current velocity threshold, stop any
@@ -75,7 +109,7 @@ void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeD
   if (curVelocityIsLow || (directionChange && fabs(newVelocity) - EPSILON <= 0.0f)) {
     mVelocity = newVelocity;
   } else {
-    float maxChange = fabsf(mVelocity * aTimeDelta.ToMilliseconds() * MAX_EVENT_ACCELERATION);
+    float maxChange = fabsf(mVelocity * aTimeDelta.ToMilliseconds() * gMaxEventAcceleration);
     mVelocity = NS_MIN(mVelocity + maxChange, NS_MAX(mVelocity - maxChange, newVelocity));
   }
 
@@ -89,7 +123,7 @@ void Axis::StartTouch(int32_t aPos) {
 }
 
 float Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
-  if (fabsf(mVelocity) < VELOCITY_THRESHOLD) {
+  if (fabsf(mVelocity) < gVelocityThreshold) {
     mAcceleration = 0;
   }
 
@@ -121,14 +155,14 @@ void Axis::CancelTouch() {
 }
 
 bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
-  if (fabsf(mVelocity) <= FLING_STOPPED_THRESHOLD) {
+  if (fabsf(mVelocity) <= gFlingStoppedThreshold) {
     // If the velocity is very low, just set it to 0 and stop the fling,
     // otherwise we'll just asymptotically approach 0 and the user won't
     // actually see any changes.
     mVelocity = 0.0f;
     return false;
   } else {
-    mVelocity *= NS_MAX(1.0f - FLING_FRICTION * aDelta.ToMilliseconds(), 0.0);
+    mVelocity *= NS_MAX(1.0f - gFlingFriction * aDelta.ToMilliseconds(), 0.0);
   }
   return true;
 }
@@ -226,7 +260,7 @@ float Axis::GetVelocity() {
 }
 
 float Axis::GetAccelerationFactor() {
-  return powf(ACCELERATION_MULTIPLIER, NS_MAX(0, (mAcceleration - 4) * 3));
+  return powf(gAccelerationMultiplier, NS_MAX(0, (mAcceleration - 4) * 3));
 }
 
 float Axis::GetCompositionEnd() {
