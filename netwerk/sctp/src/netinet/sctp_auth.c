@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 240148 2012-09-05 18:52:01Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 243882 2012-12-05 08:04:20Z glebius $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -1770,7 +1770,7 @@ sctp_handle_auth(struct sctp_tcb *stcb, struct sctp_auth_chunk *auth,
 		 * report this in an Error Chunk: Unsupported HMAC
 		 * Identifier
 		 */
-		m_err = sctp_get_mbuf_for_msg(sizeof(*err), 0, M_DONTWAIT,
+		m_err = sctp_get_mbuf_for_msg(sizeof(*err), 0, M_NOWAIT,
 					      1, MT_HEADER);
 		if (m_err != NULL) {
 			/* pre-reserve some space */
@@ -1877,7 +1877,7 @@ sctp_notify_authentication(struct sctp_tcb *stcb, uint32_t indication,
 		return;
 
 	m_notify = sctp_get_mbuf_for_msg(sizeof(struct sctp_authkey_event),
-					  0, M_DONTWAIT, 1, MT_HEADER);
+					  0, M_NOWAIT, 1, MT_HEADER);
 	if (m_notify == NULL)
 		/* no space left */
 		return;

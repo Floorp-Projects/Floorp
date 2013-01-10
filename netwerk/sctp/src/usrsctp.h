@@ -35,9 +35,6 @@
 extern "C" {
 #endif
 
-/*  to make sure some OSs define in6_pktinfo */
-#define _GNU_SOURCE
-
 #include <sys/types.h>
 #ifdef _WIN32
 #include <winsock2.h>
@@ -847,11 +844,9 @@ struct sctp_timeouts {
 
 /******************** System calls *************/
 
-
 void
 usrsctp_init(uint16_t,
              int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df));
-
 
 struct socket *
 usrsctp_socket(int domain, int type, int protocol,
@@ -863,28 +858,44 @@ usrsctp_socket(int domain, int type, int protocol,
 
 int
 usrsctp_setsockopt(struct socket *so,
-                     int level,
-                     int option_name,
-                     const void *option_value,
-                     socklen_t option_len);
+                   int level,
+                   int option_name,
+                   const void *option_value,
+                   socklen_t option_len);
 
 int
 usrsctp_getsockopt(struct socket *so,
-                     int level,
-                     int option_name,
-                     void *option_value,
-                     socklen_t *option_len);
+                   int level,
+                   int option_name,
+                   void *option_value,
+                   socklen_t *option_len);
+
+int
+usrsctp_getpaddrs(struct socket *so,
+                  sctp_assoc_t id,
+                  struct sockaddr **raddrs);
+
+void
+usrsctp_freepaddrs(struct sockaddr *addrs);
+
+int
+usrsctp_getladdrs(struct socket *so,
+                  sctp_assoc_t id,
+                  struct sockaddr **raddrs);
+
+void
+usrsctp_freeladdrs(struct sockaddr *addrs);
 
 ssize_t
 usrsctp_sendv(struct socket *so,
-                       const void *data,
-                       size_t len,
-                       struct sockaddr *to,
-                       int addrcnt,
-                       void *info,
-                       socklen_t infolen,
-                       unsigned int infotype,
-                       int flags);
+              const void *data,
+              size_t len,
+              struct sockaddr *to,
+              int addrcnt,
+              void *info,
+              socklen_t infolen,
+              unsigned int infotype,
+              int flags);
 
 ssize_t
 usrsctp_recvv(struct socket *so,
@@ -899,30 +910,39 @@ usrsctp_recvv(struct socket *so,
 
 int
 usrsctp_bind(struct socket *so,
-               struct sockaddr *name,
-               socklen_t namelen);
+             struct sockaddr *name,
+             socklen_t namelen);
+
+#define SCTP_BINDX_ADD_ADDR 0x00008001
+#define SCTP_BINDX_REM_ADDR 0x00008002
 
 int
 usrsctp_bindx(struct socket *so,
-                struct sockaddr *addrs,
-                int addrcnt,
-                int flags);
+              struct sockaddr *addrs,
+              int addrcnt,
+              int flags);
 
 int
 usrsctp_listen(struct socket *so,
-                 int backlog);
-
+               int backlog);
 
 struct socket *
 usrsctp_accept(struct socket *so,
-                 struct sockaddr * aname,
-                 socklen_t * anamelen);
+               struct sockaddr * aname,
+               socklen_t * anamelen);
 
+struct socket *
+usrsctp_peeloff(struct socket *, sctp_assoc_t);
 
 int
 usrsctp_connect(struct socket *so,
-                  struct sockaddr *name,
-                  socklen_t namelen);
+                struct sockaddr *name,
+                socklen_t namelen);
+
+int
+usrsctp_connectx(struct socket *so,
+                 const struct sockaddr *addrs, int addrcnt,
+                 sctp_assoc_t *id);
 
 void
 usrsctp_close(struct socket *so);
@@ -941,6 +961,21 @@ usrsctp_set_non_blocking(struct socket *, int);
 
 int
 usrsctp_get_non_blocking(struct socket *);
+
+void
+usrsctp_register_address(void *);
+
+void
+usrsctp_deregister_address(void *);
+
+#define SCTP_DUMP_OUTBOUND 1
+#define SCTP_DUMP_INBOUND  0
+
+char *
+usrsctp_dumppacket(void *, size_t, int);
+
+void
+usrsctp_freedumpbuffer(char *);
 
 #define USRSCTP_SYSCTL_DECL(__field)           \
 void usrsctp_sysctl_set_ ## __field(uint32_t value);\
