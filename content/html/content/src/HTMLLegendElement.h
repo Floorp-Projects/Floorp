@@ -78,8 +78,6 @@ public:
     return fieldsetControl ? fieldsetControl->GetFormElement() : nullptr;
   }
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   /**

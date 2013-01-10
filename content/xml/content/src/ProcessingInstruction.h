@@ -44,8 +44,6 @@ public:
   virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const;
 #endif
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL API

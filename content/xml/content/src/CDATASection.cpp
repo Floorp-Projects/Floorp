@@ -32,8 +32,6 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-DOMCI_NODE_DATA(CDATASection, mozilla::dom::CDATASection)
-
 namespace mozilla {
 namespace dom {
 
@@ -41,16 +39,9 @@ CDATASection::~CDATASection()
 {
 }
 
-
-// QueryInterface implementation for CDATASection
-NS_INTERFACE_TABLE_HEAD(CDATASection)
-  NS_NODE_INTERFACE_TABLE4(CDATASection, nsIDOMNode, nsIDOMCharacterData,
-                           nsIDOMText, nsIDOMCDATASection)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CDATASection)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
-
-NS_IMPL_ADDREF_INHERITED(CDATASection, nsGenericDOMDataNode)
-NS_IMPL_RELEASE_INHERITED(CDATASection, nsGenericDOMDataNode)
+NS_IMPL_ISUPPORTS_INHERITED4(CDATASection, nsGenericDOMDataNode, nsIDOMNode,
+                             nsIDOMCharacterData, nsIDOMText,
+                             nsIDOMCDATASection)
 
 JSObject*
 CDATASection::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)

@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Font)
-DOMCI_NODE_DATA(HTMLFontElement, mozilla::dom::HTMLFontElement)
 
 namespace mozilla {
 namespace dom {
@@ -36,7 +35,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLFontElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLFontElement, nsIDOMHTMLFontElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLFontElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFontElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLFontElement)

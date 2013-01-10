@@ -74,8 +74,6 @@ public:
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   virtual bool IsDisabled() const {

@@ -83,15 +83,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    } catch(e) {
      ok(true, "Threw while QI-ing on wrapper");
    }
-
-   var contentScreen = XPCNativeWrapper(win.wrappedJSObject.screen);
-   try {
-     var QIed = contentScreen.QueryInterface(Components.interfaces.nsIClassInfo);
-     ok(QIed, "Successfully QI-ed on wrapper");
-   } catch(e) {
-     ok(false, "Threw while QI-ing on wrapper");
-   }
-
   }
 
   SimpleTest.waitForExplicitFinish();

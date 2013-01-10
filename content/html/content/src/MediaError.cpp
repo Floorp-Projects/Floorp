@@ -8,8 +8,6 @@
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/MediaErrorBinding.h"
 
-DOMCI_DATA(MediaError, mozilla::dom::MediaError)
-
 namespace mozilla {
 namespace dom {
 
@@ -21,7 +19,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaError)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaError)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaError)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaError)
 NS_INTERFACE_MAP_END
 
 MediaError::MediaError(nsHTMLMediaElement* aParent, uint16_t aCode)
