@@ -21,6 +21,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsDOMFile.h"
+#include "nsDOMBlobBuilder.h"
 #include "nsThreadUtils.h"
 
 #include "ContentChild.h"
@@ -630,17 +631,51 @@ BlobTraits<Parent>::BaseType::NoteRunnableCompleted(
 }
 
 template <ActorFlavorEnum ActorFlavor>
-class RemoteBlob : public nsDOMFile,
-                   public nsIRemoteBlob
+class RemoteBlobBase : public nsIRemoteBlob
 {
 public:
   typedef RemoteBlob<ActorFlavor> SelfType;
   typedef Blob<ActorFlavor> ActorType;
   typedef InputStreamActor<ActorFlavor> StreamActorType;
 
+  void
+  SetPBlob(void* aActor) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!aActor || !mActor);
+    mActor = static_cast<ActorType*>(aActor);
+  }
+
+  virtual void*
+  GetPBlob() MOZ_OVERRIDE
+  {
+    return static_cast<typename ActorType::ProtocolType*>(mActor);
+  }
+
 private:
   ActorType* mActor;
 
+protected:
+  RemoteBlobBase()
+  : mActor(nullptr)
+  { }
+
+  virtual
+  ~RemoteBlobBase()
+  {
+    if (mActor) {
+      mActor->NoteDyingRemoteBlob();
+    }
+  }
+
+  ActorType* Actor() const { return mActor; }
+};
+
+template <ActorFlavorEnum ActorFlavor>
+class RemoteBlob : public nsDOMFile,
+                   public RemoteBlobBase<ActorFlavor>
+{
+  typedef Blob<ActorFlavor> ActorType;
+public:
   class StreamHelper : public nsRunnable
   {
     typedef Blob<ActorFlavor> ActorType;
@@ -757,6 +792,7 @@ private:
     {
       // This may be created on any thread.
       MOZ_ASSERT(aActor);
+      MOZ_ASSERT(aActor->HasManager());
     }
 
     nsresult
@@ -823,8 +859,11 @@ private:
       normalParams.contentType() = mContentType;
       normalParams.length() = mLength;
 
-      ActorType* newActor = ActorType::Create(normalParams);
+      BlobConstructorNoMultipartParams params(normalParams);
+
+      ActorType* newActor = ActorType::Create(params);
       MOZ_ASSERT(newActor);
+      mActor->PropagateManager(newActor);
 
       SlicedBlobConstructorParams slicedParams;
       slicedParams.contentType() = mContentType;
@@ -832,7 +871,8 @@ private:
       slicedParams.end() = mStart + mLength;
       SetBlobOnParams(mActor, slicedParams);
 
-      if (mActor->Manager()->SendPBlobConstructor(newActor, slicedParams)) {
+      BlobConstructorNoMultipartParams params2(slicedParams);
+      if (mActor->ConstructPBlobOnManager(newActor, params2)) {
         mSlice = newActor->GetBlob();
       }
 
@@ -854,54 +894,40 @@ public:
 
   RemoteBlob(const nsAString& aName, const nsAString& aContentType,
              uint64_t aLength, uint64_t aModDate)
-  : nsDOMFile(aName, aContentType, aLength, aModDate), mActor(nullptr)
+  : nsDOMFile(aName, aContentType, aLength, aModDate)
   {
     mImmutable = true;
   }
 
   RemoteBlob(const nsAString& aName, const nsAString& aContentType,
              uint64_t aLength)
-  : nsDOMFile(aName, aContentType, aLength), mActor(nullptr)
+  : nsDOMFile(aName, aContentType, aLength)
   {
     mImmutable = true;
   }
 
   RemoteBlob(const nsAString& aContentType, uint64_t aLength)
-  : nsDOMFile(aContentType, aLength), mActor(nullptr)
+  : nsDOMFile(aContentType, aLength)
   {
     mImmutable = true;
   }
 
   RemoteBlob()
   : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
-  , mActor(nullptr)
   {
     mImmutable = true;
-  }
-
-  virtual ~RemoteBlob()
-  {
-    if (mActor) {
-      mActor->NoteDyingRemoteBlob();
-    }
-  }
-
-  void
-  SetActor(ActorType* aActor)
-  {
-    MOZ_ASSERT(!aActor || !mActor);
-    mActor = aActor;
   }
 
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType)
               MOZ_OVERRIDE
   {
-    if (!mActor) {
+    ActorType* actor = RemoteBlobBase<ActorFlavor>::Actor();
+    if (!actor) {
       return nullptr;
     }
 
-    nsRefPtr<SliceHelper> helper = new SliceHelper(mActor);
+    nsRefPtr<SliceHelper> helper = new SliceHelper(actor);
 
     nsCOMPtr<nsIDOMBlob> slice;
     nsresult rv =
@@ -914,18 +940,100 @@ public:
   NS_IMETHOD
   GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE
   {
-    if (!mActor) {
+    ActorType* actor = RemoteBlobBase<ActorFlavor>::Actor();
+    if (!actor) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsRefPtr<StreamHelper> helper = new StreamHelper(mActor, this);
+    nsRefPtr<StreamHelper> helper = new StreamHelper(actor, this);
     return helper->GetStream(aStream);
   }
 
-  virtual void*
-  GetPBlob() MOZ_OVERRIDE
+  NS_IMETHOD
+  GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate)
   {
-    return static_cast<typename ActorType::ProtocolType*>(mActor);
+    if (IsDateUnknown()) {
+      aLastModifiedDate->setNull();
+    } else {
+      JSObject* date = JS_NewDateObjectMsec(cx, mLastModificationDate);
+      if (!date) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      aLastModifiedDate->setObject(*date);
+    }
+    return NS_OK;
+  }
+};
+
+template <ActorFlavorEnum ActorFlavor>
+class RemoteMemoryBlob : public nsDOMMemoryFile,
+                         public RemoteBlobBase<ActorFlavor>
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  RemoteMemoryBlob(void* aMemoryBuffer,
+                   uint64_t aLength,
+                   const nsAString& aName,
+                   const nsAString& aContentType,
+                   uint64_t aModDate)
+  : nsDOMMemoryFile(aMemoryBuffer, aLength, aName, aContentType, aModDate)
+  {
+    mImmutable = true;
+  }
+
+  RemoteMemoryBlob(void* aMemoryBuffer,
+                   uint64_t aLength,
+                   const nsAString& aName,
+                   const nsAString& aContentType)
+  : nsDOMMemoryFile(aMemoryBuffer, aLength, aName, aContentType)
+  {
+    mImmutable = true;
+  }
+
+  RemoteMemoryBlob(void* aMemoryBuffer,
+                   uint64_t aLength,
+                   const nsAString& aContentType)
+  : nsDOMMemoryFile(aMemoryBuffer, aLength, EmptyString(), aContentType)
+  {
+    mImmutable = true;
+  }
+
+  NS_IMETHOD
+  GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate)
+  {
+    if (IsDateUnknown()) {
+      aLastModifiedDate->setNull();
+    } else {
+      JSObject* date = JS_NewDateObjectMsec(cx, mLastModificationDate);
+      if (!date) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      aLastModifiedDate->setObject(*date);
+    }
+    return NS_OK;
+  }
+};
+
+template <ActorFlavorEnum ActorFlavor>
+class RemoteMultipartBlob : public nsDOMMultipartFile,
+                            public RemoteBlobBase<ActorFlavor>
+{
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  RemoteMultipartBlob(const nsAString& aName,
+                      const nsAString& aContentType)
+  : nsDOMMultipartFile(aName, aContentType)
+  {
+    mImmutable = true;
+  }
+
+  RemoteMultipartBlob(const nsAString& aName)
+  : nsDOMMultipartFile(aName)
+  {
+    mImmutable = true;
   }
 
   NS_IMETHOD
@@ -946,7 +1054,9 @@ public:
 
 template <ActorFlavorEnum ActorFlavor>
 Blob<ActorFlavor>::Blob(nsIDOMBlob* aBlob)
-: mBlob(aBlob), mRemoteBlob(nullptr), mOwnsBlob(true), mBlobIsFile(false)
+: mBlob(aBlob), mRemoteBlob(nullptr), mRemoteMemoryBlob(nullptr),
+  mRemoteMultipartBlob(nullptr), mContentManager(nullptr),
+  mBlobManager(nullptr), mOwnsBlob(true), mBlobIsFile(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
@@ -957,44 +1067,70 @@ Blob<ActorFlavor>::Blob(nsIDOMBlob* aBlob)
 }
 
 template <ActorFlavorEnum ActorFlavor>
-Blob<ActorFlavor>::Blob(const BlobConstructorParams& aParams)
-: mBlob(nullptr), mRemoteBlob(nullptr), mOwnsBlob(false), mBlobIsFile(false)
+Blob<ActorFlavor>::Blob(nsRefPtr<RemoteBlobType>& aBlob,
+                        bool aBlobIsFile)
+: mBlob(nullptr), mRemoteBlob(nullptr), mRemoteMemoryBlob(nullptr),
+  mRemoteMultipartBlob(nullptr), mContentManager(nullptr),
+  mBlobManager(nullptr), mOwnsBlob(true), mBlobIsFile(aBlobIsFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mBlob);
+  MOZ_ASSERT(!mRemoteBlob);
+  MOZ_ASSERT(aBlob);
 
-  nsRefPtr<RemoteBlobType> remoteBlob;
-
-  switch (aParams.type()) {
-    case BlobConstructorParams::TNormalBlobConstructorParams: {
-      const NormalBlobConstructorParams& params =
-        aParams.get_NormalBlobConstructorParams();
-      remoteBlob = new RemoteBlobType(params.contentType(), params.length());
-      break;
-    }
-
-    case BlobConstructorParams::TFileBlobConstructorParams: {
-      const FileBlobConstructorParams& params =
-        aParams.get_FileBlobConstructorParams();
-      remoteBlob =
-        new RemoteBlobType(params.name(), params.contentType(),
-                           params.length(), params.modDate());
-      mBlobIsFile = true;
-      break;
-    }
-
-    case BlobConstructorParams::TMysteryBlobConstructorParams: {
-      remoteBlob = new RemoteBlobType();
-      mBlobIsFile = true;
-      break;
-    }
-
-    default:
-      MOZ_NOT_REACHED("Unknown params!");
+  if (NS_FAILED(aBlob->SetMutable(false))) {
+    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
   }
 
-  MOZ_ASSERT(remoteBlob);
+  aBlob->SetPBlob(this);
+  aBlob.forget(&mRemoteBlob);
 
-  SetRemoteBlob(remoteBlob);
+  mBlob = mRemoteBlob;
+}
+
+template <ActorFlavorEnum ActorFlavor>
+Blob<ActorFlavor>::Blob(nsRefPtr<RemoteMemoryBlobType>& aBlob,
+                        bool aBlobIsFile)
+: mBlob(nullptr), mRemoteBlob(nullptr), mRemoteMemoryBlob(nullptr),
+  mRemoteMultipartBlob(nullptr), mContentManager(nullptr),
+  mBlobManager(nullptr), mOwnsBlob(true), mBlobIsFile(aBlobIsFile)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mBlob);
+  MOZ_ASSERT(!mRemoteMemoryBlob);
+  MOZ_ASSERT(aBlob);
+
+  if (NS_FAILED(aBlob->SetMutable(false))) {
+    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
+  }
+
+  aBlob->SetPBlob(this);
+  aBlob.forget(&mRemoteMemoryBlob);
+
+  mBlob = mRemoteMemoryBlob;
+}
+
+template <ActorFlavorEnum ActorFlavor>
+Blob<ActorFlavor>::Blob(nsRefPtr<RemoteMultipartBlobType>& aBlob,
+                        bool aBlobIsFile)
+: mBlob(nullptr), mRemoteBlob(nullptr), mRemoteMemoryBlob(nullptr),
+  mRemoteMultipartBlob(nullptr), mContentManager(nullptr),
+  mBlobManager(nullptr), mOwnsBlob(true), mBlobIsFile(aBlobIsFile)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mBlob);
+  MOZ_ASSERT(!mRemoteMultipartBlob);
+  MOZ_ASSERT(!mOwnsBlob);
+  MOZ_ASSERT(aBlob);
+
+  if (NS_FAILED(aBlob->SetMutable(false))) {
+    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
+  }
+
+  aBlob->SetPBlob(this);
+  aBlob.forget(&mRemoteMultipartBlob);
+
+  mBlob = mRemoteMultipartBlob;
 }
 
 template <ActorFlavorEnum ActorFlavor>
@@ -1004,25 +1140,156 @@ Blob<ActorFlavor>::Create(const BlobConstructorParams& aParams)
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aParams.type()) {
-    case BlobConstructorParams::TNormalBlobConstructorParams:
-    case BlobConstructorParams::TFileBlobConstructorParams:
-    case BlobConstructorParams::TMysteryBlobConstructorParams:
-      return new Blob<ActorFlavor>(aParams);
+    case BlobConstructorParams::TBlobConstructorNoMultipartParams: {
+      const BlobConstructorNoMultipartParams& params =
+        aParams.get_BlobConstructorNoMultipartParams();
 
-    case BlobConstructorParams::TSlicedBlobConstructorParams: {
-      const SlicedBlobConstructorParams& params =
-        aParams.get_SlicedBlobConstructorParams();
+      switch (params.type()) {
+        case BlobConstructorNoMultipartParams::TBlobOrFileConstructorParams: {
+          const BlobOrFileConstructorParams& fileParams =
+            params.get_BlobOrFileConstructorParams();
+          nsRefPtr<RemoteBlobType> remoteBlob;
+          bool isFile = false;
 
-      nsCOMPtr<nsIDOMBlob> source = GetBlobFromParams<ActorFlavor>(params);
-      MOZ_ASSERT(source);
+          switch (fileParams.type()) {
+            case BlobOrFileConstructorParams::TNormalBlobConstructorParams: {
+              const NormalBlobConstructorParams& normalParams =
+                fileParams.get_NormalBlobConstructorParams();
+              remoteBlob = new RemoteBlobType(normalParams.contentType(),
+                                              normalParams.length());
+              break;
+            }
 
-      nsCOMPtr<nsIDOMBlob> slice;
-      nsresult rv =
-        source->Slice(params.begin(), params.end(), params.contentType(), 3,
-                      getter_AddRefs(slice));
-      NS_ENSURE_SUCCESS(rv, nullptr);
+            case BlobOrFileConstructorParams::TFileBlobConstructorParams: {
+              const FileBlobConstructorParams& fbParams =
+                fileParams.get_FileBlobConstructorParams();
+              remoteBlob =
+                new RemoteBlobType(fbParams.name(), fbParams.contentType(),
+                                   fbParams.length(), fbParams.modDate());
+              isFile = true;
+              break;
+            }
 
-      return new Blob<ActorFlavor>(slice);
+            default:
+              MOZ_NOT_REACHED("Unknown params!");
+          }
+
+          return new Blob<ActorFlavor>(remoteBlob, isFile);
+        }
+        case BlobConstructorNoMultipartParams::TMemoryBlobOrFileConstructorParams: {
+          const MemoryBlobOrFileConstructorParams& memoryParams =
+            params.get_MemoryBlobOrFileConstructorParams();
+          const BlobOrFileConstructorParams& internalParams =
+            memoryParams.constructorParams();
+          nsRefPtr<RemoteMemoryBlobType> remoteMemoryBlob;
+          bool isFile = false;
+
+          switch (internalParams.type()) {
+            case BlobOrFileConstructorParams::TNormalBlobConstructorParams: {
+              const NormalBlobConstructorParams& normalParams =
+                internalParams.get_NormalBlobConstructorParams();
+              MOZ_ASSERT(normalParams.length() == memoryParams.data().Length());
+
+              void* data =
+                BlobTraits<ActorFlavor>::Allocate(memoryParams.data().Length());
+              if (!data) {
+                return nullptr;
+              }
+              memcpy(data,
+                     memoryParams.data().Elements(),
+                     memoryParams.data().Length());
+              remoteMemoryBlob =
+                new RemoteMemoryBlobType(data,
+                                         memoryParams.data().Length(),
+                                         normalParams.contentType());
+              break;
+            }
+
+            case BlobOrFileConstructorParams::TFileBlobConstructorParams: {
+              const FileBlobConstructorParams& fbParams =
+                internalParams.get_FileBlobConstructorParams();
+              MOZ_ASSERT(fbParams.length() == memoryParams.data().Length());
+
+              void* data =
+                BlobTraits<ActorFlavor>::Allocate(memoryParams.data().Length());
+              if (!data) {
+                return nullptr;
+              }
+              memcpy(data,
+                     memoryParams.data().Elements(),
+                     memoryParams.data().Length());
+              remoteMemoryBlob =
+                new RemoteMemoryBlobType(data,
+                                         memoryParams.data().Length(),
+                                         fbParams.name(),
+                                         fbParams.contentType(),
+                                         fbParams.modDate());
+              isFile = true;
+              break;
+            }
+
+            default:
+              MOZ_NOT_REACHED("Unknown params!");
+          }
+
+          return new Blob<ActorFlavor>(remoteMemoryBlob, isFile);
+        }
+        case BlobConstructorNoMultipartParams::TMysteryBlobConstructorParams: {
+          nsRefPtr<RemoteBlobType> remoteBlob = new RemoteBlobType();
+          return new Blob<ActorFlavor>(remoteBlob, true);
+        }
+
+        case BlobConstructorNoMultipartParams::TSlicedBlobConstructorParams: {
+          const SlicedBlobConstructorParams& slicedParams =
+            params.get_SlicedBlobConstructorParams();
+
+          nsCOMPtr<nsIDOMBlob> source =
+            GetBlobFromParams<ActorFlavor>(slicedParams);
+          MOZ_ASSERT(source);
+
+          nsCOMPtr<nsIDOMBlob> slice;
+          nsresult rv =
+            source->Slice(slicedParams.begin(), slicedParams.end(),
+                          slicedParams.contentType(), 3,
+                          getter_AddRefs(slice));
+          NS_ENSURE_SUCCESS(rv, nullptr);
+
+          return new Blob<ActorFlavor>(slice);
+        }
+
+        default:
+          MOZ_NOT_REACHED("Unknown params!");
+      }
+    }
+
+    case BlobConstructorParams::TMultipartBlobOrFileConstructorParams: {
+      const MultipartBlobOrFileConstructorParams& params =
+        aParams.get_MultipartBlobOrFileConstructorParams();
+
+      nsRefPtr<RemoteMultipartBlobType> file;
+      const BlobOrFileConstructorParams& internalParams =
+        params.constructorParams();
+      switch (internalParams.type()) {
+        case BlobOrFileConstructorParams::TNormalBlobConstructorParams: {
+          const NormalBlobConstructorParams& normalParams =
+            internalParams.get_NormalBlobConstructorParams();
+          file = new RemoteMultipartBlobType(normalParams.contentType());
+          break;
+        }
+
+        case BlobOrFileConstructorParams::TFileBlobConstructorParams: {
+          const FileBlobConstructorParams& fbParams =
+            internalParams.get_FileBlobConstructorParams();
+          file = new RemoteMultipartBlobType(fbParams.name(),
+                                             fbParams.contentType());
+          break;
+        }
+
+        default:
+          MOZ_NOT_REACHED("Unknown params!");
+      }
+
+      return new Blob<ActorFlavor>(file);
     }
 
     default:
@@ -1044,7 +1311,8 @@ Blob<ActorFlavor>::GetBlob()
   // Remote blobs are held alive until the first call to GetBlob. Thereafter we
   // only hold a weak reference. Normal blobs are held alive until the actor is
   // destroyed.
-  if (mRemoteBlob && mOwnsBlob) {
+  if (mOwnsBlob &&
+      (mRemoteBlob || mRemoteMemoryBlob || mRemoteMultipartBlob)) {
     blob = dont_AddRef(mBlob);
     mOwnsBlob = false;
   }
@@ -1099,24 +1367,53 @@ Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aContentType,
 }
 
 template <ActorFlavorEnum ActorFlavor>
-void
-Blob<ActorFlavor>::SetRemoteBlob(nsRefPtr<RemoteBlobType>& aRemoteBlob)
+typename Blob<ActorFlavor>::ProtocolType*
+Blob<ActorFlavor>::ConstructPBlobOnManager(ProtocolType* aActor,
+                                           const BlobConstructorParams& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mBlob);
-  MOZ_ASSERT(!mRemoteBlob);
-  MOZ_ASSERT(!mOwnsBlob);
-  MOZ_ASSERT(aRemoteBlob);
+  MOZ_ASSERT(HasManager());
 
-  if (NS_FAILED(aRemoteBlob->SetMutable(false))) {
-    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
+  if (mContentManager) {
+    return mContentManager->SendPBlobConstructor(aActor, aParams);
   }
 
-  aRemoteBlob->SetActor(this);
-  aRemoteBlob.forget(&mRemoteBlob);
+  if (mBlobManager) {
+    return mBlobManager->SendPBlobConstructor(aActor, aParams);
+  }
 
-  mBlob = mRemoteBlob;
-  mOwnsBlob = true;
+  MOZ_NOT_REACHED("Why don't I have a manager?!");
+  return nullptr;
+}
+
+template <ActorFlavorEnum ActorFlavor>
+void
+Blob<ActorFlavor>::SetManager(ContentManagerType* aManager)
+{
+  MOZ_ASSERT(!mContentManager && !mBlobManager);
+  MOZ_ASSERT(aManager);
+
+  mContentManager = aManager;
+}
+
+template <ActorFlavorEnum ActorFlavor>
+void
+Blob<ActorFlavor>::SetManager(BlobManagerType* aManager)
+{
+  MOZ_ASSERT(!mContentManager && !mBlobManager);
+  MOZ_ASSERT(aManager);
+
+  mBlobManager = aManager;
+}
+
+template <ActorFlavorEnum ActorFlavor>
+void
+Blob<ActorFlavor>::PropagateManager(Blob<ActorFlavor>* aActor) const
+{
+  MOZ_ASSERT(HasManager());
+
+  aActor->mContentManager = mContentManager;
+  aActor->mBlobManager = mBlobManager;
 }
 
 template <ActorFlavorEnum ActorFlavor>
@@ -1124,7 +1421,7 @@ void
 Blob<ActorFlavor>::NoteDyingRemoteBlob()
 {
   MOZ_ASSERT(mBlob);
-  MOZ_ASSERT(mRemoteBlob);
+  MOZ_ASSERT(mRemoteBlob || mRemoteMemoryBlob || mRemoteMultipartBlob);
   MOZ_ASSERT(!mOwnsBlob);
 
   // This may be called on any thread due to the fact that RemoteBlob is
@@ -1144,6 +1441,8 @@ Blob<ActorFlavor>::NoteDyingRemoteBlob()
   // Must do this before calling Send__delete__ or we'll crash there trying to
   // access a dangling pointer.
   mRemoteBlob = nullptr;
+  mRemoteMemoryBlob = nullptr;
+  mRemoteMultipartBlob = nullptr;
 
   mozilla::unused << ProtocolType::Send__delete__(this);
 }
@@ -1156,7 +1455,15 @@ Blob<ActorFlavor>::ActorDestroy(ActorDestroyReason aWhy)
   MOZ_ASSERT(mBlob);
 
   if (mRemoteBlob) {
-    mRemoteBlob->SetActor(nullptr);
+    mRemoteBlob->SetPBlob(nullptr);
+  }
+
+  if (mRemoteMemoryBlob) {
+    mRemoteMemoryBlob->SetPBlob(nullptr);
+  }
+
+  if (mRemoteMultipartBlob) {
+    mRemoteMultipartBlob->SetPBlob(nullptr);
   }
 
   if (mOwnsBlob) {
@@ -1171,6 +1478,8 @@ Blob<ActorFlavor>::RecvResolveMystery(const ResolveMysteryParams& aParams)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
+  MOZ_ASSERT(!mRemoteMemoryBlob);
+  MOZ_ASSERT(!mRemoteMultipartBlob);
   MOZ_ASSERT(mOwnsBlob);
 
   if (!mBlobIsFile) {
@@ -1213,6 +1522,8 @@ Blob<Parent>::RecvPBlobStreamConstructor(StreamType* aActor)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
+  MOZ_ASSERT(!mRemoteMemoryBlob);
+  MOZ_ASSERT(!mRemoteMultipartBlob);
 
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = mBlob->GetInternalStream(getter_AddRefs(stream));
@@ -1268,6 +1579,8 @@ Blob<Child>::RecvPBlobStreamConstructor(StreamType* aActor)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
+  MOZ_ASSERT(!mRemoteMemoryBlob);
+  MOZ_ASSERT(!mRemoteMultipartBlob);
 
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = mBlob->GetInternalStream(getter_AddRefs(stream));
@@ -1289,6 +1602,25 @@ Blob<Child>::RecvPBlobStreamConstructor(StreamType* aActor)
 }
 
 template <ActorFlavorEnum ActorFlavor>
+bool
+Blob<ActorFlavor>::RecvPBlobConstructor(ProtocolType* aActor,
+                                        const BlobConstructorParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  Blob<ActorFlavor>* subBlobActor = static_cast<Blob<ActorFlavor>*>(aActor);
+
+  if (!subBlobActor->ManagerIs(this)) {
+    // Somebody screwed up!
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMBlob> blob = subBlobActor->GetBlob();
+  static_cast<nsDOMMultipartFile*>(mBlob)->AddBlob(blob);
+  return true;
+}
+
+template <ActorFlavorEnum ActorFlavor>
 typename Blob<ActorFlavor>::StreamType*
 Blob<ActorFlavor>::AllocPBlobStream()
 {
@@ -1306,6 +1638,23 @@ Blob<ActorFlavor>::DeallocPBlobStream(StreamType* aActor)
 }
 
 template <ActorFlavorEnum ActorFlavor>
+typename Blob<ActorFlavor>::ProtocolType*
+Blob<ActorFlavor>::AllocPBlob(const BlobConstructorParams& aParams)
+{
+  Blob<ActorFlavor>* actor = Blob<ActorFlavor>::Create(aParams);
+  actor->SetManager(this);
+  return actor;
+}
+
+template <ActorFlavorEnum ActorFlavor>
+bool
+Blob<ActorFlavor>::DeallocPBlob(ProtocolType* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+template <ActorFlavorEnum ActorFlavor>
 NS_IMPL_ADDREF_INHERITED(RemoteBlob<ActorFlavor>, nsDOMFile)
 
 template <ActorFlavorEnum ActorFlavor>
@@ -1314,6 +1663,26 @@ NS_IMPL_RELEASE_INHERITED(RemoteBlob<ActorFlavor>, nsDOMFile)
 template <ActorFlavorEnum ActorFlavor>
 NS_IMPL_QUERY_INTERFACE_INHERITED1(RemoteBlob<ActorFlavor>, nsDOMFile,
                                                             nsIRemoteBlob)
+
+template <ActorFlavorEnum ActorFlavor>
+NS_IMPL_ADDREF_INHERITED(RemoteMemoryBlob<ActorFlavor>, nsDOMMemoryFile)
+
+template <ActorFlavorEnum ActorFlavor>
+NS_IMPL_RELEASE_INHERITED(RemoteMemoryBlob<ActorFlavor>, nsDOMMemoryFile)
+
+template <ActorFlavorEnum ActorFlavor>
+NS_IMPL_QUERY_INTERFACE_INHERITED1(RemoteMemoryBlob<ActorFlavor>, nsDOMMemoryFile,
+                                                                  nsIRemoteBlob)
+
+template <ActorFlavorEnum ActorFlavor>
+NS_IMPL_ADDREF_INHERITED(RemoteMultipartBlob<ActorFlavor>, nsDOMMultipartFile)
+
+template <ActorFlavorEnum ActorFlavor>
+NS_IMPL_RELEASE_INHERITED(RemoteMultipartBlob<ActorFlavor>, nsDOMMultipartFile)
+
+template <ActorFlavorEnum ActorFlavor>
+NS_IMPL_QUERY_INTERFACE_INHERITED1(RemoteMultipartBlob<ActorFlavor>, nsDOMMultipartFile,
+                                                                     nsIRemoteBlob)
 
 // Explicit instantiation of both classes.
 template class Blob<Parent>;
