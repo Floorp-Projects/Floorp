@@ -27,6 +27,13 @@ AssemblerX86Shared::copyDataRelocationTable(uint8_t *dest)
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
 }
 
+void
+AssemblerX86Shared::copyPreBarrierTable(uint8_t *dest)
+{
+    if (preBarriers_.length())
+        memcpy(dest, preBarriers_.buffer(), preBarriers_.length());
+}
+
 static void
 TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
@@ -52,6 +59,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
         gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(ptr), "ion-masm-ptr");
     }
 }
+
 
 void
 AssemblerX86Shared::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
