@@ -16,40 +16,33 @@
               android:layout_width="fill_parent"
               android:layout_height="@dimen/browser_toolbar_height"/>
 
-        <RelativeLayout android:layout_width="fill_parent"
-                        android:layout_height="0dip"
-                        android:layout_weight="1.0">
+        <View android:layout_width="fill_parent"
+              android:layout_height="2dp"
+              android:background="#FF313131"/>
 
-            <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
-                  android:id="@android:id/tabcontent"
-                  android:layout_width="fill_parent"
-                  android:layout_height="wrap_content">
+        <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
+              android:id="@android:id/tabcontent"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content">
 
-                <org.mozilla.gecko.TabsTray android:id="@+id/normal_tabs"
-                                            style="@style/TabsList"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="fill_parent"
-                                            gecko:tabs="tabs_normal"/>
+            <org.mozilla.gecko.TabsTray android:id="@+id/normal_tabs"
+                                        style="@style/TabsList"
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="fill_parent"
+                                        gecko:tabs="tabs_normal"/>
 
-                <org.mozilla.gecko.TabsTray android:id="@+id/private_tabs"
-                                            style="@style/TabsList"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="fill_parent"
-                                            gecko:tabs="tabs_private"/>
+            <org.mozilla.gecko.TabsTray android:id="@+id/private_tabs"
+                                        style="@style/TabsList"
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="fill_parent"
+                                        gecko:tabs="tabs_private"/>
 
-                <org.mozilla.gecko.RemoteTabs android:id="@+id/synced_tabs"
-                                              style="@style/RemoteTabsList"
-                                              android:layout_width="fill_parent"
-                                              android:layout_height="fill_parent"/>
+            <org.mozilla.gecko.RemoteTabs android:id="@+id/synced_tabs"
+                                          style="@style/RemoteTabsList"
+                                          android:layout_width="fill_parent"
+                                          android:layout_height="fill_parent"/>
 
-            </view>
-
-            <View android:layout_width="fill_parent"
-                  android:layout_height="3dp"
-                  android:layout_alignParentTop="true"
-                  android:background="@drawable/tabs_shadow"/>
-
-       </RelativeLayout>
+        </view>
 
    </LinearLayout>
 
