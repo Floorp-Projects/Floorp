@@ -22,7 +22,8 @@ const PREF_APPLY_PROMPT_TIMEOUT = "b2g.update.apply-prompt-timeout";
 const PREF_APPLY_IDLE_TIMEOUT   = "b2g.update.apply-idle-timeout";
 
 const NETWORK_ERROR_OFFLINE = 111;
-const FILE_ERROR_TOO_BIG = 112;
+const FILE_ERROR_TOO_BIG    = 112;
+const HTTP_ERROR_OFFSET     = 1000;
 
 const STATE_DOWNLOADING = 'downloading';
 
@@ -72,8 +73,18 @@ UpdateCheckListener.prototype = {
   },
 
   onError: function UCL_onError(request, update) {
-    if (update.errorCode == NETWORK_ERROR_OFFLINE) {
+    // nsIUpdate uses a signed integer for errorCode while any platform errors
+    // require all 32 bits.
+    let errorCode = update.errorCode >>> 0;
+    let isNSError = (errorCode >>> 31) == 1;
+
+    if (errorCode == NETWORK_ERROR_OFFLINE) {
       this._updatePrompt.setUpdateStatus("retry-when-online");
+    } else if (isNSError) {
+      this._updatePrompt.setUpdateStatus("check-error-" + errorCode);
+    } else if (errorCode > HTTP_ERROR_OFFSET) {
+      let httpErrorCode = errorCode - HTTP_ERROR_OFFSET;
+      this._updatePrompt.setUpdateStatus("check-error-http-" + httpErrorCode);
     }
 
     Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
