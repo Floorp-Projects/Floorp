@@ -461,6 +461,12 @@ Assembler::finish()
         int real_offset = offset + m_buffer.poolSizeBefore(offset);
         jumpRelocations_.writeUnsigned(real_offset);
     }
+
+    for (unsigned int i = 0; i < tmpPreBarriers_.length(); i++) {
+        int offset = tmpPreBarriers_[i].getOffset();
+        int real_offset = offset + m_buffer.poolSizeBefore(offset);
+        preBarriers_.writeUnsigned(real_offset);
+    }
 }
 
 void
@@ -699,6 +705,13 @@ Assembler::copyDataRelocationTable(uint8_t *dest)
 {
     if (dataRelocations_.length())
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
+}
+
+void
+Assembler::copyPreBarrierTable(uint8_t *dest)
+{
+    if (preBarriers_.length())
+        memcpy(dest, preBarriers_.buffer(), preBarriers_.length());
 }
 
 void
@@ -1107,7 +1120,11 @@ VFPRegister::isMissing()
 bool
 Assembler::oom() const
 {
-    return m_buffer.oom() || !enoughMemory_ || jumpRelocations_.oom();
+    return m_buffer.oom() ||
+        !enoughMemory_ ||
+        jumpRelocations_.oom() ||
+        dataRelocations_.oom() ||
+        preBarriers_.oom();
 }
 
 bool
@@ -1146,6 +1163,12 @@ Assembler::dataRelocationTableBytes() const
     return dataRelocations_.length();
 }
 
+size_t
+Assembler::preBarrierTableBytes() const
+{
+    return preBarriers_.length();
+}
+
 // Size of the data table, in bytes.
 size_t
 Assembler::dataSize() const
@@ -1158,8 +1181,10 @@ Assembler::bytesNeeded() const
     return size() +
         dataSize() +
         jumpRelocationTableBytes() +
-        dataRelocationTableBytes();
+        dataRelocationTableBytes() +
+        preBarrierTableBytes();
 }
+
 // write a blob of binary into the instruction stream
 BufferOffset
 Assembler::writeInst(uint32_t x, uint32_t *dest)
