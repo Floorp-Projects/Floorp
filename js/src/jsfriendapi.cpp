@@ -389,9 +389,9 @@ js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
     if (!fp->isFunctionFrame())
         return NULL;
 
-    JSFunction *scriptedCaller = fp->fun();
+    RootedFunction scriptedCaller(cx, fp->fun());
     RootedScript outermost(cx, scriptedCaller->nonLazyScript());
-    for (StaticScopeIter i(scriptedCaller); !i.done(); i++) {
+    for (StaticScopeIter i(cx, scriptedCaller); !i.done(); i++) {
         if (i.type() == StaticScopeIter::FUNCTION)
             outermost = i.funScript();
     }
