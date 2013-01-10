@@ -899,6 +899,7 @@ let RemoteDebugger = {
       DebuggerServer.init(this.prompt.bind(this));
       DebuggerServer.addBrowserActors();
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
+      DebuggerServer.addActors('chrome://browser/content/dbg-webapps-actors.js');
     }
 
     let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;
