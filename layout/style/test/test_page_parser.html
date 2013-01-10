@@ -23,6 +23,22 @@
     // Check a bad property.
     { rule: "position: absolute;" },
 
+    // Check good properties with invalid units.
+    { rule: _("margin: 2in; margin: 2vw;"), expected: {
+      "margin-top": "2in",
+      "margin-right-value": "2in",
+      "margin-bottom": "2in",
+      "margin-left-value": "2in",
+      "margin-left-ltr-source": "physical",
+      "margin-left-rtl-source": "physical",
+      "margin-right-ltr-source": "physical",
+      "margin-right-rtl-source": "physical"
+    }},
+    { rule: _("margin-top: 2in; margin-top: 2vw;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-top: 2in; margin-top: 2vh;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-top: 2in; margin-top: 2vmax;"), expected: {"margin-top": "2in"}},
+    { rule: _("margin-top: 2in; margin-top: 2vmin;"), expected: {"margin-top": "2in"}},
+
     // Check good properties.
     // NOTE: The margin-*-value and margin-*-source properties are not really
     // expected and will need to be removed once bug 241234 is addressed.
