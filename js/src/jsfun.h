@@ -44,6 +44,13 @@ class JSFunction : public JSObject
         HAS_DEFAULTS     = 0x0800,  /* function has at least one default parameter */
         INTERPRETED_LAZY = 0x1000,  /* function is interpreted but doesn't have a script yet */
 
+        /*
+         * Function is cloned anew at each callsite. This is temporarily
+         * needed for ParallelArray selfhosted code until type information can
+         * be made context sensitive. See discussion in bug 826148.
+         */
+        CALLSITE_CLONE   = 0x2000,
+
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
         INTERPRETED_LAMBDA = INTERPRETED | LAMBDA
@@ -100,6 +107,11 @@ class JSFunction : public JSObject
     bool hasRest()                  const { return flags & HAS_REST; }
     bool hasDefaults()              const { return flags & HAS_DEFAULTS; }
 
+    /* Original functions that should be cloned are not extended. */
+    bool isCloneAtCallsite()        const { return (flags & CALLSITE_CLONE) && !isExtended(); }
+    /* Cloned functions keep a backlink to the original in extended slot 0. */
+    bool isCallsiteClone()          const { return (flags & CALLSITE_CLONE) && isExtended(); }
+
     /* Compound attributes: */
     bool isBuiltin() const {
         return isNative() || isSelfHostedBuiltin();
@@ -139,6 +151,10 @@ class JSFunction : public JSObject
     void setIsSelfHostedConstructor() {
         JS_ASSERT(!isSelfHostedConstructor());
         flags |= SELF_HOSTED_CTOR;
+    }
+
+    void setIsCloneAtCallsite() {
+        flags |= CALLSITE_CLONE;
     }
 
     void setIsFunctionPrototype() {

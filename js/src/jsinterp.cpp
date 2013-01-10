@@ -2359,8 +2359,25 @@ BEGIN_CASE(JSOP_FUNCALL)
     bool construct = (*regs.pc == JSOP_NEW);
 
     RootedFunction &fun = rootFunction0;
+    bool isFunction = IsFunctionObject(args.calleev(), fun.address());
+
+    /*
+     * Some builtins are marked as clone-at-callsite to increase precision of
+     * TI and JITs.
+     */
+    if (isFunction) {
+        if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
+            goto error;
+        if (cx->typeInferenceEnabled() && fun->isCloneAtCallsite()) {
+            fun = CloneFunctionAtCallsite(cx, fun, script, regs.pc);
+            if (!fun)
+                goto error;
+            args.setCallee(ObjectValue(*fun));
+        }
+    }
+
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
-    if (!IsFunctionObject(args.calleev(), fun.address()) || !fun->isInterpretedConstructor()) {
+    if (!isFunction || !fun->isInterpretedConstructor()) {
         if (construct) {
             if (!InvokeConstructorKernel(cx, args))
                 goto error;
@@ -2380,9 +2397,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RootedScript funScript(cx, JSFunction::getOrCreateScript(cx, fun));
-    if (!funScript)
-        goto error;
+    RootedScript funScript(cx, fun->nonLazyScript());
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))
         goto error;
 
