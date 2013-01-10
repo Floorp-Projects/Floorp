@@ -39,11 +39,10 @@ interface HTMLImageElement : HTMLElement {
   readonly attribute unsigned long naturalWidth;
   readonly attribute unsigned long naturalHeight;
   readonly attribute boolean complete;
-/*};
+};
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLImageElement {
-*/
            [SetterThrows]
            attribute DOMString name;
            [SetterThrows]

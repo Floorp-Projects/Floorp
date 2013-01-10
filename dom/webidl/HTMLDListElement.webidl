@@ -14,12 +14,10 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-dl-element
 interface HTMLDListElement : HTMLElement {
-/*
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLDListElement {
-*/
            [SetterThrows]
            attribute boolean compact;
 };
