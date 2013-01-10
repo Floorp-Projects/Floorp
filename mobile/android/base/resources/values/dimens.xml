@@ -42,12 +42,13 @@
     <dimen name="prompt_service_icon_text_padding">10dp</dimen>
     <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
     <dimen name="prompt_service_top_bottom_text_with_icon_padding">8dp</dimen>
-    <dimen name="remote_tab_child_row_height">54dp</dimen>
+    <dimen name="remote_tab_child_row_height">64dp</dimen>
     <dimen name="remote_tab_group_row_height">26dp</dimen>
     <dimen name="popup_width">400dp</dimen>
     <dimen name="tab_thumbnail_height">78dp</dimen>
     <dimen name="tab_thumbnail_width">136dp</dimen>
     <dimen name="tabs_counter_size">22sp</dimen>
+    <dimen name="tabs_panel_list_padding">16dip</dimen>
     <dimen name="tabs_list_divider_height">2dp</dimen>
     <dimen name="text_selection_handle_width">30dp</dimen>
     <dimen name="text_selection_handle_height">44dp</dimen>

@@ -68,9 +68,6 @@ public class TabsPanel extends TabHost
     private GeckoPopupMenu mTabsPopupMenu;
     private Menu mTabsMenu;
 
-    private static final int REMOTE_TABS_HIDDEN = 1;
-    private static final int REMOTE_TABS_SHOWN = 2;
-
     public TabsPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
@@ -377,9 +374,11 @@ public class TabsPanel extends TabHost
 
         if (mCurrentPanel == Panel.REMOTE_TABS) {
             mAddTab.setVisibility(View.INVISIBLE);
+            mMenuButton.setVisibility(View.INVISIBLE);
         } else {
             mAddTab.setVisibility(View.VISIBLE);
             mAddTab.setImageLevel(index);
+            mMenuButton.setVisibility(View.VISIBLE);
         }
 
         if (isSideBar()) {
