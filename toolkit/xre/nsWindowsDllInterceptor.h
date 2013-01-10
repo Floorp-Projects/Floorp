@@ -361,6 +361,9 @@ protected:
           // complex MOV, bail
           return;
         }
+      } else if (origBytes[nBytes] == 0xB8) {
+        // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
+        nBytes += 5;
       } else if (origBytes[nBytes] == 0x83) {
         // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r/m, imm8
         unsigned char b = origBytes[nBytes+1];
