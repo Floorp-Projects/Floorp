@@ -36,7 +36,7 @@ interface nsIObserver;
 interface nsIPrincipal;
 interface nsIDOMWindow;
 
-[scriptable, uuid(9b6ffbb9-5536-4216-afcf-1b7cd7b54005)]
+[scriptable, uuid(b38c982d-30bc-463f-9afc-0ca339eac03c)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -172,6 +172,19 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testExactPermissionFromPrincipal(in nsIPrincipal principal,
                                             in string type);
+
+  /**
+   * Test whether a website has permission to perform the given action
+   * ignoring active sessions.
+   * System principals will always have permissions granted.
+   *
+   * @param principal the principal
+   * @param type      a case-sensitive ASCII string, identifying the consumer
+   * @param return    see add(), param permission. returns UNKNOWN_ACTION when
+   *                  there is no stored permission for this uri and / or type.
+   */
+  uint32_t testExactPermanentPermission(in nsIPrincipal principal,
+                                        in string type);
 
    /**
     * Increment or decrement our "refcount" of an app id.
