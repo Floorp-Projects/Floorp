@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 235828 2012-05-23 11:26:28Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 243157 2012-11-16 19:39:10Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_CONSTANTS_H_
@@ -403,6 +403,7 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_DATAGRAM_ACKED		10010
 #define SCTP_DATAGRAM_MARKED		20010
 #define SCTP_FORWARD_TSN_SKIP		30010
+#define SCTP_DATAGRAM_NR_ACKED		40010
 
 /* chunk output send from locations */
 #define SCTP_OUTPUT_FROM_USR_SEND       0
