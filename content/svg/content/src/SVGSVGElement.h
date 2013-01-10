@@ -11,7 +11,6 @@
 #include "nsIDOMSVGLocatable.h"
 #include "nsISVGPoint.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsIDOMSVGZoomAndPan.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "SVGGraphicsElement.h"
@@ -111,8 +110,7 @@ typedef SVGGraphicsElement SVGSVGElementBase;
 
 class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase,
                                 public nsIDOMSVGSVGElement,
-                                public nsIDOMSVGFitToViewBox,
-                                public nsIDOMSVGZoomAndPan
+                                public nsIDOMSVGFitToViewBox
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
@@ -133,7 +131,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGSVGElement, SVGSVGElementBase)
   NS_DECL_NSIDOMSVGSVGELEMENT
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
-  NS_DECL_NSIDOMSVGZOOMANDPAN
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
