@@ -1336,6 +1336,64 @@ nsXMLHttpRequest::SlowAbort()
   return NS_OK;
 }
 
+/*Method that checks if it is safe to expose a header value to the client.
+It is used to check what headers are exposed for CORS requests.*/
+bool
+nsXMLHttpRequest::IsSafeHeader(const nsACString& header, nsIHttpChannel* httpChannel)
+{
+  // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
+  if (!nsContentUtils::IsCallerChrome() &&
+       (header.LowerCaseEqualsASCII("set-cookie") ||
+        header.LowerCaseEqualsASCII("set-cookie2"))) {
+    NS_WARNING("blocked access to response header");
+    return false;
+  }
+  // if this is not a CORS call all headers are safe
+  if (!(mState & XML_HTTP_REQUEST_USE_XSITE_AC)){
+    return true;
+  }
+  // Check for dangerous headers
+  // Make sure we don't leak header information from denied cross-site
+  // requests.
+  if (mChannel) {
+    nsresult status;
+    mChannel->GetStatus(&status);
+    if (NS_FAILED(status)) {
+      return false;
+    }
+  }  
+  const char* kCrossOriginSafeHeaders[] = {
+    "cache-control", "content-language", "content-type", "expires",
+    "last-modified", "pragma"
+  };
+  for (uint32_t i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
+    if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
+      return true;
+    }
+  }
+  nsAutoCString headerVal;
+  // The "Access-Control-Expose-Headers" header contains a comma separated
+  // list of method names.
+  httpChannel->
+      GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"),
+                        headerVal);
+  nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
+  bool isSafe = false;
+  while (exposeTokens.hasMoreTokens()) {
+    const nsDependentCSubstring& token = exposeTokens.nextToken();
+    if (token.IsEmpty()) {
+      continue;
+    }
+    if (!IsValidHTTPToken(token)) {
+      return false;
+    }
+    if (header.Equals(token, nsCaseInsensitiveCStringComparator())) {
+      isSafe = true;
+    }
+  }
+  return isSafe;
+}
+
 /* DOMString getAllResponseHeaders(); */
 IMPL_STRING_GETTER(GetAllResponseHeaders)
 void
@@ -1350,12 +1408,8 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
     return;
   }
 
-  if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    return;
-  }
-
   if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
-    nsRefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor();
+    nsRefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor(this, httpChannel);
     if (NS_SUCCEEDED(httpChannel->VisitResponseHeaders(visitor))) {
       CopyASCIItoUTF16(visitor->Headers(), aResponseHeaders);
     }
@@ -1448,64 +1502,9 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
     return;
   }
 
-  // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-  if (!nsContentUtils::IsCallerChrome() &&
-       (header.LowerCaseEqualsASCII("set-cookie") ||
-        header.LowerCaseEqualsASCII("set-cookie2"))) {
-    NS_WARNING("blocked access to response header");
-    return;
-  }
-
   // Check for dangerous headers
-  if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    // Make sure we don't leak header information from denied cross-site
-    // requests.
-    if (mChannel) {
-      nsresult status;
-      mChannel->GetStatus(&status);
-      if (NS_FAILED(status)) {
-        return;
-      }
-    }
-
-    const char *kCrossOriginSafeHeaders[] = {
-      "cache-control", "content-language", "content-type", "expires",
-      "last-modified", "pragma"
-    };
-    bool safeHeader = false;
-    uint32_t i;
-    for (i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
-      if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
-        safeHeader = true;
-        break;
-      }
-    }
-
-    if (!safeHeader) {
-      nsAutoCString headerVal;
-      // The "Access-Control-Expose-Headers" header contains a comma separated
-      // list of method names.
-      httpChannel->
-        GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"),
-                          headerVal);
-      nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
-      while(exposeTokens.hasMoreTokens()) {
-        const nsDependentCSubstring& token = exposeTokens.nextToken();
-        if (token.IsEmpty()) {
-          continue;
-        }
-        if (!IsValidHTTPToken(token)) {
-          return;
-        }
-        if (header.Equals(token, nsCaseInsensitiveCStringComparator())) {
-          safeHeader = true;
-        }
-      }
-    }
-
-    if (!safeHeader) {
-      return;
-    }
+  if (!IsSafeHeader(header, httpChannel)) {
+    return;
   }
 
   aRv = httpChannel->GetResponseHeader(header, _retval);
@@ -3989,18 +3988,13 @@ NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 NS_IMETHODIMP nsXMLHttpRequest::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
-    // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-    if (!nsContentUtils::IsCallerChrome() &&
-         (header.LowerCaseEqualsASCII("set-cookie") ||
-          header.LowerCaseEqualsASCII("set-cookie2"))) {
-        NS_WARNING("blocked access to response header");
-    } else {
-        mHeaders.Append(header);
-        mHeaders.Append(": ");
-        mHeaders.Append(value);
-        mHeaders.Append("\r\n");
-    }
-    return NS_OK;
+  if (mXHR->IsSafeHeader(header, mHttpChannel)) {
+    mHeaders.Append(header);
+    mHeaders.Append(": ");
+    mHeaders.Append(value);
+    mHeaders.Append("\r\n");
+  }
+  return NS_OK;
 }
 
 // DOM event class to handle progress notifications
