@@ -35,6 +35,7 @@
 class mozIApplication;
 class nsConsoleService;
 class nsIDOMBlob;
+class nsDOMFileBase;
 
 namespace mozilla {
 
@@ -130,8 +131,9 @@ public:
         return mSendPermissionUpdates;
     }
 
+    bool GetParamsForBlob(nsDOMFileBase* aBlob,
+                          BlobConstructorParams* aOutParams);
     BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
-
     /**
      * Kill our subprocess and make sure it dies.  Should only be used
      * in emergency situations since it bypasses the normal shutdown

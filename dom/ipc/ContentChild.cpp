@@ -546,7 +546,9 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 PBlobChild*
 ContentChild::AllocPBlob(const BlobConstructorParams& aParams)
 {
-  return BlobChild::Create(aParams);
+  BlobChild* actor = BlobChild::Create(aParams);
+  actor->SetManager(this);
+  return actor;
 }
 
 bool
@@ -556,53 +558,42 @@ ContentChild::DeallocPBlob(PBlobChild* aActor)
   return true;
 }
 
-BlobChild*
-ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
+bool
+ContentChild::GetParamsForBlob(nsDOMFileBase* aBlob,
+                               BlobConstructorParams* aOutParams)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aBlob, "Null pointer!");
+  BlobConstructorParams resultParams;
 
-  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
-  if (remoteBlob) {
-    BlobChild* actor =
-      static_cast<BlobChild*>(static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
-    NS_ASSERTION(actor, "Null actor?!");
-
-    return actor;
-  }
-
-  // XXX This is only safe so long as all blob implementations in our tree
-  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
-  //     a real interface or something.
-  const nsDOMFileBase* blob = static_cast<nsDOMFileBase*>(aBlob);
-
-  BlobConstructorParams params;
-
-  if (blob->IsSizeUnknown() || blob->IsDateUnknown()) {
+  if (!(aBlob->IsMemoryBacked() || aBlob->GetSubBlobs()) &&
+      (aBlob->IsSizeUnknown() || aBlob->IsDateUnknown())) {
     // We don't want to call GetSize or GetLastModifiedDate
     // yet since that may stat a file on the main thread
     // here. Instead we'll learn the size lazily from the
     // other process.
-    params = MysteryBlobConstructorParams();
+    resultParams = MysteryBlobConstructorParams();
   }
   else {
+    BlobOrFileConstructorParams params;
+
     nsString contentType;
     nsresult rv = aBlob->GetType(contentType);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    NS_ENSURE_SUCCESS(rv, false);
 
     uint64_t length;
     rv = aBlob->GetSize(&length);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    NS_ENSURE_SUCCESS(rv, false);
 
-    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+    nsCOMPtr<nsIDOMFile> file;
+    static_cast<nsIDOMBlob*>(aBlob)->QueryInterface(NS_GET_IID(nsIDOMFile),
+                                          (void**)getter_AddRefs(file));
     if (file) {
       FileBlobConstructorParams fileParams;
 
       rv = file->GetName(fileParams.name());
-      NS_ENSURE_SUCCESS(rv, nullptr);
+      NS_ENSURE_SUCCESS(rv, false);
 
       rv = file->GetMozLastModifiedDate(&fileParams.modDate());
-      NS_ENSURE_SUCCESS(rv, nullptr);
+      NS_ENSURE_SUCCESS(rv, false);
 
       fileParams.contentType() = contentType;
       fileParams.length() = length;
@@ -614,13 +605,81 @@ ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
       blobParams.length() = length;
       params = blobParams;
     }
+
+    MOZ_ASSERT(!(aBlob->IsMemoryBacked() &&
+                 aBlob->GetSubBlobs()), "Can't be both!");
+
+    if (aBlob->IsMemoryBacked()) {
+      const nsDOMMemoryFile* memoryBlob =
+        static_cast<const nsDOMMemoryFile*>(aBlob);
+
+      InfallibleTArray<uint8_t> data;
+      data.SetLength(memoryBlob->GetLength());
+      memcpy(data.Elements(), memoryBlob->GetData(), memoryBlob->GetLength());
+
+      MemoryBlobOrFileConstructorParams memoryParams(params, data);
+      resultParams = memoryParams;
+    }
+    else if (aBlob->GetSubBlobs()) {
+      MultipartBlobOrFileConstructorParams multipartParams(params);
+      resultParams = multipartParams;
+    }
+    else {
+      resultParams = BlobConstructorNoMultipartParams(params);
+    }
+  }
+
+  *aOutParams = resultParams;
+
+  return true;
+}
+
+BlobChild*
+ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aBlob, "Null pointer!");
+
+  // XXX This is only safe so long as all blob implementations in our tree
+  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
+  //     a real interface or something.
+  nsDOMFileBase* blob = static_cast<nsDOMFileBase*>(aBlob);
+
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
+  if (remoteBlob) {
+    BlobChild* actor =
+      static_cast<BlobChild*>(static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
+    NS_ASSERTION(actor, "Null actor?!");
+
+    return actor;
+  }
+
+  BlobConstructorParams params;
+  if (!GetParamsForBlob(blob, &params)) {
+    return nullptr;
   }
 
   BlobChild* actor = BlobChild::Create(aBlob);
   NS_ENSURE_TRUE(actor, nullptr);
 
-  if (!SendPBlobConstructor(actor, params)) {
-    return nullptr;
+  SendPBlobConstructor(actor, params);
+
+  actor->SetManager(this);
+
+  if (const nsTArray<nsCOMPtr<nsIDOMBlob> >* subBlobs = blob->GetSubBlobs()) {
+    for (uint32_t i = 0; i < subBlobs->Length(); ++i) {
+      BlobConstructorParams subParams;
+      nsDOMFileBase* subBlob =
+        static_cast<nsDOMFileBase*>(subBlobs->ElementAt(i).get());
+      if (!GetParamsForBlob(subBlob, &subParams)) {
+        return nullptr;
+      }
+
+      BlobChild* subActor = BlobChild::Create(aBlob);
+      actor->SendPBlobConstructor(subActor, subParams);
+
+      subActor->SetManager(actor);
+    }
   }
 
   return actor;
