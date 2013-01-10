@@ -1885,6 +1885,17 @@ LIRGenerator::visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins)
 }
 
 bool
+LIRGenerator::visitCallsiteCloneCache(MCallsiteCloneCache *ins)
+{
+    JS_ASSERT(ins->callee()->type() == MIRType_Object);
+
+    LCallsiteCloneCache *lir = new LCallsiteCloneCache(useRegister(ins->callee()));
+    if (!define(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);

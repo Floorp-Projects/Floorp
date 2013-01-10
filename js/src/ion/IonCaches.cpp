@@ -2108,3 +2108,72 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
 
     return true;
 }
+
+bool
+IonCacheCallsiteClone::attach(JSContext *cx, IonScript *ion, HandleFunction original,
+                              HandleFunction clone)
+{
+    MacroAssembler masm;
+
+    // Guard against object identity on the original.
+    RepatchLabel exit;
+    CodeOffsetJump exitOffset = masm.branchPtrWithPatch(Assembler::NotEqual, calleeReg(),
+                                                        ImmWord(uintptr_t(original.get())), &exit);
+    masm.bind(&exit);
+
+    // Load the clone.
+    masm.movePtr(ImmWord(uintptr_t(clone.get())), outputReg());
+
+    RepatchLabel rejoin;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin);
+    masm.bind(&rejoin);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    rejoinOffset.fixup(&masm);
+    exitOffset.fixup(&masm);
+
+    if (ion->invalidated())
+        return true;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+    CodeLocationJump lastJump_ = lastJump();
+    PatchJump(lastJump_, CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated CALL callee clone stub at %p", code->raw());
+    return true;
+}
+
+JSObject *
+js::ion::CallsiteCloneCache(JSContext *cx, size_t cacheIndex, HandleObject callee)
+{
+    AutoFlushCache afc ("CallsiteCloneCache");
+
+    // Act as the identity for functions that are not clone-at-callsite, as we
+    // generate this cache as long as some callees are clone-at-callsite.
+    RootedFunction fun(cx, callee->toFunction());
+    if (!fun->isCloneAtCallsite())
+        return fun;
+
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
+    IonCacheCallsiteClone &cache = ion->getCache(cacheIndex).toCallsiteClone();
+
+    RootedFunction clone(cx, CloneFunctionAtCallsite(cx, fun, cache.callScript(), cache.callPc()));
+    if (!clone)
+        return NULL;
+
+    if (cache.stubCount() < MAX_STUBS) {
+        if (!cache.attach(cx, ion, fun, clone))
+            return NULL;
+        cache.incrementStubCount();
+    }
+
+    return clone;
+}
