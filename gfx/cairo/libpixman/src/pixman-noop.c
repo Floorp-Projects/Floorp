@@ -71,18 +71,18 @@ noop_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
     {
 	iter->get_scanline = get_scanline_null;
     }
-    else if ((iter->flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
+    else if ((iter->iter_flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
 	     (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
     {
 	iter->get_scanline = _pixman_iter_get_scanline_noop;
     }
     else if (image->common.extended_format_code == PIXMAN_solid		&&
-	     ((image->common.flags & (FAST_PATH_BITS_IMAGE | FAST_PATH_NO_ALPHA_MAP)) ==
+	     ((iter->image_flags & (FAST_PATH_BITS_IMAGE | FAST_PATH_NO_ALPHA_MAP)) ==
 	      (FAST_PATH_BITS_IMAGE | FAST_PATH_NO_ALPHA_MAP)))
     {
 	bits_image_t *bits = &image->bits;
 
-	if (iter->flags & ITER_NARROW)
+	if (iter->iter_flags & ITER_NARROW)
 	{
 	    uint32_t color = bits->fetch_pixel_32 (bits, 0, 0);
 	    uint32_t *buffer = iter->buffer;
@@ -104,8 +104,8 @@ noop_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 	iter->get_scanline = _pixman_iter_get_scanline_noop;
     }
     else if (image->common.extended_format_code == PIXMAN_a8r8g8b8	&&
-	     (iter->flags & ITER_NARROW)				&&
-	     (image->common.flags & FLAGS) == FLAGS			&&
+	     (iter->iter_flags & ITER_NARROW)				&&
+	     (iter->image_flags & FLAGS) == FLAGS			&&
 	     iter->x >= 0 && iter->y >= 0				&&
 	     iter->x + iter->width <= image->bits.width			&&
 	     iter->y + iter->height <= image->bits.height)
@@ -125,8 +125,8 @@ static void
 noop_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     pixman_image_t *image = iter->image;
-    uint32_t image_flags = image->common.flags;
-    uint32_t iter_flags = iter->flags;
+    uint32_t image_flags = iter->image_flags;
+    uint32_t iter_flags = iter->iter_flags;
     
     if ((image_flags & FAST_PATH_STD_DEST_FLAGS) == FAST_PATH_STD_DEST_FLAGS	&&
 	(iter_flags & ITER_NARROW) == ITER_NARROW				&&

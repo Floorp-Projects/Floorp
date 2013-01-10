@@ -7,7 +7,7 @@
 
 #include "SVGLength.h"
 #include "nsSVGElement.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsString.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
@@ -191,7 +191,7 @@ SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) cons
 SVGLength::GetUserUnitsPerPercent(const nsSVGElement *aElement, uint8_t aAxis)
 {
   if (aElement) {
-    nsSVGSVGElement *viewportElement = const_cast<nsSVGElement*>(aElement)->GetCtx();
+    dom::SVGSVGElement *viewportElement = const_cast<nsSVGElement*>(aElement)->GetCtx();
     if (viewportElement) {
       return NS_MAX(viewportElement->GetLength(aAxis) / 100.0f, 0.0f);
     }

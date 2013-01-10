@@ -17,18 +17,12 @@ import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 {

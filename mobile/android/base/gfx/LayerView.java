@@ -19,7 +19,6 @@ import android.graphics.PixelFormat;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -34,8 +33,6 @@ import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
 
 import java.nio.IntBuffer;
-
-import java.lang.reflect.Method;
 
 /**
  * A view rendered by the layer compositor.
@@ -132,10 +129,6 @@ public class LayerView extends FrameLayout {
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
             requestFocus();
-
-        /** We need to manually hide FormAssistPopup because it is not a regular PopupWindow. */
-        if (GeckoApp.mAppContext != null)
-            GeckoApp.mAppContext.hideFormAssistPopup();
 
         return mTouchEventHandler == null ? false : mTouchEventHandler.handleEvent(event);
     }

@@ -479,7 +479,7 @@ nsSVGLinearGradientFrame::GetLengthValue(uint32_t aIndex)
     gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
     "Unknown gradientUnits type");
 
-  return length.GetAnimValue(static_cast<nsSVGSVGElement*>(nullptr));
+  return length.GetAnimValue(static_cast<SVGSVGElement*>(nullptr));
 }
 
 nsSVGLinearGradientElement *
@@ -610,7 +610,7 @@ nsSVGRadialGradientFrame::GetLengthValueFromElement(uint32_t aIndex,
     gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
     "Unknown gradientUnits type");
 
-  return length.GetAnimValue(static_cast<nsSVGSVGElement*>(nullptr));
+  return length.GetAnimValue(static_cast<SVGSVGElement*>(nullptr));
 }
 
 nsSVGRadialGradientElement *

@@ -7,7 +7,6 @@
 
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGRect;
-interface nsIDOMSVGViewSpec;
 interface nsIDOMSVGNumber;
 interface nsIDOMSVGLength;
 
@@ -43,13 +42,13 @@ interface nsIDOMSVGSVGElement
   readonly attribute nsIDOMSVGAnimatedLength y;
   readonly attribute nsIDOMSVGAnimatedLength width;
   readonly attribute nsIDOMSVGAnimatedLength height;
-  readonly attribute nsIDOMSVGRect     viewport;
+  // readonly attribute nsIDOMSVGRect     viewport;
   readonly attribute float pixelUnitToMillimeterX;
   readonly attribute float pixelUnitToMillimeterY;
   readonly attribute float screenPixelToMillimeterX;
   readonly attribute float screenPixelToMillimeterY;
   readonly attribute boolean useCurrentView;
-  readonly attribute nsIDOMSVGViewSpec currentView;
+  // readonly attribute nsIDOMSVGViewSpec currentView;
   attribute float currentScale;
       // raises DOMException on setting
   //  SVGPoint
@@ -65,12 +64,14 @@ interface nsIDOMSVGSVGElement
   boolean       animationsPaused();
   float         getCurrentTime();
   void          setCurrentTime(in float seconds);
+  /*
   nsIDOMNodeList getIntersectionList(in nsIDOMSVGRect rect,
                                      in nsIDOMSVGElement referenceElement);
   nsIDOMNodeList getEnclosureList(in nsIDOMSVGRect rect, in nsIDOMSVGElement referenceElement);
   boolean       checkIntersection(in nsIDOMSVGElement element, in nsIDOMSVGRect rect);
   boolean       checkEnclosure(in nsIDOMSVGElement element, in nsIDOMSVGRect rect);
   void          deSelectAll();
+  */
   nsIDOMSVGNumber       createSVGNumber();
   nsIDOMSVGLength       createSVGLength();
   // SVGAngle

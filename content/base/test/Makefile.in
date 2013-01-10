@@ -364,18 +364,33 @@ MOCHITEST_FILES_B = \
 		file_CSP.sjs \
 		file_CSP_main.html \
 		file_CSP_main.html^headers^ \
+		file_CSP_main_spec_compliant.html \
+		file_CSP_main_spec_compliant.html^headers^ \
 		file_CSP_main.js \
+		file_CSP_main_spec_compliant.js \
 		test_CSP_frameancestors.html \
 		file_CSP_frameancestors.sjs \
 		file_CSP_frameancestors_main.html \
 		file_CSP_frameancestors_main.js \
+		file_CSP_frameancestors_spec_compliant.sjs \
+		file_CSP_frameancestors_main_spec_compliant.html \
+		file_CSP_frameancestors_main_spec_compliant.js \
 		test_CSP_inlinescript.html \
 		file_CSP_inlinescript_main.html \
 		file_CSP_inlinescript_main.html^headers^ \
+		file_CSP_inlinescript_main_spec_compliant.html \
+		file_CSP_inlinescript_main_spec_compliant.html^headers^ \
+		file_CSP_inlinescript_main_spec_compliant_allowed.html \
+		file_CSP_inlinescript_main_spec_compliant_allowed.html^headers^ \
 		test_CSP_evalscript.html \
 		file_CSP_evalscript_main.html \
 		file_CSP_evalscript_main.html^headers^ \
 		file_CSP_evalscript_main.js \
+		file_CSP_evalscript_main_allowed.js \
+		file_CSP_evalscript_main_spec_compliant.html \
+	 	file_CSP_evalscript_main_spec_compliant.html^headers^ \
+		file_CSP_evalscript_main_spec_compliant_allowed.html \
+		file_CSP_evalscript_main_spec_compliant_allowed.html^headers^ \
 		file_csp_bug768029.html \
 		file_csp_bug768029.sjs \
 		file_csp_bug773891.html \
@@ -609,6 +624,9 @@ MOCHITEST_FILES_B = \
 		test_bug813919.html \
 		test_bug814576.html \
 		test_xhr_withCredentials.html \
+		test_bothCSPheaders.html \
+		file_bothCSPheaders.html \
+		file_bothCSPheaders.html^headers^ \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

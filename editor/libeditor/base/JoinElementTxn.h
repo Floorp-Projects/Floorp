@@ -10,14 +10,14 @@
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"                       // for REFNSIID
-#include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nscore.h"                     // for NS_IMETHOD
 
 class nsEditor;
+class nsINode;
 
 /**
  * A transaction that joins two elements E1 (left node) and E2 (right node)
- * into a single node E.  
+ * into a single node E.
  * The children of E are the children of E1 followed by the children of E2.
  * After DoTransaction() and RedoTransaction(), E1 is removed from the content
  * tree and E2 remains.
@@ -31,8 +31,8 @@ public:
     * @param aRightNode the second of two nodes to join
     */
   NS_IMETHOD Init(nsEditor   *aEditor,
-                  nsIDOMNode *aLeftNode,
-                  nsIDOMNode *aRightNode);
+                  nsINode    *aLeftNode,
+                  nsINode    *aRightNode);
 
   JoinElementTxn();
 
@@ -42,21 +42,21 @@ public:
   NS_DECL_EDITTXN
 
 protected:
-  
-  /** the elements to operate upon.  
+
+  /** the elements to operate upon.
     * After the merge, mRightNode remains and mLeftNode is removed from the content tree.
     */
-  nsCOMPtr<nsIDOMNode> mLeftNode;
-  nsCOMPtr<nsIDOMNode> mRightNode;
+  nsCOMPtr<nsINode> mLeftNode;
+  nsCOMPtr<nsINode> mRightNode;
 
   /** the offset into mNode where the children of mElement are split (for undo).<BR>
-    * mOffset is the index of the first child in the right node. 
+    * mOffset is the index of the first child in the right node.
     * -1 means the left node had no children.
     */
   uint32_t  mOffset;
 
   /** the parent node containing mLeftNode and mRightNode */
-  nsCOMPtr<nsIDOMNode> mParent;
+  nsCOMPtr<nsINode> mParent;
   nsEditor*  mEditor;
 };
 

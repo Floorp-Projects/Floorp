@@ -622,14 +622,14 @@ nsDOMIdentityInternal.prototype = {
   },
 
   // Component setup.
-  classID: Components.ID("{8bcac6a3-56a4-43a4-a44c-cdf42763002f}"),
+  classID: Components.ID("{210853d9-2c97-4669-9761-b1ab9cbf57ef}"),
 
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIDOMGlobalPropertyInitializer, Ci.nsIMessageListener]
   ),
 
   classInfo: XPCOMUtils.generateCI({
-    classID: Components.ID("{8bcac6a3-56a4-43a4-a44c-cdf42763002f}"),
+    classID: Components.ID("{210853d9-2c97-4669-9761-b1ab9cbf57ef}"),
     contractID: "@mozilla.org/dom/identity;1",
     interfaces: [],
     classDescription: "Identity DOM Implementation"

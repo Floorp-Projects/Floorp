@@ -441,7 +441,7 @@ combine_saturate_u (pixman_implementation_t *imp,
  * PDF_NON_SEPARABLE_BLEND_MODE macros, which take the blend function as an
  * argument. Note that this implementation operates on premultiplied colors,
  * while the PDF specification does not. Therefore the code uses the formula
- * ar.Cra = (1 – as) . Dca + (1 – ad) . Sca + B(Dca, ad, Sca, as)
+ * Cra = (1 – as) . Dca + (1 – ad) . Sca + B(Dca, ad, Sca, as)
  */
 
 /*
@@ -526,7 +526,7 @@ combine_multiply_ca (pixman_implementation_t *imp,
 	    UN16x4_MUL_UN16_ADD_UN16x4_MUL_UN16 (result, isa, s, ida);	\
 	    								\
 	    *(dest + i) = result +					\
-		(DIV_ONE_UN16 (sa * da) << A_SHIFT) +			\
+		(DIV_ONE_UN16 (sa * (uint64_t)da) << A_SHIFT) +		\
 		(blend_ ## name (RED_16 (d), da, RED_16 (s), sa) << R_SHIFT) + \
 		(blend_ ## name (GREEN_16 (d), da, GREEN_16 (s), sa) << G_SHIFT) + \
 		(blend_ ## name (BLUE_16 (d), da, BLUE_16 (s), sa));	\
@@ -556,7 +556,7 @@ combine_multiply_ca (pixman_implementation_t *imp,
 	    UN16x4_MUL_UN16x4_ADD_UN16x4_MUL_UN16 (result, ~m, s, ida);     \
             								\
 	    result +=							\
-	        (DIV_ONE_UN16 (ALPHA_16 (m) * da) << A_SHIFT) +		\
+	        (DIV_ONE_UN16 (ALPHA_16 (m) * (uint64_t)da) << A_SHIFT) +	\
 	        (blend_ ## name (RED_16 (d), da, RED_16 (s), RED_16 (m)) << R_SHIFT) + \
 	        (blend_ ## name (GREEN_16 (d), da, GREEN_16 (s), GREEN_16 (m)) << G_SHIFT) + \
 	        (blend_ ## name (BLUE_16 (d), da, BLUE_16 (s), BLUE_16 (m))); \
@@ -853,7 +853,7 @@ PDF_SEPARABLE_BLEND_MODE (exclusion)
  *
  *    r * set_sat (C, s) = set_sat (x * C, r * s)
  *
- * The above holds for all non-zero x, because they x'es in the fraction for
+ * The above holds for all non-zero x, because the x'es in the fraction for
  * C_mid cancel out. Specifically, it holds for x = r:
  *
  *    r * set_sat (C, s) = set_sat (r_c, rs)
@@ -889,8 +889,7 @@ PDF_SEPARABLE_BLEND_MODE (exclusion)
  *
  *     a_s * a_d * B(s, d)
  *   = a_s * a_d * set_lum (set_sat (S/a_s, SAT (D/a_d)), LUM (D/a_d), 1)
- *   = a_s * a_d * set_lum (set_sat (a_d * S, a_s * SAT (D)),
- *                                        a_s * LUM (D), a_s * a_d)
+ *   = set_lum (set_sat (a_d * S, a_s * SAT (D)), a_s * LUM (D), a_s * a_d)
  *
  */
 
@@ -931,7 +930,7 @@ PDF_SEPARABLE_BLEND_MODE (exclusion)
 	    blend_ ## name (c, dc, da, sc, sa);				\
             								\
 	    *(dest + i) = result +					\
-		(DIV_ONE_UN16 (sa * da) << A_SHIFT) +			\
+		(DIV_ONE_UN16 (sa * (uint64_t)da) << A_SHIFT) +		\
 		(DIV_ONE_UN16 (c[0]) << R_SHIFT) +			\
 		(DIV_ONE_UN16 (c[1]) << G_SHIFT) +			\
 		(DIV_ONE_UN16 (c[2]));					\
@@ -1148,9 +1147,7 @@ PDF_NON_SEPARABLE_BLEND_MODE (hsl_luminosity)
 #undef CH_MIN
 #undef PDF_NON_SEPARABLE_BLEND_MODE
 
-/* Overlay
- *
- * All of the disjoint composing functions
+/* All of the disjoint/conjoint composing functions
  *
  * The four entries in the first column indicate what source contributions
  * come from each of the four areas of the picture -- areas covered by neither
@@ -1171,6 +1168,9 @@ PDF_NON_SEPARABLE_BLEND_MODE (hsl_luminosity)
  * (0,0,B,A)	max(1-(1-b)/a,0) min(1,(1-a)/b)	 min(1,b/a)	max(1-a/b,0)
  * (0,A,0,B)	min(1,(1-b)/a)	max(1-(1-a)/b,0) max(1-b/a,0)	min(1,a/b)
  * (0,A,B,0)	min(1,(1-b)/a)	min(1,(1-a)/b)	max(1-b/a,0)	max(1-a/b,0)
+ *
+ * See  http://marc.info/?l=xfree-render&m=99792000027857&w=2  for more
+ * information about these operators.
  */
 
 #define COMBINE_A_OUT 1

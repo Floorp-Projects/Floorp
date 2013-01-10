@@ -8,7 +8,6 @@ package org.mozilla.gecko.ui;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.PointUtils;
@@ -25,8 +24,6 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
-import java.util.Arrays;
-import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -140,7 +137,10 @@ public class PanZoomController
     }
 
     private void setState(PanZoomState state) {
-        mState = state;
+        if (state != mState) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PanZoom:StateChange", state.toString()));
+            mState = state;
+        }
     }
 
     private ImmutableViewportMetrics getMetrics() {
@@ -515,7 +515,7 @@ public class PanZoomController
     }
 
     /* Performs a bounce-back animation to the given viewport metrics. */
-    private void bounce(ImmutableViewportMetrics metrics) {
+    private void bounce(ImmutableViewportMetrics metrics, PanZoomState state) {
         stopAnimationTimer();
 
         ImmutableViewportMetrics bounceStartMetrics = getMetrics();
@@ -523,6 +523,8 @@ public class PanZoomController
             setState(PanZoomState.NOTHING);
             return;
         }
+
+        setState(state);
 
         // At this point we have already set mState to BOUNCE or ANIMATED_ZOOM, so
         // getRedrawHint() is returning false. This means we can safely call
@@ -534,8 +536,7 @@ public class PanZoomController
 
     /* Performs a bounce-back animation to the nearest valid viewport metrics. */
     private void bounce() {
-        setState(PanZoomState.BOUNCE);
-        bounce(getValidViewportMetrics());
+        bounce(getValidViewportMetrics(), PanZoomState.BOUNCE);
     }
 
     /* Starts the fling or bounce animation. */
@@ -1024,7 +1025,6 @@ public class PanZoomController
      * pixels.
      */
     private boolean animatedZoomTo(RectF zoomToRect) {
-        setState(PanZoomState.ANIMATED_ZOOM);
         final float startZoom = getMetrics().zoomFactor;
 
         RectF viewport = getMetrics().getViewport();
@@ -1060,7 +1060,7 @@ public class PanZoomController
         // clamped down to prevent overscroll, over-zoom, and other bad conditions.
         finalMetrics = getValidViewportMetrics(finalMetrics);
 
-        bounce(finalMetrics);
+        bounce(finalMetrics, PanZoomState.ANIMATED_ZOOM);
         return true;
     }
 
