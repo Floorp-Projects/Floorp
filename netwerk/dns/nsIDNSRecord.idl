@@ -8,6 +8,7 @@
 #include "mozilla/net/DNS.h"
 %}
 native NetAddr(mozilla::net::NetAddr);
+interface nsINetAddr;
 
 /**
  * nsIDNSRecord
@@ -17,7 +18,7 @@ native NetAddr(mozilla::net::NetAddr);
  * like an enumerator, allowing the caller to easily step through the
  * list of IP addresses.
  */
-[scriptable, uuid(67E6CF03-12C7-4AF4-AE5F-AE362C7AF8FF)]
+[scriptable, uuid(95ced6f3-44b4-4427-a149-c9a1e033d852)]
 interface nsIDNSRecord : nsISupports
 {
     /**
@@ -39,6 +40,18 @@ interface nsIDNSRecord : nsISupports
      * the record.
      */
     [noscript] NetAddr getNextAddr(in uint16_t aPort);
+
+    /**
+     * this function returns the value of the next IP address as a
+     * scriptable address and increments the internal address iterator.
+     *
+     * @param aPort
+     *        A port number to initialize the nsINetAddr with.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
+     * the record.
+     */
+    nsINetAddr getScriptableNextAddr(in uint16_t aPort);
 
     /**
      * this function returns the value of the next IP address as a

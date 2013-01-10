@@ -12,7 +12,7 @@
  * This interface represents a native NetAddr struct in a readonly
  * interface.
  */
-[scriptable, uuid(c407ab6c-c3ca-4cb2-a99b-a7dfbb88af33)]
+[scriptable, uuid(4f7c40b0-fc7d-42a4-a642-1b2a703c10f6)]
 interface nsINetAddr : nsISupports
 {
     /**
@@ -56,6 +56,13 @@ interface nsINetAddr : nsISupports
      * @throws NS_ERROR_NOT_AVAILABLE if the address family is not FAMILY_INET6
      */
     readonly attribute unsigned long scope;
+
+    /**
+     * @return whether a FAMILY_INET6 address is mapped from FAMILY_INET.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if the address family is not FAMILY_INET6
+     */
+    readonly attribute boolean isV4Mapped;
 
     /**
      * Network address families. These correspond to all the network address
