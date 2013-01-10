@@ -120,6 +120,7 @@ class Compiler : public BaseCompiler
          * more comments.
          */
         uint32_t     callIndex;
+        Label        funGuardLabel;
         DataLabelPtr funGuard;
         Jump         funJump;
         Jump         hotJump;
