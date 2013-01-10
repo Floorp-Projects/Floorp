@@ -6,7 +6,6 @@
 #include "MediaResource.h"
 #include "nsTimeRanges.h"
 #include "nsMathUtils.h"
-#include "prtypes.h"
 
 #include "mozilla/StandardInteger.h"
 

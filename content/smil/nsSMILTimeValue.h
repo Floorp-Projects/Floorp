@@ -6,8 +6,6 @@
 #ifndef NS_SMILTIMEVALUE_H_
 #define NS_SMILTIMEVALUE_H_
 
-#include "prtypes.h"
-#include "prlong.h"
 #include "nsSMILTypes.h"
 #include "nsDebug.h"
 
