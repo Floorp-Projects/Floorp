@@ -175,7 +175,7 @@ var RecommendedSearchResults = {
           id: aAddon.id,
           name: aAddon.name,
           version: aAddon.version,
-          homepageURL: aAddon.homepageURL,
+          learnmoreURL: aAddon.learnmoreURL,
           iconURL: aAddon.iconURL
         })
       });
