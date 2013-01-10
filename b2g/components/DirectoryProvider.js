@@ -18,6 +18,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "env",
                                    "@mozilla.org/process/environment;1",
                                    "nsIEnvironment");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "um",
+                                   "@mozilla.org/updates/update-manager;1",
+                                   "nsIUpdateManager");
+
 XPCOMUtils.defineLazyServiceGetter(Services, "volumeService",
                                    "@mozilla.org/telephony/volume-service;1",
                                    "nsIVolumeService");
@@ -25,6 +29,9 @@ XPCOMUtils.defineLazyServiceGetter(Services, "volumeService",
 XPCOMUtils.defineLazyGetter(this, "gExtStorage", function dp_gExtStorage() {
     return Services.env.get("EXTERNAL_STORAGE");
 });
+
+// This exists to mark the affected code for bug 828858.
+const gUseSDCard = true;
 
 const VERBOSE = 1;
 let log =
@@ -90,13 +97,15 @@ DirectoryProvider.prototype = {
       return this.createUpdatesDir(LOCAL_DIR);
     }
     let activeUpdate = Services.um.activeUpdate;
-    if (this.volumeHasFreeSpace(gExtStorage, requiredSpace)) {
-      let extUpdateDir = this.createUpdatesDir(gExtStorage);
-      if (extUpdateDir !== null) {
-        return extUpdateDir;
+    if (gUseSDCard) {
+      if (this.volumeHasFreeSpace(gExtStorage, requiredSpace)) {
+        let extUpdateDir = this.createUpdatesDir(gExtStorage);
+        if (extUpdateDir !== null) {
+          return extUpdateDir;
+        }
+        log("Warning: " + gExtStorage + " has enough free space for update " +
+            activeUpdate.name + ", but is not writable");
       }
-      log("Warning: " + gExtStorage + " has enough free space for update " +
-          activeUpdate.name + ", but is not writable");
     }
 
     if (this.volumeHasFreeSpace(LOCAL_DIR, requiredSpace)) {
