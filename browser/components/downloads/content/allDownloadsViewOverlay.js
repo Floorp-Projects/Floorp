@@ -953,27 +953,38 @@ DownloadsPlacesView.prototype = {
       if (!this._richlistbox.firstChild)
         return;
 
-      let rlRect = this._richlistbox.getBoundingClientRect();
-      let fcRect = this._richlistbox.firstChild.getBoundingClientRect();
-      // For simplicity assume border and padding are the same across all sides.
-      // This works as far as there isn't an horizontal scrollbar since fcRect
-      // is relative to the scrolled area.
-      let offset = (fcRect.left - rlRect.left) + 1;
-
-      let firstVisible = document.elementFromPoint(fcRect.left, rlRect.top + offset);
-      if (!firstVisible || firstVisible.localName != "richlistitem")
-        throw new Error("_ensureVisibleElementsAreActive invoked on the wrong view");
-
-      let lastVisible = document.elementFromPoint(fcRect.left, rlRect.bottom - offset);
-      // If the last visible child found is not a richlistitem, then there are
-      // less items than the available space, thus just proceed to the last child.
-      if (!lastVisible || lastVisible.localName != "richlistitem")
-        lastVisible = this._richlistbox.lastChild;
-
-      for (let elt = firstVisible; elt != lastVisible.nextSibling; elt = elt.nextSibling) {
-        if (elt._shell)
-          elt._shell.ensureActive();
+      let rlbRect = this._richlistbox.getBoundingClientRect();
+      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      let nodes = winUtils.nodesFromRect(rlbRect.left, rlbRect.top,
+                                         0, rlbRect.width, rlbRect.height, 0,
+                                         true, false);
+      // nodesFromRect returns nodes in z-index order, and for the same z-index
+      // sorts them in inverted DOM order, thus starting from the one that would
+      // be on top.
+      let firstVisibleNode, lastVisibleNode;
+      for (let node of nodes) {
+        if (node.localName === "richlistitem" && node._shell) {
+          node._shell.ensureActive();
+          // The first visible node is the last match.
+          firstVisibleNode = node;
+          // While the last visible node is the first match.
+          if (!lastVisibleNode)
+            lastVisibleNode = node;
+        }
       }
+
+      // Also activate the first invisible nodes in both boundaries (that is,
+      // above and below the visible area) to ensure proper keyboard navigation
+      // in both directions.
+      let nodeBelowVisibleArea = lastVisibleNode && lastVisibleNode.nextSibling;
+      if (nodeBelowVisibleArea && nodeBelowVisibleArea._shell)
+        nodeBelowVisibleArea._shell.ensureActive();
+
+      let nodeABoveVisibleArea =
+        firstVisibleNode && firstVisibleNode.previousSibling;
+      if (nodeABoveVisibleArea && nodeABoveVisibleArea._shell)
+        nodeABoveVisibleArea._shell.ensureActive();
     }.bind(this), 10);
   },
 
