@@ -3,14 +3,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<Gecko.TextView xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="0dip"
-                android:layout_height="fill_parent"
-                android:layout_weight="1.0"
-                android:gravity="center"
-                android:background="@drawable/tabs_panel_indicator"
-                android:padding="10dp"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                android:textSize="13sp"
-                android:textColor="#FFE5F2FF"/>
+<Gecko.AllCapsTextView xmlns:android="http://schemas.android.com/apk/res/android"
+                       android:layout_width="0dip"
+                       android:layout_height="fill_parent"
+                       android:layout_weight="1.0"
+                       android:gravity="center"
+                       android:background="@drawable/tabs_panel_indicator"
+                       android:padding="10dp"
+                       android:singleLine="true"
+                       android:ellipsize="marquee"
+                       android:textSize="12sp"
+                       android:textStyle="bold"
+                       android:textColor="#FFFFFFFF"/>
