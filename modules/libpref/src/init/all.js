@@ -694,6 +694,9 @@ pref("dom.experimental_bindings", true);
 // Don't use new input types
 pref("dom.experimental_forms", false);
 
+// Allocation Threshold for Workers
+pref("dom.workers.mem.gc_allocation_threshold_mb", 30);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
