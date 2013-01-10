@@ -83,8 +83,9 @@ BrowserCLH.prototype = {
 
       let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (browserWin) {
-        let whereFlags = pinned ? Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB : Ci.nsIBrowserDOMWindow.OPEN_NEWTAB;
-        browserWin.browserDOMWindow.openURI(uri, null, whereFlags, Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+        if (!pinned) {
+          browserWin.browserDOMWindow.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB, Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+        }
       } else {
         let args = {
           url: openURL,
