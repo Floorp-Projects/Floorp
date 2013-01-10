@@ -50,7 +50,7 @@ PermissionSettings.prototype = {
     let uri = Services.io.newURI(aOrigin, null, null);
     let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
     let principal = secMan.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
-    let result = permissionManager.testExactPermissionFromPrincipal(principal, aPermName);
+    let result = permissionManager.testExactPermanentPermission(principal, aPermName);
 
     switch (result)
     {
