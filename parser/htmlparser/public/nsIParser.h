@@ -256,7 +256,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIParser, NS_IPARSER_IID)
   Some useful constants...
  * ===========================================================*/
 
-#include "prtypes.h"
 #include "nsError.h"
 
 const nsresult  kEOF              = NS_ERROR_HTMLPARSER_EOF;

@@ -11,7 +11,6 @@
 
 #include "prinrval.h"
 #include "nsDebug.h"
-#include "prlong.h"
 
 namespace IPC {
 template <typename T> struct ParamTraits;

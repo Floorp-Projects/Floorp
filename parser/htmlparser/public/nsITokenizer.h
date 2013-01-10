@@ -14,7 +14,6 @@
 #define __NSITOKENIZER__
 
 #include "nsISupports.h"
-#include "prtypes.h"
 
 class CToken;
 class nsScanner;
