@@ -22,7 +22,7 @@
                  android:layout_width="@dimen/browser_toolbar_height"
                  android:layout_height="@dimen/browser_toolbar_height"
                  android:padding="@dimen/browser_toolbar_button_padding"
-                 android:src="@drawable/tab_new"
+                 android:src="@drawable/tab_new_level"
                  android:contentDescription="@string/new_tab"
                  android:background="@drawable/action_bar_button"/>
 
