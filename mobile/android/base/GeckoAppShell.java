@@ -246,8 +246,14 @@ public class GeckoAppShell
     public static native void notifyReadingMessageListFailed(int aError, int aRequestId);
 
     public static native void scheduleComposite();
+
+    // Pausing and resuming the compositor is a synchronous request, so be
+    // careful of possible deadlock. Resuming the compositor will also cause
+    // a composition, so there is no need to schedule a composition after
+    // resuming.
     public static native void schedulePauseComposition();
     public static native void scheduleResumeComposition(int width, int height);
+
     public static native float computeRenderIntegrity();
 
     public static native SurfaceBits getSurfaceBits(Surface surface);

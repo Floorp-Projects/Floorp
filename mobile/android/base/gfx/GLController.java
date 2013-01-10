@@ -74,6 +74,10 @@ public class GLController {
         notifyAll();
     }
 
+    public boolean hasValidSurface() {
+        return mSurfaceValid;
+    }
+
     private void initEGL() {
         mEGL = (EGL10)EGLContext.getEGL();
 
