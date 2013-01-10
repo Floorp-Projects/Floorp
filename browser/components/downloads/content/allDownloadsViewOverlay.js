@@ -356,37 +356,55 @@ DownloadElementShell.prototype = {
         return s.stateScanning;
       }
 
-      let [displayHost, fullHost] =
-        DownloadUtils.getURIHost(this._dataItem.referrer ||
-                                 this._dataItem.uri);
-
-      let end = new Date(this.dataItem.endTime);
-      let [displayDate, fullDate] = DownloadUtils.getReadableDates(end);
-      return s.statusSeparator(fullHost, fullDate);
+      throw new Error("_getStatusText called with a bogus download state");
     }
 
+    // This is a not-in-progress or history download.
+    let stateLabel = "";
     switch (this.getDownloadState()) {
       case nsIDM.DOWNLOAD_FAILED:
-        return s.stateFailed;
+        stateLabel = s.stateFailed;
+        break;
       case nsIDM.DOWNLOAD_CANCELED:
-        return s.stateCanceled;
+        stateLabel = s.stateCanceled;
+        break;
       case nsIDM.DOWNLOAD_BLOCKED_PARENTAL:
-        return s.stateBlockedParentalControls;
+        stateLabel = s.stateBlockedParentalControls;
+        break;
       case nsIDM.DOWNLOAD_BLOCKED_POLICY:
-        return s.stateBlockedPolicy;
+        stateLabel = s.stateBlockedPolicy;
+        break;
       case nsIDM.DOWNLOAD_DIRTY:
-        return s.stateDirty;
+        stateLabel = s.stateDirty;
+        break;
       case nsIDM.DOWNLOAD_FINISHED:{
         // For completed downloads, show the file size (e.g. "1.5 MB")
         if (this._targetFileInfoFetched && this._targetFileExists) {
           let [size, unit] = DownloadUtils.convertByteUnits(this._targetFileSize);
-          return s.sizeWithUnits(size, unit);
+          stateLabel = s.sizeWithUnits(size, unit);
+          break;
         }
-        break;
+        // Fallback to default unknown state.
       }
+      default:
+        stateLabel = s.sizeUnknown;
+        break;
     }
 
-    return s.sizeUnknown;
+    // TODO (bug 829201): history downloads should get the referrer from Places.
+    let referrer = this._dataItem && this._dataItem.referrer ||
+                   this.downloadURI;
+    let [displayHost, fullHost] = DownloadUtils.getURIHost(referrer);
+
+    // TODO (bug 826991): history downloads should get endTime from annotations.
+    let date = this._dataItem && this._dataItem.endTime ||
+               (this._placesNode.time / 1000);
+    let [displayDate, fullDate] = DownloadUtils.getReadableDates(new Date(date));
+
+    // We use the same XUL label to display the state, the host name, and the
+    // end time.
+    let firstPart = s.statusSeparator(stateLabel, displayHost);
+    return s.statusSeparator(firstPart, displayDate);
   },
 
   // The progressmeter element for the download
