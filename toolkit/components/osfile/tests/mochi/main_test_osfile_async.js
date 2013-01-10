@@ -131,6 +131,7 @@ let test = maketest("Main", function main(test) {
     yield test_path();
     yield test_open();
     yield test_stat();
+    yield test_info_features_detect();
     yield test_read_write();
     yield test_read_write_all();
     yield test_position();
@@ -243,6 +244,29 @@ let test_stat = maketest("stat", function stat(test) {
     test.ok(stat2, "stat 2 is not empty");
     for (let key in stat2) {
       test.is("" + stat1[key], "" + stat2[key], "Stat field " + key + "is the same");
+    }
+  });
+});
+
+/**
+ * Test feature detection using OS.File.Info.prototype on main thread
+ */
+let test_info_features_detect = maketest("features_detect", function features_detect(test) {
+  return Task.spawn(function() {
+    if (OS.Constants.Win) {
+      // see if winBirthDate is defined
+      if ("winBirthDate" in OS.File.Info.prototype) {
+        test.ok(true, "winBirthDate is defined");
+      } else {
+        test.fail("winBirthDate not defined though we are under Windows");
+      }
+    } else if (OS.Constants.libc) {
+      // see if unixGroup is defined
+      if ("unixGroup" in OS.File.Info.prototype) {
+        test.ok(true, "unixGroup is defined");
+      } else {
+        test.fail("unixGroup is not defined though we are under Unix");
+      }
     }
   });
 });
