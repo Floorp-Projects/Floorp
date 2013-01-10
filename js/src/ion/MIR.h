@@ -2559,11 +2559,11 @@ class MMathFunction
 
 class MAdd : public MBinaryArithInstruction
 {
-    bool implicitTruncate_;
+    int implicitTruncate_;
 
     MAdd(MDefinition *left, MDefinition *right)
       : MBinaryArithInstruction(left, right),
-        implicitTruncate_(false)
+        implicitTruncate_(0)
     {
         setResultType(MIRType_Value);
     }
@@ -2575,10 +2575,10 @@ class MAdd : public MBinaryArithInstruction
     }
     void analyzeTruncateBackward();
 
-    bool isTruncated() const {
+    int isTruncated() const {
         return implicitTruncate_;
     }
-    void setTruncated(bool truncate) {
+    void setTruncated(int truncate) {
         implicitTruncate_ = truncate;
     }
     bool updateForReplacement(MDefinition *ins);
@@ -2592,7 +2592,7 @@ class MAdd : public MBinaryArithInstruction
 
 class MSub : public MBinaryArithInstruction
 {
-    bool implicitTruncate_;
+    int implicitTruncate_;
     MSub(MDefinition *left, MDefinition *right)
       : MBinaryArithInstruction(left, right),
         implicitTruncate_(false)
@@ -2607,10 +2607,10 @@ class MSub : public MBinaryArithInstruction
     }
 
     void analyzeTruncateBackward();
-    bool isTruncated() const {
+    int isTruncated() const {
         return implicitTruncate_;
     }
-    void setTruncated(bool truncate) {
+    void setTruncated(int truncate) {
         implicitTruncate_ = truncate;
     }
     bool updateForReplacement(MDefinition *ins);
@@ -2725,7 +2725,7 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeZero_;
     bool canBeNegativeOverflow_;
     bool canBeDivideByZero_;
-    bool implicitTruncate_;
+    int implicitTruncate_;
 
     MDiv(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
@@ -2759,10 +2759,10 @@ class MDiv : public MBinaryArithInstruction
         return 1;
     }
 
-    bool isTruncated() const {
+    int isTruncated() const {
         return implicitTruncate_;
     }
-    void setTruncated(bool truncate) {
+    void setTruncated(int truncate) {
         implicitTruncate_ = truncate;
     }
 
