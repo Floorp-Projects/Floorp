@@ -52,9 +52,9 @@ function sanitizeValue(aType, aValue)
       return aValue.replace(/[\n\r]/g, "");
     case "url":
     case "email":
-      return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
+      return aValue.replace(/[\n\r]/g, "").replace(/^[\u0020\u0009\t\u000a\u000c\u000d]+|[\u0020\u0009\t\u000a\u000c\u000d]+$/g, "");
     case "number":
-      return (parseFloat(aValue) + "" === aValue) ? aValue : "";
+      return isNaN(Number(aValue)) ? "" : aValue;
     case "date":
       // http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#valid-date-string
       function getNumbersOfDaysInMonth(aMonth, aYear) {
@@ -145,10 +145,19 @@ function checkSanitizing(element)
     "  foo\n\r  bar  ",
     // For url:
     "\r\n foobar    \n\r",
+    "\u000B foo \u000B",
+    "\u000A foo \u000A",
+    "\u000C foo \u000C",
+    "\u000d foo \u000d",
+    "\u0020 foo \u0020",
+    " \u0009 foo \u0009 ",
     // For number:
     "42",
     "13.37",
     "1.234567898765432",
+    "12foo",
+    "1e2",
+    "3E42",
     // For date:
     "1970-01-01",
     "1234-12-12",
