@@ -95,8 +95,6 @@ public:
   virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
                              bool *aTriedToWrap);
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline);

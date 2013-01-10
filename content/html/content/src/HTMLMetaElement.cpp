@@ -11,8 +11,6 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
 
-DOMCI_NODE_DATA(HTMLMetaElement, mozilla::dom::HTMLMetaElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -36,7 +34,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLMetaElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLMetaElement, nsIDOMHTMLMetaElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLMetaElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMetaElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLMetaElement)

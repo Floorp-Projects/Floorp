@@ -420,8 +420,6 @@ public:
       mBindingParent = aBindingParent;
     }
 
-    virtual nsXPCClassInfo* GetClassInfo();
-
     virtual nsIDOMNode* AsDOMNode() { return this; }
 
     virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;

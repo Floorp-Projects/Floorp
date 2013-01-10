@@ -13,7 +13,6 @@
 #include "nsRuleData.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(LI)
-DOMCI_NODE_DATA(HTMLLIElement, mozilla::dom::HTMLLIElement)
 
 namespace mozilla {
 namespace dom {
@@ -31,7 +30,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLLIElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLLIElement, nsIDOMHTMLLIElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLIElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLIElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
 

@@ -2079,25 +2079,12 @@ SVGComponentTransferFunctionElement::GetNumberInfo()
                               ArrayLength(sNumberInfo));
 }
 
-
-NS_IMPL_ADDREF_INHERITED(SVGFEFuncRElement,SVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(SVGFEFuncRElement,SVGComponentTransferFunctionElement)
-
-} // namespace dom
-} // namespace mozilla
-
-DOMCI_NODE_DATA(SVGFEFuncRElement, SVGFEFuncRElement)
-
-namespace mozilla {
-namespace dom {
-
-NS_INTERFACE_TABLE_HEAD(SVGFEFuncRElement)
-  NS_NODE_INTERFACE_TABLE5(SVGFEFuncRElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGComponentTransferFunctionElement,
-                           nsIDOMSVGFEFuncRElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncRElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
+NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncRElement,
+                             SVGComponentTransferFunctionElement,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGComponentTransferFunctionElement,
+                             nsIDOMSVGFEFuncRElement)
 
 /* virtual */ JSObject*
 SVGFEFuncRElement::WrapNode(JSContext* aCx, JSObject* aScope,
@@ -2116,25 +2103,12 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 
-
-NS_IMPL_ADDREF_INHERITED(SVGFEFuncGElement,SVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(SVGFEFuncGElement,SVGComponentTransferFunctionElement)
-
-} // namespace dom
-} // namespace mozilla
-
-DOMCI_NODE_DATA(SVGFEFuncGElement, SVGFEFuncGElement)
-
-namespace mozilla {
-namespace dom {
-
-NS_INTERFACE_TABLE_HEAD(SVGFEFuncGElement)
-  NS_NODE_INTERFACE_TABLE5(SVGFEFuncGElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGComponentTransferFunctionElement,
-                           nsIDOMSVGFEFuncGElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
+NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncGElement,
+                             SVGComponentTransferFunctionElement,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGComponentTransferFunctionElement,
+                             nsIDOMSVGFEFuncGElement)
 
 /* virtual */ JSObject*
 SVGFEFuncGElement::WrapNode(JSContext* aCx, JSObject* aScope,
@@ -2153,25 +2127,12 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 
-
-NS_IMPL_ADDREF_INHERITED(SVGFEFuncBElement,SVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(SVGFEFuncBElement,SVGComponentTransferFunctionElement)
-
-} // namespace dom
-} // namespace mozilla
-
-DOMCI_NODE_DATA(SVGFEFuncBElement, SVGFEFuncBElement)
-
-namespace mozilla {
-namespace dom {
-
-NS_INTERFACE_TABLE_HEAD(SVGFEFuncBElement)
-  NS_NODE_INTERFACE_TABLE5(SVGFEFuncBElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGComponentTransferFunctionElement,
-                           nsIDOMSVGFEFuncBElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncBElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
+NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncBElement,
+                             SVGComponentTransferFunctionElement,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGComponentTransferFunctionElement,
+                             nsIDOMSVGFEFuncBElement)
 
 /* virtual */ JSObject*
 SVGFEFuncBElement::WrapNode(JSContext* aCx, JSObject* aScope,
@@ -2190,25 +2151,12 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 
-
-NS_IMPL_ADDREF_INHERITED(SVGFEFuncAElement,SVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(SVGFEFuncAElement,SVGComponentTransferFunctionElement)
-
-} // namespace dom
-} // namespace mozilla
-
-DOMCI_NODE_DATA(SVGFEFuncAElement, SVGFEFuncAElement)
-
-namespace mozilla {
-namespace dom {
-
-NS_INTERFACE_TABLE_HEAD(SVGFEFuncAElement)
-  NS_NODE_INTERFACE_TABLE5(SVGFEFuncAElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGComponentTransferFunctionElement,
-                           nsIDOMSVGFEFuncAElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncAElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
+NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncAElement,
+                             SVGComponentTransferFunctionElement,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGComponentTransferFunctionElement,
+                             nsIDOMSVGFEFuncAElement)
 
 /* virtual */ JSObject*
 SVGFEFuncAElement::WrapNode(JSContext* aCx, JSObject* aScope,

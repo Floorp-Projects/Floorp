@@ -16,8 +16,6 @@ BEGIN_FILE_NAMESPACE
 class DOMFileHandle : public FileHandle
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   static already_AddRefed<DOMFileHandle>
   Create(nsPIDOMWindow* aWindow,
          nsIFileStorage* aFileStorage,

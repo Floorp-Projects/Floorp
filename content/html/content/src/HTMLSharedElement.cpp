@@ -18,12 +18,6 @@
 #include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
-DOMCI_DATA(HTMLParamElement, mozilla::dom::HTMLSharedElement)
-DOMCI_DATA(HTMLBaseElement, mozilla::dom::HTMLSharedElement)
-DOMCI_DATA(HTMLDirectoryElement, mozilla::dom::HTMLSharedElement)
-DOMCI_DATA(HTMLQuoteElement, mozilla::dom::HTMLSharedElement)
-DOMCI_DATA(HTMLHeadElement, mozilla::dom::HTMLSharedElement)
-DOMCI_DATA(HTMLHtmlElement, mozilla::dom::HTMLSharedElement)
 
 namespace mozilla {
 namespace dom {
@@ -36,33 +30,6 @@ HTMLSharedElement::~HTMLSharedElement()
 
 NS_IMPL_ADDREF_INHERITED(HTMLSharedElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedElement, Element)
-
-nsIClassInfo*
-HTMLSharedElement::GetClassInfoInternal()
-{
-  if (mNodeInfo->Equals(nsGkAtoms::param)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLParamElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::base)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLBaseElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::dir)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLDirectoryElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::q)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLQuoteElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::blockquote)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLQuoteElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::head)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLHeadElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::html)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLHtmlElement_id);
-  }
-  return nullptr;
-}
 
 // QueryInterface implementation for HTMLSharedElement
 NS_INTERFACE_TABLE_HEAD(HTMLSharedElement)
@@ -79,8 +46,6 @@ NS_INTERFACE_TABLE_HEAD(HTMLSharedElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLQuoteElement, blockquote)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHeadElement, head)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHtmlElement, html)
-
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(GetClassInfoInternal)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
