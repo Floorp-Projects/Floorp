@@ -2811,6 +2811,22 @@ class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0>
     }
 };
 
+class LCallsiteCloneCache : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CallsiteCloneCache);
+
+    LCallsiteCloneCache(const LAllocation &callee) {
+        setOperand(0, callee);
+    }
+    const LAllocation *callee() {
+        return getOperand(0);
+    }
+    const MCallsiteCloneCache *mir() const {
+        return mir_->toCallsiteCloneCache();
+    }
+};
+
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
 class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>

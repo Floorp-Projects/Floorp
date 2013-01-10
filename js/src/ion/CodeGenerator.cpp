@@ -3844,6 +3844,8 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
             return codegen->visitOutOfLineBindNameCache(this);
           case LInstruction::LOp_GetNameCache:
             return codegen->visitOutOfLineGetNameCache(this);
+          case LInstruction::LOp_CallsiteCloneCache:
+            return codegen->visitOutOfLineCallsiteCloneCache(this);
           default:
             JS_NOT_REACHED("Bad instruction");
             return false;
@@ -3880,6 +3882,41 @@ CodeGenerator::visitCache(LInstruction *ins)
     masm.bind(ool->rejoin());
 
     ool->setInlineJump(jump, label);
+    return true;
+}
+
+typedef JSObject *(*CallsiteCloneCacheFn)(JSContext *, size_t, HandleObject);
+static const VMFunction CallsiteCloneCacheInfo =
+    FunctionInfo<CallsiteCloneCacheFn>(CallsiteCloneCache);
+
+bool
+CodeGenerator::visitOutOfLineCallsiteCloneCache(OutOfLineCache *ool)
+{
+    LCallsiteCloneCache *lir = ool->cache()->toCallsiteCloneCache();
+    const MCallsiteCloneCache *mir = lir->mir();
+    Register callee = ToRegister(lir->callee());
+    RegisterSet liveRegs = lir->safepoint()->liveRegs();
+    Register output = ToRegister(lir->output());
+
+    IonCacheCallsiteClone cache(ool->getInlineJump(), ool->getInlineLabel(),
+                                masm.labelForPatch(), liveRegs,
+                                callee, mir->block()->info().script(), mir->callPc(), output);
+
+    JS_ASSERT(!mir->resumePoint());
+
+    size_t cacheIndex = allocateCache(cache);
+
+    saveLive(lir);
+
+    pushArg(callee);
+    pushArg(Imm32(cacheIndex));
+    if (!callVM(CallsiteCloneCacheInfo, lir))
+        return false;
+
+    masm.storeCallResult(output);
+    restoreLive(lir);
+
+    masm.jump(ool->rejoin());
     return true;
 }
 

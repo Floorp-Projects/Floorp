@@ -175,6 +175,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitDeleteProperty(MDeleteProperty *ins);
     bool visitGetNameCache(MGetNameCache *ins);
     bool visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins);
+    bool visitCallsiteCloneCache(MCallsiteCloneCache *ins);
     bool visitCallGetElement(MCallGetElement *ins);
     bool visitCallSetElement(MCallSetElement *ins);
     bool visitSetPropertyCache(MSetPropertyCache *ins);
