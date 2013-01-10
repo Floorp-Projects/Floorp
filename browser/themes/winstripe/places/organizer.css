@@ -127,3 +127,16 @@
 #searchFilter {
   margin: 0;
 }
+
+/**
+ * Downloads pane
+ */
+
+#clearDownloadsButton > .toolbarbutton-icon {
+  display: none;
+}
+
+#clearDownloadsButton {
+  -moz-padding-start: 9px;
+  -moz-padding-end: 9px;
+}
