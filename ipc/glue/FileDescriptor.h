@@ -7,7 +7,6 @@
 
 #include "base/basictypes.h"
 #include "base/process.h"
-#include "mozilla/DebugOnly.h"
 #include "nscore.h"
 
 #ifdef XP_WIN
@@ -51,12 +50,9 @@ public:
 
   FileDescriptor();
 
-  FileDescriptor(const FileDescriptor& aOther)
-  {
-    *this = aOther;
-  }
-
-  FileDescriptor(PlatformHandleType aHandle);
+  FileDescriptor(PlatformHandleType aHandle)
+  : mHandle(aHandle)
+  { }
 
   FileDescriptor(const IPDLPrivate&, const PickleType& aPickle)
 #ifdef XP_WIN
@@ -64,33 +60,7 @@ public:
 #else
   : mHandle(aPickle.fd)
 #endif
-  , mHandleCreatedByOtherProcess(true)
-  , mHandleCreatedByOtherProcessWasUsed(false)
   { }
-
-  ~FileDescriptor()
-  {
-    CloseCurrentProcessHandle();
-  }
-
-  FileDescriptor&
-  operator=(const FileDescriptor& aOther)
-  {
-    CloseCurrentProcessHandle();
-
-    if (aOther.mHandleCreatedByOtherProcess) {
-      mHandleCreatedByOtherProcess = true;
-      mHandleCreatedByOtherProcessWasUsed =
-        aOther.mHandleCreatedByOtherProcessWasUsed;
-      mHandle = aOther.PlatformHandle();
-    } else {
-      DuplicateInCurrentProcess(aOther.PlatformHandle());
-      mHandleCreatedByOtherProcess = false;
-      mHandleCreatedByOtherProcessWasUsed = false;
-    }
-
-    return *this;
-  }
 
   // Performs platform-specific actions to duplicate mHandle in the other
   // process (e.g. dup() on POSIX, DuplicateHandle() on Windows). Returns a
@@ -101,17 +71,11 @@ public:
   // Tests mHandle against a well-known invalid platform-specific file handle
   // (e.g. -1 on POSIX, INVALID_HANDLE_VALUE on Windows).
   bool
-  IsValid() const
-  {
-    return IsValid(mHandle);
-  }
+  IsValid() const;
 
   PlatformHandleType
   PlatformHandle() const
   {
-    if (mHandleCreatedByOtherProcess) {
-      mHandleCreatedByOtherProcessWasUsed = true;
-    }
     return mHandle;
   }
 
@@ -122,26 +86,7 @@ public:
   }
 
 private:
-  static bool
-  IsValid(PlatformHandleType aHandle);
-
-  void
-  DuplicateInCurrentProcess(PlatformHandleType aHandle);
-
-  void
-  CloseCurrentProcessHandle();
-
   PlatformHandleType mHandle;
-
-  // If this is true then this instance is created by IPDL to ferry a handle to
-  // its eventual consumer and we never close the handle. If this is false then
-  // we are a RAII wrapper around the handle and we close the handle on
-  // destruction.
-  bool mHandleCreatedByOtherProcess;
-
-  // This is to ensure that we don't leak the handle (which is only possible
-  // when we're in the receiving process).
-  mutable DebugOnly<bool> mHandleCreatedByOtherProcessWasUsed;
 };
 
 } // namespace ipc

@@ -8,111 +8,58 @@
 #include "nsDebug.h"
 
 #ifdef XP_WIN
-
 #include <windows.h>
 #define INVALID_HANDLE INVALID_HANDLE_VALUE
-
-#else // XP_WIN
-
+#else
 #include <unistd.h>
-
-#ifndef OS_POSIX
-#define OS_POSIX
-#endif
-
-#include "base/eintr_wrapper.h"
 #define INVALID_HANDLE -1
-
-#endif // XP_WIN
+#endif
 
 using mozilla::ipc::FileDescriptor;
 
 FileDescriptor::FileDescriptor()
-: mHandle(INVALID_HANDLE), mHandleCreatedByOtherProcess(false),
-  mHandleCreatedByOtherProcessWasUsed(false)
+: mHandle(INVALID_HANDLE)
 { }
-
-FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
-: mHandle(INVALID_HANDLE), mHandleCreatedByOtherProcess(false),
-  mHandleCreatedByOtherProcessWasUsed(false)
-{
-  DuplicateInCurrentProcess(aHandle);
-}
-
-void
-FileDescriptor::DuplicateInCurrentProcess(PlatformHandleType aHandle)
-{
-  MOZ_ASSERT(!mHandleCreatedByOtherProcess);
-
-  if (IsValid(aHandle)) {
-    PlatformHandleType newHandle;
-#ifdef XP_WIN
-    if (DuplicateHandle(GetCurrentProcess(), aHandle, GetCurrentProcess(),
-                        &newHandle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
-#else // XP_WIN
-    if ((newHandle = dup(aHandle)) != INVALID_HANDLE) {
-#endif
-      mHandle = newHandle;
-      return;
-    }
-    NS_WARNING("Failed to duplicate file descriptor!");
-  }
-
-  mHandle = INVALID_HANDLE;
-}
-
-void
-FileDescriptor::CloseCurrentProcessHandle()
-{
-  MOZ_ASSERT_IF(mHandleCreatedByOtherProcess,
-                mHandleCreatedByOtherProcessWasUsed);
-
-  // Don't actually close handles created by another process.
-  if (mHandleCreatedByOtherProcess) {
-    return;
-  }
-
-  if (IsValid()) {
-#ifdef XP_WIN
-    if (!CloseHandle(mHandle)) {
-      NS_WARNING("Failed to close file handle!");
-    }
-#else // XP_WIN
-    HANDLE_EINTR(close(mHandle));
-#endif
-    mHandle = INVALID_HANDLE;
-  }
-}
 
 FileDescriptor::PickleType
 FileDescriptor::ShareTo(const FileDescriptor::IPDLPrivate&,
                         FileDescriptor::ProcessHandle aOtherProcess) const
 {
-  PlatformHandleType newHandle;
 #ifdef XP_WIN
-  if (IsValid()) {
-    if (DuplicateHandle(GetCurrentProcess(), mHandle, aOtherProcess,
-                        &newHandle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
-      return newHandle;
-    }
+  if (mHandle == INVALID_HANDLE) {
+    return INVALID_HANDLE;
+  }
+
+  PlatformHandleType newHandle;
+  if (!DuplicateHandle(GetCurrentProcess(), mHandle, aOtherProcess, &newHandle,
+                       0, FALSE, DUPLICATE_SAME_ACCESS)) {
     NS_WARNING("Failed to duplicate file handle!");
+    return INVALID_HANDLE;
   }
-  return INVALID_HANDLE;
+
+  return newHandle;
 #else // XP_WIN
-  if (IsValid()) {
-    newHandle = dup(mHandle);
-    return base::FileDescriptor(newHandle, /* auto_close */ true);
+  if (mHandle == INVALID_HANDLE) {
+    return base::FileDescriptor();
   }
-  return base::FileDescriptor();
+
+  PlatformHandleType newHandle = dup(mHandle);
+  if (newHandle < 0) {
+    NS_WARNING("Failed to duplicate file descriptor!");
+    return base::FileDescriptor();
+  }
+
+  // This file descriptor must be closed once the caller is done using it, so
+  // pass true here for the 'auto_close' argument.
+  return base::FileDescriptor(newHandle, true);
 #endif
 
   MOZ_NOT_REACHED("Must not get here!");
   return PickleType();
 }
 
-// static
 bool
-FileDescriptor::IsValid(PlatformHandleType aHandle)
+FileDescriptor::IsValid() const
 {
-  return aHandle != INVALID_HANDLE;
+  return mHandle != INVALID_HANDLE;
 }
