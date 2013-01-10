@@ -185,7 +185,6 @@ private:
   // Sample transforms for layer trees.  Return true to request
   // another animation frame.
   bool TransformShadowTree(TimeStamp aCurrentFrame);
-  void TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform);
   // Return true if an AsyncPanZoomController content transform was
   // applied for |aLayer|.  *aWantNextFrame is set to true if the
   // controller wants another animation frame.
