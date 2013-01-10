@@ -25,7 +25,7 @@
                  android:paddingBottom="15dip"
                  android:paddingLeft="20dip"
                  android:paddingRight="20dip"
-                 android:src="@drawable/tab_new"
+                 android:src="@drawable/tab_new_level"
                  android:contentDescription="@string/new_tab"
                  android:background="@drawable/action_bar_button"/>
 
