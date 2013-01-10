@@ -56,6 +56,37 @@ js_ReportAllocationOverflow(JSContext *cx);
 
 namespace js {
 
+struct CallsiteCloneKey {
+    /* The original function that we are cloning. */
+    JSFunction *original;
+
+    /* The script of the call. */
+    JSScript *script;
+
+    /* The offset of the call. */
+    uint32_t offset;
+
+    CallsiteCloneKey() { PodZero(this); }
+
+    typedef CallsiteCloneKey Lookup;
+
+    static inline uint32_t hash(CallsiteCloneKey key) {
+        return uint32_t(size_t(key.script->code + key.offset) ^ size_t(key.original));
+    }
+
+    static inline bool match(const CallsiteCloneKey &a, const CallsiteCloneKey &b) {
+        return a.script == b.script && a.offset == b.offset && a.original == b.original;
+    }
+};
+
+typedef HashMap<CallsiteCloneKey,
+                ReadBarriered<JSFunction>,
+                CallsiteCloneKey,
+                SystemAllocPolicy> CallsiteCloneTable;
+
+RawFunction CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun,
+                                    HandleScript script, jsbytecode *pc);
+
 typedef HashSet<JSObject *> ObjectSet;
 
 /* Detects cycles when traversing an object graph. */

@@ -350,6 +350,14 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     js::types::TypeObject *getLazyType(JSContext *cx, js::Handle<js::TaggedProto> proto);
 
     /*
+     * Hash table of all manually call site-cloned functions from within
+     * self-hosted code. Cloning according to call site provides extra
+     * sensitivity for type specialization and inlining.
+     */
+    js::CallsiteCloneTable callsiteClones;
+    void sweepCallsiteClones();
+
+    /*
      * Keeps track of the total number of malloc bytes connected to a
      * compartment's GC things. This counter should be used in preference to
      * gcMallocBytes. These counters affect collection in the same way as
