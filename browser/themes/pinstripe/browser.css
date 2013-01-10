@@ -3809,6 +3809,8 @@ toolbar[mode="icons"] > *|* > .social-notification-container {
 
 .social-notification-container > .toolbarbutton-1 {
   -moz-appearance: none;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 #social-toolbar-item {
@@ -3817,6 +3819,9 @@ toolbar[mode="icons"] > *|* > .social-notification-container {
 
 #social-provider-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+  /* Needed to make the adjacent buttons combine */
+  margin-left: 0;
+  margin-right: 0;
 }
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {
