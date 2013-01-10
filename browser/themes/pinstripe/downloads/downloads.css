@@ -277,6 +277,8 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
      rendered over the main browser window in the Z order.  This is required by
      the animated event notification. */
   position: relative;
+  /* The selected tab may overlap #downloads-indicator-notification */
+  z-index: 1;
 }
 
 /*** Main indicator icon ***/
