@@ -103,14 +103,32 @@ richlistitem[type="download"]:first-child {
   list-style-image: url("chrome://global/skin/icons/Error.png");
 }
 
+/* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
+   a vbox with class .downloadContainer. We set the font-size of the entire
+   container to 90% because:
+
+   1) This is the size that we want .downloadDetails to be
+   2) The container's width is set by localizers by &downloadDetails.width;,
+      which is a ch unit. Since this is the value that should control the
+      panel width, we apply it to the outer container to constrain
+      .downloadTarget and .downloadProgress.
+
+   Finally, since we want .downloadTarget's font-size to be at 100% of the
+   font-size of .downloadContainer's parent, we use calc to go from the
+   smaller font-size back to the original font-size.
+ */
+.downloadContainer {
+  font-size: 90%;
+}
+
 .downloadTarget {
+  font-size: calc(100%/0.9);
   margin-bottom: 6px;
   cursor: inherit;
 }
 
 .downloadDetails {
   opacity: 0.6;
-  font-size: 90%;
   cursor: inherit;
 }
 
