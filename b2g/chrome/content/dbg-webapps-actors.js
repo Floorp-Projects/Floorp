@@ -131,7 +131,7 @@ WebappsActor.prototype = {
           });
         } catch(e) {
           // If anything goes wrong, just send it back.
-          self.sendError(e.toString());
+          self._sendError(e.toString(), aId);
         }
       }
     }
