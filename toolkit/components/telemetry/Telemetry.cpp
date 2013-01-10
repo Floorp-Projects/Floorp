@@ -140,7 +140,7 @@ CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
   CombinedStacks::Stack& adjustedStack = mStacks.back();
 
   size_t stackSize = aStack.GetStackSize();
-  for (int i = 0; i < stackSize; ++i) {
+  for (size_t i = 0; i < stackSize; ++i) {
     const Telemetry::ProcessedStack::Frame& frame = aStack.GetFrame(i);
     uint16_t modIndex;
     if (frame.mModIndex == std::numeric_limits<uint16_t>::max()) {
