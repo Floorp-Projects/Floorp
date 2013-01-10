@@ -186,3 +186,134 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should not allow inheriting from an interface that is only forward declared")
+
+    parser = parser.reset()
+    parser.parse("""
+        [Constructor(long arg)]
+        interface A {
+            readonly attribute boolean x;
+            void foo();
+        };
+        [Constructor]
+        partial interface A {
+            readonly attribute boolean y;
+            void foo(long arg);
+        };
+    """);
+    results = parser.finish();
+    harness.check(len(results), 1,
+                  "Should have one result with partial interface")
+    iface = results[0]
+    harness.check(len(iface.members), 3,
+                  "Should have three members with partial interface")
+    harness.check(iface.members[0].identifier.name, "x",
+                  "First member should be x with partial interface")
+    harness.check(iface.members[1].identifier.name, "foo",
+                  "Second member should be foo with partial interface")
+    harness.check(len(iface.members[1].signatures()), 2,
+                  "Should have two foo signatures with partial interface")
+    harness.check(iface.members[2].identifier.name, "y",
+                  "Third member should be y with partial interface")
+    harness.check(len(iface.ctor().signatures()), 2,
+                  "Should have two constructors with partial interface")
+
+    parser = parser.reset()
+    parser.parse("""
+        [Constructor]
+        partial interface A {
+            readonly attribute boolean y;
+            void foo(long arg);
+        };
+        [Constructor(long arg)]
+        interface A {
+            readonly attribute boolean x;
+            void foo();
+        };
+    """);
+    results = parser.finish();
+    harness.check(len(results), 1,
+                  "Should have one result with reversed partial interface")
+    iface = results[0]
+    harness.check(len(iface.members), 3,
+                  "Should have three members with reversed partial interface")
+    harness.check(iface.members[0].identifier.name, "x",
+                  "First member should be x with reversed partial interface")
+    harness.check(iface.members[1].identifier.name, "foo",
+                  "Second member should be foo with reversed partial interface")
+    harness.check(len(iface.members[1].signatures()), 2,
+                  "Should have two foo signatures with reversed partial interface")
+    harness.check(iface.members[2].identifier.name, "y",
+                  "Third member should be y with reversed partial interface")
+    harness.check(len(iface.ctor().signatures()), 2,
+                  "Should have two constructors with reversed partial interface")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+                readonly attribute boolean x;
+            };
+            interface A {
+                readonly attribute boolean y;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow two non-partial interfaces with the same name")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            partial interface A {
+                readonly attribute boolean x;
+            };
+            partial interface A {
+                readonly attribute boolean y;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Must have a non-partial interface for a given name")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary  A {
+                boolean x;
+            };
+            partial interface A {
+                readonly attribute boolean y;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow a name collision between partial interface "
+               "and other object")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+                boolean x;
+            };
+            interface A {
+                readonly attribute boolean y;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow a name collision between interface "
+               "and other object")
+

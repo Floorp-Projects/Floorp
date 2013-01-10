@@ -48,11 +48,9 @@ interface HTMLBodyElement : HTMLElement {
   //attribute EventHandler onstorage;
   [SetterThrows]
   attribute EventHandler onunload;
-/*
 };
 
 partial interface HTMLBodyElement {
-*/
   [TreatNullAs=EmptyString, SetterThrows] attribute DOMString text;
   [TreatNullAs=EmptyString, SetterThrows] attribute DOMString link;
   [TreatNullAs=EmptyString, SetterThrows] attribute DOMString vLink;

@@ -20,12 +20,10 @@ interface HTMLOListElement : HTMLElement {
            attribute long start;
            [SetterThrows]
            attribute DOMString type;
-/*
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLOListElement {
-*/
            [SetterThrows]
            attribute boolean compact;
 };
