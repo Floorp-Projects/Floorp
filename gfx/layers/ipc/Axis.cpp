@@ -88,7 +88,7 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAcceleration(0),
     mAsyncPanZoomController(aAsyncPanZoomController)
 {
-    InitAxisPrefs();
+  InitAxisPrefs();
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
