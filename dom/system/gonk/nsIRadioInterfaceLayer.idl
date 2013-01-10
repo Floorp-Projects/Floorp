@@ -240,65 +240,6 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   readonly attribute DOMString voicemailDisplayName;
 };
 
-[scriptable, uuid(7cb249b8-7ec9-4e31-a043-293121574dd0)]
-interface nsIICCRecords : nsISupports
-{
-  /**
-   * Integrated Circuit Card Identifier.
-   */
-  readonly attribute DOMString iccid;
-
-  /**
-   * Mobile Subscriber ISDN Number
-   */
-  readonly attribute DOMString msisdn;
-
-  /**
-   * Administrative Data
-   */
-  readonly attribute jsval ad;
-
-  /**
-   * International Mobile Subscriber Identity
-   */
-  readonly attribute DOMString imsi;
-
-  /**
-   * Mobile Country Code
-   */
-  readonly attribute unsigned short mcc;
-
-  /**
-   * Mobile Network Code
-   */
-  readonly attribute unsigned short mnc;
-
-  /**
-   * Abbreviated dialling numbers
-   */
-  readonly attribute jsval adn;
-
-  /**
-   * Fixed Dialling Numbers
-   */
-  readonly attribute jsval fdn;
-
-  /**
-   * Service Provider Name (SPN) of the subscriber's home network.
-   */
-  readonly attribute DOMString spn;
-
-  /**
-   * Network name must be a part of displayed carrier name.
-   */
-  readonly attribute boolean isDisplayNetworkNameRequired;
-
-  /**
-   * Service provider name must be a part of displayed carrier name.
-   */
-  readonly attribute boolean isDisplaySpnRequired;
-};
-
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
 interface nsIVoicemailInfo : nsISupports
 {
@@ -307,14 +248,16 @@ interface nsIVoicemailInfo : nsISupports
   readonly attribute DOMString displayName;
 };
 
-[scriptable, uuid(e6dc89f2-0d4e-46fc-902c-cfeeaee15e40)]
+[scriptable, uuid(a09c42c3-1063-42f6-8022-268c6a0fe5e8)]
 interface nsIRilContext : nsISupports
 {
   readonly attribute DOMString radioState;
 
   readonly attribute DOMString cardState;
 
-  readonly attribute nsIICCRecords icc;
+  readonly attribute DOMString imsi;
+
+  readonly attribute nsIDOMMozMobileICCInfo iccInfo;
 
   readonly attribute nsIDOMMozMobileConnectionInfo voice;
 
