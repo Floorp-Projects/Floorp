@@ -166,6 +166,9 @@ const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
 const NETWORK_ERROR_OFFLINE             = 111;
 const FILE_ERROR_TOO_BIG                = 112;
 
+// Error codes should be < 1000. Errors above 1000 represent http status codes
+const HTTP_ERROR_OFFSET                 = 1000;
+
 const DOWNLOAD_CHUNK_SIZE           = 300000; // bytes
 const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
@@ -2047,8 +2050,8 @@ UpdateService.prototype = {
   },
 
   onError: function AUS_onError(request, update) {
-    LOG("UpdateService:onError - error during background update: " +
-        update.statusText);
+    LOG("UpdateService:onError - error during background update. error code: " +
+        update.errorCode + ", status text: " + update.statusText);
 
     var maxErrors;
     var errCount;
@@ -3077,6 +3080,10 @@ Checker.prototype = {
     return status;
   },
 
+  _isHttpStatusCode: function UC__isHttpStatusCode(status) {
+    return status >= 100 && status <= 599;
+  },
+
   /**
    * The XMLHttpRequest succeeded and the document was loaded.
    * @param   event
@@ -3116,7 +3123,12 @@ Checker.prototype = {
       var status = this._getChannelStatus(request);
       LOG("Checker:onLoad - request.status: " + status);
       var update = new Update(null);
+      update.errorCode = status;
       update.statusText = getStatusTextFromCode(status, 404);
+
+      if (this._isHttpStatusCode(status)) {
+        update.errorCode = HTTP_ERROR_OFFSET + status;
+      }
       if (e.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
         update.errorCode = updates[0] ? CERT_ATTR_CHECK_FAILED_HAS_UPDATE
                                       : CERT_ATTR_CHECK_FAILED_NO_UPDATE;
@@ -3142,10 +3154,14 @@ Checker.prototype = {
     // just use the 200 message from above, which means everything
     // "looks" fine but there was probably an XML error or a bogus file.
     var update = new Update(null);
+    update.errorCode = status;
     update.statusText = getStatusTextFromCode(status, 200);
+
     if (status == Cr.NS_ERROR_OFFLINE) {
       // We use a separate constant here because nsIUpdate.errorCode is signed
       update.errorCode = NETWORK_ERROR_OFFLINE;
+    } else if (this._isHttpStatusCode(status)) {
+      update.errorCode = HTTP_ERROR_OFFSET + status;
     }
 
     this._callback.onError(request, update);
