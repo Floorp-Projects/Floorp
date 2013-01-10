@@ -309,7 +309,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
         int length = mInputs == null ? 0 : mInputs.length;
         if (aMenuList != null && aMenuList.length > 0) {
-            int resourceId = android.R.layout.select_dialog_item;
+            int resourceId = android.R.layout.simple_list_item_1;
             if (mSelected != null && mSelected.length > 0) {
                 if (aMultipleSelection) {
                     resourceId = R.layout.select_dialog_multichoice;
