@@ -105,8 +105,11 @@ public:
     virtual bool CheckPermission(const nsAString& aPermission);
     virtual bool CheckManifestURL(const nsAString& aManifestURL);
 
+    /** Notify that a tab is beginning its destruction sequence. */
+    void NotifyTabDestroying(PBrowserParent* aTab);
     /** Notify that a tab was destroyed during normal operation. */
-    void NotifyTabDestroyed(PBrowserParent* aTab);
+    void NotifyTabDestroyed(PBrowserParent* aTab,
+                            bool aNotifiedDestroying);
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
@@ -357,6 +360,15 @@ private:
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
 
+    // After we initiate shutdown, we also start a timer to ensure
+    // that even content processes that are 100% blocked (say from
+    // SIGSTOP), are still killed eventually.  This task enforces that
+    // timer.
+    CancelableTask* mForceKillTask;
+    // How many tabs we're waiting to finish their destruction
+    // sequence.  Precisely, how many TabParents have called
+    // NotifyTabDestroying() but not called NotifyTabDestroyed().
+    int32_t mNumDestroyingTabs;
     // True only while this is ready to be used to host remote tabs.
     // This must not be used for new purposes after mIsAlive goes to
     // false, but some previously scheduled IPC traffic may still pass
