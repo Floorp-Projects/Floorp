@@ -23,6 +23,7 @@ class IonCacheSetProperty;
 class IonCacheGetElement;
 class IonCacheBindName;
 class IonCacheName;
+class IonCacheCallsiteClone;
 
 // Common structure encoding the state of a polymorphic inline cache contained
 // in the code for an IonScript. IonCaches are used for polymorphic operations
@@ -87,7 +88,8 @@ class IonCache
         GetElement,
         BindName,
         Name,
-        NameTypeOf
+        NameTypeOf,
+        CallsiteClone
     };
 
   protected:
@@ -138,6 +140,12 @@ class IonCache
             PropertyName *name;
             TypedOrValueRegisterSpace output;
         } name;
+        struct {
+            Register callee;
+            Register output;
+            JSScript *callScript;
+            jsbytecode *callPc;
+        } callsiteclone;
     } u;
 
     // Registers live after the cache, excluding output registers. The initial
@@ -228,6 +236,10 @@ class IonCache
     IonCacheName &toName() {
         JS_ASSERT(kind_ == Name || kind_ == NameTypeOf);
         return *(IonCacheName *)this;
+    }
+    IonCacheCallsiteClone &toCallsiteClone() {
+        JS_ASSERT(kind_ == CallsiteClone);
+        return *(IonCacheCallsiteClone *)this;
     }
 
     void setScriptedLocation(UnrootedScript script, jsbytecode *pc) {
@@ -423,6 +435,39 @@ class IonCacheName : public IonCache
                 HandleShape shape);
 };
 
+class IonCacheCallsiteClone : public IonCache
+{
+  public:
+    IonCacheCallsiteClone(CodeOffsetJump initialJump,
+                          CodeOffsetLabel rejoinLabel,
+                          CodeOffsetLabel cacheLabel,
+                          RegisterSet liveRegs,
+                          Register callee, JSScript *callScript, jsbytecode *callPc,
+                          Register output)
+    {
+        init(CallsiteClone, liveRegs, initialJump, rejoinLabel, cacheLabel);
+        u.callsiteclone.callee = callee;
+        u.callsiteclone.callScript = callScript;
+        u.callsiteclone.callPc = callPc;
+        u.callsiteclone.output = output;
+    }
+
+    Register calleeReg() const {
+        return u.callsiteclone.callee;
+    }
+    HandleScript callScript() const {
+        return HandleScript::fromMarkedLocation(&u.callsiteclone.callScript);
+    }
+    jsbytecode *callPc() const {
+        return u.callsiteclone.callPc;
+    }
+    Register outputReg() const {
+        return u.callsiteclone.output;
+    }
+
+    bool attach(JSContext *cx, IonScript *ion, HandleFunction original, HandleFunction clone);
+};
+
 bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp);
 
@@ -439,6 +484,9 @@ BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain);
 
 bool
 GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
+
+JSObject *
+CallsiteCloneCache(JSContext *cx, size_t cacheIndex, HandleObject callee);
 
 } // namespace ion
 } // namespace js
