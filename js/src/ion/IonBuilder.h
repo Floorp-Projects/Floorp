@@ -419,22 +419,27 @@ class IonBuilder : public MIRGenerator
     bool jsop_call_inline(HandleFunction callee, uint32_t argc, bool constructing,
                           MConstant *constFun, MBasicBlock *bottom,
                           Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
-    bool inlineScriptedCall(AutoObjectVector &targets, uint32_t argc, bool constructing,
+    bool inlineScriptedCall(AutoObjectVector &targets, AutoObjectVector &originals,
+                            uint32_t argc, bool constructing,
                             types::StackTypeSet *types, types::StackTypeSet *barrier);
     bool makeInliningDecision(AutoObjectVector &targets, uint32_t argc);
 
+    bool anyFunctionIsCloneAtCallsite(types::StackTypeSet *funTypes);
+    MDefinition *makeCallsiteClone(HandleFunction target, MDefinition *fun);
     void popFormals(uint32_t argc, MDefinition **fun, MPassArg **thisArg,
                     Vector<MPassArg *> *args);
-    MCall *makeCallHelper(HandleFunction target, bool constructing,
+    MCall *makeCallHelper(HandleFunction target, bool constructing, bool cloneAtCallsite,
                           MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args);
-    MCall *makeCallHelper(HandleFunction target, uint32_t argc, bool constructing);
+    MCall *makeCallHelper(HandleFunction target, uint32_t argc, bool constructing,
+                          bool cloneAtCallsite);
     bool makeCallBarrier(HandleFunction target, uint32_t argc, bool constructing,
-                         types::StackTypeSet *types, types::StackTypeSet *barrier);
-    bool makeCallBarrier(HandleFunction target, bool constructing,
+                         bool cloneAtCallsite, types::StackTypeSet *types,
+                         types::StackTypeSet *barrier);
+    bool makeCallBarrier(HandleFunction target, bool constructing, bool cloneAtCallsite,
                          MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args,
                          types::StackTypeSet *types, types::StackTypeSet *barrier);
-    bool makeCall(HandleFunction target, uint32_t argc, bool constructing);
-    bool makeCall(HandleFunction target, bool constructing,
+    bool makeCall(HandleFunction target, uint32_t argc, bool constructing, bool cloneAtCallsite);
+    bool makeCall(HandleFunction target, bool constructing, bool cloneAtCallsite,
                   MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args);
 
     inline bool TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types,
@@ -448,7 +453,7 @@ class IonBuilder : public MIRGenerator
     MGetPropertyCache *checkInlineableGetPropertyCache(uint32_t argc);
 
     MPolyInlineDispatch *
-    makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int argc,
+    makePolyInlineDispatch(JSContext *cx, int argc,
                            MGetPropertyCache *getPropCache,
                            types::StackTypeSet *types, types::StackTypeSet *barrier,
                            MBasicBlock *bottom,
