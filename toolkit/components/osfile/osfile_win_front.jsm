@@ -597,94 +597,36 @@
      };
 
      File.DirectoryIterator.Entry = function Entry(win_entry, parent) {
+       if (!win_entry.dwFileAttributes || !win_entry.ftCreationTime ||
+           !win_entry.ftLastAccessTime || !win_entry.ftLastWriteTime)
+        throw new TypeError();
+
        // Copy the relevant part of |win_entry| to ensure that
        // our data is not overwritten prematurely.
-       if (!win_entry.dwFileAttributes) {
-         throw new TypeError();
-       }
-       this._dwFileAttributes = win_entry.dwFileAttributes;
-       this._name = win_entry.cFileName.readString();
-       if (!this._name) {
+       let isDir = !!(win_entry.dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY);
+       let isSymLink = !!(win_entry.dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT);
+
+       let winCreationDate = FILETIME_to_Date(win_entry.ftCreationTime);
+       let winLastWriteDate = FILETIME_to_Date(win_entry.ftLastWriteTime);
+       let winLastAccessDate = FILETIME_to_Date(win_entry.ftLastAccessTime);
+
+       let name = win_entry.cFileName.readString();
+       if (!name) {
          throw new TypeError("Empty name");
        }
-       this._ftCreationTime = win_entry.ftCreationTime;
-       if (!win_entry.ftCreationTime) {
-         throw new TypeError();
-       }
-       this._ftLastAccessTime = win_entry.ftLastAccessTime;
-       if (!win_entry.ftLastAccessTime) {
-         throw new TypeError();
-       }
-       this._ftLastWriteTime = win_entry.ftLastWriteTime;
-       if (!win_entry.ftLastWriteTime) {
-         throw new TypeError();
-       }
+
        if (!parent) {
          throw new TypeError("Empty parent");
        }
        this._parent = parent;
+
+       let path = OS.Win.Path.join(this._parent, name);
+
+       exports.OS.Shared.Win.AbstractEntry.call(this, isDir, isSymLink, name,
+                                                winCreationDate, winLastWriteDate,
+                                                winLastAccessDate, path);
      };
-     File.DirectoryIterator.Entry.prototype = {
-       /**
-        * |true| if the entry is a directory, |false| otherwise
-        */
-       get isDir() {
-         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY);
-       },
-       /**
-        * |true| if the entry is a symbolic link, |false| otherwise
-        */
-       get isSymLink() {
-         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT);
-       },
-       /**
-        * The name of the entry.
-        * @type {string}
-        */
-       get name() {
-         return this._name;
-       },
-       /**
-        * The creation time of this file.
-        * @type {Date}
-        */
-       get winCreationDate() {
-         let date = FILETIME_to_Date(this._ftCreationTime);
-         delete this.winCreationDate;
-         Object.defineProperty(this, "winCreationDate", {value: date});
-         return date;
-       },
-       /**
-        * The last modification time of this file.
-        * @type {Date}
-        */
-       get winLastWriteDate() {
-         let date = FILETIME_to_Date(this._ftLastWriteTime);
-         delete this.winLastWriteDate;
-         Object.defineProperty(this, "winLastWriteDate", {value: date});
-         return date;
-       },
-       /**
-        * The last access time of this file.
-        * @type {Date}
-        */
-       get winLastAccessDate() {
-         let date = FILETIME_to_Date(this._ftLastAccessTime);
-         delete this.winLastAccessDate;
-         Object.defineProperty(this, "winLastAccessDate", {value: date});
-         return date;
-       },
-       /**
-        * The full path to the entry.
-        * @type {string}
-        */
-       get path() {
-         delete this.path;
-         let path = OS.Win.Path.join(this._parent, this.name);
-         Object.defineProperty(this, "path", {value: path});
-         return path;
-       }
-     };
+     File.DirectoryIterator.Entry.prototype = Object.create(exports.OS.Shared.Win.AbstractEntry.prototype);
 
      /**
       * Return a version of an instance of
@@ -717,82 +659,19 @@
       * @constructor
       */
      File.Info = function Info(stat) {
-       this._dwFileAttributes = stat.dwFileAttributes;
-       this._ftCreationTime = stat.ftCreationTime;
-       this._ftLastAccessTime = stat.ftLastAccessTime;
-       this._ftLastWriteTime = stat.ftLastAccessTime;
-       this._nFileSizeHigh = stat.nFileSizeHigh;
-       this._nFileSizeLow = stat.nFileSizeLow;
+       let isDir = !!(stat.dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY);
+       let isSymLink = !!(stat.dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT);
+       
+       let winBirthDate = FILETIME_to_Date(stat.ftCreationTime);
+       let lastAccessDate = FILETIME_to_Date(stat.ftLastAccessTime);
+
+       let value = ctypes.UInt64.join(stat.nFileSizeHigh, stat.nFileSizeLow);
+       let size = exports.OS.Shared.Type.uint64_t.importFromC(value);
+
+       exports.OS.Shared.Win.AbstractInfo.call(this, isDir, isSymLink, size,
+                                               winBirthDate, lastAccessDate);
      };
-     File.Info.prototype = {
-       /**
-        * |true| if this file is a directory, |false| otherwise
-        */
-       get isDir() {
-         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY);
-       },
-       /**
-        * |true| if this file is a symbolink link, |false| otherwise
-        */
-       get isSymLink() {
-         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT);
-       },
-       /**
-        * The size of the file, in bytes.
-        *
-        * Note that the result may be |NaN| if the size of the file cannot be
-        * represented in JavaScript.
-        *
-        * @type {number}
-        */
-       get size() {
-         let value = ctypes.UInt64.join(this._nFileSizeHigh, this._nFileSizeLow);
-         return exports.OS.Shared.Type.uint64_t.importFromC(value);
-       },
-       // Deprecated
-       get creationDate() {
-         return this.winBirthDate;
-       },
-       /**
-        * The date of creation of this file.
-        *
-        * @type {Date}
-        */
-       get winBirthDate() {
-         delete this.winBirthDate;
-         let date = FILETIME_to_Date(this._ftCreationTime);
-         Object.defineProperty(this, "winBirthDate", { value: date });
-         return date;
-       },
-       /**
-        * The date of last access to this file.
-        *
-        * Note that the definition of last access may depend on the
-        * underlying operating system and file system.
-        *
-        * @type {Date}
-        */
-       get lastAccessDate() {
-         delete this.lastAccess;
-         let date = FILETIME_to_Date(this._ftLastAccessTime);
-         Object.defineProperty(this, "lastAccessDate", { value: date });
-         return date;
-       },
-       /**
-        * Return the date of last modification of this file.
-        *
-        * Note that the definition of last access may depend on the
-        * underlying operating system and file system.
-        *
-        * @type {Date}
-        */
-       get lastModificationDate() {
-         delete this.lastModification;
-         let date = FILETIME_to_Date(this._ftLastWriteTime);
-         Object.defineProperty(this, "lastModificationDate", { value: date });
-         return date;
-       }
-     };
+     File.Info.prototype = Object.create(exports.OS.Shared.Win.AbstractInfo.prototype);
 
      /**
       * Return a version of an instance of File.Info that can be sent
