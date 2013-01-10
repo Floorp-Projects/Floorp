@@ -375,10 +375,12 @@ public class TabsPanel extends TabHost
         mPanel = (PanelView) getTabContentView().getChildAt(index);
         mPanel.show();
 
-        if (mCurrentPanel == Panel.REMOTE_TABS)
+        if (mCurrentPanel == Panel.REMOTE_TABS) {
             mAddTab.setVisibility(View.INVISIBLE);
-        else
+        } else {
             mAddTab.setVisibility(View.VISIBLE);
+            mAddTab.setImageLevel(index);
+        }
 
         if (isSideBar()) {
             if (showAnimation)
