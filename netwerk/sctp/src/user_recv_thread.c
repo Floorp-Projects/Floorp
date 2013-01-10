@@ -442,6 +442,7 @@ recv_function_raw(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
@@ -625,6 +626,7 @@ recv_function_raw6(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
@@ -829,6 +831,7 @@ recv_function_udp(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
@@ -1015,6 +1018,7 @@ recv_function_udp6(void *arg)
 #else
 	pthread_exit(NULL);
 #endif
+	return NULL;
 }
 #endif
 
