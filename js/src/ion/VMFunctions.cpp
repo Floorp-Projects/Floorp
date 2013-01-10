@@ -47,15 +47,27 @@ ShouldMonitorReturnType(JSFunction *fun)
 }
 
 bool
-InvokeFunction(JSContext *cx, HandleFunction fun, uint32_t argc, Value *argv, Value *rval)
+InvokeFunction(JSContext *cx, HandleFunction fun0, uint32_t argc, Value *argv, Value *rval)
 {
     AssertCanGC();
+
+    RootedFunction fun(cx, fun0);
 
     // In order to prevent massive bouncing between Ion and JM, see if we keep
     // hitting functions that are uncompilable.
     if (fun->isInterpreted()) {
         if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
             return false;
+
+        if (fun->isCloneAtCallsite()) {
+            RootedScript script(cx);
+            jsbytecode *pc;
+            types::TypeScript::GetPcScript(cx, &script, &pc);
+            fun = CloneFunctionAtCallsite(cx, fun0, script, pc);
+            if (!fun)
+                return false;
+        }
+
         if (!fun->nonLazyScript()->canIonCompile()) {
             UnrootedScript script = GetTopIonJSScript(cx);
             if (script->hasIonScript() &&
