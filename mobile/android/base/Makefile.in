@@ -532,6 +532,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_status_logo.png \
   res/drawable/remote_tabs_off.png \
   res/drawable/remote_tabs_on.png \
+  res/drawable/tab_indicator_divider.9.png \
+  res/drawable/tab_indicator_selected.9.png \
+  res/drawable/tab_indicator_selected_focused.9.png \
   res/drawable/tab_new.png \
   res/drawable/tab_new_pb.png \
   res/drawable/tab_close.png \
@@ -621,6 +624,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_status_logo.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
+  res/drawable-hdpi/tab_indicator_divider.9.png \
+  res/drawable-hdpi/tab_indicator_selected.9.png \
+  res/drawable-hdpi/tab_indicator_selected_focused.9.png \
   res/drawable-hdpi/tab_new.png \
   res/drawable-hdpi/tab_new_pb.png \
   res/drawable-hdpi/tab_close.png \
@@ -707,6 +713,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_new_tab_small.png \
   res/drawable-xhdpi/ic_menu_reload.png \
   res/drawable-xhdpi/ic_status_logo.png \
+  res/drawable-xhdpi/tab_indicator_divider.9.png \
+  res/drawable-xhdpi/tab_indicator_selected.9.png \
+  res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
   res/drawable-xhdpi/tab_new.png \
   res/drawable-xhdpi/tab_new_pb.png \
   res/drawable-xhdpi/tab_close.png \

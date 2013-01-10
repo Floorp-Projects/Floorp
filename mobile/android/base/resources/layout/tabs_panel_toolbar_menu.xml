@@ -10,7 +10,7 @@
                android:layout_height="fill_parent"
                android:layout_weight="1.0"
                android:tabStripEnabled="false"
-               android:drawable="@null"/>
+               android:divider="@drawable/tab_indicator_divider"/>
 
     <Button android:id="@+id/tabs_menu"
             android:layout_width="0dip"
