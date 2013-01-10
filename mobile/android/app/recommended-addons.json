@@ -4,12 +4,12 @@
         "name": "Full Screen",
         "version": "3.4",
         "iconURL": "https://addons.cdn.mozilla.net/img/uploads/addon_icons/252/252573-32.png?modified=1354183977",
-        "homepageURL": "https://addons.mozilla.org/en-US/android/addon/full-screen-252573/?src=api"
+        "learnmoreURL": "https://addons.mozilla.org/en-US/android/addon/full-screen-252573/?src=api"
     }, {
         "id": "cloudviewer@starkravingfinkle.org",
         "name": "Cloud Viewer",
         "version": "2.1",
         "iconURL": "https://addons.cdn.mozilla.net/img/uploads/addon_icons/295/295895-32.png?modified=1353947644",
-        "homepageURL": "https://addons.mozilla.org/en-US/android/addon/cloud-viewer/?src=api"
+        "learnmoreURL": "https://addons.mozilla.org/en-US/android/addon/cloud-viewer/?src=api"
     }]
 }
