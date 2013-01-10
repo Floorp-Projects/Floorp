@@ -227,6 +227,15 @@
       <item name="android:paddingRight">0dip</item>
     </style>
 
+    <style name="AboutHome.Thumbnail.Pinned">
+      <item name="android:layout_width">@dimen/abouthome_topsite_pinsize</item>
+      <item name="android:layout_height">@dimen/abouthome_topsite_pinsize</item>
+      <item name="android:layout_alignTop">@id/thumbnail</item>
+      <item name="android:layout_alignRight">@id/thumbnail</item>
+      <item name="android:minWidth">30dip</item>
+      <item name="android:minHeight">30dip</item>
+    </style>
+
     <style name="AboutHome.Thumbnail.Image">
       <item name="android:layout_width">fill_parent</item>
       <item name="android:layout_height">fill_parent</item>

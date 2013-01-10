@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGSVGElement;
 interface SVGAnimatedString;
 
 interface SVGElement : Element {
@@ -22,8 +21,9 @@ interface SVGElement : Element {
   [Throws]
   readonly attribute CSSStyleDeclaration style;
 
-  [Throws] // because not implemented
-  CSSValue? getPresentationAttribute(DOMString name);
+  // The CSSValue interface has been deprecated by the CSS WG.
+  // http://lists.w3.org/Archives/Public/www-style/2003Oct/0347.html
+  // CSSValue? getPresentationAttribute(DOMString name);
 
   /*[SetterThrows]
   attribute DOMString xmllang;

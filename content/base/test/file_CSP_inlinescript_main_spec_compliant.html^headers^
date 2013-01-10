@@ -1,0 +1,2 @@
+Content-Security-Policy: default-src 'self'
+Cache-Control: no-cache

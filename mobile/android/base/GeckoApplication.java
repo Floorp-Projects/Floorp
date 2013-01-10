@@ -6,8 +6,6 @@ package org.mozilla.gecko;
 
 import android.app.Application;
 
-import java.util.ArrayList;
-
 public class GeckoApplication extends Application {
 
     private boolean mInited;

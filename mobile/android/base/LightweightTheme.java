@@ -8,18 +8,13 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Application;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.LayerDrawable;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.os.Build;
@@ -29,7 +24,6 @@ import android.view.View;
 import android.view.ViewParent;
 
 import java.net.URL;
-import java.net.URLConnection;
 import java.io.InputStream;
 import java.util.List;
 import java.util.ArrayList;

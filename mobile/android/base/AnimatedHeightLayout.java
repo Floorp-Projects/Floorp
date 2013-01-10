@@ -6,7 +6,6 @@ package org.mozilla.gecko;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;

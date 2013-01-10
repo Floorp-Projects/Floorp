@@ -20,8 +20,6 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Region;
-import android.graphics.RegionIterator;
 import android.opengl.GLES20;
 import android.os.SystemClock;
 import android.util.Log;

@@ -6,13 +6,10 @@ package org.mozilla.gecko;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.LevelListDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;

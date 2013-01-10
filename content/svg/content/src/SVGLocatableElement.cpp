@@ -7,9 +7,9 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsSVGRect.h"
-#include "nsSVGSVGElement.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
+#include "mozilla/dom/SVGSVGElement.h"
 
 namespace mozilla {
 namespace dom {

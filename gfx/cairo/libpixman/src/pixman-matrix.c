@@ -25,7 +25,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif
 
 #include <math.h>
@@ -471,8 +471,8 @@ pixman_f_transform_invert (struct pixman_f_transform *      dst,
 {
     double det;
     int i, j;
-    static int a[3] = { 2, 2, 1 };
-    static int b[3] = { 1, 0, 0 };
+    static const int a[3] = { 2, 2, 1 };
+    static const int b[3] = { 1, 0, 0 };
 
     det = 0;
     for (i = 0; i < 3; i++)

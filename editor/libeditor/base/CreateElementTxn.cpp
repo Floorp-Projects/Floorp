@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIEditor.h"
 #include "nsINode.h"
 #include "nsISelection.h"
 #include "nsISupportsUtils.h"
@@ -54,7 +53,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
                                      const nsAString &aTag,
-                                     nsIDOMNode     *aParent,
+                                     nsINode       *aParent,
                                      uint32_t        aOffsetInParent)
 {
   NS_ASSERTION(aEditor&&aParent, "null args");
@@ -84,13 +83,13 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
   NS_ENSURE_TRUE(mEditor && mParent, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<dom::Element> newContent;
- 
+
   //new call to use instead to get proper HTML element, bug# 39919
   nsresult result = mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_STATE(newContent);
 
-  mNewNode = newContent->AsDOMNode();
+  mNewNode = newContent;
   // Try to insert formatting whitespace for the new node:
   mEditor->MarkNodeDirty(mNewNode);
 
@@ -103,22 +102,20 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 
   // insert the new node
   if (CreateElementTxn::eAppend == int32_t(mOffsetInParent)) {
-    nsCOMPtr<nsIDOMNode> resultNode;
-    return mParent->AppendChild(mNewNode, getter_AddRefs(resultNode));
+    ErrorResult rv;
+    mParent->AppendChild(*mNewNode, rv);
+    return rv.ErrorCode();
   }
 
-  nsCOMPtr<nsINode> parent = do_QueryInterface(mParent);
-  NS_ENSURE_STATE(parent);
 
-  mOffsetInParent = NS_MIN(mOffsetInParent, parent->GetChildCount());
+  mOffsetInParent = NS_MIN(mOffsetInParent, mParent->GetChildCount());
 
   // note, it's ok for mRefNode to be null.  that means append
-  nsIContent* refNode = parent->GetChildAt(mOffsetInParent);
-  mRefNode = refNode ? refNode->AsDOMNode() : nullptr;
+  mRefNode = mParent->GetChildAt(mOffsetInParent);
 
-  nsCOMPtr<nsIDOMNode> resultNode;
-  result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
-  NS_ENSURE_SUCCESS(result, result); 
+  ErrorResult rv;
+  mParent->InsertBefore(*mNewNode, mRefNode, rv);
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
 
   // only set selection to insertion point if editor gives permission
   bool bAdjustSelection;
@@ -156,8 +153,9 @@ NS_IMETHODIMP CreateElementTxn::UndoTransaction(void)
   NS_ASSERTION(mEditor && mParent, "bad state");
   NS_ENSURE_TRUE(mEditor && mParent, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIDOMNode> resultNode;
-  return mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
+  ErrorResult rv;
+  mParent->RemoveChild(*mNewNode, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
@@ -175,10 +173,11 @@ NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
   {
     nodeAsText->SetData(EmptyString());
   }
-  
+
   // now, reinsert mNewNode
-  nsCOMPtr<nsIDOMNode> resultNode;
-  return mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
+  ErrorResult rv;
+  mParent->InsertBefore(*mNewNode, mRefNode, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAString& aString)
@@ -188,7 +187,7 @@ NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAString& aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP CreateElementTxn::GetNewNode(nsIDOMNode **aNewNode)
+NS_IMETHODIMP CreateElementTxn::GetNewNode(nsINode **aNewNode)
 {
   NS_ENSURE_TRUE(aNewNode, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mNewNode, NS_ERROR_NOT_INITIALIZED);

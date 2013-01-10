@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>CSP inline script tests</title>
+  </head>
+  <body onload="window.parent.scriptRan(true, 'eventattr', 'event attribute in body tag fired')">
+
+    <script type="text/javascript">
+      //alert(window.parent.scriptRan);
+      window.parent.scriptRan(true, "textnode", "text node in a script tag executed.");
+    </script>
+
+    <iframe src='javascript:window.parent.parent.scriptRan(true, "jsuri", "javascript: uri in image tag")'></iframe>
+
+    <a id='anchortoclick' href='javascript:window.parent.scriptRan(true, "jsuri", "javascript: uri in anchor tag ran when clicked.");'>stuff</a>
+  </body>
+</html>

@@ -129,8 +129,10 @@ public:
 
   T* get() {
     // Nobody should be touching the raw pointer off-main-thread.
-    if (MOZ_UNLIKELY(!NS_IsMainThread()))
+    if (MOZ_UNLIKELY(!NS_IsMainThread())) {
+      NS_ERROR("Can't dereference nsMainThreadPtrHolder off main thread");
       MOZ_CRASH();
+    }
     return mRawPtr;
   }
 
@@ -173,7 +175,14 @@ class nsMainThreadPtrHandle
   // These all call through to nsMainThreadPtrHolder, and thus implicitly
   // assert that we're on the main thread. Off-main-thread consumers must treat
   // these handles as opaque.
-  T* get() { return mPtr.get()->get(); }
+  T* get()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mPtr) {
+      return mPtr.get()->get();
+    }
+    return nullptr;
+  }
   operator T*() { return get(); }
   T* operator->() { return get(); }
 };
