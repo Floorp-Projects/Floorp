@@ -18,14 +18,12 @@ union ResolveMysteryParams
 
 protocol PBlob
 {
-  manager PContent or PBlob;
+  manager PContent;
   manages PBlobStream;
-  manages PBlob;
 
 both:
   __delete__();
 
-  PBlob(BlobConstructorParams params);
   PBlobStream();
 
   ResolveMystery(ResolveMysteryParams params);

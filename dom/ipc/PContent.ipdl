@@ -117,6 +117,27 @@ union DeviceStorageParams
   DeviceStorageStatParams;
 };
 
+struct SlicedBlobConstructorParams
+{
+  PBlob source;
+  uint64_t begin;
+  uint64_t end;
+  nsString contentType;
+};
+
+struct MysteryBlobConstructorParams
+{
+  // Nothing is known about this type of blob.
+};
+
+union BlobConstructorParams
+{
+  NormalBlobConstructorParams;
+  FileBlobConstructorParams;
+  SlicedBlobConstructorParams;
+  MysteryBlobConstructorParams;
+};
+
 // An IPCTabContext which corresponds to a PBrowser opened by a child when it
 // receives window.open().
 //
