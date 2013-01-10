@@ -692,10 +692,18 @@ nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
   else
     storagePolicy = nsICache::STORE_ANYWHERE;
 
+  uint32_t appId = NECKO_NO_APP_ID;
+  bool isInBrowser = false;
+  NS_GetAppInfo(this, &appId, &isInBrowser);
+
   nsCOMPtr<nsICacheSession> cacheSession;
+  nsAutoCString sessionName;
+  nsWyciwygProtocolHandler::GetCacheSessionName(appId, isInBrowser,
+                                                mPrivateBrowsing,
+                                                sessionName);
+
   // Open a stream based cache session.
-  const char* sessionName = mPrivateBrowsing ? "wyciwyg-private" : "wyciwyg";
-  rv = cacheService->CreateSession(sessionName, storagePolicy, true,
+  rv = cacheService->CreateSession(sessionName.get(), storagePolicy, true,
                                    getter_AddRefs(cacheSession));
   if (!cacheSession) 
     return NS_ERROR_FAILURE;
