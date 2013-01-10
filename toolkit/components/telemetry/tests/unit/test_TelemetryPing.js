@@ -27,6 +27,7 @@ const ADDON_NAME = "Telemetry test addon";
 const ADDON_HISTOGRAM = "addon-histogram";
 const FLASH_VERSION = "1.1.1.1";
 const SHUTDOWN_TIME = 10000;
+const FAILED_PROFILE_LOCK_ATTEMPTS = 2;
 
 // Constants from prio.h for nsIFileOutputStream.init
 const PR_WRONLY = 0x2;
@@ -192,6 +193,7 @@ function checkPayload(request, reason, successfulPings) {
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   const TELEMETRY_TEST_FLAG = "TELEMETRY_TEST_FLAG";
   const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
+  const STARTUP_PROFILE_LOCK_FAILURES = "STARTUP_PROFILE_LOCK_FAILURES";
   do_check_true(TELEMETRY_PING in payload.histograms);
   do_check_true(READ_SAVED_PING_SUCCESS in payload.histograms);
   let rh = Telemetry.registeredHistograms;
@@ -231,6 +233,25 @@ function checkPayload(request, reason, successfulPings) {
 
   let h = payload.histograms[READ_SAVED_PING_SUCCESS];
   do_check_eq(h.values[0], 1);
+
+  if (reason == "saved-session") {
+    const expected_profile_lock_failures = {
+      range: [1, 11],
+      bucket_count: 12,
+      histogram_type: 1,
+      values: {1:0, 2:1, 3:0},
+      sum: 2,
+      sum_squares_lo: 4,
+      sum_squares_hi: 0
+    };
+    let profile_lock_failures = payload.histograms[STARTUP_PROFILE_LOCK_FAILURES];
+    do_check_eq(uneval(profile_lock_failures),
+                uneval(expected_profile_lock_failures));
+    let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    let failedProfileLocksFile = profileDirectory.clone();
+    failedProfileLocksFile.append("Telemetry.FailedProfileLocks.txt");
+    do_check_true(!failedProfileLocksFile.exists());
+  }
 
   // The ping should include data from memory reporters.  We can't check that
   // this data is correct, because we can't control the values returned by the
@@ -439,6 +460,14 @@ function write_fake_shutdown_file() {
   writeStringToFile(file, contents);
 }
 
+function write_fake_failedprofilelocks_file() {
+  let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let file = profileDirectory.clone();
+  file.append("Telemetry.FailedProfileLocks.txt");
+  let contents = "" + FAILED_PROFILE_LOCK_ATTEMPTS;
+  writeStringToFile(file, contents);
+}
+
 function run_test() {
   do_test_pending();
   try {
@@ -452,6 +481,9 @@ function run_test() {
   // Addon manager needs a profile directory
   do_get_profile();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+
+  // Make it look like we've previously failed to lock a profile a couple times.
+  write_fake_failedprofilelocks_file();
 
   // Make it look like we've shutdown before.
   write_fake_shutdown_file();

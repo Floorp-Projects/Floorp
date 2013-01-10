@@ -30,7 +30,9 @@
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
 #include "nsIFile.h"
+#include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
+#include "nsISeekableStream.h"
 #include "Telemetry.h" 
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -38,6 +40,7 @@
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/ProcessedStack.h"
@@ -725,15 +728,51 @@ ReadLastShutdownDuration(const char *filename) {
   return shutdownTime;
 }
 
+const int32_t kMaxFailedProfileLockFileSize = 10;
+
+bool
+GetFailedLockCount(nsIInputStream* inStream, unsigned int &result)
+{
+  nsAutoCString bufStr;
+  nsresult rv;
+  rv = NS_ReadInputStreamToString(inStream, bufStr, kMaxFailedProfileLockFileSize);
+  // It's reasonable to hit EOF here so we need to check for NS_ERROR_UNEXPECTED
+  if (NS_FAILED(rv) && rv != NS_ERROR_UNEXPECTED) {
+    return false;
+  }
+  result = bufStr.ToInteger(&rv);
+  return NS_SUCCEEDED(rv) && result > 0;
+}
+
+nsresult
+GetFailedProfileLockFile(nsIFile* *aFile, nsIFile* aProfileDir = nullptr)
+{
+  nsresult rv;
+  if (aProfileDir) {
+    rv = aProfileDir->Clone(aFile);
+  } else {
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aFile);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  (*aFile)->AppendNative(NS_LITERAL_CSTRING("Telemetry.FailedProfileLocks.txt"));
+  return NS_OK;
+}
+
 class nsFetchTelemetryData : public nsRunnable
 {
 public:
-  nsFetchTelemetryData(const char *aFilename) :
-    mFilename(aFilename), mTelemetry(TelemetryImpl::sTelemetry) {
+  nsFetchTelemetryData(const char* aShutdownTimeFilename,
+                       nsIFile* aFailedProfileLockFile)
+    : mShutdownTimeFilename(aShutdownTimeFilename),
+      mFailedProfileLockFile(aFailedProfileLockFile),
+      mTelemetry(TelemetryImpl::sTelemetry)
+  {
   }
 
 private:
-  const char *mFilename;
+  const char* mShutdownTimeFilename;
+  nsCOMPtr<nsIFile> mFailedProfileLockFile;
   nsCOMPtr<TelemetryImpl> mTelemetry;
 
 public:
@@ -746,12 +785,38 @@ public:
   }
 
   NS_IMETHOD Run() {
-    mTelemetry->mLastShutdownTime = ReadLastShutdownDuration(mFilename);
+    uint32_t failedLockCount;
+    nsresult rv = LoadFailedLockCount(failedLockCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (failedLockCount) {
+      Telemetry::Accumulate(Telemetry::STARTUP_PROFILE_LOCK_FAILURES,
+                            failedLockCount);
+    }
+    mTelemetry->mLastShutdownTime = 
+      ReadLastShutdownDuration(mShutdownTimeFilename);
     mTelemetry->ReadLateWritesStacks();
     nsCOMPtr<nsIRunnable> e =
       NS_NewRunnableMethod(this, &nsFetchTelemetryData::MainThread);
     NS_ENSURE_STATE(e);
     NS_DispatchToMainThread(e, NS_DISPATCH_NORMAL);
+    return NS_OK;
+  }
+
+private:
+  nsresult
+  LoadFailedLockCount(uint32_t& failedLockCount)
+  {
+    failedLockCount = 0;
+    nsCOMPtr<nsIInputStream> inStream;
+    nsresult rv;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream),
+                                    mFailedProfileLockFile,
+                                    PR_RDONLY);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(GetFailedLockCount(inStream, failedLockCount));
+    inStream->Close();
+
+    mFailedProfileLockFile->Remove(false);
     return NS_OK;
   }
 };
@@ -835,15 +900,24 @@ TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
   }
 
   // We have to get the filename from the main thread.
-  const char *filename = GetShutdownTimeFileName();
-  if (!filename) {
+  const char *shutdownTimeFilename = GetShutdownTimeFileName();
+  if (!shutdownTimeFilename) {
+    mCachedTelemetryData = true;
+    aCallback->Complete();
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> failedProfileLockFile;
+  nsresult rv = GetFailedProfileLockFile(getter_AddRefs(failedProfileLockFile));
+  if (NS_FAILED(rv)) {
     mCachedTelemetryData = true;
     aCallback->Complete();
     return NS_OK;
   }
 
   mCallbacks.AppendObject(aCallback);
-  nsCOMPtr<nsIRunnable> event = new nsFetchTelemetryData(filename);
+  nsCOMPtr<nsIRunnable> event = new nsFetchTelemetryData(shutdownTimeFilename,
+                                                         failedProfileLockFile);
 
   targetThread->Dispatch(event, NS_DISPATCH_NORMAL);
   return NS_OK;
@@ -2231,6 +2305,56 @@ GetStackAndModules(const std::vector<uintptr_t>& aPCs)
 #endif
 
   return Ret;
+}
+
+void
+WriteFailedProfileLock(nsIFile* aProfileDir)
+{
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetFailedProfileLockFile(getter_AddRefs(file), aProfileDir);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  int64_t fileSize = 0;
+  rv = file->GetFileSize(&fileSize);
+  // It's expected that the file might not exist yet
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
+    return;
+  }
+  nsCOMPtr<nsIFileStream> fileStream;
+  rv = NS_NewLocalFileStream(getter_AddRefs(fileStream), file,
+                             PR_RDWR | PR_CREATE_FILE, 0640);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_TRUE_VOID(fileSize <= kMaxFailedProfileLockFileSize);
+  unsigned int failedLockCount = 0;
+  if (fileSize > 0) {
+    nsCOMPtr<nsIInputStream> inStream = do_QueryInterface(fileStream);
+    NS_ENSURE_TRUE_VOID(inStream);
+    if (!GetFailedLockCount(inStream, failedLockCount)) {
+      failedLockCount = 0;
+    }
+  }
+  ++failedLockCount;
+  nsAutoCString bufStr;
+  bufStr.AppendInt(static_cast<int>(failedLockCount));
+  nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(fileStream);
+  NS_ENSURE_TRUE_VOID(seekStream);
+  // If we read in an existing failed lock count, we need to reset the file ptr
+  if (fileSize > 0) {
+    rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+  nsCOMPtr<nsIOutputStream> outStream = do_QueryInterface(fileStream);
+  uint32_t bytesLeft = bufStr.Length();
+  const char* bytes = bufStr.get();
+  do {
+    uint32_t written = 0;
+    rv = outStream->Write(bytes, bytesLeft, &written);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+    bytes += written;
+    bytesLeft -= written;
+  } while (bytesLeft > 0);
+  seekStream->SetEOF();
 }
 
 } // namespace Telemetry

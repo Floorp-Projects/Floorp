@@ -166,6 +166,13 @@ void RecordChromeHang(uint32_t duration,
                       ProcessedStack &aStack);
 #endif
 
+/**
+ * Record a failed attempt at locking the user's profile.
+ *
+ * @param aProfileDir The profile directory whose lock attempt failed
+ */
+void WriteFailedProfileLock(nsIFile* aProfileDir);
+
 } // namespace Telemetry
 } // namespace mozilla
 #endif // Telemetry_h__
