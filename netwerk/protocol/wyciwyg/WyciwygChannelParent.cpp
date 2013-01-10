@@ -122,6 +122,10 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
       pbChannel->SetPrivate(loadContext.mUsePrivateBrowsing);
   }
 
+  rv = mChannel->SetNotificationCallbacks(this);
+  if (NS_FAILED(rv))
+    return SendCancelEarly(rv);
+
   rv = mChannel->AsyncOpen(this, nullptr);
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
