@@ -240,21 +240,49 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   return !!*aReturnWindow;
 }
 
+class DispatchAsyncScrollEventRunnable : public nsRunnable
+{
+public:
+  DispatchAsyncScrollEventRunnable(TabParent* aTabParent,
+                                   const gfx::Rect& aContentRect,
+                                   const gfx::Size& aContentSize)
+    : mTabParent(aTabParent)
+    , mContentRect(aContentRect)
+    , mContentSize(aContentSize)
+  {}
+
+  NS_IMETHOD Run();
+
+private:
+  nsRefPtr<TabParent> mTabParent;
+  const gfx::Rect mContentRect;
+  const gfx::Size mContentSize;
+};
+
+NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
+{
+  nsIDOMElement* element = mTabParent->GetOwnerElement();
+  nsCOMPtr<Element> frameElement = do_QueryInterface(element);
+  // Create the event's detail object.
+  nsRefPtr<nsAsyncScrollEventDetail> detail =
+    new nsAsyncScrollEventDetail(mContentRect.x, mContentRect.y,
+                                 mContentRect.width, mContentRect.height,
+                                 mContentSize.width, mContentSize.height);
+  DispatchCustomDOMEvent(frameElement,
+                         NS_LITERAL_STRING("mozbrowserasyncscroll"),
+                         detail);
+  return NS_OK;
+}
+
 bool
 BrowserElementParent::DispatchAsyncScrollEvent(TabParent* aTabParent,
                                                const gfx::Rect& aContentRect,
                                                const gfx::Size& aContentSize)
 {
-  nsIDOMElement* element = aTabParent->GetOwnerElement();
-  nsCOMPtr<Element> frameElement = do_QueryInterface(element);
-  // Create the event's detail object.
-  nsRefPtr<nsAsyncScrollEventDetail> detail =
-    new nsAsyncScrollEventDetail(aContentRect.x, aContentRect.y,
-                                 aContentRect.width, aContentRect.height,
-                                 aContentSize.width, aContentSize.height);
-  return DispatchCustomDOMEvent(frameElement,
-                                NS_LITERAL_STRING("mozbrowserasyncscroll"),
-                                detail);
+  nsRefPtr<DispatchAsyncScrollEventRunnable> runnable =
+    new DispatchAsyncScrollEventRunnable(aTabParent, aContentRect,
+                                         aContentSize);
+  return NS_SUCCEEDED(NS_DispatchToMainThread(runnable));
 }
 
 } // namespace mozilla
