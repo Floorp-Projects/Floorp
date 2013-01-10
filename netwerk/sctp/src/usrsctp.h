@@ -968,7 +968,7 @@ usrsctp_register_address(void *);
 void
 usrsctp_deregister_address(void *);
 
-#define SCTP_DUMP_OUTBOUND 1
+#define SCTP_DUMP_OUTBOUND 0
 #define SCTP_DUMP_INBOUND  0
 
 char *
