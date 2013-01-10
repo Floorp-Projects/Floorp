@@ -937,7 +937,7 @@ MakeJITScript(JSContext *cx, HandleScript script)
 }
 
 static inline bool
-IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
+IonGetsFirstChance(JSContext *cx, JSScript *script, jsbytecode *pc, CompileRequest request)
 {
 #ifdef JS_ION
     if (!ion::IsEnabled(cx))
@@ -958,6 +958,11 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
 
     // If we cannot enter Ion because bailouts are expected, let JM take over.
     if (script->hasIonScript() && script->ion->bailoutExpected())
+        return false;
+
+    // If we cannot enter Ion because it was compiled for OSR at a different PC,
+    // let JM take over until the PC is reached.
+    if (script->hasIonScript() && pc && script->ionScript()->osrPc() != pc)
         return false;
 
     // If ion compilation is pending or in progress on another thread, continue
@@ -998,7 +1003,7 @@ mjit::CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
             return Compile_Skipped;
     }
 
-    if (IonGetsFirstChance(cx, script, request))
+    if (IonGetsFirstChance(cx, script, pc, request))
         return Compile_Skipped;
 
     if (script->hasMJITInfo()) {
