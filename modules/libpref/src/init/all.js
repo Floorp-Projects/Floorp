@@ -368,6 +368,9 @@ pref("toolkit.telemetry.debugSlowSql", false);
 pref("toolkit.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
+// Enable deprecation warnings.
+pref("devtools.errorconsole.deprecation_warnings", true);
+
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
 // Disable remote debugging connections
