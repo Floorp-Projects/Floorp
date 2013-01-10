@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/mozPoisonWrite.h"
+#include "mozPoisonWriteBase.h"
 #include "mozilla/Util.h"
 #include "nsTraceRefcntImpl.h"
 #include "mozilla/Assertions.h"
@@ -40,120 +41,6 @@ struct FuncData {
     void *Buffer;          // Will point to the jump buffer that lets us call
                            // 'Function' after it has been replaced.
 };
-
-// This a wrapper over a file descriptor that provides a Printf method and
-// computes the sha1 of the data that passes through it.
-class SHA1Stream
-{
-public:
-    SHA1Stream(int aFd) {
-        MozillaRegisterDebugFD(aFd);
-        mFile = fdopen(aFd, "w");
-    }
-    void Printf(const char *aFormat, ...)
-    {
-        MOZ_ASSERT(mFile);
-        va_list list;
-        va_start(list, aFormat);
-        nsAutoCString str;
-        str.AppendPrintf(aFormat, list);
-        va_end(list);
-        mSHA1.update(str.get(), str.Length());
-        fwrite(str.get(), 1, str.Length(), mFile);
-    }
-    void Finish(SHA1Sum::Hash &aHash)
-    {
-        int fd = fileno(mFile);
-        fflush(mFile);
-        MozillaUnRegisterDebugFD(fd);
-        fclose(mFile);
-        mSHA1.finish(aHash);
-        mFile = NULL;
-    }
-private:
-    FILE *mFile;
-    SHA1Sum mSHA1;
-};
-
-void RecordStackWalker(void *aPC, void *aSP, void *aClosure)
-{
-    std::vector<uintptr_t> *stack =
-        static_cast<std::vector<uintptr_t>*>(aClosure);
-    stack->push_back(reinterpret_cast<uintptr_t>(aPC));
-}
-
-char *sProfileDirectory = NULL;
-
-bool ValidWriteAssert(bool ok)
-{
-    // On a debug build, just crash.
-    MOZ_ASSERT(ok);
-
-    if (ok || !sProfileDirectory || !Telemetry::CanRecord())
-        return ok;
-
-    // Write the stack and loaded libraries to a file. We can get here
-    // concurrently from many writes, so we use multiple temporary files.
-    std::vector<uintptr_t> rawStack;
-
-    NS_StackWalk(RecordStackWalker, /* skipFrames */ 0, /* maxFrames */ 0,
-                 reinterpret_cast<void*>(&rawStack), 0, nullptr);
-    Telemetry::ProcessedStack stack = Telemetry::GetStackAndModules(rawStack);
-
-    nsPrintfCString nameAux("%s%s", sProfileDirectory,
-                            "/Telemetry.LateWriteTmpXXXXXX");
-    char *name;
-    nameAux.GetMutableData(&name);
-
-    // We want the sha1 of the entire file, so please don't write to fd
-    // directly; use sha1Stream.
-    int fd = mkstemp(name);
-    SHA1Stream sha1Stream(fd);
-    fd = 0;
-
-    size_t numModules = stack.GetNumModules();
-    sha1Stream.Printf("%u\n", (unsigned)numModules);
-    for (int i = 0; i < numModules; ++i) {
-        Telemetry::ProcessedStack::Module module = stack.GetModule(i);
-        sha1Stream.Printf("%s %s\n", module.mBreakpadId.c_str(),
-                          module.mName.c_str());
-    }
-
-    size_t numFrames = stack.GetStackSize();
-    sha1Stream.Printf("%u\n", (unsigned)numFrames);
-    for (size_t i = 0; i < numFrames; ++i) {
-        const Telemetry::ProcessedStack::Frame &frame =
-            stack.GetFrame(i);
-        // NOTE: We write the offsets, while the atos tool expects a value with
-        // the virtual address added. For example, running otool -l on the the firefox
-        // binary shows
-        //      cmd LC_SEGMENT_64
-        //      cmdsize 632
-        //      segname __TEXT
-        //      vmaddr 0x0000000100000000
-        // so to print the line matching the offset 123 one has to run
-        // atos -o firefox 0x100000123.
-        sha1Stream.Printf("%d %x\n", frame.mModIndex, (unsigned)frame.mOffset);
-    }
-
-    SHA1Sum::Hash sha1;
-    sha1Stream.Finish(sha1);
-
-    // Note: These files should be deleted by telemetry once it reads them. If
-    // there were no telemery runs by the time we shut down, we just add files
-    // to the existing ones instead of replacing them. Given that each of these
-    // files is a bug to be fixed, that is probably the right thing to do.
-
-    // We append the sha1 of the contents to the file name. This provides a simple
-    // client side deduplication.
-    nsPrintfCString finalName("%s%s", sProfileDirectory, "/Telemetry.LateWriteFinal-");
-    for (int i = 0; i < 20; ++i) {
-        finalName.AppendPrintf("%02x", sha1[i]);
-    }
-    PR_Delete(finalName.get());
-    PR_Rename(name, finalName.get());
-    return false;
-}
 
 // Wrap aio_write. We have not seen it before, so just assert/report it.
 typedef ssize_t (*aio_write_t)(struct aiocb *aiocbp);
@@ -248,13 +135,6 @@ FuncData *Functions[] = { &aio_write_data,
 
 const int NumFunctions = ArrayLength(Functions);
 
-std::vector<int>& getDebugFDs() {
-    // We have to use new as some write happen during static destructors
-    // so an static std::vector might be destroyed while we still need it.
-    static std::vector<int> *DebugFDs = new std::vector<int>();
-    return *DebugFDs;
-}
-
 struct AutoLockTraits {
     typedef PRLock *type;
     const static type empty() {
@@ -279,14 +159,6 @@ public:
     }
 };
 
-// This variable being true has two consequences
-// * It prevents PoisonWrite from patching the write functions.
-// * If the patching has already been done, it prevents AbortOnBadWrite from
-//   asserting. Note that not all writes use AbortOnBadWrite at this point
-//   (aio_write for example), so disabling writes after patching doesn't
-//   completely undo it.
-bool PoisoningDisabled = true;
-
 // We want to detect "actual" writes, not IPC. Some IPC mechanisms are
 // implemented with file descriptors, so filter them out.
 bool IsIPCWrite(int fd, const struct stat &buf) {
@@ -308,7 +180,7 @@ bool IsIPCWrite(int fd, const struct stat &buf) {
 }
 
 void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
-    if (PoisoningDisabled)
+    if (!PoisonWriteEnabled())
         return;
 
     // Ignore writes of zero bytes, firefox does some during shutdown.
@@ -361,46 +233,7 @@ void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
     if (!ValidWriteAssert(pos2 == pos))
         return;
 }
-
-// We cannot use destructors to free the lock and the list of debug fds since
-// we don't control the order the destructors are called. Instead, we use
-// libc funcion __cleanup callback which runs after the destructors.
-void (*OldCleanup)();
-extern "C" void (*__cleanup)();
-void FinalCleanup() {
-    if (OldCleanup)
-        OldCleanup();
-    if (sProfileDirectory)
-        PL_strfree(sProfileDirectory);
-    sProfileDirectory = nullptr;
-    delete &getDebugFDs();
-    PR_DestroyLock(MyAutoLock::getDebugFDsLock());
-}
-
 } // anonymous namespace
-
-extern "C" {
-    void MozillaRegisterDebugFD(int fd) {
-        MyAutoLock lockedScope;
-        std::vector<int> &Vec = getDebugFDs();
-        MOZ_ASSERT(std::find(Vec.begin(), Vec.end(), fd) == Vec.end());
-        Vec.push_back(fd);
-    }
-    void MozillaUnRegisterDebugFD(int fd) {
-        MyAutoLock lockedScope;
-        std::vector<int> &Vec = getDebugFDs();
-        std::vector<int>::iterator i = std::find(Vec.begin(), Vec.end(), fd);
-        MOZ_ASSERT(i != Vec.end());
-        Vec.erase(i);
-    }
-    void MozillaUnRegisterDebugFILE(FILE *f) {
-        int fd = fileno(f);
-        if (fd == 1 || fd == 2)
-            return;
-        fflush(f);
-        MozillaUnRegisterDebugFD(fd);
-    }
-}
 
 namespace mozilla {
 void PoisonWrite() {
@@ -411,21 +244,10 @@ void PoisonWrite() {
         return;
     WritesArePoisoned = true;
 
-    if (PoisoningDisabled)
+    if (!PoisonWriteEnabled())
         return;
 
-    nsCOMPtr<nsIFile> mozFile;
-    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
-    if (mozFile) {
-        nsAutoCString nativePath;
-        nsresult rv = mozFile->GetNativePath(nativePath);
-        if (NS_SUCCEEDED(rv)) {
-            sProfileDirectory = PL_strdup(nativePath.get());
-        }
-    }
-
-    OldCleanup = __cleanup;
-    __cleanup = FinalCleanup;
+    PoisonWriteBase();
 
     for (int i = 0; i < NumFunctions; ++i) {
         FuncData *d = Functions[i];
@@ -433,15 +255,9 @@ void PoisonWrite() {
             d->Function = dlsym(RTLD_DEFAULT, d->Name);
         if (!d->Function)
             continue;
-        mach_error_t t = mach_override_ptr(d->Function, d->Wrapper,
+        DebugOnly<mach_error_t> t = mach_override_ptr(d->Function, d->Wrapper,
                                            &d->Buffer);
         MOZ_ASSERT(t == err_none);
     }
-}
-void DisableWritePoisoning() {
-    PoisoningDisabled = true;
-}
-void EnableWritePoisoning() {
-    PoisoningDisabled = false;
 }
 }
