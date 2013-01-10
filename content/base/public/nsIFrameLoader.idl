@@ -8,6 +8,7 @@
 interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;
+interface nsSubDocumentFrame;
 interface nsIMessageSender;
 interface nsIVariant;
 interface nsIDOMElement;
@@ -108,7 +109,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, uuid(f234c232-bb17-4450-b324-bf1ef5ccfd34)]
+[scriptable, uuid(a4db652e-e3b0-4345-8107-cf6a30486759)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -146,7 +147,7 @@ interface nsIFrameLoader : nsISupports
    *
    *  @param aIFrame The nsIFrame for the content node that owns this frameloader
    */
-  [noscript] void updatePositionAndSize(in nsIFrame aIFrame);
+  [noscript] void updatePositionAndSize(in nsSubDocumentFrame aIFrame);
 
   /**
    * Activate remote frame.
