@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,16 +17,13 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

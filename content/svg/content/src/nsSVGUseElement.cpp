@@ -8,7 +8,7 @@
 #include "nsSVGUseElement.h"
 #include "nsIDOMSVGGElement.h"
 #include "nsGkAtoms.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsIDOMSVGSymbolElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"

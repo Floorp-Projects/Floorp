@@ -5,15 +5,11 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.sync.setup.SyncAccounts;
-
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -27,7 +23,6 @@ import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.TabWidget;
-import android.widget.TextView;
 
 public class TabsPanel extends TabHost
                        implements GeckoPopupMenu.OnMenuItemClickListener,

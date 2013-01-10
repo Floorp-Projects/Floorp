@@ -125,7 +125,7 @@ def main():
 
     print("diffing output to", diff_name)
 
-    ret = subprocess.call(["diff", "-u", filtered_name, expected_name],
+    ret = subprocess.call(["diff", "-u", expected_name, filtered_name],
                           stdout=open(diff_name, "w"))
 
     if ret == 0:

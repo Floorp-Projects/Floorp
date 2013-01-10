@@ -27,8 +27,6 @@ public:
   using FragmentOrElement::TextLength;
 
   // WebIDL
-  nsCOMPtr<nsIDOMSVGAnimatedLength> GetTextLength(ErrorResult& rv);
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> GetLengthAdjust(ErrorResult& rv);
   int32_t GetNumberOfChars();
   float GetComputedTextLength();
   float GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv);
@@ -37,7 +35,6 @@ public:
   already_AddRefed<nsIDOMSVGRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
   float GetRotationOfChar(uint32_t charnum, ErrorResult& rv);
   int32_t GetCharNumAtPosition(nsISVGPoint& point);
-  void SelectSubString(uint32_t charnum, uint32_t nchars, ErrorResult& rv);
 
 protected:
 

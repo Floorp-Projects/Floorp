@@ -198,8 +198,6 @@ typedef JS::Handle<PropertyName*>      HandlePropertyName;
 typedef JS::MutableHandle<Shape*>      MutableHandleShape;
 typedef JS::MutableHandle<JSAtom*>     MutableHandleAtom;
 
-typedef JSAtom *                       RawAtom;
-
 typedef js::Rooted<Shape*>             RootedShape;
 typedef js::Rooted<types::TypeObject*> RootedTypeObject;
 typedef js::Rooted<JSAtom*>            RootedAtom;

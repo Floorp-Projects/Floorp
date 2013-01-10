@@ -27,7 +27,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsSize.h"
 #include "gfxRect.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEffects.h"
 
@@ -71,7 +71,7 @@ bool
 SVGDocumentWrapper::GetWidthOrHeight(Dimension aDimension,
                                      int32_t& aResult)
 {
-  nsSVGSVGElement* rootElem = GetRootSVGElem();
+  SVGSVGElement* rootElem = GetRootSVGElem();
   NS_ABORT_IF_FALSE(rootElem, "root elem missing or of wrong type");
   nsresult rv;
 
@@ -140,7 +140,7 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
 {
   NS_ABORT_IF_FALSE(!mIgnoreInvalidation, "shouldn't be reentrant");
 
-  nsSVGSVGElement* svgElem = GetRootSVGElem();
+  SVGSVGElement* svgElem = GetRootSVGElem();
   if (!svgElem)
     return;
 
@@ -197,7 +197,7 @@ SVGDocumentWrapper::StopAnimation()
 void
 SVGDocumentWrapper::ResetAnimation()
 {
-  nsSVGSVGElement* svgElem = GetRootSVGElem();
+  SVGSVGElement* svgElem = GetRootSVGElem();
   if (!svgElem)
     return;
 
@@ -287,7 +287,7 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
 {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Sever ties from rendering observers to helper-doc's root SVG node
-    nsSVGSVGElement* svgElem = GetRootSVGElem();
+    SVGSVGElement* svgElem = GetRootSVGElem();
     if (svgElem) {
       nsSVGEffects::RemoveAllRenderingObservers(svgElem);
     }
@@ -423,7 +423,7 @@ SVGDocumentWrapper::FlushLayout()
   }
 }
 
-nsSVGSVGElement*
+SVGSVGElement*
 SVGDocumentWrapper::GetRootSVGElem()
 {
   if (!mViewer)
@@ -438,7 +438,7 @@ SVGDocumentWrapper::GetRootSVGElem()
     return nullptr;
   }
 
-  return static_cast<nsSVGSVGElement*>(rootElem);
+  return static_cast<SVGSVGElement*>(rootElem);
 }
 
 } // namespace image

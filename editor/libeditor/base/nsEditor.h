@@ -173,9 +173,10 @@ public:
 
   /* ------------ nsIEditor methods -------------- */
   NS_DECL_NSIEDITOR
+
   /* ------------ nsIEditorIMESupport methods -------------- */
   NS_DECL_NSIEDITORIMESUPPORT
-  
+
   /* ------------ nsIObserver methods -------------- */
   NS_DECL_NSIOBSERVER
 
@@ -184,8 +185,9 @@ public:
 
 public:
 
+  nsresult MarkNodeDirty(nsINode* aNode);
   virtual bool IsModifiableNode(nsINode *aNode);
-  
+
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                                nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                int32_t *aInOutOffset,
@@ -251,28 +253,28 @@ protected:
 
   /** create a transaction for setting aAttribute to aValue on aElement
     */
-  NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement, 
-                                      const nsAString &  aAttribute, 
+  NS_IMETHOD CreateTxnForSetAttribute(mozilla::dom::Element *aElement,
+                                      const nsAString &  aAttribute,
                                       const nsAString &  aValue,
                                       ChangeAttributeTxn ** aTxn);
 
   /** create a transaction for removing aAttribute on aElement
     */
-  NS_IMETHOD CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
+  NS_IMETHOD CreateTxnForRemoveAttribute(mozilla::dom::Element *aElement,
                                          const nsAString &  aAttribute,
                                          ChangeAttributeTxn ** aTxn);
 
   /** create a transaction for creating a new child node of aParent of type aTag.
     */
   NS_IMETHOD CreateTxnForCreateElement(const nsAString & aTag,
-                                       nsIDOMNode     *aParent,
+                                       nsINode         *aParent,
                                        int32_t         aPosition,
                                        CreateElementTxn ** aTxn);
 
   /** create a transaction for inserting aNode as a child of aParent.
     */
-  NS_IMETHOD CreateTxnForInsertElement(nsIDOMNode * aNode,
-                                       nsIDOMNode * aParent,
+  NS_IMETHOD CreateTxnForInsertElement(nsINode    * aNode,
+                                       nsINode    * aParent,
                                        int32_t      aOffset,
                                        InsertElementTxn ** aTxn);
 
@@ -330,12 +332,12 @@ protected:
                                        EDirection           aDirection,
                                        DeleteTextTxn**      aTxn);
 	
-  NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
+  NS_IMETHOD CreateTxnForSplitNode(nsINode *aNode,
                                    uint32_t    aOffset,
                                    SplitElementTxn **aTxn);
 
-  NS_IMETHOD CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
-                                  nsIDOMNode  *aRightNode,
+  NS_IMETHOD CreateTxnForJoinNode(nsINode  *aLeftNode,
+                                  nsINode  *aRightNode,
                                   JoinElementTxn **aTxn);
 
   /**

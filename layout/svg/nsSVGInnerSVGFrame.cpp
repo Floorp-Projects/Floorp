@@ -13,7 +13,10 @@
 #include "nsRenderingContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -66,7 +69,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
-    static_cast<nsSVGSVGElement*>(mContent)->
+    static_cast<SVGSVGElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
     if (width <= 0 || height <= 0) {
@@ -92,7 +95,7 @@ nsSVGInnerSVGFrame::ReflowSVG()
   // mRect must be set before FinishAndStoreOverflow is called in order
   // for our overflow areas to be clipped correctly.
   float x, y, width, height;
-  static_cast<nsSVGSVGElement*>(mContent)->
+  static_cast<SVGSVGElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(x, y, width, height),
@@ -108,14 +111,14 @@ nsSVGInnerSVGFrame::NotifySVGChanged(uint32_t aFlags)
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
 
-    nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
+    SVGSVGElement *svg = static_cast<SVGSVGElement*>(mContent);
 
     bool xOrYIsPercentage =
-      svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
-      svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage();
+      svg->mLengthAttributes[SVGSVGElement::ATTR_X].IsPercentage() ||
+      svg->mLengthAttributes[SVGSVGElement::ATTR_Y].IsPercentage();
     bool widthOrHeightIsPercentage =
-      svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
-      svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage();
+      svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH].IsPercentage() ||
+      svg->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT].IsPercentage();
 
     if (xOrYIsPercentage || widthOrHeightIsPercentage) {
       // Ancestor changes can't affect how we render from the perspective of
@@ -165,7 +168,7 @@ nsSVGInnerSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None &&
       !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
 
-    nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+    SVGSVGElement* content = static_cast<SVGSVGElement*>(mContent);
 
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
@@ -268,7 +271,7 @@ nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor)
     NS_ASSERTION(mParent, "null parent");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-    nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+    SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
     gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));
 
@@ -280,7 +283,7 @@ nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor)
 bool
 nsSVGInnerSVGFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
 {
-  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+  SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
   if (content->HasViewBoxOrSyntheticViewBox()) {
     // XXX Maybe return false if the transform is the identity transform?

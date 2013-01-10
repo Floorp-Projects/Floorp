@@ -176,7 +176,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
     return false;
   }
   nsAutoString procHandleStr;
-  procHandleStr.AppendPrintf("%p", procHandle);
+  procHandleStr.AppendPrintf("%p", procHandle.Get());
   commandLine.AppendLooseValue(procHandleStr.get());
 
   std::wstring ipcCookie;
