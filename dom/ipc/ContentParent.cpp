@@ -63,6 +63,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIFilePicker.h"
 #include "nsIMemoryReporter.h"
+#include "nsIMutable.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
 #include "nsIRemoteBlob.h"
@@ -1518,6 +1519,13 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
   //     inherit nsDOMFileBase. If that ever changes then this will need to grow
   //     a real interface or something.
   nsDOMFileBase* blob = static_cast<nsDOMFileBase*>(aBlob);
+
+  // All blobs shared between processes must be immutable.
+  nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(aBlob);
+  if (!mutableBlob || NS_FAILED(mutableBlob->SetMutable(false))) {
+    NS_WARNING("Failed to make blob immutable!");
+    return nullptr;
+  }
 
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
   if (remoteBlob) {
