@@ -25,7 +25,10 @@
  * Based on fbmmx.c by Owen Taylor, Søren Sandmann and Nicholas Miell
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 #include <altivec.h>
