@@ -61,9 +61,12 @@ EdgeCaseAnalysis::analyzeEarly()
     return true;
 }
 
-bool
+int
 EdgeCaseAnalysis::AllUsesTruncate(MInstruction *m)
 {
+    // If all uses truncate, the return value must be at least 1. If anything doesn't truncate
+    // 0 is explicitly returned.
+    int ret = 1;
     for (MUseIterator use = m->usesBegin(); use != m->usesEnd(); use++) {
         // See #809485 why this is allowed
         if (use->node()->isResumePoint())
@@ -84,12 +87,16 @@ EdgeCaseAnalysis::AllUsesTruncate(MInstruction *m)
             continue;
         if (def->isBitNot())
             continue;
-        if (def->isAdd() && def->toAdd()->isTruncated())
+        if (def->isAdd() && def->toAdd()->isTruncated()) {
+            ret = Max(ret, def->toAdd()->isTruncated() + 1);
             continue;
-        if (def->isSub() && def->toSub()->isTruncated())
+        }
+        if (def->isSub() && def->toSub()->isTruncated()) {
+            ret = Max(ret, def->toSub()->isTruncated() + 1);
             continue;
+        }
         // cannot use divide, since |truncate(int32(x/y) + int32(a/b)) != truncate(x/y+a/b)|
-        return false;
+        return 0;
     }
-    return true;
+    return ret;
 }

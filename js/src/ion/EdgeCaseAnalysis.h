@@ -22,7 +22,7 @@ class EdgeCaseAnalysis
     EdgeCaseAnalysis(MIRGenerator *mir, MIRGraph &graph);
     bool analyzeEarly();
     bool analyzeLate();
-    static bool AllUsesTruncate(MInstruction *m);
+    static int AllUsesTruncate(MInstruction *m);
 };
 
 
