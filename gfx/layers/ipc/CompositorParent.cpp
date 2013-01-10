@@ -892,24 +892,135 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
   return appliedTransform;
 }
 
+void
+CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform)
+{
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  ContainerLayer* container = aLayer->AsContainerLayer();
+
+  const FrameMetrics& metrics = container->GetFrameMetrics();
+  // We must apply the resolution scale before a pan/zoom transform, so we call
+  // GetTransform here.
+  const gfx3DMatrix& currentTransform = aLayer->GetTransform();
+
+  gfx3DMatrix treeTransform;
+
+  // Translate fixed position layers so that they stay in the correct position
+  // when mScrollOffset and metricsScrollOffset differ.
+  gfxPoint offset;
+  gfxSize scaleDiff;
+
+  float rootScaleX = aRootTransform.GetXScale(),
+        rootScaleY = aRootTransform.GetYScale();
+  // The ratio of layers pixels to device pixels.  The Java
+  // compositor wants to see values in units of device pixels, so we
+  // map our FrameMetrics values to that space.  This is not exposed
+  // as a FrameMetrics helper because it's a deprecated conversion.
+  float devPixelRatioX = 1 / rootScaleX, devPixelRatioY = 1 / rootScaleY;
+
+  gfxPoint scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
+  nsIntPoint scrollOffsetDevPixels(
+    NS_lround(scrollOffsetLayersPixels.x * devPixelRatioX),
+    NS_lround(scrollOffsetLayersPixels.y * devPixelRatioY));
+
+  if (mIsFirstPaint) {
+    mContentRect = metrics.mContentRect;
+    SetFirstPaintViewport(scrollOffsetDevPixels,
+                          1/rootScaleX,
+                          mContentRect,
+                          metrics.mScrollableRect);
+    mIsFirstPaint = false;
+  } else if (!metrics.mContentRect.IsEqualEdges(mContentRect)) {
+    mContentRect = metrics.mContentRect;
+    SetPageRect(metrics.mScrollableRect);
+  }
+
+  // We synchronise the viewport information with Java after sending the above
+  // notifications, so that Java can take these into account in its response.
+  // Calculate the absolute display port to send to Java
+  gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
+                                    metrics.mDisplayPort : metrics.mCriticalDisplayPort);
+  nsIntRect displayPortDevPixels(
+    NS_lround(displayPortLayersPixels.x * devPixelRatioX),
+    NS_lround(displayPortLayersPixels.y * devPixelRatioY),
+    NS_lround(displayPortLayersPixels.width * devPixelRatioX),
+    NS_lround(displayPortLayersPixels.height * devPixelRatioY));
+
+  displayPortDevPixels.x += scrollOffsetDevPixels.x;
+  displayPortDevPixels.y += scrollOffsetDevPixels.y;
+
+  SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
+                   mScrollOffset, mXScale, mYScale);
+  mLayersUpdated = false;
+
+  // Handle transformations for asynchronous panning and zooming. We determine the
+  // zoom used by Gecko from the transformation set on the root layer, and we
+  // determine the scroll offset used by Gecko from the frame metrics of the
+  // primary scrollable layer. We compare this to the desired zoom and scroll
+  // offset in the view transform we obtained from Java in order to compute the
+  // transformation we need to apply.
+  float tempScaleDiffX = rootScaleX * mXScale;
+  float tempScaleDiffY = rootScaleY * mYScale;
+
+  nsIntPoint metricsScrollOffset(0, 0);
+  if (metrics.IsScrollable()) {
+    metricsScrollOffset = scrollOffsetDevPixels;
+  }
+
+  nsIntPoint scrollCompensation(
+    (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
+    (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
+  treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
+                                            gfxSize(mXScale, mYScale)));
+
+  // If the contents can fit entirely within the widget area on a particular
+  // dimenson, we need to translate and scale so that the fixed layers remain
+  // within the page boundaries.
+  if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
+    offset.x = -metricsScrollOffset.x;
+    scaleDiff.width = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
+  } else {
+    offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
+                       mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX) -
+               metricsScrollOffset.x;
+    scaleDiff.width = tempScaleDiffX;
+  }
+
+  if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
+    offset.y = -metricsScrollOffset.y;
+    scaleDiff.height = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
+  } else {
+    offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
+                       mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY) -
+               metricsScrollOffset.y;
+    scaleDiff.height = tempScaleDiffY;
+  }
+
+  // The transform already takes the resolution scale into account.  Since we
+  // will apply the resolution scale again when computing the effective
+  // transform, we must apply the inverse resolution scale here.
+  gfx3DMatrix computedTransform = treeTransform * currentTransform;
+  computedTransform.Scale(1.0f/container->GetPreXScale(),
+                          1.0f/container->GetPreYScale(),
+                          1);
+  computedTransform.ScalePost(1.0f/container->GetPostXScale(),
+                              1.0f/container->GetPostYScale(),
+                              1);
+  shadow->SetShadowTransform(computedTransform);
+  TransformFixedLayers(aLayer, offset, scaleDiff);
+}
+
 bool
 CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 {
   bool wantNextFrame = false;
-  Layer* layer = mLayerManager->GetPrimaryScrollableLayer();
-  ShadowLayer* shadow = layer->AsShadowLayer();
-  ContainerLayer* container = layer->AsContainerLayer();
   Layer* root = mLayerManager->GetRoot();
 
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
   wantNextFrame |= SampleAnimations(root, aCurrentFrame);
 
-  const FrameMetrics& metrics = container->GetFrameMetrics();
-  // We must apply the resolution scale before a pan/zoom transform, so we call
-  // GetTransform here.
   const gfx3DMatrix& rootTransform = root->GetTransform();
-  const gfx3DMatrix& currentTransform = layer->GetTransform();
 
   // FIXME/bug 775437: unify this interface with the ~native-fennec
   // derived code
@@ -923,111 +1034,12 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
   // its own platform-specific async rendering that is done partially
   // in Gecko and partially in Java.
   if (!ApplyAsyncContentTransformToTree(aCurrentFrame, root, &wantNextFrame)) {
-    gfx3DMatrix treeTransform;
+    nsAutoTArray<Layer*,1> scrollableLayers;
+    mLayerManager->GetScrollableLayers(scrollableLayers);
 
-    // Translate fixed position layers so that they stay in the correct position
-    // when mScrollOffset and metricsScrollOffset differ.
-    gfxPoint offset;
-    gfxSize scaleDiff;
-
-    float rootScaleX = rootTransform.GetXScale(),
-          rootScaleY = rootTransform.GetYScale();
-    // The ratio of layers pixels to device pixels.  The Java
-    // compositor wants to see values in units of device pixels, so we
-    // map our FrameMetrics values to that space.  This is not exposed
-    // as a FrameMetrics helper because it's a deprecated conversion.
-    float devPixelRatioX = 1 / rootScaleX, devPixelRatioY = 1 / rootScaleY;
-
-    gfxPoint scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
-    nsIntPoint scrollOffsetDevPixels(
-      NS_lround(scrollOffsetLayersPixels.x * devPixelRatioX),
-      NS_lround(scrollOffsetLayersPixels.y * devPixelRatioY));
-
-    if (mIsFirstPaint) {
-      mContentRect = metrics.mContentRect;
-      SetFirstPaintViewport(scrollOffsetDevPixels,
-                            1/rootScaleX,
-                            mContentRect,
-                            metrics.mScrollableRect);
-      mIsFirstPaint = false;
-    } else if (!metrics.mContentRect.IsEqualEdges(mContentRect)) {
-      mContentRect = metrics.mContentRect;
-      SetPageRect(metrics.mScrollableRect);
+    for (uint32_t i = 0; i < scrollableLayers.Length(); i++) {
+      TransformScrollableLayer(scrollableLayers[i], rootTransform);
     }
-
-    // We synchronise the viewport information with Java after sending the above
-    // notifications, so that Java can take these into account in its response.
-    // Calculate the absolute display port to send to Java
-    gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
-                                      metrics.mDisplayPort : metrics.mCriticalDisplayPort);
-    nsIntRect displayPortDevPixels(
-      NS_lround(displayPortLayersPixels.x * devPixelRatioX),
-      NS_lround(displayPortLayersPixels.y * devPixelRatioY),
-      NS_lround(displayPortLayersPixels.width * devPixelRatioX),
-      NS_lround(displayPortLayersPixels.height * devPixelRatioY));
-
-    displayPortDevPixels.x += scrollOffsetDevPixels.x;
-    displayPortDevPixels.y += scrollOffsetDevPixels.y;
-
-    SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
-                     mScrollOffset, mXScale, mYScale);
-    mLayersUpdated = false;
-
-    // Handle transformations for asynchronous panning and zooming. We determine the
-    // zoom used by Gecko from the transformation set on the root layer, and we
-    // determine the scroll offset used by Gecko from the frame metrics of the
-    // primary scrollable layer. We compare this to the desired zoom and scroll
-    // offset in the view transform we obtained from Java in order to compute the
-    // transformation we need to apply.
-    float tempScaleDiffX = rootScaleX * mXScale;
-    float tempScaleDiffY = rootScaleY * mYScale;
-
-    nsIntPoint metricsScrollOffset(0, 0);
-    if (metrics.IsScrollable()) {
-      metricsScrollOffset = scrollOffsetDevPixels;
-    }
-
-    nsIntPoint scrollCompensation(
-      (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
-      (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
-    treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
-                                              gfxSize(mXScale, mYScale)));
-
-    // If the contents can fit entirely within the widget area on a particular
-    // dimenson, we need to translate and scale so that the fixed layers remain
-    // within the page boundaries.
-    if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
-      offset.x = -metricsScrollOffset.x;
-      scaleDiff.height = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
-    } else {
-      offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
-                         mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX) -
-                 metricsScrollOffset.x;
-      scaleDiff.height = tempScaleDiffX;
-    }
-
-    if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
-      offset.y = -metricsScrollOffset.y;
-      scaleDiff.width = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
-    } else {
-      offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
-                         mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY) -
-                 metricsScrollOffset.y;
-      scaleDiff.width = tempScaleDiffY;
-    }
-
-    // The transform already takes the resolution scale into account.  Since we
-    // will apply the resolution scale again when computing the effective
-    // transform, we must apply the inverse resolution scale here.
-    gfx3DMatrix computedTransform = treeTransform * currentTransform;
-    computedTransform.Scale(1.0f/container->GetPreXScale(),
-                            1.0f/container->GetPreYScale(),
-                            1);
-    computedTransform.ScalePost(1.0f/container->GetPostXScale(),
-                                1.0f/container->GetPostYScale(),
-                                1);
-    shadow->SetShadowTransform(computedTransform);
-    TransformFixedLayers(layer, offset, scaleDiff);
   }
 
   return wantNextFrame;
