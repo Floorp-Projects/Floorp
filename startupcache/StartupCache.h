@@ -6,16 +6,10 @@
 #ifndef StartupCache_h_
 #define StartupCache_h_
 
-#include "prio.h"
-#include "prtypes.h"
-
 #include "nsClassHashtable.h"
-#include "nsIZipWriter.h"
-#include "nsIZipReader.h"
 #include "nsComponentManagerUtils.h"
 #include "nsZipArchive.h"
 #include "nsIStartupCache.h"
-#include "nsIStorageStream.h"
 #include "nsITimer.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
