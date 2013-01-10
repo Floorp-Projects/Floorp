@@ -27,14 +27,14 @@ using namespace js;
 using namespace js::gc;
 
 static inline HeapSlot &
-GetCall(UnrootedObject proxy)
+GetCall(JSObject *proxy)
 {
     JS_ASSERT(IsFunctionProxy(proxy));
     return proxy->getSlotRef(JSSLOT_PROXY_CALL);
 }
 
 static inline Value
-GetConstruct(UnrootedObject proxy)
+GetConstruct(JSObject *proxy)
 {
     if (proxy->slotSpan() <= JSSLOT_PROXY_CONSTRUCT)
         return UndefinedValue();
@@ -42,7 +42,7 @@ GetConstruct(UnrootedObject proxy)
 }
 
 static inline HeapSlot &
-GetFunctionProxyConstruct(UnrootedObject proxy)
+GetFunctionProxyConstruct(JSObject *proxy)
 {
     JS_ASSERT(IsFunctionProxy(proxy));
     JS_ASSERT(proxy->slotSpan() > JSSLOT_PROXY_CONSTRUCT);
@@ -60,10 +60,8 @@ BaseProxyHandler::~BaseProxyHandler()
 }
 
 bool
-BaseProxyHandler::has(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
+BaseProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    RootedObject proxy(cx, proxy_);
-    RootedId id(cx, id_);
     AutoPropertyDescriptorRooter desc(cx);
     if (!getPropertyDescriptor(cx, proxy, id, &desc, 0))
         return false;
@@ -72,10 +70,8 @@ BaseProxyHandler::has(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 }
 
 bool
-BaseProxyHandler::hasOwn(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
+BaseProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    RootedObject proxy(cx, proxy_);
-    RootedId id(cx, id_);
     AutoPropertyDescriptorRooter desc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &desc, 0))
         return false;
@@ -274,11 +270,10 @@ BaseProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
 }
 
 bool
-BaseProxyHandler::construct(JSContext *cx, JSObject *proxy_, unsigned argc,
+BaseProxyHandler::construct(JSContext *cx, JSObject *proxy, unsigned argc,
                             Value *argv, Value *rval)
 {
-    RootedObject proxy(cx, proxy_);
-    RootedValue fval(cx, GetConstruct(proxy_));
+    Value fval = GetConstruct(proxy);
     if (fval.isUndefined())
         fval = GetCall(proxy);
     return InvokeConstructor(cx, fval, argc, argv, rval);
@@ -1651,7 +1646,7 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy_,
 
     // step d
     if (trap.isUndefined())
-        return DirectProxyHandler::getOwnPropertyNames(cx, proxy, props);
+        return DirectProxyHandler::getOwnPropertyNames(cx, proxy_, props);
 
     // step e
     Value argv[] = {
@@ -1692,7 +1687,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, JSObject *proxy_, jsid id_, b
 
     // step 4
     if (trap.isUndefined())
-        return DirectProxyHandler::delete_(cx, proxy, id, bp);
+        return DirectProxyHandler::delete_(cx, proxy_, id_, bp);
 
     // step 5
     RootedValue value(cx);
@@ -1746,7 +1741,7 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, JSObject *proxy_, AutoIdVec
 
     // step d
     if (trap.isUndefined())
-        return DirectProxyHandler::enumerate(cx, proxy, props);
+        return DirectProxyHandler::enumerate(cx, proxy_, props);
 
     // step e
     Value argv[] = {
@@ -1792,7 +1787,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, JSObject *proxy_, jsid id_, bool 
 
     // step 4
     if (trap.isUndefined())
-        return DirectProxyHandler::has(cx, proxy, id, bp);
+        return DirectProxyHandler::has(cx, proxy_, id_, bp);
 
     // step 5
     RootedValue value(cx);
@@ -1855,7 +1850,7 @@ ScriptedDirectProxyHandler::hasOwn(JSContext *cx, JSObject *proxy_, jsid id_, bo
 
     // step 4
     if (trap.isUndefined())
-        return DirectProxyHandler::hasOwn(cx, proxy, id, bp);
+        return DirectProxyHandler::hasOwn(cx, proxy_, id_, bp);
 
     // step 5
     RootedValue value(cx);
@@ -1928,7 +1923,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, JSObject *proxy_, JSObject *recei
 
     // step 4
     if (trap.isUndefined())
-        return DirectProxyHandler::get(cx, proxy, receiver, id, vp);
+        return DirectProxyHandler::get(cx, proxy_, receiver_, id_, vp);
 
     // step 5
     RootedValue value(cx);
@@ -2001,7 +1996,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *recei
 
     // step 4
     if (trap.isUndefined())
-        return DirectProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+        return DirectProxyHandler::set(cx, proxy_, receiver_, id_, strict, vp);
 
     // step 5
     RootedValue value(cx);
@@ -2071,7 +2066,7 @@ ScriptedDirectProxyHandler::keys(JSContext *cx, JSObject *proxy_, AutoIdVector &
 
     // step d
     if (trap.isUndefined())
-        return DirectProxyHandler::keys(cx, proxy, props);
+        return DirectProxyHandler::keys(cx, proxy_, props);
 
     // step e
     Value argv[] = {
@@ -2131,7 +2126,7 @@ ScriptedDirectProxyHandler::call(JSContext *cx, JSObject *proxy_, unsigned argc,
 
     // step 5
     if (trap.isUndefined())
-        return DirectProxyHandler::call(cx, proxy, argc, vp);
+        return DirectProxyHandler::call(cx, proxy_, argc, vp);
 
     // step 6
     Value argv[] = {
@@ -2172,7 +2167,7 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, JSObject *proxy_, unsigned 
 
     // step 5
     if (trap.isUndefined())
-        return DirectProxyHandler::construct(cx, proxy, argc, argv, rval);
+        return DirectProxyHandler::construct(cx, proxy_, argc, argv, rval);
 
     // step 6
     Value constructArgv[] = {
@@ -2996,7 +2991,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
 static JSBool
 proxy_Call(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject proxy(cx, &JS_CALLEE(cx, vp).toObject());
+    JSObject *proxy = &JS_CALLEE(cx, vp).toObject();
     JS_ASSERT(proxy->isProxy());
     return Proxy::call(cx, proxy, argc, vp);
 }
@@ -3004,9 +2999,10 @@ proxy_Call(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject proxy(cx, &JS_CALLEE(cx, vp).toObject());
+    JSObject *proxy = &JS_CALLEE(cx, vp).toObject();
     JS_ASSERT(proxy->isProxy());
-    return Proxy::construct(cx, proxy, argc, JS_ARGV(cx, vp), vp);
+    bool ok = Proxy::construct(cx, proxy, argc, JS_ARGV(cx, vp), vp);
+    return ok;
 }
 
 JS_FRIEND_DATA(Class) js::FunctionProxyClass = {

@@ -28,8 +28,6 @@
 #include "vm/ObjectImpl.h"
 #include "vm/String.h"
 
-ForwardDeclareJS(Object);
-
 namespace JS {
 struct ObjectsExtraSizes;
 }
