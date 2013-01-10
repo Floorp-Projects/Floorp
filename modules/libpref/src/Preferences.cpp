@@ -151,6 +151,7 @@ struct CacheData {
     bool defaultValueBool;
     int32_t defaultValueInt;
     uint32_t defaultValueUint;
+    float defaultValueFloat;
   };
 };
 
@@ -1555,6 +1556,29 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   data->defaultValueUint = aDefault;
   gCacheData->AppendElement(data);
   return RegisterCallback(UintVarChanged, aPref, data);
+}
+
+static int FloatVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *((float*)cache->cacheLocation) =
+    Preferences::GetFloat(aPref, cache->defaultValueFloat);
+  return 0;
+}
+
+// static
+nsresult
+Preferences::AddFloatVarCache(float* aCache,
+                             const char* aPref,
+                             float aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+  *aCache = Preferences::GetFloat(aPref, aDefault);
+  CacheData* data = new CacheData();
+  data->cacheLocation = aCache;
+  data->defaultValueFloat = aDefault;
+  gCacheData->AppendElement(data);
+  return RegisterCallback(FloatVarChanged, aPref, data);
 }
 
 // static

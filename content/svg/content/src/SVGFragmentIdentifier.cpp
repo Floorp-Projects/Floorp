@@ -83,11 +83,11 @@ SVGFragmentIdentifier::SaveOldZoomAndPan(dom::SVGSVGElement *root)
   }
 }
 
-void 
+void
 SVGFragmentIdentifier::RestoreOldZoomAndPan(dom::SVGSVGElement *root)
 {
   uint16_t oldZoomAndPan = root->GetZoomAndPanProperty();
-  if (oldZoomAndPan != nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_UNKNOWN) {
+  if (oldZoomAndPan != SVG_ZOOMANDPAN_UNKNOWN) {
     root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].SetBaseValue(oldZoomAndPan, root);
   } else if (root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].IsExplicitlySet()) {
     mozilla::ErrorResult error;
