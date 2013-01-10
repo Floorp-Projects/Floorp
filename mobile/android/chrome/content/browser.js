@@ -1618,9 +1618,6 @@ var NativeWindow = {
           }
         }
 
-        // if we reach a link or a text node, stop digging up through the node hierarchy
-        if (this.linkOpenableContext.matches(element) || this.textContext.matches(element))
-          break;
         element = element.parentNode;
       }
 
