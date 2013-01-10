@@ -1265,7 +1265,7 @@ Blob<ActorFlavor>::Create(const BlobConstructorParams& aParams)
       const MultipartBlobOrFileConstructorParams& params =
         aParams.get_MultipartBlobOrFileConstructorParams();
 
-      nsRefPtr<RemoteMultipartBlobType> file
+      nsRefPtr<RemoteMultipartBlobType> file;
       bool isFile = false;
       const BlobOrFileConstructorParams& internalParams =
         params.constructorParams();
