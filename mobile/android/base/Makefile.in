@@ -1088,7 +1088,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
   mobile/android/base/resources/drawable/tabs_tray_default_selector.xml         \
-  mobile/android/base/resources/drawable/tabs_shadow.xml                        \
   mobile/android/base/resources/drawable/shadow.png                             \
   mobile/android/base/resources/drawable/marketplace.png                        \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
