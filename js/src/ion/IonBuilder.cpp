@@ -6710,7 +6710,7 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
 
     MDefinition *obj = walkScopeChain(sc.hops);
 
-    RootedShape shape(cx, ScopeCoordinateToStaticScope(script(), pc).scopeShape());
+    RootedShape shape(cx, ScopeCoordinateToStaticScopeShape(cx, script(), pc));
 
     MInstruction *load;
     if (shape->numFixedSlots() <= sc.slot) {
@@ -6744,7 +6744,7 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
     MDefinition *rval = current->peek(-1);
     MDefinition *obj = walkScopeChain(sc.hops);
 
-    RootedShape shape(cx, ScopeCoordinateToStaticScope(script(), pc).scopeShape());
+    RootedShape shape(cx, ScopeCoordinateToStaticScopeShape(cx, script(), pc));
 
     MInstruction *store;
     if (shape->numFixedSlots() <= sc.slot) {
