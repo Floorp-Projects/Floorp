@@ -2343,6 +2343,37 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     return dst;
 }
 
+bool
+js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone)
+{
+    JS_ASSERT(clone->isInterpreted());
+
+    RootedScript script(cx, clone->nonLazyScript());
+    JS_ASSERT(script);
+    JS_ASSERT(script->compartment() == original->compartment());
+    JS_ASSERT_IF(script->compartment() != cx->compartment,
+                 !script->enclosingStaticScope());
+
+    RootedObject scope(cx, script->enclosingStaticScope());
+
+    clone->mutableScript().init(NULL);
+
+    RawScript cscript = CloneScript(cx, scope, clone, script);
+    if (!cscript)
+        return false;
+
+    clone->setScript(cscript);
+    cscript->setFunction(clone);
+
+    GlobalObject *global = script->compileAndGo ? &script->global() : NULL;
+
+    script = clone->nonLazyScript();
+    CallNewScriptHook(cx, script, clone);
+    Debugger::onNewScript(cx, script, global);
+
+    return true;
+}
+
 DebugScript *
 JSScript::debugScript()
 {
