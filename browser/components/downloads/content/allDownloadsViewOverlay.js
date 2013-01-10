@@ -22,6 +22,8 @@ Cu.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -389,13 +391,12 @@ DownloadElementShell.prototype = {
 
   // The progressmeter element for the download
   get _progressElement() {
-    let progressElement = document.getAnonymousElementByAttribute(
-      this._element, "anonid", "progressmeter");
-    if (progressElement) {
-      delete this._progressElement;
-      return this._progressElement = progressElement;
+    if (!("__progressElement" in this)) {
+      this.__progressElement =
+        document.getAnonymousElementByAttribute(this._element, "anonid",
+                                                "progressmeter");
     }
-    return null;
+    return this.__progressElement;
   },
 
   // Updates the download state attribute (and by that hide/unhide the
@@ -533,8 +534,8 @@ DownloadElementShell.prototype = {
       case "downloadsCmd_pauseResume":
         return this._dataItem && this._dataItem.inProgress && this._dataItem.resumable;
       case "downloadsCmd_retry":
-        // Disable the retry command for past downloads until it's fully implemented.
-        return this._dataItem && this._dataItem.canRetry;
+        // An history download can always be retried.
+        return !this._dataItem || this._dataItem.canRetry;
       case "downloadsCmd_openReferrer":
         return this._dataItem && !!this._dataItem.referrer;
       case "cmd_delete":
@@ -549,8 +550,16 @@ DownloadElementShell.prototype = {
   },
 
   _retryAsHistoryDownload: function DES__retryAsHistoryDownload() {
-    // TODO: save in the right location (the current saveURL api does not allow this)
-    saveURL(this.downloadURI, this._displayName, null, true, true, undefined, document);
+    // In future we may try to download into the same original target uri, when
+    // we have it.  Though that requires verifying the path is still valid and
+    // may surprise the user if he wants to be requested every time.
+
+    // For private browsing, try to get document out of the most recent browser
+    // window, or provide our own if there's no browser window.
+    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let initiatingDoc = browserWin ? browserWin.document : document;
+    saveURL(this.downloadURI, this._displayName, null, true, true, undefined,
+            initiatingDoc);
   },
 
   /* nsIController */
@@ -840,6 +849,10 @@ DownloadsPlacesView.prototype = {
         if (!this._lastSessionDownloadElement) {
           this._lastSessionDownloadElement = newOrUpdatedShell.element;
         }
+        // Some operations like retrying an history download move an element to
+        // the top of the richlistbox, along with other session downloads.
+        // More generally, if a new download is added, should be made visible.
+        this._richlistbox.ensureElementIsVisible(newOrUpdatedShell.element);
       }
       else if (aDataItem) {
         let before = this._lastSessionDownloadElement ?
@@ -937,13 +950,15 @@ DownloadsPlacesView.prototype = {
 
     this._ensureVisibleTimer = setTimeout(function() {
       delete this._ensureVisibleTimer;
+      if (!this._richlistbox.firstChild)
+        return;
 
       let rlRect = this._richlistbox.getBoundingClientRect();
       let fcRect = this._richlistbox.firstChild.getBoundingClientRect();
       // For simplicity assume border and padding are the same across all sides.
       // This works as far as there isn't an horizontal scrollbar since fcRect
       // is relative to the scrolled area.
-      let offset = fcRect.left - rlRect.left + 1;
+      let offset = (fcRect.left - rlRect.left) + 1;
 
       let firstVisible = document.elementFromPoint(fcRect.left, rlRect.top + offset);
       if (!firstVisible || firstVisible.localName != "richlistitem")
