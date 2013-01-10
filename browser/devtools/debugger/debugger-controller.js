@@ -396,6 +396,11 @@ ThreadState.prototype = {
    */
   _update: function TS__update(aEvent) {
     DebuggerView.Toolbar.toggleResumeButtonState(this.activeThread.state);
+
+    if (DebuggerController._target &&
+        (aEvent == "paused" || aEvent == "resumed")) {
+      DebuggerController._target.emit("thread-" + aEvent);
+    }
   }
 };
 

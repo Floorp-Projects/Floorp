@@ -153,6 +153,7 @@ DevTools.prototype = {
       }
 
       return promise.then(function() {
+        toolbox.raise();
         return toolbox;
       });
     }
@@ -243,17 +244,44 @@ let gDevToolsBrowser = {
   _trackedBrowserWindows: new Set(),
 
   /**
-   * This function is for the benefit of command#Tools:DevToolbox in
+   * This function is for the benefit of Tools:DevToolbox in
    * browser/base/content/browser-sets.inc and should not be used outside
    * of there
    */
-  toggleToolboxCommand: function(gBrowser, toolId=null) {
+  toggleToolboxCommand: function(gBrowser) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
 
-    return toolbox && (toolId == null || toolId == toolbox.currentToolId) ?
-        toolbox.destroy() :
-        gDevTools.showToolbox(target, toolId);
+    toolbox ? toolbox.destroy() : gDevTools.showToolbox(target);
+  },
+
+  /**
+   * This function is for the benefit of Tools:{toolId} commands,
+   * triggered from the WebDeveloper menu and keyboard shortcuts.
+   *
+   * selectToolCommand's behavior:
+   * - if the toolbox is closed,
+   *   we open the toolbox and select the tool
+   * - if the toolbox is open, and the targetted tool is not selected,
+   *   we select it
+   * - if the toolbox is open, and the targetted tool is selected,
+   *   and the host is NOT a window, we close the toolbox
+   * - if the toolbox is open, and the targetted tool is selected,
+   *   and the host is a window, we raise the toolbox window
+   */
+  selectToolCommand: function(gBrowser, toolId) {
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    let toolbox = gDevTools.getToolbox(target);
+
+    if (toolbox && toolbox.currentToolId == toolId) {
+      if (toolbox.hostType == Toolbox.HostType.WINDOW) {
+        toolbox.raise();
+      } else {
+        toolbox.destroy();
+      }
+    } else {
+      gDevTools.showToolbox(target, toolId);
+    }
   },
 
   /**
@@ -363,7 +391,7 @@ let gDevToolsBrowser = {
     let cmd = doc.createElement("command");
     cmd.id = "Tools:" + id;
     cmd.setAttribute("oncommand",
-        'gDevToolsBrowser.toggleToolboxCommand(gBrowser, "' + id + '");');
+        'gDevToolsBrowser.selectToolCommand(gBrowser, "' + id + '");');
 
     let key = null;
     if (toolDefinition.key) {
@@ -376,15 +404,14 @@ let gDevToolsBrowser = {
         key.setAttribute("key", toolDefinition.key);
       }
 
-      key.setAttribute("oncommand",
-          'gDevToolsBrowser.toggleToolboxCommand(gBrowser, "' + id + '");');
+      key.setAttribute("command", cmd.id);
       key.setAttribute("modifiers", toolDefinition.modifiers);
     }
 
     let bc = doc.createElement("broadcaster");
     bc.id = "devtoolsMenuBroadcaster_" + id;
     bc.setAttribute("label", toolDefinition.label);
-    bc.setAttribute("command", "Tools:" + id);
+    bc.setAttribute("command", cmd.id);
 
     if (key) {
       bc.setAttribute("key", "key_" + id);
@@ -474,7 +501,9 @@ let gDevToolsBrowser = {
    */
   _removeToolFromMenu: function DT_removeToolFromMenu(toolId, doc) {
     let command = doc.getElementById("Tools:" + toolId);
-    command.parentNode.removeChild(command);
+    if (command) {
+      command.parentNode.removeChild(command);
+    }
 
     let key = doc.getElementById("key_" + toolId);
     if (key) {
@@ -482,7 +511,19 @@ let gDevToolsBrowser = {
     }
 
     let bc = doc.getElementById("devtoolsMenuBroadcaster_" + toolId);
-    bc.parentNode.removeChild(bc);
+    if (bc) {
+      bc.parentNode.removeChild(bc);
+    }
+
+    let appmenuitem = doc.getElementById("appmenuitem_" + toolId);
+    if (appmenuitem) {
+      appmenuitem.parentNode.removeChild(appmenuitem);
+    }
+
+    let menuitem = doc.getElementById("menuitem_" + toolId);
+    if (menuitem) {
+      menuitem.parentNode.removeChild(menuitem);
+    }
   },
 
   /**
