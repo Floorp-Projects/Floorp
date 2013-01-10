@@ -154,7 +154,7 @@ public class LayerView extends FrameLayout {
             // from a SurfaceView, which is just not possible (the bitmap will be transparent).
             setWillNotCacheDrawing(false);
 
-            mSurfaceView = new SurfaceView(getContext());
+            mSurfaceView = new LayerSurfaceView(getContext(), this);
             mSurfaceView.setBackgroundColor(Color.WHITE);
             addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
@@ -316,7 +316,36 @@ public class LayerView extends FrameLayout {
         return getDrawable(R.drawable.scrollbar);
     }
 
+    /* When using a SurfaceView (mSurfaceView != null), resizing happens in two
+     * phases. First, the LayerView changes size, then, often some frames later,
+     * the SurfaceView changes size. Because of this, we need to split the
+     * resize into two phases to avoid jittering.
+     *
+     * The first phase is the LayerView size change. mListener is notified so
+     * that a synchronous draw can be performed (otherwise a blank frame will
+     * appear).
+     *
+     * The second phase is the SurfaceView size change. At this point, the
+     * backing GL surface is resized and another synchronous draw is performed.
+     * Gecko is also sent the new window size, and this will likely cause an
+     * extra draw a few frames later, after it's re-rendered and caught up.
+     *
+     * In the case that there is no valid GL surface (for example, when
+     * resuming, or when coming back from the awesomescreen), or we're using a
+     * TextureView instead of a SurfaceView, the first phase is skipped.
+     */
     private void onSizeChanged(int width, int height) {
+        if (!mGLController.hasValidSurface() || mSurfaceView == null) {
+            surfaceChanged(width, height);
+            return;
+        }
+
+        if (mListener != null) {
+            mListener.sizeChanged(width, height);
+        }
+    }
+
+    private void surfaceChanged(int width, int height) {
         mGLController.surfaceChanged(width, height);
 
         if (mListener != null) {
@@ -356,6 +385,7 @@ public class LayerView extends FrameLayout {
         void renderRequested();
         void compositionPauseRequested();
         void compositionResumeRequested(int width, int height);
+        void sizeChanged(int width, int height);
         void surfaceChanged(int width, int height);
     }
 
@@ -370,6 +400,24 @@ public class LayerView extends FrameLayout {
 
         public void surfaceDestroyed(SurfaceHolder holder) {
             onDestroyed();
+        }
+    }
+
+    /* A subclass of SurfaceView to listen to layout changes, as
+     * View.OnLayoutChangeListener requires API level 11.
+     */
+    private class LayerSurfaceView extends SurfaceView {
+        LayerView mParent;
+
+        public LayerSurfaceView(Context aContext, LayerView aParent) {
+            super(aContext);
+            mParent = aParent;
+        }
+
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            if (changed) {
+                mParent.surfaceChanged(right - left, bottom - top);
+            }
         }
     }
 

@@ -384,8 +384,6 @@ CompositorParent::SetEGLSurfaceSize(int width, int height)
 void
 CompositorParent::ResumeCompositionAndResize(int width, int height)
 {
-  mWidgetSize.width = width;
-  mWidgetSize.height = height;
   SetEGLSurfaceSize(width, height);
   ResumeComposition();
 }
@@ -1003,22 +1001,22 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // If the contents can fit entirely within the widget area on a particular
     // dimenson, we need to translate and scale so that the fixed layers remain
     // within the page boundaries.
-    if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
+    if (mContentRect.width * tempScaleDiffX < metrics.mCompositionBounds.width) {
       offset.x = -metricsScrollOffset.x;
-      scaleDiff.height = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
+      scaleDiff.height = NS_MIN(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
     } else {
       offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
-                         mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX) -
+                         mContentRect.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) -
                  metricsScrollOffset.x;
       scaleDiff.height = tempScaleDiffX;
     }
 
-    if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
+    if (mContentRect.height * tempScaleDiffY < metrics.mCompositionBounds.height) {
       offset.y = -metricsScrollOffset.y;
-      scaleDiff.width = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
+      scaleDiff.width = NS_MIN(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
     } else {
       offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
-                         mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY) -
+                         mContentRect.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) -
                  metricsScrollOffset.y;
       scaleDiff.width = tempScaleDiffY;
     }
@@ -1116,8 +1114,6 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
   // NULL before returning from this method, to avoid accessing it elsewhere.
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
-  mWidgetSize.width = rect.width;
-  mWidgetSize.height = rect.height;
 
   *aBackend = aBackendHint;
 
