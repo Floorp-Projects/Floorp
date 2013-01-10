@@ -1075,6 +1075,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/progress_spinner_10.png                \
   mobile/android/base/resources/drawable/progress_spinner_11.png                \
   mobile/android/base/resources/drawable/progress_spinner_12.png                \
+  mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
   mobile/android/base/resources/drawable/remote_tabs_level.xml                  \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
@@ -1087,7 +1088,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
   mobile/android/base/resources/drawable/tabs_tray_default_selector.xml         \
-  mobile/android/base/resources/drawable/tabs_tray_list_divider.xml             \
   mobile/android/base/resources/drawable/tabs_shadow.xml                        \
   mobile/android/base/resources/drawable/shadow.png                             \
   mobile/android/base/resources/drawable/marketplace.png                        \

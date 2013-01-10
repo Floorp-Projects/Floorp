@@ -15,7 +15,8 @@
             android:layout_height="fill_parent"
             android:layout_weight="1.0"
             android:text="@string/tabs_normal"
-            android:textColor="@color/tabs_counter_color"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp"
             android:background="@drawable/action_bar_button"/>
 
     <ImageButton android:id="@+id/add_tab"

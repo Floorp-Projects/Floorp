@@ -3,16 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          android:id="@+id/client"
-          android:layout_width="fill_parent"
-          android:layout_height="@dimen/remote_tab_group_row_height"
-          style="@style/TabRowTextAppearance"
-          android:paddingLeft="10dip"
-          android:paddingRight="10dip"
-          android:textStyle="bold"
-          android:textSize="13sp"
-          android:singleLine="false"
-          android:maxLines="2"
-          android:background="@drawable/tabs_tray_selected_bg_repeat"
-          android:gravity="center_vertical"/>
+<Gecko.AllCapsTextView xmlns:android="http://schemas.android.com/apk/res/android"
+                       android:id="@+id/client"
+                       android:layout_width="fill_parent"
+                       android:layout_height="@dimen/remote_tab_group_row_height"
+                       style="@style/RemoteTabRowTextAppearance.Url"
+                       android:background="@android:color/transparent"
+                       android:paddingLeft="2dip"
+                       android:paddingRight="2dip"
+                       android:textStyle="bold"
+                       android:textSize="12sp"
+                       android:singleLine="false"
+                       android:maxLines="2"
+                       android:gravity="center_vertical"/>

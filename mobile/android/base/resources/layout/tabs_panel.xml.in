@@ -40,7 +40,10 @@
             <org.mozilla.gecko.RemoteTabs android:id="@+id/synced_tabs"
                                           style="@style/RemoteTabsList"
                                           android:layout_width="fill_parent"
-                                          android:layout_height="fill_parent"/>
+                                          android:layout_height="fill_parent"
+                                          android:paddingLeft="@dimen/tabs_panel_list_padding"
+                                          android:paddingRight="@dimen/tabs_panel_list_padding"
+                                          android:scrollbarStyle="outsideOverlay"/>
 
         </view>
 
