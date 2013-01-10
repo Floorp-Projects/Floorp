@@ -279,7 +279,7 @@ class IDLUnresolvedIdentifier(IDLObject):
                               [location])
         if name[0] == '_' and not allowDoubleUnderscore:
             name = name[1:]
-        if name in ["prototype", "constructor", "toString"] and not allowForbidden:
+        if name in ["constructor", "toString"] and not allowForbidden:
             raise WebIDLError("Cannot use reserved identifier '%s'" % (name),
                               [location])
 
@@ -2078,6 +2078,10 @@ class IDLConst(IDLInterfaceMember):
         self.type = type
         self.value = value
 
+        if identifier.name == "prototype":
+            raise WebIDLError("The identifier of a constant must not be 'prototype'",
+                              [location])
+
     def __str__(self):
         return "'%s' const '%s'" % (self.type, self.identifier)
 
@@ -2116,6 +2120,10 @@ class IDLAttribute(IDLInterfaceMember):
         self.lenientThis = False
         self._unforgeable = False
         self.stringifier = stringifier
+
+        if static and identifier.name == "prototype":
+            raise WebIDLError("The identifier of a static attribute must not be 'prototype'",
+                              [location])
 
         if readonly and inherit:
             raise WebIDLError("An attribute cannot be both 'readonly' and 'inherit'",
@@ -2448,6 +2456,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         assert isinstance(stringifier, bool)
         self._stringifier = stringifier
         self._specialType = specialType
+
+        if static and identifier.name == "prototype":
+            raise WebIDLError("The identifier of a static operation must not be 'prototype'",
+                              [location])
 
         self.assertSignatureConstraints()
 
