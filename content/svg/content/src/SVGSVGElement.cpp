@@ -113,8 +113,8 @@ nsSVGElement::LengthInfo SVGSVGElement::sLengthInfo[4] =
 };
 
 nsSVGEnumMapping SVGSVGElement::sZoomAndPanMap[] = {
-  {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
-  {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
+  {&nsGkAtoms::disable, SVG_ZOOMANDPAN_DISABLE},
+  {&nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
   {nullptr, 0}
 };
 
@@ -122,7 +122,7 @@ nsSVGElement::EnumInfo SVGSVGElement::sEnumInfo[1] =
 {
   { &nsGkAtoms::zoomAndPan,
     sZoomAndPanMap,
-    nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY
+    SVG_ZOOMANDPAN_MAGNIFY
   }
 };
 
@@ -147,11 +147,10 @@ NS_IMPL_ADDREF_INHERITED(SVGSVGElement,SVGSVGElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGSVGElement,SVGSVGElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGSVGElement)
-  NS_NODE_INTERFACE_TABLE6(SVGSVGElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE5(SVGSVGElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGSVGElement,
-                           nsIDOMSVGFitToViewBox,
-                           nsIDOMSVGZoomAndPan)
+                           nsIDOMSVGFitToViewBox)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGSVGElementBase)
 
@@ -738,17 +737,6 @@ SVGSVGElement::PreserveAspectRatio()
   return ratio.forget();
 }
 
-//----------------------------------------------------------------------
-// nsIDOMSVGZoomAndPan methods
-
-/* attribute unsigned short zoomAndPan; */
-NS_IMETHODIMP
-SVGSVGElement::GetZoomAndPan(uint16_t *aZoomAndPan)
-{
-  *aZoomAndPan = ZoomAndPan();
-  return NS_OK;
-}
-
 uint16_t
 SVGSVGElement::ZoomAndPan()
 {
@@ -761,19 +749,11 @@ SVGSVGElement::ZoomAndPan()
   return mEnumAttributes[ZOOMANDPAN].GetAnimValue();
 }
 
-NS_IMETHODIMP
-SVGSVGElement::SetZoomAndPan(uint16_t aZoomAndPan)
-{
-  ErrorResult rv;
-  SetZoomAndPan(aZoomAndPan, rv);
-  return rv.ErrorCode();
-}
-
 void
 SVGSVGElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv)
 {
-  if (aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE ||
-      aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+  if (aZoomAndPan == SVG_ZOOMANDPAN_DISABLE ||
+      aZoomAndPan == SVG_ZOOMANDPAN_MAGNIFY) {
     mEnumAttributes[ZOOMANDPAN].SetBaseValue(aZoomAndPan, this);
     return;
   }
@@ -1530,7 +1510,7 @@ SVGSVGElement::GetZoomAndPanProperty() const
   if (valPtr) {
     return reinterpret_cast<uintptr_t>(valPtr);
   }
-  return nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_UNKNOWN;
+  return SVG_ZOOMANDPAN_UNKNOWN;
 }
 
 bool
