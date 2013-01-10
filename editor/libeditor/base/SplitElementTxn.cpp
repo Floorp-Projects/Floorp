@@ -183,12 +183,12 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   }
 #endif
 
-  nsresult result;
   // first, massage the existing node so it is in its post-split state
   nsCOMPtr<nsIDOMCharacterData>rightNodeAsText = do_QueryInterface(mExistingRightNode);
   if (rightNodeAsText)
   {
-    result = rightNodeAsText->DeleteData(0, mOffset);
+    nsresult result = rightNodeAsText->DeleteData(0, mOffset);
+    NS_ENSURE_SUCCESS(result, result);
 #ifdef DEBUG
     if (gNoisy) 
     { 
