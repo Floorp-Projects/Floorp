@@ -1300,6 +1300,9 @@ CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_C
 extern UnrootedScript
 CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script);
 
+bool
+CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone);
+
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required
  * subsequent set-up of owning function or script object and then call
