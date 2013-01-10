@@ -9,7 +9,7 @@ chrome.jar:
 % content browser %content/
 
   content/arrow.svg                     (content/arrow.svg)
-  content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
+* content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
 * content/dbg-webapps-actors.js         (content/dbg-webapps-actors.js)
   content/forms.js                      (content/forms.js)
 * content/settings.js                   (content/settings.js)
