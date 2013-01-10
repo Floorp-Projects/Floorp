@@ -174,7 +174,11 @@ nsWindow::~nsWindow()
     if (top->mFocus == this)
         top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
-    SetCompositor(NULL, NULL);
+    if (mLayerManager == sLayerManager) {
+        // If this window was the one that created the global OMTC layer manager
+        // and compositor, then we should null those out.
+        SetCompositor(NULL, NULL, NULL);
+    }
 }
 
 bool
@@ -697,9 +701,14 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
     bool useCompositor = UseOffMainThreadCompositing();
 
     if (useCompositor) {
+        if (sLayerManager) {
+            return sLayerManager;
+        }
         CreateCompositor();
         if (mLayerManager) {
-            SetCompositor(mCompositorParent, mCompositorChild);
+            // for OMTC create a single layer manager and compositor that will be
+            // used for all windows.
+            SetCompositor(mLayerManager, mCompositorParent, mCompositorChild);
             return mLayerManager;
         }
 
@@ -2276,16 +2285,19 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 
 // off-main-thread compositor fields and functions
 
+nsRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager = 0;
 nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
 nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
 bool nsWindow::sCompositorPaused = false;
 
 void
-nsWindow::SetCompositor(mozilla::layers::CompositorParent* aCompositorParent,
+nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
+                        mozilla::layers::CompositorParent* aCompositorParent,
                         mozilla::layers::CompositorChild* aCompositorChild)
 {
     bool sizeChangeNeeded = (aCompositorParent && !sCompositorParent && gAndroidBounds.width != 0);
 
+    sLayerManager = aLayerManager;
     sCompositorParent = aCompositorParent;
     sCompositorChild = aCompositorChild;
 

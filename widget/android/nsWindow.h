@@ -150,7 +150,8 @@ public:
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 
-    static void SetCompositor(mozilla::layers::CompositorParent* aCompositorParent,
+    static void SetCompositor(mozilla::layers::LayerManager* aLayerManager,
+                              mozilla::layers::CompositorParent* aCompositorParent,
                               mozilla::layers::CompositorChild* aCompositorChild);
     static void ScheduleComposite();
     static void SchedulePauseComposition();
@@ -231,6 +232,7 @@ private:
 #ifdef MOZ_ANDROID_OMTC
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
 
+    static nsRefPtr<mozilla::layers::LayerManager> sLayerManager;
     static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
     static nsRefPtr<mozilla::layers::CompositorChild> sCompositorChild;
     static bool sCompositorPaused;
