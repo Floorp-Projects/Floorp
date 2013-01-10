@@ -2570,5 +2570,10 @@
     "high": "60000",
     "n_buckets": 50,
     "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
+  },
+  "STARTUP_PROFILE_LOCK_FAILURES": {
+    "kind": "enumerated",
+    "n_values": 11,
+    "description": "The user's profile was unable to be locked, preventing startup"
   }
 }
