@@ -158,6 +158,8 @@ let Pipe = {
     // kIdentityShimFile, where it is used to access the BrowserID object
     // and its internal API.
     let content = GaiaInterface.getContent();
+    let mm = null;
+    let uuid = getRandomId();
 
     if (!content) {
       log("ERROR: what the what? no content window?");
@@ -165,73 +167,90 @@ let Pipe = {
       return;
     }
 
-    // Prepare a message for gaia.  The parameter showUI signals
-    // whether user interaction is needed.  If it is, gaia will open a
-    // dialog; if not, a hidden iframe.  In each case, BrowserID is
-    // available in the context.
-    let id = kOpenIdentityDialog + "-" + getRandomId();
-    let detail = {
-      type: kOpenIdentityDialog,
-      showUI: aGaiaOptions.showUI || false,
-      id: id
-    };
+    function removeMessageListeners() {
+      if (mm) {
+        mm.removeMessageListener(kIdentityDelegateFinished, identityDelegateFinished);
+        mm.removeMessageListener(kIdentityControllerDoMethod, aMessageCallback);
+      }
+    }
 
-    // When gaia signals back with a mozContentEvent containing the
-    // unique id we created, we know the window is ready.  We then inject
-    // the magic javascript (kIdentityShimFile) that will give the content
-    // the superpowers it needs to communicate back with this code.
+    function identityDelegateFinished() {
+      removeMessageListeners();
+
+      let detail = {
+        type: kReceivedIdentityAssertion,
+        showUI: aGaiaOptions.showUI || false,
+        id: kReceivedIdentityAssertion + "-" + uuid
+      };
+      log('telling gaia to close the dialog');
+      // tell gaia to close the dialog
+      GaiaInterface.sendChromeEvent(detail);
+    }
+
     content.addEventListener("mozContentEvent", function getAssertion(evt) {
-
-      // Make sure the message is really for us
       let msg = evt.detail;
-      if (msg.id != id) {
+      if (!msg.id.match(uuid)) {
         return;
       }
 
-      // We only need to catch the first mozContentEvent from the
-      // iframe or popup, so we remove the listener right away.
-      content.removeEventListener("mozContentEvent", getAssertion);
+      switch (msg.id) {
+        case kOpenIdentityDialog + '-' + uuid:
+          if (msg.type === 'cancel') {
+            // The user closed the dialog.  Clean up and call cancel.
+            content.removeEventListener("mozContentEvent", getAssertion);
+            removeMessageListeners();
+            aMessageCallback({json: {method: "cancel"}});
+          } else {
+            // The window has opened.  Inject the identity shim file containing
+            // the callbacks in the content script.  This could be either the
+            // visible popup that the user interacts with, or it could be an
+            // invisible frame.
+            let frame = evt.detail.frame;
+            let frameLoader = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+            mm = frameLoader.messageManager;
+            try {
+              mm.loadFrameScript(kIdentityShimFile, true);
+              log("Loaded shim " + kIdentityShimFile + "\n");
+            } catch (e) {
+              log("Error loading ", kIdentityShimFile, " as a frame script: ", e);
+            }
 
-      // Try to load the identity shim file containing the callbacks
-      // in the content script.  This could be either the visible
-      // popup that the user interacts with, or it could be an invisible
-      // frame.
-      let frame = evt.detail.frame;
-      let frameLoader = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-      let mm = frameLoader.messageManager;
-      try {
-        mm.loadFrameScript(kIdentityShimFile, true);
-        log("Loaded shim " + kIdentityShimFile + "\n");
-      } catch (e) {
-        log("Error loading ", kIdentityShimFile, " as a frame script: ", e);
+            // There are two messages that the delegate can send back: a "do
+            // method" event, and a "finished" event.  We pass the do-method
+            // events straight to the caller for interpretation and handling.
+            // If we receive a "finished" event, then the delegate is done, so
+            // we shut down the pipe and clean up.
+            mm.addMessageListener(kIdentityControllerDoMethod, aMessageCallback);
+            mm.addMessageListener(kIdentityDelegateFinished, identityDelegateFinished);
+
+            mm.sendAsyncMessage(aGaiaOptions.message, aRpOptions);
+          }
+          break;
+
+        case kReceivedIdentityAssertion + '-' + uuid:
+          // Received our assertion.  The message manager callbacks will handle
+          // communicating back to the IDService.  All we have to do is remove
+          // this listener.
+          content.removeEventListener("mozContentEvent", getAssertion);
+          break;
+
+        default:
+          log("ERROR - Unexpected message: id=" + msg.id + ", type=" + msg.type + ", errorMsg=" + msg.errorMsg);
+          break;
       }
 
-      // There are two messages that the delegate can send back: a "do
-      // method" event, and a "finished" event.  We pass the do-method
-      // events straight to the caller for interpretation and handling.
-      // If we receive a "finished" event, then the delegate is done, so
-      // we shut down the pipe and clean up.
-      mm.addMessageListener(kIdentityControllerDoMethod, aMessageCallback);
-      mm.addMessageListener(kIdentityDelegateFinished, function identityDelegateFinished() {
-        // clean up listeners
-        mm.removeMessageListener(kIdentityDelegateFinished, identityDelegateFinished);
-        mm.removeMessageListener(kIdentityControllerDoMethod, aMessageCallback);
-
-        let id = kReceivedIdentityAssertion + "-" + getRandomId();
-        let detail = {
-          type: kReceivedIdentityAssertion,
-          showUI: aGaiaOptions.showUI || false,
-          id: id
-        };
-        log('telling gaia to close the dialog');
-        // tell gaia to close the dialog
-        GaiaInterface.sendChromeEvent(detail);
-      });
-
-      mm.sendAsyncMessage(aGaiaOptions.message, aRpOptions);
     });
 
-    // Tell gaia to open the identity iframe or trusty popup
+    // Tell gaia to open the identity iframe or trusty popup. The parameter
+    // showUI signals whether user interaction is needed.  If it is, gaia will
+    // open a dialog; if not, a hidden iframe.  In each case, BrowserID is
+    // available in the context.
+    let detail = {
+      type: kOpenIdentityDialog,
+      showUI: aGaiaOptions.showUI || false,
+      id: kOpenIdentityDialog + "-" + uuid
+    };
+
     GaiaInterface.sendChromeEvent(detail);
   }
 
@@ -314,6 +333,10 @@ this.SignInToWebsiteController = {
 
         case "logout":
           IdentityService.doLogout(aRpId);
+          break;
+
+        case "cancel":
+          IdentityService.doCancel(aRpId);
           break;
 
         default:
