@@ -520,7 +520,10 @@ public:
                                  EGL_NO_CONTEXT);
         if (!mSurface) {
 #ifdef MOZ_ANDROID_OMTC
-            mSurface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
+            mSurface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface(false);
+            if (!mSurface) {
+                return false;
+            }
 #else
             EGLConfig config;
             CreateConfig(&config);
@@ -2191,7 +2194,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
 #ifdef MOZ_ANDROID_OMTC
     mozilla::AndroidBridge::Bridge()->RegisterCompositor();
-    EGLSurface surface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
+    EGLSurface surface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface(true);
 #else
     EGLSurface surface = CreateSurfaceForWindow(aWidget, config);
 #endif
