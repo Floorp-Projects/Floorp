@@ -21,7 +21,6 @@ nsIContentIterator.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \
-nsIDocumentInlines.h \
 nsDeprecatedOperationList.h \
 nsIDocumentObserver.h \
 nsIMutationObserver.h \

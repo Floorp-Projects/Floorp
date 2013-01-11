@@ -37,7 +37,6 @@
 #include "nsIAppsService.h"
 #include "nsIBaseWindow.h"
 #include "nsIComponentManager.h"
-#include "nsIDocumentInlines.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
@@ -428,7 +427,7 @@ TabChild::HandlePossibleViewportChange()
   float minScale = 1.0f;
 
   nsCOMPtr<nsIDOMElement> htmlDOMElement = do_QueryInterface(document->GetHtmlElement());
-  HTMLBodyElement* bodyDOMElement = document->GetBodyElement();
+  nsCOMPtr<nsIDOMElement> bodyDOMElement = do_QueryInterface(document->GetBodyElement());
 
   int32_t htmlWidth = 0, htmlHeight = 0;
   if (htmlDOMElement) {
@@ -437,8 +436,8 @@ TabChild::HandlePossibleViewportChange()
   }
   int32_t bodyWidth = 0, bodyHeight = 0;
   if (bodyDOMElement) {
-    bodyWidth = bodyDOMElement->ScrollWidth();
-    bodyHeight = bodyDOMElement->ScrollHeight();
+    bodyDOMElement->GetScrollWidth(&bodyWidth);
+    bodyDOMElement->GetScrollHeight(&bodyHeight);
   }
 
   float pageWidth, pageHeight;

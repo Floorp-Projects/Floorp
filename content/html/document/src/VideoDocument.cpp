@@ -8,7 +8,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsHTMLMediaElement.h"
-#include "nsIDocumentInlines.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"

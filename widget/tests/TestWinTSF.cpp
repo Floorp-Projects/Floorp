@@ -59,7 +59,7 @@ template<class T> class nsReadingIterator;
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMHTMLDocument.h"
-#include "mozilla/dom/HTMLBodyElement.h"
+#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -1575,7 +1575,7 @@ TestApp::Init(void)
 
   // set a background color manually,
   // otherwise the window might be transparent
-  static_cast<HTMLBodyElement*>(htmlBody)->
+  nsCOMPtr<nsIDOMHTMLBodyElement>(do_QueryInterface(htmlBody))->
       SetBgColor(NS_LITERAL_STRING("white"));
 
   widget->Show(true);
