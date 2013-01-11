@@ -42,7 +42,6 @@ class PStorageChild;
 class ClonedMessageData;
 
 class ContentChild : public PContentChild
-                   , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -198,6 +197,9 @@ public:
     nsString &GetIndexedDBPath();
 
     uint64_t GetID() { return mID; }
+
+    bool IsForApp() { return mIsForApp; }
+    bool IsForBrowser() { return mIsForBrowser; }
 
     bool GetParamsForBlob(nsDOMFileBase* aBlob,
                           BlobConstructorParams* aOutParams);

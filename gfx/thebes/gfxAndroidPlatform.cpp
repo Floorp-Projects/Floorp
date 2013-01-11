@@ -259,7 +259,7 @@ gfxAndroidPlatform::FontHintingEnabled()
     // Otherwise, enable hinting unless we're in a content process
     // that might be used for non-reflowing zoom.
     return XRE_GetProcessType() != GeckoProcessType_Content ||
-           ContentChild::GetSingleton()->HasOwnApp();
+           !ContentChild::GetSingleton()->IsForBrowser();
 #endif //  MOZ_USING_ANDROID_JAVA_WIDGETS
 }
 
