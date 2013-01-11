@@ -9,6 +9,7 @@
 #include "nsIImageDocument.h"
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDocumentInlines.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyEvent.h"
