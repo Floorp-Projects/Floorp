@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.InputConnectionHandler;
 import android.R;
 import android.content.Context;
 import android.os.Build;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
@@ -52,7 +53,7 @@ class GeckoInputConnection
     private final ExtractedText mUpdateExtract = new ExtractedText();
     private boolean mBatchSelectionChanged;
     private boolean mBatchTextChanged;
-    private Runnable mRestartInputRunnable;
+    private long mLastRestartInputTime;
     private final InputConnection mPluginInputConnection;
 
     public static GeckoEditableListener create(View targetView,
@@ -200,27 +201,34 @@ class GeckoInputConnection
     }
 
     private void restartInput() {
-        if (mRestartInputRunnable != null) {
+        // Coalesce restartInput calls because InputMethodManager.restartInput()
+        // is expensive and successive calls to it can lock up the keyboard
+        long time = SystemClock.uptimeMillis();
+        if (time < mLastRestartInputTime + 200) {
             return;
         }
+        mLastRestartInputTime = time;
+
         final InputMethodManager imm = getInputMethodManager();
         if (imm == null) {
             return;
         }
-        mRestartInputRunnable = new Runnable() {
-            @Override
-            public void run() {
-                final View v = getView();
-                final Editable editable = getEditable();
-                // Fake a selection change, so that when we restart the input,
-                // the IME will make sure that any old composition string is cleared
-                notifySelectionChange(Selection.getSelectionStart(editable),
-                                      Selection.getSelectionEnd(editable));
-                imm.restartInput(v);
-                mRestartInputRunnable = null;
-            }
-        };
-        GeckoApp.mAppContext.mMainHandler.postDelayed(mRestartInputRunnable, 200);
+        final View v = getView();
+        // InputMethodManager has internal logic to detect if we are restarting input
+        // in an already focused View, which is the case here because all content text
+        // fields are inside one LayerView. When this happens, InputMethodManager will
+        // tell the input method to soft reset instead of hard reset. Stock latin IME
+        // on Android 4.2+ has a quirk that when it soft resets, it does not clear the
+        // composition. The following workaround tricks the IME into clearing the
+        // composition when soft resetting.
+        if (InputMethods.needsSoftResetWorkaround(mCurrentInputMethod)) {
+            // Fake a selection change, because the IME clears the composition when
+            // the selection changes, even if soft-resetting. Offsets here must be
+            // different from the previous selection offsets, and -1 seems to be a
+            // reasonable, deterministic value
+            notifySelectionChange(-1, -1);
+        }
+        imm.restartInput(v);
     }
 
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
