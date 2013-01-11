@@ -1565,7 +1565,7 @@ JSObject::deleteByValue(JSContext *cx, HandleObject obj,
 
     RootedValue propval(cx, property);
     Rooted<SpecialId> sid(cx);
-    if (ValueIsSpecial(obj, &propval, sid.address(), cx))
+    if (ValueIsSpecial(obj, &propval, &sid, cx))
         return deleteSpecial(cx, obj, sid, rval, strict);
 
     JSAtom *name = ToAtom(cx, propval);

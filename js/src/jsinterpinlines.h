@@ -767,7 +767,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
             }
         }
 
-        SpecialId special;
+        Rooted<SpecialId> special(cx);
         res.set(rref);
         if (ValueIsSpecial(obj, res, &special, cx)) {
             if (!JSObject::getSpecial(cx, obj, obj, special, res))
