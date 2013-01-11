@@ -620,10 +620,10 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
 }
 
 bool
-Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
+Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rval)
 {
     if (!env) {
-        rval->setNull();
+        rval.setNull();
         return true;
     }
 
@@ -657,7 +657,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
             return false;
         }
     }
-    rval->setObject(*envobj);
+    rval.setObject(*envobj);
     return true;
 }
 
@@ -3326,7 +3326,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    return dbg->wrapEnvironment(cx, env, args.rval().address());
+    return dbg->wrapEnvironment(cx, env, args.rval());
 }
 
 static JSBool
@@ -4073,7 +4073,7 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    return dbg->wrapEnvironment(cx, env, args.rval().address());
+    return dbg->wrapEnvironment(cx, env, args.rval());
 }
 
 static JSBool
@@ -4717,7 +4717,7 @@ DebuggerEnv_getParent(JSContext *cx, unsigned argc, Value *vp)
 
     /* Don't bother switching compartments just to get env's parent. */
     Rooted<Env*> parent(cx, env->enclosingScope());
-    return dbg->wrapEnvironment(cx, parent, args.rval().address());
+    return dbg->wrapEnvironment(cx, parent, args.rval());
 }
 
 static JSBool
@@ -4830,7 +4830,7 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    return dbg->wrapEnvironment(cx, env, args.rval().address());
+    return dbg->wrapEnvironment(cx, env, args.rval());
 }
 
 static JSBool
