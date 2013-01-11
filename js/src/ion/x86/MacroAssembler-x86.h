@@ -386,8 +386,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Address &dest) {
         addl(imm, Operand(dest));
     }
+    void addPtr(const Address &src, const Register &dest) {
+        addl(Operand(src), dest);
+    }
     void subPtr(Imm32 imm, const Register &dest) {
         subl(imm, dest);
+    }
+    void subPtr(const Register &src, const Register &dest) {
+        subl(src, dest);
+    }
+    void subPtr(const Address &addr, const Register &dest) {
+        subl(Operand(addr), dest);
     }
 
     template <typename T, typename S>
@@ -666,8 +675,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void lshiftPtr(Imm32 imm, Register dest) {
         shll(imm, dest);
     }
+    void xorPtr(Imm32 imm, Register dest) {
+        xorl(imm, dest);
+    }
     void orPtr(Imm32 imm, Register dest) {
         orl(imm, dest);
+    }
+    void andPtr(Imm32 imm, Register dest) {
+        andl(imm, dest);
     }
 
     void loadInstructionPointerAfterCall(const Register &dest) {

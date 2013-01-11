@@ -502,8 +502,16 @@ public:
 #if WTF_CPU_X86_64
     void addq_rr(RegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("addq       %s, %s",
+             nameIReg(8,src), nameIReg(8,dst));
         m_formatter.oneByteOp64(OP_ADD_EvGv, src, dst);
+    }
+
+    void addq_mr(int offset, RegisterID base, RegisterID dst)
+    {
+        spew("addq       %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(8,base), nameIReg(8,dst));
+        m_formatter.oneByteOp64(OP_ADD_GvEv, dst, base, offset);
     }
 
     void addq_ir(int imm, RegisterID dst)
@@ -800,8 +808,16 @@ public:
 #if WTF_CPU_X86_64
     void subq_rr(RegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("subq       %s, %s",
+             nameIReg(8,src), nameIReg(8,dst));
         m_formatter.oneByteOp64(OP_SUB_EvGv, src, dst);
+    }
+
+    void subq_mr(int offset, RegisterID base, RegisterID dst)
+    {
+        spew("subq       %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(8,base), nameIReg(8,dst));
+        m_formatter.oneByteOp64(OP_SUB_GvEv, dst, base, offset);
     }
 
     void subq_ir(int imm, RegisterID dst)
