@@ -497,6 +497,15 @@ class ICStub
         return IonCode::FromExecutable(stubCode_);
     }
 
+    // This method is not valid on TypeUpdate stub chains!
+    inline ICFallbackStub *getChainFallback() {
+        ICStub *lastStub = this;
+        while (lastStub->next_)
+            lastStub = lastStub->next_;
+        JS_ASSERT(lastStub->isFallback());
+        return lastStub->toFallbackStub();
+    }
+
     static inline size_t offsetOfNext() {
         return offsetof(ICStub, next_);
     }
