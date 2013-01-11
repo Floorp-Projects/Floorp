@@ -17,7 +17,7 @@
 
 class nsIAtom;
 class nsIContentIterator;
-class nsIDocument;
+class nsIDOMDocument;
 class nsIDOMRange;
 class nsISelection;
 template <class E> class nsCOMArray;
@@ -236,10 +236,10 @@ class nsITransferable;
 class nsEditorHookUtils
 {
   public:
-    static bool     DoInsertionHook(nsIDocument *aDoc, nsIDOMEvent *aEvent,
+    static bool     DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aEvent,
                                     nsITransferable *aTrans);
   private:
-    static nsresult GetHookEnumeratorFromDocument(nsIDocument *aDoc,
+    static nsresult GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
                                                   nsISimpleEnumerator **aEnumerator);
 };
 

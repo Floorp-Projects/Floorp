@@ -13,6 +13,7 @@
 #include "nsIClipboardDragDropHooks.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -182,10 +183,13 @@ nsEditorUtils::IsLeafNode(nsIDOMNode *aNode)
  *****************************************************************************/
 
 nsresult
-nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDocument *aDoc,
+nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
                                                  nsISimpleEnumerator **aResult)
 {
-  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
   NS_ENSURE_TRUE(hookObj, NS_ERROR_FAILURE);
@@ -194,7 +198,7 @@ nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDocument *aDoc,
 }
 
 bool
-nsEditorHookUtils::DoInsertionHook(nsIDocument *aDoc, nsIDOMEvent *aDropEvent,  
+nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent,  
                                    nsITransferable *aTrans)
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
