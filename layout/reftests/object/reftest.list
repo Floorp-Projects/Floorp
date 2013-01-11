@@ -6,7 +6,7 @@ HTTP == 404-data-with-type.html 404-data-with-type-ref.html
 == connection-refused.html connection-refused-ref.html
 == image.html image-ref.html
 == image-with-type.html image-with-type-ref.html
-fails-if(Android) == image-no-useful-extension-typesniff.html image-no-useful-extension-typesniff-ref.html
+skip-if(B2G) fails-if(Android) == image-no-useful-extension-typesniff.html image-no-useful-extension-typesniff-ref.html # bug 773482
 == image-no-useful-extension-with-type.html image-no-useful-extension-with-type-ref.html
 #
 # This test must be run on an HTTP server because it relies on the HTTP

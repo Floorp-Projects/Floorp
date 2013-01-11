@@ -26,6 +26,7 @@
 #include "plstr.h"
 #include "nsIOService.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsNetAddr.h"
 
 #include "mozilla/Attributes.h"
 
@@ -155,6 +156,18 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
     else if (addr->raw.family == AF_INET6) {
         addr->inet6.port = port;
     }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSRecord::GetScriptableNextAddr(uint16_t port, nsINetAddr * *result)
+{
+    NetAddr addr;
+    nsresult rv = GetNextAddr(port, &addr);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ADDREF(*result = new nsNetAddr(&addr));
 
     return NS_OK;
 }

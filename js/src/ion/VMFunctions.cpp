@@ -289,7 +289,7 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
 bool
 ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(obj->isArray());
 
     AutoDetectInvalidation adi(cx, rval.address());
 
@@ -309,7 +309,7 @@ ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 bool
 ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
-    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(obj->isArray());
 
     Value argv[] = { UndefinedValue(), ObjectValue(*obj), v };
     AutoValueArray ava(cx, argv, 3);
@@ -323,7 +323,7 @@ ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 bool
 ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(obj->isArray());
 
     AutoDetectInvalidation adi(cx, rval.address());
 
@@ -343,9 +343,9 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 JSObject *
 ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res)
 {
-    JS_ASSERT(obj1->isDenseArray());
-    JS_ASSERT(obj2->isDenseArray());
-    JS_ASSERT_IF(res, res->isDenseArray());
+    JS_ASSERT(obj1->isArray());
+    JS_ASSERT(obj2->isArray());
+    JS_ASSERT_IF(res, res->isArray());
 
     if (res) {
         // Fast path if we managed to allocate an object inline.
@@ -455,7 +455,7 @@ OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
 {
     RootedValue dummy(cx); // Disregards atomization changes: no way to propagate.
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, key, id.address(), &dummy))
+    if (!FetchElementId(cx, obj, key, &id, &dummy))
         return false;
 
     RootedObject obj2(cx);

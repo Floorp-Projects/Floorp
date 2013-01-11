@@ -90,12 +90,10 @@ interface Document : Node {
   [Creator, Throws]
   Attr createAttributeNS(DOMString? namespace, DOMString name);
   readonly attribute DOMString? inputEncoding;
-/*
 };
 
-http://www.whatwg.org/specs/web-apps/current-work/#the-document-object
+// http://www.whatwg.org/specs/web-apps/current-work/#the-document-object
 partial interface Document {
-*/
   [PutForwards=href, Unforgeable] readonly attribute Location? location;
   //(HTML only)         attribute DOMString domain;
   readonly attribute DOMString referrer;
@@ -318,12 +316,10 @@ partial interface Document {
   void mozSetImageElement(DOMString aImageElementId,
                           Element? aImageElement);
 
-/*
 };
 
-http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html#api
+// http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html#api
 partial interface Document {
-*/
   // Note: Per spec the 'S' in these two is lowercase, but the "Moz"
   // versions hve it uppercase.
   readonly attribute boolean mozFullScreenEnabled;
@@ -335,30 +331,24 @@ partial interface Document {
   // Gecko-specific fullscreen bits
   readonly attribute boolean mozFullScreen;
   void mozCancelFullScreen();
-/*
 };
 
-http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface
+// http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface
 partial interface Document {
-*/
     readonly attribute Element? mozPointerLockElement;
     void mozExitPointerLock ();
-/*
 };
 
-http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/PageVisibility/Overview.html#sec-document-interface
+// http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/PageVisibility/Overview.html#sec-document-interface
 partial interface Document {
-*/
   readonly attribute boolean hidden;
   readonly attribute boolean mozHidden;
   readonly attribute VisibilityState visibilityState;
   readonly attribute VisibilityState mozVisibilityState;
-/*
 };
 
-http://dev.w3.org/csswg/cssom/#extensions-to-the-document-interface
+// http://dev.w3.org/csswg/cssom/#extensions-to-the-document-interface
 partial interface Document {
-*/
     [Constant]
     readonly attribute StyleSheetList styleSheets;
     attribute DOMString? selectedStyleSheetSet;
@@ -367,29 +357,23 @@ partial interface Document {
     [Constant]
     readonly attribute DOMStringList styleSheetSets;
     void enableStyleSheetsForSet (DOMString? name);
-/*
 };
 
-http://dev.w3.org/csswg/cssom-view/#extensions-to-the-document-interface
+// http://dev.w3.org/csswg/cssom-view/#extensions-to-the-document-interface
 partial interface Document {
-*/
     Element? elementFromPoint (float x, float y);
 
     CaretPosition? caretPositionFromPoint (float x, float y);
-/*
 };
 
-http://dvcs.w3.org/hg/undomanager/raw-file/tip/undomanager.html
+// http://dvcs.w3.org/hg/undomanager/raw-file/tip/undomanager.html
 partial interface Document {
-*/
     [Pref="dom.undo_manager.enabled"]
     readonly attribute UndoManager? undoManager;
-/*
 };
 
-http://dev.w3.org/2006/webapi/selectors-api2/#interface-definitions
+// http://dev.w3.org/2006/webapi/selectors-api2/#interface-definitions
 partial interface Document {
-*/
   [Throws]
   Element?  querySelector(DOMString selectors);
   [Throws]
@@ -397,11 +381,10 @@ partial interface Document {
 
   //(Not implemented)Element?  find(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
   //(Not implemented)NodeList  findAll(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
-/*};
+};
 
-  Mozilla extensions of various sorts
-*/
-
+//  Mozilla extensions of various sorts
+partial interface Document {
   // nsIDOMDocumentXBL.  Wish we could make these [ChromeOnly], but
   // that would likely break bindings running with the page principal.
   NodeList? getAnonymousNodes(Element elt);

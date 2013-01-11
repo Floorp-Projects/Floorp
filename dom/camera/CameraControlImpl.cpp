@@ -314,14 +314,42 @@ CameraControlImpl::GetPreviewStream(CameraSize aSize, nsICameraPreviewStreamCall
 nsresult
 CameraControlImpl::AutoFocus(nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError)
 {
-  nsCOMPtr<nsIRunnable> autoFocusTask = new AutoFocusTask(this, onSuccess, onError);
+  MOZ_ASSERT(NS_IsMainThread());
+  bool cancel = false;
+
+  nsCOMPtr<nsICameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb.get();
+  if (cb) {
+    /**
+     * We already have a callback, so someone has already
+     * called autoFocus() -- cancel it.
+     */
+    mAutoFocusOnSuccessCb = nullptr;
+    mAutoFocusOnErrorCb = nullptr;
+    cancel = true;
+  }
+
+  nsCOMPtr<nsIRunnable> autoFocusTask = new AutoFocusTask(this, cancel, onSuccess, onError);
   return mCameraThread->Dispatch(autoFocusTask, NS_DISPATCH_NORMAL);
 }
 
 nsresult
 CameraControlImpl::TakePicture(CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
 {
-  nsCOMPtr<nsIRunnable> takePictureTask = new TakePictureTask(this, aSize, aRotation, aFileFormat, aPosition, onSuccess, onError);
+  MOZ_ASSERT(NS_IsMainThread());
+  bool cancel = false;
+
+  nsCOMPtr<nsICameraTakePictureCallback> cb = mTakePictureOnSuccessCb.get();
+  if (cb) {
+    /**
+     * We already have a callback, so someone has already
+     * called takePicture() -- cancel it.
+     */
+    mTakePictureOnSuccessCb = nullptr;
+    mTakePictureOnErrorCb = nullptr;
+    cancel = true;
+  }
+
+  nsCOMPtr<nsIRunnable> takePictureTask = new TakePictureTask(this, cancel, aSize, aRotation, aFileFormat, aPosition, onSuccess, onError);
   return mCameraThread->Dispatch(takePictureTask, NS_DISPATCH_NORMAL);
 }
 

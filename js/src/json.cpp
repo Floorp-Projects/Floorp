@@ -627,8 +627,8 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             /* Step 4b(ii). */
             uint32_t len;
             JS_ALWAYS_TRUE(GetLengthProperty(cx, replacer, &len));
-            if (replacer->isDenseArray())
-                len = Min(len, replacer->getDenseArrayCapacity());
+            if (replacer->isArray() && !replacer->isIndexed())
+                len = Min(len, replacer->getDenseInitializedLength());
 
             HashSet<jsid, JsidHasher> idSet(cx);
             if (!idSet.init(len))
@@ -644,7 +644,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                 if (!JSObject::getElement(cx, replacer, replacer, i, &v))
                     return false;
 
-                jsid id;
+                RootedId id(cx);
                 if (v.isNumber()) {
                     /* Step 4b(iv)(4). */
                     int32_t n;
@@ -769,31 +769,24 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
             RootedId id(cx);
             RootedValue newElement(cx);
             for (uint32_t i = 0; i < length; i++) {
-                if (!IndexToId(cx, i, id.address()))
+                if (!IndexToId(cx, i, &id))
                     return false;
 
                 /* Step 2a(iii)(1). */
                 if (!Walk(cx, obj, id, reviver, &newElement))
                     return false;
 
-                /*
-                 * Arrays which begin empty and whose properties are always
-                 * incrementally appended are always dense, no matter their
-                 * length, under current dense/slow array heuristics.
-                 * Also, deleting a property from a dense array which is not
-                 * currently being enumerated never makes it slow.  This array
-                 * is never exposed until the reviver sees it below, so it must
-                 * be dense and isn't currently being enumerated.  Therefore
-                 * property definition and deletion will always succeed,
-                 * and we need not check for failure.
-                 */
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
-                    JS_ALWAYS_TRUE(array_deleteElement(cx, obj, i, &newElement, false));
+                    if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &newElement, false))
+                        return false;
                 } else {
                     /* Step 2a(iii)(3). */
-                    JS_ALWAYS_TRUE(array_defineElement(cx, obj, i, newElement, JS_PropertyStub,
-                                                       JS_StrictPropertyStub, JSPROP_ENUMERATE));
+                    if (!DefineNativeProperty(cx, obj, id, newElement, JS_PropertyStub,
+                                              JS_StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
+                    {
+                        return false;
+                    }
                 }
             }
         } else {

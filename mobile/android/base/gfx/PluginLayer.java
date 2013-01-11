@@ -5,22 +5,13 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.SurfaceBits;
 import org.mozilla.gecko.util.FloatUtils;
 
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.opengl.GLES20;
-import android.util.Log;
-import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.AbsoluteLayout;
-
-import java.nio.FloatBuffer;
 
 public class PluginLayer extends TileLayer {
     private static final String LOGTAG = "PluginLayer";

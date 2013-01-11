@@ -16,7 +16,6 @@
 
 namespace mozilla {
 
-
 class GetPreviewStreamTask;
 class StartPreviewTask;
 class StopPreviewTask;
@@ -160,8 +159,8 @@ private:
 class CameraErrorResult : public nsRunnable
 {
 public:
-  CameraErrorResult(nsICameraErrorCallback* onError, const nsString& aErrorMsg, uint64_t aWindowId)
-    : mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
+  CameraErrorResult(nsMainThreadPtrHandle<nsICameraErrorCallback> onError, const nsString& aErrorMsg, uint64_t aWindowId)
+    : mOnErrorCb(onError)
     , mErrorMsg(aErrorMsg)
     , mWindowId(aWindowId)
   { }
@@ -253,9 +252,9 @@ public:
 class AutoFocusResult : public nsRunnable
 {
 public:
-  AutoFocusResult(bool aSuccess, nsICameraAutoFocusCallback* onSuccess, uint64_t aWindowId)
+  AutoFocusResult(bool aSuccess, nsMainThreadPtrHandle<nsICameraAutoFocusCallback> onSuccess, uint64_t aWindowId)
     : mSuccess(aSuccess)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraAutoFocusCallback>(onSuccess))
+    , mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   { }
 
@@ -281,8 +280,9 @@ protected:
 class AutoFocusTask : public nsRunnable
 {
 public:
-  AutoFocusTask(CameraControlImpl* aCameraControl, nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError)
+  AutoFocusTask(CameraControlImpl* aCameraControl, bool aCancel, nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
+    , mCancel(aCancel)
     , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraAutoFocusCallback>(onSuccess))
     , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
   {
@@ -308,6 +308,7 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
+  bool mCancel;
   nsMainThreadPtrHandle<nsICameraAutoFocusCallback> mOnSuccessCb;
   nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
 };
@@ -316,11 +317,11 @@ public:
 class TakePictureResult : public nsRunnable
 {
 public:
-  TakePictureResult(uint8_t* aData, uint64_t aLength, const nsAString& aMimeType, nsICameraTakePictureCallback* onSuccess, uint64_t aWindowId)
+  TakePictureResult(uint8_t* aData, uint64_t aLength, const nsAString& aMimeType, nsMainThreadPtrHandle<nsICameraTakePictureCallback> onSuccess, uint64_t aWindowId)
     : mData(aData)
     , mLength(aLength)
     , mMimeType(aMimeType)
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraTakePictureCallback>(onSuccess))
+    , mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -358,8 +359,9 @@ protected:
 class TakePictureTask : public nsRunnable
 {
 public:
-  TakePictureTask(CameraControlImpl* aCameraControl, dom::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, dom::CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
+  TakePictureTask(CameraControlImpl* aCameraControl, bool aCancel, dom::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, dom::CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
+    , mCancel(aCancel)
     , mSize(aSize)
     , mRotation(aRotation)
     , mFileFormat(aFileFormat)
@@ -389,6 +391,7 @@ public:
   }
 
   nsRefPtr<CameraControlImpl> mCameraControl;
+  bool mCancel;
   dom::CameraSize mSize;
   int32_t mRotation;
   nsString mFileFormat;
@@ -401,8 +404,8 @@ public:
 class StartRecordingResult : public nsRunnable
 {
 public:
-  StartRecordingResult(nsICameraStartRecordingCallback* onSuccess, uint64_t aWindowId)
-    : mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraStartRecordingCallback>(onSuccess))
+  StartRecordingResult(nsMainThreadPtrHandle<nsICameraStartRecordingCallback> onSuccess, uint64_t aWindowId)
+    : mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   { }
 
@@ -558,37 +561,6 @@ public:
   nsRefPtr<CameraControlImpl> mCameraControl;
 };
 
-// Return the resulting preview stream to JS.  Runs on the main thread.
-class GetPreviewStreamVideoModeResult : public nsRunnable
-{
-public:
-  GetPreviewStreamVideoModeResult(nsIDOMMediaStream* aStream, nsICameraPreviewStreamCallback* onSuccess)
-    : mStream(new nsMainThreadPtrHolder<nsIDOMMediaStream>(aStream))
-    , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraPreviewStreamCallback>(onSuccess))
-  {
-    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  }
-
-  virtual ~GetPreviewStreamVideoModeResult()
-  {
-    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (mOnSuccessCb.get()) {
-      mOnSuccessCb->HandleEvent(mStream);
-    }
-    return NS_OK;
-  }
-
-protected:
-  nsMainThreadPtrHandle<nsIDOMMediaStream> mStream;
-  nsMainThreadPtrHandle<nsICameraPreviewStreamCallback> mOnSuccessCb;
-};
-
 // Get the video mode preview stream.
 class GetPreviewStreamVideoModeTask : public nsRunnable
 {
@@ -623,8 +595,8 @@ public:
 class ReleaseHardwareResult : public nsRunnable
 {
 public:
-  ReleaseHardwareResult(nsICameraReleaseCallback* onSuccess, uint64_t aWindowId)
-    : mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraReleaseCallback>(onSuccess))
+  ReleaseHardwareResult(nsMainThreadPtrHandle<nsICameraReleaseCallback> onSuccess, uint64_t aWindowId)
+    : mOnSuccessCb(onSuccess)
     , mWindowId(aWindowId)
   {
     DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -689,8 +661,8 @@ public:
 class CameraRecorderStateChange : public nsRunnable
 {
 public:
-  CameraRecorderStateChange(nsICameraRecorderStateChange* onStateChange, const nsString& aStateMsg, int32_t aStatus, int32_t aTrackNumber, uint64_t aWindowId)
-    : mOnStateChangeCb(new nsMainThreadPtrHolder<nsICameraRecorderStateChange>(onStateChange))
+  CameraRecorderStateChange(nsMainThreadPtrHandle<nsICameraRecorderStateChange> onStateChange, const nsString& aStateMsg, int32_t aStatus, int32_t aTrackNumber, uint64_t aWindowId)
+    : mOnStateChangeCb(onStateChange)
     , mStateMsg(aStateMsg)
     , mStatus(aStatus)
     , mTrackNumber(aTrackNumber)

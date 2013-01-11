@@ -416,7 +416,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     template <typename T>
-    CodeOffsetLabel patchableCallPreBarrier(const T &address, MIRType type) {
+    void patchableCallPreBarrier(const T &address, MIRType type) {
         JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
 
         Label done;
@@ -424,13 +424,13 @@ class MacroAssembler : public MacroAssemblerSpecific
         // All barriers are off by default.
         // They are enabled if necessary at the end of CodeGenerator::generate().
         CodeOffsetLabel nopJump = toggledJump(&done);
+        writePrebarrierOffset(nopJump);
 
         callPreBarrier(address, type);
         jump(&done);
 
         align(8);
         bind(&done);
-        return nopJump;
     }
 
     template<typename T>

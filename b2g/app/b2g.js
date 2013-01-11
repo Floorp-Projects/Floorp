@@ -530,6 +530,9 @@ pref("javascript.options.mem.gc_low_frequency_heap_growth", 105);
 pref("javascript.options.mem.high_water_mark", 6);
 pref("javascript.options.mem.gc_allocation_threshold_mb", 3);
 
+// Allocation Threshold for workers
+pref("dom.workers.mem.gc_allocation_threshold_mb", 3);
+
 // Show/Hide scrollbars when active/inactive
 pref("ui.showHideScrollbars", 1);
 

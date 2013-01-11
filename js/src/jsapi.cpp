@@ -3152,7 +3152,13 @@ JS_ValueToId(JSContext *cx, jsval valueArg, jsid *idp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    return ValueToId(cx, value, idp);
+
+    RootedId id(cx);
+    if (!ValueToId(cx, value, &id))
+        return false;
+
+    *idp = id;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3565,15 +3571,7 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
         return JS_TRUE;
     }
 
-    if (obj2->isNative()) {
-        /* Peek at the native property's slot value, without doing a Get. */
-        if (shape->hasSlot()) {
-            *vp = obj2->nativeGetSlot(shape->slot());
-            return true;
-        }
-    } else {
-        if (obj2->isDenseArray())
-            return js_GetDenseArrayElementValue(cx, obj2, id, vp);
+    if (IsImplicitProperty(shape)) {
         if (obj2->isProxy()) {
             AutoPropertyDescriptorRooter desc(cx);
             if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc, 0))
@@ -3582,6 +3580,15 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
                 *vp = desc.value;
                 return true;
             }
+        } else if (obj2->isNative()) {
+            *vp = obj2->getDenseElement(JSID_TO_INT(id));
+            return true;
+        }
+    } else {
+        /* Peek at the native property's slot value, without doing a Get. */
+        if (shape->hasSlot()) {
+            *vp = obj2->nativeGetSlot(shape->slot());
+            return true;
         }
     }
 
@@ -3607,7 +3614,7 @@ JS_LookupElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval *vp)
 {
     RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
-    jsid id;
+    RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
     return JS_LookupPropertyById(cx, obj, id, vp);
@@ -3680,7 +3687,7 @@ JS_HasElement(JSContext *cx, JSObject *objArg, uint32_t index, JSBool *foundp)
     RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    jsid id;
+    RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
     return JS_HasPropertyById(cx, obj, id, foundp);
@@ -3721,6 +3728,11 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *objArg, jsid id_, JSBool *
         return JS_TRUE;
     }
 
+    if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
+        *foundp = true;
+        return JS_TRUE;
+    }
+
     *foundp = obj->nativeContains(cx, id);
     return JS_TRUE;
 }
@@ -3731,7 +3743,7 @@ JS_AlreadyHasOwnElement(JSContext *cx, JSObject *objArg, uint32_t index, JSBool 
     RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    jsid id;
+    RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
     return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
@@ -3868,7 +3880,7 @@ JS_DefineElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval valueArg
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return DefinePropertyById(cx, obj, id, value, GetterWrapper(getter),
                               SetterWrapper(setter), attrs, 0, 0);
@@ -4049,13 +4061,20 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
     desc->obj = obj2;
     if (obj2->isNative()) {
-        desc->attrs = shape->attributes();
-        desc->getter = shape->getter();
-        desc->setter = shape->setter();
-        if (shape->hasSlot())
-            desc->value = obj2->nativeGetSlot(shape->slot());
-        else
-            desc->value.setUndefined();
+        if (IsImplicitProperty(shape)) {
+            desc->attrs = JSPROP_ENUMERATE;
+            desc->getter = NULL;
+            desc->setter = NULL;
+            desc->value = obj2->getDenseElement(JSID_TO_INT(id));
+        } else {
+            desc->attrs = shape->attributes();
+            desc->getter = shape->getter();
+            desc->setter = shape->setter();
+            if (shape->hasSlot())
+                desc->value = obj2->nativeGetSlot(shape->slot());
+            else
+                desc->value.setUndefined();
+        }
     } else {
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);
@@ -4156,7 +4175,11 @@ JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *objArg, jsid idArg, jsval *
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return GetOwnPropertyDescriptor(cx, obj, id, vp);
+    RootedValue value(cx);
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &value))
+        return false;
+    *vp = value;
+    return true;
 }
 
 static JSBool
@@ -7092,9 +7115,13 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 #endif
 
 JS_PUBLIC_API(JSBool)
-JS_IndexToId(JSContext *cx, uint32_t index, jsid *id)
+JS_IndexToId(JSContext *cx, uint32_t index, jsid *idp)
 {
-    return IndexToId(cx, index, id);
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    *idp = id;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)

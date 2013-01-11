@@ -28,12 +28,22 @@ enum SVGAlign MOZ_ENUM_TYPE(uint8_t) {
   SVG_PRESERVEASPECTRATIO_XMAXYMAX = 10
 };
 
+// These constants represent the range of valid enum values for the <align>
+// parameter. They exclude the sentinel _UNKNOWN value.
+const uint16_t SVG_ALIGN_MIN_VALID = SVG_PRESERVEASPECTRATIO_NONE;
+const uint16_t SVG_ALIGN_MAX_VALID = SVG_PRESERVEASPECTRATIO_XMAXYMAX;
+
 // Meet-or-slice Types
 enum SVGMeetOrSlice MOZ_ENUM_TYPE(uint8_t) {
   SVG_MEETORSLICE_UNKNOWN = 0,
   SVG_MEETORSLICE_MEET = 1,
   SVG_MEETORSLICE_SLICE = 2
 };
+
+// These constants represent the range of valid enum values for the
+// <meetOrSlice> parameter. They exclude the sentinel _UNKNOWN value.
+const uint16_t SVG_MEETORSLICE_MIN_VALID = SVG_MEETORSLICE_MEET;
+const uint16_t SVG_MEETORSLICE_MAX_VALID = SVG_MEETORSLICE_SLICE;
 
 class SVGAnimatedPreserveAspectRatio;
 
@@ -57,8 +67,7 @@ public:
   {}
 
   nsresult SetAlign(uint16_t aAlign) {
-    if (aAlign < SVG_PRESERVEASPECTRATIO_NONE ||
-        aAlign > SVG_PRESERVEASPECTRATIO_XMAXYMAX)
+    if (aAlign < SVG_ALIGN_MIN_VALID || aAlign > SVG_ALIGN_MAX_VALID)
       return NS_ERROR_FAILURE;
     mAlign = static_cast<uint8_t>(aAlign);
     return NS_OK;
@@ -69,8 +78,8 @@ public:
   }
 
   nsresult SetMeetOrSlice(uint16_t aMeetOrSlice) {
-    if (aMeetOrSlice < SVG_MEETORSLICE_MEET ||
-        aMeetOrSlice > SVG_MEETORSLICE_SLICE)
+    if (aMeetOrSlice < SVG_MEETORSLICE_MIN_VALID ||
+        aMeetOrSlice > SVG_MEETORSLICE_MAX_VALID)
       return NS_ERROR_FAILURE;
     mMeetOrSlice = static_cast<uint8_t>(aMeetOrSlice);
     return NS_OK;

@@ -856,8 +856,6 @@ function DownloadsViewItem(aDataItem, aElement)
   this._element = aElement;
   this.dataItem = aDataItem;
 
-  this.wasDone = this.dataItem.done;
-  this.wasInProgress = this.dataItem.inProgress;
   this.lastEstimatedSecondsLeft = Infinity;
 
   // Set the URI that represents the correct icon for the target file.  As soon
@@ -910,7 +908,7 @@ DownloadsViewItem.prototype = {
    * the download might be the same as before, if the data layer received
    * multiple events for the same download.
    */
-  onStateChange: function DVI_onStateChange()
+  onStateChange: function DVI_onStateChange(aOldState)
   {
     // If a download just finished successfully, it means that the target file
     // now exists and we can extract its specific icon.  To ensure that the icon
@@ -918,17 +916,10 @@ DownloadsViewItem.prototype = {
     // example by adding a query parameter.  Since this URI has a "moz-icon"
     // scheme, this only works if we add one of the parameters explicitly
     // supported by the nsIMozIconURI interface.
-    if (!this.wasDone && this.dataItem.openable) {
+    if (aOldState != Ci.nsIDownloadManager.DOWNLOAD_FINISHED &&
+        aOldState != this.dataItem.state) {
       this._element.setAttribute("image", this.image + "&state=normal");
     }
-
-    // Update the end time using the current time if required.
-    if (this.wasInProgress && !this.dataItem.inProgress) {
-      this.endTime = Date.now();
-    }
-
-    this.wasDone = this.dataItem.done;
-    this.wasInProgress = this.dataItem.inProgress;
 
     // Update the user interface after switching states.
     this._element.setAttribute("state", this.dataItem.state);

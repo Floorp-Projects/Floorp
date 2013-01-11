@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <dbus/dbus.h>
 
+#include "pratom.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsDebug.h"
@@ -151,7 +152,7 @@ static const char* sBluetoothDBusSignals[] =
 static nsAutoPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sAuthorizeReqTable;
-static bool sIsPairing = false;
+static PRInt32 sIsPairing = 0;
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 
 class RemoveDeviceTask : public nsRunnable {
@@ -907,8 +908,7 @@ GetObjectPathCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
   if (sIsPairing) {
     RunDBusCallback(aMsg, aBluetoothReplyRunnable,
                     UnpackObjectPathMessage);
-
-    sIsPairing = false;
+    PR_AtomicDecrement(&sIsPairing);
   }
 }
 
@@ -1655,7 +1655,7 @@ BluetoothDBusService::StopInternal()
   sAuthorizeReqTable.EnumerateRead(UnrefDBusMessages, nullptr);
   sAuthorizeReqTable.Clear();
 
-  sIsPairing = false;
+  PR_AtomicSet(&sIsPairing, 0);
 
   StopDBus();
   return NS_OK;
@@ -2154,6 +2154,20 @@ BluetoothDBusService::CreatePairedDeviceInternal(const nsAString& aAdapterPath,
   nsCString tempDeviceAddress = NS_ConvertUTF16toUTF8(aDeviceAddress);
   const char *deviceAddress = tempDeviceAddress.get();
 
+  /**
+   * FIXME: Bug 820274
+   *
+   * If the user turns off Bluetooth in the middle of pairing process, the
+   * callback function GetObjectPathCallback (see the third argument of the
+   * function call above) may still be called while enabling next time by
+   * dbus daemon. To prevent this from happening, added a flag to distinguish
+   * if Bluetooth has been turned off. Nevertheless, we need a check if there
+   * is a better solution.
+   *
+   * Please see Bug 818696 for more information.
+   */
+  PR_AtomicIncrement(&sIsPairing);
+
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
   // Then send CreatePairedDevice, it will register a temp device agent then
   // unregister it after pairing process is over
@@ -2168,26 +2182,10 @@ BluetoothDBusService::CreatePairedDeviceInternal(const nsAString& aAdapterPath,
                                   DBUS_TYPE_OBJECT_PATH, &deviceAgentPath,
                                   DBUS_TYPE_STRING, &capabilities,
                                   DBUS_TYPE_INVALID);
-
   if (!ret) {
     NS_WARNING("Could not start async function!");
     return NS_ERROR_FAILURE;
   }
-
-
-  /**
-   * FIXME: Bug 820274
-   *
-   * If the user turns off Bluetooth in the middle of pairing process, the
-   * callback function GetObjectPathCallback (see the third argument of the
-   * function call above) may still be called while enabling next time by
-   * dbus daemon. To prevent this from happening, added a flag to distinguish
-   * if Bluetooth has been turned off. Nevertheless, we need a check if there
-   * is a better solution.
-   *
-   * Please see Bug 818696 for more information.
-   */
-  sIsPairing = true;
 
   runnable.forget();
   return NS_OK;

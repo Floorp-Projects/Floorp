@@ -107,7 +107,7 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 662288-1.html 662288-1-ref.html
 == 670226-1.html 670226-1-ref.html
 == 676245-1.html 676245-1-ref.html
-== 698291-1.html 698291-1-ref.html
+skip-if(B2G) == 698291-1.html 698291-1-ref.html
 == 698706-1.html 698706-1-ref.html
 == 704837-1.html 704837-1-ref.html
 == 712600-1.html 712600-1-ref.html
@@ -117,7 +117,7 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 718236-1.html 718236-1-ref.html
 == 718236-2.html 718236-2-ref.html
 == 718236-3.html 718236-3-ref.html
-== 726420-1.html 726420-1-ref.html
+skip-if(B2G) == 726420-1.html 726420-1-ref.html
 == 726460-1.html 726460-1-ref.html
 == 729047-1.html 729047-1-ref.html
 == 730562-1.html 730562-1-ref.html

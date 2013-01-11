@@ -205,7 +205,7 @@ typedef uint64_t JSValueShiftedTag;
 
 typedef enum JSWhyMagic
 {
-    JS_ARRAY_HOLE,               /* a hole in a dense array */
+    JS_ELEMENTS_HOLE,            /* a hole in a native object's elements */
     JS_NATIVE_ENUMERATE,         /* indicates that a custom enumerate hook forwarded
                                   * to JS_EnumerateState, which really means the object can be
                                   * enumerated like a native object. */

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
 <meta charset="UTF-8">
 
@@ -24,7 +24,7 @@ function renderBackup(canvas) {
   context.fillRect(0, 0, 256, 256);
 }
 
-function onLoad() {
+function runTest() {
   var canvas = document.getElementById("canvas");
   var gl = initGL(canvas);
 
@@ -32,11 +32,17 @@ function onLoad() {
     renderGL(gl);
   else
     renderBackup(canvas);
+
+  rAF(testComplete);
+}
+
+function testComplete() {
+  document.documentElement.removeAttribute("class");
 }
 </script>
 </head>
 
-<body onload="onLoad();">
+<body onload="rAF(runTest);">
   <canvas id="canvas" width="256" height="256"></canvas>
 </body>
 

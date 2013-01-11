@@ -96,6 +96,24 @@ var testExpectedResults = { "font-src": true,
                             "worker-redir": false,
                             "xhr-src": true,
                             "xhr-src-redir": false,
+                            "font-src-spec-compliant": true,
+                            "font-src-redir-spec-compliant": false,
+                            "frame-src-spec-compliant": true,
+                            "frame-src-redir-spec-compliant": false,
+                            "img-src-spec-compliant": true,
+                            "img-src-redir-spec-compliant": false,
+                            "media-src-spec-compliant": true,
+                            "media-src-redir-spec-compliant": false,
+                            "object-src-spec-compliant": true,
+                            "object-src-redir-spec-compliant": false,
+                            "script-src-spec-compliant": true,
+                            "script-src-redir-spec-compliant": false,
+                            "style-src-spec-compliant": true,
+                            "style-src-redir-spec-compliant": false,
+                            "worker-spec-compliant": true,
+                            "worker-redir-spec-compliant": false,
+                            "xhr-src-spec-compliant": true,
+                            "xhr-src-redir-spec-compliant": false,
                           };
 
 // takes the name of the test, the URL that was tested, and whether the
@@ -110,8 +128,9 @@ var testResult = function(testName, url, result) {
 
   // don't finish until we've run all the tests
   for (var t in testExpectedResults) {
-    if (testExpectedResults[t] != "completed")
+    if (testExpectedResults[t] != "completed") {
       return;
+    }
   }
 
   window.examiner.remove();
@@ -120,9 +139,13 @@ var testResult = function(testName, url, result) {
 
 SimpleTest.waitForExplicitFinish();
 
-// load the test harness
-document.getElementById("harness").src = "file_csp_redirects_main.html";
-
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+  function() {
+    // save this for last so that our listeners are registered.
+    // ... this loads the testbed of good and bad requests.
+    document.getElementById("harness").src = "file_csp_redirects_main.html";
+  });
 </script>
 </pre>
 

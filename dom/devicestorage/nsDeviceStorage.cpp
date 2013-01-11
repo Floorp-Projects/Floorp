@@ -223,6 +223,56 @@ DeviceStorageTypeChecker::GetAccessForRequest(const DeviceStorageRequestType aRe
   return NS_OK;
 }
 
+
+NS_IMPL_ISUPPORTS1(FileUpdateDispatcher, nsIObserver)
+
+mozilla::StaticRefPtr<FileUpdateDispatcher> FileUpdateDispatcher::sSingleton;
+
+FileUpdateDispatcher*
+FileUpdateDispatcher::GetSingleton()
+{
+  if (sSingleton) {
+    return sSingleton;
+  }
+
+  sSingleton = new FileUpdateDispatcher();
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->AddObserver(sSingleton, "file-watcher-notify", false);
+  ClearOnShutdown(&sSingleton);
+
+  return sSingleton;
+}
+
+NS_IMETHODIMP
+FileUpdateDispatcher::Observe(nsISupports *aSubject,
+                              const char *aTopic,
+                              const PRUnichar *aData)
+{
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+
+    DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
+    if (!file || !file->mFile) {
+      NS_WARNING("Device storage file looks invalid!");
+      return NS_OK;
+    }
+
+    nsString fullpath;
+    nsresult rv = file->mFile->GetPath(fullpath);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Could not get path from the nsIFile!");
+      return NS_OK;
+    }
+
+    ContentChild::GetSingleton()->SendFilePathUpdateNotify(file->mStorageType,
+                                                           fullpath,
+                                                           NS_ConvertUTF16toUTF8(aData));
+  } else {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->NotifyObservers(aSubject, "file-watcher-update", aData);
+  }
+  return NS_OK;
+}
+
 class IOEventComplete : public nsRunnable
 {
 public:
@@ -240,7 +290,8 @@ public:
     nsString data;
     CopyASCIItoUTF16(mType, data);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(mFile, "file-watcher-update", data.get());
+
+    obs->NotifyObservers(mFile, "file-watcher-notify", data.get());
     return NS_OK;
   }
 
@@ -1558,6 +1609,18 @@ public:
           return NS_ERROR_FAILURE;
         }
 
+        DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile) ||
+            !typeChecker->Check(mFile->mStorageType, mBlob)) {
+          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          NS_DispatchToMainThread(r);
+          return NS_OK;
+        }
+
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
 
           BlobChild* actor = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
@@ -1582,6 +1645,17 @@ public:
       case DEVICE_STORAGE_REQUEST_READ:
       case DEVICE_STORAGE_REQUEST_WRITE:
       {
+        DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile)) {
+          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          NS_DispatchToMainThread(r);
+          return NS_OK;
+        }
+
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
           DeviceStorageGetParams params(mFile->mStorageType, mFile->mPath, fullpath);
@@ -1595,6 +1669,17 @@ public:
 
       case DEVICE_STORAGE_REQUEST_DELETE:
       {
+        DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile)) {
+          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          NS_DispatchToMainThread(r);
+          return NS_OK;
+        }
+
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
           DeviceStorageDeleteParams params(mFile->mStorageType, fullpath);

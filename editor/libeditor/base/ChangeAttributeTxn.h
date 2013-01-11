@@ -9,15 +9,20 @@
 #include "EditTxn.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMElement.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "nscore.h"
 
-class nsIEditor;
+class nsEditor;
+
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 
 /**
- * A transaction that changes an attribute of a content node. 
+ * A transaction that changes an attribute of a content node.
  * This transaction covers add, remove, and change attribute.
  */
 class ChangeAttributeTxn : public EditTxn
@@ -30,8 +35,8 @@ public:
     * @param aValue     the new value for aAttribute, if aRemoveAttribute is false
     * @param aRemoveAttribute if true, remove aAttribute from aNode
     */
-  NS_IMETHOD Init(nsIEditor      *aEditor,
-                  nsIDOMElement  *aNode,
+  NS_IMETHOD Init(nsEditor      *aEditor,
+                  mozilla::dom::Element *aNode,
                   const nsAString& aAttribute,
                   const nsAString& aValue,
                   bool aRemoveAttribute);
@@ -48,11 +53,11 @@ public:
 protected:
 
   /** the editor that created this transaction */
-  nsIEditor*  mEditor;
-  
+  nsEditor*  mEditor;
+
   /** the element to operate upon */
-  nsCOMPtr<nsIDOMElement> mElement;
-  
+  nsCOMPtr<mozilla::dom::Element> mElement;
+
   /** the attribute to change */
   nsString mAttribute;
 

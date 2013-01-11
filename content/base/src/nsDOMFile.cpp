@@ -707,7 +707,7 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
 };
 
 NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter,
-                   nsIMemoryMultiReporter);
+                   nsIMemoryMultiReporter)
 
 /* static */ void
 nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
