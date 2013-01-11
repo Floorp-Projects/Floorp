@@ -1568,7 +1568,7 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(OpenDatabaseHelper, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(OpenDatabaseHelper, nsIRunnable)
 
 nsresult
 OpenDatabaseHelper::Init()
@@ -2246,7 +2246,7 @@ OpenDatabaseHelper::ReleaseMainThreadObjects()
   HelperBase::ReleaseMainThreadObjects();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(SetVersionHelper, AsyncConnectionHelper);
+NS_IMPL_ISUPPORTS_INHERITED0(SetVersionHelper, AsyncConnectionHelper)
 
 nsresult
 SetVersionHelper::Init()

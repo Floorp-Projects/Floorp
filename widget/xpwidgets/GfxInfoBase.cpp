@@ -64,7 +64,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(ShutdownObserver, nsIObserver);
+NS_IMPL_ISUPPORTS1(ShutdownObserver, nsIObserver)
 
 void InitGfxDriverInfoShutdownObserver()
 {

@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS1(LoadContext, nsILoadContext);
+NS_IMPL_ISUPPORTS1(LoadContext, nsILoadContext)
 
 //-----------------------------------------------------------------------------
 // LoadContext::nsILoadContext
