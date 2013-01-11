@@ -468,6 +468,10 @@ Toolbox.prototype = {
   /**
    * Create a host object based on the given host type.
    *
+   * Warning: some hosts require that the toolbox target provides a reference to
+   * the attached tab. Not all Targets have a tab property - make sure you correctly
+   * mix and match hosts and targets.
+   *
    * @param {string} hostType
    *        The host type of the new host object
    *
