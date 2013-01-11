@@ -44,6 +44,8 @@ var todoTypes = [
   "datetime", "month", "week", "datetime-local", "range", "color"
 ];
 
+var nonTrivialSanitizing = [ 'number', 'date', 'time' ];
+
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 
@@ -54,13 +56,15 @@ for (var i=0; i<length; ++i) {
     e.type = testData[i][0];
 
     var expectedValue;
-    if ((testData[i][0] == 'number' && testData[j][0] == 'date') ||
-        (testData[i][0] == 'date' && testData[j][0] == 'number')) {
+    if (nonTrivialSanitizing.indexOf(testData[i][0]) != -1 &&
+        nonTrivialSanitizing.indexOf(testData[j][0]) != -1) {
       expectedValue = '';
     } else if (testData[i][0] == 'number' || testData[j][0] == 'number') {
       expectedValue = '42';
     } else if (testData[i][0] == 'date' || testData[j][0] == 'date') {
       expectedValue = '2012-12-21';
+    } else if (testData[i][0] == 'time' || testData[j][0] == 'time') {
+      expectedValue = '21:21';
     } else {
       expectedValue = "foo";
     }
