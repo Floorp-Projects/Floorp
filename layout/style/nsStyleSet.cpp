@@ -14,7 +14,7 @@
 #include "nsStyleSet.h"
 #include "nsNetUtil.h"
 #include "nsCSSStyleSheet.h"
-#include "nsIDocument.h"
+#include "nsIDocumentInlines.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
 #include "mozilla/css/StyleRule.h"

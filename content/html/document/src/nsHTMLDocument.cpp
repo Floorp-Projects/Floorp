@@ -55,7 +55,6 @@
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLHeadElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
@@ -68,6 +67,7 @@
 
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+#include "nsIDocumentInlines.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsICachingChannel.h"
 #include "nsIJSContextStack.h"
@@ -104,6 +104,7 @@
 #include "nsHtml5Parser.h"
 #include "nsIDOMJSWindow.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/dom/HTMLBodyElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2057,7 +2058,7 @@ nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
 {
   aAlinkColor.Truncate();
 
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->GetALink(aAlinkColor);
   }
@@ -2068,7 +2069,7 @@ nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
 NS_IMETHODIMP
 nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor)
 {
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetALink(aAlinkColor);
   }
@@ -2081,7 +2082,7 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
 {
   aLinkColor.Truncate();
 
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->GetLink(aLinkColor);
   }
@@ -2092,7 +2093,7 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
 NS_IMETHODIMP
 nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor)
 {
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetLink(aLinkColor);
   }
@@ -2105,7 +2106,7 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
 {
   aVlinkColor.Truncate();
 
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->GetVLink(aVlinkColor);
   }
@@ -2116,7 +2117,7 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
 NS_IMETHODIMP
 nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor)
 {
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetVLink(aVlinkColor);
   }
@@ -2129,7 +2130,7 @@ nsHTMLDocument::GetBgColor(nsAString& aBgColor)
 {
   aBgColor.Truncate();
 
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->GetBgColor(aBgColor);
   }
@@ -2140,7 +2141,7 @@ nsHTMLDocument::GetBgColor(nsAString& aBgColor)
 NS_IMETHODIMP
 nsHTMLDocument::SetBgColor(const nsAString& aBgColor)
 {
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetBgColor(aBgColor);
   }
@@ -2153,7 +2154,7 @@ nsHTMLDocument::GetFgColor(nsAString& aFgColor)
 {
   aFgColor.Truncate();
 
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->GetText(aFgColor);
   }
@@ -2164,7 +2165,7 @@ nsHTMLDocument::GetFgColor(nsAString& aFgColor)
 NS_IMETHODIMP
 nsHTMLDocument::SetFgColor(const nsAString& aFgColor)
 {
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyElement());
+  HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetText(aFgColor);
   }
