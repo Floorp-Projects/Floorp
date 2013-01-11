@@ -55,8 +55,8 @@ function installTwoApps(next) {
 }
 
 function uninstallTwoApps(next) {
-  app1.uninstall().onsuccess = function onUninstallApp1() {
-    app2.uninstall().onsuccess = function onUninstallApp2() {
+  navigator.mozApps.mgmt.uninstall(app1).onsuccess = function onUninstallApp1() {
+    navigator.mozApps.mgmt.uninstall(app2).onsuccess = function onUninstallApp2() {
       next();
     };
   };
