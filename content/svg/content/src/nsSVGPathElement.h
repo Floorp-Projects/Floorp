@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGPathElement_h
-#define mozilla_dom_SVGPathElement_h
+#ifndef __NS_SVGPATHELEMENT_H__
+#define __NS_SVGPATHELEMENT_H__
 
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathElement.h"
@@ -12,29 +12,23 @@
 #include "nsSVGPathGeometryElement.h"
 #include "SVGAnimatedPathSegList.h"
 
-nsresult NS_NewSVGPathElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
-
 class gfxContext;
 
-typedef nsSVGPathGeometryElement SVGPathElementBase;
+typedef nsSVGPathGeometryElement nsSVGPathElementBase;
 
-namespace mozilla {
-namespace dom {
-
-class SVGPathElement MOZ_FINAL : public SVGPathElementBase,
-                                 public nsIDOMSVGPathElement,
-                                 public nsIDOMSVGAnimatedPathData
+class nsSVGPathElement : public nsSVGPathElementBase,
+                         public nsIDOMSVGPathElement,
+                         public nsIDOMSVGAnimatedPathData
 {
 friend class nsSVGPathFrame;
 
 protected:
-  friend nsresult (::NS_NewSVGPathElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult NS_NewSVGPathElement(nsIContent **aResult,
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
-  typedef SVGAnimatedPathSegList SVGAnimatedPathSegList;
+  typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -44,7 +38,7 @@ public:
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGPathElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPathElementBase::)
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
@@ -97,7 +91,4 @@ protected:
   static NumberInfo sNumberInfo;
 };
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_SVGPathElement_h
+#endif

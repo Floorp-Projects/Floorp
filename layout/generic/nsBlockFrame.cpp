@@ -6028,8 +6028,9 @@ static void ComputeVisualOverflowArea(nsLineList& aLines,
 bool
 nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  if (mContent->IsHTML() && (mContent->Tag() == nsGkAtoms::html ||
-                             mContent->Tag() == nsGkAtoms::body))
+  nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(mContent));
+  if (html || body)
     return true;
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
