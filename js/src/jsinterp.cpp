@@ -902,7 +902,7 @@ TryNoteIter::settle()
 #define PUSH_STRING(s)           do { regs.sp++->setString(s); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
 #define PUSH_OBJECT(obj)         do { regs.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
 #define PUSH_OBJECT_OR_NULL(obj) do { regs.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
-#define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
+#define PUSH_HOLE()              regs.sp++->setMagic(JS_ELEMENTS_HOLE)
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
 
@@ -2958,7 +2958,7 @@ BEGIN_CASE(JSOP_INITELEM_ARRAY)
     RootedObject &obj = rootObject0;
     obj = &regs.sp[-2].toObject();
 
-    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(obj->isArray());
 
     uint32_t index = GET_UINT24(regs.pc);
     if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))

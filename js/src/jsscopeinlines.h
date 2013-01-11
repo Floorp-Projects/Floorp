@@ -494,6 +494,24 @@ BaseShape::markChildren(JSTracer *trc)
         MarkObject(trc, &parent, "parent");
 }
 
+/*
+ * Property lookup hooks on objects are required to return a non-NULL shape to
+ * signify that the property has been found. For cases where the property is
+ * not actually represented by a Shape (dense elements, properties of
+ * non-native objects), use a dummy value.
+ */
+static inline void
+MarkImplicitPropertyFound(MutableHandleShape propp)
+{
+    propp.set(reinterpret_cast<Shape*>(1));
+}
+
+static inline bool
+IsImplicitProperty(HandleShape prop)
+{
+    return prop.get() == reinterpret_cast<Shape*>(1);
+}
+
 } /* namespace js */
 
 #endif /* jsscopeinlines_h___ */

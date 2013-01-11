@@ -466,25 +466,30 @@ class HeapSlot : public EncapsulatedValue
     inline HeapSlot &operator=(const HeapSlot &v) MOZ_DELETE;
 
   public:
+    enum Kind {
+        Slot,
+        Element
+    };
+
     explicit inline HeapSlot() MOZ_DELETE;
-    explicit inline HeapSlot(JSObject *obj, uint32_t slot, const Value &v);
-    explicit inline HeapSlot(JSObject *obj, uint32_t slot, const HeapSlot &v);
+    explicit inline HeapSlot(JSObject *obj, Kind kind, uint32_t slot, const Value &v);
+    explicit inline HeapSlot(JSObject *obj, Kind kind, uint32_t slot, const HeapSlot &v);
     inline ~HeapSlot();
 
-    inline void init(JSObject *owner, uint32_t slot, const Value &v);
-    inline void init(JSCompartment *comp, JSObject *owner, uint32_t slot, const Value &v);
+    inline void init(JSObject *owner, Kind kind, uint32_t slot, const Value &v);
+    inline void init(JSCompartment *comp, JSObject *owner, Kind kind, uint32_t slot, const Value &v);
 
-    inline void set(JSObject *owner, uint32_t slot, const Value &v);
-    inline void set(JSCompartment *comp, JSObject *owner, uint32_t slot, const Value &v);
-    inline void setCrossCompartment(JSObject *owner, uint32_t slot, const Value &v,
+    inline void set(JSObject *owner, Kind kind, uint32_t slot, const Value &v);
+    inline void set(JSCompartment *comp, JSObject *owner, Kind kind, uint32_t slot, const Value &v);
+    inline void setCrossCompartment(JSObject *owner, Kind kind, uint32_t slot, const Value &v,
                                     JSCompartment *vcomp);
 
-    static inline void writeBarrierPost(JSObject *obj, uint32_t slot);
-    static inline void writeBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t slot);
+    static inline void writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot);
+    static inline void writeBarrierPost(JSCompartment *comp, JSObject *obj, Kind kind, uint32_t slot);
 
   private:
-    inline void post(JSObject *owner, uint32_t slot);
-    inline void post(JSCompartment *comp, JSObject *owner, uint32_t slot);
+    inline void post(JSObject *owner, Kind kind, uint32_t slot);
+    inline void post(JSCompartment *comp, JSObject *owner, Kind kind, uint32_t slot);
 };
 
 /*
