@@ -164,7 +164,7 @@ this.AppsUtils = {
    * from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
    * only the name property is mandatory
    */
-  checkManifest: function(aManifest) {
+  checkManifest: function(aManifest, app) {
     if (aManifest.name == undefined)
       return false;
 
@@ -219,6 +219,9 @@ this.AppsUtils = {
       }
     }
 
+    // Ensure that non-updatable fields contains the current app value
+    AppsUtils.normalizeManifest(aManifest, app);
+
     return true;
   },
 
@@ -232,6 +235,43 @@ this.AppsUtils = {
       return false;
     }
     return true;
+  },
+
+  /**
+   * Method to apply modifications to webapp manifests file saved internally.
+   * For now, only ensure app can't rename itself.
+   */
+  normalizeManifest: function normalizeManifest(aManifest, aApp) {
+    // As normalizeManifest isn't only called on update but also
+    // during app install, we need to bail out on install.
+    if (aApp.installState != "installed" &&
+        aApp.installState != "updating") {
+      return;
+    }
+
+    let previousManifest = aApp.manifest;
+
+    // Ensure that app name can't be updated
+    aManifest.name = aApp.name;
+
+    // Nor through localized names
+    if ('locales' in aManifest) {
+      let defaultName = new ManifestHelper(aManifest, aApp.origin).name;
+      for (let locale in aManifest.locales) {
+        let entry = aManifest.locales[locale];
+        if (!entry.name) {
+          continue;
+        }
+        // In case previous manifest didn't had a name,
+        // we use the default app name
+        let localizedName = defaultName;
+        if (previousManifest && 'locales' in previousManifest &&
+            locale in previousManifest.locales) {
+          localizedName = previousManifest.locales[locale].name;
+        }
+        entry.name = localizedName;
+      }
+    }
   },
 
   /**
