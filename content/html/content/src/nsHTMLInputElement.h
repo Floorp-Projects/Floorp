@@ -608,7 +608,7 @@ protected:
    * @return whether the string is a valid date.
    * Note : this function does not consider the empty string as valid.
    */
-  bool IsValidDate(nsAString& aValue) const;
+  bool IsValidDate(const nsAString& aValue) const;
 
   /**
    * Parse a date string of the form yyyy-mm-dd
@@ -616,10 +616,10 @@ protected:
    * @return the date in aYear, aMonth, aDay.
    * @return whether the parsing was successful.
    */
-  bool GetValueAsDate(nsAString& aValue,
-                      uint32_t& aYear,
-                      uint32_t& aMonth,
-                      uint32_t& aDay) const;
+  bool GetValueAsDate(const nsAString& aValue,
+                      uint32_t* aYear,
+                      uint32_t* aMonth,
+                      uint32_t* aDay) const;
 
   /**
    * This methods returns the number of days in a given month, for a given year.
