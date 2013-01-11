@@ -33,7 +33,6 @@
 #include "nsIContentIterator.h"
 #include "nsID.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
@@ -52,6 +51,7 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTextEditUtils.h"
+#include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsWSRunObject.h"
@@ -62,6 +62,7 @@ class nsISupports;
 class nsRulesInfo;
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -347,7 +348,7 @@ nsHTMLEditRules::BeforeEdit(EditAction action,
     }
 
     // Stabilize the document against contenteditable count changes
-    nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
+    nsCOMPtr<nsIDocument> doc = mHTMLEditor->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
     NS_ENSURE_TRUE(htmlDoc, NS_ERROR_FAILURE);
@@ -385,7 +386,7 @@ nsHTMLEditRules::AfterEdit(EditAction action,
 
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
-      nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
+      nsCOMPtr<nsIDocument> doc = mHTMLEditor->GetDocument();
       NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
       nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
       NS_ENSURE_TRUE(htmlDoc, NS_ERROR_FAILURE);
@@ -1290,7 +1291,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
   *aCancel = false;
 
   // we need to get the doc
-  nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
+  nsCOMPtr<nsIDocument> doc = mHTMLEditor->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
   // for every property that is set, insert a new inline style node
@@ -4312,7 +4313,7 @@ nsHTMLEditRules::ConvertListType(nsINode* aList,
 //
 nsresult
 nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection,
-                                          nsIDOMDocument *aDoc)
+                                          nsIDocument *aDoc)
 {
   MOZ_ASSERT(aSelection && aDoc && mHTMLEditor->mTypeInState);
 
@@ -4354,9 +4355,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection,
     }
   }
 
-  nsCOMPtr<nsIDOMElement> rootElement;
-  res = aDoc->GetDocumentElement(getter_AddRefs(rootElement));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIDOMNode> rootElement = aDoc->GetRootElement()->AsDOMNode();
 
   // process clearing any styles first
   nsAutoPtr<PropItem> item(mHTMLEditor->mTypeInState->TakeClearProperty());
@@ -4385,12 +4384,12 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection,
     if (!mHTMLEditor->IsContainer(node)) {
       return NS_OK;
     }
-    nsCOMPtr<nsIDOMNode> newNode;
-    nsCOMPtr<nsIDOMText> nodeAsText;
-    res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
-    NS_ENSURE_SUCCESS(res, res);
+
+    ErrorResult rv;
+    nsRefPtr<nsTextNode> nodeAsText = aDoc->CreateTextNode(EmptyString(), rv);
+    NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
     NS_ENSURE_TRUE(nodeAsText, NS_ERROR_NULL_POINTER);
-    newNode = do_QueryInterface(nodeAsText);
+    nsCOMPtr<nsIDOMNode> newNode = nodeAsText->AsDOMNode();
     res = mHTMLEditor->InsertNode(newNode, node, offset);
     NS_ENSURE_SUCCESS(res, res);
     node = newNode;

@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsSubstringTuple.h"
+#include "nsTextNode.h"
 #include "nscore.h"
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
@@ -647,7 +648,7 @@ nsHTMLEditor::SetResizeIncrements(int32_t aX, int32_t aY,
 nsresult
 nsHTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW, int32_t aH)
 {
-  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
 
   NS_NAMED_LITERAL_STRING(leftStr, "left");
   NS_NAMED_LITERAL_STRING(topStr, "top");
@@ -719,10 +720,10 @@ nsHTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW, int32_
                     NS_LITERAL_STRING(", ") + diffHeightStr +
                     NS_LITERAL_STRING(")"));
 
-  nsCOMPtr<nsIDOMText> nodeAsText;
-  res = domdoc->CreateTextNode(info, getter_AddRefs(nodeAsText));
-  NS_ENSURE_SUCCESS(res, res);
-  textInfo = do_QueryInterface(nodeAsText);
+  ErrorResult rv;
+  nsRefPtr<nsTextNode> nodeAsText = doc->CreateTextNode(info, rv);
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  textInfo = nodeAsText->AsDOMNode();
   res =  mResizingInfo->AppendChild(textInfo, getter_AddRefs(junk));
   NS_ENSURE_SUCCESS(res, res);
 

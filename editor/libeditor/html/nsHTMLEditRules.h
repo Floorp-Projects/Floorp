@@ -22,8 +22,8 @@
 
 class nsHTMLEditor;
 class nsIAtom;
+class nsIDocument;
 class nsIDOMCharacterData;
-class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsIDOMRange;
@@ -236,7 +236,7 @@ protected:
                            nsIAtom* aListType,
                            nsIAtom* aItemType);
 
-  nsresult CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocument *aDoc);
+  nsresult CreateStyleForInsertText(nsISelection *aSelection, nsIDocument *aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
                         bool *outIsEmptyBlock, 
                         bool aMozBRDoesntCount = false,

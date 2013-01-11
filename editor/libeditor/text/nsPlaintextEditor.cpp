@@ -28,7 +28,7 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h" 
 #include "nsIDOMKeyEvent.h"
@@ -216,25 +216,20 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Update META charset element.
-  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  NS_ENSURE_TRUE(domdoc, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
-  if (UpdateMetaCharset(domdoc, characterSet)) {
+  if (UpdateMetaCharset(doc, characterSet)) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNodeList> headList;
-  rv = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(headList));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(headList, NS_OK);
-
-  nsCOMPtr<nsIDOMNode> headNode;
-  headList->Item(0, getter_AddRefs(headNode));
+  nsINode* headNode = doc->GetHeadElement();
   NS_ENSURE_TRUE(headNode, NS_OK);
 
   // Create a new meta charset tag
   nsCOMPtr<nsIDOMNode> resultNode;
-  rv = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode));
+  rv = CreateNode(NS_LITERAL_STRING("meta"), headNode->AsDOMNode(),
+                  0, getter_AddRefs(resultNode));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(resultNode, NS_OK);
 
@@ -259,24 +254,18 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
 }
 
 bool
-nsPlaintextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
+nsPlaintextEditor::UpdateMetaCharset(nsIDocument* aDocument,
                                      const nsACString& aCharacterSet)
 {
   MOZ_ASSERT(aDocument);
   // get a list of META tags
-  nsCOMPtr<nsIDOMNodeList> list;
-  nsresult rv = aDocument->GetElementsByTagName(NS_LITERAL_STRING("meta"),
-                                                getter_AddRefs(list));
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(list, false);
-
-  nsCOMPtr<nsINodeList> metaList = do_QueryInterface(list);
-
-  uint32_t listLength = 0;
-  metaList->GetLength(&listLength);
+  nsRefPtr<nsContentList> metaList =
+    aDocument->GetElementsByTagName(NS_LITERAL_STRING("meta"));
+  NS_ENSURE_TRUE(metaList, false);
+  uint32_t listLength = metaList->Length(true);
 
   for (uint32_t i = 0; i < listLength; ++i) {
-    nsCOMPtr<nsIContent> metaNode = metaList->Item(i);
+    nsIContent* metaNode = metaList->Item(i);
     MOZ_ASSERT(metaNode);
 
     if (!metaNode->IsElement()) {
@@ -306,10 +295,11 @@ nsPlaintextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
     // set attribute to <original prefix> charset=text/html
     nsCOMPtr<nsIDOMElement> metaElement = do_QueryInterface(metaNode);
     MOZ_ASSERT(metaElement);
-    rv = nsEditor::SetAttribute(metaElement, NS_LITERAL_STRING("content"),
-                                Substring(originalStart, start) +
-                                  charsetEquals +
-                                  NS_ConvertASCIItoUTF16(aCharacterSet));
+    nsresult rv
+      = nsEditor::SetAttribute(metaElement, NS_LITERAL_STRING("content"),
+                               Substring(originalStart, start) +
+                                 charsetEquals +
+                                 NS_ConvertASCIItoUTF16(aCharacterSet));
     return NS_SUCCEEDED(rv);
   }
   return false;
@@ -329,7 +319,7 @@ nsPlaintextEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
 
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   *aIsDocumentEditable = doc && IsModifiable();
 
   return NS_OK;
@@ -770,7 +760,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
     }
 
     // we need to get the doc
-    nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+    nsCOMPtr<nsIDocument> doc = GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
     // don't spaz my selection in subtransactions
@@ -1206,9 +1196,10 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDocWeak);
-  NS_ASSERTION(domDoc, "Need a document");
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  NS_ASSERTION(doc, "Need a document");
 
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   rv = docEncoder->Init(domDoc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
