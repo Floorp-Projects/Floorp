@@ -265,7 +265,7 @@ Shape::matchesParamsAfterId(UnrootedBaseShape base, uint32_t aslot,
 }
 
 inline bool
-Shape::getUserId(JSContext *cx, jsid *idp) const
+Shape::getUserId(JSContext *cx, MutableHandleId idp) const
 {
     AssertCanGC();
     const Shape *self = this;
@@ -277,16 +277,11 @@ Shape::getUserId(JSContext *cx, jsid *idp) const
 #endif
     if (self->hasShortID()) {
         int16_t id = self->shortid();
-        if (id < 0) {
-            RootedId rootedId(cx);
-            if (!ValueToId(cx, Int32Value(id), &rootedId))
-                return false;
-            *idp = rootedId;
-            return true;
-        }
-        *idp = INT_TO_JSID(id);
+        if (id < 0)
+            return ValueToId(cx, Int32Value(id), idp);
+        idp.set(INT_TO_JSID(id));
     } else {
-        *idp = self->propid();
+        idp.set(self->propid());
     }
     return true;
 }
@@ -303,7 +298,7 @@ Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, 
 
     Rooted<Shape *> self(cx, this);
     RootedId id(cx);
-    if (!self->getUserId(cx, id.address()))
+    if (!self->getUserId(cx, &id))
         return false;
 
     return CallJSPropertyOp(cx, self->getterOp(), receiver, id, vp);
@@ -324,7 +319,7 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, 
 
     Rooted<Shape *> self(cx, this);
     RootedId id(cx);
-    if (!self->getUserId(cx, id.address()))
+    if (!self->getUserId(cx, &id))
         return false;
 
     /*
