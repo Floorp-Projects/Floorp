@@ -2,23 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-pref("healthreport.documentServerURI", "https://data.mozilla.com/");
-pref("healthreport.documentServerNamespace", "metrics");
-pref("healthreport.logging.consoleEnabled", true);
-pref("healthreport.logging.consoleLevel", "Warn");
-pref("healthreport.policy.currentDaySubmissionFailureCount", 0);
-pref("healthreport.policy.dataSubmissionEnabled", true);
-pref("healthreport.policy.dataSubmissionPolicyAccepted", false);
-pref("healthreport.policy.dataSubmissionPolicyBypassAcceptance", false);
-pref("healthreport.policy.dataSubmissionPolicyNotifiedTime", "0");
-pref("healthreport.policy.dataSubmissionPolicyResponseType", "");
-pref("healthreport.policy.dataSubmissionPolicyResponseTime", "0");
-pref("healthreport.policy.firstRunTime", "0");
-pref("healthreport.policy.lastDataSubmissionFailureTime", "0");
-pref("healthreport.policy.lastDataSubmissionRequestedTime", "0");
-pref("healthreport.policy.lastDataSubmissionSuccessfulTime", "0");
-pref("healthreport.policy.nextDataSubmissionTime", "0");
-pref("healthreport.service.enabled", true);
-pref("healthreport.service.loadDelayMsec", 10000);
-pref("healthreport.service.providerCategories", "healthreport-js-provider");
-pref("healthreport.infoURL", "http://www.mozilla.org/legal/privacy/firefox.html#health-report");
+pref("datareporting.healthreport.currentDaySubmissionFailureCount", 0);
+pref("datareporting.healthreport.documentServerURI", "https://data.mozilla.com/");
+pref("datareporting.healthreport.documentServerNamespace", "metrics");
+pref("datareporting.healthreport.infoURL", "http://www.mozilla.org/legal/privacy/firefox.html#health-report");
+pref("datareporting.healthreport.logging.consoleEnabled", true);
+pref("datareporting.healthreport.logging.consoleLevel", "Warn");
+pref("datareporting.healthreport.lastDataSubmissionFailureTime", "0");
+pref("datareporting.healthreport.lastDataSubmissionRequestedTime", "0");
+pref("datareporting.healthreport.lastDataSubmissionSuccessfulTime", "0");
+pref("datareporting.healthreport.nextDataSubmissionTime", "0");
+pref("datareporting.healthreport.pendingDeleteRemoteData", false);
+
+// Health Report is enabled by default on all channels.
+pref("datareporting.healthreport.uploadEnabled", true);
+
+pref("datareporting.healthreport.service.enabled", true);
+pref("datareporting.healthreport.service.loadDelayMsec", 10000);
+pref("datareporting.healthreport.service.providerCategories", "healthreport-js-provider");
+

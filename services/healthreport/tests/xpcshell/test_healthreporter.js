@@ -9,7 +9,7 @@ Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
-Cu.import("resource://gre/modules/services/healthreport/policy.jsm");
+Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://testing-common/services-common/bagheeraserver.js");
@@ -36,12 +36,29 @@ function defineNow(policy, now) {
 function getJustReporter(name, uri=SERVER_URI, inspected=false) {
   let branch = "healthreport.testing. " + name + ".";
 
-  let prefs = new Preferences(branch);
+  let prefs = new Preferences(branch + "healthreport.");
   prefs.set("documentServerURI", uri);
   prefs.set("dbName", name);
 
+  let reporter;
+
+  let policyPrefs = new Preferences(branch + "policy.");
+  let policy = new DataReportingPolicy(policyPrefs, prefs, {
+    onRequestDataUpload: function (request) {
+      reporter.requestDataUpload(request);
+    },
+
+    onNotifyDataPolicy: function (request) { },
+
+    onRequestRemoteDelete: function (request) {
+      reporter.deleteRemoteData(request);
+    },
+  });
+
   let type = inspected ? InspectedHealthReporter : HealthReporter;
-  return new type(branch);
+  reporter = new type(branch + "healthreport.", policy);
+
+  return reporter;
 }
 
 function getReporter(name, uri, inspected) {
@@ -251,7 +268,7 @@ add_task(function test_data_submission_transport_failure() {
 
   let deferred = Promise.defer();
   let request = new DataSubmissionRequest(deferred, new Date(Date.now + 30000));
-  reporter.onRequestDataUpload(request);
+  reporter.requestDataUpload(request);
 
   yield deferred.promise;
   do_check_eq(request.state, request.SUBMISSION_FAILURE_SOFT);
@@ -268,7 +285,7 @@ add_task(function test_data_submission_success() {
   let deferred = Promise.defer();
 
   let request = new DataSubmissionRequest(deferred, new Date());
-  reporter.onRequestDataUpload(request);
+  reporter.requestDataUpload(request);
   yield deferred.promise;
   do_check_eq(request.state, request.SUBMISSION_SUCCESS);
   do_check_true(reporter.lastPingDate.getTime() > 0);
@@ -336,21 +353,22 @@ add_task(function test_request_remote_data_deletion() {
 add_task(function test_policy_accept_reject() {
   let [reporter, server] = yield getReporterAndServer("policy_accept_reject");
 
-  do_check_false(reporter.dataSubmissionPolicyAccepted);
+  let policy = reporter._policy;
+
+  do_check_false(policy.dataSubmissionPolicyAccepted);
   do_check_false(reporter.willUploadData);
 
-  reporter.recordPolicyAcceptance();
-  do_check_true(reporter.dataSubmissionPolicyAccepted);
+  policy.recordUserAcceptance();
+  do_check_true(policy.dataSubmissionPolicyAccepted);
   do_check_true(reporter.willUploadData);
 
-  reporter.recordPolicyRejection();
-  do_check_false(reporter.dataSubmissionPolicyAccepted);
+  policy.recordUserRejection();
+  do_check_false(policy.dataSubmissionPolicyAccepted);
   do_check_false(reporter.willUploadData);
 
   reporter._shutdown();
   yield shutdownServer(server);
 });
-
 
 add_task(function test_upload_save_payload() {
   let [reporter, server] = yield getReporterAndServer("upload_save_payload");
