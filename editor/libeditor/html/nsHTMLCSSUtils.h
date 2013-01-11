@@ -291,9 +291,18 @@ public:
     * @param aCssDecl        [OUT] the CSS declaration corresponding to the style attr
     * @param aLength         [OUT] the number of declarations in aCssDecl
     */
-  nsresult GetInlineStyles(nsIDOMElement * aElement, nsIDOMCSSStyleDeclaration ** aCssDecl,
-                           uint32_t * aLength);
+  nsresult GetInlineStyles(mozilla::dom::Element* aElement,
+                           nsIDOMCSSStyleDeclaration** aCssDecl,
+                           uint32_t* aLength);
+  nsresult GetInlineStyles(nsIDOMElement* aElement,
+                           nsIDOMCSSStyleDeclaration** aCssDecl,
+                           uint32_t* aLength);
+private:
+  nsresult GetInlineStyles(nsISupports* aElement,
+                           nsIDOMCSSStyleDeclaration** aCssDecl,
+                           uint32_t* aLength);
 
+public:
   /** returns aNode itself if it is an element node, or the first ancestors being an element
     * node if aNode is not one itself
     *
