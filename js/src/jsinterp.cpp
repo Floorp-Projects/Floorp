@@ -3926,7 +3926,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 {
     RootedId id(cx);
     RootedValue indexval(cx, index);
-    if (!FetchElementId(cx, obj, indexval, id.address(), &indexval))
+    if (!FetchElementId(cx, obj, indexval, &id, &indexval))
         return false;
     return SetObjectElementOperation(cx, obj, id, value, strict);
 }

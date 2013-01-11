@@ -681,14 +681,15 @@ NegOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue val
 }
 
 static inline bool
-FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *idp, MutableHandleValue vp)
+FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, MutableHandleId idp,
+               MutableHandleValue vp)
 {
     int32_t i_;
     if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
-        *idp = INT_TO_JSID(i_);
+        idp.set(INT_TO_JSID(i_));
         return true;
     }
-    return !!InternNonIntElementId(cx, obj, idval, idp, vp);
+    return !!InternNonIntElementId(cx, obj, idval, idp.address(), vp);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -718,7 +719,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
 {
 #if JS_HAS_XML_SUPPORT
     if (op == JSOP_CALLELEM && JS_UNLIKELY(obj->isXML())) {
-        jsid id;
+        RootedId id(cx);
         if (!FetchElementId(cx, obj, rref, &id, res))
             return false;
         return js_GetXMLMethod(cx, obj, id, res);
@@ -892,7 +893,7 @@ InitElemOperation(JSContext *cx, HandleObject obj, MutableHandleValue idval, Han
     JS_ASSERT(!val.isMagic(JS_ARRAY_HOLE));
 
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, idval, id.address(), idval))
+    if (!FetchElementId(cx, obj, idval, &id, idval))
         return false;
 
     return JSObject::defineGeneric(cx, obj, id, val, NULL, NULL, JSPROP_ENUMERATE);
