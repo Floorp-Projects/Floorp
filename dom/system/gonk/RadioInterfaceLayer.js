@@ -608,6 +608,9 @@ RadioInterfaceLayer.prototype = {
       case "iccinfochange":
         this.handleICCInfoChange(message);
         break;
+      case "iccimsi":
+        this.rilContext.imsi = message.imsi;
+        break;
       case "iccGetCardLock":
       case "iccSetCardLock":
       case "iccUnlockCardLock":
