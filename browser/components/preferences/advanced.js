@@ -235,49 +235,38 @@ var gAdvancedPane = {
    * Initialize the health report service reference and checkbox.
    */
   initSubmitHealthReport: function () {
-    this._setupLearnMoreLink("healthreport.infoURL", "FHRLearnMore");
+    this._setupLearnMoreLink("datareporting.healthreport.infoURL", "FHRLearnMore");
 
-    let reporter = Components.classes["@mozilla.org/healthreport/service;1"]
-                                     .getService(Components.interfaces.nsISupports)
-                                     .wrappedJSObject
-                                     .reporter;
+    let policy = Components.classes["@mozilla.org/datareporting/service;1"]
+                                   .getService(Components.interfaces.nsISupports)
+                                   .wrappedJSObject
+                                   .policy;
 
     let checkbox = document.getElementById("submitHealthReportBox");
 
-    if (!reporter) {
+    if (!policy) {
       checkbox.setAttribute("disabled", "true");
       return;
     }
 
-    checkbox.checked = reporter.dataSubmissionPolicyAccepted;
+    checkbox.checked = policy.healthReportUploadEnabled;
   },
 
   /**
    * Update the health report policy acceptance with state from checkbox.
    */
   updateSubmitHealthReport: function () {
-    let reporter = Components.classes["@mozilla.org/healthreport/service;1"]
-                                     .getService(Components.interfaces.nsISupports)
-                                     .wrappedJSObject
-                                     .reporter;
+    let policy = Components.classes["@mozilla.org/datareporting/service;1"]
+                                   .getService(Components.interfaces.nsISupports)
+                                   .wrappedJSObject
+                                   .policy;
 
-    if (!reporter) {
+    if (!policy) {
       return;
     }
 
     let checkbox = document.getElementById("submitHealthReportBox");
-
-    let accepted = reporter.dataSubmissionPolicyAccepted;
-
-    if (checkbox.checked && !accepted) {
-      reporter.recordPolicyAcceptance("pref-checkbox-checked");
-      return;
-    }
-
-    if (!checkbox.checked && accepted) {
-      reporter.recordPolicyRejection("pref-checkbox-unchecked");
-      return;
-    }
+    policy.healthReportUploadEnabled = checkbox.checked;
   },
 #endif
 

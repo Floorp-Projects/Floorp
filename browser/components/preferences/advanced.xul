@@ -130,7 +130,9 @@
 
       <tabs id="tabsElement">
         <tab id="generalTab" label="&generalTab.label;" helpTopic="prefs-advanced-general"/>
+#ifdef MOZ_DATA_REPORTING
         <tab id="dataChoicesTab" label="&dataChoicesTab.label;" helpTopic="prefs-advanced-data-choices"/>
+#endif
         <tab id="networkTab" label="&networkTab.label;" helpTopic="prefs-advanced-network"/>
         <tab id="updateTab" label="&updateTab.label;"  helpTopic="prefs-advanced-update"/>
         <tab id="encryptionTab" label="&encryptionTab.label;" helpTopic="prefs-advanced-encryption"/>
@@ -204,14 +206,7 @@
 #endif
         </tabpanel>
 
-#ifndef MOZ_TELEMETRY_REPORTING
-#ifndef MOZ_SERVICES_HEALTHREPORT
-#ifndef MOZ_CRASHREPORTER
-#define HIDE_DATACHOICES
-#endif
-#endif
-#endif
-#ifndef HIDE_DATACHOICES
+#ifdef MOZ_DATA_REPORTING
         <!-- Data Choices -->
         <tabpanel id="dataChoicesPanel" orient="vertical">
 #ifdef MOZ_TELEMETRY_REPORTING
