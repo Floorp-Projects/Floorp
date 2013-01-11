@@ -93,6 +93,10 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
     mChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
   }
 
+  rv = mChannel->SetNotificationCallbacks(this);
+  if (NS_FAILED(rv))
+    return SendFailedAsyncOpen(rv);
+
   nsCOMPtr<nsIInputStream> upload = DeserializeInputStream(aUploadStream);
   if (upload) {
     // contentType and contentLength are ignored
