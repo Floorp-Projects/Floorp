@@ -689,7 +689,7 @@ FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, MutableHandleId
         idp.set(INT_TO_JSID(i_));
         return true;
     }
-    return !!InternNonIntElementId(cx, obj, idval, idp.address(), vp);
+    return !!InternNonIntElementId(cx, obj, idval, idp, vp);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -705,7 +705,7 @@ ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue ob
     if (!obj)
         return false;
 
-    jsid dummy;
+    RootedId dummy(cx);
     if (!InternNonIntElementId(cx, obj, idval, &dummy, res))
         return false;
 
