@@ -52,9 +52,9 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsIAtom.h"                    // for nsIAtom
 #include "nsIContent.h"                 // for nsIContent
+#include "nsIDocument.h"                // for nsIDocument
 #include "nsIDOMAttr.h"                 // for nsIDOMAttr
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
-#include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
@@ -104,6 +104,7 @@
 #include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc
 #include "nsStyleStructFwd.h"           // for nsIFrame::GetStyleUIReset, etc
 #include "nsTextEditUtils.h"            // for nsTextEditUtils
+#include "nsTextNode.h"
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsTransactionManager.h"       // for nsTransactionManager
 #include "prtime.h"                     // for PR_Now
@@ -532,7 +533,7 @@ NS_IMETHODIMP
 nsEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   *aIsDocumentEditable = !!doc;
 
   return NS_OK;
@@ -546,19 +547,12 @@ nsEditor::GetDocument()
   return doc.forget();
 }
 
-already_AddRefed<nsIDOMDocument>
-nsEditor::GetDOMDocument()
-{
-  NS_PRECONDITION(mDocWeak, "bad state, mDocWeak weak pointer not initialized");
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  return doc.forget();
-}
-
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
-  doc.forget(aDoc);
+  NS_PRECONDITION(mDocWeak, "bad state, mDocWeak weak pointer not initialized");
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDocWeak);
+  domDoc.forget(aDoc);
   return *aDoc ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 
@@ -2324,7 +2318,7 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(bool aScrollToAnchor)
 NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert, 
                                           nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                           int32_t *aInOutOffset,
-                                          nsIDOMDocument *aDoc)
+                                          nsIDocument *aDoc)
 {
   // NOTE: caller *must* have already used nsAutoTxnsConserveSelection stack-based
   // class to turn off txn selection updating.  Caller also turned on rules sniffing
@@ -2419,8 +2413,9 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
     if (!nodeAsText)
     {
       // create a text node
-      res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
-      NS_ENSURE_SUCCESS(res, res);
+      ErrorResult rv;
+      nodeAsText = aDoc->CreateTextNode(EmptyString(), rv);
+      NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
       NS_ENSURE_TRUE(nodeAsText, NS_ERROR_NULL_POINTER);
       nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(nodeAsText);
       // then we insert it into the dom tree
@@ -2444,8 +2439,9 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
     {
       // we are inserting text into a non-text node
       // first we have to create a textnode (this also populates it with the text)
-      res = aDoc->CreateTextNode(aStringToInsert, getter_AddRefs(nodeAsText));
-      NS_ENSURE_SUCCESS(res, res);
+      ErrorResult rv;
+      nodeAsText = aDoc->CreateTextNode(aStringToInsert, rv);
+      NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
       NS_ENSURE_TRUE(nodeAsText, NS_ERROR_NULL_POINTER);
       nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(nodeAsText);
       // then we insert it into the dom tree

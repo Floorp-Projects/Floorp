@@ -19,8 +19,8 @@ class OffsetEntry;
 class nsIAtom;
 class nsIContent;
 class nsIContentIterator;
+class nsIDocument;
 class nsIDOMCharacterData;
-class nsIDOMDocument;
 class nsIDOMNode;
 class nsIDOMRange;
 class nsIEditor;
@@ -70,7 +70,7 @@ private:
                  eNext             // No TN in CB, I points to first TN in next block.
   } TSDIteratorStatus;
 
-  nsCOMPtr<nsIDOMDocument>        mDOMDocument;
+  nsCOMPtr<nsIDocument>           mDOMDocument;
   nsCOMPtr<nsISelectionController>mSelCon;
   nsWeakPtr                       mEditor;  // avoid a cycle with the spell checker and editor
   nsCOMPtr<nsIContentIterator>    mIterator;
