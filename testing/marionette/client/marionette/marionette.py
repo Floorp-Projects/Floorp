@@ -95,6 +95,9 @@ class Marionette(object):
 
     CONTEXT_CHROME = 'chrome'
     CONTEXT_CONTENT = 'content'
+    TIMEOUT_SEARCH = 'implicit'
+    TIMEOUT_SCRIPT = 'script'
+    TIMEOUT_PAGE = 'page load'
 
     def __init__(self, host='localhost', port=2828, bin=None, profile=None,
                  emulator=None, sdcard=None, emulatorBinary=None,
@@ -384,6 +387,11 @@ class Marionette(object):
 
     def navigate(self, url):
         response = self._send_message('goUrl', 'ok', value=url)
+        return response
+
+    def timeouts(self, timeout_type, ms):
+        assert(timeout_type == self.TIMEOUT_SEARCH or timeout_type == self.TIMEOUT_SCRIPT or timeout_type == self.TIMEOUT_PAGE)
+        response = self._send_message('timeouts', 'ok', timeoutType=timeout_type, ms=ms)
         return response
 
     def go_back(self):
