@@ -1451,6 +1451,19 @@ is(cs.marginTop, "0px", "important2 (margin-top) test at 1s");
 is(cs.marginBottom, "50px", "important2 (margin-bottom) test at 1s");
 done_div();
 
+// Test that it's the length of the 'animation-name' list that's used to
+// start animations.
+// note: anim2 animates margin-right from 0 to 100px
+// note: anim3 animates margin-top from 0 to 100px
+new_div("animation-name: anim2, anim3; animation-duration: 1s; animation-timing-function: linear; animation-delay: -250ms, -250ms, -750ms, -500ms;");
+is(cs.marginRight, "25px", "animation-name list length is the length that matters");
+is(cs.marginTop, "25px", "animation-name list length is the length that matters");
+done_div();
+new_div("animation-name: anim2, anim3, anim2; animation-duration: 1s; animation-timing-function: linear; animation-delay: -250ms, -250ms, -750ms, -500ms;");
+is(cs.marginRight, "75px", "animation-name list length is the length that matters, and the last occurrence of a name wins");
+is(cs.marginTop, "25px", "animation-name list length is the length that matters");
+done_div();
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>

@@ -525,7 +525,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ElementAnimations *ea =
       GetElementAnimations(aElement, aStyleContext->GetPseudoType(), false);
     if (!ea &&
-        disp->mAnimations.Length() == 1 &&
+        disp->mAnimationNameCount == 1 &&
         disp->mAnimations[0].GetName().IsEmpty()) {
       return nullptr;
     }
@@ -710,7 +710,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay *disp = aStyleContext->GetStyleDisplay();
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  for (uint32_t animIdx = 0, animEnd = disp->mAnimations.Length();
+  for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
     const nsAnimation& aSrc = disp->mAnimations[animIdx];
     ElementAnimation& aDest = *aAnimations.AppendElement();
