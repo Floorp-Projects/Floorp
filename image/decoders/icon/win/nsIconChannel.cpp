@@ -487,6 +487,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
           maskHeader.biWidth  == colorHeader.biWidth  &&
           colorHeader.biBitCount > 8 &&
           colorHeader.biSizeImage > 0 &&
+          colorHeader.biWidth >= 0 && colorHeader.biWidth <= 255 &&
+          colorHeader.biHeight >= 0 && colorHeader.biHeight <= 255 &&
           maskHeader.biSizeImage > 0  &&
           (colorTableSize = GetColorTableSize(&colorHeader)) >= 0 &&
           (maskTableSize  = GetColorTableSize(&maskHeader))  >= 0) {
@@ -514,8 +516,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
 
           // followed by the single icon entry
           ICONENTRY iconEntry;
-          iconEntry.ieWidth = colorHeader.biWidth;
-          iconEntry.ieHeight = colorHeader.biHeight;
+          iconEntry.ieWidth = static_cast<int8_t>(colorHeader.biWidth);
+          iconEntry.ieHeight = static_cast<int8_t>(colorHeader.biHeight);
           iconEntry.ieColors = 0;
           iconEntry.ieReserved = 0;
           iconEntry.iePlanes = 1;
