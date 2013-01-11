@@ -19,41 +19,6 @@ using namespace mozilla::services;
 namespace mozilla {
 
 bool
-CheckAppHasPermission(mozIApplication *app, const char* aCapability)
-{
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal;
-
-  uint32_t appId;
-  app->GetLocalId(&appId);
-  nsString appOrigin;
-  rv = app->GetOrigin(appOrigin);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), appOrigin);
-  rv = securityManager->GetAppCodebasePrincipal(uri, appId, false, getter_AddRefs(principal));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPermissionManager> pm = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-  rv = pm->TestPermissionFromPrincipal(principal, aCapability, &permission);
-
-  return NS_SUCCEEDED(rv) && (permission == nsIPermissionManager::ALLOW_ACTION ||
-                              permission == nsIPermissionManager::PROMPT_ACTION);
-}
-
-bool
 AssertAppProcess(PBrowserParent* aActor,
                  AssertAppProcessType aType,
                  const char* aCapability)
@@ -88,8 +53,6 @@ AssertAppProcess(PBrowserParent* aActor,
       default:
         break;
     }
-  } else {
-    aValid = CheckAppHasPermission(app, aCapability);
   }
 
   if (!aValid) {
