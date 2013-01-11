@@ -12,6 +12,7 @@
 #include "nsSMILKeySpline.h"
 #include "nsEventDispatcher.h"
 #include "nsCSSFrameConstructor.h"
+#include <math.h>
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -94,15 +95,14 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
   // Set |positionInIteration| to the position from 0% to 100% along
   // the keyframes.
   NS_ABORT_IF_FALSE(currentIterationCount >= 0.0, "must be positive");
-  uint32_t whichIteration = int(currentIterationCount);
-  if (whichIteration == aIterationCount && whichIteration != 0) {
+  double whichIteration = floor(currentIterationCount);
+  if (whichIteration == aIterationCount && whichIteration != 0.0) {
     // When the animation's iteration count is an integer (as it
     // normally is), we need to end at 100% of its last iteration
     // rather than 0% of the next one (unless it's zero).
-    --whichIteration;
+    whichIteration -= 1.0;
   }
-  double positionInIteration =
-    currentIterationCount - double(whichIteration);
+  double positionInIteration = currentIterationCount - whichIteration;
 
   bool thisIterationReverse = false;
   switch (aDirection) {
@@ -113,10 +113,15 @@ ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
       thisIterationReverse = true;
       break;
     case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE:
-      thisIterationReverse = (whichIteration & 1) == 1;
+      // uint64_t has more integer precision than double does, so if
+      // whichIteration is that large, we've already lost and we're just
+      // guessing.  But the animation is presumably oscillating so fast
+      // it doesn't matter anyway.
+      thisIterationReverse = (uint64_t(whichIteration) & 1) == 1;
       break;
     case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
-      thisIterationReverse = (whichIteration & 1) == 0;
+      // see as previous case
+      thisIterationReverse = (uint64_t(whichIteration) & 1) == 0;
       break;
   }
   if (thisIterationReverse) {
