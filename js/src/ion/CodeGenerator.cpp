@@ -3363,6 +3363,13 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.loadObjProto(temp1, temp1);
     masm.branchTestPtr(Assembler::NonZero, temp1, temp1, ool->entry());
 
+    // Ensure the object does not have any elements. The presence of dense
+    // elements is not captured by the shape tests above.
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(obj, JSObject::offsetOfElements()),
+                   ImmWord(js::emptyObjectElements),
+                   ool->entry());
+
     // Write barrier for stores to the iterator. We only need to take a write
     // barrier if NativeIterator::obj is actually going to change.
     {

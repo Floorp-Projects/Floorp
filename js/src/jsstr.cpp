@@ -1775,7 +1775,7 @@ BuildFlatMatchArray(JSContext *cx, HandleString textstr, const FlatMatch &fm, Ca
     }
 
     /* For this non-global match, produce a RegExp.exec-style array. */
-    RootedObject obj(cx, NewSlowEmptyArray(cx));
+    RootedObject obj(cx, NewDenseEmptyArray(cx));
     if (!obj)
         return false;
 

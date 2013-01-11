@@ -2539,7 +2539,7 @@ proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         return false;
 
     if (found) {
-        MarkNonNativePropertyFound(obj, propp);
+        MarkImplicitPropertyFound(propp);
         objp.set(obj);
     } else {
         objp.set(NULL);
