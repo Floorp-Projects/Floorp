@@ -30,6 +30,7 @@
 using namespace js;
 
 using js::frontend::IsIdentifier;
+using mozilla::ArrayLength;
 using mozilla::Maybe;
 
 
@@ -661,16 +662,17 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
 }
 
 bool
-Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
+Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 {
     assertSameCompartment(cx, object.get());
 
-    if (vp->isObject()) {
-        RootedObject obj(cx, &vp->toObject());
+    if (vp.isObject()) {
+        // Do we need this RootedObject?
+        RootedObject obj(cx, &vp.toObject());
 
         ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
         if (p) {
-            vp->setObject(*p->value);
+            vp.setObject(*p->value);
         } else {
             /* Create a new Debugger.Object for obj. */
             JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
@@ -695,10 +697,10 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
                 }
             }
 
-            vp->setObject(*dobj);
+            vp.setObject(*dobj);
         }
-    } else if (!cx->compartment->wrap(cx, vp)) {
-        vp->setUndefined();
+    } else if (!cx->compartment->wrap(cx, vp.address())) {
+        vp.setUndefined();
         return false;
     }
 
@@ -706,11 +708,11 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
 }
 
 bool
-Debugger::unwrapDebuggeeValue(JSContext *cx, Value *vp)
+Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 {
-    assertSameCompartment(cx, object.get(), *vp);
-    if (vp->isObject()) {
-        JSObject *dobj = &vp->toObject();
+    assertSameCompartment(cx, object.get(), vp);
+    if (vp.isObject()) {
+        JSObject *dobj = &vp.toObject();
         if (dobj->getClass() != &DebuggerObject_class) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
                                  "Debugger", "Debugger.Object", dobj->getClass()->name);
@@ -726,7 +728,7 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, Value *vp)
             return false;
         }
 
-        vp->setObject(*(JSObject *) dobj->getPrivate());
+        vp.setObject(*static_cast<JSObject*>(dobj->getPrivate()));
     }
     return true;
 }
@@ -805,7 +807,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_, V
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!obj ||
-        !wrapDebuggeeValue(cx, value.address()) ||
+        !wrapDebuggeeValue(cx, &value) ||
         !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
@@ -868,7 +870,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     }
 
     RootedValue v(cx, *vp);
-    if (!js_NativeGet(cx, obj, obj, shape, 0, &v) || !unwrapDebuggeeValue(cx, v.address()))
+    if (!js_NativeGet(cx, obj, obj, shape, 0, &v) || !unwrapDebuggeeValue(cx, &v))
         return handleUncaughtException(ac, v.address(), callHook);
     *vp = v;
 
@@ -931,7 +933,7 @@ Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
     AutoValueArray avr(cx, argv, 2);
 
     argv[1] = exc;
-    if (!getScriptFrame(cx, cx->fp(), &argv[0]) || !wrapDebuggeeValue(cx, &argv[1]))
+    if (!getScriptFrame(cx, cx->fp(), &argv[0]) || !wrapDebuggeeValue(cx, avr.handleAt(1)))
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
@@ -1269,8 +1271,9 @@ Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Valu
     ac.construct(cx, object);
 
     Value argv[1];
+    AutoArrayRooter argvRooter(cx, ArrayLength(argv), argv);
     argv[0].setObject(*global);
-    if (!wrapDebuggeeValue(cx, &argv[0]))
+    if (!wrapDebuggeeValue(cx, argvRooter.handleAt(0)))
         return handleUncaughtException(ac, NULL, false);
 
     Value rv;
@@ -1832,7 +1835,7 @@ Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
 
     /* If it's a Debugger.Object belonging to this debugger, dereference that. */
     if (obj->getClass() == &DebuggerObject_class) {
-        Value rv = v;
+        RootedValue rv(cx, v);
         if (!unwrapDebuggeeValue(cx, &rv))
             return NULL;
         obj = &rv.toObject();
@@ -1872,7 +1875,7 @@ Debugger::addDebuggee(JSContext *cx, unsigned argc, Value *vp)
     if (!dbg->addDebuggeeGlobal(cx, global))
         return false;
 
-    Value v = ObjectValue(*global);
+    RootedValue v(cx, ObjectValue(*global));
     if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
     args.rval().set(v);
@@ -1946,7 +1949,7 @@ Debugger::getDebuggees(JSContext *cx, unsigned argc, Value *vp)
     arrobj->ensureDenseArrayInitializedLength(cx, 0, dbg->debuggees.count());
     unsigned i = 0;
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
-        Value v = ObjectValue(*e.front());
+        RootedValue v(cx, ObjectValue(*e.front()));
         if (!dbg->wrapDebuggeeValue(cx, &v))
             return false;
         arrobj->setDenseArrayElement(i++, v);
@@ -2562,7 +2565,7 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
              */
             ExposeGCThingToActiveJS(global, JSTRACE_OBJECT);
 
-            Value globalValue(ObjectValue(*global));
+            RootedValue globalValue(cx, ObjectValue(*global));
             if (!dbg->wrapDebuggeeValue(cx, &globalValue))
                 return false;
             if (!js_NewbornArrayPush(cx, result, globalValue))
@@ -3330,7 +3333,7 @@ static JSBool
 DebuggerFrame_getCallee(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get callee", args, thisobj, fp);
-    Value calleev = (fp->isFunctionFrame() && !fp->isEvalFrame()) ? fp->calleev() : NullValue();
+    RootedValue calleev(cx, (fp->isFunctionFrame() && !fp->isEvalFrame()) ? fp->calleev() : NullValue());
     if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &calleev))
         return false;
     args.rval().set(calleev);
@@ -3357,7 +3360,7 @@ static JSBool
 DebuggerFrame_getThis(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get this", args, thisobj, fp);
-    Value thisv;
+    RootedValue thisv(cx);
     {
         AutoCompartment ac(cx, fp->scopeChain());
         if (!ComputeThis(cx, fp))
@@ -3441,7 +3444,7 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
         arg.setUndefined();
     }
 
-    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, arg.address()))
+    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &arg))
         return false;
     args.rval().set(arg);
     return true;
@@ -3711,7 +3714,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
             HandleId keyp = HandleId::fromMarkedLocation(&keys[i]);
             MutableHandleValue valp = MutableHandleValue::fromMarkedLocation(&values[i]);
             if (!JSObject::getGeneric(cx, bindingsobj, bindingsobj, keyp, valp) ||
-                !dbg->unwrapDebuggeeValue(cx, valp.address()))
+                !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
             }
@@ -3908,7 +3911,7 @@ DebuggerObject_getProto(JSContext *cx, unsigned argc, Value *vp)
         if (!JSObject::getProto(cx, refobj, &proto))
             return false;
     }
-    Value protov = ObjectOrNullValue(proto);
+    RootedValue protov(cx, ObjectOrNullValue(proto));
     if (!dbg->wrapDebuggeeValue(cx, &protov))
         return false;
     args.rval().set(protov);
@@ -3952,7 +3955,7 @@ DebuggerObject_getName(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    Value namev = StringValue(name);
+    RootedValue namev(cx, StringValue(name));
     if (!dbg->wrapDebuggeeValue(cx, &namev))
         return false;
     args.rval().set(namev);
@@ -3975,7 +3978,7 @@ DebuggerObject_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    Value namev = StringValue(name);
+    RootedValue namev(cx, StringValue(name));
     if (!dbg->wrapDebuggeeValue(cx, &namev))
         return false;
     args.rval().set(namev);
@@ -4078,7 +4081,7 @@ DebuggerObject_getGlobal(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get global", args, dbg, obj);
 
-    Value v = ObjectValue(obj->global());
+    RootedValue v(cx, ObjectValue(obj->global()));
     if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
     args.rval().set(v);
@@ -4110,16 +4113,19 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 
     if (desc.obj) {
         /* Rewrap the debuggee values in desc for the debugger. */
-        if (!dbg->wrapDebuggeeValue(cx, &desc.value))
+        RootedValue value(cx, desc.value);
+        if (!dbg->wrapDebuggeeValue(cx, &value))
             return false;
+        desc.value = value;
+
         if (desc.attrs & JSPROP_GETTER) {
-            Value get = ObjectOrNullValue(CastAsObject(desc.getter));
+            RootedValue get(cx, ObjectOrNullValue(CastAsObject(desc.getter)));
             if (!dbg->wrapDebuggeeValue(cx, &get))
                 return false;
             desc.getter = CastAsPropertyOp(get.toObjectOrNull());
         }
         if (desc.attrs & JSPROP_SETTER) {
-            Value set = ObjectOrNullValue(CastAsObject(desc.setter));
+            RootedValue set(cx, ObjectOrNullValue(CastAsObject(desc.setter)));
             if (!dbg->wrapDebuggeeValue(cx, &set))
                 return false;
             desc.setter = CastAsStrictPropertyOp(set.toObjectOrNull());
@@ -4161,7 +4167,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
                  return false;
          } else {
              vals[i].setObject(*JSID_TO_OBJECT(id));
-             if (!dbg->wrapDebuggeeValue(cx, &vals[i]))
+             if (!dbg->wrapDebuggeeValue(cx, vals.handleAt(i)))
                  return false;
          }
     }
@@ -4403,7 +4409,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      * Unwrap Debugger.Objects. This happens in the debugger's compartment since
      * that is where any exceptions must be reported.
      */
-    Value thisv = argc > 0 ? args[0] : UndefinedValue();
+    RootedValue thisv(cx, argc > 0 ? args[0] : UndefinedValue());
     if (!dbg->unwrapDebuggeeValue(cx, &thisv))
         return false;
     unsigned callArgc = 0;
@@ -4428,8 +4434,10 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
         callArgc = argc > 0 ? unsigned(Min(argc - 1, StackSpace::ARGS_LENGTH_MAX)) : 0;
         callArgv = args.array() + 1;
     }
+
+    AutoArrayRooter callArgvRooter(cx, callArgc, callArgv);
     for (unsigned i = 0; i < callArgc; i++) {
-        if (!dbg->unwrapDebuggeeValue(cx, &callArgv[i]))
+        if (!dbg->unwrapDebuggeeValue(cx, callArgvRooter.handleAt(i)))
             return false;
     }
 
@@ -4439,7 +4447,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      */
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, &thisv))
+    if (!cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, thisv.address()))
         return false;
     for (unsigned i = 0; i < callArgc; i++) {
         if (!cx->compartment->wrap(cx, &callArgv[i]))
@@ -4473,23 +4481,25 @@ DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Object.prototype.makeDebuggeeValue", 1);
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "makeDebuggeeValue", args, dbg, referent);
 
+    RootedValue arg0(cx, args[0]);
+
     /* Non-objects are already debuggee values. */
-    if (args[0].isObject()) {
+    if (arg0.isObject()) {
         // Enter this Debugger.Object's referent's compartment, and wrap the
         // argument as appropriate for references from there.
         {
             AutoCompartment ac(cx, referent);
-            if (!cx->compartment->wrap(cx, &args[0]))
+            if (!cx->compartment->wrap(cx, arg0.address()))
                 return false;
         }
 
         // Back in the debugger's compartment, produce a new Debugger.Object
         // instance referring to the wrapped argument.
-        if (!dbg->wrapDebuggeeValue(cx, &args[0]))
+        if (!dbg->wrapDebuggeeValue(cx, &arg0))
             return false;
     }
 
-    args.rval().set(args[0]);
+    args.rval().set(arg0);
     return true;
 }
 
@@ -4551,8 +4561,8 @@ DebuggerObject_unwrap(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    *vp = ObjectValue(*unwrapped);
-    if (!dbg->wrapDebuggeeValue(cx, vp))
+    args.rval().setObject(*unwrapped);
+    if (!dbg->wrapDebuggeeValue(cx, args.rval()))
         return false;
     return true;
 }
@@ -4732,10 +4742,9 @@ DebuggerEnv_getObject(JSContext *cx, unsigned argc, Value *vp)
         JS_ASSERT(!obj->isDebugScope());
     }
 
-    Value rval = ObjectValue(*obj);
-    if (!dbg->wrapDebuggeeValue(cx, &rval))
+    args.rval().setObject(*obj);
+    if (!dbg->wrapDebuggeeValue(cx, args.rval()))
         return false;
-    args.rval().set(rval);
     return true;
 }
 
@@ -4758,7 +4767,7 @@ DebuggerEnv_getCallee(JSContext *cx, unsigned argc, Value *vp)
         return true;
 
     args.rval().setObject(callobj.callee());
-    if (!dbg->wrapDebuggeeValue(cx, args.rval().address()))
+    if (!dbg->wrapDebuggeeValue(cx, args.rval()))
         return false;
     return true;
 }
@@ -4847,7 +4856,7 @@ DebuggerEnv_getVariable(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    if (!dbg->wrapDebuggeeValue(cx, v.address()))
+    if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
     args.rval().set(v);
     return true;
@@ -4864,7 +4873,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedValue v(cx, args[1]);
-    if (!dbg->unwrapDebuggeeValue(cx, v.address()))
+    if (!dbg->unwrapDebuggeeValue(cx, &v))
         return false;
 
     {
