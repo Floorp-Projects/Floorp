@@ -3871,7 +3871,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHand
     }
 
     RootedId userid(cx);
-    if (!shape->getUserId(cx, userid.address()))
+    if (!shape->getUserId(cx, &userid))
         return false;
 
     if (!CallJSPropertyOp(cx, obj->getClass()->delProperty, obj, userid, rval))
