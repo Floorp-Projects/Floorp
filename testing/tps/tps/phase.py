@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import re
 
 class TPSTestPhase(object):
@@ -45,9 +44,9 @@ class TPSTestPhase(object):
 
     self.log("\nlaunching Firefox for phase %s with args %s\n" %
              (self.phase, str(args)))
-    returncode = self.firefoxRunner.run(env=self.env,
-                                        args=args,
-                                        profile=self.profile)
+    self.firefoxRunner.run(env=self.env,
+                           args=args,
+                           profile=self.profile)
 
     # parse the logfile and look for results from the current test phase
     found_test = False

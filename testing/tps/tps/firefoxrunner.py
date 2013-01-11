@@ -6,11 +6,9 @@ import copy
 import httplib2
 import os
 import shutil
-import sys
 
 import mozinstall
 
-from mozprocess.pid import get_pids
 from mozprofile import Profile
 from mozrunner import FirefoxRunner
 
