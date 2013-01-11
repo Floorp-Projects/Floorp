@@ -191,8 +191,9 @@ DataChannelConnection::Destroy()
     RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
                                      &DataChannelConnection::disconnect_all),
                   NS_DISPATCH_NORMAL);
-    // safe to do now from Mainthread per ekr
-    mTransportFlow = nullptr;
+    // don't release mTransportFlow until we are destroyed in case
+    // runnables are in flight.  We may well have packets to send as the
+    // SCTP lib may have sent a shutdown.
   }
 }
 
