@@ -628,3 +628,8 @@ pref("layers.orientation.sync.timeout", 1000);
 // Don't discard WebGL contexts for foreground apps on memory
 // pressure.
 pref("webgl.can-lose-context-in-foreground", false);
+
+// Allow nsMemoryInfoDumper to create a fifo in the temp directory.  We use
+// this fifo to trigger about:memory dumps, among other things.
+pref("memory_info_dumper.watch_fifo.enabled", true);
+pref("memory_info_dumper.watch_fifo.directory", "/data/local");
