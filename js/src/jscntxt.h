@@ -62,16 +62,16 @@ typedef HashSet<JSObject *> ObjectSet;
 class AutoCycleDetector
 {
     JSContext *cx;
-    JSObject *obj;
+    RootedObject obj;
     bool cyclic;
     uint32_t hashsetGenerationAtInit;
     ObjectSet::AddPtr hashsetAddPointer;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    AutoCycleDetector(JSContext *cx, JSObject *obj
+    AutoCycleDetector(JSContext *cx, HandleObject objArg
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), obj(obj), cyclic(true)
+      : cx(cx), obj(cx, objArg), cyclic(true)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
