@@ -755,20 +755,20 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   // If there is no source node, this is probably an external drag and the
   // drop is allowed. The later checks rely on checking if the drag target
   // is the same as the drag source.
-  nsCOMPtr<nsIDOMNode> domSourceNode;
-  dataTransfer->GetMozSourceNode(getter_AddRefs(domSourceNode));
-  nsCOMPtr<nsINode> sourceNode = do_QueryInterface(domSourceNode);
+  nsCOMPtr<nsIDOMNode> sourceNode;
+  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
   if (!sourceNode)
     return true;
 
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
 
-  nsCOMPtr<nsIDocument> domdoc = mEditor->GetDocument();
+  nsCOMPtr<nsIDOMDocument> domdoc = mEditor->GetDOMDocument();
   NS_ENSURE_TRUE(domdoc, false);
 
-  nsresult rv;
-  nsIDocument* sourceDoc = sourceNode->GetOwnerDocument();
+  nsCOMPtr<nsIDOMDocument> sourceDoc;
+  nsresult rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
+  NS_ENSURE_SUCCESS(rv, false);
   if (domdoc == sourceDoc)      // source and dest are the same document; disallow drops within the selection
   {
     nsCOMPtr<nsISelection> selection;

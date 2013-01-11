@@ -226,7 +226,7 @@ nsresult
 nsWSRunObject::InsertText(const nsAString& aStringToInsert, 
                           nsCOMPtr<nsIDOMNode> *aInOutParent, 
                           int32_t *aInOutOffset,
-                          nsIDocument *aDoc)
+                          nsIDOMDocument *aDoc)
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in nsHTMLEditRules.cpp

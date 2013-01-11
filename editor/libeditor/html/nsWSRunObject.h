@@ -15,7 +15,7 @@
 #include "nscore.h"
 
 class nsHTMLEditor;
-class nsIDocument;
+class nsIDOMDocument;
 class nsIDOMNode;
 struct DOMPoint;
 
@@ -218,7 +218,7 @@ class NS_STACK_CLASS nsWSRunObject
     nsresult InsertText(const nsAString& aStringToInsert, 
                         nsCOMPtr<nsIDOMNode> *aInOutNode, 
                         int32_t *aInOutOffset,
-                        nsIDocument *aDoc);
+                        nsIDOMDocument *aDoc);
 
     // DeleteWSBackward deletes a single visible piece of ws before
     // the ws point (the point to create the wsRunObject, passed to 
