@@ -407,6 +407,7 @@ UpdatePrompt.prototype = {
   // Trigger apps update check and wait for all to be done before
   // notifying gaia.
   onUpdateCheckStart: function UP_onUpdateCheckStart() {
+    log("onUpdateCheckStart (" + this._checkingApps + ")");
     // Don't start twice.
     if (this._checkingApps) {
       return;
@@ -426,8 +427,11 @@ UpdatePrompt.prototype = {
       this.result.forEach(function updateApp(aApp) {
         let update = aApp.checkForUpdate();
         update.onsuccess = function() {
+          if (aApp.downloadAvailable) {
+            appsToUpdate.push(aApp.manifestURL);
+          }
+
           appsChecked += 1;
-          appsToUpdate.push(aApp.manifestURL);
           if (appsChecked == appsCount) {
             self.appsUpdated(appsToUpdate);
           }
