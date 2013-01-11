@@ -348,7 +348,9 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args):
     # This queue will contain the return value of the function
     # processing the test results.
     result_process_return_queue = queue_manager.Queue()
-    result_process = Process(target=process_test_results_parallel, args=(async_test_result_queue, result_process_return_queue, notify_queue, len(tests), OPTIONS, JS))
+    result_process = Process(target=process_test_results_parallel,
+                             args=(async_test_result_queue, result_process_return_queue,
+                                   notify_queue, len(tests), OPTIONS, JS, lib_dir, shell_args))
     result_process.start()
 
     # Ensure that a SIGTERM is handled the same way as SIGINT
@@ -427,12 +429,12 @@ def get_parallel_results(async_test_result_queue, notify_queue):
 
         yield async_test_result
 
-def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, js):
+def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, js, lib_dir, shell_args):
     gen = get_parallel_results(async_test_result_queue, notify_queue)
-    ok = process_test_results(gen, num_tests, options, js)
+    ok = process_test_results(gen, num_tests, options, js, lib_dir, shell_args)
     return_queue.put(ok)
 
-def print_test_summary(failures, complete, doing, options):
+def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
     if failures:
         if options.write_failures:
             try:
@@ -475,7 +477,7 @@ def print_test_summary(failures, complete, doing, options):
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)'%doing))
         return True
 
-def process_test_results(results, num_tests, options, js):
+def process_test_results(results, num_tests, options, js, lib_dir, shell_args):
     pb = NullProgressBar()
     if not options.hide_progress and not options.show_cmd and ProgressBar.conservative_isatty():
         fmt = [
@@ -524,7 +526,7 @@ def process_test_results(results, num_tests, options, js):
         print_tinderbox("TEST-UNEXPECTED-FAIL", None, "Test execution interrupted by user");
 
     pb.finish(True)
-    return print_test_summary(failures, complete, doing, options)
+    return print_test_summary(failures, complete, doing, options, lib_dir, shell_args)
 
 
 def get_serial_results(tests, lib_dir, shell_args):
@@ -534,7 +536,7 @@ def get_serial_results(tests, lib_dir, shell_args):
 
 def run_tests(tests, test_dir, lib_dir, shell_args):
     gen = get_serial_results(tests, lib_dir, shell_args)
-    ok = process_test_results(gen, len(tests), OPTIONS, JS)
+    ok = process_test_results(gen, len(tests), OPTIONS, JS, lib_dir, shell_args)
     return ok
 
 def parse_jitflags():
