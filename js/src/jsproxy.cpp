@@ -818,7 +818,7 @@ ScriptedIndirectProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsi
     RootedValue fval(cx), value(cx);
     RootedId id(cx, id_);
     return GetFundamentalTrap(cx, handler, cx->names().defineProperty, &fval) &&
-           NewPropertyDescriptorObject(cx, desc, value.address()) &&
+           NewPropertyDescriptorObject(cx, desc, &value) &&
            Trap2(cx, handler, fval, id, value, value.address());
 }
 
@@ -1286,7 +1286,7 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
         AutoPropertyDescriptorRooter desc(cx);
         if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
             return false;
-        return NewPropertyDescriptorObject(cx, &desc, rval.address());
+        return NewPropertyDescriptorObject(cx, &desc, rval);
     }
 
     // step 5
@@ -2216,8 +2216,14 @@ Proxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy_, unsigned flags, js
     JS_CHECK_RECURSION(cx, return false);
     RootedObject proxy(cx, proxy_);
     AutoPropertyDescriptorRooter desc(cx);
-    return Proxy::getPropertyDescriptor(cx, proxy, id, &desc, flags) &&
-           NewPropertyDescriptorObject(cx, &desc, vp);
+    if (!Proxy::getPropertyDescriptor(cx, proxy, id, &desc, flags))
+        return false;
+
+    RootedValue value(cx);
+    if (!NewPropertyDescriptorObject(cx, &desc, &value))
+        return false;
+    *vp = value;
+    return true;
 }
 
 bool
@@ -2236,8 +2242,14 @@ Proxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy_, unsigned flags,
     JS_CHECK_RECURSION(cx, return false);
     RootedObject proxy(cx, proxy_);
     AutoPropertyDescriptorRooter desc(cx);
-    return Proxy::getOwnPropertyDescriptor(cx, proxy, id, &desc, flags) &&
-           NewPropertyDescriptorObject(cx, &desc, vp);
+    if (!Proxy::getOwnPropertyDescriptor(cx, proxy, id, &desc, flags))
+        return false;
+
+    RootedValue value(cx);
+    if (!NewPropertyDescriptorObject(cx, &desc, &value))
+        return false;
+    *vp = value;
+    return true;
 }
 
 bool

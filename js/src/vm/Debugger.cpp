@@ -4135,7 +4135,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    return NewPropertyDescriptorObject(cx, &desc, args.rval().address());
+    return NewPropertyDescriptorObject(cx, &desc, args.rval());
 }
 
 static JSBool
