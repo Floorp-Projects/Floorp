@@ -181,12 +181,14 @@ private:
 
     // redirection specific methods
     void     HandleAsyncRedirect();
+    void     HandleAsyncAPIRedirect();
     nsresult ContinueHandleAsyncRedirect(nsresult);
     void     HandleAsyncNotModified();
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod);
+    nsresult StartRedirectChannelToURI(nsIURI *);
+    virtual  nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod);
 
     // proxy specific methods
     nsresult ProxyFailover();
@@ -241,8 +243,8 @@ private:
     nsresult DoAuthRetry(nsAHttpConnection *);
 
     void     HandleAsyncRedirectChannelToHttps();
-    nsresult AsyncRedirectChannelToHttps();
-    nsresult ContinueAsyncRedirectChannelToHttps(nsresult rv);
+    nsresult StartRedirectChannelToHttps();
+    nsresult ContinueAsyncRedirectChannelToURI(nsresult rv);
     nsresult OpenRedirectChannel(nsresult rv);
 
     /**
