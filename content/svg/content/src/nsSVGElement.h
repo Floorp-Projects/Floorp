@@ -301,7 +301,6 @@ public:
   mozilla::dom::SVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
   nsSVGElement* GetViewportElement();
   already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
-  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
 protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap);
