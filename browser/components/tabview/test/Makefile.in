@@ -121,7 +121,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug669694.js \
                  browser_tabview_bug673196.js \
                  browser_tabview_bug673729.js \
-                 browser_tabview_bug678374.js \
+                 $(filter disabled-temporarily--bug-795265, browser_tabview_bug678374.js) \
                  browser_tabview_bug681599.js \
                  browser_tabview_bug685476.js \
                  browser_tabview_bug685692.js \

@@ -8,4 +8,4 @@ needs-focus == select-load.html select-ref.html
 needs-focus == select-create.html select-ref.html
 needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
 needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html
-needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html
+skip-if(B2G) needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html # bug 773482

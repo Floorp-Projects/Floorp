@@ -87,9 +87,9 @@ void
 AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                AudioChannelType aType)
 {
-  AudioChannelAgentData data = { aType,
-                                 true /* mElementHidden */,
-                                 true /* mMuted */ };
+  AudioChannelAgentData* data = new AudioChannelAgentData(aType,
+                                                          true /* mElementHidden */,
+                                                          true /* mMuted */);
   mAgents.Put(aAgent, data);
   RegisterType(aType, CONTENT_PARENT_UNKNOWN_CHILD_ID);
 }
@@ -111,13 +111,12 @@ AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID)
 void
 AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
-  AudioChannelAgentData data;
-  if (!mAgents.Get(aAgent, &data)) {
-    return;
-  }
+  nsAutoPtr<AudioChannelAgentData> data;
+  mAgents.RemoveAndForget(aAgent, data);
 
-  mAgents.Remove(aAgent);
-  UnregisterType(data.mType, data.mElementHidden, CONTENT_PARENT_UNKNOWN_CHILD_ID);
+  if (data) {
+    UnregisterType(data->mType, data->mElementHidden, CONTENT_PARENT_UNKNOWN_CHILD_ID);
+  }
 }
 
 void
@@ -141,20 +140,17 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
 bool
 AudioChannelService::GetMuted(AudioChannelAgent* aAgent, bool aElementHidden)
 {
-  AudioChannelAgentData data;
+  AudioChannelAgentData* data;
   if (!mAgents.Get(aAgent, &data)) {
     return true;
   }
 
-  bool muted = GetMutedInternal(data.mType, CONTENT_PARENT_UNKNOWN_CHILD_ID,
-                                aElementHidden, data.mElementHidden);
+  bool muted = GetMutedInternal(data->mType, CONTENT_PARENT_UNKNOWN_CHILD_ID,
+                                aElementHidden, data->mElementHidden);
 
   // Update visibility.
-  if (data.mElementHidden != aElementHidden || data.mMuted != muted) {
-    data.mElementHidden = aElementHidden;
-    data.mMuted = muted;
-    mAgents.Put(aAgent, data);
-  }
+  data->mElementHidden = aElementHidden;
+  data->mMuted = muted;
 
   SendAudioChannelChangedNotification();
   return muted;
@@ -277,7 +273,7 @@ AudioChannelService::SendAudioChannelChangedNotification()
 
 PLDHashOperator
 AudioChannelService::NotifyEnumerator(AudioChannelAgent* aAgent,
-                                      AudioChannelAgentData aData, void* aUnused)
+                                      AudioChannelAgentData* aData, void* aUnused)
 {
   MOZ_ASSERT(aAgent);
   aAgent->NotifyAudioChannelStateChanged();

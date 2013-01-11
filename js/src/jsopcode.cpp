@@ -583,7 +583,7 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
       }
 
       case JOF_SCOPECOORD: {
-        Value v = StringValue(ScopeCoordinateName(cx->runtime, script, pc));
+        Value v = StringValue(ScopeCoordinateName(cx, script, pc));
         JSAutoByteString bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
@@ -1926,7 +1926,7 @@ IsVarSlot(JSPrinter *jp, jsbytecode *pc, JSAtom **varAtom, int *localSlot)
     *localSlot = -1;
 
     if (JOF_OPTYPE(*pc) == JOF_SCOPECOORD) {
-        *varAtom = ScopeCoordinateName(jp->sprinter.context->runtime, jp->script, pc);
+        *varAtom = ScopeCoordinateName(jp->sprinter.context, jp->script, pc);
         LOCAL_ASSERT_RV(*varAtom, false);
         return true;
     }
@@ -5973,7 +5973,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       }
       case JSOP_CALLALIASEDVAR:
       case JSOP_GETALIASEDVAR: {
-        JSAtom *atom = ScopeCoordinateName(cx->runtime, script, pc);
+        JSAtom *atom = ScopeCoordinateName(cx, script, pc);
         JS_ASSERT(atom);
         return write(atom);
       }

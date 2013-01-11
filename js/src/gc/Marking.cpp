@@ -1151,7 +1151,7 @@ struct SlotArrayLayout
 {
     union {
         HeapSlot *end;
-        js::Class *clasp;
+        HeapSlot::Kind kind;
     };
     union {
         HeapSlot *start;
@@ -1170,12 +1170,8 @@ struct SlotArrayLayout
  * the entire stack. At that point, JS code can run and reallocate slot arrays
  * that are stored on the stack. To prevent this from happening, we replace all
  * ValueArrayTag stack items with SavedValueArrayTag. In the latter, slots
- * pointers are replaced with slot indexes.
- *
- * We also replace the slot array end pointer (which can be derived from the obj
- * pointer) with the object's class. During JS executation, array slowification
- * can cause the layout of slots to change. We can observe that slowification
- * happened if the class changed; in that case, we completely rescan the array.
+ * pointers are replaced with slot indexes, and slot array end pointers are
+ * replaced with the kind of index (properties vs. elements).
  */
 void
 GCMarker::saveValueRanges()
@@ -1183,15 +1179,17 @@ GCMarker::saveValueRanges()
     for (uintptr_t *p = stack.tos; p > stack.stack; ) {
         uintptr_t tag = *--p & StackTagMask;
         if (tag == ValueArrayTag) {
+            *p &= ~StackTagMask;
             p -= 2;
             SlotArrayLayout *arr = reinterpret_cast<SlotArrayLayout *>(p);
             JSObject *obj = arr->obj;
+            JS_ASSERT(obj->isNative());
 
-            if (obj->getClass() == &ArrayClass) {
-                HeapSlot *vp = obj->getDenseArrayElements();
-                JS_ASSERT(arr->start >= vp &&
-                          arr->end == vp + obj->getDenseArrayInitializedLength());
+            HeapSlot *vp = obj->getDenseElements();
+            if (arr->end == vp + obj->getDenseInitializedLength()) {
+                JS_ASSERT(arr->start >= vp);
                 arr->index = arr->start - vp;
+                arr->kind = HeapSlot::Element;
             } else {
                 HeapSlot *vp = obj->fixedSlots();
                 unsigned nfixed = obj->numFixedSlots();
@@ -1205,8 +1203,8 @@ GCMarker::saveValueRanges()
                               arr->end == obj->slots + obj->slotSpan() - nfixed);
                     arr->index = (arr->start - obj->slots) + nfixed;
                 }
+                arr->kind = HeapSlot::Slot;
             }
-            arr->clasp = obj->getClass();
             p[2] |= SavedValueArrayTag;
         } else if (tag == SavedValueArrayTag) {
             p -= 2;
@@ -1218,17 +1216,14 @@ bool
 GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
 {
     uintptr_t start = stack.pop();
-    js::Class *clasp = reinterpret_cast<js::Class *>(stack.pop());
+    HeapSlot::Kind kind = (HeapSlot::Kind) stack.pop();
 
-    JS_ASSERT(obj->getClass() == clasp ||
-              (clasp == &ArrayClass && obj->getClass() == &SlowArrayClass));
-
-    if (clasp == &ArrayClass) {
+    if (kind == HeapSlot::Element) {
         if (obj->getClass() != &ArrayClass)
             return false;
 
-        uint32_t initlen = obj->getDenseArrayInitializedLength();
-        HeapSlot *vp = obj->getDenseArrayElements();
+        uint32_t initlen = obj->getDenseInitializedLength();
+        HeapSlot *vp = obj->getDenseElements();
         if (start < initlen) {
             *vpp = vp + start;
             *endp = vp + initlen;
@@ -1237,6 +1232,7 @@ GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
             *vpp = *endp = vp;
         }
     } else {
+        JS_ASSERT(kind == HeapSlot::Slot);
         HeapSlot *vp = obj->fixedSlots();
         unsigned nfixed = obj->numFixedSlots();
         unsigned nslots = obj->slotSpan();
@@ -1392,16 +1388,9 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         /* Call the trace hook if necessary. */
         Class *clasp = shape->getObjectClass();
         if (clasp->trace) {
-            if (clasp == &ArrayClass) {
-                JS_ASSERT(!shape->isNative());
-                vp = obj->getDenseArrayElements();
-                end = vp + obj->getDenseArrayInitializedLength();
-                goto scan_value_array;
-            } else {
-                JS_ASSERT_IF(runtime->gcMode == JSGC_MODE_INCREMENTAL &&
-                             runtime->gcIncrementalEnabled,
-                             clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
-            }
+            JS_ASSERT_IF(runtime->gcMode == JSGC_MODE_INCREMENTAL &&
+                         runtime->gcIncrementalEnabled,
+                         clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
             clasp->trace(this, obj);
         }
 
@@ -1409,6 +1398,15 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             return;
 
         unsigned nslots = obj->slotSpan();
+
+        if (!obj->hasEmptyElements()) {
+            vp = obj->getDenseElements();
+            end = vp + obj->getDenseInitializedLength();
+            if (!nslots)
+                goto scan_value_array;
+            pushValueArray(obj, vp, end);
+        }
+
         vp = obj->fixedSlots();
         if (obj->slots) {
             unsigned nfixed = obj->numFixedSlots();

@@ -28,34 +28,6 @@ NS_IMPL_RELEASE_INHERITED(SVGTextContentElement, SVGTextContentElementBase)
 NS_INTERFACE_MAP_BEGIN(SVGTextContentElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGTextContentElementBase)
 
-/* readonly attribute nsIDOMSVGAnimatedLength textLength; */
-NS_IMETHODIMP SVGTextContentElement::GetTextLength(nsIDOMSVGAnimatedLength * *aTextLength)
-{
-  NS_NOTYETIMPLEMENTED("SVGTextContentElement::GetTextLength");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsCOMPtr<nsIDOMSVGAnimatedLength>
-SVGTextContentElement::GetTextLength(ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
-/* readonly attribute nsIDOMSVGAnimatedEnumeration lengthAdjust; */
-NS_IMETHODIMP SVGTextContentElement::GetLengthAdjust(nsIDOMSVGAnimatedEnumeration * *aLengthAdjust)
-{
-  NS_NOTYETIMPLEMENTED("SVGTextContentElement::GetLengthAdjust");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsCOMPtr<nsIDOMSVGAnimatedEnumeration>
-SVGTextContentElement::GetLengthAdjust(ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
 /* long getNumberOfChars (); */
 NS_IMETHODIMP SVGTextContentElement::GetNumberOfChars(int32_t *_retval)
 {
@@ -222,20 +194,6 @@ SVGTextContentElement::GetCharNumAtPosition(nsISVGPoint& aPoint)
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
   return metrics ? metrics->GetCharNumAtPosition(&aPoint) : -1;
 }
-
-/* void selectSubString (in unsigned long charnum, in unsigned long nchars); */
-NS_IMETHODIMP SVGTextContentElement::SelectSubString(uint32_t charnum, uint32_t nchars)
-{
-  NS_NOTYETIMPLEMENTED("nsSVGTextContentElement::SelectSubString");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-SVGTextContentElement::SelectSubString(uint32_t charnum, uint32_t nchars, ErrorResult& rv)
-{
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
 
 } // namespace dom
 } // namespace mozilla

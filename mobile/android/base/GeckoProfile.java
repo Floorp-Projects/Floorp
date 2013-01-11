@@ -13,7 +13,6 @@ import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 
 import android.content.Context;
-import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 

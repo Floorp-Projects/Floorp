@@ -48,11 +48,11 @@ ToAtom(JSContext *cx, const js::Value &v)
 }
 
 inline bool
-ValueToId(JSContext* cx, JSObject *obj, const Value &v, jsid *idp)
+ValueToId(JSContext* cx, JSObject *obj, const Value &v, MutableHandleId idp)
 {
     int32_t i;
     if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
-        *idp = INT_TO_JSID(i);
+        idp.set(INT_TO_JSID(i));
         return true;
     }
 
@@ -60,7 +60,7 @@ ValueToId(JSContext* cx, JSObject *obj, const Value &v, jsid *idp)
 }
 
 inline bool
-ValueToId(JSContext* cx, const Value &v, jsid *idp)
+ValueToId(JSContext* cx, const Value &v, MutableHandleId idp)
 {
     return ValueToId(cx, NULL, v, idp);
 }
@@ -95,15 +95,15 @@ BackfillIndexInCharBuffer(uint32_t index, mozilla::RangedPtr<T> end)
 }
 
 bool
-IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp);
+IndexToIdSlow(JSContext *cx, uint32_t index, MutableHandleId idp);
 
 inline bool
-IndexToId(JSContext *cx, uint32_t index, jsid *idp)
+IndexToId(JSContext *cx, uint32_t index, MutableHandleId idp)
 {
     MaybeCheckStackRoots(cx);
 
     if (index <= JSID_INT_MAX) {
-        *idp = INT_TO_JSID(index);
+        idp.set(INT_TO_JSID(index));
         return true;
     }
 

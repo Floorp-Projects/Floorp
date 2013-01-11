@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 238501 2012-07-15 20:16:17Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 243186 2012-11-17 20:04:04Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -117,7 +117,7 @@ in6_sin6_2_sin_in_sock(struct sockaddr *nam)
 
 #if !defined(__Userspace__)
 int
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
 sctp6_input_with_port(struct mbuf **i_pak, int *offp, uint16_t port)
 #elif defined( __Panda__)
 sctp6_input(pakhandle_type *i_pak)
@@ -141,7 +141,7 @@ sctp6_input(struct mbuf **i_pak, int *offp, int proto)
 	uint32_t mflowid;
 	uint8_t use_mflowid;
 #endif
-#if !(defined(__APPLE__) || defined (__Userspace__))
+#if !(defined(__APPLE__) || defined (__FreeBSD__))
 	uint16_t port = 0;
 #endif
 
@@ -325,6 +325,14 @@ sctp6_input(struct mbuf **i_pak, int *offp, int proto)
 #if defined(__APPLE__)
 int
 sctp6_input(struct mbuf **i_pak, int *offp)
+{
+	return (sctp6_input_with_port(i_pak, offp, 0));
+}
+#endif
+
+#if defined(__FreeBSD__)
+int
+sctp6_input(struct mbuf **i_pak, int *offp, int proto SCTP_UNUSED)
 {
 	return (sctp6_input_with_port(i_pak, offp, 0));
 }

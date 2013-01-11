@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import android.content.Context;
 import android.graphics.drawable.StateListDrawable;
-import android.net.Uri;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.PagerAdapter;
 import android.util.AttributeSet;

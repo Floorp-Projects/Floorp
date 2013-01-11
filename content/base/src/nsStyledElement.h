@@ -50,7 +50,7 @@ public:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                                 const nsAttrValue* aValue, bool aNotify);
 
-  nsICSSDeclaration* GetStyle(nsresult* retval);
+  nsICSSDeclaration* Style();
 
 protected:
 

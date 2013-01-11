@@ -65,7 +65,7 @@ js::CreateRegExpMatchResult(JSContext *cx, JSString *input_, StableCharPtr chars
      *  input:          input string
      *  index:          start index for the match
      */
-    RootedObject array(cx, NewSlowEmptyArray(cx));
+    RootedObject array(cx, NewDenseEmptyArray(cx));
     if (!array)
         return false;
 
@@ -200,7 +200,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSAtom *unescaped)
             return NULL;
     }
 
-    return sb.empty() ? unescaped : sb.finishAtom();
+    return sb.empty() ? UnrootedAtom(unescaped) : sb.finishAtom();
 }
 
 /*

@@ -136,10 +136,8 @@ public:
 
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   {
-    nsresult rv;
-    *aStyle = static_cast<nsXULElement*>(mElement.get())->GetStyle(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ADDREF(*aStyle);
+    nsXULElement* element = static_cast<nsXULElement*>(mElement.get());
+    NS_ADDREF(*aStyle = element->Style());
     return NS_OK;
   }
   NS_FORWARD_NSIFRAMELOADEROWNER(static_cast<nsXULElement*>(mElement.get())->)

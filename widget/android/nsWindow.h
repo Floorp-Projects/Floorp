@@ -150,7 +150,8 @@ public:
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 
-    static void SetCompositor(mozilla::layers::CompositorParent* aCompositorParent,
+    static void SetCompositor(mozilla::layers::LayerManager* aLayerManager,
+                              mozilla::layers::CompositorParent* aCompositorParent,
                               mozilla::layers::CompositorChild* aCompositorChild);
     static void ScheduleComposite();
     static void SchedulePauseComposition();
@@ -201,21 +202,13 @@ protected:
             mStart(start), mOldEnd(oldEnd), mNewEnd(newEnd)
         {
         }
-        IMEChange(int32_t start, int32_t end) :
-            mStart(start), mOldEnd(end), mNewEnd(-1)
-        {
-        }
         bool IsEmpty()
         {
             return mStart < 0;
         }
-        bool IsTextChange()
-        {
-            return mNewEnd >= 0;
-        }
     };
     nsAutoTArray<IMEChange, 4> mIMETextChanges;
-    IMEChange mIMESelectionChange;
+    bool mIMESelectionChanged;
 
     InputContext mInputContext;
 
@@ -239,6 +232,7 @@ private:
 #ifdef MOZ_ANDROID_OMTC
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
 
+    static nsRefPtr<mozilla::layers::LayerManager> sLayerManager;
     static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
     static nsRefPtr<mozilla::layers::CompositorChild> sCompositorChild;
     static bool sCompositorPaused;

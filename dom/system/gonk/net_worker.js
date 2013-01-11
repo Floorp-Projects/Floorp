@@ -379,13 +379,18 @@ function getTxBytes(params, callback) {
   return doCommand(command, callback);
 }
 
+function escapeQuote(str) {
+  str = str.replace(/\\/g, "\\\\");
+  return str.replace(/"/g, "\\\"");
+}
+
 // The command format is "softap set wlan0 wl0.1 hotspot456 open null 6 0 8".
 function setAccessPoint(params, callback) {
   let command = "softap set " + params.ifname +
                 " " + params.wifictrlinterfacename +
-                " " + params.ssid +
+                " \"" + escapeQuote(params.ssid) + "\"" +
                 " " + params.security +
-                " " + params.key +
+                " \"" + escapeQuote(params.key) + "\"" +
                 " " + "6 0 8";
   return doCommand(command, callback);
 }

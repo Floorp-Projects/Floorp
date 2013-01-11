@@ -71,10 +71,6 @@ NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t e
 extern JSObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, RawObject proto = NULL);
 
-/* Create a sparse array. */
-extern JSObject *
-NewSlowEmptyArray(JSContext *cx);
-
 /* Get the common shape used by all dense arrays with a prototype at globalObj. */
 extern UnrootedShape
 GetDenseArrayShape(JSContext *cx, HandleObject globalObj);
@@ -86,12 +82,7 @@ extern JSBool
 SetLengthProperty(JSContext *cx, HandleObject obj, double length);
 
 extern JSBool
-array_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue value,
-                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
-extern JSBool
-array_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
-                    MutableHandleValue rval, JSBool strict);
+ObjectMayHaveExtraIndexedProperties(JSObject *obj);
 
 /*
  * Copy 'length' elements from aobj to vp.
@@ -141,16 +132,6 @@ js_ArrayInfo(JSContext *cx, unsigned argc, js::Value *vp);
  */
 extern JSBool
 js_NewbornArrayPush(JSContext *cx, js::HandleObject obj, const js::Value &v);
-
-JSBool
-js_PrototypeHasIndexedProperties(JSObject *obj);
-
-/*
- * Utility to access the value from the id returned by array_lookupProperty.
- */
-JSBool
-js_GetDenseArrayElementValue(JSContext *cx, js::HandleObject obj, jsid id,
-                             js::Value *vp);
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool

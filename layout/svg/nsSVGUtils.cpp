@@ -48,7 +48,7 @@
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGPaintServerFrame.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsSVGTextContainerFrame.h"
 #include "nsTextFrame.h"
 #include "SVGContentUtils.h"
@@ -329,7 +329,7 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
     return nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
 
   case eStyleUnit_Percent: {
-      nsSVGSVGElement* ctx = aContent->GetCtx();
+      SVGSVGElement* ctx = aContent->GetCtx();
       return ctx ? aCoord.GetPercentValue() * ctx->GetLength(SVGContentUtils::XY) : 0.0f;
     }
   default:
@@ -452,7 +452,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
         aFrame->GetStyleDisplay()->IsScrollableOverflow()) {
       // Clip rect to the viewport established by this inner-<svg>:
       float x, y, width, height;
-      static_cast<nsSVGSVGElement*>(aFrame->GetContent())->
+      static_cast<SVGSVGElement*>(aFrame->GetContent())->
         GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
       if (width <= 0.0f || height <= 0.0f) {
         return; // Nothing to invalidate
@@ -616,7 +616,7 @@ nsSVGUtils::ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength)
     // Multiply first to avoid precision errors:
     return axis * aLength->GetAnimValInSpecifiedUnits() / 100;
   }
-  return aLength->GetAnimValue(static_cast<nsSVGSVGElement*>(nullptr)) * axis;
+  return aLength->GetAnimValue(static_cast<SVGSVGElement*>(nullptr)) * axis;
 }
 
 float

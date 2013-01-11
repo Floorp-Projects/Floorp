@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
-import android.widget.TabHost.TabContentFactory;
 import android.widget.TextView;
 
 abstract public class AwesomeBarTab {

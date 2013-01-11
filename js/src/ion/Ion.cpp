@@ -347,8 +347,12 @@ IonCode::copyFrom(MacroAssembler &masm)
 
     jumpRelocTableBytes_ = masm.jumpRelocationTableBytes();
     masm.copyJumpRelocationTable(code_ + jumpRelocTableOffset());
+
     dataRelocTableBytes_ = masm.dataRelocationTableBytes();
     masm.copyDataRelocationTable(code_ + dataRelocTableOffset());
+
+    preBarrierTableBytes_ = masm.preBarrierTableBytes();
+    masm.copyPreBarrierTable(code_ + preBarrierTableOffset());
 
     masm.processCodeLabels(this);
 }
@@ -383,6 +387,22 @@ IonCode::finalize(FreeOp *fop)
     // Pools are refcounted. Releasing the pool may free it.
     if (pool_)
         pool_->release();
+}
+
+void
+IonCode::togglePreBarriers(bool enabled)
+{
+    uint8_t *start = code_ + preBarrierTableOffset();
+    CompactBufferReader reader(start, start + preBarrierTableBytes_);
+
+    while (reader.more()) {
+        size_t offset = reader.readUnsigned();
+        CodeLocationLabel loc(this, offset);
+        if (enabled)
+            Assembler::ToggleToCmp(loc);
+        else
+            Assembler::ToggleToJmp(loc);
+    }
 }
 
 void
@@ -441,8 +461,6 @@ IonScript::IonScript()
     osiIndexEntries_(0),
     cacheList_(0),
     cacheEntries_(0),
-    prebarrierList_(0),
-    prebarrierEntries_(0),
     safepointsStart_(0),
     safepointsSize_(0),
     scriptList_(0),
@@ -458,8 +476,8 @@ static const int DataAlignment = 4;
 IonScript *
 IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
-               size_t osiIndices, size_t cacheEntries, size_t prebarrierEntries,
-               size_t safepointsSize, size_t scriptEntries)
+               size_t osiIndices, size_t cacheEntries, size_t safepointsSize,
+               size_t scriptEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))
@@ -477,8 +495,6 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     size_t paddedSafepointIndicesSize = AlignBytes(safepointIndices * sizeof(SafepointIndex), DataAlignment);
     size_t paddedOsiIndicesSize = AlignBytes(osiIndices * sizeof(OsiIndex), DataAlignment);
     size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(IonCache), DataAlignment);
-    size_t paddedPrebarrierEntriesSize =
-        AlignBytes(prebarrierEntries * sizeof(CodeOffsetLabel), DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
     size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(RawScript), DataAlignment);
     size_t bytes = paddedSnapshotsSize +
@@ -487,7 +503,6 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
                    paddedSafepointIndicesSize+
                    paddedOsiIndicesSize +
                    paddedCacheEntriesSize +
-                   paddedPrebarrierEntriesSize +
                    paddedSafepointSize +
                    paddedScriptSize;
     uint8_t *buffer = (uint8_t *)cx->malloc_(sizeof(IonScript) + bytes);
@@ -522,10 +537,6 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     script->cacheList_ = offsetCursor;
     script->cacheEntries_ = cacheEntries;
     offsetCursor += paddedCacheEntriesSize;
-
-    script->prebarrierList_ = offsetCursor;
-    script->prebarrierEntries_ = prebarrierEntries;
-    offsetCursor += paddedPrebarrierEntriesSize;
 
     script->safepointsStart_ = offsetCursor;
     script->safepointsSize_ = safepointsSize;
@@ -626,23 +637,6 @@ IonScript::copyCacheEntries(const IonCache *caches, MacroAssembler &masm)
         getCache(i).updateBaseAddress(method_, masm);
 }
 
-inline CodeOffsetLabel &
-IonScript::getPrebarrier(size_t index)
-{
-    JS_ASSERT(index < numPrebarriers());
-    return prebarrierList()[index];
-}
-
-void
-IonScript::copyPrebarrierEntries(const CodeOffsetLabel *barriers, MacroAssembler &masm)
-{
-    memcpy(prebarrierList(), barriers, numPrebarriers() * sizeof(CodeOffsetLabel));
-
-    // On ARM, the saved offset may be wrong due to shuffling code buffers. Correct it.
-    for (size_t i = 0; i < numPrebarriers(); i++)
-        getPrebarrier(i).fixup(&masm);
-}
-
 const SafepointIndex *
 IonScript::getSafepointIndex(uint32_t disp) const
 {
@@ -735,14 +729,7 @@ IonScript::Destroy(FreeOp *fop, IonScript *script)
 void
 IonScript::toggleBarriers(bool enabled)
 {
-    for (size_t i = 0; i < numPrebarriers(); i++) {
-        CodeLocationLabel loc(method(), getPrebarrier(i));
-
-        if (enabled)
-            Assembler::ToggleToCmp(loc);
-        else
-            Assembler::ToggleToJmp(loc);
-    }
+    method()->togglePreBarriers(enabled);
 }
 
 void

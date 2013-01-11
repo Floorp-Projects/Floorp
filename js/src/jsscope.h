@@ -755,7 +755,7 @@ class Shape : public js::gc::Cell
      * If SHORTID is set in shape->flags, we use shape->shortid rather
      * than id when calling shape's getter or setter.
      */
-    inline bool getUserId(JSContext *cx, jsid *idp) const;
+    inline bool getUserId(JSContext *cx, MutableHandleId idp) const;
 
     uint8_t attributes() const { return attrs; }
     bool configurable() const { return (attrs & JSPROP_PERMANENT) == 0; }
@@ -1120,9 +1120,6 @@ Shape::searchNoAllocation(UnrootedShape start, jsid id)
 
     return UnrootedShape(NULL);
 }
-
-void
-MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
 
 template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};
 template<> struct RootKind<BaseShape *> : SpecificRootKind<BaseShape *, THING_ROOT_BASE_SHAPE> {};
