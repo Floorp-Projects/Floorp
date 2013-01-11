@@ -39,8 +39,9 @@ ElementAnimationsPropertyDtor(void           *aObject,
 }
 
 double
-ElementAnimations::GetPositionInIteration(TimeStamp aStartTime, TimeStamp aCurrentTime,
-                                          TimeDuration aDuration, double aIterationCount,
+ElementAnimations::GetPositionInIteration(TimeDuration aElapsedDuration,
+                                          TimeDuration aIterationDuration,
+                                          double aIterationCount,
                                           uint32_t aDirection, bool aIsForElement,
                                           ElementAnimation* aAnimation,
                                           ElementAnimations* aEa,
@@ -48,9 +49,7 @@ ElementAnimations::GetPositionInIteration(TimeStamp aStartTime, TimeStamp aCurre
 {
   // Set |currentIterationCount| to the (fractional) number of
   // iterations we've completed up to the current position.
-  TimeDuration currentTimeDuration = aCurrentTime - aStartTime;
-  double currentIterationCount =
-    currentTimeDuration / aDuration;
+  double currentIterationCount = aElapsedDuration / aIterationDuration;
   bool dispatchStartOrIteration = false;
   if (currentIterationCount >= aIterationCount) {
     if (aAnimation) {
@@ -60,7 +59,7 @@ ElementAnimations::GetPositionInIteration(TimeStamp aStartTime, TimeStamp aCurre
             ElementAnimation::LAST_NOTIFICATION_END) {
         aAnimation->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
         AnimationEventInfo ei(aEa->mElement, aAnimation->mName, NS_ANIMATION_END,
-                              currentTimeDuration);
+                              aElapsedDuration);
         aEventsToDispatch->AppendElement(ei);
       }
 
@@ -139,7 +138,7 @@ ElementAnimations::GetPositionInIteration(TimeStamp aStartTime, TimeStamp aCurre
 
     aAnimation->mLastNotification = whichIteration;
     AnimationEventInfo ei(aEa->mElement, aAnimation->mName, message,
-                          currentTimeDuration);
+                          aElapsedDuration);
     aEventsToDispatch->AppendElement(ei);
   }
 
@@ -211,16 +210,10 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         continue;
       }
 
-      TimeStamp currentTime;
-      if (anim.IsPaused()) {
-        // FIXME: avoid recalculating every time
-        currentTime = anim.mPauseStart;
-      } else {
-        currentTime = aRefreshTime;
-      }
-
+      // The ElapsedDurationAt() call here handles pausing.  But:
+      // FIXME: avoid recalculating every time when paused.
       double positionInIteration =
-        GetPositionInIteration(anim.mStartTime, currentTime,
+        GetPositionInIteration(anim.ElapsedDurationAt(aRefreshTime),
                                anim.mIterationDuration, anim.mIterationCount,
                                anim.mDirection, IsForElement(),
                                &anim, this, &aEventsToDispatch);
@@ -298,8 +291,12 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
-  return !IsPaused() && aTime >= mStartTime &&
-    (aTime - mStartTime)  / mIterationDuration < mIterationCount;
+  if (IsPaused()) {
+    return false;
+  }
+
+  double iterationsElapsed = ElapsedDurationAt(aTime) / mIterationDuration;
+  return 0.0 <= iterationsElapsed && iterationsElapsed < mIterationCount;
 }
 
 
@@ -721,7 +718,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     aDest.mFillMode = aSrc.GetFillMode();
     aDest.mPlayState = aSrc.GetPlayState();
 
-    aDest.mStartTime = now + TimeDuration::FromMilliseconds(aSrc.GetDelay());
+    aDest.mDelay = TimeDuration::FromMilliseconds(aSrc.GetDelay());
+    aDest.mStartTime = now;
     if (aDest.IsPaused()) {
       aDest.mPauseStart = now;
     } else {

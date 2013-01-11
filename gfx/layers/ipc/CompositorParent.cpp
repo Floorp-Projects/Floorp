@@ -780,8 +780,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     double numIterations = animation.numIterations() != -1 ?
       animation.numIterations() : NS_IEEEPositiveInfinity();
     double positionInIteration =
-      ElementAnimations::GetPositionInIteration(animation.startTime(),
-                                                aPoint,
+      ElementAnimations::GetPositionInIteration(aPoint - animation.startTime(),
                                                 animation.duration(),
                                                 numIterations,
                                                 animation.direction());
