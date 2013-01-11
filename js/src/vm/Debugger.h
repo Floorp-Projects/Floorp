@@ -411,7 +411,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * create a Debugger.Environment object for the given Env. On success,
      * store the Environment object in *vp and return true.
      */
-    bool wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *vp);
+    bool wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue vp);
 
     /*
      * Like cx->compartment->wrap(cx, vp), but for the debugger compartment.
