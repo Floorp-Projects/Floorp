@@ -85,12 +85,6 @@ public:
     SetIsDOMBinding();
   }
 
-  ~DOMSVGMatrix() {
-    if (mTransform) {
-      mTransform->ClearMatrixTearoff(this);
-    }
-  }
-
   const gfxMatrix& Matrix() const {
     return mTransform ? mTransform->Matrixgfx() : mMatrix;
   }
