@@ -19,7 +19,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
-#include "nsIDocumentInlines.h"
+#include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIContentIterator.h"

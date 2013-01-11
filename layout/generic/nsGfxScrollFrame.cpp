@@ -17,7 +17,7 @@
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
-#include "nsIDocumentInlines.h"
+#include "nsIDocument.h"
 #include "nsFontMetrics.h"
 #include "nsIDocumentObserver.h"
 #include "nsBoxLayoutState.h"
