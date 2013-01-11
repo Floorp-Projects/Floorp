@@ -30,7 +30,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITestCom, NS_ITEST_COM_IID)
  * nsTestCom
  */
 
-class nsTestCom: public nsITestCom {
+class nsTestCom MOZ_FINAL : public nsITestCom {
   NS_DECL_ISUPPORTS
 
 public:
@@ -69,7 +69,7 @@ nsrefcnt nsTestCom::Release()
   return res;
 }
 
-class nsTestComFactory: public nsIFactory {
+class nsTestComFactory MOZ_FINAL : public nsIFactory {
   NS_DECL_ISUPPORTS
 public:
   nsTestComFactory() {

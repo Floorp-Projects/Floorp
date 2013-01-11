@@ -26,7 +26,7 @@
 // avoided when authenticating over the internet since it may use a lower-grade
 // version of password hashing depending on the version of Windows being used.
 
-class nsAuthSSPI : public nsIAuthModule
+class nsAuthSSPI MOZ_FINAL : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS
