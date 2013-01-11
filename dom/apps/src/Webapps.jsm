@@ -1324,7 +1324,7 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!AppsUtils.checkManifest(manifest)) {
+        if (!AppsUtils.checkManifest(manifest, app)) {
           sendError("INVALID_MANIFEST");
           return;
         } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
@@ -1439,7 +1439,7 @@ this.DOMApplicationRegistry = {
           return;
         }
 
-        if (!AppsUtils.checkManifest(app.manifest)) {
+        if (!AppsUtils.checkManifest(app.manifest, app)) {
           sendError("INVALID_MANIFEST");
         } else if (!AppsUtils.checkInstallAllowed(app.manifest, app.installOrigin)) {
           sendError("INSTALL_FROM_DENIED");
@@ -1501,7 +1501,7 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!(AppsUtils.checkManifest(manifest) &&
+        if (!(AppsUtils.checkManifest(manifest, app) &&
               manifest.package_path)) {
           sendError("INVALID_MANIFEST");
         } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
@@ -2023,13 +2023,16 @@ this.DOMApplicationRegistry = {
               let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
                                                                    istream.available()) || ""));
 
+              // Call checkManifest before compareManifests, as checkManifest
+              // will normalize some attributes that has already been normalized
+              // for aManifest during checkForUpdate.
+              if (!AppsUtils.checkManifest(manifest, app)) {
+                throw "INVALID_MANIFEST";
+              }
+
               if (!AppsUtils.compareManifests(manifest,
                                               aManifest._manifest)) {
                 throw "MANIFEST_MISMATCH";
-              }
-
-              if (!AppsUtils.checkManifest(manifest)) {
-                throw "INVALID_MANIFEST";
               }
 
               if (!AppsUtils.checkInstallAllowed(manifest, aApp.installOrigin)) {
