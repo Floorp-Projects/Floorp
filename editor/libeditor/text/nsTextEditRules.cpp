@@ -22,6 +22,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
@@ -672,9 +673,9 @@ nsTextEditRules::WillInsertText(EditAction aAction,
   }
 
   // we need to get the doc
-  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
+  nsCOMPtr<nsIDOMDocument> doc = mEditor->GetDOMDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
-
+    
   if (aAction == EditAction::insertIMEText) {
     res = mEditor->InsertTextImpl(*outString, address_of(selNode), &selOffset, doc);
     NS_ENSURE_SUCCESS(res, res);

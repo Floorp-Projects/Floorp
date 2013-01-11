@@ -22,8 +22,9 @@
 #include "nsIDOMText.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
-#include "nsIDocumentInlines.h"
+#include "nsIDocument.h"
 #include "nsIDOMEventTarget.h" 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -343,10 +344,11 @@ nsHTMLEditor::GetRootElement(nsIDOMElement **aRootElement)
   } else {
     // If there is no HTML body element,
     // we should use the document root element instead.
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
     NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
-    rootElement = do_QueryInterface(doc->GetDocumentElement());
+    rv = doc->GetDocumentElement(getter_AddRefs(rootElement));
+    NS_ENSURE_SUCCESS(rv, rv);
     // Document can have no elements
     if (!rootElement) {
       return NS_ERROR_NOT_AVAILABLE;
@@ -974,7 +976,7 @@ nsHTMLEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
   *aIsDocumentEditable = doc && IsModifiable();
 
   return NS_OK;
@@ -988,16 +990,32 @@ bool nsHTMLEditor::IsModifiable()
 NS_IMETHODIMP
 nsHTMLEditor::UpdateBaseURL()
 {
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMDocument> domDoc = GetDOMDocument();
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   // Look for an HTML <base> tag
-  nsINode* baseNode = doc->GetHtmlChildElement(nsGkAtoms::base);
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsresult rv = domDoc->GetElementsByTagName(NS_LITERAL_STRING("base"), getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIDOMNode> baseNode;
+  if (nodeList)
+  {
+    uint32_t count;
+    nodeList->GetLength(&count);
+    if (count >= 1)
+    {
+      rv = nodeList->Item(0, getter_AddRefs(baseNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
   // If no base tag, then set baseURL to the document's URL
   // This is very important, else relative URLs for links and images are wrong
   if (!baseNode)
   {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
     return doc->SetBaseURI(doc->GetDocumentURI());
   }
   return NS_OK;
@@ -1168,21 +1186,32 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 
   // Do not use nsAutoRules -- rules code won't let us insert in <head>
   // Use the head node as a parent and delete/insert directly
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
-  nsINode* headNode = doc->GetHeadElement();
-  NS_ENSURE_TRUE(headNode, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  res = doc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_NULL_POINTER);
+
+  uint32_t count; 
+  nodeList->GetLength(&count);
+  if (count < 1) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> headNode;
+  res = nodeList->Item(0, getter_AddRefs(headNode)); 
+  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(headNode, NS_ERROR_NULL_POINTER);
 
   // First, make sure there are no return chars in the source.
   // Bad things happen if you insert returns (instead of dom newlines, \n)
   // into an editor document.
   nsAutoString inputString (aSourceToInsert);  // hope this does copy-on-write
-
+ 
   // Windows linebreaks: Map CRLF to LF:
   inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
                                NS_LITERAL_STRING("\n").get());
-
+ 
   // Mac linebreaks: Map any remaining CR to LF:
   inputString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
                                NS_LITERAL_STRING("\n").get());
@@ -1215,27 +1244,30 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   }
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
+  nsCOMPtr<nsIDOMNode> child;
+
   // First delete all children in head
-  nsINode* child;
   do {
-    child = headNode->GetFirstChild();
+    res = headNode->GetFirstChild(getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(res, res);
     if (child)
     {
-      res = DeleteNode(child->AsDOMNode());
+      res = DeleteNode(child);
       NS_ENSURE_SUCCESS(res, res);
     }
   } while (child);
 
   // Now insert the new nodes
   int32_t offsetOfNewNode = 0;
-  nsCOMPtr<nsINode> fragmentAsNode (do_QueryInterface(docfrag));
+  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
 
   // Loop over the contents of the fragment and move into the document
   do {
-    nsINode* child = fragmentAsNode->GetFirstChild();
+    res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(res, res);
     if (child)
     {
-      res = InsertNode(child->AsDOMNode(), headNode->AsDOMNode(), offsetOfNewNode++);
+      res = InsertNode(child, headNode, offsetOfNewNode++);
       NS_ENSURE_SUCCESS(res, res);
     }
   } while (child);
@@ -2602,6 +2634,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
 
   nsCOMPtr<nsIDOMElement>newElement;
   nsCOMPtr<dom::Element> newContent;
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
   //new call to use instead to get proper HTML element, bug# 39919
   res = CreateHTMLContent(realTagName, getter_AddRefs(newContent));
@@ -3208,7 +3242,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteText(nsIDOMCharacterData *aTextNode,
 NS_IMETHODIMP nsHTMLEditor::InsertTextImpl(const nsAString& aStringToInsert, 
                                            nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                            int32_t *aInOutOffset,
-                                           nsIDocument *aDoc)
+                                           nsIDOMDocument *aDoc)
 {
   // do nothing if the node is read-only
   if (!IsModifiableNode(*aInOutNode)) {

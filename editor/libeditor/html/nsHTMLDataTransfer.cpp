@@ -35,6 +35,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDataTransfer.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -223,9 +224,8 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                     int32_t aDestOffset,
                                     bool aDeleteSelection)
 {
-  nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDoc);
   return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
-      aFlavor, sourceDoc, aDestNode, aDestOffset, aDeleteSelection,
+      aFlavor, aSourceDoc, aDestNode, aDestOffset, aDeleteSelection,
       true);
 }
 
@@ -234,7 +234,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
                                       const nsAString & aContextStr,
                                       const nsAString & aInfoStr,
                                       const nsAString & aFlavor,
-                                      nsIDocument *aSourceDoc,
+                                      nsIDOMDocument *aSourceDoc,
                                       nsIDOMNode *aDestNode,
                                       int32_t aDestOffset,
                                       bool aDeleteSelection,
@@ -876,7 +876,7 @@ nsHTMLEditor::RemoveInsertionListener(nsIContentFilter *aListener)
  
 nsresult
 nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor, 
-                                      nsIDocument *sourceDoc,
+                                      nsIDOMDocument *sourceDoc,
                                       bool aWillDeleteSelection,
                                       nsIDOMNode **aFragmentAsNode, 
                                       nsIDOMNode **aFragStartNode, 
@@ -891,14 +891,13 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
 
   int32_t i;
   nsIContentFilter *listener;
-  nsCOMPtr<nsIDOMDocument> sourceDOMDoc = do_QueryInterface(sourceDoc);
   for (i=0; i < mContentFilters.Count() && *aDoContinue; i++)
   {
     listener = (nsIContentFilter *)mContentFilters[i];
     if (listener)
-      listener->NotifyOfInsertion(aFlavor, nullptr, sourceDOMDoc,
+      listener->NotifyOfInsertion(aFlavor, nullptr, sourceDoc,
                                   aWillDeleteSelection, aFragmentAsNode,
-                                  aFragStartNode, aFragStartOffset,
+                                  aFragStartNode, aFragStartOffset, 
                                   aFragEndNode, aFragEndOffset,
                                   aTargetNode, aTargetOffset, aDoContinue);
   }
@@ -1171,7 +1170,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
 }
 
 nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
-                                    nsIDocument *aSourceDoc,
+                                    nsIDOMDocument *aSourceDoc,
                                     nsIDOMNode *aDestinationNode,
                                     int32_t aDestOffset,
                                     bool aDoDeleteSelection)
@@ -1251,7 +1250,7 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable, 
-                                                   nsIDocument *aSourceDoc,
+                                                   nsIDOMDocument *aSourceDoc,
                                                    const nsAString & aContextStr,
                                                    const nsAString & aInfoStr,
                                                    nsIDOMNode *aDestinationNode,
@@ -1368,7 +1367,7 @@ GetStringFromDataTransfer(nsIDOMDataTransfer *aDataTransfer, const nsAString& aT
 
 nsresult nsHTMLEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
                                               int32_t aIndex,
-                                              nsIDocument *aSourceDoc,
+                                              nsIDOMDocument *aSourceDoc,
                                               nsIDOMNode *aDestinationNode,
                                               int32_t aDestOffset,
                                               bool aDoDeleteSelection)
@@ -1544,8 +1543,9 @@ NS_IMETHODIMP nsHTMLEditor::Paste(int32_t aSelectionType)
   }
 
   // handle transferable hooks
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(doc, nullptr, trans))
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
     return NS_OK;
 
   return InsertFromTransferable(trans, nullptr, contextStr, infoStr,
@@ -1558,8 +1558,8 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
     return NS_OK;
 
   // handle transferable hooks
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(doc, nullptr, aTransferable))
+  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable))
     return NS_OK;
 
   nsAutoString contextStr, infoStr;

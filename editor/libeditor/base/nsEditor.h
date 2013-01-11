@@ -40,9 +40,9 @@ class SplitElementTxn;
 class nsCSSStyleSheet;
 class nsIAtom;
 class nsIContent;
-class nsIDocument;
 class nsIDOMCharacterData;
 class nsIDOMDataTransfer;
+class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMEvent;
 class nsIDOMEventListener;
@@ -166,6 +166,7 @@ public:
                                            nsIEditor)
 
   /* ------------ utility methods   -------------- */
+  already_AddRefed<nsIDOMDocument> GetDOMDocument();
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
   void NotifyEditorObservers();
@@ -190,7 +191,7 @@ public:
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                                nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                int32_t *aInOutOffset,
-                               nsIDocument *aDoc);
+                               nsIDOMDocument *aDoc);
   nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert, 
                                       nsIDOMCharacterData *aTextNode, 
                                       int32_t aOffset,
@@ -781,7 +782,7 @@ public:
   // each item passed as aIndex.
   virtual nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
                                           int32_t aIndex,
-                                          nsIDocument *aSourceDoc,
+                                          nsIDOMDocument *aSourceDoc,
                                           nsIDOMNode *aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) = 0;
