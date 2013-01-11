@@ -74,8 +74,16 @@ const KEY_GRED            = "GreD";
 #define USE_UPDROOT
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#define USE_UPDATE_ARCHIVE_DIR
+#endif
+
 #ifdef USE_UPDROOT
 const KEY_UPDROOT         = "UpdRootD";
+#endif
+
+#ifdef USE_UPDATE_ARCHIVE_DIR
+const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
 #endif
 
 #ifdef XP_WIN
@@ -99,7 +107,8 @@ const FILE_UPDATE_ARCHIVE = "update.apk";
 #else
 const FILE_UPDATE_ARCHIVE = "update.mar";
 #endif
-const FILE_UPDATE_LOG     = "update.log"
+const FILE_UPDATE_LINK    = "update.link";
+const FILE_UPDATE_LOG     = "update.log";
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_PERMS_TEST     = "update.test";
@@ -155,6 +164,10 @@ const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
 const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
 const NETWORK_ERROR_OFFLINE             = 111;
+const FILE_ERROR_TOO_BIG                = 112;
+
+// Error codes should be < 1000. Errors above 1000 represent http status codes
+const HTTP_ERROR_OFFSET                 = 1000;
 
 const DOWNLOAD_CHUNK_SIZE           = 300000; // bytes
 const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
@@ -174,6 +187,14 @@ const DEFAULT_SOCKET_MAX_ERRORS = 10;
 const DEFAULT_UPDATE_RETRY_TIMEOUT = 2000;
 
 var gLocale     = null;
+#ifdef MOZ_B2G
+var gVolumeMountLock = null;
+XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
+    return Services.env.get("EXTERNAL_STORAGE");
+});
+
+var gSDCardMountLock = null;
+#endif
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
@@ -732,6 +753,74 @@ function writeStatusFile(dir, state) {
 }
 
 /**
+ * Reads the link file from the update.link file in the
+ * specified directory.
+ * @param   dir
+ *          The dir to look for an update.link file in
+ * @return  The contents of the update.link file.
+ */
+function readLinkFile(dir) {
+  var linkFile = dir.clone();
+  linkFile.append(FILE_UPDATE_LINK);
+  var link = readStringFromFile(linkFile) || STATE_NONE;
+  LOG("readLinkFile - link: " + link + ", path: " + linkFile.path);
+  return status;
+}
+
+/**
+ * Creates a link file, which allows the actual patch to live in
+ * a directory different from the update directory.
+ * @param   dir
+ *          The patch directory where the update.link file
+ *          should be written.
+ * @param   patchFile
+ *          The fully qualified filename of the patchfile.
+ */
+function writeLinkFile(dir, patchFile) {
+  var linkFile = dir.clone();
+  linkFile.append(FILE_UPDATE_LINK);
+  writeStringToFile(linkFile, patchFile.path);
+#ifdef MOZ_B2G
+  if (patchFile.path.indexOf(gExtStorage) == 0) {
+    // The patchfile is being stored on external storage. Try to lock it
+    // so that it doesn't get shared with the PC while we're downloading
+    // to it.
+    acquireSDCardMountLock();
+  }
+#endif
+}
+
+/**
+ * Acquires a VolumeMountLock for the sdcard volume.
+ *
+ * This prevents the SDCard from being shared with the PC while
+ * we're downloading the update.
+ */
+function acquireSDCardMountLock() {
+#ifdef MOZ_B2G
+  let volsvc = Cc["@mozilla.org/telephony/volume-service;1"].
+                    getService(Ci.nsIVolumeService);
+  if (volsvc) {
+    gSDCardMountLock = volsvc.createMountLock("sdcard");
+  }
+#endif
+}
+
+/**
+ * Releases any SDCard mount lock that we might have.
+ *
+ * This once again allows the SDCard to be shared with the PC.
+ */
+function releaseSDCardMountLock() {
+#ifdef MOZ_B2G
+  if (gSDCardMountLock) {
+    gSDCardMountLock.unlock();
+    gSDCardMountLock = null;
+  }
+#endif
+}
+
+/**
  * Determines if the service should be used to attempt an update
  * or not.  For now this is only when PREF_APP_UPDATE_SERVICE_ENABLED
  * is true and we have Firefox.
@@ -899,6 +988,7 @@ function cleanUpUpdatesDir(aBackgroundUpdate) {
       LOG("cleanUpUpdatesDir - failed to remove file " + f.path);
     }
   }
+  releaseSDCardMountLock();
 }
 
 /**
@@ -1960,8 +2050,8 @@ UpdateService.prototype = {
   },
 
   onError: function AUS_onError(request, update) {
-    LOG("UpdateService:onError - error during background update: " +
-        update.statusText);
+    LOG("UpdateService:onError - error during background update. error code: " +
+        update.errorCode + ", status text: " + update.statusText);
 
     var maxErrors;
     var errCount;
@@ -2798,6 +2888,8 @@ UpdateManager.prototype = {
       var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateDownloaded(update, true);
+    } else {
+      releaseSDCardMountLock();
     }
   },
 
@@ -2988,6 +3080,10 @@ Checker.prototype = {
     return status;
   },
 
+  _isHttpStatusCode: function UC__isHttpStatusCode(status) {
+    return status >= 100 && status <= 599;
+  },
+
   /**
    * The XMLHttpRequest succeeded and the document was loaded.
    * @param   event
@@ -3027,7 +3123,12 @@ Checker.prototype = {
       var status = this._getChannelStatus(request);
       LOG("Checker:onLoad - request.status: " + status);
       var update = new Update(null);
+      update.errorCode = status;
       update.statusText = getStatusTextFromCode(status, 404);
+
+      if (this._isHttpStatusCode(status)) {
+        update.errorCode = HTTP_ERROR_OFFSET + status;
+      }
       if (e.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
         update.errorCode = updates[0] ? CERT_ATTR_CHECK_FAILED_HAS_UPDATE
                                       : CERT_ATTR_CHECK_FAILED_NO_UPDATE;
@@ -3053,10 +3154,14 @@ Checker.prototype = {
     // just use the 200 message from above, which means everything
     // "looks" fine but there was probably an XML error or a bogus file.
     var update = new Update(null);
+    update.errorCode = status;
     update.statusText = getStatusTextFromCode(status, 200);
+
     if (status == Cr.NS_ERROR_OFFLINE) {
       // We use a separate constant here because nsIUpdate.errorCode is signed
       update.errorCode = NETWORK_ERROR_OFFLINE;
+    } else if (this._isHttpStatusCode(status)) {
+      update.errorCode = HTTP_ERROR_OFFSET + status;
     }
 
     this._callback.onError(request, update);
@@ -3146,6 +3251,7 @@ Downloader.prototype = {
     if (this._request && this._request instanceof Ci.nsIRequest) {
       this._request.cancel(cancelError);
     }
+    releaseSDCardMountLock();
   },
 
   /**
@@ -3317,6 +3423,28 @@ Downloader.prototype = {
   },
 
   /**
+   * Get the nsIFile to use for downloading the active update's selected patch
+   */
+  _getUpdateArchiveFile: function Downloader__getUpdateArchiveFile() {
+    var updateArchive;
+#ifdef USE_UPDATE_ARCHIVE_DIR
+    try {
+      updateArchive = FileUtils.getDir(KEY_UPDATE_ARCHIVE_DIR, [], true);
+    } catch (e) {
+      if (e == Cr.NS_ERROR_FILE_TOO_BIG) {
+        this._update.errorCode = FILE_ERROR_TOO_BIG;
+      }
+      return null;
+    }
+#else
+    updateArchive = getUpdatesDir().clone();
+#endif
+
+    updateArchive.append(FILE_UPDATE_ARCHIVE);
+    return updateArchive;
+  },
+
+  /**
    * Download and stage the given update.
    * @param   update
    *          A nsIUpdate object to download a patch for. Cannot be null.
@@ -3339,8 +3467,16 @@ Downloader.prototype = {
     }
     this.isCompleteUpdate = this._patch.type == "complete";
 
-    var patchFile = updateDir.clone();
-    patchFile.append(FILE_UPDATE_ARCHIVE);
+    var patchFile = this._getUpdateArchiveFile();
+    if (!patchFile) {
+      return STATE_NONE;
+    }
+
+    if (patchFile.path.indexOf(updateDir.path) != 0) {
+      // The patchFile is in a directory which is different from the
+      // updateDir, create a link file.
+      writeLinkFile(updateDir, patchFile);
+    }
 
     var uri = Services.io.newURI(this._patch.URL, null, null);
 

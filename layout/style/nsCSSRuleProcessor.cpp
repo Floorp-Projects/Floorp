@@ -1056,8 +1056,8 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
   , mLastPresContext(nullptr)
-  , mSheetType(aSheetType)
   , mScopeElement(aScopeElement)
+  , mSheetType(aSheetType)
 {
   NS_ASSERTION(!!mScopeElement == (aSheetType == nsStyleSet::eScopedDocSheet),
                "aScopeElement must be specified iff aSheetType is "

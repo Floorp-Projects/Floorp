@@ -18,18 +18,18 @@ HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
 random-if(winWidget) HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
-HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
+skip-if(B2G) HTTP(..) == src-list-format-1.html src-list-format-1-ref.html # bug 773482
 HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 HTTP(..) == src-list-format-3.html src-list-format-3-ref.html
 HTTP(..) == src-list-format-4.html src-list-format-1-ref.html
 HTTP(..) == src-list-format-5.html src-list-format-2-ref.html
 HTTP(..) == src-list-format-6.html src-list-format-3-ref.html
 # assumes AAT fonts are only supported on MacOS
-random-if(cocoaWidget) HTTP(..) == src-list-format-7.html src-list-format-2-ref.html
-random-if(!cocoaWidget) HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
-fails-if(Android) == src-list-local-full.html src-list-local-full-ref.html
-fails-if(Android) == src-list-local-full-quotes.html src-list-local-full-ref.html
-HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
+skip-if(B2G) random-if(cocoaWidget) HTTP(..) == src-list-format-7.html src-list-format-2-ref.html
+skip-if(B2G) random-if(!cocoaWidget) HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
+fails-if(Android||B2G) == src-list-local-full.html src-list-local-full-ref.html # bug 773482
+fails-if(Android||B2G) == src-list-local-full-quotes.html src-list-local-full-ref.html # bug 773482
+skip-if(B2G) HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
 
 # data url tests (these don't need the HTTP server)
 == src-list-data-1.html src-list-data-ref.html
@@ -38,13 +38,13 @@ HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
 == src-list-data-4.html src-list-data-ref.html
 
 # load with data url vs. font data load
-HTTP(..) == src-list-actual-font-ref.html src-list-data-1.html
+skip-if(B2G) HTTP(..) == src-list-actual-font-ref.html src-list-data-1.html # bug 773482
 
 # localized full fontnames should *not* match, only English ones (need locale-invariant key)
 skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html # 486787, 486497
 
 # Postscript name lookup only supported on MacOS/Windows currently
-fails-if(Android) random-if(gtk2Widget) == src-list-local-ps.html src-list-local-full-ref.html
+skip-if(B2G) fails-if(Android) random-if(gtk2Widget) == src-list-local-ps.html src-list-local-full-ref.html # bug 773482
 # Mac-specific test of 100 weight faces
 random-if(!cocoaWidget) == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
@@ -59,7 +59,7 @@ HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
 HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
 HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
 HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
-HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
+skip-if(B2G) HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html # bug 773482
 
 # Dynamic changes
 HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
@@ -70,17 +70,17 @@ HTTP(..) == enable-sheet-4.html enable-sheet-4-ref.html
 HTTP(..) == enable-sheet-5.html enable-sheet-4-ref.html
 skip HTTP(..) == enable-sheet-6.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-7.html multiple-in-family-1-ref.html
-HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
+skip-if(B2G) HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html # bug 773482
 # We're missing disable-sheet-{2,3,6,7} (analogs to
 # enable-sheet{2,3,6,7}) because I don't know how to detect test
 # completion for those cases.
 HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
 HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
-HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
+skip-if(B2G) HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html # bug 773482
 random-if(cocoaWidget) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
 HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
 HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
-HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
+skip-if(B2G) HTTP(..) == delete-rule-1.html delete-rule-1-ref.html # bug 773482
 HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
 HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
 HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
@@ -95,11 +95,11 @@ HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 # random-if(cocoaWidget) HTTP(..) == src-format-arabic.html src-format-arabic-ot-ref.html
 
 # bug 769194 - src:local() completely broken on android
-fails-if(Android) == local-1.html local-1-ref.html
-fails-if(Android) == local-styled-1.html local-styled-1-ref.html
+skip-if(B2G) fails-if(Android) == local-1.html local-1-ref.html # bug 773482
+skip-if(B2G) fails-if(Android) == local-styled-1.html local-styled-1-ref.html # bug 773482
 
-HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html
-HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
+skip-if(B2G) HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html # bug 773482
+skip-if(B2G) HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
 
 # Leak test
 HTTP(..) load 486974-1.html
@@ -108,8 +108,8 @@ HTTP(..) load 486974-1.html
 HTTP(..) == load-badchecksum.html load-badchecksum-ref.html
 
 # @font-face names take precedence over names of platform fonts (bug 494360)
-HTTP(..) == name-collision.html name-collision-ref.html
-HTTP(..) == name-collision-bad-url.html name-collision-bad-url-ref.html
+skip-if(B2G) HTTP(..) == name-collision.html name-collision-ref.html # bug 773482
+skip-if(B2G) HTTP(..) == name-collision-bad-url.html name-collision-bad-url-ref.html # bug 773482
 
 HTTP(..) == name-collision-with-prefs-font.html name-collision-with-prefs-font-ref.html # bug 668758
 
@@ -129,7 +129,7 @@ HTTP(..) == 507960-1-bad-checksums-woff.html 507960-1-ref.html
 # try versions that should NOT load (bad offsets, signatures, hint)
 HTTP(..) != 507960-1-bad-sfnt-version-ttf.html 507960-1-ref.html
 HTTP(..) != 507960-1-bad-sfnt-version-woff.html 507960-1-ref.html
-HTTP(..) != 507960-1-bad-woff-sig.html 507960-1-ref.html
+skip-if(B2G) HTTP(..) != 507960-1-bad-woff-sig.html 507960-1-ref.html
 HTTP(..) != 507960-1-bad-offset-woff.html 507960-1-ref.html
 HTTP(..) != 507960-1-woff-bad-hint.html 507960-1-ref.html
 
@@ -141,14 +141,14 @@ fails-if(cocoaWidget) fails-if(winWidget) HTTP(..) != underline-offset-change-1-
 HTTP(..) != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
 HTTP(..) == bug533251.html bug533251-ref.html
 
-fails-if(Android) HTTP(..) == ivs-1.html ivs-1-ref.html
+skip-if(B2G) fails-if(Android) HTTP(..) == ivs-1.html ivs-1-ref.html # bug 773482
 
-HTTP(..) == missing-names.html missing-names-ref.html
+skip-if(B2G) HTTP(..) == missing-names.html missing-names-ref.html # bug 773482
 
 # Tests for bug 670900 - handling of 404 (not found) error in @font-face URL
 # (using Chunkfive font data returned from a .sjs file)
 HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
-HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load
+skip-if(B2G) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # bug 773482
 HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
 
 # Font load redirection

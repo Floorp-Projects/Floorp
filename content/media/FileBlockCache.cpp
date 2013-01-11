@@ -128,7 +128,7 @@ nsresult FileBlockCache::Seek(int64_t aOffset)
   return NS_OK;
 }
 
-nsresult FileBlockCache::ReadFromFile(int32_t aOffset,
+nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
                                       uint8_t* aDest,
                                       int32_t aBytesToRead,
                                       int32_t& aBytesRead)
@@ -151,7 +151,7 @@ nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
 {
   mFileMonitor.AssertCurrentThreadOwns();
 
-  nsresult rv = Seek(aBlockIndex * BLOCK_SIZE);
+  nsresult rv = Seek(BlockIndexToOffset(aBlockIndex));
   if (NS_FAILED(rv)) return rv;
 
   int32_t amount = PR_Write(mFD, aBlockData, BLOCK_SIZE);
@@ -171,7 +171,7 @@ nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
 
   uint8_t buf[BLOCK_SIZE];
   int32_t bytesRead = 0;
-  if (NS_FAILED(ReadFromFile(aSourceBlockIndex * BLOCK_SIZE,
+  if (NS_FAILED(ReadFromFile(BlockIndexToOffset(aSourceBlockIndex),
                              buf,
                              BLOCK_SIZE,
                              bytesRead))) {
@@ -275,7 +275,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
       {
         MonitorAutoUnlock unlock(mDataMonitor);
         MonitorAutoLock lock(mFileMonitor);
-        res = ReadFromFile(blockIndex * BLOCK_SIZE + start,
+        res = ReadFromFile(BlockIndexToOffset(blockIndex) + start,
                            dst,
                            amount,
                            bytesRead);

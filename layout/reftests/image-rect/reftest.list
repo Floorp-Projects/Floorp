@@ -1,4 +1,4 @@
-random-if(bug685516) == background-common-usage-floating-point.html background-common-usage-ref.html
+skip-if(B2G) random-if(bug685516) == background-common-usage-floating-point.html background-common-usage-ref.html # bug 773482
 random-if(bug685516) == background-common-usage-percent.html background-common-usage-ref.html
 random-if(bug685516) == background-common-usage-pixel.html background-common-usage-ref.html
 random-if(bug685516) == background-draw-nothing-empty-rect.html background-draw-nothing-ref.html

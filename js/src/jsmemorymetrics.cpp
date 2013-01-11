@@ -142,10 +142,8 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSObject *obj = static_cast<JSObject *>(thing);
         if (obj->isFunction()) {
             cStats->gcHeapObjectsFunction += thingSize;
-        } else if (obj->isDenseArray()) {
+        } else if (obj->isArray()) {
             cStats->gcHeapObjectsDenseArray += thingSize;
-        } else if (obj->isSlowArray()) {
-            cStats->gcHeapObjectsSlowArray += thingSize;
         } else if (obj->isCrossCompartmentWrapper()) {
             cStats->gcHeapObjectsCrossCompartmentWrapper += thingSize;
         } else {

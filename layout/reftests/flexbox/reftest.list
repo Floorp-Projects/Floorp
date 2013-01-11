@@ -158,7 +158,7 @@ HTTP(..) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-hor
 == flexbox-mbp-horiz-3-reverse.xhtml     flexbox-mbp-horiz-3-reverse-ref.xhtml
 
 # Tests for flexbox in an iframe that gets resized.
-== flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
+skip-if(B2G) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
 == flexbox-sizing-horiz-1.xhtml flexbox-sizing-horiz-1-ref.xhtml

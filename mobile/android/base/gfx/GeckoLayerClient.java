@@ -118,6 +118,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         mPanZoomController = new PanZoomController(this, eventDispatcher);
         mView = view;
+        mView.setListener(this);
     }
 
     /** Attaches to root layer so that Gecko appears. */
@@ -127,7 +128,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = mView.getRenderer();
 
-        mView.setListener(this);
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();
@@ -613,6 +613,14 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    public void sizeChanged(int width, int height) {
+        // We need to make sure a draw happens synchronously at this point,
+        // but resizing the surface before the SurfaceView has resized will
+        // cause a visible jump.
+        compositionResumeRequested(mWindowSize.width, mWindowSize.height);
+    }
+
+    /** Implementation of LayerView.Listener */
     public void surfaceChanged(int width, int height) {
         setViewportSize(width, height);
 
@@ -620,7 +628,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // paused (e.g. during an orientation change), to make the compositor
         // aware of the changed surface.
         compositionResumeRequested(width, height);
-        renderRequested();
     }
 
     /** Implementation of LayerView.Listener */
