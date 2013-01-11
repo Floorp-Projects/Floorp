@@ -56,6 +56,7 @@ function sanitizeValue(aType, aValue)
     case "number":
       return (parseFloat(aValue) + "" === aValue) ? aValue : "";
     case "date":
+      // http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#valid-date-string
       function getNumbersOfDaysInMonth(aMonth, aYear) {
         if (aMonth === 2) {
           return (aYear % 400 === 0 || (aYear % 100 != 0 && aYear % 4 === 0)) ? 29 : 28;
@@ -79,7 +80,40 @@ function sanitizeValue(aType, aValue)
       var day = Number(match[3]);
       return 1 <= day && day <= getNumbersOfDaysInMonth(month, year) ? aValue : "";
     case "time":
-      return ""; 
+      // http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#valid-time-string
+      var match = /^([0-9]{2}):([0-9]{2})(.*)$/.exec(aValue);
+      if (!match) {
+        return "";
+      }
+      var hours = match[1];
+      if (hours < 0 || hours > 23) {
+        return "";
+      }
+      var minutes = match[2];
+      if (minutes < 0 || minutes > 59) {
+        return "";
+      }
+      var other = match[3];
+      if (other == "") {
+        return aValue;
+      }
+      match = /^:([0-9]{2})(.*)$/.exec(other);
+      if (!match) {
+        return "";
+      }
+      var seconds = match[1];
+      if (seconds < 0 || seconds > 59) {
+        return "";
+      }
+      var other = match[2];
+      if (other == "") {
+        return aValue;
+      }
+      match = /^.([0-9]{1,3})$/.exec(other);
+      if (!match) {
+        return "";
+      }
+      return aValue;
     case "month":
     case "week":
     case "datetime":
@@ -102,10 +136,6 @@ function sanitizeValue(aType, aValue)
 
 function checkSanitizing(element)
 {
-  if (element.type === 'time') {
-    return;
-  }
-
   var testData =
   [
     // For text, password, search, tel, email:
@@ -168,6 +198,63 @@ function checkSanitizing(element)
     "1234-12 12",
     "1234 12-12",
     "1234 12 12",
+    // For time:
+    "1",
+    "10",
+    "10:",
+    "10:1",
+    "21:21",
+    ":21:21",
+    "-21:21",
+    " 21:21",
+    "21-21",
+    "21:21:",
+    "21:211",
+    "121:211",
+    "21:21 ",
+    "00:00",
+    "-1:00",
+    "24:00",
+    "00:60",
+    "01:01",
+    "23:59",
+    "99:99",
+    "8:30",
+    "19:2",
+    "19:a2",
+    "4c:19",
+    "10:.1",
+    "1.:10",
+    "13:37:42",
+    "13:37.42",
+    "13:37:42 ",
+    "13:37:42.",
+    "13:37:61.",
+    "13:37:00",
+    "13:37:99",
+    "13:37:b5",
+    "13:37:-1",
+    "13:37:.1",
+    "13:37:1.",
+    "13:37:42.001",
+    "13:37:42.001",
+    "13:37:42.abc",
+    "13:37:42.00c",
+    "13:37:42.a23",
+    "13:37:42.12e",
+    "13:37:42.1e1",
+    "13:37:42.e11",
+    "13:37:42.1",
+    "13:37:42.99",
+    "13:37:42.0",
+    "13:37:42.00",
+    "13:37:42.000",
+    "13:37:42.-1",
+    "13:37:42.1.1",
+    "13:37:42.1,1",
+    "13:37:42.",
+    "foo12:12",
+    "13:37:42.100000000000",
   ];
 
   for (value of testData) {

@@ -334,6 +334,23 @@ protected:
    */
   static bool IsValidEmailAddressList(const nsAString& aValue);
 
+  /**
+   * This helper method convert a sub-string that contains only digits to a
+   * number (unsigned int given that it can't contain a minus sign).
+   * This method will return whether the sub-string is correctly formatted
+   * (ie. contains only digit) and it can be successfuly parsed to generate a
+   * number).
+   * If the method returns true, |aResult| will contained the parsed number.
+   *
+   * @param aValue  the string on which the sub-string will be extracted and parsed.
+   * @param aStart  the beginning of the sub-string in aValue.
+   * @param aLen    the length of the sub-string.
+   * @param aResult the parsed number.
+   * @return whether the sub-string has been parsed successfully.
+   */
+  static bool DigitSubStringToNumber(const nsAString& aValue, uint32_t aStart,
+                                     uint32_t aLen, uint32_t* aResult);
+
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
                             bool aUserInput,
@@ -608,6 +625,15 @@ protected:
    * This methods returns the number of days in a given month, for a given year.
    */
   uint32_t NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const;
+
+  /**
+   * Returns whether aValue is a valid time as described by HTML specifications:
+   * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#valid-time-string
+   *
+   * @param aValue the string to be tested.
+   * @return Whether the string is a valid time per HTML specifications.
+   */
+  bool IsValidTime(const nsAString& aValue) const;
 
   /**
    * Sets the value of the element to the string representation of the double.
