@@ -186,7 +186,7 @@ function browserLoadEvent() {
     for (i in this.result) {
       var app = this.result[i];
       if (app.manifestURL == gManifestURL) {
-        app.uninstall().onsuccess = function() {
+        navigator.mozApps.mgmt.uninstall(app).onsuccess = function() {
           /*
            * Now that the app is uninstalled, we should not find any more
            * localStorage data from the app or its browsers. However,

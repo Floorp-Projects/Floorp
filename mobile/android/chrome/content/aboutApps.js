@@ -60,7 +60,7 @@ var ContextMenus = {
   },
 
   uninstall: function() {
-    this.target.app.uninstall();
+    navigator.mozApps.mgmt.uninstall(this.target.app);
 
     let manifest = this.target.manifest;
     gChromeWin.sendMessageToJava({

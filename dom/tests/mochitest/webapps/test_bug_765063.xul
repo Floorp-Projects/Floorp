@@ -33,7 +33,7 @@ var observer = {
 
     navigator.mozApps.mgmt.getAll().onsuccess = function onGetAll() {
       var app = [a for (a of this.result) if (a.manifestURL == url)][0];
-      app.uninstall().onsuccess = function onUninstall() {
+      navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
         SimpleTest.finish();
       }
     }
