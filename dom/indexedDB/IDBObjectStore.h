@@ -44,9 +44,6 @@ struct IndexInfo;
 struct IndexUpdateInfo;
 struct ObjectStoreInfo;
 
-struct FileHandleData;
-struct BlobOrFileData;
-
 class IDBObjectStore MOZ_FINAL : public nsIIDBObjectStore
 {
 public:
@@ -101,7 +98,6 @@ public:
                  StructuredCloneWriteInfo& aCloneWriteInfo,
                  jsval aValue);
 
-  template <class DeserializationTraits>
   static JSObject*
   StructuredCloneReadCallback(JSContext* aCx,
                               JSStructuredCloneReader* aReader,
@@ -273,14 +269,6 @@ protected:
   static void
   ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer);
 
-  static bool
-  ReadFileHandle(JSStructuredCloneReader* aReader,
-                 FileHandleData* aRetval);
-
-  static bool
-  ReadBlobOrFile(JSStructuredCloneReader* aReader,
-                 uint32_t aTag,
-                 BlobOrFileData* aRetval);
 private:
   nsRefPtr<IDBTransaction> mTransaction;
 

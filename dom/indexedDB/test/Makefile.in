@@ -73,7 +73,6 @@ MOCHITEST_FILES = \
   test_index_update_delete.html \
   test_indexes.html \
   test_indexes_bad_values.html \
-  test_indexes_funny_things.html \
   test_key_requirements.html \
   test_keys.html \
   test_leaving_page.html \
