@@ -18,7 +18,7 @@ namespace hal_impl {
 
 static nsRefPtr<ISensor> sAccelerometer;
 
-class SensorEvent : public ISensorEvents {
+class SensorEvent MOZ_FINAL : public ISensorEvents {
 public:
   SensorEvent() : mCount(0) {
   }

@@ -79,7 +79,7 @@ private:
  * device and create swap chains for the individual windows the layer managers
  * belong to.
  */
-class THEBES_API DeviceManagerD3D9
+class THEBES_API DeviceManagerD3D9 MOZ_FINAL
 {
 public:
   DeviceManagerD3D9();

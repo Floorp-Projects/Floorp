@@ -14,7 +14,7 @@ struct ID2D1GeometrySink;
 namespace mozilla {
 namespace gfx {
 
-class ScaledFontDWrite : public ScaledFontBase
+class ScaledFontDWrite MOZ_FINAL : public ScaledFontBase
 {
 public:
   ScaledFontDWrite(IDWriteFontFace *aFont, Float aSize)
