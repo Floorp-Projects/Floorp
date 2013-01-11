@@ -41,6 +41,7 @@ native gfxImageFormat(gfxASurface::gfxImageFormat);
 native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
+native nsSize(nsSize);
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native ImageContainer(mozilla::layers::ImageContainer);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
@@ -55,7 +56,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(c7e8eed7-2be9-40b0-be7c-b682097f5b28)]
+[scriptable, builtinclass, uuid(a9a6835f-ca7e-4c80-8892-962c959fcd27)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -69,6 +70,19 @@ interface imgIContainer : nsISupports
    * zero is returned, and an exception will be thrown.
    */
   readonly attribute int32_t height;
+
+  /**
+   * The intrinsic size of this image in appunits. If the image has no intrinsic
+   * size in a dimension, -1 will be returned for that dimension. In the case of
+   * any error, an exception will be thrown.
+   */
+  [noscript] readonly attribute nsSize intrinsicSize;
+
+  /**
+   * The (dimensionless) intrinsic ratio of this image. In the case of any error,
+   * an exception will be thrown.
+   */
+  [noscript] readonly attribute nsSize intrinsicRatio;
 
   /**
     * Enumerated values for the 'type' attribute (below).

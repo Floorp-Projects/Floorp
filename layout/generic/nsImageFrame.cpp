@@ -287,22 +287,23 @@ nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
     return false;
 
   nsIFrame::IntrinsicSize oldIntrinsicSize = mIntrinsicSize;
+  mIntrinsicSize = nsIFrame::IntrinsicSize();
 
-  nsIFrame* rootFrame = aImage->GetRootLayoutFrame();
-  if (rootFrame) {
-    // Set intrinsic size to match that of aImage's rootFrame.
-    mIntrinsicSize = rootFrame->GetIntrinsicSize();
+  // Set intrinsic size to match aImage's reported intrinsic width & height.
+  nsSize intrinsicSize;
+  if (NS_SUCCEEDED(aImage->GetIntrinsicSize(&intrinsicSize))) {
+    // If the image has no intrinsic width, intrinsicSize.width will be -1, and
+    // we can leave mIntrinsicSize.width at its default value of eStyleUnit_None.
+    // Otherwise we use intrinsicSize.width. Height works the same way.
+    if (intrinsicSize.width != -1)
+      mIntrinsicSize.width.SetCoordValue(intrinsicSize.width);
+    if (intrinsicSize.height != -1)
+      mIntrinsicSize.height.SetCoordValue(intrinsicSize.height);
   } else {
-    // Set intrinsic size to match aImage's reported width & height.
-    nsIntSize imageSizeInPx;
-    if (NS_FAILED(aImage->GetWidth(&imageSizeInPx.width)) ||
-        NS_FAILED(aImage->GetHeight(&imageSizeInPx.height))) {
-      imageSizeInPx.SizeTo(0, 0);
-    }
-    mIntrinsicSize.width.SetCoordValue(
-      nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.width));
-    mIntrinsicSize.height.SetCoordValue(
-      nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.height));
+    // Failure means that the image hasn't loaded enough to report a result. We
+    // treat this case as if the image's intrinsic size was 0x0.
+    mIntrinsicSize.width.SetCoordValue(0);
+    mIntrinsicSize.height.SetCoordValue(0);
   }
 
   return mIntrinsicSize != oldIntrinsicSize;
@@ -318,18 +319,9 @@ nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage)
 
   nsSize oldIntrinsicRatio = mIntrinsicRatio;
 
-  nsIFrame* rootFrame = aImage->GetRootLayoutFrame();
-  if (rootFrame) {
-    // Set intrinsic ratio to match that of aImage's rootFrame.
-    mIntrinsicRatio = rootFrame->GetIntrinsicRatio();
-  } else {
-    NS_ABORT_IF_FALSE(mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
-                      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord,
-                      "since aImage doesn't have a rootFrame, our intrinsic "
-                      "dimensions must have coord units (not percent units)");
-    mIntrinsicRatio.width = mIntrinsicSize.width.GetCoordValue();
-    mIntrinsicRatio.height = mIntrinsicSize.height.GetCoordValue();
-  }
+  // Set intrinsic ratio to match aImage's reported intrinsic ratio.
+  if (NS_FAILED(aImage->GetIntrinsicRatio(&mIntrinsicRatio)))
+    mIntrinsicRatio.SizeTo(0, 0);
 
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
