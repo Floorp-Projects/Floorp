@@ -3023,22 +3023,33 @@ let RIL = {
         delete newCalls[currentCall.callIndex];
       }
 
-      if (newCall) {
-        // Call is still valid.
-        if (newCall.state != currentCall.state) {
-          // State has changed.
-          if (!currentCall.started && newCall.state == CALL_STATE_ACTIVE) {
-            currentCall.started = new Date().getTime();
-          }
-          currentCall.state = newCall.state;
-          this._handleChangedCallState(currentCall);
-        }
-      } else {
+      if (!newCall) {
         // Call is no longer reported by the radio. Remove from our map and
         // send disconnected state change.
         delete this.currentCalls[currentCall.callIndex];
         this.getFailCauseCode(currentCall);
+        continue;
       }
+
+      // Call is still valid.
+      if (newCall.state == currentCall.state) {
+        continue;
+      }
+
+      // State has changed.
+      if (newCall.state == CALL_STATE_INCOMING &&
+          currentCall.state == CALL_STATE_WAITING) {
+        // Update the call internally but we don't notify DOM since these two
+        // states are viewed as the same one there.
+        currentCall.state = newCall.state;
+        continue;
+      }
+
+      if (!currentCall.started && newCall.state == CALL_STATE_ACTIVE) {
+        currentCall.started = new Date().getTime();
+      }
+      currentCall.state = newCall.state;
+      this._handleChangedCallState(currentCall);
     }
 
     // Go through any remaining calls that are new to us.
