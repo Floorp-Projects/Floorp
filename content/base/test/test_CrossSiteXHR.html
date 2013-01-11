@@ -559,7 +559,16 @@ function runTest() {
                  exposeHeaders: "  ,  ,,y-my-header,z-my-header,  ",
                  expectedResponseHeaders: ["y-my-header"],
                },
-               
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "Cache-Control": "cacheControl header",
+                                    "Content-Language": "contentLanguage header",
+                                    "Expires":"expires header",
+                                    "Last-Modified":"lastModified header",
+                                    "Pragma":"pragma header",
+                                    "Unexpected":"unexpected header" },
+                 expectedResponseHeaders: ["Cache-Control","Content-Language","Content-Type","Expires","Last-Modified","Pragma"],
+               },
                // Check that sending a body in the OPTIONS response works
                { pass: 1,
                  method: "DELETE",
@@ -673,13 +682,19 @@ function runTest() {
         for (header in test.responseHeaders) {
           if (test.expectedResponseHeaders.indexOf(header) == -1) {
             is(res.responseHeaders[header], null,
-               "wrong response header (" + header + ") in test for " +
+               "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
                test.toSource());
+	    is(res.allResponseHeaders[header], null,
+              "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
+              test.toSource());
           }
           else {
             is(res.responseHeaders[header], test.responseHeaders[header],
-               "wrong response header (" + header + ") in test for " +
+               "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
                test.toSource());
+            is(res.allResponseHeaders[header], test.responseHeaders[header],
+              "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
+              test.toSource());
           }
         }
       }

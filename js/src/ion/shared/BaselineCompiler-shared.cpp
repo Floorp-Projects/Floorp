@@ -16,7 +16,7 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, HandleScript scrip
   : cx(cx),
     script(cx, script),
     pc(NULL),
-    ionCompileable_(ion::IsEnabled(cx) && CanIonCompileScript(script)),
+    ionCompileable_(ion::IsEnabled(cx) && CanIonCompileScript(cx, script)),
     frame(cx, script, masm),
     stubSpace_(),
     icEntries_(),

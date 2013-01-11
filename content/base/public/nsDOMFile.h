@@ -48,6 +48,8 @@ public:
   virtual const nsTArray<nsCOMPtr<nsIDOMBlob> >*
   GetSubBlobs() const { return nullptr; }
 
+  virtual bool IsMemoryBacked() const { return false; }
+
   NS_DECL_NSIDOMBLOB
   NS_DECL_NSIDOMFILE
   NS_DECL_NSIXHRSENDABLE
@@ -350,8 +352,9 @@ public:
   nsDOMMemoryFile(void *aMemoryBuffer,
                   uint64_t aLength,
                   const nsAString& aName,
-                  const nsAString& aContentType)
-    : nsDOMFile(aName, aContentType, aLength, UINT64_MAX),
+                  const nsAString& aContentType,
+                  uint64_t aModDate = UINT64_MAX)
+    : nsDOMFile(aName, aContentType, aLength, aModDate),
       mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
@@ -368,6 +371,10 @@ public:
   }
 
   NS_IMETHOD GetInternalStream(nsIInputStream**);
+
+  virtual bool IsMemoryBacked() const { return true; }
+  void* GetData() const { return mDataOwner->mData; }
+  uint64_t GetLength() const { return mDataOwner->mLength; }
 
 protected:
   // Create slice

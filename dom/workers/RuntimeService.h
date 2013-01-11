@@ -73,6 +73,7 @@ class RuntimeService MOZ_FINAL : public nsIObserver
 
   static uint32_t sDefaultJSContextOptions;
   static uint32_t sDefaultJSRuntimeHeapSize;
+  static uint32_t sDefaultJSAllocationThreshold;
   static int32_t sCloseHandlerTimeoutSeconds;
 
 #ifdef JS_GC_ZEAL
@@ -160,21 +161,37 @@ public:
   UpdateAllWorkerJSContextOptions();
 
   static uint32_t
-  GetDefaultJSRuntimeHeapSize()
+  GetDefaultJSWorkerMemoryParameter(JSGCParamKey aKey)
   {
     AssertIsOnMainThread();
-    return sDefaultJSRuntimeHeapSize;
+    switch (aKey) {
+      case JSGC_ALLOCATION_THRESHOLD:
+        return sDefaultJSAllocationThreshold;
+      case JSGC_MAX_BYTES:
+        return sDefaultJSRuntimeHeapSize;
+      default:
+        MOZ_NOT_REACHED("Unknown Worker Memory Parameter.");
+    }
   }
 
   static void
-  SetDefaultJSRuntimeHeapSize(uint32_t aMaxBytes)
+  SetDefaultJSWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue)
   {
     AssertIsOnMainThread();
-    sDefaultJSRuntimeHeapSize = aMaxBytes;
+    switch(aKey) {
+      case JSGC_ALLOCATION_THRESHOLD:
+        sDefaultJSAllocationThreshold = aValue;
+        break;
+      case JSGC_MAX_BYTES:
+        sDefaultJSRuntimeHeapSize = aValue;
+        break;
+      default:
+        MOZ_NOT_REACHED("Unknown Worker Memory Parameter.");
+    }
   }
 
   void
-  UpdateAllWorkerJSRuntimeHeapSize();
+  UpdateAllWorkerMemoryParameter(JSGCParamKey aKey);
 
   static uint32_t
   GetCloseHandlerTimeoutSeconds()

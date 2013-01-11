@@ -37,7 +37,8 @@ nsRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCancelableRunnable, nsICancelableRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsCancelableRunnable, nsICancelableRunnable,
+                              nsIRunnable)
 
 NS_IMETHODIMP
 nsCancelableRunnable::Run()

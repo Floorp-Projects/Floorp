@@ -1,8 +1,8 @@
-fails-if(Android) == fallback-01.xhtml fallback-01-ref.xhtml
+fails-if(Android||B2G) == fallback-01.xhtml fallback-01-ref.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
-== font-selection-fallback-1.html font-selection-fallback-1-ref.html
-HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html
-fails-if(Android) != font-size-adjust-01.html font-size-adjust-01-ref.html
+skip-if(B2G) == font-selection-fallback-1.html font-selection-fallback-1-ref.html
+skip-if(B2G) HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html # bug 773482
+fails-if(Android||B2G) != font-size-adjust-01.html font-size-adjust-01-ref.html
 # The following test passes consistently only on Mac OS X;
 # both Windows and Linux give results that vary depending on the font size/zoom factor used,
 # because hinting affects the metrics used to compute the font size adjustment. See bug 429605.
@@ -24,7 +24,7 @@ load ligature-with-space-1.html
 == line-editing-1e.html line-editing-1-ref.html
 fails-if(cocoaWidget||winWidget) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
-== long-1.html long-ref.html
+skip-if(B2G) == long-1.html long-ref.html
 == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
@@ -47,7 +47,7 @@ fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixe
 # subpixel.
 # D2D/DirectWrite results depend on the rendering mode chosen, so considering this as random for now.
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
-HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
+skip-if(B2G) HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
 == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 fuzzy-if(Android,9,61) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
@@ -110,20 +110,20 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == wordbreak-4b.html wordbreak-4b-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
 == wordbreak-6.html wordbreak-6-ref.html
-HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
+skip-if(B2G) HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
 fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
-HTTP(..) == wordwrap-03.html wordwrap-03-ref.html
+skip-if(B2G) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html
 == wordwrap-07.html wordwrap-07-ref.html
-!= wordwrap-08.html wordwrap-01-ref.html
-== wordwrap-08.html wordwrap-08-ref.html
-!= wordwrap-09.html wordwrap-01-ref.html
-== wordwrap-09.html wordwrap-09-ref.html
+skip-if(B2G) != wordwrap-08.html wordwrap-01-ref.html
+skip-if(B2G) == wordwrap-08.html wordwrap-08-ref.html
+skip-if(B2G) != wordwrap-09.html wordwrap-01-ref.html
+skip-if(B2G) == wordwrap-09.html wordwrap-09-ref.html
 == wordwrap-10.html wordwrap-10-ref.html # bug 752459
 == word-spacing-01.html word-spacing-01-ref.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
@@ -135,8 +135,8 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
-HTTP(..) == 475092-sub.html 475092-ref.html
-fails-if(!winWidget) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
+skip-if(B2G) HTTP(..) == 475092-sub.html 475092-ref.html
+fails-if(!winWidget) skip-if(B2G) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
@@ -152,14 +152,14 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 # Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
 # These tests are not valid on OS X because our masking of complex-script ranges
 # in the 'cmap' will prevent the test font (without GSUB) being used.
-fails-if(cocoaWidget) HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
+skip-if(B2G) fails-if(cocoaWidget) HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
 fails-if(cocoaWidget) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
 fails-if(cocoaWidget) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
 fails-if(!cocoaWidget) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
 
 == 726392-1.html 726392-1-ref.html
 == 726392-2.html 726392-2-ref.html
-== 726392-3.html 726392-3-ref.html
+skip-if(B2G) == 726392-3.html 726392-3-ref.html
 == 745555-1.html 745555-1-ref.html
 == 745555-2.html 745555-2-ref.html
 == 820255.html 820255-ref.html
@@ -171,12 +171,12 @@ fails-if(!cocoaWidget) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notr
 
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
 HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
-HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
+skip-if(B2G) HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
 HTTP(..) == graphite-05-simple.html graphite-05-ref.html
 HTTP(..) == graphite-05-multipass.html graphite-05-ref.html
-HTTP(..) == graphite-05-lang.html graphite-05-ref.html
-HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
-HTTP(..) == graphite-05-feat.html graphite-05-ref.html
+skip-if(B2G) HTTP(..) == graphite-05-lang.html graphite-05-ref.html
+skip-if(B2G) HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
+skip-if(B2G) HTTP(..) == graphite-05-feat.html graphite-05-ref.html
 
 # comparing composed and decomposed characters that should render identically
 # under both OpenType and Graphite shaping

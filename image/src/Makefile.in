@@ -47,7 +47,7 @@ LOCAL_INCLUDES += -I$(topsrcdir)/image/decoders
 # For URI-related functionality
 LOCAL_INCLUDES += -I$(topsrcdir)/netwerk/base/src
 
-# Because SVGDocumentWrapper.cpp includes "nsSVGSVGElement.h"
+# Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
 LOCAL_INCLUDES += \
 			-I$(topsrcdir)/content/svg/content/src \
 			-I$(topsrcdir)/content/base/src \

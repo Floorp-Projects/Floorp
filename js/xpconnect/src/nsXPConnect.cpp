@@ -473,6 +473,72 @@ TraceWeakMapping(js::WeakMapTracer *trc, JSObject *m,
     }
 }
 
+// This is based on the logic in TraceWeakMapping.
+struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
+{
+    FixWeakMappingGrayBitsTracer(JSRuntime *rt)
+        : js::WeakMapTracer(rt, FixWeakMappingGrayBits)
+    {}
+
+    void
+    FixAll()
+    {
+        do {
+            mAnyMarked = false;
+            js::TraceWeakMaps(this);
+        } while (mAnyMarked);
+    }
+
+private:
+
+    static void
+    FixWeakMappingGrayBits(js::WeakMapTracer *trc, JSObject *m,
+                           void *k, JSGCTraceKind kkind,
+                           void *v, JSGCTraceKind vkind)
+    {
+        MOZ_ASSERT(!js::IsIncrementalBarrierNeeded(trc->runtime),
+                   "Don't call FixWeakMappingGrayBits during a GC.");
+
+        FixWeakMappingGrayBitsTracer *tracer = static_cast<FixWeakMappingGrayBitsTracer*>(trc);
+
+        // If nothing that could be held alive by this entry is marked gray, return.
+        bool delegateMightNeedMarking = k && xpc_IsGrayGCThing(k);
+        bool valueMightNeedMarking = v && xpc_IsGrayGCThing(v) && vkind != JSTRACE_STRING;
+        if (!delegateMightNeedMarking && !valueMightNeedMarking)
+            return;
+
+        if (!AddToCCKind(kkind))
+            k = nullptr;
+
+        if (delegateMightNeedMarking && kkind == JSTRACE_OBJECT) {
+            JSObject *kdelegate = js::GetWeakmapKeyDelegate((JSObject *)k);
+            if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
+                js::UnmarkGrayGCThingRecursively(k, JSTRACE_OBJECT);
+                tracer->mAnyMarked = true;
+            }
+        }
+
+        if (v && xpc_IsGrayGCThing(v) &&
+            (!k || !xpc_IsGrayGCThing(k)) &&
+            (!m || !xpc_IsGrayGCThing(m)) &&
+            vkind != JSTRACE_SHAPE)
+        {
+            js::UnmarkGrayGCThingRecursively(v, vkind);
+            tracer->mAnyMarked = true;
+        }
+
+    }
+
+    bool mAnyMarked;
+};
+
+void
+nsXPConnect::FixWeakMappingGrayBits()
+{
+    FixWeakMappingGrayBitsTracer fixer(GetRuntime()->GetJSRuntime());
+    fixer.FixAll();
+}
+
 nsresult
 nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
 {

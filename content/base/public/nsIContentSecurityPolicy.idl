@@ -13,7 +13,7 @@ interface nsIDocShell;
  * Describes an XPCOM component used to model an enforce CSPs.
  */
 
-[scriptable, uuid(AB36A2BF-CB32-4AA6-AB41-6B4E4444A221)]
+[scriptable, uuid(d1680bb4-1ac0-4772-9437-1188375e44f2)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -96,7 +96,7 @@ interface nsIContentSecurityPolicy : nsISupports
    * Updates the policy currently stored in the CSP to be "refined" or
    * tightened by the one specified in the string policyString.
    */
-  void refinePolicy(in AString policyString, in nsIURI selfURI);
+  void refinePolicy(in AString policyString, in nsIURI selfURI, in boolean specCompliant);
 
   /**
    * Verifies ancestry as permitted by the policy.

@@ -1,0 +1,94 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=823965
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=823965">Mozilla Bug 823965</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+var gFileName = "devicestorage/hi.png";
+var gData = "My name is Doug Turner (?!?).  My IRC nick is DougT.  I like Maple cookies."
+var gDataBlob = new Blob([gData], {type: 'image/png'});
+
+function getSuccess(e) {
+  var storage = navigator.getDeviceStorage("pictures");
+  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+  ok(e.target.result.name == gFileName, "File name should match");
+  ok(e.target.result.size > 0, "File size be greater than zero");
+  ok(e.target.result.type, "File should have a mime type");
+  ok(e.target.result.lastModifiedDate, "File should have a last modified date");
+
+  var mreq = storage.enumerate();
+  mreq.onsuccess = function() {
+    var storage2 = navigator.getDeviceStorage('music');
+    var dreq = storage2.delete(mreq.result.name);
+    dreq.onerror = function () {
+      ok(true, "The bug has been fixed");
+      devicestorage_cleanup();
+    };
+    dreq.onsuccess = function () {
+      ok(false, "The bug has been fixed");
+      devicestorage_cleanup();
+    };
+  };
+
+  mreq.onerror = getError;
+}
+
+function getError(e) {
+  ok(false, "getError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function addSuccess(e) {
+
+  ok(e.target.result == gFileName, "File name should match");
+
+  var storage = navigator.getDeviceStorage("pictures");
+  request = storage.get(gFileName);
+  request.onsuccess = getSuccess;
+  request.onerror = getError;
+
+  ok(true, "addSuccess was called");
+}
+
+function addError(e) {
+  ok(false, "addError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+var storage = navigator.getDeviceStorage("pictures");
+ok(storage, "Should have gotten a storage");
+
+request = storage.addNamed(gDataBlob, "devicestorage/hi.png");
+ok(request, "Should have a non-null request");
+
+request.onsuccess = addSuccess;
+request.onerror = addError;
+
+</script>
+</pre>
+</body>
+</html>
+

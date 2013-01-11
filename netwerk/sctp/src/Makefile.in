@@ -105,6 +105,8 @@ DEFINES += \
 else
 ifeq (,$(filter-out Linux Android,$(OS_TARGET)))
 DEFINES += -D__Userspace_os_Linux=1
+# to make sure that in6_pktinfo gets defined on all distros
+DEFINES += -D_GNU_SOURCE
 else
 ifeq ($(OS_TARGET),FreeBSD)
 DEFINES += \

@@ -1,4 +1,16 @@
 {
   "name": "Basic App",
-  "installs_allowed_from": ["*"]
+  "installs_allowed_from": ["*"],
+  "activities": {
+    "without_href": {
+      "returnValue": true
+    },
+    "valid_href": {
+      "returnvalue": true,
+      "href": "/foo.html"
+    }
+  },
+  "messages": [
+    { "valid_message_href": "/bar.html" }
+  ]
 }

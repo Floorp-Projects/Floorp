@@ -29,6 +29,9 @@ var steps = [
   invalidLaunchPath2,
   invalidEntryPoint,
   invalidLocaleEntryPoint,
+  invalidActivityHref,
+  invalidActivityHref2,
+  invalidMessage,
   fileURL,
   originNotAllowed,
   originAllowed,
@@ -140,6 +143,36 @@ function invalidLocaleEntryPoint(next) {
   confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
+}
+
+function invalidActivityHref(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_activity_href.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Manifest has non-relative URI for activity href");
+    next();
+  };
+}
+
+function invalidActivityHref2(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_activity_href2.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Manifest has data: URI for activity href");
+    next();
+  };
+}
+
+function invalidMessage(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_message.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Manifest has absolute message href");
     next();
   };
 }

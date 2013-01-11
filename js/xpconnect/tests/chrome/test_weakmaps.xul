@@ -209,6 +209,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
   let make_live_map = function () {
     let live = get_live_dom();
     wn_live_map.set(live, {});
+    ok(wn_live_map.has(get_live_dom()), "Live map should have live DOM node before GC.");
   }
 
   make_live_map();
@@ -237,15 +238,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
   SimpleTest.waitForExplicitFinish();
 
   Cu.schedulePreciseGC(function () {
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-         .getInterface(Ci.nsIDOMWindowUtils)
-         .cycleCollect();
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-         .getInterface(Ci.nsIDOMWindowUtils)
-         .garbageCollect();
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-         .getInterface(Ci.nsIDOMWindowUtils)
-         .garbageCollect();
+    SpecialPowers.DOMWindowUtils.cycleCollect();
+    SpecialPowers.DOMWindowUtils.garbageCollect();
+    SpecialPowers.DOMWindowUtils.garbageCollect();
 
     ok(weak_ref_dead(weakref), "Garbage gray cycle should be collected.");
 
@@ -262,6 +257,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
     // fixed by Bug 680937
     is(Cu.nondeterministicGetWeakMapKeys(wn_live_map).length, 1,
        "Live weak map wrapped native key should not be removed.");
+
+    ok(wn_live_map.has(get_live_dom()), "Live map should have live dom.");
 
     SimpleTest.finish();
   });

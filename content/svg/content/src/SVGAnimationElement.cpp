@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsSMILTimeContainer.h"
 #include "nsSMILAnimationController.h"
 #include "nsSMILAnimationFunction.h"
@@ -436,7 +436,7 @@ SVGAnimationElement::ActivateByHyperlink()
     if (timeContainer) {
       timeContainer->SetCurrentTime(seekTime.GetMillis());
       AnimationNeedsResample();
-      // As with nsSVGSVGElement::SetCurrentTime, we need to trigger
+      // As with SVGSVGElement::SetCurrentTime, we need to trigger
       // a synchronous sample now.
       FlushAnimations();
     }
@@ -453,7 +453,7 @@ SVGAnimationElement::ActivateByHyperlink()
 nsSMILTimeContainer*
 SVGAnimationElement::GetTimeContainer()
 {
-  nsSVGSVGElement *element = SVGContentUtils::GetOuterSVGElement(this);
+  SVGSVGElement *element = SVGContentUtils::GetOuterSVGElement(this);
 
   if (element) {
     return element->GetTimedDocumentRoot();

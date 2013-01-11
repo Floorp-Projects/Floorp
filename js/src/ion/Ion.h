@@ -250,7 +250,7 @@ IonContext *GetIonContext();
 
 bool SetIonContext(IonContext *ctx);
 
-bool CanIonCompileScript(JSScript *script);
+bool CanIonCompileScript(JSContext *cx, UnrootedScript script);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, HandleScript script,
                               StackFrame *fp, jsbytecode *pc);

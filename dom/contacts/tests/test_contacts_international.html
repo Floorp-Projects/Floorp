@@ -52,6 +52,12 @@ var properties1 = {
   tel: [{type: ["work"], value: number1.local, carrier: "testCarrier"} , {type: ["home", "fax"], value: number2.local}],
 };
 
+var shortNumber = "888";
+var properties2 = {
+  name: "Testname2",
+  tel: [{type: ["work"], value: shortNumber, carrier: "testCarrier"}]
+};
+
 var req;
 var index = 0;
 var createResult1;
@@ -83,6 +89,17 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    ok(true, "Adding a new contact2");
+    var createResult2 = new mozContact();
+    createResult2.init(properties2);
+    req = navigator.mozContacts.save(createResult2);
+    req.onsuccess = function () {
+      ok(createResult2.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
     ok(true, "Searching for local number");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
@@ -106,6 +123,44 @@ var steps = [
       ok(req.result.length == 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for a short number matching the prefix");
+    var shortNumber = number1.local.substring(0, 3);
+    var options = {filterBy: ["tel"],
+                   filterOp: "equals",
+                   filterValue: shortNumber};
+    req = mozContacts.find(options);
+    req.onsuccess = function() {
+      ok(req.result.length == 0, "The prefix short number should not match any contact.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for a short number matching the suffix");
+    var shortNumber = number1.local.substring(number1.local.length - 3);
+    var options = {filterBy: ["tel"],
+                   filterOp: "equals",
+                   filterValue: shortNumber};
+    req = mozContacts.find(options);
+    req.onsuccess = function() {
+      ok(req.result.length == 0, "The suffix short number should not match any contact.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for a short number matching a contact");
+    var options = {filterBy: ["tel"],
+                   filterOp: "equals",
+                   filterValue: shortNumber};
+    req = mozContacts.find(options);
+    req.onsuccess = function() {
+      ok(req.result.length == 1, "Found the contact equally matching the shortNumber.");
       next();
     };
     req.onerror = onFailure;

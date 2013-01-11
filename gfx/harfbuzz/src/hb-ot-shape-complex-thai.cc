@@ -215,7 +215,7 @@ static const struct thai_below_state_machine_edge_t {
 
 
 static void
-do_thai_pua_shaping (const hb_ot_shape_plan_t *plan,
+do_thai_pua_shaping (const hb_ot_shape_plan_t *plan HB_UNUSED,
 		     hb_buffer_t              *buffer,
 		     hb_font_t                *font)
 {

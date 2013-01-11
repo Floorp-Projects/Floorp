@@ -17,7 +17,8 @@ public interface PanZoomTarget {
 
     public void setAnimationTarget(ImmutableViewportMetrics viewport);
     public void setViewportMetrics(ImmutableViewportMetrics viewport);
-    public void setForceRedraw();
+    /** This triggers an (asynchronous) viewport update/redraw. */
+    public void forceRedraw();
 
     public boolean post(Runnable action);
     public Object getLock();

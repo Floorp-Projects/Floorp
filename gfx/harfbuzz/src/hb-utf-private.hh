@@ -176,7 +176,7 @@ hb_utf_strlen (const uint16_t *text)
 
 static inline const uint32_t *
 hb_utf_next (const uint32_t *text,
-	     const uint32_t *end,
+	     const uint32_t *end HB_UNUSED,
 	     hb_codepoint_t *unicode)
 {
   *unicode = *text++;
@@ -185,7 +185,7 @@ hb_utf_next (const uint32_t *text,
 
 static inline const uint32_t *
 hb_utf_prev (const uint32_t *text,
-	     const uint32_t *start,
+	     const uint32_t *start HB_UNUSED,
 	     hb_codepoint_t *unicode)
 {
   *unicode = *--text;

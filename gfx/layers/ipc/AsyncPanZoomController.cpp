@@ -24,7 +24,13 @@ using namespace mozilla::css;
 namespace mozilla {
 namespace layers {
 
-const float AsyncPanZoomController::TOUCH_START_TOLERANCE = 1.0f/16.0f;
+/**
+ * Constant describing the tolerance in distance we use, multiplied by the
+ * device DPI, before we start panning the screen. This is to prevent us from
+ * accidentally processing taps as touch moves, and from very short/accidental
+ * touches moving the screen.
+ */
+static float gTouchStartTolerance = 1.0f/16.0f;
 
 static const float EPSILON = 0.0001;
 
@@ -32,19 +38,19 @@ static const float EPSILON = 0.0001;
  * Maximum amount of time while panning before sending a viewport change. This
  * will asynchronously repaint the page. It is also forced when panning stops.
  */
-static const int32_t PAN_REPAINT_INTERVAL = 250;
+static int32_t gPanRepaintInterval = 250;
 
 /**
  * Maximum amount of time flinging before sending a viewport change. This will
  * asynchronously repaint the page.
  */
-static const int32_t FLING_REPAINT_INTERVAL = 75;
+static int32_t gFlingRepaintInterval = 75;
 
 /**
  * Minimum amount of speed along an axis before we begin painting far ahead by
  * adjusting the displayport.
  */
-static const float MIN_SKATE_SPEED = 0.7f;
+static float gMinSkateSpeed = 0.7f;
 
 /**
  * Duration of a zoom to animation.
@@ -72,13 +78,68 @@ static const double MIN_ZOOM = 0.125;
  * time, we will just pretend that content did not preventDefault any touch
  * events we dispatched to it.
  */
-static const int TOUCH_LISTENER_TIMEOUT = 300;
+static int gTouchListenerTimeout = 300;
 
 /**
  * Number of samples to store of how long it took to paint after the previous
  * requests.
  */
-static const int NUM_PAINT_DURATION_SAMPLES = 3;
+static int gNumPaintDurationSamples = 3;
+
+/** The multiplier we apply to a dimension's length if it is skating. That is,
+ * if it's going above sMinSkateSpeed. We prefer to increase the size of the
+ * Y axis because it is more natural in the case that a user is reading a page
+ * that scrolls up/down. Note that one, both or neither of these may be used
+ * at any instant.
+ */
+static float gXSkateSizeMultiplier = 3.0f;
+static float gYSkateSizeMultiplier = 3.5f;
+
+/** The multiplier we apply to a dimension's length if it is stationary. We
+ * prefer to increase the size of the Y axis because it is more natural in the
+ * case that a user is reading a page that scrolls up/down. Note that one,
+ * both or neither of these may be used at any instant.
+ */
+static float gXStationarySizeMultiplier = 1.5f;
+static float gYStationarySizeMultiplier = 2.5f;
+
+static void ReadAZPCPrefs()
+{
+  Preferences::AddIntVarCache(&gPanRepaintInterval, "gfx.azpc.pan_repaint_interval", gPanRepaintInterval);
+  Preferences::AddIntVarCache(&gFlingRepaintInterval, "gfx.azpc.fling_repaint_interval", gFlingRepaintInterval);
+  Preferences::AddFloatVarCache(&gMinSkateSpeed, "gfx.azpc.min_skate_speed", gMinSkateSpeed);
+  Preferences::AddIntVarCache(&gTouchListenerTimeout, "gfx.azpc.touch_listener_timeout", gTouchListenerTimeout);
+  Preferences::AddIntVarCache(&gNumPaintDurationSamples, "gfx.azpc.num_paint_duration_samples", gNumPaintDurationSamples);
+  Preferences::AddFloatVarCache(&gTouchStartTolerance, "gfx.azpc.touch_start_tolerance", gTouchStartTolerance);
+  Preferences::AddFloatVarCache(&gXSkateSizeMultiplier, "gfx.azpc.x_skate_size_multiplier", gXSkateSizeMultiplier);
+  Preferences::AddFloatVarCache(&gYSkateSizeMultiplier, "gfx.azpc.y_skate_size_multiplier", gYSkateSizeMultiplier);
+  Preferences::AddFloatVarCache(&gXStationarySizeMultiplier, "gfx.azpc.x_stationary_size_multiplier", gXStationarySizeMultiplier);
+  Preferences::AddFloatVarCache(&gYStationarySizeMultiplier, "gfx.azpc.y_stationary_size_multiplier", gYStationarySizeMultiplier);
+}
+
+class ReadAZPCPref MOZ_FINAL : public nsRunnable {
+public:
+  NS_IMETHOD Run()
+  {
+    ReadAZPCPrefs();
+    return NS_OK;
+  }
+};
+
+static void InitAZPCPrefs()
+{
+  static bool sInitialized = false;
+  if (sInitialized)
+    return;
+
+  sInitialized = true;
+  if (NS_IsMainThread()) {
+    ReadAZPCPrefs();
+  } else {
+    // We have to dispatch an event to the main thread to read the pref.
+    NS_DispatchToMainThread(new ReadAZPCPref());
+  }
+}
 
 AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoContentController,
                                                GestureBehavior aGestures)
@@ -102,9 +163,13 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mDPI(72),
      mWaitingForContentToPaint(false),
      mDisableNextTouchBatch(false),
-     mHandlingTouchQueue(false)
+     mHandlingTouchQueue(false),
+     mDelayPanning(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  InitAZPCPrefs();
+
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
   }
@@ -124,6 +189,12 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
 
 AsyncPanZoomController::~AsyncPanZoomController() {
 
+}
+
+/* static */float
+AsyncPanZoomController::GetTouchStartTolerance()
+{
+  return gTouchStartTolerance;
 }
 
 static gfx::Point
@@ -230,7 +301,7 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
         MessageLoop::current()->PostDelayedTask(
           FROM_HERE,
           mTouchListenerTimeoutTask,
-          TOUCH_LISTENER_TIMEOUT);
+          gTouchListenerTimeout);
       }
     }
     return nsEventStatus_eConsumeNoDefault;
@@ -262,7 +333,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
         MessageLoop::current()->PostDelayedTask(
           FROM_HERE,
           mTouchListenerTimeoutTask,
-          TOUCH_LISTENER_TIMEOUT);
+          gTouchListenerTimeout);
       }
       return nsEventStatus_eConsumeNoDefault;
     }
@@ -363,7 +434,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case TOUCHING: {
-      float panThreshold = TOUCH_START_TOLERANCE * mDPI;
+      float panThreshold = gTouchStartTolerance * mDPI;
       UpdateWithTouchAtDevicePoint(aEvent);
 
       if (PanDistance() < panThreshold) {
@@ -696,7 +767,7 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     ScheduleComposite();
 
     TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
-    if (timePaintDelta.ToMilliseconds() > PAN_REPAINT_INTERVAL) {
+    if (timePaintDelta.ToMilliseconds() > gPanRepaintInterval) {
       RequestContentRepaint();
     }
   }
@@ -733,7 +804,7 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
     mY.GetDisplacementForDuration(inverseResolution, aDelta)
   ));
   TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
-  if (timePaintDelta.ToMilliseconds() > FLING_REPAINT_INTERVAL) {
+  if (timePaintDelta.ToMilliseconds() > gFlingRepaintInterval) {
     RequestContentRepaint();
   }
 
@@ -802,7 +873,7 @@ bool AsyncPanZoomController::EnlargeDisplayPortAlongAxis(float aSkateSizeMultipl
                                                          float* aDisplayPortOffset,
                                                          float* aDisplayPortLength)
 {
-  if (fabsf(aVelocity) > MIN_SKATE_SPEED) {
+  if (fabsf(aVelocity) > gMinSkateSpeed) {
     // Enlarge the area we paint.
     *aDisplayPortLength = aCompositionBounds * aSkateSizeMultiplier;
     // Position the area we paint such that all of the excess that extends past
@@ -834,21 +905,6 @@ const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
   const gfx::Point& aAcceleration,
   double aEstimatedPaintDuration)
 {
-  // The multiplier we apply to a dimension's length if it is skating. That is,
-  // if it's going above MIN_SKATE_SPEED. We prefer to increase the size of the
-  // Y axis because it is more natural in the case that a user is reading a page
-  // that scrolls up/down. Note that one, both or neither of these may be used
-  // at any instant.
-  const float X_SKATE_SIZE_MULTIPLIER = 3.0f;
-  const float Y_SKATE_SIZE_MULTIPLIER = 3.5f;
-
-  // The multiplier we apply to a dimension's length if it is stationary. We
-  // prefer to increase the size of the Y axis because it is more natural in the
-  // case that a user is reading a page that scrolls up/down. Note that one,
-  // both or neither of these may be used at any instant.
-  const float X_STATIONARY_SIZE_MULTIPLIER = 1.5f;
-  const float Y_STATIONARY_SIZE_MULTIPLIER = 2.5f;
-
   // If we don't get an estimated paint duration, we probably don't have any
   // data. In this case, we're dealing with either a stationary frame or a first
   // paint. In either of these cases, we can just assume it'll take 1 second to
@@ -865,18 +921,18 @@ const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
   gfx::Point scrollOffset = aFrameMetrics.mScrollOffset;
 
   gfx::Rect displayPort(0, 0,
-                        compositionBounds.width * X_STATIONARY_SIZE_MULTIPLIER,
-                        compositionBounds.height * Y_STATIONARY_SIZE_MULTIPLIER);
+                        compositionBounds.width * gXStationarySizeMultiplier,
+                        compositionBounds.height * gYStationarySizeMultiplier);
 
   // If there's motion along an axis of movement, and it's above a threshold,
   // then we want to paint a larger area in the direction of that motion so that
   // it's less likely to checkerboard.
   bool enlargedX = EnlargeDisplayPortAlongAxis(
-    X_SKATE_SIZE_MULTIPLIER, estimatedPaintDuration,
+    gXSkateSizeMultiplier, estimatedPaintDuration,
     compositionBounds.width, aVelocity.x, aAcceleration.x,
     &displayPort.x, &displayPort.width);
   bool enlargedY = EnlargeDisplayPortAlongAxis(
-    Y_SKATE_SIZE_MULTIPLIER, estimatedPaintDuration,
+    gYSkateSizeMultiplier, estimatedPaintDuration,
     compositionBounds.height, aVelocity.y, aAcceleration.y,
     &displayPort.y, &displayPort.height);
 
@@ -1161,7 +1217,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
   if (mWaitingForContentToPaint) {
     // Remove the oldest sample we have if adding a new sample takes us over our
     // desired number of samples.
-    if (mPreviousPaintDurations.Length() >= NUM_PAINT_DURATION_SAMPLES) {
+    if (mPreviousPaintDurations.Length() >= gNumPaintDurationSamples) {
       mPreviousPaintDurations.RemoveElementAt(0);
     }
 

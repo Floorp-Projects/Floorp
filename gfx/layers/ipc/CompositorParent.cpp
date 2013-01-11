@@ -346,12 +346,17 @@ CompositorParent::ResumeComposition()
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  mPaused = false;
-
 #ifdef MOZ_WIDGET_ANDROID
-  static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
+  if (!static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface()) {
+    // We can't get a surface. This could be because the activity changed between
+    // the time resume was scheduled and now.
+    __android_log_print(ANDROID_LOG_INFO, "CompositorParent", "Unable to renew compositor surface; remaining in paused state");
+    lock.NotifyAll();
+    return;
+  }
 #endif
 
+  mPaused = false;
   Composite();
 
   // if anyone's waiting to make sure that composition really got resumed, tell them
@@ -379,8 +384,6 @@ CompositorParent::SetEGLSurfaceSize(int width, int height)
 void
 CompositorParent::ResumeCompositionAndResize(int width, int height)
 {
-  mWidgetSize.width = width;
-  mWidgetSize.height = height;
   SetEGLSurfaceSize(width, height);
   ResumeComposition();
 }
@@ -402,7 +405,7 @@ CompositorParent::SchedulePauseOnCompositorThread()
   lock.Wait();
 }
 
-void
+bool
 CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 {
   MonitorAutoLock lock(mResumeCompositionMonitor);
@@ -413,6 +416,8 @@ CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
+
+  return !mPaused;
 }
 
 void
@@ -813,6 +818,11 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     case eCSSProperty_transform:
     {
       gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
+      if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+        matrix.ScalePost(c->GetInheritedXScale(),
+                         c->GetInheritedYScale(),
+                         1);
+      }
       shadow->SetShadowTransform(matrix);
       break;
     }
@@ -991,24 +1001,24 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // If the contents can fit entirely within the widget area on a particular
     // dimenson, we need to translate and scale so that the fixed layers remain
     // within the page boundaries.
-    if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
+    if (mContentRect.width * tempScaleDiffX < metrics.mCompositionBounds.width) {
       offset.x = -metricsScrollOffset.x;
-      scaleDiff.height = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
+      scaleDiff.width = NS_MIN(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
     } else {
       offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
-                         mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX) -
+                         mContentRect.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) -
                  metricsScrollOffset.x;
-      scaleDiff.height = tempScaleDiffX;
+      scaleDiff.width = tempScaleDiffX;
     }
 
-    if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
+    if (mContentRect.height * tempScaleDiffY < metrics.mCompositionBounds.height) {
       offset.y = -metricsScrollOffset.y;
-      scaleDiff.width = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
+      scaleDiff.height = NS_MIN(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
     } else {
       offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
-                         mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY) -
+                         mContentRect.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) -
                  metricsScrollOffset.y;
-      scaleDiff.width = tempScaleDiffY;
+      scaleDiff.height = tempScaleDiffY;
     }
 
     // The transform already takes the resolution scale into account.  Since we
@@ -1104,8 +1114,6 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
   // NULL before returning from this method, to avoid accessing it elsewhere.
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
-  mWidgetSize.width = rect.width;
-  mWidgetSize.height = rect.height;
 
   *aBackend = aBackendHint;
 

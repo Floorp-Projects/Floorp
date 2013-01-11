@@ -738,6 +738,11 @@ function do_register_cleanup(aFunction)
  * @return nsILocalFile of the profile directory.
  */
 function do_get_profile() {
+  if (!runningInParent) {
+    _dump("TEST-INFO | (xpcshell/head.js) | Ignoring profile creation from child process.\n");
+    return null;
+  }
+
   if (!_profileInitialized) {
     // Since we have a profile, we will notify profile shutdown topics at
     // the end of the current test, to ensure correct cleanup on shutdown.

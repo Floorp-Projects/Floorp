@@ -129,57 +129,60 @@ static const hb_script_t ucdn_script_translate[] =
 
 static hb_unicode_combining_class_t
 hb_ucdn_combining_class(hb_unicode_funcs_t *ufuncs, hb_codepoint_t unicode,
-        void *user_data)
+			void *user_data HB_UNUSED)
 {
     return (hb_unicode_combining_class_t) ucdn_get_combining_class(unicode);
 }
 
 static unsigned int
 hb_ucdn_eastasian_width(hb_unicode_funcs_t *ufuncs, hb_codepoint_t unicode,
-        void *user_data)
+			void *user_data HB_UNUSED)
 {
     int w = ucdn_get_east_asian_width(unicode);
     return (w == UCDN_EAST_ASIAN_F || w == UCDN_EAST_ASIAN_W) ? 2 : 1;
 }
 
 static hb_unicode_general_category_t
-hb_ucdn_general_category(hb_unicode_funcs_t *ufuncs,
-        hb_codepoint_t unicode, void *user_data)
+hb_ucdn_general_category(hb_unicode_funcs_t *ufuncs, hb_codepoint_t unicode,
+			 void *user_data HB_UNUSED)
 {
     return (hb_unicode_general_category_t)ucdn_get_general_category(unicode);
 }
 
 static hb_codepoint_t
 hb_ucdn_mirroring(hb_unicode_funcs_t *ufuncs, hb_codepoint_t unicode,
-        void *user_data)
+		  void *user_data HB_UNUSED)
 {
     return ucdn_mirror(unicode);
 }
 
 static hb_script_t
 hb_ucdn_script(hb_unicode_funcs_t *ufuncs, hb_codepoint_t unicode,
-        void *user_data)
+	       void *user_data HB_UNUSED)
 {
     return ucdn_script_translate[ucdn_get_script(unicode)];
 }
 
 static hb_bool_t
-hb_ucdn_compose(hb_unicode_funcs_t *ufuncs, hb_codepoint_t a,
-        hb_codepoint_t b, hb_codepoint_t *ab, void *user_data)
+hb_ucdn_compose(hb_unicode_funcs_t *ufuncs,
+		hb_codepoint_t a, hb_codepoint_t b, hb_codepoint_t *ab,
+		void *user_data HB_UNUSED)
 {
     return ucdn_compose(ab, a, b);
 }
 
 static hb_bool_t
-hb_ucdn_decompose(hb_unicode_funcs_t *ufuncs, hb_codepoint_t ab,
-        hb_codepoint_t *a, hb_codepoint_t *b, void *user_data)
+hb_ucdn_decompose(hb_unicode_funcs_t *ufuncs,
+		  hb_codepoint_t ab, hb_codepoint_t *a, hb_codepoint_t *b,
+		  void *user_data HB_UNUSED)
 {
     return ucdn_decompose(ab, a, b);
 }
 
 static unsigned int
-hb_ucdn_decompose_compatibility(hb_unicode_funcs_t *ufuncs, hb_codepoint_t u,
-        hb_codepoint_t *decomposed, void *user_data)
+hb_ucdn_decompose_compatibility(hb_unicode_funcs_t *ufuncs,
+				hb_codepoint_t u, hb_codepoint_t *decomposed,
+				void *user_data HB_UNUSED)
 {
     return ucdn_compat_decompose(u, decomposed);
 }

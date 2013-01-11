@@ -19,5 +19,7 @@ interface SVGStyleElement : SVGElement {
   attribute DOMString media;
   [SetterThrows]
   attribute DOMString title;
+  [SetterThrows]
+  attribute boolean scoped;
 };
 

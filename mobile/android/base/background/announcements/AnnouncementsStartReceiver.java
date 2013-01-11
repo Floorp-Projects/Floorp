@@ -6,7 +6,6 @@ package org.mozilla.gecko.background.announcements;
 
 import org.mozilla.gecko.sync.Logger;
 
-import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

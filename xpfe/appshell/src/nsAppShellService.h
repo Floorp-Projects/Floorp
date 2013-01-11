@@ -32,6 +32,9 @@ public:
 protected:
   ~nsAppShellService();
 
+  nsresult CreateHiddenWindowHelper(bool aIsPrivate);
+  void EnsurePrivateHiddenWindow();
+
   nsresult JustCreateTopWindow(nsIXULWindow *aParent,
                                nsIURI *aUrl, 
                                uint32_t aChromeMask,

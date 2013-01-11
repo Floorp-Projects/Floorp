@@ -11,24 +11,34 @@ function testForceCheck() {
 }
 
 function testDownload() {
-  let gotDownloading = false;
+  let gotStarted = false, gotProgress = false, gotStopped = false;
   let progress = 0, total = 0;
 
-  addChromeEventListener("update-downloading", function(evt) {
-    gotDownloading = true;
+  addChromeEventListener("update-download-started", function(evt) {
+    gotStarted = true;
     return true;
   });
-  addChromeEventListener("update-progress", function(evt) {
+  addChromeEventListener("update-download-progress", function(evt) {
     progress = evt.detail.progress;
     total = evt.detail.total;
+    gotProgress = true;
     if (total == progress) {
-      ok(gotDownloading);
+      ok(gotStarted);
       return true;
     }
     return false;
   });
+  addChromeEventListener("update-download-stopped", function(evt) {
+    is(evt.detail.paused, false);
+    gotStopped = true;
+    ok(gotStarted);
+    ok(gotProgress);
+    return true;
+  });
   addChromeEventListener("update-downloaded", function(evt) {
-    ok(gotDownloading);
+    ok(gotStarted);
+    ok(gotProgress);
+    ok(gotStopped);
     is(progress, total);
     return true;
   });

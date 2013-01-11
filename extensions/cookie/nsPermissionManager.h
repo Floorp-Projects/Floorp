@@ -202,7 +202,7 @@ public:
    * That way, we can prevent have nsPermissionManager created at startup just
    * to be able to clear data when an application is uninstalled.
    */
-  static void AppUninstallObserverInit();
+  static void AppClearDataObserverInit();
 
 private:
   int32_t GetTypeIndex(const char *aTypeString,
@@ -217,7 +217,8 @@ private:
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal,
                                 const char *aType,
                                 uint32_t   *aPermission,
-                                bool        aExactHostMatch);
+                                bool        aExactHostMatch,
+                                bool        aIncludingSession);
 
   nsresult InitDB(bool aRemoveFile);
   nsresult CreateTable();

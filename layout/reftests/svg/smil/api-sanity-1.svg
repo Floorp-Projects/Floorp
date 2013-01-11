@@ -5,7 +5,7 @@
 >
   <script type="application/javascript">
     function go() {
-      // Try calling the animation-related methods in nsSVGSVGElement.cpp
+      // Try calling the animation-related methods in SVGSVGElement.cpp
       // If any aren't implemented, we'll throw an exception and
       // the rect will stay red.
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<body>
+  <style>
+    @keyframes a {
+      from { color: green }
+      to { color: green }
+    }
+    p { animation-duration: 1s; animation-fill-mode: both }
+    #a { animation-name: a }
+    #c { animation-name: b }
+  </style>
+  <p id=a>First</p>
+  <p>
+    <style scoped>
+      @keyframes a {
+        from { color: blue }
+        to { color: blue }
+      }
+      @keyframes b {
+        from { color: red }
+        to { color: red }
+      }
+      p { animation-name: b }
+    </style>
+    Second
+  </p>
+  <p id=c>Third</p>
+</body>

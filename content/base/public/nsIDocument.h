@@ -46,7 +46,6 @@ class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMDocumentType;
-class nsXMLProcessingInstruction;
 class nsIDOMElement;
 class nsIDOMEventTarget;
 class nsIDOMNodeList;
@@ -75,6 +74,7 @@ class nsTextNode;
 class nsWindowSizes;
 class nsSmallVoidArray;
 class nsDOMCaretPosition;
+class nsViewportInfo;
 
 namespace mozilla {
 class ErrorResult;
@@ -85,12 +85,14 @@ class ImageLoader;
 } // namespace css
 
 namespace dom {
+class CDATASection;
 class Comment;
 class DocumentFragment;
 class DocumentType;
 class DOMImplementation;
 class Element;
 class Link;
+class ProcessingInstruction;
 class UndoManager;
 template<typename> class Sequence;
 } // namespace dom
@@ -561,6 +563,10 @@ public:
    * Return the root element for this document.
    */
   Element* GetRootElement() const;
+
+  virtual nsViewportInfo GetViewportInfo(uint32_t aDisplayWidth,
+                                         uint32_t aDisplayHeight) = 0;
+
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;
@@ -1826,7 +1832,7 @@ public:
                                               mozilla::ErrorResult& rv) const;
   already_AddRefed<mozilla::dom::Comment>
     CreateComment(const nsAString& aData, mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsXMLProcessingInstruction>
+  already_AddRefed<mozilla::dom::ProcessingInstruction>
     CreateProcessingInstruction(const nsAString& target, const nsAString& data,
                                 mozilla::ErrorResult& rv) const;
   already_AddRefed<nsINode>
@@ -1843,7 +1849,7 @@ public:
                      nsIDOMNodeFilter* aFilter, mozilla::ErrorResult& rv) const;
 
   // Deprecated WebIDL bits
-  already_AddRefed<nsIDOMCDATASection>
+  already_AddRefed<mozilla::dom::CDATASection>
     CreateCDATASection(const nsAString& aData, mozilla::ErrorResult& rv);
   already_AddRefed<nsIDOMAttr>
     CreateAttribute(const nsAString& aName, mozilla::ErrorResult& rv);

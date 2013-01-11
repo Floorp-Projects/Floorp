@@ -23,8 +23,8 @@ using namespace js::types;
 
 /*****************************************************************************/
 
-StaticScopeIter::StaticScopeIter(JSObject *obj)
-  : obj(obj), onNamedLambda(false)
+StaticScopeIter::StaticScopeIter(JSContext *cx, HandleObject objArg)
+  : obj(cx, objArg), onNamedLambda(false)
 {
     JS_ASSERT_IF(obj, obj->isStaticBlock() || obj->isFunction());
 }
@@ -32,7 +32,7 @@ StaticScopeIter::StaticScopeIter(JSObject *obj)
 bool
 StaticScopeIter::done() const
 {
-    return obj == NULL;
+    return !obj;
 }
 
 void
@@ -92,20 +92,20 @@ StaticScopeIter::funScript() const
 
 /*****************************************************************************/
 
-StaticScopeIter
-js::ScopeCoordinateToStaticScope(JSScript *script, jsbytecode *pc)
+UnrootedShape
+js::ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(pc >= script->code && pc < script->code + script->length);
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
     uint32_t blockIndex = GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t));
-    JSObject *innermostStaticScope;
+    RootedObject innermostStaticScope(cx, NULL);
     if (blockIndex == UINT32_MAX)
         innermostStaticScope = script->function();
     else
         innermostStaticScope = &script->getObject(blockIndex)->asStaticBlock();
 
-    StaticScopeIter ssi(innermostStaticScope);
+    StaticScopeIter ssi(cx, innermostStaticScope);
     ScopeCoordinate sc(pc);
     while (true) {
         if (ssi.hasDynamicScopeObject()) {
@@ -115,13 +115,13 @@ js::ScopeCoordinateToStaticScope(JSScript *script, jsbytecode *pc)
         }
         ssi++;
     }
-    return ssi;
+    return ssi.scopeShape();
 }
 
 PropertyName *
-js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
+js::ScopeCoordinateName(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    Shape::Range r = ScopeCoordinateToStaticScope(script, pc).scopeShape()->all();
+    Shape::Range r = ScopeCoordinateToStaticScopeShape(cx, script, pc)->all();
     ScopeCoordinate sc(pc);
     while (r.front().slot() != sc.slot)
         r.popFront();
@@ -129,7 +129,7 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
 
     /* Beware nameless destructuring formal. */
     if (!JSID_IS_ATOM(id))
-        return rt->atomState.empty;
+        return cx->runtime->atomState.empty;
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 
@@ -427,7 +427,7 @@ static JSBool
 with_SetGeneric(JSContext *cx, HandleObject obj, HandleId id,
                 MutableHandleValue vp, JSBool strict)
 {
-    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->asWith().object());
     return JSObject::setGeneric(cx, actual, actual, id, vp, strict);
 }
 
@@ -435,7 +435,7 @@ static JSBool
 with_SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                  MutableHandleValue vp, JSBool strict)
 {
-    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->asWith().object());
     return JSObject::setProperty(cx, actual, actual, name, vp, strict);
 }
 
@@ -443,7 +443,7 @@ static JSBool
 with_SetElement(JSContext *cx, HandleObject obj, uint32_t index,
                 MutableHandleValue vp, JSBool strict)
 {
-    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->asWith().object());
     return JSObject::setElement(cx, actual, actual, index, vp, strict);
 }
 
@@ -451,7 +451,7 @@ static JSBool
 with_SetSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                 MutableHandleValue vp, JSBool strict)
 {
-    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    RootedObject actual(cx, &obj->asWith().object());
     return JSObject::setSpecial(cx, actual, actual, sid, vp, strict);
 }
 
