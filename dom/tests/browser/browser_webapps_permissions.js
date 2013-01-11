@@ -40,6 +40,12 @@ const uninstalledPermsToTest = {
   "audio-channel-normal": "unknown"
 };
 
+var permManager = Cc["@mozilla.org/permissionmanager;1"]
+                    .getService(Ci.nsIPermissionManager);
+permManager.addFromPrincipal(window.document.nodePrincipal,
+                             "webapps-manage",
+                             Ci.nsIPermissionManager.ALLOW_ACTION);
+
 var gWindow, gNavigator;
 
 function test() {
@@ -112,7 +118,7 @@ function uninstallApp()
       var app = m[i];
 
       function uninstall() {
-        var pendingUninstall = app.uninstall();
+        var pendingUninstall = nav.mozApps.mgmt.uninstall(app);
 
         pendingUninstall.onsuccess = function(r) {
           // test to make sure all permissions have been removed

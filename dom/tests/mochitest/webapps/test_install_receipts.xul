@@ -49,7 +49,7 @@ function onInstall() {
   todo_is(this.result.receipts[8], NaN, "receipts[8]");
   todo_is(this.result.receipts[9], Infinity, "receipts[9]");
 
-  this.result.uninstall().onsuccess = function onUninstall() {
+  navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
     SimpleTest.finish();
   }
 };
