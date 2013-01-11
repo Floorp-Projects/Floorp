@@ -925,11 +925,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address &dest);
     void or32(Imm32 imm, const Address &dest);
-    void xorPtr(Imm32 imm, Register dest);
     void orPtr(Imm32 imm, Register dest);
-    void andPtr(Imm32 imm, Register dest);
     void addPtr(Register src, Register dest);
-    void addPtr(const Address &src, Register dest);
 
     void move32(const Imm32 &imm, const Register &dest);
 
@@ -1026,7 +1023,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmpPtr(const Address &lhs, const ImmWord &rhs);
 
     void subPtr(Imm32 imm, const Register dest);
-    void subPtr(const Address &addr, const Register dest);
     void addPtr(Imm32 imm, const Register dest);
     void addPtr(Imm32 imm, const Address &dest);
     void addPtr(ImmWord imm, const Register dest) {
