@@ -416,25 +416,25 @@ js::IndexToIdSlow(JSContext *cx, uint32_t index, MutableHandleId idp)
 
 bool
 js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
-                          jsid *idp, MutableHandleValue vp)
+                          MutableHandleId idp, MutableHandleValue vp)
 {
 #if JS_HAS_XML_SUPPORT
     if (idval.isObject()) {
         JSObject *idobj = &idval.toObject();
 
         if (obj && obj->isXML()) {
-            *idp = OBJECT_TO_JSID(idobj);
+            idp.set(OBJECT_TO_JSID(idobj));
             vp.set(idval);
             return true;
         }
 
-        if (js_GetLocalNameFromFunctionQName(idobj, idp, cx)) {
-            vp.set(IdToValue(*idp));
+        if (js_GetLocalNameFromFunctionQName(idobj, idp.address(), cx)) {
+            vp.set(IdToValue(idp));
             return true;
         }
 
         if (!obj && idobj->isXMLId()) {
-            *idp = OBJECT_TO_JSID(idobj);
+            idp.set(OBJECT_TO_JSID(idobj));
             vp.set(idval);
             return JS_TRUE;
         }
@@ -445,7 +445,7 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
     if (!atom)
         return false;
 
-    *idp = AtomToId(atom);
+    idp.set(AtomToId(atom));
     vp.setString(atom);
     return true;
 }
