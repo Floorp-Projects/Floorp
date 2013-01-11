@@ -2556,17 +2556,19 @@ AppcacheObserver.prototype = {
 
     debug("Offline cache state change for " + app.origin + " : " + aState);
 
-    let setStatus = function appObs_setStatus(aStatus) {
+    let setStatus = function appObs_setStatus(aStatus, aProgress) {
       debug("Offlinecache setStatus to " + aStatus + " for " + app.origin);
       mustSave = (app.installState != aStatus);
       app.installState = aStatus;
+      app.progress = aProgress;
       if (aStatus == "installed") {
         app.downloading = false;
         app.downloadAvailable = false;
       }
       DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
                                               { manifest: app.manifestURL,
-                                                installState: app.installState });
+                                                installState: app.installState,
+                                                progress: app.progress });
     }
 
     let setError = function appObs_setError(aError) {
@@ -2587,16 +2589,16 @@ AppcacheObserver.prototype = {
       case Ci.nsIOfflineCacheUpdateObserver.STATE_NOUPDATE:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
         aUpdate.removeObserver(this);
-        setStatus("installed");
+        setStatus("installed", aUpdate.byteProgress);
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
-        setStatus(this.startStatus);
+        setStatus(this.startStatus, aUpdate.byteProgress);
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
         let now = Date.now();
         if (now - this.lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
-          setStatus(this.startStatus);
+          setStatus(this.startStatus, aUpdate.byteProgress);
           this.lastProgressTime = now;
         }
         break;
