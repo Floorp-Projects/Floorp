@@ -3,15 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import logging
 import optparse
 import os
 import sys
-import time
 
 from threading import RLock
 
-from tps import TPSFirefoxRunner, TPSTestRunner
+from tps import TPSTestRunner
 
 def main():
   parser = optparse.OptionParser()

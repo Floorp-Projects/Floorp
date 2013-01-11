@@ -2,19 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import httplib
 import json
 import os
 import platform
 import random
 import re
-import socket
 import tempfile
 import time
 import traceback
-import urllib
-
-from threading import RLock
 
 from mozprofile import Profile
 
