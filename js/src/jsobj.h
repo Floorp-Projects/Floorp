@@ -1294,7 +1294,7 @@ js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pob
 
 extern JSBool
 js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
-             js::Handle<js::Shape*> shape, bool added, bool strict, js::Value *vp);
+             js::Handle<js::Shape*> shape, bool added, bool strict, js::MutableHandleValue vp);
 
 namespace js {
 
