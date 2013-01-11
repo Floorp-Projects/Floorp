@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGLocatableElement.h"
-#include "DOMSVGMatrix.h"
+#include "mozilla/dom/SVGLocatableElement.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsSVGRect.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGSVGElement.h"
 
 namespace mozilla {
@@ -87,7 +87,7 @@ SVGLocatableElement::GetBBox(ErrorResult& rv)
   return rect.forget();
 }
 
-/* DOMSVGMatrix getCTM (); */
+/* SVGMatrix getCTM (); */
 NS_IMETHODIMP
 SVGLocatableElement::GetCTM(nsISupports * *aCTM)
 {
@@ -95,15 +95,15 @@ SVGLocatableElement::GetCTM(nsISupports * *aCTM)
   return NS_OK;
 }
 
-already_AddRefed<DOMSVGMatrix>
+already_AddRefed<SVGMatrix>
 SVGLocatableElement::GetCTM()
 {
   gfxMatrix m = SVGContentUtils::GetCTM(this, false);
-  nsCOMPtr<DOMSVGMatrix> mat = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
+  nsCOMPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
   return mat.forget();
 }
 
-/* DOMSVGMatrix getScreenCTM (); */
+/* SVGMatrix getScreenCTM (); */
 NS_IMETHODIMP
 SVGLocatableElement::GetScreenCTM(nsISupports * *aCTM)
 {
@@ -111,15 +111,15 @@ SVGLocatableElement::GetScreenCTM(nsISupports * *aCTM)
   return NS_OK;
 }
 
-already_AddRefed<DOMSVGMatrix>
+already_AddRefed<SVGMatrix>
 SVGLocatableElement::GetScreenCTM()
 {
   gfxMatrix m = SVGContentUtils::GetCTM(this, true);
-  nsCOMPtr<DOMSVGMatrix> mat = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
+  nsCOMPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
   return mat.forget();
 }
 
-/* DOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
+/* SVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
 NS_IMETHODIMP
 SVGLocatableElement::GetTransformToElement(nsIDOMSVGElement *element,
                                            nsISupports **_retval)
@@ -132,7 +132,7 @@ SVGLocatableElement::GetTransformToElement(nsIDOMSVGElement *element,
   return rv.ErrorCode();
 }
 
-already_AddRefed<DOMSVGMatrix>
+already_AddRefed<SVGMatrix>
 SVGLocatableElement::GetTransformToElement(nsSVGElement& aElement,
                                            ErrorResult& rv)
 {
@@ -143,17 +143,17 @@ SVGLocatableElement::GetTransformToElement(nsSVGElement& aElement,
   }
 
   // the easiest way to do this (if likely to increase rounding error):
-  nsCOMPtr<DOMSVGMatrix> ourScreenCTM = GetScreenCTM();
-  nsCOMPtr<DOMSVGMatrix> targetScreenCTM;
+  nsCOMPtr<SVGMatrix> ourScreenCTM = GetScreenCTM();
+  nsCOMPtr<SVGMatrix> targetScreenCTM;
   target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
   if (!ourScreenCTM || !targetScreenCTM) {
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  nsCOMPtr<DOMSVGMatrix> tmp = targetScreenCTM->Inverse(rv);
+  nsCOMPtr<SVGMatrix> tmp = targetScreenCTM->Inverse(rv);
   if (rv.Failed()) return nullptr;
 
-  nsCOMPtr<DOMSVGMatrix> mat = tmp->Multiply(*ourScreenCTM).get();
+  nsCOMPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM).get();
   return mat.forget();
 }
 

@@ -21,7 +21,10 @@ class nsSVGElement;
 
 namespace mozilla {
 
-class DOMSVGMatrix;
+namespace dom {
+class SVGMatrix;
+}
+
 class DOMSVGTransform;
 
 /**
@@ -120,7 +123,7 @@ public:
   {
     return InsertItemBefore(newItem, LengthNoFlush(), error);
   }
-  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix);
+  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(dom::SVGMatrix& matrix);
   already_AddRefed<DOMSVGTransform> Consolidate(ErrorResult& error);
   uint32_t Length() const
   {
