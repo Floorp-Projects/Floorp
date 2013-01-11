@@ -398,7 +398,7 @@ js::AtomizeChars(JSContext *cx, const jschar *chars, size_t length, InternBehavi
 }
 
 bool
-js::IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)
+js::IndexToIdSlow(JSContext *cx, uint32_t index, MutableHandleId idp)
 {
     JS_ASSERT(index > JSID_INT_MAX);
 
@@ -410,7 +410,7 @@ js::IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)
     if (!atom)
         return false;
 
-    *idp = JSID_FROM_BITS((size_t)atom);
+    idp.set(JSID_FROM_BITS((size_t)atom));
     return true;
 }
 

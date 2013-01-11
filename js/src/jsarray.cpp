@@ -263,7 +263,7 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
         return true;
     }
 
-    jsid id;
+    RootedId id(cx);
     if (!IndexToId(cx, i, &id))
         return false;
 
@@ -279,7 +279,7 @@ bool
 DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
 {
     if (index == uint32_t(index))
-        return IndexToId(cx, uint32_t(index), id.address());
+        return IndexToId(cx, uint32_t(index), id);
 
     return ValueToId(cx, DoubleValue(index), id);
 }
@@ -868,7 +868,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index,
                  MutableHandleValue vp, JSBool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
 
     if (!obj->isDenseArray())
@@ -2258,7 +2258,7 @@ NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
         /* This can happen in one evil case. See bug 630377. */
         RootedId id(cx);
         RootedValue nv(cx, v);
-        return IndexToId(cx, length, id.address()) &&
+        return IndexToId(cx, length, &id) &&
                baseops::DefineGeneric(cx, obj, id, nv, NULL, NULL, JSPROP_ENUMERATE);
     }
 
