@@ -139,6 +139,10 @@ private:
   TrackID mTrackID;
   TrackTicks mLastEndTime;
 
+  // mMonitor protects mImage access/changes, and transitions of mState
+  // from kStarted to kStopped (which are combined with EndTrack() and
+  // image changes).  Note that mSources is not accessed from other threads
+  // for video and is not protected.
   mozilla::ReentrantMonitor mMonitor; // Monitor for processing WebRTC frames.
   nsTArray<SourceMediaStream *> mSources; // When this goes empty, we shut down HW
 
@@ -215,6 +219,9 @@ private:
   webrtc::VoEExternalMedia* mVoERender;
   webrtc::VoENetwork*  mVoENetwork;
 
+  // mMonitor protects mSources[] access/changes, and transitions of mState
+  // from kStarted to kStopped (which are combined with EndTrack()).
+  // mSources[] is accessed from webrtc threads.
   mozilla::ReentrantMonitor mMonitor;
   nsTArray<SourceMediaStream *> mSources; // When this goes empty, we shut down HW
 

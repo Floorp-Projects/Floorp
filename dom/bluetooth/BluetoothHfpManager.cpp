@@ -641,7 +641,19 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       goto respond_with_ok;
     }
 
-    mCMER = (atCommandValues[3].EqualsLiteral("1"));
+    mCMER = atCommandValues[3].EqualsLiteral("1");
+  } else if (msg.Find("AT+CMEE=") != -1) {
+    ParseAtCommand(msg, 8, atCommandValues);
+
+    if (atCommandValues.IsEmpty()) {
+      NS_WARNING("Could't get the value of command [AT+CMEE=]");
+      goto respond_with_ok;
+    }
+
+    // AT+CMEE = 0: +CME ERROR shall not be used
+    // AT+CMEE = 1: use numeric <err>
+    // AT+CMEE = 2: use verbose <err>
+    mCMEE = !atCommandValues[0].EqualsLiteral("0");
   } else if (msg.Find("AT+VTS=") != -1) {
     ParseAtCommand(msg, 7, atCommandValues);
     if (atCommandValues.Length() != 1) {
@@ -741,6 +753,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
   } else if (msg.Find("ATD>") != -1) {
     // Currently, we don't support memory dialing in Dialer app
     SendLine("ERROR");
+    return;
   } else if (msg.Find("ATD") != -1) {
     nsAutoCString message(msg), newMsg;
     int end = message.FindChar(';');
@@ -1214,5 +1227,6 @@ BluetoothHfpManager::OnDisconnect()
   sCINDItems[CINDType::CALLSETUP].value = CallSetupState::NO_CALLSETUP;
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::NO_CALLHELD;
   mCLIP = false;
+  mCMEE = false;
   mCMER = false;
 }

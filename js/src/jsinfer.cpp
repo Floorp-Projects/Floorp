@@ -2970,16 +2970,16 @@ TypeCompartment::fixArrayType(JSContext *cx, HandleObject obj)
      * If the array is heterogenous, keep the existing type object, which has
      * unknown properties.
      */
-    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(obj->isArray());
 
-    unsigned len = obj->getDenseArrayInitializedLength();
+    unsigned len = obj->getDenseInitializedLength();
     if (len == 0)
         return;
 
-    Type type = GetValueTypeForTable(cx, obj->getDenseArrayElement(0));
+    Type type = GetValueTypeForTable(cx, obj->getDenseElement(0));
 
     for (unsigned i = 1; i < len; i++) {
-        Type ntype = GetValueTypeForTable(cx, obj->getDenseArrayElement(i));
+        Type ntype = GetValueTypeForTable(cx, obj->getDenseElement(i));
         if (ntype != type) {
             if (NumberTypes(type, ntype))
                 type = Type::DoubleType();
@@ -3250,11 +3250,10 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 
     if (singleton) {
         /*
-         * Fill the property in with any type the object already has in an
-         * own property. We are only interested in plain native properties
-         * which don't go through a barrier when read by the VM or jitcode.
-         * We don't need to handle arrays or other JIT'ed non-natives as
-         * these are not (yet) singletons.
+         * Fill the property in with any type the object already has in an own
+         * property. We are only interested in plain native properties and
+         * dense elements which don't go through a barrier when read by the VM
+         * or jitcode.
          */
 
         RootedObject rSingleton(cx, singleton);
@@ -3265,6 +3264,16 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
                 if (JSID_IS_VOID(MakeTypeId(cx, shape->propid())))
                     UpdatePropertyType(cx, &base->types, rSingleton, shape, true);
                 shape = shape->previous();
+            }
+
+            /* Also get values of any dense elements in the object. */
+            for (size_t i = 0; i < singleton->getDenseInitializedLength(); i++) {
+                const Value &value = singleton->getDenseElement(i);
+                if (!value.isMagic(JS_ELEMENTS_HOLE)) {
+                    Type type = GetValueType(cx, value);
+                    base->types.setOwnProperty(cx, false);
+                    base->types.addType(cx, type);
+                }
             }
         } else if (!JSID_IS_EMPTY(id) && singleton->isNative()) {
             UnrootedShape shape = singleton->nativeLookup(cx, id);
@@ -5809,11 +5818,14 @@ JSObject::makeLazyType(JSContext *cx)
      * looking at the class prototype key.
      */
 
-    if (self->isSlowArray())
-        type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
-
     if (IsTypedArrayProtoClass(self->getClass()))
         type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
+
+    /* Don't track whether singletons are packed. */
+    type->flags |= OBJECT_FLAG_NON_PACKED_ARRAY;
+
+    if (self->isArray() && (self->isIndexed() || self->getArrayLength() > INT32_MAX))
+        type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY;
 
     self->type_ = type;
 

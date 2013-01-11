@@ -59,7 +59,7 @@ AudioChannelServiceChild::~AudioChannelServiceChild()
 bool
 AudioChannelServiceChild::GetMuted(AudioChannelAgent* aAgent, bool aElementHidden)
 {
-  AudioChannelAgentData data;
+  AudioChannelAgentData* data;
   if (!mAgents.Get(aAgent, &data)) {
     return true;
   }
@@ -68,15 +68,12 @@ AudioChannelServiceChild::GetMuted(AudioChannelAgent* aAgent, bool aElementHidde
   bool muted = true;
 
   if (cc) {
-    cc->SendAudioChannelGetMuted(data.mType, aElementHidden, data.mElementHidden, &muted);
+    cc->SendAudioChannelGetMuted(data->mType, aElementHidden, data->mElementHidden, &muted);
   }
 
   // Update visibility.
-  if (data.mElementHidden != aElementHidden || data.mMuted != muted) {
-    data.mElementHidden = aElementHidden;
-    data.mMuted = muted;
-    mAgents.Put(aAgent, data);
-  }
+  data->mElementHidden = aElementHidden;
+  data->mMuted = muted;
 
   if (cc) {
     cc->SendAudioChannelChangedNotification();
@@ -105,10 +102,14 @@ AudioChannelServiceChild::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
 void
 AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
-  AudioChannelAgentData data;
-  if (!mAgents.Get(aAgent, &data)) {
+  AudioChannelAgentData *pData;
+  if (!mAgents.Get(aAgent, &pData)) {
     return;
   }
+
+  // We need to keep a copy because unregister will remove the
+  // AudioChannelAgentData object from the hashtable.
+  AudioChannelAgentData data(*pData);
 
   AudioChannelService::UnregisterAudioChannelAgent(aAgent);
 

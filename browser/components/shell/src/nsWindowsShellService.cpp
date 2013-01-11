@@ -135,9 +135,9 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 
 // The values checked are all default values so the value name is not needed.
 typedef struct {
-  char* keyName;
-  char* valueData;
-  char* oldValueData;
+  const char* keyName;
+  const char* valueData;
+  const char* oldValueData;
 } SETTING;
 
 #define APP_REG_NAME L"Firefox"
@@ -317,7 +317,7 @@ IsWin8OrLater()
   osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
   GetVersionExW(&osInfo);
   return osInfo.dwMajorVersion > 6 || 
-         osInfo.dwMajorVersion >= 6 && osInfo.dwMinorVersion >= 2;
+         (osInfo.dwMajorVersion >= 6 && osInfo.dwMinorVersion >= 2);
 }
 
 static bool

@@ -195,20 +195,11 @@ GetGCKindSlots(AllocKind thingKind, Class *clasp)
 }
 
 static inline void
-GCPoke(JSRuntime *rt, Value oldval)
+GCPoke(JSRuntime *rt)
 {
     AutoAssertNoGC nogc;
 
-    /*
-     * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
-     * loading oldval.  XXX remove implied force, fix jsinterp.c's "second arg
-     * ignored", etc.
-     */
-#if 1
     rt->gcPoke = true;
-#else
-    rt->gcPoke = oldval.isGCThing();
-#endif
 
 #ifdef JS_GC_ZEAL
     /* Schedule a GC to happen "soon" after a GC poke. */

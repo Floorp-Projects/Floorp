@@ -1205,9 +1205,11 @@ AndroidBridge::RegisterCompositor(JNIEnv *env, bool resetting)
 }
 
 EGLSurface
-AndroidBridge::ProvideEGLSurface()
+AndroidBridge::ProvideEGLSurface(bool waitUntilValid)
 {
-    sController.WaitForValidSurface();
+    if (waitUntilValid) {
+        sController.WaitForValidSurface();
+    }
     return sController.ProvideEGLSurface();
 }
 

@@ -19,11 +19,11 @@
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
 HTTP(..) == columnfill-balance.html columnfill-balance-ref.html
 HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
-== columnrule-basic.html columnrule-basic-ref.html
-== columnrule-complex.html columnrule-complex-ref.html
+skip-if(B2G) == columnrule-basic.html columnrule-basic-ref.html # bug 773482
+skip-if(B2G) == columnrule-complex.html columnrule-complex-ref.html # bug 773482
 != columnrule-linestyles.html columnrule-linestyles-notref.html
 == columnrule-padding.html columnrule-padding-ref.html
-== columnfill-overflow.html columnfill-overflow-ref.html
+skip-if(B2G) == columnfill-overflow.html columnfill-overflow-ref.html # bug 773482
 == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1-ref.html
 == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2-ref.html
 == column-balancing-nested-000.html column-balancing-nested-000-ref.html

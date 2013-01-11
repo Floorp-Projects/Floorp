@@ -927,8 +927,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         String url = tab.getURL();
 
-        // Only set shadow to visible when not on about screens.
-        visible &= !(url == null || url.startsWith("about:"));
+        // Only set shadow to visible when not on about screens except about:blank.
+        visible &= !(url == null || (url.startsWith("about:") && 
+                     !url.equals("about:blank")));
 
         if ((mShadow.getVisibility() == View.VISIBLE) != visible) {
             mShadow.setVisibility(visible ? View.VISIBLE : View.GONE);

@@ -23,6 +23,10 @@ MOCHITEST_FILES	= \
 		test_innerWidthHeight_script.html \
 		innerWidthHeight_script.html \
 		test_location_setters.html \
+		test_location_getters.html \
+		test_location_framed.html \
+		test_location_sandboxed.html \
+		framed_location.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
