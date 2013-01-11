@@ -517,7 +517,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
     /* Save the frame's completion value. */
     JSTrapStatus status;
     RootedValue value(cx);
-    Debugger::resultToCompletion(cx, frameOk, fp->returnValue(), &status, value.address());
+    Debugger::resultToCompletion(cx, frameOk, fp->returnValue(), &status, &value);
 
     /* Build a list of the recipients. */
     AutoObjectVector frames(cx);
@@ -756,20 +756,20 @@ Debugger::handleUncaughtException(Maybe<AutoCompartment> &ac, Value *vp, bool ca
 
 void
 Debugger::resultToCompletion(JSContext *cx, bool ok, const Value &rv,
-                             JSTrapStatus *status, Value *value)
+                             JSTrapStatus *status, MutableHandleValue value)
 {
     JS_ASSERT_IF(ok, !cx->isExceptionPending());
 
     if (ok) {
         *status = JSTRAP_RETURN;
-        *value = rv;
+        value.set(rv);
     } else if (cx->isExceptionPending()) {
         *status = JSTRAP_THROW;
-        *value = cx->getPendingException();
+        value.set(cx->getPendingException());
         cx->clearPendingException();
     } else {
         *status = JSTRAP_ERROR;
-        value->setUndefined();
+        value.setUndefined();
     }
 }
 
@@ -822,7 +822,7 @@ Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val,
     JSContext *cx = ac.ref().context();
 
     JSTrapStatus status;
-    Value value;
+    RootedValue value(cx);
     resultToCompletion(cx, ok, val, &status, &value);
     ac.destroy();
     return newCompletionValue(cx, status, value, vp);

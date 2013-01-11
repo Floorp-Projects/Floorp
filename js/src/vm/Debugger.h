@@ -464,7 +464,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * to be false).
      */
     static void resultToCompletion(JSContext *cx, bool ok, const Value &rv,
-                                   JSTrapStatus *status, Value *value);
+                                   JSTrapStatus *status, MutableHandleValue value);
 
     /*
      * Set |*result| to a JavaScript completion value corresponding to |status|
