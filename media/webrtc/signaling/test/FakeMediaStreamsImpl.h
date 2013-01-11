@@ -91,20 +91,18 @@ void Fake_AudioStreamSource::Periodic() {
   //Generate Signed 16 Bit Audio samples
   nsRefPtr<mozilla::SharedBuffer> samples =
     mozilla::SharedBuffer::Create(AUDIO_BUFFER_SIZE * NUM_CHANNELS * sizeof(int16_t));
+  int16_t* data = reinterpret_cast<int16_t *>(samples->Data());
   for(int i=0; i<(1600*2); i++) {
     //saw tooth audio sample
-    reinterpret_cast<int16_t *>(samples->Data())[i] =
-                              ((mCount % 8) * 4000) - (7*4000)/2;
+    data[i] = ((mCount % 8) * 4000) - (7*4000)/2;
     mCount++;
   }
 
   mozilla::AudioSegment segment;
   segment.Init(1);
-  segment.AppendFrames(samples.forget(),
-                       AUDIO_BUFFER_SIZE,
-                       0,
-                       AUDIO_BUFFER_SIZE,
-                       mozilla::AUDIO_FORMAT_S16);
+  nsAutoTArray<const int16_t *,1> channels;
+  channels.AppendElement(data);
+  segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE);
 
   for(std::set<Fake_MediaStreamListener *>::iterator it = mListeners.begin();
        it != mListeners.end(); ++it) {

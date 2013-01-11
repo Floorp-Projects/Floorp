@@ -523,6 +523,7 @@ WebappsApplication.prototype = {
 
         if ("installState" in msg) {
           this.installState = msg.installState;
+          this.progress = msg.progress;
           if (this.installState == "installed") {
             this._downloadError = null;
             this.downloading = false;

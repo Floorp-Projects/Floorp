@@ -210,6 +210,9 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
     AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(loop), 0,
                                   sMaxStreamVolumeTbl[loop]);
   }
+  // Force publicnotification to output at maximal volume
+  AudioSystem::setStreamVolumeIndex(static_cast<audio_stream_type_t>(AUDIO_STREAM_ENFORCED_AUDIBLE),
+                                    sMaxStreamVolumeTbl[AUDIO_STREAM_ENFORCED_AUDIBLE]);
 }
 
 AudioManager::~AudioManager() {

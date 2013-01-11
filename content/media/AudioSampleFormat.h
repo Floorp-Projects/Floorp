@@ -139,13 +139,27 @@ ScaleAudioSamples(float* aBuffer, int aCount, float aScale)
   }
 }
 
-
 inline void
 ScaleAudioSamples(short* aBuffer, int aCount, float aScale)
 {
   int32_t volume = int32_t((1 << 16) * aScale);
   for (int32_t i = 0; i < aCount; ++i) {
     aBuffer[i] = short((int32_t(aBuffer[i]) * volume) >> 16);
+  }
+}
+
+inline const void*
+AddAudioSampleOffset(const void* aBase, AudioSampleFormat aFormat,
+                     int32_t aOffset)
+{
+  switch (aFormat) {
+  case AUDIO_FORMAT_FLOAT32:
+    return static_cast<const float*>(aBase) + aOffset;
+  case AUDIO_FORMAT_S16:
+    return static_cast<const int16_t*>(aBase) + aOffset;
+  default:
+    NS_ERROR("Unknown format");
+    return nullptr;
   }
 }
 

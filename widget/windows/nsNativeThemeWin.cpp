@@ -1169,6 +1169,15 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
   return NS_ERROR_FAILURE;
 }
 
+static bool
+AssumeThemePartAndStateAreTransparent(int32_t aPart, int32_t aState)
+{
+  if (aPart == MENU_POPUPITEM && aState == MBI_NORMAL) {
+    return true;
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
@@ -1213,6 +1222,10 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
   if (NS_FAILED(rv))
     return rv;
+
+  if (AssumeThemePartAndStateAreTransparent(part, state)) {
+    return NS_OK;
+  }
 
   gfxFloat p2a = gfxFloat(aContext->AppUnitsPerDevPixel());
   RECT widgetRect;
@@ -3148,6 +3161,10 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsRenderingContext* aCont
   rv = ClassicGetThemePartAndState(aFrame, aWidgetType, part, state, focused);
   if (NS_FAILED(rv))
     return rv;
+
+  if (AssumeThemePartAndStateAreTransparent(part, state)) {
+    return NS_OK;
+  }
 
   gfxFloat p2a = gfxFloat(aContext->AppUnitsPerDevPixel());
   RECT widgetRect;
