@@ -17,6 +17,36 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothReplyRunnable;
 class BluetoothHfpManagerObserver;
 
+/**
+ * These costants are defined in 4.33.2 "AT Capabilities Re-Used from GSM 07.07
+ * and 3GPP 27.007" in Bluetooth hands-free profile 1.6
+ */
+enum BluetoothCmeError {
+  AG_FAILURE = 0,
+  NO_CONNECTION_TO_PHONE = 1,
+  OPERATION_NOT_ALLOWED = 3,
+  OPERATION_NOT_SUPPORTED = 4,
+  PIN_REQUIRED = 5,
+  SIM_NOT_INSERTED = 10,
+  SIM_PIN_REQUIRED = 11,
+  SIM_PUK_REQUIRED = 12,
+  SIM_FAILURE = 13,
+  SIM_BUSY = 14,
+  INCORRECT_PASSWORD = 16,
+  SIM_PIN2_REQUIRED = 17,
+  SIM_PUK2_REQUIRED = 18,
+  MEMORY_FULL = 20,
+  INVALID_INDEX = 21,
+  MEMORY_FAILURE = 23,
+  TEXT_STRING_TOO_LONG = 24,
+  INVALID_CHARACTERS_IN_TEXT_STRING = 25,
+  DIAL_STRING_TOO_LONG = 26,
+  INVALID_CHARACTERS_IN_DIAL_STRING = 27,
+  NO_NETWORK_SERVICE = 30,
+  NETWORK_TIMEOUT = 31,
+  NETWORK_NOT_ALLOWED = 32
+};
+
 class BluetoothHfpManager : public mozilla::ipc::UnixSocketConsumer
 {
 public:
@@ -59,6 +89,7 @@ private:
   int mCurrentVgm;
   int mCurrentCallIndex;
   bool mCLIP;
+  bool mCMEE;
   bool mCMER;
   bool mReceiveVgsFlag;
   nsString mDevicePath;
