@@ -142,7 +142,7 @@ stubs::SetElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    if (!FetchElementId(f.cx, obj, idval, id.address(),
+    if (!FetchElementId(f.cx, obj, idval, &id,
                         MutableHandleValue::fromMarkedLocation(&regs.sp[-2])))
     {
         THROW();
@@ -193,7 +193,7 @@ stubs::ToId(VMFrame &f)
         THROW();
 
     RootedId id(f.cx);
-    if (!FetchElementId(f.cx, obj, idval, id.address(), idval))
+    if (!FetchElementId(f.cx, obj, idval, &id, idval))
         THROW();
 
     if (!idval.isInt32()) {
@@ -1492,7 +1492,7 @@ stubs::In(VMFrame &f)
 
     RootedObject obj(cx, &rref.toObject());
     RootedId id(cx);
-    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(),
+    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], &id,
                         MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2])))
     {
         THROWV(JS_FALSE);
