@@ -165,9 +165,6 @@ struct CallICInfo {
 
     FrameSize frameSize;
 
-    /* Label to the function object identity guard. */
-    JSC::CodeLocationLabel funGuardLabel;
-
     /* Function object identity guard. */
     JSC::CodeLocationDataLabelPtr funGuard;
 
@@ -176,12 +173,6 @@ struct CallICInfo {
 
     /* Inline to OOL jump, redirected by stubs. */
     JSC::CodeLocationJump funJump;
-
-    /*
-     * Target of the above jump, remembered so that if we need to generate a
-     * callsite clone stub we can redirect to the original funJump target.
-     */
-    JSC::CodeLocationLabel funJumpTarget;
 
     /*
      * If an Ion stub has been generated, its guard may be linked to another

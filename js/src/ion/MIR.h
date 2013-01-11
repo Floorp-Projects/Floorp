@@ -1171,23 +1171,18 @@ class MCall
     CompilerRootFunction target_;
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
-    // The typeset of the callee, could be NULL.
-    types::StackTypeSet *calleeTypes_;
 
-    MCall(JSFunction *target, uint32_t numActualArgs, bool construct,
-          types::StackTypeSet *calleeTypes)
+    MCall(JSFunction *target, uint32_t numActualArgs, bool construct)
       : construct_(construct),
         target_(target),
-        numActualArgs_(numActualArgs),
-        calleeTypes_(calleeTypes)
+        numActualArgs_(numActualArgs)
     {
         setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(Call)
-    static MCall *New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct,
-                      types::StackTypeSet *calleeTypes);
+    static MCall *New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct);
 
     void initPrepareCall(MDefinition *start) {
         JS_ASSERT(start->isPrepareCall());
@@ -1218,9 +1213,6 @@ class MCall
 
     bool isConstructing() const {
         return construct_;
-    }
-    types::StackTypeSet *calleeTypes() const {
-        return calleeTypes_;
     }
 
     // The number of stack arguments is the max between the number of formal
@@ -4351,16 +4343,12 @@ class InlinePropertyTable : public TempObject
         return entries_[i]->func;
     }
 
-    void trimToAndMaybePatchTargets(AutoObjectVector &targets, AutoObjectVector &originals) {
+    void trimToTargets(AutoObjectVector &targets) {
         size_t i = 0;
         while (i < numEntries()) {
             bool foundFunc = false;
-            // Compare using originals, but if we find a matching function,
-            // patch it to the target, which might be a clone.
-            for (size_t j = 0; j < originals.length(); j++) {
-                if (entries_[i]->func == originals[j]) {
-                    if (entries_[i]->func != targets[j])
-                        entries_[i] = new Entry(entries_[i]->typeObj, targets[j]->toFunction());
+            for (size_t j = 0; j < targets.length(); j++) {
+                if (entries_[i]->func == targets[j]) {
                     foundFunc = true;
                     break;
                 }
@@ -4985,41 +4973,6 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
     }
     PropertyName *name() const {
         return name_;
-    }
-};
-
-class MCallsiteCloneCache
-  : public MUnaryInstruction,
-    public SingleObjectPolicy
-{
-    jsbytecode *callPc_;
-
-    MCallsiteCloneCache(MDefinition *callee, jsbytecode *callPc)
-      : MUnaryInstruction(callee),
-        callPc_(callPc)
-    {
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(CallsiteCloneCache);
-
-    static MCallsiteCloneCache *New(MDefinition *callee, jsbytecode *callPc) {
-        return new MCallsiteCloneCache(callee, callPc);
-    }
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    MDefinition *callee() const {
-        return getOperand(0);
-    }
-    jsbytecode *callPc() const {
-        return callPc_;
-    }
-
-    // Callsite cloning is idempotent.
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
     }
 };
 

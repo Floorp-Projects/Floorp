@@ -395,11 +395,10 @@ MParameter::congruentTo(MDefinition * const &ins) const
 }
 
 MCall *
-MCall::New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct,
-           types::StackTypeSet *calleeTypes)
+MCall::New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct)
 {
     JS_ASSERT(maxArgc >= numActualArgs);
-    MCall *ins = new MCall(target, numActualArgs, construct, calleeTypes);
+    MCall *ins = new MCall(target, numActualArgs, construct);
     if (!ins->init(maxArgc + NumNonArgumentOperands))
         return NULL;
     return ins;
