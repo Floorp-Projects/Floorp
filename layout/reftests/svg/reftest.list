@@ -292,6 +292,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layou
 == text-style-01d.svg text-style-01-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 == thin-stroke-01.svg pass.svg
+== zero-stroke-01.svg pass.svg
 == tspan-dxdy-01.svg tspan-dxdy-ref.svg
 == tspan-dxdy-02.svg tspan-dxdy-ref.svg
 == tspan-dxdy-03.svg tspan-dxdy-ref.svg
