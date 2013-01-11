@@ -1225,6 +1225,8 @@ class FrameRegs
 
 class StackSegment
 {
+    JSContext *cx_;
+
     /* Previous segment within same context stack. */
     StackSegment *const prevInContext_;
 
@@ -1237,12 +1239,23 @@ class StackSegment
     /* Call args for most recent native call in this segment (or null). */
     CallArgsList *calls_;
 
+#if JS_BITS_PER_WORD == 32
+    /*
+     * Ensure StackSegment is Value-aligned. Protected to silence Clang warning
+     * about unused private fields.
+     */
+  protected:
+    uint32_t padding_;
+#endif
+
   public:
-    StackSegment(StackSegment *prevInContext,
+    StackSegment(JSContext *cx,
+                 StackSegment *prevInContext,
                  StackSegment *prevInMemory,
                  FrameRegs *regs,
                  CallArgsList *calls)
-      : prevInContext_(prevInContext),
+      : cx_(cx),
+        prevInContext_(prevInContext),
         prevInMemory_(prevInMemory),
         regs_(regs),
         calls_(calls)
@@ -1292,6 +1305,10 @@ class StackSegment
 
     Value *maybeCallArgv() const {
         return calls_ ? calls_->array() : NULL;
+    }
+
+    JSContext *cx() const {
+        return cx_;
     }
 
     StackSegment *prevInContext() const {
@@ -1690,6 +1707,59 @@ class GeneratorFrameGuard : public FrameGuard
     ~GeneratorFrameGuard() { if (pushed()) stack_->popGeneratorFrame(*this); }
 };
 
+/* Pointer to either a StackFrame or a baseline JIT frame. */
+class TaggedFramePtr
+{
+    uintptr_t ptr_;
+
+    bool isStackFrame() const {
+        return ptr_ & 0x1;
+    }
+
+    StackFrame *asStackFrame() const {
+        JS_ASSERT(isStackFrame());
+        StackFrame *res = (StackFrame *)(ptr_ & ~0x1);
+        JS_ASSERT(res);
+        return res;
+    }
+
+  public:
+    TaggedFramePtr()
+      : ptr_(0)
+    {}
+
+    explicit TaggedFramePtr(StackFrame *fp)
+      : ptr_(uintptr_t(fp) | 0x1)
+    {
+        JS_ASSERT(fp);
+    }
+
+    void *raw() const { return reinterpret_cast<void *>(ptr_); }
+
+    bool operator ==(const TaggedFramePtr &other) const { return ptr_ == other.ptr_; }
+    bool operator !=(const TaggedFramePtr &other) const { return ptr_ != other.ptr_; }
+
+    JSScript *script() const {
+        if (isStackFrame())
+            return asStackFrame()->script();
+        JS_NOT_REACHED("Invalid frame");
+        return NULL;
+    }
+};
+
+template <>
+struct DefaultHasher<TaggedFramePtr> {
+    typedef TaggedFramePtr Lookup;
+
+    static js::HashNumber hash(const Lookup &key) {
+        return size_t(key.raw());
+    }
+
+    static bool match(const TaggedFramePtr &k, const Lookup &l) {
+        return k == l;
+    }
+};
+
 /*****************************************************************************/
 
 /*
@@ -1712,31 +1782,45 @@ class GeneratorFrameGuard : public FrameGuard
  */
 class StackIter
 {
-    friend class ContextStack;
-    PerThreadData *perThread_;
-    JSContext    *maybecx_;
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
-  private:
-    SavedOption  savedOption_;
-
     enum State { DONE, SCRIPTED, NATIVE, ION };
 
-    State        state_;
+    /*
+     * Unlike StackIter itself, StackIter::Data can be allocated on the heap,
+     * so this structure should not contain any GC things.
+     */
+    struct Data
+    {
+        PerThreadData *perThread_;
+        JSContext    *maybecx_;
+        SavedOption  savedOption_;
 
-    StackFrame   *fp_;
-    CallArgsList *calls_;
+        State        state_;
 
-    StackSegment *seg_;
-    jsbytecode   *pc_;
-    RootedScript  script_;
-    CallArgs      args_;
+        StackFrame   *fp_;
+        CallArgsList *calls_;
 
-    bool          poppedCallDuringSettle_;
+        StackSegment *seg_;
+        jsbytecode   *pc_;
+        CallArgs      args_;
+
+        bool          poppedCallDuringSettle_;
 
 #ifdef JS_ION
-    ion::IonActivationIterator ionActivations_;
-    ion::IonFrameIterator ionFrames_;
+        ion::IonActivationIterator ionActivations_;
+        ion::IonFrameIterator ionFrames_;
+#endif
+
+        Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption);
+        Data(JSRuntime *rt, StackSegment *seg);
+        Data(const Data &other);
+    };
+
+    friend class ContextStack;
+  private:
+    Data data_;
+#ifdef JS_ION
     ion::InlineFrameIterator ionInlineFrames_;
 #endif
 
@@ -1754,42 +1838,62 @@ class StackIter
     StackIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
     StackIter(JSRuntime *rt, StackSegment &seg);
     StackIter(const StackIter &iter);
+    StackIter(const Data &data);
 
-    bool done() const { return state_ == DONE; }
+    bool done() const { return data_.state_ == DONE; }
     StackIter &operator++();
+
+    Data *copyData() const;
 
     bool operator==(const StackIter &rhs) const;
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
     JSCompartment *compartment() const;
 
-    bool poppedCallDuringSettle() const { return poppedCallDuringSettle_; }
+    bool poppedCallDuringSettle() const { return data_.poppedCallDuringSettle_; }
 
     bool isScript() const {
         JS_ASSERT(!done());
 #ifdef JS_ION
-        if (state_ == ION)
-            return ionFrames_.isScripted();
+        if (data_.state_ == ION)
+            return data_.ionFrames_.isScripted();
 #endif
-        return state_ == SCRIPTED;
+        return data_.state_ == SCRIPTED;
+    }
+    UnrootedScript script() const {
+        JS_ASSERT(isScript());
+        if (data_.state_ == SCRIPTED)
+            return interpFrame()->script();
+#ifdef JS_ION
+        JS_ASSERT(data_.state_ == ION);
+        return ionInlineFrames_.script();
+#else
+        return NULL;
+#endif
     }
     bool isIon() const {
         JS_ASSERT(!done());
-        return state_ == ION;
+        return data_.state_ == ION;
     }
     bool isNativeCall() const {
         JS_ASSERT(!done());
 #ifdef JS_ION
-        if (state_ == ION)
-            return ionFrames_.isNative();
+        if (data_.state_ == ION)
+            return data_.ionFrames_.isNative();
 #endif
-        return state_ == NATIVE;
+        return data_.state_ == NATIVE;
     }
 
     bool isFunctionFrame() const;
+    bool isGlobalFrame() const;
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
+    bool isGeneratorFrame() const;
     bool isConstructing() const;
+
+    bool hasArgs() const { return isNonEvalFunctionFrame(); }
+
+    TaggedFramePtr taggedFramePtr() const;
 
     /*
      * When entering IonMonkey, the top interpreter frame (pushed by the caller)
@@ -1797,19 +1901,28 @@ class StackIter
      * contents of the frame are ignored by Ion code (and GC) and thus
      * immediately become garbage and must not be touched directly.
      */
-    StackFrame *interpFrame() const { JS_ASSERT(isScript() && !isIon()); return fp_; }
+    StackFrame *interpFrame() const { JS_ASSERT(isScript() && !isIon()); return data_.fp_; }
 
-    jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
-    UnrootedScript script() const { JS_ASSERT(isScript()); return script_; }
+    jsbytecode *pc() const { JS_ASSERT(isScript()); return data_.pc_; }
+    void        updatePcQuadratic();
     JSFunction *callee() const;
     Value       calleev() const;
     unsigned    numActualArgs() const;
+    unsigned    numFormalArgs() const { return script()->function()->nargs; }
+    Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
 
     JSObject   *scopeChain() const;
+    CallObject &callObj() const;
+
+    bool        hasArgsObj() const;
+    ArgumentsObject &argsObj() const;
 
     // Ensure that thisv is correct, see ComputeThis.
     bool        computeThis() const;
     Value       thisv() const;
+
+    Value       returnValue() const;
+    void        setReturnValue(const Value &v);
 
     JSFunction *maybeCallee() const {
         return isFunctionFrame() ? callee() : NULL;
@@ -1819,7 +1932,7 @@ class StackIter
     size_t      numFrameSlots() const;
     Value       frameSlotValue(size_t index) const;
 
-    CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
+    CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return data_.args_; }
 
     template <class Op>
     inline void ionForEachCanonicalActualArg(Op op);
@@ -1835,7 +1948,11 @@ class ScriptFrameIter : public StackIter
 
   public:
     ScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-        : StackIter(cx, opt) { settle(); }
+      : StackIter(cx, opt) { settle(); }
+
+    ScriptFrameIter(const StackIter::Data &data)
+      : StackIter(data)
+    {}
 
     ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
@@ -1871,6 +1988,9 @@ class AllFramesIter
 
     bool        isIon() const { return fp_->runningInIon(); }
     StackFrame *interpFrame() const { return fp_; }
+    StackSegment *seg() const { return seg_; }
+
+    TaggedFramePtr taggedFramePtr() const;
 
   private:
     void settle();
