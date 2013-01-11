@@ -20,33 +20,31 @@ function test() {
 function runTest(win) {
   let doc = win.document;
 
-  //win.gotoPref("paneAdvanced");
-  //let advancedPrefs = doc.getElementById("advancedPrefs");
-  //let dataChoicesTab = doc.getElementById("dataChoicesTab");
-  //advancedPrefs.selectedTab = dataChoicesTab;
+  let policy = Components.classes["@mozilla.org/datareporting/service;1"]
+                                 .getService(Components.interfaces.nsISupports)
+                                 .wrappedJSObject
+                                 .policy;
+  ok(policy);
+  is(policy.dataSubmissionPolicyAccepted, false, "Data submission policy not accepted.");
+  is(policy.healthReportUploadEnabled, true, "Health Report upload enabled on app first run.");
 
   let checkbox = doc.getElementById("submitHealthReportBox");
   ok(checkbox);
-  is(checkbox.checked, false, "Health Report checkbox is unchecked on app first run.");
+  is(checkbox.checked, true, "Health Report checkbox is checked on app first run.");
 
-  let reporter = Components.classes["@mozilla.org/healthreport/service;1"]
-                                   .getService(Components.interfaces.nsISupports)
-                                   .wrappedJSObject
-                                   .reporter;
-  ok(reporter);
-  is(reporter.dataSubmissionPolicyAccepted, false, "Data submission policy not accepted.");
+  checkbox.checked = false;
+  checkbox.doCommand();
+  is(policy.healthReportUploadEnabled, false, "Unchecking checkbox opts out of FHR upload.");
 
   checkbox.checked = true;
   checkbox.doCommand();
-  is(reporter.dataSubmissionPolicyAccepted, true, "Checking checkbox accepts data submission policy.");
-  checkbox.checked = false;
-  checkbox.doCommand();
-  is(reporter.dataSubmissionPolicyAccepted, false, "Unchecking checkbox opts out of data submission.");
+  is(policy.healthReportUploadEnabled, true, "Checking checkbox allows FHR upload.");
 
   win.close();
   finish();
 }
 
 function resetPreferences() {
-  Services.prefs.clearUserPref("healthreport.policy.dataSubmissionPolicyAccepted");
+  Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
 }
+
