@@ -7,7 +7,7 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const name = this.window ? window.location.pathname : "Splendid Test";
+  const name = this.window ? this.window ? window.location.pathname : "Splendid Test" : "Splendid Test";
 
   const objectStoreName = "People";
 
