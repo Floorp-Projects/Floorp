@@ -5,7 +5,6 @@
 
 #include "nsSVGPathDataParser.h"
 #include "nsSVGDataParser.h"
-#include "nsSVGPathElement.h"
 #include "prdtoa.h"
 #include "DOMSVGPathSeg.h"
 #include <stdlib.h>
