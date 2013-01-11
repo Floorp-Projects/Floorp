@@ -14,9 +14,10 @@
     {0x89, 0xec, 0xe6, 0x69, 0x6c, 0xb7, 0xb8, 0xb3} }
 
 namespace mozilla {
-class DOMSVGMatrix;
 
 namespace dom {
+class SVGMatrix;
+
 class SVGLocatableElement : public nsSVGElement,
                             public nsIDOMSVGLocatable
 {
@@ -33,10 +34,10 @@ public:
   nsSVGElement* GetNearestViewportElement();
   nsSVGElement* GetFarthestViewportElement();
   already_AddRefed<nsIDOMSVGRect> GetBBox(ErrorResult& rv);
-  already_AddRefed<DOMSVGMatrix> GetCTM();
-  already_AddRefed<DOMSVGMatrix> GetScreenCTM();
-  already_AddRefed<DOMSVGMatrix> GetTransformToElement(nsSVGElement& aElement,
-                                                       ErrorResult& rv);
+  already_AddRefed<SVGMatrix> GetCTM();
+  already_AddRefed<SVGMatrix> GetScreenCTM();
+  already_AddRefed<SVGMatrix> GetTransformToElement(nsSVGElement& aElement,
+                                                    ErrorResult& rv);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGLocatableElement,
