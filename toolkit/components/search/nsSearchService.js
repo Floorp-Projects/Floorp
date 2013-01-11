@@ -803,13 +803,21 @@ function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
     distributionID = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
   }
   catch (ex) { }
+  var official = MOZ_OFFICIAL;
+  try {
+    if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "official"))
+      official = "official";
+    else
+      official = "unofficial";
+  }
+  catch (ex) { }
 
   // Custom search parameters. These are only available to default search
   // engines.
   if (aEngine._isDefault) {
     value = value.replace(MOZ_PARAM_LOCALE, getLocale());
     value = value.replace(MOZ_PARAM_DIST_ID, distributionID);
-    value = value.replace(MOZ_PARAM_OFFICIAL, MOZ_OFFICIAL);
+    value = value.replace(MOZ_PARAM_OFFICIAL, official);
   }
 
   // Insert the OpenSearch parameters we're confident about
