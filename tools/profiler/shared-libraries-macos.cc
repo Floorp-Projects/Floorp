@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
+#include <sstream>
 
 #include "shared-libraries.h"
 
@@ -55,25 +56,41 @@ void addSharedLibrary(const platform_mach_header* header, char *name, SharedLibr
   const struct load_command *cmd =
     reinterpret_cast<const struct load_command *>(header + 1);
 
-  seg_size size;
+  seg_size size = 0;
+  unsigned long long start = reinterpret_cast<unsigned long long>(header);
   // Find the cmd segment in the macho image. It will contain the offset we care about.
-  for (unsigned int i = 0; cmd && (i < header->ncmds); ++i) {
+  const uint8_t *uuid_bytes = nullptr;
+  for (unsigned int i = 0;
+       cmd && (i < header->ncmds) && (uuid_bytes == nullptr || size == 0);
+       ++i) {
     if (cmd->cmd == CMD_SEGMENT) {
       const mach_segment_command_type *seg =
         reinterpret_cast<const mach_segment_command_type *>(cmd);
 
       if (!strcmp(seg->segname, "__TEXT")) {
         size = seg->vmsize;
-        unsigned long long start = reinterpret_cast<unsigned long long>(header);
-        info.AddSharedLibrary(SharedLibrary(start, start+seg->vmsize, 0,
-                                            "", name));
-        return;
       }
+    } else if (cmd->cmd == LC_UUID) {
+      const uuid_command *ucmd = reinterpret_cast<const uuid_command *>(cmd);
+      uuid_bytes = ucmd->uuid;
     }
 
     cmd = reinterpret_cast<const struct load_command *>
       (reinterpret_cast<const char *>(cmd) + cmd->cmdsize);
   }
+
+  std::stringstream uuid;
+  uuid << std::hex << std::uppercase;
+  if (uuid_bytes != nullptr) {
+    for (int i = 0; i < 16; ++i) {
+      uuid << ((uuid_bytes[i] & 0xf0) >> 4);
+      uuid << (uuid_bytes[i] & 0xf);
+    }
+    uuid << '0';
+  }
+
+  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid.str(),
+                                      name));
 }
 
 // Use dyld to inspect the macho image information. We can build the SharedLibraryEntry structure
