@@ -91,6 +91,30 @@ window.opener.SimpleTest.waitForFocus(function () {
   startPopupTests(popupTests);
 }, window);
 
+// On Linux, the first menu opens when F10 is pressed, but on other platforms
+// the menubar is focused but no menu is opened. This means that different events
+// fire.
+function pressF10Events()
+{
+  return navigator.platform.indexOf("Linux") >= 0 ?
+    [ "DOMMenuBarActive menubar", "popupshowing filepopup", "DOMMenuItemActive item1", "popupshown filepopup"] :
+    [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
+}
+
+function closeAfterF10Events(extraInactive)
+{
+  if (navigator.platform.indexOf("Linux") >= 0) {
+    var events = [ "popuphiding filepopup", "popuphidden filepopup", "DOMMenuItemInactive item1",
+                   "DOMMenuInactive filepopup", "DOMMenuBarInactive menubar",
+                   "DOMMenuItemInactive filemenu" ];
+    if (extraInactive)
+      events.push("DOMMenuItemInactive filemenu");
+    return events;
+  }
+
+  return [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ];
+}
+
 var popupTests = [
 {
   testname: "press on menu",
@@ -251,7 +275,7 @@ var popupTests = [
   // open the submenu with the enter key
   testname: "open submenu with enter",
   events: function() {
-    // on Windows, the disabled 'navigation' item can stll be highlihted
+    // on Windows, the disabled 'navigation' item can stll be highlighted
     if (navigator.platform.indexOf("Win") == 0)
       return [ "popupshowing toolbarpopup", "DOMMenuItemActive navigation",
                "popupshown toolbarpopup" ];
@@ -284,8 +308,55 @@ var popupTests = [
   },
 },
 {
+  // open the submenu with the enter key again
+  testname: "open submenu with enter again",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: function() {
+    // on Windows, the disabled 'navigation' item can stll be highlighted
+    if (navigator.platform.indexOf("Win") == 0)
+      return [ "popupshowing toolbarpopup", "DOMMenuItemActive navigation",
+               "popupshown toolbarpopup" ];
+    else
+      return [ "popupshowing toolbarpopup", "popupshown toolbarpopup" ];
+  },
+  test: function() { sendKey("ENTER"); },
+  result: function(testname) {
+    checkOpen("viewmenu", testname);
+    checkOpen("toolbar", testname);
+  },
+},
+{
+  // while a submenu is open, switch to the next toplevel menu with the cursor right key
+  testname: "while a submenu is open, switch to the next menu with the cursor right",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: [ "DOMMenuItemInactive viewmenu", "DOMMenuItemActive helpmenu",
+            "popuphiding toolbarpopup", "popuphidden toolbarpopup",
+            "popuphiding viewpopup", "popuphidden viewpopup",
+            "popupshowing helppopup", "DOMMenuItemInactive navigation",
+            "DOMMenuInactive toolbarpopup", "DOMMenuItemInactive toolbar",
+            "DOMMenuInactive viewpopup", "DOMMenuItemActive contents",
+            "popupshown helppopup" ],
+  test: function() { sendKey("RIGHT"); },
+  result: function(testname) {
+    checkOpen("helpmenu", testname);
+    checkClosed("toolbar", testname);
+    checkClosed("viewmenu", testname);
+  }
+},
+{
   // close the main menu with the escape key
   testname: "close menubar menu with escape",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: [ "popuphiding helppopup", "popuphidden helppopup",
+            "DOMMenuItemInactive contents", "DOMMenuInactive helppopup",
+            "DOMMenuBarInactive menubar", "DOMMenuItemInactive helpmenu" ],
+  test: function() { sendKey("ESCAPE"); },
+  result: function(testname) { checkClosed("viewmenu", testname); },
+},
+{
+  // close the main menu with the escape key
+  testname: "close menubar menu with escape",
+  condition: function() { return (navigator.platform.indexOf("Win") != 0) },
   events: [ "popuphiding viewpopup", "popuphidden viewpopup",
             "DOMMenuItemInactive toolbar", "DOMMenuInactive viewpopup",
             "DOMMenuBarInactive menubar",
@@ -407,25 +478,37 @@ var popupTests = [
   result: function(testname) { checkClosed("helpmenu", testname); }
 },
 {
-  // pressing F10 should highlight the first menu but not open it
+  // pressing F10 should highlight the first menu. On Linux, the menu is opened.
   testname: "F10 to activate menubar",
-  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  events: pressF10Events(),
   test: function() { sendKey("F10"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, true, testname + " openedWithKey");
-    checkClosed("filemenu", testname);
+    if (navigator.platform.indexOf("Linux") >= 0)
+      checkOpen("filemenu", testname);
+    else
+      checkClosed("filemenu", testname);
   },
 },
 {
-  // pressing cursor down should open a menu
+  // pressing cursor left then down should open a menu
   testname: "cursor down on menu",
-  events: [ 
-            "popupshowing helppopup",
-            "DOMMenuItemInactive filemenu", "DOMMenuItemActive helpmenu",
-            // This is in a different order than the
-            // "accelerator on active menubar" because menus opened from a
-            // shortcut key are fired asynchronously
-            "DOMMenuItemActive contents", "popupshown helppopup" ],
+  events: (navigator.platform.indexOf("Linux") >= 0) ?
+            [  "DOMMenuItemInactive filemenu", "DOMMenuItemActive helpmenu",
+               // This is in a different order than the
+               // "accelerator on active menubar" because menus opened from a
+               // shortcut key are fired asynchronously
+               "popuphiding filepopup", "popuphidden filepopup",
+               "popupshowing helppopup", "DOMMenuItemInactive item1",
+               "DOMMenuItemActive item2", "DOMMenuItemInactive item2",
+               "DOMMenuInactive filepopup", "DOMMenuItemActive contents",
+               "popupshown helppopup" ] :
+            [ "popupshowing helppopup", "DOMMenuItemInactive filemenu",
+              "DOMMenuItemActive helpmenu",
+              // This is in a different order than the
+              // "accelerator on active menubar" because menus opened from a
+              // shortcut key are fired asynchronously
+              "DOMMenuItemActive contents", "popupshown helppopup" ],
   test: function() { sendKey("LEFT"); sendKey("DOWN"); },
   result: function(testname) {
     is(document.getElementById("helpmenu").openedWithKey, true, testname + " openedWithKey");
@@ -576,12 +659,12 @@ var popupTests = [
 },
 {
   testname: "F10 to activate menubar for tab deactivation",
-  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  events: pressF10Events(true) ,
   test: function() { sendKey("F10"); },
 },
 {
   testname: "Deactivate menubar with tab key",
-  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ],
+  events: closeAfterF10Events(true),
   test: function() { sendKey("TAB"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");
@@ -589,12 +672,12 @@ var popupTests = [
 },
 {
   testname: "F10 to activate menubar for escape deactivation",
-  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  events: pressF10Events(),
   test: function() { sendKey("F10"); },
 },
 {
   testname: "Deactivate menubar with escape key",
-  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ],
+  events: closeAfterF10Events(false),
   test: function() { sendKey("ESCAPE"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");
@@ -602,12 +685,12 @@ var popupTests = [
 },
 {
   testname: "F10 to activate menubar for f10 deactivation",
-  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  events: pressF10Events(),
   test: function() { sendKey("F10"); },
 },
 {
   testname: "Deactivate menubar with f10 key",
-  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu"  ],
+  events: closeAfterF10Events(true),
   test: function() { sendKey("F10"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");

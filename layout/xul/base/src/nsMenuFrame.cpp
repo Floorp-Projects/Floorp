@@ -577,6 +577,22 @@ nsMenuFrame::PopupClosed(bool aDeselectMenu)
       // becoming active again.
       nsMenuFrame *current = mMenuParent->GetCurrentMenuItem();
       if (current) {
+        // However, if the menu is a descendant on a menubar, and the menubar
+        // has the 'stay active' flag set, it means that the menubar is switching
+        // to another toplevel menu entirely (for example from Edit to View), so
+        // don't fire the DOMMenuItemActive event or else we'll send extraneous
+        // events for submenus. nsMenuBarFrame::ChangeMenuItem has already deselected
+        // the old menu, so it doesn't need to happen again here, and the new
+        // menu can be selected right away.
+        nsIFrame* parent = current;
+        while (parent) {
+          nsMenuBarFrame* menubar = do_QueryFrame(parent);
+          if (menubar && menubar->GetStayActive())
+            return;
+
+          parent = parent->GetParent();
+        }
+
         nsCOMPtr<nsIRunnable> event =
           new nsMenuActivateEvent(current->GetContent(),
                                   PresContext(), true);
