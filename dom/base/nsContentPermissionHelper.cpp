@@ -48,7 +48,7 @@ nsContentPermissionRequestProxy::OnParentDestroyed()
   mParent = nullptr;
 }
 
-NS_IMPL_ISUPPORTS1(nsContentPermissionRequestProxy, nsIContentPermissionRequest);
+NS_IMPL_ISUPPORTS1(nsContentPermissionRequestProxy, nsIContentPermissionRequest)
 
 NS_IMETHODIMP
 nsContentPermissionRequestProxy::GetType(nsACString & aType)

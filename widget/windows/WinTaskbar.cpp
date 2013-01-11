@@ -192,7 +192,7 @@ DefaultController::OnClick(nsITaskbarPreviewButton *button) {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(DefaultController, nsITaskbarPreviewController);
+NS_IMPL_ISUPPORTS1(DefaultController, nsITaskbarPreviewController)
 }
 
 namespace mozilla {
