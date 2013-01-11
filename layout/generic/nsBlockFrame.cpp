@@ -5532,6 +5532,9 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
       nsFrameList* list = GetPushedFloats();
       if (list) {
         removed = list->RemoveFrameIfPresent(aChild);
+        if (list->IsEmpty()) {
+          delete RemovePushedFloats();
+        }
       }
     }
     return removed ? NS_OK : NS_ERROR_UNEXPECTED;
