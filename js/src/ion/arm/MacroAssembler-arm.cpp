@@ -1483,13 +1483,6 @@ MacroAssemblerARMCompat::addPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::addPtr(const Address &src, Register dest)
-{
-    load32(src, ScratchRegister);
-    ma_add(ScratchRegister, dest, SetCond);
-}
-
-void
 MacroAssemblerARMCompat::and32(Imm32 imm, const Address &dest)
 {
     load32(dest, ScratchRegister);
@@ -1506,21 +1499,9 @@ MacroAssemblerARMCompat::or32(Imm32 imm, const Address &dest)
 }
 
 void
-MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
-{
-    ma_eor(imm, dest);
-}
-
-void
 MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
 {
     ma_orr(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::andPtr(Imm32 imm, Register dest)
-{
-    ma_andr(imm, dest);
 }
 
 void
@@ -1950,13 +1931,6 @@ void
 MacroAssemblerARMCompat::subPtr(Imm32 imm, const Register dest)
 {
     ma_sub(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(const Address &addr, const Register dest)
-{
-    loadPtr(addr, ScratchRegister);
-    ma_sub(ScratchRegister, dest);
 }
 
 void
