@@ -228,6 +228,6 @@ protected:
   uint32_t mMaxQualityIndex;
 };
 
-}; // namespace mozilla
+} // namespace mozilla
 
 #endif // DOM_CAMERA_CAMERA_RECORDER_PROFILES_H
