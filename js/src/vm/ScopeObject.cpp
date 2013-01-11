@@ -1226,19 +1226,19 @@ class DebugScopeProxy : public BaseProxyHandler
 
         /* Handle unaliased let and catch bindings at block scope. */
         if (scope->isClonedBlock()) {
-            ClonedBlockObject &block = scope->asClonedBlock();
-            UnrootedShape shape = block.lastProperty()->search(cx, id);
+            Rooted<ClonedBlockObject *> block(cx, &scope->asClonedBlock());
+            UnrootedShape shape = block->lastProperty()->search(cx, id);
             if (!shape)
                 return false;
 
             AutoAssertNoGC nogc;
             unsigned i = shape->shortid();
-            if (block.staticBlock().isAliased(i))
+            if (block->staticBlock().isAliased(i))
                 return false;
 
             if (maybefp) {
                 UnrootedScript script = maybefp->script();
-                unsigned local = block.slotToLocalIndex(script->bindings, shape->slot());
+                unsigned local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     *vp = maybefp->unaliasedLocal(local);
                 else
@@ -1246,9 +1246,9 @@ class DebugScopeProxy : public BaseProxyHandler
                 JS_ASSERT(analyze::LocalSlot(script, local) >= analyze::TotalSlots(script));
             } else {
                 if (action == GET)
-                    *vp = block.var(i, DONT_CHECK_ALIASING);
+                    *vp = block->var(i, DONT_CHECK_ALIASING);
                 else
-                    block.setVar(i, *vp, DONT_CHECK_ALIASING);
+                    block->setVar(i, *vp, DONT_CHECK_ALIASING);
             }
 
             return true;
