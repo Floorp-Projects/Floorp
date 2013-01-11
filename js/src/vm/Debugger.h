@@ -422,7 +422,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * If *vp is an object, this produces a (new or existing) Debugger.Object
      * wrapper for it. Otherwise this is the same as JSCompartment::wrap.
      */
-    bool wrapDebuggeeValue(JSContext *cx, Value *vp);
+    bool wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
     /*
      * Unwrap a Debug.Object, without rewrapping it for any particular debuggee
@@ -451,7 +451,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * debugger compartment--mirror symmetry. But compartment wrapping always
      * happens in the target compartment--rotational symmetry.)
      */
-    bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
+    bool unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
     /* Store the Debugger.Frame object for the frame fp in *vp. */
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
