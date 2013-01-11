@@ -3678,7 +3678,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame
 
 static JSBool
 DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
-                    const Value &code, Value *bindings, Value *vp,
+                    const Value &code, Value *bindings, MutableHandleValue vp,
                     Debugger *dbg, HandleObject scope, StackFrame *fp)
 {
     /* Either we're specifying the frame, or a global. */
@@ -3765,7 +3765,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
     JS::Anchor<JSString *> anchor(stable);
     bool ok = EvaluateInEnv(cx, env, thisv, fp, stable->chars(), stable->length(),
                             "debugger eval code", 1, &rval);
-    return dbg->receiveCompletionValue(ac, ok, rval, vp);
+    return dbg->receiveCompletionValue(ac, ok, rval, vp.address());
 }
 
 static JSBool
@@ -3775,7 +3775,7 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Frame.prototype.eval", 1);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
-                               args[0], NULL, vp, dbg, NullPtr(), fp);
+                               args[0], NULL, args.rval(), dbg, NullPtr(), fp);
 }
 
 static JSBool
@@ -3785,7 +3785,7 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Frame.prototype.evalWithBindings", 2);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
-                               args[0], &args[1], vp, dbg, NullPtr(), fp);
+                               args[0], &args[1], args.rval(), dbg, NullPtr(), fp);
 }
 
 static JSBool
@@ -4536,7 +4536,7 @@ DebuggerObject_evalInGlobal(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobal",
-                               args[0], NULL, vp, dbg, referent, NULL);
+                               args[0], NULL, args.rval(), dbg, referent, NULL);
 }
 
 static JSBool
@@ -4548,7 +4548,7 @@ DebuggerObject_evalInGlobalWithBindings(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobalWithBindings",
-                               args[0], &args[1], vp, dbg, referent, NULL);
+                               args[0], &args[1], args.rval(), dbg, referent, NULL);
 }
 
 static JSBool
