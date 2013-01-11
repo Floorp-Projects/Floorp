@@ -3276,17 +3276,17 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Handl
 
 JSBool
 js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
-             HandleShape shape, bool added, bool strict, Value *vp)
+             HandleShape shape, bool added, bool strict, MutableHandleValue vp)
 {
     JS_ASSERT(obj->isNative());
 
     if (shape->hasSlot()) {
         uint32_t slot = shape->slot();
 
-        /* If shape has a stub setter, just store *vp. */
+        /* If shape has a stub setter, just store vp. */
         if (shape->hasDefaultSetter()) {
-            AddTypePropertyId(cx, obj, shape->propid(), *vp);
-            obj->nativeSetSlot(slot, *vp);
+            AddTypePropertyId(cx, obj, shape->propid(), vp);
+            obj->nativeSetSlot(slot, vp);
             return true;
         }
     } else {
@@ -3300,10 +3300,10 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
             return js_ReportGetterOnlyAssignment(cx);
     }
 
-    RootedValue nvp(cx, *vp);
+    RootedValue ovp(cx, vp);
 
     uint32_t sample = cx->runtime->propertyRemovals;
-    if (!shape->set(cx, obj, receiver, strict, &nvp))
+    if (!shape->set(cx, obj, receiver, strict, vp))
         return false;
 
     /*
@@ -3312,12 +3312,12 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
      */
     if (shape->hasSlot() &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
-         obj->nativeContains(cx, shape))) {
-        AddTypePropertyId(cx, obj, shape->propid(), *vp);
-        obj->setSlot(shape->slot(), nvp);
+         obj->nativeContains(cx, shape)))
+     {
+        AddTypePropertyId(cx, obj, shape->propid(), ovp);
+        obj->setSlot(shape->slot(), vp);
     }
 
-    *vp = nvp;
     return true;
 }
 
@@ -3764,7 +3764,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     if ((defineHow & DNP_CACHE_RESULT) && !added)
         cx->propertyCache().fill(cx, obj, obj, shape);
 
-    return js_NativeSet(cx, obj, receiver, shape, added, strict, vp.address());
+    return js_NativeSet(cx, obj, receiver, shape, added, strict, vp);
 }
 
 JSBool
