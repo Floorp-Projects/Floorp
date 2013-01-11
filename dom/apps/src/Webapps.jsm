@@ -914,8 +914,6 @@ this.DOMApplicationRegistry = {
     app.progress = 0;
     app.installState = download.previousState;
     app.downloading = false;
-    app.downloadAvailable = false;
-    app.downloadSize = 0;
     this._saveApps((function() {
       this.broadcastMessage("Webapps:PackageEvent",
                              { type: "canceled",
@@ -968,6 +966,7 @@ this.DOMApplicationRegistry = {
                                                     manifestURL: aManifestURL,
                                                     app: app,
                                                     manifest: jsonManifest });
+          DOMApplicationRegistry._saveApps();
         }
       }).bind(this));
 
@@ -1869,6 +1868,7 @@ this.DOMApplicationRegistry = {
                                     manifestURL: aApp.manifestURL,
                                     app: app });
             lastProgressTime = now;
+            self._saveApps();
           }
         },
         onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { },
