@@ -42,5 +42,6 @@ ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/media/webrtc/trunk/src \
   -I$(topsrcdir)/media/webrtc/signaling/src/common \
+  -I$(topsrcdir)/media/webrtc/signaling/src/common/browser_logging \
   $(NULL)
 endif
