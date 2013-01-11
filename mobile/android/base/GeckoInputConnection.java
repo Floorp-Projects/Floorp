@@ -40,10 +40,10 @@ class GeckoInputConnection
 
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
-    private static int mIMEState;
-    private static String mIMETypeHint = "";
-    private static String mIMEModeHint = "";
-    private static String mIMEActionHint = "";
+    private int mIMEState;
+    private String mIMETypeHint = "";
+    private String mIMEModeHint = "";
+    private String mIMEActionHint = "";
 
     private String mCurrentInputMethod;
 
@@ -229,6 +229,20 @@ class GeckoInputConnection
             notifySelectionChange(-1, -1);
         }
         imm.restartInput(v);
+    }
+
+    private void resetInputConnection() {
+        if (mBatchEditCount != 0) {
+            Log.w(LOGTAG, "resetting with mBatchEditCount = " + mBatchEditCount);
+            mBatchEditCount = 0;
+        }
+        mBatchSelectionChanged = false;
+        mBatchTextChanged = false;
+        mUpdateRequest = null;
+
+        mIMEState = IME_STATE_DISABLED;
+        mIMETypeHint = mIMEModeHint = mIMEActionHint = "";
+        mCurrentInputMethod = "";
     }
 
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
@@ -506,8 +520,7 @@ class GeckoInputConnection
 
             case NOTIFY_IME_FOCUSCHANGE:
                 // Showing/hiding vkb is done in notifyIMEEnabled
-                mBatchEditCount = 0;
-                mUpdateRequest = null;
+                resetInputConnection();
                 break;
 
             default:
