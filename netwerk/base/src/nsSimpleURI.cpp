@@ -62,13 +62,9 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
-    bool isMutable; // (because ReadBoolean doesn't support bool*)
+    bool isMutable;
     rv = aStream->ReadBoolean(&isMutable);
     if (NS_FAILED(rv)) return rv;
-    if (isMutable != true && isMutable != false) {
-        NS_WARNING("Unexpected boolean value");
-        return NS_ERROR_UNEXPECTED;
-    }
     mMutable = isMutable;
 
     rv = aStream->ReadCString(mScheme);
@@ -80,10 +76,6 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
     bool isRefValid;
     rv = aStream->ReadBoolean(&isRefValid);
     if (NS_FAILED(rv)) return rv;
-    if (isRefValid != true && isRefValid != false) {
-        NS_WARNING("Unexpected boolean value");
-        return NS_ERROR_UNEXPECTED;
-    }
     mIsRefValid = isRefValid;
 
     if (isRefValid) {
