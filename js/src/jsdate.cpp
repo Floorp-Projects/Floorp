@@ -2612,7 +2612,7 @@ typedef enum formatspec {
 
 /* helper function */
 static JSBool
-date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
+date_format(JSContext *cx, double date, formatspec format, MutableHandleValue rval)
 {
     char buf[100];
     char tzbuf[100];
@@ -2721,12 +2721,12 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
     UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    call.rval().setString(str);
+    rval.setString(str);
     return true;
 }
 
 static bool
-ToLocaleHelper(JSContext *cx, CallReceiver call, HandleObject obj, const char *format)
+ToLocaleHelper(JSContext *cx, HandleObject obj, const char *format, MutableHandleValue rval)
 {
     double utctime = obj->getDateUTCTime().toNumber();
 
@@ -2744,7 +2744,7 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, HandleObject obj, const char *f
 
         /* If it failed, default to toString. */
         if (result_len == 0)
-            return date_format(cx, utctime, FORMATSPEC_FULL, call);
+            return date_format(cx, utctime, FORMATSPEC_FULL, rval);
 
         /* Hacked check against undesired 2-digit year 00/00/00 form. */
         if (strcmp(format, "%x") == 0 && result_len >= 6 &&
@@ -2762,29 +2762,29 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, HandleObject obj, const char *f
     }
 
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
-        return cx->localeCallbacks->localeToUnicode(cx, buf, call.rval().address());
+        return cx->localeCallbacks->localeToUnicode(cx, buf, rval.address());
 
     UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    call.rval().setString(str);
+    rval.setString(str);
     return true;
 }
 
 static bool
-ToLocaleStringHelper(JSContext *cx, CallReceiver call, HandleObject thisObj)
+ToLocaleStringHelper(JSContext *cx, HandleObject thisObj, MutableHandleValue rval)
 {
     /*
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
      * with msvc; '%#c' requests that a full year be used in the result string.
      */
-    return ToLocaleHelper(cx, call, thisObj,
+    return ToLocaleHelper(cx, thisObj,
 #if defined(_WIN32) && !defined(__MWERKS__)
                           "%#c"
 #else
                           "%c"
 #endif
-                         );
+                         , rval);
 }
 
 /* ES5 15.9.5.5. */
@@ -2794,7 +2794,7 @@ date_toLocaleString_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    return ToLocaleStringHelper(cx, args, thisObj);
+    return ToLocaleStringHelper(cx, thisObj, args.rval());
 }
 
 static JSBool
@@ -2823,7 +2823,7 @@ date_toLocaleDateString_impl(JSContext *cx, CallArgs args)
                                    ;
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    return ToLocaleHelper(cx, args, thisObj, format);
+    return ToLocaleHelper(cx, thisObj, format, args.rval());
 }
 
 static JSBool
@@ -2840,7 +2840,7 @@ date_toLocaleTimeString_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    return ToLocaleHelper(cx, args, thisObj, "%X");
+    return ToLocaleHelper(cx, thisObj, "%X", args.rval());
 }
 
 static JSBool
@@ -2858,7 +2858,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
     RootedObject thisObj(cx, &args.thisv().toObject());
 
     if (args.length() == 0)
-        return ToLocaleStringHelper(cx, args, thisObj);
+        return ToLocaleStringHelper(cx, thisObj, args.rval());
 
     RootedString fmt(cx, ToString(cx, args[0]));
     if (!fmt)
@@ -2868,7 +2868,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
     if (!fmtbytes)
         return false;
 
-    return ToLocaleHelper(cx, args, thisObj, fmtbytes.ptr());
+    return ToLocaleHelper(cx, thisObj, fmtbytes.ptr(), args.rval());
 }
 
 static JSBool
@@ -2885,7 +2885,7 @@ date_toTimeString_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     return date_format(cx, args.thisv().toObject().getDateUTCTime().toNumber(),
-                       FORMATSPEC_TIME, args);
+                       FORMATSPEC_TIME, args.rval());
 }
 
 static JSBool
@@ -2902,7 +2902,7 @@ date_toDateString_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     return date_format(cx, args.thisv().toObject().getDateUTCTime().toNumber(),
-                       FORMATSPEC_DATE, args);
+                       FORMATSPEC_DATE, args.rval());
 }
 
 static JSBool
@@ -2946,7 +2946,7 @@ date_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
     return date_format(cx, args.thisv().toObject().getDateUTCTime().toNumber(),
-                       FORMATSPEC_FULL, args);
+                       FORMATSPEC_FULL, args.rval());
 }
 
 static JSBool
@@ -3041,7 +3041,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
 
     /* Date called as function. */
     if (!IsConstructing(args))
-        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, args);
+        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, args.rval());
 
     /* Date called as constructor. */
     double d;
