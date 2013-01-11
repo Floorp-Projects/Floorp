@@ -980,7 +980,7 @@ var BrowserApp = {
   getFocusedInput: function(aBrowser, aOnlyInputElements = false) {
     let doc = aBrowser.contentDocument;
     if (!doc)
-      return;
+      return null;
 
     let focused = doc.activeElement;
     while (focused instanceof HTMLFrameElement || focused instanceof HTMLIFrameElement) {
