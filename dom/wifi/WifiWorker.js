@@ -2829,6 +2829,11 @@ WifiWorker.prototype = {
       this.setWifiEnabledInternal(false, function(data) {
         this.setWifiApEnabled(data, this.nextRequest.bind(this));
       }.bind(this));
+      // It's really sad that we don't have an API to notify the wifi
+      // hotspot status. Toggle settings to let gaia know that wifi hotspot
+      // is disalbed.
+      gSettingsService.createLock().set(
+        "tethering.wifi.enabled", false, null, "fromInternalSetting");
     }
     this.setWifiEnabled({enabled: enabled});
   },
