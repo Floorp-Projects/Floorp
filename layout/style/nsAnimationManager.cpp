@@ -171,17 +171,30 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       ElementAnimation &anim = mAnimations[animIdx];
 
       if (anim.mProperties.Length() == 0 ||
-          anim.mIterationDuration.ToMilliseconds() <= 0.0 ||
-          anim.IsPaused()) {
+          anim.mIterationDuration.ToMilliseconds() <= 0.0) {
         continue;
       }
 
+      uint32_t oldLastNotification = anim.mLastNotification;
+
+      // We need to call GetPositionInIteration here to populate
+      // aEventsToDispatch.
+      // The ElapsedDurationAt() call here handles pausing.  But:
+      // FIXME: avoid recalculating every time when paused.
+      GetPositionInIteration(anim.ElapsedDurationAt(aRefreshTime),
+                             anim.mIterationDuration, anim.mIterationCount,
+                             anim.mDirection, IsForElement(),
+                             &anim, this, &aEventsToDispatch);
+
+      // GetPositionInIteration just adjusted mLastNotification; check
+      // its new value against the value before we called
+      // GetPositionInIteration.
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
-      if ((aRefreshTime - anim.mStartTime) / anim.mIterationDuration >= anim.mIterationCount && 
-          anim.mLastNotification != ElementAnimation::LAST_NOTIFICATION_END) {
+      if (anim.mLastNotification == ElementAnimation::LAST_NOTIFICATION_END &&
+          anim.mLastNotification != oldLastNotification) {
         aIsThrottled = false;
         break;
       }
