@@ -204,9 +204,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * that way, but since stack frames are not gc-things, the implementation
      * has to be different.
      */
-    typedef HashMap<StackFrame *,
+    typedef HashMap<TaggedFramePtr,
                     RelocatablePtrObject,
-                    DefaultHasher<StackFrame *>,
+                    DefaultHasher<TaggedFramePtr>,
                     RuntimeAllocPolicy> FrameMap;
     FrameMap frames;
 
@@ -403,7 +403,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     inline bool observesNewScript() const;
     inline bool observesNewGlobalObject() const;
     inline bool observesGlobal(GlobalObject *global) const;
-    inline bool observesFrame(StackFrame *fp) const;
+    inline bool observesFrame(TaggedFramePtr frame) const;
     bool observesScript(JSScript *script) const;
 
     /*
@@ -453,8 +453,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
 
-    /* Store the Debugger.Frame object for the frame fp in *vp. */
-    bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
+    /* Store the Debugger.Frame object for iter in *vp. */
+    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, Value *vp);
 
     /*
      * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
@@ -631,9 +631,9 @@ Debugger::observesGlobal(GlobalObject *global) const
 }
 
 bool
-Debugger::observesFrame(StackFrame *fp) const
+Debugger::observesFrame(TaggedFramePtr frame) const
 {
-    return observesGlobal(&fp->global());
+    return observesGlobal(&frame.script()->global());
 }
 
 JSTrapStatus
