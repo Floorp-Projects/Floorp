@@ -465,6 +465,9 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
     // push it again, though.)  Likewise, if that previous reflow
     // reflowed this block but not its next continuation, we might need
     // to steal it from our own float-continuations list.
+    //
+    // For more about pushed floats, see the comment above
+    // nsBlockFrame::DrainPushedFloats.
     nsBlockFrame *floatParent =
       static_cast<nsBlockFrame*>(aFloat->GetParent());
     floatParent->StealFrame(mPresContext, aFloat);
