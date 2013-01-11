@@ -314,7 +314,7 @@ public:
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                             nsCOMPtr<nsIDOMNode> *aInOutNode, 
                             int32_t *aInOutOffset,
-                            nsIDOMDocument *aDoc);
+                            nsIDocument *aDoc);
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
   virtual bool IsModifiableNode(nsINode *aNode);
 
@@ -532,7 +532,7 @@ protected:
                                         nsIDOMNode **aNodeInserted);
 
   nsresult InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
-                        nsIDOMDocument *aSourceDoc,
+                        nsIDocument *aSourceDoc,
                         nsIDOMNode *aDestinationNode,
                         int32_t aDestOffset,
                         bool aDoDeleteSelection);
@@ -541,7 +541,7 @@ protected:
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
   NS_IMETHOD PrepareHTMLTransferable(nsITransferable **transferable, bool havePrivFlavor);
   NS_IMETHOD InsertFromTransferable(nsITransferable *transferable, 
-                                    nsIDOMDocument *aSourceDoc,
+                                    nsIDocument *aSourceDoc,
                                     const nsAString & aContextStr,
                                     const nsAString & aInfoStr,
                                     nsIDOMNode *aDestinationNode,
@@ -549,14 +549,14 @@ protected:
                                     bool aDoDeleteSelection);
   nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
                                   int32_t aIndex,
-                                  nsIDOMDocument *aSourceDoc,
+                                  nsIDocument *aSourceDoc,
                                   nsIDOMNode *aDestinationNode,
                                   int32_t aDestOffset,
                                   bool aDoDeleteSelection);
   bool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
   nsresult   ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext);
   nsresult   DoContentFilterCallback(const nsAString &aFlavor,
-                                     nsIDOMDocument *aSourceDoc,
+                                     nsIDocument *aSourceDoc,
                                      bool aWillDeleteSelection,
                                      nsIDOMNode **aFragmentAsNode,      
                                      nsIDOMNode **aFragStartNode,
@@ -732,7 +732,7 @@ protected:
                                    const nsAString& aContextStr,
                                    const nsAString& aInfoStr,
                                    const nsAString& aFlavor,
-                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDocument* aSourceDoc,
                                    nsIDOMNode* aDestNode,
                                    int32_t aDestOffset,
                                    bool aDeleteSelection,

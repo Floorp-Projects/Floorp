@@ -17,7 +17,7 @@
 #include "nsIContent.h"                 // for nsIContent, etc
 #include "nsIContentIterator.h"         // for nsIContentIterator
 #include "nsID.h"                       // for NS_GET_IID
-#include "nsIDOMDocument.h"             // for nsIDOMDocument
+#include "nsIDocument.h"                // for nsIDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
 #include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
@@ -37,6 +37,7 @@
 #include "nsString.h"                   // for nsString, nsAutoString
 #include "nsTextServicesDocument.h"
 #include "nscore.h"                     // for nsresult, NS_IMETHODIMP, etc
+#include "mozilla/dom/Element.h"
 
 #define LOCK_DOC(doc)
 #define UNLOCK_DOC(doc)
@@ -136,7 +137,7 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsISelectionController> selCon;
-  nsCOMPtr<nsIDOMDocument> doc;
+  nsCOMPtr<nsIDOMDocument> domDoc;
 
   NS_ENSURE_TRUE(aEditor, NS_ERROR_NULL_POINTER);
 
@@ -165,7 +166,8 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
   // Check to see if we already have an mDOMDocument. If we do, it
   // better be the same one the editor uses!
 
-  result = aEditor->GetDocument(getter_AddRefs(doc));
+  result = aEditor->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
 
   if (NS_FAILED(result))
   {
@@ -219,8 +221,7 @@ nsTextServicesDocument::GetDocument(nsIDOMDocument **aDoc)
   *aDoc = nullptr; // init out param
   NS_ENSURE_TRUE(mDOMDocument, NS_ERROR_NOT_INITIALIZED);
 
-  *aDoc = mDOMDocument;
-  NS_ADDREF(*aDoc);
+  CallQueryInterface(mDOMDocument, aDoc);
 
   return NS_OK;
 }
@@ -2046,15 +2047,10 @@ nsTextServicesDocument::GetDocumentContentRootNode(nsIDOMNode **aNode)
   {
     // For non-HTML documents, the content root node will be the document element.
 
-    nsCOMPtr<nsIDOMElement> docElement;
-
-    result = mDOMDocument->GetDocumentElement(getter_AddRefs(docElement));
-
-    NS_ENSURE_SUCCESS(result, result);
-
+    dom::Element* docElement = mDOMDocument->GetDocumentElement();
     NS_ENSURE_TRUE(docElement, NS_ERROR_FAILURE);
-
-    result = docElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aNode);
+    nsCOMPtr<nsIDOMNode> node = docElement->AsDOMNode();
+    node.forget(aNode);
   }
 
   return result;

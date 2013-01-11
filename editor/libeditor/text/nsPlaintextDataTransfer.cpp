@@ -17,7 +17,6 @@
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIDOMDataTransfer.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
@@ -141,7 +140,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
 
 nsresult nsPlaintextEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
                                                    int32_t aIndex,
-                                                   nsIDOMDocument *aSourceDoc,
+                                                   nsIDocument *aSourceDoc,
                                                    nsIDOMNode *aDestinationNode,
                                                    int32_t aDestOffset,
                                                    bool aDoDeleteSelection)
@@ -175,12 +174,13 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   NS_ASSERTION(dragSession, "No drag session");
 
-  nsCOMPtr<nsIDOMNode> sourceNode;
-  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
+  nsCOMPtr<nsIDOMNode> domSourceNode;
+  dataTransfer->GetMozSourceNode(getter_AddRefs(domSourceNode));
+  nsCOMPtr<nsINode> sourceNode = do_QueryInterface(domSourceNode);
 
-  nsCOMPtr<nsIDOMDocument> srcdomdoc;
+  nsCOMPtr<nsIDocument> srcdomdoc;
   if (sourceNode) {
-    sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
+    srcdomdoc = sourceNode->GetOwnerDocument();
     NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
   }
 
@@ -193,7 +193,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   }
 
   // Current doc is destination
-  nsCOMPtr<nsIDOMDocument> destdomdoc = GetDOMDocument();
+  nsCOMPtr<nsIDocument> destdomdoc = GetDocument();
   NS_ENSURE_TRUE(destdomdoc, NS_ERROR_NOT_INITIALIZED);
 
   uint32_t numItems = 0;
@@ -342,7 +342,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
       // handle transferable hooks
-      nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
+      nsCOMPtr<nsIDocument> domdoc = GetDocument();
       if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
         return NS_OK;
 
@@ -362,8 +362,8 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
     return NS_OK;
 
   // handle transferable hooks
-  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable))
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  if (!nsEditorHookUtils::DoInsertionHook(doc, nullptr, aTransferable))
     return NS_OK;
 
   return InsertTextFromTransferable(aTransferable, nullptr, 0, true);
@@ -425,7 +425,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPasteTransferable(nsITransferable *aTransfer
   return NS_OK;
 }
 
-bool nsPlaintextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
+bool nsPlaintextEditor::IsSafeToInsertData(nsIDocument* aSourceDoc)
 {
   // Try to determine whether we should use a sanitizing fragment sink
   bool isSafe = false;
@@ -442,10 +442,7 @@ bool nsPlaintextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
   if (docShell && NS_SUCCEEDED(docShell->GetAppType(&appType)))
     isSafe = appType == nsIDocShell::APP_TYPE_EDITOR;
   if (!isSafe && aSourceDoc) {
-    nsCOMPtr<nsIDocument> srcdoc = do_QueryInterface(aSourceDoc);
-    NS_ASSERTION(srcdoc, "Where is our source doc?");
-
-    nsIPrincipal* srcPrincipal = srcdoc->NodePrincipal();
+    nsIPrincipal* srcPrincipal = aSourceDoc->NodePrincipal();
     nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
     NS_ASSERTION(srcPrincipal && destPrincipal, "How come we don't have a principal?");
     srcPrincipal->Subsumes(destPrincipal, &isSafe);
