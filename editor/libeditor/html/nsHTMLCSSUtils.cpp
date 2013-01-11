@@ -1277,7 +1277,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
     if (nsEditProperty::u == aHTMLProperty || nsEditProperty::strike == aHTMLProperty) {
       // unfortunately, the value of the text-decoration property is not inherited.
       // that means that we have to look at ancestors of node to see if they are underlined
-      node = node->GetElementParent();  // set to null if it's not a dom element
+      node = node->GetParentElement();  // set to null if it's not a dom element
     }
   } while ((nsEditProperty::u == aHTMLProperty || nsEditProperty::strike == aHTMLProperty) &&
            !aIsSet && node);
