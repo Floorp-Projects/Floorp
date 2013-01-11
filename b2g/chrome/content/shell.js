@@ -231,9 +231,7 @@ var shell = {
           let cr = Cc["@mozilla.org/xre/app-info;1"]
                      .getService(Ci.nsICrashReporter);
           cr.annotateCrashReport("B2G_OS_Version", value);
-        } catch(e) {
-          dump("exception: " + e);
-        }
+        } catch(e) { }
       });
 #endif
     } catch(e) {
