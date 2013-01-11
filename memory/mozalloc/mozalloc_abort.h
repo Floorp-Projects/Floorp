@@ -26,8 +26,15 @@
 /**
  * Terminate this process in such a way that breakpad is triggered, if
  * at all possible.
+ *
+ * Note: MOZ_NORETURN seems to break crash stacks on ARM, so we don't
+ * use that annotation there.
  */
-MOZALLOC_EXPORT void mozalloc_abort(const char* const msg);
+MOZALLOC_EXPORT
+#if !defined(__arm__)
+  MOZ_NORETURN
+#endif
+  void mozalloc_abort(const char* const msg);
 
 
 #endif  /* ifndef mozilla_mozalloc_abort_h */
