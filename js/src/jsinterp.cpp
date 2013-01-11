@@ -1629,7 +1629,7 @@ END_CASE(JSOP_AND)
 #define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
-        if (!ValueToId(cx, obj, idval_, id.address()))                        \
+        if (!ValueToId(cx, obj, idval_, &id))                                 \
             goto error;                                                       \
     JS_END_MACRO
 

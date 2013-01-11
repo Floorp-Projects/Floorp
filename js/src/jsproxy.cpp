@@ -702,7 +702,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
             return false;
         if (!JSObject::getElement(cx, obj, obj, n, &v))
             return false;
-        jsid id;
+        RootedId id(cx);
         if (!ValueToId(cx, v, &id))
             return false;
         if (!props.append(id))
@@ -1484,7 +1484,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
         // step ii
         RootedId id(cx);
-        if (!ValueToId(cx, v, id.address()))
+        if (!ValueToId(cx, v, &id))
             return false;
 
         // step iii

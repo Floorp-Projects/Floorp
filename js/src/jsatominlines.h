@@ -48,19 +48,19 @@ ToAtom(JSContext *cx, const js::Value &v)
 }
 
 inline bool
-ValueToId(JSContext* cx, JSObject *obj, const Value &v, jsid *idp)
+ValueToId(JSContext* cx, JSObject *obj, const Value &v, MutableHandleId idp)
 {
     int32_t i;
     if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
-        *idp = INT_TO_JSID(i);
+        idp.set(INT_TO_JSID(i));
         return true;
     }
 
-    return InternNonIntElementId(cx, obj, v, idp);
+    return InternNonIntElementId(cx, obj, v, idp.address());
 }
 
 inline bool
-ValueToId(JSContext* cx, const Value &v, jsid *idp)
+ValueToId(JSContext* cx, const Value &v, MutableHandleId idp)
 {
     return ValueToId(cx, NULL, v, idp);
 }
