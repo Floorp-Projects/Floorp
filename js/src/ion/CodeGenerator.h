@@ -201,7 +201,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineSetPropertyCache(OutOfLineCache *ool);
     bool visitOutOfLineBindNameCache(OutOfLineCache *ool);
     bool visitOutOfLineGetNameCache(OutOfLineCache *ool);
-    bool visitOutOfLineCallsiteCloneCache(OutOfLineCache *ool);
 
     bool visitGetPropertyCacheV(LGetPropertyCacheV *ins) {
         return visitCache(ins);
@@ -222,9 +221,6 @@ class CodeGenerator : public CodeGeneratorSpecific
         return visitCache(ins);
     }
     bool visitGetNameCache(LGetNameCache *ins) {
-        return visitCache(ins);
-    }
-    bool visitCallsiteCloneCache(LCallsiteCloneCache *ins) {
         return visitCache(ins);
     }
 
