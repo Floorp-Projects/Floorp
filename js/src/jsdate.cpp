@@ -44,6 +44,7 @@
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
+#include "vm/String.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
@@ -767,7 +768,7 @@ DaysInMonth(int year, int month)
  */
 
 static JSBool
-date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
+date_parseISOString(Handle<JSLinearString*> str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
 
@@ -906,7 +907,7 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 }
 
 static JSBool
-date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
+date_parseString(Handle<JSLinearString*> str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
 
@@ -1180,21 +1181,21 @@ syntax:
 static JSBool
 date_parse(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSString *str;
-    double result;
-
-    if (argc == 0) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
         vp->setDouble(js_NaN);
         return true;
     }
-    str = ToString(cx, vp[2]);
+
+    RootedString str(cx, ToString(cx, args[0]));
     if (!str)
-        return JS_FALSE;
-    vp[2].setString(str);
-    JSLinearString *linearStr = str->ensureLinear(cx);
+        return false;
+
+    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
 
+    double result;
     if (!date_parseString(linearStr, &result, &cx->runtime->dateTimeInfo)) {
         vp->setDouble(js_NaN);
         return true;
@@ -2491,7 +2492,7 @@ date_toGMTString_impl(JSContext *cx, CallArgs args)
     else
         print_gmt_string(buf, sizeof buf, utctime);
 
-    JSString *str = JS_NewStringCopyZ(cx, buf);
+    UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2520,7 +2521,7 @@ date_toISOString_impl(JSContext *cx, CallArgs args)
     char buf[100];
     print_iso_string(buf, sizeof buf, utctime);
 
-    JSString *str = JS_NewStringCopyZ(cx, buf);
+    UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2614,7 +2615,6 @@ static JSBool
 date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
 {
     char buf[100];
-    JSString *str;
     char tzbuf[100];
     JSBool usetz;
     size_t i, tzlen;
@@ -2718,11 +2718,11 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
         }
     }
 
-    str = JS_NewStringCopyZ(cx, buf);
+    UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
-        return JS_FALSE;
+        return false;
     call.rval().setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static bool
@@ -2764,7 +2764,7 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, HandleObject obj, const char *f
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
         return cx->localeCallbacks->localeToUnicode(cx, buf, call.rval().address());
 
-    JSString *str = JS_NewStringCopyZ(cx, buf);
+    UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     call.rval().setString(str);
@@ -2860,11 +2860,10 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
     if (args.length() == 0)
         return ToLocaleStringHelper(cx, args, thisObj);
 
-    JSString *fmt = ToString(cx, args[0]);
+    RootedString fmt(cx, ToString(cx, args[0]));
     if (!fmt)
         return false;
 
-    args[0].setString(fmt);
     JSAutoByteString fmtbytes(cx, fmt);
     if (!fmtbytes)
         return false;
@@ -2927,7 +2926,7 @@ date_toSource_impl(JSContext *cx, CallArgs args)
         return false;
     }
 
-    JSString *str = sb.finishString();
+    UnrootedString str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -3058,11 +3057,11 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
 
         if (args[0].isString()) {
             /* Step 2. */
-            JSString *str = ToString(cx, args[0]);
+            UnrootedString str = args[0].toString();
             if (!str)
                 return false;
-            args[0].setString(str);
-            JSLinearString *linearStr = str->ensureLinear(cx);
+
+            Rooted<JSLinearString*> linearStr(cx, DropUnrooted(str)->ensureLinear(cx));
             if (!linearStr)
                 return false;
 
