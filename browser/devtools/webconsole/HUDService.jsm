@@ -426,8 +426,11 @@ var HeadsUpDisplayUICommands = {
    */
   getOpenHUD: function UIC_getOpenHUD()
   {
-    let window = HUDService.currentContext();
-    let target = TargetFactory.forTab(window.gBrowser.selectedTab);
+    let tab = HUDService.currentContext().gBrowser.selectedTab;
+    if (!tab || !TargetFactory.isKnownTab(tab)) {
+      return null;
+    }
+    let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let panel = toolbox ? toolbox.getPanel("webconsole") : null;
     return panel ? panel.hud : null;
