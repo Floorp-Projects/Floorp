@@ -31,14 +31,14 @@ class nsQtNetworkManager : public QObject
     static void enableInstance();
     bool openConnection(const QString&);
     bool isOnline();
-  signals:
+  Q_SIGNALS:
     void openConnectionSignal();
 
-  public slots:
+  public Q_SLOTS:
     void closeSession();
     void onlineStateChanged(bool);
 
-  private slots:
+  private Q_SLOTS:
     void openSession();
 
   private:
