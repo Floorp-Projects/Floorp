@@ -141,7 +141,7 @@ const char* nsCRT::memmem(const char* haystack, uint32_t haystackLen,
   // No memmem means we need to roll our own.  This isn't really optimized
   // for performance ... if that becomes an issue we can take some inspiration
   // from the js string compare code in jsstr.cpp
-  for (int32_t i = 0; i < haystackLen - needleLen; i++) {
+  for (uint32_t i = 0; i < haystackLen - needleLen; i++) {
     if (!memcmp(haystack + i, needle, needleLen))
       return haystack + i;
   }

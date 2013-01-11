@@ -18,7 +18,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIVOLUMESTAT
 
-  nsVolumeStat(const nsAString &aPath);
+  nsVolumeStat(const nsAString& aPath);
 
 private:
   ~nsVolumeStat();

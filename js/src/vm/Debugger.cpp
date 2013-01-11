@@ -11,7 +11,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jswrapper.h"
-#include "jsarrayinlines.h"
 #include "jsgcinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -1949,13 +1948,13 @@ Debugger::getDebuggees(JSContext *cx, unsigned argc, Value *vp)
     RootedObject arrobj(cx, NewDenseAllocatedArray(cx, dbg->debuggees.count()));
     if (!arrobj)
         return false;
-    arrobj->ensureDenseArrayInitializedLength(cx, 0, dbg->debuggees.count());
+    arrobj->ensureDenseInitializedLength(cx, 0, dbg->debuggees.count());
     unsigned i = 0;
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
         RootedValue v(cx, ObjectValue(*e.front()));
         if (!dbg->wrapDebuggeeValue(cx, &v))
             return false;
-        arrobj->setDenseArrayElement(i++, v);
+        arrobj->setDenseElement(i++, v);
     }
     args.rval().setObject(*arrobj);
     return true;
@@ -2533,14 +2532,14 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     if (!result)
         return false;
 
-    result->ensureDenseArrayInitializedLength(cx, 0, scripts.length());
+    result->ensureDenseInitializedLength(cx, 0, scripts.length());
 
     for (size_t i = 0; i < scripts.length(); i++) {
         JSObject *scriptObject =
             dbg->wrapScript(cx, Handle<JSScript*>::fromMarkedLocation(&scripts[i]));
         if (!scriptObject)
             return false;
-        result->setDenseArrayElement(i, ObjectValue(*scriptObject));
+        result->setDenseElement(i, ObjectValue(*scriptObject));
     }
 
     args.rval().setObject(*result);
@@ -3027,14 +3026,20 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
         if (flowData[offset] != NoEdges && flowData[offset] != lineno) {
             /* Get the offsets array for this line. */
             RootedObject offsets(cx);
-            Value offsetsv;
-            if (!result->arrayGetOwnDataElement(cx, lineno, &offsetsv))
+            RootedValue offsetsv(cx);
+
+            RootedId id(cx, INT_TO_JSID(lineno));
+
+            bool found;
+            if (!JSObject::hasProperty(cx, result, id, &found))
+                return false;
+            if (found && !JSObject::getGeneric(cx, result, result, id, &offsetsv))
                 return false;
 
             if (offsetsv.isObject()) {
                 offsets = &offsetsv.toObject();
             } else {
-                JS_ASSERT(offsetsv.isMagic(JS_ARRAY_HOLE));
+                JS_ASSERT(offsetsv.isUndefined());
 
                 /*
                  * Create an empty offsets array for this line.
@@ -4002,7 +4007,7 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     JSObject *result = NewDenseAllocatedArray(cx, fun->nargs);
     if (!result)
         return false;
-    result->ensureDenseArrayInitializedLength(cx, 0, fun->nargs);
+    result->ensureDenseInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
         JS_ASSERT(fun->nargs == fun->nonLazyScript()->bindings.numArgs());
@@ -4018,12 +4023,12 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
                     v = UndefinedValue();
                 else
                     v = StringValue(bindings[i].name());
-                result->setDenseArrayElement(i, v);
+                result->setDenseElement(i, v);
             }
         }
     } else {
         for (size_t i = 0; i < fun->nargs; i++)
-            result->setDenseArrayElement(i, UndefinedValue());
+            result->setDenseElement(i, UndefinedValue());
     }
 
     args.rval().setObject(*result);

@@ -1121,9 +1121,6 @@ Shape::searchNoAllocation(UnrootedShape start, jsid id)
     return UnrootedShape(NULL);
 }
 
-void
-MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
-
 template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};
 template<> struct RootKind<BaseShape *> : SpecificRootKind<BaseShape *, THING_ROOT_BASE_SHAPE> {};
 

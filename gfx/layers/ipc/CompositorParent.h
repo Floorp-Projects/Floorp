@@ -85,7 +85,11 @@ public:
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread();
   void SchedulePauseOnCompositorThread();
-  void ScheduleResumeOnCompositorThread(int width, int height);
+  /**
+   * Returns true if a surface was obtained and the resume succeeded; false
+   * otherwise.
+   */
+  bool ScheduleResumeOnCompositorThread(int width, int height);
 
   virtual void ScheduleComposition();
   void NotifyShadowTreeTransaction();
@@ -185,6 +189,7 @@ private:
   // Sample transforms for layer trees.  Return true to request
   // another animation frame.
   bool TransformShadowTree(TimeStamp aCurrentFrame);
+  void TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform);
   // Return true if an AsyncPanZoomController content transform was
   // applied for |aLayer|.  *aWantNextFrame is set to true if the
   // controller wants another animation frame.
@@ -271,7 +276,6 @@ private:
   float mYScale;
   nsIntPoint mScrollOffset;
   nsIntRect mContentRect;
-  nsIntSize mWidgetSize;
 
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).

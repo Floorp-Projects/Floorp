@@ -19,11 +19,9 @@ interface HTMLTableRowElement : HTMLElement {
   HTMLElement insertCell(optional long index = -1);
   [Throws]
   void deleteCell(long index);
-/*
 };
 
 partial interface HTMLTableRowElement {
-*/
            [SetterThrows]
            attribute DOMString align;
            [SetterThrows]

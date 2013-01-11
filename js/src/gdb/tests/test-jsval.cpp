@@ -7,7 +7,7 @@ FRAGMENT(jsval, simple) {
   js::Rooted<jsval> null(cx, JSVAL_NULL);
   js::Rooted<jsval> js_true(cx, JSVAL_TRUE);
   js::Rooted<jsval> js_false(cx, JSVAL_FALSE);
-  js::Rooted<jsval> array_hole(cx, js::MagicValue(JS_ARRAY_HOLE));
+  js::Rooted<jsval> array_hole(cx, js::MagicValue(JS_ELEMENTS_HOLE));
 
   js::Rooted<jsval> empty_string(cx);
   empty_string.setString(JS_NewStringCopyZ(cx, ""));

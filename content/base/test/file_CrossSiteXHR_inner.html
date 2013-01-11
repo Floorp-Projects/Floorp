@@ -8,6 +8,10 @@
 <html>
 <head>
 <script>
+function trimString(stringValue) {
+  return stringValue.replace(/^\s+|\s+$/g, '');
+};
+
 window.addEventListener("message", function(e) {
 
   sendData = null;
@@ -61,7 +65,16 @@ window.addEventListener("message", function(e) {
       res.responseHeaders[responseHeader] =
         xhr.getResponseHeader(responseHeader);
     }
-
+    res.allResponseHeaders = {};
+    var splitHeaders = xhr.getAllResponseHeaders().split("\r\n");
+    for (var i = 0; i < splitHeaders.length; i++) {
+      var headerValuePair = splitHeaders[i].split(":");
+        if(headerValuePair[1] != null) {
+          var headerName = trimString(headerValuePair[0]);
+          var headerValue = trimString(headerValuePair[1]);
+          res.allResponseHeaders[headerName] = headerValue;
+        }
+    }
     post(e, res);
   }
 

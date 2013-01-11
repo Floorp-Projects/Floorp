@@ -17,6 +17,7 @@
 
 struct ChromePackage;
 class nsIDOMBlob;
+class nsDOMFileBase;
 class nsIObserver;
 struct ResourceMapping;
 struct OverrideMapping;
@@ -183,7 +184,10 @@ public:
     virtual bool RecvLastPrivateDocShellDestroyed();
 
     virtual bool RecvFilePathUpdate(const nsString& type, const nsString& path, const nsCString& reason);
-    virtual bool RecvFileSystemUpdate(const nsString& aFsName, const nsString& aName, const int32_t& aState);
+    virtual bool RecvFileSystemUpdate(const nsString& aFsName,
+                                      const nsString& aName,
+                                      const int32_t& aState,
+                                      const int32_t& aMountGeneration);
 
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
@@ -195,6 +199,8 @@ public:
 
     uint64_t GetID() { return mID; }
 
+    bool GetParamsForBlob(nsDOMFileBase* aBlob,
+                          BlobConstructorParams* aOutParams);
     BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
 private:

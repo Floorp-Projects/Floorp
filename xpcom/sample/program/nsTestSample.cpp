@@ -105,6 +105,5 @@ main(void)
     // Shutdown XPCOM
     NS_ShutdownXPCOM(nullptr);
 
-    XPCOMGlueShutdown();
     return 0;
 }

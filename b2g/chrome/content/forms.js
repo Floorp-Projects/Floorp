@@ -455,7 +455,7 @@ function getJSON(element) {
     value = element.textContent;
   }
 
-  // Until the input type=date/datetime/time have been implemented
+  // Until the input type=date/datetime/range have been implemented
   // let's return their real type even if the platform returns 'text'
   let attributeType = element.getAttribute("type") || "";
 
@@ -464,6 +464,7 @@ function getJSON(element) {
     switch (typeLowerCase) {
       case "datetime":
       case "datetime-local":
+      case "range":
         type = typeLowerCase;
         break;
     }

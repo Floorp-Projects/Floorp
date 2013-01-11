@@ -296,7 +296,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(BluetoothService,
 
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsVolumeService)
 #endif
 
 #ifdef MOZ_B2G_FM
@@ -325,6 +324,10 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIGeolocationProvider,
                                          GonkGPSGeolocationProvider::GetSingleton)
+// Since the nsVolumeService constructor calls into nsIPowerManagerService,
+// we need it to be constructed sometime after nsIPowerManagerService.
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsVolumeService,
+                                         nsVolumeService::GetSingleton)
 #endif
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMediaManagerService,
                                          MediaManager::GetInstance)
