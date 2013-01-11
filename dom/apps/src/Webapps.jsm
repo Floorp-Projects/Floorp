@@ -2066,7 +2066,7 @@ this.DOMApplicationRegistry = {
             } catch (e) {
               // Something bad happened when reading the package.
               if (typeof e == 'object') {
-                debug(e);
+                Cu.reportError("Error while reading package:" + e);
                 cleanup("INVALID_PACKAGE");
               } else {
                 cleanup(e);

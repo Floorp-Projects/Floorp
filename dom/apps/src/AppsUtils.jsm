@@ -375,7 +375,8 @@ this.AppsUtils = {
         return false;
       }
 
-      return (dev1.name === dev2.name && dev1.url === dev2.url);
+      return (!dev1 && !dev2) ||
+             (dev1.name === dev2.name && dev1.url === dev2.url);
     }
 
     // 2. For each locale, check if the name and dev info are the same.
@@ -441,7 +442,9 @@ ManifestHelper.prototype = {
   },
 
   get developer() {
-    return this._localeProp("developer");
+    // Default to {} in order to avoid exception in code
+    // that doesn't check for null `developer`
+    return this._localeProp("developer") || {};
   },
 
   get icons() {
