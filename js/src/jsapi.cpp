@@ -4162,7 +4162,11 @@ JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *objArg, jsid idArg, jsval *
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return GetOwnPropertyDescriptor(cx, obj, id, vp);
+    RootedValue value(cx);
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &value))
+        return false;
+    *vp = value;
+    return true;
 }
 
 static JSBool

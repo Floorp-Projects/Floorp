@@ -1312,7 +1312,7 @@ bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, PropertyDescriptor *desc);
 
 bool
-GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
 bool
 NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value *vp);

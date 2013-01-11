@@ -736,13 +736,14 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx);
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
         return JS_FALSE;
     RootedId id(cx);
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), &id))
+    if (!ValueToId(cx, args.length() > 1 ? args[1] : UndefinedValue(), &id))
         return JS_FALSE;
-    return GetOwnPropertyDescriptor(cx, obj, id, vp);
+    return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
 
 static JSBool
