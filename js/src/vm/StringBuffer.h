@@ -11,9 +11,11 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jscntxt.h"
-#include "jspubtd.h"
 
 #include "js/Vector.h"
+
+ForwardDeclareJS(Atom);
+ForwardDeclareJS(FlatString);
 
 namespace js {
 
@@ -87,10 +89,10 @@ class StringBuffer
      * Creates a string from the characters in this buffer, then (regardless
      * whether string creation succeeded or failed) empties the buffer.
      */
-    JSFlatString *finishString();
+    js::UnrootedFlatString finishString();
 
     /* Identical to finishString() except that an atom is created. */
-    JSAtom *finishAtom();
+    js::UnrootedAtom finishAtom();
 
     /*
      * Creates a raw string from the characters in this buffer.  The string is

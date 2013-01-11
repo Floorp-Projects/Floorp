@@ -38,7 +38,10 @@
 #include <netinet/sctp_var.h>
 #include <netinet/sctp_sysctl.h>
 #include <netinet/sctp_input.h>
-
+#include <netinet/sctp_peeloff.h>
+#ifdef INET6
+#include <netinet6/sctp6_var.h>
+#endif
 #if defined(__Userspace_os_Linux)
 #define __FAVOR_BSD    /* (on Ubuntu at least) enables UDP header field names like BSD in RFC 768 */
 #endif
@@ -52,6 +55,10 @@ userland_cond_t accept_cond = PTHREAD_COND_INITIALIZER;
 #include <user_socketvar.h>
 userland_mutex_t accept_mtx;
 userland_cond_t accept_cond;
+#endif
+#ifdef _WIN32
+#include <time.h>
+#include <sys/timeb.h>
 #endif
 
 MALLOC_DEFINE(M_PCB, "sctp_pcb", "sctp pcb");
@@ -934,7 +941,7 @@ struct mbuf* mbufalloc(size_t size, void* data, unsigned char fill)
 
     /* First one gets a header equal to sizeof(struct sctp_data_chunk) */
     left = size;
-    head = m = sctp_get_mbuf_for_msg((left + resv_upfront), 1, M_WAIT, 0, MT_DATA);
+    head = m = sctp_get_mbuf_for_msg((left + resv_upfront), 1, M_WAITOK, 0, MT_DATA);
     if (m == NULL) {
         SCTP_PRINTF("%s: ENOMEN: Memory allocation failure\n", __func__);
         return (NULL);
@@ -959,7 +966,7 @@ struct mbuf* mbufalloc(size_t size, void* data, unsigned char fill)
         left -= willcpy;
         cpsz += willcpy;
         if (left > 0) {
-            SCTP_BUF_NEXT(m) = sctp_get_mbuf_for_msg(left, 0, M_WAIT, 0, MT_DATA);
+            SCTP_BUF_NEXT(m) = sctp_get_mbuf_for_msg(left, 0, M_WAITOK, 0, MT_DATA);
             if (SCTP_BUF_NEXT(m) == NULL) {
                 /*
                  * the head goes back to caller, he can free
@@ -1597,7 +1604,7 @@ sowakeup(struct socket *so, struct sockbuf *sb)
 	if ((so->so_state & SS_ASYNC) && so->so_sigio != NULL)
 		pgsigio(&so->so_sigio, SIGIO, 0);
 	if (sb->sb_flags & SB_UPCALL)
-		(*so->so_upcall)(so, so->so_upcallarg, M_DONTWAIT);
+		(*so->so_upcall)(so, so->so_upcallarg, M_NOWAIT);
 	if (sb->sb_flags & SB_AIO)
 		aio_swake(so, sb);
 	mtx_assert(SOCKBUF_MTX(sb), MA_NOTOWNED);
@@ -1748,11 +1755,10 @@ soaccept(struct socket *so, struct sockaddr **nam)
  * kern_accept modified for __Userspace__
  */
 int
-user_accept(struct socket *aso,  struct sockaddr **name, socklen_t *namelen, struct socket **ptr_accept_ret_sock)
+user_accept(struct socket *head,  struct sockaddr **name, socklen_t *namelen, struct socket **ptr_accept_ret_sock)
 {
 	struct sockaddr *sa = NULL;
 	int error;
-	struct socket *head = aso;
 	struct socket *so = NULL;
 
 
@@ -1926,6 +1932,35 @@ userspace_accept(struct socket *so, struct sockaddr *aname, socklen_t *anamelen)
 	return (usrsctp_accept(so, aname, anamelen));
 }
 
+struct socket *
+usrsctp_peeloff(struct socket *head, sctp_assoc_t id)
+{
+	struct socket *so;
+
+	if ((errno = sctp_can_peel_off(head, id)) != 0) {
+		return (NULL);
+	}
+	if ((so = sonewconn(head, SS_ISCONNECTED)) == NULL) {
+		return (NULL);
+	}
+	ACCEPT_LOCK();
+	SOCK_LOCK(so);
+	soref(so);
+	TAILQ_REMOVE(&head->so_comp, so, so_list);
+	head->so_qlen--;
+	so->so_state |= (head->so_state & SS_NBIO);
+	so->so_qstate &= ~SQ_COMP;
+	so->so_head = NULL;
+	SOCK_UNLOCK(so);
+	ACCEPT_UNLOCK();
+	if ((errno = sctp_do_peeloff(head, so, id)) != 0) {
+		so->so_count = 0;
+		sodealloc(so);
+		return (NULL);
+	}
+	return (so);
+}
+
 int
 sodisconnect(struct socket *so)
 {
@@ -2094,6 +2129,8 @@ int userspace_connect(struct socket *so, struct sockaddr *name, int namelen)
 {
 	return (usrsctp_connect(so, name, namelen));
 }
+
+#define SCTP_STACK_BUF_SIZE         2048
 
 void
 usrsctp_close(struct socket *so) {
@@ -2304,6 +2341,395 @@ userspace_getsockopt(struct socket *so, int level, int option_name,
 	return (usrsctp_getsockopt(so, level, option_name, option_value, option_len));
 }
 
+int
+usrsctp_bindx(struct socket *so, struct sockaddr *addrs, int addrcnt, int flags)
+{
+	struct sctp_getaddresses *gaddrs;
+	struct sockaddr *sa;
+	struct sockaddr_in *sin;
+#ifdef INET6
+	struct sockaddr_in6 *sin6;
+#endif
+	int i;
+	size_t argsz;
+	uint16_t sport = 0;
+
+	/* validate the flags */
+	if ((flags != SCTP_BINDX_ADD_ADDR) &&
+	    (flags != SCTP_BINDX_REM_ADDR)) {
+		errno = EFAULT;
+		return (-1);
+	}
+	/* validate the address count and list */
+	if ((addrcnt <= 0) || (addrs == NULL)) {
+		errno = EINVAL;
+		return (-1);
+	}
+	/* First pre-screen the addresses */
+	sa = addrs;
+	for (i = 0; i < addrcnt; i++) {
+		switch (sa->sa_family) {
+#ifdef INET
+		case AF_INET:
+#ifdef HAVE_SA_LEN
+			if (sa->sa_len != sizeof(struct sockaddr_in)) {
+				errno = EINVAL;
+				return (-1);
+			}
+#endif
+			sin = (struct sockaddr_in *)sa;
+			if (sin->sin_port) {
+				/* non-zero port, check or save */
+				if (sport) {
+					/* Check against our port */
+					if (sport != sin->sin_port) {
+						errno = EINVAL;
+						return (-1);
+					}
+				} else {
+					/* save off the port */
+					sport = sin->sin_port;
+				}
+			}
+#ifndef HAVE_SA_LEN
+		sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in));
+#endif
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+#ifdef HAVE_SA_LEN
+			if (sa->sa_len != sizeof(struct sockaddr_in6)) {
+				errno = EINVAL;
+				return (-1);
+			}
+#endif
+			sin6 = (struct sockaddr_in6 *)sa;
+			if (sin6->sin6_port) {
+				/* non-zero port, check or save */
+				if (sport) {
+					/* Check against our port */
+					if (sport != sin6->sin6_port) {
+						errno = EINVAL;
+						return (-1);
+					}
+				} else {
+					/* save off the port */
+					sport = sin6->sin6_port;
+				}
+			}
+#ifndef HAVE_SA_LEN
+		sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in6));
+#endif
+			break;
+#endif
+		default:
+			/* Invalid address family specified. */
+			errno = EINVAL;
+			return (-1);
+		}
+#ifdef HAVE_SA_LEN
+		sa = (struct sockaddr *)((caddr_t)sa + sa->sa_len);
+#endif
+	}
+	/*
+	 * Now if there was a port mentioned, assure that the first address
+	 * has that port to make sure it fails or succeeds correctly.
+	 */
+	if (sport) {
+		sin = (struct sockaddr_in *)sa;
+		sin->sin_port = sport;
+	}
+	argsz = sizeof(struct sctp_getaddresses) +
+	        sizeof(struct sockaddr_storage);
+	if ((gaddrs = (struct sctp_getaddresses *)malloc(argsz)) == NULL) {
+		errno = ENOMEM;
+		return (-1);
+	}
+	sa = addrs;
+	for (i = 0; i < addrcnt; i++) {
+#ifndef HAVE_SA_LEN
+		size_t sa_len;
+#endif 
+		memset(gaddrs, 0, argsz);
+		gaddrs->sget_assoc_id = 0;
+#ifdef HAVE_SA_LEN
+		memcpy(gaddrs->addr, sa, sa->sa_len);
+		if (usrsctp_setsockopt(so, IPPROTO_SCTP, flags, gaddrs, (socklen_t)argsz) != 0) {
+			free(gaddrs);
+			return (-1);
+		}
+		sa = (struct sockaddr *)((caddr_t)sa + sa->sa_len);
+#else
+		switch (sa->sa_family) {
+#ifdef INET
+		case AF_INET:
+			sa_len = sizeof(struct sockaddr_in);
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+			sa_len = sizeof(struct sockaddr_in6);
+			break;
+#endif
+		default:
+			sa_len = 0;
+			break;
+		}
+		memcpy(gaddrs->addr, sa, sa_len);
+		if (usrsctp_setsockopt(so, IPPROTO_SCTP, flags, gaddrs, (socklen_t)argsz) != 0) {
+			free(gaddrs);
+			return (-1);
+		}
+		sa = (struct sockaddr *)((caddr_t)sa + sa_len);
+#endif
+	}
+	free(gaddrs);
+	return (0);
+}
+
+int
+usrsctp_connectx(struct socket *so,
+                 const struct sockaddr *addrs, int addrcnt,
+                 sctp_assoc_t *id)
+{
+	char buf[SCTP_STACK_BUF_SIZE];
+	int i, ret, cnt, *aa;
+	char *cpto;
+	const struct sockaddr *at;
+	sctp_assoc_t *p_id;
+	size_t len = sizeof(int);
+
+	/* validate the address count and list */
+	if ((addrs == NULL) || (addrcnt <= 0)) {
+		errno = EINVAL;
+		return (-1);
+	}
+	at = addrs;
+	cnt = 0;
+	cpto = ((caddr_t)buf + sizeof(int));
+	/* validate all the addresses and get the size */
+	for (i = 0; i < addrcnt; i++) {
+		switch (at->sa_family) {
+#ifdef INET
+		case AF_INET:
+#ifdef HAVE_SA_LEN
+			if (at->sa_len != sizeof(struct sockaddr_in)) {
+				errno = EINVAL;
+				return (-1);
+			}
+#endif
+			memcpy(cpto, at, sizeof(struct sockaddr_in));
+			cpto = ((caddr_t)cpto + sizeof(struct sockaddr_in));
+			len += sizeof(struct sockaddr_in);
+			at = (struct sockaddr *)((caddr_t)at + sizeof(struct sockaddr_in));
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+#ifdef HAVE_SA_LEN
+			if (at->sa_len != sizeof(struct sockaddr_in6)) {
+				errno = EINVAL;
+				return (-1);
+			}
+#endif
+			if (IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6 *)at)->sin6_addr)) {
+				in6_sin6_2_sin((struct sockaddr_in *)cpto, (struct sockaddr_in6 *)at);
+				cpto = ((caddr_t)cpto + sizeof(struct sockaddr_in));
+				len += sizeof(struct sockaddr_in);
+			} else {
+				memcpy(cpto, at, sizeof(struct sockaddr_in6));
+				cpto = ((caddr_t)cpto + sizeof(struct sockaddr_in6));
+				len += sizeof(struct sockaddr_in6);
+			}
+			at = (struct sockaddr *)((caddr_t)at + sizeof(struct sockaddr_in6));
+			break;
+#endif
+		default:
+			errno = EINVAL;
+			return (-1);
+		}
+		if (len > (sizeof(buf) - sizeof(int))) {
+			/* Never enough memory */
+			errno = E2BIG;
+			return (-1);
+		}
+		cnt++;
+	}
+	/* do we have any? */
+	if (cnt == 0) {
+		errno = EINVAL;
+		return (-1);
+	}
+	aa = (int *)buf;
+	*aa = cnt;
+	ret = usrsctp_setsockopt(so, IPPROTO_SCTP, SCTP_CONNECT_X, (void *)buf, (socklen_t)len);
+	if ((ret == 0) && id) {
+		p_id = (sctp_assoc_t *)buf;
+		*id = *p_id;
+	}
+	return (ret);
+}
+
+int
+usrsctp_getpaddrs(struct socket *so, sctp_assoc_t id, struct sockaddr **raddrs)
+{
+	struct sctp_getaddresses *addrs;
+	struct sockaddr *sa;
+	sctp_assoc_t asoc;
+	caddr_t lim;
+	socklen_t opt_len;
+	int cnt;
+
+	if (raddrs == NULL) {
+		errno = EFAULT;
+		return (-1);
+	}
+	asoc = id;
+	opt_len = (socklen_t)sizeof(sctp_assoc_t);
+	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_REMOTE_ADDR_SIZE, &asoc, &opt_len) != 0) {
+		return (-1);
+	}
+	/* size required is returned in 'asoc' */
+	opt_len = (socklen_t)((size_t)asoc + sizeof(struct sctp_getaddresses));
+	addrs = calloc(1, (size_t)opt_len);
+	if (addrs == NULL) {
+		errno = ENOMEM;
+		return (-1);
+	}
+	addrs->sget_assoc_id = id;
+	/* Now lets get the array of addresses */
+	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_PEER_ADDRESSES, addrs, &opt_len) != 0) {
+		free(addrs);
+		return (-1);
+	}
+	*raddrs = (struct sockaddr *)&addrs->addr[0];
+	cnt = 0;
+	sa = (struct sockaddr *)&addrs->addr[0];
+	lim = (caddr_t)addrs + opt_len;
+#ifdef HAVE_SA_LEN
+	while (((caddr_t)sa < lim) && (sa->sa_len > 0)) {
+		sa = (struct sockaddr *)((caddr_t)sa + sa->sa_len);
+#else
+	while ((caddr_t)sa < lim) {
+		switch (sa->sa_family) {
+#ifdef INET
+		case AF_INET:
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in));
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in6));
+			break;
+#endif
+		case AF_CONN:
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_conn));
+			break;
+		default:
+			return (cnt);
+			break;
+		}
+#endif
+		cnt++;
+	}
+	return (cnt);
+}
+
+void
+usrsctp_freepaddrs(struct sockaddr *addrs)
+{
+	/* Take away the hidden association id */
+	void *fr_addr;
+
+	fr_addr = (void *)((caddr_t)addrs - sizeof(sctp_assoc_t));
+	/* Now free it */
+	free(fr_addr);
+}
+
+int
+usrsctp_getladdrs(struct socket *so, sctp_assoc_t id, struct sockaddr **raddrs)
+{
+	struct sctp_getaddresses *addrs;
+	caddr_t lim;
+	struct sockaddr *sa;
+	size_t size_of_addresses;
+	socklen_t opt_len;
+	int cnt;
+
+	if (raddrs == NULL) {
+		errno = EFAULT;
+		return (-1);
+	}
+	size_of_addresses = 0;
+	opt_len = (socklen_t)sizeof(int);
+	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_LOCAL_ADDR_SIZE, &size_of_addresses, &opt_len) != 0) {
+		errno = ENOMEM;
+		return (-1);
+	}
+	if (size_of_addresses == 0) {
+		errno = ENOTCONN;
+		return (-1);
+	}
+	opt_len = (socklen_t)(size_of_addresses +
+	                      sizeof(struct sockaddr_storage) +
+	                      sizeof(struct sctp_getaddresses));
+	addrs = calloc(1, (size_t)opt_len);
+	if (addrs == NULL) {
+		errno = ENOMEM;
+		return (-1);
+	}
+	addrs->sget_assoc_id = id;
+	/* Now lets get the array of addresses */
+	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_LOCAL_ADDRESSES, addrs, &opt_len) != 0) {
+		free(addrs);
+		errno = ENOMEM;
+		return (-1);
+	}
+	*raddrs = (struct sockaddr *)&addrs->addr[0];
+	cnt = 0;
+	sa = (struct sockaddr *)&addrs->addr[0];
+	lim = (caddr_t)addrs + opt_len;
+#ifdef HAVE_SA_LEN
+	while (((caddr_t)sa < lim) && (sa->sa_len > 0)) {
+		sa = (struct sockaddr *)((caddr_t)sa + sa->sa_len);
+#else
+	while ((caddr_t)sa < lim) {
+		switch (sa->sa_family) {
+#ifdef INET
+		case AF_INET:
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in));
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in6));
+			break;
+#endif
+		case AF_CONN:
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_conn));
+			break;
+		default:
+			return (cnt);
+			break;
+		}
+#endif
+		cnt++;
+	}
+	return (cnt);
+}
+
+void
+usrsctp_freeladdrs(struct sockaddr *addrs)
+{
+	/* Take away the hidden association id */
+	void *fr_addr;
+
+	fr_addr = (void *)((caddr_t)addrs - sizeof(sctp_assoc_t));
+	/* Now free it */
+	free(fr_addr);
+}
+
 #ifdef INET
 void
 sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
@@ -2370,7 +2796,6 @@ sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
 #if defined(__Userspace_os_Linux) || defined (__Userspace_os_Windows)
 		/* need to put certain fields into network order for Linux */
 		ip->ip_len = htons(ip->ip_len);
-		ip->ip_tos = htons(ip->ip_tos);
 		ip->ip_off = 0;
 #endif
 	}
@@ -2618,6 +3043,119 @@ free_mbuf:
 #endif
 
 void
+usrsctp_register_address(void *addr)
+{
+	struct sockaddr_conn sconn;
+
+	memset(&sconn, 0, sizeof(struct sockaddr_conn));
+	sconn.sconn_family = AF_CONN;
+#ifdef HAVE_SCONN_LEN
+	sconn.sconn_len = sizeof(struct sockaddr_conn);
+#endif
+	sconn.sconn_port = 0;
+	sconn.sconn_addr = addr;
+	sctp_add_addr_to_vrf(SCTP_DEFAULT_VRFID,
+	                     NULL,
+	                     0xffffffff,
+	                     0,
+	                     "conn",
+	                     NULL,
+	                     (struct sockaddr *)&sconn,
+	                     0,
+	                     0);
+}
+
+void
+usrsctp_deregister_address(void *addr)
+{
+	struct sockaddr_conn sconn;
+
+	memset(&sconn, 0, sizeof(struct sockaddr_conn));
+	sconn.sconn_family = AF_CONN;
+#ifdef HAVE_SCONN_LEN
+	sconn.sconn_len = sizeof(struct sockaddr_conn);
+#endif
+	sconn.sconn_port = 0;
+	sconn.sconn_addr = addr;
+	sctp_del_addr_from_vrf(SCTP_DEFAULT_VRFID,
+	                       (struct sockaddr *)&sconn,
+	                       0xffffffff,
+	                       "conn");
+}
+
+#define PREAMBLE_FORMAT "\n%c %02d:%02d:%02d.%06d "
+#define PREAMBLE_LENGTH 19
+#define HEADER "0000 "
+#define TRAILER "# SCTP_PACKET\n"
+
+char *
+usrsctp_dumppacket(void *buf, size_t len, int outbound)
+{
+	size_t i, pos;
+	char *dump_buf, *packet;
+#ifdef _WIN32
+	struct timeb tb;
+	struct tm t;
+#else
+	struct timeval tv;
+	struct tm *t;
+#endif
+
+	if ((len == 0) || (buf == NULL)) {
+		return (NULL);
+	}
+	if ((dump_buf = malloc(PREAMBLE_LENGTH + strlen(HEADER) + 3 * len + strlen(TRAILER) + 1)) == NULL) {
+		return (NULL);
+	}
+	pos = 0;
+#ifdef _WIN32
+	ftime(&tb);
+	localtime_s(&t, &tb.time);
+	_snprintf_s(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_LENGTH, PREAMBLE_FORMAT,
+	            outbound ? 'O' : 'I',
+	            t.tm_hour, t.tm_min, t.tm_sec, 1000 * tb.millitm);	
+#else
+	gettimeofday(&tv, NULL);
+	t = localtime(&tv.tv_sec);
+	snprintf(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_FORMAT,
+	         outbound ? 'O' : 'I',
+	         t->tm_hour, t->tm_min, t->tm_sec, tv.tv_usec);
+#endif
+	pos += PREAMBLE_LENGTH;
+#ifdef _WIN32
+	strncpy_s(dump_buf + pos, strlen(HEADER) + 1, HEADER, strlen(HEADER));
+#else
+	strcpy(dump_buf + pos, HEADER);
+#endif	
+	pos += strlen(HEADER);
+	packet = (char *)buf;
+	for (i = 0; i < len; i++) {
+		uint8_t byte, low, high;
+
+		byte = (uint8_t)packet[i];
+		high = byte / 16;
+		low = byte % 16;
+		dump_buf[pos++] = high < 10 ? '0' + high : 'a' + (high - 10);
+		dump_buf[pos++] = low < 10 ? '0' + low : 'a' + (low - 10);
+		dump_buf[pos++] = ' ';
+	}
+#ifdef _WIN32
+	strncpy_s(dump_buf + pos, strlen(TRAILER) + 1, TRAILER, strlen(TRAILER));
+#else
+	strcpy(dump_buf + pos, TRAILER);
+#endif
+	pos += strlen(TRAILER);
+	dump_buf[pos++] = '\0';
+	return (dump_buf);
+}
+
+void
+usrsctp_freedumpbuffer(char *buf)
+{
+	free(buf);
+}
+
+void
 usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bits)
 {
 	struct sockaddr_conn src, dst;
@@ -2637,7 +3175,7 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 	dst.sconn_len = sizeof(struct sockaddr_conn);
 #endif
 	dst.sconn_addr = addr;
-	if ((m = sctp_get_mbuf_for_msg(length, 1, M_DONTWAIT, 0, MT_DATA)) == NULL) {
+	if ((m = sctp_get_mbuf_for_msg(length, 1, M_NOWAIT, 0, MT_DATA)) == NULL) {
 		return;
 	}
 	m_copyback(m, 0, length, (caddr_t)buffer);

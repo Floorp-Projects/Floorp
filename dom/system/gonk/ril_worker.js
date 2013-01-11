@@ -1470,7 +1470,11 @@ let RIL = {
       debug("Setting manual network selection: " + options.mcc + options.mnc);
     }
 
-    let numeric = String(options.mcc) + options.mnc;
+    // TODO: Bug 828307 - B2G RIL: Change to store MNC/MCC values from integer to string
+    let mnc = options.mnc.toString();
+    if (mnc.length == 1)
+      mnc = "0" + mnc;
+    let numeric = options.mcc.toString() + mnc;
     Buf.newParcel(REQUEST_SET_NETWORK_SELECTION_MANUAL, options);
     Buf.writeString(numeric);
     Buf.sendParcel();
@@ -3594,12 +3598,6 @@ let RIL = {
 
     delete this._pendingSentSmsMap[message.messageRef];
 
-    if ((options.segmentMaxSeq > 1)
-        && (options.segmentSeq < options.segmentMaxSeq)) {
-      // Not the last segment.
-      return PDU_FCS_OK;
-    }
-
     let deliveryStatus = ((status >>> 5) == 0x00)
                        ? GECKO_SMS_DELIVERY_STATUS_SUCCESS
                        : GECKO_SMS_DELIVERY_STATUS_ERROR;
@@ -4405,17 +4403,17 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
 
-  if (options.requestStatusReport) {
-    if (DEBUG) debug("waiting SMS-STATUS-REPORT for messageRef " + options.messageRef);
-    this._pendingSentSmsMap[options.messageRef] = options;
-  }
-
   if ((options.segmentMaxSeq > 1)
       && (options.segmentSeq < options.segmentMaxSeq)) {
     // Not last segment
     this._processSentSmsSegment(options);
   } else {
-    // Last segment sent with success. Report it.
+    // Last segment sent with success.
+    if (options.requestStatusReport) {
+      if (DEBUG) debug("waiting SMS-STATUS-REPORT for messageRef " + options.messageRef);
+      this._pendingSentSmsMap[options.messageRef] = options;
+    }
+
     this.sendDOMMessage({
       rilMessageType: "sms-sent",
       envelopeId: options.envelopeId,
@@ -7693,7 +7691,7 @@ let StkProactiveCmdHelper = {
   retrieveTextString: function retrieveTextString(length) {
     if (!length) {
       // null string.
-      return null;
+      return {textString: null};
     }
 
     let text = {
@@ -9120,7 +9118,10 @@ let ICCRecordHelper = {
   getPNN: function getPNN() {
     let pnn = [];
     function callback(options) {
-      let pnnElement = RIL.iccInfoPrivate.PNN = {};
+      let pnnElement = {
+        fullName: "",
+        shortName: ""
+      };
       let len = Buf.readUint32();
       let readLen = 0;
       while (len > readLen) {

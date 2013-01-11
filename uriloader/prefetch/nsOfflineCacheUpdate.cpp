@@ -476,6 +476,18 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
         mUpdate->OnByteProgress(mBytesRead);
     }
 
+    if (NS_FAILED(aStatus)) {
+        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+        if (httpChannel) {
+            bool isNoStore;
+            if (NS_SUCCEEDED(httpChannel->IsNoStoreResponse(&isNoStore))
+                && isNoStore) {
+                LogToConsole("Offline cache manifest item has Cache-control: no-store header",
+                             this);
+            }
+        }
+    }
+
     // We need to notify the update that the load is complete, but we
     // want to give the channel a chance to close the cache entries.
     NS_DispatchToCurrentThread(this);

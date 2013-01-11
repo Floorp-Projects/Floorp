@@ -16,12 +16,48 @@ namespace system {
 
 Volume::EventObserverList Volume::mEventObserverList;
 
+// We have a feature where volumes can be locked when mounted. This
+// is used to prevent a volume from being shared with the PC while
+// it is actively being used (say for storing an update image)
+//
+// We use WakeLocks (a poor choice of name, but it does what we want)
+// from the PowerManagerService to determine when we're locked.
+// In particular we'll create a wakelock called volume-NAME-GENERATION
+// (where NAME is the volume name, and GENERATION is its generation
+// number), and if this wakelock is locked, then we'll prevent a volume
+// from being shared.
+//
+// Implementation Details:
+//
+// Since the AutoMounter can only control when something gets mounted
+// and not when it gets unmounted (for example: a user pulls the SDCard)
+// and because Volume and nsVolume data structures are maintained on
+// separate threads, we have the potential for some race conditions.
+// We eliminate the race conditions by introducing the concept of a
+// generation number. Every time a volume transitions to the Mounted
+// state, it gets assigned a new generation number. Whenever the state
+// of a Volume changes, we send the updated state and current generation
+// number to the main thread where it gets updated in the nsVolume.
+//
+// Since WakeLocks can only be queried from the main-thread, the
+// nsVolumeService looks for WakeLock status changes, and forwards
+// the results to the IOThread.
+//
+// If the Volume (IOThread) recieves a volume update where the generation
+// number mismatches, then the update is simply ignored.
+//
+// When a Volume (IOThread) initially becomes mounted, we assume it to
+// be locked until we get our first update from nsVolume (MainThread).
+static int32_t sMountGeneration = 0;
+
 // We don't get media inserted/removed events at startup. So we
 // assume it's present, and we'll be told that it's missing.
-Volume::Volume(const nsCSubstring &aName)
+Volume::Volume(const nsCSubstring& aName)
   : mMediaPresent(true),
     mState(nsIVolume::STATE_INIT),
-    mName(aName)
+    mName(aName),
+    mMountGeneration(-1),
+    mMountLocked(true)  // Needs to agree with nsVolume::nsVolume
 {
   DBG("Volume %s: created", NameStr());
 }
@@ -29,6 +65,9 @@ Volume::Volume(const nsCSubstring &aName)
 void
 Volume::SetMediaPresent(bool aMediaPresent)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   // mMediaPresent is slightly redunant to the state, however
   // when media is removed (while Idle), we get the following:
   //    631 Volume sdcard /mnt/sdcard disk removed (179:0)
@@ -64,13 +103,19 @@ Volume::SetMediaPresent(bool aMediaPresent)
 void
 Volume::SetState(Volume::STATE aNewState)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   if (aNewState == mState) {
     return;
   }
   if (aNewState == nsIVolume::STATE_MOUNTED) {
-    LOG("Volume %s: changing state from %s to %s @ '%s' (%d observers)",
+    mMountGeneration = ++sMountGeneration;
+    LOG("Volume %s: changing state from %s to %s @ '%s' (%d observers) "
+        "mountGeneration = %d, locked = %d",
         NameStr(), StateStr(mState),
-        StateStr(aNewState), mMountPoint.get(), mEventObserverList.Length());
+        StateStr(aNewState), mMountPoint.get(), mEventObserverList.Length(),
+        mMountGeneration, (int)mMountLocked);
   } else {
     LOG("Volume %s: changing state from %s to %s (%d observers)",
         NameStr(), StateStr(mState),
@@ -86,8 +131,11 @@ Volume::SetState(Volume::STATE aNewState)
 }
 
 void
-Volume::SetMountPoint(const nsCSubstring &aMountPoint)
+Volume::SetMountPoint(const nsCSubstring& aMountPoint)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   if (mMountPoint.Equals(aMountPoint)) {
     return;
   }
@@ -96,39 +144,55 @@ Volume::SetMountPoint(const nsCSubstring &aMountPoint)
 }
 
 void
-Volume::StartMount(VolumeResponseCallback *aCallback)
+Volume::StartMount(VolumeResponseCallback* aCallback)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   StartCommand(new VolumeActionCommand(this, "mount", "", aCallback));
 }
 
 void
-Volume::StartUnmount(VolumeResponseCallback *aCallback)
+Volume::StartUnmount(VolumeResponseCallback* aCallback)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   StartCommand(new VolumeActionCommand(this, "unmount", "force", aCallback));
 }
 
 void
-Volume::StartShare(VolumeResponseCallback *aCallback)
+Volume::StartShare(VolumeResponseCallback* aCallback)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   StartCommand(new VolumeActionCommand(this, "share", "ums", aCallback));
 }
 
 void
-Volume::StartUnshare(VolumeResponseCallback *aCallback)
+Volume::StartUnshare(VolumeResponseCallback* aCallback)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   StartCommand(new VolumeActionCommand(this, "unshare", "ums", aCallback));
 }
 
 void
-Volume::StartCommand(VolumeCommand *aCommand)
+Volume::StartCommand(VolumeCommand* aCommand)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   VolumeManager::PostCommand(aCommand);
 }
 
 //static
 void
-Volume::RegisterObserver(Volume::EventObserver *aObserver)
+Volume::RegisterObserver(Volume::EventObserver* aObserver)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
   mEventObserverList.AddObserver(aObserver);
@@ -142,16 +206,40 @@ Volume::RegisterObserver(Volume::EventObserver *aObserver)
 
 //static
 void
-Volume::UnregisterObserver(Volume::EventObserver *aObserver)
+Volume::UnregisterObserver(Volume::EventObserver* aObserver)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
   mEventObserverList.RemoveObserver(aObserver);
 }
 
+//static
 void
-Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer &aTokenizer)
+Volume::UpdateMountLock(const nsACString& aVolumeName,
+                        const int32_t& aMountGeneration,
+                        const bool& aMountLocked)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
+  RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+  if (!vol || (vol->mMountGeneration != aMountGeneration)) {
+    return;
+  }
+  if (vol->mMountLocked != aMountLocked) {
+    vol->mMountLocked = aMountLocked;
+    DBG("Volume::UpdateMountLock for '%s' to %d\n", vol->NameStr(), (int)aMountLocked);
+    mEventObserverList.Broadcast(vol);
+  }
+}
+
+void
+Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
   // The volume name will have already been parsed, and the tokenizer will point
   // to the token after the volume name
   switch (aResponseCode) {

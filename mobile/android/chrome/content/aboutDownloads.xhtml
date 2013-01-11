@@ -24,6 +24,16 @@
 </head>
 
 <body dir="&locale.dir;" onload="Downloads.init();" onunload="Downloads.uninit();">
+  <menu type="context" id="downloadmenu">
+    <menuitem id="contextmenu-open" label="&aboutDownloads.open;" onclick="ContextMenus.open();"></menuitem>
+    <menuitem id="contextmenu-retry" label="&aboutDownloads.retry;" onclick="ContextMenus.retry();"></menuitem>
+    <menuitem id="contextmenu-remove" label="&aboutDownloads.remove;" onclick="ContextMenus.remove();"></menuitem>
+    <menuitem id="contextmenu-pause" label="&aboutDownloads.pause;" onclick="ContextMenus.pause();"></menuitem>
+    <menuitem id="contextmenu-resume" label="&aboutDownloads.resume;" onclick="ContextMenus.resume();"></menuitem>
+    <menuitem id="contextmenu-cancel" label="&aboutDownloads.cancel;" onclick="ContextMenus.cancel();"></menuitem>
+    <menuitem id="contextmenu-removeall" label="&aboutDownloads.removeAll;" onclick="ContextMenus.removeAll();"></menuitem>
+  </menu>
+
   <div class="header">
     <div>&aboutDownloads.header;</div>
   </div>

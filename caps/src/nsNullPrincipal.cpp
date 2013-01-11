@@ -298,6 +298,13 @@ nsNullPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
+{
+  // For a null principal, we use our unique uuid as the base domain.
+  return mURI->GetPath(aBaseDomain);
+}
+
 /**
  * nsISerializable implementation
  */

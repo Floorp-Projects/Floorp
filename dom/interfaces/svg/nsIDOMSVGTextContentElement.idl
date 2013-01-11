@@ -32,8 +32,9 @@ interface nsIDOMSVGTextContentElement
   const unsigned short LENGTHADJUST_SPACING          = 1;
   const unsigned short LENGTHADJUST_SPACINGANDGLYPHS = 2;
   
-  readonly attribute nsIDOMSVGAnimatedLength      textLength;
-  readonly attribute nsIDOMSVGAnimatedEnumeration lengthAdjust;
+  // Not implemented
+  // readonly attribute nsIDOMSVGAnimatedLength      textLength;
+  // readonly attribute nsIDOMSVGAnimatedEnumeration lengthAdjust;
   
   long     getNumberOfChars();
   float    getComputedTextLength();
@@ -50,6 +51,8 @@ interface nsIDOMSVGTextContentElement
   float    getRotationOfChar(in unsigned long charnum);
     // raises(DOMException);       SVGPoint
   long     getCharNumAtPosition(in nsISupports point);
-  void     selectSubString(in unsigned long charnum, in unsigned long nchars);
+
+  // Not implemented
+  // void     selectSubString(in unsigned long charnum, in unsigned long nchars);
     // raises(DOMException);
 };

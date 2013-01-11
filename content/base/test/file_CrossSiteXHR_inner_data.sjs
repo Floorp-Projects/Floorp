@@ -50,7 +50,16 @@ window.addEventListener("message", function(e) {\n\
       res.responseHeaders[responseHeader] =\n\
         xhr.getResponseHeader(responseHeader);\n\
     }\n\
-\n\
+    res.allResponseHeaders = {};\n\
+    var splitHeaders = xhr.getAllResponseHeaders().split("\\r\\n");\n\
+    for (var i = 0; i < splitHeaders.length; i++) {\n\
+      var headerValuePair = splitHeaders[i].split(":");\n\
+        if(headerValuePair[1] != null){\n\
+          var headerName = trimString(headerValuePair[0]);\n\
+          var headerValue = trimString(headerValuePair[1]); \n\
+          res.allResponseHeaders[headerName] = headerValue;\n\
+        }\n\
+    }\n\
     post(e, res);\n\
   }\n\
 \n\
@@ -74,6 +83,9 @@ window.addEventListener("message", function(e) {\n\
 function post(e, res) {\n\
   e.source.postMessage(res.toSource(), "*");\n\
 }\n\
+function trimString(stringValue) {\n\
+  return stringValue.replace("/^\s+|\s+$/g","");\n\
+};\n\
 \n\
 </script>\n\
 </head>\n\

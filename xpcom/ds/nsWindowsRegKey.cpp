@@ -10,6 +10,7 @@
 #include "nsWindowsRegKey.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 //-----------------------------------------------------------------------------
 
@@ -18,7 +19,7 @@
 #define MAX_KEY_NAME_LEN     255
 #define MAX_VALUE_NAME_LEN   16383
 
-class nsWindowsRegKey : public nsIWindowsRegKey
+class nsWindowsRegKey MOZ_FINAL : public nsIWindowsRegKey
 {
 public:
   NS_DECL_ISUPPORTS
@@ -179,7 +180,7 @@ nsWindowsRegKey::HasChild(const nsAString &name, bool *result)
   LONG rv = RegOpenKeyExW(mKey, PromiseFlatString(name).get(), 0,
                           STANDARD_RIGHTS_READ, &key);
 
-  if (*result = (rv == ERROR_SUCCESS && key))
+  if ((*result = (rv == ERROR_SUCCESS && key)))
     RegCloseKey(key);
 
   return NS_OK;

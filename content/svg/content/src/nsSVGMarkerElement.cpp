@@ -272,8 +272,8 @@ nsSVGMarkerElement::UnsetAttr(int32_t aNamespaceID, nsIAtom* aName,
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-void 
-nsSVGMarkerElement::SetParentCoordCtxProvider(nsSVGSVGElement *aContext)
+void
+nsSVGMarkerElement::SetParentCoordCtxProvider(SVGSVGElement *aContext)
 {
   mCoordCtx = aContext;
   mViewBoxToViewportTransform = nullptr;

@@ -14,12 +14,10 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-ul-element
 interface HTMLUListElement : HTMLElement {
-/*
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLUListElement {
-*/
            [SetterThrows]
            attribute boolean compact;
            [SetterThrows]

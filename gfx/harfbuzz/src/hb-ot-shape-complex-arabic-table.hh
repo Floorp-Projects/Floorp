@@ -6,8 +6,8 @@
  *
  * on files with these headers:
  *
- * # ArabicShaping-6.1.0.txt
- * # Date: 2011-04-15, 23:16:00 GMT [KW]
+ * # ArabicShaping-6.2.0.txt
+ * # Date: 2012-05-15, 21:05:00 GMT [KW]
  * UnicodeData.txt does not have a header.
  */
 

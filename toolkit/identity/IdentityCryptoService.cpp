@@ -22,6 +22,8 @@
 #include "keyhi.h"
 #include "cryptohi.h"
 
+#include <limits.h>
+
 using namespace mozilla;
 
 namespace {
@@ -424,15 +426,15 @@ GenerateDSAKeyPair(PK11SlotInfo * slot,
     0x72,0xDF,0xFA,0x89,0x62,0x33,0x39,0x7A
   };
 
-  MOZ_STATIC_ASSERT(PR_ARRAY_SIZE(P) == 1024 / PR_BITS_PER_BYTE, "bad DSA P");
-  MOZ_STATIC_ASSERT(PR_ARRAY_SIZE(Q) ==  160 / PR_BITS_PER_BYTE, "bad DSA Q");
-  MOZ_STATIC_ASSERT(PR_ARRAY_SIZE(G) == 1024 / PR_BITS_PER_BYTE, "bad DSA G");
+  MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(P) == 1024 / CHAR_BIT, "bad DSA P");
+  MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(Q) ==  160 / CHAR_BIT, "bad DSA Q");
+  MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(G) == 1024 / CHAR_BIT, "bad DSA G");
 
   PQGParams pqgParams  = {
     NULL /*arena*/,
-    { siBuffer, P, PR_ARRAY_SIZE(P) },
-    { siBuffer, Q, PR_ARRAY_SIZE(Q) },
-    { siBuffer, G, PR_ARRAY_SIZE(G) }
+    { siBuffer, P, static_cast<unsigned int>(mozilla::ArrayLength(P)) },
+    { siBuffer, Q, static_cast<unsigned int>(mozilla::ArrayLength(Q)) },
+    { siBuffer, G, static_cast<unsigned int>(mozilla::ArrayLength(G)) }
   };
 
   return GenerateKeyPair(slot, privateKey, publicKey, CKM_DSA_KEY_PAIR_GEN,

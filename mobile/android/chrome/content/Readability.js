@@ -26,6 +26,7 @@ var Readability = function(uri, doc) {
   this._doc = doc;
   this._biggestFrame = false;
   this._articleByline = null;
+  this._articleDir = null;
 
   // Start with all flags set
   this._flags = this.FLAG_STRIP_UNLIKELYS |
@@ -405,6 +406,9 @@ Readability.prototype = {
     let isPaging = (page !== null ? true: false);
     page = page ? page : this._doc.body;
     let pageCacheHtml = page.innerHTML;
+
+    // Check if any "dir" is set on the toplevel document element
+    this._articleDir = doc.documentElement.getAttribute("dir");
 
     while (true) {
       let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
@@ -1432,6 +1436,7 @@ Readability.prototype = {
 
     return { title: articleTitle,
              byline: this._articleByline,
+             dir: this._articleDir,
              content: articleContent.innerHTML };
   }
 };

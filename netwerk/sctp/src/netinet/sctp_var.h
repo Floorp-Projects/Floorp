@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 235828 2012-05-23 11:26:28Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 242327 2012-10-29 20:47:32Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_VAR_H_
@@ -398,83 +398,82 @@ void sctp_close(struct socket *so);
 int sctp_detach(struct socket *so);
 #endif
 int sctp_disconnect(struct socket *so);
-
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__)
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
 void sctp_ctlinput __P((int, struct sockaddr *, void *));
 int sctp_ctloutput __P((struct socket *, struct sockopt *));
 #ifdef INET
 void sctp_input_with_port __P((struct mbuf *, int, uint16_t));
-#endif
-#if defined(__APPLE__) || defined(__Userspace__)
-#ifdef INET6
-int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
-#endif
-#endif
-#ifdef INET
 void sctp_input __P((struct mbuf *, int));
 #endif
 void sctp_pathmtu_adjustment __P((struct sctp_tcb *, uint16_t));
+#else
+void sctp_ctlinput(int, struct sockaddr *, void *);
+int sctp_ctloutput(struct socket *, struct sockopt *);
+#ifdef INET
+void sctp_input_with_port(struct mbuf *, int, uint16_t);
+void sctp_input(struct mbuf *, int);
+#endif
+void sctp_pathmtu_adjustment(struct sctp_tcb *, uint16_t);
+#endif
 #else
 #if defined(__Panda__)
-void sctp_input __P((pakhandle_type i_pak));
+void sctp_input(pakhandle_type i_pak);
 #elif defined(__Userspace__)
-void sctp_input_with_port __P((struct mbuf *, int, uint16_t));
-#ifdef INET6
-int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
-#endif
-void sctp_input __P((struct mbuf *, int));
-void sctp_pathmtu_adjustment __P((struct sctp_tcb *, uint16_t));
+void sctp_pathmtu_adjustment(struct sctp_tcb *, uint16_t);
 #else
-void sctp_input __P((struct mbuf *,...));
+void sctp_input(struct mbuf *,...);
 #endif
-void *sctp_ctlinput __P((int, struct sockaddr *, void *));
-int sctp_ctloutput __P((int, struct socket *, int, int, struct mbuf **));
-
+void *sctp_ctlinput(int, struct sockaddr *, void *);
+int sctp_ctloutput(int, struct socket *, int, int, struct mbuf **);
 #endif
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
 void sctp_drain __P((void));
-#if defined(__Userspace__)
-void sctp_init __P((uint16_t,
-                    int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df)));
 #else
-void sctp_init __P((void));
+void sctp_drain(void);
 #endif
-
+#if defined(__Userspace__)
+void sctp_init(uint16_t, int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df));
+#else
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+void sctp_init __P((void));
+#else
+void sctp_init(void);
+#endif
+#endif
 void sctp_finish(void);
-
 #if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
 int sctp_flush(struct socket *, int);
 #endif
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
 int sctp_shutdown __P((struct socket *));
 void sctp_notify __P((struct sctp_inpcb *, struct ip *ip, struct sctphdr *,
 		struct sockaddr *, struct sctp_tcb *,
 		struct sctp_nets *));
-
+#else
+int sctp_shutdown(struct socket *);
+void sctp_notify(struct sctp_inpcb *, struct ip *ip, struct sctphdr *,
+		 struct sockaddr *, struct sctp_tcb *,
+		 struct sctp_nets *);
+#endif
 int sctp_bindx(struct socket *, int, struct sockaddr_storage *,
 	int, int, struct proc *);
-
 /* can't use sctp_assoc_t here */
 int sctp_peeloff(struct socket *, struct socket *, int, caddr_t, int *);
-
-int sctp_ingetaddr(struct socket *,
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__)
-	struct sockaddr **
+int sctp_ingetaddr(struct socket *, struct sockaddr **);
 #elif defined(__Panda__)
-	struct sockaddr *
+int sctp_ingetaddr(struct socket *, struct sockaddr *);
 #else
-	struct mbuf *
+int sctp_ingetaddr(struct socket *, struct mbuf *);
 #endif
-);
-
-int sctp_peeraddr(struct socket *,
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__)
-	struct sockaddr **
+int sctp_peeraddr(struct socket *, struct sockaddr **);
 #elif defined(__Panda__)
-	struct sockaddr *
+int sctp_peeraddr(struct socket *, struct sockaddr *);
 #else
-	struct mbuf *
+int sctp_peeraddr(struct socket *, struct mbuf *);
 #endif
-);
-
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 #if __FreeBSD_version >= 700000
 int sctp_listen(struct socket *, int, struct thread *);
@@ -488,7 +487,6 @@ int sctp_listen(struct socket *, int, struct proc *);
 #else
 int sctp_listen(struct socket *, struct proc *);
 #endif
-
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
 int sctp_accept(struct socket *, struct sockaddr **);
 #elif defined(__Panda__)

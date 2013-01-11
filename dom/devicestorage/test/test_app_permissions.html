@@ -60,12 +60,12 @@ function TestAdd(iframe, data) {
 
 function TestGet(iframe, data) {
 
-  createTestFile();
+  createTestFile(data.fileExtension);
 
   var storage = iframe.contentDocument.defaultView.navigator.getDeviceStorage(data.type);
   isnot(storage, null, "Should be able to get storage object for " + data.type);
 
-  request = storage.get("testfile");
+  request = storage.get("testfile" + data.fileExtension);
   isnot(request, null, "Should be able to get request");
 
   request.onsuccess = function() {
@@ -81,12 +81,12 @@ function TestGet(iframe, data) {
 
 function TestDelete(iframe, data) {
 
-  createTestFile();
+  createTestFile(data.fileExtension);
 
   var storage = iframe.contentDocument.defaultView.navigator.getDeviceStorage(data.type);
   isnot(storage, null, "Should be able to get storage object for " + data.type);
 
-  request = storage.delete("testfile");
+  request = storage.delete("testfile" + data.fileExtension);
   isnot(request, null, "Should be able to get request");
 
   request.onsuccess = function() {
@@ -103,7 +103,7 @@ function TestDelete(iframe, data) {
 
 function TestEnumerate(iframe, data) {
 
-  createTestFile();
+  createTestFile(data.fileExtension);
 
   var storage = iframe.contentDocument.defaultView.navigator.getDeviceStorage(data.type);
   isnot(storage, null, "Should be able to get storage object for " + data.type);
@@ -137,21 +137,25 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: false,
+    fileExtension: '.png',
     test: TestGet
   },
   {
     type: 'videos',
     shouldPass: false,
+    fileExtension: '.ogv',
     test: TestGet
   },
   {
     type: 'music',
     shouldPass: false,
+    fileExtension: '.ogg',
     test: TestGet
   },
   {
     type: 'sdcard',
     shouldPass: false,
+    fileExtension: '.txt',
     test: TestGet
   },
 
@@ -159,6 +163,7 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: true,
+    fileExtension: '.png',
 
     permissions: ["device-storage:pictures"],
 
@@ -167,6 +172,7 @@ var gData = [
   {
     type: 'videos',
     shouldPass: true,
+    fileExtension: '.ogv',
 
     permissions: ["device-storage:videos"],
 
@@ -175,6 +181,7 @@ var gData = [
   {
     type: 'music',
     shouldPass: true,
+    fileExtension: '.ogg',
 
     permissions: ["device-storage:music"],
 
@@ -183,6 +190,7 @@ var gData = [
   {
     type: 'sdcard',
     shouldPass: true,
+    fileExtension: '.txt',
 
     permissions: ["device-storage:sdcard"],
 
@@ -193,6 +201,7 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: true,
+    fileExtension: '.png',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:pictures"],
@@ -202,6 +211,7 @@ var gData = [
   {
     type: 'videos',
     shouldPass: true,
+    fileExtension: '.ogv',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:videos"],
@@ -211,6 +221,7 @@ var gData = [
   {
     type: 'music',
     shouldPass: true,
+    fileExtension: '.ogg',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:music"],
@@ -220,6 +231,7 @@ var gData = [
   {
     type: 'sdcard',
     shouldPass: true,
+    fileExtension: '.txt',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:sdcard"],
@@ -356,21 +368,25 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: false,
+    fileExtension: '.png',
     test: TestDelete
   },
   {
     type: 'videos',
     shouldPass: false,
+    fileExtension: '.ogv',
     test: TestDelete
   },
   {
     type: 'music',
     shouldPass: false,
+    fileExtension: '.ogg',
     test: TestDelete
   },
   {
     type: 'sdcard',
     shouldPass: false,
+    fileExtension: '.txt',
     test: TestDelete
   },
 
@@ -378,6 +394,7 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: true,
+    fileExtension: '.png',
 
     permissions: ["device-storage:pictures"],
 
@@ -386,6 +403,7 @@ var gData = [
   {
     type: 'videos',
     shouldPass: true,
+    fileExtension: '.ogv',
 
     permissions: ["device-storage:videos"],
 
@@ -394,6 +412,7 @@ var gData = [
   {
     type: 'music',
     shouldPass: true,
+    fileExtension: '.ogg',
 
     permissions: ["device-storage:music"],
 
@@ -402,6 +421,7 @@ var gData = [
   {
     type: 'sdcard',
     shouldPass: true,
+    fileExtension: '.txt',
 
     permissions: ["device-storage:sdcard"],
 
@@ -412,6 +432,7 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: true,
+    fileExtension: '.png',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:pictures"],
@@ -421,6 +442,7 @@ var gData = [
   {
     type: 'videos',
     shouldPass: true,
+    fileExtension: '.ogv',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:videos"],
@@ -430,6 +452,7 @@ var gData = [
   {
     type: 'music',
     shouldPass: true,
+    fileExtension: '.ogg',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:music"],
@@ -439,6 +462,7 @@ var gData = [
   {
     type: 'sdcard',
     shouldPass: true,
+    fileExtension: '.txt',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:sdcard"],
@@ -590,7 +614,7 @@ function runTest() {
   }
 }
 
-function createTestFile() {
+function createTestFile(extension) {
 try {
   const Cc = SpecialPowers.Cc;
   const Ci = SpecialPowers.Ci;
@@ -598,12 +622,12 @@ try {
   var f = directoryService.get("TmpD", Ci.nsIFile);
   f.appendRelativePath("device-storage-testing");
   f.remove(true);
-  f.appendRelativePath("testfile");
+  f.appendRelativePath("testfile" + extension);
   f.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
   } catch(e) {}
 }
 
-createTestFile();
+createTestFile('.txt');
 var gTestRunner = runTest();
 SpecialPowers.addPermission("browser", true, gTestUri);
 

@@ -4,16 +4,21 @@
 
 #include "nsISupports.idl"
 #include "nsIVolume.idl"
+#include "nsIVolumeMountLock.idl"
 
-[scriptable, uuid(b31bd379-4bd2-4189-a85b-c0927a266a85)]
+[scriptable, uuid(597403c6-5ba4-4e7b-b3f4-ed3f05f775d8)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
     nsIVolume getVolumeByPath(in DOMString path);
+
+    void BroadcastVolume(in DOMString volName);
+
+    nsIVolumeMountLock createMountLock(in DOMString volName);
 };
 
 %{C++
 #define NS_VOLUMESERVICE_CID \
-  {0xb31bd379, 0x4bd2, 0x4189, {0xa8, 0x5b, 0xc0, 0x92, 0x7a, 0x26, 0x6a, 0x85}}
+  {0x597403c6, 0x5ba4, 0x4e7b, {0xb3, 0xf4, 0xed, 0x3f, 0x05, 0xf7, 0x75, 0xd8}}
 #define NS_VOLUMESERVICE_CONTRACTID "@mozilla.org/telephony/volume-service;1"
 %}

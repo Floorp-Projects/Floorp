@@ -23,6 +23,59 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
 
 XPCOMUtils.defineLazyGetter(window, "SelectHelper", function() gChromeWin.SelectHelper);
 
+var ContextMenus = {
+  target: null,
+
+  init: function() {
+    document.addEventListener("contextmenu", this, false);
+  },
+
+  handleEvent: function(event) {
+    // store the target of context menu events so that we know which app to act on
+    this.target = event.target;
+    while (!this.target.hasAttribute("contextmenu")) {
+      this.target = this.target.parentNode;
+    }
+
+    if (!this.target) {
+      document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
+      document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
+      document.getElementById("contextmenu-uninstall").setAttribute("hidden", "true");
+      return;
+    }
+
+    let addon = this.target.addon;
+    if (addon.scope == AddonManager.SCOPE_APPLICATION) {
+      document.getElementById("contextmenu-uninstall").setAttribute("hidden", "true");
+    } else {
+      document.getElementById("contextmenu-uninstall").removeAttribute("hidden");
+    }
+
+    if (this.target.getAttribute("isDisabled") != "true") {
+      document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
+      document.getElementById("contextmenu-disable").removeAttribute("hidden");
+    } else {
+      document.getElementById("contextmenu-enable").removeAttribute("hidden");
+      document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
+    }
+  },
+
+  enable: function(event) {
+    Addons.setEnabled(true, this.target.addon);
+    this.target = null;
+  },
+  
+  disable: function (event) {
+    Addons.setEnabled(false, this.target.addon);
+    this.target = null;
+  },
+  
+  uninstall: function (event) {
+    Addons.uninstall(this.target.addon);
+    this.target = null;
+  },
+}
+
 function init() {
   window.addEventListener("popstate", onPopState, false);
   Services.obs.addObserver(Addons, "browser-search-engine-modified", false);
@@ -31,6 +84,7 @@ function init() {
   AddonManager.addAddonListener(Addons);
   Addons.getAddons();
   showList();
+  ContextMenus.init();
 }
 
 function uninit() {
@@ -78,6 +132,7 @@ var Addons = {
     outer.setAttribute("addonID", aAddon.id);
     outer.className = "addon-item";
     outer.setAttribute("role", "button");
+    outer.setAttribute("contextmenu", "addonmenu");
     outer.addEventListener("click", function() {
       this.showDetails(outer);
       history.pushState({ id: aAddon.id }, document.title);
@@ -367,11 +422,11 @@ var Addons = {
     this.setEnabled(false);
   },
 
-  uninstall: function uninstall() {
+  uninstall: function uninstall(aAddon) {
     let list = document.getElementById("addons-list");
     let detailItem = document.querySelector("#addons-details > .addon-item");
 
-    let addon = detailItem.addon;
+    let addon = aAddon || detailItem.addon;
     if (!addon)
       return;
 

@@ -25,10 +25,9 @@ struct nsRuleData
   const uint32_t mSIDs;
   bool mCanStoreInRuleTree;
   bool mIsImportantRule;
-  uint8_t mLevel; // an nsStyleSet::sheetType
+  uint16_t mLevel; // an nsStyleSet::sheetType
   nsPresContext* const mPresContext;
   nsStyleContext* const mStyleContext;
-  const nsPostResolveFunc mPostResolveCallback;
 
   // We store nsCSSValues needed to compute the data for one or more
   // style structs (specified by the bitfield mSIDs).  These are stored

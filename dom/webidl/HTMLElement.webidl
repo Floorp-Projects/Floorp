@@ -222,12 +222,10 @@ interface HTMLElement : Element {
            attribute EventHandler oncut;
   [SetterThrows]
            attribute EventHandler onpaste;
-/*
 };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface
 partial interface HTMLElement {
-*/
   readonly attribute Element? offsetParent;
   readonly attribute long offsetTop;
   readonly attribute long offsetLeft;

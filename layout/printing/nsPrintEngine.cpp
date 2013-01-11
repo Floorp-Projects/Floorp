@@ -510,21 +510,24 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrt->mPrintObject = new nsPrintObject();
-  NS_ENSURE_TRUE(mPrt->mPrintObject, NS_ERROR_OUT_OF_MEMORY);
-  rv = mPrt->mPrintObject->Init(webContainer, aDoc, aIsPrintPreview);
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    nsAutoScriptBlocker scriptBlocker;
+    mPrt->mPrintObject = new nsPrintObject();
+    NS_ENSURE_TRUE(mPrt->mPrintObject, NS_ERROR_OUT_OF_MEMORY);
+    rv = mPrt->mPrintObject->Init(webContainer, aDoc, aIsPrintPreview);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(mPrt->mPrintDocList.AppendElement(mPrt->mPrintObject),
-                 NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mPrt->mPrintDocList.AppendElement(mPrt->mPrintObject),
+                   NS_ERROR_OUT_OF_MEMORY);
 
-  mPrt->mIsParentAFrameSet = IsParentAFrameSet(webContainer);
-  mPrt->mPrintObject->mFrameType = mPrt->mIsParentAFrameSet ? eFrameSet : eDoc;
+    mPrt->mIsParentAFrameSet = IsParentAFrameSet(webContainer);
+    mPrt->mPrintObject->mFrameType = mPrt->mIsParentAFrameSet ? eFrameSet : eDoc;
 
-  // Build the "tree" of PrintObjects
-  nsCOMPtr<nsIDocShellTreeNode> parentAsNode =
-    do_QueryInterface(mPrt->mPrintObject->mDocShell);
-  BuildDocTree(parentAsNode, &mPrt->mPrintDocList, mPrt->mPrintObject);
+    // Build the "tree" of PrintObjects
+    nsCOMPtr<nsIDocShellTreeNode> parentAsNode =
+      do_QueryInterface(mPrt->mPrintObject->mDocShell);
+    BuildDocTree(parentAsNode, &mPrt->mPrintDocList, mPrt->mPrintObject);
+  }
 
   if (!aIsPrintPreview) {
     SetIsPrinting(true);

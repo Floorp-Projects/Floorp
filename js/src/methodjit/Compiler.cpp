@@ -6060,7 +6060,7 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
     for (unsigned i = 0; i < sc.hops; i++)
         masm.loadPayload(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
 
-    UnrootedShape shape = ScopeCoordinateToStaticScope(script_, PC).scopeShape();
+    UnrootedShape shape = ScopeCoordinateToStaticScopeShape(cx, script_, PC);
     Address addr;
     if (shape->numFixedSlots() <= sc.slot) {
         masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);

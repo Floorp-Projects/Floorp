@@ -17,6 +17,7 @@
 
 #include "gc/Barrier.h"
 
+ForwardDeclareJS(Atom);
 ForwardDeclareJS(Script);
 
 namespace js { class FunctionExtended; }
@@ -165,7 +166,7 @@ class JSFunction : public JSObject
     inline void initAtom(JSAtom *atom);
     JSAtom *displayAtom() const { return atom_; }
 
-    inline void setGuessedAtom(JSAtom *atom);
+    inline void setGuessedAtom(js::UnrootedAtom atom);
 
     /* uint16_t representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };

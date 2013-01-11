@@ -63,8 +63,9 @@ public class testVkbOverlap extends PixelTest {
             // if the vkb scrolled into view as expected, then the number of green pixels now visible should be about the
             // same as it was before, since the green pixels indicate the text input is in view. use a fudge factor of 0.9 to
             // account for borders and such of the text input which might still be out of view.
+            // Since we should be zooming into the input, this expects that newCount will be significantly greater than the previous count.
             int newCount = countGreenPixels(painted);
-            mAsserter.ok(newCount >= (greenPixelCount * 0.9), "testVkbOverlap", "Found " + newCount + " green pixels after tapping; expected " + greenPixelCount);
+            mAsserter.ok(newCount > greenPixelCount, "testVkbOverlap", "Found " + newCount + " green pixels after tapping; expected " + greenPixelCount);
         } finally {
             painted.close();
         }

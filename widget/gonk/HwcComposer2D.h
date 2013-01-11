@@ -55,6 +55,7 @@ private:
     nsCOMPtr<nsIScreen>     mScreen;
     int                     mScreenWidth, mScreenHeight;
     int                     mMaxLayerCount;
+    bool                    mColorFill;
 };
 
 } // namespace mozilla

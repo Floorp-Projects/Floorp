@@ -103,6 +103,7 @@ protected:
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
+                                 bool* aIsScoped,
                                  bool* aIsAlternate);
   virtual CORSMode GetCORSMode() const;
 protected:
@@ -431,11 +432,13 @@ void
 nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
                                      nsAString& aType,
                                      nsAString& aMedia,
+                                     bool* aIsScoped,
                                      bool* aIsAlternate)
 {
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
+  *aIsScoped = false;
   *aIsAlternate = false;
 
   nsAutoString rel;

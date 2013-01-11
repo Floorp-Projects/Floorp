@@ -330,6 +330,10 @@ public class BrowserDB {
             return mPinnedSites.get(position);
         }
 
+        public boolean isPinned() {
+            return mPinnedSites.get(mIndex) != null;
+        }
+
         private int getPinnedBefore(int position) {
             int numFound = 0;
             if (!hasPinnedSites()) {

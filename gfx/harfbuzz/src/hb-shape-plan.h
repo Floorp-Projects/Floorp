@@ -80,10 +80,8 @@ hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
 		       const hb_feature_t *features,
 		       unsigned int        num_features);
 
-#ifdef HB_NOT_IMPLEMENTED
 const char *
-Xhb_shape_plan_get_shaper (hb_shape_plan_t *shape_plan);
-#endif
+hb_shape_plan_get_shaper (hb_shape_plan_t *shape_plan);
 
 
 HB_END_DECLS

@@ -5,6 +5,12 @@
 
 #include <algorithm>
 
+#ifdef XP_MACOS
+#include <fstream>
+#endif
+
+#include <prio.h>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
@@ -15,6 +21,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsXPCOMPrivate.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIXPConnect.h"
 #include "mozilla/Services.h"
@@ -133,7 +140,7 @@ CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
   CombinedStacks::Stack& adjustedStack = mStacks.back();
 
   size_t stackSize = aStack.GetStackSize();
-  for (int i = 0; i < stackSize; ++i) {
+  for (size_t i = 0; i < stackSize; ++i) {
     const Telemetry::ProcessedStack::Frame& frame = aStack.GetFrame(i);
     uint16_t modIndex;
     if (frame.mModIndex == std::numeric_limits<uint16_t>::max()) {
@@ -304,6 +311,7 @@ private:
   static bool AddonReflector(AddonEntryType *entry, JSContext *cx, JSObject *obj);
   static bool CreateHistogramForAddon(const nsACString &name,
                                       AddonHistogramInfo &info);
+  void ReadLateWritesStacks();
   AddonMapType mAddonMap;
 
   // This is used for speedy string->Telemetry::ID conversions
@@ -322,6 +330,7 @@ private:
   Mutex mHangReportsMutex;
   nsIMemoryReporter *mMemoryReporter;
 
+  CombinedStacks mLateWritesStacks; // This is collected out of the main thread.
   bool mCachedTelemetryData;
   uint32_t mLastShutdownTime;
   nsCOMArray<nsIFetchTelemetryDataCallback> mCallbacks;
@@ -738,6 +747,7 @@ public:
 
   NS_IMETHOD Run() {
     mTelemetry->mLastShutdownTime = ReadLastShutdownDuration(mFilename);
+    mTelemetry->ReadLateWritesStacks();
     nsCOMPtr<nsIRunnable> e =
       NS_NewRunnableMethod(this, &nsFetchTelemetryData::MainThread);
     NS_ENSURE_STATE(e);
@@ -1454,28 +1464,12 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
 
-    // "PDB Age" identifier
-    val = INT_TO_JSVAL(module.mPdbAge);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+    // Module breakpad identifier
+    JSString *id = JS_NewStringCopyZ(cx, module.mBreakpadId.c_str());
+    if (!id) {
       return nullptr;
     }
-
-    // "PDB Signature" GUID
-    str = JS_NewStringCopyZ(cx, module.mPdbSignature.c_str());
-    if (!str) {
-      return nullptr;
-    }
-    val = STRING_TO_JSVAL(str);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
-      return nullptr;
-    }
-
-    // Name of associated PDB file
-    str = JS_NewStringCopyZ(cx, module.mPdbName.c_str());
-    if (!str) {
-      return nullptr;
-    }
-    val = STRING_TO_JSVAL(str);
+    val = STRING_TO_JSVAL(id);
     if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
       return nullptr;
     }
@@ -1531,6 +1525,150 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   }
 
   return ret;
+}
+
+// Read a stack from the given file name. In case of any error, aStack is
+// unchanged.
+static void
+ReadStack(const char *aFileName, Telemetry::ProcessedStack &aStack)
+{
+#ifdef XP_MACOS
+  std::ifstream file(aFileName);
+
+  size_t numModules;
+  file >> numModules;
+  if (file.fail()) {
+    return;
+  }
+
+  char newline = file.get();
+  if (file.fail() || newline != '\n') {
+    return;
+  }
+
+  Telemetry::ProcessedStack stack;
+  for (size_t i = 0; i < numModules; ++i) {
+    std::string moduleName;
+    getline(file, moduleName);
+    if (file.fail()) {
+      return;
+    }
+
+    Telemetry::ProcessedStack::Module module = {
+      moduleName,
+      0,  // mPdbAge
+      "", // mPdbSignature
+      ""  // mPdbName
+    };
+    stack.AddModule(module);
+  }
+
+  size_t numFrames;
+  file >> numFrames;
+  if (file.fail()) {
+    return;
+  }
+
+  newline = file.get();
+  if (file.fail() || newline != '\n') {
+    return;
+  }
+
+  for (size_t i = 0; i < numFrames; ++i) {
+    uint16_t index;
+    file >> index;
+    uintptr_t offset;
+    file >> std::hex >> offset >> std::dec;
+    if (file.fail()) {
+      return;
+    }
+
+    Telemetry::ProcessedStack::Frame frame = {
+      offset,
+      index
+    };
+    stack.AddFrame(frame);
+  }
+
+  aStack = stack;
+#endif
+}
+
+void
+TelemetryImpl::ReadLateWritesStacks()
+{
+  nsCOMPtr<nsIFile> profileDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileDir));
+  if (!profileDir || NS_FAILED(rv)) {
+    return;
+  }
+
+  nsAutoCString nativePath;
+  rv = profileDir->GetNativePath(nativePath);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  const char *name = nativePath.get();
+  PRDir *dir = PR_OpenDir(name);
+  if (!dir) {
+    return;
+  }
+
+  PRDirEntry *ent;
+  const char *prefix = "Telemetry.LateWriteFinal-";
+  unsigned int prefixLen = strlen(prefix);
+  while ((ent = PR_ReadDir(dir, PR_SKIP_NONE))) {
+    if (strncmp(prefix, ent->name, prefixLen) != 0) {
+      continue;
+    }
+
+    nsAutoCString stackNativePath = nativePath;
+    stackNativePath += XPCOM_FILE_PATH_SEPARATOR;
+    stackNativePath += nsDependentCString(ent->name);
+
+    Telemetry::ProcessedStack stack;
+    ReadStack(stackNativePath.get(), stack);
+    if (stack.GetStackSize() != 0) {
+      mLateWritesStacks.AddStack(stack);
+    }
+    // Delete the file so that we don't report it again on the next run.
+    PR_Delete(stackNativePath.get());
+  }
+  PR_CloseDir(dir);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetLateWrites(JSContext *cx, jsval *ret)
+{
+  // The user must call AsyncReadTelemetryData first. We return an empty list
+  // instead of reporting a failure so that the rest of telemetry can uniformly
+  // handle the read not being available yet.
+
+  // FIXME: we allocate the js object again and again in the getter. We should
+  // figure out a way to cache it. In order to do that we have to call
+  // JS_AddNamedObjectRoot. A natural place to do so is in the TelemetryImpl
+  // constructor, but it is not clear how to get a JSContext in there.
+  // Another option would be to call it in here when we first call
+  // CreateJSStackObject, but we would still need to figure out where to call
+  // JS_RemoveObjectRoot. Would it be ok to never call JS_RemoveObjectRoot
+  // and just set the pointer to nullptr is the telemetry destructor?
+
+  JSObject *report;
+  if (!mCachedTelemetryData) {
+    CombinedStacks empty;
+    report = CreateJSStackObject(cx, empty);
+  } else {
+    report = CreateJSStackObject(cx, mLateWritesStacks);
+  }
+
+  if (report == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *ret = OBJECT_TO_JSVAL(report);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1983,9 +2121,7 @@ void ProcessedStack::Clear() {
 
 bool ProcessedStack::Module::operator==(const Module& aOther) const {
   return  mName == aOther.mName &&
-    mPdbAge == aOther.mPdbAge &&
-    mPdbSignature == aOther.mPdbSignature &&
-    mPdbName == aOther.mPdbName;
+    mBreakpadId == aOther.mBreakpadId;
 }
 
 struct StackFrame
@@ -2088,21 +2224,8 @@ GetStackAndModules(const std::vector<uintptr_t>& aPCs)
     const SharedLibrary &info = rawModules.GetEntry(i);
     ProcessedStack::Module module = {
       info.GetName(),
-#ifdef XP_WIN
-      info.GetPdbAge(),
-      "", // mPdbSignature
-      info.GetPdbName(),
-#else
-      0, // mPdbAge
-      "", // mPdbSignature
-      "" // mPdbName
-#endif
+      info.GetBreakpadId()
     };
-#ifdef XP_WIN
-    char guidString[NSID_LENGTH] = { 0 };
-    info.GetPdbSignature().ToProvidedString(guidString);
-    module.mPdbSignature = guidString;
-#endif
     Ret.AddModule(module);
   }
 #endif
