@@ -5970,17 +5970,9 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
       continue;
     }
 
-    if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
-      // Reflow
-      aState.FlowAndPlaceFloat(f);
-    }
-    else {
-      // Just reload the float region into the space manager
-      nsRect region = nsFloatManager::GetRegionFor(f);
-      aState.mFloatManager->AddFloat(f, region);
-      if (f->GetNextInFlow())
-        NS_MergeReflowStatusInto(&aStatus, NS_FRAME_OVERFLOW_INCOMPLETE);
-    }
+    // Always call FlowAndPlaceFloat; we might need to place this float
+    // if didn't belong to this block the last time it was reflowed.
+    aState.FlowAndPlaceFloat(f);
 
     ConsiderChildOverflow(aOverflowAreas, f);
   }
