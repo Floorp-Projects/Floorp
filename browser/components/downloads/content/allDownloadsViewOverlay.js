@@ -537,7 +537,7 @@ DownloadElementShell.prototype = {
         return this._targetFileExists;
       }
       case "downloadsCmd_show": {
-        // TODO: Bug 827010 - Handle part-file asynchronously. 
+        // TODO: Bug 827010 - Handle part-file asynchronously.
         if (this._dataItem &&
             this._dataItem.partFile && this._dataItem.partFile.exists())
           return true;
@@ -703,6 +703,7 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
 
   // Register as a downloads view. The places data will be initialized by
   // the places setter.
+  this._initiallySelectedElement = null;
   let downloadsData = DownloadsCommon.getData(window.opener || window);
   downloadsData.addView(this);
 
@@ -1045,6 +1046,7 @@ DownloadsPlacesView.prototype = {
       this._result = val;
       this._resultNode = val.root;
       this._resultNode.containerOpen = true;
+      this._ensureInitialSelection();
     }
     else {
       delete this._resultNode;
@@ -1167,16 +1169,44 @@ DownloadsPlacesView.prototype = {
     return this._searchTerm = aValue;
   },
 
-  applyFilter: function() {
-    throw new Error("applyFilter is not implemented by the DownloadsView")
-  },
-
-  load: function(aQueries, aOptions) {
-    throw new Error("|load| is not implemented by the Downloads View");
+  /**
+   * When the view loads, we want to select the first item.
+   * However, because session downloads, for which the data is loaded
+   * asynchronously, always come first in the list, and because the list
+   * may (or may not) already contain history downloads at that point, it
+   * turns out that by the time we can select the first item, the user may
+   * have already started using the view.
+   * To make things even more complicated, in other cases, the places data
+   * may be loaded after the session downloads data.  Thus we cannot rely on
+   * the order in which the data comes in.
+   * We work around this by attempting to select the first element twice,
+   * once after the places data is loaded and once when the session downloads
+   * data is done loading.  However, if the selection has changed in-between,
+   * we assume the user has already started using the view and give up.
+   */
+  _ensureInitialSelection: function DPV__ensureInitialSelection() {
+    // Either they're both null, or the selection has not changed in between.
+    if (this._richlistbox.selectedItem == this._initiallySelectedElement) {
+      let firstDownloadElement = this._richlistbox.firstChild;
+      if (firstDownloadElement != this._initiallySelectedElement) {
+        // We may be called before _ensureVisibleElementsAreActive,
+        // or before the download binding is attached. Therefore, ensure the
+        // first item is activated, and pass the item to the richlistbox
+        // setters only at a point we know for sure the binding is attached.
+        firstDownloadElement._shell.ensureActive();
+        Services.tm.mainThread.dispatch(function() {
+          this._richlistbox.selectedItem = firstDownloadElement;
+          this._richlistbox.currentItem = firstDownloadElement;
+          this._initiallySelectedElement = firstDownloadElement;
+        }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+      }
+    }
   },
 
   onDataLoadStarting: function() { },
-  onDataLoadCompleted: function() { },
+  onDataLoadCompleted: function DPV_onDataLoadCompleted() {
+    this._ensureInitialSelection();
+  },
 
   onDataItemAdded: function DPV_onDataItemAdded(aDataItem, aNewest) {
     this._addDownloadData(aDataItem, null, aNewest);
@@ -1345,6 +1375,12 @@ DownloadsPlacesView.prototype = {
     this._ensureVisibleElementsAreActive();
   }
 };
+
+for (let methodName of ["load", "applyFilter", "selectNode", "selectItems"]) {
+  DownloadsPlacesView.prototype[methodName] = function() {
+    throw new Error("|" + methodName + "| is not implemented by the downloads view.");
+  }
+}
 
 function goUpdateDownloadCommands() {
   for (let command of DOWNLOAD_VIEW_SUPPORTED_COMMANDS) {
