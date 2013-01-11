@@ -8,7 +8,7 @@
 interface nsIDOMDOMRequest;
 interface nsIDOMDOMError;
 
-[scriptable, uuid(84524e5f-c4ab-4dce-8364-4aac71851ff1)]
+[scriptable, uuid(d89870fe-5ba3-11e2-a5d2-cfa1d3f6e5f4)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
@@ -84,13 +84,12 @@ interface mozIDOMApplication  : nsISupports
 
   /* startPoint will be used when several launch_path exists for an app */
   nsIDOMDOMRequest launch([optional] in DOMString startPoint);
-  nsIDOMDOMRequest uninstall();
 
   /* Clear data that has been collected through mozbrowser elements. */
   void clearBrowserData();
 };
 
-[scriptable, uuid(0015d114-70c1-44ae-a8a3-fb6c107fe0e1)]
+[scriptable, uuid(cf742022-5ba3-11e2-868f-03310341b006)]
 interface mozIDOMApplicationMgmt : nsISupports
 {
   /**
@@ -125,6 +124,15 @@ interface mozIDOMApplicationMgmt : nsISupports
    * |readyToApplyDownload| set to true.
    */
   void applyDownload(in mozIDOMApplication app);
+
+  /**
+   * Uninstall a web app.
+   *
+   * @param app : the app object of the web app to be uninstalled.
+   * @returns   : A DOMRequest object, returning the app's origin in |result|
+   *              if uninstall succeeds; returning "NOT_INSTALLED" error otherwise.
+   */
+  nsIDOMDOMRequest uninstall(in mozIDOMApplication app);
 };
 
 [scriptable, uuid(abfc6c15-8b92-4b9a-b892-52e6ae76f379)]
