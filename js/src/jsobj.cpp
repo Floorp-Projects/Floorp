@@ -168,10 +168,11 @@ js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, Handl
 }
 
 bool
-js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value *vp)
+js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc,
+                                MutableHandleValue vp)
 {
     if (!desc->obj) {
-        vp->setUndefined();
+        vp.setUndefined();
         return true;
     }
 
@@ -182,7 +183,7 @@ js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, V
     d.initFromPropertyDescriptor(*desc);
     if (!d.makeObject(cx))
         return false;
-    *vp = d.pd();
+    vp.set(d.pd());
     return true;
 }
 
@@ -297,7 +298,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Mutab
 {
     AutoPropertyDescriptorRooter desc(cx);
     return GetOwnPropertyDescriptor(cx, obj, id, &desc) &&
-           NewPropertyDescriptorObject(cx, &desc, vp.address());
+           NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
 bool
