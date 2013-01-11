@@ -1353,7 +1353,7 @@ nsHttpChannelAuthProvider::SetAuthorizationHeader(nsHttpAuthCache    *authCache,
             if (nsCRT::strcmp(ident.User(), entry->User()) == 0) {
                 uint32_t loadFlags;
                 if (NS_SUCCEEDED(mAuthChannel->GetLoadFlags(&loadFlags)) &&
-                    !(loadFlags && nsIChannel::LOAD_EXPLICIT_CREDENTIALS)) {
+                    !(loadFlags & nsIChannel::LOAD_EXPLICIT_CREDENTIALS)) {
                     ident.Clear();
                 }
             }
