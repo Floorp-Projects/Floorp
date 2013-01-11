@@ -1545,7 +1545,7 @@ JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
 {
     if (JS_UNLIKELY(obj->watched())) {
         RootedId id(cx);
-        if (!IndexToId(cx, index, id.address()))
+        if (!IndexToId(cx, index, &id))
             return false;
 
         WatchpointMap *wpmap = cx->compartment->watchpointMap;
@@ -2896,7 +2896,7 @@ baseops::DefineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleVa
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
 
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, 0, 0);
@@ -3174,7 +3174,7 @@ baseops::LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                        MutableHandleObject objp, MutableHandleShape propp)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
 
     return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
@@ -3430,7 +3430,7 @@ JSBool
 baseops::GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
                     MutableHandleValue vp)
 {
-    jsid id;
+    RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
 
@@ -3772,7 +3772,7 @@ baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver
                           unsigned defineHow, MutableHandleValue vp, JSBool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return baseops::SetPropertyHelper(cx, obj, receiver, id, defineHow, vp, strict);
 }
@@ -3895,7 +3895,7 @@ baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index,
                        MutableHandleValue rval, JSBool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return baseops::DeleteGeneric(cx, obj, id, rval, strict);
 }
