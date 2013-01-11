@@ -127,6 +127,10 @@ richlistitem.download:hover[selected] > .downloadButton.downloadRetry:active {
   .downloadButton {
     list-style-image: url("chrome://browser/skin/downloads/buttons@2x.png");
   }
+  .downloadButton > .button-box > .button-icon {
+    width: 16px;
+    height: 16px;
+  }
 
   .downloadButton.downloadCancel {
      -moz-image-region: rect(0px, 32px, 32px, 0px);
