@@ -278,6 +278,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
         return false;
     }
 
+    /*
+     * Use sparse indexes for watched objects, as dense elements can be written
+     * to without checking the watchpoint map.
+     */
+    if (!JSObject::sparsifyDenseElements(cx, obj))
+        return false;
+
     types::MarkTypePropertyConfigured(cx, obj, propid);
 
     WatchpointMap *wpmap = cx->compartment->watchpointMap;

@@ -372,8 +372,8 @@ enum {
         OBJECT_FLAG_PROPERTY_COUNT_MASK >> OBJECT_FLAG_PROPERTY_COUNT_SHIFT,
 
     /*
-     * Some objects are not dense arrays, or are dense arrays whose length
-     * property does not fit in an int32_t.
+     * Whether any objects this represents are not arrays, are arrays whose
+     * length does not fit in an int32_t, or are arrays with sparse indexes.
      */
     OBJECT_FLAG_NON_DENSE_ARRAY       = 0x00010000,
 

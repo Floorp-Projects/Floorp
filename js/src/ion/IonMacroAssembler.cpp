@@ -339,8 +339,8 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
     storePtr(ImmGCPtr(templateObject->type()), Address(obj, JSObject::offsetOfType()));
     storePtr(ImmWord((void *)NULL), Address(obj, JSObject::offsetOfSlots()));
 
-    if (templateObject->isDenseArray()) {
-        JS_ASSERT(!templateObject->getDenseArrayInitializedLength());
+    if (templateObject->isArray()) {
+        JS_ASSERT(!templateObject->getDenseInitializedLength());
 
         int elementsOffset = JSObject::offsetOfFixedElements();
 
@@ -349,9 +349,9 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
         addPtr(Imm32(-elementsOffset), obj);
 
         // Fill in the elements header.
-        store32(Imm32(templateObject->getDenseArrayCapacity()),
+        store32(Imm32(templateObject->getDenseCapacity()),
                 Address(obj, elementsOffset + ObjectElements::offsetOfCapacity()));
-        store32(Imm32(templateObject->getDenseArrayInitializedLength()),
+        store32(Imm32(templateObject->getDenseInitializedLength()),
                 Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
         store32(Imm32(templateObject->getArrayLength()),
                 Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
