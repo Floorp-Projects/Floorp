@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -278,8 +277,13 @@ Shape::getUserId(JSContext *cx, jsid *idp) const
 #endif
     if (self->hasShortID()) {
         int16_t id = self->shortid();
-        if (id < 0)
-            return ValueToId(cx, Int32Value(id), idp);
+        if (id < 0) {
+            RootedId rootedId(cx);
+            if (!ValueToId(cx, Int32Value(id), &rootedId))
+                return false;
+            *idp = rootedId;
+            return true;
+        }
         *idp = INT_TO_JSID(id);
     } else {
         *idp = self->propid();

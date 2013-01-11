@@ -109,7 +109,7 @@ ReportObjectRequired(JSContext *cx)
 bool
 ValueToIdentifier(JSContext *cx, const Value &v, MutableHandleId id)
 {
-    if (!ValueToId(cx, v, id.address()))
+    if (!ValueToId(cx, v, id))
         return false;
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
@@ -3043,7 +3043,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
                 RootedId id(cx);
                 offsets = NewDenseEmptyArray(cx);
                 if (!offsets ||
-                    !ValueToId(cx, NumberValue(lineno), id.address()))
+                    !ValueToId(cx, NumberValue(lineno), &id))
                 {
                     return false;
                 }
@@ -4098,7 +4098,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
 
     RootedId id(cx);
-    if (!ValueToId(cx, argc >= 1 ? args[0] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, argc >= 1 ? args[0] : UndefinedValue(), &id))
         return false;
 
     /* Bug: This can cause the debuggee to run! */
@@ -4189,7 +4189,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Object.defineProperty", 2);
 
     RootedId id(cx);
-    if (!ValueToId(cx, args[0], id.address()))
+    if (!ValueToId(cx, args[0], &id))
         return false;
 
     const Value &descval = args[1];
