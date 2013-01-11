@@ -399,11 +399,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(imm, ScratchReg);
         addq(ScratchReg, dest);
     }
+    void addPtr(const Address &src, const Register &dest) {
+        addq(Operand(src), dest);
+    }
     void subPtr(Imm32 imm, const Register &dest) {
         subq(imm, dest);
     }
     void subPtr(const Register &src, const Register &dest) {
         subq(src, dest);
+    }
+    void subPtr(const Address &addr, const Register &dest) {
+        subq(Operand(addr), dest);
     }
 
     // Specialization for AbsoluteAddress.
@@ -491,8 +497,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void lshiftPtr(Imm32 imm, Register dest) {
         shlq(imm, dest);
     }
+    void xorPtr(Imm32 imm, Register dest) {
+        xorq(imm, dest);
+    }
     void orPtr(Imm32 imm, Register dest) {
         orq(imm, dest);
+    }
+    void andPtr(Imm32 imm, Register dest) {
+        andq(imm, dest);
     }
 
     void splitTag(Register src, Register dest) {
