@@ -541,7 +541,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
             Maybe<AutoCompartment> ac;
             ac.construct(cx, dbg->object);
 
-            Value completion;
+            RootedValue completion(cx);
             if (!dbg->newCompletionValue(cx, status, value, &completion)) {
                 status = dbg->handleUncaughtException(ac, NULL, false);
                 break;
@@ -549,7 +549,8 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
 
             /* Call the onPop handler. */
             Value rval;
-            bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, &completion, &rval);
+            bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
+                                 &rval);
             Value nextValue;
             JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
 
@@ -776,7 +777,8 @@ Debugger::resultToCompletion(JSContext *cx, bool ok, const Value &rv,
 }
 
 bool
-Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_, Value *result)
+Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
+                             MutableHandleValue result)
 {
     /*
      * We must be in the debugger's compartment, since that's where we want
@@ -797,7 +799,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_, V
         break;
 
       case JSTRAP_ERROR:
-        result->setNull();
+        result.setNull();
         return true;
 
       default:
@@ -814,12 +816,13 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_, V
         return false;
     }
 
-    result->setObject(*obj);
+    result.setObject(*obj);
     return true;
 }
 
 bool
-Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val, Value *vp)
+Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val,
+                                 MutableHandleValue vp)
 {
     JSContext *cx = ac.ref().context();
 
@@ -3765,7 +3768,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
     JS::Anchor<JSString *> anchor(stable);
     bool ok = EvaluateInEnv(cx, env, thisv, fp, stable->chars(), stable->length(),
                             "debugger eval code", 1, &rval);
-    return dbg->receiveCompletionValue(ac, ok, rval, vp.address());
+    return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
 static JSBool
@@ -4460,7 +4463,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      */
     Value rval;
     bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
-    return dbg->receiveCompletionValue(ac, ok, rval, args.rval().address());
+    return dbg->receiveCompletionValue(ac, ok, rval, args.rval());
 }
 
 static JSBool
