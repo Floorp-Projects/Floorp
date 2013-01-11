@@ -8,8 +8,8 @@
 #include "mozilla/dom/SVGMPathElement.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
-#include "nsSVGPathElement.h"
 #include "mozilla/dom/SVGAnimateMotionElement.h"
+#include "mozilla/dom/SVGPathElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGMPathElementBinding.h"
 
@@ -203,7 +203,7 @@ SVGMPathElement::AttributeChanged(nsIDocument* aDocument,
 //----------------------------------------------------------------------
 // Public helper methods
 
-nsSVGPathElement*
+SVGPathElement*
 SVGMPathElement::GetReferencedPath()
 {
   if (!HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
@@ -215,7 +215,7 @@ SVGMPathElement::GetReferencedPath()
 
   nsIContent* genericTarget = mHrefTarget.get();
   if (genericTarget && genericTarget->IsSVG(nsGkAtoms::path)) {
-    return static_cast<nsSVGPathElement*>(genericTarget);
+    return static_cast<SVGPathElement*>(genericTarget);
   }
   return nullptr;
 }
