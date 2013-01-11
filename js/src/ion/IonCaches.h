@@ -94,7 +94,8 @@ class IonCache
     Kind kind_ : 8;
     bool pure_ : 1;
     bool idempotent_ : 1;
-    size_t stubCount_ : 6;
+    bool disabled_ : 1;
+    size_t stubCount_ : 5;
 
     CodeLocationJump initialJump_;
     CodeLocationJump lastJump_;
@@ -166,6 +167,12 @@ class IonCache
     IonCache() { PodZero(this); }
 
     void updateBaseAddress(IonCode *code, MacroAssembler &masm);
+
+    // disable the IC.
+    void disable();
+    inline bool isDisabled() const {
+        return disabled_;
+    }
     
     // Reset the cache around garbage collection.
     void reset();

@@ -1032,6 +1032,13 @@ IonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
 }
 
 void
+IonCache::disable()
+{
+    reset();
+    this->disabled_ = 1;
+}
+
+void
 IonCache::reset()
 {
     PatchJump(initialJump_, cacheLabel_);
@@ -1691,19 +1698,28 @@ bool
 js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
                          MutableHandleValue res)
 {
-    AutoFlushCache afc ("GetElementCache");
-
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
-
     IonCacheGetElement &cache = ion->getCache(cacheIndex).toGetElement();
+    RootedScript script(cx);
+    jsbytecode *pc;
+    cache.getScriptedLocation(&script, &pc);
+    RootedValue lval(cx, ObjectValue(*obj));
+ 
+    if (cache.isDisabled()) {
+        if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
+            return false;
+        return true;
+    }
 
     // Override the return value if we are invalidated (bug 728188).
+    AutoFlushCache afc ("GetElementCache");
     AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
     if (!FetchElementId(cx, obj, idval, &id, res))
         return false;
 
+    bool attachedStub = false;
     if (cache.stubCount() < MAX_STUBS) {
         if (obj->isNative() && cache.monitoredResult()) {
             cache.incrementStubCount();
@@ -1712,6 +1728,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
                 if (!cache.attachGetProp(cx, ion, obj, idval, JSID_TO_ATOM(id)->asPropertyName()))
                     return false;
+                attachedStub = true;
             }
         } else if (!cache.hasDenseStub() && obj->isNative() && idval.isInt32()) {
             // Generate at most one dense array stub.
@@ -1719,16 +1736,17 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
 
             if (!cache.attachDenseElement(cx, ion, obj, idval))
                 return false;
+            attachedStub = true;
         }
     }
 
-    RootedScript script(cx);
-    jsbytecode *pc;
-    cache.getScriptedLocation(&script, &pc);
-
-    RootedValue lval(cx, ObjectValue(*obj));
     if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
         return false;
+
+    // If no new attach was done, and we've reached maximum number of stubs, then
+    // disable the cache.
+    if (!attachedStub && cache.stubCount() >= MAX_STUBS)
+        cache.disable();
 
     types::TypeScript::Monitor(cx, script, pc, res);
     return true;
