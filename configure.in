@@ -8719,6 +8719,15 @@ if test "$MOZ_TELEMETRY_REPORTING"; then
     fi
 fi
 
+dnl If we have any service that uploads data (and requires data submission
+dnl policy alert), set MOZ_DATA_REPORTING.
+dnl We need SUBST for build system and DEFINE for xul preprocessor.
+if test -n "$MOZ_TELEMETRY_REPORTING" || test -n "$MOZ_SERVICES_HEALTHREPORT" || test -n "MOZ_CRASHREPORTER"; then
+  MOZ_DATA_REPORTING=1
+  AC_DEFINE(MOZ_DATA_REPORTING)
+  AC_SUBST(MOZ_DATA_REPORTING)
+fi
+
 dnl win32 options
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
