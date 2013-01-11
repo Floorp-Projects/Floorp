@@ -248,11 +248,6 @@ Toolbox.prototype = {
       let domReady = function() {
         iframe.removeEventListener("DOMContentLoaded", domReady, true);
 
-        let vbox = this.doc.getElementById("toolbox-panel-" + this._currentToolId);
-        if (vbox) {
-          this.doc.commandDispatcher.advanceFocusIntoSubtree(vbox);
-        }
-
         this.isReady = true;
 
         let closeButton = this.doc.getElementById("toolbox-close");

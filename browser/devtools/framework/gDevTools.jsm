@@ -25,8 +25,8 @@ const FORBIDDEN_IDS = new Set("toolbox", "");
  * set of tools and keeps track of open toolboxes in the browser.
  */
 this.DevTools = function DevTools() {
-  this._tools = new Map();
-  this._toolboxes = new Map();
+  this._tools = new Map();     // Map<toolId, tool>
+  this._toolboxes = new Map(); // Map<target, toolbox>
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
@@ -85,11 +85,16 @@ DevTools.prototype = {
    *
    * @param {string} toolId
    *        id of the tool to unregister
+   * @param {boolean} isQuitApplication
+   *        true to indicate that the call is due to app quit, so we should not
+   *        cause a cascade of costly events
    */
-  unregisterTool: function DT_unregisterTool(toolId) {
+  unregisterTool: function DT_unregisterTool(toolId, isQuitApplication) {
     this._tools.delete(toolId);
 
-    this.emit("tool-unregistered", toolId);
+    if (!isQuitApplication) {
+      this.emit("tool-unregistered", toolId);
+    }
   },
 
   /**
@@ -218,8 +223,13 @@ DevTools.prototype = {
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
 
-    delete this._trackedBrowserWindows;
-    delete this._toolboxes;
+    for (let [key, tool] of this._tools) {
+      this.unregisterTool(key, true);
+    }
+
+    // Cleaning down the toolboxes: i.e.
+    //   for (let [target, toolbox] of this._toolboxes) toolbox.destroy();
+    // Is taken care of by the gDevToolsBrowser.forgetBrowserWindow
   },
 };
 
@@ -534,10 +544,6 @@ let gDevToolsBrowser = {
    *         The window containing the menu entry
    */
   forgetBrowserWindow: function DT_forgetBrowserWindow(win) {
-    if (!gDevToolsBrowser._trackedBrowserWindows) {
-      return;
-    }
-
     gDevToolsBrowser._trackedBrowserWindows.delete(win);
 
     // Destroy toolboxes for closed window
@@ -557,7 +563,6 @@ let gDevToolsBrowser = {
    */
   destroy: function() {
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
-    delete gDevToolsBrowser._trackedBrowserWindows;
   },
 }
 this.gDevToolsBrowser = gDevToolsBrowser;
