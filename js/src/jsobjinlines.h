@@ -1631,14 +1631,15 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
 }
 
 static JS_ALWAYS_INLINE bool
-ValueIsSpecial(JSObject *obj, MutableHandleValue propval, SpecialId *sidp, JSContext *cx)
+ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialId> sidp,
+               JSContext *cx)
 {
 #if JS_HAS_XML_SUPPORT
     if (!propval.isObject())
         return false;
 
     if (obj->isXML()) {
-        *sidp = SpecialId(propval.toObject());
+        sidp.set(SpecialId(propval.toObject()));
         return true;
     }
 

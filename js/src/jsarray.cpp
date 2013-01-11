@@ -791,7 +791,7 @@ array_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleI
         return array_getElement(cx, obj, receiver, index, vp);
 
     Rooted<SpecialId> sid(cx);
-    if (ValueIsSpecial(obj, &idval, sid.address(), cx))
+    if (ValueIsSpecial(obj, &idval, &sid, cx))
         return array_getSpecial(cx, obj, receiver, sid, vp);
 
     JSAtom *atom = ToAtom(cx, idval);
