@@ -106,10 +106,9 @@ ReportObjectRequired(JSContext *cx)
 }
 
 bool
-ValueToIdentifier(JSContext *cx, const Value &v, jsid *idp)
+ValueToIdentifier(JSContext *cx, const Value &v, MutableHandleId id)
 {
-    jsid id;
-    if (!ValueToId(cx, v, &id))
+    if (!ValueToId(cx, v, id.address()))
         return false;
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
@@ -117,7 +116,6 @@ ValueToIdentifier(JSContext *cx, const Value &v, jsid *idp)
                                  JSDVG_SEARCH_STACK, val, NullPtr(), "not an identifier", NULL);
         return false;
     }
-    *idp = id;
     return true;
 }
 
@@ -4802,7 +4800,7 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGENV_OWNER(cx, argc, vp, "find", args, envobj, env, dbg);
 
     RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], id.address()))
+    if (!ValueToIdentifier(cx, args[0], &id))
         return false;
 
     {
@@ -4833,7 +4831,7 @@ DebuggerEnv_getVariable(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGENV_OWNER(cx, argc, vp, "getVariable", args, envobj, env, dbg);
 
     RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], id.address()))
+    if (!ValueToIdentifier(cx, args[0], &id))
         return false;
 
     RootedValue v(cx);
@@ -4862,7 +4860,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGENV_OWNER(cx, argc, vp, "setVariable", args, envobj, env, dbg);
 
     RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], id.address()))
+    if (!ValueToIdentifier(cx, args[0], &id))
         return false;
 
     RootedValue v(cx, args[1]);
