@@ -1423,7 +1423,7 @@ IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHan
 
 static bool
 IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject holder,
-                               jsid id, HandleShape shape)
+                               HandleShape shape)
 {
     if (!shape)
         return false;
@@ -1446,7 +1446,7 @@ IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject hol
 }
 
 static bool
-IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSlots,
+IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t oldSlots,
                         MutableHandleShape pShape)
 {
     // This is not a Add, the property exists.
@@ -1523,7 +1523,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
             if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
                 return false;
 
-            if (IsPropertySetterCallInlineable(cx, obj, holder, id, shape)) {
+            if (IsPropertySetterCallInlineable(cx, obj, holder, shape)) {
                 cache.incrementStubCount();
                 if (!cache.attachSetterCall(cx, ion, obj, holder, shape, returnAddr))
                     return false;
