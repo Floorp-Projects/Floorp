@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=413958
+-->
+<head>
+  <title>Test for Bug 413958</title>
+  <meta charset="UTF-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<style>span { color: red }</style><!-- backstop -->
+<p><a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=413958"
+      >Mozilla Bug 413958</a>. All text below should be black on white.</p>
+<p>Sheet: <span id="s1">1</span>
+          <span id="s2">2</span>
+          <span id="s3">3</span>.
+   Style attr: <span id="setStyle">4</span>.
+   Properties: <span id="setStyleProp" style="">5</span>.</p>
+<script>
+var tests = [
+  function() {
+    var s = document.createTextNode(
+"#s1{nosuchprop:auto; color:black}\n"+
+"#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}"),
+        e = document.createElement("style");
+    e.appendChild(s);
+    document.body.appendChild(e);
+  },
+  function() {
+    document.getElementById("setStyle")
+            .setAttribute("style", "width:200;color:black");
+  },
+  function() {
+    var s = document.getElementById("setStyleProp").style;
+    s.width = "200";
+    s.color = "black";
+  },
+];
+var results = [
+  [ { errorMessage: /Unknown property 'nosuchprop'/,
+      lineNumber: 1, columnNumber: 15,
+      sourceLine: "#s1{nosuchprop:auto; color:black}" },
+    { errorMessage: /Unknown property 'nosuchprop'/,
+      lineNumber: 2, columnNumber: 15, sourceLine:
+      "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" },
+    { errorMessage: /Ruleset ignored due to bad selector/,
+      lineNumber: 2, columnNumber: 41, sourceLine:
+      "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" } ],
+  [ { errorMessage: /parsing value for 'width'/,
+      lineNumber: 0, columnNumber: 7,
+      sourceLine: "width:200;color:black" } ],
+  [ { errorMessage: /parsing value for 'width'/,
+      lineNumber: 0, columnNumber: 0,
+      sourceLine: "200" } ],
+];
+var curTest = -1;
+
+function doTest() {
+  if (++curTest == tests.length) {
+    var ss = document.getElementsByTagName("span");
+    for (var i = 0; i < ss.length; i++) {
+      is(window.getComputedStyle(ss[i], "").color, "rgb(0, 0, 0)",
+         "recovery | " + ss[i].id);
+    }
+    SimpleTest.finish();
+  } else {
+    SimpleTest.expectConsoleMessages(tests[curTest], results[curTest], doTest);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+doTest();
+</script>
+</body>
+</html>
