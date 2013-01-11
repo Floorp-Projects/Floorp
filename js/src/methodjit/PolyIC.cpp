@@ -1393,7 +1393,7 @@ class GetPropCompiler : public PICStubCompiler
             if (shape->hasGetterValue()) {
                 generateNativeGetterStub(masm, shape, start, shapeMismatches);
             } else {
-                jsid userid;
+                RootedId userid(cx);
                 if (!shape->getUserId(cx, &userid))
                     return error();
                 generateGetterStub(masm, shape, userid, start, shapeMismatches);
