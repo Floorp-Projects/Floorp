@@ -4,9 +4,9 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+let Cu = Components.utils;
+let Cc = Components.classes;
+let Ci = Components.interfaces;
 
 function debug(aMsg) {
   /*
