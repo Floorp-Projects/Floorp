@@ -197,12 +197,13 @@ public:
     /* The Gecko crash reporter is confused by adjacent memory mappings of
      * the same file. On Android, subsequent mappings are growing in memory
      * address, and chances are we're going to map from the same file
-     * descriptor right away. Allocate one page more than requested so that
-     * there is a gap between this mapping and the subsequent one. */
+     * descriptor right away. To avoid problems with the crash reporter,
+     * create an empty anonymous page after the ashmem mapping. To do so,
+     * allocate one page more than requested, then replace the last page with
+     * an anonymous mapping. */
     void *buf = ::mmap(NULL, length + PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (buf != MAP_FAILED) {
-      /* Actually create the gap with anonymous memory */
-      ::mmap(reinterpret_cast<char *>(buf) + ((length + PAGE_SIZE) & PAGE_MASK),
+      ::mmap(reinterpret_cast<char *>(buf) + ((length + PAGE_SIZE - 1) & PAGE_MASK),
              PAGE_SIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
              -1, 0);
       debug("Decompression buffer of size %d in ashmem \"%s\", mapped @%p",
@@ -248,7 +249,7 @@ public:
 #ifdef ANDROID
   ~_MappableBuffer() {
     /* Free the additional page we allocated. See _MappableBuffer::Create */
-    ::munmap(*this + ((GetLength() + PAGE_SIZE) & ~(PAGE_SIZE - 1)), PAGE_SIZE);
+    ::munmap(*this + ((GetLength() + PAGE_SIZE - 1) & PAGE_MASK), PAGE_SIZE);
   }
 #endif
 

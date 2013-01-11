@@ -817,26 +817,17 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
     }
   }
 
+  nsIntSize size = frame->GetSubdocumentSize();
+  if (mRemoteFrame) {
+    return ShowRemoteFrame(size, frame);
+  }
+
   nsView* view = frame->EnsureInnerView();
   if (!view)
     return false;
 
-  if (mRemoteFrame) {
-    return ShowRemoteFrame(GetSubDocumentSize(frame));
-  }
-
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
   NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
-  nsIntSize size;
-  if (!(frame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    // We have a useful size already; use it, since we might get no
-    // more size updates.
-    size = GetSubDocumentSize(frame);
-  } else {
-    // Pick some default size for now.  Using 10x10 because that's what the
-    // code here used to do.
-    size.SizeTo(10, 10);
-  }
   baseWindow->InitWindow(nullptr, view->GetWidget(), 0, 0,
                          size.width, size.height);
   // This is kinda whacky, this "Create()" call doesn't really
@@ -921,7 +912,8 @@ nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
 }
 
 bool
-nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
+nsFrameLoader::ShowRemoteFrame(const nsIntSize& size,
+                               nsSubDocumentFrame *aFrame)
 {
   NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
 
@@ -964,7 +956,11 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
   } else {
     nsRect dimensions;
     NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), false);
-    mRemoteBrowser->UpdateDimensions(dimensions, size);
+
+    // Don't show remote iframe if we are waiting for the completion of reflow.
+    if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
+    }
   }
 
   return true;
@@ -1836,11 +1832,11 @@ nsFrameLoader::GetWindowDimensions(nsRect& aRect)
 }
 
 NS_IMETHODIMP
-nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
+nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
 {
   if (mRemoteFrame) {
     if (mRemoteBrowser) {
-      nsIntSize size = GetSubDocumentSize(aIFrame);
+      nsIntSize size = aIFrame->GetSubdocumentSize();
       nsRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
       mRemoteBrowser->UpdateDimensions(dimensions, size);
@@ -1851,7 +1847,7 @@ nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
 }
 
 nsresult
-nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
+nsFrameLoader::UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame)
 {
   nsCOMPtr<nsIDocShell> docShell;
   GetDocShell(getter_AddRefs(docShell));
@@ -1871,7 +1867,7 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
       return NS_OK;
     }
 
-    nsIntSize size = GetSubDocumentSize(aIFrame);
+    nsIntSize size = aIFrame->GetSubdocumentSize();
 
     baseWindow->SetPositionAndSize(x, y, size.width, size.height, false);
   }
@@ -1973,22 +1969,6 @@ nsFrameLoader::SetClampScrollPosition(bool aClamp)
     }
   }
   return NS_OK;
-}
-
-nsIntSize
-nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
-{
-  nsSize docSizeAppUnits;
-  nsPresContext* presContext = aIFrame->PresContext();
-  nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = 
-    do_QueryInterface(aIFrame->GetContent());
-  if (frameElem) {
-    docSizeAppUnits = aIFrame->GetSize();
-  } else {
-    docSizeAppUnits = aIFrame->GetContentRect().Size();
-  }
-  return nsIntSize(presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
-                   presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
 }
 
 bool

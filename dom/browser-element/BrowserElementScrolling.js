@@ -233,10 +233,19 @@ const ContentPanning = {
     }
 
     let isPan = KineticPanning.isPan();
+    if (!isPan) {
+      // If panning distance is not large enough, both BES and APZC
+      // should not perform scrolling
+      evt.preventDefault();
+      return;
+    }
+
+    let isScroll = this.scrollCallback(delta.scale(-1));
+
     if (this.detectingScrolling) {
       this.detectingScrolling = false;
       // Stop async-pan-zooming if the user is panning the subframe.
-      if (isPan) {
+      if (isScroll) {
         // We're going to drive synchronously scrolling an inner frame.
         Services.obs.notifyObservers(docShell, 'cancel-default-pan-zoom', null);
       } else {
@@ -245,8 +254,6 @@ const ContentPanning = {
         return;
       }
     }
-
-    this.scrollCallback(delta.scale(-1));
 
     // If a pan action happens, cancel the active state of the
     // current target.
