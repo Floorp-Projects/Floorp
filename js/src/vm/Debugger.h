@@ -471,7 +471,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * and |value|. |value| should be the return value or exception value, not
      * wrapped as a debuggee value. |cx| must be in the debugger compartment.
      */
-    bool newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result);
+    bool newCompletionValue(JSContext *cx, JSTrapStatus status, Value value,
+                            MutableHandleValue result);
 
     /*
      * Precondition: we are in the debuggee compartment (ac is entered) and ok
@@ -485,7 +486,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * pending exception. (This ordinarily returns true even if the ok argument
      * is false.)
      */
-    bool receiveCompletionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok, Value val, Value *vp);
+    bool receiveCompletionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok, Value val,
+                                MutableHandleValue vp);
 
     /*
      * Return the Debugger.Script object for |script|, or create a new one if
