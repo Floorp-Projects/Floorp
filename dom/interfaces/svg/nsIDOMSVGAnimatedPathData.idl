@@ -9,8 +9,8 @@
 interface nsIDOMSVGAnimatedPathData : nsISupports
 {
   readonly attribute nsISupports   pathSegList;
-  readonly attribute nsISupports   normalizedPathSegList;
+  // readonly attribute nsISupports   normalizedPathSegList;
   readonly attribute nsISupports   animatedPathSegList;
-  readonly attribute nsISupports   animatedNormalizedPathSegList;
+  // readonly attribute nsISupports   animatedNormalizedPathSegList;
 };
 

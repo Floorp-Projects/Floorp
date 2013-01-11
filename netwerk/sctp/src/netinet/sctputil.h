@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 237715 2012-06-28 16:01:08Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 243186 2012-11-17 20:04:04Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UTIL_H_
@@ -338,16 +338,9 @@ do { \
 } while (0)
 
 /* functions to start/stop udp tunneling */
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
 void sctp_over_udp_stop(void);
 int sctp_over_udp_start(void);
-#endif
-#if defined(__FreeBSD__)
-/* XXX: Remove the #ifdef after tunneling over IPv6 works also on FreeBSD. */
-#ifdef INET
-void sctp_over_udp_stop(void);
-int sctp_over_udp_start(void);
-#endif
 #endif
 #if defined(__Windows__)
 void sctp_over_udp_restart(void);

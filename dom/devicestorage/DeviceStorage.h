@@ -10,6 +10,7 @@
 #include "nsIPrincipal.h"
 #include "nsIObserver.h"
 #include "nsDOMEventTargetHelper.h"
+#include "mozilla/StaticPtr.h"
 
 class DeviceStorageFile MOZ_FINAL
   : public nsISupports {
@@ -41,6 +42,18 @@ public:
 private:
   void NormalizeFilePath();
   void AppendRelativePath();
+};
+
+class FileUpdateDispatcher MOZ_FINAL
+  : public nsIObserver
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static FileUpdateDispatcher* GetSingleton();
+ private:
+  static mozilla::StaticRefPtr<FileUpdateDispatcher> sSingleton;
 };
 
 class nsDOMDeviceStorage MOZ_FINAL

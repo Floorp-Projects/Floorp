@@ -10,11 +10,13 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsEditor.h"                   // for nsEditor
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
+#include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
-#include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIEditor.h"                  // for nsEditor::DebugDumpContent, etc
 #include "nsISelection.h"               // for nsISelection
 #include "nsISupportsUtils.h"           // for NS_ADDREF
+
+using namespace mozilla;
 
 #ifdef DEBUG
 static bool gNoisy = false;
@@ -45,7 +47,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitElementTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
-                                    nsIDOMNode *aNode,
+                                    nsINode    *aNode,
                                     int32_t     aOffset)
 {
   NS_ASSERTION(aEditor && aNode, "bad args");
@@ -73,9 +75,10 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
   if (!mExistingRightNode || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
   // create a new node
-  nsresult result = mExistingRightNode->CloneNode(false, 1, getter_AddRefs(mNewLeftNode));
-  NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
-  NS_ENSURE_SUCCESS(result, result);
+  ErrorResult rv;
+  mNewLeftNode = mExistingRightNode->CloneNode(false, rv);
+  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ASSERTION(mNewLeftNode, "could not create element.");
   NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NULL_POINTER);
   mEditor->MarkNodeDirty(mExistingRightNode);
 
@@ -88,12 +91,15 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 #endif
 
   // get the parent node
-  result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
-  NS_ENSURE_SUCCESS(result, result);
+  mParent = mExistingRightNode->GetParentNode();
   NS_ENSURE_TRUE(mParent, NS_ERROR_NULL_POINTER);
 
   // insert the new node
-  result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  nsresult result = mEditor->SplitNodeImpl(mExistingRightNode->AsDOMNode(),
+                                           mOffset,
+                                           mNewLeftNode->AsDOMNode(),
+                                           mParent->AsDOMNode());
+  NS_ENSURE_SUCCESS(result, result);
   if (mNewLeftNode) {
     bool bAdjustSelection;
     mEditor->ShouldTxnSetSelection(&bAdjustSelection);
@@ -103,7 +109,7 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
       result = mEditor->GetSelection(getter_AddRefs(selection));
       NS_ENSURE_SUCCESS(result, result);
       NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-      result = selection->Collapse(mNewLeftNode, mOffset);
+      result = selection->Collapse(mNewLeftNode->AsDOMNode(), mOffset);
     }
     else
     {
@@ -131,7 +137,10 @@ NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
   }
 
   // this assumes Do inserted the new node in front of the prior existing node
-  nsresult result = mEditor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, false);
+  nsresult result = mEditor->JoinNodesImpl(mExistingRightNode->AsDOMNode(),
+                                           mNewLeftNode->AsDOMNode(),
+                                           mParent->AsDOMNode(),
+                                           false);
 #ifdef DEBUG
   if (gNoisy) 
   { 
@@ -174,13 +183,12 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   }
 #endif
 
-  nsresult result;
-  nsCOMPtr<nsIDOMNode>resultNode;
   // first, massage the existing node so it is in its post-split state
   nsCOMPtr<nsIDOMCharacterData>rightNodeAsText = do_QueryInterface(mExistingRightNode);
   if (rightNodeAsText)
   {
-    result = rightNodeAsText->DeleteData(0, mOffset);
+    nsresult result = rightNodeAsText->DeleteData(0, mOffset);
+    NS_ENSURE_SUCCESS(result, result);
 #ifdef DEBUG
     if (gNoisy) 
     { 
@@ -193,45 +201,43 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   }
   else
   {
-    nsCOMPtr<nsIDOMNode>child;
-    nsCOMPtr<nsIDOMNode>nextSibling;
-    result = mExistingRightNode->GetFirstChild(getter_AddRefs(child));
-    int32_t i;
-    for (i=0; i<mOffset; i++)
+    nsINode* child = mExistingRightNode->GetFirstChild();
+    for (int32_t i=0; i<mOffset; i++)
     {
-      if (NS_FAILED(result)) {return result;}
       if (!child) {return NS_ERROR_NULL_POINTER;}
-      child->GetNextSibling(getter_AddRefs(nextSibling));
-      result = mExistingRightNode->RemoveChild(child, getter_AddRefs(resultNode));
-      if (NS_SUCCEEDED(result)) 
+      ErrorResult rv;
+      mExistingRightNode->RemoveChild(*child, rv);
+      if (NS_SUCCEEDED(rv.ErrorCode()))
       {
-        result = mNewLeftNode->AppendChild(child, getter_AddRefs(resultNode));
+        mNewLeftNode->AppendChild(*child, rv);
+        NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
 #ifdef DEBUG
-        if (gNoisy) 
-        { 
+        if (gNoisy)
+        {
           printf("** move child node %p from right node %p to left node %p\n",
-                 static_cast<void*>(child.get()),
+                 static_cast<void*>(child),
                  static_cast<void*>(mExistingRightNode.get()),
                  static_cast<void*>(mNewLeftNode.get()));
           if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
         }
 #endif
       }
-      child = do_QueryInterface(nextSibling);
+      child = child->GetNextSibling();
     }
   }
-  // second, re-insert the left node into the tree 
-  result = mParent->InsertBefore(mNewLeftNode, mExistingRightNode, getter_AddRefs(resultNode));
+  // second, re-insert the left node into the tree
+  ErrorResult rv;
+  mParent->InsertBefore(*mNewLeftNode, mExistingRightNode, rv);
 #ifdef DEBUG
-  if (gNoisy) 
-  { 
+  if (gNoisy)
+  {
     printf("** reinsert left child node %p before right node %p\n",
            static_cast<void*>(mNewLeftNode.get()),
            static_cast<void*>(mExistingRightNode.get()));
     if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
   }
 #endif
-  return result;
+  return rv.ErrorCode();
 }
 
 
@@ -241,7 +247,7 @@ NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAString& aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP SplitElementTxn::GetNewNode(nsIDOMNode **aNewNode)
+NS_IMETHODIMP SplitElementTxn::GetNewNode(nsINode **aNewNode)
 {
   NS_ENSURE_TRUE(aNewNode, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NOT_INITIALIZED);

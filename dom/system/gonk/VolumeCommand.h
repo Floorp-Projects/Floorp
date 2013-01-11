@@ -59,14 +59,14 @@ public:
   const nsCString  &ResponseStr() const   { return mResponseStr; }
 
 protected:
-  virtual void ResponseReceived(const VolumeCommand *aCommand) = 0;
+  virtual void ResponseReceived(const VolumeCommand* aCommand) = 0;
 
 private:
   friend  class VolumeCommand;  // Calls HandleResponse and SetPending
 
-  void HandleResponse(const VolumeCommand *aCommand,
+  void HandleResponse(const VolumeCommand* aCommand,
                       int aResponseCode,
-                      nsACString &aResponseStr)
+                      nsACString& aResponseStr)
   {
     mResponseCode = aResponseCode;
     mResponseStr = aResponseStr;
@@ -102,14 +102,14 @@ private:
 class VolumeCommand : public RefCounted<VolumeCommand>
 {
 public:
-  VolumeCommand(VolumeResponseCallback *aCallback)
+  VolumeCommand(VolumeResponseCallback* aCallback)
     : mBytesConsumed(0),
       mCallback(aCallback)
   {
     SetCmd(NS_LITERAL_CSTRING(""));
   }
 
-  VolumeCommand(const nsACString &aCommand, VolumeResponseCallback *aCallback)
+  VolumeCommand(const nsACString& aCommand, VolumeResponseCallback* aCallback)
     : mBytesConsumed(0),
       mCallback(aCallback)
   {
@@ -118,7 +118,7 @@ public:
 
   virtual ~VolumeCommand() {}
 
-  void SetCmd(const nsACString &aCommand)
+  void SetCmd(const nsACString& aCommand)
   {
     mCmd = aCommand;
     // Add a null character. We want this to be included in the length since
@@ -126,8 +126,8 @@ public:
     mCmd.Append('\0');
   }
 
-  const char *CmdStr() const    { return mCmd.get(); }
-  const char *Data() const      { return mCmd.Data() + mBytesConsumed; }
+  const char* CmdStr() const    { return mCmd.get(); }
+  const char* Data() const      { return mCmd.Data() + mBytesConsumed; }
   size_t BytesConsumed() const  { return mBytesConsumed; }
 
   size_t BytesRemaining() const
@@ -150,7 +150,7 @@ private:
     }
   }
 
-  void HandleResponse(int aResponseCode, nsACString &aResponseStr)
+  void HandleResponse(int aResponseCode, nsACString& aResponseStr)
   {
     if (mCallback) {
       mCallback->HandleResponse(this, aResponseCode, aResponseStr);
@@ -167,8 +167,8 @@ private:
 class VolumeActionCommand : public VolumeCommand
 {
 public:
-  VolumeActionCommand(Volume *aVolume, const char *aAction,
-                      const char *aExtraArgs, VolumeResponseCallback *aCallback);
+  VolumeActionCommand(Volume* aVolume, const char* aAction,
+                      const char* aExtraArgs, VolumeResponseCallback* aCallback);
 
 private:
   RefPtr<Volume>  mVolume;
@@ -177,7 +177,7 @@ private:
 class VolumeListCommand : public VolumeCommand
 {
 public:
-  VolumeListCommand(VolumeResponseCallback *aCallback);
+  VolumeListCommand(VolumeResponseCallback* aCallback);
 };
 
 } // system

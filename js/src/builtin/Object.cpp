@@ -72,7 +72,7 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 1. */
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return false;
 
     /* Step 2. */
@@ -159,7 +159,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
         int valcnt = 0;
         if (shape) {
             bool doGet = true;
-            if (obj2->isNative()) {
+            if (obj2->isNative() && !IsImplicitProperty(shape)) {
                 unsigned attrs = shape->attributes();
                 if (attrs & JSPROP_GETTER) {
                     doGet = false;
@@ -382,7 +382,7 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedId id(cx);
-    if (!ValueToId(cx, args[0], id.address()))
+    if (!ValueToId(cx, args[0], &id))
         return false;
 
     RootedObject descObj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
@@ -434,7 +434,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return JS_FALSE;
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -456,7 +456,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         return JS_FALSE;
     args.rval().setUndefined();
     if (shape) {
-        if (pobj->isNative()) {
+        if (pobj->isNative() && !IsImplicitProperty(shape)) {
             if (shape->hasGetterValue())
                 args.rval().set(shape->getterValue());
         }
@@ -470,7 +470,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return JS_FALSE;
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -492,7 +492,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         return JS_FALSE;
     args.rval().setUndefined();
     if (shape) {
-        if (pobj->isNative()) {
+        if (pobj->isNative() && !IsImplicitProperty(shape)) {
             if (shape->hasSetterValue())
                 args.rval().set(shape->setterValue());
         }
@@ -575,7 +575,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedId propid(cx);
-    if (!ValueToId(cx, args[0], propid.address()))
+    if (!ValueToId(cx, args[0], &propid))
         return false;
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
@@ -589,8 +589,6 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setUndefined();
 
-    if (obj->isDenseArray() && !JSObject::makeDenseArraySlow(cx, obj))
-        return false;
     return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
@@ -603,7 +601,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
     args.rval().setUndefined();
-    jsid id;
+    RootedId id(cx);
     if (argc != 0) {
         if (!ValueToId(cx, args[0], &id))
             return false;
@@ -623,7 +621,7 @@ obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 1. */
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return false;
 
     /* Step 2. */
@@ -736,13 +734,14 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx);
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
         return JS_FALSE;
     RootedId id(cx);
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() > 1 ? args[1] : UndefinedValue(), &id))
         return JS_FALSE;
-    return GetOwnPropertyDescriptor(cx, obj, id, vp);
+    return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
 
 static JSBool
@@ -828,7 +827,7 @@ obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedId id(cx);
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), &id))
         return JS_FALSE;
 
     const Value descval = argc >= 3 ? vp[4] : UndefinedValue();

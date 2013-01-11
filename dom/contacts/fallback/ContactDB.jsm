@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const STORE_NAME = "contacts";
 
 this.ContactDB = function ContactDB(aGlobal) {
@@ -58,7 +58,6 @@ ContactDB.prototype = {
         objectStore.createIndex("name",       "properties.name",       { unique: false, multiEntry: true });
         objectStore.createIndex("familyName", "properties.familyName", { unique: false, multiEntry: true });
         objectStore.createIndex("givenName",  "properties.givenName",  { unique: false, multiEntry: true });
-        objectStore.createIndex("tel",        "properties.tel",        { unique: false, multiEntry: true });
         objectStore.createIndex("email",      "properties.email",      { unique: false, multiEntry: true });
         objectStore.createIndex("note",       "properties.note",       { unique: false, multiEntry: true });
 
@@ -78,7 +77,9 @@ ContactDB.prototype = {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
         // Delete old tel index.
-        objectStore.deleteIndex("tel");
+        if (objectStore.indexNames.contains("tel")) {
+          objectStore.deleteIndex("tel");
+        }
 
         // Upgrade existing tel field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
@@ -192,6 +193,44 @@ ContactDB.prototype = {
             cursor.continue();
           }
         };
+      } else if (currVersion == 5) {
+        if (DEBUG) debug("Add index for equals tel searches");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        // Delete old tel index (not on the right field).
+        if (objectStore.indexNames.contains("tel")) {
+          objectStore.deleteIndex("tel");
+        }
+
+        // Create new index for "equals" searches
+        objectStore.createIndex("tel", "search.exactTel", { unique: false, multiEntry: true });
+
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.properties.tel) {
+              if (DEBUG) debug("upgrade : " + JSON.stringify(cursor.value));
+              cursor.value.properties.tel.forEach(
+                function(duple) {
+                  let number = duple.value.toString();
+                  let parsedNumber = PhoneNumberUtils.parse(number);
+
+                  cursor.value.search.exactTel = [number];
+                  if (parsedNumber &&
+                      parsedNumber.internationalNumber &&
+                      number !== parsedNumber.internationalNumber) {
+                    cursor.value.search.exactTel.push(parsedNumber.internationalNumber);
+                  }
+                }
+              )
+              cursor.update(cursor.value);
+            }
+            if (DEBUG) debug("upgrade : " + JSON.stringify(cursor.value));
+            cursor.continue();
+          }
+        };
       }
     }
   },
@@ -233,6 +272,7 @@ ContactDB.prototype = {
       email:           [],
       category:        [],
       tel:             [],
+      exactTel:        [],
       org:             [],
       jobTitle:        [],
       note:            [],
@@ -251,6 +291,7 @@ ContactDB.prototype = {
 
               // Chop off the first characters
               let number = aContact.properties[field][i].value;
+              contact.search.exactTel.push(number);
               let search = {};
               if (number) {
                 for (let i = 0; i < number.length; i++) {
@@ -273,6 +314,7 @@ ContactDB.prototype = {
                   debug("NationalFormat: " + parsedNumber.nationalFormat);
                   if (parsedNumber.internationalNumber &&
                       number.toString() !== parsedNumber.internationalNumber) {
+                    contact.search.exactTel.push(parsedNumber.internationalNumber);
                     let digits = parsedNumber.internationalNumber.match(/\d/g);
                     if (digits) {
                       digits = digits.join('');

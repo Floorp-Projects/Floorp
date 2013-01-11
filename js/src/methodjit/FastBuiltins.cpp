@@ -760,7 +760,7 @@ mjit::Compiler::compileArrayWithArgs(uint32_t argc)
         return Compile_Error;
     templateObject->setType(type);
 
-    JS_ASSERT(templateObject->getDenseArrayCapacity() >= argc);
+    JS_ASSERT(templateObject->getDenseCapacity() >= argc);
 
     RegisterID result = frame.allocReg();
     Jump emptyFreeList = getNewObject(cx, result, templateObject);

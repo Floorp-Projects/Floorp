@@ -96,7 +96,7 @@ function onNetworkEventUpdate(aState, aType, aPacket)
       break;
     case "requestCookies":
       expectedPacket = {
-        cookies: 2,
+        cookies: 3,
       };
       break;
     case "requestPostData":
@@ -174,11 +174,12 @@ function onRequestCookies(aState, aResponse)
 {
   info("checking request cookies");
 
-  is(aResponse.cookies.length, 2, "request cookies length");
+  is(aResponse.cookies.length, 3, "request cookies length");
 
   checkHeadersOrCookies(aResponse.cookies, {
     foobar: "fooval",
     omgfoo: "bug768096",
+    badcookie: "bug826798=st3fan",
   });
 
   onRequestPostData = onRequestPostData.bind(null, aState);

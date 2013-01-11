@@ -523,6 +523,7 @@ dictionary Dict : ParentDict {
   DOMString? yetAnotherStr = null;
   DOMString template;
   object someObj;
+  boolean prototype;
   object? anotherObj = null;
   TestCallback? someCallback = null;
 };

@@ -22,5 +22,6 @@ interface nsIDOMSVGElement : nsIDOMElement
   readonly attribute nsIDOMSVGAnimatedString   className;
   readonly attribute nsIDOMCSSStyleDeclaration style;
 
-  nsIDOMCSSValue getPresentationAttribute(in DOMString name);
+  // Not implemented
+  // nsIDOMCSSValue getPresentationAttribute(in DOMString name);
 };

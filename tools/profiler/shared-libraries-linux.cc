@@ -70,7 +70,7 @@ int dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
     if (end > libEnd)
       libEnd = end;
   }
-  SharedLibrary shlib(libStart, libEnd, 0, dl_info->dlpi_name);
+  SharedLibrary shlib(libStart, libEnd, 0, "", dl_info->dlpi_name);
   info.AddSharedLibrary(shlib);
 
   return 0;
@@ -120,7 +120,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     if (strcmp(name, "/dev/ashmem/dalvik-jit-code-cache") != 0)
       continue;
 #endif
-    SharedLibrary shlib(start, end, offset, name);
+    SharedLibrary shlib(start, end, offset, "", name);
     info.AddSharedLibrary(shlib);
     if (count > 10000) {
       LOG("Get maps failed");

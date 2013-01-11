@@ -680,20 +680,7 @@ nsGonkCameraControl::StopPreviewImpl(StopPreviewTask* aStopPreview)
 nsresult
 nsGonkCameraControl::AutoFocusImpl(AutoFocusTask* aAutoFocus)
 {
-  nsMainThreadPtrHandle<nsICameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb;
-  if (cb.get()) {
-    /**
-     * We already have a callback, so someone has already
-     * called autoFocus() -- cancel it.
-     */
-    mAutoFocusOnSuccessCb = nullptr;
-    nsMainThreadPtrHandle<nsICameraErrorCallback> ecb = mAutoFocusOnErrorCb;
-    mAutoFocusOnErrorCb = nullptr;
-    if (ecb.get()) {
-      nsresult rv = NS_DispatchToMainThread(new CameraErrorResult(ecb, NS_LITERAL_STRING("CANCELLED"), mWindowId));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
+  if (aAutoFocus->mCancel) {
     GonkCameraHardware::CancelAutoFocus(mHwHandle);
   }
 
@@ -748,20 +735,7 @@ nsGonkCameraControl::SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHei
 nsresult
 nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
 {
-  nsMainThreadPtrHandle<nsICameraTakePictureCallback> cb = mTakePictureOnSuccessCb;
-  if (cb.get()) {
-    /**
-     * We already have a callback, so someone has already
-     * called TakePicture() -- cancel it.
-     */
-    mTakePictureOnSuccessCb = nullptr;
-    nsMainThreadPtrHandle<nsICameraErrorCallback> ecb = mTakePictureOnErrorCb;
-    mTakePictureOnErrorCb = nullptr;
-    if (ecb.get()) {
-      nsresult rv = NS_DispatchToMainThread(new CameraErrorResult(ecb, NS_LITERAL_STRING("CANCELLED"), mWindowId));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
+  if (aTakePicture->mCancel) {
     GonkCameraHardware::CancelTakePicture(mHwHandle);
   }
 
@@ -916,7 +890,7 @@ public:
     nsString data;
     CopyASCIItoUTF16(mType, data);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(mFile, "file-watcher-update", data.get());
+    obs->NotifyObservers(mFile, "file-watcher-notify", data.get());
     return NS_OK;
   }
 
@@ -1335,7 +1309,7 @@ nsGonkCameraControl::ReleaseHardwareImpl(ReleaseHardwareTask* aReleaseHardware)
   // release the hardware handle
   GonkCameraHardware::ReleaseHandle(mHwHandle, true /* unregister */);
 
-  if (aReleaseHardware && aReleaseHardware->mOnSuccessCb.get()) {
+  if (aReleaseHardware) {
     nsCOMPtr<nsIRunnable> releaseHardwareResult = new ReleaseHardwareResult(aReleaseHardware->mOnSuccessCb, mWindowId);
     return NS_DispatchToMainThread(releaseHardwareResult);
   }

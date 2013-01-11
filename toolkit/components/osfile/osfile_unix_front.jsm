@@ -667,43 +667,15 @@
      File.DirectoryIterator.Entry = function Entry(unix_entry, parent) {
        // Copy the relevant part of |unix_entry| to ensure that
        // our data is not overwritten prematurely.
-       this._d_type = unix_entry.d_type;
-       this._name = unix_entry.d_name.readString();
+       let isDir = unix_entry.d_type == OS.Constants.libc.DT_DIR;
+       let isSymLink = unix_entry.d_type == OS.Constants.libc.DT_LNK;
+       let name = unix_entry.d_name.readString();
        this._parent = parent;
+       let path = OS.Unix.Path.join(this._parent, name);
+
+       exports.OS.Shared.Unix.AbstractEntry.call(this, isDir, isSymLink, name, path);
      };
-     File.DirectoryIterator.Entry.prototype = {
-       /**
-        * |true| if the entry is a directory, |false| otherwise
-        */
-       get isDir() {
-         return this._d_type == OS.Constants.libc.DT_DIR;
-       },
-
-       /**
-        * |true| if the entry is a symbolic link, |false| otherwise
-        */
-       get isSymLink() {
-         return this._d_type == OS.Constants.libc.DT_LNK;
-       },
-
-       /**
-        * The name of the entry.
-        * @type {string}
-        */
-       get name() {
-         return this._name;
-       },
-
-       /**
-        * The full path to the entry.
-        */
-       get path() {
-         delete this.path;
-         let path = OS.Unix.Path.join(this._parent, this.name);
-         Object.defineProperty(this, "path", {value: path});
-         return path;
-       }
-     };
+     File.DirectoryIterator.Entry.prototype = Object.create(exports.OS.Shared.Unix.AbstractEntry.prototype);
 
      /**
       * Return a version of an instance of
@@ -729,128 +701,49 @@
      let gStatDataPtr = gStatData.address();
      let MODE_MASK = 4095 /*= 07777*/;
      File.Info = function Info(stat) {
-       this._st_mode = stat.st_mode;
-       this._st_uid = stat.st_uid;
-       this._st_gid = stat.st_gid;
-       this._st_atime = stat.st_atime;
-       this._st_mtime = stat.st_mtime;
-       this._st_ctime = stat.st_ctime;
+       let isDir = (stat.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFDIR;
+       let isSymLink = (stat.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.S_IFLNK;
+       let size = exports.OS.Shared.Type.size_t.importFromC(stat.st_size);
+
+       let lastAccessDate = new Date(stat.st_atime * 1000);
+       let lastModificationDate = new Date(stat.st_mtime * 1000);
+       let unixLastStatusChangeDate = new Date(stat.st_ctime * 1000);
+
+       let unixOwner = exports.OS.Shared.Type.uid_t.importFromC(stat.st_uid);
+       let unixGroup = exports.OS.Shared.Type.gid_t.importFromC(stat.st_gid);
+       let unixMode = exports.OS.Shared.Type.mode_t.importFromC(stat.st_mode & MODE_MASK);
+
+       exports.OS.Shared.Unix.AbstractInfo.call(this, isDir, isSymLink, size, lastAccessDate,
+                                                lastModificationDate, unixLastStatusChangeDate,
+                                                unixOwner, unixGroup, unixMode);
+
        // Some platforms (e.g. MacOS X, some BSDs) store a file creation date
        if ("OSFILE_OFFSETOF_STAT_ST_BIRTHTIME" in OS.Constants.libc) {
-         this._st_birthtime = stat.st_birthtime;
-       }
-       this._st_size = stat.st_size;
-     };
-     File.Info.prototype = {
-       /**
-        * |true| if this file is a directory, |false| otherwise
-        */
-       get isDir() {
-         return (this._st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFDIR;
-       },
-       /**
-        * |true| if this file is a symbolink link, |false| otherwise
-        */
-       get isSymLink() {
-         return (this._st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFLNK;
-       },
-       /**
-        * The size of the file, in bytes.
-        *
-        * Note that the result may be |NaN| if the size of the file cannot be
-        * represented in JavaScript.
-        *
-        * @type {number}
-        */
-       get size() {
-         return exports.OS.Shared.Type.size_t.importFromC(this._st_size);
-       },
-       // Deprecated, use macBirthDate/winBirthDate instead
-       get creationDate() {
-         // On the Macintosh, returns the birth date if available.
-         // On other Unix, as the birth date is not available,
-         // returns the epoch.
-         return this.macBirthDate || new Date(0);
-       },
-       /**
-        * The date of last access to this file.
-        *
-        * Note that the definition of last access may depend on the
-        * underlying operating system and file system.
-        *
-        * @type {Date}
-        */
-       get lastAccessDate() {
-         delete this.lastAccessDate;
-         let date = new Date(this._st_atime * 1000);
-         Object.defineProperty(this, "lastAccessDate", {value: date});
-         return date;
-       },
-       /**
-        * Return the date of last modification of this file.
-        */
-       get lastModificationDate() {
-         delete this.lastModificationDate;
-         let date = new Date(this._st_mtime * 1000);
-         Object.defineProperty(this, "lastModificationDate", {value: date});
-         return date;
-       },
-       /**
-        * Return the date at which the status of this file was last modified
-        * (this is the date of the latest write/renaming/mode change/...
-        * of the file)
-        */
-       get unixLastStatusChangeDate() {
-         delete this.unixLastStatusChangeDate;
-         let date = new Date(this._st_ctime * 1000);
-         Object.defineProperty(this, "unixLastStatusChangeDate", {value: date});
-         return date;
-       },
-       /**
-        * Return the Unix owner of this file.
-        */
-       get unixOwner() {
-         return exports.OS.Shared.Type.uid_t.importFromC(this._st_uid);
-       },
-       /**
-        * Return the Unix group of this file.
-        */
-       get unixGroup() {
-         return exports.OS.Shared.Type.gid_t.importFromC(this._st_gid);
-       },
-       /**
-        * Return the Unix mode of this file.
-        */
-       get unixMode() {
-         return exports.OS.Shared.Type.mode_t.importFromC(this._st_mode & MODE_MASK);
-       }
-     };
+         let date = new Date(stat.st_birthtime * 1000);
 
-    /**
-     * The date of creation of this file.
-     *
-     * Note that the date returned by this method is not always
-     * reliable. Not all file systems are able to provide this
-     * information.
-     *
-     * @type {Date}
-     */
-     if ("OSFILE_OFFSETOF_STAT_ST_BIRTHTIME" in OS.Constants.libc) {
-       Object.defineProperty(
-         File.Info.prototype,
-         "macBirthDate",
-         {
-           get: function macBirthDate() {
-             delete this.macBirthDate;
-             let time;
-             time = this._st_birthtime;
-             let date = new Date(time * 1000);
-             Object.defineProperty(this, "macBirthDate", { value: date });
-             return date;
-           }
-         }
-       );
-     }
+        /**
+         * The date of creation of this file.
+         *
+         * Note that the date returned by this method is not always
+         * reliable. Not all file systems are able to provide this
+         * information.
+         *
+         * @type {Date}
+         */
+         this.macBirthDate = date;
+       }
+     };
+     File.Info.prototype = Object.create(exports.OS.Shared.Unix.AbstractInfo.prototype);
+
+     // Deprecated, use macBirthDate/winBirthDate instead
+     Object.defineProperty(File.Info.prototype, "creationDate", {
+      get: function creationDate() {
+        // On the Macintosh, returns the birth date if available.
+        // On other Unix, as the birth date is not available,
+        // returns the epoch.
+        return this.macBirthDate || new Date(0);
+      }
+     });
 
      /**
       * Return a version of an instance of File.Info that can be sent

@@ -309,7 +309,6 @@ struct SetElementIC : public BaseIC {
 
     void purge(Repatcher &repatcher);
     LookupStatus attachTypedArray(VMFrame &f, JSObject *obj, int32_t key);
-    LookupStatus attachHoleStub(VMFrame &f, JSObject *obj, int32_t key);
     LookupStatus update(VMFrame &f, const Value &objval, const Value &idval);
     LookupStatus disable(VMFrame &f, const char *reason);
     LookupStatus error(JSContext *cx);

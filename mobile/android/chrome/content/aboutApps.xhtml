@@ -27,6 +27,12 @@
   </head>
 
   <body dir="&locale.dir;" onload="onLoad(event)" onunload="onUnload(event)">
+
+    <menu type="context" id="appmenu">
+      <menuitem label="&aboutApps.addToHomescreen;" onclick="ContextMenus.addToHomescreen();"></menuitem>
+      <menuitem label="&aboutApps.uninstall;" onclick="ContextMenus.uninstall();"></menuitem>
+    </menu>
+  
     <div class="header">
       <div>&aboutApps.header;</div>
       <img src="chrome://browser/skin/images/addons-amo-hdpi.png" class="icon" pref="app.marketplaceURL" onclick="openLink(this);"/>

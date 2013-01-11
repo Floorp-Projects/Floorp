@@ -581,6 +581,26 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
 }
 
 NS_IMETHODIMP
+nsLocation::GetOrigin(nsAString& aOrigin)
+{
+  if (!CallerSubsumes())
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  aOrigin.Truncate();
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri), true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString origin;
+  rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOrigin = origin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLocation::GetPathname(nsAString& aPathname)
 {
   if (!CallerSubsumes())

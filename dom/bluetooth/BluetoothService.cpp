@@ -238,6 +238,25 @@ BluetoothService::~BluetoothService()
   Cleanup();
 }
 
+PLDHashOperator
+RemoveObserversExceptBluetoothManager
+  (const nsAString& key,
+   nsAutoPtr<BluetoothSignalObserverList>& value,
+   void* arg)
+{
+  if (!key.EqualsLiteral("/")) {
+    static_cast<BluetoothService*>(arg)->RemoveObserverFromTable(key);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+void
+BluetoothService::RemoveObserverFromTable(const nsAString& key)
+{
+  mBluetoothSignalObserverTable.Remove(key);
+}
+
 // static
 BluetoothService*
 BluetoothService::Create()
@@ -306,6 +325,8 @@ BluetoothService::RegisterBluetoothSignalHandler(const nsAString& aNodeName,
     ol = new BluetoothSignalObserverList();
     mBluetoothSignalObserverTable.Put(aNodeName, ol);
   }
+
+  ol->RemoveObserver(aHandler);
   ol->AddObserver(aHandler);
 }
 
@@ -419,10 +440,19 @@ BluetoothService::SetEnabled(bool aEnabled)
      * cleared after turned off bluetooth
      */
     while (iter.HasMore()) {
-      RegisterBluetoothSignalHandler(managerPath, (BluetoothSignalObserver*)iter.GetNext());
+      RegisterBluetoothSignalHandler(
+        managerPath,
+        (BluetoothSignalObserver*)iter.GetNext());
     }
   } else {
-    mBluetoothSignalObserverTable.Clear();
+    /**
+     * Remove all handlers except BluetoothManager when turning off bluetooth
+     * since it is possible that the event 'onAdapterAdded' would be fired after
+     * BluetoothManagers of child process are registered. Please see Bug 827759
+     * for more details.
+     */
+    mBluetoothSignalObserverTable.Enumerate(
+      RemoveObserversExceptBluetoothManager, this);
   }
 
   /**

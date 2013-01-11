@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/PluralForm.jsm");
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 
 let downloadTemplate =
-"<li downloadID='{id}' role='button' state='{state}'>" +
+"<li downloadID='{id}' role='button' state='{state}' contextmenu='downloadmenu'>" +
   "<img class='icon' src='{icon}'/>" +
   "<div class='details'>" +
      "<div class='row'>" +
@@ -35,6 +35,86 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function ()
     .getInterface(Ci.nsIDOMWindow)
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
+
+var ContextMenus = {
+  target: null,
+
+  init: function() {
+    document.addEventListener("contextmenu", this, false);
+    this.items = [
+      { name: "open", states: [Downloads._dlmgr.DOWNLOAD_FINISHED] },
+      { name: "retry", states: [Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
+      { name: "remove", states: [Downloads._dlmgr.DOWNLOAD_FINISHED,Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
+      { name: "removeall", states: [Downloads._dlmgr.DOWNLOAD_FINISHED,Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
+      { name: "pause", states: [Downloads._dlmgr.DOWNLOAD_DOWNLOADING] },
+      { name: "resume", states: [Downloads._dlmgr.DOWNLOAD_PAUSED] },
+      { name: "cancel", states: [Downloads._dlmgr.DOWNLOAD_DOWNLOADING, Downloads._dlmgr.DOWNLOAD_NOTSTARTED, Downloads._dlmgr.DOWNLOAD_QUEUED, Downloads._dlmgr.DOWNLOAD_PAUSED] },
+    ];
+  },
+
+  handleEvent: function(event) {
+    // store the target of context menu events so that we know which app to act on
+    this.target = event.target;
+    while (!this.target.hasAttribute("contextmenu")) {
+      this.target = this.target.parentNode;
+    }
+    if (!this.target)
+      return;
+
+    let state = parseInt(this.target.getAttribute("state"));
+    for (let i = 0; i < this.items.length; i++) {
+      var item = this.items[i];
+      let enabled = (item.states.indexOf(state) > -1);
+      if (enabled)
+        document.getElementById("contextmenu-" + item.name).removeAttribute("hidden");
+      else
+        document.getElementById("contextmenu-" + item.name).setAttribute("hidden", "true");
+    }
+  },
+
+  // Open shown only for downloads that completed successfully
+  open: function(event) {
+    Downloads.openDownload(this.target);
+    this.target = null;
+  },
+
+  // Retry shown when its failed, canceled, blocked(covered in failed, see _getState())
+  retry: function (event) {
+    Downloads.retryDownload(this.target);
+    this.target = null;
+  },
+
+  // Remove shown when its canceled, finished, failed(failed includes blocked and dirty, see _getState())
+  remove: function (event) {
+    Downloads.removeDownload(this.target);
+    this.target = null;
+  },
+
+  // Pause shown when item is currently downloading
+  pause: function (event) {
+    Downloads.pauseDownload(this.target);
+    this.target = null;
+  },
+
+  // Resume shown for paused items only
+  resume: function (event) {
+    Downloads.resumeDownload(this.target);
+    this.target = null;
+  },
+
+  // Cancel shown when its downloading, notstarted, queued or paused
+  cancel: function (event) {
+    Downloads.cancelDownload(this.target);
+    this.target = null;
+  },
+
+  removeAll: function(event) {
+    Downloads.removeAll();
+    this.target = null;
+  }
+}
+
+
 let Downloads = {
   init: function dl_init() {
     this._list = document.getElementById("downloads-list");
@@ -56,70 +136,7 @@ let Downloads = {
     Services.obs.addObserver(this, "dl-cancel", false);
 
     this.getDownloads();
-
-    let contextmenus = gChromeWin.NativeWindow.contextmenus;
-
-    // Open shown only for downloads that completed successfully
-    Downloads.openMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.open"),
-                                              contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']"),
-      function (aTarget) {
-        Downloads.openDownload(aTarget);
-      }
-    );
-    
-    // Retry shown when its failed, canceled, blocked(covered in failed, see _getState())
-    Downloads.retryMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.retry"),
-                                               contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_FAILED + "']," +
-                                                                            "li[state='" + this._dlmgr.DOWNLOAD_CANCELED + "']"),
-      function (aTarget) {
-        Downloads.retryDownload(aTarget);
-      }
-    );
-    
-    // Remove shown when its canceled, finished, failed(failed includes blocked and dirty, see _getState())
-    Downloads.removeMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.remove"),
-                                                contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_CANCELED + "']," +
-                                                                             "li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']," +
-                                                                             "li[state='" + this._dlmgr.DOWNLOAD_FAILED + "']"),
-      function (aTarget) {
-        Downloads.removeDownload(aTarget);
-      }
-    );
-
-    // Pause shown when item is currently downloading
-    Downloads.pauseMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.pause"),
-                                               contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_DOWNLOADING + "']"),
-      function (aTarget) {
-        Downloads.pauseDownload(aTarget);
-      }
-    );
-    
-    // Resume shown for paused items only
-    Downloads.resumeMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.resume"),
-                                                contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_PAUSED + "']"),
-      function (aTarget) {
-        Downloads.resumeDownload(aTarget);
-      }
-    );
-    
-    // Cancel shown when its downloading, notstarted, queued or paused
-    Downloads.cancelMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.cancel"),
-                                                contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_DOWNLOADING + "']," +
-                                                                             "li[state='" + this._dlmgr.DOWNLOAD_NOTSTARTED + "']," +
-                                                                             "li[state='" + this._dlmgr.DOWNLOAD_QUEUED + "']," +
-                                                                             "li[state='" + this._dlmgr.DOWNLOAD_PAUSED + "']"),
-      function (aTarget) {
-        Downloads.cancelDownload(aTarget);
-      }
-    );
-
-    // Delete All shown when item is finished, canceled, or failed
-    Downloads.deleteAllMenuItem = contextmenus.add(gStrings.GetStringFromName("downloadAction.deleteAll"),
-                                                   contextmenus.SelectorContext("li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']," +
-                                                                                "li[state='" + this._dlmgr.DOWNLOAD_CANCELED + "']," +
-                                                                                "li[state='" + this._dlmgr.DOWNLOAD_FAILED + "']"),
-                                                   this.deleteAll.bind(this)
-    );
+    ContextMenus.init();
   },
 
   uninit: function dl_uninit() {
@@ -420,7 +437,7 @@ let Downloads = {
     } catch(ex) { }
   },
 
-  deleteAll: function dl_deleteAll() {
+  removeAll: function dl_removeAll() {
     let title = gStrings.GetStringFromName("downloadAction.deleteAll");
     let messageForm = gStrings.GetStringFromName("downloadMessage.deleteAll");
     let elements = this._list.querySelectorAll("li[state='" + this._dlmgr.DOWNLOAD_FINISHED + "']," +
