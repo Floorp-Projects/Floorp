@@ -348,7 +348,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
             } else {
                 RootedValue rref(cx, rval);
                 bool strict = cx->stack.currentScript()->strict;
-                if (!js_NativeSet(cx, obj, obj, shape, false, strict, rref.address()))
+                if (!js_NativeSet(cx, obj, obj, shape, false, strict, &rref))
                     return false;
             }
             return true;
