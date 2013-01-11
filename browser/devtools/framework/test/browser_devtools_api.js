@@ -32,11 +32,11 @@ function runTests(aTab) {
   };
 
   ok(gDevTools, "gDevTools exists");
-  is(gDevTools.getToolDefinitions().has(toolId), false,
+  is(gDevTools.getToolDefinitionMap().has(toolId), false,
     "The tool is not registered");
 
   gDevTools.registerTool(toolDefinition);
-  is(gDevTools.getToolDefinitions().has(toolId), true,
+  is(gDevTools.getToolDefinitionMap().has(toolId), true,
     "The tool is registered");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -51,14 +51,14 @@ function continueTests(toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId, "toolbox _currentToolId is correct");
 
-  let toolDefinitions = gDevTools.getToolDefinitions();
+  let toolDefinitions = gDevTools.getToolDefinitionMap();
   is(toolDefinitions.has(toolId), true, "The tool is in gDevTools");
 
   let toolDefinition = toolDefinitions.get(toolId);
   is(toolDefinition.id, toolId, "toolDefinition id is correct");
 
   gDevTools.unregisterTool(toolId);
-  is(gDevTools.getToolDefinitions().has(toolId), false,
+  is(gDevTools.getToolDefinitionMap().has(toolId), false,
     "The tool is no longer registered");
 
   toolbox.destroy().then(function() {
