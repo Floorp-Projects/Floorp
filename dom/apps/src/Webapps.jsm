@@ -746,10 +746,11 @@ this.DOMApplicationRegistry = {
     Services.prefs.setBoolPref("dom.mozApps.used", true);
 
     // We need to check permissions for calls coming from mozApps.mgmt.
-    // These are: getAll(), getNotInstalled() and applyDownload()
+    // These are: getAll(), getNotInstalled(), applyDownload() and uninstall().
     if (["Webapps:GetAll",
          "Webapps:GetNotInstalled",
-         "Webapps:ApplyDownload"].indexOf(aMessage.name) != -1) {
+         "Webapps:ApplyDownload",
+         "Webapps:Uninstall"].indexOf(aMessage.name) != -1) {
       if (!aMessage.target.assertPermission("webapps-manage")) {
         debug("mozApps message " + aMessage.name +
         " from a content process with no 'webapps-manage' privileges.");
@@ -837,6 +838,7 @@ this.DOMApplicationRegistry = {
   // Webapps:RemoveApp
   // Webapps:Install:Return:OK
   // Webapps:Uninstall:Return:OK
+  // Webapps:Uninstall:Broadcast:Return:OK
   // Webapps:OfflineCache
   // Webapps:checkForUpdate:Return:OK
   // Webapps:PackageEvent
@@ -2145,7 +2147,8 @@ this.DOMApplicationRegistry = {
 
       this._saveApps((function() {
         aData.manifestURL = app.manifestURL;
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", aData);
+        this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK", aData);
+        aMm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-uninstall", appNote);
         this.broadcastMessage("Webapps:RemoveApp", { id: id });
       }).bind(this));
@@ -2359,8 +2362,8 @@ this.DOMApplicationRegistry = {
           dir.remove(true);
         } catch (e) {
         }
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", { origin: origin,
-                                                               manifestURL: manifestURL });
+        this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK",
+                              { origin: origin, manifestURL: manifestURL });
       } else {
         if (this.webapps[record.id]) {
           this.webapps[record.id] = record.value;
