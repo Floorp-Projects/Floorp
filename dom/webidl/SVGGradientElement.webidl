@@ -10,9 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-/* SVGDefinitionElement support is bug 825769. */
-
-interface SVGGradientElement /* : SVGDefinitionElement */ : SVGElement {
+interface SVGGradientElement : SVGElement {
 
   // Spread Method Types
   const unsigned short SVG_SPREADMETHOD_UNKNOWN = 0;
