@@ -18,10 +18,10 @@ DOCROOT = '.'
 
 class EasyServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     allow_reuse_address = True
-    
+
 class MozRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def translate_path(self, path):
-        # It appears that the default path is '/' and os.path.join makes the '/' 
+        # It appears that the default path is '/' and os.path.join makes the '/'
         o = urlparse(path)
 
         sep = '/'
@@ -92,9 +92,9 @@ class MozHttpd(object):
                     for fileName in fileList:
                         if fileName == webline:
                             found = True
-                
+
                 if (found == False):
-                    print "NOT FOUND: " + webline.strip()                
+                    print "NOT FOUND: " + webline.strip()
 
     def stop(self):
         if self.httpd:
@@ -102,4 +102,3 @@ class MozHttpd(object):
             self.httpd.server_close()
 
     __del__ = stop
-
