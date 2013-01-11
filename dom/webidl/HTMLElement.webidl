@@ -73,7 +73,7 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandChecked;
 
   // styling
-  [Throws, Constant]
+  [Constant]
   readonly attribute CSSStyleDeclaration style;
 
   // event handler IDL attributes
