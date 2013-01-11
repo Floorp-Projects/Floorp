@@ -23,7 +23,6 @@ CPPSRCS		= \
 		DOMSVGAnimatedTransformList.cpp \
 		DOMSVGLength.cpp \
 		DOMSVGLengthList.cpp \
-		DOMSVGMatrix.cpp \
 		DOMSVGNumber.cpp \
 		DOMSVGNumberList.cpp \
 		DOMSVGPathSeg.cpp \
@@ -98,6 +97,7 @@ CPPSRCS		= \
 		SVGLengthListSMILType.cpp \
 		SVGLineElement.cpp \
 		SVGLocatableElement.cpp \
+		SVGMatrix.cpp \
 		SVGMetadataElement.cpp \
 		SVGMotionSMILType.cpp \
 		SVGMotionSMILAttr.cpp \
@@ -173,6 +173,7 @@ EXPORTS_mozilla/dom = \
 	SVGImageElement.h \
 	SVGLineElement.h \
 	SVGLocatableElement.h \
+	SVGMatrix.h \
 	SVGMetadataElement.h \
 	SVGMPathElement.h \
 	SVGPolygonElement.h \

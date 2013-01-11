@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGTransform.h"
-#include "DOMSVGMatrix.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "SVGAnimatedTransformList.h"
 #include "nsError.h"
 #include <math.h>
@@ -16,7 +16,9 @@
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<DOMSVGTransform, DOMSVGMatrix> sSVGMatrixTearoffTable;
+using namespace dom;
+
+static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
 
 //----------------------------------------------------------------------
 // nsISupports methods:
@@ -125,13 +127,13 @@ DOMSVGTransform::Type() const
   return Transform().Type();
 }
 
-already_AddRefed<DOMSVGMatrix>
+already_AddRefed<SVGMatrix>
 DOMSVGTransform::Matrix()
 {
-  nsRefPtr<DOMSVGMatrix> wrapper =
+  nsRefPtr<SVGMatrix> wrapper =
     sSVGMatrixTearoffTable.GetTearoff(this);
   if (!wrapper) {
-    wrapper = new DOMSVGMatrix(*this);
+    wrapper = new SVGMatrix(*this);
     sSVGMatrixTearoffTable.AddTearoff(this, wrapper);
   }
   return wrapper.forget();
@@ -144,7 +146,7 @@ DOMSVGTransform::Angle() const
 }
 
 void
-DOMSVGTransform::SetMatrix(DOMSVGMatrix& aMatrix, ErrorResult& rv)
+DOMSVGTransform::SetMatrix(SVGMatrix& aMatrix, ErrorResult& rv)
 {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -311,7 +313,7 @@ DOMSVGTransform::IndexIsValid()
 
 
 //----------------------------------------------------------------------
-// Interface for DOMSVGMatrix's use
+// Interface for SVGMatrix's use
 
 void
 DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix)

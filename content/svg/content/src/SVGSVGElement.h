@@ -30,12 +30,12 @@ class nsSVGImageFrame;
 
 namespace mozilla {
 class DOMSVGAnimatedPreserveAspectRatio;
-class DOMSVGMatrix;
 class DOMSVGTransform;
 class SVGFragmentIdentifier;
 
 namespace dom {
 class SVGAngle;
+class SVGMatrix;
 class SVGViewElement;
 
 class SVGSVGElement;
@@ -81,7 +81,7 @@ private:
     virtual float Y() { return mVal->GetY(); }
     virtual void SetX(float aValue, ErrorResult& rv);
     virtual void SetY(float aValue, ErrorResult& rv);
-    virtual already_AddRefed<nsISVGPoint> MatrixTransform(DOMSVGMatrix& matrix);
+    virtual already_AddRefed<nsISVGPoint> MatrixTransform(SVGMatrix& matrix);
 
     virtual nsISupports* GetParentObject() MOZ_OVERRIDE;
 
@@ -285,10 +285,10 @@ public:
   already_AddRefed<nsIDOMSVGLength> CreateSVGLength();
   already_AddRefed<SVGAngle> CreateSVGAngle();
   already_AddRefed<nsISVGPoint> CreateSVGPoint();
-  already_AddRefed<DOMSVGMatrix> CreateSVGMatrix();
+  already_AddRefed<SVGMatrix> CreateSVGMatrix();
   already_AddRefed<nsIDOMSVGRect> CreateSVGRect();
   already_AddRefed<DOMSVGTransform> CreateSVGTransform();
-  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix);
+  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(SVGMatrix& matrix);
   Element* GetElementById(const nsAString& elementId, ErrorResult& rv);
   already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();

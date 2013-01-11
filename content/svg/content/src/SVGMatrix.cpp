@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMSVGMatrix.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "nsError.h"
 #include <math.h>
 #include "nsContentUtils.h"
@@ -13,50 +13,49 @@
 const double radPerDegree = 2.0 * M_PI / 360.0;
 
 namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-// Make sure we clear the weak ref in the owning transform (if there is one)
-// upon unlink.
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGMatrix)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGMatrix)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGMatrix)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SVGMatrix)
 NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransform)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGMatrix)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SVGMatrix)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransform)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGMatrix)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(SVGMatrix)
 NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGMatrix)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGMatrix)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGMatrix)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGMatrix)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGMatrix)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGMatrix)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(mozilla::DOMSVGMatrix) // pseudo-interface
+  NS_INTERFACE_MAP_ENTRY(mozilla::dom::SVGMatrix) // pseudo-interface
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 DOMSVGTransform*
-DOMSVGMatrix::GetParentObject() const
+SVGMatrix::GetParentObject() const
 {
   return mTransform;
 }
 
 JSObject*
-DOMSVGMatrix::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+SVGMatrix::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
 {
-  return mozilla::dom::SVGMatrixBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGMatrixBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 void
-DOMSVGMatrix::SetA(float aA, ErrorResult& rv)
+SVGMatrix::SetA(float aA, ErrorResult& rv)
 {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -69,7 +68,7 @@ DOMSVGMatrix::SetA(float aA, ErrorResult& rv)
 }
 
 void
-DOMSVGMatrix::SetB(float aB, ErrorResult& rv)
+SVGMatrix::SetB(float aB, ErrorResult& rv)
 {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -82,7 +81,7 @@ DOMSVGMatrix::SetB(float aB, ErrorResult& rv)
 }
 
 void
-DOMSVGMatrix::SetC(float aC, ErrorResult& rv)
+SVGMatrix::SetC(float aC, ErrorResult& rv)
 {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -95,7 +94,7 @@ DOMSVGMatrix::SetC(float aC, ErrorResult& rv)
 }
 
 void
-DOMSVGMatrix::SetD(float aD, ErrorResult& rv)
+SVGMatrix::SetD(float aD, ErrorResult& rv)
 {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -108,7 +107,7 @@ DOMSVGMatrix::SetD(float aD, ErrorResult& rv)
 }
 
 void
-DOMSVGMatrix::SetE(float aE, ErrorResult& rv)
+SVGMatrix::SetE(float aE, ErrorResult& rv)
 {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -121,7 +120,7 @@ DOMSVGMatrix::SetE(float aE, ErrorResult& rv)
 }
 
 void
-DOMSVGMatrix::SetF(float aF, ErrorResult& rv)
+SVGMatrix::SetF(float aF, ErrorResult& rv)
 {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -133,88 +132,88 @@ DOMSVGMatrix::SetF(float aF, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::Multiply(DOMSVGMatrix& aMatrix)
+already_AddRefed<SVGMatrix>
+SVGMatrix::Multiply(SVGMatrix& aMatrix)
 {
-  nsCOMPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(aMatrix.Matrix() * Matrix());
+  nsCOMPtr<SVGMatrix> matrix = new SVGMatrix(aMatrix.Matrix() * Matrix());
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::Inverse(ErrorResult& rv)
+already_AddRefed<SVGMatrix>
+SVGMatrix::Inverse(ErrorResult& rv)
 {
   if (Matrix().IsSingular()) {
     rv.Throw(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE);
     return nullptr;
   }
-  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(gfxMatrix(Matrix()).Invert());
+  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(gfxMatrix(Matrix()).Invert());
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::Translate(float x, float y)
+already_AddRefed<SVGMatrix>
+SVGMatrix::Translate(float x, float y)
 {
-  nsRefPtr<DOMSVGMatrix> matrix =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Translate(gfxPoint(x, y)));
+  nsRefPtr<SVGMatrix> matrix =
+    new SVGMatrix(gfxMatrix(Matrix()).Translate(gfxPoint(x, y)));
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::Scale(float scaleFactor)
+already_AddRefed<SVGMatrix>
+SVGMatrix::Scale(float scaleFactor)
 {
   return ScaleNonUniform(scaleFactor, scaleFactor);
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::ScaleNonUniform(float scaleFactorX,
-                              float scaleFactorY)
+already_AddRefed<SVGMatrix>
+SVGMatrix::ScaleNonUniform(float scaleFactorX,
+                           float scaleFactorY)
 {
-  nsRefPtr<DOMSVGMatrix> matrix =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Scale(scaleFactorX, scaleFactorY));
+  nsRefPtr<SVGMatrix> matrix =
+    new SVGMatrix(gfxMatrix(Matrix()).Scale(scaleFactorX, scaleFactorY));
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::Rotate(float angle)
+already_AddRefed<SVGMatrix>
+SVGMatrix::Rotate(float angle)
 {
-  nsRefPtr<DOMSVGMatrix> matrix =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(angle*radPerDegree));
+  nsRefPtr<SVGMatrix> matrix =
+    new SVGMatrix(gfxMatrix(Matrix()).Rotate(angle*radPerDegree));
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
+already_AddRefed<SVGMatrix>
+SVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
 {
   if (x == 0.0 || y == 0.0) {
     rv.Throw(NS_ERROR_RANGE_ERR);
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGMatrix> matrix =
-    new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(atan2(y, x)));
+  nsRefPtr<SVGMatrix> matrix =
+    new SVGMatrix(gfxMatrix(Matrix()).Rotate(atan2(y, x)));
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::FlipX()
+already_AddRefed<SVGMatrix>
+SVGMatrix::FlipX()
 {
   const gfxMatrix& mx = Matrix();
-  nsRefPtr<DOMSVGMatrix> matrix =
-    new DOMSVGMatrix(gfxMatrix(-mx.xx, -mx.yx, mx.xy, mx.yy, mx.x0, mx.y0));
+  nsRefPtr<SVGMatrix> matrix =
+    new SVGMatrix(gfxMatrix(-mx.xx, -mx.yx, mx.xy, mx.yy, mx.x0, mx.y0));
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::FlipY()
+already_AddRefed<SVGMatrix>
+SVGMatrix::FlipY()
 {
   const gfxMatrix& mx = Matrix();
-  nsRefPtr<DOMSVGMatrix> matrix =
-    new DOMSVGMatrix(gfxMatrix(mx.xx, mx.yx, -mx.xy, -mx.yy, mx.x0, mx.y0));
+  nsRefPtr<SVGMatrix> matrix =
+    new SVGMatrix(gfxMatrix(mx.xx, mx.yx, -mx.xy, -mx.yy, mx.x0, mx.y0));
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::SkewX(float angle, ErrorResult& rv)
+already_AddRefed<SVGMatrix>
+SVGMatrix::SkewX(float angle, ErrorResult& rv)
 {
   double ta = tan( angle*radPerDegree );
   if (!NS_finite(ta)) {
@@ -226,12 +225,12 @@ DOMSVGMatrix::SkewX(float angle, ErrorResult& rv)
   gfxMatrix skewMx(mx.xx, mx.yx,
                    (float) (mx.xy + mx.xx*ta), (float) (mx.yy + mx.yx*ta),
                    mx.x0, mx.y0);
-  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(skewMx);
+  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
   return matrix.forget();
 }
 
-already_AddRefed<DOMSVGMatrix>
-DOMSVGMatrix::SkewY(float angle, ErrorResult& rv)
+already_AddRefed<SVGMatrix>
+SVGMatrix::SkewY(float angle, ErrorResult& rv)
 {
   double ta = tan( angle*radPerDegree );
   if (!NS_finite(ta)) {
@@ -244,9 +243,9 @@ DOMSVGMatrix::SkewY(float angle, ErrorResult& rv)
                    mx.xy, mx.yy,
                    mx.x0, mx.y0);
 
-  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix(skewMx);
+  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
   return matrix.forget();
 }
 
+} // namespace dom
 } // namespace mozilla
-
