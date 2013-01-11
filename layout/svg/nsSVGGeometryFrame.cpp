@@ -12,7 +12,6 @@
 #include "nsPresContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPaintServerFrame.h"
-#include "nsSVGPathElement.h"
 #include "nsSVGUtils.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGGeometryFrame)

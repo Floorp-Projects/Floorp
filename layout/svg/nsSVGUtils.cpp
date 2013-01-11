@@ -44,7 +44,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsSVGPathElement.h"
+#include "mozilla/dom/SVGPathElement.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGPaintServerFrame.h"
@@ -1733,8 +1733,8 @@ GetStrokeDashData(nsIFrame* aFrame,
     gfxFloat pathScale = 1.0;
 
     if (content->Tag() == nsGkAtoms::path) {
-      pathScale = static_cast<nsSVGPathElement*>(content)->
-        GetPathLengthScale(nsSVGPathElement::eForStroking);
+      pathScale = static_cast<SVGPathElement*>(content)->
+        GetPathLengthScale(SVGPathElement::eForStroking);
       if (pathScale <= 0) {
         return false;
       }
