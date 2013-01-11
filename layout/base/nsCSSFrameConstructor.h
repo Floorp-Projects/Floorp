@@ -1464,9 +1464,9 @@ private:
    */
 public:
   nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
-private:
   nsIFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 
+private:
   nsIContent* PropagateScrollToViewport();
 
   // Build a scroll frame: 
