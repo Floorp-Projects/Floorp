@@ -2677,7 +2677,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
         id = INT_TO_JSID(idval.toInt32());
     } else {
-        if (!InternNonIntElementId(cx, obj, idval, id.address()))
+        if (!InternNonIntElementId(cx, obj, idval, &id))
             THROW();
     }
 

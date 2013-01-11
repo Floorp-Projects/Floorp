@@ -56,7 +56,7 @@ ValueToId(JSContext* cx, JSObject *obj, const Value &v, MutableHandleId idp)
         return true;
     }
 
-    return InternNonIntElementId(cx, obj, v, idp.address());
+    return InternNonIntElementId(cx, obj, v, idp);
 }
 
 inline bool
