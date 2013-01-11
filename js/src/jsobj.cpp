@@ -293,11 +293,11 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
+js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     AutoPropertyDescriptorRooter desc(cx);
     return GetOwnPropertyDescriptor(cx, obj, id, &desc) &&
-           NewPropertyDescriptorObject(cx, &desc, vp);
+           NewPropertyDescriptorObject(cx, &desc, vp.address());
 }
 
 bool
