@@ -486,6 +486,38 @@ VectorImage::GetHeight(int32_t* aHeight)
 }
 
 //******************************************************************************
+/* [noscript] readonly attribute nsSize intrinsicSize; */
+NS_IMETHODIMP
+VectorImage::GetIntrinsicSize(nsSize* aSize)
+{
+  nsIFrame* rootFrame = GetRootLayoutFrame();
+  if (!rootFrame)
+    return NS_ERROR_FAILURE;
+
+  *aSize = nsSize(-1, -1);
+  nsIFrame::IntrinsicSize rfSize = rootFrame->GetIntrinsicSize();
+  if (rfSize.width.GetUnit() == eStyleUnit_Coord)
+    aSize->width = rfSize.width.GetCoordValue();
+  if (rfSize.height.GetUnit() == eStyleUnit_Coord)
+    aSize->height = rfSize.height.GetCoordValue();
+
+  return NS_OK;
+}
+
+//******************************************************************************
+/* [noscript] readonly attribute nsSize intrinsicRatio; */
+NS_IMETHODIMP
+VectorImage::GetIntrinsicRatio(nsSize* aRatio)
+{
+  nsIFrame* rootFrame = GetRootLayoutFrame();
+  if (!rootFrame)
+    return NS_ERROR_FAILURE;
+
+  *aRatio = rootFrame->GetIntrinsicRatio();
+  return NS_OK;
+}
+
+//******************************************************************************
 /* readonly attribute unsigned short type; */
 NS_IMETHODIMP
 VectorImage::GetType(uint16_t* aType)
