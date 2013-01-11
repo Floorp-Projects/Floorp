@@ -183,7 +183,7 @@ WebConsoleActor.prototype =
       this.consoleProgressListener.destroy();
       this.consoleProgressListener = null;
     }
-    this.conn.removeActorPool(this.actorPool);
+    this.conn.removeActorPool(this._actorPool);
     this._actorPool = null;
     this.sandbox = null;
     this._sandboxWindowId = 0;

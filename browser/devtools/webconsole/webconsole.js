@@ -43,6 +43,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/promise/core.js");
+
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
@@ -168,9 +171,9 @@ const MIN_FONT_SIZE = 10;
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 
 /**
- * A WebConsoleFrame instance is an interactive console initialized *per tab*
+ * A WebConsoleFrame instance is an interactive console initialized *per target*
  * that displays console log data as well as provides an interactive terminal to
- * manipulate the current tab's document content.
+ * manipulate the target's document content.
  *
  * The WebConsoleFrame is responsible for the actual Web Console UI
  * implementation.
@@ -190,18 +193,9 @@ function WebConsoleFrame(aWebConsoleOwner)
 
   this._toggleFilter = this._toggleFilter.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
-  this._connectionTimeout = this._connectionTimeout.bind(this);
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
-
-  this._initDefaultFilterPrefs();
-  this._commandController = new CommandController(this);
-  this.positionConsole(window);
-
-  this.jsterm = new JSTerm(this);
-  this.jsterm.inputNode.focus();
-  this._initConnection();
 }
 
 WebConsoleFrame.prototype = {
@@ -221,13 +215,6 @@ WebConsoleFrame.prototype = {
    * @type object
    */
   proxy: null,
-
-  /**
-   * Timer used for the connection.
-   * @private
-   * @type object
-   */
-  _connectTimer: null,
 
   /**
    * Getter for the xul:popupset that holds any popups we open.
@@ -306,7 +293,7 @@ WebConsoleFrame.prototype = {
   groupDepth: 0,
 
   /**
-   * The current tab location.
+   * The current target location.
    * @type string
    */
   contentLocation: "",
@@ -335,6 +322,8 @@ WebConsoleFrame.prototype = {
    * @type object
    */
   get webConsoleClient() this.proxy ? this.proxy.webConsoleClient : null,
+
+  _destroyer: null,
 
   _saveRequestAndResponseBodies: false,
 
@@ -365,59 +354,50 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Initialize the WebConsoleFrame instance.
+   * @return object
+   *         A Promise object for the initialization.
+   */
+  init: function WCF_init()
+  {
+    this._initUI();
+    return this._initConnection();
+  },
+
+  /**
    * Connect to the server using the remote debugging protocol.
+   *
    * @private
+   * @return object
+   *         A Promise object that is resolved/reject based on the connection
+   *         result.
    */
   _initConnection: function WCF__initConnection()
   {
+    let deferred = Promise.defer();
+
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
-    let timeout = Services.prefs.getIntPref(PREF_CONNECTION_TIMEOUT);
-    this._connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._connectTimer.initWithCallback(this._connectionTimeout,
-                                        timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    let onSuccess = function() {
+      this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
+      deferred.resolve(this);
+    }.bind(this);
 
-    this.proxy.connect(function() {
-      // Don't complete connection if the connection timed-out.
-      if (this._connectTimer) {
-        this._connectTimer.cancel();
-        this._connectTimer = null;
-        this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
-        this._onInitComplete();
-      }
-    }.bind(this));
-  },
+    let onFailure = function(aReason) {
+      let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
+                                        aReason.error + ": " + aReason.message);
+      this.outputMessage(CATEGORY_JS, node);
+      deferred.reject(aReason);
+    }.bind(this);
 
-  /**
-   * Connection timeout handler. This method simply prints a message informing
-   * the user that the connection timed-out.
-   * @private
-   */
-  _connectionTimeout: function WCF__connectionTimeout()
-  {
-    this._connectTimer = null;
+    let sendNotification = function() {
+      let id = WebConsoleUtils.supportsString(this.hudId);
+      Services.obs.notifyObservers(id, "web-console-created", null);
+    }.bind(this);
 
-    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
-                                      l10n.getStr("connectionTimeout"));
-    this.outputMessage(CATEGORY_JS, node);
+    this.proxy.connect().then(onSuccess, onFailure).then(sendNotification);
 
-    // Allow initialization to complete.
-    this._onInitComplete();
-  },
-
-  /**
-   * Reset the connection timeout timer.
-   * @private
-   */
-  _resetConnectionTimeout: function WCF__resetConnectionTimeout()
-  {
-    let timer = this._connectTimer;
-    if (timer) {
-      let timeout = timer.delay;
-      timer.cancel();
-      timer.initWithCallback(this._connectionTimeout, timeout,
-                             Ci.nsITimer.TYPE_ONE_SHOT);
-    }
+    return deferred.promise;
   },
 
   /**
@@ -426,6 +406,18 @@ WebConsoleFrame.prototype = {
    */
   _initUI: function WCF__initUI()
   {
+    // Remember that this script is loaded in the webconsole.xul context:
+    // |window| is the iframe global.
+    this.window = window;
+    this.document = this.window.document;
+    this.rootElement = this.document.documentElement;
+
+    this._initDefaultFilterPrefs();
+
+    // Register the controller to handle "select all" properly.
+    this._commandController = new CommandController(this);
+    this.window.controllers.insertControllerAt(0, this._commandController);
+
     let doc = this.document;
 
     this.filterBox = doc.querySelector(".hud-filter-box");
@@ -482,6 +474,10 @@ WebConsoleFrame.prototype = {
       this.owner._onClearButton();
       this.jsterm.clearOutput(true);
     }.bind(this));
+
+    this.jsterm = new JSTerm(this);
+    this.jsterm.init();
+    this.jsterm.inputNode.focus();
   },
 
   /**
@@ -565,54 +561,6 @@ WebConsoleFrame.prototype = {
 
       aButton.setAttribute("checked", someChecked);
     }, this);
-  },
-
-  /**
-   * Callback method for when the Web Console initialization is complete. For
-   * now this method sends the web-console-created notification using the
-   * nsIObserverService.
-   *
-   * @private
-   */
-  _onInitComplete: function WC__onInitComplete()
-  {
-    let id = WebConsoleUtils.supportsString(this.hudId);
-    Services.obs.notifyObservers(id, "web-console-created", null);
-  },
-
-  /**
-   * Position the console in a different location.
-   *
-   * Note: you do not usually call this method. This is called by the WebConsole
-   * instance that owns this iframe. You need to call this if you write
-   * a different owner or you manually reposition the iframe.
-   *
-   * @param object aNewWindow
-   *        Repositioning causes the iframe to reload - bug 254144. You need to
-   *        provide the new window object so we can reinitialize the UI as
-   *        needed.
-   */
-  positionConsole: function WCF_positionConsole(aNewWindow)
-  {
-    this.window = aNewWindow;
-    this.document = this.window.document;
-    this.rootElement = this.document.documentElement;
-
-    // register the controller to handle "select all" properly
-    this.window.controllers.insertControllerAt(0, this._commandController);
-
-    let oldOutputNode = this.outputNode;
-
-    this._initUI();
-    this.jsterm && this.jsterm._initUI();
-
-    if (oldOutputNode && oldOutputNode.childNodes.length) {
-      let parentNode = this.outputNode.parentNode;
-      parentNode.replaceChild(oldOutputNode, this.outputNode);
-      this.outputNode = oldOutputNode;
-    }
-
-    this.jsterm && this.jsterm.inputNode.focus();
   },
 
   /**
@@ -2706,15 +2654,21 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Destroy the HUD object. Call this method to avoid memory leaks when the Web
-   * Console is closed.
+   * Destroy the WebConsoleFrame object. Call this method to avoid memory leaks
+   * when the Web Console is closed.
    *
-   * @param function [aOnDestroy]
-   *        Optional function to invoke when the Web Console instance is
-   *        destroyed.
+   * @return object
+   *         A Promise that is resolved when the WebConsoleFrame instance is
+   *         destroyed.
    */
-  destroy: function WCF_destroy(aOnDestroy)
+  destroy: function WCF_destroy()
   {
+    if (this._destroyer) {
+      return this._destroyer.promise;
+    }
+
+    this._destroyer = Promise.defer();
+
     this._cssNodes = {};
     this._outputQueue = [];
     this._pruneCategoriesQueue = {};
@@ -2726,22 +2680,26 @@ WebConsoleFrame.prototype = {
     }
     this._outputTimer = null;
 
-    if (this._connectTimer) {
-      this._connectTimer.cancel();
-    }
-    this._connectTimer = null;
-
-    if (this.proxy) {
-      this.proxy.disconnect(aOnDestroy);
-      this.proxy = null;
-    }
-
     if (this.jsterm) {
       this.jsterm.destroy();
       this.jsterm = null;
     }
 
     this._commandController = null;
+
+    let onDestroy = function() {
+      this._destroyer.resolve(null);
+    }.bind(this);
+
+    if (this.proxy) {
+      this.proxy.disconnect().then(onDestroy);
+      this.proxy = null;
+    }
+    else {
+      onDestroy();
+    }
+
+    return this._destroyer.promise;
   },
 };
 
@@ -2763,12 +2721,8 @@ function JSTerm(aWebConsoleFrame)
   this.history = [];
   this.historyIndex = 0;
   this.historyPlaceHolder = 0;  // this.history.length;
-  this.autocompletePopup = new AutocompletePopup(this.hud.owner.chromeDocument);
-  this.autocompletePopup.onSelect = this.onAutocompleteSelect.bind(this);
-  this.autocompletePopup.onClick = this.acceptProposedCompletion.bind(this);
   this._keyPress = this.keyPress.bind(this);
   this._inputEventHandler = this.inputEventHandler.bind(this);
-  this._initUI();
 }
 
 JSTerm.prototype = {
@@ -2790,6 +2744,10 @@ JSTerm.prototype = {
    */
   history: null,
 
+  autocompletePopup: null,
+  inputNode: null,
+  completeNode: null,
+
   /**
    * Getter for the element that holds the messages we display.
    * @type nsIDOMElement
@@ -2808,10 +2766,14 @@ JSTerm.prototype = {
 
   /**
    * Initialize the JSTerminal UI.
-   * @private
    */
-  _initUI: function JST__initUI()
+  init: function JST_init()
   {
+    let chromeDocument = this.hud.owner.chromeDocument;
+    this.autocompletePopup = new AutocompletePopup(chromeDocument);
+    this.autocompletePopup.onSelect = this.onAutocompleteSelect.bind(this);
+    this.autocompletePopup.onClick = this.acceptProposedCompletion.bind(this);
+
     let doc = this.hud.document;
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");
@@ -3819,6 +3781,12 @@ JSTerm.prototype = {
     this.autocompletePopup.destroy();
     this.autocompletePopup = null;
 
+    let popup = this.hud.owner.chromeDocument
+                .getElementById("webConsole_autocompletePopup");
+    if (popup) {
+      popup.parentNode.removeChild(popup);
+    }
+
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
@@ -4047,6 +4015,11 @@ function WebConsoleConnectionProxy(aWebConsole, aTarget)
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onFileActivity = this._onFileActivity.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
+  this._onListTabs = this._onListTabs.bind(this);
+  this._onAttachTab = this._onAttachTab.bind(this);
+  this._onAttachConsole = this._onAttachConsole.bind(this);
+  this._onCachedMessages = this._onCachedMessages.bind(this);
+  this._connectionTimeout = this._connectionTimeout.bind(this);
 }
 
 WebConsoleConnectionProxy.prototype = {
@@ -4093,6 +4066,16 @@ WebConsoleConnectionProxy.prototype = {
   connected: false,
 
   /**
+   * Timer used for the connection.
+   * @private
+   * @type object
+   */
+  _connectTimer: null,
+
+  _connectDefer: null,
+  _disconnecter: null,
+
+  /**
    * The WebConsoleActor ID.
    *
    * @private
@@ -4130,11 +4113,31 @@ WebConsoleConnectionProxy.prototype = {
   /**
    * Initialize a debugger client and connect it to the debugger server.
    *
-   * @param function [aCallback]
-   *        Optional function to invoke when connection is established.
+   * @return object
+   *         A Promise object that is resolved/rejected based on the success of
+   *         the connection initialization.
    */
-  connect: function WCCP_connect(aCallback)
+  connect: function WCCP_connect()
   {
+    if (this._connectDefer) {
+      return this._connectDefer.promise;
+    }
+
+    this._connectDefer = Promise.defer();
+
+    let timeout = Services.prefs.getIntPref(PREF_CONNECTION_TIMEOUT);
+    this._connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._connectTimer.initWithCallback(this._connectionTimeout,
+                                        timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+
+    let promise = this._connectDefer.promise;
+    promise.then(function _onSucess() {
+      this._connectTimer.cancel();
+      this._connectTimer = null;
+    }.bind(this), function _onFailure() {
+      this._connectTimer = null;
+    }.bind(this));
+
     // TODO: convert the non-remote path to use the target API as well.
     let transport, client;
     if (this.target.isRemote) {
@@ -4143,7 +4146,6 @@ WebConsoleConnectionProxy.prototype = {
     else {
       this.initServer();
       transport = DebuggerServer.connectPipe();
-
       client = this.client = new DebuggerClient(transport);
     }
 
@@ -4157,39 +4159,54 @@ WebConsoleConnectionProxy.prototype = {
     if (this.target.isRemote) {
       if (!this.target.chrome) {
         // target.form is a TabActor grip
-        this._attachTab(this.target.form, aCallback);
+        this._attachTab(this.target.form);
       }
       else {
         // target.form is a RootActor grip
         this._consoleActor = this.target.form.consoleActor;
-        this._attachConsole(aCallback);
+        this._attachConsole();
       }
     }
     else {
       client.connect(function(aType, aTraits) {
-        client.listTabs(this._onListTabs.bind(this, aCallback));
+        client.listTabs(this._onListTabs);
       }.bind(this));
     }
+
+    return promise;
+  },
+
+  /**
+   * Connection timeout handler.
+   * @private
+   */
+  _connectionTimeout: function WCCP__connectionTimeout()
+  {
+    let error = {
+      error: "timeout",
+      message: l10n.getStr("connectionTimeout"),
+    };
+
+    this._connectDefer.reject(error);
   },
 
   /**
    * The "listTabs" response handler.
    *
    * @private
-   * @param function [aCallback]
-   *        Optional function to invoke once the connection is established.
    * @param object aResponse
    *        The JSON response object received from the server.
    */
-  _onListTabs: function WCCP__onListTabs(aCallback, aResponse)
+  _onListTabs: function WCCP__onListTabs(aResponse)
   {
     if (aResponse.error) {
       Cu.reportError("listTabs failed: " + aResponse.error + " " +
                      aResponse.message);
+      this._connectDefer.reject(aResponse);
       return;
     }
 
-    this._attachTab(aResponse.tabs[aResponse.selected], aCallback);
+    this._attachTab(aResponse.tabs[aResponse.selected]);
   },
 
   /**
@@ -4198,74 +4215,65 @@ WebConsoleConnectionProxy.prototype = {
    * @private
    * @param object aTab
    *        Grip for the tab to attach to.
-   * @param function aCallback
-   *        Function to invoke when the connection is established.
    */
-  _attachTab: function WCCP__attachTab(aTab, aCallback)
+  _attachTab: function WCCP__attachTab(aTab)
   {
     this._consoleActor = aTab.consoleActor;
     this._tabActor = aTab.actor;
     this.owner.onLocationChange(aTab.url, aTab.title);
-    this.client.attachTab(this._tabActor,
-                          this._onAttachTab.bind(this, aCallback));
+    this.client.attachTab(this._tabActor, this._onAttachTab);
   },
 
   /**
    * The "attachTab" response handler.
    *
    * @private
-   * @param function [aCallback]
-   *        Optional function to invoke once the connection is established.
    * @param object aResponse
    *        The JSON response object received from the server.
    * @param object aTabClient
    *        The TabClient instance for the attached tab.
    */
-  _onAttachTab: function WCCP__onAttachTab(aCallback, aResponse, aTabClient)
+  _onAttachTab: function WCCP__onAttachTab(aResponse, aTabClient)
   {
     if (aResponse.error) {
       Cu.reportError("attachTab failed: " + aResponse.error + " " +
                      aResponse.message);
+      this._connectDefer.reject(aResponse);
       return;
     }
 
     this.tabClient = aTabClient;
-    this._attachConsole(aCallback);
+    this._attachConsole();
   },
 
   /**
    * Attach to the Web Console actor.
-   *
    * @private
-   * @param function aCallback
-   *        Function to invoke when the connection is established.
    */
-  _attachConsole: function WCCP__attachConsole(aCallback)
+  _attachConsole: function WCCP__attachConsole()
   {
     let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
                      "FileActivity"];
     this.client.attachConsole(this._consoleActor, listeners,
-                              this._onAttachConsole.bind(this, aCallback));
+                              this._onAttachConsole);
   },
 
   /**
    * The "attachConsole" response handler.
    *
    * @private
-   * @param function [aCallback]
-   *        Optional function to invoke once the connection is established.
    * @param object aResponse
    *        The JSON response object received from the server.
    * @param object aWebConsoleClient
    *        The WebConsoleClient instance for the attached console, for the
    *        specific tab we work with.
    */
-  _onAttachConsole:
-  function WCCP__onAttachConsole(aCallback, aResponse, aWebConsoleClient)
+  _onAttachConsole: function WCCP__onAttachConsole(aResponse, aWebConsoleClient)
   {
     if (aResponse.error) {
       Cu.reportError("attachConsole failed: " + aResponse.error + " " +
                      aResponse.message);
+      this._connectDefer.reject(aResponse);
       return;
     }
 
@@ -4274,25 +4282,29 @@ WebConsoleConnectionProxy.prototype = {
     this._hasNativeConsoleAPI = aResponse.nativeConsoleAPI;
 
     let msgs = ["PageError", "ConsoleAPI"];
-    this.webConsoleClient.getCachedMessages(msgs,
-      this._onCachedMessages.bind(this, aCallback));
+    this.webConsoleClient.getCachedMessages(msgs, this._onCachedMessages);
   },
 
   /**
    * The "cachedMessages" response handler.
    *
    * @private
-   * @param function [aCallback]
-   *        Optional function to invoke once the connection is established.
    * @param object aResponse
    *        The JSON response object received from the server.
    */
-  _onCachedMessages: function WCCP__onCachedMessages(aCallback, aResponse)
+  _onCachedMessages: function WCCP__onCachedMessages(aResponse)
   {
     if (aResponse.error) {
       Cu.reportError("Web Console getCachedMessages error: " + aResponse.error +
                      " " + aResponse.message);
+      this._connectDefer.reject(aResponse);
       return;
+    }
+
+    if (!this._connectTimer) {
+      // This happens if the Promise is rejected (eg. a timeout), but the
+      // connection attempt is successful, nonetheless.
+      Cu.reportError("Web Console getCachedMessages error: invalid state.");
     }
 
     this.owner.displayCachedMessages(aResponse.messages);
@@ -4302,7 +4314,7 @@ WebConsoleConnectionProxy.prototype = {
     }
 
     this.connected = true;
-    aCallback && aCallback();
+    this._connectDefer.resolve(this);
   },
 
   /**
@@ -4432,30 +4444,33 @@ WebConsoleConnectionProxy.prototype = {
   /**
    * Disconnect the Web Console from the remote server.
    *
-   * @param function [aOnDisconnect]
-   *        Optional function to invoke when the connection is dropped.
+   * @return object
+   *         A Promise object that is resolved when disconnect completes.
    */
-  disconnect: function WCCP_disconnect(aOnDisconnect)
+  disconnect: function WCCP_disconnect()
   {
+    if (this._disconnecter) {
+      return this._disconnecter.promise;
+    }
+
+    this._disconnecter = Promise.defer();
+
     if (!this.client) {
-      aOnDisconnect && aOnDisconnect();
-      return;
+      this._disconnecter.resolve(null);
+      return this._disconnecter.promise;
     }
 
     let onDisconnect = function() {
       if (timer) {
         timer.cancel();
         timer = null;
+        this._disconnecter.resolve(null);
       }
-      if (aOnDisconnect) {
-        aOnDisconnect();
-        aOnDisconnect = null;
-      }
-    };
+    }.bind(this);
 
     let timer = null;
     let remoteTarget = this.target.isRemote;
-    if (aOnDisconnect && !remoteTarget) {
+    if (!remoteTarget) {
       timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       timer.initWithCallback(onDisconnect, 1500, Ci.nsITimer.TYPE_ONE_SHOT);
     }
@@ -4476,20 +4491,21 @@ WebConsoleConnectionProxy.prototype = {
     this.connected = false;
     this.owner = null;
 
-    try {
-      if (!remoteTarget) {
+    if (!remoteTarget) {
+      try {
         client.close(onDisconnect);
       }
+      catch (ex) {
+        Cu.reportError("Web Console disconnect exception: " + ex);
+        Cu.reportError(ex.stack);
+        onDisconnect();
+      }
     }
-    catch (ex) {
-      Cu.reportError("Web Console disconnect exception: " + ex);
-      Cu.reportError(ex.stack);
+    else {
       onDisconnect();
     }
 
-    if (remoteTarget) {
-      onDisconnect();
-    }
+    return this._disconnecter.promise;
   },
 };
 
