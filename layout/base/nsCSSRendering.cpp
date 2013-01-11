@@ -27,7 +27,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsTransform2D.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "nsIDocumentInlines.h"
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
