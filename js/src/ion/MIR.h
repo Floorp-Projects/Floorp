@@ -2595,7 +2595,7 @@ class MSub : public MBinaryArithInstruction
     int implicitTruncate_;
     MSub(MDefinition *left, MDefinition *right)
       : MBinaryArithInstruction(left, right),
-        implicitTruncate_(false)
+        implicitTruncate_(0)
     {
         setResultType(MIRType_Value);
     }
@@ -2732,7 +2732,7 @@ class MDiv : public MBinaryArithInstruction
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
-        implicitTruncate_(false)
+        implicitTruncate_(0)
     {
         if (type != MIRType_Value)
             specialization_ = type;
