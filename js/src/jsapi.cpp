@@ -3152,7 +3152,13 @@ JS_ValueToId(JSContext *cx, jsval valueArg, jsid *idp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    return ValueToId(cx, value, idp);
+
+    RootedId id(cx);
+    if (!ValueToId(cx, value, &id))
+        return false;
+
+    *idp = id;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)

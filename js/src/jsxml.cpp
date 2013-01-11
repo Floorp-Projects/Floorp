@@ -5528,10 +5528,14 @@ ValueToIdForXML(JSContext *cx, jsval v, jsid *idp)
 {
     if (JSVAL_IS_INT(v)) {
         int32_t i = JSVAL_TO_INT(v);
-        if (INT_FITS_IN_JSID(i))
+        if (INT_FITS_IN_JSID(i)) {
             *idp = INT_TO_JSID(i);
-        else if (!ValueToId(cx, v, idp))
-            return JS_FALSE;
+        } else {
+            RootedId id(cx);
+            if (!ValueToId(cx, v, &id))
+                return JS_FALSE;
+            *idp = id;
+        }
     } else if (JSVAL_IS_STRING(v)) {
         JSAtom *atom = AtomizeString(cx, JSVAL_TO_STRING(v));
         if (!atom)
@@ -5885,7 +5889,7 @@ xml_hasOwnProperty(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     RootedId id(cx);
-    if (!ValueToId(cx, name, id.address()))
+    if (!ValueToId(cx, name, &id))
         return false;
 
     RootedObject obj2(cx);
