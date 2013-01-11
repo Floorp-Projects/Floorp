@@ -120,7 +120,7 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
         mozilla::AudioChunk& chunk = *(iter);
         MOZ_ASSERT(chunk.mBuffer);
         const int16_t* buf =
-                static_cast<const int16_t*>(chunk.mBuffer->Data());
+          static_cast<const int16_t*>(chunk.mChannelData[0]);
         for(int i=0; i<chunk.mDuration; i++) {
           if(buf[i]) {
             //atleast one non-zero sample found.

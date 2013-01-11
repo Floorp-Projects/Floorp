@@ -1464,6 +1464,7 @@ private:
    */
 public:
   nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
+  nsIFrame* GetFixedContainingBlock(nsIFrame* aFrame);
 private:
   nsIFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 

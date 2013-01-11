@@ -121,12 +121,16 @@ var shell = {
       }
     } catch (e) { }
 
-    // Let Gaia notify the user of the crash.
-    this.sendChromeEvent({
-      type: "handle-crash",
-      crashID: crashID,
-      chrome: isChrome
-    });
+    // We can get here if we're just submitting old pending crashes.
+    // Check that there's a valid crashID so that we only notify the
+    // user if a crash just happened and not when we OOM. Bug 829477
+    if (crashID) {
+      this.sendChromeEvent({
+        type: "handle-crash",
+        crashID: crashID,
+        chrome: isChrome
+      });
+    }
   },
 
   // this function submit the pending crashes.
@@ -227,9 +231,7 @@ var shell = {
           let cr = Cc["@mozilla.org/xre/app-info;1"]
                      .getService(Ci.nsICrashReporter);
           cr.annotateCrashReport("B2G_OS_Version", value);
-        } catch(e) {
-          dump("exception: " + e);
-        }
+        } catch(e) { }
       });
 #endif
     } catch(e) {

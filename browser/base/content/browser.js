@@ -1173,8 +1173,8 @@ var gBrowserInit = {
     allTabs.readPref();
     TabsOnTop.init();
     BookmarksMenuButton.init();
-    TabsInTitlebar.init();
     gPrivateBrowsingUI.init();
+    TabsInTitlebar.init();
     retrieveToolbarIconsizesFromTheme();
 
     // Wait until chrome is painted before executing code not critical to making the window visible

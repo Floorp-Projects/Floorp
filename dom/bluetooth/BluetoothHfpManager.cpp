@@ -629,7 +629,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
      */
     ParseAtCommand(msg, 8, atCommandValues);
 
-    if (atCommandValues.Length() <= 4) {
+    if (atCommandValues.Length() < 4) {
       NS_WARNING("Could't get the value of command [AT+CMER=]");
       goto respond_with_ok;
     }

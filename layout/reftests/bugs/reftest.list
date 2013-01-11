@@ -1738,3 +1738,5 @@ skip-if(B2G) == 814952-1.html 814952-1-ref.html
 == 816458-1.html 816458-1-ref.html
 == 816359-1.html 816359-1-ref.html
 skip-if(B2G) == 818276-1.html 818276-1-ref.html
+== 827577-1a.html 827577-1-ref.html
+== 827577-1b.html 827577-1-ref.html
