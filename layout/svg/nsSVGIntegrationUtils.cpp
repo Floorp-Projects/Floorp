@@ -356,8 +356,13 @@ nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& a
   nsIFrame* firstFrame =
     nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aFrame);
   // Convert aPt to user space:
-  nsPoint toUserSpace =
-    aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
+  nsPoint toUserSpace;
+  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    toUserSpace = aFrame->GetPosition();
+  } else {
+    toUserSpace =
+      aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
+  }
   nsPoint pt = aPt + toUserSpace;
   return nsSVGUtils::HitTestClip(firstFrame, pt);
 }

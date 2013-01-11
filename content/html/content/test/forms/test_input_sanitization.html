@@ -26,12 +26,13 @@ var inputTypes =
 [
   "text", "password", "search", "tel", "hidden", "checkbox", "radio",
   "submit", "image", "reset", "button", "email", "url", "number", "date",
+  "time",
 ];
 
 var todoTypes =
 [
   "range", "color",
-  "month", "week", "time", "datetime", "datetime-local",
+  "month", "week", "datetime", "datetime-local",
 ];
 
 var valueModeValue =
@@ -121,9 +122,10 @@ function sanitizeValue(aType, aValue)
 			return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
 		case "date":
 			return "";
+		case "time":
+                  return ""; 
 		case "month":
 		case "week":
-		case "time":
 		case "datetime":
 		case "datetime-local":
 			// TODO: write the sanitize algorithm.
@@ -162,6 +164,11 @@ function checkSanitizing(element)
     "13.37",
     "1.234567898765432",
   ];
+
+  // TODO: temp
+  if (element.type == 'time') {
+    return;
+  }
 
   for (value of testData) {
     element.setAttribute('value', value);

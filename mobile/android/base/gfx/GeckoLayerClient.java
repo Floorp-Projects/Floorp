@@ -17,18 +17,12 @@ import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 {
@@ -124,6 +118,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         mPanZoomController = new PanZoomController(this, eventDispatcher);
         mView = view;
+        mView.setListener(this);
     }
 
     /** Attaches to root layer so that Gecko appears. */
@@ -133,7 +128,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = mView.getRenderer();
 
-        mView.setListener(this);
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();
@@ -477,9 +471,9 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations
             // that are in progress and send an updated display port request to browser.js as soon
-            // as possible. We accomplish this by passing true to abortPanZoomAnimation, which
-            // sends the request after aborting the animation. The display port request is actually
-            // a full viewport update, which is fine because if browser.js has somehow moved to
+            // as possible. The call to PanZoomController.abortAnimation accomplishes this by calling the
+            // forceRedraw function, which sends the viewport to gecko. The display port request is
+            // actually a full viewport update, which is fine because if browser.js has somehow moved to
             // be out of sync with this first-paint viewport, then we force them back in sync.
             abortPanZoomAnimation();
 
@@ -619,6 +613,14 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    public void sizeChanged(int width, int height) {
+        // We need to make sure a draw happens synchronously at this point,
+        // but resizing the surface before the SurfaceView has resized will
+        // cause a visible jump.
+        compositionResumeRequested(mWindowSize.width, mWindowSize.height);
+    }
+
+    /** Implementation of LayerView.Listener */
     public void surfaceChanged(int width, int height) {
         setViewportSize(width, height);
 
@@ -626,7 +628,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // paused (e.g. during an orientation change), to make the compositor
         // aware of the changed surface.
         compositionResumeRequested(width, height);
-        renderRequested();
     }
 
     /** Implementation of LayerView.Listener */
@@ -690,7 +691,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of PanZoomTarget */
-    public void setForceRedraw() {
+    public void forceRedraw() {
         mForceRedraw = true;
         if (mGeckoIsReady) {
             geometryChanged();

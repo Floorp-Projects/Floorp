@@ -6,7 +6,6 @@
 
 #include "WorkerPrivate.h"
 
-#include "mozIThirdPartyUtil.h"
 #include "nsIClassInfo.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIConsoleService.h"
@@ -1321,21 +1320,23 @@ public:
   }
 };
 
-class UpdateJSRuntimeHeapSizeRunnable : public WorkerControlRunnable
+class UpdateJSWorkerMemoryParameterRunnable : public WorkerControlRunnable
 {
-  uint32_t mJSRuntimeHeapSize;
+  uint32_t mValue;
+  JSGCParamKey mKey;
 
 public:
-  UpdateJSRuntimeHeapSizeRunnable(WorkerPrivate* aWorkerPrivate,
-                                  uint32_t aJSRuntimeHeapSize)
+  UpdateJSWorkerMemoryParameterRunnable(WorkerPrivate* aWorkerPrivate,
+                                        JSGCParamKey aKey,
+                                        uint32_t aValue)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
-    mJSRuntimeHeapSize(aJSRuntimeHeapSize)
+    mValue(aValue), mKey(aKey)
   { }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    aWorkerPrivate->UpdateJSRuntimeHeapSizeInternal(aCx, mJSRuntimeHeapSize);
+    aWorkerPrivate->UpdateJSWorkerMemoryParameter(aCx, mKey, mValue);
     return true;
   }
 };
@@ -1797,7 +1798,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mMemoryReportCondVar(mMutex, "WorkerPrivateParent Memory Report CondVar"),
   mJSObject(aObject), mParent(aParent), mParentJSContext(aParentJSContext),
   mScriptURL(aScriptURL), mDomain(aDomain), mBusyCount(0),
-  mParentStatus(Pending), mJSContextOptions(0), mJSRuntimeHeapSize(0),
+  mParentStatus(Pending), mJSContextOptions(0),
+  mJSRuntimeHeapSize(0), mJSWorkerAllocationThreshold(3),
   mGCZeal(0), mJSObjectRooted(false), mParentSuspended(false),
   mIsChromeWorker(aIsChromeWorker), mPrincipalIsSystem(false),
   mMainThreadObjectsForgotten(false), mEvalAllowed(aEvalAllowed)
@@ -1827,6 +1829,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                  "Runtime heap size mismatch!");
     mJSRuntimeHeapSize = aParent->GetJSRuntimeHeapSize();
 
+    mJSWorkerAllocationThreshold = aParent->GetJSWorkerAllocationThreshold();
+
 #ifdef JS_GC_ZEAL
     mGCZeal = aParent->GetGCZeal();
 #endif
@@ -1835,7 +1839,10 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     AssertIsOnMainThread();
 
     mJSContextOptions = RuntimeService::GetDefaultJSContextOptions();
-    mJSRuntimeHeapSize = RuntimeService::GetDefaultJSRuntimeHeapSize();
+    mJSRuntimeHeapSize =
+      RuntimeService::GetDefaultJSWorkerMemoryParameter(JSGC_MAX_BYTES);
+    mJSWorkerAllocationThreshold =
+      RuntimeService::GetDefaultJSWorkerMemoryParameter(JSGC_ALLOCATION_THRESHOLD);
 #ifdef JS_GC_ZEAL
     mGCZeal = RuntimeService::GetDefaultGCZeal();
 #endif
@@ -2201,17 +2208,28 @@ WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateJSRuntimeHeapSize(JSContext* aCx,
-                                                      uint32_t aMaxBytes)
+WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
+                                                            JSGCParamKey aKey,
+                                                            uint32_t aValue)
 {
   AssertIsOnParentThread();
+  switch(aKey) {
+    case JSGC_ALLOCATION_THRESHOLD:
+      mJSWorkerAllocationThreshold = aValue;
+      break;
+    case JSGC_MAX_BYTES:
+      mJSRuntimeHeapSize = aValue;
+      break;
+    default:
+      break;
+  }
 
-  mJSRuntimeHeapSize = aMaxBytes;
-
-  nsRefPtr<UpdateJSRuntimeHeapSizeRunnable> runnable =
-    new UpdateJSRuntimeHeapSizeRunnable(ParentAsWorkerPrivate(), aMaxBytes);
+  nsRefPtr<UpdateJSWorkerMemoryParameterRunnable> runnable =
+    new UpdateJSWorkerMemoryParameterRunnable(ParentAsWorkerPrivate(),
+                                              aKey,
+                                              aValue);
   if (!runnable->Dispatch(aCx)) {
-    NS_WARNING("Failed to update worker heap size!");
+    NS_WARNING("Failed to update memory parameter!");
     JS_ClearPendingException(aCx);
   }
 }
@@ -2476,41 +2494,36 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           return nullptr;
         }
 
-        nsCOMPtr<nsIURI> codebase;
-        if (NS_FAILED(principal->GetURI(getter_AddRefs(codebase)))) {
-          JS_ReportError(aCx, "Could not determine codebase!");
-          return nullptr;
-        }
+        // We use the document's base domain to limit the number of workers
+        // each domain can create. For sandboxed documents, we use the domain
+        // of their first non-sandboxed document, walking up until we find
+        // one. If we can't find one, we fall back to using the GUID of the
+        // null principal as the base domain.
+        if (document->GetSandboxFlags() & SANDBOXED_ORIGIN) {
+          nsCOMPtr<nsIDocument> tmpDoc = document;
+          do {
+            tmpDoc = tmpDoc->GetParentDocument();
+          } while (tmpDoc && tmpDoc->GetSandboxFlags() & SANDBOXED_ORIGIN);
 
-        NS_NAMED_LITERAL_CSTRING(file, "file");
+          if (tmpDoc) {
+            // There was an unsandboxed ancestor, yay!
+            nsCOMPtr<nsIPrincipal> tmpPrincipal = tmpDoc->NodePrincipal();
 
-        bool isFile;
-        if (NS_FAILED(codebase->SchemeIs(file.get(), &isFile))) {
-          JS_ReportError(aCx, "Could not determine if codebase is file!");
-          return nullptr;
-        }
-
-        if (isFile) {
-          // XXX Fix this, need a real domain here.
-          domain = file;
-        }
-        // Workaround for workers needing a string domain - will be fixed
-        // in a followup after this lands.
-        else if (document->GetSandboxFlags() & SANDBOXED_ORIGIN) {
-          if (NS_FAILED(codebase->GetAsciiSpec(domain))) {
-            JS_ReportError(aCx, "Could not get URI's spec for sandboxed document!");
-            return nullptr;
+            if (NS_FAILED(tmpPrincipal->GetBaseDomain(domain))) {
+              JS_ReportError(aCx, "Could not determine base domain!");
+              return nullptr;
+            }
+          } else {
+            // No unsandboxed ancestor, use our GUID.
+            if (NS_FAILED(principal->GetBaseDomain(domain))) {
+              JS_ReportError(aCx, "Could not determine base domain!");
+             return nullptr;
+            }
           }
         } else {
-          nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-            do_GetService(THIRDPARTYUTIL_CONTRACTID);
-          if (!thirdPartyUtil) {
-            JS_ReportError(aCx, "Could not get third party helper service!");
-            return nullptr;
-          }
-
-          if (NS_FAILED(thirdPartyUtil->GetBaseDomain(codebase, domain))) {
-            JS_ReportError(aCx, "Could not get domain!");
+          // Document creating the worker is not sandboxed.
+          if (NS_FAILED(principal->GetBaseDomain(domain))) {
+            JS_ReportError(aCx, "Could not determine base domain!");
             return nullptr;
           }
         }
@@ -4017,15 +4030,15 @@ WorkerPrivate::UpdateJSContextOptionsInternal(JSContext* aCx, uint32_t aOptions)
 }
 
 void
-WorkerPrivate::UpdateJSRuntimeHeapSizeInternal(JSContext* aCx,
-                                               uint32_t aMaxBytes)
+WorkerPrivate::UpdateJSWorkerMemoryParameterInternal(JSContext* aCx,
+                                                     JSGCParamKey aKey,
+                                                     uint32_t aValue)
 {
   AssertIsOnWorkerThread();
-
-  JS_SetGCParameter(JS_GetRuntime(aCx), JSGC_MAX_BYTES, aMaxBytes);
+  JS_SetGCParameter(JS_GetRuntime(aCx), aKey, aValue);
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdateJSRuntimeHeapSize(aCx, aMaxBytes);
+    mChildWorkers[index]->UpdateJSWorkerMemoryParameter(aCx, aKey, aValue);
   }
 }
 
@@ -4200,7 +4213,7 @@ WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  return static_cast<WorkerPrivate*>(JS_GetContextPrivate(aCx));
+  return static_cast<WorkerPrivate*>(JS_GetRuntimePrivate(JS_GetRuntime(aCx)));
 }
 
 JSStructuredCloneCallbacks*

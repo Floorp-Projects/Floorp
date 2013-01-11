@@ -6,12 +6,12 @@
  *
  * on files with these headers:
  *
- * # IndicSyllabicCategory-6.1.0.txt
- * # Date: 2011-08-31, 23:54:00 GMT [KW]
- * # IndicMatraCategory-6.1.0.txt
- * # Date: 2011-08-31, 23:50:00 GMT [KW]
- * # Blocks-6.1.0.txt
- * # Date: 2011-06-14, 18:26:00 GMT [KW, LI]
+ * # IndicSyllabicCategory-6.2.0.txt
+ * # Date: 2012-05-15, 21:12:00 GMT [KW]
+ * # IndicMatraCategory-6.2.0.txt
+ * # Date: 2012-05-15, 21:10:00 GMT [KW]
+ * # Blocks-6.2.0.txt
+ * # Date: 2012-05-14, 22:42:00 GMT [KW, LI]
  */
 
 #ifndef HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH

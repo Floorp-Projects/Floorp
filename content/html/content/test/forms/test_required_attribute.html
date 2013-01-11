@@ -166,6 +166,8 @@ function checkInputRequiredValidity(type)
     element.value = '42';
   } else if (element.type == 'date') {
     element.value = '2010-10-10';
+  } else if (element.type == 'time') {
+    element.value = '21:21';
   } else {
     element.value = 'foo';
   }
@@ -375,10 +377,10 @@ for (type of typeRequireNotApply) {
 }
 
 // Now, checking for all types which accept the required attribute.
-// TODO: check 'datetime', 'month', 'week', 'time' and 'datetime-local'
+// TODO: check 'datetime', 'month', 'week' and 'datetime-local'
 //       when they will be implemented.
 var typeRequireApply = ["text", "password", "search", "tel", "email", "url",
-                        "number", "date"];
+                        "number", "date", "time"];
 
 for (type of typeRequireApply) {
   checkInputRequiredValidity(type);

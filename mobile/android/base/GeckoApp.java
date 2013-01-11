@@ -17,7 +17,6 @@ import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
-import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.updater.UpdateService;
 
@@ -31,12 +30,10 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.WallpaperManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -59,11 +56,9 @@ import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StrictMode;
-import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -85,9 +80,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-
 import android.widget.AbsoluteLayout;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -99,17 +92,12 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -249,6 +237,8 @@ abstract public class GeckoApp
                 // Fall through...
             case SELECTED:
                 invalidateOptionsMenu();
+                if (mFormAssistPopup != null)
+                    mFormAssistPopup.hide();
                 break;
         }
     }
@@ -629,52 +619,8 @@ abstract public class GeckoApp
         if (ReaderModeUtils.isAboutReader(url))
             url = ReaderModeUtils.getUrlFromAboutReader(url);
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            final Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
-            shareIntent.setType("text/plain");
-
-            PackageManager pm = getPackageManager();
-            List<ResolveInfo> activities = pm.queryIntentActivities(shareIntent, 0);
-            Collections.sort(activities, new Comparator<ResolveInfo>() {
-                @Override
-                public int compare(ResolveInfo one, ResolveInfo two) {
-                    return one.preferredOrder - two.preferredOrder;
-                }
-
-                @Override
-                public boolean equals(Object info) {
-                    return this.equals(info);
-                }
-            });
-
-            GeckoSubMenu menu = new GeckoSubMenu(mAppContext, null);
-
-            GeckoMenu parent = (GeckoMenu) mMenu;
-            menu.setCallback(parent.getCallback());
-            menu.setMenuPresenter(parent.getMenuPresenter());
-
-            for (ResolveInfo activity : activities) {
-                 final ActivityInfo activityInfo = activity.activityInfo;
-
-                 MenuItem item = menu.add(activity.loadLabel(pm));
-                 item.setIcon(activity.loadIcon(pm));
-                 item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                     @Override
-                     public boolean onMenuItemClick(MenuItem item) {
-                         shareIntent.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
-                         startActivity(shareIntent);
-                         return true;
-                     }
-                 });
-            }
-
-            showMenu(menu);
-        } else {
-            GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                          Intent.ACTION_SEND, tab.getDisplayTitle());
-        }
+        GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                      Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
     protected void onSaveInstanceState(Bundle outState) {
@@ -688,11 +634,6 @@ abstract public class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, inBackground);
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
-    }
-
-    public void hideFormAssistPopup() {
-        if (mFormAssistPopup != null)
-            mFormAssistPopup.hide();
     }
 
     void handleSecurityChange(final int tabId, final JSONObject identityData) {

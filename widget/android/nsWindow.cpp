@@ -162,7 +162,8 @@ nsWindow::nsWindow() :
     mIMEComposing(false),
     mIMEMaskSelectionUpdate(false),
     mIMEMaskTextUpdate(false),
-    mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
+    mIMEMaskEventsCount(1), // Mask IME events since there's no focus yet
+    mIMESelectionChanged(false)
 {
 }
 
@@ -173,7 +174,11 @@ nsWindow::~nsWindow()
     if (top->mFocus == this)
         top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
-    SetCompositor(NULL, NULL);
+    if (mLayerManager == sLayerManager) {
+        // If this window was the one that created the global OMTC layer manager
+        // and compositor, then we should null those out.
+        SetCompositor(NULL, NULL, NULL);
+    }
 }
 
 bool
@@ -696,9 +701,14 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
     bool useCompositor = UseOffMainThreadCompositing();
 
     if (useCompositor) {
+        if (sLayerManager) {
+            return sLayerManager;
+        }
         CreateCompositor();
         if (mLayerManager) {
-            SetCompositor(mCompositorParent, mCompositorChild);
+            // for OMTC create a single layer manager and compositor that will be
+            // used for all windows.
+            SetCompositor(mLayerManager, mCompositorParent, mCompositorChild);
             return mLayerManager;
         }
 
@@ -939,8 +949,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             // Since we might have prevented one or more draw events from
             // occurring while the compositor was paused, we need to schedule
             // a draw event now.
-            sCompositorPaused = false;
-            win->RedrawAll();
+            if (!sCompositorPaused) {
+                win->RedrawAll();
+            }
             break;
 
         case AndroidGeckoEvent::GECKO_EVENT_SYNC:
@@ -2064,9 +2075,12 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 
     if (aFocus) {
         mIMETextChanges.Clear();
-        mIMESelectionChange = IMEChange();
+        mIMESelectionChanged = false;
         // OnIMETextChange also notifies selection
-        OnIMETextChange(0, INT32_MAX, INT32_MAX);
+        // Use 'INT32_MAX / 2' here because subsequent text changes might
+        // combine with this text change, and overflow might occur if
+        // we just use INT32_MAX
+        OnIMETextChange(0, INT32_MAX / 2, INT32_MAX / 2);
         FlushIMEChanges();
     } else {
         // Mask events because we lost focus. On the next focus event, Gecko will notify
@@ -2086,7 +2100,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 void
 nsWindow::PostFlushIMEChanges()
 {
-    if (!mIMETextChanges.IsEmpty() || !mIMESelectionChange.IsEmpty()) {
+    if (!mIMETextChanges.IsEmpty() || mIMESelectionChanged) {
         // Already posted
         return;
     }
@@ -2101,7 +2115,6 @@ nsWindow::FlushIMEChanges()
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     for (uint32_t i = 0; i < mIMETextChanges.Length(); i++) {
         IMEChange &change = mIMETextChanges[i];
-        MOZ_ASSERT(change.IsTextChange());
 
         nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
         InitEvent(event, nullptr);
@@ -2119,12 +2132,18 @@ nsWindow::FlushIMEChanges()
     }
     mIMETextChanges.Clear();
 
-    if (!mIMESelectionChange.IsEmpty()) {
-        MOZ_ASSERT(!mIMESelectionChange.IsTextChange());
+    if (mIMESelectionChanged) {
+        nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
+        InitEvent(event, nullptr);
+
+        DispatchEvent(&event);
+        if (!event.mSucceeded)
+            return;
+
         AndroidBridge::NotifyIMEChange(nullptr, 0,
-                                       mIMESelectionChange.mStart,
-                                       mIMESelectionChange.mOldEnd, -1);
-        mIMESelectionChange = IMEChange();
+                                       event.GetSelectionStart(),
+                                       event.GetSelectionEnd(), -1);
+        mIMESelectionChanged = false;
     }
 }
 
@@ -2138,7 +2157,7 @@ nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
             aStart, aOldEnd, aNewEnd);
 
     /* Make sure Java's selection is up-to-date */
-    mIMESelectionChange = IMEChange();
+    mIMESelectionChanged = false;
     OnIMESelectionChange();
     PostFlushIMEChanges();
 
@@ -2209,17 +2228,8 @@ nsWindow::OnIMESelectionChange(void)
 
     ALOGIME("IME: OnIMESelectionChange");
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
-    nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
-    InitEvent(event, nullptr);
-
-    DispatchEvent(&event);
-    if (!event.mSucceeded)
-        return NS_OK;
-
     PostFlushIMEChanges();
-    mIMESelectionChange = IMEChange((int32_t)event.GetSelectionStart(),
-                                    (int32_t)event.GetSelectionEnd());
+    mIMESelectionChanged = true;
     return NS_OK;
 }
 
@@ -2275,16 +2285,19 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 
 // off-main-thread compositor fields and functions
 
+nsRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager = 0;
 nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
 nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
 bool nsWindow::sCompositorPaused = false;
 
 void
-nsWindow::SetCompositor(mozilla::layers::CompositorParent* aCompositorParent,
+nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
+                        mozilla::layers::CompositorParent* aCompositorParent,
                         mozilla::layers::CompositorChild* aCompositorChild)
 {
     bool sizeChangeNeeded = (aCompositorParent && !sCompositorParent && gAndroidBounds.width != 0);
 
+    sLayerManager = aLayerManager;
     sCompositorParent = aCompositorParent;
     sCompositorChild = aCompositorChild;
 
@@ -2312,8 +2325,8 @@ nsWindow::SchedulePauseComposition()
 void
 nsWindow::ScheduleResumeComposition(int width, int height)
 {
-    if (sCompositorParent) {
-        sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
+    if (sCompositorParent && sCompositorParent->ScheduleResumeOnCompositorThread(width, height)) {
+        sCompositorPaused = false;
     }
 }
 

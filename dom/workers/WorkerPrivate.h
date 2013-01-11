@@ -193,6 +193,7 @@ private:
   Status mParentStatus;
   uint32_t mJSContextOptions;
   uint32_t mJSRuntimeHeapSize;
+  uint32_t mJSWorkerAllocationThreshold;
   uint8_t mGCZeal;
   bool mJSObjectRooted;
   bool mParentSuspended;
@@ -304,7 +305,7 @@ public:
   UpdateJSContextOptions(JSContext* aCx, uint32_t aOptions);
 
   void
-  UpdateJSRuntimeHeapSize(JSContext* aCx, uint32_t aJSRuntimeHeapSize);
+  UpdateJSWorkerMemoryParameter(JSContext* aCx, JSGCParamKey key, uint32_t value);
 
 #ifdef JS_GC_ZEAL
   void
@@ -483,6 +484,12 @@ public:
   GetJSRuntimeHeapSize() const
   {
     return mJSRuntimeHeapSize;
+  }
+
+  uint32_t
+  GetJSWorkerAllocationThreshold() const
+  {
+    return mJSWorkerAllocationThreshold;
   }
 
 #ifdef JS_GC_ZEAL
@@ -706,7 +713,7 @@ public:
   UpdateJSContextOptionsInternal(JSContext* aCx, uint32_t aOptions);
 
   void
-  UpdateJSRuntimeHeapSizeInternal(JSContext* aCx, uint32_t aJSRuntimeHeapSize);
+  UpdateJSWorkerMemoryParameterInternal(JSContext* aCx, JSGCParamKey key, uint32_t aValue);
 
   void
   ScheduleDeletion(bool aWasPending);
@@ -770,6 +777,22 @@ public:
   // This may block!
   void
   EndCTypesCall();
+
+  void
+  BeginCTypesCallback()
+  {
+    // If a callback is beginning then we need to do the exact same thing as
+    // when a ctypes call ends.
+    EndCTypesCall();
+  }
+
+  void
+  EndCTypesCallback()
+  {
+    // If a callback is ending then we need to do the exact same thing as
+    // when a ctypes call begins.
+    BeginCTypesCall();
+  }
 
 private:
   WorkerPrivate(JSContext* aCx, JSObject* aObject, WorkerPrivate* aParent,

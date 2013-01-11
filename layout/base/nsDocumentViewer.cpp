@@ -1624,6 +1624,9 @@ nsDocumentViewer::Destroy()
 
   // The document was not put in the bfcache
 
+  if (mPresShell) {
+    DestroyPresShell();
+  }
   if (mDocument) {
     mDocument->Destroy();
     mDocument = nullptr;
@@ -1656,10 +1659,6 @@ nsDocumentViewer::Destroy()
   }
 
   mDeviceContext = nullptr;
-
-  if (mPresShell) {
-    DestroyPresShell();
-  }
 
   if (mPresContext) {
     DestroyPresContext();

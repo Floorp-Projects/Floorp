@@ -27,14 +27,6 @@ all_xpis = $(foreach dir,$(EXTENSIONS),$(DISTROEXT)/$(dir).xpi)
 libs:: $(all_xpis)
 GARBAGE += $(all_xpis)
 
-$(all_xpis): $(DISTROEXT)/%.xpi: $(call mkdir_deps,$(DISTROEXT)) libs-%
-	cd $* && \
-	$(ZIP) -r9XD $@ * -x \*.in -x \*.mkdir.done
-	cd $(call core_abspath,$(srcdir)/$*) && \
-	$(ZIP) -r9XD $@ * -x \*.in -x \*.mkdir.done
-
-.PHONY: $(all_xpis:.xpi=)
-
 define pp_one
 $(2) := $(2)
 $(2)_PATH := $(dir $(2))
@@ -50,3 +42,11 @@ $(foreach d,$(EXTENSIONS), \
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+$(all_xpis): $(DISTROEXT)/%.xpi: $(call mkdir_deps,$(DISTROEXT)) libs-%
+	cd $* && \
+	$(ZIP) -r9XD $@ * -x \*.in -x \*.mkdir.done
+	cd $(call core_abspath,$(srcdir)/$*) && \
+	$(ZIP) -r9XD $@ * -x \*.in -x \*.mkdir.done
+
+.PHONY: $(all_xpis:.xpi=)

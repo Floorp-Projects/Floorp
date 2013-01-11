@@ -144,7 +144,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
  *
  * Note: requestOrigin is scoped outside the PR_BEGIN_MACRO/PR_END_MACRO on
  * purpose */
-#define CHECK_PRINCIPAL                                                       \
+#define CHECK_PRINCIPAL_AND_DATA(action)                                      \
   nsCOMPtr<nsIURI> requestOrigin;                                             \
   PR_BEGIN_MACRO                                                              \
   if (originPrincipal) {                                                      \
@@ -153,12 +153,32 @@ NS_CP_ContentTypeName(uint32_t contentType)
           secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);        \
       }                                                                       \
       if (secMan) {                                                           \
-          bool isSystem;                                                    \
+          bool isSystem;                                                      \
           nsresult rv = secMan->IsSystemPrincipal(originPrincipal,            \
                                                   &isSystem);                 \
           NS_ENSURE_SUCCESS(rv, rv);                                          \
           if (isSystem) {                                                     \
               *decision = nsIContentPolicy::ACCEPT;                           \
+              nsCOMPtr<nsINode> n = do_QueryInterface(context);               \
+              if (!n) {                                                       \
+                  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(context);   \
+                  n = win ? win->GetExtantDoc() : nullptr;                    \
+              }                                                               \
+              if (n) {                                                        \
+                  nsIDocument* d = n->OwnerDoc();                             \
+                  if (d->IsLoadedAsData() || d->IsBeingUsedAsImage() ||       \
+                      d->IsResourceDoc()) {                                   \
+                      nsCOMPtr<nsIContentPolicy> dataPolicy =                 \
+                          do_GetService(                                      \
+                              "@mozilla.org/data-document-content-policy;1"); \
+                      if (dataPolicy) {                                       \
+                          dataPolicy-> action (contentType, contentLocation,  \
+                                               requestOrigin, context,        \
+                                               mimeType, extra,               \
+                                               originPrincipal, decision);    \
+                      }                                                       \
+                  }                                                           \
+              }                                                               \
               return NS_OK;                                                   \
           }                                                                   \
       }                                                                       \
@@ -187,7 +207,7 @@ NS_CheckContentLoadPolicy(uint32_t          contentType,
                           nsIContentPolicy *policyService = nullptr,
                           nsIScriptSecurityManager* aSecMan = nullptr)
 {
-    CHECK_PRINCIPAL;
+    CHECK_PRINCIPAL_AND_DATA(ShouldLoad);
     if (policyService) {
         CHECK_CONTENT_POLICY_WITH_SERVICE(ShouldLoad, policyService);
     }
@@ -214,7 +234,7 @@ NS_CheckContentProcessPolicy(uint32_t          contentType,
                              nsIContentPolicy *policyService = nullptr,
                              nsIScriptSecurityManager* aSecMan = nullptr)
 {
-    CHECK_PRINCIPAL;
+    CHECK_PRINCIPAL_AND_DATA(ShouldProcess);
     if (policyService) {
         CHECK_CONTENT_POLICY_WITH_SERVICE(ShouldProcess, policyService);
     }

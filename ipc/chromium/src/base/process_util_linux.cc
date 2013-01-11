@@ -29,10 +29,6 @@
 # include <private/android_filesystem_config.h>
 # define CHILD_UNPRIVILEGED_UID AID_APP
 # define CHILD_UNPRIVILEGED_GID AID_APP
-# define CHILD_CAMERA_UID AID_SYSTEM
-# define CHILD_CAMERA_GID AID_SDCARD_RW
-# define CHILD_VIDEO_UID AID_MEDIA
-# define CHILD_VIDEO_GID AID_AUDIO
 #else
 /*
  * On platforms that are not gonk based, we fall back to an arbitrary
@@ -239,7 +235,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
       gid_t gid = CHILD_UNPRIVILEGED_GID;
       uid_t uid = CHILD_UNPRIVILEGED_UID;
 #ifdef MOZ_WIDGET_GONK
-      if (privs == PRIVILEGES_UNPRIVILEGED) {
+      {
         static bool checked_pix_max, pix_max_ok;
         if (!checked_pix_max) {
           checked_pix_max = true;
@@ -266,12 +262,20 @@ bool LaunchApp(const std::vector<std::string>& argv,
         }
         gid += getpid();
         uid += getpid();
-      } else if (privs == PRIVILEGES_CAMERA) {
-        uid = CHILD_CAMERA_UID;
-        gid = CHILD_CAMERA_GID;
-      } else if (privs == PRIVILEGES_VIDEO) {
-        uid = CHILD_VIDEO_UID;
-        gid = CHILD_VIDEO_GID;
+      }
+      if (privs == PRIVILEGES_CAMERA) {
+        gid_t groups[] = { AID_AUDIO, AID_CAMERA, AID_SDCARD_RW };
+        if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0) {
+          DLOG(ERROR) << "FAILED TO setgroups() CHILD PROCESS, path: " << argv_cstr[0];
+          _exit(127);
+        }
+      }
+      else if (privs == PRIVILEGES_VIDEO) {
+        gid_t groups[] = { AID_AUDIO, AID_MEDIA };
+        if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0) {
+          DLOG(ERROR) << "FAILED TO setgroups() CHILD PROCESS, path: " << argv_cstr[0];
+          _exit(127);
+        }
       }
 #endif
       if (setgid(gid) != 0) {

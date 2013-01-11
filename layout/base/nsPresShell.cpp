@@ -33,7 +33,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
-#include "nsCSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
+#include "nsCSSStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsAnimationManager.h"
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
@@ -2419,7 +2419,7 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 
   if (aUpdateType & UPDATE_STYLE) {
     mStyleSet->EndUpdate();
-    if (mStylesHaveChanged)
+    if (mStylesHaveChanged || !mChangedScopeStyleRoots.IsEmpty())
       ReconstructStyleData();
   }
 
@@ -4170,6 +4170,15 @@ PresShell::ReconstructFrames(void)
 void
 nsIPresShell::ReconstructStyleDataInternal()
 {
+  nsAutoTArray<nsRefPtr<mozilla::dom::Element>,1> scopeRoots;
+  mChangedScopeStyleRoots.SwapElements(scopeRoots);
+
+  if (mStylesHaveChanged) {
+    // If we need to restyle everything, no need to restyle individual
+    // scoped style roots.
+    scopeRoots.Clear();
+  }
+
   mStylesHaveChanged = false;
 
   if (mIsDestroying) {
@@ -4193,13 +4202,43 @@ nsIPresShell::ReconstructStyleDataInternal()
     return;
   }
   
-  mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree, NS_STYLE_HINT_NONE);
+  if (scopeRoots.IsEmpty()) {
+    // If scopeRoots is empty, we know that mStylesHaveChanged was true at
+    // the beginning of this function, and that we need to restyle the whole
+    // document.
+    mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree,
+                                        NS_STYLE_HINT_NONE);
+  } else {
+    for (uint32_t i = 0; i < scopeRoots.Length(); i++) {
+      Element* scopeRoot = scopeRoots[i];
+      mFrameConstructor->PostRestyleEvent(scopeRoot, eRestyle_Subtree,
+                                          NS_STYLE_HINT_NONE);
+    }
+  }
 }
 
 void
 nsIPresShell::ReconstructStyleDataExternal()
 {
   ReconstructStyleDataInternal();
+}
+
+void
+PresShell::RecordStyleSheetChange(nsIStyleSheet* aStyleSheet)
+{
+  if (mStylesHaveChanged)
+    return;
+
+  nsRefPtr<nsCSSStyleSheet> cssStyleSheet = do_QueryObject(aStyleSheet);
+  if (cssStyleSheet) {
+    Element* scopeElement = cssStyleSheet->GetScopeElement();
+    if (scopeElement) {
+      mChangedScopeStyleRoots.AppendElement(scopeElement);
+      return;
+    }
+  }
+
+  mStylesHaveChanged = true;
 }
 
 void
@@ -4211,7 +4250,7 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
   if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    mStylesHaveChanged = true;
+    RecordStyleSheetChange(aStyleSheet);
   }
 }
 
@@ -4224,7 +4263,7 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
   if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    mStylesHaveChanged = true;
+    RecordStyleSheetChange(aStyleSheet);
   }
 }
 
@@ -4234,7 +4273,7 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
                                             bool aApplicable)
 {
   if (aStyleSheet->HasRules()) {
-    mStylesHaveChanged = true;
+    RecordStyleSheetChange(aStyleSheet);
   }
 }
 
@@ -4244,7 +4283,7 @@ PresShell::StyleRuleChanged(nsIDocument *aDocument,
                             nsIStyleRule* aOldStyleRule,
                             nsIStyleRule* aNewStyleRule)
 {
-  mStylesHaveChanged = true;
+  RecordStyleSheetChange(aStyleSheet);
 }
 
 void
@@ -4252,7 +4291,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
                           nsIStyleSheet* aStyleSheet,
                           nsIStyleRule* aStyleRule) 
 {
-  mStylesHaveChanged = true;
+  RecordStyleSheetChange(aStyleSheet);
 }
 
 void
@@ -4260,7 +4299,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) 
 {
-  mStylesHaveChanged = true;
+  RecordStyleSheetChange(aStyleSheet);
 }
 
 nsIFrame*

@@ -44,7 +44,6 @@ function test() {
   browser.addEventListener("DOMContentLoaded", function onLoad(event) {
     browser.removeEventListener("DOMContentLoaded", onLoad, false);
     gWindow = browser.contentWindow;
-    SpecialPowers.setBoolPref("dom.mozApps.dev_mode", true);
     SpecialPowers.setBoolPref("dom.mozPermissionSettings.enabled", true);
     SpecialPowers.addPermission("permissions", true, browser.contentWindow.document);
     SpecialPowers.addPermission("permissions", true, browser.contentDocument);

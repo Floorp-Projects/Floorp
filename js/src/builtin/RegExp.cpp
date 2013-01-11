@@ -200,7 +200,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSAtom *unescaped)
             return NULL;
     }
 
-    return sb.empty() ? unescaped : sb.finishAtom();
+    return sb.empty() ? UnrootedAtom(unescaped) : sb.finishAtom();
 }
 
 /*
@@ -532,17 +532,6 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
     /* Add static properties to the RegExp constructor. */
     if (!JS_DefineProperties(cx, ctor, regexp_static_props))
         return NULL;
-
-    /* Capture normal data properties pregenerated for RegExp objects. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    AddTypeProperty(cx, type, "source", Type::StringType());
-    AddTypeProperty(cx, type, "global", Type::BooleanType());
-    AddTypeProperty(cx, type, "ignoreCase", Type::BooleanType());
-    AddTypeProperty(cx, type, "multiline", Type::BooleanType());
-    AddTypeProperty(cx, type, "sticky", Type::BooleanType());
-    AddTypeProperty(cx, type, "lastIndex", Type::Int32Type());
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
         return NULL;

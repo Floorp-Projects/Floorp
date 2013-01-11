@@ -994,13 +994,6 @@ HashStore::ProcessSubs()
   RemoveMatchingPrefixes(mSubPrefixes, &mAddCompletes);
   RemoveMatchingPrefixes(mSubPrefixes, &mSubCompletes);
 
-  // Clean up temporary subs (without per-client randomization),
-  // that we temporarily stored so we could knock out completes.
-  ChunkSet dummyChunks;
-  dummyChunks.Set(0);
-  ExpireEntries(&mSubPrefixes, dummyChunks);
-  mSubChunks.Remove(dummyChunks);
-
   // Remove any remaining subbed prefixes from both addprefixes
   // and addcompletes.
   KnockoutSubs(&mSubPrefixes,  &mAddPrefixes);

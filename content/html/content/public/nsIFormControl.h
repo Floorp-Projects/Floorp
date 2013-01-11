@@ -61,6 +61,7 @@ enum InputElementTypes {
   NS_FORM_INPUT_SUBMIT,
   NS_FORM_INPUT_TEL,
   NS_FORM_INPUT_TEXT,
+  NS_FORM_INPUT_TIME,
   NS_FORM_INPUT_URL,
   eInputElementTypesMax
 };
@@ -237,8 +238,9 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
          aType == NS_FORM_INPUT_URL ||
          // TODO: this is temporary until bug 635240 is fixed.
          aType == NS_FORM_INPUT_NUMBER ||
-         // TODO: this is temporary until bug 773205 is fixed.
+         // TODO: those are temporary until bug 773205 is fixed.
          aType == NS_FORM_INPUT_DATE ||
+         aType == NS_FORM_INPUT_TIME ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
 }
 

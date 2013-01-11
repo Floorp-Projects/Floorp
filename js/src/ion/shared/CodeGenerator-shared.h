@@ -61,9 +61,6 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Vector of information about generated polymorphic inline caches.
     js::Vector<IonCache, 0, SystemAllocPolicy> cacheList_;
 
-    // Vector of all patchable write pre-barrier offsets.
-    js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> barrierOffsets_;
-
     // List of stack slots that have been pushed as arguments to an MCall.
     js::Vector<uint32_t, 0, SystemAllocPolicy> pushedArgumentSlots_;
 
@@ -160,10 +157,6 @@ class CodeGeneratorShared : public LInstructionVisitor
         size_t index = cacheList_.length();
         masm.reportMemory(cacheList_.append(cache));
         return index;
-    }
-
-    void addPreBarrierOffset(CodeOffsetLabel offset) {
-        masm.reportMemory(barrierOffsets_.append(offset));
     }
 
   protected:

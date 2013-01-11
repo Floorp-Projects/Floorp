@@ -636,6 +636,10 @@ nsViewSourceChannel::GetResponseHeader(const nsACString & aHeader,
                         nsCaseInsensitiveCStringComparator()) &&
         !aHeader.Equals(NS_LITERAL_CSTRING("X-Content-Security-Policy-Report-Only"),
                         nsCaseInsensitiveCStringComparator()) &&
+        !aHeader.Equals(NS_LITERAL_CSTRING("Content-Security-Policy"),
+                        nsCaseInsensitiveCStringComparator()) &&
+        !aHeader.Equals(NS_LITERAL_CSTRING("Content-Security-Policy-Report-Only"),
+                        nsCaseInsensitiveCStringComparator()) &&
         !aHeader.Equals(NS_LITERAL_CSTRING("X-Frame-Options"),
                         nsCaseInsensitiveCStringComparator())) {
         aValue.Truncate();

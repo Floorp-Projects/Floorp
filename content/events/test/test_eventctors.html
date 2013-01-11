@@ -426,6 +426,10 @@ is(e.min, 0, "min should be 0");
 is(e.max, 2, "max should be 2");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
+e = new DeviceProximityEvent("hello");
+is(e.value, Infinity, "Uninitialized value should be infinity");
+is(e.min, -Infinity, "Uninitialized min should be -infinity");
+is(e.max, Infinity, "Uninitialized max should be infinity");
 
 // UserProximityEvent
 e = new UserProximityEvent("hello", {near: true});

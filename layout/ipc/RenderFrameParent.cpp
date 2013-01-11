@@ -600,8 +600,11 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   *aId = 0;
 
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
-  *aBackendType = lm->GetBackendType();
-  *aMaxTextureSize = lm->GetMaxTextureSize();
+  // Perhaps the document containing this frame currently has no presentation?
+  if (lm) {
+    *aBackendType = lm->GetBackendType();
+    *aMaxTextureSize = lm->GetMaxTextureSize();
+  }
 
   if (CompositorParent::CompositorLoop()) {
     // Our remote frame will push layers updates to the compositor,
@@ -725,6 +728,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     ClearContainer(mContainer);
     mContainer->SetPreScale(1.0f, 1.0f);
     mContainer->SetPostScale(1.0f, 1.0f);
+    mContainer->SetInheritedScale(1.0f, 1.0f);
   }
 
   ContainerLayer* shadowRoot = GetRootLayer();

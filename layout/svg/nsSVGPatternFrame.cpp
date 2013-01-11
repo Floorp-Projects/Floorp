@@ -24,6 +24,7 @@
 #include "SVGContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // Helper classes
@@ -617,7 +618,7 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
                                 nsIFrame *aTarget)
 {
   gfxMatrix tCTM;
-  nsSVGSVGElement *ctx = nullptr;
+  SVGSVGElement *ctx = nullptr;
   nsIContent* targetContent = aTarget->GetContent();
 
   // The objectBoundingBox conversion must be handled in the CTM:

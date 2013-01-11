@@ -190,6 +190,8 @@ struct ContainerLayerAttributes {
   FrameMetrics metrics;
   float preXScale;
   float preYScale;
+  float inheritedXScale;
+  float inheritedYScale;
 };
 struct ColorLayerAttributes     { Color color; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; };

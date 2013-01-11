@@ -987,8 +987,17 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
   if (dirProvider) { // Normal code path
     // Check for and process any available updates
     bool persistent;
-    nsresult rv = dirProvider->GetFile(XRE_UPDATE_ROOT_DIR, &persistent,
-                                       getter_AddRefs(updRoot));
+    nsresult rv = NS_ERROR_FAILURE; // Take the NS_FAILED path when non-GONK
+#ifdef MOZ_WIDGET_GONK
+    // Check in the sdcard for updates first, since that's our preferred
+    // download location.
+    rv = dirProvider->GetFile(XRE_UPDATE_ARCHIVE_DIR, &persistent,
+                              getter_AddRefs(updRoot));
+#endif
+    if (NS_FAILED(rv)) {
+      rv = dirProvider->GetFile(XRE_UPDATE_ROOT_DIR, &persistent,
+                                getter_AddRefs(updRoot));
+    }
     // XRE_UPDATE_ROOT_DIR may fail. Fallback to appDir if failed
     if (NS_FAILED(rv))
       updRoot = dirProvider->GetAppDir();

@@ -44,7 +44,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-filter-07.js \
 	browser_dbg_propertyview-filter-08.js \
 	browser_dbg_propertyview-reexpand.js \
-	browser_dbg_reload-same-script.js \
+	$(filter disabled-temporarily--bug-782179, browser_dbg_reload-same-script.js) \
 	browser_dbg_reload-preferred-script.js \
 	browser_dbg_pane-collapse.js \
 	browser_dbg_panesize-inner.js \
@@ -69,6 +69,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_scripts-searching-files_ui.js \
 	browser_dbg_scripts-searching-popup.js \
 	browser_dbg_pause-resume.js \
+	browser_dbg_pause-warning.js \
 	browser_dbg_update-editor-mode.js \
 	$(filter temporarily-disabled-due-to-oranges--bug-726609, browser_dbg_select-line.js) \
 	browser_dbg_clean-exit.js \

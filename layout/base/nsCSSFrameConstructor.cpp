@@ -2294,7 +2294,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                                 nullptr, aFrameState);
   // Initialize the ancestor filter with null for now; we'll push
   // aDocElement once we finish resolving style for it.
-  state.mTreeMatchContext.mAncestorFilter.Init(nullptr);
+  state.mTreeMatchContext.InitAncestors(nullptr);
 
   // XXXbz why, exactly?
   if (!mTempFrameTreeState)
@@ -2361,8 +2361,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     return NS_OK;
   }
 
-  AncestorFilter::AutoAncestorPusher
-    ancestorPusher(true, state.mTreeMatchContext.mAncestorFilter, aDocElement);
+  TreeMatchContext::AutoAncestorPusher
+    ancestorPusher(true, state.mTreeMatchContext, aDocElement);
 
   // Make sure to start any background image loads for the root element now.
   styleContext->StartBackgroundImageLoads();
@@ -3434,6 +3434,8 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
     SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewTextControlFrame),
     // TODO: this is temporary until a frame is written: bug 773205.
     SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewTextControlFrame),
+    // TODO: this is temporary until a frame is written: bug 773205
+    SIMPLE_INT_CREATE(NS_FORM_INPUT_TIME, NS_NewTextControlFrame),
     { NS_FORM_INPUT_SUBMIT,
       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                  nsCSSAnonBoxes::buttonContent) },
@@ -3571,9 +3573,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   // frames constructed), this is the best place to bottleneck the
   // pushing of the content instead of having to do it in multiple
   // places.
-  AncestorFilter::AutoAncestorPusher
+  TreeMatchContext::AutoAncestorPusher
     ancestorPusher(aState.mTreeMatchContext.mAncestorFilter.HasFilter(),
-                   aState.mTreeMatchContext.mAncestorFilter,
+                   aState.mTreeMatchContext,
                    content->IsElement() ? content->AsElement() : nullptr);
 
   nsIFrame* newFrame;
@@ -3807,9 +3809,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 
   nsFrameConstructorState::PendingBindingAutoPusher pusher(aState,
                                                            aPendingBinding);
-  AncestorFilter::AutoAncestorPusher
+  TreeMatchContext::AutoAncestorPusher
     ancestorPusher(aState.mTreeMatchContext.mAncestorFilter.HasFilter(),
-                   aState.mTreeMatchContext.mAncestorFilter,
+                   aState.mTreeMatchContext,
                    aParent->AsElement());
 
   nsIAnonymousContentCreator* creator = do_QueryFrame(aParentFrame);
@@ -6608,7 +6610,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame));
-  state.mTreeMatchContext.mAncestorFilter.Init(aContainer->AsElement());
+  state.mTreeMatchContext.InitAncestors(aContainer->AsElement());
 
   // See if the containing block has :first-letter style applied.
   bool haveFirstLetterStyle = false, haveFirstLineStyle = false;
@@ -7044,9 +7046,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame),
                                 aFrameState);
-  state.mTreeMatchContext.mAncestorFilter.Init(aContainer ?
-                                                 aContainer->AsElement() :
-                                                 nullptr);
+  state.mTreeMatchContext.InitAncestors(aContainer ?
+                                          aContainer->AsElement() :
+                                          nullptr);
 
   // Recover state for the containing block - we need to know if
   // it has :first-letter or :first-line style applied to it. The
@@ -11281,9 +11283,9 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   nsStyleContext* const parentStyleContext = aParentItem.mStyleContext;
   nsIContent* const parentContent = aParentItem.mContent;
 
-  AncestorFilter::AutoAncestorPusher
+  TreeMatchContext::AutoAncestorPusher
     ancestorPusher(aState.mTreeMatchContext.mAncestorFilter.HasFilter(),
-                   aState.mTreeMatchContext.mAncestorFilter,
+                   aState.mTreeMatchContext,
                    parentContent->AsElement());
   
   CreateGeneratedContentItem(aState, nullptr, parentContent, parentStyleContext,

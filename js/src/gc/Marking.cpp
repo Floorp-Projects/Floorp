@@ -1569,6 +1569,21 @@ struct UnmarkGrayTracer : public JSTracer
  * black in step 2 above. This must be done on everything reachable from the
  * object being returned. The following code takes care of the recursive
  * re-coloring.
+ *
+ * There is an additional complication for certain kinds of edges that are not
+ * contained explicitly in the source object itself, such as from a weakmap key
+ * to its value, and from an object being watched by a watchpoint to the
+ * watchpoint's closure. These "implicit edges" are represented in some other
+ * container object, such as the weakmap or the watchpoint itself. In these
+ * cases, calling unmark gray on an object won't find all of its children.
+ *
+ * Handling these implicit edges has two parts:
+ * - A special pass enumerating all of the containers that know about the
+ *   implicit edges to fix any black-gray edges that have been created. This
+ *   is implemented in nsXPConnect::FixWeakMappingGrayBits.
+ * - To prevent any incorrectly gray objects from escaping to live JS outside
+ *   of the containers, we must add unmark-graying read barriers to these
+ *   containers.
  */
 static void
 UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)

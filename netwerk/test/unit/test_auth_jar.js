@@ -10,6 +10,9 @@ function createURI(s) {
 }
  
 function run_test() {
+  // Set up a profile.
+  do_get_profile();
+
   var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
   const kURI1 = "http://example.com";
   var app1 = secMan.getAppCodebasePrincipal(createURI(kURI1), 1, false);

@@ -17,11 +17,9 @@ interface HTMLTableSectionElement : HTMLElement {
   HTMLElement insertRow(optional long index = -1);
   [Throws]
   void deleteRow(long index);
-/*
 };
 
 partial interface HTMLTableSectionElement {
-*/
            [SetterThrows]
            attribute DOMString align;
            [SetterThrows]

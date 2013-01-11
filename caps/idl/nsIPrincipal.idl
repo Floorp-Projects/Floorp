@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(011966C0-8564-438D-B37A-08D7E1195E5A)]
+[scriptable, builtinclass, uuid(dbda8bb0-3023-4aec-ad98-8e9931a29d70)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -153,6 +153,13 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute AUTF8String extendedOrigin;
 
+    /**
+     * The base domain of the codebase URI to which this principal pertains
+     * (generally the document URI), handling null principals and
+     * non-hierarchical schemes correctly.
+     */
+    readonly attribute ACString baseDomain;
+    
     const short APP_STATUS_NOT_INSTALLED = 0;
     const short APP_STATUS_INSTALLED     = 1;
     const short APP_STATUS_PRIVILEGED    = 2;

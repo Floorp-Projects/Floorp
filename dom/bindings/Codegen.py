@@ -6648,8 +6648,8 @@ class CGDictionary(CGThing):
              "  }\n" if self.needToInitIds else "") +
             "${initParent}" +
             ("  JSBool found;\n"
-             "  JS::Value temp;\n" if len(memberInits) > 0 else "") +
-            "  bool isNull = val.isNullOrUndefined();\n"
+             "  JS::Value temp;\n"
+             "  bool isNull = val.isNullOrUndefined();\n" if len(memberInits) > 0 else "") +
             "  if (!IsConvertibleToDictionary(cx, val)) {\n"
             "    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
             "  }\n"

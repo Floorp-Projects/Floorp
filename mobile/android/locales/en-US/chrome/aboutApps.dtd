@@ -11,3 +11,5 @@
 <!ENTITY aboutApps.noApps.pre "No web apps installed. Get some from the ">
 <!ENTITY aboutApps.noApps.middle3 "Firefox Marketplace">
 <!ENTITY aboutApps.noApps.post ".">
+<!ENTITY aboutApps.uninstall "Uninstall">
+<!ENTITY aboutApps.addToHomescreen "Add to Home Screen">

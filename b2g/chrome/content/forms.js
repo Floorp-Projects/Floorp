@@ -455,17 +455,16 @@ function getJSON(element) {
     value = element.textContent;
   }
 
-  // Until the input type=date/datetime/time have been implemented
+  // Until the input type=date/datetime/range have been implemented
   // let's return their real type even if the platform returns 'text'
-  // Related to Bug 777279 - Implement <input type=time>
   let attributeType = element.getAttribute("type") || "";
 
   if (attributeType) {
     var typeLowerCase = attributeType.toLowerCase(); 
     switch (typeLowerCase) {
-      case "time":
       case "datetime":
       case "datetime-local":
+      case "range":
         type = typeLowerCase;
         break;
     }

@@ -580,7 +580,7 @@ var SyntheticGestures = (function() {
   }
 
   return {
-    touchSupported: false,
+    touchSupported: true,
     tap: tap,
     mousetap: mousetap,
     dbltap: dbltap,

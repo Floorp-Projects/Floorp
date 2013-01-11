@@ -3095,7 +3095,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .popup-notification-icon[popupid="geolocation"] {
   list-style-image: url(chrome://browser/skin/Geolocation-64.png);
 }
-
 @media (min-resolution: 2dppx) {
   .popup-notification-icon[popupid="geolocation"] {
     list-style-image: url(chrome://browser/skin/Geolocation-64@2x.png);
@@ -3165,6 +3164,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .popup-notification-icon[popupid="webRTC-sharingDevices"],
 .popup-notification-icon[popupid="webRTC-shareDevices"] {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
+}
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="webRTC-sharingDevices"],
+  .popup-notification-icon[popupid="webRTC-shareDevices"] {
+    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64@2x.png);
+  }
 }
 
 /* Popup Buttons */
@@ -3804,6 +3809,8 @@ toolbar[mode="icons"] > *|* > .social-notification-container {
 
 .social-notification-container > .toolbarbutton-1 {
   -moz-appearance: none;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 #social-toolbar-item {
@@ -3812,6 +3819,9 @@ toolbar[mode="icons"] > *|* > .social-notification-container {
 
 #social-provider-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+  /* Needed to make the adjacent buttons combine */
+  margin-left: 0;
+  margin-right: 0;
 }
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {

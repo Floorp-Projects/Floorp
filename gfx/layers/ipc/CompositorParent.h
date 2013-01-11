@@ -85,7 +85,11 @@ public:
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread();
   void SchedulePauseOnCompositorThread();
-  void ScheduleResumeOnCompositorThread(int width, int height);
+  /**
+   * Returns true if a surface was obtained and the resume succeeded; false
+   * otherwise.
+   */
+  bool ScheduleResumeOnCompositorThread(int width, int height);
 
   virtual void ScheduleComposition();
   void NotifyShadowTreeTransaction();
@@ -271,7 +275,6 @@ private:
   float mYScale;
   nsIntPoint mScrollOffset;
   nsIntRect mContentRect;
-  nsIntSize mWidgetSize;
 
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).

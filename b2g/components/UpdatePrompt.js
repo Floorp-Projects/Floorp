@@ -22,6 +22,10 @@ const PREF_APPLY_PROMPT_TIMEOUT = "b2g.update.apply-prompt-timeout";
 const PREF_APPLY_IDLE_TIMEOUT   = "b2g.update.apply-idle-timeout";
 
 const NETWORK_ERROR_OFFLINE = 111;
+const FILE_ERROR_TOO_BIG    = 112;
+const HTTP_ERROR_OFFSET     = 1000;
+
+const STATE_DOWNLOADING = 'downloading';
 
 XPCOMUtils.defineLazyServiceGetter(Services, "aus",
                                    "@mozilla.org/updates/update-service;1",
@@ -69,8 +73,18 @@ UpdateCheckListener.prototype = {
   },
 
   onError: function UCL_onError(request, update) {
-    if (update.errorCode == NETWORK_ERROR_OFFLINE) {
+    // nsIUpdate uses a signed integer for errorCode while any platform errors
+    // require all 32 bits.
+    let errorCode = update.errorCode >>> 0;
+    let isNSError = (errorCode >>> 31) == 1;
+
+    if (errorCode == NETWORK_ERROR_OFFLINE) {
       this._updatePrompt.setUpdateStatus("retry-when-online");
+    } else if (isNSError) {
+      this._updatePrompt.setUpdateStatus("check-error-" + errorCode);
+    } else if (errorCode > HTTP_ERROR_OFFSET) {
+      let httpErrorCode = errorCode - HTTP_ERROR_OFFSET;
+      this._updatePrompt.setUpdateStatus("check-error-http-" + httpErrorCode);
     }
 
     Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
@@ -272,8 +286,17 @@ UpdatePrompt.prototype = {
       }
     }
 
-    Services.aus.downloadUpdate(aUpdate, true);
-    Services.aus.addDownloadListener(this);
+    let status = Services.aus.downloadUpdate(aUpdate, true);
+    if (status == STATE_DOWNLOADING) {
+      Services.aus.addDownloadListener(this);
+      return;
+    }
+
+    log("Error downloading update " + aUpdate.name + ": " + aUpdate.errorCode);
+    if (aUpdate.errorCode == FILE_ERROR_TOO_BIG) {
+      aUpdate.statusText = "file-too-big";
+    }
+    this.showUpdateError(aUpdate);
   },
 
   handleDownloadCancel: function UP_handleDownloadCancel() {
@@ -460,11 +483,20 @@ UpdatePrompt.prototype = {
 
   // nsIRequestObserver
 
+  _startedSent: false,
+
   onStartRequest: function UP_onStartRequest(aRequest, aContext) {
-    this.sendChromeEvent("update-downloading");
+    // Wait until onProgress to send the update-download-started event, in case
+    // this request turns out to fail for some reason
+    this._startedSent = false;
   },
 
   onStopRequest: function UP_onStopRequest(aRequest, aContext, aStatusCode) {
+    let paused = !Components.isSuccessCode(aStatusCode);
+    this.sendChromeEvent("update-download-stopped", {
+        paused: paused
+    });
+
     Services.aus.removeDownloadListener(this);
   },
 
@@ -472,7 +504,14 @@ UpdatePrompt.prototype = {
 
   onProgress: function UP_onProgress(aRequest, aContext, aProgress,
                                      aProgressMax) {
-    this.sendChromeEvent("update-progress", {
+    if (!this._startedSent) {
+      this.sendChromeEvent("update-download-started", {
+        total: aProgressMax
+      });
+      this._startedSent = true;
+    }
+
+    this.sendChromeEvent("update-download-progress", {
       progress: aProgress,
       total: aProgressMax
     });
