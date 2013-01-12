@@ -10,6 +10,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
+const NEW_SCRIPT_IGNORED_URLS = ["debugger eval code", "self-hosted"];
 const NEW_SCRIPT_DISPLAY_DELAY = 200; // ms
 const FETCH_SOURCE_RESPONSE_DELAY = 50; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
@@ -1071,8 +1072,8 @@ SourceScripts.prototype = {
    * Handler for the debugger client's unsolicited newScript notification.
    */
   _onNewScript: function SS__onNewScript(aNotification, aPacket) {
-    // Ignore scripts generated from 'clientEvaluate' packets.
-    if (aPacket.url == "debugger eval code") {
+    // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
+    if (NEW_SCRIPT_IGNORED_URLS.indexOf(aPacket.url) != -1) {
       return;
     }
 
@@ -1126,8 +1127,8 @@ SourceScripts.prototype = {
   _onScriptsAdded: function SS__onScriptsAdded(aResponse) {
     // Add all the sources in the debugger view sources container.
     for (let script of aResponse.scripts) {
-      // Ignore scripts generated from 'clientEvaluate' packets.
-      if (script.url == "debugger eval code") {
+      // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
+      if (NEW_SCRIPT_IGNORED_URLS.indexOf(script.url) != -1) {
         continue;
       }
       this._addSource(script);
