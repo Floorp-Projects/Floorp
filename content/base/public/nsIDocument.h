@@ -91,6 +91,7 @@ class DocumentFragment;
 class DocumentType;
 class DOMImplementation;
 class Element;
+class HTMLBodyElement;
 class Link;
 class ProcessingInstruction;
 class UndoManager;
@@ -580,9 +581,7 @@ public:
   Element* GetHtmlChildElement(nsIAtom* aTag);
   // Get the canonical <body> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <body> isn't there)
-  Element* GetBodyElement() {
-    return GetHtmlChildElement(nsGkAtoms::body);
-  }
+  mozilla::dom::HTMLBodyElement* GetBodyElement();
   // Get the canonical <head> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <head> isn't there)
   Element* GetHeadElement() {
