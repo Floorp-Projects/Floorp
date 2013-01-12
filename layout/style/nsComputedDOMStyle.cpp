@@ -4373,6 +4373,17 @@ nsComputedDOMStyle::DoGetMaskType()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetPaintOrder()
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  nsAutoString string;
+  uint8_t paintOrder = GetStyleSVG()->mPaintOrder;
+  nsStyleUtil::AppendPaintOrderValue(paintOrder, string);
+  val->SetString(string);
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetTransitionDelay()
 {
   const nsStyleDisplay* display = GetStyleDisplay();
@@ -4940,6 +4951,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(marker_start,                  MarkerStart),
     COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
     COMPUTED_STYLE_MAP_ENTRY(mask_type,                     MaskType),
+    COMPUTED_STYLE_MAP_ENTRY(paint_order,                   PaintOrder),
     COMPUTED_STYLE_MAP_ENTRY(shape_rendering,               ShapeRendering),
     COMPUTED_STYLE_MAP_ENTRY(stop_color,                    StopColor),
     COMPUTED_STYLE_MAP_ENTRY(stop_opacity,                  StopOpacity),

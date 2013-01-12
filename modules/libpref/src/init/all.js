@@ -1800,6 +1800,13 @@ pref("svg.smil.enabled", true);
 pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
 
+// Is support for the SVG 2 paint-order property enabled?
+#ifdef RELEASE_BUILD
+pref("svg.paint-order.enabled", false);
+#else
+pref("svg.paint-order.enabled", true);
+#endif
+
 pref("font.minimum-size.ar", 0);
 pref("font.minimum-size.x-armn", 0);
 pref("font.minimum-size.x-beng", 0);
