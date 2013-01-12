@@ -5,11 +5,11 @@
 </head>
 <body>
 <script>
-function addPlugin(callback) {
+function addPlugin(type="application/x-test") {
   var embed = document.createElement("embed");
   embed.style.width = "200px";
   embed.style.height = "200px";
-  embed.setAttribute("type", "application/x-test");
+  embed.setAttribute("type", type);
   return document.body.appendChild(embed);
 }
 </script>

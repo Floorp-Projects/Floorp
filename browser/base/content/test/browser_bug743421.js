@@ -15,7 +15,7 @@ function test() {
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   gTestBrowser.addEventListener("load", pageLoad, true);
-  prepareTest(test1a, gTestRoot + "plugin_bug743421.html");
+  prepareTest(test1a, gTestRoot + "plugin_add_dynamically.html");
 }
 
 function finishTest() {
