@@ -67,9 +67,15 @@ ICStub::trace(JSTracer *trc)
         MarkObject(trc, &callStub->callee(), "baseline-callstub-callee");
         break;
       }
+      case ICStub::GetElem_Dense: {
+        ICGetElem_Dense *getElemStub = toGetElem_Dense();
+        MarkShape(trc, &getElemStub->shape(), "baseline-getelem-dense-shape");
+        break;
+      }
       case ICStub::SetElem_Dense: {
         ICSetElem_Dense *setElemStub = toSetElem_Dense();
-        MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-dense-stub-type");
+        MarkShape(trc, &setElemStub->shape(), "baseline-getelem-dense-shape");
+        MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-dense-type");
         break;
       }
       case ICStub::TypeMonitor_TypeObject: {
@@ -1160,12 +1166,9 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
         return true;
 
     RootedObject obj(cx, &lhs.toObject());
-    if (obj->isDenseArray() && rhs.isInt32()) {
-        // Don't attach multiple dense array stubs.
-        if (stub->hasStub(ICStub::GetElem_Dense))
-            return true;
-
-        ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub());
+    if (obj->isNative() && rhs.isInt32()) {
+        ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                           obj->lastProperty());
         ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!denseStub)
             return false;
@@ -1206,17 +1209,15 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    RootedShape shape(cx, GetDenseArrayShape(cx, cx->global()));
-    if (!shape)
-        return false;
-
-    // Unbox R0 and guard it's a dense array.
-    Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
-
-    // Load obj->elements in scratchReg.
     GeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
+
+    // Unbox R0 and shape guard.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(BaselineStubReg, ICGetElem_Dense::offsetOfShape()), scratchReg);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
+
+    // Load obj->elements.
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
 
     // Unbox key.
@@ -1263,9 +1264,9 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     }
 
     // Try to generate new stubs.
-    if (obj->isDenseArray() && index.isInt32()) {
+    if (obj->isNative() && index.isInt32()) {
         RootedTypeObject type(cx, obj->getType(cx));
-        ICSetElem_Dense::Compiler compiler(cx, type);
+        ICSetElem_Dense::Compiler compiler(cx, obj->lastProperty(), type);
         ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!denseStub)
             return false;
@@ -1316,20 +1317,20 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    RootedShape shape(cx, GetDenseArrayShape(cx, cx->global()));
-    if (!shape)
-        return false;
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
 
     // Unbox R0 and guard it's a dense array.
     Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
+    masm.loadPtr(Address(BaselineStubReg, ICSetElem_Dense::offsetOfShape()), scratchReg);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
 
     // Stow both R0 and R1 (object and key)
     // But R0 and R1 still hold their values.
     EmitStowICValues(masm, 2);
 
     // We may need to free up some registers
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    regs = availableGeneralRegs(0);
     regs.take(R0);
 
     // Guard that the type object matches.
@@ -1350,8 +1351,6 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     EmitUnstowICValues(masm, 2);
 
     // Load obj->elements in scratchReg.
-    regs = availableGeneralRegs(2);
-    Register scratchReg = regs.takeAny();
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
 
     // Unbox key.
@@ -1511,8 +1510,8 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
 
     RootedObject obj(cx, &val.toObject());
 
-    if (obj->isDenseArray() && res.isInt32()) {
-        ICGetProp_DenseLength::Compiler compiler(cx);
+    if (obj->isArray() && res.isInt32()) {
+        ICGetProp_ArrayLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!newStub)
             return false;
@@ -1569,7 +1568,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallbac
         return true;
 
     RootedObject obj(cx, &val.toObject());
-    if (!obj->isNative() && !obj->isDenseArray())
+    if (!obj->isNative())
         return true;
 
     RootedShape shape(cx);
@@ -1672,21 +1671,18 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICGetProp_DenseLength::Compiler::generateStubCode(MacroAssembler &masm)
+ICGetProp_ArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    RootedShape shape(cx, GetDenseArrayShape(cx, cx->global()));
-    if (!shape)
-        return false;
+    Register scratch = R1.scratchReg();
 
-    // Unbox R0 and guard it's a dense array.
+    // Unbox R0 and guard it's an array.
     Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, shape, &failure);
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, &ArrayClass, &failure);
 
     // Load obj->elements->length.
-    Register scratch = R1.scratchReg();
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratch);
     masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
 

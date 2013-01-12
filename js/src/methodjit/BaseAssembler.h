@@ -1389,8 +1389,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
          * as for dense arrays we will need to get the address of the fixed
          * elements first.
          */
-        if (templateObject->isDenseArray()) {
-            JS_ASSERT(!templateObject->getDenseArrayInitializedLength());
+        if (templateObject->isArray()) {
+            JS_ASSERT(!templateObject->getDenseInitializedLength());
             addPtr(Imm32(-thingSize + elementsOffset), result);
             storePtr(result, Address(result, -elementsOffset + JSObject::offsetOfElements()));
             addPtr(Imm32(-elementsOffset), result);
@@ -1403,11 +1403,11 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         storePtr(ImmPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
         storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
 
-        if (templateObject->isDenseArray()) {
+        if (templateObject->isArray()) {
             /* Fill in the elements header. */
-            store32(Imm32(templateObject->getDenseArrayCapacity()),
+            store32(Imm32(templateObject->getDenseCapacity()),
                     Address(result, elementsOffset + ObjectElements::offsetOfCapacity()));
-            store32(Imm32(templateObject->getDenseArrayInitializedLength()),
+            store32(Imm32(templateObject->getDenseInitializedLength()),
                     Address(result, elementsOffset + ObjectElements::offsetOfInitializedLength()));
             store32(Imm32(templateObject->getArrayLength()),
                     Address(result, elementsOffset + ObjectElements::offsetOfLength()));

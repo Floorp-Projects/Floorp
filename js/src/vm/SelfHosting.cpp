@@ -286,27 +286,6 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
     return true;
 }
 static RawObject
-CloneDenseArray(JSContext *cx, HandleObject obj, CloneMemory &clonedObjects)
-{
-    uint32_t len = obj->getArrayLength();
-    RootedObject clone(cx, NewDenseAllocatedArray(cx, len));
-    clone->setDenseArrayInitializedLength(len);
-    for (uint32_t i = 0; i < len; i++)
-        JSObject::initDenseArrayElementWithType(cx, clone, i, UndefinedValue());
-    RootedValue elt(cx);
-    for (uint32_t i = 0; i < len; i++) {
-        bool present;
-        if (!obj->getElementIfPresent(cx, obj, obj, i, &elt, &present))
-            return NULL;
-        if (present) {
-            if (!CloneValue(cx, &elt, clonedObjects))
-                return NULL;
-            JSObject::setDenseArrayElementWithType(cx, clone, i, elt);
-        }
-    }
-    return clone;
-}
-static RawObject
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
     CloneMemory::AddPtr p = clonedObjects.lookupForAdd(srcObj.get());
@@ -334,16 +313,12 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         if (!str)
             return NULL;
         clone = StringObject::create(cx, str);
-    } else if (srcObj->isDenseArray()) {
-        return CloneDenseArray(cx, srcObj, clonedObjects);
+    } else if (srcObj->isArray()) {
+        clone = NewDenseEmptyArray(cx);
     } else {
-        if (srcObj->isArray()) {
-            clone = NewDenseEmptyArray(cx);
-        } else {
-            JS_ASSERT(srcObj->isNative());
-            clone = NewObjectWithClassProto(cx, srcObj->getClass(), NULL, cx->global(),
-                                            srcObj->getAllocKind());
-        }
+        JS_ASSERT(srcObj->isNative());
+        clone = NewObjectWithClassProto(cx, srcObj->getClass(), NULL, cx->global(),
+                                        srcObj->getAllocKind());
     }
     if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
         !CloneProperties(cx, srcObj, clone, clonedObjects))

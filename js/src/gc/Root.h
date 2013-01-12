@@ -493,7 +493,7 @@ class Unrooted
      * NoGCScope on assignment. Instead we tag the pointer when we should
      * disable the LeaveNoGCScope.
      */
-    static inline T UninitializedTag() { return reinterpret_cast<T>(1); };
+    static inline T UninitializedTag() { return reinterpret_cast<T>(2); };
 
     T ptr_;
 };

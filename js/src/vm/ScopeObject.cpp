@@ -1176,9 +1176,9 @@ class DebugScopeProxy : public BaseProxyHandler
                         maybefp->unaliasedVar(i) = *vp;
                 } else if (JSObject *snapshot = debugScope->maybeSnapshot()) {
                     if (action == GET)
-                        *vp = snapshot->getDenseArrayElement(bindings.numArgs() + i);
+                        *vp = snapshot->getDenseElement(bindings.numArgs() + i);
                     else
-                        snapshot->setDenseArrayElement(bindings.numArgs() + i, *vp);
+                        snapshot->setDenseElement(bindings.numArgs() + i, *vp);
                 } else {
                     /* The unaliased value has been lost to the debugger. */
                     if (action == GET)
@@ -1208,9 +1208,9 @@ class DebugScopeProxy : public BaseProxyHandler
                     }
                 } else if (JSObject *snapshot = debugScope->maybeSnapshot()) {
                     if (action == GET)
-                        *vp = snapshot->getDenseArrayElement(i);
+                        *vp = snapshot->getDenseElement(i);
                     else
-                        snapshot->setDenseArrayElement(i, *vp);
+                        snapshot->setDenseElement(i, *vp);
                 } else {
                     /* The unaliased value has been lost to the debugger. */
                     if (action == GET)

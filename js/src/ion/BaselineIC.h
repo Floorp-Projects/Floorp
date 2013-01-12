@@ -314,7 +314,7 @@ class ICEntry
     _(GetName_Global)           \
                                 \
     _(GetProp_Fallback)         \
-    _(GetProp_DenseLength)      \
+    _(GetProp_ArrayLength)      \
     _(GetProp_StringLength)     \
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
@@ -1591,29 +1591,44 @@ class ICGetElem_Dense : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
-    ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub)
-      : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub) {}
+    HeapPtrShape shape_;
+
+    ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape)
+      : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub),
+        shape_(shape)
+    {}
 
   public:
-    static inline ICGetElem_Dense *New(
-            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub)
+    static inline ICGetElem_Dense *New(ICStubSpace *space, IonCode *code,
+                                       ICStub *firstMonitorStub, HandleShape shape)
     {
-        return space->allocate<ICGetElem_Dense>(code, firstMonitorStub);
+        return space->allocate<ICGetElem_Dense>(code, firstMonitorStub, shape);
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICGetElem_Dense, shape_);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
     }
 
     class Compiler : public ICStubCompiler {
       ICStub *firstMonitorStub_;
+      RootedShape shape_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, UnrootedShape shape)
           : ICStubCompiler(cx, ICStub::GetElem_Dense),
-            firstMonitorStub_(firstMonitorStub) {}
+            firstMonitorStub_(firstMonitorStub),
+            shape_(cx, shape)
+        {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICGetElem_Dense::New(space, getStubCode(), firstMonitorStub_);
+            return ICGetElem_Dense::New(space, getStubCode(), firstMonitorStub_, shape_);
         }
     };
 };
@@ -1656,41 +1671,54 @@ class ICSetElem_Dense : public ICUpdatedStub
 {
     friend class ICStubSpace;
 
+    HeapPtrShape shape_;
     HeapPtrTypeObject type_;
 
-    ICSetElem_Dense(IonCode *stubCode, HandleTypeObject type)
+    ICSetElem_Dense(IonCode *stubCode, HandleShape shape, HandleTypeObject type)
       : ICUpdatedStub(SetElem_Dense, stubCode),
-        type_(type) {}
+        shape_(shape),
+        type_(type)
+    {}
 
   public:
-    static inline ICSetElem_Dense *New(ICStubSpace *space, IonCode *code, HandleTypeObject type) {
-        return space->allocate<ICSetElem_Dense>(code, type);
+    static inline ICSetElem_Dense *New(ICStubSpace *space, IonCode *code, HandleShape shape,
+                                       HandleTypeObject type) {
+        return space->allocate<ICSetElem_Dense>(code, shape, type);
     }
 
+    static size_t offsetOfShape() {
+        return offsetof(ICSetElem_Dense, shape_);
+    }
     static size_t offsetOfType() {
         return offsetof(ICSetElem_Dense, type_);
     }
 
+    HeapPtrShape &shape() {
+        return shape_;
+    }
     HeapPtrTypeObject &type() {
         return type_;
     }
 
     class Compiler : public ICStubCompiler {
+        RootedShape shape_;
+
         // Compiler is only live on stack during compilation, it should
         // outlive any RootedTypeObject it's passed.  So it can just
         // use the handle.
         HandleTypeObject type_;
 
-      protected:
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, HandleTypeObject type)
+        Compiler(JSContext *cx, UnrootedShape shape, HandleTypeObject type)
           : ICStubCompiler(cx, ICStub::SetElem_Dense),
-            type_(type) {}
+            shape_(cx, shape),
+            type_(type)
+        {}
 
         ICStub *getStub(ICStubSpace *space) {
-            ICSetElem_Dense *stub = ICSetElem_Dense::New(space, getStubCode(), type_);
+            ICSetElem_Dense *stub = ICSetElem_Dense::New(space, getStubCode(), shape_, type_);
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
             return stub;
@@ -1820,17 +1848,17 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
 };
 
 // Stub for accessing a dense array's length.
-class ICGetProp_DenseLength : public ICStub
+class ICGetProp_ArrayLength : public ICStub
 {
     friend class ICStubSpace;
 
-    ICGetProp_DenseLength(IonCode *stubCode)
-      : ICStub(GetProp_DenseLength, stubCode)
+    ICGetProp_ArrayLength(IonCode *stubCode)
+      : ICStub(GetProp_ArrayLength, stubCode)
     {}
 
   public:
-    static inline ICGetProp_DenseLength *New(ICStubSpace *space, IonCode *code) {
-        return space->allocate<ICGetProp_DenseLength>(code);
+    static inline ICGetProp_ArrayLength *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetProp_ArrayLength>(code);
     }
 
     class Compiler : public ICStubCompiler {
@@ -1838,11 +1866,11 @@ class ICGetProp_DenseLength : public ICStub
 
       public:
         Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::GetProp_DenseLength)
+          : ICStubCompiler(cx, ICStub::GetProp_ArrayLength)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICGetProp_DenseLength::New(space, getStubCode());
+            return ICGetProp_ArrayLength::New(space, getStubCode());
         }
     };
 };
