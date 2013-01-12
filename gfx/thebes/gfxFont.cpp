@@ -1560,6 +1560,10 @@ struct GlyphBuffer {
         if (aDrawMode == gfxFont::GLYPH_PATH) {
             cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
         } else {
+            if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
+                             (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) {
+                FlushStroke(aCR, aObjectPaint, aGlobalMatrix);
+            }
             if (aDrawMode & gfxFont::GLYPH_FILL) {
                 SAMPLE_LABEL("GlyphBuffer", "cairo_show_glyphs");
                 nsRefPtr<gfxPattern> pattern;
@@ -1575,27 +1579,34 @@ struct GlyphBuffer {
                     cairo_restore(aCR);
                 }
             }
-
-            if (aDrawMode & gfxFont::GLYPH_STROKE) {
-                nsRefPtr<gfxPattern> pattern;
-                if (aObjectPaint &&
-                    !!(pattern = aObjectPaint->GetStrokePattern(aGlobalMatrix))) {
-                    cairo_save(aCR);
-                    cairo_set_source(aCR, pattern->CairoPattern());
-                }
-
-                cairo_new_path(aCR);
-                cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
-                cairo_stroke(aCR);
-
-                if (pattern) {
-                    cairo_restore(aCR);
-                }
+            if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
+                              gfxFont::GLYPH_STROKE) {
+                FlushStroke(aCR, aObjectPaint, aGlobalMatrix);
             }
         }
 
         mNumGlyphs = 0;
     }
+
+private:
+    void FlushStroke(cairo_t *aCR, gfxTextObjectPaint *aObjectPaint,
+                     const gfxMatrix& aGlobalMatrix) {
+        nsRefPtr<gfxPattern> pattern;
+        if (aObjectPaint &&
+            !!(pattern = aObjectPaint->GetStrokePattern(aGlobalMatrix))) {
+            cairo_save(aCR);
+            cairo_set_source(aCR, pattern->CairoPattern());
+        }
+
+        cairo_new_path(aCR);
+        cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
+        cairo_stroke(aCR);
+
+        if (pattern) {
+            cairo_restore(aCR);
+        }
+    }
+
 #undef GLYPH_BUFFER_SIZE
 };
 
@@ -1645,6 +1656,10 @@ struct GlyphBufferAzure {
         buf.mNumGlyphs = mNumGlyphs;
 
         gfxContext::AzureState state = aThebesContext->CurrentState();
+        if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
+                         (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) {
+            FlushStroke(aDT, aObjectPaint, aFont, aThebesContext, buf, state);
+        }
         if (aDrawMode & gfxFont::GLYPH_FILL) {
             if (state.pattern || aObjectPaint) {
                 Pattern *pat;
@@ -1700,19 +1715,29 @@ struct GlyphBufferAzure {
             aThebesContext->EnsurePathBuilder();
             aFont->CopyGlyphsToBuilder(buf, aThebesContext->mPathBuilder);
         }
-        if (aDrawMode & gfxFont::GLYPH_STROKE) {
-            RefPtr<Path> path = aFont->GetPathForGlyphs(buf, aDT);
-            if (aObjectPaint) {
-                nsRefPtr<gfxPattern> strokePattern =
-                  aObjectPaint->GetStrokePattern(aThebesContext->CurrentMatrix());
-                if (strokePattern) {
-                    aDT->Stroke(path, *strokePattern->GetPattern(aDT), state.strokeOptions);
-                }
-            }
+        if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
+                          gfxFont::GLYPH_STROKE) {
+            FlushStroke(aDT, aObjectPaint, aFont, aThebesContext, buf, state);
         }
 
         mNumGlyphs = 0;
     }
+
+private:
+    void FlushStroke(DrawTarget *aDT, gfxTextObjectPaint *aObjectPaint,
+                     ScaledFont *aFont, gfxContext *aThebesContext,
+                     gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
+    {
+        RefPtr<Path> path = aFont->GetPathForGlyphs(aBuf, aDT);
+        if (aObjectPaint) {
+            nsRefPtr<gfxPattern> strokePattern =
+              aObjectPaint->GetStrokePattern(aThebesContext->CurrentMatrix());
+            if (strokePattern) {
+                aDT->Stroke(path, *strokePattern->GetPattern(aDT), aState.strokeOptions);
+            }
+        }
+    }
+
 #undef GLYPH_BUFFER_SIZE
 };
 
@@ -1748,7 +1773,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
               gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aPt,
               Spacing *aSpacing, gfxTextObjectPaint *aObjectPaint)
 {
-    NS_ASSERTION(aDrawMode <= gfxFont::GLYPH_PATH, "GLYPH_PATH cannot be used with GLYPH_FILL or GLYPH_STROKE");
+    NS_ASSERTION(aDrawMode == gfxFont::GLYPH_PATH || !(aDrawMode & gfxFont::GLYPH_PATH),
+                 "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
 
     if (aStart >= aEnd)
         return;
@@ -5068,7 +5094,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode
                  gfxTextRun::DrawCallbacks *aCallbacks)
 {
     NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
-    NS_ASSERTION(aDrawMode <= gfxFont::GLYPH_PATH, "GLYPH_PATH cannot be used with GLYPH_FILL or GLYPH_STROKE");
+    NS_ASSERTION(aDrawMode == gfxFont::GLYPH_PATH || !(aDrawMode & gfxFont::GLYPH_PATH),
+                 "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
     NS_ASSERTION(aDrawMode == gfxFont::GLYPH_PATH || !aCallbacks, "callback must not be specified unless using GLYPH_PATH");
 
     gfxFloat direction = GetDirection();

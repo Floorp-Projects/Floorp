@@ -30,6 +30,7 @@
 #include "pldhash.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
+#include "nsStyleStruct.h"
 #include "nsSize.h"
 #include "imgIRequest.h"
 #include "nsRuleData.h"
@@ -7346,6 +7347,26 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   } else if (eCSSUnit_Inherit == markerStartValue->GetUnit()) {
     canStoreInRuleTree = false;
     svg->mMarkerStart = parentSVG->mMarkerStart;
+  }
+
+  // paint-order: enum (bit field), inherit, initial
+  const nsCSSValue* paintOrderValue = aRuleData->ValueForPaintOrder();
+  switch (paintOrderValue->GetUnit()) {
+    case eCSSUnit_Enumerated:
+      MOZ_STATIC_ASSERT
+        (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
+         "SVGStyleStruct::mPaintOrder not big enough");
+      svg->mPaintOrder = static_cast<uint8_t>(paintOrderValue->GetIntValue());
+      break;
+
+    case eCSSUnit_Inherit:
+      canStoreInRuleTree = false;
+      svg->mPaintOrder = parentSVG->mPaintOrder;
+      break;
+
+    case eCSSUnit_Initial:
+      svg->mPaintOrder = NS_STYLE_PAINT_ORDER_NORMAL;
+      break;
   }
 
   // shape-rendering: enum, inherit
