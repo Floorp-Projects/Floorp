@@ -581,7 +581,7 @@ BaselineCompiler::emit_JSOP_UNDEFINED()
 bool
 BaselineCompiler::emit_JSOP_HOLE()
 {
-    frame.push(MagicValue(JS_ARRAY_HOLE));
+    frame.push(MagicValue(JS_ELEMENTS_HOLE));
     return true;
 }
 

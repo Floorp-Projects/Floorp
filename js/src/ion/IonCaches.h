@@ -112,7 +112,7 @@ class IonCache
             PropertyName *name;
             TypedOrValueRegisterSpace output;
             bool allowGetters : 1;
-            bool hasDenseArrayLengthStub : 1;
+            bool hasArrayLengthStub : 1;
             bool hasTypedArrayLengthStub : 1;
         } getprop;
         struct {
@@ -126,7 +126,7 @@ class IonCache
             ConstantOrRegisterSpace index;
             TypedOrValueRegisterSpace output;
             bool monitoredResult : 1;
-            bool hasDenseArrayStub : 1;
+            bool hasDenseStub : 1;
         } getelem;
         struct {
             Register scopeChain;
@@ -267,7 +267,7 @@ class IonCacheGetProperty : public IonCache
         u.getprop.name = name;
         u.getprop.output.data() = output;
         u.getprop.allowGetters = allowGetters;
-        u.getprop.hasDenseArrayLengthStub = false;
+        u.getprop.hasArrayLengthStub = false;
         u.getprop.hasTypedArrayLengthStub = false;
     }
 
@@ -275,7 +275,7 @@ class IonCacheGetProperty : public IonCache
     PropertyName *name() const { return u.getprop.name; }
     TypedOrValueRegister output() const { return u.getprop.output.data(); }
     bool allowGetters() const { return u.getprop.allowGetters; }
-    bool hasDenseArrayLengthStub() const { return u.getprop.hasDenseArrayLengthStub; }
+    bool hasArrayLengthStub() const { return u.getprop.hasArrayLengthStub; }
     bool hasTypedArrayLengthStub() const { return u.getprop.hasTypedArrayLengthStub; }
 
     bool attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
@@ -283,7 +283,7 @@ class IonCacheGetProperty : public IonCache
     bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                           HandleShape shape,
                           const SafepointIndex *safepointIndex, void *returnAddr);
-    bool attachDenseArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
+    bool attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
     bool attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
 };
 
@@ -332,7 +332,7 @@ class IonCacheGetElement : public IonCache
         u.getelem.index.data() = index;
         u.getelem.output.data() = output;
         u.getelem.monitoredResult = monitoredResult;
-        u.getelem.hasDenseArrayStub = false;
+        u.getelem.hasDenseStub = false;
     }
 
     Register object() const {
@@ -347,16 +347,16 @@ class IonCacheGetElement : public IonCache
     bool monitoredResult() const {
         return u.getelem.monitoredResult;
     }
-    bool hasDenseArrayStub() const {
-        return u.getelem.hasDenseArrayStub;
+    bool hasDenseStub() const {
+        return u.getelem.hasDenseStub;
     }
-    void setHasDenseArrayStub() {
-        JS_ASSERT(!hasDenseArrayStub());
-        u.getelem.hasDenseArrayStub = true;
+    void setHasDenseStub() {
+        JS_ASSERT(!hasDenseStub());
+        u.getelem.hasDenseStub = true;
     }
 
     bool attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj, const Value &idval, PropertyName *name);
-    bool attachDenseArray(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
+    bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
 };
 
 class IonCacheBindName : public IonCache
