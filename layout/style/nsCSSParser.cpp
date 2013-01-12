@@ -622,6 +622,7 @@ protected:
   bool ParsePaint(nsCSSProperty aPropID);
   bool ParseDasharray();
   bool ParseMarker();
+  bool ParsePaintOrder();
 
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
@@ -6318,6 +6319,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseDasharray();
   case eCSSProperty_marker:
     return ParseMarker();
+  case eCSSProperty_paint_order:
+    return ParsePaintOrder();
   default:
     NS_ABORT_IF_FALSE(false, "should not be called");
     return false;
@@ -10134,6 +10137,93 @@ CSSParserImpl::ParseMarker()
     }
   }
   return false;
+}
+
+bool
+CSSParserImpl::ParsePaintOrder()
+{
+  MOZ_STATIC_ASSERT
+    ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) > NS_STYLE_PAINT_ORDER_LAST_VALUE,
+     "bitfield width insufficient for paint-order constants");
+
+  static const int32_t kPaintOrderKTable[] = {
+    eCSSKeyword_normal,  NS_STYLE_PAINT_ORDER_NORMAL,
+    eCSSKeyword_fill,    NS_STYLE_PAINT_ORDER_FILL,
+    eCSSKeyword_stroke,  NS_STYLE_PAINT_ORDER_STROKE,
+    eCSSKeyword_markers, NS_STYLE_PAINT_ORDER_MARKERS,
+    eCSSKeyword_UNKNOWN,-1
+  };
+
+  MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(kPaintOrderKTable) ==
+                      2 * (NS_STYLE_PAINT_ORDER_LAST_VALUE + 2),
+                    "missing paint-order values in kPaintOrderKTable");
+
+  nsCSSValue value;
+  if (!ParseVariant(value, VARIANT_HK, kPaintOrderKTable)) {
+    return false;
+  }
+
+  uint32_t seen = 0;
+  uint32_t order = 0;
+  uint32_t position = 0;
+
+  // Ensure that even cast to a signed int32_t when stored in CSSValue,
+  // we have enough space for the entire paint-order value.
+  MOZ_STATIC_ASSERT
+    (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE < 32,
+     "seen and order not big enough");
+
+  if (value.GetUnit() == eCSSUnit_Enumerated) {
+    uint32_t component = static_cast<uint32_t>(value.GetIntValue());
+    if (component != NS_STYLE_PAINT_ORDER_NORMAL) {
+      bool parsedOK = true;
+      for (;;) {
+        if (seen & (1 << component)) {
+          // Already seen this component.
+          UngetToken();
+          parsedOK = false;
+          break;
+        }
+        seen |= (1 << component);
+        order |= (component << position);
+        position += NS_STYLE_PAINT_ORDER_BITWIDTH;
+        if (!ParseEnum(value, kPaintOrderKTable)) {
+          break;
+        }
+        component = value.GetIntValue();
+        if (component == NS_STYLE_PAINT_ORDER_NORMAL) {
+          // Can't have "normal" in the middle of the list of paint components.
+          UngetToken();
+          parsedOK = false;
+          break;
+        }
+      }
+
+      // Fill in the remaining paint-order components in the order of their
+      // constant values.
+      if (parsedOK) {
+        for (component = 1;
+             component <= NS_STYLE_PAINT_ORDER_LAST_VALUE;
+             component++) {
+          if (!(seen & (1 << component))) {
+            order |= (component << position);
+            position += NS_STYLE_PAINT_ORDER_BITWIDTH;
+          }
+        }
+      }
+    }
+
+    MOZ_STATIC_ASSERT(NS_STYLE_PAINT_ORDER_NORMAL == 0,
+                      "unexpected value for NS_STYLE_PAINT_ORDER_NORMAL");
+    value.SetIntValue(static_cast<int32_t>(order), eCSSUnit_Enumerated);
+  }
+
+  if (!ExpectEndProperty()) {
+    return false;
+  }
+
+  AppendValue(eCSSProperty_paint_order, value);
+  return true;
 }
 
 } // anonymous namespace
