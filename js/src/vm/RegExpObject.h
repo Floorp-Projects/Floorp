@@ -14,6 +14,8 @@
 #include "jscntxt.h"
 #include "jsobj.h"
 
+#include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "js/TemplateLib.h"
 #include "vm/MatchPairs.h"
 
@@ -120,11 +122,12 @@ class RegExpShared
 #endif
 
     /*
-     * Source to the RegExp. The RegExpShared must either be protected by a
-     * RegExpGuard, which handles rooting for stacky RegExpShareds,
-     * or trace() must be explicitly called during marking.
+     * Source to the RegExp, for lazy compilation.
+     * The source must be rooted while activeUseCount is non-zero
+     * via RegExpGuard, RegExpHeapGuard, or explicit calls to trace().
      */
     JSAtom *           source;
+
     RegExpFlag         flags;
     unsigned           parenCount;
 
@@ -149,7 +152,10 @@ class RegExpShared
     RegExpShared(JSRuntime *rt, JSAtom *source, RegExpFlag flags);
     ~RegExpShared();
 
-    void trace(JSTracer *trc);
+    /* Explicit trace function for use by the RegExpStatics and JITs. */
+    void trace(JSTracer *trc) {
+        MarkStringUnbarriered(trc, &source, "regexpshared source");
+    }
 
     /* Static functions to expose some Yarr logic. */
     static inline bool isJITRuntimeEnabled(JSContext *cx);
@@ -222,17 +228,58 @@ class RegExpGuard
         re_->incRef();
     }
 
-    ~RegExpGuard() {
-        if (re_)
-            re_->decRef();
-    }
+    ~RegExpGuard() { release(); }
 
   public:
     void init(RegExpShared &re) {
-        JS_ASSERT(!re_);
+        JS_ASSERT(!initialized());
         re_ = &re;
         re_->incRef();
-        source_ = re.source;
+        source_ = re_->source;
+    }
+    void release() {
+        if (re_) {
+            re_->decRef();
+            re_ = NULL;
+            source_ = NULL;
+        }
+    }
+
+    bool initialized() const { return !!re_; }
+    RegExpShared *re() const { JS_ASSERT(initialized()); return re_; }
+    RegExpShared *operator->() { return re(); }
+    RegExpShared &operator*() { return *re(); }
+};
+
+/* Equivalent of RegExpGuard, heap-allocated, with explicit tracing. */
+class RegExpHeapGuard
+{
+    RegExpShared *re_;
+
+    RegExpHeapGuard(const RegExpGuard &) MOZ_DELETE;
+    void operator=(const RegExpHeapGuard &) MOZ_DELETE;
+
+  public:
+    RegExpHeapGuard() : re_(NULL) { }
+    RegExpHeapGuard(RegExpShared &re) { init(re); }
+    ~RegExpHeapGuard() { release(); }
+
+  public:
+    void init(RegExpShared &re) {
+        JS_ASSERT(!initialized());
+        re_ = &re;
+        re_->incRef();
+    }
+    void release() {
+        if (re_) {
+            re_->decRef();
+            re_ = NULL;
+        }
+    }
+
+    void trace(JSTracer *trc) {
+        if (initialized())
+            re_->trace(trc);
     }
 
     bool initialized() const { return !!re_; }
@@ -246,9 +293,12 @@ class RegExpCompartment
     struct Key {
         JSAtom *atom;
         uint16_t flag;
+
         Key() {}
         Key(JSAtom *atom, RegExpFlag flag)
-          : atom(atom), flag(flag) {}
+          : atom(atom), flag(flag)
+        { }
+
         typedef Key Lookup;
         static HashNumber hash(const Lookup &l) {
             return DefaultHasher<JSAtom *>::hash(l.atom) ^ (l.flag << 1);
