@@ -13,6 +13,7 @@ AUS_Cu.import("resource://gre/modules/XPCOMUtils.jsm")
 var gNextRunFunc;
 var gStatusResult;
 var gExpectedStatusResult;
+var gExpectedStatusResult2;
 var gIncrementalDownloadClassID, gIncOldFactory;
 
 // gIncrementalDownloadErrorType is used to loop through each of the connection
@@ -61,13 +62,18 @@ function callHandleEvent() {
 
 // Helper function for testing mar downloads that have the correct size
 // specified in the update xml.
-function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
+function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc, aExpectedStatusResult2) {
   gUpdates = null;
   gUpdateCount = null;
   gStatusResult = null;
   gCheckFunc = check_test_helper_pt1_1;
   gNextRunFunc = aNextRunFunc;
   gExpectedStatusResult = aExpectedStatusResult;
+  if (aExpectedStatusResult2) {
+    gExpectedStatusResult2 = aExpectedStatusResult2;
+  } else {
+    gExpectedStatusResult2 = -1;
+  }
   logTestInfo(aMsg, Components.stack.caller);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -83,7 +89,15 @@ function check_test_helper_pt1_1() {
 }
 
 function check_test_helper_pt1_2() {
-  do_check_eq(gStatusResult, gExpectedStatusResult);
+  if (gExpectedStatusResult == -1) {
+    do_check_eq(gStatusResult, gExpectedStatusResult);
+  } else {
+    if (gStatusResult == gExpectedStatusResult2) {
+      do_check_eq(gStatusResult, gExpectedStatusResult2);
+    } else {
+      do_check_eq(gStatusResult, gExpectedStatusResult);
+    }
+  }
   gAUS.removeDownloadListener(downloadListener);
   gNextRunFunc();
 }
@@ -179,7 +193,8 @@ function run_test_pt12() {
   const arbitraryFileSize = 1024000;
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR ,arbitraryFileSize);
   run_test_helper_pt1("mar download with a valid MD5 hash but invalid file size",
-                      AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13);
+                      AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13,
+                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT);
 }
 
 var newFactory = {

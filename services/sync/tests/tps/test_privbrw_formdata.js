@@ -60,7 +60,7 @@ Phase('phase2', [
 
 Phase('phase3', [
   [Sync],
-  [SetPrivateBrowsing, true],
+  [Windows.add, { private: true }],
   [Formdata.add, formdata2],
   [Formdata.verify, formdata2],
   [Sync],

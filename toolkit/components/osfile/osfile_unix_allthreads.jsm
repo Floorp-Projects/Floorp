@@ -160,6 +160,136 @@ if (typeof Components != "undefined") {
 
   exports.OS.Shared.Unix.Error = OSError;
 
+  /**
+   * Code shared by implementations of File.Info on Unix
+   *
+   * @constructor
+  */
+  let AbstractInfo = function AbstractInfo(isDir, isSymLink, size, lastAccessDate,
+                                           lastModificationDate, unixLastStatusChangeDate,
+                                           unixOwner, unixGroup, unixMode) {
+    this._isDir = isDir;
+    this._isSymlLink = isSymLink;
+    this._size = size;
+    this._lastAccessDate = lastAccessDate;
+    this._lastModificationDate = lastModificationDate;
+    this._unixLastStatusChangeDate = unixLastStatusChangeDate;
+    this._unixOwner = unixOwner;
+    this._unixGroup = unixGroup;
+    this._unixMode = unixMode;
+  };
+
+  AbstractInfo.prototype = {
+    /**
+     * |true| if this file is a directory, |false| otherwise
+     */
+    get isDir() {
+      return this._isDir;
+    },
+    /**
+     * |true| if this file is a symbolink link, |false| otherwise
+     */
+    get isSymLink() {
+      return this._isSymlLink;
+    },
+    /**
+     * The size of the file, in bytes.
+     *
+     * Note that the result may be |NaN| if the size of the file cannot be
+     * represented in JavaScript.
+     *
+     * @type {number}
+     */
+    get size() {
+      return this._size;
+    },
+    /**
+     * The date of last access to this file.
+     *
+     * Note that the definition of last access may depend on the
+     * underlying operating system and file system.
+     *
+     * @type {Date}
+     */
+    get lastAccessDate() {
+      return this._lastAccessDate;
+    },
+    /**
+     * Return the date of last modification of this file.
+     */
+    get lastModificationDate() {
+      return this._lastModificationDate;
+    },
+    /**
+     * Return the date at which the status of this file was last modified
+     * (this is the date of the latest write/renaming/mode change/...
+     * of the file)
+     */
+    get unixLastStatusChangeDate() {
+      return this._unixLastStatusChangeDate;
+    },
+    /*
+     * Return the Unix owner of this file
+     */
+    get unixOwner() {
+      return this._unixOwner;
+    },
+    /*
+     * Return the Unix group of this file
+     */
+    get unixGroup() {
+      return this._unixGroup;
+    },
+    /*
+     * Return the Unix group of this file
+     */
+    get unixMode() {
+      return this._unixMode;
+    }
+  };
+  exports.OS.Shared.Unix.AbstractInfo = AbstractInfo;
+
+  /**
+   * Code shared by implementations of File.DirectoryIterator.Entry on Unix
+   *
+   * @constructor
+  */
+  let AbstractEntry = function AbstractEntry(isDir, isSymLink, name, path) {
+    this._isDir = isDir;
+    this._isSymlLink = isSymLink;
+    this._name = name;
+    this._path = path;
+  };
+
+  AbstractEntry.prototype = {
+    /**
+     * |true| if the entry is a directory, |false| otherwise
+     */
+    get isDir() {
+      return this._isDir;
+    },
+    /**
+     * |true| if the entry is a directory, |false| otherwise
+     */
+    get isSymLink() {
+      return this._isSymlLink;
+    },
+    /**
+     * The name of the entry
+     * @type {string}
+     */
+    get name() {
+      return this._name;
+    },
+    /**
+     * The full path to the entry
+     */
+    get path() {
+      return this._path;
+    }
+  };
+  exports.OS.Shared.Unix.AbstractEntry = AbstractEntry;
+
   // Special constants that need to be defined on all platforms
 
    Object.defineProperty(exports.OS.Shared, "POS_START", { value: exports.OS.Constants.libc.SEEK_SET });

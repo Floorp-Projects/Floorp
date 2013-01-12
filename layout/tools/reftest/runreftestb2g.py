@@ -406,7 +406,7 @@ user_pref("dom.mozBrowserFramesWhitelist","app://system.gaiamobile.org");\n
 user_pref("network.dns.localDomains","app://system.gaiamobile.org");\n
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
-user_pref("reftest.browser.iframe.enabled", true);
+user_pref("reftest.browser.iframe.enabled", false);
 user_pref("reftest.remote", true);
 user_pref("reftest.uri", "%s");
 // Set a future policy version to avoid the telemetry prompt.

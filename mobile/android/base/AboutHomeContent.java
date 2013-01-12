@@ -6,14 +6,11 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.PinnedSite;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
-import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 
@@ -28,42 +25,30 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.PathShape;
 import android.graphics.Path;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.style.StyleSpan;
 import android.text.style.TextAppearanceSpan;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.ContextMenu;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AbsListView;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -123,6 +108,7 @@ public class AboutHomeContent extends ScrollView
 
     private static Rect sIconBounds;
     private static TextAppearanceSpan sSubTitleSpan;
+    private static Drawable sPinDrawable = null;
 
     public interface UriLoadCallback {
         public void callback(String uriSpec);
@@ -858,7 +844,36 @@ public class AboutHomeContent extends ScrollView
     private class TopSitesViewHolder {
         public TextView titleView = null;
         public ImageView thumbnailView = null;
+        public ImageView pinnedView = null;
         public String url = null;
+
+        public TopSitesViewHolder(View v) {
+            titleView = (TextView) v.findViewById(R.id.title);
+            thumbnailView = (ImageView) v.findViewById(R.id.thumbnail);
+            pinnedView = (ImageView) v.findViewById(R.id.pinned);
+        }
+
+        private Drawable getPinDrawable() {
+            if (sPinDrawable == null) {
+                int size = mContext.getResources().getDimensionPixelSize(R.dimen.abouthome_topsite_pinsize);
+
+                // Draw a little triangle in the upper right corner
+                Path path = new Path();
+                path.moveTo(0, 0);
+                path.lineTo(size, 0);
+                path.lineTo(size, size);
+                path.close();
+
+                sPinDrawable = new ShapeDrawable(new PathShape(path, size, size));
+                Paint p = ((ShapeDrawable) sPinDrawable).getPaint();
+                p.setColor(mContext.getResources().getColor(R.color.abouthome_topsite_pin));
+            }
+            return sPinDrawable;
+        }
+
+        public void setPinned(boolean aPinned) {
+            pinnedView.setBackgroundDrawable(aPinned ? getPinDrawable() : null);
+        }
     }
 
     public class TopSitesCursorAdapter extends SimpleCursorAdapter {
@@ -879,14 +894,12 @@ public class AboutHomeContent extends ScrollView
             return;
         }
 
-        private View buildView(String url, String title, View convertView) {
+        private View buildView(String url, String title, boolean pinned, View convertView) {
             TopSitesViewHolder viewHolder;
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.abouthome_topsite_item, null);
 
-                viewHolder = new TopSitesViewHolder();
-                viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
-                viewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.thumbnail);
+                viewHolder = new TopSitesViewHolder(convertView);
                 convertView.setTag(viewHolder);
             } else {
                 viewHolder = (TopSitesViewHolder) convertView.getTag();
@@ -895,6 +908,7 @@ public class AboutHomeContent extends ScrollView
             viewHolder.titleView.setVisibility(TextUtils.isEmpty(title) ? View.INVISIBLE : View.VISIBLE);
             viewHolder.titleView.setText(title);
             viewHolder.url = url;
+            viewHolder.setPinned(pinned);
 
             // Force the view to fit inside this slot in the grid
             convertView.setLayoutParams(new AbsListView.LayoutParams(mTopSitesGrid.getColumnWidth(),
@@ -907,14 +921,17 @@ public class AboutHomeContent extends ScrollView
         public View getView(int position, View convertView, ViewGroup parent) {
             String url = "";
             String title = "";
+            boolean pinned = false;
 
             Cursor c = getCursor();
             c.moveToPosition(position);
             if (!c.isAfterLast()) {
                 url = c.getString(c.getColumnIndex(URLColumns.URL));
                 title = c.getString(c.getColumnIndex(URLColumns.TITLE));
+                pinned = ((TopSitesCursorWrapper)c).isPinned();
             }
-            return buildView(url, title, convertView);
+
+            return buildView(url, title, pinned, convertView);
         }
     }
 
@@ -933,6 +950,7 @@ public class AboutHomeContent extends ScrollView
             View v = mTopSitesGrid.getChildAt(i);
             TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
             clearThumbnail(holder);
+            holder.setPinned(false);
         }
 
         (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
@@ -954,6 +972,7 @@ public class AboutHomeContent extends ScrollView
         final int position = mTopSitesGrid.getSelectedPosition();
         View v = mTopSitesGrid.getChildAt(position);
         TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+        holder.setPinned(false);
 
         // Quickly update the view so that there isn't as much lag between the request and response
         clearThumbnail(holder);
@@ -979,6 +998,8 @@ public class AboutHomeContent extends ScrollView
         TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
         final String url = holder.url;
         final String title = holder.titleView.getText().toString();
+        holder.setPinned(true);
+
         // update the database on a background thread
         (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
             @Override

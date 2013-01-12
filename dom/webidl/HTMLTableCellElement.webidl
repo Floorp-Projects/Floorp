@@ -26,11 +26,9 @@ interface HTMLTableCellElement : HTMLElement {
            attribute DOMString abbr;
            [SetterThrows]
            attribute DOMString scope;
-/*
 };
 
 partial interface HTMLTableCellElement {
-*/
            [SetterThrows]
            attribute DOMString align;
            [SetterThrows]

@@ -366,9 +366,6 @@ struct mbuf {
  * XXX Eventually just phase this out to use M_WAITOK/M_NOWAIT.
  */
 #define	MBTOM(how)	(how)
-#define	M_DONTWAIT	M_NOWAIT
-#define	M_TRYWAIT	M_WAITOK
-#define	M_WAIT		M_WAITOK
 
 void		 m_tag_delete(struct mbuf *, struct m_tag *);
 void		 m_tag_delete_chain(struct mbuf *, struct m_tag *);

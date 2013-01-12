@@ -288,6 +288,12 @@ public:
   Layer* GetPrimaryScrollableLayer();
 
   /**
+   * Returns a list of all descendant layers for which 
+   * GetFrameMetrics().IsScrollable() is true.
+   */
+  void GetScrollableLayers(nsTArray<Layer*>& aArray);
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Called when a managee has mutated.
    * Subclasses overriding this method must first call their
@@ -495,7 +501,11 @@ public:
   static PRLogModuleInfo* GetLog() { return sLog; }
 
   bool IsCompositingCheap(LayersBackend aBackend)
-  { return LAYERS_BASIC != aBackend; }
+  {
+    // LAYERS_NONE is an error state, but in that case we should try to
+    // avoid loading the compositor!
+    return LAYERS_BASIC != aBackend && LAYERS_NONE != aBackend;
+  }
 
   virtual bool IsCompositingCheap() { return true; }
 
@@ -776,6 +786,7 @@ public:
 
   // Call AddAnimation to add a new animation to this layer from layout code.
   // Caller must add segments to the returned animation.
+  // aStart represents the time at the *end* of the delay.
   Animation* AddAnimation(mozilla::TimeStamp aStart, mozilla::TimeDuration aDuration,
                           float aIterations, int aDirection,
                           nsCSSProperty aProperty, const AnimationData& aData);

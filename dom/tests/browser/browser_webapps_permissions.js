@@ -27,17 +27,17 @@ const TEST_ORIGIN_URL = "http://mochi.test:8888";
 const installedPermsToTest = {
   "geolocation": "prompt",
   "alarms": "allow",
-  "contacts-write": "prompt",
-  "contacts-read": "prompt",
-  "device-storage:apps-read": "deny",
-  "device-storage:apps-write": "unknown"
+  "fmradio": "allow",
+  "desktop-notification": "allow",
+  "audio-channel-normal": "allow"
 };
 
 const uninstalledPermsToTest = {
   "geolocation": "unknown",
   "alarms": "unknown",
-  "contacts-read": "unknown",
-  "device-storage:apps-read": "unknown",
+  "fmradio": "unknown",
+  "desktop-notification": "unknown",
+  "audio-channel-normal": "unknown"
 };
 
 var gWindow, gNavigator;
@@ -59,7 +59,6 @@ function test() {
     browser.removeEventListener("DOMContentLoaded", onLoad, false);
     gWindow = browser.contentWindow;
 
-    SpecialPowers.setBoolPref("dom.mozApps.dev_mode", true);
     SpecialPowers.setBoolPref("dom.mozPermissionSettings.enabled", true);
     SpecialPowers.addPermission("permissions", true, browser.contentWindow.document);
     SpecialPowers.addPermission("permissions", true, browser.contentDocument);

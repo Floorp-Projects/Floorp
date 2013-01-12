@@ -42,6 +42,8 @@ struct BlobTraits<Parent>
 {
   typedef mozilla::dom::PBlobParent ProtocolType;
   typedef mozilla::dom::PBlobStreamParent StreamType;
+  typedef mozilla::dom::PContentParent ContentManagerType;
+  typedef ProtocolType BlobManagerType;
 
   // BaseType on the parent side is a bit more complicated than for the child
   // side. In the case of nsIInputStreams backed by files we need to ensure that
@@ -66,6 +68,13 @@ struct BlobTraits<Parent>
 
     nsTArray<nsRevocableEventPtr<OpenStreamRunnable> > mOpenStreamRunnables;
   };
+
+  static void*
+  Allocate(size_t aSize)
+  {
+    // We want fallible allocation in the parent.
+    return moz_malloc(aSize);
+  }
 };
 
 template <>
@@ -73,6 +82,8 @@ struct BlobTraits<Child>
 {
   typedef mozilla::dom::PBlobChild ProtocolType;
   typedef mozilla::dom::PBlobStreamChild StreamType;
+  typedef mozilla::dom::PContentChild ContentManagerType;
+  typedef ProtocolType BlobManagerType;
 
   class BaseType : public ProtocolType
   {
@@ -83,21 +94,38 @@ struct BlobTraits<Child>
     virtual ~BaseType()
     { }
   };
+
+  static void*
+  Allocate(size_t aSize)
+  {
+    // We want infallible allocation in the child.
+    return moz_xmalloc(aSize);
+  }
 };
 
 template <ActorFlavorEnum>
+class RemoteBlobBase;
+template <ActorFlavorEnum>
 class RemoteBlob;
+template <ActorFlavorEnum>
+class RemoteMemoryBlob;
+template <ActorFlavorEnum>
+class RemoteMultipartBlob;
 
 template <ActorFlavorEnum ActorFlavor>
 class Blob : public BlobTraits<ActorFlavor>::BaseType
 {
-  friend class RemoteBlob<ActorFlavor>;
+  friend class RemoteBlobBase<ActorFlavor>;
 
 public:
   typedef typename BlobTraits<ActorFlavor>::ProtocolType ProtocolType;
   typedef typename BlobTraits<ActorFlavor>::StreamType StreamType;
   typedef typename BlobTraits<ActorFlavor>::BaseType BaseType;
+  typedef typename BlobTraits<ActorFlavor>::ContentManagerType ContentManagerType;
+  typedef typename BlobTraits<ActorFlavor>::BlobManagerType BlobManagerType;
   typedef RemoteBlob<ActorFlavor> RemoteBlobType;
+  typedef RemoteMemoryBlob<ActorFlavor> RemoteMemoryBlobType;
+  typedef RemoteMultipartBlob<ActorFlavor> RemoteMultipartBlobType;
   typedef mozilla::ipc::IProtocolManager<
                       mozilla::ipc::RPCChannel::RPCListener>::ActorDestroyReason
           ActorDestroyReason;
@@ -106,6 +134,12 @@ public:
 protected:
   nsIDOMBlob* mBlob;
   RemoteBlobType* mRemoteBlob;
+  RemoteMemoryBlobType* mRemoteMemoryBlob;
+  RemoteMultipartBlobType* mRemoteMultipartBlob;
+
+  ContentManagerType* mContentManager;
+  BlobManagerType* mBlobManager;
+
   bool mOwnsBlob;
   bool mBlobIsFile;
 
@@ -136,15 +170,49 @@ public:
   bool
   SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength);
 
+  ProtocolType*
+  ConstructPBlobOnManager(ProtocolType* aActor,
+                          const BlobConstructorParams& aParams);
+
+  bool
+  ManagerIs(const ContentManagerType* aManager) const
+  {
+    return aManager == mContentManager;
+  }
+
+  bool
+  ManagerIs(const BlobManagerType* aManager) const
+  {
+    return aManager == mBlobManager;
+  }
+
+#ifdef DEBUG
+  bool
+  HasManager() const
+  {
+    return !!mContentManager || !!mBlobManager;
+  }
+#endif
+
+  void
+  SetManager(ContentManagerType* aManager);
+  void
+  SetManager(BlobManagerType* aManager);
+
+  void
+  PropagateManager(Blob<ActorFlavor>* aActor) const;
+
 private:
   // This constructor is called on the sending side.
   Blob(nsIDOMBlob* aBlob);
 
-  // This constructor is called on the receiving side.
-  Blob(const BlobConstructorParams& aParams);
-
-  void
-  SetRemoteBlob(nsRefPtr<RemoteBlobType>& aRemoteBlob);
+  // These constructors are called on the receiving side.
+  Blob(nsRefPtr<RemoteBlobType>& aBlob,
+       bool aIsFile);
+  Blob(nsRefPtr<RemoteMemoryBlobType>& aBlob,
+       bool aIsFile);
+  Blob(nsRefPtr<RemoteMultipartBlobType>& aBlob,
+       bool aIsFile);
 
   void
   NoteDyingRemoteBlob();
@@ -159,11 +227,21 @@ private:
   virtual bool
   RecvPBlobStreamConstructor(StreamType* aActor) MOZ_OVERRIDE;
 
+  virtual bool
+  RecvPBlobConstructor(ProtocolType* aActor,
+                       const BlobConstructorParams& aParams) MOZ_OVERRIDE;
+
   virtual StreamType*
   AllocPBlobStream() MOZ_OVERRIDE;
 
   virtual bool
   DeallocPBlobStream(StreamType* aActor) MOZ_OVERRIDE;
+
+  virtual ProtocolType*
+  AllocPBlob(const BlobConstructorParams& params) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPBlob(ProtocolType* actor) MOZ_OVERRIDE;
 };
 
 } // namespace ipc

@@ -13,4 +13,7 @@
     <TextView android:id="@+id/title"
               style="@style/AboutHome.Thumbnail.Label"/>
 
+    <ImageView android:id="@+id/pinned"
+               style="@style/AboutHome.Thumbnail.Pinned"/>
+
 </RelativeLayout>

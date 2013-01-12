@@ -98,8 +98,8 @@ public:
 
   bool Initialised() { return mInitialised; }
 
-protected:
   virtual nsIntPoint GetOriginOffset() = 0;
+protected:
 
   GLContext* gl() const { return mOGLLayer->gl(); }
 
@@ -343,7 +343,6 @@ public:
     return mTexImage ? mTexImage->GetBackingSurface() : nullptr;
   }
 
-protected:
   virtual nsIntPoint GetOriginOffset() {
     return BufferRect().TopLeft() - BufferRotation();
   }
@@ -366,6 +365,10 @@ public:
 
   virtual PaintState BeginPaint(ContentType aContentType,
                                 uint32_t aFlags);
+  virtual nsIntPoint GetOriginOffset() {
+    return mBufferRect.TopLeft() - mBufferRotation;
+  }
+
 
 protected:
   enum XSide {
@@ -375,10 +378,6 @@ protected:
     TOP, BOTTOM
   };
   nsIntRect GetQuadrantRectangle(XSide aXSide, YSide aYSide);
-
-  virtual nsIntPoint GetOriginOffset() {
-    return mBufferRect.TopLeft() - mBufferRotation;
-  }
 
 private:
   nsIntRect mBufferRect;
@@ -947,7 +946,6 @@ public:
     return mBufferRotation;
   }
 
-protected:
   virtual nsIntPoint GetOriginOffset() {
     return mBufferRect.TopLeft() - mBufferRotation;
   }
@@ -1156,7 +1154,7 @@ ShadowThebesLayerOGL::GetRenderState()
   }
   uint32_t flags = (mBuffer->Rotation() != nsIntPoint()) ?
                    LAYER_RENDER_STATE_BUFFER_ROTATION : 0;
-  return LayerRenderState(&mBufferDescriptor, flags);
+  return LayerRenderState(&mBufferDescriptor, mBuffer->GetOriginOffset(), flags);
 }
 
 bool

@@ -43,6 +43,13 @@ function handleRequest(request, response)
     return;
   }
 
+  if (query["res"] == "font-spec-compliant") {
+    response.setHeader("Access-Control-Allow-Origin", "*", false);
+    response.setHeader("Content-Type", "text/plain", false);
+    response.write("font data...");
+    return;
+  }
+
   // iframe with arbitrary content
   if (query["res"] == "iframe") {
     response.setHeader("Content-Type", "text/html", false);
@@ -102,8 +109,17 @@ function handleRequest(request, response)
     return;
   }
 
+  if (query["res"] == "xhr-spec-compliant") {
+    response.setHeader("Content-Type", "text/html", false);
+    var resp = 'var x = new XMLHttpRequest(); x.open("GET", "' + otherSite +
+               resource+'?res=xhr-resp-spec-compliant&testid=xhr-src-redir-spec-compliant", false); ' +
+               'x.send(null);';
+    response.write(resp);
+    return;
+  }
+
   // response to XHR
-  if (query["res"] == "xhr-resp") {
+  if (query["res"] == "xhr-resp-spec-compliant") {
     response.setHeader("Access-Control-Allow-Origin", "*", false);
     response.setHeader("Content-Type", "text/html", false);
     response.write('XHR response...');

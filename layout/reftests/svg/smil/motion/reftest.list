@@ -1,12 +1,12 @@
 # Tests related to SVG Animation (using SMIL), focusing on the animateMotion
 # element.
 
-== animateMotion-by-1.svg      lime.svg
-== animateMotion-from-to-1.svg lime.svg
+skip-if(B2G) == animateMotion-by-1.svg      lime.svg # bug 773482
+skip-if(B2G) == animateMotion-from-to-1.svg lime.svg # bug 773482
 == animateMotion-indefinite-to-1.svg lime.svg
 == animateMotion-indefinite-to-2.svg lime.svg
-== animateMotion-rotate-1a.svg lime.svg
-== animateMotion-rotate-1b.svg lime.svg
+skip-if(B2G) == animateMotion-rotate-1a.svg lime.svg # bug 773482
+skip-if(B2G) == animateMotion-rotate-1b.svg lime.svg # bug 773482
 == animateMotion-rotate-2.svg  lime.svg
 == animateMotion-to-overridden-1.svg lime.svg
 == animateMotion-values-linear-1.svg animateMotion-values-linear-1-ref.svg
@@ -14,6 +14,6 @@
 == animateMotion-values-paced-1b.svg animateMotion-values-paced-1-ref.svg
 
 # Tests involving <mpath> sub-element
-== animateMotion-mpath-pathLength-1.svg lime.svg
-== animateMotion-mpath-targetChange-1.svg lime.svg
+skip-if(B2G) == animateMotion-mpath-pathLength-1.svg lime.svg # bug 773482
+skip-if(B2G) == animateMotion-mpath-targetChange-1.svg lime.svg # bug 773482
 == animateMotion-mpath-target-transform-1.svg lime.svg

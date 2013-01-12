@@ -12,7 +12,7 @@
 
 #include "AudioChannelCommon.h"
 #include "AudioChannelAgent.h"
-#include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 namespace dom {
@@ -100,7 +100,16 @@ protected:
   AudioChannelInternalType GetInternalType(AudioChannelType aType,
                                            bool aElementHidden);
 
-  struct AudioChannelAgentData {
+  class AudioChannelAgentData {
+  public:
+    AudioChannelAgentData(AudioChannelType aType,
+                          bool aElementHidden,
+                          bool aMuted)
+    : mType(aType)
+    , mElementHidden(aElementHidden)
+    , mMuted(aMuted)
+    {}
+
     AudioChannelType mType;
     bool mElementHidden;
     bool mMuted;
@@ -108,9 +117,9 @@ protected:
 
   static PLDHashOperator
   NotifyEnumerator(AudioChannelAgent* aAgent,
-                   AudioChannelAgentData aData, void *aUnused);
+                   AudioChannelAgentData* aData, void *aUnused);
 
-  nsDataHashtable< nsPtrHashKey<AudioChannelAgent>, AudioChannelAgentData > mAgents;
+  nsClassHashtable< nsPtrHashKey<AudioChannelAgent>, AudioChannelAgentData > mAgents;
 
   nsTArray<uint64_t> mChannelCounters[AUDIO_CHANNEL_INT_LAST];
 

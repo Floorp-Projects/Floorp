@@ -333,7 +333,7 @@ let ChromeHangs = {
     let memoryMap = hangs.memoryMap;
     let stacks = hangs.stacks;
     let request = {"memoryMap" : memoryMap, "stacks" : stacks,
-                   "version" : 2};
+                   "version" : 3};
     let requestJSON = JSON.stringify(request);
 
     this.symbolRequest = XMLHttpRequest();

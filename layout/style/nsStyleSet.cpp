@@ -295,7 +295,7 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
   mRuleProcessors[aType] = nullptr;
   if (aType == eScopedDocSheet) {
-    for (int i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
+    for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
       nsIStyleRuleProcessor* processor = mScopedDocSheetRuleProcessors[i].get();
       Element* scope =
         static_cast<nsCSSRuleProcessor*>(processor)->GetScopeElement();
@@ -332,7 +332,7 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
       // nsCSSStyleSheets, and mark all of their scope elements
       // as scoped style roots.
       nsTArray<nsCSSStyleSheet*> sheets(count);
-      for (int32_t i = 0; i < count; i++) {
+      for (uint32_t i = 0; i < count; i++) {
         nsRefPtr<nsCSSStyleSheet> sheet =
           do_QueryObject(mSheets[eScopedDocSheet].ObjectAt(i));
         sheets.AppendElement(sheet);
@@ -961,7 +961,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
       aElement && aElement->IsElementInStyleScope()) {
     lastScopedRNs.SetLength(mScopedDocSheetRuleProcessors.Length());
     haveImportantScopedRules.SetLength(mScopedDocSheetRuleProcessors.Length());
-    for (int32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
+    for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
       aRuleWalker->SetLevel(eScopedDocSheet, false, true);
       nsCSSRuleProcessor* processor =
         static_cast<nsCSSRuleProcessor*>(mScopedDocSheetRuleProcessors[i].get());
@@ -1110,7 +1110,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     if (mRuleProcessors[eDocSheet]) // NOTE: different
       (*aFunc)(mRuleProcessors[eDocSheet], aData);
     if (aData->mElement->IsElementInStyleScope()) {
-      for (int32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++)
+      for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++)
         (*aFunc)(mScopedDocSheetRuleProcessors[i], aData);
     }
   }

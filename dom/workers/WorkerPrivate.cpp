@@ -1320,21 +1320,23 @@ public:
   }
 };
 
-class UpdateJSRuntimeHeapSizeRunnable : public WorkerControlRunnable
+class UpdateJSWorkerMemoryParameterRunnable : public WorkerControlRunnable
 {
-  uint32_t mJSRuntimeHeapSize;
+  uint32_t mValue;
+  JSGCParamKey mKey;
 
 public:
-  UpdateJSRuntimeHeapSizeRunnable(WorkerPrivate* aWorkerPrivate,
-                                  uint32_t aJSRuntimeHeapSize)
+  UpdateJSWorkerMemoryParameterRunnable(WorkerPrivate* aWorkerPrivate,
+                                        JSGCParamKey aKey,
+                                        uint32_t aValue)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
-    mJSRuntimeHeapSize(aJSRuntimeHeapSize)
+    mValue(aValue), mKey(aKey)
   { }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    aWorkerPrivate->UpdateJSRuntimeHeapSizeInternal(aCx, mJSRuntimeHeapSize);
+    aWorkerPrivate->UpdateJSWorkerMemoryParameter(aCx, mKey, mValue);
     return true;
   }
 };
@@ -1796,7 +1798,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mMemoryReportCondVar(mMutex, "WorkerPrivateParent Memory Report CondVar"),
   mJSObject(aObject), mParent(aParent), mParentJSContext(aParentJSContext),
   mScriptURL(aScriptURL), mDomain(aDomain), mBusyCount(0),
-  mParentStatus(Pending), mJSContextOptions(0), mJSRuntimeHeapSize(0),
+  mParentStatus(Pending), mJSContextOptions(0),
+  mJSRuntimeHeapSize(0), mJSWorkerAllocationThreshold(3),
   mGCZeal(0), mJSObjectRooted(false), mParentSuspended(false),
   mIsChromeWorker(aIsChromeWorker), mPrincipalIsSystem(false),
   mMainThreadObjectsForgotten(false), mEvalAllowed(aEvalAllowed)
@@ -1826,6 +1829,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                  "Runtime heap size mismatch!");
     mJSRuntimeHeapSize = aParent->GetJSRuntimeHeapSize();
 
+    mJSWorkerAllocationThreshold = aParent->GetJSWorkerAllocationThreshold();
+
 #ifdef JS_GC_ZEAL
     mGCZeal = aParent->GetGCZeal();
 #endif
@@ -1834,7 +1839,10 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     AssertIsOnMainThread();
 
     mJSContextOptions = RuntimeService::GetDefaultJSContextOptions();
-    mJSRuntimeHeapSize = RuntimeService::GetDefaultJSRuntimeHeapSize();
+    mJSRuntimeHeapSize =
+      RuntimeService::GetDefaultJSWorkerMemoryParameter(JSGC_MAX_BYTES);
+    mJSWorkerAllocationThreshold =
+      RuntimeService::GetDefaultJSWorkerMemoryParameter(JSGC_ALLOCATION_THRESHOLD);
 #ifdef JS_GC_ZEAL
     mGCZeal = RuntimeService::GetDefaultGCZeal();
 #endif
@@ -2200,17 +2208,28 @@ WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateJSRuntimeHeapSize(JSContext* aCx,
-                                                      uint32_t aMaxBytes)
+WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
+                                                            JSGCParamKey aKey,
+                                                            uint32_t aValue)
 {
   AssertIsOnParentThread();
+  switch(aKey) {
+    case JSGC_ALLOCATION_THRESHOLD:
+      mJSWorkerAllocationThreshold = aValue;
+      break;
+    case JSGC_MAX_BYTES:
+      mJSRuntimeHeapSize = aValue;
+      break;
+    default:
+      break;
+  }
 
-  mJSRuntimeHeapSize = aMaxBytes;
-
-  nsRefPtr<UpdateJSRuntimeHeapSizeRunnable> runnable =
-    new UpdateJSRuntimeHeapSizeRunnable(ParentAsWorkerPrivate(), aMaxBytes);
+  nsRefPtr<UpdateJSWorkerMemoryParameterRunnable> runnable =
+    new UpdateJSWorkerMemoryParameterRunnable(ParentAsWorkerPrivate(),
+                                              aKey,
+                                              aValue);
   if (!runnable->Dispatch(aCx)) {
-    NS_WARNING("Failed to update worker heap size!");
+    NS_WARNING("Failed to update memory parameter!");
     JS_ClearPendingException(aCx);
   }
 }
@@ -4011,15 +4030,15 @@ WorkerPrivate::UpdateJSContextOptionsInternal(JSContext* aCx, uint32_t aOptions)
 }
 
 void
-WorkerPrivate::UpdateJSRuntimeHeapSizeInternal(JSContext* aCx,
-                                               uint32_t aMaxBytes)
+WorkerPrivate::UpdateJSWorkerMemoryParameterInternal(JSContext* aCx,
+                                                     JSGCParamKey aKey,
+                                                     uint32_t aValue)
 {
   AssertIsOnWorkerThread();
-
-  JS_SetGCParameter(JS_GetRuntime(aCx), JSGC_MAX_BYTES, aMaxBytes);
+  JS_SetGCParameter(JS_GetRuntime(aCx), aKey, aValue);
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdateJSRuntimeHeapSize(aCx, aMaxBytes);
+    mChildWorkers[index]->UpdateJSWorkerMemoryParameter(aCx, aKey, aValue);
   }
 }
 

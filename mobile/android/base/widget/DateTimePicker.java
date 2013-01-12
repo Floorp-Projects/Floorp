@@ -18,38 +18,27 @@
 package org.mozilla.gecko.widget;
 
 import android.content.Context;
-import android.graphics.Point;
 import android.os.Build;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
-import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityManager;
 import android.view.Display;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.OrientationEventListener;
 import android.view.WindowManager;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
-import android.widget.TextView;
-import java.text.ParseException;
+
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import org.mozilla.gecko.R;
 
