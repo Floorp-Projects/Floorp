@@ -578,7 +578,6 @@ def main(argv):
     if HAVE_MULTIPROCESSING:
         try:
             max_jobs_default = cpu_count()
-            print "Defaulting to %d jobs in parallel" % max_jobs_default
         except NotImplementedError:
             pass
 
