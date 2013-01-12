@@ -48,9 +48,11 @@ var gAdvancedPane = {
 #ifdef MOZ_CRASHREPORTER
     this.initSubmitCrashes();
 #endif
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     this.initTelemetry();
+#ifdef MOZ_SERVICES_HEALTHREPORT
+    this.initSubmitHealthReport();
 #endif
+
     this.updateActualCacheSize("disk");
     this.updateActualCacheSize("offline");
 
@@ -130,6 +132,36 @@ var gAdvancedPane = {
   },
 
   /**
+   * When the user toggles the layers.acceleration.disabled pref,
+   * sync its new value to the gfx.direct2d.disabled pref too.
+   */
+  updateHardwareAcceleration: function()
+  {
+#ifdef XP_WIN
+    var fromPref = document.getElementById("layers.acceleration.disabled");
+    var toPref = document.getElementById("gfx.direct2d.disabled");
+    toPref.value = fromPref.value;
+#endif
+  },
+
+  // DATA CHOICES TAB
+
+  /**
+   * Set up or hide the Learn More links for various data collection options
+   */
+  _setupLearnMoreLink: function (pref, element) {
+    // set up the Learn More link with the correct URL
+    let url = Services.prefs.getCharPref(pref);
+    let el = document.getElementById(element);
+
+    if (url) {
+      el.setAttribute("href", url);
+    } else {
+      el.setAttribute("hidden", "true");
+    }
+  },
+
+  /**
    *
    */
   initSubmitCrashes: function ()
@@ -142,6 +174,7 @@ var gAdvancedPane = {
     } catch (e) {
       checkbox.style.display = "none";
     }
+    this._setupLearnMoreLink("toolkit.crashreporter.infoURL", "crashReporterLearnMore");
   },
 
   /**
@@ -157,16 +190,19 @@ var gAdvancedPane = {
     } catch (e) { }
   },
 
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+
   /**
    * When telemetry is opt-out, verify if the user explicitly rejected the
    * telemetry prompt, and if so reflect his choice in the current preference
    * value. This doesn't cover the case where the user refused telemetry in the
    * prompt but later enabled it in preferences in builds before the fix for
    * bug 737600.
+   *
+   * In all cases, set up the Learn More link sanely
    */
   initTelemetry: function ()
   {
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabledPreRelease";
     let enabled = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED);
     let rejected = false;
@@ -176,8 +212,11 @@ var gAdvancedPane = {
     if (enabled && rejected) {
       Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, false);
     }
-  },
 #endif
+#ifdef MOZ_TELEMETRY_REPORTING
+    this._setupLearnMoreLink("toolkit.telemetry.infoURL", "telemetryLearnMore");
+#endif
+  },
 
   /**
    * When the user toggles telemetry, update the rejected value as well, so we
@@ -191,18 +230,45 @@ var gAdvancedPane = {
     displayed.value = @MOZ_TELEMETRY_DISPLAY_REV@;
   },
 
+#ifdef MOZ_SERVICES_HEALTHREPORT
   /**
-   * When the user toggles the layers.acceleration.disabled pref,
-   * sync its new value to the gfx.direct2d.disabled pref too.
+   * Initialize the health report service reference and checkbox.
    */
-  updateHardwareAcceleration: function()
-  {
-#ifdef XP_WIN
-    var fromPref = document.getElementById("layers.acceleration.disabled");
-    var toPref = document.getElementById("gfx.direct2d.disabled");
-    toPref.value = fromPref.value;
-#endif
+  initSubmitHealthReport: function () {
+    this._setupLearnMoreLink("datareporting.healthreport.infoURL", "FHRLearnMore");
+
+    let policy = Components.classes["@mozilla.org/datareporting/service;1"]
+                                   .getService(Components.interfaces.nsISupports)
+                                   .wrappedJSObject
+                                   .policy;
+
+    let checkbox = document.getElementById("submitHealthReportBox");
+
+    if (!policy) {
+      checkbox.setAttribute("disabled", "true");
+      return;
+    }
+
+    checkbox.checked = policy.healthReportUploadEnabled;
   },
+
+  /**
+   * Update the health report policy acceptance with state from checkbox.
+   */
+  updateSubmitHealthReport: function () {
+    let policy = Components.classes["@mozilla.org/datareporting/service;1"]
+                                   .getService(Components.interfaces.nsISupports)
+                                   .wrappedJSObject
+                                   .policy;
+
+    if (!policy) {
+      return;
+    }
+
+    let checkbox = document.getElementById("submitHealthReportBox");
+    policy.healthReportUploadEnabled = checkbox.checked;
+  },
+#endif
 
   // NETWORK TAB
 

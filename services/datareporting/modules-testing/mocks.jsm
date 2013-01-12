@@ -12,7 +12,7 @@ Cu.import("resource://services-common/log4moz.js");
 
 
 this.MockPolicyListener = function MockPolicyListener() {
-  this._log = Log4Moz.repository.getLogger("HealthReport.Testing.MockPolicyListener");
+  this._log = Log4Moz.repository.getLogger("Services.DataReporting.Testing.MockPolicyListener");
   this._log.level = Log4Moz.Level["Debug"];
 
   this.requestDataUploadCount = 0;
@@ -44,3 +44,4 @@ MockPolicyListener.prototype = {
     this.lastNotifyRequest = request;
   },
 };
+

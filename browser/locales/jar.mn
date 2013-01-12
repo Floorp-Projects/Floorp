@@ -11,6 +11,9 @@
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/aboutHome.dtd                   (%chrome/browser/aboutHome.dtd)
+#ifdef MOZ_SERVICES_HEALTHREPORT
+    locale/browser/aboutHealthReport.dtd           (%chrome/browser/aboutHealthReport.dtd)
+#endif
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/syncProgress.dtd                (%chrome/browser/syncProgress.dtd)
