@@ -1712,6 +1712,17 @@ class TaggedFramePtr
 {
     uintptr_t ptr_;
 
+  public:
+    TaggedFramePtr()
+      : ptr_(0)
+    {}
+
+    TaggedFramePtr(StackFrame *fp)
+      : ptr_(uintptr_t(fp) | 0x1)
+    {
+        JS_ASSERT(fp);
+    }
+
     bool isStackFrame() const {
         return ptr_ & 0x1;
     }
@@ -1723,27 +1734,199 @@ class TaggedFramePtr
         return res;
     }
 
-  public:
-    TaggedFramePtr()
-      : ptr_(0)
-    {}
-
-    explicit TaggedFramePtr(StackFrame *fp)
-      : ptr_(uintptr_t(fp) | 0x1)
-    {
-        JS_ASSERT(fp);
-    }
-
     void *raw() const { return reinterpret_cast<void *>(ptr_); }
 
     bool operator ==(const TaggedFramePtr &other) const { return ptr_ == other.ptr_; }
     bool operator !=(const TaggedFramePtr &other) const { return ptr_ != other.ptr_; }
 
+    operator bool() const { return !!ptr_; }
+
+    JSGenerator *maybeSuspendedGenerator(JSRuntime *rt) const {
+        if (isStackFrame())
+            return asStackFrame()->maybeSuspendedGenerator(rt);
+        return NULL;
+    }
+    JSObject *scopeChain() const {
+        if (isStackFrame())
+            return asStackFrame()->scopeChain();
+        return NULL;
+    }
+    JSCompartment *compartment() const {
+        return scopeChain()->compartment();
+    }
+    StaticBlockObject *maybeBlockChain() const {
+        if (isStackFrame())
+            return asStackFrame()->maybeBlockChain();
+        return NULL;
+    }
+    bool hasCallObj() const {
+        if (isStackFrame())
+            return asStackFrame()->hasCallObj();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    CallObject &callObj() const {
+        if (isStackFrame())
+            return asStackFrame()->callObj();
+        JS_NOT_REACHED("Invalid frame");
+        return asStackFrame()->callObj();
+    }
+    bool isGeneratorFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isGeneratorFrame();
+        return false;
+    }
+    bool isYielding() const {
+        if (isStackFrame())
+            return asStackFrame()->isYielding();
+        return false;
+    }
+    bool isFunctionFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isFunctionFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    bool isGlobalFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isGlobalFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    bool isEvalFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isEvalFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    bool isDebuggerFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isDebuggerFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
     JSScript *script() const {
         if (isStackFrame())
             return asStackFrame()->script();
         JS_NOT_REACHED("Invalid frame");
         return NULL;
+    }
+    UnrootedFunction fun() const {
+        if (isStackFrame())
+            return asStackFrame()->fun();
+        JS_NOT_REACHED("Invalid frame");
+        return NULL;
+    }
+    JSFunction &callee() const {
+        if (isStackFrame())
+            return asStackFrame()->callee();
+        JS_NOT_REACHED("Invalid frame");
+        return asStackFrame()->callee();
+    }
+    bool isNonEvalFunctionFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isNonEvalFunctionFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    bool isNonStrictDirectEvalFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isNonStrictDirectEvalFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    bool isStrictEvalFrame() const {
+        if (isStackFrame())
+            return asStackFrame()->isStrictEvalFrame();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    unsigned numActualArgs() const {
+        if (isStackFrame())
+            return asStackFrame()->numActualArgs();
+        JS_NOT_REACHED("Invalid frame");
+        return 0;
+    }
+    unsigned numFormalArgs() const {
+        if (isStackFrame())
+            return asStackFrame()->numFormalArgs();
+        JS_NOT_REACHED("Invalid frame");
+        return 0;
+    }
+    Value *formals() const {
+        if (isStackFrame())
+            return asStackFrame()->formals();
+        JS_NOT_REACHED("Invalid frame");
+        return NULL;
+    }
+    Value *actuals() const {
+        if (isStackFrame())
+            return asStackFrame()->actuals();
+        JS_NOT_REACHED("Invalid frame");
+        return NULL;
+    }
+    bool hasArgsObj() const {
+        if (isStackFrame())
+            return asStackFrame()->hasArgsObj();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    ArgumentsObject &argsObj() const {
+        if (isStackFrame())
+            return asStackFrame()->argsObj();
+        JS_NOT_REACHED("Invalid frame");
+        return asStackFrame()->argsObj();
+    }
+    void initArgsObj(ArgumentsObject &argsobj) const {
+        if (isStackFrame()) {
+            asStackFrame()->initArgsObj(argsobj);
+            return;
+        }
+        JS_NOT_REACHED("Invalid frame");
+    }
+    bool copyRawFrameSlots(AutoValueVector *vec) const {
+        if (isStackFrame())
+            return asStackFrame()->copyRawFrameSlots(vec);
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
+        if (isStackFrame())
+            return asStackFrame()->unaliasedVar(i, checkAliasing);
+        JS_NOT_REACHED("Invalid frame");
+        return asStackFrame()->unaliasedVar(i);
+    }
+    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
+        if (isStackFrame())
+            return asStackFrame()->unaliasedLocal(i, checkAliasing);
+        JS_NOT_REACHED("Invalid frame");
+        return asStackFrame()->unaliasedLocal(i);
+    }
+    Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
+        if (isStackFrame())
+            return asStackFrame()->unaliasedFormal(i, checkAliasing);
+        JS_NOT_REACHED("Invalid frame");
+        return asStackFrame()->unaliasedFormal(i);
+    }
+    bool prevUpToDate() const {
+        if (isStackFrame())
+            return asStackFrame()->prevUpToDate();
+        JS_NOT_REACHED("Invalid frame");
+        return false;
+    }
+    void setPrevUpToDate() const {
+        if (isStackFrame()) {
+            asStackFrame()->setPrevUpToDate();
+            return;
+        }
+        JS_NOT_REACHED("Invalid frame");
+    }
+    TaggedFramePtr evalPrev() const {
+        JS_ASSERT(isEvalFrame());
+        if (isStackFrame())
+            return TaggedFramePtr(asStackFrame()->prev());
+        JS_NOT_REACHED("Invalid frame");
+        return TaggedFramePtr();
     }
 };
 
