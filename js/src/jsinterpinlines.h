@@ -348,7 +348,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
             } else {
                 RootedValue rref(cx, rval);
                 bool strict = cx->stack.currentScript()->strict;
-                if (!js_NativeSet(cx, obj, obj, shape, false, strict, rref.address()))
+                if (!js_NativeSet(cx, obj, obj, shape, false, strict, &rref))
                     return false;
             }
             return true;
@@ -681,11 +681,12 @@ NegOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue val
 }
 
 static inline bool
-FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *idp, MutableHandleValue vp)
+FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, MutableHandleId idp,
+               MutableHandleValue vp)
 {
     int32_t i_;
     if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
-        *idp = INT_TO_JSID(i_);
+        idp.set(INT_TO_JSID(i_));
         return true;
     }
     return !!InternNonIntElementId(cx, obj, idval, idp, vp);
@@ -704,7 +705,7 @@ ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue ob
     if (!obj)
         return false;
 
-    jsid dummy;
+    RootedId dummy(cx);
     if (!InternNonIntElementId(cx, obj, idval, &dummy, res))
         return false;
 
@@ -718,7 +719,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
 {
 #if JS_HAS_XML_SUPPORT
     if (op == JSOP_CALLELEM && JS_UNLIKELY(obj->isXML())) {
-        jsid id;
+        RootedId id(cx);
         if (!FetchElementId(cx, obj, rref, &id, res))
             return false;
         return js_GetXMLMethod(cx, obj, id, res);
@@ -729,7 +730,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
 
     uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
-        if (analyze && !obj->isNative() && !obj->isArray()) {
+        if (analyze && !obj->isNative()) {
             RootedScript script(cx, NULL);
             jsbytecode *pc = NULL;
             types::TypeScript::GetPcScript(cx, &script, &pc);
@@ -738,20 +739,8 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 script->analysis()->getCode(pc).nonNativeGetElement = true;
         }
 
-        do {
-            if (obj->isDenseArray()) {
-                if (index < obj->getDenseArrayInitializedLength()) {
-                    res.set(obj->getDenseArrayElement(index));
-                    if (!res.isMagic())
-                        break;
-                }
-            } else if (obj->isArguments()) {
-                if (obj->asArguments().maybeGetElement(index, res))
-                    break;
-            }
-            if (!JSObject::getElement(cx, obj, obj, index, res))
-                return false;
-        } while(0);
+        if (!JSObject::getElement(cx, obj, obj, index, res))
+            return false;
     } else {
         if (analyze) {
             RootedScript script(cx, NULL);
@@ -766,7 +755,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
             }
         }
 
-        SpecialId special;
+        Rooted<SpecialId> special(cx);
         res.set(rref);
         if (ValueIsSpecial(obj, res, &special, cx)) {
             if (!JSObject::getSpecial(cx, obj, obj, special, res))
@@ -848,31 +837,18 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
 {
     types::TypeScript::MonitorAssign(cx, obj, id);
 
-    do {
-        if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            uint32_t length = obj->getDenseArrayInitializedLength();
-            int32_t i = JSID_TO_INT(id);
-            if ((uint32_t)i < length) {
-                if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-                    if (js_PrototypeHasIndexedProperties(obj))
-                        break;
-                    if ((uint32_t)i >= obj->getArrayLength())
-                        JSObject::setArrayLength(cx, obj, i + 1);
-                }
-                JSObject::setDenseArrayElementWithType(cx, obj, i, value);
-                return true;
-            } else {
-                if (!cx->fp()->beginsIonActivation()) {
-                    RootedScript script(cx);
-                    jsbytecode *pc;
-                    types::TypeScript::GetPcScript(cx, &script, &pc);
+    if (obj->isArray() && JSID_IS_INT(id)) {
+        uint32_t length = obj->getDenseInitializedLength();
+        int32_t i = JSID_TO_INT(id);
+        if ((uint32_t)i >= length && !cx->fp()->beginsIonActivation()) {
+            RootedScript script(cx);
+            jsbytecode *pc;
+            types::TypeScript::GetPcScript(cx, &script, &pc);
 
-                    if (script->hasAnalysis())
-                        script->analysis()->getCode(pc).arrayWriteHole = true;
-                }
-            }
+            if (script->hasAnalysis())
+                script->analysis()->getCode(pc).arrayWriteHole = true;
         }
-    } while (0);
+    }
 
     RootedValue tmp(cx, value);
     return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
@@ -888,11 +864,10 @@ TypeOfOperation(JSContext *cx, HandleValue v)
 static JS_ALWAYS_INLINE bool
 InitElemOperation(JSContext *cx, HandleObject obj, MutableHandleValue idval, HandleValue val)
 {
-    JS_ASSERT(!obj->isDenseArray());
-    JS_ASSERT(!val.isMagic(JS_ARRAY_HOLE));
+    JS_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
 
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, idval, id.address(), idval))
+    if (!FetchElementId(cx, obj, idval, &id, idval))
         return false;
 
     return JSObject::defineGeneric(cx, obj, id, val, NULL, NULL, JSPROP_ENUMERATE);
@@ -911,7 +886,7 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
      * if the current op is the last element initialiser, set the array length
      * to one greater than id.
      */
-    if (val.isMagic(JS_ARRAY_HOLE)) {
+    if (val.isMagic(JS_ELEMENTS_HOLE)) {
         JSOp next = JSOp(*GetNextPc(pc));
 
         if ((op == JSOP_INITELEM_ARRAY && next == JSOP_ENDINIT) ||

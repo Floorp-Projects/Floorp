@@ -323,7 +323,7 @@ nsHTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 }
 
 NS_IMPL_ISUPPORTS1(nsHTMLInputElement::nsFilePickerShownCallback,
-                   nsIFilePickerShownCallback);
+                   nsIFilePickerShownCallback)
 
 nsHTMLInputElement::AsyncClickHandler::AsyncClickHandler(nsHTMLInputElement* aInput)
   : mInput(aInput)

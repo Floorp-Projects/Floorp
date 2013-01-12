@@ -21,6 +21,14 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, JSObject *pobj, Shape *shape)
     JS_ASSERT(!cx->runtime->isHeapBusy());
 
     /*
+     * Don't cache entries on indexed properties. Indexes can be added or
+     * deleted from the dense elements of objects along the prototype chain
+     * wihout any shape changes.
+     */
+    if (JSID_IS_INT(shape->propid()))
+        return JS_NO_PROP_CACHE_FILL;
+
+    /*
      * Check for overdeep scope and prototype chain. Because resolve, getter,
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after LookupPropertyWithFlags has returned, we calculate the protoIndex

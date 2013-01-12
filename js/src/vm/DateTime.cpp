@@ -24,10 +24,25 @@ ComputeLocalTime(time_t local, struct tm *ptm)
 #endif
 }
 
+static bool
+ComputeUTCTime(time_t t, struct tm *ptm)
+{
+#ifdef HAVE_GMTIME_R
+    return gmtime_r(&t, ptm);
+#else
+    struct tm *otm = gmtime(&t);
+    if (!otm)
+        return false;
+    *ptm = *otm;
+    return true;
+#endif
+}
+
 static int32_t
 LocalUTCDifferenceSeconds()
 {
     using js::SecondsPerDay;
+    using js::SecondsPerHour;
 
 #if defined(XP_WIN)
     // Windows doesn't follow POSIX: updates to the TZ environment variable are
@@ -36,29 +51,27 @@ LocalUTCDifferenceSeconds()
     _tzset();
 #endif
 
-    /*
-     * Get the difference between this time zone and GMT, by checking the local
-     * time for days 0 and 180 of 1970, using a date for which daylight savings
-     * time was not in effect.
-     */
-    int day = 0;
-    struct tm tm;
+    time_t t = time(NULL);
+    struct tm local, utc;
 
-    if (!ComputeLocalTime(0, &tm))
+    if (!ComputeLocalTime(t, &local) || !ComputeUTCTime(t, &utc))
         return 0;
-    if (tm.tm_isdst > 0) {
-        day = 180;
-        if (!ComputeLocalTime(SecondsPerDay * day, &tm))
-            return 0;
+
+    int utc_secs = utc.tm_hour * SecondsPerHour + utc.tm_min * 60;
+    int local_secs = local.tm_hour * SecondsPerHour + local.tm_min * 60;
+
+    // Callers expect the negative difference of the offset from local time
+    // and UTC.
+
+    if (utc.tm_mday == local.tm_mday) {
+      return utc_secs - local_secs;
     }
-
-    int32_t time = (tm.tm_hour * 3600) + (tm.tm_min * 60) + tm.tm_sec;
-    time = SecondsPerDay - time;
-
-    if (tm.tm_yday == day)
-        time -= SecondsPerDay;
-
-    return time;
+    if (utc_secs > local_secs) {
+      // Local date comes before UTC (offset in the negative range).
+      return utc_secs - SecondsPerDay - local_secs;
+    }
+    // Local date comes after UTC (offset in the positive range).
+    return SecondsPerDay - local_secs + utc_secs;
 }
 
 void

@@ -576,7 +576,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
         if (!keys.reserve(length))
             return false;
         for (size_t i = 0; i < length; ++i) {
-            jsid id;
+            RootedId id(cx);
             if (!ValueToId(cx, StringValue(ni->begin()[i]), &id))
                 return false;
             keys.infallibleAppend(id);

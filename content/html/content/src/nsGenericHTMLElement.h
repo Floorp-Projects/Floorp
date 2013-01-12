@@ -229,15 +229,6 @@ public:
                             : NS_LITERAL_STRING("false"),
                 aError);
   }
-  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& aError)
-  {
-    nsresult rv;
-    nsICSSDeclaration* style = nsMappedAttributeElement::GetStyle(&rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
-    }
-    return style;
-  }
 
   /**
    * Determine whether an attribute is an event (onclick, etc.)

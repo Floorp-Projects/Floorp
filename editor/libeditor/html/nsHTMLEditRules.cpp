@@ -686,7 +686,7 @@ nsHTMLEditRules::GetListState(bool *aMixed, bool *aOL, bool *aUL, bool *aDL)
     } else if (curElement->IsHTML(nsGkAtoms::ol)) {
       *aOL = true;
     } else if (curElement->IsHTML(nsGkAtoms::li)) {
-      if (dom::Element* parent = curElement->GetElementParent()) {
+      if (dom::Element* parent = curElement->GetParentElement()) {
         if (parent->IsHTML(nsGkAtoms::ul)) {
           *aUL = true;
         } else if (parent->IsHTML(nsGkAtoms::ol)) {

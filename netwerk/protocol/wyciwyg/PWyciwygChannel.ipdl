@@ -26,6 +26,7 @@ parent:
             uint32_t              loadFlags,
             SerializedLoadContext loadContext,
             PBrowser browser);
+  AppData(SerializedLoadContext loadContext, PBrowser browser);
 
   // methods corresponding to those of nsIWyciwygChannel
   WriteToCacheEntry(nsString data);

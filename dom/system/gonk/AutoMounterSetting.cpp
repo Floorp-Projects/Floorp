@@ -35,7 +35,7 @@ public:
 
   SettingsServiceCallback() {}
 
-  NS_IMETHOD Handle(const nsAString &aName, const JS::Value &aResult) {
+  NS_IMETHOD Handle(const nsAString& aName, const JS::Value& aResult) {
     if (JSVAL_IS_INT(aResult)) {
       int32_t mode = JSVAL_TO_INT(aResult);
       SetAutoMounterMode(mode);
@@ -43,7 +43,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(const nsAString &aName) {
+  NS_IMETHOD HandleError(const nsAString& aName) {
     ERR("SettingsCallback::HandleError: %s\n", NS_LossyConvertUTF16toASCII(aName).get());
     return NS_OK;
   }
@@ -95,9 +95,9 @@ AutoMounterSetting::~AutoMounterSetting()
 NS_IMPL_ISUPPORTS1(AutoMounterSetting, nsIObserver)
 
 NS_IMETHODIMP
-AutoMounterSetting::Observe(nsISupports *aSubject,
-                            const char *aTopic,
-                            const PRUnichar *aData)
+AutoMounterSetting::Observe(nsISupports* aSubject,
+                            const char* aTopic,
+                            const PRUnichar* aData)
 {
   if (strcmp(aTopic, MOZSETTINGS_CHANGED) != 0) {
     return NS_OK;
@@ -115,7 +115,7 @@ AutoMounterSetting::Observe(nsISupports *aSubject,
     ERR("Failed to get JSContextStack");
     return NS_OK;
   }
-  JSContext *cx = stack->GetSafeJSContext();
+  JSContext* cx = stack->GetSafeJSContext();
   if (!cx) {
     ERR("Failed to GetSafeJSContext");
     return NS_OK;
@@ -126,7 +126,7 @@ AutoMounterSetting::Observe(nsISupports *aSubject,
       !val.isObject()) {
     return NS_OK;
   }
-  JSObject &obj(val.toObject());
+  JSObject& obj(val.toObject());
   JS::Value key;
   if (!JS_GetProperty(cx, &obj, "key", &key) ||
       !key.isString()) {

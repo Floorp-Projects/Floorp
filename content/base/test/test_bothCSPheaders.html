@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Correctly Handling Both Pre-1.0 and 1.0 Content Security Policy Headers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+var loadedImgURL = "http://example.org/nonexistent.jpg";
+
+// This is used to watch the blocked data bounce off CSP and allowed data 
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if(!SpecialPowers.can_QI(subject))
+      return;
+
+    if (topic === "http-on-modify-request") {
+      // the load was allowed, this is a fail, the Content-Security Policy
+      // should not allow the load
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (asciiSpec != loadedImgURL) return;
+
+      ok(false, "the Content-Security Policy header does not allow the load, the X-Content-Security header should be ignored");
+      window.examiner.remove();
+      SimpleTest.finish();
+    }
+
+    if (topic === "csp-on-violate-policy") {
+      // the load was blocked, this is a pass, the Content-Security-Policy
+      // header doesn't allow the load, but the X-Content-Security-Header does
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (asciiSpec != loadedImgURL) return;
+
+      ok(true, "Load was blocked - the Content-Security-Policy header doesn't allow the load, the X-Content-Security-Header does but should have been ignored");
+      window.examiner.remove();
+      SimpleTest.finish();
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+SpecialPowers.pushPrefEnv(
+{'set':[["security.csp.speccompliant", true]]},
+  function() {
+    // save this for last so that our listeners are registered.
+    // ... this loads the testbed of good and bad requests.
+    document.getElementById('cspframe').src = 'file_bothCSPheaders.html';
+  }
+);
+</script>
+</pre>
+</body>
+</html>

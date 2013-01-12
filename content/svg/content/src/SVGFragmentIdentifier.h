@@ -9,10 +9,13 @@
 #include "nsString.h"
 
 class nsIDocument;
-class nsSVGSVGElement;
 class nsSVGViewElement;
 
 namespace mozilla {
+
+namespace dom {
+class SVGSVGElement;
+}
 
 /**
  * Implements support for parsing SVG fragment identifiers
@@ -36,17 +39,17 @@ private:
   * Parse an SVG ViewSpec and set applicable attributes on the root element.
   * @return true if there is a valid ViewSpec
   */
-  static bool ProcessSVGViewSpec(const nsAString &aViewSpec, nsSVGSVGElement *root);
+  static bool ProcessSVGViewSpec(const nsAString &aViewSpec, dom::SVGSVGElement *root);
 
   // Save and restore things we override in case we want to go back e.g. the
   // user presses the back button
-  static void SaveOldPreserveAspectRatio(nsSVGSVGElement *root);
-  static void RestoreOldPreserveAspectRatio(nsSVGSVGElement *root);
-  static void SaveOldViewBox(nsSVGSVGElement *root);
-  static void RestoreOldViewBox(nsSVGSVGElement *root);
-  static void SaveOldZoomAndPan(nsSVGSVGElement *root);
-  static void RestoreOldZoomAndPan(nsSVGSVGElement *root);
-  static void ClearTransform(nsSVGSVGElement *root);
+  static void SaveOldPreserveAspectRatio(dom::SVGSVGElement *root);
+  static void RestoreOldPreserveAspectRatio(dom::SVGSVGElement *root);
+  static void SaveOldViewBox(dom::SVGSVGElement *root);
+  static void RestoreOldViewBox(dom::SVGSVGElement *root);
+  static void SaveOldZoomAndPan(dom::SVGSVGElement *root);
+  static void RestoreOldZoomAndPan(dom::SVGSVGElement *root);
+  static void ClearTransform(dom::SVGSVGElement *root);
 };
 
 } // namespace mozilla

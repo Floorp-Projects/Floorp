@@ -23,6 +23,8 @@
 #include "js/HashTable.h"
 #include "vm/CommonPropertyNames.h"
 
+ForwardDeclareJS(Atom);
+
 struct JSIdArray {
     int length;
     js::HeapId vector[1];    /* actually, length jsid words */
@@ -79,7 +81,7 @@ class AtomStateEntry
   public:
     AtomStateEntry() : bits(0) {}
     AtomStateEntry(const AtomStateEntry &other) : bits(other.bits) {}
-    AtomStateEntry(JSAtom *ptr, bool tagged)
+    AtomStateEntry(RawAtom ptr, bool tagged)
       : bits(uintptr_t(ptr) | uintptr_t(tagged))
     {
         JS_ASSERT((uintptr_t(ptr) & 0x1) == 0);
@@ -220,15 +222,15 @@ enum InternBehavior
     InternAtom = true
 };
 
-extern JSAtom *
+extern UnrootedAtom
 Atomize(JSContext *cx, const char *bytes, size_t length,
         js::InternBehavior ib = js::DoNotInternAtom);
 
-extern JSAtom *
+extern UnrootedAtom
 AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
              js::InternBehavior ib = js::DoNotInternAtom);
 
-extern JSAtom *
+extern UnrootedAtom
 AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 inline JSAtom *
@@ -236,10 +238,10 @@ ToAtom(JSContext *cx, const js::Value &v);
 
 bool
 InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
-                      jsid *idp, MutableHandleValue vp);
+                      MutableHandleId idp, MutableHandleValue vp);
 
 inline bool
-InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *idp)
+InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval, MutableHandleId idp)
 {
     RootedValue dummy(cx);
     return InternNonIntElementId(cx, obj, idval, idp, &dummy);

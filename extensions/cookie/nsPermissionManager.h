@@ -217,7 +217,8 @@ private:
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal,
                                 const char *aType,
                                 uint32_t   *aPermission,
-                                bool        aExactHostMatch);
+                                bool        aExactHostMatch,
+                                bool        aIncludingSession);
 
   nsresult InitDB(bool aRemoveFile);
   nsresult CreateTable();

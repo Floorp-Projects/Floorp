@@ -127,7 +127,7 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
 // idle observer and its timer on shutdown. Note: the observer and idle
 // services hold references to instances of this object, and those references
 // are what keep this object alive.
-class nsAnonTempFileRemover : public nsIObserver {
+class nsAnonTempFileRemover MOZ_FINAL : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 

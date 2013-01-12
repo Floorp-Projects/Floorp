@@ -23,7 +23,9 @@
                  xbl:inherits="src=image"/>
       <xul:image class="downloadTypeIcon blockedIcon"/>
       <xul:vbox pack="center"
-                flex="1">
+                flex="1"
+                class="downloadContainer"
+                style="width: &downloadDetails.width;">
         <!-- We're letting localizers put a min-width in here primarily
              because of the downloads summary at the bottom of the list of
              download items. An element in the summary has the same min-width
@@ -41,7 +43,6 @@
                            max="100"
                            xbl:inherits="mode=progressmode,value=progress"/>
         <xul:description class="downloadDetails"
-                         style="width: &downloadDetails.width;"
                          crop="end"
                          xbl:inherits="value=status,tooltiptext=statusTip"/>
       </xul:vbox>

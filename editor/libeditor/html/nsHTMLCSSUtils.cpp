@@ -1277,7 +1277,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
     if (nsEditProperty::u == aHTMLProperty || nsEditProperty::strike == aHTMLProperty) {
       // unfortunately, the value of the text-decoration property is not inherited.
       // that means that we have to look at ancestors of node to see if they are underlined
-      node = node->GetElementParent();  // set to null if it's not a dom element
+      node = node->GetParentElement();  // set to null if it's not a dom element
     }
   } while ((nsEditProperty::u == aHTMLProperty || nsEditProperty::strike == aHTMLProperty) &&
            !aIsSet && node);
@@ -1300,36 +1300,35 @@ nsHTMLCSSUtils::IsCSSPrefChecked()
 // specified CSS declarations in the STYLE attribute 
 // The answer is always negative if at least one of them carries an ID or a class
 bool
-nsHTMLCSSUtils::ElementsSameStyle(dom::Element* aFirstNode,
-                                  dom::Element* aSecondNode)
+nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode)
 {
-  MOZ_ASSERT(aFirstNode && aSecondNode);
-  return ElementsSameStyle(aFirstNode->AsDOMNode(), aSecondNode->AsDOMNode());
+  nsCOMPtr<dom::Element> firstElement  = do_QueryInterface(aFirstNode);
+  nsCOMPtr<dom::Element> secondElement = do_QueryInterface(aSecondNode);
+
+  NS_ASSERTION((firstElement && secondElement), "Non element nodes passed to ElementsSameStyle.");
+  NS_ENSURE_TRUE(firstElement, false);
+  NS_ENSURE_TRUE(secondElement, false);
+
+  return ElementsSameStyle(firstElement, secondElement);
 }
 
 bool
-nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode)
+nsHTMLCSSUtils::ElementsSameStyle(dom::Element* aFirstElement,
+                                  dom::Element* aSecondElement)
 {
-  nsresult res;
-  nsCOMPtr<nsIDOMElement> firstElement  = do_QueryInterface(aFirstNode);
-  nsCOMPtr<nsIDOMElement> secondElement = do_QueryInterface(aSecondNode);
+  MOZ_ASSERT(aFirstElement);
+  MOZ_ASSERT(aSecondElement);
 
-  NS_ASSERTION((firstElement && secondElement), "Non element nodes passed to ElementsSameStyle.");
-
-  nsAutoString firstID, secondID;
-  bool isFirstIDSet, isSecondIDSet;
-  res = mHTMLEditor->GetAttributeValue(firstElement,  NS_LITERAL_STRING("id"), firstID,  &isFirstIDSet);
-  res = mHTMLEditor->GetAttributeValue(secondElement, NS_LITERAL_STRING("id"), secondID, &isSecondIDSet);
-  if (isFirstIDSet || isSecondIDSet) {
+  if (aFirstElement->HasAttr(kNameSpaceID_None, nsGkAtoms::id) ||
+      aSecondElement->HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
     // at least one of the spans carries an ID ; suspect a CSS rule applies to it and
     // refuse to merge the nodes
     return false;
   }
 
   nsAutoString firstClass, secondClass;
-  bool isFirstClassSet, isSecondClassSet;
-  res = mHTMLEditor->GetAttributeValue(firstElement,  NS_LITERAL_STRING("class"), firstClass,  &isFirstClassSet);
-  res = mHTMLEditor->GetAttributeValue(secondElement, NS_LITERAL_STRING("class"), secondClass, &isSecondClassSet);
+  bool isFirstClassSet = aFirstElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, firstClass);
+  bool isSecondClassSet = aSecondElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, secondClass);
   if (isFirstClassSet && isSecondClassSet) {
     // both spans carry a class, let's compare them
     if (!firstClass.Equals(secondClass)) {
@@ -1341,32 +1340,35 @@ nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNod
       // need to discuss this issue before any modification.
       return false;
     }
-  }
-  else if (isFirstClassSet || isSecondClassSet) {
+  } else if (isFirstClassSet || isSecondClassSet) {
     // one span only carries a class, early way out
     return false;
   }
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> firstCSSDecl, secondCSSDecl;
   uint32_t firstLength, secondLength;
-  res = GetInlineStyles(firstElement,  getter_AddRefs(firstCSSDecl),  &firstLength);
-  if (NS_FAILED(res) || !firstCSSDecl) return false;
-  res = GetInlineStyles(secondElement, getter_AddRefs(secondCSSDecl), &secondLength);
-  if (NS_FAILED(res) || !secondCSSDecl) return false;
+  nsresult rv = GetInlineStyles(aFirstElement,  getter_AddRefs(firstCSSDecl),  &firstLength);
+  if (NS_FAILED(rv) || !firstCSSDecl) {
+    return false;
+  }
+  rv = GetInlineStyles(aSecondElement, getter_AddRefs(secondCSSDecl), &secondLength);
+  if (NS_FAILED(rv) || !secondCSSDecl) {
+    return false;
+  }
 
   if (firstLength != secondLength) {
     // early way out if we can
     return false;
   }
-  else if (0 == firstLength) {
+
+  if (!firstLength) {
     // no inline style !
     return true;
   }
 
-  uint32_t i;
   nsAutoString propertyNameString;
   nsAutoString firstValue, secondValue;
-  for (i=0; i<firstLength; i++) {
+  for (uint32_t i = 0; i < firstLength; i++) {
     firstCSSDecl->Item(i, propertyNameString);
     firstCSSDecl->GetPropertyValue(propertyNameString, firstValue);
     secondCSSDecl->GetPropertyValue(propertyNameString, secondValue);
@@ -1374,7 +1376,7 @@ nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNod
       return false;
     }
   }
-  for (i=0; i<secondLength; i++) {
+  for (uint32_t i = 0; i < secondLength; i++) {
     secondCSSDecl->Item(i, propertyNameString);
     secondCSSDecl->GetPropertyValue(propertyNameString, secondValue);
     firstCSSDecl->GetPropertyValue(propertyNameString, firstValue);
@@ -1387,7 +1389,23 @@ nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNod
 }
 
 nsresult
-nsHTMLCSSUtils::GetInlineStyles(nsIDOMElement *aElement,
+nsHTMLCSSUtils::GetInlineStyles(dom::Element* aElement,
+                                nsIDOMCSSStyleDeclaration** aCssDecl,
+                                uint32_t* aLength)
+{
+  return GetInlineStyles(static_cast<nsISupports*>(aElement), aCssDecl, aLength);
+}
+
+nsresult
+nsHTMLCSSUtils::GetInlineStyles(nsIDOMElement* aElement,
+                                nsIDOMCSSStyleDeclaration** aCssDecl,
+                                uint32_t* aLength)
+{
+  return GetInlineStyles(static_cast<nsISupports*>(aElement), aCssDecl, aLength);
+}
+
+nsresult
+nsHTMLCSSUtils::GetInlineStyles(nsISupports *aElement,
                                 nsIDOMCSSStyleDeclaration **aCssDecl,
                                 uint32_t *aLength)
 {
@@ -1395,8 +1413,11 @@ nsHTMLCSSUtils::GetInlineStyles(nsIDOMElement *aElement,
   *aLength = 0;
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
+
   nsresult res = inlineStyles->GetStyle(aCssDecl);
-  if (NS_FAILED(res) || !aCssDecl) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_SUCCESS(res, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(*aCssDecl);
+
   (*aCssDecl)->GetLength(aLength);
   return NS_OK;
 }

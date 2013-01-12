@@ -11,10 +11,9 @@
  * and create derivative works of this document.
  */
 
-interface HTMLDivElement : HTMLElement {/*};
+interface HTMLDivElement : HTMLElement {};
 
 partial interface HTMLDivElement {
-*/
   [SetterThrows]
            attribute DOMString align;
 };

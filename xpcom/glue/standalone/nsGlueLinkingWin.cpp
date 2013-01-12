@@ -75,23 +75,6 @@ ReadDependentCB(const char *aDependentLib, bool do_preload)
 }
 
 // like strpbrk but finds the *last* char, not the first
-static char*
-ns_strrpbrk(char *string, const char *strCharSet)
-{
-    char *found = NULL;
-    for (; *string; ++string) {
-        for (const char *search = strCharSet; *search; ++search) {
-            if (*search == *string) {
-                found = string;
-                // Since we're looking for the last char, we save "found"
-                // until we're at the end of the string.
-            }
-        }
-    }
-
-    return found;
-}
-// like strpbrk but finds the *last* char, not the first
 static wchar_t*
 ns_wcspbrk(wchar_t *string, const wchar_t *strCharSet)
 {
