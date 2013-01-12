@@ -405,8 +405,10 @@ HistoryTracker.prototype = {
 
   onVisit: function (uri, vid, time, session, referrer, trans, guid) {
     if (this.ignoreAll) {
+      this._log.trace("ignoreAll: ignoring visit for " + guid);
       return;
     }
+
     this._log.trace("onVisit: " + uri.spec);
     if (this.addChangedID(guid)) {
       this.score += SCORE_INCREMENT_SMALL;

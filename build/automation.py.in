@@ -460,6 +460,9 @@ user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_com
 
 // Get network events.
 user_pref("network.activity.blipIntervalMilliseconds", 250);
+
+// Don't allow the Data Reporting service to prompt for policy acceptance.
+user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
