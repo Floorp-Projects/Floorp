@@ -839,6 +839,17 @@ ClearWrapper(T* p, void*)
   ClearWrapper(p, cache);
 }
 
+// Attempt to preserve the wrapper, if any, for a Paris DOM bindings object.
+// Return true if we successfully preserved the wrapper, or there is no wrapper
+// to preserve. In the latter case we don't need to preserve the wrapper, because
+// the object can only be obtained by JS once, or they cannot be meaningfully
+// owned from the native side.
+//
+// This operation will return false only for non-nsISupports cycle-collected
+// objects, because we cannot determine if they are wrappercached or not.
+bool
+TryPreserveWrapper(JSObject* obj);
+
 // Can only be called with the immediate prototype of the instance object. Can
 // only be called on the prototype of an object known to be a DOM instance.
 JSBool

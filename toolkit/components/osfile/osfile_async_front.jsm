@@ -543,6 +543,14 @@ File.writeAtomic = function writeAtomic(path, buffer, options) {
 File.Info = function Info(value) {
   return value;
 };
+if (OS.Constants.Win) {
+  File.Info.prototype = Object.create(OS.Shared.Win.AbstractInfo.prototype);
+} else if (OS.Constants.libc) {
+  File.Info.prototype = Object.create(OS.Shared.Unix.AbstractInfo.prototype);
+} else {
+  throw new Error("I am neither under Windows nor under a Posix system");
+}
+
 File.Info.fromMsg = function fromMsg(value) {
   return new File.Info(value);
 };
@@ -710,6 +718,14 @@ DirectoryIterator.prototype = {
 DirectoryIterator.Entry = function Entry(value) {
   return value;
 };
+if (OS.Constants.Win) {
+  DirectoryIterator.Entry.prototype = Object.create(OS.Shared.Win.AbstractEntry.prototype);
+} else if (OS.Constants.libc) {
+  DirectoryIterator.Entry.prototype = Object.create(OS.Shared.Unix.AbstractEntry.prototype);
+} else {
+  throw new Error("I am neither under Windows nor under a Posix system");
+}
+
 DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
   return new DirectoryIterator.Entry(value);
 };

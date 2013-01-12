@@ -1178,6 +1178,7 @@ class Assembler
     js::Vector<JumpPool *, 0, SystemAllocPolicy> jumpPools_;
     js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpJumpRelocations_;
     js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpDataRelocations_;
+    js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpPreBarriers_;
     class JumpPool : TempObject
     {
         BufferOffset start;
@@ -1188,6 +1189,7 @@ class Assembler
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
     CompactBufferWriter relocations_;
+    CompactBufferWriter preBarriers_;
     size_t dataBytesNeeded_;
 
     bool enoughMemory_;
@@ -1249,6 +1251,9 @@ class Assembler
         if (ptr.value)
             tmpDataRelocations_.append(nextOffset());
     }
+    void writePrebarrierOffset(CodeOffsetLabel label) {
+        tmpPreBarriers_.append(BufferOffset(label.offset()));
+    }
 
     enum RelocBranchStyle {
         B_MOVWT,
@@ -1285,8 +1290,9 @@ class Assembler
     void executableCopy(void *buffer);
     void processDeferredData(IonCode *code, uint8_t *data);
     void processCodeLabels(IonCode *code);
-    void copyJumpRelocationTable(uint8_t *buffer);
-    void copyDataRelocationTable(uint8_t *buffer);
+    void copyJumpRelocationTable(uint8_t *dest);
+    void copyDataRelocationTable(uint8_t *dest);
+    void copyPreBarrierTable(uint8_t *dest);
 
     bool addDeferredData(DeferredData *data, size_t bytes);
 
@@ -1297,6 +1303,8 @@ class Assembler
     // Size of the jump relocation table, in bytes.
     size_t jumpRelocationTableBytes() const;
     size_t dataRelocationTableBytes() const;
+    size_t preBarrierTableBytes() const;
+
     // Size of the data table, in bytes.
     size_t dataSize() const;
     size_t bytesNeeded() const;

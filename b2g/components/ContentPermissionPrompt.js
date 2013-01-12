@@ -88,7 +88,38 @@ ContentPermissionPrompt.prototype = {
     return false;
   },
 
+  handledByApp: function handledByApp(request) {
+    if (request.principal.appId == Ci.nsIScriptSecurityManager.NO_APP_ID ||
+        request.principal.appId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID) {
+      // This should not really happen
+      request.cancel();
+      return true;
+    }
+
+    let appsService = Cc["@mozilla.org/AppsService;1"]
+                        .getService(Ci.nsIAppsService);
+    let app = appsService.getAppByLocalId(request.principal.appId);
+
+    let url = Services.io.newURI(app.origin, null, null);
+    let principal = secMan.getAppCodebasePrincipal(url, request.principal.appId,
+                                                   /*mozbrowser*/false);
+    let access = (request.access && request.access !== "unused") ? request.type + "-" + request.access :
+                                                                   request.type;
+    let result = Services.perms.testExactPermissionFromPrincipal(principal, access);
+
+    if (result == Ci.nsIPermissionManager.ALLOW_ACTION ||
+        result == Ci.nsIPermissionManager.PROMPT_ACTION) {
+      return false;
+    }
+
+    request.cancel();
+    return true;
+  },
+
   prompt: function(request) {
+    if (this.handledByApp(request))
+        return;
+
     // returns true if the request was handled
     if (this.handleExistingPermission(request))
        return;

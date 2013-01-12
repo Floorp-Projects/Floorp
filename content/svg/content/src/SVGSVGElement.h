@@ -3,15 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGSVGELEMENT_H__
-#define __NS_SVGSVGELEMENT_H__
+#ifndef mozilla_dom_SVGSVGElement_h
+#define mozilla_dom_SVGSVGElement_h
 
 #include "mozilla/dom/FromParser.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsISVGPoint.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsIDOMSVGZoomAndPan.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "SVGGraphicsElement.h"
@@ -20,19 +19,26 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
 
+nsresult NS_NewSVGSVGElement(nsIContent **aResult,
+                             already_AddRefed<nsINodeInfo> aNodeInfo,
+                             mozilla::dom::FromParser aFromParser);
+
 class nsSMILTimeContainer;
+class nsSVGOuterSVGFrame;
+class nsSVGInnerSVGFrame;
+class nsSVGImageFrame;
+
 namespace mozilla {
-  class DOMSVGMatrix;
-  class SVGFragmentIdentifier;
+class DOMSVGAnimatedPreserveAspectRatio;
+class DOMSVGMatrix;
+class DOMSVGTransform;
+class SVGFragmentIdentifier;
 
-  namespace dom {
-    class SVGViewElement;
-  }
-}
+namespace dom {
+class SVGAngle;
+class SVGViewElement;
 
-typedef mozilla::dom::SVGGraphicsElement nsSVGSVGElementBase;
-
-class nsSVGSVGElement;
+class SVGSVGElement;
 
 class nsSVGTranslatePoint {
 public:
@@ -55,7 +61,7 @@ public:
   float GetY() const
     { return mY; }
 
-  nsresult ToDOMVal(nsSVGSVGElement *aElement, nsISupports **aResult);
+  nsresult ToDOMVal(SVGSVGElement *aElement, nsISupports **aResult);
 
   bool operator!=(const nsSVGTranslatePoint &rhs) const {
     return mX != rhs.mX || mY != rhs.mY;
@@ -63,9 +69,9 @@ public:
 
 private:
 
-  struct DOMVal MOZ_FINAL : public mozilla::nsISVGPoint {
-    DOMVal(nsSVGTranslatePoint* aVal, nsSVGSVGElement *aElement)
-      : mozilla::nsISVGPoint(), mVal(aVal), mElement(aElement) {}
+  struct DOMVal MOZ_FINAL : public nsISVGPoint {
+    DOMVal(nsSVGTranslatePoint* aVal, SVGSVGElement *aElement)
+      : nsISVGPoint(), mVal(aVal), mElement(aElement) {}
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMVal)
@@ -73,14 +79,14 @@ private:
     // WebIDL
     virtual float X() { return mVal->GetX(); }
     virtual float Y() { return mVal->GetY(); }
-    virtual void SetX(float aValue, mozilla::ErrorResult& rv);
-    virtual void SetY(float aValue, mozilla::ErrorResult& rv);
-    virtual already_AddRefed<mozilla::nsISVGPoint> MatrixTransform(mozilla::DOMSVGMatrix& matrix);
+    virtual void SetX(float aValue, ErrorResult& rv);
+    virtual void SetY(float aValue, ErrorResult& rv);
+    virtual already_AddRefed<nsISVGPoint> MatrixTransform(DOMSVGMatrix& matrix);
 
     virtual nsISupports* GetParentObject() MOZ_OVERRIDE;
 
     nsSVGTranslatePoint *mVal; // kept alive because it belongs to mElement
-    nsRefPtr<nsSVGSVGElement> mElement;
+    nsRefPtr<SVGSVGElement> mElement;
   };
 
   float mX;
@@ -100,37 +106,36 @@ public:
   float height;
 };
 
-class nsSVGSVGElement : public nsSVGSVGElementBase,
-                        public nsIDOMSVGSVGElement,
-                        public nsIDOMSVGFitToViewBox,
-                        public nsIDOMSVGZoomAndPan
+typedef SVGGraphicsElement SVGSVGElementBase;
+
+class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase,
+                                public nsIDOMSVGSVGElement,
+                                public nsIDOMSVGFitToViewBox
 {
-  friend class nsSVGOuterSVGFrame;
-  friend class nsSVGInnerSVGFrame;
-  friend class nsSVGImageFrame;
+  friend class ::nsSVGOuterSVGFrame;
+  friend class ::nsSVGInnerSVGFrame;
+  friend class ::nsSVGImageFrame;
   friend class mozilla::SVGFragmentIdentifier;
 
-  friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
-                                      already_AddRefed<nsINodeInfo> aNodeInfo,
-                                      mozilla::dom::FromParser aFromParser);
-  nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                  mozilla::dom::FromParser aFromParser);
-  
-public:
-  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
-  typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
+  SVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                FromParser aFromParser);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
 
+  friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
+                                         already_AddRefed<nsINodeInfo> aNodeInfo,
+                                         mozilla::dom::FromParser aFromParser));
+
+public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGSVGElement, nsSVGSVGElementBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGSVGElement, SVGSVGElementBase)
   NS_DECL_NSIDOMSVGSVGELEMENT
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
-  NS_DECL_NSIDOMSVGZOOMANDPAN
-  
+
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGSVGElementBase::)
 
   /**
    * For use by zoom controls to allow currentScale, currentTranslate.x and
@@ -171,8 +176,8 @@ public:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const;
   virtual bool HasValidDimensions() const;
- 
-  // nsSVGSVGElement methods:
+
+  // SVGSVGElement methods:
   float GetLength(uint8_t mCtxType);
 
   // public helpers:
@@ -254,6 +259,42 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedLength> X();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+  float PixelUnitToMillimeterX();
+  float PixelUnitToMillimeterY();
+  float ScreenPixelToMillimeterX();
+  float ScreenPixelToMillimeterY();
+  bool UseCurrentView();
+  // XPIDL SetCurrentScale and SetCurrentTranslate are alright to use because
+  // they only throw on non-finite floats and we don't allow those.
+  float CurrentScale();
+  already_AddRefed<nsISVGPoint> CurrentTranslate();
+  uint32_t SuspendRedraw(uint32_t max_wait_milliseconds);
+  // XPIDL UnSuspendRedraw(All) can be used because it's a no-op.
+  void ForceRedraw(ErrorResult& rv);
+  void PauseAnimations(ErrorResult& rv);
+  void UnpauseAnimations(ErrorResult& rv);
+  bool AnimationsPaused(ErrorResult& rv);
+  float GetCurrentTime(ErrorResult& rv);
+  void SetCurrentTime(float seconds, ErrorResult& rv);
+  already_AddRefed<nsIDOMSVGNumber> CreateSVGNumber();
+  already_AddRefed<nsIDOMSVGLength> CreateSVGLength();
+  already_AddRefed<SVGAngle> CreateSVGAngle();
+  already_AddRefed<nsISVGPoint> CreateSVGPoint();
+  already_AddRefed<DOMSVGMatrix> CreateSVGMatrix();
+  already_AddRefed<nsIDOMSVGRect> CreateSVGRect();
+  already_AddRefed<DOMSVGTransform> CreateSVGTransform();
+  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix);
+  Element* GetElementById(const nsAString& elementId, ErrorResult& rv);
+  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  uint16_t ZoomAndPan();
+  void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
+
 private:
   // nsSVGElement overrides
 
@@ -264,7 +305,7 @@ private:
 
   // implementation helpers:
 
-  mozilla::dom::SVGViewElement* GetCurrentViewElement() const;
+  SVGViewElement* GetCurrentViewElement() const;
 
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
   // These are private so that only our friends (nsSVGImageFrame in
@@ -335,7 +376,7 @@ private:
 
   virtual LengthAttributesInfo GetLengthInfo();
 
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
@@ -388,4 +429,7 @@ private:
   bool                              mUseCurrentView;
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // SVGSVGElement_h

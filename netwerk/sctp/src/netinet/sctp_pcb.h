@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 237715 2012-06-28 16:01:08Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 243186 2012-11-17 20:04:04Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PCB_H_
@@ -147,8 +147,13 @@ struct sctp_tagblock {
 
 
 struct sctp_epinfo {
-#ifdef __FreeBSD__
-    struct socket *udp_tun_socket;
+#if defined(__FreeBSD__)
+#ifdef INET
+	struct socket *udp4_tun_socket;
+#endif
+#ifdef INET6
+	struct socket *udp6_tun_socket;
+#endif
 #endif
 	struct sctpasochead *sctp_asochash;
 	u_long hashasocmark;

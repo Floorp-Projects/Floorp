@@ -465,23 +465,19 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
 void
 CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index, MIRType type)
 {
-    CodeOffsetLabel offset;
-
     if (index->isConstant()) {
         Address address(base, ToInt32(index) * sizeof(Value));
-        offset = masm.patchableCallPreBarrier(address, type);
+        masm.patchableCallPreBarrier(address, type);
     } else {
         BaseIndex address(base, ToRegister(index), TimesEight);
-        offset = masm.patchableCallPreBarrier(address, type);
+        masm.patchableCallPreBarrier(address, type);
     }
-
-    addPreBarrierOffset(offset);
 }
 
 void
 CodeGeneratorShared::emitPreBarrier(Address address, MIRType type)
 {
-    addPreBarrierOffset(masm.patchableCallPreBarrier(address, type));
+    masm.patchableCallPreBarrier(address, type);
 }
 
 void

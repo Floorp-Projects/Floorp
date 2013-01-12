@@ -18,12 +18,12 @@
 #include "nsStubMutationObserver.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsSVGTextFrame.h"
 #include "mozilla/dom/SVGViewElement.h"
 #include "nsSubDocumentFrame.h"
 
-namespace dom = mozilla::dom;
+using namespace mozilla::dom;
 
 class nsSVGMutationObserver : public nsStubMutationObserver
 {
@@ -54,7 +54,7 @@ static nsSVGMutationObserver sSVGMutationObserver;
 
 void
 nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
-                                        dom::Element* aElement,
+                                        Element* aElement,
                                         int32_t aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         int32_t aModType)
@@ -164,7 +164,7 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   // prevent them from painting by [ab]use NS_STATE_SVG_NONDISPLAY_CHILD. The
   // frame will be recreated via an nsChangeHint_ReconstructFrame restyle if
   // the value returned by PassesConditionalProcessingTests changes.
-  nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(aContent);
+  SVGSVGElement *svg = static_cast<SVGSVGElement*>(aContent);
   if (!svg->PassesConditionalProcessingTests()) {
     AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
   }
@@ -215,8 +215,8 @@ nsSVGOuterSVGFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
 
-  nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
-  nsSVGLength2 &width = svg->mLengthAttributes[nsSVGSVGElement::WIDTH];
+  SVGSVGElement *svg = static_cast<SVGSVGElement*>(mContent);
+  nsSVGLength2 &width = svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
 
   if (width.IsPercentage()) {
     // It looks like our containing block's width may depend on our width. In
@@ -241,9 +241,9 @@ nsSVGOuterSVGFrame::GetIntrinsicSize()
 
   IntrinsicSize intrinsicSize;
 
-  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
-  nsSVGLength2 &width  = content->mLengthAttributes[nsSVGSVGElement::WIDTH];
-  nsSVGLength2 &height = content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+  SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
+  nsSVGLength2 &width  = content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
+  nsSVGLength2 &height = content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
   if (!width.IsPercentage()) {
     nscoord val = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(content));
@@ -267,9 +267,9 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
   // are both specified and set to non-percentage values, or we have a viewBox
   // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
 
-  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
-  nsSVGLength2 &width  = content->mLengthAttributes[nsSVGSVGElement::WIDTH];
-  nsSVGLength2 &height = content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+  SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
+  nsSVGLength2 &width  = content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
+  nsSVGLength2 &height = content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
   if (!width.IsPercentage() && !height.IsPercentage()) {
     nsSize ratio(NSToCoordRoundWithClamp(width.GetAnimValue(content)),
@@ -283,7 +283,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     return ratio;
   }
 
-  dom::SVGViewElement* viewElement = content->GetCurrentViewElement();
+  SVGViewElement* viewElement = content->GetCurrentViewElement();
   const nsSVGViewBoxRect* viewbox = nullptr;
 
   // The logic here should match HasViewBox().
@@ -344,10 +344,10 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     // intrinsic size.  Also note that explicit percentage values are mapped
     // into style, so the following isn't for them.)
 
-    nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+    SVGSVGElement* content = static_cast<SVGSVGElement*>(mContent);
 
     nsSVGLength2 &width =
-      content->mLengthAttributes[nsSVGSVGElement::WIDTH];
+      content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
     if (width.IsPercentage()) {
       NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
                         "GetIntrinsicSize should have reported no "
@@ -358,7 +358,7 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     }
 
     nsSVGLength2 &height =
-      content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+      content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
     NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
                  "root should not have auto-height containing block");
     if (height.IsPercentage()) {
@@ -404,7 +404,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_ASSERTION(!GetPrevInFlow(), "SVG can't currently be broken across pages.");
 
-  nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
+  SVGSVGElement *svgElem = static_cast<SVGSVGElement*>(mContent);
 
   nsSVGOuterSVGAnonChildFrame *anonKid =
     static_cast<nsSVGOuterSVGAnonChildFrame*>(GetFirstPrincipalChild());
@@ -429,7 +429,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
       // The overflow rects of our child frames will be empty if we had a
       // [synthetic] viewBox during our last reflow, since under
       // FinishAndStoreOverflow() the nsDisplayTransform::TransformRect call
-      // will have ended up calling nsSVGSVGElement::GetViewBoxTransform()
+      // will have ended up calling SVGSVGElement::GetViewBoxTransform()
       // which will have returned the identity matrix due to our viewport
       // having been zero-sized. Mark all our child frames as dirty so that we
       // reflow them below and update their overflow rects:
@@ -655,7 +655,7 @@ nsSVGOuterSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
                 aAttribute == nsGkAtoms::viewBox ?
                   TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
 
-      static_cast<nsSVGSVGElement*>(mContent)->ChildrenOnlyTransformChanged();
+      static_cast<SVGSVGElement*>(mContent)->ChildrenOnlyTransformChanged();
 
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {
@@ -757,7 +757,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
     return;
   }
 
-  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+  SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
     if (content->HasViewBox()) {
@@ -795,7 +795,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
     if (haveNonFulLZoomTransformChange &&
         !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
       uint32_t flags = (mState & NS_FRAME_IN_REFLOW) ?
-                         nsSVGSVGElement::eDuringReflow : 0;
+                         SVGSVGElement::eDuringReflow : 0;
       content->ChildrenOnlyTransformChanged(flags);
     }
   }
@@ -847,7 +847,7 @@ nsSVGOuterSVGFrame::GetCanvasTM(uint32_t aFor)
     }
   }
   if (!mCanvasTM) {
-    nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+    SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
     float devPxPerCSSPx =
       1.0f / PresContext()->AppUnitsToFloatCSSPixels(
@@ -909,8 +909,8 @@ nsSVGOuterSVGFrame::IsRootOfImage()
 bool
 nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
 {
-  nsSVGLength2 &height = static_cast<nsSVGSVGElement*>(mContent)->
-                           mLengthAttributes[nsSVGSVGElement::HEIGHT];
+  nsSVGLength2 &height = static_cast<SVGSVGElement*>(mContent)->
+                           mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
   return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;
 }
 
@@ -951,7 +951,7 @@ nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) con
   // We must claim our nsSVGOuterSVGFrame's children-only transforms as our own
   // so that the children we are used to wrap are transformed properly.
 
-  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+  SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
   bool hasTransform = content->HasChildrenOnlyTransform();
 

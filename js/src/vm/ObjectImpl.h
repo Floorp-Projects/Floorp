@@ -852,13 +852,69 @@ ElementsHeader::asArrayBufferElements()
     return *static_cast<ArrayBufferElementsHeader *>(this);
 }
 
+class ArrayBufferObject;
+
 /*
- * Header structure for object element arrays. This structure is immediately
+ * Elements header used for all native objects. The elements component of such
+ * objects offers an efficient representation for all or some of the indexed
+ * properties of the object, using a flat array of Values rather than a shape
+ * hierarchy stored in the object's slots. This structure is immediately
  * followed by an array of elements, with the elements member in an object
  * pointing to the beginning of that array (the end of this structure).
  * See below for usage of this structure.
+ *
+ * The sets of properties represented by an object's elements and slots
+ * are disjoint. The elements contain only indexed properties, while the slots
+ * can contain both named and indexed properties; any indexes in the slots are
+ * distinct from those in the elements. If isIndexed() is false for an object,
+ * all indexed properties (if any) are stored in the dense elements.
+ *
+ * Indexes will be stored in the object's slots instead of its elements in
+ * the following case:
+ *  - there are more than MIN_SPARSE_INDEX slots total and the load factor
+ *    (COUNT / capacity) is less than 0.25
+ *  - a property is defined that has non-default property attributes.
+ *
+ * We track these pieces of metadata for dense elements:
+ *  - The length property as a uint32_t, accessible for array objects with
+ *    getArrayLength(), setArrayLength(). This is unused for non-arrays.
+ *  - The number of element slots (capacity), gettable with
+ *    getDenseElementsCapacity().
+ *  - The array's initialized length, accessible with
+ *    getDenseElementsInitializedLength().
+ *
+ * Holes in the array are represented by MagicValue(JS_ELEMENTS_HOLE) values.
+ * These indicate indexes which are not dense properties of the array. The
+ * property may, however, be held by the object's properties.
+ *
+ * NB: the capacity and length of an object are entirely unrelated!  The
+ * length may be greater than, less than, or equal to the capacity. The first
+ * case may occur when the user writes "new Array(100)", in which case the
+ * length is 100 while the capacity remains 0 (indices below length and above
+ * capacity must be treated as holes). See array_length_setter for another
+ * explanation of how the first case may occur.
+ *
+ * The initialized length of an object specifies the number of elements that
+ * have been initialized. All elements above the initialized length are
+ * holes in the object, and the memory for all elements between the initialized
+ * length and capacity is left uninitialized. When type inference is disabled,
+ * the initialized length always equals the capacity. When inference is
+ * enabled, the initialized length is some value less than or equal to both the
+ * object's length and the object's capacity.
+ *
+ * With inference enabled, there is flexibility in exactly the value the
+ * initialized length must hold, e.g. if an array has length 5, capacity 10,
+ * completely empty, it is valid for the initialized length to be any value
+ * between zero and 5, as long as the in memory values below the initialized
+ * length have been initialized with a hole value. However, in such cases we
+ * want to keep the initialized length as small as possible: if the object is
+ * known to have no hole values below its initialized length, then it is
+ * "packed" and can be accessed much faster by JIT code.
+ *
+ * Elements do not track property creation order, so enumerating the elements
+ * of an object does not necessarily visit indexes in the order they were
+ * created.
  */
-class ArrayBufferObject;
 class ObjectElements
 {
     friend struct ::JSObject;
@@ -954,15 +1010,14 @@ ObjectValue(ObjectImpl &obj);
  * (the address of the third value, to leave room for a ObjectElements header;
  * in this case numFixedSlots() is zero) or to a dynamically allocated array.
  *
- * Only certain combinations of properties and elements storage are currently
- * possible. This will be changing soon :XXX: bug 586842.
+ * Only certain combinations of slots and elements storage are possible.
  *
- * - For objects other than arrays and typed arrays, the elements are empty.
+ * - For native objects, slots and elements may both be non-empty. The
+ *   slots may be either names or indexes; no indexed property will be in both
+ *   the slots and elements.
  *
- * - For 'slow' arrays, both elements and properties are used, but the
- *   elements have zero capacity --- only the length member is used.
- *
- * - For dense arrays, elements are used and properties are not used.
+ * - For non-native objects other than typed arrays, properties and elements
+ *   are both empty.
  *
  * - For typed array buffers, elements are used and properties are not used.
  *   The data indexed by the elements do not represent Values, but primitive
@@ -1021,17 +1076,10 @@ class ObjectImpl : public gc::Cell
 
     inline bool isExtensible() const;
 
-    /*
-     * XXX Once the property/element split of bug 586842 is complete, these
-     *     methods should move back to JSObject.
-     */
-    inline bool isDenseArray() const;
-    inline bool isSlowArray() const;
-    inline bool isArray() const;
-
-    inline HeapSlotArray getDenseArrayElements();
-    inline const Value & getDenseArrayElement(uint32_t idx);
-    inline uint32_t getDenseArrayInitializedLength();
+    inline HeapSlotArray getDenseElements();
+    inline const Value & getDenseElement(uint32_t idx);
+    inline bool containsDenseElement(uint32_t idx);
+    inline uint32_t getDenseInitializedLength();
 
     bool makeElementsSparse(JSContext *cx) {
         NEW_OBJECT_REPRESENTATION_ONLY();
@@ -1290,6 +1338,10 @@ class ObjectImpl : public gc::Cell
          * (which have at least two fixed slots) and can only result in a leak.
          */
         return elements != emptyObjectElements && elements != fixedElements();
+    }
+
+    inline bool hasEmptyElements() const {
+        return elements == emptyObjectElements;
     }
 
     /* GC support. */

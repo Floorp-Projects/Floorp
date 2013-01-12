@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 238790 2012-07-26 08:10:29Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 242327 2012-10-29 20:47:32Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UIO_H_
@@ -60,9 +60,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 238790 2012-07-26 08:10:29Z tuex
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#endif
-#if defined(__Userspace_os_Windows)
-#define __P(Protos) Protos
 #endif
 
 typedef uint32_t sctp_assoc_t;
@@ -1331,6 +1328,7 @@ sctp_sorecvmsg(struct socket *so,
 #if !(defined(_KERNEL)) && !(defined(__Userspace__))
 
 __BEGIN_DECLS
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
 int	sctp_peeloff __P((int, sctp_assoc_t));
 int	sctp_bindx __P((int, struct sockaddr *, int, int));
 int	sctp_connectx __P((int, const struct sockaddr *, int, sctp_assoc_t *));
@@ -1368,6 +1366,45 @@ ssize_t	sctp_sendv __P((int, const struct iovec *, int, struct sockaddr *,
 
 ssize_t	sctp_recvv __P((int, const struct iovec *, int, struct sockaddr *,
 	    socklen_t *, void *, socklen_t *, unsigned int *, int *));
+#else
+int	sctp_peeloff(int, sctp_assoc_t);
+int	sctp_bindx(int, struct sockaddr *, int, int);
+int	sctp_connectx(int, const struct sockaddr *, int, sctp_assoc_t *);
+int	sctp_getaddrlen(sa_family_t);
+int	sctp_getpaddrs(int, sctp_assoc_t, struct sockaddr **);
+void	sctp_freepaddrs(struct sockaddr *);
+int	sctp_getladdrs(int, sctp_assoc_t, struct sockaddr **);
+void	sctp_freeladdrs(struct sockaddr *);
+int	sctp_opt_info(int, sctp_assoc_t, int, void *, socklen_t *);
+
+/* deprecated */
+ssize_t	sctp_sendmsg(int, const void *, size_t, const struct sockaddr *,
+	    socklen_t, uint32_t, uint32_t, uint16_t, uint32_t, uint32_t);
+
+/* deprecated */
+ssize_t	sctp_send(int, const void *, size_t,
+	    const struct sctp_sndrcvinfo *, int);
+
+/* deprecated */
+ssize_t	sctp_sendx(int, const void *, size_t, struct sockaddr *,
+	    int, struct sctp_sndrcvinfo *, int);
+
+/* deprecated */
+ssize_t	sctp_sendmsgx(int sd, const void *, size_t, struct sockaddr *,
+	    int, uint32_t, uint32_t, uint16_t, uint32_t, uint32_t);
+
+sctp_assoc_t	sctp_getassocid(int, struct sockaddr *);
+
+/* deprecated */
+ssize_t	sctp_recvmsg(int, void *, size_t, struct sockaddr *, socklen_t *,
+	    struct sctp_sndrcvinfo *, int *);
+
+ssize_t	sctp_sendv(int, const struct iovec *, int, struct sockaddr *,
+	    int, void *, socklen_t, unsigned int, int);
+
+ssize_t	sctp_recvv(int, const struct iovec *, int, struct sockaddr *,
+	    socklen_t *, void *, socklen_t *, unsigned int *, int *);
+#endif
 __END_DECLS
 
 #endif				/* !_KERNEL */

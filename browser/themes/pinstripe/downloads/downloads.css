@@ -122,14 +122,32 @@ richlistitem[type="download"]:last-child {
   list-style-image: url("chrome://global/skin/icons/Error.png");
 }
 
+/* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
+   a vbox with class .downloadContainer. We set the font-size of the entire
+   container to 95% because:
+
+   1) This is the size that we want .downloadDetails to be
+   2) The container's width is set by localizers by &downloadDetails.width;,
+      which is a ch unit. Since this is the value that should control the
+      panel width, we apply it to the outer container to constrain
+      .downloadTarget and .downloadProgress.
+
+   Finally, since we want .downloadTarget's font-size to be at 100% of the
+   font-size of .downloadContainer's parent, we use calc to go from the
+   smaller font-size back to the original font-size.
+ */
+.downloadContainer {
+  font-size: 95%;
+}
+
 .downloadTarget {
+  font-size: calc(100%/0.95);
   margin-bottom: 6px;
   cursor: inherit;
 }
 
 .downloadDetails {
   opacity: 0.7;
-  font-size: 95%;
   cursor: inherit;
 }
 
@@ -259,6 +277,8 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
      rendered over the main browser window in the Z order.  This is required by
      the animated event notification. */
   position: relative;
+  /* The selected tab may overlap #downloads-indicator-notification */
+  z-index: 1;
 }
 
 /*** Main indicator icon ***/
@@ -334,6 +354,12 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
   animation-duration: 1s;
 }
 
+@media (min-resolution: 2dppx) {
+  #downloads-indicator[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+    background-image: url("chrome://browser/skin/downloads/download-notification-start@2x.png");
+  }
+}
+
 #downloads-indicator[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
   animation-name: downloadsIndicatorNotificationStartLeft;
 }
@@ -348,6 +374,12 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
   background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
   animation-name: downloadsIndicatorNotificationFinish;
   animation-duration: 1s;
+}
+
+@media (min-resolution: 2dppx) {
+  #downloads-indicator[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+    background-image: url("chrome://browser/skin/downloads/download-notification-finish@2x.png");
+  }
 }
 
 /*** Progress bar and text ***/

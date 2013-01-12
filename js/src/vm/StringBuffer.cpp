@@ -38,27 +38,27 @@ StringBuffer::extractWellSized()
     return buf;
 }
 
-JSFlatString *
+UnrootedFlatString
 StringBuffer::finishString()
 {
     JSContext *cx = context();
     if (cb.empty())
-        return cx->names().empty;
+        return UnrootedFlatString(cx->names().empty);
 
     size_t length = cb.length();
     if (!JSString::validateLength(cx, length))
-        return NULL;
+        return UnrootedFlatString();
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
         return NewShortString(cx, cb.begin(), length);
 
     if (!cb.append('\0'))
-        return NULL;
+        return UnrootedFlatString();
 
     jschar *buf = extractWellSized();
     if (!buf)
-        return NULL;
+        return UnrootedFlatString();
 
     JSFlatString *str = js_NewString(cx, buf, length);
     if (!str)
@@ -66,16 +66,17 @@ StringBuffer::finishString()
     return str;
 }
 
-JSAtom *
+UnrootedAtom
 StringBuffer::finishAtom()
 {
+    AssertCanGC();
     JSContext *cx = context();
 
     size_t length = cb.length();
     if (length == 0)
-        return cx->names().empty;
+        return UnrootedAtom(cx->names().empty);
 
-    JSAtom *atom = AtomizeChars(cx, cb.begin(), length);
+    UnrootedAtom atom = AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }

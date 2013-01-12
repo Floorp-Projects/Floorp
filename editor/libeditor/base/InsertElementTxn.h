@@ -9,11 +9,11 @@
 #include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 #include "nscore.h"                     // for NS_IMETHOD
 
-class nsIEditor;
+class nsEditor;
+class nsINode;
 
 /**
  * A transaction that inserts a single element
@@ -26,10 +26,10 @@ public:
     * @param aParent the node to insert into
     * @param aOffset the offset in aParent to insert aNode
     */
-  NS_IMETHOD Init(nsIDOMNode *aNode,
-                  nsIDOMNode *aParent,
+  NS_IMETHOD Init(nsINode *aNode,
+                  nsINode *aParent,
                   int32_t     aOffset,
-                  nsIEditor  *aEditor);
+                  nsEditor  *aEditor);
 
   InsertElementTxn();
 
@@ -39,15 +39,15 @@ public:
   NS_DECL_EDITTXN
 
 protected:
-  
+
   /** the element to insert */
-  nsCOMPtr<nsIDOMNode> mNode;
+  nsCOMPtr<nsINode> mNode;
 
   /** the node into which the new node will be inserted */
-  nsCOMPtr<nsIDOMNode> mParent;
+  nsCOMPtr<nsINode> mParent;
 
   /** the editor for this transaction */
-  nsIEditor*           mEditor;
+  nsEditor*           mEditor;
 
   /** the index in mParent for the new node */
   int32_t mOffset;

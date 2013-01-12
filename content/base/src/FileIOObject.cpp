@@ -45,9 +45,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileIOObject,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
  
-NS_IMPL_EVENT_HANDLER(FileIOObject, abort);
-NS_IMPL_EVENT_HANDLER(FileIOObject, error);
-NS_IMPL_EVENT_HANDLER(FileIOObject, progress);
+NS_IMPL_EVENT_HANDLER(FileIOObject, abort)
+NS_IMPL_EVENT_HANDLER(FileIOObject, error)
+NS_IMPL_EVENT_HANDLER(FileIOObject, progress)
 
 FileIOObject::FileIOObject()
   : mProgressEventWasDelayed(false),

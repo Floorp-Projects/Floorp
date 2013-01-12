@@ -29,7 +29,6 @@ const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
 class js::ThreadPoolWorker : public Monitor
 {
     const size_t workerId_;
-    ThreadPool *const threadPool_;
 
     // Current point in the worker's lifecycle.
     //
@@ -48,7 +47,7 @@ class js::ThreadPoolWorker : public Monitor
     void run();
 
   public:
-    ThreadPoolWorker(size_t workerId, ThreadPool *tp);
+    ThreadPoolWorker(size_t workerId);
     ~ThreadPoolWorker();
 
     bool init();
@@ -66,9 +65,8 @@ class js::ThreadPoolWorker : public Monitor
     void terminate();
 };
 
-ThreadPoolWorker::ThreadPoolWorker(size_t workerId, ThreadPool *tp)
+ThreadPoolWorker::ThreadPoolWorker(size_t workerId)
   : workerId_(workerId),
-    threadPool_(tp),
     state_(CREATED),
     worklist_()
 { }
@@ -243,7 +241,7 @@ ThreadPool::lazyStartWorkers(JSContext *cx)
     // but workers_.length() is the number of *successfully
     // initialized* workers.
     for (size_t workerId = 0; workerId < numWorkers(); workerId++) {
-        ThreadPoolWorker *worker = js_new<ThreadPoolWorker>(workerId, this);
+        ThreadPoolWorker *worker = js_new<ThreadPoolWorker>(workerId);
         if (!worker) {
             terminateWorkersAndReportOOM(cx);
             return false;

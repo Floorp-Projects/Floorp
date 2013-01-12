@@ -21,7 +21,7 @@
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
-#include "nsSVGSVGElement.h"
+#include "mozilla/dom/SVGSVGElement.h"
 
 namespace mozilla {
 

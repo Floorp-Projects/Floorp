@@ -6,18 +6,13 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.Intent;
-import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 /**

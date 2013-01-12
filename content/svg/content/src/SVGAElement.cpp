@@ -5,7 +5,8 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGAElement.h"
+#include "mozilla/dom/SVGAElement.h"
+#include "mozilla/dom/SVGAElementBinding.h"
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
@@ -14,28 +15,34 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+DOMCI_NODE_DATA(SVGAElement, mozilla::dom::SVGAElement)
 
-nsSVGElement::StringInfo nsSVGAElement::sStringInfo[2] =
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(A)
+
+namespace mozilla {
+namespace dom {
+
+JSObject*
+SVGAElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGAElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+nsSVGElement::StringInfo SVGAElement::sStringInfo[2] =
 {
   { &nsGkAtoms::href, kNameSpaceID_XLink, true },
   { &nsGkAtoms::target, kNameSpaceID_None, true }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(A)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGAElement, nsSVGAElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGAElement, nsSVGAElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGAElement, SVGAElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
 
-DOMCI_NODE_DATA(SVGAElement, nsSVGAElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGAElement)
-  NS_NODE_INTERFACE_TABLE7(nsSVGAElement,
+NS_INTERFACE_TABLE_HEAD(SVGAElement)
+  NS_NODE_INTERFACE_TABLE7(SVGAElement,
                            nsIDOMNode,
                            nsIDOMElement,
                            nsIDOMSVGElement,
@@ -44,16 +51,17 @@ NS_INTERFACE_TABLE_HEAD(nsSVGAElement)
                            nsILink,
                            Link)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGAElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGAElementBase)
 
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAElement::nsSVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGAElementBase(aNodeInfo),
+SVGAElement::SVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGAElementBase(aNodeInfo),
     Link(this)
 {
+  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
@@ -61,18 +69,27 @@ nsSVGAElement::nsSVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 /* readonly attribute nsIDOMSVGAnimatedString href; */
 NS_IMETHODIMP
-nsSVGAElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
+SVGAElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
+  *aHref = Href().get();
+  return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsSVGAElement, Download, download)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGAElement::Href()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> href;
+  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
+  return href.forget();
+}
+
+NS_IMPL_STRING_ATTR(SVGAElement, Download, download)
 
 //----------------------------------------------------------------------
 // nsINode methods
 
 nsresult
-nsSVGAElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+SVGAElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   nsresult rv = Element::PreHandleEvent(aVisitor);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -81,12 +98,12 @@ nsSVGAElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsSVGAElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+SVGAElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForLinks(aVisitor);
 }
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGAElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAElement)
 
 
 //----------------------------------------------------------------------
@@ -94,27 +111,37 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGAElement)
 
 /* readonly attribute nsIDOMSVGAnimatedString target; */
 NS_IMETHODIMP
-nsSVGAElement::GetTarget(nsIDOMSVGAnimatedString * *aTarget)
+SVGAElement::GetTarget(nsIDOMSVGAnimatedString * *aTarget)
 {
-  return mStringAttributes[TARGET].ToDOMAnimatedString(aTarget, this);
+  *aTarget = Target().get();
+  return NS_OK;
 }
+
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGAElement::Target()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> target;
+  mStringAttributes[TARGET].ToDOMAnimatedString(getter_AddRefs(target), this);
+  return target.forget();
+}
+
 
 
 //----------------------------------------------------------------------
 // nsIContent methods
 
 nsresult
-nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
-                          nsIContent *aBindingParent,
-                          bool aCompileEventHandlers)
+SVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
+                        nsIContent *aBindingParent,
+                        bool aCompileEventHandlers)
 {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv = nsSVGAElementBase::BindToTree(aDocument, aParent,
-                                              aBindingParent,
-                                              aCompileEventHandlers);
+  nsresult rv = SVGAElementBase::BindToTree(aDocument, aParent,
+                                            aBindingParent,
+                                            aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (aDocument) {
     aDocument->RegisterPendingLinkUpdate(this);
   }
@@ -123,28 +150,28 @@ nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
 }
 
 void
-nsSVGAElement::UnbindFromTree(bool aDeep, bool aNullParent)
+SVGAElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
-  
+
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
     doc->UnregisterPendingLinkUpdate(this);
   }
 
-  nsSVGAElementBase::UnbindFromTree(aDeep, aNullParent);
+  SVGAElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsLinkState
-nsSVGAElement::GetLinkState() const
+SVGAElement::GetLinkState() const
 {
   return Link::GetLinkState();
 }
 
 already_AddRefed<nsIURI>
-nsSVGAElement::GetHrefURI() const
+SVGAElement::GetHrefURI() const
 {
   nsCOMPtr<nsIURI> hrefURI;
   return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
@@ -152,7 +179,7 @@ nsSVGAElement::GetHrefURI() const
 
 
 NS_IMETHODIMP_(bool)
-nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
+SVGAElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFEFloodMap,
@@ -166,11 +193,11 @@ nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
   };
 
   return FindAttributeDependence(name, map) ||
-    nsSVGAElementBase::IsAttributeMapped(name);
+    SVGAElementBase::IsAttributeMapped(name);
 }
 
 bool
-nsSVGAElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
+SVGAElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 {
   nsCOMPtr<nsIURI> uri;
   if (IsLink(getter_AddRefs(uri))) {
@@ -188,7 +215,7 @@ nsSVGAElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 }
 
 bool
-nsSVGAElement::IsLink(nsIURI** aURI) const
+SVGAElement::IsLink(nsIURI** aURI) const
 {
   // To be a clickable XLink for styling and interaction purposes, we require:
   //
@@ -237,7 +264,7 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
 }
 
 void
-nsSVGAElement::GetLinkTarget(nsAString& aTarget)
+SVGAElement::GetLinkTarget(nsAString& aTarget)
 {
   mStringAttributes[TARGET].GetAnimValue(aTarget, this);
   if (aTarget.IsEmpty()) {
@@ -261,18 +288,18 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
 }
 
 nsEventStates
-nsSVGAElement::IntrinsicState() const
+SVGAElement::IntrinsicState() const
 {
-  return Link::LinkState() | nsSVGAElementBase::IntrinsicState();
+  return Link::LinkState() | SVGAElementBase::IntrinsicState();
 }
 
 nsresult
-nsSVGAElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                       nsIAtom* aPrefix, const nsAString& aValue,
-                       bool aNotify)
+SVGAElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                     nsIAtom* aPrefix, const nsAString& aValue,
+                     bool aNotify)
 {
-  nsresult rv = nsSVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
-                                           aValue, aNotify);
+  nsresult rv = SVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
+                                         aValue, aNotify);
 
   // The ordering of the parent class's SetAttr call and Link::ResetLinkState
   // is important here!  The attribute is not set until SetAttr returns, and
@@ -287,8 +314,8 @@ nsSVGAElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsSVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
-                         bool aNotify)
+SVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
+                       bool aNotify)
 {
   nsresult rv = nsSVGElement::UnsetAttr(aNameSpaceID, aAttr, aNotify);
 
@@ -308,8 +335,11 @@ nsSVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
 // nsSVGElement methods
 
 nsSVGElement::StringAttributesInfo
-nsSVGAElement::GetStringInfo()
+SVGAElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
+
+} // namespace dom
+} // namespace mozilla

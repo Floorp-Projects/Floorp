@@ -174,7 +174,11 @@ nsWindow::~nsWindow()
     if (top->mFocus == this)
         top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
-    SetCompositor(NULL, NULL);
+    if (mLayerManager == sLayerManager) {
+        // If this window was the one that created the global OMTC layer manager
+        // and compositor, then we should null those out.
+        SetCompositor(NULL, NULL, NULL);
+    }
 }
 
 bool
@@ -697,9 +701,14 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
     bool useCompositor = UseOffMainThreadCompositing();
 
     if (useCompositor) {
+        if (sLayerManager) {
+            return sLayerManager;
+        }
         CreateCompositor();
         if (mLayerManager) {
-            SetCompositor(mCompositorParent, mCompositorChild);
+            // for OMTC create a single layer manager and compositor that will be
+            // used for all windows.
+            SetCompositor(mLayerManager, mCompositorParent, mCompositorChild);
             return mLayerManager;
         }
 
@@ -940,8 +949,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             // Since we might have prevented one or more draw events from
             // occurring while the compositor was paused, we need to schedule
             // a draw event now.
-            sCompositorPaused = false;
-            win->RedrawAll();
+            if (!sCompositorPaused) {
+                win->RedrawAll();
+            }
             break;
 
         case AndroidGeckoEvent::GECKO_EVENT_SYNC:
@@ -2275,16 +2285,19 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 
 // off-main-thread compositor fields and functions
 
+nsRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager = 0;
 nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
 nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
 bool nsWindow::sCompositorPaused = false;
 
 void
-nsWindow::SetCompositor(mozilla::layers::CompositorParent* aCompositorParent,
+nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
+                        mozilla::layers::CompositorParent* aCompositorParent,
                         mozilla::layers::CompositorChild* aCompositorChild)
 {
     bool sizeChangeNeeded = (aCompositorParent && !sCompositorParent && gAndroidBounds.width != 0);
 
+    sLayerManager = aLayerManager;
     sCompositorParent = aCompositorParent;
     sCompositorChild = aCompositorChild;
 
@@ -2312,8 +2325,8 @@ nsWindow::SchedulePauseComposition()
 void
 nsWindow::ScheduleResumeComposition(int width, int height)
 {
-    if (sCompositorParent) {
-        sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
+    if (sCompositorParent && sCompositorParent->ScheduleResumeOnCompositorThread(width, height)) {
+        sCompositorPaused = false;
     }
 }
 

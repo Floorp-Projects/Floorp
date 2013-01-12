@@ -1239,6 +1239,17 @@ class AutoArrayRooter : private AutoGCRooter {
 
     Value *array;
 
+    MutableHandleValue handleAt(size_t i)
+    {
+        JS_ASSERT(i < size_t(tag));
+        return MutableHandleValue::fromMarkedLocation(&array[i]);
+    }
+    HandleValue handleAt(size_t i) const
+    {
+        JS_ASSERT(i < size_t(tag));
+        return HandleValue::fromMarkedLocation(&array[i]);
+    }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:

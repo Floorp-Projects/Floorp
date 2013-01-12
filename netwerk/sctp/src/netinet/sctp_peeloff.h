@@ -32,13 +32,11 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.h 235828 2012-05-23 11:26:28Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.h 243516 2012-11-25 14:25:08Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PEELOFF_H_
 #define _NETINET_SCTP_PEELOFF_H_
-
-
 #if defined(HAVE_SCTP_PEELOFF_SOCKOPT)
 /* socket option peeloff */
 struct sctp_peeloff_opt {
@@ -54,30 +52,17 @@ struct sctp_peeloff_opt {
 	HANDLE new_sd;
 #endif
 };
-
 #endif /* HAVE_SCTP_PEELOFF_SOCKOPT */
-
-
 #if defined(_KERNEL)
-
 int sctp_can_peel_off(struct socket *, sctp_assoc_t);
 int sctp_do_peeloff(struct socket *, struct socket *, sctp_assoc_t);
-struct socket *sctp_get_peeloff(struct socket *, sctp_assoc_t, int *);
-
 #if defined(HAVE_SCTP_PEELOFF_SOCKOPT)
+struct socket *sctp_get_peeloff(struct socket *, sctp_assoc_t, int *);
 int sctp_peeloff_option(struct proc *p, struct sctp_peeloff_opt *peeloff);
-
-#endif				/* HAVE_SCTP_PEELOFF_SOCKOPT */
-
-#ifdef __APPLE__
-/* sctp_peeloff() syscall arguments */
-struct sctp_peeloff_args {
-	int s;
-	caddr_t name;
-};
-
-#endif				/* __APPLE__ */
-
-#endif				/* _KERNEL */
-
-#endif
+#endif /* HAVE_SCTP_PEELOFF_SOCKOPT */
+#endif /* _KERNEL */
+#if defined(__Userspace__)
+int sctp_can_peel_off(struct socket *, sctp_assoc_t);
+int sctp_do_peeloff(struct socket *, struct socket *, sctp_assoc_t);
+#endif /* __Userspace__ */
+#endif /* _NETINET_SCTP_PEELOFF_H_ */

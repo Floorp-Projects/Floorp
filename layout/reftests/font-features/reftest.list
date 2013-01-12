@@ -7,7 +7,7 @@
 
 # check that Turkish language causes a change in rendering (no fi ligature)
 # (also works via Pango)
-HTTP(..) != font-features-turkish.html font-features-ref.html
+skip-if(B2G) HTTP(..) != font-features-turkish.html font-features-ref.html # bug 773482
 
 # check that disabling ligatures causes a change
 HTTP(..) != font-features-noliga.html font-features-ref.html
@@ -32,7 +32,7 @@ HTTP(..) == font-features-hlig-4.html font-features-hlig.html
 HTTP(..) != font-features-hlig-5.html font-features-hlig.html
 
 # check that feature in style rule overrides @font-face
-HTTP(..) == font-features-hlig-3.html font-features-noliga.html
+skip-if(B2G) HTTP(..) == font-features-hlig-3.html font-features-noliga.html # bug 773482
 
 # make sure old syntax usage never interferes with new syntax usage
 HTTP(..) == font-features-oldsyntax-1.html font-features-ref.html
@@ -41,13 +41,13 @@ HTTP(..) == font-features-oldsyntax-3.html font-features-hlig.html
 HTTP(..) == font-features-oldsyntax-4.html font-features-hlig.html
 
 # compare -moz-font-language-override rendering to lang-tagged rendering
-HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html
+skip-if(B2G) HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html # bug 773482
 HTTP(..) == font-features-turkish-override-2.html font-features-turkish.html
 
 # check use of -moz-font-language-override to override explicit lang tag
 HTTP(..) == font-features-turkish-override-3.html font-features-ref.html
 HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
-HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html
+skip-if(B2G) HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html # bug 773482
 
 # check that last value wins if a feature is repeated
 HTTP(..) == font-features-order-1.html font-features-ref.html

@@ -33,12 +33,12 @@ class nsSVGLength2;
 class nsSVGNumber2;
 class nsSVGNumberPair;
 class nsSVGString;
-class nsSVGSVGElement;
 class nsSVGViewBox;
 
 namespace mozilla {
 namespace dom {
 class CSSValue;
+class SVGSVGElement;
 }
 
 class SVGAnimatedNumberList;
@@ -124,12 +124,11 @@ public:
   NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
   NS_IMETHOD GetClassName(nsIDOMSVGAnimatedString** aClassName);
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  NS_IMETHOD GetPresentationAttribute(const nsAString& aName, nsIDOMCSSValue** aReturn);
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
   // nullptr for outer <svg> or SVG without an <svg> parent (invalid SVG).
-  nsSVGSVGElement* GetCtx() const;
+  mozilla::dom::SVGSVGElement* GetCtx() const;
 
   enum TransformTypes {
      eAllTransforms
@@ -299,10 +298,9 @@ public:
   }
 
   // WebIDL
-  nsSVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
+  mozilla::dom::SVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
   nsSVGElement* GetViewportElement();
   already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
-  nsICSSDeclaration* GetStyle(mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
 protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap);
@@ -647,26 +645,6 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 {                                                                            \
   nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
     new mozilla::dom::SVG##_elementName##Element(aNodeInfo);                 \
-                                                                             \
-  nsresult rv = it->Init();                                                  \
-                                                                             \
-  if (NS_FAILED(rv)) {                                                       \
-    return rv;                                                               \
-  }                                                                          \
-                                                                             \
-  it.forget(aResult);                                                        \
-                                                                             \
-  return rv;                                                                 \
-}
-
-#define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
-nsresult                                                                     \
-NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 already_AddRefed<nsINodeInfo> aNodeInfo,    \
-                                 FromParser aFromParser)                     \
-{                                                                            \
-  nsRefPtr<nsSVG##_elementName##Element> it =                                \
-    new nsSVG##_elementName##Element(aNodeInfo, aFromParser);                \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=506856
        basis will be '0' (based off of the viewport width, which is 0 in this
        case since we're in a display:none iframe. We use viewport width because
        the lack of a viewbox forces us into the not-mViewBox::IsValid() case of
-       nsSVGSVGElement::GetLength).
+       SVGSVGElement::GetLength).
 
        And we don't want a percent-length basis of 0, because then when we call
        convertToSpecifiedUnits to convert out of percent units, we divide by 0

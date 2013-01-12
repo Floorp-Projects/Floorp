@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.c 237565 2012-06-25 17:15:09Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.c 243186 2012-11-17 20:04:04Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -632,8 +632,6 @@ skip:
 	else if ((var) >= (max)) { (var) = (max); }
 #endif
 
-/* XXX: Remove the #if after tunneling over IPv6 works also on FreeBSD. */
-#if !defined(__FreeBSD__) || defined(INET)
 #if defined(__APPLE__)
 static int
 sysctl_sctp_udp_tunneling_check SYSCTL_HANDLER_ARGS
@@ -676,7 +674,6 @@ sysctl_sctp_udp_tunneling_check(SYSCTL_HANDLER_ARGS)
 out:
 	return (error);
 }
-#endif
 
 #if defined(__APPLE__)
 int sctp_is_vmware_interface(struct ifnet *);
@@ -1267,12 +1264,9 @@ SYSCTL_VNET_PROC(_net_inet_sctp, OID_AUTO, clear_trace, CTLTYPE_UINT | CTLFLAG_R
                  "Clear SCTP Logging buffer");
 #endif
 
-/* XXX: Remove the #if after tunneling over IPv6 works also on FreeBSD. */
-#if !defined(__FreeBSD__) || defined(INET)
 SYSCTL_VNET_PROC(_net_inet_sctp, OID_AUTO, udp_tunneling_port, CTLTYPE_UINT|CTLFLAG_RW,
                  &SCTP_BASE_SYSCTL(sctp_udp_tunneling_port), 0, sysctl_sctp_udp_tunneling_check, "IU",
                  SCTPCTL_UDP_TUNNELING_PORT_DESC);
-#endif
 
 SYSCTL_VNET_PROC(_net_inet_sctp, OID_AUTO, enable_sack_immediately, CTLTYPE_UINT|CTLFLAG_RW,
                  &SCTP_BASE_SYSCTL(sctp_enable_sack_immediately), 0, sysctl_sctp_check, "IU",

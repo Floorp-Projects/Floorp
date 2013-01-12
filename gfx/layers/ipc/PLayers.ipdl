@@ -152,6 +152,9 @@ union AnimationData {
 };
 
 struct Animation {
+  // Unlike in nsAnimationManager, this start time is at the end of the
+  // delay.  If the delay is changed dynamically, the layer's data will
+  // be updated.
   TimeStamp startTime;
   TimeDuration duration;
   // For each frame, the interpolation point is computed based on the

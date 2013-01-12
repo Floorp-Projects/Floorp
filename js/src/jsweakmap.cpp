@@ -291,7 +291,10 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
     }
 
     // Preserve wrapped native keys to prevent wrapper optimization.
-    if (key->getClass()->ext.isWrappedNative) {
+    if (key->getClass()->ext.isWrappedNative ||
+        (key->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
+        (key->isProxy() && GetProxyHandler(key)->family() == GetListBaseHandlerFamily()))
+    {
         JS_ASSERT(cx->runtime->preserveWrapperCallback);
         if (!cx->runtime->preserveWrapperCallback(cx, key)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_WEAKMAP_KEY);

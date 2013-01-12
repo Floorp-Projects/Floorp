@@ -65,7 +65,7 @@ PropDesc::checkSetter(JSContext *cx)
 }
 
 static bool
-CheckArgCompartment(JSContext *cx, JSObject *obj, const Value &v,
+CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
                     const char *methodname, const char *propname)
 {
     if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
@@ -89,27 +89,33 @@ PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, JSObject *obj,
     *unwrapped = *this;
 
     if (unwrapped->hasValue()) {
-        if (!dbg->unwrapDebuggeeValue(cx, &unwrapped->value_) ||
-            !CheckArgCompartment(cx, obj, unwrapped->value_, "defineProperty", "value"))
+        RootedValue value(cx, unwrapped->value_);
+        if (!dbg->unwrapDebuggeeValue(cx, &value) ||
+            !CheckArgCompartment(cx, obj, value, "defineProperty", "value"))
         {
             return false;
         }
+        unwrapped->value_ = value;
     }
 
     if (unwrapped->hasGet()) {
-        if (!dbg->unwrapDebuggeeValue(cx, &unwrapped->get_) ||
-            !CheckArgCompartment(cx, obj, unwrapped->get_, "defineProperty", "get"))
+        RootedValue get(cx, unwrapped->get_);
+        if (!dbg->unwrapDebuggeeValue(cx, &get) ||
+            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
         {
             return false;
         }
+        unwrapped->get_ = get;
     }
 
     if (unwrapped->hasSet()) {
-        if (!dbg->unwrapDebuggeeValue(cx, &unwrapped->set_) ||
-            !CheckArgCompartment(cx, obj, unwrapped->set_, "defineProperty", "set"))
+        RootedValue set(cx, unwrapped->set_);
+        if (!dbg->unwrapDebuggeeValue(cx, &set) ||
+            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
         {
             return false;
         }
+        unwrapped->set_ = set;
     }
 
     return true;
@@ -221,9 +227,9 @@ js::ObjectImpl::initSlotRange(uint32_t start, const Value *vector, uint32_t leng
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
-        sp->init(comp, this->asObjectPtr(), start++, *vector++);
+        sp->init(comp, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
     for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
-        sp->init(comp, this->asObjectPtr(), start++, *vector++);
+        sp->init(comp, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
 }
 
 void
@@ -233,9 +239,9 @@ js::ObjectImpl::copySlotRange(uint32_t start, const Value *vector, uint32_t leng
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
-        sp->set(comp, this->asObjectPtr(), start++, *vector++);
+        sp->set(comp, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
     for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
-        sp->set(comp, this->asObjectPtr(), start++, *vector++);
+        sp->set(comp, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
 }
 
 #ifdef DEBUG
@@ -286,8 +292,10 @@ js::ObjectImpl::markChildren(JSTracer *trc)
     if (clasp->trace)
         clasp->trace(trc, obj);
 
-    if (shape_->isNative())
+    if (shape_->isNative()) {
         MarkObjectSlots(trc, obj, 0, obj->slotSpan());
+        gc::MarkArraySlots(trc, obj->getDenseInitializedLength(), obj->getDenseElements(), "objectElements");
+    }
 }
 
 bool
@@ -303,7 +311,7 @@ DenseElementsHeader::getOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
     }
 
     HeapSlot &slot = obj->elements[index];
-    if (slot.isMagic(JS_ARRAY_HOLE)) {
+    if (slot.isMagic(JS_ELEMENTS_HOLE)) {
         *desc = PropDesc::undefined();
         return true;
     }
@@ -403,7 +411,7 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
     uint32_t initLen = initializedLength();
     if (index < initLen) {
         HeapSlot &slot = obj->elements[index];
-        if (!slot.isMagic(JS_ARRAY_HOLE)) {
+        if (!slot.isMagic(JS_ELEMENTS_HOLE)) {
             /*
              * The element exists with attributes { [[Enumerable]]: true,
              * [[Configurable]]: true, [[Writable]]: true, [[Value]]: slot }.
@@ -445,7 +453,7 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
 
     /* But if we were able to ensure the element's existence, we're good. */
     MOZ_ASSERT(res == ObjectImpl::Succeeded);
-    obj->elements[index].set(obj->asObjectPtr(), index, desc.value());
+    obj->elements[index].set(obj->asObjectPtr(), HeapSlot::Element, index, desc.value());
     *succeeded = true;
     return true;
 }
