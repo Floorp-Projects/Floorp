@@ -860,6 +860,10 @@ pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("toolkit.crashreporter.pluginHangSubmitURL",
      "https://hang-reports.mozilla.org/submit");
 
+// URL for "Learn More" for Crash Reporter
+pref("toolkit.crashreporter.infoURL",
+     "http://www.mozilla.com/legal/privacy/firefox.html#crash-reporter");
+
 // base URL for web-based support pages
 pref("app.support.baseURL", "http://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 

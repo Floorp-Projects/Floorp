@@ -899,6 +899,7 @@ xpicleanup@BIN_SUFFIX@
   components/GPSDGeolocationProvider.js
   components/interfaces.manifest
   components/jsconsole-clhandler.js
+  components/MetricsCollectionService.js
   components/NetworkGeolocationProvider.js
   components/NotificationsComponents.manifest
   components/nsBadCertHandler.js

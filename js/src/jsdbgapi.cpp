@@ -261,7 +261,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH_PROP);
         return false;
     } else {
-        if (!ValueToId(cx, IdToValue(id), propid.address()))
+        if (!ValueToId(cx, IdToValue(id), &propid))
             return false;
     }
 

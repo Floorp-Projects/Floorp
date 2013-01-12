@@ -162,7 +162,7 @@ js::GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
 }
 
 bool
-DoubleIndexToId(JSContext *cx, double index, jsid *id)
+DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
 {
     if (index == uint32_t(index))
         return IndexToId(cx, uint32_t(index), id);
@@ -181,7 +181,7 @@ DoGetElement(JSContext *cx, HandleObject obj, double index, JSBool *hole, Mutabl
 {
     RootedId id(cx);
 
-    if (!DoubleIndexToId(cx, index, id.address()))
+    if (!DoubleIndexToId(cx, index, &id))
         return false;
 
     RootedObject obj2(cx);
@@ -317,7 +317,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
     }
 
     RootedId id(cx);
-    if (!DoubleIndexToId(cx, index, id.address()))
+    if (!DoubleIndexToId(cx, index, &id))
         return false;
 
     RootedValue tmp(cx, v);
@@ -953,7 +953,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     Value idval = DoubleValue(MAX_ARRAY_INDEX + 1);
     do {
         value = *vector++;
-        if (!ValueToId(cx, idval, id.address()) ||
+        if (!ValueToId(cx, idval, &id) ||
             !JSObject::setGeneric(cx, obj, obj, id, &value, true)) {
             return false;
         }

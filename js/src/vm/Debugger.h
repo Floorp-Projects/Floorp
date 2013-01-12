@@ -411,7 +411,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * create a Debugger.Environment object for the given Env. On success,
      * store the Environment object in *vp and return true.
      */
-    bool wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *vp);
+    bool wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue vp);
 
     /*
      * Like cx->compartment->wrap(cx, vp), but for the debugger compartment.
@@ -422,7 +422,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * If *vp is an object, this produces a (new or existing) Debugger.Object
      * wrapper for it. Otherwise this is the same as JSCompartment::wrap.
      */
-    bool wrapDebuggeeValue(JSContext *cx, Value *vp);
+    bool wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
     /*
      * Unwrap a Debug.Object, without rewrapping it for any particular debuggee
@@ -451,7 +451,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * debugger compartment--mirror symmetry. But compartment wrapping always
      * happens in the target compartment--rotational symmetry.)
      */
-    bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
+    bool unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
     /* Store the Debugger.Frame object for the frame fp in *vp. */
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
@@ -464,14 +464,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * to be false).
      */
     static void resultToCompletion(JSContext *cx, bool ok, const Value &rv,
-                                   JSTrapStatus *status, Value *value);
+                                   JSTrapStatus *status, MutableHandleValue value);
 
     /*
      * Set |*result| to a JavaScript completion value corresponding to |status|
      * and |value|. |value| should be the return value or exception value, not
      * wrapped as a debuggee value. |cx| must be in the debugger compartment.
      */
-    bool newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result);
+    bool newCompletionValue(JSContext *cx, JSTrapStatus status, Value value,
+                            MutableHandleValue result);
 
     /*
      * Precondition: we are in the debuggee compartment (ac is entered) and ok
@@ -485,7 +486,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * pending exception. (This ordinarily returns true even if the ok argument
      * is false.)
      */
-    bool receiveCompletionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok, Value val, Value *vp);
+    bool receiveCompletionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok, Value val,
+                                MutableHandleValue vp);
 
     /*
      * Return the Debugger.Script object for |script|, or create a new one if

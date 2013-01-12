@@ -1368,7 +1368,7 @@ class GetPropCompiler : public PICStubCompiler
             if (shape->hasGetterValue()) {
                 generateNativeGetterStub(masm, shape, start, shapeMismatches);
             } else {
-                jsid userid;
+                RootedId userid(cx);
                 if (!shape->getUserId(cx, &userid))
                     return error();
                 generateGetterStub(masm, shape, userid, start, shapeMismatches);
@@ -2648,7 +2648,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
         id = INT_TO_JSID(idval.toInt32());
     } else {
-        if (!InternNonIntElementId(cx, obj, idval, id.address()))
+        if (!InternNonIntElementId(cx, obj, idval, &id))
             THROW();
     }
 
