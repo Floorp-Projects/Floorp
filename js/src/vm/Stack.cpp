@@ -816,7 +816,9 @@ StackSpace::sizeOf()
 bool
 StackSpace::containsSlow(StackFrame *fp)
 {
-    for (AllFramesIter i(*this); !i.done(); ++i) {
+    if (!seg_)
+        return false;
+    for (AllFramesIter i(seg_->cx()->runtime); !i.done(); ++i) {
         /*
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
@@ -2041,24 +2043,75 @@ StackIter::frameSlotValue(size_t index) const
 
 /*****************************************************************************/
 
-AllFramesIter::AllFramesIter(StackSpace &space)
-  : seg_(space.seg_),
+AllFramesIter::AllFramesIter(JSRuntime *rt)
+  : seg_(rt->stackSpace.seg_),
     fp_(seg_ ? seg_->maybefp() : NULL)
+#ifdef JS_ION
+    , ionActivations_(rt),
+    ionFrames_((uint8_t *)NULL)
+#endif
 {
-    settle();
+    settleOnNewState();
 }
+
+#ifdef JS_ION
+void
+AllFramesIter::popIonFrame()
+{
+    JS_ASSERT(state_ == ION);
+
+    ++ionFrames_;
+    while (!ionFrames_.done() && !ionFrames_.isScripted())
+        ++ionFrames_;
+
+    if (!ionFrames_.done())
+        return;
+
+    // The activation has no other frames. If entryfp is NULL, it was invoked
+    // by a native written in C++, using FastInvoke, on top of another activation.
+    ion::IonActivation *activation = ionActivations_.activation();
+    if (!activation->entryfp()) {
+        JS_ASSERT(activation->prevpc());
+        JS_ASSERT(fp_->beginsIonActivation());
+        ++ionActivations_;
+        settleOnNewState();
+        return;
+    }
+
+    if (fp_->runningInIon()) {
+        ++ionActivations_;
+        fp_ = fp_->prev();
+        settleOnNewState();
+    } else {
+        JS_ASSERT(fp_->callingIntoIon());
+        state_ = SCRIPTED;
+        ++ionActivations_;
+    }
+}
+#endif
 
 AllFramesIter&
 AllFramesIter::operator++()
 {
-    JS_ASSERT(!done());
-    fp_ = fp_->prev();
-    settle();
+    switch (state_) {
+      case SCRIPTED:
+        fp_ = fp_->prev();
+        settleOnNewState();
+        break;
+#ifdef JS_ION
+      case ION:
+        popIonFrame();
+        break;
+#endif
+      case DONE:
+      default:
+        JS_NOT_REACHED("Unexpeced state");
+    }
     return *this;
 }
 
 void
-AllFramesIter::settle()
+AllFramesIter::settleOnNewState()
 {
     while (seg_ && (!fp_ || !seg_->contains(fp_))) {
         seg_ = seg_->prevInMemory();
@@ -2067,10 +2120,33 @@ AllFramesIter::settle()
 
     JS_ASSERT(!!seg_ == !!fp_);
     JS_ASSERT_IF(fp_, seg_->contains(fp_));
+
+#ifdef JS_ION
+    if (fp_ && fp_->beginsIonActivation()) {
+        // Start at the first scripted frame.
+        ionFrames_ = ion::IonFrameIterator(ionActivations_);
+        while (!ionFrames_.isScripted() && !ionFrames_.done())
+            ++ionFrames_;
+
+        state_ = ionFrames_.done() ? SCRIPTED : ION;
+        return;
+    }
+#endif
+
+    state_ = fp_ ? SCRIPTED : DONE;
 }
 
 TaggedFramePtr
 AllFramesIter::taggedFramePtr() const
 {
-    return TaggedFramePtr(interpFrame());
+    switch (state_) {
+      case SCRIPTED:
+        return TaggedFramePtr(interpFrame());
+      case ION:
+        break;
+      case DONE:
+        break;
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return TaggedFramePtr();
 }
