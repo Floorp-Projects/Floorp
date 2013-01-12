@@ -32,8 +32,6 @@ DeleteRangeTxn::DeleteRangeTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DeleteRangeTxn)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DeleteRangeTxn,
                                                 EditAggregateTxn)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRange)

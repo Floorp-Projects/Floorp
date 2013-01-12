@@ -281,8 +281,6 @@ NS_NewXULDocument(nsIXULDocument** result)
 // nsISupports interface
 //
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULDocument)
-
 static PLDHashOperator
 TraverseTemplateBuilders(nsISupports* aKey, nsIXULTemplateBuilder* aData,
                          void* aContext)

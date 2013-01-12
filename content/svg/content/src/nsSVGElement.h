@@ -681,14 +681,12 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 // No unlinking, we'd need to null out the value pointer (the object it
 // points to is held by the element) and null-check it everywhere.
 #define NS_SVG_VAL_IMPL_CYCLE_COLLECTION(_val, _element)                     \
-NS_IMPL_CYCLE_COLLECTION_CLASS(_val)                                         \
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_val)                                \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_element) \
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                        \
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_val)
 
 #define NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(_val, _element)       \
-NS_IMPL_CYCLE_COLLECTION_CLASS(_val)                                         \
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_val)                                  \
 NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER                            \
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                          \

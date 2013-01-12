@@ -315,8 +315,6 @@ nsPresContext::~nsPresContext()
                                   this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPresContext)
    NS_INTERFACE_MAP_ENTRY(nsISupports)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)

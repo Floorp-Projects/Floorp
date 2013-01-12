@@ -55,8 +55,6 @@ using namespace mozilla;
 using mozilla::dom::EncodingUtils;
 using mozilla::dom::FileIOObject;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   FileIOObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFile)

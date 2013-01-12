@@ -877,8 +877,6 @@ nsEventStateManager::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventStateManager)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventStateManager)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
