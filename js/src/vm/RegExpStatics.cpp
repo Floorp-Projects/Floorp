@@ -74,7 +74,7 @@ RegExpStatics::executeLazy(JSContext *cx)
     if (!pendingLazyEvaluation)
         return true;
 
-    JS_ASSERT(regexp);
+    JS_ASSERT(regexp.initialized());
     JS_ASSERT(matchesInput);
     JS_ASSERT(lastIndex != size_t(-1));
 
@@ -87,17 +87,14 @@ RegExpStatics::executeLazy(JSContext *cx)
     StableCharPtr chars(matchesInput->chars(), length);
 
     /* Execute the full regular expression. */
-    RegExpGuard shared(cx);
-    if (!regexp->getShared(cx, &shared))
-        return false;
-
-    RegExpRunStatus status = shared->execute(cx, chars, length, &this->lastIndex, this->matches);
+    RegExpRunStatus status = regexp->execute(cx, chars, length, &this->lastIndex, this->matches);
     if (status == RegExpRunStatus_Error)
         return false;
 
     /* Unset lazy state and remove rooted values that now have no use. */
     pendingLazyEvaluation = false;
-    regexp = NULL;
+    regexp.release();
+    lastIndex = size_t(-1);
 
     return true;
 }
