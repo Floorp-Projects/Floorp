@@ -45,8 +45,6 @@ const char* kUssdReceivedTopic     = "mobile-connection-ussd-received";
 const char* kDataErrorTopic        = "mobile-connection-data-error";
 const char* kIccCardLockErrorTopic = "mobile-connection-icccardlock-error";
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
                                                   nsDOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

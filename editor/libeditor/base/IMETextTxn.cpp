@@ -31,8 +31,6 @@ IMETextTxn::IMETextTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(IMETextTxn)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IMETextTxn, EditTxn)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
   // mRangeList can't lead to cycles

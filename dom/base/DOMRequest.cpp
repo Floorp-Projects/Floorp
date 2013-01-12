@@ -44,8 +44,6 @@ DOMRequest::Init(nsIDOMWindow* aWindow)
 
 DOMCI_DATA(DOMRequest, DOMRequest)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMRequest)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)

@@ -148,7 +148,6 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNodeInfo)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsNodeInfo)
 
 static const char* kNSURIs[] = {

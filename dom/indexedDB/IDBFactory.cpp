@@ -485,8 +485,6 @@ IDBFactory::SetDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(IDBFactory)
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBFactory)
 

@@ -71,15 +71,7 @@ inline int32_t CompareIntegers(uint32_t a, uint32_t b)
 
 using namespace mozilla::places;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResultNode)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResultNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResultNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_1(nsNavHistoryResultNode, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResultNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryResultNode)
@@ -327,8 +319,6 @@ nsNavHistoryFullVisitResultNode::nsNavHistoryFullVisitResultNode(
 {
 }
 
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryContainerResultNode)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResult)
@@ -4110,8 +4100,6 @@ nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
 {
 }
 
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
 
 static PLDHashOperator
 RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,

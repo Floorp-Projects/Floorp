@@ -57,8 +57,6 @@ IsChromeProcess()
   return type == nsIXULRuntime::PROCESS_TYPE_DEFAULT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameMessageManager)
   uint32_t count = tmp->mListeners.Length();
   for (uint32_t i = 0; i < count; i++) {

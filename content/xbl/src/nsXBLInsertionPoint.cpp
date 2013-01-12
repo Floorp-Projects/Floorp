@@ -23,7 +23,6 @@ nsXBLInsertionPoint::~nsXBLInsertionPoint()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLInsertionPoint)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDefaultContentTemplate)

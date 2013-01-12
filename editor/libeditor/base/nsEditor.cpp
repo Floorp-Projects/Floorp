@@ -165,8 +165,6 @@ nsEditor::~nsEditor()
   delete mPhonetic;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsEditor)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEditor)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInlineSpellChecker)
