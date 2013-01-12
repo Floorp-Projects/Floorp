@@ -282,6 +282,11 @@ class CompartmentChecker
         if (fp)
             check(fp->scopeChain());
     }
+
+    void check(TaggedFramePtr frame) {
+        if (frame)
+            check(frame.scopeChain());
+    }
 };
 #endif /* JS_CRASH_DIAGNOSTICS */
 
