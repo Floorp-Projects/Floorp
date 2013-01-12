@@ -170,10 +170,19 @@ WebConsole.prototype = {
   iframe: null,
   _destroyer: null,
 
+  _browserWindow: null,
+
   get browserWindow()
   {
-    return this.target.isLocalTab ?
-           this.chromeWindow.top : HUDService.currentContext();
+    if (!this._browserWindow) {
+      let window = this.chromeWindow.top;
+      let element = window.document.documentElement;
+      if (element.getAttribute("windowtype") != "navigator:browser") {
+        window = HUDService.currentContext();
+      }
+      this._browserWindow = window;
+    }
+    return this._browserWindow;
   },
 
   /**
