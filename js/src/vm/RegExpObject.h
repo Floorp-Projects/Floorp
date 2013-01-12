@@ -14,8 +14,6 @@
 #include "jscntxt.h"
 #include "jsobj.h"
 
-#include "gc/Barrier.h"
-#include "gc/Marking.h"
 #include "js/TemplateLib.h"
 #include "vm/MatchPairs.h"
 
@@ -151,13 +149,7 @@ class RegExpShared
     RegExpShared(JSRuntime *rt, JSAtom *source, RegExpFlag flags);
     ~RegExpShared();
 
-    /* Explicit trace function for use by the RegExpStatics. */
-    void trace(JSTracer *trc) {
-        MarkString(trc, &source, "regexpshared source");
-    }
-    void writeBarrierPre() {
-        JSString::writeBarrierPre(source);
-    }
+    void trace(JSTracer *trc);
 
     /* Static functions to expose some Yarr logic. */
     static inline bool isJITRuntimeEnabled(JSContext *cx);
@@ -230,59 +222,17 @@ class RegExpGuard
         re_->incRef();
     }
 
-    ~RegExpGuard() { release(); }
+    ~RegExpGuard() {
+        if (re_)
+            re_->decRef();
+    }
 
   public:
     void init(RegExpShared &re) {
-        JS_ASSERT(!initialized());
+        JS_ASSERT(!re_);
         re_ = &re;
         re_->incRef();
-        source_ = re_->source;
-    }
-    void release() {
-        if (re_) {
-            re_->decRef();
-            re_ = NULL;
-            source_ = NULL;
-        }
-    }
-
-    bool initialized() const { return !!re_; }
-    RegExpShared *re() const { JS_ASSERT(initialized()); return re_; }
-    RegExpShared *operator->() { return re(); }
-    RegExpShared &operator*() { return *re(); }
-};
-
-/* Equivalent of RegExpGuard, heap-allocated, with explicit tracing. */
-class RegExpHeapGuard
-{
-    RegExpShared *re_;
-
-    RegExpHeapGuard(const RegExpGuard &) MOZ_DELETE;
-    void operator=(const RegExpHeapGuard &) MOZ_DELETE;
-
-  public:
-    RegExpHeapGuard() : re_(NULL) { }
-    RegExpHeapGuard(RegExpShared &re) { init(re); }
-    ~RegExpHeapGuard() { release(); }
-
-  public:
-    void init(RegExpShared &re) {
-        JS_ASSERT(!initialized());
-        re_ = &re;
-        re_->incRef();
-    }
-    void release() {
-        if (re_) {
-            re_->writeBarrierPre();
-            re_->decRef();
-            re_ = NULL;
-        }
-    }
-
-    void trace(JSTracer *trc) {
-        if (initialized())
-            re_->trace(trc);
+        source_ = re.source;
     }
 
     bool initialized() const { return !!re_; }
@@ -296,12 +246,9 @@ class RegExpCompartment
     struct Key {
         JSAtom *atom;
         uint16_t flag;
-
         Key() {}
         Key(JSAtom *atom, RegExpFlag flag)
-          : atom(atom), flag(flag)
-        { }
-
+          : atom(atom), flag(flag) {}
         typedef Key Lookup;
         static HashNumber hash(const Lookup &l) {
             return DefaultHasher<JSAtom *>::hash(l.atom) ^ (l.flag << 1);
