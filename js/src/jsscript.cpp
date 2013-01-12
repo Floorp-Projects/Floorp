@@ -2714,9 +2714,9 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
          */
         if (i.isIon())
             continue;
-        StackFrame *fp = i.interpFrame();
-        if (fp->isFunctionFrame() && fp->script() == script) {
-            ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
+        TaggedFramePtr frame = i.taggedFramePtr();
+        if (frame.isFunctionFrame() && frame.script() == script) {
+            ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, frame);
             if (!argsobj) {
                 /*
                  * We can't leave stack frames with script->needsArgsObj but no
@@ -2728,8 +2728,8 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
             }
 
             /* Note: 'arguments' may have already been overwritten. */
-            if (fp->unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
-                fp->unaliasedLocal(var) = ObjectValue(*argsobj);
+            if (frame.unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
+                frame.unaliasedLocal(var) = ObjectValue(*argsobj);
         }
     }
 

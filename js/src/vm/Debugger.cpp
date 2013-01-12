@@ -3360,7 +3360,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     Rooted<Env*> env(cx);
     {
         AutoCompartment ac(cx, iter.scopeChain());
-        env = GetDebugScopeForFrame(cx, iter.interpFrame());
+        env = GetDebugScopeForFrame(cx, iter.taggedFramePtr());
         if (!env)
             return false;
     }
@@ -3777,7 +3777,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
         if (!iter->computeThis())
             return false;
         thisv = iter->thisv();
-        env = GetDebugScopeForFrame(cx, iter->interpFrame());
+        env = GetDebugScopeForFrame(cx, iter->taggedFramePtr());
         if (!env)
             return false;
     } else {
