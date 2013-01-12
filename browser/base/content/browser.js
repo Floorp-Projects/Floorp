@@ -157,6 +157,12 @@ let gInitialPages = [
 #include browser-thumbnails.js
 #include browser-webrtcUI.js
 
+#ifdef MOZ_DATA_REPORTING
+#include browser-data-submission-info-bar.js
+
+let gDataNotificationInfoBar = new DataNotificationInfoBar();
+#endif
+
 #ifdef MOZ_SERVICES_SYNC
 #include browser-syncui.js
 #endif
@@ -1393,6 +1399,10 @@ var gBrowserInit = {
 #ifdef MOZ_SERVICES_SYNC
     // initialize the sync UI
     gSyncUI.init();
+#endif
+
+#ifdef MOZ_DATA_REPORTING
+    gDataNotificationInfoBar.init();
 #endif
 
     gBrowserThumbnails.init();
