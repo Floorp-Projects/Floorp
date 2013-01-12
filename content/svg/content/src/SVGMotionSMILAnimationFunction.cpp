@@ -10,8 +10,8 @@
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
 #include "nsSVGPathDataParser.h"
-#include "nsSVGPathElement.h" // for nsSVGPathList
-#include "SVGMPathElement.h"
+#include "mozilla/dom/SVGPathElement.h" // for nsSVGPathList
+#include "mozilla/dom/SVGMPathElement.h"
 #include "nsAttrValueInlines.h"
 
 namespace mozilla {
@@ -217,7 +217,7 @@ SVGMotionSMILAnimationFunction::
   mPathSourceType = ePathSourceType_Mpath;
 
   // Use the path that's the target of our chosen <mpath> child.
-  nsSVGPathElement* pathElem = aMpathElem->GetReferencedPath();
+  SVGPathElement* pathElem = aMpathElem->GetReferencedPath();
   if (pathElem) {
     const SVGPathData &path = pathElem->GetAnimPathSegList()->GetAnimValue();
     // Path data must contain of at least one path segment (if the path data
