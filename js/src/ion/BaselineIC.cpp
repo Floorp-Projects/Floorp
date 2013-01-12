@@ -19,6 +19,32 @@
 namespace js {
 namespace ion {
 
+#ifdef DEBUG
+void
+FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
+{
+    if (IonSpewEnabled(IonSpew_BaselineICFallback)) {
+        RootedScript script(cx, GetTopIonJSScript(cx));
+        jsbytecode *pc = stub->icEntry()->pc(script);
+
+        char fmtbuf[100];
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(fmtbuf, 100, fmt, args);
+        va_end(args);
+
+        IonSpew(IonSpew_BaselineICFallback, "Fallback hit for (%s:%d) (pc=%d) (line=%d): %s",
+                script->filename,
+                script->lineno,
+                (int) (pc - script->code),
+                PCToLineNumber(script, pc),
+                fmtbuf);
+    }
+}
+#else
+#define FallbackICSpew(...)
+#endif
+
 void
 ICStub::markCode(JSTracer *trc, const char *name)
 {
@@ -255,6 +281,7 @@ ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm)
 static bool
 DoStackCheckFallback(JSContext *cx, ICStackCheck_Fallback *stub)
 {
+    FallbackICSpew(cx, stub, "StackCheck");
     JS_CHECK_RECURSION(cx, return false);
     return true;
 }
@@ -285,6 +312,12 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, size_t count)
 {
     // TODO:
     //  Bail out from this script and attempt an Ion compilation.
+    FallbackICSpew(cx, stub, "UseCount");
+
+    // Reset the script's use count for now.
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    script->resetUseCount();
+
     return true;
 }
 
@@ -375,9 +408,9 @@ DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue v
                       MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
-
-    // Monitor the pc.
     jsbytecode *pc = stub->mainFallbackStub()->icEntry()->pc(script);
+    FallbackICSpew(cx, stub->mainFallbackStub(), "TypeMonitor");
+
     types::TypeScript::Monitor(cx, script, pc, value);
 
     if (!stub->addMonitorStubForValue(cx, ICStubSpace::StubSpaceFor(script), value))
@@ -499,6 +532,8 @@ static bool
 DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue value)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
+    FallbackICSpew(cx, stub->getChainFallback(), "TypeUpdate(%s)",
+                   ICStub::KindString(stub->kind()));
 
     switch(stub->kind()) {
       case ICStub::SetElem_Dense: {
@@ -593,6 +628,11 @@ ICTypeUpdate_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
 static bool
 DoThisFallback(JSContext *cx, ICThis_Fallback *stub, HandleValue thisv, MutableHandleValue ret)
 {
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    IonSpew(IonSpew_BaselineICFallback, "This fallback called! (%s:%d/%d)",
+            script->filename, script->lineno, (int) (pc - script->code));
+
     ret.set(thisv);
     bool modified;
     if (!BoxNonStrictThis(cx, ret, &modified))
@@ -622,8 +662,11 @@ ICThis_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoNewArray(JSContext *cx, uint32_t length, HandleTypeObject type, MutableHandleValue res)
+DoNewArray(JSContext *cx, ICNewArray_Fallback *stub, uint32_t length,
+           HandleTypeObject type, MutableHandleValue res)
 {
+    FallbackICSpew(cx, stub, "NewArray");
+
     RawObject obj = NewInitArray(cx, length, type);
     if (!obj)
         return false;
@@ -632,7 +675,8 @@ DoNewArray(JSContext *cx, uint32_t length, HandleTypeObject type, MutableHandleV
     return true;
 }
 
-typedef bool(*DoNewArrayFn)(JSContext *, uint32_t, HandleTypeObject, MutableHandleValue);
+typedef bool(*DoNewArrayFn)(JSContext *, ICNewArray_Fallback *, uint32_t, HandleTypeObject,
+                            MutableHandleValue);
 static const VMFunction DoNewArrayInfo = FunctionInfo<DoNewArrayFn>(DoNewArray);
 
 bool
@@ -642,6 +686,7 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.push(R1.scratchReg()); // type
     masm.push(R0.scratchReg()); // length
+    masm.push(BaselineStubReg); // stub.
 
     return tailCallVM(DoNewArrayInfo, masm);
 }
@@ -655,9 +700,12 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
                   MutableHandleValue ret)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+
+    FallbackICSpew(cx, stub, "Compare(%s)", js_CodeName[op]);
 
     // Perform the compare operation.
-    JSOp op = JSOp(*stub->icEntry()->pc(script));
     JSBool out;
 
     switch(op) {
@@ -753,6 +801,7 @@ static bool
 DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, MutableHandleValue ret)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
+    FallbackICSpew(cx, stub, "ToBool");
 
     bool cond = ToBoolean(arg);
     ret.setBoolean(cond);
@@ -833,6 +882,7 @@ ICToBool_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 static bool
 DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, MutableHandleValue ret)
 {
+    FallbackICSpew(cx, stub, "ToNumber");
     ret.set(arg);
     return ToNumber(cx, ret.address());
 }
@@ -863,9 +913,11 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
                       HandleValue rhs, MutableHandleValue ret)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "BinaryArith(%s)", js_CodeName[op]);
 
     // Perform the compare operation.
-    JSOp op = JSOp(*stub->icEntry()->pc(script));
     switch(op) {
       case JSOP_ADD:
         // Do an add.
@@ -1057,8 +1109,8 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
-
     JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "UnaryArith(%s)", js_CodeName[op]);
 
     switch (op) {
       case JSOP_BITNOT: {
@@ -1151,6 +1203,7 @@ static bool
 DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
+    FallbackICSpew(cx, stub, "GetElem");
 
     if (!GetElementMonitored(cx, lhs, rhs, res))
         return false;
@@ -1249,11 +1302,13 @@ static bool
 DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, HandleValue objv,
                   HandleValue index)
 {
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    FallbackICSpew(cx, stub, "SetElem");
+
     RootedObject obj(cx, ToObject(cx, objv));
     if (!obj)
         return false;
 
-    RootedScript script(cx, GetTopIonJSScript(cx));
     if (!SetObjectElement(cx, obj, index, rhs, script->strict))
         return false;
 
@@ -1413,8 +1468,10 @@ DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeCha
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
+    mozilla::DebugOnly<JSOp> op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "GetName(%s)", js_CodeName[JSOp(*pc)]);
 
-    JS_ASSERT(JSOp(*pc) == JSOP_GETGNAME || JSOp(*pc) == JSOP_CALLGNAME);
+    JS_ASSERT(op == JSOP_GETGNAME || op == JSOP_CALLGNAME);
 
     RootedPropertyName name(cx, script->getName(pc));
 
@@ -1602,10 +1659,10 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "GetProp(%s)", js_CodeName[op]);
 
-    JS_ASSERT(JSOp(*pc) == JSOP_GETPROP ||
-              JSOp(*pc) == JSOP_CALLPROP ||
-              JSOp(*pc) == JSOP_LENGTH);
+    JS_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH);
 
     RootedPropertyName name(cx, script->getName(pc));
     RootedId id(cx, NameToId(name));
@@ -1615,7 +1672,7 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
         return false;
 
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), obj, id, res))
+        if (!GetPropertyGenericMaybeCallXML(cx, op, obj, id, res))
             return false;
     } else {
         if (!GetPropertyHelper(cx, obj, id, 0, res))
@@ -1624,7 +1681,7 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
 
 #if JS_HAS_NO_SUCH_METHOD
     // Handle objects with __noSuchMethod__.
-    if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(res.isPrimitive())) {
+    if (op == JSOP_CALLPROP && JS_UNLIKELY(res.isPrimitive())) {
         if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
             return false;
     }
@@ -1639,7 +1696,7 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
 
     bool attached = false;
 
-    if (JSOp(*pc) == JSOP_LENGTH) {
+    if (op == JSOP_LENGTH) {
         if (!TryAttachLengthStub(cx, script, stub, val, res, &attached))
             return false;
         if (attached)
@@ -1771,10 +1828,10 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
+    mozilla::DebugOnly<JSOp> op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "SetProp(%s)", js_CodeName[op]);
 
-    JS_ASSERT(JSOp(*pc) == JSOP_SETPROP ||
-              JSOp(*pc) == JSOP_SETNAME ||
-              JSOp(*pc) == JSOP_SETGNAME);
+    JS_ASSERT(op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME);
 
     RootedPropertyName name(cx, script->getName(pc));
     RootedId id(cx, NameToId(name));
@@ -1879,13 +1936,15 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
 static bool
 DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, MutableHandleValue res)
 {
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "Call(%s)", js_CodeName[op]);
+
     RootedValue callee(cx, vp[0]);
     RootedValue thisv(cx, vp[1]);
 
     Value *args = vp + 2;
-
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    JSOp op = JSOp(*stub->icEntry()->pc(script));
 
     bool attachedStub;
     if (!TryAttachCallStub(cx, stub, script, op, argc, vp, res, &attachedStub))
