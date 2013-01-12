@@ -52,6 +52,11 @@
 #else
                   />
 #endif
+        <menuitem id="healthReport"
+                  label="&healthReport.label;"
+                  accesskey="&healthReport.accesskey;"
+                  oncommand="openHealthReport()"
+                  onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="troubleShooting"
                   accesskey="&helpTroubleshootingInfo.accesskey;"
                   label="&helpTroubleshootingInfo.label;"

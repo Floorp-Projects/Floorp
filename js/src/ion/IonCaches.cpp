@@ -566,7 +566,7 @@ struct GetNativePropertyStub
             masm.movePtr(StackPointer, argVpReg);
 
             // push canonical jsid from shape instead of propertyname.
-            jsid propId;
+            RootedId propId(cx);
             if (!shape->getUserId(cx, &propId))
                 return false;
             masm.Push(propId, scratchReg);
@@ -1227,7 +1227,7 @@ IonCacheSetProperty::attachSetterCall(JSContext *cx, IonScript *ion,
     masm.move32(Imm32(strict() ? 1 : 0), argStrictReg);
 
     // push canonical jsid from shape instead of propertyname.
-    jsid propId;
+    RootedId propId(cx);
     if (!shape->getUserId(cx, &propId))
         return false;
     masm.Push(propId, argIdReg);
@@ -1725,7 +1725,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
     AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, idval, id.address(), res))
+    if (!FetchElementId(cx, obj, idval, &id, res))
         return false;
 
     if (cache.stubCount() < MAX_STUBS) {

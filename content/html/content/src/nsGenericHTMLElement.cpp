@@ -233,9 +233,8 @@ class nsGenericHTMLElementTearoff : public nsIDOMElementCSSInlineStyle
 
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   {
-    mozilla::ErrorResult rv;
-    NS_IF_ADDREF(*aStyle = mElement->GetStyle(rv));
-    return rv.ErrorCode();
+    NS_ADDREF(*aStyle = mElement->Style());
+    return NS_OK;
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGenericHTMLElementTearoff,

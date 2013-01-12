@@ -829,8 +829,10 @@ MDiv::updateForReplacement(MDefinition *ins_)
     MDiv *ins = ins_->toDiv();
     // Since EdgeCaseAnalysis is not being run before GVN, its information does
     // not need to be merged here.
-    if (isTruncated())
+    if (isTruncated() && ins->isTruncated())
         setTruncated(Max(isTruncated(), ins->isTruncated()));
+    else
+        setTruncated(0);
     return true;
 }
 
@@ -866,8 +868,10 @@ MAdd::updateForReplacement(MDefinition *ins_)
 {
     JS_ASSERT(ins_->isAdd());
     MAdd *ins = ins_->toAdd();
-    if (isTruncated())
+    if (isTruncated() && ins->isTruncated())
         setTruncated(Max(isTruncated(), ins->isTruncated()));
+    else
+        setTruncated(0);
     return true;
 }
 
@@ -896,8 +900,10 @@ MSub::updateForReplacement(MDefinition *ins_)
 {
     JS_ASSERT(ins_->isSub());
     MSub *ins = ins_->toSub();
-    if (isTruncated())
+    if (isTruncated() && ins->isTruncated())
         setTruncated(Max(isTruncated(), ins->isTruncated()));
+    else
+        setTruncated(0);
     return true;
 }
 

@@ -324,6 +324,7 @@ user_pref("reftest.remote", true);
 user_pref("toolkit.telemetry.prompted", 999);
 user_pref("toolkit.telemetry.notifiedOptOut", 999);
 user_pref("reftest.uri", "%s");
+user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
 """ % reftestlist)
 
         #workaround for jsreftests.

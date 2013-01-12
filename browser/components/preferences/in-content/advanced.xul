@@ -152,6 +152,9 @@
 
   <tabs id="tabsElement">
     <tab id="generalTab" label="&generalTab.label;" helpTopic="prefs-advanced-general"/>
+#ifdef MOZ_DATA_REPORTING
+    <tab id="dataChoicesTab" label="&dataChoicesTab.label;" helpTopic="prefs-advanced-data-choices"/>
+#endif
     <tab id="networkTab" label="&networkTab.label;" helpTopic="prefs-advanced-network"/>
     <tab id="updateTab" label="&updateTab.label;"  helpTopic="prefs-advanced-update"/>
     <tab id="encryptionTab" label="&encryptionTab.label;" helpTopic="prefs-advanced-encryption"/>
@@ -201,14 +204,14 @@
                   onsynctopreference="return gAdvancedPane.writeCheckSpelling();"
                   preference="layout.spellcheckDefault"/>
       </groupbox>
+#ifdef HAVE_SHELL_SERVICE
       <!-- System Defaults -->
       <groupbox id="systemDefaultsGroup" orient="vertical">
         <caption label="&systemDefaults.label;"/>
 
-#ifdef HAVE_SHELL_SERVICE
         <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                      label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                      flex="1"/>
+                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
+                  flex="1"/>
         <hbox class="indent">
           <deck id="setDefaultPane">
             <button id="setDefaultButton"
@@ -218,19 +221,63 @@
             <description>&isDefault.label;</description>
           </deck>
         </hbox>
-#ifdef MOZ_CRASHREPORTER
-        <checkbox id="submitCrashesBox" flex="1"
-                  oncommand="gAdvancedPane.updateSubmitCrashes();"
-                  label="&submitCrashes.label;" accesskey="&submitCrashes.accesskey;"/>
-#endif
-#endif
-#ifdef MOZ_TELEMETRY_REPORTING
-        <checkbox id="submitTelemetryBox" flex="1"
-                  preference="toolkit.telemetry.enabled"
-                  label="&submitTelemetry.label;" accesskey="&submitTelemetry.accesskey;"/>
-#endif
       </groupbox>
+#endif
     </tabpanel>
+#ifdef MOZ_DATA_REPORTING
+    <!-- Data Choices -->
+    <tabpanel id="dataChoicesPanel" orient="vertical">
+#ifdef MOZ_TELEMETRY_REPORTING
+      <groupbox>
+        <caption label="&telemetrySection.label;"/>
+        <description>&telemetryDesc.label;</description>
+        <hbox>
+          <checkbox id="submitTelemetryBox"
+                    preference="toolkit.telemetry.enabled"
+                    label="&enableTelemetry.label;"
+                    accesskey="&enableTelemetry.accesskey;"/>
+          <spacer flex="1"/>
+          <label id="telemetryLearnMore"
+                 class="text-link"
+                 value="&telemetryLearnMore.label;"/>
+        </hbox>
+      </groupbox>
+#endif
+#ifdef MOZ_SERVICES_HEALTHREPORT
+      <groupbox>
+        <caption label="&FHRSection.label;"/>
+        <description>&FHRDesc.label;</description>
+        <hbox>
+          <checkbox id="submitHealthReportBox"
+                    oncommand="gAdvancedPane.updateSubmitHealthReport();"
+                    label="&enableFHR.label;"
+                    accesskey="&enableFHR.accesskey;"/>
+          <spacer flex="1"/>
+          <label id="FHRLearnMore"
+                 class="text-link"
+                 value="&FHRLearnMore.label;"/>
+        </hbox>
+      </groupbox>
+#endif
+#ifdef MOZ_CRASHREPORTER
+      <groupbox>
+        <caption label="&crashReporterSection.label;"/>
+        <description>&crashReporterDesc.label;</description>
+        <hbox>
+          <checkbox id="submitCrashesBox"
+                    oncommand="gAdvancedPane.updateSubmitCrashes();"
+                    label="&enableCrashReporter.label;"
+                    accesskey="&enableCrashReporter.accesskey;"/>
+
+          <spacer flex="1"/>
+          <label id="crashReporterLearnMore"
+                 class="text-link"
+                 value="&crashReporterLearnMore.label;"/>
+        </hbox>
+      </groupbox>
+#endif
+    </tabpanel>
+#endif
 
     <!-- Network -->
     <tabpanel id="networkPanel" orient="vertical">

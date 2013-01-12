@@ -1293,7 +1293,7 @@ js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pob
 
 extern JSBool
 js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
-             js::Handle<js::Shape*> shape, bool added, bool strict, js::Value *vp);
+             js::Handle<js::Shape*> shape, bool added, bool strict, js::MutableHandleValue vp);
 
 namespace js {
 
@@ -1311,10 +1311,10 @@ bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, PropertyDescriptor *desc);
 
 bool
-GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
 bool
-NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value *vp);
+NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, MutableHandleValue vp);
 
 extern JSBool
 GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, MutableHandleValue vp);

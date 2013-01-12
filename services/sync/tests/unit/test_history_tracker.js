@@ -30,7 +30,9 @@ tracker.persistChangedIDs = false;
 
 let _counter = 0;
 function addVisit() {
-  let uri = Utils.makeURI("http://getfirefox.com/" + _counter);
+  let uriString = "http://getfirefox.com/" + _counter++;
+  let uri = Utils.makeURI(uriString);
+  _("Adding visit for URI " + uriString);
   let place = {
     uri: uri,
     visits: [ {
@@ -38,26 +40,30 @@ function addVisit() {
       transitionType: PlacesUtils.history.TRANSITION_LINK
     } ]
   };
+
   let cb = Async.makeSpinningCallback();
   PlacesUtils.asyncHistory.updatePlaces(place, {
     handleError: function Add_handleError() {
+      _("Error adding visit for " + uriString);
       cb(new Error("Error adding history entry"));
     },
     handleResult: function Add_handleResult() {
+      _("Added visit for " + uriString);
       cb();
     },
     handleCompletion: function Add_handleCompletion() {
        // Nothing to do
      }
    });
-  // Spin the event loop to embed this async call in a sync API
+
+  // Spin the event loop to embed this async call in a sync API.
   cb.wait();
-  _counter++;
   return uri;
 }
 
-
 function run_test() {
+  initTestLogging("Trace");
+  Log4Moz.repository.getLogger("Sync.Tracker.History").level = Log4Moz.Level.Trace;
   run_next_test();
 }
 
@@ -91,6 +97,7 @@ add_test(function test_start_tracking() {
 
   _("Tell the tracker to start tracking changes.");
   onScoreUpdated(function() {
+    _("Score updated in test_start_tracking.");
     do_check_attribute_count(tracker.changedIDs, 1);
     do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
     run_next_test();
@@ -101,12 +108,18 @@ add_test(function test_start_tracking() {
 });
 
 add_test(function test_start_tracking_twice() {
+  _("Verifying preconditions from test_start_tracking.");
+  do_check_attribute_count(tracker.changedIDs, 1);
+  do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
+
   _("Notifying twice won't do any harm.");
   onScoreUpdated(function() {
+    _("Score updated in test_start_tracking_twice.");
     do_check_attribute_count(tracker.changedIDs, 2);
     do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
     run_next_test();
   });
+
   Svc.Obs.notify("weave:engine:start-tracking");
   addVisit();
 });

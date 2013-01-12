@@ -6,15 +6,19 @@
 const {utils: Cu} = Components;
 
 Cu.import("resource://services-common/preferences.js");
-Cu.import("resource://gre/modules/services/healthreport/policy.jsm");
-Cu.import("resource://testing-common/services/healthreport/mocks.jsm");
+Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
+Cu.import("resource://testing-common/services/datareporting/mocks.jsm");
 
 
 function getPolicy(name) {
-  let prefs = new Preferences(name);
-  let listener = new MockPolicyListener();
+  let branch = "testing.datareporting." + name;
+  let policyPrefs = new Preferences(branch + ".policy.");
+  let healthReportPrefs = new Preferences(branch + ".healthreport.");
 
-  return [new HealthReportPolicy(prefs, listener), prefs, listener];
+  let listener = new MockPolicyListener();
+  let policy = new DataReportingPolicy(policyPrefs, healthReportPrefs, listener);
+
+  return [policy, policyPrefs, healthReportPrefs, listener];
 }
 
 function defineNow(policy, now) {
@@ -32,14 +36,15 @@ function run_test() {
 }
 
 add_test(function test_constructor() {
-  let prefs = new Preferences("foo.bar");
+  let policyPrefs = new Preferences("foo.bar.policy.");
+  let hrPrefs = new Preferences("foo.bar.healthreport.");
   let listener = {
     onRequestDataUpload: function() {},
     onRequestRemoteDelete: function() {},
     onNotifyDataPolicy: function() {},
   };
 
-  let policy = new HealthReportPolicy(prefs, listener);
+  let policy = new DataReportingPolicy(policyPrefs, hrPrefs, listener);
   do_check_true(Date.now() - policy.firstRunDate.getTime() < 1000);
 
   let tomorrow = Date.now() + 24 * 60 * 60 * 1000;
@@ -51,68 +56,75 @@ add_test(function test_constructor() {
 });
 
 add_test(function test_prefs() {
-  let [policy, prefs, listener] = getPolicy("prefs");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("prefs");
 
   let now = new Date();
   let nowT = now.getTime();
 
   policy.firstRunDate = now;
-  do_check_eq(prefs.get("firstRunTime"), nowT);
+  do_check_eq(policyPrefs.get("firstRunTime"), nowT);
   do_check_eq(policy.firstRunDate.getTime(), nowT);
 
   policy.dataSubmissionPolicyNotifiedDate= now;
-  do_check_eq(prefs.get("dataSubmissionPolicyNotifiedTime"), nowT);
+  do_check_eq(policyPrefs.get("dataSubmissionPolicyNotifiedTime"), nowT);
   do_check_eq(policy.dataSubmissionPolicyNotifiedDate.getTime(), nowT);
 
   policy.dataSubmissionPolicyResponseDate = now;
-  do_check_eq(prefs.get("dataSubmissionPolicyResponseTime"), nowT);
+  do_check_eq(policyPrefs.get("dataSubmissionPolicyResponseTime"), nowT);
   do_check_eq(policy.dataSubmissionPolicyResponseDate.getTime(), nowT);
 
   policy.dataSubmissionPolicyResponseType = "type-1";
-  do_check_eq(prefs.get("dataSubmissionPolicyResponseType"), "type-1");
+  do_check_eq(policyPrefs.get("dataSubmissionPolicyResponseType"), "type-1");
   do_check_eq(policy.dataSubmissionPolicyResponseType, "type-1");
 
   policy.dataSubmissionEnabled = false;
-  do_check_false(prefs.get("dataSubmissionEnabled", true));
+  do_check_false(policyPrefs.get("dataSubmissionEnabled", true));
   do_check_false(policy.dataSubmissionEnabled);
 
   policy.dataSubmissionPolicyAccepted = false;
-  do_check_false(prefs.get("dataSubmissionPolicyAccepted", true));
+  do_check_false(policyPrefs.get("dataSubmissionPolicyAccepted", true));
   do_check_false(policy.dataSubmissionPolicyAccepted);
 
+  policy.dataSubmissionPolicyAcceptedVersion = 2;
+  do_check_eq(policyPrefs.get("dataSubmissionPolicyAcceptedVersion"), 2);
+
   do_check_false(policy.dataSubmissionPolicyBypassAcceptance);
-  prefs.set("dataSubmissionPolicyBypassAcceptance", true);
+  policyPrefs.set("dataSubmissionPolicyBypassAcceptance", true);
   do_check_true(policy.dataSubmissionPolicyBypassAcceptance);
 
   policy.lastDataSubmissionRequestedDate = now;
-  do_check_eq(prefs.get("lastDataSubmissionRequestedTime"), nowT);
+  do_check_eq(hrPrefs.get("lastDataSubmissionRequestedTime"), nowT);
   do_check_eq(policy.lastDataSubmissionRequestedDate.getTime(), nowT);
 
   policy.lastDataSubmissionSuccessfulDate = now;
-  do_check_eq(prefs.get("lastDataSubmissionSuccessfulTime"), nowT);
+  do_check_eq(hrPrefs.get("lastDataSubmissionSuccessfulTime"), nowT);
   do_check_eq(policy.lastDataSubmissionSuccessfulDate.getTime(), nowT);
 
   policy.lastDataSubmissionFailureDate = now;
-  do_check_eq(prefs.get("lastDataSubmissionFailureTime"), nowT);
+  do_check_eq(hrPrefs.get("lastDataSubmissionFailureTime"), nowT);
   do_check_eq(policy.lastDataSubmissionFailureDate.getTime(), nowT);
 
   policy.nextDataSubmissionDate = now;
-  do_check_eq(prefs.get("nextDataSubmissionTime"), nowT);
+  do_check_eq(hrPrefs.get("nextDataSubmissionTime"), nowT);
   do_check_eq(policy.nextDataSubmissionDate.getTime(), nowT);
 
   policy.currentDaySubmissionFailureCount = 2;
-  do_check_eq(prefs.get("currentDaySubmissionFailureCount", 0), 2);
+  do_check_eq(hrPrefs.get("currentDaySubmissionFailureCount", 0), 2);
   do_check_eq(policy.currentDaySubmissionFailureCount, 2);
 
   policy.pendingDeleteRemoteData = true;
-  do_check_true(prefs.get("pendingDeleteRemoteData"));
+  do_check_true(hrPrefs.get("pendingDeleteRemoteData"));
   do_check_true(policy.pendingDeleteRemoteData);
+
+  policy.healthReportUploadEnabled = false;
+  do_check_false(hrPrefs.get("uploadEnabled"));
+  do_check_false(policy.healthReportUploadEnabled);
 
   run_next_test();
 });
 
 add_test(function test_notify_state_prefs() {
-  let [policy, prefs, listener] = getPolicy("notify_state_prefs");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notify_state_prefs");
 
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_UNNOTIFIED);
 
@@ -127,7 +139,7 @@ add_test(function test_notify_state_prefs() {
 });
 
 add_test(function test_initial_submission_notification() {
-  let [policy, prefs, listener] = getPolicy("initial_submission_notification");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("initial_submission_notification");
 
   do_check_eq(listener.notifyUserCount, 0);
 
@@ -159,9 +171,9 @@ add_test(function test_initial_submission_notification() {
 });
 
 add_test(function test_bypass_acceptance() {
-  let [policy, prefs, listener] = getPolicy("bypass_acceptance");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("bypass_acceptance");
 
-  prefs.set("dataSubmissionPolicyBypassAcceptance", true);
+  policyPrefs.set("dataSubmissionPolicyBypassAcceptance", true);
   do_check_false(policy.dataSubmissionPolicyAccepted);
   do_check_true(policy.dataSubmissionPolicyBypassAcceptance);
   defineNow(policy, new Date(policy.nextDataSubmissionDate.getTime()));
@@ -172,7 +184,7 @@ add_test(function test_bypass_acceptance() {
 });
 
 add_test(function test_notification_implicit_acceptance() {
-  let [policy, prefs, listener] = getPolicy("notification_implicit_acceptance");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_implicit_acceptance");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
                      policy.SUBMISSION_NOTIFY_INTERVAL_MSEC + 1);
@@ -202,7 +214,7 @@ add_test(function test_notification_implicit_acceptance() {
 
 add_test(function test_notification_rejected() {
   // User notification failed. We should not record it as being presented.
-  let [policy, prefs, listener] = getPolicy("notification_failed");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_failed");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
                      policy.SUBMISSION_NOTIFY_INTERVAL_MSEC + 1);
@@ -218,7 +230,7 @@ add_test(function test_notification_rejected() {
 });
 
 add_test(function test_notification_accepted() {
-  let [policy, prefs, listener] = getPolicy("notification_accepted");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_accepted");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
                      policy.SUBMISSION_NOTIFY_INTERVAL_MSEC + 1);
@@ -238,7 +250,7 @@ add_test(function test_notification_accepted() {
 });
 
 add_test(function test_notification_rejected() {
-  let [policy, prefs, listener] = getPolicy("notification_rejected");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_rejected");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
                      policy.SUBMISSION_NOTIFY_INTERVAL_MSEC + 1);
@@ -261,11 +273,12 @@ add_test(function test_notification_rejected() {
 });
 
 add_test(function test_submission_kill_switch() {
-  let [policy, prefs, listener] = getPolicy("submission_kill_switch");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_kill_switch");
 
   policy.firstRunDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
   policy.nextDataSubmissionDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.recordUserAcceptance("accept-old-ack");
+  do_check_eq(policyPrefs.get("dataSubmissionPolicyAcceptedVersion"), 1);
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 1);
 
@@ -279,16 +292,16 @@ add_test(function test_submission_kill_switch() {
 });
 
 add_test(function test_upload_kill_switch() {
-  let [policy, prefs, listener] = getPolicy("upload_kill_switch");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("upload_kill_switch");
 
   defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
   policy.recordUserAcceptance();
   defineNow(policy, policy.nextDataSubmissionDate);
 
-  policy.dataUploadEnabled = false;
+  policy.healthReportUploadEnabled = false;
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 0);
-  policy.dataUploadEnabled = true;
+  policy.healthReportUploadEnabled = true;
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 1);
 
@@ -296,7 +309,7 @@ add_test(function test_upload_kill_switch() {
 });
 
 add_test(function test_data_submission_no_data() {
-  let [policy, prefs, listener] = getPolicy("data_submission_no_data");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("data_submission_no_data");
 
   policy.dataSubmissionPolicyResponseDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.dataSubmissionPolicyAccepted = true;
@@ -316,7 +329,7 @@ add_test(function test_data_submission_no_data() {
 });
 
 add_test(function test_data_submission_submit_failure_hard() {
-  let [policy, prefs, listener] = getPolicy("data_submission_submit_failure_hard");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("data_submission_submit_failure_hard");
 
   policy.dataSubmissionPolicyResponseDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.dataSubmissionPolicyAccepted = true;
@@ -341,7 +354,7 @@ add_test(function test_data_submission_submit_failure_hard() {
 });
 
 add_test(function test_data_submission_submit_try_again() {
-  let [policy, prefs, listener] = getPolicy("data_submission_failure_soft");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("data_submission_failure_soft");
 
   policy.recordUserAcceptance();
   let nextDataSubmissionDate = policy.nextDataSubmissionDate;
@@ -356,7 +369,7 @@ add_test(function test_data_submission_submit_try_again() {
 });
 
 add_test(function test_submission_daily_scheduling() {
-  let [policy, prefs, listener] = getPolicy("submission_daily_scheduling");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_daily_scheduling");
 
   policy.dataSubmissionPolicyResponseDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.dataSubmissionPolicyAccepted = true;
@@ -396,7 +409,7 @@ add_test(function test_submission_daily_scheduling() {
 });
 
 add_test(function test_submission_far_future_scheduling() {
-  let [policy, prefs, listener] = getPolicy("submission_far_future_scheduling");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_far_future_scheduling");
 
   let now = new Date(Date.now() - 24 * 60 * 60 * 1000);
   defineNow(policy, now);
@@ -420,7 +433,7 @@ add_test(function test_submission_far_future_scheduling() {
 });
 
 add_test(function test_submission_backoff() {
-  let [policy, prefs, listener] = getPolicy("submission_backoff");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_backoff");
 
   do_check_eq(policy.FAILURE_BACKOFF_INTERVALS.length, 2);
 
@@ -483,7 +496,7 @@ add_test(function test_submission_backoff() {
 
 // Ensure that only one submission request can be active at a time.
 add_test(function test_submission_expiring() {
-  let [policy, prefs, listener] = getPolicy("submission_expiring");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_expiring");
 
   policy.dataSubmissionPolicyResponseDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.dataSubmissionPolicyAccepted = true;
@@ -506,7 +519,7 @@ add_test(function test_submission_expiring() {
 });
 
 add_test(function test_delete_remote_data() {
-  let [policy, prefs, listener] = getPolicy("delete_remote_data");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("delete_remote_data");
 
   do_check_false(policy.pendingDeleteRemoteData);
   let nextSubmissionDate = policy.nextDataSubmissionDate;
@@ -532,7 +545,7 @@ add_test(function test_delete_remote_data() {
 
 // Ensure that deletion requests take priority over regular data submission.
 add_test(function test_delete_remote_data_priority() {
-  let [policy, prefs, listener] = getPolicy("delete_remote_data_priority");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("delete_remote_data_priority");
 
   let now = new Date();
   defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
@@ -553,7 +566,7 @@ add_test(function test_delete_remote_data_priority() {
 });
 
 add_test(function test_delete_remote_data_backoff() {
-  let [policy, prefs, listener] = getPolicy("delete_remote_data_backoff");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("delete_remote_data_backoff");
 
   let now = new Date();
   defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
@@ -586,7 +599,7 @@ add_test(function test_delete_remote_data_backoff() {
 // If we request delete while an upload is in progress, delete should be
 // scheduled immediately after upload.
 add_test(function test_delete_remote_data_in_progress_upload() {
-  let [policy, prefs, listener] = getPolicy("delete_remote_data_in_progress_upload");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("delete_remote_data_in_progress_upload");
 
   let now = new Date();
   defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
@@ -616,7 +629,7 @@ add_test(function test_delete_remote_data_in_progress_upload() {
 });
 
 add_test(function test_polling() {
-  let [policy, prefs, listener] = getPolicy("polling");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("polling");
 
   // Ensure checkStateAndTrigger is called at a regular interval.
   let now = new Date();
@@ -632,7 +645,7 @@ add_test(function test_polling() {
 
       do_check_true(now2.getTime() - now.getTime() >= 500);
       now = now2;
-      HealthReportPolicy.prototype.checkStateAndTrigger.call(policy);
+      DataReportingPolicy.prototype.checkStateAndTrigger.call(policy);
 
       if (count >= 2) {
         policy.stopPolling();
@@ -652,7 +665,7 @@ add_test(function test_polling() {
 // This is probably covered by other tests. But, it's best to have explicit
 // coverage from a higher-level.
 add_test(function test_polling_implicit_acceptance() {
-  let [policy, prefs, listener] = getPolicy("polling_implicit_acceptance");
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("polling_implicit_acceptance");
 
   // Redefine intervals with shorter, test-friendly values.
   Object.defineProperty(policy, "POLL_INTERVAL_MSEC", {
@@ -670,7 +683,7 @@ add_test(function test_polling_implicit_acceptance() {
       print("checkStateAndTrigger count: " + count);
 
       // Account for some slack.
-      HealthReportPolicy.prototype.checkStateAndTrigger.call(policy);
+      DataReportingPolicy.prototype.checkStateAndTrigger.call(policy);
 
       // What should happen on different invocations:
       //
