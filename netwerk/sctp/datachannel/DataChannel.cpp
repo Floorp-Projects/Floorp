@@ -159,7 +159,14 @@ DataChannelConnection::~DataChannelConnection()
   MOZ_ASSERT(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
+
   // Already disconnected from sigslot/mTransportFlow
+  // TransportFlows must be released from the STS thread
+  if (mTransportFlow && !IsSTSThread()) {
+    MOZ_ASSERT(mSTS);
+    RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow),
+                  NS_DISPATCH_NORMAL);
+  }
 }
 
 void
@@ -825,6 +832,9 @@ DataChannelConnection::SendOpenRequestMessage(const nsACString& label,
 // Alternatively, it can use a timeout, but that's guaranteed to be wrong
 // (just not sure in what direction).  We could re-implement NSPR's
 // PR_POLL_WRITE/etc handling... with a lot of work.
+
+// Better yet, use the SCTP stack's notifications on buffer state to avoid
+// filling the SCTP's buffers.
 
 // returns if we're still blocked or not
 bool
