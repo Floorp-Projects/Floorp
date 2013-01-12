@@ -1251,6 +1251,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
       throw new Error("enqueueOperation expects a function. Got: " + typeof(func));
     }
 
+    this._log.trace("Enqueueing operation.");
     let deferred = Promise.defer();
 
     this._queuedOperations.push([func, deferred]);
@@ -1268,7 +1269,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
     }
 
     this._log.trace("Performing queued operation.");
-    let [func, deferred] = this._queuedOperations.pop();
+    let [func, deferred] = this._queuedOperations.shift();
     let promise;
 
     try {

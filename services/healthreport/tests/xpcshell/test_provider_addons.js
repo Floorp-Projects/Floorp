@@ -75,6 +75,19 @@ add_task(function test_collect() {
       installDate: now,
       updateDate: now,
     },
+    // Is counted but full details are omitted because it is a theme.
+    {
+      id: "addon2",
+      userDisabled: false,
+      appDisabled: false,
+      version: "3",
+      type: "theme",
+      scope: 1,
+      foreignInstall: false,
+      hasBinaryComponents: false,
+      installDate: now,
+      updateDate: now,
+    },
   ];
 
   monkeypatchAddons(provider, addons);
@@ -109,9 +122,10 @@ add_task(function test_collect() {
   do_check_true(data.days.hasDay(now));
 
   value = data.days.getDay(now);
-  do_check_eq(value.size, 2);
+  do_check_eq(value.size, 3);
   do_check_eq(value.get("extension"), 1);
   do_check_eq(value.get("plugin"), 1);
+  do_check_eq(value.get("theme"), 1);
 
   yield provider.shutdown();
   yield storage.close();
