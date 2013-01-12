@@ -22,7 +22,6 @@
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsAutoCompleteController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAutoCompleteController)
   tmp->SetInput(nullptr);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

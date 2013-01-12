@@ -590,8 +590,6 @@ IDBTransaction::Abort(nsresult aErrorCode)
   return AbortInternal(aErrorCode, DOMError::CreateForNSResult(aErrorCode));
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
                                                   IDBWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDatabase)

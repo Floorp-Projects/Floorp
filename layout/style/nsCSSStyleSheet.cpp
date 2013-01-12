@@ -1192,7 +1192,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSStyleSheet)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSStyleSheet)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSStyleSheet)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSStyleSheet)
   tmp->DropMedia();
   // We do not unlink mNext; our parent will handle that.  If we

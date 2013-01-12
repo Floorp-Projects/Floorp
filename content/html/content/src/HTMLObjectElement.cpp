@@ -169,7 +169,6 @@ HTMLObjectElement::DoneAddingChildren(bool aHaveNotified)
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLObjectElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLObjectElement,
                                                   nsGenericHTMLFormElement)
   nsObjectLoadingContent::Traverse(tmp, cb);

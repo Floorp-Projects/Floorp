@@ -32,7 +32,6 @@ nsSVGElement::StringInfo SVGMPathElement::sStringInfo[1] =
 };
 
 // Cycle collection magic -- based on nsSVGUseElement
-NS_IMPL_CYCLE_COLLECTION_CLASS(SVGMPathElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGMPathElement,
                                                 SVGMPathElementBase)
   tmp->UnlinkHrefTarget(false);

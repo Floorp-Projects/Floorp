@@ -48,7 +48,6 @@ nsSVGElement::StringInfo SVGUseElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(SVGUseElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGUseElement,
                                                 SVGUseElementBase)
   nsAutoScriptBlocker scriptBlocker;

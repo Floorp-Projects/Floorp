@@ -496,7 +496,6 @@ nsTimeout::~nsTimeout()
   MOZ_COUNT_DTOR(nsTimeout);
 }
 
-NS_IMPL_CYCLE_COLLECTION_LEGACY_NATIVE_CLASS(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTimeout)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
@@ -1173,8 +1172,6 @@ nsGlobalWindow::FreeInnerObjects()
 #define END_OUTER_WINDOW_ONLY                                                 \
     foundInterface = 0;                                                       \
   } else
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
 DOMCI_DATA(Window, nsGlobalWindow)
 
@@ -10825,7 +10822,6 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 
 // nsGlobalChromeWindow implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
                                                   nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserDOMWindow)

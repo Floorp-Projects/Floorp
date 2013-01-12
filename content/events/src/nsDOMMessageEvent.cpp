@@ -8,8 +8,6 @@
 #include "jsapi.h"
 #include "nsDOMClassInfoID.h"
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMMessageEvent)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
   if (tmp->mDataRooted) {
     tmp->UnrootData();

@@ -446,7 +446,6 @@ TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.

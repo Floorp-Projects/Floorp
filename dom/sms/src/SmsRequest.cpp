@@ -31,8 +31,6 @@ namespace sms {
 
 NS_IMPL_ISUPPORTS1(SmsRequestForwarder, nsISmsRequest)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(SmsRequest)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS

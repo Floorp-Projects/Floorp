@@ -155,7 +155,6 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLButtonElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLButtonElement,
                                                   nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)

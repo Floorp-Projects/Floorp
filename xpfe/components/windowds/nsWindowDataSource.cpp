@@ -96,7 +96,6 @@ nsWindowDataSource::Observe(nsISupports *aSubject, const char* aTopic, const PRU
     return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsWindowDataSource)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsWindowDataSource)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsWindowDataSource)
     // XXX mContainer?
