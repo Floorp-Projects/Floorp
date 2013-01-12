@@ -150,28 +150,18 @@ stubs::SetElem(VMFrame &f)
 
     TypeScript::MonitorAssign(cx, obj, id);
 
-    do {
-        if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            uint32_t length = obj->getDenseArrayInitializedLength();
-            int32_t i = JSID_TO_INT(id);
-            if ((uint32_t)i < length) {
-                if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-                    if (js_PrototypeHasIndexedProperties(obj))
-                        break;
-                    if ((uint32_t)i >= obj->getArrayLength())
-                        JSObject::setArrayLength(cx, obj, i + 1);
-                }
-                JSObject::setDenseArrayElementWithType(cx, obj, i, rval);
-                goto end_setelem;
-            } else {
-                if (f.script()->hasAnalysis())
-                    f.script()->analysis()->getCode(f.pc()).arrayWriteHole = true;
-            }
+    if (obj->isArray() && JSID_IS_INT(id)) {
+        uint32_t length = obj->getDenseInitializedLength();
+        int32_t i = JSID_TO_INT(id);
+        if ((uint32_t)i >= length) {
+            if (f.script()->hasAnalysis())
+                f.script()->analysis()->getCode(f.pc()).arrayWriteHole = true;
         }
-    } while (0);
+    }
+
     if (!JSObject::setGeneric(cx, obj, obj, id, &rval, strict))
         THROW();
-  end_setelem:
+
     /* :FIXME: Moving the assigned object into the lowest stack slot
      * is a temporary hack. What we actually want is an implementation
      * of popAfterSet() that allows popping more than one value;

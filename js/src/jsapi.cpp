@@ -3565,15 +3565,7 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
         return JS_TRUE;
     }
 
-    if (obj2->isNative()) {
-        /* Peek at the native property's slot value, without doing a Get. */
-        if (shape->hasSlot()) {
-            *vp = obj2->nativeGetSlot(shape->slot());
-            return true;
-        }
-    } else {
-        if (obj2->isDenseArray())
-            return js_GetDenseArrayElementValue(cx, obj2, id, vp);
+    if (IsImplicitProperty(shape)) {
         if (obj2->isProxy()) {
             AutoPropertyDescriptorRooter desc(cx);
             if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc, 0))
@@ -3582,6 +3574,15 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
                 *vp = desc.value;
                 return true;
             }
+        } else if (obj2->isNative()) {
+            *vp = obj2->getDenseElement(JSID_TO_INT(id));
+            return true;
+        }
+    } else {
+        /* Peek at the native property's slot value, without doing a Get. */
+        if (shape->hasSlot()) {
+            *vp = obj2->nativeGetSlot(shape->slot());
+            return true;
         }
     }
 
@@ -3718,6 +3719,11 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *objArg, jsid id_, JSBool *
         if (!LookupPropertyById(cx, obj, id, 0, &obj2, &prop))
             return JS_FALSE;
         *foundp = (obj == obj2);
+        return JS_TRUE;
+    }
+
+    if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
+        *foundp = true;
         return JS_TRUE;
     }
 
@@ -4049,13 +4055,20 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
     desc->obj = obj2;
     if (obj2->isNative()) {
-        desc->attrs = shape->attributes();
-        desc->getter = shape->getter();
-        desc->setter = shape->setter();
-        if (shape->hasSlot())
-            desc->value = obj2->nativeGetSlot(shape->slot());
-        else
-            desc->value.setUndefined();
+        if (IsImplicitProperty(shape)) {
+            desc->attrs = JSPROP_ENUMERATE;
+            desc->getter = NULL;
+            desc->setter = NULL;
+            desc->value = obj2->getDenseElement(JSID_TO_INT(id));
+        } else {
+            desc->attrs = shape->attributes();
+            desc->getter = shape->getter();
+            desc->setter = shape->setter();
+            if (shape->hasSlot())
+                desc->value = obj2->nativeGetSlot(shape->slot());
+            else
+                desc->value.setUndefined();
+        }
     } else {
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);

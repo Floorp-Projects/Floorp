@@ -3240,7 +3240,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_INT32)
 
           BEGIN_CASE(JSOP_HOLE)
-            frame.push(MagicValue(JS_ARRAY_HOLE));
+            frame.push(MagicValue(JS_ELEMENTS_HOLE));
           END_CASE(JSOP_HOLE)
 
           BEGIN_CASE(JSOP_LOOPHEAD)
@@ -6224,6 +6224,12 @@ mjit::Compiler::iter(unsigned flags)
     masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     Jump overlongChain = masm.branchPtr(Assembler::NonZero, T1, T1);
     stubcc.linkExit(overlongChain, Uses(1));
+
+    /* Compare object's elements() with emptyObjectElements. */
+    Address elementsAddress(reg, JSObject::offsetOfElements());
+    Jump hasElements = masm.branchPtr(Assembler::NotEqual, elementsAddress,
+                                      ImmPtr(js::emptyObjectElements));
+    stubcc.linkExit(hasElements, Uses(1));
 
 #ifdef JSGC_INCREMENTAL_MJ
     /*
