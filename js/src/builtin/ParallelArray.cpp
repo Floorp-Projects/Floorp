@@ -1804,7 +1804,7 @@ ParallelArrayObject::defineElement(JSContext *cx, HandleObject obj,
                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
@@ -1829,7 +1829,7 @@ ParallelArrayObject::getGeneric(JSContext *cx, HandleObject obj, HandleObject re
         return getElement(cx, obj, receiver, index, vp);
 
     Rooted<SpecialId> sid(cx);
-    if (ValueIsSpecial(obj, &idval, sid.address(), cx))
+    if (ValueIsSpecial(obj, &idval, &sid, cx))
         return getSpecial(cx, obj, receiver, sid, vp);
 
     JSAtom *atom = ToAtom(cx, idval);
@@ -1928,7 +1928,7 @@ ParallelArrayObject::setElement(JSContext *cx, HandleObject obj, uint32_t index,
                                 MutableHandleValue vp, JSBool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return setGeneric(cx, obj, id, vp, strict);
 }
@@ -2004,7 +2004,7 @@ ParallelArrayObject::setElementAttributes(JSContext *cx, HandleObject obj, uint3
                                           unsigned *attrsp)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return setGenericAttributes(cx, obj, id, attrsp);
 }
@@ -2050,7 +2050,7 @@ ParallelArrayObject::deleteElement(JSContext *cx, HandleObject obj, uint32_t ind
                                    MutableHandleValue rval, JSBool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return deleteGeneric(cx, obj, id, rval, strict);
 }

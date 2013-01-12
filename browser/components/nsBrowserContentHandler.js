@@ -7,6 +7,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
 
 const nsISupports            = Components.interfaces.nsISupports;
 
@@ -295,13 +297,6 @@ function getMostRecentWindow(aType) {
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService(nsIWindowMediator);
   return wm.getMostRecentWindow(aType);
-}
-
-// this returns the most recent non-popup browser window
-function getMostRecentBrowserWindow() {
-  var browserGlue = Components.classes["@mozilla.org/browser/browserglue;1"]
-                              .getService(Components.interfaces.nsIBrowserGlue);
-  return browserGlue.getMostRecentBrowserWindow();
 }
 
 function doSearch(searchTerm, cmdLine) {
@@ -735,7 +730,8 @@ function handURIToExistingBrowser(uri, location, cmdLine)
   if (!shouldLoadURI(uri))
     return;
 
-  var navWin = getMostRecentBrowserWindow();
+  // Do not open external links in private windows
+  var navWin = RecentWindow.getMostRecentBrowserWindow({private: false});
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
     openWindow(null, gBrowserContentHandler.chromeURL, "_blank",

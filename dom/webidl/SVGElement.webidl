@@ -18,7 +18,6 @@ interface SVGElement : Element {
            attribute DOMString xmlbase; */
 
   readonly attribute SVGAnimatedString className;
-  [Throws]
   readonly attribute CSSStyleDeclaration style;
 
   // The CSSValue interface has been deprecated by the CSS WG.

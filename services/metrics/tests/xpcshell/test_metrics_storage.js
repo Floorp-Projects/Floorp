@@ -195,6 +195,50 @@ add_task(function test_field_registration_repopulation() {
   yield backend.close();
 });
 
+add_task(function test_enqueue_operation_execution_order() {
+  let backend = yield Metrics.Storage("enqueue_operation_execution_order");
+
+  let executionCount = 0;
+
+  let fns = {
+    op1: function () {
+      do_check_eq(executionCount, 1);
+    },
+
+    op2: function () {
+      do_check_eq(executionCount, 2);
+    },
+
+    op3: function () {
+      do_check_eq(executionCount, 3);
+    },
+  };
+
+  function enqueuedOperation(fn) {
+    let deferred = Promise.defer();
+
+    CommonUtils.nextTick(function onNextTick() {
+      executionCount++;
+      fn();
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  }
+
+  let promises = [];
+  for (let i = 1; i <= 3; i++) {
+    let fn = fns["op" + i];
+    promises.push(backend.enqueueOperation(enqueuedOperation.bind(this, fn)));
+  }
+
+  for (let promise of promises) {
+    yield promise;
+  }
+
+  yield backend.close();
+});
+
 add_task(function test_enqueue_operation_many() {
   let backend = yield Metrics.Storage("enqueue_operation_many");
 

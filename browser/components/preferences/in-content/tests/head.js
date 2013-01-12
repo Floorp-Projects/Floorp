@@ -28,8 +28,8 @@ function is_element_hidden(aElement, aMsg) {
 function open_preferences(aCallback) {
   gBrowser.selectedTab = gBrowser.addTab("about:preferences");
   let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-  newTabBrowser.addEventListener("load", function () {
-    newTabBrowser.removeEventListener("load", arguments.callee, true);
+  newTabBrowser.addEventListener("Initialized", function () {
+    newTabBrowser.removeEventListener("Initialized", arguments.callee, true);
     aCallback(gBrowser.contentWindow);
   }, true);
 }

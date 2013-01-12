@@ -80,6 +80,8 @@ protected:
     nsCString                           mCharset;
     int64_t                             mContentLength;
     uint32_t                            mLoadFlags;
+    uint32_t                            mAppId;
+    bool                                mInBrowser;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsISupports>               mOwner;

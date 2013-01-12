@@ -1096,7 +1096,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         RootedObject obj2(cx);
                         RootedShape prop(cx);
                         RootedId id(cx);
-                        if (!ValueToId(cx, StringValue(*idp), id.address()))
+                        if (!ValueToId(cx, StringValue(*idp), &id))
                             return false;
                         if (!JSObject::lookupGeneric(cx, proto, id, &obj2, &prop))
                             return false;
@@ -1173,7 +1173,7 @@ js_SuppressDeletedProperty(JSContext *cx, HandleObject obj, jsid id)
 bool
 js_SuppressDeletedElement(JSContext *cx, HandleObject obj, uint32_t index)
 {
-    jsid id;
+    RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
     return js_SuppressDeletedProperty(cx, obj, id);
@@ -1227,7 +1227,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     if (ni) {
         JS_ASSERT(!ni->isKeyIter());
         RootedId id(cx);
-        if (!ValueToId(cx, StringValue(*ni->current()), id.address()))
+        if (!ValueToId(cx, StringValue(*ni->current()), &id))
             return false;
         ni->incCursor();
         RootedObject obj(cx, ni->obj);

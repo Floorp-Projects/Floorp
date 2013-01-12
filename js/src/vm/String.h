@@ -18,13 +18,14 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "gc/Root.h"
 
-class JSString;
+ForwardDeclareJS(String);
 class JSDependentString;
 class JSUndependedString;
 class JSExtensibleString;
 class JSExternalString;
-class JSLinearString;
+ForwardDeclareJS(LinearString);
 class JSStableString;
 class JSInlineString;
 class JSRope;

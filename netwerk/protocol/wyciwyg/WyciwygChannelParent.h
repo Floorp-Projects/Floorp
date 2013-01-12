@@ -45,11 +45,17 @@ protected:
                                        const nsCString& charset);
   virtual bool RecvSetSecurityInfo(const nsCString& securityInfo);
   virtual bool RecvCancel(const nsresult& statusCode);
+  virtual bool RecvAppData(const IPC::SerializedLoadContext& loadContext,
+                           PBrowserParent* parent);
 
   virtual void ActorDestroy(ActorDestroyReason why);
 
+  bool SetupAppData(const IPC::SerializedLoadContext& loadContext,
+                    PBrowserParent* aParent);
+
   nsCOMPtr<nsIWyciwygChannel> mChannel;
   bool mIPCClosed;
+  bool mReceivedAppData;
   nsCOMPtr<nsILoadContext> mLoadContext;
 };
 

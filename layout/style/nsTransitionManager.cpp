@@ -409,7 +409,7 @@ nsTransitionManager::UpdateAllThrottledStyles()
     nsTArray<dom::Element*> ancestors;
     do {
       ancestors.AppendElement(element);
-    } while ((element = element->GetElementParent()));
+    } while ((element = element->GetParentElement()));
 
     // walk down the ancestors until we find one with a throttled transition
     for (int32_t i = ancestors.Length() - 1; i >= 0; --i) {

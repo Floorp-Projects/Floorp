@@ -2183,6 +2183,17 @@ class AutoValueArray : public AutoGCRooter
     RawValue *start() { return start_; }
     unsigned length() const { return length_; }
 
+    MutableHandleValue handleAt(unsigned i)
+    {
+        JS_ASSERT(i < length_);
+        return MutableHandleValue::fromMarkedLocation(&start_[i]);
+    }
+    HandleValue handleAt(unsigned i) const
+    {
+        JS_ASSERT(i < length_);
+        return HandleValue::fromMarkedLocation(&start_[i]);
+    }
+
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

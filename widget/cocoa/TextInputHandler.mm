@@ -1948,6 +1948,9 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     }
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nullptr));
+    if (keypressEvent.isChar) {
+      keypressEvent.charCode = str.CharAt(0);
+    }
     // Note that insertText is not called only at key pressing.
     if (!keypressEvent.charCode) {
       keypressEvent.keyCode =

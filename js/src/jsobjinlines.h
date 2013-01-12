@@ -200,7 +200,7 @@ JSObject::deleteProperty(JSContext *cx, js::HandleObject obj,
 JSObject::deleteElement(JSContext *cx, js::HandleObject obj,
                         uint32_t index, js::MutableHandleValue rval, bool strict)
 {
-    jsid id;
+    js::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
@@ -1218,7 +1218,7 @@ JSObject::getElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
         return op(cx, obj, receiver, index, vp);
 
     js::RootedId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    if (!js::IndexToId(cx, index, &id))
         return false;
     return getGeneric(cx, obj, receiver, id, vp);
 }
@@ -1238,7 +1238,7 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject obj, js::HandleObj
      * doing index-to-id conversions, we can use those here.
      */
     js::RootedId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    if (!js::IndexToId(cx, index, &id))
         return false;
 
     js::RootedObject obj2(cx);
@@ -1284,7 +1284,7 @@ JSObject::getElementAttributes(JSContext *cx, js::HandleObject obj,
                                uint32_t index, unsigned *attrsp)
 {
     js::RootedId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    if (!js::IndexToId(cx, index, &id))
         return false;
     return getGenericAttributes(cx, obj, id, attrsp);
 }
@@ -1738,14 +1738,15 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
 }
 
 static JS_ALWAYS_INLINE bool
-ValueIsSpecial(JSObject *obj, MutableHandleValue propval, SpecialId *sidp, JSContext *cx)
+ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialId> sidp,
+               JSContext *cx)
 {
 #if JS_HAS_XML_SUPPORT
     if (!propval.isObject())
         return false;
 
     if (obj->isXML()) {
-        *sidp = SpecialId(propval.toObject());
+        sidp.set(SpecialId(propval.toObject()));
         return true;
     }
 
