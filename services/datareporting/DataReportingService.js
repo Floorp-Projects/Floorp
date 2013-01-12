@@ -165,7 +165,6 @@ DataReportingService.prototype = Object.freeze({
     try {
       this._loadHealthReporter();
     } catch (ex) {
-      dump("Error loading health reporter: " + ex);
       this._healthReporter = null;
     }
 
