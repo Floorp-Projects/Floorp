@@ -13,7 +13,6 @@ AUS_Cu.import("resource://gre/modules/XPCOMUtils.jsm")
 var gNextRunFunc;
 var gStatusResult;
 var gExpectedStatusResult;
-var gExpectedStatusResult2;
 var gIncrementalDownloadClassID, gIncOldFactory;
 
 // gIncrementalDownloadErrorType is used to loop through each of the connection
@@ -62,18 +61,13 @@ function callHandleEvent() {
 
 // Helper function for testing mar downloads that have the correct size
 // specified in the update xml.
-function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc, aExpectedStatusResult2) {
+function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
   gUpdates = null;
   gUpdateCount = null;
   gStatusResult = null;
   gCheckFunc = check_test_helper_pt1_1;
   gNextRunFunc = aNextRunFunc;
   gExpectedStatusResult = aExpectedStatusResult;
-  if (aExpectedStatusResult2) {
-    gExpectedStatusResult2 = aExpectedStatusResult2;
-  } else {
-    gExpectedStatusResult2 = -1;
-  }
   logTestInfo(aMsg, Components.stack.caller);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -89,14 +83,40 @@ function check_test_helper_pt1_1() {
 }
 
 function check_test_helper_pt1_2() {
-  if (gExpectedStatusResult == -1) {
-    do_check_eq(gStatusResult, gExpectedStatusResult);
+  do_check_eq(gStatusResult, gExpectedStatusResult);
+  gAUS.removeDownloadListener(downloadListener);
+  gNextRunFunc();
+}
+
+// The following 3 functions are a workaround for GONK due to Bug 828858 and
+// can be removed after it is fixed and the callers are changed to use the
+// regular helper functions.
+function run_test_helper_bug828858_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
+  gUpdates = null;
+  gUpdateCount = null;
+  gStatusResult = null;
+  gCheckFunc = check_test_helper_bug828858_pt1_1;
+  gNextRunFunc = aNextRunFunc;
+  gExpectedStatusResult = aExpectedStatusResult;
+  logTestInfo(aMsg, Components.stack.caller);
+  gUpdateChecker.checkForUpdates(updateCheckListener, true);
+}
+
+function check_test_helper_bug828858_pt1_1() {
+  do_check_eq(gUpdateCount, 1);
+  gCheckFunc = check_test_helper_bug828858_pt1_2;
+  var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
+  var state = gAUS.downloadUpdate(bestUpdate, false);
+  if (state == STATE_NONE || state == STATE_FAILED)
+    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
+  gAUS.addDownloadListener(downloadListener);
+}
+
+function check_test_helper_bug828858_pt1_2() {
+  if (gStatusResult == AUS_Cr.NS_ERROR_CONTENT_CORRUPTED) {
+    do_check_eq(gStatusResult, AUS_Cr.NS_ERROR_CONTENT_CORRUPTED);
   } else {
-    if (gStatusResult == gExpectedStatusResult2) {
-      do_check_eq(gStatusResult, gExpectedStatusResult2);
-    } else {
-      do_check_eq(gStatusResult, gExpectedStatusResult);
-    }
+    do_check_eq(gStatusResult, gExpectedStatusResult);
   }
   gAUS.removeDownloadListener(downloadListener);
   gNextRunFunc();
@@ -192,9 +212,19 @@ function run_test_pt11() {
 function run_test_pt12() {
   const arbitraryFileSize = 1024000;
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR ,arbitraryFileSize);
-  run_test_helper_pt1("mar download with a valid MD5 hash but invalid file size",
-                      AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13,
-                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT);
+  if (IS_TOOLKIT_GONK) {
+    // There seems to be a race on the web server side when the patchFile is
+    // stored on the SDCard. Sometimes, the webserver will serve up an error
+    // 416 and the contents of the file, and sometimes it will serve up an error
+    // 200 and no contents. This can cause either NS_ERROR_UNEXPECTED or
+    // NS_ERROR_CONTENT_CORRUPTED.
+    // Bug 828858 was filed to follow up on this issue.
+    run_test_helper_bug828858_pt1("mar download with a valid MD5 hash but invalid file size",
+                                  AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13);
+  } else {
+    run_test_helper_pt1("mar download with a valid MD5 hash but invalid file size",
+                        AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13);
+  }
 }
 
 var newFactory = {
@@ -365,8 +395,19 @@ function run_test_pt14() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_ERRORS, 2);
   Services.prefs.setIntPref(PREF_APP_UPDATE_RETRY_TIMEOUT, 0);
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
+
+  var expectedResult;
+  if (IS_TOOLKIT_GONK) {
+    // Gonk treats interrupted downloads differently. For gonk, if the state
+    // is pending, this means that the download has completed and only the
+    // staging needs to occur. So gonk will skip the download portion which
+    // results in an NS_OK return.
+    expectedResult = AUS_Cr.NS_OK;
+  } else {
+    expectedResult = AUS_Cr.NS_ERROR_NET_RESET;
+  }
   run_test_helper_pt1("mar download with connection interruption without recovery",
-                      AUS_Cr.NS_ERROR_NET_RESET, run_test_pt15);
+                      expectedResult, run_test_pt15);
 }
 
 // Test entering offline mode while downloading
