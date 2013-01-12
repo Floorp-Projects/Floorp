@@ -1922,7 +1922,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
      * to date' bit for fp->prev() in fp, simply popping fp effectively clears
      * the flag for us, at exactly the time when execution resumes fp->prev().
      */
-    for (AllFramesIter i(cx->runtime->stackSpace); !i.done(); ++i) {
+    for (AllFramesIter i(cx->runtime); !i.done(); ++i) {
         /*
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.

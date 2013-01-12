@@ -1984,7 +1984,7 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
      * cx->fp() would return the topmost frame in the current context.
      * Since there may be multiple contexts, use AllFramesIter instead.
      */
-    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+    for (AllFramesIter i(cx->runtime); !i.done(); ++i) {
         /*
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
