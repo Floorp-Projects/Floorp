@@ -887,7 +887,7 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
 
     TransformFixedLayers(
       aLayer,
-      -gfxPoint(treeTransform.mTranslation) / treeTransform.mScale,
+      -treeTransform.mTranslation / treeTransform.mScale,
       treeTransform.mScale);
 
     appliedTransform = true;
