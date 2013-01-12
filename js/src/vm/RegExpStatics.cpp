@@ -91,6 +91,12 @@ RegExpStatics::executeLazy(JSContext *cx)
     if (status == RegExpRunStatus_Error)
         return false;
 
+    /*
+     * RegExpStatics are only updated on successful (matching) execution.
+     * Re-running the same expression must therefore produce a matching result.
+     */
+    JS_ASSERT(status == RegExpRunStatus_Success);
+
     /* Unset lazy state and remove rooted values that now have no use. */
     pendingLazyEvaluation = false;
     regexp.release();
