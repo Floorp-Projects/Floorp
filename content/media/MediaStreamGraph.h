@@ -189,6 +189,9 @@ class MediaStreamGraphImpl;
 class SourceMediaStream;
 class ProcessedMediaStream;
 class MediaInputPort;
+class AudioNodeStream;
+class AudioNodeEngine;
+struct AudioChunk;
 
 /**
  * A stream of synchronized audio and video data. All (not blocked) streams
@@ -345,6 +348,7 @@ public:
 
   virtual SourceMediaStream* AsSourceStream() { return nullptr; }
   virtual ProcessedMediaStream* AsProcessedStream() { return nullptr; }
+  virtual AudioNodeStream* AsAudioNodeStream() { return nullptr; }
 
   // media graph thread only
   void Init();
@@ -819,12 +823,20 @@ protected:
   bool mInCycle;
 };
 
+// Returns ideal audio rate for processing
+inline TrackRate IdealAudioRate() { return 48000; }
+
 /**
  * Initially, at least, we will have a singleton MediaStreamGraph per
  * process.
  */
 class MediaStreamGraph {
 public:
+  // We ensure that the graph current time advances in multiples of
+  // IdealAudioBlockSize()/IdealAudioRate(). A stream that never blocks
+  // and has a track with the ideal audio rate will produce audio in
+  // multiples of the block size.
+
   // Main thread only
   static MediaStreamGraph* GetInstance();
   // Control API.
@@ -848,6 +860,11 @@ public:
    * particular tracks of each input stream.
    */
   ProcessedMediaStream* CreateTrackUnionStream(nsDOMMediaStream* aWrapper);
+  /**
+   * Create a stream that will process audio for an AudioNode.
+   * Takes ownership of aEngine.
+   */
+  AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine);
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected
