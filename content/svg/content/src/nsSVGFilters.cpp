@@ -2744,7 +2744,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
-                                int32_t, Image*) { return true; }
+                              int32_t, Image*) { return true; }
 
   virtual StringAttributesInfo GetStringInfo();
 
@@ -4824,6 +4824,8 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
+  virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
+                              int32_t, Image*) { return true; }
   virtual void
   LightPixel(const float *N, const float *L,
              nscolor color, uint8_t *targetData) = 0;
@@ -5840,7 +5842,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
-                                int32_t aInput, Image* aImage) {
+                              int32_t aInput, Image* aImage) {
     switch (aInput) {
     case 0:
       return aImage->mColorModel.mColorSpace == ColorModel::SRGB;
