@@ -860,8 +860,22 @@ MMod::foldsTo(bool useValueNumbers)
 void
 MAdd::analyzeTruncateBackward()
 {
-    if (!isTruncated())
+    if (!isTruncated()) {
         setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+    }
+    if (isTruncated() && isTruncated() < 20) {
+        // Super obvious optimization... If this operation is a double
+        // BUT it happens to look like a large precision int that eventually
+        // gets truncated, then just call it an int.
+        // This can arise if we have x+y | 0, and x and y are both INT_MAX,
+        // TI will observe an overflow, thus marking the addition as double-like
+        // but we'll have MTruncate(MAddD(toDouble(x), toDouble(y))), which we know
+        // we'll be able to convert to MAddI(x,y)
+        if (isBigInt_ && type() == MIRType_Double) {
+            specialization_ = MIRType_Int32;
+            setResultType(MIRType_Int32);
+        }
+    }
 }
 
 bool
