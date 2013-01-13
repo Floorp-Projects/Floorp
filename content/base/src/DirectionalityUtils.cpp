@@ -365,53 +365,17 @@ GetDirectionFromText(const nsTextFragment* aFrag,
  * Set the directionality of a node with dir=auto as defined in
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#the-directionality
  *
- * @param[in] aStartAfterNode as an optimization, a caller may pass in a node
- *            from which to begin walking the descendants of aElement, if it is
- *            known that all text nodes before this node do not contain any
- *            strong directional characters
  * @return the text node containing the character that determined the direction
  */
 static nsINode*
-WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
-                                    nsINode* aStartAfterNode = nullptr)
+WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true)
 {
   MOZ_ASSERT(aElement, "aElement is null");
   if (DoesNotParticipateInAutoDirection(aElement)) {
     return nullptr;
   }
 
-  nsIContent* child;
-  if (aStartAfterNode &&
-      nsContentUtils::ContentIsDescendantOf(aStartAfterNode, aElement)) {
-    nsIContent* firstNode = aStartAfterNode->GetNextNode(aElement);
-
-#ifdef DEBUG
-    // In debug builds, assert that aStartAfterNode is correctly set by checking
-    // that text node descendants of elements up to aStartAfterNode don't have
-    // any strong directional characters
-    child = aElement->GetFirstChild();
-    while (child && child != firstNode) {
-      // Skip over nodes whose text node descendants don't affect directionality
-      // of their ancestors
-      if (child->IsElement() &&
-          DoesNotAffectDirectionOfAncestors(child->AsElement())) {
-        child = child->GetNextNonChildNode(aElement);
-        continue;
-      }
-
-      if (child->NodeType() == nsIDOMNode::TEXT_NODE) {
-        MOZ_ASSERT(GetDirectionFromText(child->GetText()) == eDir_NotSet,
-                   "Strong directional characters before aStartAfterNode");
-      }
-      child = child->GetNextNode(aElement);
-    }
-#else
-    child = firstNode;
-#endif
-  } else {
-    child = aElement->GetFirstChild();
-  }
-
+  nsIContent* child = aElement->GetFirstChild();
   while (child) {
     if (child->IsElement() &&
         DoesNotAffectDirectionOfAncestors(child->AsElement())) {
@@ -515,10 +479,8 @@ private:
     MOZ_ASSERT(aEntry->GetKey()->IsElement(), "Must be an Element");
     // run the downward propagation algorithm
     // and remove the text node from the map
-    nsINode* startAfterNode = static_cast<Element*>(aData);
     Element* rootNode = aEntry->GetKey();
-    nsINode* textNode = WalkDescendantsSetDirectionFromText(rootNode, true,
-                                                            startAfterNode);
+    nsINode* textNode = WalkDescendantsSetDirectionFromText(rootNode, true);
     if (textNode) {
       nsTextNodeDirectionalityMap::AddEntryToMap(textNode, rootNode);
     } else {
@@ -534,9 +496,9 @@ public:
     mElements.EnumerateEntries(SetNodeDirection, &aDir);
   }
 
-  void ResetAutoDirection(nsINode* aStartAfterNode)
+  void ResetAutoDirection()
   {
-    mElements.EnumerateEntries(ResetNodeDirection, aStartAfterNode);
+    mElements.EnumerateEntries(ResetNodeDirection, nullptr);
   }
 
   static void RemoveElementFromMap(nsINode* aTextNode, Element* aElement)
@@ -563,12 +525,11 @@ public:
     GetDirectionalityMap(aTextNode)->UpdateAutoDirection(aDir);
   }
 
-  static void ResetTextNodeDirection(nsINode* aTextNode,
-                                     nsINode* aStartAfterNode = nullptr)
+  static void ResetTextNodeDirection(nsINode* aTextNode)
   {
     MOZ_ASSERT(aTextNode->HasTextNodeDirectionalityMap(),
                "Map missing in ResetTextNodeDirection");
-    GetDirectionalityMap(aTextNode)->ResetAutoDirection(aStartAfterNode);
+    GetDirectionalityMap(aTextNode)->ResetAutoDirection();
   }
 };
 
@@ -672,7 +633,7 @@ WalkDescendantsResetAutoDirection(Element* aElement)
     }
 
     if (child->HasTextNodeDirectionalityMap()) {
-      nsTextNodeDirectionalityMap::ResetTextNodeDirection(child, child);
+      nsTextNodeDirectionalityMap::ResetTextNodeDirection(child);
     }
     child = child->GetNextNode(aElement);
   }
