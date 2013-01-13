@@ -473,6 +473,14 @@ class MDefinition : public MNode
         JS_ASSERT(getAliasSet().flags() & store->getAliasSet().flags());
         return true;
     }
+    // This indicates if this instruction is "integral at heart".  This will
+    // be the case if
+    // a) its result type is int32
+    // b) it is an instruction that is very likely to produce an integer or integer-truncatable
+    //    result (add, mul, sub), and both of its inputs are ints. (currently only implemented for add)
+    virtual bool isBigIntOutput() { return resultType_ == MIRType_Int32; }
+    virtual void recalculateBigInt() {}
+
 };
 
 // An MUseDefIterator walks over uses in a definition, skipping any use that is
@@ -2568,10 +2576,12 @@ class MMathFunction
 class MAdd : public MBinaryArithInstruction
 {
     int implicitTruncate_;
-
+    // Is this instruction really an int at heart?
+    bool isBigInt_;
     MAdd(MDefinition *left, MDefinition *right)
       : MBinaryArithInstruction(left, right),
-        implicitTruncate_(0)
+        implicitTruncate_(0),
+        isBigInt_(left->isBigIntOutput() && right->isBigIntOutput())
     {
         setResultType(MIRType_Value);
     }
@@ -2596,6 +2606,16 @@ class MAdd : public MBinaryArithInstruction
 
     bool fallible();
     void computeRange();
+    // This is an add, so the return value is from only
+    // integer sources if we know we return an int32
+    // or it has been explicitly marked as being a large int.
+    virtual bool isBigIntOutput() {
+        return (type() == MIRType_Int32) || isBigInt_;
+    }
+    // An add will produce a big int if both of its sources are big ints.
+    virtual void recalculateBigInt() {
+        isBigInt_ = (lhs()->isBigIntOutput() && rhs()->isBigIntOutput());
+    }
 };
 
 class MSub : public MBinaryArithInstruction
