@@ -250,7 +250,7 @@ static bool
 DoesNotAffectDirectionOfAncestors(const Element* aElement)
 {
   return (DoesNotParticipateInAutoDirection(aElement) ||
-          aElement->NodeInfo()->Equals(nsGkAtoms::bdi) ||
+          aElement->IsHTML(nsGkAtoms::bdi) ||
           aElement->HasFixedDir());
 }
 
@@ -870,7 +870,7 @@ void
 OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
              bool hadValidDir, bool aNotify)
 {
-  if (aElement->IsHTML() && aElement->NodeInfo()->Equals(nsGkAtoms::input)) {
+  if (aElement->IsHTML(nsGkAtoms::input)) {
     return;
   }
 
