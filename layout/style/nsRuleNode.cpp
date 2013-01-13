@@ -7352,6 +7352,9 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   // paint-order: enum (bit field), inherit, initial
   const nsCSSValue* paintOrderValue = aRuleData->ValueForPaintOrder();
   switch (paintOrderValue->GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+
     case eCSSUnit_Enumerated:
       MOZ_STATIC_ASSERT
         (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
