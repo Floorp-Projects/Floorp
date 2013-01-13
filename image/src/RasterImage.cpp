@@ -17,7 +17,6 @@
 #include "prenv.h"
 #include "ImageContainer.h"
 #include "Layers.h"
-#include "nsPresContext.h"
 
 #include "nsPNGDecoder.h"
 #include "nsGIFDecoder2.h"
@@ -778,31 +777,6 @@ RasterImage::GetHeight(int32_t *aHeight)
   }
 
   *aHeight = mSize.height;
-  return NS_OK;
-}
- 
-//******************************************************************************
-/* [noscript] readonly attribute nsSize intrinsicSize; */
-NS_IMETHODIMP
-RasterImage::GetIntrinsicSize(nsSize* aSize)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  *aSize = nsSize(nsPresContext::CSSPixelsToAppUnits(mSize.width),
-                  nsPresContext::CSSPixelsToAppUnits(mSize.height));
-  return NS_OK;
-}
-
-//******************************************************************************
-/* [noscript] readonly attribute nsSize intrinsicRatio; */
-NS_IMETHODIMP
-RasterImage::GetIntrinsicRatio(nsSize* aRatio)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  *aRatio = nsSize(mSize.width, mSize.height);
   return NS_OK;
 }
 
