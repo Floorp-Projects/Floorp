@@ -1,0 +1,13 @@
+<noframes dir=auto id=test4></noframes><vbox id=test5>K<csaction id=test3><script>
+function reference(domNode) { this.domNode = domNode;} function walk(a, currentPrefix, index, domNode) { if(domNode == null) return; newPrefix = currentPrefix + "_" + index; walk(a, domNode.nextSibling); walk(a, domNode.firstChild); a[newPrefix] = new reference(domNode); } function clear() { var a = new Array(); walk(a, "", 0, document.documentElement); for(key in a) {a[key].domNode.parentNode.removeChild(a[key].domNode); }}
+function crash() {
+try { test1 = document.createElementNS("http://www.w3.org/2000/svg", "text"); } catch(e) {}
+try { test2 = test3.cloneNode(true); } catch(e) {}
+setTimeout("try { clear(); } catch(e) {}", 500);
+try { test1.appendChild(test5); } catch(e) {}
+try { test2.appendChild(test1); } catch(e) {}
+try { test4.appendChild(test2); } catch(e) {}
+try { test5.innerHTML = ""; } catch(e) {}
+}
+document.addEventListener("DOMContentLoaded", crash, false);
+</script>
