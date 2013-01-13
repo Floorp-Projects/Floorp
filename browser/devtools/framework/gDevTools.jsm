@@ -25,8 +25,8 @@ const FORBIDDEN_IDS = new Set("toolbox", "");
  * set of tools and keeps track of open toolboxes in the browser.
  */
 this.DevTools = function DevTools() {
-  this._tools = new Map();
-  this._toolboxes = new Map();
+  this._tools = new Map();     // Map<toolId, tool>
+  this._toolboxes = new Map(); // Map<target, toolbox>
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
@@ -85,11 +85,16 @@ DevTools.prototype = {
    *
    * @param {string} toolId
    *        id of the tool to unregister
+   * @param {boolean} isQuitApplication
+   *        true to indicate that the call is due to app quit, so we should not
+   *        cause a cascade of costly events
    */
-  unregisterTool: function DT_unregisterTool(toolId) {
+  unregisterTool: function DT_unregisterTool(toolId, isQuitApplication) {
     this._tools.delete(toolId);
 
-    this.emit("tool-unregistered", toolId);
+    if (!isQuitApplication) {
+      this.emit("tool-unregistered", toolId);
+    }
   },
 
   /**
@@ -99,7 +104,7 @@ DevTools.prototype = {
    * @return {Map} tools
    *         A map of the the tool definitions registered in this instance
    */
-  getToolDefinitions: function DT_getToolDefinitions() {
+  getToolDefinitionMap: function DT_getToolDefinitionMap() {
     let tools = new Map();
 
     for (let [key, value] of this._tools) {
@@ -116,6 +121,31 @@ DevTools.prototype = {
       }
     }
     return tools;
+  },
+
+  /**
+   * Tools have an inherent ordering that can't be represented in a Map so
+   * getToolDefinitionArray provides an alternative representation of the
+   * definitions sorted by ordinal value.
+   *
+   * @return {Array} tools
+   *         A sorted array of the tool definitions registered in this instance
+   */
+  getToolDefinitionArray: function DT_getToolDefinitionArray() {
+    const MAX_ORDINAL = 99;
+
+    let definitions = [];
+    for (let [id, definition] of this.getToolDefinitionMap()) {
+      definitions.push(definition);
+    }
+
+    definitions.sort(function(d1, d2) {
+      let o1 = (typeof d1.ordinal == "number") ? d1.ordinal : MAX_ORDINAL;
+      let o2 = (typeof d2.ordinal == "number") ? d2.ordinal : MAX_ORDINAL;
+      return o1 - o2;
+    });
+
+    return definitions;
   },
 
   /**
@@ -218,8 +248,13 @@ DevTools.prototype = {
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
 
-    delete this._trackedBrowserWindows;
-    delete this._toolboxes;
+    for (let [key, tool] of this._tools) {
+      this.unregisterTool(key, true);
+    }
+
+    // Cleaning down the toolboxes: i.e.
+    //   for (let [target, toolbox] of this._toolboxes) toolbox.destroy();
+    // Is taken care of by the gDevToolsBrowser.forgetBrowserWindow
   },
 };
 
@@ -313,8 +348,43 @@ let gDevToolsBrowser = {
    *        properties of the tool to add
    */
   _addToolToWindows: function DT_addToolToWindows(toolDefinition) {
+    // We need to insert the new tool in the right place, which means knowing
+    // the tool that comes before the tool that we're trying to add
+    let allDefs = gDevTools.getToolDefinitionArray();
+    let prevDef;
+    for (let def of allDefs) {
+      if (def === toolDefinition) {
+        break;
+      }
+      prevDef = def;
+    }
+
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
-      gDevToolsBrowser._addToolToMenu(toolDefinition, win.document);
+      let doc = win.document;
+      let elements = gDevToolsBrowser._createToolMenuElements(toolDefinition, doc);
+
+      doc.getElementById("mainCommandSet").appendChild(elements.cmd);
+
+      if (elements.key) {
+        doc.getElementById("mainKeyset").appendChild(elements.key);
+      }
+
+      doc.getElementById("mainBroadcasterSet").appendChild(elements.bc);
+
+      let amp = doc.getElementById("appmenu_webDeveloper_popup");
+      if (amp) {
+        let ref = (prevDef != null) ?
+            doc.getElementById("appmenuitem_" + prevDef.id).nextSibling :
+            doc.getElementById("appmenu_devtools_separator");
+
+        amp.insertBefore(elements.appmenuitem, ref);
+      }
+
+      let mp = doc.getElementById("menuWebDeveloperPopup");
+      let ref = (prevDef != null) ?
+          doc.getElementById("menuitem_" + prevDef.id).nextSibling :
+          doc.getElementById("menu_devtools_separator");
+      mp.insertBefore(elements.menuitem, ref);
     }
   },
 
@@ -331,22 +401,20 @@ let gDevToolsBrowser = {
     let fragAppMenuItems = doc.createDocumentFragment();
     let fragMenuItems = doc.createDocumentFragment();
 
-    for (let [key, toolDefinition] of gDevTools._tools) {
-      let frags = gDevToolsBrowser._addToolToMenu(toolDefinition, doc, true);
+    for (let toolDefinition of gDevTools.getToolDefinitionArray()) {
+      let elements = gDevToolsBrowser._createToolMenuElements(toolDefinition, doc);
 
-      if (!frags) {
+      if (!elements) {
         return;
       }
 
-      let [cmd, key, bc, appmenuitem, menuitem] = frags;
-
-      fragCommands.appendChild(cmd);
-      if (key) {
-        fragKeys.appendChild(key);
+      fragCommands.appendChild(elements.cmd);
+      if (elements.key) {
+        fragKeys.appendChild(elements.key);
       }
-      fragBroadcasters.appendChild(bc);
-      fragAppMenuItems.appendChild(appmenuitem);
-      fragMenuItems.appendChild(menuitem);
+      fragBroadcasters.appendChild(elements.bc);
+      fragAppMenuItems.appendChild(elements.appmenuitem);
+      fragMenuItems.appendChild(elements.menuitem);
     }
 
     let mcs = doc.getElementById("mainCommandSet");
@@ -376,11 +444,8 @@ let gDevToolsBrowser = {
    *        Tool definition of the tool to add a menu entry.
    * @param {XULDocument} doc
    *        The document to which the tool menu item is to be added.
-   * @param {Boolean} [noAppend]
-   *        Return an array of elements instead of appending them to the
-   *        document. Default is false.
    */
-  _addToolToMenu: function DT_addToolToMenu(toolDefinition, doc, noAppend) {
+  _createToolMenuElements: function DT_createToolMenuElements(toolDefinition, doc) {
     let id = toolDefinition.id;
 
     // Prevent multiple entries for the same tool.
@@ -429,30 +494,13 @@ let gDevToolsBrowser = {
       menuitem.setAttribute("accesskey", toolDefinition.accesskey);
     }
 
-    if (noAppend) {
-      return [cmd, key, bc, appmenuitem, menuitem];
-    } else {
-      let mcs = doc.getElementById("mainCommandSet");
-      mcs.appendChild(cmd);
-
-      if (key) {
-        let mks = doc.getElementById("mainKeyset");
-        mks.appendChild(key);
-      }
-
-      let mbs = doc.getElementById("mainBroadcasterSet");
-      mbs.appendChild(bc);
-
-      let amp = doc.getElementById("appmenu_webDeveloper_popup");
-      if (amp) {
-        let amps = doc.getElementById("appmenu_devtools_separator");
-        amp.insertBefore(appmenuitem, amps);
-      }
-
-      let mp = doc.getElementById("menuWebDeveloperPopup");
-      let mps = doc.getElementById("menu_devtools_separator");
-      mp.insertBefore(menuitem, mps);
-    }
+    return {
+      cmd: cmd,
+      key: key,
+      bc: bc,
+      appmenuitem: appmenuitem,
+      menuitem: menuitem
+    };
   },
 
   /**
@@ -534,10 +582,6 @@ let gDevToolsBrowser = {
    *         The window containing the menu entry
    */
   forgetBrowserWindow: function DT_forgetBrowserWindow(win) {
-    if (!gDevToolsBrowser._trackedBrowserWindows) {
-      return;
-    }
-
     gDevToolsBrowser._trackedBrowserWindows.delete(win);
 
     // Destroy toolboxes for closed window
@@ -557,7 +601,6 @@ let gDevToolsBrowser = {
    */
   destroy: function() {
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
-    delete gDevToolsBrowser._trackedBrowserWindows;
   },
 }
 this.gDevToolsBrowser = gDevToolsBrowser;

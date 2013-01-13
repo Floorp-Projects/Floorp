@@ -130,7 +130,7 @@ this.Toolbox = function Toolbox(target, selectedTool, hostType) {
   if (!selectedTool) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
   }
-  let definitions = gDevTools.getToolDefinitions();
+  let definitions = gDevTools.getToolDefinitionMap();
   if (!definitions.get(selectedTool)) {
     selectedTool = "webconsole";
   }
@@ -248,11 +248,6 @@ Toolbox.prototype = {
       let domReady = function() {
         iframe.removeEventListener("DOMContentLoaded", domReady, true);
 
-        let vbox = this.doc.getElementById("toolbox-panel-" + this._currentToolId);
-        if (vbox) {
-          this.doc.commandDispatcher.advanceFocusIntoSubtree(vbox);
-        }
-
         this.isReady = true;
 
         let closeButton = this.doc.getElementById("toolbox-close");
@@ -315,7 +310,7 @@ Toolbox.prototype = {
    * Add tabs to the toolbox UI for registered tools
    */
   _buildTabs: function TBOX_buildTabs() {
-    for (let [id, definition] of gDevTools.getToolDefinitions()) {
+    for (let definition of gDevTools.getToolDefinitionArray()) {
       this._buildTabForTool(definition);
     }
   },
@@ -347,7 +342,6 @@ Toolbox.prototype = {
    *        Tool definition of the tool to build a tab for.
    */
   _buildTabForTool: function TBOX_buildTabForTool(toolDefinition) {
-    const MAX_ORDINAL = 99;
     if (!toolDefinition.isTargetSupported(this._target)) {
       return;
     }
@@ -366,10 +360,6 @@ Toolbox.prototype = {
     if (toolDefinition.icon) {
       radio.setAttribute("src", toolDefinition.icon);
     }
-
-    let ordinal = (typeof toolDefinition.ordinal == "number") ?
-                  toolDefinition.ordinal : MAX_ORDINAL;
-    radio.setAttribute("ordinal", ordinal);
 
     radio.addEventListener("command", function(id) {
       this.selectTool(id);
@@ -422,7 +412,7 @@ Toolbox.prototype = {
     let deck = this.doc.getElementById("toolbox-deck");
     deck.selectedIndex = index;
 
-    let definition = gDevTools.getToolDefinitions().get(id);
+    let definition = gDevTools.getToolDefinitionMap().get(id);
 
     this._currentToolId = id;
 
@@ -477,6 +467,10 @@ Toolbox.prototype = {
 
   /**
    * Create a host object based on the given host type.
+   *
+   * Warning: some hosts require that the toolbox target provides a reference to
+   * the attached tab. Not all Targets have a tab property - make sure you correctly
+   * mix and match hosts and targets.
    *
    * @param {string} hostType
    *        The host type of the new host object
@@ -539,7 +533,7 @@ Toolbox.prototype = {
    *         Id of the tool that was registered
    */
   _toolRegistered: function TBOX_toolRegistered(event, toolId) {
-    let defs = gDevTools.getToolDefinitions();
+    let defs = gDevTools.getToolDefinitionMap();
     let tool = defs.get(toolId);
 
     this._buildTabForTool(tool);
