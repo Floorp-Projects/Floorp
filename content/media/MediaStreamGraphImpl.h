@@ -250,6 +250,19 @@ public:
                            GraphTime aTime, GraphTime aEndBlockingDecisions,
                            GraphTime* aEnd);
   /**
+   * Produce data for all streams >= aStreamIndex for the given time interval.
+   * Advances block by block, each iteration producing data for all streams
+   * for a single block.
+   * This is needed if there are WebAudio delay nodes, whose output for a block
+   * may depend on the output of any other node (including itself) for the
+   * previous block. This is probably also more performant due to better memory
+   * locality.
+   * This is called whenever we have an AudioNodeStream in the graph.
+   */
+  void ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
+                                         GraphTime aFrom,
+                                         GraphTime aTo);
+  /**
    * Returns true if aStream will underrun at aTime for its own playback.
    * aEndBlockingDecisions is when we plan to stop making blocking decisions.
    * *aEnd will be reduced to the first time in the future to recompute these
