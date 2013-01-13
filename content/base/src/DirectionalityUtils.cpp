@@ -360,7 +360,7 @@ GetDirectionFromText(const nsTextFragment* aFrag,
  */
 static nsINode*
 WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
-                                       nsINode* aStartAfterNode = nullptr)
+                                    nsINode* aStartAfterNode = nullptr)
 {
   MOZ_ASSERT(aElement, "aElement is null");
   if (DoesNotParticipateInAutoDirection(aElement)) {
@@ -525,7 +525,7 @@ public:
     mElements.EnumerateEntries(SetNodeDirection, &aDir);
   }
 
-  void ResetAutoDirection(nsINode* aTextNode, nsINode* aStartAfterNode)
+  void ResetAutoDirection(nsINode* aStartAfterNode)
   {
     mElements.EnumerateEntries(ResetNodeDirection, aStartAfterNode);
   }
@@ -559,8 +559,7 @@ public:
   {
     MOZ_ASSERT(aTextNode->HasTextNodeDirectionalityMap(),
                "Map missing in ResetTextNodeDirection");
-    GetDirectionalityMap(aTextNode)->ResetAutoDirection(aTextNode,
-                                                        aStartAfterNode);
+    GetDirectionalityMap(aTextNode)->ResetAutoDirection(aStartAfterNode);
   }
 };
 
