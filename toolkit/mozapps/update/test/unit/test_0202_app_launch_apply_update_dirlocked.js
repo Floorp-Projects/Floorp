@@ -27,12 +27,6 @@ const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 // Number of milliseconds for each do_timeout call.
 const CHECK_TIMEOUT_MILLI = 1000;
 
-// Maximum number of milliseconds the process that is launched can run before
-// the test will try to kill it.
-const APP_TIMER_TIMEOUT = 15000;
-
-let gAppTimer;
-let gProcess;
 let gActiveUpdate;
 
 // Override getUpdatesRootDir on Mac because we need to apply the update
