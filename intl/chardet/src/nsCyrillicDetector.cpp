@@ -9,7 +9,8 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsICharsetDetector.h"
-#include "nsCharDetDll.h"
+#include "nsICharsetDetectionObserver.h"
+#include "nsIStringCharsetDetector.h"
 #include "nsCyrillicDetector.h"
 
 //----------------------------------------------------------------------
