@@ -904,10 +904,26 @@ SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent)
       aParent && aParent->NodeOrAncestorHasDirAuto()) {
     aElement->SetAncestorHasDirAuto();
 
-    // if we are binding an element to the tree that already has descendants,
-    // and the parent has NodeHasDirAuto or NodeAncestorHasDirAuto, we may
-    // need to reset the direction of an ancestor with dir=auto
-    if (aElement->GetFirstChild()) {
+    nsIContent* child = aElement->GetFirstChild();
+    if (child) {
+      // If we are binding an element to the tree that already has descendants,
+      // and the parent has NodeHasDirAuto or NodeAncestorHasDirAuto, we need
+      // to set NodeAncestorHasDirAuto on all the element's descendants, except
+      // for nodes that don't affect the direction of their ancestors.
+      do {
+        if (child->IsElement() &&
+            (DoesNotParticipateInAutoDirection(child->AsElement()) ||
+             child->NodeInfo()->Equals(nsGkAtoms::bdi) ||
+             child->HasFixedDir())) {
+          child = child->GetNextNonChildNode(aElement);
+          continue;
+        }
+
+        child->SetAncestorHasDirAuto();
+        child = child->GetNextNode(aElement);
+      } while (child);
+
+      // We may also need to reset the direction of an ancestor with dir=auto
       WalkAncestorsResetAutoDirection(aElement, true);
     }
   }
