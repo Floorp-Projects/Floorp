@@ -89,7 +89,6 @@ AudioSegment::ApplyVolume(float aVolume)
 }
 
 static const int AUDIO_PROCESSING_FRAMES = 640; /* > 10ms of 48KHz audio */
-static const int GUESS_AUDIO_CHANNELS = 2;
 static const uint8_t gZeroChannel[MAX_AUDIO_SAMPLE_SIZE*AUDIO_PROCESSING_FRAMES] = {0};
 
 void

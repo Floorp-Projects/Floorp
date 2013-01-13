@@ -16,6 +16,11 @@ namespace mozilla {
 class AudioStream;
 
 /**
+ * For auto-arrays etc, guess this as the common number of channels.
+ */
+const int GUESS_AUDIO_CHANNELS = 2;
+
+/**
  * An AudioChunk represents a multi-channel buffer of audio samples.
  * It references an underlying ThreadSharedObject which manages the lifetime
  * of the buffer. An AudioChunk maintains its own duration and channel data
