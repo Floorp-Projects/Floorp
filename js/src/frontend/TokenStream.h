@@ -273,6 +273,8 @@ struct TokenPos {
     }
 };
 
+enum DecimalPoint { NoDecimal = false, HasDecimal = true };
+
 struct Token {
     TokenKind           type;           /* char value or above enumerator */
     TokenPos            pos;            /* token position in file */
@@ -294,7 +296,10 @@ struct Token {
             PropertyName *target;       /* non-empty */
             JSAtom       *data;         /* maybe empty, never null */
         } xmlpi;
-        double          number;         /* floating point number */
+        struct {
+            double       value;         /* floating point number */
+            DecimalPoint decimalPoint;  /* literal contains . or exponent */
+        } number;
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
     } u;
@@ -335,8 +340,9 @@ struct Token {
         u.reflags = flags;
     }
 
-    void setNumber(double n) {
-        u.number = n;
+    void setNumber(double n, DecimalPoint decimalPoint) {
+        u.number.value = n;
+        u.number.decimalPoint = decimalPoint;
     }
 
     /* Type-safe accessors */
@@ -374,7 +380,12 @@ struct Token {
 
     double number() const {
         JS_ASSERT(type == TOK_NUMBER);
-        return u.number;
+        return u.number.value;
+    }
+
+    DecimalPoint decimalPoint() const {
+        JS_ASSERT(type == TOK_NUMBER);
+        return u.number.decimalPoint;
     }
 };
 

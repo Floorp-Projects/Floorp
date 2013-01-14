@@ -623,7 +623,10 @@ struct ParseNode {
                         blockid:20;     /* block number, for subset dominance
                                            computation */
         } name;
-        double        dval;             /* aligned numeric literal value */
+        struct {
+            double      value;          /* aligned numeric literal value */
+            DecimalPoint decimalPoint;  /* Whether the number has a decimal point */
+        } number;
         class {
             friend class LoopControlStatement;
             PropertyName     *label;    /* target of break/continue statement */
@@ -659,7 +662,7 @@ struct ParseNode {
 #define pn_objbox       pn_u.name.objbox
 #define pn_expr         pn_u.name.expr
 #define pn_lexdef       pn_u.name.lexdef
-#define pn_dval         pn_u.dval
+#define pn_dval         pn_u.number.value
 
   protected:
     void init(TokenKind type, JSOp op, ParseNodeArity arity) {
@@ -867,6 +870,13 @@ struct ParseNode {
         JS_ASSERT(pn_arity == PN_LIST);
         JS_ASSERT(pn_count != 0);
         return (ParseNode *)(uintptr_t(pn_tail) - offsetof(ParseNode, pn_next));
+    }
+
+    void initNumber(const Token &tok) {
+        JS_ASSERT(pn_arity == PN_NULLARY);
+        JS_ASSERT(getKind() == PNK_NUMBER);
+        pn_u.number.value = tok.number();
+        pn_u.number.decimalPoint = tok.decimalPoint();
     }
 
     void makeEmpty() {
