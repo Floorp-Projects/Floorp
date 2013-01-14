@@ -208,6 +208,10 @@ function PeerConnection() {
   this._onCreateAnswerSuccess = null;
   this._onCreateAnswerFailure = null;
 
+  this._pendingType = null;
+  this._localType = null;
+  this._remoteType = null;
+
   /**
    * Everytime we get a request from content, we put it in the queue. If
    * there are no pending operations though, we will execute it immediately.
@@ -226,8 +230,6 @@ function PeerConnection() {
   this.onstatechange = null;
   this.ongatheringchange = null;
   this.onicechange = null;
-  this.localDescription = null;
-  this.remoteDescription = null;
 
   // Data channel.
   this.ondatachannel = null;
@@ -293,6 +295,9 @@ PeerConnection.prototype = {
 	return;
     }
     if (!this._pending) {
+      if (obj.type !== undefined) {
+        this._pendingType = obj.type;
+      }
       obj.func.apply(this, obj.args);
       if (obj.wait) {
         this._pending = true;
@@ -306,6 +311,9 @@ PeerConnection.prototype = {
   _executeNext: function() {
     if (this._queue.length) {
       let obj = this._queue.shift();
+      if (obj.type !== undefined) {
+        this._pendingType = obj.type;
+      }
       obj.func.apply(this, obj.args);
       if (!obj.wait) {
         this._executeNext();
@@ -421,7 +429,8 @@ PeerConnection.prototype = {
     this._queueOrRun({
       func: this._pc.setLocalDescription,
       args: [type, desc.sdp],
-      wait: true
+      wait: true,
+      type: desc.type
     });
   },
 
@@ -444,20 +453,11 @@ PeerConnection.prototype = {
         break;
     }
 
-    this.localDescription = {
-      type: desc.type, sdp: desc.sdp,
-      __exposedProps__: { type: "rw", sdp: "rw"}
-    };
-
-    this.remoteDescription = {
-      type: desc.type, sdp: desc.sdp,
-      __exposedProps__: { type: "rw", sdp: "rw" }
-    };
-
     this._queueOrRun({
       func: this._pc.setRemoteDescription,
       args: [type, desc.sdp],
-      wait: true
+      wait: true,
+      type: desc.type
     });
   },
 
@@ -510,8 +510,31 @@ PeerConnection.prototype = {
   get localStreams() {
     return this._pc.localStreams;
   },
+
   get remoteStreams() {
     return this._pc.remoteStreams;
+  },
+
+  get localDescription() {
+    let sdp = this._pc.localDescription;
+    if (sdp.length == 0) {
+      return null;
+    }
+    return {
+      type: this._localType, sdp: sdp,
+      __exposedProps__: { type: "rw", sdp: "rw" }
+    };
+  },
+
+  get remoteDescription() {
+    let sdp = this._pc.remoteDescription;
+    if (sdp.length == 0) {
+      return null;
+    }
+    return {
+      type: this._remoteType, sdp: sdp,
+      __exposedProps__: { type: "rw", sdp: "rw" }
+    };
   },
 
   createDataChannel: function(label, dict) {
@@ -602,6 +625,8 @@ PeerConnectionObserver.prototype = {
   },
 
   onSetLocalDescriptionSuccess: function(code) {
+    this._dompc._localType = this._dompc._pendingType;
+    this._dompc._pendingType = null;
     if (this._dompc._onSetLocalDescriptionSuccess) {
       try {
         this._dompc._onSetLocalDescriptionSuccess.onCallback(code);
@@ -611,6 +636,8 @@ PeerConnectionObserver.prototype = {
   },
 
   onSetRemoteDescriptionSuccess: function(code) {
+    this._dompc._remoteType = this._dompc._pendingType;
+    this._dompc._pendingType = null;
     if (this._dompc._onSetRemoteDescriptionSuccess) {
       try {
         this._dompc._onSetRemoteDescriptionSuccess.onCallback(code);
@@ -620,6 +647,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onSetLocalDescriptionError: function(code) {
+    this._dompc._pendingType = null;
     if (this._dompc._onSetLocalDescriptionFailure) {
       try {
         this._dompc._onSetLocalDescriptionFailure.onCallback(code);
@@ -629,6 +657,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onSetRemoteDescriptionError: function(code) {
+    this._dompc._pendingType = null;
     if (this._dompc._onSetRemoteDescriptionFailure) {
       this._dompc._onSetRemoteDescriptionFailure.onCallback(code);
     }
