@@ -23,9 +23,11 @@ using namespace std;
 #include "FakeMediaStreams.h"
 #include "FakeMediaStreamsImpl.h"
 #include "PeerConnectionImpl.h"
+#include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
 #include "nsStaticComponents.h"
 #include "nsIDOMRTCPeerConnection.h"
+#include "nsWeakReference.h"
 
 #include "mtransport_test_utils.h"
 MtransportTestUtils *test_utils;
@@ -118,7 +120,8 @@ enum offerAnswerFlags
 };
 
 
-class TestObserver : public IPeerConnectionObserver
+class TestObserver : public IPeerConnectionObserver,
+                     public nsSupportsWeakReference
 {
 public:
   enum Action {
@@ -163,7 +166,9 @@ private:
   std::vector<nsDOMMediaStream *> streams;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TestObserver, IPeerConnectionObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(TestObserver,
+                              IPeerConnectionObserver,
+                              nsISupportsWeakReference)
 
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer)
@@ -489,7 +494,7 @@ class SignalingAgent {
       NS_DISPATCH_SYNC);
   }
 
-  void Init(nsCOMPtr<nsIThread> thread)
+  void Init_m(nsCOMPtr<nsIThread> thread)
   {
     size_t found = 2;
     ASSERT_TRUE(found > 0);
@@ -501,6 +506,14 @@ class SignalingAgent {
     ASSERT_TRUE(pObserver);
 
     ASSERT_EQ(pc->Initialize(pObserver, nullptr, thread), NS_OK);
+
+  }
+
+  void Init(nsCOMPtr<nsIThread> thread)
+  {
+    thread->Dispatch(
+      WrapRunnable(this, &SignalingAgent::Init_m, thread),
+      NS_DISPATCH_SYNC);
 
     ASSERT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
@@ -1759,6 +1772,13 @@ int main(int argc, char **argv) {
 
   ::testing::AddGlobalTestEnvironment(new test::SignalingEnvironment);
   int result = RUN_ALL_TESTS();
+
+  // Because we don't initialize on the main thread, we can't register for
+  // XPCOM shutdown callbacks (where the context is usually shut down) --
+  // so we need to explictly destroy the context.
+  sipcc::PeerConnectionCtx::Destroy();
   delete test_utils;
+
+
   return result;
 }
