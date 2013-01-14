@@ -1439,7 +1439,8 @@ TokenStream::getTokenInternal()
     Token *tp;
     FirstCharKind c1kind;
     const jschar *numStart;
-    bool hasFracOrExp;
+    bool hasExp;
+    DecimalPoint decimalPoint;
     const jschar *identStart;
     bool hadUnicodeEscape;
 
@@ -1594,6 +1595,8 @@ TokenStream::getTokenInternal()
         c = getCharIgnoreEOL();
         if (JS7_ISDEC(c)) {
             numStart = userbuf.addressOfNextRawChar() - 2;
+            decimalPoint = HasDecimal;
+            hasExp = false;
             goto decimal_dot;
         }
         if (c == '.') {
@@ -1740,19 +1743,20 @@ TokenStream::getTokenInternal()
         numStart = userbuf.addressOfNextRawChar() - 1;
 
       decimal:
-        hasFracOrExp = false;
+        decimalPoint = NoDecimal;
+        hasExp = false;
         while (JS7_ISDEC(c))
             c = getCharIgnoreEOL();
 
         if (c == '.') {
+            decimalPoint = HasDecimal;
           decimal_dot:
-            hasFracOrExp = true;
             do {
                 c = getCharIgnoreEOL();
             } while (JS7_ISDEC(c));
         }
         if (c == 'e' || c == 'E') {
-            hasFracOrExp = true;
+            hasExp = true;
             c = getCharIgnoreEOL();
             if (c == '+' || c == '-')
                 c = getCharIgnoreEOL();
@@ -1779,14 +1783,14 @@ TokenStream::getTokenInternal()
          */
         double dval;
         const jschar *dummy;
-        if (!hasFracOrExp) {
+        if (!((decimalPoint == HasDecimal) || hasExp)) {
             if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
                 goto error;
         } else {
             if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
-        tp->setNumber(dval);
+        tp->setNumber(dval, decimalPoint);
         tt = TOK_NUMBER;
         goto out;
     }
@@ -1871,7 +1875,7 @@ TokenStream::getTokenInternal()
         const jschar *dummy;
         if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
             goto error;
-        tp->setNumber(dval);
+        tp->setNumber(dval, NoDecimal);
         tt = TOK_NUMBER;
         goto out;
     }

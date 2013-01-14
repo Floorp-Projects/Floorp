@@ -6650,7 +6650,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                 pn3 = NullaryNode::create(PNK_NUMBER, this);
                 if (!pn3)
                     return NULL;
-                pn3->pn_dval = tokenStream.currentToken().number();
+                pn3->initNumber(tokenStream.currentToken());
                 atom = ToAtom<CanGC>(context, DoubleValue(pn3->pn_dval));
                 if (!atom)
                     return NULL;
@@ -6697,7 +6697,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                         pn3 = NullaryNode::create(PNK_NUMBER, this);
                         if (!pn3)
                             return NULL;
-                        pn3->pn_dval = tokenStream.currentToken().number();
+                        pn3->initNumber(tokenStream.currentToken());
                         atom = ToAtom<CanGC>(context, DoubleValue(pn3->pn_dval));
                         if (!atom)
                             return NULL;
@@ -6965,7 +6965,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         if (!pn)
             return NULL;
         pn->setOp(JSOP_DOUBLE);
-        pn->pn_dval = tokenStream.currentToken().number();
+        pn->initNumber(tokenStream.currentToken());
         break;
 
       case TOK_TRUE:
