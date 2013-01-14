@@ -189,7 +189,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xDA,0xDA,0xDA);
       break;
     case eColorID_menu:
-    case eColorID__moz_menubar:
       aColor = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
       break;
     case eColorID_infobackground:
