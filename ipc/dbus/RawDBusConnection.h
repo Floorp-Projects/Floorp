@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "nscore.h"
 #include "mozilla/Scoped.h"
+#include <mozilla/Mutex.h>
 
 struct DBusConnection;
 
@@ -34,8 +35,12 @@ public:
   DBusConnection* GetConnection() {
     return mConnection;
   }
+
 protected:
   Scoped<ScopedDBusConnectionPtrTraits> mConnection;
+
+private:
+  static bool sDBusIsInit;
 };
 
 }
