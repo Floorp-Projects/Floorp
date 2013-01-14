@@ -9,6 +9,7 @@
 #include "mozilla/dom/CSSValueListBinding.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 
@@ -25,11 +26,15 @@ nsDOMCSSValueList::~nsDOMCSSValueList()
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSValueList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSValueList)
 
+  DOMCI_DATA(CSSValueList, nsDOMCSSValueList)
+
 // QueryInterface implementation for nsDOMCSSValueList
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSValueList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValue)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValueList)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, CSSValue)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSValueList)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCSSValueList, mCSSValues)
