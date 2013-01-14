@@ -124,7 +124,7 @@ class RegExpShared
      * RegExpGuard, which handles rooting for stacky RegExpShareds,
      * or trace() must be explicitly called during marking.
      */
-    HeapPtrAtom        source;
+    JSAtom *           source;
     RegExpFlag         flags;
     unsigned           parenCount;
 

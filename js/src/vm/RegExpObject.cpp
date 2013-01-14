@@ -408,7 +408,7 @@ RegExpShared::~RegExpShared()
 void
 RegExpShared::trace(JSTracer *trc)
 {
-    MarkString(trc, &source, "regexpshared source");
+    MarkStringUnbarriered(trc, &source, "regexpshared source");
 }
 
 void
