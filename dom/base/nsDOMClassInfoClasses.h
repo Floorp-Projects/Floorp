@@ -127,6 +127,10 @@ DOMCI_CLASS(MediaList)
 DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
 
+// CSSValueList object that represents an nsIDOMCSSValueList, used
+// by DOM CSS
+DOMCI_CLASS(CSSValueList)
+
 // Range classes
 DOMCI_CLASS(Range)
 DOMCI_CLASS(Selection)
