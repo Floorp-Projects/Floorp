@@ -859,10 +859,10 @@ mLastShutdownTime(0)
 {
   // A whitelist to prevent Telemetry reporting on Addon & Thunderbird DBs
   const char *trackedDBs[] = {
-    "addons.sqlite", "content-prefs.sqlite",
-    "cookies.sqlite", "downloads.sqlite", "extensions.sqlite",
-    "formhistory.sqlite", "index.sqlite", "permissions.sqlite", "places.sqlite",
-    "search.sqlite", "signons.sqlite", "urlclassifier3.sqlite",
+    "addons.sqlite", "content-prefs.sqlite", "cookies.sqlite",
+    "downloads.sqlite", "extensions.sqlite", "formhistory.sqlite",
+    "index.sqlite", "healthreport.sqlite", "permissions.sqlite",
+    "places.sqlite", "search.sqlite", "signons.sqlite", "urlclassifier3.sqlite",
     "webappsstore.sqlite"
   };
 
