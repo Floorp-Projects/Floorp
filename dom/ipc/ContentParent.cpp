@@ -2334,5 +2334,11 @@ ContentParent::CheckManifestURL(const nsAString& aManifestURL)
   return AssertAppProcessManifestURL(this, NS_ConvertUTF16toUTF8(aManifestURL).get());
 }
 
+bool
+ContentParent::CheckAppHasPermission(const nsAString& aPermission)
+{
+  return AssertAppHasPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
+}
+
 } // namespace dom
 } // namespace mozilla

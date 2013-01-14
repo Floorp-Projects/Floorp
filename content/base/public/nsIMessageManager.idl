@@ -336,7 +336,7 @@ interface nsIFrameScriptLoader : nsISupports
   void removeDelayedFrameScript(in AString aURL);
 };
 
-[scriptable, builtinclass, uuid(e2ccdade-4c16-11e2-9ae0-23151c6d6e1d)]
+[scriptable, builtinclass, uuid(134ccbf0-5c08-11e2-bcfd-0800200c9a66)]
 interface nsIProcessChecker : nsISupports
 {
 
@@ -381,5 +381,7 @@ interface nsIProcessChecker : nsISupports
    * it will be killed as a precaution.
    */
   boolean assertContainApp(in DOMString aManifestURL);
+
+  boolean assertAppHasPermission(in DOMString aPermission);
 
 };
