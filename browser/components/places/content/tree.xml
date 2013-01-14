@@ -117,6 +117,11 @@
           // calls removeObserver.
           result.addObserver(treeView, false);
           this.view = treeView;
+
+          if (this.getAttribute("selectfirstnode") == "true" && treeView.rowCount > 0) {
+            treeView.selection.select(0);
+          }
+
           this._cachedInsertionPoint = undefined;
         ]]></body>
       </method>

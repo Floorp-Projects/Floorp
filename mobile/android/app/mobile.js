@@ -262,6 +262,11 @@ pref("browser.search.jarURIs", "chrome://browser/locale/searchplugins/");
 // tell the search service that we don't really expose the "current engine"
 pref("browser.search.noCurrentEngine", true);
 
+#ifdef MOZ_OFFICIAL_BRANDING
+// {moz:official} expands to "official"
+pref("browser.search.official", true);
+#endif
+
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 

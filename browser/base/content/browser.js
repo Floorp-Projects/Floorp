@@ -1179,8 +1179,8 @@ var gBrowserInit = {
     allTabs.readPref();
     TabsOnTop.init();
     BookmarksMenuButton.init();
-    TabsInTitlebar.init();
     gPrivateBrowsingUI.init();
+    TabsInTitlebar.init();
     retrieveToolbarIconsizesFromTheme();
 
     // Wait until chrome is painted before executing code not critical to making the window visible
@@ -4556,7 +4556,8 @@ var TabsProgressListener = {
       // or history.push/pop/replaceState.
       if (aRequest) {
         // Initialize the click-to-play state.
-        aBrowser._clickToPlayPluginsActivated = false;
+        aBrowser._clickToPlayPluginsActivated = new Map();
+        aBrowser._clickToPlayAllPluginsActivated = false;
         aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
       }
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);

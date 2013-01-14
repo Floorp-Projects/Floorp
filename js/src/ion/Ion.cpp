@@ -863,17 +863,6 @@ CompileBackEnd(MIRGenerator *mir)
             return NULL;
     }
 
-    if (js_IonOptions.edgeCaseAnalysis) {
-        EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
-        if (!edgeCaseAnalysis.analyzeEarly())
-            return NULL;
-        IonSpewPass("Edge Case Analysis (Early)");
-        AssertExtendedGraphCoherency(graph);
-
-        if (mir->shouldCancel("Edge Case Analysis (Early)"))
-            return NULL;
-    }
-
     if (js_IonOptions.gvn) {
         ValueNumberer gvn(mir, graph, js_IonOptions.gvnIsOptimistic);
         if (!gvn.analyze())

@@ -368,6 +368,9 @@ pref("toolkit.telemetry.debugSlowSql", false);
 pref("toolkit.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
+// Enable deprecation warnings.
+pref("devtools.errorconsole.deprecation_warnings", true);
+
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
 // Disable remote debugging connections
@@ -1796,6 +1799,13 @@ pref("svg.smil.enabled", true);
 // Enable the use of display-lists for SVG hit-testing and painting.
 pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
+
+// Is support for the SVG 2 paint-order property enabled?
+#ifdef RELEASE_BUILD
+pref("svg.paint-order.enabled", false);
+#else
+pref("svg.paint-order.enabled", true);
+#endif
 
 pref("font.minimum-size.ar", 0);
 pref("font.minimum-size.x-armn", 0);

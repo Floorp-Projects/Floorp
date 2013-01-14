@@ -130,6 +130,22 @@ FindExceptionHandler(JSContext *cx)
  * Clean up a frame and return.
  */
 
+static inline bool
+MaybeCloneAndPatchCallee(JSContext *cx, CallArgs args, HandleScript script, jsbytecode *pc)
+{
+    if (cx->typeInferenceEnabled() && !args.calleev().isPrimitive() &&
+        args.callee().isFunction() && args.callee().toFunction()->isCloneAtCallsite())
+    {
+        RootedFunction fun(cx, args.callee().toFunction());
+        fun = CloneFunctionAtCallsite(cx, fun, script, pc);
+        if (!fun)
+            return false;
+        args.setCallee(ObjectValue(*fun));
+    }
+
+    return true;
+}
+
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32_t argc)
 {
@@ -137,10 +153,13 @@ stubs::SlowCall(VMFrame &f, uint32_t argc)
         THROW();
 
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
+    RootedScript fscript(f.cx, f.script());
+
+    if (!MaybeCloneAndPatchCallee(f.cx, args, fscript, f.pc()))
+        THROW();
     if (!InvokeKernel(f.cx, args))
         THROW();
 
-    RootedScript fscript(f.cx, f.script());
     types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
 }
 
@@ -148,10 +167,13 @@ void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32_t argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
+    RootedScript fscript(f.cx, f.script());
+
+    if (!MaybeCloneAndPatchCallee(f.cx, args, fscript, f.pc()))
+        THROW();
     if (!InvokeConstructorKernel(f.cx, args))
         THROW();
 
-    RootedScript fscript(f.cx, f.script());
     types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
 }
 
@@ -210,6 +232,10 @@ stubs::FixupArity(VMFrame &f, uint32_t nactual)
 
     /* Reserve enough space for a callee frame. */
     CallArgs args = CallArgsFromSp(nactual, f.regs.sp);
+    if (fun->isCallsiteClone()) {
+        JS_ASSERT(args.callee().toFunction() == fun->getExtendedSlot(0).toObject().toFunction());
+        args.setCallee(ObjectValue(*fun));
+    }
     StackFrame *fp = cx->stack.getFixupFrame(cx, DONT_REPORT_ERROR, args, fun,
                                              script, ncode, initial, &f.stackLimit);
 
@@ -287,7 +313,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     RootedFunction newfun(cx, args.callee().toFunction());
 
-    RootedScript newscript(cx, JSFunction::getOrCreateScript(cx, newfun));
+    RootedScript newscript(cx, newfun->nonLazyScript());
     if (!newscript)
         return false;
 
@@ -395,15 +421,18 @@ stubs::UncachedNewHelper(VMFrame &f, uint32_t argc, UncachedCallResult &ucr)
     ucr.init();
     JSContext *cx = f.cx;
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
+    RootedScript fscript(cx, f.script());
+
+    if (!ucr.setFunction(cx, args, fscript, f.pc()))
+        THROW();
 
     /* Try to do a fast inline call before the general Invoke path. */
-    if (IsFunctionObject(args.calleev(), ucr.fun.address()) && ucr.fun->isInterpretedConstructor()) {
+    if (ucr.fun && ucr.fun->isInterpretedConstructor()) {
         if (!UncachedInlineCall(f, INITIAL_CONSTRUCT, &ucr.codeAddr, &ucr.unjittable, argc))
             THROW();
     } else {
         if (!InvokeConstructorKernel(cx, args))
             THROW();
-        RootedScript fscript(cx, f.script());
         types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
     }
 }
@@ -453,8 +482,12 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
 
     JSContext *cx = f.cx;
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
+    RootedScript fscript(cx, f.script());
 
-    if (IsFunctionObject(args.calleev(), ucr.fun.address())) {
+    if (!ucr.setFunction(cx, args, fscript, f.pc()))
+        THROW();
+
+    if (ucr.fun) {
         if (ucr.fun->isInterpreted()) {
             InitialFrameFlags initial = lowered ? INITIAL_LOWERED : INITIAL_NONE;
             if (!UncachedInlineCall(f, initial, &ucr.codeAddr, &ucr.unjittable, argc))
@@ -474,7 +507,6 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
     if (!InvokeKernel(f.cx, args))
         THROW();
 
-    RootedScript fscript(cx, f.script());
     types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
     return;
 }

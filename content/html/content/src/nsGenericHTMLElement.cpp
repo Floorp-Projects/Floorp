@@ -16,7 +16,6 @@
 #include "mozilla/css/StyleRule.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocumentFragment.h"
@@ -100,6 +99,7 @@
 #include "nsHTMLDocument.h"
 #include "nsDOMTouchEvent.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/HTMLBodyElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3024,8 +3024,7 @@ nsGenericHTMLElement::IsCurrentBodyElement()
 {
   // TODO Bug 698498: Should this handle the case where GetBody returns a
   //                  frameset?
-  nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement = do_QueryInterface(this);
-  if (!bodyElement) {
+  if (!IsHTML(nsGkAtoms::body)) {
     return false;
   }
 
@@ -3037,7 +3036,7 @@ nsGenericHTMLElement::IsCurrentBodyElement()
 
   nsCOMPtr<nsIDOMHTMLElement> htmlElement;
   htmlDocument->GetBody(getter_AddRefs(htmlElement));
-  return htmlElement == bodyElement;
+  return htmlElement == static_cast<HTMLBodyElement*>(this);
 }
 
 // static

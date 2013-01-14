@@ -83,7 +83,7 @@ function getSelf(next) {
 }
 
 function uninstall(next) {
-  app.uninstall().onsuccess = function onUninstall() {
+  navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
     // Try to retrieve the app we just uninstalled, to make sure it no longer
     // exists in the registry.
     navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {

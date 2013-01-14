@@ -14,7 +14,7 @@ namespace plugins {
 
 class PluginModuleChild;
 
-class COMMessageFilter : public IMessageFilter
+class COMMessageFilter MOZ_FINAL : public IMessageFilter
 {
 public:
   static void Initialize(PluginModuleChild* plugin);

@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "base/basictypes.h"
-#include "prtypes.h"
 #include "base/cpu.h"
 #include "skia/SkTypes.h"
 

@@ -90,6 +90,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new TextSelectionHandle(context, attrs);
             else if (TextUtils.equals(viewName, "gfx.LayerView"))
                 return new LayerView(context, attrs);
+            else if (TextUtils.equals(viewName, "AllCapsTextView"))
+                return new AllCapsTextView(context, attrs);
             else if (TextUtils.equals(viewName, "Button"))
                 return new GeckoButton(context, attrs);
             else if (TextUtils.equals(viewName, "EditText"))

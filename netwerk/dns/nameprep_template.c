@@ -48,8 +48,6 @@
 #ifndef NAMEPREP_TEMPLATE_INIT
 #define NAMEPREP_TEMPLATE_INIT
 
-#include "prtypes.h"
-
 /* Symbol composition. */
 #define compose_sym2(a, b)		compose_sym2X(a, b)
 #define compose_sym2X(a, b)		a ## b

@@ -140,7 +140,7 @@ private:
     static IDWriteFontFileLoader* mInstance;
 }; 
 
-class gfxDWriteFontFileStream : public IDWriteFontFileStream
+class gfxDWriteFontFileStream MOZ_FINAL : public IDWriteFontFileStream
 {
 public:
     /**

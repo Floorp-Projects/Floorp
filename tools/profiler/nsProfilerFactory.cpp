@@ -8,7 +8,7 @@
 #include "nsProfiler.h"
 #include "nsProfilerCIID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfiler)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProfiler, Init)
 
 NS_DEFINE_NAMED_CID(NS_PROFILER_CID);
 

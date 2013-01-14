@@ -1582,7 +1582,7 @@ PresShell::GetSelection(SelectionType aType, nsISelection **aSelection)
   return NS_OK;
 }
 
-nsISelection*
+Selection*
 PresShell::GetCurrentSelection(SelectionType aType)
 {
   if (!mSelection)

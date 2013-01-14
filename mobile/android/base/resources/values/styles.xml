@@ -139,25 +139,39 @@
     <style name="TabsList" parent="android:style/Widget.ListView">
          <item name="android:background">@android:color/transparent</item>
          <item name="android:cacheColorHint">@android:color/transparent</item>
-         <item name="android:divider">@drawable/tabs_tray_list_divider</item>
-         <item name="android:dividerHeight">2dip</item>
+         <item name="android:divider">@android:color/transparent</item>
+         <item name="android:dividerHeight">0dip</item>
+         <item name="android:listSelector">@android:color/transparent</item>
     </style>
 
     <!-- RemoteTabsList -->
     <style name="RemoteTabsList" parent="TabsList">
-         <item name="android:childDivider">@drawable/tabs_tray_list_divider</item>
+         <item name="android:dividerHeight">1dip</item>
+         <item name="android:childDivider">@drawable/remote_tabs_child_divider</item>
          <item name="android:groupIndicator">@android:color/transparent</item>
     </style>
 
     <!-- TabsTray Row -->
     <style name="TabRowTextAppearance">
-        <item name="android:textColor">#E5F2FF</item>
+        <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:shadowColor">#7F000000</item>
         <item name="android:shadowRadius">1</item>
         <item name="android:shadowDx">0</item>
         <item name="android:shadowDy">1</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
+    </style>
+
+    <!-- RemoteTabs Row -->
+    <style name="RemoteTabRowTextAppearance">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+    </style>
+
+    <!-- RemoteTabs Row Url -->
+    <style name="RemoteTabRowTextAppearance.Url">
+        <item name="android:textColor">#FFA4A7A9</item>
     </style>
 
     <!-- TabWidget --> 

@@ -4427,9 +4427,27 @@ nsBlockFrame::DrainSelfOverflowList()
   return true;
 }
 
-// This function assumes our prev-in-flow has completed reflow and its
-// mFloats may contain frames at the end of its float list, marked with
-// NS_FRAME_IS_PUSHED_FLOAT, that should be pulled to this block.
+/**
+ * Pushed floats are floats whose placeholders are in a previous
+ * continuation.  They might themselves be next-continuations of a float
+ * that partially fit in an earlier continuation, or they might be the
+ * first continuation of a float that couldn't be placed at all.
+ *
+ * Pushed floats live permanently at the beginning of a block's float
+ * list, where they must live *before* any floats whose placeholders are
+ * in that block.
+ *
+ * Temporarily, during reflow, they also live on the pushed floats list,
+ * which only holds them between (a) when one continuation pushes them to
+ * its pushed floats list because they don't fit and (b) when the next
+ * continuation pulls them onto the beginning of its float list.
+ *
+ * DrainPushedFloats sets up pushed floats the way we need them at the
+ * start of reflow; they are then reflowed by ReflowPushedFloats (which
+ * might push some of them on).  Floats with placeholders in this block
+ * are reflowed by (nsBlockReflowState/nsLineLayout)::AddFloat, which
+ * also maintains these invariants.
+ */
 void
 nsBlockFrame::DrainPushedFloats(nsBlockReflowState& aState)
 {
@@ -4442,16 +4460,70 @@ nsBlockFrame::DrainPushedFloats(nsBlockReflowState& aState)
   nsLayoutUtils::AssertNoDuplicateContinuations(this, mFloats);
 #endif
 
-  // Take any continuations we need to take from our prev-in-flow.
-  nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
-  if (!prevBlock)
-    return;
-  nsFrameList *list = prevBlock->RemovePushedFloats();
-  if (list) {
-    if (list->NotEmpty()) {
-      mFloats.InsertFrames(this, nullptr, *list);
+  // If we're getting reflowed multiple times without our
+  // next-continuation being reflowed, we might need to pull back floats
+  // that we just put in the list to be pushed to our next-in-flow.
+  // We don't want to pull back any next-in-flows of floats on our own
+  // float list, and we only need to pull back first-in-flows whose
+  // placeholders were in earlier blocks (since first-in-flows whose
+  // placeholders are in this block will get pulled appropriately by
+  // AddFloat, and will then be more likely to be in the correct order).
+  // FIXME: What if there's a continuation in our pushed floats list
+  // whose prev-in-flow is in a previous continuation of this block
+  // rather than this block?  Might we need to pull it back so we don't
+  // report ourselves complete?
+  // FIXME: Maybe we should just pull all of them back?
+  nsFrameList *ourPushedFloats = GetPushedFloats();
+  if (ourPushedFloats) {
+    // When we pull back floats, we want to put them with the pushed
+    // floats, which must live at the start of our float list, but we
+    // want them at the end of those pushed floats.
+    // FIXME: This isn't quite right!  What if they're all pushed floats?
+    nsIFrame *insertionPrevSibling = nullptr; /* beginning of list */
+    for (nsIFrame* f = mFloats.FirstChild();
+         f && (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT);
+         f = f->GetNextSibling()) {
+      insertionPrevSibling = f;
     }
-    delete list;
+
+    nsPresContext *presContext = PresContext();
+    for (nsIFrame *f = ourPushedFloats->LastChild(), *next; f; f = next) {
+      next = f->GetPrevSibling();
+
+      if (f->GetPrevContinuation()) {
+        // FIXME
+      } else {
+        nsPlaceholderFrame *placeholder =
+          presContext->FrameManager()->GetPlaceholderFrameFor(f);
+        nsIFrame *floatOriginalParent = presContext->PresShell()->
+          FrameConstructor()->GetFloatContainingBlock(placeholder);
+        if (floatOriginalParent != this) {
+          // This is a first continuation that was pushed from one of our
+          // previous continuations.  Take it out of the pushed floats
+          // list and put it in our floats list, before any of our
+          // floats, but after other pushed floats.
+          ourPushedFloats->RemoveFrame(f);
+          mFloats.InsertFrame(nullptr, insertionPrevSibling, f);
+        }
+      }
+    }
+
+    if (ourPushedFloats->IsEmpty()) {
+      delete RemovePushedFloats();
+    }
+  }
+
+  // After our prev-in-flow has completed reflow, it may have a pushed
+  // floats list, containing floats that we need to own.  Take these.
+  nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
+  if (prevBlock) {
+    nsFrameList *list = prevBlock->RemovePushedFloats();
+    if (list) {
+      if (list->NotEmpty()) {
+        mFloats.InsertFrames(this, nullptr, *list);
+      }
+      delete list;
+    }
   }
 }
 
@@ -5850,6 +5922,8 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
                                  nsReflowStatus&     aStatus)
 {
   nsresult rv = NS_OK;
+  // Pushed floats live at the start of our float list; see comment
+  // above nsBlockFrame::DrainPushedFloats.
   for (nsIFrame* f = mFloats.FirstChild(), *next;
        f && (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT);
        f = next) {
@@ -5896,17 +5970,9 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
       continue;
     }
 
-    if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
-      // Reflow
-      aState.FlowAndPlaceFloat(f);
-    }
-    else {
-      // Just reload the float region into the space manager
-      nsRect region = nsFloatManager::GetRegionFor(f);
-      aState.mFloatManager->AddFloat(f, region);
-      if (f->GetNextInFlow())
-        NS_MergeReflowStatusInto(&aStatus, NS_FRAME_OVERFLOW_INCOMPLETE);
-    }
+    // Always call FlowAndPlaceFloat; we might need to place this float
+    // if didn't belong to this block the last time it was reflowed.
+    aState.FlowAndPlaceFloat(f);
 
     ConsiderChildOverflow(aOverflowAreas, f);
   }
@@ -6028,9 +6094,8 @@ static void ComputeVisualOverflowArea(nsLineList& aLines,
 bool
 nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(mContent));
-  nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(mContent));
-  if (html || body)
+  if (mContent->IsHTML() && (mContent->Tag() == nsGkAtoms::html ||
+                             mContent->Tag() == nsGkAtoms::body))
     return true;
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));

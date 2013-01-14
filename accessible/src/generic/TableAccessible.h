@@ -9,7 +9,6 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
-#include "prtypes.h"
 
 namespace mozilla {
 namespace a11y {

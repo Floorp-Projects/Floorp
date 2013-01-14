@@ -958,6 +958,7 @@ nsSVGElement::sFillStrokeMap[] = {
   { &nsGkAtoms::fill },
   { &nsGkAtoms::fill_opacity },
   { &nsGkAtoms::fill_rule },
+  { &nsGkAtoms::paint_order },
   { &nsGkAtoms::stroke },
   { &nsGkAtoms::stroke_dasharray },
   { &nsGkAtoms::stroke_dashoffset },

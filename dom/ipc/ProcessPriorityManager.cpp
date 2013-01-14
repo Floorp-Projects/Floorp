@@ -170,7 +170,7 @@ private:
   TimeStamp mStartupTime;
 };
 
-NS_IMPL_ISUPPORTS2(ProcessPriorityManager, nsIObserver, nsIDOMEventListener);
+NS_IMPL_ISUPPORTS2(ProcessPriorityManager, nsIObserver, nsIDOMEventListener)
 
 ProcessPriorityManager::ProcessPriorityManager()
   : mProcessPriority(PROCESS_PRIORITY_FOREGROUND)

@@ -14,8 +14,6 @@
 #define nsIFormProcessor_h__
 
 #include "nsISupports.h"
-#include "prtypes.h"
-
 #include "nsIDOMHTMLInputElement.h"
 #include "nsTArray.h"
 

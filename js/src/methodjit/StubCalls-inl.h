@@ -29,6 +29,27 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         js_ReportIsNotDefined(cx, printable.ptr());
 }
 
+inline bool
+stubs::UncachedCallResult::setFunction(JSContext *cx, CallArgs &args,
+                                       HandleScript callScript, jsbytecode *callPc)
+{
+    if (!IsFunctionObject(args.calleev(), fun.address()))
+        return true;
+
+    if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
+        return false;
+
+    if (cx->typeInferenceEnabled() && fun->isCloneAtCallsite()) {
+        original = fun;
+        fun = CloneFunctionAtCallsite(cx, original, callScript, callPc);
+        if (!fun)
+            return false;
+        args.setCallee(ObjectValue(*fun));
+    }
+
+    return true;
+}
+
 } /* namespace mjit */
 } /* namespace js */
 

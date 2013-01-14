@@ -186,6 +186,7 @@ _BROWSER_FILES = \
                  browser_pinnedTabs.js \
                  browser_plainTextLinks.js \
                  browser_pluginnotification.js \
+                 browser_plugins_added_dynamically.js \
                  browser_clickToPlayPluginScriptAccessPopup.js \
                  browser_pluginplaypreview.js \
                  browser_relatedTabs.js \
@@ -249,7 +250,7 @@ _BROWSER_FILES = \
                  plugin_alternate_content.html \
                  plugin_both.html \
                  plugin_both2.html \
-                 plugin_bug743421.html \
+                 plugin_add_dynamically.html \
                  plugin_clickToPlayAllow.html \
                  plugin_clickToPlayDeny.html \
                  plugin_bug749455.html \

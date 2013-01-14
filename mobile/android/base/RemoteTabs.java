@@ -29,9 +29,9 @@ public class RemoteTabs extends ExpandableListView
     private static ArrayList <ArrayList <HashMap <String, String>>> mTabsList;
 
     private static final String[] CLIENT_KEY = new String[] { "name" };
-    private static final String[] TAB_KEY = new String[] { "title" };
+    private static final String[] TAB_KEY = new String[] { "title", "url" };
     private static final int[] CLIENT_RESOURCE = new int[] { R.id.client };
-    private static final int[] TAB_RESOURCE = new int[] { R.id.tab };
+    private static final int[] TAB_RESOURCE = new int[] { R.id.tab, R.id.url };
 
     public RemoteTabs(Context context, AttributeSet attrs) {
         super(context, attrs);

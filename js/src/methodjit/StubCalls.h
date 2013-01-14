@@ -8,6 +8,7 @@
 #if !defined jslogic_h__ && defined JS_METHODJIT
 #define jslogic_h__
 
+#include "jsfuninlines.h"
 #include "MethodJIT.h"
 
 namespace js {
@@ -58,16 +59,21 @@ void JS_FASTCALL ScriptProbeOnlyEpilogue(VMFrame &f);
  */
 struct UncachedCallResult {
     RootedFunction fun;        // callee function
+    RootedFunction original;   // NULL if fun is not a callsite clone, else
+                               // points to the original function.
     void           *codeAddr;  // code address of compiled callee function
     bool           unjittable; // did we try to JIT and fail?
 
-    UncachedCallResult(JSContext *cx) : fun(cx) {}
+    UncachedCallResult(JSContext *cx) : fun(cx), original(cx) {}
 
     void init() {
         fun = NULL;
+        original = NULL;
         codeAddr = NULL;
         unjittable = false;
     }
+    inline bool setFunction(JSContext *cx, CallArgs &args,
+                            HandleScript callScript, jsbytecode *callPc);
 };
 
 /*

@@ -19,7 +19,9 @@ class nsSVGElement;
 
 namespace mozilla {
 
-class DOMSVGMatrix;
+namespace dom {
+class SVGMatrix;
+}
 
 /**
  * Class nsISVGPoint
@@ -46,7 +48,7 @@ public:
   virtual void SetX(float aX, ErrorResult& rv) = 0;
   virtual float Y() = 0;
   virtual void SetY(float aY, ErrorResult& rv) = 0;
-  virtual already_AddRefed<nsISVGPoint> MatrixTransform(DOMSVGMatrix& matrix) = 0;
+  virtual already_AddRefed<nsISVGPoint> MatrixTransform(dom::SVGMatrix& matrix) = 0;
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
     { return dom::SVGPointBinding::Wrap(cx, scope, this, triedToWrap); }

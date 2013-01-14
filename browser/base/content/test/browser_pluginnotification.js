@@ -537,7 +537,7 @@ function test15() {
   var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(mainBox, "Test 15, Plugin with id=" + plugin.id + " overlay should exist");
 
-  prepareTest(test16a, gTestRoot + "plugin_bug743421.html");
+  prepareTest(test16a, gTestRoot + "plugin_add_dynamically.html");
 }
 
 // Tests that a plugin dynamically added to a page after one plugin is clicked

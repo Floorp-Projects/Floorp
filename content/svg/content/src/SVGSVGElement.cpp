@@ -17,7 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "DOMSVGMatrix.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "DOMSVGPoint.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
@@ -93,7 +93,7 @@ nsSVGTranslatePoint::DOMVal::SetY(float aValue, ErrorResult& rv)
 }
 
 already_AddRefed<nsISVGPoint>
-nsSVGTranslatePoint::DOMVal::MatrixTransform(DOMSVGMatrix& matrix)
+nsSVGTranslatePoint::DOMVal::MatrixTransform(SVGMatrix& matrix)
 {
   float a = matrix.A(), b = matrix.B(), c = matrix.C();
   float d = matrix.D(), e = matrix.E(), f = matrix.F();
@@ -611,7 +611,7 @@ SVGSVGElement::CreateSVGPoint()
   return point.forget();
 }
 
-/* DOMSVGMatrix createSVGMatrix (); */
+/* SVGMatrix createSVGMatrix (); */
 NS_IMETHODIMP
 SVGSVGElement::CreateSVGMatrix(nsISupports **_retval)
 {
@@ -619,10 +619,10 @@ SVGSVGElement::CreateSVGMatrix(nsISupports **_retval)
   return NS_OK;
 }
 
-already_AddRefed<DOMSVGMatrix>
+already_AddRefed<SVGMatrix>
 SVGSVGElement::CreateSVGMatrix()
 {
-  nsRefPtr<DOMSVGMatrix> matrix = new DOMSVGMatrix();
+  nsRefPtr<SVGMatrix> matrix = new SVGMatrix();
   return matrix.forget();
 }
 
@@ -657,12 +657,12 @@ SVGSVGElement::CreateSVGTransform()
   return transform.forget();
 }
 
-/* DOMSVGTransform createSVGTransformFromMatrix (in DOMSVGMatrix matrix); */
+/* DOMSVGTransform createSVGTransformFromMatrix (in SVGMatrix matrix); */
 NS_IMETHODIMP
 SVGSVGElement::CreateSVGTransformFromMatrix(nsISupports *matrix,
                                             nsISupports **_retval)
 {
-  nsCOMPtr<DOMSVGMatrix> domItem = do_QueryInterface(matrix);
+  nsCOMPtr<SVGMatrix> domItem = do_QueryInterface(matrix);
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
@@ -672,7 +672,7 @@ SVGSVGElement::CreateSVGTransformFromMatrix(nsISupports *matrix,
 }
 
 already_AddRefed<DOMSVGTransform>
-SVGSVGElement::CreateSVGTransformFromMatrix(DOMSVGMatrix& matrix)
+SVGSVGElement::CreateSVGTransformFromMatrix(SVGMatrix& matrix)
 {
   nsRefPtr<DOMSVGTransform> transform = new DOMSVGTransform(matrix.Matrix());
   return transform.forget();
