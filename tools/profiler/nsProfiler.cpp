@@ -136,7 +136,7 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
 
 #ifdef DEBUG
   std::ostringstream oStream;
-  oStream << pdbSignature << std::hex << pdbAge;
+  oStream << pdbSignature << std::hex << std::uppercase << pdbAge;
   MOZ_ASSERT(breakpadId == oStream.str());
 #endif
 
