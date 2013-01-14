@@ -511,6 +511,12 @@ IsImplicitProperty(HandleShape prop)
     return prop.get() == reinterpret_cast<Shape*>(1);
 }
 
+static inline uint8_t
+GetShapeAttributes(HandleShape shape)
+{
+    return IsImplicitProperty(shape) ? JSPROP_ENUMERATE : shape->attributes();
+}
+
 } /* namespace js */
 
 #endif /* jsscopeinlines_h___ */
