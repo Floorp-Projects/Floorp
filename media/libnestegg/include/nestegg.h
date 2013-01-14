@@ -319,6 +319,12 @@ int nestegg_packet_count(nestegg_packet * packet, unsigned int * count);
 int nestegg_packet_data(nestegg_packet * packet, unsigned int item,
                         unsigned char ** data, size_t * length);
 
+/**
+ * Query the presence of cues.
+ * @retval 0 The media has no cues.
+ * @retval 1 The media has cues. */
+int nestegg_has_cues(nestegg * context);
+
 #ifdef __cplusplus
 }
 #endif
