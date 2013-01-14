@@ -18,8 +18,10 @@ let log =
   function log_dump(msg) { dump("UpdatePrompt: "+ msg +"\n"); } :
   function log_noop(msg) { };
 
-const PREF_APPLY_PROMPT_TIMEOUT = "b2g.update.apply-prompt-timeout";
-const PREF_APPLY_IDLE_TIMEOUT   = "b2g.update.apply-idle-timeout";
+const PREF_APPLY_PROMPT_TIMEOUT          = "b2g.update.apply-prompt-timeout";
+const PREF_APPLY_IDLE_TIMEOUT            = "b2g.update.apply-idle-timeout";
+const PREF_DOWNLOAD_WATCHDOG_TIMEOUT     = "b2g.update.download-watchdog-timeout";
+const PREF_DOWNLOAD_WATCHDOG_MAX_RETRIES = "b2g.update.download-watchdog-max-retries";
 
 const NETWORK_ERROR_OFFLINE = 111;
 const FILE_ERROR_TOO_BIG    = 112;
@@ -489,25 +491,92 @@ UpdatePrompt.prototype = {
 
   _startedSent: false,
 
+  _watchdogTimer: null,
+  _watchdogTimeout: 0,
+
+  _autoRestartDownload: false,
+  _autoRestartCount: 0,
+
+  watchdogTimerFired: function UP_watchdogTimerFired() {
+    log("Download watchdog fired");
+    this._autoRestartDownload = true;
+    Services.aus.pauseDownload();
+  },
+
+  startWatchdogTimer: function UP_startWatchdogTimer() {
+    if (this._watchdogTimer) {
+      this._watchdogTimer.cancel();
+    } else {
+      this._watchdogTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._watchdogTimeout = Services.prefs.getIntPref(PREF_DOWNLOAD_WATCHDOG_TIMEOUT);
+    }
+    this._watchdogTimer.initWithCallback(this.watchdogTimerFired.bind(this),
+                                         this._watchdogTimeout,
+                                         Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  stopWatchdogTimer: function UP_stopWatchdogTimer() {
+    if (this._watchdogTimer) {
+      this._watchdogTimer.cancel();
+      this._watchdogTimer = null;
+    }
+  },
+
+  touchWatchdogTimer: function UP_touchWatchdogTimer() {
+    this.startWatchdogTimer();
+  },
+
   onStartRequest: function UP_onStartRequest(aRequest, aContext) {
     // Wait until onProgress to send the update-download-started event, in case
     // this request turns out to fail for some reason
     this._startedSent = false;
+    this.startWatchdogTimer();
   },
 
   onStopRequest: function UP_onStopRequest(aRequest, aContext, aStatusCode) {
-    let paused = !Components.isSuccessCode(aStatusCode);
-    this.sendChromeEvent("update-download-stopped", {
-        paused: paused
-    });
-
+    this.stopWatchdogTimer();
     Services.aus.removeDownloadListener(this);
+    let paused = !Components.isSuccessCode(aStatusCode);
+    if (!paused) {
+      // The download was successful, no need to restart
+      this._autoRestartDownload = false;
+    }
+    if (this._autoRestartDownload) {
+      this._autoRestartDownload = false;
+      let watchdogMaxRetries = Services.prefs.getIntPref(PREF_DOWNLOAD_WATCHDOG_MAX_RETRIES);
+      this._autoRestartCount++;
+      if (this._autoRestartCount > watchdogMaxRetries) {
+        log("Download - retry count exceeded - error");
+        // We exceeded the max retries. Treat the download like an error,
+        // which will give the user a chance to restart manually later.
+        this._autoRestartCount = 0;
+        if (Services.um.activeUpdate) {
+          this.showUpdateError(Services.um.activeUpdate);
+        }
+        return;
+      }
+      log("Download - restarting download - attempt " + this._autoRestartCount);
+      this.downloadUpdate(null);
+      return;
+    }
+    this._autoRestartCount = 0;
+    this.sendChromeEvent("update-download-stopped", {
+      paused: paused
+    });
   },
 
   // nsIProgressEventSink
 
   onProgress: function UP_onProgress(aRequest, aContext, aProgress,
                                      aProgressMax) {
+    if (aProgress == aProgressMax) {
+      // The update.mar validation done by onStopRequest may take
+      // a while before the onStopRequest callback is made, so stop
+      // the timer now.
+      this.stopWatchdogTimer();
+    } else {
+      this.touchWatchdogTimer();
+    }
     if (!this._startedSent) {
       this.sendChromeEvent("update-download-started", {
         total: aProgressMax
