@@ -57,13 +57,11 @@ nsNthIndexCache::IndexDeterminedFromPreviousSibling(nsIContent* aSibling,
         // |siblingIndex| is the index of aSibling.
         // So if aIsFromEnd, we want |aResult = siblingIndex - aResult| and
         // otherwise we want |aResult = siblingIndex + aResult|.
-        NS_ABORT_IF_FALSE(aIsFromEnd == 0 || aIsFromEnd == 1,
-                          "Bogus bool value");
         aResult = siblingIndex + aResult * (1 - 2 * aIsFromEnd);
         return true;
       }
     }
-    
+
     ++aResult;
   }
 

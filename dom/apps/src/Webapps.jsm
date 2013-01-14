@@ -746,10 +746,11 @@ this.DOMApplicationRegistry = {
     Services.prefs.setBoolPref("dom.mozApps.used", true);
 
     // We need to check permissions for calls coming from mozApps.mgmt.
-    // These are: getAll(), getNotInstalled() and applyDownload()
+    // These are: getAll(), getNotInstalled(), applyDownload() and uninstall().
     if (["Webapps:GetAll",
          "Webapps:GetNotInstalled",
-         "Webapps:ApplyDownload"].indexOf(aMessage.name) != -1) {
+         "Webapps:ApplyDownload",
+         "Webapps:Uninstall"].indexOf(aMessage.name) != -1) {
       if (!aMessage.target.assertPermission("webapps-manage")) {
         debug("mozApps message " + aMessage.name +
         " from a content process with no 'webapps-manage' privileges.");
@@ -837,6 +838,7 @@ this.DOMApplicationRegistry = {
   // Webapps:RemoveApp
   // Webapps:Install:Return:OK
   // Webapps:Uninstall:Return:OK
+  // Webapps:Uninstall:Broadcast:Return:OK
   // Webapps:OfflineCache
   // Webapps:checkForUpdate:Return:OK
   // Webapps:PackageEvent
@@ -912,8 +914,6 @@ this.DOMApplicationRegistry = {
     app.progress = 0;
     app.installState = download.previousState;
     app.downloading = false;
-    app.downloadAvailable = false;
-    app.downloadSize = 0;
     this._saveApps((function() {
       this.broadcastMessage("Webapps:PackageEvent",
                              { type: "canceled",
@@ -966,6 +966,7 @@ this.DOMApplicationRegistry = {
                                                     manifestURL: aManifestURL,
                                                     app: app,
                                                     manifest: jsonManifest });
+          DOMApplicationRegistry._saveApps();
         }
       }).bind(this));
 
@@ -1324,7 +1325,7 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!AppsUtils.checkManifest(manifest)) {
+        if (!AppsUtils.checkManifest(manifest, app)) {
           sendError("INVALID_MANIFEST");
           return;
         } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
@@ -1439,7 +1440,7 @@ this.DOMApplicationRegistry = {
           return;
         }
 
-        if (!AppsUtils.checkManifest(app.manifest)) {
+        if (!AppsUtils.checkManifest(app.manifest, app)) {
           sendError("INVALID_MANIFEST");
         } else if (!AppsUtils.checkInstallAllowed(app.manifest, app.installOrigin)) {
           sendError("INSTALL_FROM_DENIED");
@@ -1501,7 +1502,7 @@ this.DOMApplicationRegistry = {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-        if (!(AppsUtils.checkManifest(manifest) &&
+        if (!(AppsUtils.checkManifest(manifest, app) &&
               manifest.package_path)) {
           sendError("INVALID_MANIFEST");
         } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
@@ -1867,6 +1868,7 @@ this.DOMApplicationRegistry = {
                                     manifestURL: aApp.manifestURL,
                                     app: app });
             lastProgressTime = now;
+            self._saveApps();
           }
         },
         onStatus: function notifStatus(aRequest, aContext, aStatus, aStatusArg) { },
@@ -2023,13 +2025,16 @@ this.DOMApplicationRegistry = {
               let manifest = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(istream,
                                                                    istream.available()) || ""));
 
+              // Call checkManifest before compareManifests, as checkManifest
+              // will normalize some attributes that has already been normalized
+              // for aManifest during checkForUpdate.
+              if (!AppsUtils.checkManifest(manifest, app)) {
+                throw "INVALID_MANIFEST";
+              }
+
               if (!AppsUtils.compareManifests(manifest,
                                               aManifest._manifest)) {
                 throw "MANIFEST_MISMATCH";
-              }
-
-              if (!AppsUtils.checkManifest(manifest)) {
-                throw "INVALID_MANIFEST";
               }
 
               if (!AppsUtils.checkInstallAllowed(manifest, aApp.installOrigin)) {
@@ -2061,7 +2066,7 @@ this.DOMApplicationRegistry = {
             } catch (e) {
               // Something bad happened when reading the package.
               if (typeof e == 'object') {
-                debug(e);
+                Cu.reportError("Error while reading package:" + e);
                 cleanup("INVALID_PACKAGE");
               } else {
                 cleanup(e);
@@ -2142,7 +2147,8 @@ this.DOMApplicationRegistry = {
 
       this._saveApps((function() {
         aData.manifestURL = app.manifestURL;
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", aData);
+        this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK", aData);
+        aMm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-uninstall", appNote);
         this.broadcastMessage("Webapps:RemoveApp", { id: id });
       }).bind(this));
@@ -2356,8 +2362,8 @@ this.DOMApplicationRegistry = {
           dir.remove(true);
         } catch (e) {
         }
-        this.broadcastMessage("Webapps:Uninstall:Return:OK", { origin: origin,
-                                                               manifestURL: manifestURL });
+        this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK",
+                              { origin: origin, manifestURL: manifestURL });
       } else {
         if (this.webapps[record.id]) {
           this.webapps[record.id] = record.value;
@@ -2556,17 +2562,19 @@ AppcacheObserver.prototype = {
 
     debug("Offline cache state change for " + app.origin + " : " + aState);
 
-    let setStatus = function appObs_setStatus(aStatus) {
+    let setStatus = function appObs_setStatus(aStatus, aProgress) {
       debug("Offlinecache setStatus to " + aStatus + " for " + app.origin);
       mustSave = (app.installState != aStatus);
       app.installState = aStatus;
+      app.progress = aProgress;
       if (aStatus == "installed") {
         app.downloading = false;
         app.downloadAvailable = false;
       }
       DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
                                               { manifest: app.manifestURL,
-                                                installState: app.installState });
+                                                installState: app.installState,
+                                                progress: app.progress });
     }
 
     let setError = function appObs_setError(aError) {
@@ -2587,16 +2595,16 @@ AppcacheObserver.prototype = {
       case Ci.nsIOfflineCacheUpdateObserver.STATE_NOUPDATE:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
         aUpdate.removeObserver(this);
-        setStatus("installed");
+        setStatus("installed", aUpdate.byteProgress);
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
-        setStatus(this.startStatus);
+        setStatus(this.startStatus, aUpdate.byteProgress);
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
         let now = Date.now();
         if (now - this.lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
-          setStatus(this.startStatus);
+          setStatus(this.startStatus, aUpdate.byteProgress);
           this.lastProgressTime = now;
         }
         break;

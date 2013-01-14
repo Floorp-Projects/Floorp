@@ -90,7 +90,7 @@ public:
       return mozilla::HashString(str);
     }
 
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PermissionKey);
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PermissionKey)
 
     nsCString mHost;
     uint32_t  mAppId;

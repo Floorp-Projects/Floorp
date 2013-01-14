@@ -758,12 +758,57 @@ let LateWritesSingleton = {
   }
 };
 
+/**
+ * Helper function for sorting the startup milestones in the Simple Measurements
+ * section into temporal order.
+ *
+ * @param aSimpleMeasurements Telemetry ping's "Simple Measurements" data
+ * @return Sorted measurements
+ */
+function sortStartupMilestones(aSimpleMeasurements) {
+  // List of startup milestones
+  const startupMilestones =
+    ["start", "main", "startupCrashDetectionBegin", "createTopLevelWindow",
+     "firstPaint", "delayedStartupStarted", "firstLoadURI",
+     "sessionRestoreInitialized", "sessionRestoreRestoring", "sessionRestored",
+     "delayedStartupFinished", "startupCrashDetectionEnd"];
+
+  let sortedKeys = Object.keys(aSimpleMeasurements);
+
+  // Sort the measurements, with startup milestones at the front + ordered by time
+  sortedKeys.sort(function keyCompare(keyA, keyB) {
+    let isKeyAMilestone = (startupMilestones.indexOf(keyA) > -1);
+    let isKeyBMilestone = (startupMilestones.indexOf(keyB) > -1);
+
+    // First order by startup vs non-startup measurement
+    if (isKeyAMilestone && !isKeyBMilestone)
+      return -1;
+    if (!isKeyAMilestone && isKeyBMilestone)
+      return 1;
+    // Don't change order of non-startup measurements
+    if (!isKeyAMilestone && !isKeyBMilestone)
+      return 0;
+
+    // If both keys are startup measurements, order them by value
+    return aSimpleMeasurements[keyA] - aSimpleMeasurements[keyB];
+  });
+
+  // Insert measurements into a result object in sort-order
+  let result = {};
+  for (let key of sortedKeys) {
+    result[key] = aSimpleMeasurements[key];
+  }
+
+  return result;
+}
+
 function displayPingData() {
   let ping = TelemetryPing.getPayload();
 
   // Show simple measurements
-  if (Object.keys(ping.simpleMeasurements).length) {
-    KeyValueTable.render("simple-measurements-table", ping.simpleMeasurements);
+  let simpleMeasurements = sortStartupMilestones(ping.simpleMeasurements);
+  if (Object.keys(simpleMeasurements).length) {
+    KeyValueTable.render("simple-measurements-table", simpleMeasurements);
   } else {
     showEmptySectionMessage("simple-measurements-section");
   }

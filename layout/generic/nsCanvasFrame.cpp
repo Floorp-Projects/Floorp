@@ -147,7 +147,7 @@ nsCanvasFrame::RemoveFrame(ChildListID     aListID,
 {
   NS_ASSERTION(aListID == kPrincipalList ||
                aListID == kAbsoluteList, "unexpected child list ID");
-  if (aListID != kPrincipalList || aListID != kAbsoluteList) {
+  if (aListID != kPrincipalList && aListID != kAbsoluteList) {
     // We only support the Principal and Absolute child lists.
     return NS_ERROR_INVALID_ARG;
   }

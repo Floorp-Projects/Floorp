@@ -14,7 +14,7 @@
 
 
 
-class nsCollationWin : public nsICollation {
+class nsCollationWin MOZ_FINAL : public nsICollation {
 
 protected:
   nsCollation   *mCollation;  // XP collation class

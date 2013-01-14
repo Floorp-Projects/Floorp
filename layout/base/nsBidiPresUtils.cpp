@@ -1599,7 +1599,6 @@ nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    nsCharType       aCharType,
                                    bool             aIsOddLevel)
 {
-  NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
   nsresult rv = NS_OK;
   // ahmed 
   //adjusted for correct numeral shaping  

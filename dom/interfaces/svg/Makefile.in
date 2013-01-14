@@ -24,7 +24,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedNumber.idl \
 		nsIDOMSVGAnimatedPathData.idl \
-		nsIDOMSVGAnimatedPoints.idl \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimatedString.idl \
 		nsIDOMSVGAnimateElement.idl \

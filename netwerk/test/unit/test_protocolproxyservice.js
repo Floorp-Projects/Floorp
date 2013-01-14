@@ -597,7 +597,41 @@ function myipaddress_callback(pi)
   do_check_neq(pi.host, null);
   do_check_neq(pi.host, "127.0.0.1");
   do_check_neq(pi.host, "::1");
+  
+  run_myipaddress_test_2();
+}
 
+function run_myipaddress_test_2()
+{
+  // test that myIPAddress() can be used outside of the scope of
+  // FindProxyForURL(). bug 829646.
+
+  var pac = 'data:text/plain,' +
+            'var myaddr = myIpAddress(); ' +
+            'function FindProxyForURL(url, host) {' +
+            ' return "PROXY " + myaddr + ":5678";' +
+            '}';
+
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = myipaddress2_callback;
+  var req = pps.asyncResolve(uri, 0, cb);
+}
+
+function myipaddress2_callback(pi)
+{
+  do_check_neq(pi, null);
+  do_check_eq(pi.type, "http");
+  do_check_eq(pi.port, 5678);
+
+  // make sure we didn't return localhost
+  do_check_neq(pi.host, null);
+  do_check_neq(pi.host, "127.0.0.1");
+  do_check_neq(pi.host, "::1");
+  
   run_failed_script_test();
 }
 

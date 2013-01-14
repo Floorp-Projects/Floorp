@@ -142,29 +142,6 @@ inline nscoord NSCoordSaturatingMultiply(nscoord aCoord, float aScale) {
   return _nscoordSaturatingMultiply(aCoord, aScale, false);
 }
 
-inline nscoord NSCoordMultiply(nscoord aCoord, int32_t aScale) {
-  VERIFY_COORD(aCoord);
-  return aCoord * aScale;
-}
-
-inline nscoord NSCoordDivide(nscoord aCoord, float aVal) {
-  VERIFY_COORD(aCoord);
-#ifdef NS_COORD_IS_FLOAT
-  return floorf(aCoord/aVal);
-#else
-  return (int32_t)(aCoord/aVal);
-#endif
-}
-
-inline nscoord NSCoordDivide(nscoord aCoord, int32_t aVal) {
-  VERIFY_COORD(aCoord);
-#ifdef NS_COORD_IS_FLOAT
-  return floorf(aCoord/aVal);
-#else
-  return aCoord/aVal;
-#endif
-}
-
 /**
  * Returns a + b, capping the sum to nscoord_MAX.
  *
@@ -265,54 +242,6 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
   }
 #endif
 }
-/** compare against a nscoord "b", which might be unconstrained
-  * "a" must not be unconstrained.
-  * Every number is smaller than a unconstrained one
-  */
-inline bool
-NSCoordLessThan(nscoord a,nscoord b)
-{
-  NS_ASSERTION(a != nscoord_MAX, 
-               "This coordinate should be constrained");
-  return ((a < b) || (b == nscoord_MAX));
-}
-
-/** compare against a nscoord "b", which might be unconstrained
-  * "a" must not be unconstrained
-  * No number is larger than a unconstrained one.
-  */
-inline bool
-NSCoordGreaterThan(nscoord a,nscoord b)
-{
-  NS_ASSERTION(a != nscoord_MAX, 
-               "This coordinate should be constrained");
-  return ((a > b) && (b != nscoord_MAX));
-}
-
-/**
- * Convert an nscoord to a int32_t. This *does not* do rounding because
- * coords are never fractional. They can be out of range, so this does
- * clamp out of bounds coord values to INT32_MIN and INT32_MAX.
- */
-inline int32_t NSCoordToInt(nscoord aCoord) {
-  VERIFY_COORD(aCoord);
-#ifdef NS_COORD_IS_FLOAT
-  NS_ASSERTION(!NS_IEEEIsNan(aCoord), "NaN encountered in int conversion");
-  if (aCoord < -2147483648.0f) {
-    // -2147483648 is the smallest 32-bit signed integer that can be
-    // exactly represented as a float
-    return INT32_MIN;
-  } else if (aCoord > 2147483520.0f) {
-    // 2147483520 is the largest 32-bit signed integer that can be
-    // exactly represented as an IEEE float
-    return INT32_MAX;
-  } else {
-    return (int32_t)aCoord;
-  }
-#else
-  return aCoord;
-#endif
-}
 
 inline float NSCoordToFloat(nscoord aCoord) {
   VERIFY_COORD(aCoord);
@@ -363,24 +292,6 @@ inline nscoord NSToCoordCeil(double aValue)
   return nscoord(ceil(aValue));
 }
 
-inline nscoord NSToCoordCeilClamped(float aValue)
-{
-#ifndef NS_COORD_IS_FLOAT
-  // Bounds-check before converting out of float, to avoid overflow
-  NS_WARN_IF_FALSE(aValue <= nscoord_MAX,
-                   "Overflowed nscoord_MAX in conversion to nscoord");
-  if (aValue >= nscoord_MAX) {
-    return nscoord_MAX;
-  }
-  NS_WARN_IF_FALSE(aValue >= nscoord_MIN,
-                   "Overflowed nscoord_MIN in conversion to nscoord");
-  if (aValue <= nscoord_MIN) {
-    return nscoord_MIN;
-  }
-#endif
-  return NSToCoordCeil(aValue);
-}
-
 inline nscoord NSToCoordCeilClamped(double aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
@@ -422,11 +333,6 @@ inline int32_t NSToIntRound(double aValue)
   return NS_lround(aValue);
 }
 
-inline int32_t NSToIntRoundUp(float aValue)
-{
-  return int32_t(floorf(aValue + 0.5f));
-}
-
 inline int32_t NSToIntRoundUp(double aValue)
 {
   return int32_t(floor(aValue + 0.5));
@@ -452,11 +358,6 @@ inline nscoord NSIntPixelsToAppUnits(int32_t aPixels, int32_t aAppUnitsPerPixel)
 inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
 {
   return (float(aAppUnits) / aAppUnitsPerPixel);
-}
-
-inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, nscoord aAppUnitsPerPixel)
-{
-  return (double(aAppUnits) / double(aAppUnitsPerPixel));
 }
 
 inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, double aAppUnitsPerPixel)
@@ -501,20 +402,13 @@ inline float NSTwipsToUnits(float aTwips, float aUnitsPerPoint)
 #define NS_INCHES_TO_TWIPS(x)         NSUnitsToTwips((x), POINTS_PER_INCH_FLOAT)                      // 72 points per inch
 
 #define NS_MILLIMETERS_TO_TWIPS(x)    NSUnitsToTwips((x), (POINTS_PER_INCH_FLOAT * 0.03937f))
-#define NS_CENTIMETERS_TO_TWIPS(x)    NSUnitsToTwips((x), (POINTS_PER_INCH_FLOAT * 0.3937f))
-
-#define NS_PICAS_TO_TWIPS(x)          NSUnitsToTwips((x), 12.0f)                      // 12 points per pica
 
 #define NS_POINTS_TO_INT_TWIPS(x)     NSToIntRound(NS_POINTS_TO_TWIPS(x))
 #define NS_INCHES_TO_INT_TWIPS(x)     NSToIntRound(NS_INCHES_TO_TWIPS(x))
 
-#define NS_TWIPS_TO_POINTS(x)         NSTwipsToUnits((x), 1.0f)
 #define NS_TWIPS_TO_INCHES(x)         NSTwipsToUnits((x), 1.0f / POINTS_PER_INCH_FLOAT)
 
 #define NS_TWIPS_TO_MILLIMETERS(x)    NSTwipsToUnits((x), 1.0f / (POINTS_PER_INCH_FLOAT * 0.03937f))
-#define NS_TWIPS_TO_CENTIMETERS(x)    NSTwipsToUnits((x), 1.0f / (POINTS_PER_INCH_FLOAT * 0.3937f))
-
-#define NS_TWIPS_TO_PICAS(x)          NSTwipsToUnits((x), 1.0f / 12.0f)
 //@}
 
 #endif /* NSCOORD_H */

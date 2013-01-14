@@ -10,7 +10,7 @@
 #include "nsSVGElement.h"
 #include "nsError.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
-#include "DOMSVGMatrix.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGPointBinding.h"
 
 // See the architecture comment in DOMSVGPointList.h.
@@ -115,7 +115,7 @@ DOMSVGPoint::SetY(float aY, ErrorResult& rv)
 }
 
 already_AddRefed<nsISVGPoint>
-DOMSVGPoint::MatrixTransform(DOMSVGMatrix& matrix)
+DOMSVGPoint::MatrixTransform(dom::SVGMatrix& matrix)
 {
   float x = HasOwner() ? InternalItem().mX : mPt.mX;
   float y = HasOwner() ? InternalItem().mY : mPt.mY;

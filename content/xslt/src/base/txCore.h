@@ -9,7 +9,6 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
-#include "prtypes.h"
 
 class nsAString;
 

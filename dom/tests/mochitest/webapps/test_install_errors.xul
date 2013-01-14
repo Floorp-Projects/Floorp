@@ -82,7 +82,7 @@ function permissionDenied(next) {
 
   request.onsuccess = function onInstall() {
     todo(false, "manifest without installs_allowed_from fails");
-    this.result.uninstall().onsuccess = function onUninstall() {
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
   };
@@ -101,7 +101,7 @@ function invalidContent(next) {
 
   request.onsuccess = function onInstall() {
     ok(false, "manifest with bad content type should fail");
-    this.result.uninstall().onsuccess = function onUninstall() {
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
   };
@@ -217,7 +217,7 @@ function originNotAllowed(next) {
 
   request.onsuccess = function onInstall() {
     ok(false, "test should fail because of installs_allowed_from");
-    this.result.uninstall().onsuccess = function onUninstall() {
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
   };
@@ -236,7 +236,7 @@ function originAllowed(next) {
 
   request.onsuccess = function onInstall() {
     ok(true, "test origin is in installs_allowed_from");
-    this.result.uninstall().onsuccess = function onUninstall() {
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
   };

@@ -16,7 +16,6 @@ interface nsINode;
 
 %{C++
 class nsFrameSelection;
-class nsIPresShell;
 struct nsTextRangeStyle;
 struct nsPoint;
 struct ScrollAxis;
@@ -26,14 +25,13 @@ struct ScrollAxis;
 
 [ptr] native nsFrameSelection(nsFrameSelection);
 [ptr] native nsIFrame(nsIFrame);
-[ptr] native nsIPresShell(nsIPresShell);
 [ptr] native RangeArray(nsTArray<nsRange*>);
 [ref] native constTextRangeStyleRef(const nsTextRangeStyle);
 [ref] native nsPointRef(nsPoint);
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, uuid(3a1a6d3b-3698-4561-ba00-ba648cb2b0d4)]
+[scriptable, uuid(2e44b10f-7d6d-4bf4-92e2-f9551d22f422)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -74,9 +72,6 @@ interface nsISelectionPrivate : nsISelection
       */
     long getTableSelectionType(in nsIDOMRange range);
     
-    /* Internal utility method to set the pres shell on a newly created selection */
-    [noscript] void setPresShell(in nsIPresShell aPresShell);
-
     /* canCacheFrameOffset
      * Frame Offset cache can be used just during calling nsEditor::EndPlaceHolderTransaction.
      * EndPlaceHolderTransaction will give rise to reflow/refreshing view/scroll, and call times

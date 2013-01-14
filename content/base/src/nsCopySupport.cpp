@@ -45,6 +45,7 @@
 #include "nsContentCID.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/Selection.h"
 
 #include "mozilla/Preferences.h"
 

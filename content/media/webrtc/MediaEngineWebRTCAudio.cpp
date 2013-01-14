@@ -300,7 +300,9 @@ MediaEngineWebRTCAudioSource::Process(const int channel,
 
     AudioSegment segment;
     segment.Init(CHANNELS);
-    segment.AppendFrames(buffer.forget(), length, 0, length, AUDIO_FORMAT_S16);
+    nsAutoTArray<const sample*,1> channels;
+    channels.AppendElement(dest);
+    segment.AppendFrames(buffer.forget(), channels, length);
 
     SourceMediaStream *source = mSources[i];
     if (source) {

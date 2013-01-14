@@ -218,8 +218,8 @@ DeviceStorageRequestParent::~DeviceStorageRequestParent()
   MOZ_COUNT_DTOR(DeviceStorageRequestParent);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(DeviceStorageRequestParent);
-NS_IMPL_THREADSAFE_RELEASE(DeviceStorageRequestParent);
+NS_IMPL_THREADSAFE_ADDREF(DeviceStorageRequestParent)
+NS_IMPL_THREADSAFE_RELEASE(DeviceStorageRequestParent)
 
 void
 DeviceStorageRequestParent::ActorDestroy(ActorDestroyReason)

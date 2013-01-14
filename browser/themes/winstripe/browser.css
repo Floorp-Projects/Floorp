@@ -2981,6 +2981,10 @@ html|*#gcli-output-frame {
   display: none;
 }
 
+#developer-toolbar-toolbox-button > .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
 .developer-toolbar-button {
   -moz-appearance: none;
   min-width: 78px;
@@ -3391,8 +3395,10 @@ chatbox[minimized="true"] {
   background-position: top left;
 }
 
-#main-window[privatebrowsingmode=temporary] #appmenu-button {
+#main-window[privatebrowsingmode=temporary] #appmenu-button > .button-box > .box-inherit > .button-icon {
   list-style-image: url("chrome://browser/skin/privatebrowsing-light.png");
+  width: 20px;
+  height: 16px;
 }
 %endif
 

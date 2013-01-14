@@ -20,7 +20,7 @@ DWORD WINAPI StartTaskThread(void *aManager);
 
 struct ReadbackTask;
 
-class ReadbackManagerD3D10 : public IUnknown
+class ReadbackManagerD3D10 MOZ_FINAL : public IUnknown
 {
 public:
   ReadbackManagerD3D10();

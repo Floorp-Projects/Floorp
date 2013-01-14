@@ -1198,9 +1198,8 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                             mAsyncScrollTimeout);
   }
 
-  nsIntPoint scrollCompensation(
-    ((scrollOffset / rootScale - metricsScrollOffset) * localScale)
-    .RoundedAwayFromZero());
+  gfxPoint scrollCompensation(
+    (scrollOffset / rootScale - metricsScrollOffset) * localScale);
   *aNewTransform = ViewTransform(-scrollCompensation, localScale);
 
   mLastSampleTime = aSampleTime;
@@ -1421,7 +1420,7 @@ void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
 
     while (!mTouchQueue.IsEmpty()) {
       // we need to reset mDelayPanning before handling scrolling gesture.
-      if (mTouchQueue[0].mType == MultiTouchInput::MULTITOUCH_MOVE) {
+      if (!aPreventDefault && mTouchQueue[0].mType == MultiTouchInput::MULTITOUCH_MOVE) {
         mDelayPanning = false;
       }
       if (!aPreventDefault) {

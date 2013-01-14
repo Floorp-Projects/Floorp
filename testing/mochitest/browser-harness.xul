@@ -9,9 +9,9 @@
         onload="TestStart();"
         title="Browser chrome tests"
         width="1024">
-  <script src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
-  <script src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
-  <script src="chrome://mochikit/content/chrome-harness.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
     #results {
       margin: 5px;

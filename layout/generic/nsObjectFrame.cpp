@@ -1984,8 +1984,8 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         return;
       }
 
-      origin.x = NSToIntRound(float(ctxMatrix.GetTranslation().x));
-      origin.y = NSToIntRound(float(ctxMatrix.GetTranslation().y));
+      origin.x = NSToIntRound(ctxMatrix.GetTranslation().x);
+      origin.y = NSToIntRound(ctxMatrix.GetTranslation().y);
 
       /* Need to force the clip to be set */
       ctx->UpdateSurfaceClip();

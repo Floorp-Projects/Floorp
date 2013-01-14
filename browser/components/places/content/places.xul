@@ -368,6 +368,7 @@
               flex="1"
               type="places"
               flatList="true"
+              selectfirstnode="true"
               enableColumnDrag="true"
               onfocus="PlacesOrganizer.updateDetailsPane(event)"
               onselect="PlacesOrganizer.updateDetailsPane(event)"

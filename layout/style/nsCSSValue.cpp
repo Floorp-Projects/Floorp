@@ -834,6 +834,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
                                            aResult);
       }
     }
+    else if (eCSSProperty_paint_order == aProperty) {
+      MOZ_STATIC_ASSERT
+        (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
+         "SVGStyleStruct::mPaintOrder and the following cast not big enough");
+      nsStyleUtil::AppendPaintOrderValue(static_cast<uint8_t>(GetIntValue()),
+                                         aResult);
+    }
     else {
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, GetIntValue());
       AppendASCIItoUTF16(name, aResult);

@@ -2344,6 +2344,37 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     return dst;
 }
 
+bool
+js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone)
+{
+    JS_ASSERT(clone->isInterpreted());
+
+    RootedScript script(cx, clone->nonLazyScript());
+    JS_ASSERT(script);
+    JS_ASSERT(script->compartment() == original->compartment());
+    JS_ASSERT_IF(script->compartment() != cx->compartment,
+                 !script->enclosingStaticScope());
+
+    RootedObject scope(cx, script->enclosingStaticScope());
+
+    clone->mutableScript().init(NULL);
+
+    RawScript cscript = CloneScript(cx, scope, clone, script);
+    if (!cscript)
+        return false;
+
+    clone->setScript(cscript);
+    cscript->setFunction(clone);
+
+    GlobalObject *global = script->compileAndGo ? &script->global() : NULL;
+
+    script = clone->nonLazyScript();
+    CallNewScriptHook(cx, script, clone);
+    Debugger::onNewScript(cx, script, global);
+
+    return true;
+}
+
 DebugScript *
 JSScript::debugScript()
 {
@@ -2672,7 +2703,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
      *    assumption of !script->needsArgsObj();
      *  - type inference data for the script assuming script->needsArgsObj; and
      */
-    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+    for (AllFramesIter i(cx->runtime); !i.done(); ++i) {
         /*
          * We cannot reliably create an arguments object for Ion activations of
          * this script.  To maintain the invariant that "script->needsArgsObj
@@ -2684,9 +2715,9 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
          */
         if (i.isIon())
             continue;
-        StackFrame *fp = i.interpFrame();
-        if (fp->isFunctionFrame() && fp->script() == script) {
-            ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
+        TaggedFramePtr frame = i.taggedFramePtr();
+        if (frame.isFunctionFrame() && frame.script() == script) {
+            ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, frame);
             if (!argsobj) {
                 /*
                  * We can't leave stack frames with script->needsArgsObj but no
@@ -2698,8 +2729,8 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
             }
 
             /* Note: 'arguments' may have already been overwritten. */
-            if (fp->unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
-                fp->unaliasedLocal(var) = ObjectValue(*argsobj);
+            if (frame.unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
+                frame.unaliasedLocal(var) = ObjectValue(*argsobj);
         }
     }
 

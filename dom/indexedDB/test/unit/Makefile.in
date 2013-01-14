@@ -35,6 +35,7 @@ MOCHITEST_FILES = \
   test_index_update_delete.js \
   test_indexes.js \
   test_indexes_bad_values.js \
+  test_indexes_funny_things.js \
   test_key_requirements.js \
   test_keys.js \
   test_multientry.js \

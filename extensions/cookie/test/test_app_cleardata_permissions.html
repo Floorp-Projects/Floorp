@@ -182,7 +182,7 @@ function checks() {
         Webapps.DOMApplicationRegistry.allAppsLaunchable = gPreviousLaunchableValue;
 
         // Now we uninstall the app and make sure everything is clean.
-        app.uninstall().onsuccess = function() {
+        navigator.mozApps.mgmt.uninstall(app).onsuccess = function() {
           is(getPermissionCountForApp(gTestAppId), 0, "App should have 0 permissions");
           finish();
         };

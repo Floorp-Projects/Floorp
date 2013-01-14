@@ -28,7 +28,7 @@ navigator.mozApps.install(url, null).onsuccess = function onInstall() {
   is(this.result.manifest.description, "This App is THE BOM, yo. ヅヂチ",
      "manifest.description");
 
-  this.result.uninstall().onsuccess = function onUninstall() {
+  navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
     SimpleTest.finish();
   }
 };

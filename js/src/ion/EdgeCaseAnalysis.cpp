@@ -47,20 +47,6 @@ EdgeCaseAnalysis::analyzeLate()
     return true;
 }
 
-bool
-EdgeCaseAnalysis::analyzeEarly()
-{
-
-    for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Analyze Early (main loop)"))
-            return false;
-        for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++)
-            riter->analyzeTruncateBackward();
-    }
-
-    return true;
-}
-
 int
 EdgeCaseAnalysis::AllUsesTruncate(MInstruction *m)
 {

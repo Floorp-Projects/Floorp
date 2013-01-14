@@ -395,12 +395,36 @@ class Assembler : public AssemblerX86Shared
     void addq(const Register &src, const Register &dest) {
         masm.addq_rr(src.code(), dest.code());
     }
+    void addq(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.addq_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.addq_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
 
     void subq(Imm32 imm, const Register &dest) {
         masm.subq_ir(imm.value, dest.code());
     }
     void subq(const Register &src, const Register &dest) {
         masm.subq_rr(src.code(), dest.code());
+    }
+    void subq(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.subq_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.subq_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
     }
     void shlq(Imm32 imm, const Register &dest) {
         masm.shlq_i8r(imm.value, dest.code());

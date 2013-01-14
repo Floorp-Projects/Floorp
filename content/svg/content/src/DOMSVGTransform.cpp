@@ -5,15 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGTransform.h"
-#include "DOMSVGMatrix.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "SVGAnimatedTransformList.h"
 #include "nsError.h"
 #include <math.h>
 #include "nsContentUtils.h"
 #include "nsAttrValueInlines.h"
+#include "nsSVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGTransformBinding.h"
 
 namespace mozilla {
+
+using namespace dom;
+
+static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
 
 //----------------------------------------------------------------------
 // nsISupports methods:
@@ -67,7 +72,6 @@ DOMSVGTransform::DOMSVGTransform(DOMSVGTransformList *aList,
   , mListIndex(aListIndex)
   , mIsAnimValItem(aIsAnimValItem)
   , mTransform(nullptr)
-  , mMatrixTearoff(nullptr)
 {
   SetIsDOMBinding();
   // These shifts are in sync with the members in the header.
@@ -84,7 +88,6 @@ DOMSVGTransform::DOMSVGTransform()
   , mTransform(new SVGTransform()) // Default ctor for objects not in a list
                                    // initialises to matrix type with identity
                                    // matrix
-  , mMatrixTearoff(nullptr)
 {
   SetIsDOMBinding();
 }
@@ -94,7 +97,6 @@ DOMSVGTransform::DOMSVGTransform(const gfxMatrix &aMatrix)
   , mListIndex(0)
   , mIsAnimValItem(false)
   , mTransform(new SVGTransform(aMatrix))
-  , mMatrixTearoff(nullptr)
 {
   SetIsDOMBinding();
 }
@@ -104,11 +106,20 @@ DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
   , mListIndex(0)
   , mIsAnimValItem(false)
   , mTransform(new SVGTransform(aTransform))
-  , mMatrixTearoff(nullptr)
 {
   SetIsDOMBinding();
 }
 
+DOMSVGTransform::~DOMSVGTransform()
+{
+  sSVGMatrixTearoffTable.RemoveTearoff(this);
+  // Our mList's weak ref to us must be nulled out when we die. If GC has
+  // unlinked us using the cycle collector code, then that has already
+  // happened, and mList is null.
+  if (mList) {
+    mList->mItems[mListIndex] = nullptr;
+  }
+}
 
 uint16_t
 DOMSVGTransform::Type() const
@@ -116,14 +127,16 @@ DOMSVGTransform::Type() const
   return Transform().Type();
 }
 
-already_AddRefed<DOMSVGMatrix>
+already_AddRefed<SVGMatrix>
 DOMSVGTransform::Matrix()
 {
-  if (!mMatrixTearoff) {
-    mMatrixTearoff = new DOMSVGMatrix(*this);
+  nsRefPtr<SVGMatrix> wrapper =
+    sSVGMatrixTearoffTable.GetTearoff(this);
+  if (!wrapper) {
+    wrapper = new SVGMatrix(*this);
+    sSVGMatrixTearoffTable.AddTearoff(this, wrapper);
   }
-  nsRefPtr<DOMSVGMatrix> matrix = mMatrixTearoff;
-  return matrix.forget();
+  return wrapper.forget();
 }
 
 float
@@ -133,7 +146,7 @@ DOMSVGTransform::Angle() const
 }
 
 void
-DOMSVGTransform::SetMatrix(DOMSVGMatrix& aMatrix, ErrorResult& rv)
+DOMSVGTransform::SetMatrix(SVGMatrix& aMatrix, ErrorResult& rv)
 {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -300,7 +313,7 @@ DOMSVGTransform::IndexIsValid()
 
 
 //----------------------------------------------------------------------
-// Interface for DOMSVGMatrix's use
+// Interface for SVGMatrix's use
 
 void
 DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
@@ -317,15 +330,6 @@ DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
   Transform().SetMatrix(aMatrix);
   NotifyElementDidChange(emptyOrOldValue);
 }
-
-void
-DOMSVGTransform::ClearMatrixTearoff(DOMSVGMatrix* aMatrix)
-{
-  NS_ABORT_IF_FALSE(mMatrixTearoff == aMatrix,
-      "Unexpected matrix pointer to be cleared");
-  mMatrixTearoff = nullptr;
-}
-
 
 //----------------------------------------------------------------------
 // Implementation helpers

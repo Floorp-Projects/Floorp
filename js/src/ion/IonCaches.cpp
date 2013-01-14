@@ -1056,6 +1056,13 @@ IonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
 }
 
 void
+IonCache::disable()
+{
+    reset();
+    this->disabled_ = 1;
+}
+
+void
 IonCache::reset()
 {
     PatchJump(initialJump_, cacheLabel_);
@@ -1447,7 +1454,7 @@ IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHan
 
 static bool
 IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject holder,
-                               jsid id, HandleShape shape)
+                               HandleShape shape)
 {
     if (!shape)
         return false;
@@ -1470,7 +1477,7 @@ IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject hol
 }
 
 static bool
-IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSlots,
+IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t oldSlots,
                         MutableHandleShape pShape)
 {
     // This is not a Add, the property exists.
@@ -1547,7 +1554,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
             if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
                 return false;
 
-            if (IsPropertySetterCallInlineable(cx, obj, holder, id, shape)) {
+            if (IsPropertySetterCallInlineable(cx, obj, holder, shape)) {
                 cache.incrementStubCount();
                 if (!cache.attachSetterCall(cx, ion, obj, holder, shape, returnAddr))
                     return false;
@@ -1715,19 +1722,28 @@ bool
 js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
                          MutableHandleValue res)
 {
-    AutoFlushCache afc ("GetElementCache");
-
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
-
     IonCacheGetElement &cache = ion->getCache(cacheIndex).toGetElement();
+    RootedScript script(cx);
+    jsbytecode *pc;
+    cache.getScriptedLocation(&script, &pc);
+    RootedValue lval(cx, ObjectValue(*obj));
+ 
+    if (cache.isDisabled()) {
+        if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
+            return false;
+        return true;
+    }
 
     // Override the return value if we are invalidated (bug 728188).
+    AutoFlushCache afc ("GetElementCache");
     AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
     if (!FetchElementId(cx, obj, idval, &id, res))
         return false;
 
+    bool attachedStub = false;
     if (cache.stubCount() < MAX_STUBS) {
         if (obj->isNative() && cache.monitoredResult()) {
             cache.incrementStubCount();
@@ -1736,6 +1752,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
                 if (!cache.attachGetProp(cx, ion, obj, idval, JSID_TO_ATOM(id)->asPropertyName()))
                     return false;
+                attachedStub = true;
             }
         } else if (!cache.hasDenseStub() && obj->isNative() && idval.isInt32()) {
             // Generate at most one dense array stub.
@@ -1743,16 +1760,17 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
 
             if (!cache.attachDenseElement(cx, ion, obj, idval))
                 return false;
+            attachedStub = true;
         }
     }
 
-    RootedScript script(cx);
-    jsbytecode *pc;
-    cache.getScriptedLocation(&script, &pc);
-
-    RootedValue lval(cx, ObjectValue(*obj));
     if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
         return false;
+
+    // If no new attach was done, and we've reached maximum number of stubs, then
+    // disable the cache.
+    if (!attachedStub && cache.stubCount() >= MAX_STUBS)
+        cache.disable();
 
     types::TypeScript::Monitor(cx, script, pc, res);
     return true;
@@ -2113,4 +2131,73 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     types::TypeScript::Monitor(cx, script, pc, vp);
 
     return true;
+}
+
+bool
+IonCacheCallsiteClone::attach(JSContext *cx, IonScript *ion, HandleFunction original,
+                              HandleFunction clone)
+{
+    MacroAssembler masm;
+
+    // Guard against object identity on the original.
+    RepatchLabel exit;
+    CodeOffsetJump exitOffset = masm.branchPtrWithPatch(Assembler::NotEqual, calleeReg(),
+                                                        ImmWord(uintptr_t(original.get())), &exit);
+    masm.bind(&exit);
+
+    // Load the clone.
+    masm.movePtr(ImmWord(uintptr_t(clone.get())), outputReg());
+
+    RepatchLabel rejoin;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin);
+    masm.bind(&rejoin);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    rejoinOffset.fixup(&masm);
+    exitOffset.fixup(&masm);
+
+    if (ion->invalidated())
+        return true;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+    CodeLocationJump lastJump_ = lastJump();
+    PatchJump(lastJump_, CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated CALL callee clone stub at %p", code->raw());
+    return true;
+}
+
+JSObject *
+js::ion::CallsiteCloneCache(JSContext *cx, size_t cacheIndex, HandleObject callee)
+{
+    AutoFlushCache afc ("CallsiteCloneCache");
+
+    // Act as the identity for functions that are not clone-at-callsite, as we
+    // generate this cache as long as some callees are clone-at-callsite.
+    RootedFunction fun(cx, callee->toFunction());
+    if (!fun->isCloneAtCallsite())
+        return fun;
+
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
+    IonCacheCallsiteClone &cache = ion->getCache(cacheIndex).toCallsiteClone();
+
+    RootedFunction clone(cx, CloneFunctionAtCallsite(cx, fun, cache.callScript(), cache.callPc()));
+    if (!clone)
+        return NULL;
+
+    if (cache.stubCount() < MAX_STUBS) {
+        if (!cache.attach(cx, ion, fun, clone))
+            return NULL;
+        cache.incrementStubCount();
+    }
+
+    return clone;
 }

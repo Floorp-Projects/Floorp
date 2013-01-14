@@ -956,6 +956,20 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext,
     toDraw = DrawMode(toDraw | gfxFont::GLYPH_FILL);
   }
 
+  uint32_t paintOrder = GetStyleSVG()->mPaintOrder;
+  while (paintOrder) {
+    uint32_t component =
+      paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+    if (component == NS_STYLE_PAINT_ORDER_FILL) {
+      break;
+    }
+    if (component == NS_STYLE_PAINT_ORDER_STROKE) {
+      toDraw = DrawMode(toDraw | gfxFont::GLYPH_STROKE_UNDERNEATH);
+      break;
+    }
+    paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
+  }
+
   *aThisObjectPaint = thisObjectPaint;
 
   return toDraw;
@@ -966,12 +980,11 @@ nsSVGGlyphFrame::SetupCairoStroke(gfxContext *aContext,
                                   gfxTextObjectPaint *aOuterObjectPaint,
                                   SVGTextObjectPaint *aThisObjectPaint)
 {
-  const nsStyleSVG *style = GetStyleSVG();
-  if (style->mStroke.mType == eStyleSVGPaintType_None) {
-    aThisObjectPaint->SetStrokeOpacity(0.0f);
+  if (!nsSVGUtils::HasStroke(this, aOuterObjectPaint)) {
     return false;
   }
 
+  const nsStyleSVG *style = GetStyleSVG();
   nsSVGUtils::SetupCairoStrokeHitGeometry(this, aContext, aOuterObjectPaint);
   float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
                                          style->mStrokeOpacity,

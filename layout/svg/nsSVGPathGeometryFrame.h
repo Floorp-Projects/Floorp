@@ -98,7 +98,9 @@ protected:
   void GeneratePath(gfxContext *aContext, const gfxMatrix &aTransform);
 
 private:
-  void Render(nsRenderingContext *aContext);
+  enum { eRenderFill = 1, eRenderStroke = 2 };
+  void Render(nsRenderingContext *aContext, uint32_t aRenderComponents);
+  void PaintMarkers(nsRenderingContext *aContext);
 
   struct MarkerProperties {
     nsSVGMarkerProperty* mMarkerStart;
