@@ -47,6 +47,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 #include "mozilla/NullPtr.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Util.h"
 #include "mozilla/FileUtils.h"
@@ -113,13 +114,8 @@ struct DBusThread : public RawDBusConnection
   DBusThread();
   ~DBusThread();
 
-  bool StartEventLoop();
-  bool StopEventLoop();
-  bool IsEventLoopRunning();
-  void EventLoop();
-
-  // Thread members
-  nsCOMPtr<nsIThread> mThread;
+  bool Initialize();
+  void CleanUp();
 
   // Information about the sockets we're polling. Socket counts
   // increase/decrease depending on how many add/remove watch signals
@@ -133,11 +129,8 @@ struct DBusThread : public RawDBusConnection
   ScopedClose mControlFdW;
 
 protected:
-  bool SetUpEventLoop();
-  bool TearDownData();
+  bool SetUp();
 };
-
-static nsAutoPtr<DBusThread> sDBusThread;
 
 // DBus utility functions
 // Free statics, as they're used as function pointers in dbus setup
@@ -297,7 +290,7 @@ DBusThread::~DBusThread()
 }
 
 bool
-DBusThread::SetUpEventLoop()
+DBusThread::SetUp()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -351,7 +344,18 @@ DBusThread::SetUpEventLoop()
 }
 
 bool
-DBusThread::TearDownData()
+DBusThread::Initialize()
+{
+  if (!SetUp()) {
+    CleanUp();
+    return false;
+  }
+
+  return true;
+}
+
+void
+DBusThread::CleanUp()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -378,105 +382,6 @@ DBusThread::TearDownData()
   // DBusWatch pointers are maintained by DBus, so we won't leak by
   // clearing.
   mWatchData.Clear();
-  return true;
-}
-
-void
-DBusThread::EventLoop()
-{
-#ifdef DEBUG
-  LOG("DBus Event Loop Starting\n");
-#endif
-  while (1) {
-    poll(mPollData.Elements(), mPollData.Length(), -1);
-
-    for (uint32_t i = 0; i < mPollData.Length(); i++) {
-      if (!mPollData[i].revents) {
-        continue;
-      }
-
-      if (mPollData[i].fd == mControlFdR.get()) {
-        char data;
-        while (recv(mControlFdR.get(), &data, sizeof(char), MSG_DONTWAIT)
-               != -1) {
-          switch (data) {
-          case DBUS_EVENT_LOOP_EXIT:
-#ifdef DEBUG
-            LOG("DBus Event Loop Exiting\n");
-#endif
-            return;
-          case DBUS_EVENT_LOOP_ADD:
-            HandleWatchAdd(this);
-            break;
-          case DBUS_EVENT_LOOP_REMOVE:
-            HandleWatchRemove(this);
-            break;
-          case DBUS_EVENT_LOOP_WAKEUP:
-            // noop
-            break;
-          }
-        }
-      } else {
-        short events = mPollData[i].revents;
-        unsigned int flags = UnixEventsToDBusFlags(events);
-        dbus_watch_handle(mWatchData[i], flags);
-        mPollData[i].revents = 0;
-        // Break at this point since we don't know if the operation
-        // was destructive
-        break;
-      }
-    }
-    while (dbus_connection_dispatch(mConnection) ==
-           DBUS_DISPATCH_DATA_REMAINS)
-    {}
-  }
-}
-
-bool
-DBusThread::StartEventLoop()
-{
-  if (!SetUpEventLoop()) {
-    TearDownData();
-    return false;
-  }
-  if (NS_FAILED(NS_NewNamedThread("DBus Poll",
-                                  getter_AddRefs(mThread),
-                                  NS_NewNonOwningRunnableMethod(this,
-                                                                &DBusThread::EventLoop)))) {
-    NS_WARNING("Cannot create DBus Thread!");
-    return false;    
-  }
-#ifdef DEBUG
-  LOG("DBus Thread Starting\n");
-#endif
-  return true;
-}
-
-bool
-DBusThread::StopEventLoop()
-{
-  if (!mThread) {
-    return true;
-  }
-  char data = DBUS_EVENT_LOOP_EXIT;
-  ssize_t wret = write(mControlFdW.get(), &data, sizeof(char));
-  if(wret < 0) {
-    NS_ERROR("Cannot write exit flag to Dbus Thread!");
-    return false;
-  }
-#ifdef DEBUG
-  LOG("DBus Thread Joining\n");
-#endif
-  nsCOMPtr<nsIThread> tmpThread;
-  mThread.swap(tmpThread);
-  if(NS_FAILED(tmpThread->Shutdown())) {
-    NS_WARNING("DBus thread shutdown failed!");
-  }
-#ifdef DEBUG
-  LOG("DBus Thread Joined\n");
-#endif
-  TearDownData();
-  return true;
 }
 
 // Main task for polling the DBus system
@@ -558,22 +463,43 @@ private:
   DBusThread* mConnection;
 };
 
+static StaticAutoPtr<DBusThread> gDBusThread;
+static StaticRefPtr<nsIThread>   gDBusServiceThread;
+
 // Startup/Shutdown utility functions
 
 bool
 StartDBus()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  if (sDBusThread) {
-    NS_WARNING("Trying to start DBus Thread that is already currently running, skipping.");
-    return true;
+  NS_ENSURE_TRUE(!gDBusThread, true);
+
+  nsAutoPtr<DBusThread> dbusThread(new DBusThread());
+
+  bool eventLoopStarted = dbusThread->Initialize();
+  NS_ENSURE_TRUE(eventLoopStarted, false);
+
+  nsresult rv;
+
+  if (!gDBusServiceThread) {
+    nsIThread* dbusServiceThread;
+    rv = NS_NewNamedThread("DBus Thread", &dbusServiceThread);
+    NS_ENSURE_SUCCESS(rv, false);
+    gDBusServiceThread = dbusServiceThread;
   }
-  nsAutoPtr<DBusThread> thread(new DBusThread());
-  if (!thread->StartEventLoop()) {
-    NS_WARNING("Cannot start DBus event loop!");
-    return false;
-  }
-  sDBusThread = thread;
+
+#ifdef DEBUG
+  LOG("DBus Thread Starting\n");
+#endif
+
+  nsRefPtr<nsIRunnable> pollTask(new DBusPollTask(dbusThread));
+  NS_ENSURE_TRUE(pollTask, false);
+
+  rv = gDBusServiceThread->Dispatch(pollTask, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  gDBusThread = dbusThread.forget();
+
   return true;
 }
 
@@ -581,13 +507,34 @@ bool
 StopDBus()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  if (!sDBusThread) {
-    return true;
+  NS_ENSURE_TRUE(gDBusServiceThread, true);
+
+  if (gDBusThread) {
+    static const char data = DBUS_EVENT_LOOP_EXIT;
+    ssize_t wret = TEMP_FAILURE_RETRY(write(gDBusThread->mControlFdW.get(),
+                                            &data, sizeof(data)));
+    NS_ENSURE_TRUE(wret == 1, false);
   }
 
-  nsAutoPtr<DBusThread> thread(sDBusThread);
-  sDBusThread = nullptr;  
-  return thread->StopEventLoop();
+#ifdef DEBUG
+  LOG("DBus Thread Joining\n");
+#endif
+
+  if (NS_FAILED(gDBusServiceThread->Shutdown())) {
+    NS_WARNING("DBus thread shutdown failed!");
+  }
+  gDBusServiceThread = nullptr;
+
+#ifdef DEBUG
+  LOG("DBus Thread Joined\n");
+#endif
+
+  if (gDBusThread) {
+    gDBusThread->CleanUp();
+    gDBusThread = nullptr;
+  }
+
+  return true;
 }
 
 }
