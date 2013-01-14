@@ -485,6 +485,88 @@ SmsDatabaseService.prototype = {
     }
   },
 
+  /**
+   * Queue up {aMessageId, aTimestamp} pairs, find out intersections and report
+   * to onNextMessageInListGot. Return true if it is still possible to have
+   * another match.
+   */
+  onNextMessageInMultiFiltersGot: function onNextMessageInMultiFiltersGot(
+      aRequest, aObjectStore, aMessageList, aWhich, aMessageId, aTimestamp) {
+
+    if (DEBUG) {
+      debug("onNextMessageInMultiFiltersGot: "
+            + aWhich + ", " + aMessageId + ", " + aTimestamp);
+    }
+    let filters = aMessageList.filters;
+
+    if (!aMessageId) {
+      filters[aWhich].processing = false;
+      for (let i = 0; i < filters.length; i++) {
+        if (filters[i].processing) {
+          return false;
+        }
+      }
+
+      this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, 0);
+      return false;
+    }
+
+    // Search id in other existing results. If no other results has it,
+    // and A) the last timestamp is smaller-equal to current timestamp,
+    // we wait for further results; either B) record timestamp is larger
+    // then current timestamp or C) no more processing for a filter, then we
+    // drop this id because there can't be a match anymore.
+    for (let i = 0; i < filters.length; i++) {
+      if (i == aWhich) continue;
+
+      let ctx = filters[i];
+      let results = ctx.results;
+      let found = false;
+      for (let j = 0; j < results.length; j++) {
+        let result = results[j];
+        if (result.id == aMessageId) {
+          found = true;
+          break;
+        }
+        if ((!aMessageList.reverse && (result.timestamp > aTimestamp)) ||
+            (aMessageList.reverse && (result.timestamp < aTimestamp))) {
+          // B) Cannot find a match anymore. Drop.
+          return true;
+        }
+      }
+
+      if (!found) {
+        if (!ctx.processing) {
+          // C) Cannot find a match anymore. Drop.
+          if (results.length) {
+            let lastResult = results[results.length - 1];
+            if ((!aMessageList.reverse && (lastResult.timestamp >= aTimestamp)) ||
+                (aMessageList.reverse && (lastResult.timestamp <= aTimestamp))) {
+              // Still have a chance to get another match. Return true.
+              return true;
+            }
+          }
+
+          // Impossible to find another match because all results in ctx have
+          // timestamps smaller than aTimestamp.
+          return this.onNextMessageInMultiFiltersGot(aRequest, aObjectStore,
+                                                     aMessageList, aWhich, 0, 0);
+        }
+
+        // A) Pending.
+        filters[aWhich].results.push({
+          id: aMessageId,
+          timestamp: aTimestamp
+        });
+        return true;
+      }
+    }
+
+    // Now id is found in all other results. Report it.
+    this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, aMessageId);
+    return true;
+  },
+
   saveMessage: function saveMessage(message) {
     this.lastKey += 1;
     message.id = this.lastKey;
@@ -824,10 +906,11 @@ SmsDatabaseService.prototype = {
 
       let messageList = {
         listId: -1,
+        reverse: reverse,
         processing: true,
         stop: false,
         // Local contexts for multiple filter targets' case.
-        contexts: [],
+        filters: [],
         // Pending message waiting count. Initialized with 1 for notifying
         // message list created.
         waitCount: 1,
@@ -867,6 +950,33 @@ SmsDatabaseService.prototype = {
       // We support filtering by date range only (see `else` block below) or
       // by number/delivery status/read status with an optional date range.
       if (filter.delivery || filter.numbers || filter.read != undefined) {
+        let multiFiltersGotCb = self.onNextMessageInMultiFiltersGot
+                                    .bind(self, aRequest, store, messageList);
+
+        let multiFiltersSuccessCb = function onMultiFiltersSuccess(which, event) {
+          if (messageList.stop) {
+            return;
+          }
+
+          let cursor = event.target.result;
+          if (cursor) {
+            if (multiFiltersGotCb(which, cursor.primaryKey, cursor.key[1])) {
+              cursor.continue();
+            }
+          } else {
+            multiFiltersGotCb(which, 0, 0);
+          }
+        };
+
+        let multiFiltersErrorCb = function onMultiFiltersError(which, event) {
+          if (messageList.stop) {
+            return;
+          }
+
+          // Act as no more matched records.
+          multiFiltersGotCb(which, 0, 0);
+        };
+
         // Numeric 0 is smaller than any time stamp, and empty string is larger
         // than all numeric values.
         let startDate = 0, endDate = "";
@@ -885,33 +995,60 @@ SmsDatabaseService.prototype = {
           if (filter.read != undefined) numFilterTargets++;
           singleFilter = numFilterTargets == 1;
         }
-        if (!singleFilter) {
-          // FIXME
-          aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
-          return;
-        }
+
+        let which = 0;
+
+        let createRangedRequest = function createRangedRequest(indexName, key) {
+          let range = IDBKeyRange.bound([key, startDate], [key, endDate]);
+          return store.index(indexName).openKeyCursor(range, direction);
+        };
+
+        let createSimpleRangedRequest =
+            function createSimpleRangedRequest(indexName, key) {
+          let request = createRangedRequest(indexName, key);
+          if (singleFilter) {
+            request.onsuccess = singleFilterSuccessCb;
+            request.onerror = singleFilterErrorCb;
+          } else {
+            let me = which++;
+            messageList.filters.push({
+              processing: true,
+              results: []
+            });
+            request.onsuccess = multiFiltersSuccessCb.bind(null, me);
+            request.onerror = multiFiltersErrorCb.bind(null, me);
+          }
+        };
 
         // Retrieve the keys from the 'delivery' index that matches the
         // value of filter.delivery.
         if (filter.delivery) {
           if (DEBUG) debug("filter.delivery " + filter.delivery);
-          let range = IDBKeyRange.bound([filter.delivery, startDate],
-                                        [filter.delivery, endDate]);
-          let request = store.index("delivery").openKeyCursor(range, direction);
-          request.onsuccess = singleFilterSuccessCb;
-          request.onerror = singleFilterErrorCb;
+          createSimpleRangedRequest("delivery", filter.delivery);
         }
 
         // Retrieve the keys from the 'sender' and 'receiver' indexes that
         // match the values of filter.numbers
         if (filter.numbers) {
           if (DEBUG) debug("filter.numbers " + filter.numbers.join(", "));
+          let me = which++;
+
+          let ctx = {};
+          if (!singleFilter) {
+            ctx.processing = true;
+            ctx.results = [];
+          }
+          messageList.filters.push(ctx);
+
           for (let i = 0; i < filter.numbers.length; i++) {
-            let range = IDBKeyRange.bound([filter.numbers[i], startDate],
-                                          [filter.numbers[i], endDate]);
-            let request = store.index("number").openKeyCursor(range, direction);
-            request.onsuccess = singleFilterSuccessCb;
-            request.onerror = singleFilterErrorCb;
+            let request = createRangedRequest("number", filter.numbers[i]);
+            if (singleFilter) {
+              request.onsuccess = singleFilterSuccessCb;
+              request.onerror = singleFilterErrorCb;
+            } else {
+              request.onsuccess = multiFiltersSuccessCb.bind(null, me);
+              request.onerror = multiFiltersErrorCb.bind(null, me);
+            }
           }
         }
 
@@ -920,11 +1057,7 @@ SmsDatabaseService.prototype = {
         if (filter.read != undefined) {
           let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
           if (DEBUG) debug("filter.read " + read);
-          let range = IDBKeyRange.bound([read, startDate],
-                                        [read, endDate]);
-          let request = store.index("read").openKeyCursor(range, direction);
-          request.onsuccess = singleFilterSuccessCb;
-          request.onerror = singleFilterErrorCb;
+          createSimpleRangedRequest("read", read);
         }
       } else {
         // Filtering by date range only.
