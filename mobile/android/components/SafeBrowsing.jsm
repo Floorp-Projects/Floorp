@@ -14,6 +14,7 @@ const phishingList = "goog-phish-shavar";
 const malwareList  = "goog-malware-shavar";
 
 var debug = false;
+
 function log(...stuff) {
   if (!debug)
     return;
@@ -89,7 +90,7 @@ this.SafeBrowsing = {
 #ifdef USE_HISTORIC_SAFEBROWSING_ID
     let clientID = "navclient-auto-ffox";
 #else
-    let clientID = Services.appinfo.name;
+#expand    let clientID = __MOZ_APP_UA_NAME__;
 #endif
 
     log("initializing safe browsing URLs");
