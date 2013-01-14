@@ -35,6 +35,33 @@
  * related to a single item in the downloads list widgets.
  */
 
+/**
+ * A few words on focus and focusrings
+ *
+ * We do quite a few hacks in the Downloads Panel for focusrings. In fact, we
+ * basically suppress most if not all XUL-level focusrings, and style/draw
+ * them ourselves (using :focus instead of -moz-focusring). There are a few
+ * reasons for this:
+ *
+ * 1) Richlists on OSX don't have focusrings; instead, they are shown as
+ *    selected. This makes for some ambiguity when we have a focused/selected
+ *    item in the list, and the mouse is hovering a completed download (which
+ *    highlights).
+ * 2) Windows doesn't show focusrings until after the first time that tab is
+ *    pressed (and by then you're focusing the second item in the panel).
+ * 3) Richlistbox sets -moz-focusring even when we select it with a mouse.
+ *
+ * In general, the desired behaviour is to focus the first item after pressing
+ * tab/down, and show that focus with a ring. Then, if the mouse moves over
+ * the panel, to hide that focus ring; essentially resetting us to the state
+ * before pressing the key.
+ *
+ * We end up capturing the tab/down key events, and preventing their default
+ * behaviour. We then set a "keyfocus" attribute on the panel, which allows
+ * us to draw a ring around the currently focused element. If the panel is
+ * closed or the mouse moves over the panel, we remove the attribute.
+ */
+
 "use strict";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +235,42 @@ const DownloadsPanel = {
            this._state == this.kStateShown;
   },
 
+  /**
+   * Returns whether the user has started keyboard navigation.
+   */
+  get keyFocusing()
+  {
+    return this.panel.hasAttribute("keyfocus");
+  },
+
+  /**
+   * Set to true if the user has started keyboard navigation, and we should be
+   * showing focusrings in the panel. Also adds a mousemove event handler to
+   * the panel which disables keyFocusing.
+   */
+  set keyFocusing(aValue)
+  {
+    if (aValue) {
+      this.panel.setAttribute("keyfocus", "true");
+      this.panel.addEventListener("mousemove", this);
+    } else {
+      this.panel.removeAttribute("keyfocus");
+      this.panel.removeEventListener("mousemove", this);
+    }
+    return aValue;
+  },
+
+  /**
+   * Handles the mousemove event for the panel, which disables focusring
+   * visualization.
+   */
+  handleEvent: function DP_handleEvent(aEvent)
+  {
+    if (aEvent.type == "mousemove") {
+      this.keyFocusing = false;
+    }
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// Callback functions from DownloadsView
 
@@ -256,6 +319,10 @@ const DownloadsPanel = {
       return;
     }
 
+    // Removes the keyfocus attribute so that we stop handling keyboard
+    // navigation.
+    this.keyFocusing = false;
+
     // Since at most one popup is open at any given time, we can set globally.
     DownloadsCommon.getIndicatorData(window).attentionSuppressed = false;
 
@@ -291,7 +358,11 @@ const DownloadsPanel = {
    */
   _attachEventListeners: function DP__attachEventListeners()
   {
+    // Handle keydown to support accel-V.
     this.panel.addEventListener("keydown", this._onKeyDown.bind(this), false);
+    // Handle keypress to be able to preventDefault() events before they reach
+    // the richlistbox, for keyboard navigation.
+    this.panel.addEventListener("keypress", this._onKeyPress.bind(this), false);
   },
 
   /**
@@ -302,14 +373,67 @@ const DownloadsPanel = {
   {
     this.panel.removeEventListener("keydown", this._onKeyDown.bind(this),
                                    false);
+    this.panel.removeEventListener("keypress", this._onKeyPress.bind(this),
+                                   false);
+  },
+
+  _onKeyPress: function DP__onKeyPress(aEvent)
+  {
+    // Handle unmodified keys only.
+    if (aEvent.altKey || aEvent.ctrlKey || aEvent.shiftKey || aEvent.metaKey) {
+      return;
+    }
+
+    let richListBox = DownloadsView.richListBox;
+
+    // If the user has pressed the tab, up, or down cursor key, start keyboard
+    // navigation, thus enabling focusrings in the panel.  Keyboard navigation
+    // is automatically disabled if the user moves the mouse on the panel, or
+    // if the panel is closed.
+    if ((aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_TAB ||
+        aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP ||
+        aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) &&
+        !this.keyFocusing) {
+      this.keyFocusing = true;
+      aEvent.preventDefault();
+      return;
+    }
+
+    if (aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
+      // If the last element in the list is selected, or the footer is already
+      // focused, focus the footer.
+      if (richListBox.selectedItem === richListBox.lastChild ||
+          document.activeElement.parentNode.id === "downloadsFooter") {
+        DownloadsFooter.focus();
+        aEvent.preventDefault();
+        return;
+      }
+    }
+
+    // Pass keypress events to the richlistbox view when it's focused.
+    if (document.activeElement === richListBox) {
+      DownloadsView.onDownloadKeyPress(aEvent);
+    }
   },
 
   /**
-   * Keydown listener that listens for the accel-V "paste" event. Initiates a
-   * file download if the pasted item can be resolved to a URI.
+   * Keydown listener that listens for the keys to start key focusing, as well
+   * as the the accel-V "paste" event, which initiates a file download if the
+   * pasted item can be resolved to a URI.
    */
   _onKeyDown: function DP__onKeyDown(aEvent)
   {
+    // If the footer is focused and the downloads list has at least 1 element
+    // in it, focus the last element in the list when going up.
+    if (aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP &&
+        document.activeElement.parentNode.id === "downloadsFooter" &&
+        DownloadsView.richListBox.firstChild) {
+      DownloadsView.richListBox.focus();
+      DownloadsView.richListBox.selectedItem = DownloadsView.richListBox.lastChild;
+      aEvent.preventDefault();
+      return;
+    }
+
     let pasting = aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_V &&
 #ifdef XP_MACOSX
                   aEvent.metaKey;
@@ -364,7 +488,7 @@ const DownloadsPanel = {
       if (DownloadsView.richListBox.itemCount > 0) {
         DownloadsView.richListBox.focus();
       } else {
-        this.panel.focus();
+        DownloadsFooter.focus();
       }
     }
   },
@@ -767,13 +891,11 @@ const DownloadsView = {
     }
   },
 
+  /**
+   * Handles keypress events on a download item.
+   */
   onDownloadKeyPress: function DV_onDownloadKeyPress(aEvent)
   {
-    // Handle unmodified keys only.
-    if (aEvent.altKey || aEvent.ctrlKey || aEvent.shiftKey || aEvent.metaKey) {
-      return;
-    }
-
     // Pressing the key on buttons should not invoke the action because the
     // event has already been handled by the button itself.
     if (aEvent.originalTarget.hasAttribute("command") ||
@@ -786,17 +908,9 @@ const DownloadsView = {
       return;
     }
 
-    switch (aEvent.keyCode) {
-      case KeyEvent.DOM_VK_ENTER:
-      case KeyEvent.DOM_VK_RETURN:
-        goDoCommand("downloadsCmd_doDefault");
-        break;
-      case KeyEvent.DOM_VK_DOWN:
-        // Are we focused on the last element in the list?
-        if (this.richListBox.currentIndex == (this.richListBox.itemCount - 1)) {
-          DownloadsFooter.focus();
-        }
-        break;
+    if (aEvent.keyCode == KeyEvent.DOM_VK_ENTER ||
+        aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
+      goDoCommand("downloadsCmd_doDefault");
     }
   },
 
@@ -1325,7 +1439,7 @@ DownloadsViewItemController.prototype = {
 const DownloadsSummary = {
 
   /**
-   * Sets the active state of the summary. When active, the sumamry subscribes
+   * Sets the active state of the summary. When active, the summary subscribes
    * to the DownloadsCommon DownloadsSummaryData singleton.
    *
    * @param aActive
@@ -1431,12 +1545,12 @@ const DownloadsSummary = {
   },
 
   /**
-   * Respond to keypress events on the Downloads Summary node.
+   * Respond to keydown events on the Downloads Summary node.
    *
    * @param aEvent
-   *        The keypress event being handled.
+   *        The keydown event being handled.
    */
-  onKeyPress: function DS_onKeyPress(aEvent)
+  onKeyDown: function DS_onKeyDown(aEvent)
   {
     if (aEvent.charCode == " ".charCodeAt(0) ||
         aEvent.keyCode == KeyEvent.DOM_VK_ENTER ||
@@ -1527,27 +1641,14 @@ const DownloadsFooter = {
    */
   focus: function DF_focus()
   {
-    if (DownloadsSummary.visible) {
+    if (this._showingSummary) {
       DownloadsSummary.focus();
     } else {
       DownloadsView.downloadsHistory.focus();
     }
   },
 
-  /**
-   * Handles keypress events on the footer element.
-   */
-  onKeyPress: function DF_onKeyPress(aEvent)
-  {
-    // If the up key is pressed, and the downloads list has at least 1 element
-    // in it, focus the last element in the list.
-    if (aEvent.keyCode == KeyEvent.DOM_VK_UP &&
-        DownloadsView.richListBox.itemCount > 0) {
-      DownloadsView.richListBox.focus();
-      DownloadsView.richListBox.selectedIndex =
-        (DownloadsView.richListBox.itemCount - 1);
-    }
-  },
+  _showingSummary: false,
 
   /**
    * Sets whether or not the Downloads Summary should be displayed in the
@@ -1561,6 +1662,7 @@ const DownloadsFooter = {
       } else {
         this._footerNode.removeAttribute("showingsummary");
       }
+      this._showingSummary = aValue;
     }
     return aValue;
   },
