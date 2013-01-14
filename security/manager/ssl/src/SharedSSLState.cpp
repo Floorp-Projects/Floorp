@@ -187,13 +187,17 @@ SharedSSLState::GlobalCleanup()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Not on main thread");
 
-  gPrivateState->Cleanup();
-  delete gPrivateState;
-  gPrivateState = nullptr;
+  if (gPrivateState) {
+    gPrivateState->Cleanup();
+    delete gPrivateState;
+    gPrivateState = nullptr;
+  }
 
-  gPublicState->Cleanup();
-  delete gPublicState;
-  gPublicState = nullptr;
+  if (gPublicState) {
+    gPublicState->Cleanup();
+    delete gPublicState;
+    gPublicState = nullptr;
+  }
 }
 
 /*static*/ void
