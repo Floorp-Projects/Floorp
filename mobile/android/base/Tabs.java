@@ -156,6 +156,14 @@ public class Tabs implements GeckoEventListener {
             return null;
     }
 
+    /**
+     * Gets the selected tab.
+     *
+     * The selected tab can be null if we're doing a session restore after a
+     * crash and Gecko isn't ready yet.
+     *
+     * @return the selected tab, or null if no tabs exist
+     */
     public Tab getSelectedTab() {
         return mSelectedTab;
     }
