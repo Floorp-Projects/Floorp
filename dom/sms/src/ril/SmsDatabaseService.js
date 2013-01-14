@@ -15,7 +15,7 @@ const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const STORE_NAME = "sms";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
@@ -195,6 +195,10 @@ SmsDatabaseService.prototype = {
             if (DEBUG) debug("Upgrade to version 6. Use PhonenumberJS.")
             self.upgradeSchema5(event.target.transaction);
             break;
+          case 6:
+            if (DEBUG) debug("Upgrade to version 7. Use multiple entry indexes.")
+            self.upgradeSchema6(event.target.transaction);
+            break;
           default:
             event.target.transaction.abort();
             callback("Old database version: " + event.oldVersion, null);
@@ -271,9 +275,6 @@ SmsDatabaseService.prototype = {
   createSchema: function createSchema(db) {
     // This objectStore holds the main SMS data.
     let objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-    objectStore.createIndex("delivery", "delivery", { unique: false });
-    objectStore.createIndex("sender", "sender", { unique: false });
-    objectStore.createIndex("receiver", "receiver", { unique: false });
     objectStore.createIndex("timestamp", "timestamp", { unique: false });
     if (DEBUG) debug("Created object stores and indexes");
   },
@@ -365,6 +366,51 @@ SmsDatabaseService.prototype = {
 
   upgradeSchema5: function upgradeSchema5(transaction) {
     // Don't perform any upgrade. See Bug 819560.
+  },
+
+  upgradeSchema6: function upgradeSchema6(transaction) {
+    let objectStore = transaction.objectStore(STORE_NAME);
+
+    // Delete "delivery" index.
+    if (objectStore.indexNames.contains("delivery")) {
+      objectStore.deleteIndex("delivery");
+    }
+    // Delete "sender" index.
+    if (objectStore.indexNames.contains("sender")) {
+      objectStore.deleteIndex("sender");
+    }
+    // Delete "receiver" index.
+    if (objectStore.indexNames.contains("receiver")) {
+      objectStore.deleteIndex("receiver");
+    }
+    // Delete "read" index.
+    if (objectStore.indexNames.contains("read")) {
+      objectStore.deleteIndex("read");
+    }
+
+    // Create new "delivery", "number" and "read" indexes.
+    objectStore.createIndex("delivery", "deliveryIndex");
+    objectStore.createIndex("number", "numberIndex", { multiEntry: true });
+    objectStore.createIndex("read", "readIndex");
+
+    // Populate new "deliverIndex", "numberIndex" and "readIndex" attributes.
+    objectStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        return;
+      }
+
+      let message = cursor.value;
+      let timestamp = message.timestamp;
+      message.deliveryIndex = [message.delivery, timestamp];
+      message.numberIndex = [
+        [message.sender, timestamp],
+        [message.receiver, timestamp]
+      ];
+      message.readIndex = [message.read, timestamp];
+      cursor.update(message);
+      cursor.continue();
+    }
   },
 
   /**
@@ -527,14 +573,20 @@ SmsDatabaseService.prototype = {
                : sender;
     }
 
-    let message = {delivery:       DELIVERY_RECEIVED,
-                   deliveryStatus: DELIVERY_STATUS_SUCCESS,
-                   sender:         sender,
-                   receiver:       receiver,
-                   body:           aBody,
-                   messageClass:   aMessageClass,
-                   timestamp:      aDate,
-                   read:           FILTER_READ_UNREAD};
+    let message = {
+      deliveryIndex:  [DELIVERY_RECEIVED, aDate],
+      numberIndex:    [[sender, aDate], [receiver, aDate]],
+      readIndex:      [FILTER_READ_UNREAD, aDate],
+
+      delivery:       DELIVERY_RECEIVED,
+      deliveryStatus: DELIVERY_STATUS_SUCCESS,
+      sender:         sender,
+      receiver:       receiver,
+      body:           aBody,
+      messageClass:   aMessageClass,
+      timestamp:      aDate,
+      read:           FILTER_READ_UNREAD
+    };
     return this.saveMessage(message);
   },
 
@@ -562,14 +614,20 @@ SmsDatabaseService.prototype = {
                : sender;
     }
 
-    let message = {delivery:       DELIVERY_SENDING,
-                   deliveryStatus: DELIVERY_STATUS_PENDING,
-                   sender:         sender,
-                   receiver:       receiver,
-                   body:           aBody,
-                   messageClass:   MESSAGE_CLASS_NORMAL,
-                   timestamp:      aDate,
-                   read:           FILTER_READ_READ};
+    let message = {
+      deliveryIndex:  [DELIVERY_SENDING, aDate],
+      numberIndex:    [[sender, aDate], [receiver, aDate]],
+      readIndex:      [FILTER_READ_READ, aDate],
+
+      delivery:       DELIVERY_SENDING,
+      deliveryStatus: DELIVERY_STATUS_PENDING,
+      sender:         sender,
+      receiver:       receiver,
+      body:           aBody,
+      messageClass:   MESSAGE_CLASS_NORMAL,
+      timestamp:      aDate,
+      read:           FILTER_READ_READ
+    };
     return this.saveMessage(message);
   },
 
@@ -608,6 +666,7 @@ SmsDatabaseService.prototype = {
           return;
         }
         message.delivery = delivery;
+        message.deliveryIndex = [delivery, message.timestamp];
         message.deliveryStatus = deliveryStatus;
         if (DEBUG) {
           debug("Message.delivery set to: " + delivery
@@ -721,44 +780,29 @@ SmsDatabaseService.prototype = {
               }
 
               if (mostRecentEntry.id == messageId) {
-                // This sucks, we have to find a new most-recent message.
-                message = null;
-
-                // Check most recent sender.
-                smsStore.index("sender").openCursor(number, "prev").onsuccess = function(event) {
+                // Check most recent sender/receiver.
+                let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
+                let numberRequest = smsStore.index("number")
+                                            .openCursor(numberRange, PREV);
+                numberRequest.onsuccess = function(event) {
                   let cursor = event.target.result;
-                  if (cursor) {
-                    message = cursor.value;
-                  }
-                };
-
-                // Check most recent receiver.
-                smsStore.index("receiver").openCursor(number, "prev").onsuccess = function(event) {
-                  let cursor = event.target.result;
-                  if (cursor) {
-                    if (!message || cursor.value.timeStamp > message.timestamp) {
-                      message = cursor.value;
-                    }
-                  }
-
-                  // If we found a new message then we need to update the data
-                  // in the most-recent store. Otherwise we can delete it.
-                  if (message) {
-                    mostRecentEntry.id = message.id;
-                    mostRecentEntry.timestamp = message.timestamp;
-                    mostRecentEntry.body = message.body;
-                    if (DEBUG) {
-                      debug("Updating mru entry: " +
-                            JSON.stringify(mostRecentEntry));
-                    }
-                    mruStore.put(mostRecentEntry);
-                  }
-                  else {
+                  if (!cursor) {
                     if (DEBUG) {
                       debug("Deleting mru entry for number '" + number + "'");
                     }
                     mruStore.delete(number);
+                    return;
                   }
+
+                  let nextMsg = cursor.value;
+                  mostRecentEntry.id = nextMsg.id;
+                  mostRecentEntry.timestamp = nextMsg.timestamp;
+                  mostRecentEntry.body = nextMsg.body;
+                  if (DEBUG) {
+                    debug("Updating mru entry: " +
+                          JSON.stringify(mostRecentEntry));
+                  }
+                  mruStore.put(mostRecentEntry);
                 };
               } else if (!message.read) {
                 // Shortcut, just update the unread count.
@@ -853,7 +897,8 @@ SmsDatabaseService.prototype = {
       // Retrieve the keys from the 'delivery' index that matches the
       // value of filter.delivery.
       if (filter.delivery) {
-        let deliveryKeyRange = IDBKeyRange.only(filter.delivery);
+        let deliveryKeyRange = IDBKeyRange.bound([filter.delivery, 0],
+                                                 [filter.delivery, ""]);
         let deliveryRequest = store.index("delivery")
                                    .openKeyCursor(deliveryKeyRange);
         deliveryRequest.onsuccess = function onsuccess(event) {
@@ -866,16 +911,14 @@ SmsDatabaseService.prototype = {
       // match the values of filter.numbers
       if (filter.numbers) {
         for (let i = 0; i < filter.numbers.length; i++) {
-          let numberKeyRange = IDBKeyRange.only(filter.numbers[i]);
-          let senderRequest = store.index("sender")
+          let numberKeyRange = IDBKeyRange.bound([filter.numbers[i], 0],
+                                                 [filter.numbers[i], ""]);
+          let numberRequest = store.index("number")
                                    .openKeyCursor(numberKeyRange);
-          let receiverRequest = store.index("receiver")
-                                     .openKeyCursor(numberKeyRange);
-          senderRequest.onsuccess = receiverRequest.onsuccess =
-            function onsuccess(event){
-              successCb(event.target.result, FILTER_NUMBERS);
-            };
-          senderRequest.onerror = receiverRequest.onerror = errorCb;
+          numberRequest.onsuccess = function onsuccess(event) {
+            successCb(event.target.result, FILTER_NUMBERS);
+          };
+          numberRequest.onerror = errorCb;
         }
       }
 
@@ -884,7 +927,7 @@ SmsDatabaseService.prototype = {
       if (filter.read != undefined) {
         let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
         if (DEBUG) debug("filter.read " + read);
-        let readKeyRange = IDBKeyRange.only(read);
+        let readKeyRange = IDBKeyRange.bound([read, 0], [read, ""]);
         let readRequest = store.index("read")
                                .openKeyCursor(readKeyRange);
         readRequest.onsuccess = function onsuccess(event) {
@@ -1009,6 +1052,7 @@ SmsDatabaseService.prototype = {
           return;
         }
         message.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
+        message.readIndex = [message.read, message.timestamp];
         if (DEBUG) debug("Message.read set to: " + value);
         event.target.source.put(message).onsuccess = function onsuccess(event) {
           if (DEBUG) {
