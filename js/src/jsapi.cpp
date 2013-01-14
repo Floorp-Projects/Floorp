@@ -3572,7 +3572,7 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
         return JS_TRUE;
     }
 
-    if (IsImplicitProperty(shape)) {
+    if (!obj2->isNative()) {
         if (obj2->isProxy()) {
             AutoPropertyDescriptorRooter desc(cx);
             if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc, 0))
@@ -3581,10 +3581,10 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
                 *vp = desc.value;
                 return true;
             }
-        } else if (obj2->isNative()) {
-            *vp = obj2->getDenseElement(JSID_TO_INT(id));
-            return true;
         }
+    } else if (IsImplicitDenseElement(shape)) {
+        *vp = obj2->getDenseElement(JSID_TO_INT(id));
+        return true;
     } else {
         /* Peek at the native property's slot value, without doing a Get. */
         if (shape->hasSlot()) {
@@ -4062,7 +4062,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
     desc->obj = obj2;
     if (obj2->isNative()) {
-        if (IsImplicitProperty(shape)) {
+        if (IsImplicitDenseElement(shape)) {
             desc->attrs = JSPROP_ENUMERATE;
             desc->getter = NULL;
             desc->setter = NULL;
