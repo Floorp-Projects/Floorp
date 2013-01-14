@@ -1518,6 +1518,12 @@ MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::orPtr(Register src, Register dest)
+{
+    ma_orr(src, dest);
+}
+
+void
 MacroAssemblerARMCompat::andPtr(Imm32 imm, Register dest)
 {
     ma_and(imm, dest);

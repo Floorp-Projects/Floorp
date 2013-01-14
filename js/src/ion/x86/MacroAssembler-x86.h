@@ -681,6 +681,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void orPtr(Imm32 imm, Register dest) {
         orl(imm, dest);
     }
+    void orPtr(Register src, Register dest) {
+        orl(src, dest);
+    }
     void andPtr(Imm32 imm, Register dest) {
         andl(imm, dest);
     }
