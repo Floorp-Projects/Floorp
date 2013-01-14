@@ -23,7 +23,7 @@ using namespace js;
 using namespace js::gc;
 
 static void
-CopyStackFrameArguments(const TaggedFramePtr frame, HeapValue *dst)
+CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst)
 {
     JS_ASSERT_IF(frame.isStackFrame(), !frame.asStackFrame()->runningInIon());
 
@@ -46,7 +46,7 @@ CopyStackFrameArguments(const TaggedFramePtr frame, HeapValue *dst)
 }
 
 /* static */ void
-ArgumentsObject::MaybeForwardToCallObject(TaggedFramePtr frame, JSObject *obj, ArgumentsData *data)
+ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data)
 {
     UnrootedScript script = frame.script();
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
@@ -58,9 +58,9 @@ ArgumentsObject::MaybeForwardToCallObject(TaggedFramePtr frame, JSObject *obj, A
 
 struct CopyFrameArgs
 {
-    TaggedFramePtr frame_;
+    AbstractFramePtr frame_;
 
-    CopyFrameArgs(TaggedFramePtr frame)
+    CopyFrameArgs(AbstractFramePtr frame)
       : frame_(frame)
     { }
 
@@ -87,7 +87,7 @@ struct CopyStackIterArgs
 
     void copyArgs(HeapValue *dstBase) const {
         if (!iter_.isIon()) {
-            CopyStackFrameArguments(iter_.taggedFramePtr(), dstBase);
+            CopyStackFrameArguments(iter_.abstractFramePtr(), dstBase);
             return;
         }
 
@@ -110,7 +110,7 @@ struct CopyStackIterArgs
      */
     void maybeForwardToCallObject(JSObject *obj, ArgumentsData *data) {
         if (!iter_.isIon())
-            ArgumentsObject::MaybeForwardToCallObject(iter_.taggedFramePtr(), obj, data);
+            ArgumentsObject::MaybeForwardToCallObject(iter_.abstractFramePtr(), obj, data);
     }
 };
 
@@ -176,7 +176,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
 }
 
 ArgumentsObject *
-ArgumentsObject::createExpected(JSContext *cx, TaggedFramePtr frame)
+ArgumentsObject::createExpected(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT(frame.script()->needsArgsObj());
     RootedScript script(cx, frame.script());
@@ -200,7 +200,7 @@ ArgumentsObject::createUnexpected(JSContext *cx, StackIter &iter)
 }
 
 ArgumentsObject *
-ArgumentsObject::createUnexpected(JSContext *cx, TaggedFramePtr frame)
+ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
 {
     RootedScript script(cx, frame.script());
     RootedFunction callee(cx, &frame.callee());
