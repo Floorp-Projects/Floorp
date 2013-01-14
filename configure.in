@@ -6236,8 +6236,8 @@ dnl (unless in case of cross compiling, for which Unicode
 dnl is not yet sufficient).
 if test "$OS_ARCH" = "WINNT"; then
     REQ_NSIS_MAJOR_VER=2
-    MIN_NSIS_MINOR_VER=33
-    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
+    MIN_NSIS_MINOR_VER=46
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensis)
     if test -n "$MAKENSISU" -a "$MAKENSISU" != ":"; then
       AC_MSG_RESULT([yes])
       changequote(,)
