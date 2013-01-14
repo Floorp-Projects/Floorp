@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=827546
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 827546</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 827546 **/
+
+  var notEditable = document.createElement("div");
+  var thrown;
+  try {
+    thrown = false;
+    SpecialPowers.do_QueryInterface(notEditable, "nsIDOMNSEditableElement");
+  } catch (e) {
+    thrown = true;
+  }
+  ok(thrown,
+     "QI to nsIDOMNSEditableElement on a non-editable element should fail");
+
+  var editable = document.createElement("input");
+  ok(SpecialPowers.do_QueryInterface(editable, "nsIDOMNSEditableElement"),
+     "Editable element needs to support QI to nsIDOMNSEditableElement");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827546">Mozilla Bug 827546</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
