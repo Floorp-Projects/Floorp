@@ -235,9 +235,9 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
         nsDragService *dragService = static_cast<nsDragService*>(user_data);
         dragService->SetDragEndPoint(nsIntPoint(event->motion.x_root,
                                                 event->motion.y_root));
-    } else if (sMotionEvent && (event->type != GDK_KEY_PRESS ||
-                                event->type != GDK_KEY_RELEASE)) {
-        // Update modifier state from keypress events.
+    } else if (sMotionEvent && (event->type == GDK_KEY_PRESS ||
+                                event->type == GDK_KEY_RELEASE)) {
+        // Update modifier state from key events.
         sMotionEvent->motion.state = event->key.state;
     } else {
         return;

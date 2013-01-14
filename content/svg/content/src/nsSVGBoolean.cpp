@@ -80,8 +80,6 @@ nsSVGBoolean::GetBaseValueAtom() const
 void
 nsSVGBoolean::SetBaseValue(bool aValue, nsSVGElement *aSVGElement)
 {
-  NS_PRECONDITION(aValue == true || aValue == false, "Boolean out of range");
-
   if (aValue == mBaseVal) {
     return;
   }

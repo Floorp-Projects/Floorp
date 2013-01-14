@@ -178,8 +178,13 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 const char** mozilla_sampler_get_features();
 void mozilla_sampler_init();
 void mozilla_sampler_shutdown();
-
 void mozilla_sampler_print_location();
+// Lock the profiler. When locked the profiler is (1) stopped,
+// (2) profile data is cleared, (3) profiler-locked is fired.
+// This is used to lock down the profiler during private browsing
+void mozilla_sampler_lock();
+// Unlock the profiler, leaving it stopped and fires profiler-unlocked.
+void mozilla_sampler_unlock();
 
 namespace mozilla {
 

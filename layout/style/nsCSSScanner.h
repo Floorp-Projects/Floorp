@@ -109,8 +109,18 @@ class nsCSSScanner {
     return mSVGMode;
   }
 
-  uint32_t GetLineNumber() const { return mLineNumber; }
-  uint32_t GetColumnNumber() const { return mOffset - mLineOffset + 1; }
+  // Get the 1-based line number of the last character of
+  // the most recently processed token.
+  uint32_t GetLineNumber() const { return mTokenLineNumber; }
+
+  // Get the 0-based column number of the first character of
+  // the most recently processed token.
+  uint32_t GetColumnNumber() const
+  { return mTokenOffset - mTokenLineOffset; }
+
+  // Get the text of the line containing the first character of
+  // the most recently processed token.
+  nsDependentSubstring GetCurrentLine() const;
 
   // Get the next token. Return false on EOF. aTokenResult
   // is filled in with the data for the token.
@@ -164,9 +174,15 @@ protected:
 
   uint32_t mLineNumber;
   uint32_t mLineOffset;
+
+  uint32_t mTokenLineNumber;
+  uint32_t mTokenLineOffset;
+  uint32_t mTokenOffset;
+
   uint32_t mRecordStartOffset;
 
   mozilla::css::ErrorReporter *mReporter;
+
   // True if we are in SVG mode; false in "normal" CSS
   bool mSVGMode;
   bool mRecording;

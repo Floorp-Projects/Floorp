@@ -142,7 +142,6 @@ nsEditor::nsEditor()
 ,  mUpdateCount(0)
 ,  mPlaceHolderBatch(0)
 ,  mAction(EditAction::none)
-,  mHandlingActionCount(0)
 ,  mIMETextOffset(0)
 ,  mIMEBufferLength(0)
 ,  mDirection(eNone)
@@ -153,7 +152,6 @@ nsEditor::nsEditor()
 ,  mShouldTxnSetSelection(true)
 ,  mDidPreDestroy(false)
 ,  mDidPostCreate(false)
-,  mHandlingTrustedAction(false)
 ,  mDispatchInputEvent(true)
 {
 }
@@ -1817,9 +1815,8 @@ class EditorInputEventDispatcher : public nsRunnable
 {
 public:
   EditorInputEventDispatcher(nsEditor* aEditor,
-                             bool aIsTrusted,
                              nsIContent* aTarget) :
-    mEditor(aEditor), mTarget(aTarget), mIsTrusted(aIsTrusted)
+    mEditor(aEditor), mTarget(aTarget)
   {
   }
 
@@ -1837,7 +1834,9 @@ public:
       return NS_OK;
     }
 
-    nsEvent inputEvent(mIsTrusted, NS_FORM_INPUT);
+    // Even if the change is caused by untrusted event, we need to dispatch
+    // trusted input event since it's a fact.
+    nsEvent inputEvent(true, NS_FORM_INPUT);
     inputEvent.mFlags.mCancelable = false;
     inputEvent.time = static_cast<uint64_t>(PR_Now() / 1000);
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1850,7 +1849,6 @@ public:
 private:
   nsRefPtr<nsEditor> mEditor;
   nsCOMPtr<nsIContent> mTarget;
-  bool mIsTrusted;
 };
 
 void nsEditor::NotifyEditorObservers(void)
@@ -1872,7 +1870,7 @@ void nsEditor::NotifyEditorObservers(void)
   NS_ENSURE_TRUE_VOID(target);
 
   nsContentUtils::AddScriptRunner(
-    new EditorInputEventDispatcher(this, mHandlingTrustedAction, target));
+    new EditorInputEventDispatcher(this, target));
 }
 
 NS_IMETHODIMP
@@ -5307,14 +5305,4 @@ nsEditor::SetSuppressDispatchingInputEvent(bool aSuppress)
 {
   mDispatchInputEvent = !aSuppress;
   return NS_OK;
-}
-
-nsEditor::HandlingTrustedAction::HandlingTrustedAction(nsEditor* aSelf,
-                                                       nsIDOMEvent* aEvent)
-{
-  MOZ_ASSERT(aEvent);
-
-  bool isTrusted = false;
-  aEvent->GetIsTrusted(&isTrusted);
-  Init(aSelf, isTrusted);
 }

@@ -15,7 +15,8 @@
             android:layout_height="fill_parent"
             android:layout_weight="1.0"
             android:text="@string/tabs_normal"
-            android:textColor="@color/tabs_counter_color"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp"
             android:background="@drawable/action_bar_button"/>
 
     <ImageButton android:id="@+id/add_tab"
@@ -25,7 +26,7 @@
                  android:paddingBottom="15dip"
                  android:paddingLeft="20dip"
                  android:paddingRight="20dip"
-                 android:src="@drawable/tab_new"
+                 android:src="@drawable/tab_new_level"
                  android:contentDescription="@string/new_tab"
                  android:background="@drawable/action_bar_button"/>
 

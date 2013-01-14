@@ -443,9 +443,9 @@ NS_IMPL_RELEASE_INHERITED(IDBDatabase, IDBWrapperCache)
 
 DOMCI_DATA(IDBDatabase, IDBDatabase)
 
-NS_IMPL_EVENT_HANDLER(IDBDatabase, abort);
-NS_IMPL_EVENT_HANDLER(IDBDatabase, error);
-NS_IMPL_EVENT_HANDLER(IDBDatabase, versionchange);
+NS_IMPL_EVENT_HANDLER(IDBDatabase, abort)
+NS_IMPL_EVENT_HANDLER(IDBDatabase, error)
+NS_IMPL_EVENT_HANDLER(IDBDatabase, versionchange)
 
 NS_IMETHODIMP
 IDBDatabase::GetName(nsAString& aName)

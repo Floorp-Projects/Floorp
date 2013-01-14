@@ -1088,7 +1088,7 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         }
 
         uint32_t year, month, day;
-        if (!GetValueAsDate(aValue, year, month, day)) {
+        if (!GetValueAsDate(aValue, &year, &month, &day)) {
           return false;
         }
 
@@ -1293,7 +1293,7 @@ nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
   uint32_t year, month, day;
   nsAutoString value;
   GetValueInternal(value);
-  if (!GetValueAsDate(value, year, month, day)) {
+  if (!GetValueAsDate(value, &year, &month, &day)) {
     aDate->setNull();
     return NS_OK;
   }
@@ -2995,116 +2995,70 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
         }
       }
       break;
+    case NS_FORM_INPUT_TIME:
+      {
+        if (!aValue.IsEmpty() && !IsValidTime(aValue)) {
+          aValue.Truncate();
+        }
+      }
+      break;
   }
 }
 
 bool
-nsHTMLInputElement::IsValidDate(nsAString& aValue) const
+nsHTMLInputElement::IsValidDate(const nsAString& aValue) const
 {
   uint32_t year, month, day;
-  return GetValueAsDate(aValue, year, month, day);
+  return GetValueAsDate(aValue, &year, &month, &day);
 }
 
 bool
-nsHTMLInputElement::GetValueAsDate(nsAString& aValue,
-                                   uint32_t& aYear,
-                                   uint32_t& aMonth,
-                                   uint32_t& aDay) const
+nsHTMLInputElement::GetValueAsDate(const nsAString& aValue,
+                                   uint32_t* aYear,
+                                   uint32_t* aMonth,
+                                   uint32_t* aDay) const
 {
 
 /*
- * Parse the year, month, day values out a date string formatted as 'yyy-mm-dd'.
+ * Parse the year, month, day values out a date string formatted as 'yyyy-mm-dd'.
  * -The year must be 4 or more digits long, and year > 0
  * -The month must be exactly 2 digits long, and 01 <= month <= 12
  * -The day must be exactly 2 digit long, and 01 <= day <= maxday
  *  Where maxday is the number of days in the month 'month' and year 'year'
  */
 
-  if (aValue.IsEmpty()) {
+  if (aValue.Length() < 10) {
     return false;
   }
 
-  int32_t fieldMaxSize = 0;
-  int32_t fieldMinSize = 4;
-  enum {
-    YEAR, MONTH, DAY, NONE
-  } field;
-  int32_t fieldSize = 0;
-  nsresult ec;
+  uint32_t endOfYearOffset = 0;
+  for (; NS_IsAsciiDigit(aValue[endOfYearOffset]); ++endOfYearOffset);
 
-  field = YEAR;
-  for (uint32_t offset = 0; offset < aValue.Length(); ++offset) {
-    // Test if the fied size is superior to its maximum size.
-    if (fieldMaxSize && fieldSize > fieldMaxSize) {
-      return false;
-    }
-
-    // Illegal char.
-    if (aValue[offset] != '-' && !NS_IsAsciiDigit(aValue[offset])) {
-      return false;
-    }
-
-    // There are more characters in this field.
-    if (aValue[offset] != '-' && offset != aValue.Length()-1) {
-      fieldSize++;
-      continue;
-    }
-
-    // Parse the field.
-    if (fieldSize < fieldMinSize) {
-      return false;
-    }
-
-    switch(field) {
-      case YEAR:
-        aYear = PromiseFlatString(StringHead(aValue, offset)).ToInteger(&ec);
-        NS_ENSURE_SUCCESS(ec, false);
-
-        if (aYear <= 0) {
-          return false;
-        }
-
-        // The field after year is month, which have a fixed size of 2 char.
-        field = MONTH;
-        fieldMaxSize = 2;
-        fieldMinSize = 2;
-        break;
-      case MONTH:
-        aMonth = PromiseFlatString(Substring(aValue,
-                                            offset-fieldSize,
-                                            offset)).ToInteger(&ec);
-        NS_ENSURE_SUCCESS(ec, false);
-
-        if (aMonth < 1 || aMonth > 12) {
-          return false;
-        }
-
-        // The next field is the last one, we won't parse a '-',
-        // so the field size will be one char smaller.
-        field = DAY;
-        fieldMinSize = 1;
-        fieldMaxSize = 1;
-        break;
-      case DAY:
-        aDay = PromiseFlatString(Substring(aValue,
-                                          offset-fieldSize,
-                                          offset + 1)).ToInteger(&ec);
-        NS_ENSURE_SUCCESS(ec, false);
-
-        if (aDay <  1 || aDay > NumberOfDaysInMonth(aMonth, aYear)) {
-          return false;
-        }
-
-        field = NONE;
-        break;
-      default:
-        return false;
-    }
-
-    fieldSize = 0;
+  // The year must be at least 4 digits long.
+  if (aValue[endOfYearOffset] != '-' || endOfYearOffset < 4) {
+    return false;
   }
 
-  return field == NONE;
+  // Now, we know where is the next '-' and what should be the size of the
+  // string.
+  if (aValue[endOfYearOffset + 3] != '-' ||
+      aValue.Length() != 10 + (endOfYearOffset - 4)) {
+    return false;
+  }
+
+  nsresult ec;
+  *aYear = PromiseFlatString(StringHead(aValue, endOfYearOffset)).ToInteger(&ec);
+  if (NS_FAILED(ec) || *aYear == 0) {
+    return false;
+  }
+
+  if (!DigitSubStringToNumber(aValue, endOfYearOffset + 1, 2, aMonth) ||
+      *aMonth < 1 || *aMonth > 12) {
+    return false;
+  }
+
+  return DigitSubStringToNumber(aValue, endOfYearOffset + 4, 2, aDay) &&
+         *aDay > 0 && *aDay <= NumberOfDaysInMonth(*aMonth, *aYear);
 }
 
 uint32_t
@@ -3132,6 +3086,88 @@ nsHTMLInputElement::NumberOfDaysInMonth(uint32_t aMonth, uint32_t aYear) const
 
   return (aYear % 400 == 0 || (aYear % 100 != 0 && aYear % 4 == 0))
           ? 29 : 28;
+}
+
+/* static */ bool
+nsHTMLInputElement::DigitSubStringToNumber(const nsAString& aStr,
+                                           uint32_t aStart, uint32_t aLen,
+                                           uint32_t* aRetVal)
+{
+  MOZ_ASSERT(aStr.Length() > (aStart + aLen - 1));
+
+  for (uint32_t offset = 0; offset < aLen; ++offset) {
+    if (!NS_IsAsciiDigit(aStr[aStart + offset])) {
+      return false;
+    }
+  }
+
+  nsresult ec;
+  *aRetVal = static_cast<uint32_t>(PromiseFlatString(Substring(aStr, aStart, aLen)).ToInteger(&ec));
+
+  return NS_SUCCEEDED(ec);
+}
+
+bool
+nsHTMLInputElement::IsValidTime(const nsAString& aValue) const
+{
+  /* The string must have the following parts:
+   * - HOURS: two digits, value being in [0, 23];
+   * - Colon (:);
+   * - MINUTES: two digits, value being in [0, 59];
+   * - Optional:
+   *   - Colon (:);
+   *   - SECONDS: two digits, value being in [0, 59];
+   *   - Optional:
+   *     - DOT (.);
+   *     - FRACTIONAL SECONDS: one to three digits, no value range.
+   */
+
+  // The following format is the shorter one allowed: "HH:MM".
+  if (aValue.Length() < 5) {
+    return false;
+  }
+
+  uint32_t hours;
+  if (!DigitSubStringToNumber(aValue, 0, 2, &hours) || hours > 23) {
+    return false;
+  }
+
+  // Hours/minutes separator.
+  if (aValue[2] != ':') {
+    return false;
+  }
+
+  uint32_t minutes;
+  if (!DigitSubStringToNumber(aValue, 3, 2, &minutes) || minutes > 59) {
+    return false;
+  }
+
+  if (aValue.Length() == 5) {
+    return true;
+  }
+
+  // The following format is the next shorter one: "HH:MM:SS".
+  if (aValue.Length() < 8 || aValue[5] != ':') {
+    return false;
+  }
+
+  uint32_t seconds;
+  if (!DigitSubStringToNumber(aValue, 6, 2, &seconds) || seconds > 59) {
+    return false;
+  }
+
+  if (aValue.Length() == 8) {
+    return true;
+  }
+
+  // The string must follow this format now: "HH:MM:SS.{s,ss,sss}".
+  // There can be 1 to 3 digits for the fractions of seconds.
+  if (aValue.Length() == 9 || aValue.Length() > 12 || aValue[8] != '.') {
+    return false;
+  }
+
+  uint32_t fractionsSeconds;
+  return DigitSubStringToNumber(aValue, 9, aValue.Length() - 9, &fractionsSeconds);
 }
  
 bool

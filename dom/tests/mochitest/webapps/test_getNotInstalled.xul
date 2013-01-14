@@ -129,7 +129,7 @@ function unmonkeyPatchDOMApplicationRegistry(next) {
 
 // Remove the app from the appregistry
 function uninstallApp(next) {
-  app.uninstall().onsuccess = function onUninstall() {
+  window.navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
     app = null;
     next();
   }

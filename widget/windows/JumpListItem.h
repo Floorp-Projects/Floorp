@@ -93,7 +93,7 @@ public:
   {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItem);
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItem)
   NS_IMETHOD GetType(int16_t *aType) { return JumpListItem::GetType(aType); }
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval);
   NS_DECL_NSIJUMPLISTSHORTCUT

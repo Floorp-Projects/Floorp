@@ -11,7 +11,7 @@
 
 var imports = {};
 Cu.import("resource:///modules/devtools/Templater.jsm", imports);
-Cu.import("resource://gre/modules/devtools/_Promise.jsm", imports);
+Cu.import("resource://gre/modules/commonjs/promise/core.js", imports);
 
 function test() {
   addTab("http://example.com/browser/browser/devtools/shared/test/browser_templater_basic.html", function() {
@@ -278,9 +278,9 @@ var tests = [
 ];
 
 function delayReply(data) {
-  var p = new imports.Promise();
+  var d = imports.Promise.defer();
   executeSoon(function() {
-    p.resolve(data);
+    d.resolve(data);
   });
-  return p;
+  return d.promise;
 }

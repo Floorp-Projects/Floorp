@@ -683,15 +683,18 @@ public:
   ~nsFrameConstructorSaveState();
 
 private:
-  nsAbsoluteItems* mItems;                // pointer to struct whose data we save/restore
-  bool*    mFixedPosIsAbsPos;
-
-  nsAbsoluteItems  mSavedItems;           // copy of original data
-  bool             mSavedFixedPosIsAbsPos;
+  nsAbsoluteItems* mItems;      // pointer to struct whose data we save/restore
+  nsAbsoluteItems  mSavedItems; // copy of original data
 
   // The name of the child list in which our frames would belong
   ChildListID mChildListID;
   nsFrameConstructorState* mState;
+
+  // State used only when we're saving the abs-pos state for a transformed
+  // element.
+  nsAbsoluteItems mSavedFixedItems;
+
+  bool mSavedFixedPosIsAbsPos;
 
   friend class nsFrameConstructorState;
 };
@@ -781,6 +784,8 @@ public:
   // Function to push the existing absolute containing block state and
   // create a new scope. Code that uses this function should get matching
   // logic in GetAbsoluteContainingBlock.
+  // Also makes aNewAbsoluteContainingBlock the containing block for
+  // fixed-pos elements if necessary.
   void PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteContainingBlock,
                                    nsFrameConstructorSaveState& aSaveState);
 
@@ -1027,10 +1032,14 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
   aSaveState.mSavedItems = mAbsoluteItems;
   aSaveState.mChildListID = nsIFrame::kAbsoluteList;
   aSaveState.mState = this;
-
-  /* Store whether we're wiring the abs-pos and fixed-pos lists together. */
-  aSaveState.mFixedPosIsAbsPos = &mFixedPosIsAbsPos;
   aSaveState.mSavedFixedPosIsAbsPos = mFixedPosIsAbsPos;
+
+  if (mFixedPosIsAbsPos) {
+    // Since we're going to replace mAbsoluteItems, we need to save it into
+    // mFixedItems now (and save the current value of mFixedItems).
+    aSaveState.mSavedFixedItems = mFixedItems;
+    mFixedItems = mAbsoluteItems;
+  }
 
   mAbsoluteItems = 
     nsAbsoluteItems(AdjustAbsoluteContainingBlock(aNewAbsoluteContainingBlock));
@@ -1235,7 +1244,13 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
 
   NS_ASSERTION(containingBlock,
                "Child list without containing block?");
-  
+
+  if (aChildListID == nsIFrame::kFixedList &&
+      containingBlock->GetStyleDisplay()->HasTransform(containingBlock)) {
+    // Put this frame on the transformed-frame's abs-pos list instead.
+    aChildListID = nsIFrame::kAbsoluteList;
+  }
+
   // Insert the frames hanging out in aItems.  We can use SetInitialChildList()
   // if the containing block hasn't been reflowed yet (so NS_FRAME_FIRST_REFLOW
   // is set) and doesn't have any frames in the aChildListID child list yet.
@@ -1299,11 +1314,11 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
 
 nsFrameConstructorSaveState::nsFrameConstructorSaveState()
   : mItems(nullptr),
-    mFixedPosIsAbsPos(nullptr),
     mSavedItems(nullptr),
-    mSavedFixedPosIsAbsPos(false),
     mChildListID(kPrincipalList),
-    mState(nullptr)
+    mState(nullptr),
+    mSavedFixedItems(nullptr),
+    mSavedFixedPosIsAbsPos(false)
 {
 }
 
@@ -1319,9 +1334,20 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
     // Note that this only matters for the assert in ~nsAbsoluteItems.
     mSavedItems.Clear();
 #endif
-  }
-  if (mFixedPosIsAbsPos) {
-    *mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
+    if (mItems == &mState->mAbsoluteItems) {
+      mState->mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
+      if (mSavedFixedPosIsAbsPos) {
+        // mAbsoluteItems was moved to mFixedItems, so move mFixedItems back
+        // and repair the old mFixedItems now.
+        mState->mAbsoluteItems = mState->mFixedItems;
+        mState->mFixedItems = mSavedFixedItems;
+#ifdef DEBUG
+        mSavedFixedItems.Clear();
+#endif
+      }
+    }
+    NS_ASSERTION(!mItems->LastChild() || !mItems->LastChild()->GetNextSibling(),
+                 "Something corrupted our list");
   }
 }
 
@@ -5614,6 +5640,21 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
 }
 
 nsIFrame*
+nsCSSFrameConstructor::GetFixedContainingBlock(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(nullptr != mRootElementFrame, "no root element frame");
+
+  // Starting with aFrame, look for a frame that is CSS-transformed
+  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
+    if (frame->GetStyleDisplay()->HasTransform(frame)) {
+      return frame;
+    }
+  }
+
+  return mFixedContainingBlock;
+}
+
+nsIFrame*
 nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
 {
   // Starting with aFrame, look for a frame that is a float containing block.
@@ -6607,7 +6648,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                         &parentAfterFrame);
   
   // Create some new frames
-  nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
+  nsFrameConstructorState state(mPresShell, GetFixedContainingBlock(parentFrame),
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame));
   state.mTreeMatchContext.InitAncestors(aContainer->AsElement());
@@ -7042,7 +7083,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     return rv;
   }
 
-  nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
+  nsFrameConstructorState state(mPresShell, GetFixedContainingBlock(parentFrame),
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame),
                                 aFrameState);

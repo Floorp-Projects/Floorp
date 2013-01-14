@@ -1029,13 +1029,13 @@ class CallCompiler : public BaseCompiler
         linker.link(claspGuard, ic.slowPathStart);
         linker.link(funGuard, ic.slowPathStart);
         linker.link(done, ic.funGuard.labelAtOffset(ic.hotPathOffset));
-        JSC::CodeLocationLabel cs = linker.finalize(f);
+        ic.funJumpTarget = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%lu bytes)\n",
-                   cs.executableAddress(), (unsigned long) masm.size());
+                   ic.funJumpTarget.executableAddress(), (unsigned long) masm.size());
 
         Repatcher repatch(f.chunk());
-        repatch.relink(ic.funJump, cs);
+        repatch.relink(ic.funJump, ic.funJumpTarget);
 
         return true;
     }
@@ -1209,10 +1209,67 @@ class CallCompiler : public BaseCompiler
         ic.fastGuardedNative = fun;
 
         linker.link(funGuard, ic.slowPathStart);
-        JSC::CodeLocationLabel start = linker.finalize(f);
+        ic.funJumpTarget = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%lu bytes)\n",
+                   ic.funJumpTarget.executableAddress(), (unsigned long) masm.size());
+
+        Repatcher repatch(f.chunk());
+        repatch.relink(ic.funJump, ic.funJumpTarget);
+
+        return true;
+    }
+
+    bool generateCallsiteCloneStub(HandleFunction original, HandleFunction fun)
+    {
+        AutoAssertNoGC nogc;
+
+        Assembler masm;
+
+        // If we have a callsite clone, we do the folowing hack:
+        //
+        //  1) Patch funJump to a stub which guards on the identity of the
+        //     original function. If this guard fails, we jump to the original
+        //     funJump target.
+        //  2) Load the clone into the callee register.
+        //  3) Jump *back* to funGuard.
+        //
+        // For the inline path, hopefully we will succeed upon jumping back to
+        // funGuard after loading the clone.
+        //
+        // This hack is not ideal, as we can actually fail the first funGuard
+        // twice: we fail the first funGuard, pass the second funGuard, load
+        // the clone, and jump back to the first funGuard. We fail the first
+        // funGuard again, and this time we also fail the second funGuard,
+        // since a function's clone is never equal to itself. Finally, we jump
+        // to the original funJump target.
+
+        // Guard on the original function's identity.
+        Jump originalGuard = masm.branchPtr(Assembler::NotEqual, ic.funObjReg, ImmPtr(original));
+
+        // Load the clone.
+        masm.move(ImmPtr(fun), ic.funObjReg);
+
+        // Jump back to the first fun guard.
+        Jump done = masm.jump();
+
+        LinkerHelper linker(masm, JSC::JAEGER_CODE);
+        JSC::ExecutablePool *ep = linker.init(f.cx);
+        if (!ep)
+            return false;
+
+        if (!linker.verifyRange(f.chunk())) {
+            disable();
+            return true;
+        }
+
+        linker.link(originalGuard, !!ic.funJumpTarget ? ic.funJumpTarget : ic.slowPathStart);
+        linker.link(done, ic.funGuardLabel);
+        JSC::CodeLocationLabel start = linker.finalize(f);
+
+        JaegerSpew(JSpew_PICs, "generated CALL clone stub %p (%lu bytes)\n",
                    start.executableAddress(), (unsigned long) masm.size());
+        JaegerSpew(JSpew_PICs, "guarding %p with clone %p\n", original.get(), fun.get());
 
         Repatcher repatch(f.chunk());
         repatch.relink(ic.funJump, start);
@@ -1302,6 +1359,9 @@ class CallCompiler : public BaseCompiler
                     THROWV(NULL);
             }
         }
+
+        if (ucr.original && !generateCallsiteCloneStub(ucr.original, ucr.fun))
+            THROWV(NULL);
 
         return ucr.codeAddr;
     }

@@ -1885,6 +1885,16 @@ abstract public class GeckoApp
             GeckoAppShell.setLayerClient(mLayerView.getLayerClient());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
         }
+
+        // Homescreen Widget requests awesome bar
+        if (ACTION_WIDGET.equals(action)) {
+            if (mRestoreMode != RESTORE_NONE && !mIsRestoringActivity) {
+                addTab();
+            } else {
+                onSearchRequested();
+            }
+        }
+
     }
 
     public GeckoProfile getProfile() {

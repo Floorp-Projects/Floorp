@@ -822,6 +822,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                          c->GetInheritedYScale(),
                          1);
       }
+      NS_ASSERTION(!aLayer->GetIsFixedPosition(), "Can't animate transforms on fixed-position layers");
       shadow->SetShadowTransform(matrix);
       break;
     }
@@ -887,7 +888,7 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
 
     TransformFixedLayers(
       aLayer,
-      -gfxPoint(treeTransform.mTranslation) / treeTransform.mScale,
+      -treeTransform.mTranslation / treeTransform.mScale,
       treeTransform.mScale);
 
     appliedTransform = true;

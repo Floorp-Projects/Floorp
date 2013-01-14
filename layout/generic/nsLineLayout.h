@@ -389,7 +389,6 @@ protected:
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
       NS_ASSERTION(aFlag<=UINT8_MAX, "bad flag");
-      NS_ASSERTION(aValue==false || aValue==true, "bad value");
       if (aValue) { // set flag
         mFlags |= aFlag;
       }

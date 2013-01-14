@@ -1240,3 +1240,18 @@ void mozilla_sampler_print_location()
   printf_stderr("Backtrace:\n");
   threadProfile.IterateTags(print_callback);
 }
+
+void mozilla_sampler_lock()
+{
+  mozilla_sampler_stop();
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os)
+    os->NotifyObservers(nullptr, "profiler-locked", nullptr);
+}
+
+void mozilla_sampler_unlock()
+{
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os)
+    os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
+}
