@@ -283,7 +283,7 @@ class CompartmentChecker
             check(fp->scopeChain());
     }
 
-    void check(TaggedFramePtr frame) {
+    void check(AbstractFramePtr frame) {
         if (frame)
             check(frame.scopeChain());
     }
