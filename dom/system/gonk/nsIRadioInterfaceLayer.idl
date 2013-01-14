@@ -225,9 +225,14 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   readonly attribute DOMString voicemailDisplayName;
 };
 
-[scriptable, uuid(4efdb1d4-1e49-4f5d-a656-44e6180062a7)]
+[scriptable, uuid(886251a4-18d9-4a54-a6a1-57d5c1d61ceb)]
 interface nsIICCRecords : nsISupports
 {
+  /**
+   * Integrated Circuit Card Identifier.
+   */
+  readonly attribute DOMString iccid;
+
   /**
    * Mobile Subscriber ISDN Number
    */
