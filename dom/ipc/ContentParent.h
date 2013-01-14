@@ -104,6 +104,7 @@ public:
                                     const mozilla::dom::StructuredCloneData& aData);
     virtual bool CheckPermission(const nsAString& aPermission);
     virtual bool CheckManifestURL(const nsAString& aManifestURL);
+    virtual bool CheckAppHasPermission(const nsAString& aPermission);
 
     /** Notify that a tab is beginning its destruction sequence. */
     void NotifyTabDestroying(PBrowserParent* aTab);

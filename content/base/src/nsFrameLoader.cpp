@@ -2301,6 +2301,13 @@ nsFrameLoader::CheckManifestURL(const nsAString& aManifestURL)
                                      NS_ConvertUTF16toUTF8(aManifestURL).get());
 }
 
+bool
+nsFrameLoader::CheckAppHasPermission(const nsAString& aPermission)
+{
+  return AssertAppHasPermission(GetRemoteBrowser(),
+                                NS_ConvertUTF16toUTF8(aPermission).get());
+}
+
 NS_IMETHODIMP
 nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
 {
