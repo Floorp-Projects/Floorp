@@ -101,16 +101,14 @@
                    class="plain"
                    flex="1"
                    context="downloadsContextMenu"
-                   onkeypress="DownloadsView.onDownloadKeyPress(event);"
                    oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
                    ondragstart="DownloadsView.onDownloadDragStart(event);"/>
 
-      <vbox id="downloadsFooter"
-            onkeypress="DownloadsFooter.onKeyPress(event);">
+      <vbox id="downloadsFooter">
         <hbox id="downloadsSummary"
               align="center"
               orient="horizontal"
-              onkeypress="DownloadsSummary.onKeyPress(event);"
+              onkeydown="DownloadsSummary.onKeyDown(event);"
               onclick="DownloadsSummary.onClick(event);">
           <image class="downloadTypeIcon" />
           <vbox>
