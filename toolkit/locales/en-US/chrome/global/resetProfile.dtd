@@ -10,6 +10,6 @@
 
 <!ENTITY resetProfile.title               "Reset &brandShortName; to its default state">
 <!ENTITY resetProfile.description         "If you're having major problems which you can't resolve, start fresh with only your essential information.">
-<!ENTITY resetProfile.button.label        "Reset &brandShortName;">
+<!ENTITY resetProfile.button.label2       "Reset &brandShortName;…">
 
 <!ENTITY resetProfile.cleaning.description "Please wait while &brandShortName; cleans up your old data…">
