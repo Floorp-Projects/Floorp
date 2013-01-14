@@ -1487,7 +1487,7 @@ RasterImage::SetFrameDisposalMethod(uint32_t aFrameNum,
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame,
                     "Calling SetFrameDisposalMethod on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
@@ -1507,7 +1507,7 @@ RasterImage::SetFrameTimeout(uint32_t aFrameNum, int32_t aTimeout)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameTimeout on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1526,7 +1526,7 @@ RasterImage::SetFrameBlendMethod(uint32_t aFrameNum, int32_t aBlendMethod)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameBlendMethod on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1545,7 +1545,7 @@ RasterImage::SetFrameHasNoAlpha(uint32_t aFrameNum)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameHasNoAlpha on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1564,7 +1564,7 @@ RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame* frame = GetImgFrame(aFrameNum);
+  imgFrame* frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameAsNonPremult on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
