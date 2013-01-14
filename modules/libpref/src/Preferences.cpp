@@ -253,7 +253,7 @@ Preferences::GetInstanceForService()
   gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
   gObserverTable->Init();
 
-  // Preferences;:GetInstanceForService() can be called from GetService(), and
+  // Preferences::GetInstanceForService() can be called from GetService(), and
   // NS_RegisterMemoryReporter calls GetService(nsIMemoryReporter).  To avoid a
   // potential recursive GetService() call, we can't register the memory
   // reporter here; instead, do it off a runnable.
