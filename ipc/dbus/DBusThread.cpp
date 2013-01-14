@@ -46,6 +46,7 @@
 #include "base/message_loop.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Monitor.h"
@@ -116,6 +117,8 @@ struct DBusThread : public RawDBusConnection
 
   bool Initialize();
   void CleanUp();
+
+  void WakeUp();
 
   // Information about the sockets we're polling. Socket counts
   // increase/decrease depending on how many add/remove watch signals
@@ -271,11 +274,9 @@ HandleWatchRemove(DBusThread* aDbt)
 static
 void DBusWakeup(void* aData)
 {
-  DBusThread *dbt = (DBusThread *)aData;
-  char control = DBUS_EVENT_LOOP_WAKEUP;
-  if (write(dbt->mControlFdW.get(), &control, sizeof(char)) < 0) {
-    NS_WARNING("Cannot write wakeup bit to DBus controller!");
-  }
+  MOZ_ASSERT(aData);
+  DBusThread* dbusThread = static_cast<DBusThread*>(aData);
+  dbusThread->WakeUp();
 }
 
 // DBus Thread Implementation
@@ -382,6 +383,28 @@ DBusThread::CleanUp()
   // DBusWatch pointers are maintained by DBus, so we won't leak by
   // clearing.
   mWatchData.Clear();
+}
+
+void
+DBusThread::WakeUp()
+{
+  static const char control = DBUS_EVENT_LOOP_WAKEUP;
+
+  struct pollfd fds = {
+    mControlFdW.get(),
+    POLLOUT,
+    0
+  };
+
+  int nfds = TEMP_FAILURE_RETRY(poll(&fds, 1, 0));
+  NS_ENSURE_TRUE_VOID(nfds == 1);
+  NS_ENSURE_TRUE_VOID(fds.revents == POLLOUT);
+
+  ssize_t rv = TEMP_FAILURE_RETRY(write(mControlFdW.get(), &control, sizeof(control)));
+
+  if (rv < 0) {
+    NS_WARNING("Cannot write wakeup bit to DBus controller!");
+  }
 }
 
 // Main task for polling the DBus system
@@ -535,6 +558,20 @@ StopDBus()
   }
 
   return true;
+}
+
+nsresult
+DispatchToDBusThread(nsIRunnable* event)
+{
+  MOZ_ASSERT(gDBusServiceThread);
+  MOZ_ASSERT(gDBusThread);
+
+  nsresult rv = gDBusServiceThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  gDBusThread->WakeUp();
+
+  return NS_OK;
 }
 
 }
