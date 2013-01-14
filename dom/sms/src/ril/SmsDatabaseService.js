@@ -567,6 +567,54 @@ SmsDatabaseService.prototype = {
     return true;
   },
 
+  onNextMessageInMultiNumbersGot: function onNextMessageInMultiNumbersGot(
+      aRequest, aObjectStore, aMessageList, aWhich,
+      aSingleFilter, aIndex, aMessageId, aTimestamp) {
+
+    if (DEBUG) {
+      debug("onNextMessageInMultiNumbersGot: "
+            + aIndex + ", " + aMessageId + ", " + aTimestamp);
+    }
+    let queues = aMessageList.filters[aWhich].queues;
+    let q = queues[aIndex];
+    if (aMessageId) {
+      if (!aIndex) { // Timestamp.
+        q.results.push({
+          id: aMessageId,
+          timestamp: aTimestamp
+        });
+      } else { // Numbers.
+        q.results.push(aMessageId);
+      }
+      return true;
+    }
+
+    q.processing -= 1;
+    if (queues[0].processing || queues[1].processing) {
+      return false;
+    }
+
+    let tres = queues[0].results;
+    let qres = queues[1].results;
+    tres = tres.filter(function (element) {
+      return qres.indexOf(element.id) != -1;
+    });
+    if (aSingleFilter) {
+      for (let i = 0; i < tres.length; i++) {
+        this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, tres[i].id);
+      }
+      this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, 0);
+    } else {
+      for (let i = 0; i < tres.length; i++) {
+        this.onNextMessageInMultiFiltersGot(aRequest, aObjectStore, aMessageList,
+                                            aWhich, tres[i].id, tres[i].timestamp);
+      }
+      this.onNextMessageInMultiFiltersGot(aRequest, aObjectStore, aMessageList,
+                                          aWhich, 0, 0);
+    }
+    return false;
+  },
+
   saveMessage: function saveMessage(message) {
     this.lastKey += 1;
     message.id = this.lastKey;
@@ -1033,16 +1081,79 @@ SmsDatabaseService.prototype = {
           if (DEBUG) debug("filter.numbers " + filter.numbers.join(", "));
           let me = which++;
 
+          let multiNumbersGotCb = self.onNextMessageInMultiNumbersGot
+                                      .bind(self, aRequest, store, messageList,
+                                            me, singleFilter);
+
+          let multiNumbersSuccessCb = function onMultiNumbersSuccess(index, event) {
+            if (messageList.stop) {
+              return;
+            }
+
+            let cursor = event.target.result;
+            if (cursor) {
+              if (multiNumbersGotCb(index, cursor.primaryKey,
+                                    index ? cursor.key[1] : cursor.key)) {
+                cursor.continue();
+              }
+            } else {
+              multiNumbersGotCb(index, 0, 0);
+            }
+          };
+
+          let multiNumbersErrorCb = function onMultiNumbersError(index, event) {
+            if (messageList.stop) {
+              return;
+            }
+
+            // Act as no more matched records.
+            multiNumbersGotCb(index, 0, 0);
+          };
+
           let ctx = {};
           if (!singleFilter) {
             ctx.processing = true;
             ctx.results = [];
           }
+
+          let multiNumbers = filter.numbers.length > 1;
+          if (multiNumbers) {
+            ctx.queues = [];
+            // For timestamp.
+            let range = null;
+            if (filter.startDate != null && filter.endDate != null) {
+              range = IDBKeyRange.bound(filter.startDate.getTime(),
+                                        filter.endDate.getTime());
+            } else if (filter.startDate != null) {
+              range = IDBKeyRange.lowerBound(filter.startDate.getTime());
+            } else if (filter.endDate != null) {
+              range = IDBKeyRange.upperBound(filter.endDate.getTime());
+            }
+
+            let request = store.index("timestamp")
+                               .openKeyCursor(range, direction);
+            request.onsuccess = multiNumbersSuccessCb.bind(null, 0);
+            request.onerror = multiNumbersErrorCb.bind(null, 0);
+
+            ctx.queues.push({
+              processing: 1,
+              results: []
+            });
+            // For all numbers.
+            ctx.queues.push({
+              processing: filter.numbers.length,
+              results: []
+            });
+          }
+
           messageList.filters.push(ctx);
 
           for (let i = 0; i < filter.numbers.length; i++) {
             let request = createRangedRequest("number", filter.numbers[i]);
-            if (singleFilter) {
+            if (multiNumbers) {
+              request.onsuccess = multiNumbersSuccessCb.bind(null, 1);
+              request.onerror = multiNumbersErrorCb.bind(null, 1);
+            } else if (singleFilter) {
               request.onsuccess = singleFilterSuccessCb;
               request.onerror = singleFilterErrorCb;
             } else {
