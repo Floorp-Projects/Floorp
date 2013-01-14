@@ -560,14 +560,9 @@ int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lc
         case HOST:
           break;
         case SERVER_REFLEXIVE:
+        case PEER_REFLEXIVE:
           /* Don't actually pair these candidates */
           goto next_cand;
-          break;
-        case PEER_REFLEXIVE:
-          /* This is not implemented, and I'm not sure if we need it
-             for trickle ICE. We don't need it for regular ICE */
-          assert(0);
-          ABORT(R_INTERNAL);
           break;
         case RELAYED:
           break;
