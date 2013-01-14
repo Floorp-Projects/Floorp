@@ -270,7 +270,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 
     bool doGet = true;
     if (pobj->isNative()) {
-        desc->attrs = IsImplicitProperty(shape) ? JSPROP_ENUMERATE : shape->attributes();
+        desc->attrs = GetShapeAttributes(shape);
         if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
             doGet = false;
             if (desc->attrs & JSPROP_GETTER)
@@ -3975,7 +3975,7 @@ baseops::GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
     if (!nobj->isNative())
         return JSObject::getGenericAttributes(cx, nobj, id, attrsp);
 
-    *attrsp = shape->attributes();
+    *attrsp = GetShapeAttributes(shape);
     return true;
 }
 
@@ -3993,7 +3993,7 @@ baseops::GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
     if (!nobj->isNative())
         return JSObject::getElementAttributes(cx, nobj, index, attrsp);
 
-    *attrsp = shape->attributes();
+    *attrsp = GetShapeAttributes(shape);
     return true;
 }
 
@@ -4006,6 +4006,11 @@ baseops::SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
         return false;
     if (!shape)
         return true;
+    if (nobj->isNative() && IsImplicitProperty(shape)) {
+        if (!JSObject::sparsifyDenseElement(cx, nobj, JSID_TO_INT(id)))
+            return false;
+        shape = obj->nativeLookup(cx, id);
+    }
     return nobj->isNative()
            ? JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp)
            : JSObject::setGenericAttributes(cx, nobj, id, attrsp);
@@ -4020,6 +4025,11 @@ baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
         return false;
     if (!shape)
         return true;
+    if (nobj->isNative() && IsImplicitProperty(shape)) {
+        if (!JSObject::sparsifyDenseElement(cx, obj, index))
+            return false;
+        shape = obj->nativeLookup(cx, INT_TO_JSID(index));
+    }
     return nobj->isNative()
            ? JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp)
            : JSObject::setElementAttributes(cx, nobj, index, attrsp);
@@ -4282,13 +4292,12 @@ js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
             break;
         }
 
-        if (IsImplicitProperty(shape)) {
-            *attrsp = JSPROP_ENUMERATE;
-            if (!writing)
+        *attrsp = GetShapeAttributes(shape);
+
+        if (!writing) {
+            if (IsImplicitProperty(shape)) {
                 vp.set(pobj->getDenseElement(JSID_TO_INT(id)));
-        } else {
-            *attrsp = shape->attributes();
-            if (!writing) {
+            } else {
                 if (shape->hasSlot())
                     vp.set(pobj->nativeGetSlot(shape->slot()));
                 else
