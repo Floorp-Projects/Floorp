@@ -1708,16 +1708,16 @@ class GeneratorFrameGuard : public FrameGuard
 };
 
 /* Pointer to either a StackFrame or a baseline JIT frame. */
-class TaggedFramePtr
+class AbstractFramePtr
 {
     uintptr_t ptr_;
 
   public:
-    TaggedFramePtr()
+    AbstractFramePtr()
       : ptr_(0)
     {}
 
-    TaggedFramePtr(StackFrame *fp)
+    AbstractFramePtr(StackFrame *fp)
       : ptr_(uintptr_t(fp) | 0x1)
     {
         JS_ASSERT(fp);
@@ -1736,8 +1736,8 @@ class TaggedFramePtr
 
     void *raw() const { return reinterpret_cast<void *>(ptr_); }
 
-    bool operator ==(const TaggedFramePtr &other) const { return ptr_ == other.ptr_; }
-    bool operator !=(const TaggedFramePtr &other) const { return ptr_ != other.ptr_; }
+    bool operator ==(const AbstractFramePtr &other) const { return ptr_ == other.ptr_; }
+    bool operator !=(const AbstractFramePtr &other) const { return ptr_ != other.ptr_; }
 
     operator bool() const { return !!ptr_; }
 
@@ -1746,14 +1746,11 @@ class TaggedFramePtr
             return asStackFrame()->maybeSuspendedGenerator(rt);
         return NULL;
     }
-    JSObject *scopeChain() const {
-        if (isStackFrame())
-            return asStackFrame()->scopeChain();
-        return NULL;
-    }
-    JSCompartment *compartment() const {
-        return scopeChain()->compartment();
-    }
+
+    inline UnrootedObject scopeChain() const;
+    inline CallObject &callObj() const;
+    inline JSCompartment *compartment() const;
+
     StaticBlockObject *maybeBlockChain() const {
         if (isStackFrame())
             return asStackFrame()->maybeBlockChain();
@@ -1764,12 +1761,6 @@ class TaggedFramePtr
             return asStackFrame()->hasCallObj();
         JS_NOT_REACHED("Invalid frame");
         return false;
-    }
-    CallObject &callObj() const {
-        if (isStackFrame())
-            return asStackFrame()->callObj();
-        JS_NOT_REACHED("Invalid frame");
-        return asStackFrame()->callObj();
     }
     bool isGeneratorFrame() const {
         if (isStackFrame())
@@ -1841,18 +1832,10 @@ class TaggedFramePtr
         JS_NOT_REACHED("Invalid frame");
         return false;
     }
-    unsigned numActualArgs() const {
-        if (isStackFrame())
-            return asStackFrame()->numActualArgs();
-        JS_NOT_REACHED("Invalid frame");
-        return 0;
-    }
-    unsigned numFormalArgs() const {
-        if (isStackFrame())
-            return asStackFrame()->numFormalArgs();
-        JS_NOT_REACHED("Invalid frame");
-        return 0;
-    }
+
+    inline unsigned numActualArgs() const;
+    inline unsigned numFormalArgs() const;
+
     Value *formals() const {
         if (isStackFrame())
             return asStackFrame()->formals();
@@ -1890,24 +1873,11 @@ class TaggedFramePtr
         JS_NOT_REACHED("Invalid frame");
         return false;
     }
-    Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        if (isStackFrame())
-            return asStackFrame()->unaliasedVar(i, checkAliasing);
-        JS_NOT_REACHED("Invalid frame");
-        return asStackFrame()->unaliasedVar(i);
-    }
-    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        if (isStackFrame())
-            return asStackFrame()->unaliasedLocal(i, checkAliasing);
-        JS_NOT_REACHED("Invalid frame");
-        return asStackFrame()->unaliasedLocal(i);
-    }
-    Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        if (isStackFrame())
-            return asStackFrame()->unaliasedFormal(i, checkAliasing);
-        JS_NOT_REACHED("Invalid frame");
-        return asStackFrame()->unaliasedFormal(i);
-    }
+
+    inline Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
+    inline Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
+    inline Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
+
     bool prevUpToDate() const {
         if (isStackFrame())
             return asStackFrame()->prevUpToDate();
@@ -1921,24 +1891,24 @@ class TaggedFramePtr
         }
         JS_NOT_REACHED("Invalid frame");
     }
-    TaggedFramePtr evalPrev() const {
+    AbstractFramePtr evalPrev() const {
         JS_ASSERT(isEvalFrame());
         if (isStackFrame())
-            return TaggedFramePtr(asStackFrame()->prev());
+            return AbstractFramePtr(asStackFrame()->prev());
         JS_NOT_REACHED("Invalid frame");
-        return TaggedFramePtr();
+        return AbstractFramePtr();
     }
 };
 
 template <>
-struct DefaultHasher<TaggedFramePtr> {
-    typedef TaggedFramePtr Lookup;
+struct DefaultHasher<AbstractFramePtr> {
+    typedef AbstractFramePtr Lookup;
 
     static js::HashNumber hash(const Lookup &key) {
         return size_t(key.raw());
     }
 
-    static bool match(const TaggedFramePtr &k, const Lookup &l) {
+    static bool match(const AbstractFramePtr &k, const Lookup &l) {
         return k == l;
     }
 };
@@ -2076,7 +2046,7 @@ class StackIter
 
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
 
-    TaggedFramePtr taggedFramePtr() const;
+    AbstractFramePtr abstractFramePtr() const;
 
     /*
      * When entering IonMonkey, the top interpreter frame (pushed by the caller)
@@ -2174,7 +2144,7 @@ class AllFramesIter
     StackFrame *interpFrame() const { JS_ASSERT(state_ == SCRIPTED); return fp_; }
     StackSegment *seg() const { return seg_; }
 
-    TaggedFramePtr taggedFramePtr() const;
+    AbstractFramePtr abstractFramePtr() const;
 
   private:
     enum State { DONE, SCRIPTED, ION };

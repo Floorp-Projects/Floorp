@@ -609,5 +609,73 @@ StackIter::ionForEachCanonicalActualArg(Op op)
 #endif
 }
 
+inline UnrootedObject
+AbstractFramePtr::scopeChain() const
+{
+    if (isStackFrame())
+        return asStackFrame()->scopeChain();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
+
+inline CallObject &
+AbstractFramePtr::callObj() const
+{
+    if (isStackFrame())
+        return asStackFrame()->callObj();
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->callObj();
+}
+
+inline JSCompartment *
+AbstractFramePtr::compartment() const
+{
+    return scopeChain()->compartment();
+}
+
+inline unsigned
+AbstractFramePtr::numActualArgs() const
+{
+    if (isStackFrame())
+        return asStackFrame()->numActualArgs();
+    JS_NOT_REACHED("Invalid frame");
+    return 0;
+}
+inline unsigned
+AbstractFramePtr::numFormalArgs() const
+{
+    if (isStackFrame())
+        return asStackFrame()->numFormalArgs();
+    JS_NOT_REACHED("Invalid frame");
+    return 0;
+}
+
+inline Value &
+AbstractFramePtr::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
+{
+    if (isStackFrame())
+        return asStackFrame()->unaliasedVar(i, checkAliasing);
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->unaliasedVar(i);
+}
+
+inline Value &
+AbstractFramePtr::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
+{
+    if (isStackFrame())
+        return asStackFrame()->unaliasedLocal(i, checkAliasing);
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->unaliasedLocal(i);
+}
+
+inline Value &
+AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
+{
+    if (isStackFrame())
+        return asStackFrame()->unaliasedFormal(i, checkAliasing);
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->unaliasedFormal(i);
+}
+
 } /* namespace js */
 #endif /* Stack_inl_h__ */

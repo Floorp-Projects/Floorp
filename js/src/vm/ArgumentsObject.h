@@ -114,7 +114,7 @@ class ArgumentsObject : public JSObject
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
     /* Create an arguments object for a frame that is expecting them. */
-    static ArgumentsObject *createExpected(JSContext *cx, TaggedFramePtr frame);
+    static ArgumentsObject *createExpected(JSContext *cx, AbstractFramePtr frame);
 
     /*
      * Purposefully disconnect the returned arguments object from the frame
@@ -123,7 +123,7 @@ class ArgumentsObject : public JSObject
      * not aliased and generally simplifies arguments objects.
      */
     static ArgumentsObject *createUnexpected(JSContext *cx, StackIter &iter);
-    static ArgumentsObject *createUnexpected(JSContext *cx, TaggedFramePtr frame);
+    static ArgumentsObject *createUnexpected(JSContext *cx, AbstractFramePtr frame);
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -202,7 +202,7 @@ class ArgumentsObject : public JSObject
         return getFixedSlotOffset(DATA_SLOT);
     }
 
-    static void MaybeForwardToCallObject(TaggedFramePtr frame, JSObject *obj, ArgumentsData *data);
+    static void MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data);
 };
 
 class NormalArgumentsObject : public ArgumentsObject
