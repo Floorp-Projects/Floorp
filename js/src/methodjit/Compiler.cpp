@@ -5086,6 +5086,7 @@ mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType,
          * must fit in an int32_t.
          */
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
+            frame.forgetMismatchedObject(top);
             bool isObject = top->isTypeKnown();
             if (!isObject) {
                 Jump notObject = frame.testObject(Assembler::NotEqual, top);
@@ -7593,6 +7594,7 @@ mjit::Compiler::jsop_in()
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
             !types::ArrayPrototypeHasIndexedProperty(cx, outerScript))
         {
+            frame.forgetMismatchedObject(obj);
             bool isPacked = !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
 
             if (!obj->isTypeKnown()) {
