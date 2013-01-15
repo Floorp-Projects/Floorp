@@ -49,7 +49,7 @@ SnapshotIterator::readFrameArgs(Op op, const Value *argv, Value *scopeChain, Val
 
 template <class Op>
 inline void
-InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const
+InlineFrameIterator::forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const
 {
     unsigned nactual = numActualArgs();
     if (count == unsigned(-1))
@@ -66,7 +66,7 @@ InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned c
         // arguments, needed in case of overflow, and because the analyze phase
         // disable Ion inlining if the function redefine its arguments with JSOP_SETARG.
 
-        InlineFrameIterator it(this);
+        InlineFrameIterator it(cx, this);
         ++it;
         SnapshotIterator s(it.snapshotIterator());
 

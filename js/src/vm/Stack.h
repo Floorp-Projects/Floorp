@@ -1962,7 +1962,7 @@ class StackIter
     struct Data
     {
         PerThreadData *perThread_;
-        JSContext    *maybecx_;
+        JSContext    *cx_;
         SavedOption  savedOption_;
 
         State        state_;
@@ -1982,7 +1982,7 @@ class StackIter
 #endif
 
         Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption);
-        Data(JSRuntime *rt, StackSegment *seg);
+        Data(JSContext *cx, JSRuntime *rt, StackSegment *seg);
         Data(const Data &other);
     };
 
@@ -2104,7 +2104,7 @@ class StackIter
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return data_.args_; }
 
     template <class Op>
-    inline void ionForEachCanonicalActualArg(Op op);
+    inline void ionForEachCanonicalActualArg(JSContext *cx, Op op);
 };
 
 /* A filtering of the StackIter to only stop at scripts. */
