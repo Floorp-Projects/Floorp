@@ -20,6 +20,8 @@ WIN_LIBS=                                       \
 
 ---------------------------------------------------------------------- */
 
+#define NOMINMAX 1
+
 #include "plstr.h"
 #include <windows.h>
 #include <tchar.h>
