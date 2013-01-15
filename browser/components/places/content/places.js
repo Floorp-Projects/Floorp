@@ -1244,6 +1244,7 @@ let ContentArea = {
     this._deck = document.getElementById("placesViewsDeck");
     this._toolbar = document.getElementById("placesToolbar");
     ContentTree.init();
+    this._setupView();
   },
 
   /**
