@@ -446,7 +446,7 @@ MappableSeekableZStream::ensure(const void *addr)
 
   /* Find corresponding chunk */
   off_t mapOffset = map->offsetOf(addrPage);
-  size_t chunk = mapOffset / zStream.GetChunkSize();
+  off_t chunk = mapOffset / zStream.GetChunkSize();
 
   /* In the typical case, we just need to decompress the chunk entirely. But
    * when the current mapping ends in the middle of the chunk, we want to
@@ -457,8 +457,8 @@ MappableSeekableZStream::ensure(const void *addr)
    * going to call mmap (which adds lazyMaps) while this function is
    * called. */
   size_t length = zStream.GetChunkSize(chunk);
-  size_t chunkStart = chunk * zStream.GetChunkSize();
-  size_t chunkEnd = chunkStart + length;
+  off_t chunkStart = chunk * zStream.GetChunkSize();
+  off_t chunkEnd = chunkStart + length;
   std::vector<LazyMap>::iterator it;
   for (it = map; it < lazyMaps.end(); ++it) {
     if (chunkEnd <= it->endOffset())
@@ -513,7 +513,7 @@ MappableSeekableZStream::ensure(const void *addr)
   length = reinterpret_cast<uintptr_t>(end)
            - reinterpret_cast<uintptr_t>(start);
 
-  debug("mprotect @%p, 0x%x, 0x%x", start, length, map->prot);
+  debug("mprotect @%p, 0x%" PRIxSize ", 0x%x", start, length, map->prot);
   if (mprotect(const_cast<void *>(start), length, map->prot) == 0)
     return true;
 
@@ -525,7 +525,7 @@ void
 MappableSeekableZStream::stats(const char *when, const char *name) const
 {
   size_t nEntries = zStream.GetChunksNum();
-  debug("%s: %s; %ld/%ld chunks decompressed",
+  debug("%s: %s; %" PRIdSize "/%" PRIdSize " chunks decompressed",
         name, when, chunkAvailNum, nEntries);
 
   size_t len = 64;
