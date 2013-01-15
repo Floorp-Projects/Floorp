@@ -512,7 +512,7 @@ nsBrowserContentHandler.prototype = {
     if (cmdLine.handleFlag("silent", false))
       cmdLine.preventDefault = true;
 #ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    if (cmdLine.findFlag("private-window", false) >= 0) {
+    if (cmdLine.handleFlag("private-window", false) >= 0) {
       openWindow(null, this.chromeURL, "_blank",
         "chrome,dialog=no,private,all" + this.getFeatures(cmdLine),
         "about:privatebrowsing");
