@@ -13,8 +13,21 @@
 namespace js {
 namespace frontend {
 
+// Perform constant folding on the given AST. For example, the program
+// `print(2 + 2)` would become `print(4)`.
+//
+// pnp is the address of a pointer variable that points to the root node of the
+// AST. On success, *pnp points to the root node of the new tree, which may be
+// the same node (unchanged or modified in place) or a new node.
+//
+// Usage:
+//    pn = parser->statement();
+//    if (!pn)
+//        return false;
+//    if (!FoldConstants(cx, &pn, parser))
+//        return false;
 bool
-FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLambda = false,
+FoldConstants(JSContext *cx, ParseNode **pnp, Parser *parser, bool inGenexpLambda = false,
               bool inCond = false);
 
 } /* namespace frontend */
