@@ -329,6 +329,22 @@ public:
      */
     virtual bool FontHintingEnabled() { return true; }
 
+    /**
+     * True when zooming should not require reflow, so glyph metrics and
+     * positioning should not be adjusted for device pixels.
+     * If this is TRUE, then FontHintingEnabled() should be FALSE,
+     * but the converse is not necessarily required; in particular,
+     * B2G always has FontHintingEnabled FALSE, but RequiresLinearZoom
+     * is only true for the browser process, not Gaia or other apps.
+     *
+     * Like FontHintingEnabled (above), this setting shouldn't
+     * change per gecko process, while the process is live.  If so the
+     * results are not defined.
+     *
+     * NB: this bit is only honored by the FT2 backend, currently.
+     */
+    virtual bool RequiresLinearZoom() { return false; }
+
     bool UsesSubpixelAATextRendering() {
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
 	return false;
