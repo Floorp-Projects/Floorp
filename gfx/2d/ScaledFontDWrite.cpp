@@ -176,7 +176,7 @@ readShort(const char *aBuf)
 }
 
 static bool
-DoGrayscale(IDWriteFontFace *aDWFace, unsigned int ppem)
+DoGrayscale(IDWriteFontFace *aDWFace, Float ppem)
 {
   void *tableContext;
   char *tableData;
@@ -266,11 +266,15 @@ DWriteFontFileStream::ReadFileFragment(const void **fragmentStart,
                                        void **fragmentContext)
 {
   // We are required to do bounds checking.
-  if (fileOffset + fragmentSize > (UINT64)mData.size()) {
+  if (fileOffset + fragmentSize > mData.size()) {
     return E_FAIL;
   }
+
+  // truncate the 64 bit fileOffset to size_t sized index into mData
+  size_t index = static_cast<size_t>(fileOffset);
+
   // We should be alive for the duration of this.
-  *fragmentStart = &mData[fileOffset];
+  *fragmentStart = &mData[index];
   *fragmentContext = NULL;
   return S_OK;
 }
@@ -379,9 +383,14 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
   RefPtr<IDWriteFontFileStream> stream;
   loader->CreateStreamFromKey(referenceKey, refKeySize, byRef(stream));
 
-  UINT64 fileSize;
-  stream->GetFileSize(&fileSize);
-
+  UINT64 fileSize64;
+  stream->GetFileSize(&fileSize64);
+  if (fileSize64 > UINT32_MAX) {
+    MOZ_ASSERT(false);
+    return false;
+  }
+  
+  uint32_t fileSize = static_cast<uint32_t>(fileSize64);
   const void *fragmentStart;
   void *context;
   stream->ReadFileFragment(&fragmentStart, 0, fileSize, &context);
