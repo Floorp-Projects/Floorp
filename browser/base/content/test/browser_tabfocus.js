@@ -166,13 +166,13 @@ function test() {
     // navigating back maintains the focus in the urlbar.
     browser1.addEventListener("pageshow", _browser_tabfocus_navigation_test_eventOccured, true);
     button1.focus();
-    browser1.contentWindow.location.assign(testPage3);
+    browser1.contentWindow.location = testPage3;
   }
 
   browser1.addEventListener("load", check, true);
   browser2.addEventListener("load", check, true);
-  browser1.contentWindow.location.assign(testPage1);
-  browser2.contentWindow.location.assign(testPage2);
+  browser1.contentWindow.location = testPage1;
+  browser2.contentWindow.location = testPage2;
 }
 
 var _browser_tabfocus_test_lastfocus;

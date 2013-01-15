@@ -36,7 +36,6 @@
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
 #include "nsContentUtils.h"
-#include "nsEventStateManager.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -461,72 +460,8 @@ nsLocation::SetHref(const nsAString& aHref)
   nsresult rv = NS_OK;
 
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
-
-  // According to HTML5 spec, |location.href = ...| must act as if
-  // it were |location.replace(...)| before the page load finishes.
-  //
-  // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#location
-  //
-  // > The href attribute must return the current address of the
-  // > associated Document object, as an absolute URL.
-  // >
-  // > On setting, if the Location object's associated Document
-  // > object has completely loaded, then the user agent must act
-  // > as if the assign() method had been called with the new value
-  // > as its argument. Otherwise, the user agent must act as if
-  // > the replace() method had been called with the new value as its
-  // > argument.
-  //
-  // Note: The spec says the condition is "Document object has completely
-  //       loaded", but that may break some websites. If the user was
-  //       willing to move from one page to another, and was able to do
-  //       so, we should not overwrite the session history entry even
-  //       if the loading has not finished yet.
-  //
-  //       https://www.w3.org/Bugs/Public/show_bug.cgi?id=17041 
-  //
-  // See bug 39938, bug 72197, bug 178729 and bug 754029.
-  // About other browsers:
-  // http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2010-July/027372.html
-
-  bool replace = false;
-  if (!nsEventStateManager::IsHandlingUserInput()) {
-    // "completely loaded" is defined at:
-    //
-    // http://www.w3.org/TR/2012/WD-html5-20120329/the-end.html#completely-loaded
-    //
-    // > 7.  document readiness to "complete", and fire "load".
-    // >
-    // > 8.  "pageshow"
-    // >
-    // > 9.  ApplicationCache
-    // >
-    // > 10. Print in the pending list.
-    // >
-    // > 12. Queue a task to mark the Document as completely loaded.
-    //
-    // Since Gecko doesn't (yet) have a flag corresponding to no. "12.
-    // ... completely loaded", here the logic is a little tricky.
-
-    nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-    nsCOMPtr<nsIDocument> document(do_GetInterface(docShell));
-    if (document) {
-      replace =
-        nsIDocument::READYSTATE_COMPLETE != document->GetReadyStateEnum();
-
-      // nsIDocShell::isExecutingOnLoadHandler is true while
-      // the document is handling "load", "pageshow",
-      // "readystatechange" for "complete" and "beforeprint"/"afterprint".
-      //
-      // Maybe this API property needs a better name.
-      if (!replace) {
-        docShell->GetIsExecutingOnLoadHandler(&replace);
-      }
-    }
-  }
-
   if (cx) {
-    rv = SetHrefWithContext(cx, aHref, replace);
+    rv = SetHrefWithContext(cx, aHref, false);
   } else {
     rv = GetHref(oldHref);
 
@@ -536,7 +471,7 @@ nsLocation::SetHref(const nsAString& aHref)
       rv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
 
       if (oldUri) {
-        rv = SetHrefWithBase(aHref, oldUri, replace);
+        rv = SetHrefWithBase(aHref, oldUri, false);
       }
     }
   }
@@ -567,6 +502,8 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
   nsresult result;
   nsCOMPtr<nsIURI> newUri;
 
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
+
   nsAutoCString docCharset;
   if (NS_SUCCEEDED(GetDocumentCharacterSetForURI(aHref, docCharset)))
     result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), aBase);
@@ -574,7 +511,34 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     result = NS_NewURI(getter_AddRefs(newUri), aHref, nullptr, aBase);
 
   if (newUri) {
-    return SetURI(newUri, aReplace);
+    /* Check with the scriptContext if it is currently processing a script tag.
+     * If so, this must be a <script> tag with a location.href in it.
+     * we want to do a replace load, in such a situation. 
+     * In other cases, for example if a event handler or a JS timer
+     * had a location.href in it, we want to do a normal load,
+     * so that the new url will be appended to Session History.
+     * This solution is tricky. Hopefully it isn't going to bite
+     * anywhere else. This is part of solution for bug # 39938, 72197
+     * 
+     */
+    bool inScriptTag=false;
+    JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    if (cx) {
+      nsIScriptContext *scriptContext =
+        nsJSUtils::GetDynamicScriptContext(cx);
+
+      if (scriptContext) {
+        if (scriptContext->GetProcessingScriptTag()) {
+          // Now check to make sure that the script is running in our window,
+          // since we only want to replace if the location is set by a
+          // <script> tag in the same window.  See bug 178729.
+          nsCOMPtr<nsIScriptGlobalObject> ourGlobal(do_GetInterface(docShell));
+          inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
+        }
+      }  
+    } //cx
+
+    return SetURI(newUri, aReplace || inScriptTag);
   }
 
   return result;
