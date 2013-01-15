@@ -119,6 +119,15 @@ function init() {
   // of the panel in the browser's window.
   Services.prefs.setBoolPref("browser.download.useToolkitUI", true);
 
+  // Check if the file we're trying to download already exists in the destination
+  // folder, and if so, remove it first to ensure that the test works properly.
+  let fileToDownload = dm.userDownloadsDirectory.clone();
+  fileToDownload.append(FILE_NAME);
+  if (fileToDownload.exists()) {
+    fileToDownload.remove(false);
+    info("File to download had to be removed as it already existed.");
+  }
+
   ww.registerNotification(windowObserver);
   PlacesUtils.annotations.addObserver(annoObserver, false);
   dm.addListener(downloadListener);
