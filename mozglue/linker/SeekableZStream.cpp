@@ -61,7 +61,7 @@ bool
 SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
 {
   if (chunk >= offsetTable.numElements()) {
-    log("DecompressChunk: chunk #%ld out of range [0-%ld)",
+    log("DecompressChunk: chunk #%" PRIdSize " out of range [0-%" PRIdSize ")",
         chunk, offsetTable.numElements());
     return false;
   }
@@ -73,7 +73,8 @@ SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
   if (length == 0 || length > chunkLen)
     length = chunkLen;
 
-  debug("DecompressChunk #%ld @%p (%ld/%ld)", chunk, where, length, chunkLen);
+  debug("DecompressChunk #%" PRIdSize " @%p (%" PRIdSize "/% " PRIdSize ")",
+        chunk, where, length, chunkLen);
   z_stream zStream;
   memset(&zStream, 0, sizeof(zStream));
   zStream.avail_in = (isLastChunk ? totalSize : uint32_t(offsetTable[chunk + 1]))
