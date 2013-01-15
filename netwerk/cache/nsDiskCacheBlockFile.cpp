@@ -8,6 +8,7 @@
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
 #include "mozilla/FileUtils.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -385,7 +386,7 @@ nsDiskCacheBlockFile::Write(int32_t offset, const void *buf, int32_t amount)
                     mFileSize *= 2;
             mFileSize = clamped(mFileSize, minPreallocate, maxPreallocate);
         }
-        mFileSize = NS_MIN(mFileSize, maxFileSize);
+        mFileSize = std::min(mFileSize, maxFileSize);
         //  Appears to cause bug 617123?  Disabled for now.
         //mozilla::fallocate(mFD, mFileSize);
     }

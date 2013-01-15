@@ -5,6 +5,7 @@
 
 // Main header first:
 #include "nsSVGGradientFrame.h"
+#include <algorithm>
 
 // Keep others in (case-insensitive) order:
 #include "gfxPattern.h"
@@ -660,7 +661,7 @@ nsSVGRadialGradientFrame::CreateGradient()
     // 1/128 is the limit of the fractional part of cairo's 24.8 fixed point
     // representation divided by 2 to ensure that we get different cairo
     // fractions
-    double dMax = NS_MAX(0.0, r - 1.0/128);
+    double dMax = std::max(0.0, r - 1.0/128);
     float dx = fx - cx;
     float dy = fy - cy;
     double d = sqrt((dx * dx) + (dy * dy));

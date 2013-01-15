@@ -13,6 +13,7 @@
 #include "nsIOutputStream.h"
 #include "nsCRT.h"
 #include "nsThreadUtils.h"
+#include <algorithm>
 
 #define kMinDecompressReadBufLen 1024
 #define kMinCompressWriteBufLen  1024
@@ -921,7 +922,7 @@ nsDecompressInputStreamWrapper::Read(char *    buf,
         // input stream at one time. Making the buffer size proportional
         // to the request size is not necessary, but helps minimize the
         // number of read requests to the input stream.
-        uint32_t newBufLen = NS_MAX(count, (uint32_t)kMinDecompressReadBufLen);
+        uint32_t newBufLen = std::max(count, (uint32_t)kMinDecompressReadBufLen);
         unsigned char* newBuf;
         newBuf = (unsigned char*)nsMemory::Realloc(mReadBuffer, 
             newBufLen);
@@ -1332,7 +1333,7 @@ nsCompressOutputStreamWrapper::Write(const char * buf,
         // Once allocated, this buffer is referenced by the zlib stream and
         // cannot be grown. We use 2x(initial write request) to approximate
         // a stream buffer size proportional to request buffers.
-        mWriteBufferLen = NS_MAX(count*2, (uint32_t)kMinCompressWriteBufLen);
+        mWriteBufferLen = std::max(count*2, (uint32_t)kMinCompressWriteBufLen);
         mWriteBuffer = (unsigned char*)nsMemory::Alloc(mWriteBufferLen);
         if (!mWriteBuffer) {
             mWriteBufferLen = 0;

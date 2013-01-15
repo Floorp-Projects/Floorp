@@ -11,6 +11,7 @@
 #include "nsRect.h"
 
 #include "nsError.h"
+#include <algorithm>
 
 namespace mozilla {
 namespace image {
@@ -98,7 +99,7 @@ nsIconDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
       case iconStateReadPixels:
 
         // How many bytes are we reading?
-        bytesToRead = NS_MIN(aCount, mPixBytesTotal - mPixBytesRead);
+        bytesToRead = std::min(aCount, mPixBytesTotal - mPixBytesRead);
 
         // Copy the bytes
         memcpy(mImageData + mPixBytesRead, aBuffer, bytesToRead);

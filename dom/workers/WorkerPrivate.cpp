@@ -44,6 +44,7 @@
 #include "xpcpublic.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include <algorithm>
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -3887,7 +3888,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
   // We want to make sure to run *something*, even if the timer fired a little
   // early. Fudge the value of now to at least include the first timeout.
-  const TimeStamp now = NS_MAX(TimeStamp::Now(), mTimeouts[0]->mTargetTime);
+  const TimeStamp now = std::max(TimeStamp::Now(), mTimeouts[0]->mTargetTime);
 
   nsAutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
@@ -4005,7 +4006,7 @@ WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx)
 
   double delta =
     (mTimeouts[0]->mTargetTime - TimeStamp::Now()).ToMilliseconds();
-  uint32_t delay = delta > 0 ? NS_MIN(delta, double(UINT32_MAX)) : 0;
+  uint32_t delay = delta > 0 ? std::min(delta, double(UINT32_MAX)) : 0;
 
   nsresult rv = mTimer->InitWithFuncCallback(DummyCallback, nullptr, delay,
                                              nsITimer::TYPE_ONE_SHOT);

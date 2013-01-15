@@ -246,7 +246,7 @@ void ResizeFilter::ComputeFilters(int src_size,
   // that the range covered by the filter won't necessarily cover any source
   // pixel boundaries. Therefore, we use these clamped values (max of 1) for
   // some computations.
-  float clamped_scale = NS_MIN(1.0f, scale);
+  float clamped_scale = std::min(1.0f, scale);
 
   // Speed up the divisions below by turning them into multiplies.
   float inv_scale = 1.0f / scale;
@@ -273,8 +273,8 @@ void ResizeFilter::ComputeFilters(int src_size,
     float src_pixel = (static_cast<float>(dest_subset_i) + 0.5f) * inv_scale;
 
     // Compute the (inclusive) range of source pixels the filter covers.
-    int src_begin = NS_MAX(0, FloorInt(src_pixel - src_support));
-    int src_end = NS_MIN(src_size - 1, CeilInt(src_pixel + src_support));
+    int src_begin = std::max(0, FloorInt(src_pixel - src_support));
+    int src_end = std::min(src_size - 1, CeilInt(src_pixel + src_support));
 
     // Compute the unnormalized filter value at each location of the source
     // it covers.

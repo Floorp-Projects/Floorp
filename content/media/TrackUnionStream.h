@@ -7,6 +7,7 @@
 #define MOZILLA_TRACKUNIONSTREAM_H_
 
 #include "MediaStreamGraph.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -117,7 +118,7 @@ protected:
   {
     // Use the ID of the source track if we can, otherwise allocate a new
     // unique ID
-    TrackID id = NS_MAX(mMaxTrackID + 1, aTrack->GetID());
+    TrackID id = std::max(mMaxTrackID + 1, aTrack->GetID());
     mMaxTrackID = id;
 
     TrackRate rate = aTrack->GetRate();
@@ -181,7 +182,7 @@ protected:
     *aOutputTrackFinished = false;
     for (GraphTime t = aFrom; t < aTo; t = next) {
       MediaInputPort::InputInterval interval = map->mInputPort->GetNextInputInterval(t);
-      interval.mEnd = NS_MIN(interval.mEnd, aTo);
+      interval.mEnd = std::min(interval.mEnd, aTo);
       if (interval.mStart >= interval.mEnd)
         break;
       next = interval.mEnd;
@@ -224,10 +225,10 @@ protected:
         TrackTicks inputEndTicks = TimeToTicksRoundUp(rate, inputEnd);
         TrackTicks inputStartTicks = inputEndTicks - ticks;
         segment->AppendSlice(*aInputTrack->GetSegment(),
-                             NS_MIN(inputTrackEndPoint, inputStartTicks),
-                             NS_MIN(inputTrackEndPoint, inputEndTicks));
+                             std::min(inputTrackEndPoint, inputStartTicks),
+                             std::min(inputTrackEndPoint, inputEndTicks));
         LOG(PR_LOG_DEBUG, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
-            this, (long long)(NS_MIN(inputTrackEndPoint, inputEndTicks) - NS_MIN(inputTrackEndPoint, inputStartTicks)),
+            this, (long long)(std::min(inputTrackEndPoint, inputEndTicks) - std::min(inputTrackEndPoint, inputStartTicks)),
             outputTrack->GetID()));
       }
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {

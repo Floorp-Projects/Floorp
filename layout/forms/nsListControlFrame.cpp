@@ -45,6 +45,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Attributes.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -439,7 +440,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
         // Just pick something
         mNumDisplayRows = 1;
       } else {
-        mNumDisplayRows = NS_MAX(1, state.ComputedHeight() / rowHeight);
+        mNumDisplayRows = std::max(1, state.ComputedHeight() / rowHeight);
       }
     }
 
@@ -570,7 +571,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
       mDropdownCanGrow = GetNumberOfRows() > 1;
     } else {
       nscoord bp = aReflowState.mComputedBorderPadding.TopBottom();
-      nscoord availableHeight = NS_MAX(above, below) - bp;
+      nscoord availableHeight = std::max(above, below) - bp;
       nscoord newHeight;
       uint32_t rows;
       if (visibleHeight <= availableHeight) {
@@ -1378,7 +1379,7 @@ nsListControlFrame::AddOption(int32_t aIndex)
 static int32_t
 DecrementAndClamp(int32_t aSelectionIndex, int32_t aLength)
 {
-  return aLength == 0 ? kNothingSelected : NS_MAX(0, aSelectionIndex - 1);
+  return aLength == 0 ? kNothingSelected : std::max(0, aSelectionIndex - 1);
 }
 
 NS_IMETHODIMP
@@ -2385,13 +2386,13 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     case nsIDOMKeyEvent::DOM_VK_PAGE_UP: {
       AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
                                 (int32_t)numOptions,
-                                -NS_MAX(1, int32_t(mNumDisplayRows-1)), -1);
+                                -std::max(1, int32_t(mNumDisplayRows-1)), -1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
       AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
                                 (int32_t)numOptions,
-                                NS_MAX(1, int32_t(mNumDisplayRows-1)), 1);
+                                std::max(1, int32_t(mNumDisplayRows-1)), 1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_HOME: {

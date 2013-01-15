@@ -6,6 +6,7 @@
 #include "gfxSkipChars.h"
 
 #include <stdlib.h>
+#include <algorithm>
 
 #define SHORTCUT_FREQUENCY 256
 
@@ -208,7 +209,7 @@ gfxSkipCharsBuilder::FlushRun()
     // Fill in buffer entries starting at mBufferLength, as many as necessary
     uint32_t charCount = mRunCharCount;
     for (;;) {
-        uint32_t chars = NS_MIN<uint32_t>(255, charCount);
+        uint32_t chars = std::min<uint32_t>(255, charCount);
         if (!mBuffer.AppendElement(chars)) {
             mInErrorState = true;
             return;

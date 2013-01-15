@@ -17,6 +17,7 @@
 #include "mozilla/gfx/BaseRect.h"
 #include "mozilla/Likely.h"
 #include <climits>
+#include <algorithm>
 
 struct nsIntRect;
 
@@ -124,26 +125,26 @@ struct NS_GFX nsRect :
     return UnionEdges(aRect);
 #else
     nsRect result;
-    result.x = NS_MIN(aRect.x, x);
-    int64_t w = NS_MAX(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
+    result.x = std::min(aRect.x, x);
+    int64_t w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
     if (MOZ_UNLIKELY(w > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
       // Clamp huge negative x to nscoord_MIN / 2 and try again.
-      result.x = NS_MAX(result.x, nscoord_MIN / 2);
-      w = NS_MAX(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
+      result.x = std::max(result.x, nscoord_MIN / 2);
+      w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
       if (MOZ_UNLIKELY(w > nscoord_MAX)) {
         w = nscoord_MAX;
       }
     }
     result.width = nscoord(w);
 
-    result.y = NS_MIN(aRect.y, y);
-    int64_t h = NS_MAX(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
+    result.y = std::min(aRect.y, y);
+    int64_t h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
     if (MOZ_UNLIKELY(h > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
       // Clamp huge negative y to nscoord_MIN / 2 and try again.
-      result.y = NS_MAX(result.y, nscoord_MIN / 2);
-      h = NS_MAX(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
+      result.y = std::max(result.y, nscoord_MIN / 2);
+      h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
       if (MOZ_UNLIKELY(h > nscoord_MAX)) {
         h = nscoord_MAX;
       }

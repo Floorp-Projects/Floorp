@@ -7,6 +7,7 @@
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include <stdlib.h>
+#include <algorithm>
 
 static
 gboolean ref_printer(GtkPrinter *aPrinter, gpointer aData)
@@ -253,7 +254,7 @@ nsPrintSettingsGTK::GetStartPageRange(int32_t *aStartPageRange)
     // the lowest start page.
     int32_t start(lstRanges[0].start);
     for (gint ii = 1; ii < ctRanges; ii++) {
-      start = NS_MIN(lstRanges[ii].start, start);
+      start = std::min(lstRanges[ii].start, start);
     }
     *aStartPageRange = start + 1;
   }
@@ -288,7 +289,7 @@ nsPrintSettingsGTK::GetEndPageRange(int32_t *aEndPageRange)
   } else {
     int32_t end(lstRanges[0].end);
     for (gint ii = 1; ii < ctRanges; ii++) {
-      end = NS_MAX(lstRanges[ii].end, end);
+      end = std::max(lstRanges[ii].end, end);
     }
     *aEndPageRange = end + 1;
   }

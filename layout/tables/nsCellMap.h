@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsAlgorithm.h"
 #include "nsAutoPtr.h"
+#include <algorithm>
 
 #undef DEBUG_TABLE_CELLMAP
 
@@ -598,7 +599,7 @@ public:
     if (mCurMap) {
       mCurMapContentRowCount = mCurMap->GetRowCount();
       uint32_t rowArrayLength = mCurMap->mRows.Length();
-      mCurMapRelevantRowCount = NS_MIN(mCurMapContentRowCount, rowArrayLength);
+      mCurMapRelevantRowCount = std::min(mCurMapContentRowCount, rowArrayLength);
       if (mCurMapRelevantRowCount == 0 && mOrigCells > 0) {
         // This row group is useless; advance!
         AdvanceRowGroup();

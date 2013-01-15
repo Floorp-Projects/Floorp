@@ -961,7 +961,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             if member.implicit_jscontext:
                 argv.append('cx')
             if member.optional_argc:
-                argv.append('NS_MIN<uint32_t>(argc, %d) - %d' % 
+                argv.append('std::min<uint32_t>(argc, %d) - %d' % 
                             (len(member.params), requiredArgs))
             if not isVoidType(member.realtype):
                 argv.append(outParamForm(resultname, member.realtype))
@@ -1239,6 +1239,7 @@ stubTopTemplate = '''\
 #include "xpcprivate.h"  // for XPCCallContext
 #include "XPCQuickStubs.h"
 #include "nsWrapperCacheInlines.h"
+#include <algorithm>
 '''
 
 def writeStubFile(filename, headerFilename, conf, interfaces):

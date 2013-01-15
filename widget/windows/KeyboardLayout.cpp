@@ -22,6 +22,7 @@
 
 #include <windows.h>
 #include <winuser.h>
+#include <algorithm>
 
 #ifndef WINABLEAPI
 #include <winable.h>
@@ -198,7 +199,7 @@ UniCharsAndModifiers::UniCharsCaseInsensitiveEqual(
 UniCharsAndModifiers&
 UniCharsAndModifiers::operator+=(const UniCharsAndModifiers& aOther)
 {
-  uint32_t copyCount = NS_MIN(aOther.mLength, 5 - mLength);
+  uint32_t copyCount = std::min(aOther.mLength, 5 - mLength);
   NS_ENSURE_TRUE(copyCount > 0, *this);
   memcpy(&mChars[mLength], aOther.mChars, copyCount * sizeof(PRUnichar));
   memcpy(&mModifiers[mLength], aOther.mModifiers,

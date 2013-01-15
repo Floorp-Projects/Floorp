@@ -12,6 +12,7 @@
 
 #include "nsIPlatformCharset.h"
 #include "nsIFile.h"
+#include <algorithm>
 
 #ifdef MOZ_TOOLKIT_SEARCH
 #include "nsIBrowserSearchService.h"
@@ -811,7 +812,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
         spaceLoc = uint32_t(kNotFound);
     }
     uint32_t qMarkLoc = uint32_t(aURIString.FindChar('?'));
-    uint32_t quoteLoc = NS_MIN(uint32_t(aURIString.FindChar('"')),
+    uint32_t quoteLoc = std::min(uint32_t(aURIString.FindChar('"')),
                                uint32_t(aURIString.FindChar('\'')));
 
     if (((spaceLoc < dotLoc || quoteLoc < dotLoc) &&

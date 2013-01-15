@@ -18,6 +18,7 @@
 #include "nsThreadUtils.h"
 #include "Layers.h"
 #include "AnimationCommon.h"
+#include <algorithm>
 
 using namespace mozilla::css;
 
@@ -1059,7 +1060,7 @@ void AsyncPanZoomController::RequestContentRepaint() {
   gfxFloat actualZoom = mFrameMetrics.mZoom.width;
   // Calculate the factor of acceleration based on the faster of the two axes.
   float accelerationFactor =
-    clamped(NS_MAX(mX.GetAccelerationFactor(), mY.GetAccelerationFactor()),
+    clamped(std::max(mX.GetAccelerationFactor(), mY.GetAccelerationFactor()),
             float(MIN_ZOOM) / 2.0f, float(MAX_ZOOM));
   // Scale down the resolution a bit based on acceleration.
   mFrameMetrics.mZoom.width = mFrameMetrics.mZoom.height =
@@ -1344,7 +1345,7 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
     }
 
     gfxFloat targetResolution =
-      NS_MIN(compositionBounds.width / zoomToRect.width,
+      std::min(compositionBounds.width / zoomToRect.width,
              compositionBounds.height / zoomToRect.height);
 
     // Recalculate the zoom to rect using the new dimensions.
@@ -1355,7 +1356,7 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
     zoomToRect = zoomToRect.Intersect(cssPageRect);
 
     // Do one final recalculation to get the resolution.
-    targetResolution = NS_MAX(compositionBounds.width / zoomToRect.width,
+    targetResolution = std::max(compositionBounds.width / zoomToRect.width,
                               compositionBounds.height / zoomToRect.height);
     float targetZoom = float(targetResolution / resolution.width) * mFrameMetrics.mZoom.width;
 

@@ -123,6 +123,7 @@
 #include "nsILoadContext.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
+#include <algorithm>
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -1928,7 +1929,7 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
   uint32_t pos2 = parents2.Length();
   nsINode* parent = nullptr;
   uint32_t len;
-  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
+  for (len = std::min(pos1, pos2); len > 0; --len) {
     nsINode* child1 = parents1.ElementAt(--pos1);
     nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
@@ -1979,7 +1980,7 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
   // Find where the parent chains differ
   nsINode* parent = parents1.ElementAt(pos1);
   uint32_t len;
-  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
+  for (len = std::min(pos1, pos2); len > 0; --len) {
     nsINode* child1 = parents1.ElementAt(--pos1);
     nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
@@ -4714,7 +4715,7 @@ nsContentUtils::GetLocalizedEllipsis()
   static PRUnichar sBuf[4] = { 0, 0, 0, 0 };
   if (!sBuf[0]) {
     nsAdoptingString tmp = Preferences::GetLocalizedString("intl.ellipsis");
-    uint32_t len = NS_MIN(uint32_t(tmp.Length()),
+    uint32_t len = std::min(uint32_t(tmp.Length()),
                           uint32_t(ArrayLength(sBuf) - 1));
     CopyUnicodeTo(tmp, 0, sBuf, len);
     if (!sBuf[0])
@@ -6733,8 +6734,8 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   }
 
   // Make sure aOutStartOffset <= aOutEndOffset.
-  aOutStartOffset = NS_MIN(anchorOffset, focusOffset);
-  aOutEndOffset = NS_MAX(anchorOffset, focusOffset);
+  aOutStartOffset = std::min(anchorOffset, focusOffset);
+  aOutEndOffset = std::max(anchorOffset, focusOffset);
 }
 
 nsIEditor*

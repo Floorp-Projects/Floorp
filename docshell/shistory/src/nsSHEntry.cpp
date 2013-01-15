@@ -17,6 +17,7 @@
 #include "nsIContentViewer.h"
 #include "nsISupportsArray.h"
 #include "nsIStructuredCloneContainer.h"
+#include <algorithm>
 
 namespace dom = mozilla::dom;
 
@@ -561,7 +562,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, int32_t aOffset)
     // If there are dynamically added children before that, those must be
     // moved to be after aOffset.
     if (mChildren.Count() > 0) {
-      int32_t start = NS_MIN(mChildren.Count() - 1, aOffset);
+      int32_t start = std::min(mChildren.Count() - 1, aOffset);
       int32_t dynEntryIndex = -1;
       nsISHEntry* dynEntry = nullptr;
       for (int32_t i = start; i >= 0; --i) {

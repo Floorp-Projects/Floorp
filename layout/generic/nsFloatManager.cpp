@@ -11,6 +11,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsBlockDebugFlags.h"
 #include "nsError.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -460,14 +461,14 @@ nsFloatManager::ClearFloats(nscoord aY, uint8_t aBreakType,
   const FloatInfo &tail = mFloats[mFloats.Length() - 1];
   switch (aBreakType) {
     case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-      bottom = NS_MAX(bottom, tail.mLeftYMost);
-      bottom = NS_MAX(bottom, tail.mRightYMost);
+      bottom = std::max(bottom, tail.mLeftYMost);
+      bottom = std::max(bottom, tail.mRightYMost);
       break;
     case NS_STYLE_CLEAR_LEFT:
-      bottom = NS_MAX(bottom, tail.mLeftYMost);
+      bottom = std::max(bottom, tail.mLeftYMost);
       break;
     case NS_STYLE_CLEAR_RIGHT:
-      bottom = NS_MAX(bottom, tail.mRightYMost);
+      bottom = std::max(bottom, tail.mRightYMost);
       break;
     default:
       // Do nothing

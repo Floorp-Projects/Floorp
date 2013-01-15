@@ -12,6 +12,7 @@
 #include "nsAlgorithm.h"
 #include "nsJSUtils.h"
 #include "xpcpublic.h"
+#include <algorithm>
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -409,7 +410,7 @@ Key::DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd)
   ++aPos;
 
   uint64_t number = 0;
-  memcpy(&number, aPos, NS_MIN<size_t>(sizeof(number), aEnd - aPos));
+  memcpy(&number, aPos, std::min<size_t>(sizeof(number), aEnd - aPos));
   number = NS_SWAP64(number);
 
   aPos += sizeof(number);

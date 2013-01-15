@@ -7,6 +7,7 @@
 #define __nsBoundingMetrics_h
 
 #include "nsCoord.h"
+#include <algorithm>
 
 /* Struct used for accurate measurements of a string, in order to
  * allow precise positioning when processing MathML.  This is in its
@@ -76,8 +77,8 @@ struct nsBoundingMetrics {
         else {
             if (ascent < bm.ascent) ascent = bm.ascent;
             if (descent < bm.descent) descent = bm.descent;
-            leftBearing = NS_MIN(leftBearing, width + bm.leftBearing);
-            rightBearing = NS_MAX(rightBearing, width + bm.rightBearing);
+            leftBearing = std::min(leftBearing, width + bm.leftBearing);
+            rightBearing = std::max(rightBearing, width + bm.rightBearing);
         }
         width += bm.width;
     }
