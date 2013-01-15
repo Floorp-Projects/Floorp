@@ -12,6 +12,9 @@
 #  error "STL code can only be used with -fno-exceptions"
 #endif
 
+// Suppress windef.h min and max macros - they make std::min/max not compile.
+#define NOMINMAX 1
+
 // Code built with !_HAS_EXCEPTIONS calls std::_Throw(), but the win2k
 // CRT doesn't export std::_Throw().  So we define it.
 #ifndef mozilla_Throw_h
