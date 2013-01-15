@@ -5,10 +5,12 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsMacWebAppUtils.h"
-#include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsCocoaUtils.h"
 #include "nsString.h"
+
+// This must be included last:
+#include "nsObjCExceptions.h"
 
 // Find the path to the app with the given bundleIdentifier, if any.
 // Note that the OS will return the path to the newest binary, if there is more than one.
