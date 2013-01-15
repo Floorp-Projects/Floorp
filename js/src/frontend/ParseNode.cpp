@@ -26,54 +26,6 @@ JS_STATIC_ASSERT(pn_offsetof(pn_link) == pn_offsetof(dn_uses));
 
 #undef pn_offsetof
 
-void
-ParseNode::become(ParseNode *pn2)
-{
-    JS_ASSERT(!pn_defn);
-    JS_ASSERT(!pn2->isDefn());
-
-    JS_ASSERT(!pn_used);
-    if (pn2->isUsed()) {
-        ParseNode **pnup = &pn2->pn_lexdef->dn_uses;
-        while (*pnup != pn2)
-            pnup = &(*pnup)->pn_link;
-        *pnup = this;
-        pn_link = pn2->pn_link;
-        pn_used = true;
-        pn2->pn_link = NULL;
-        pn2->pn_used = false;
-    }
-
-    pn_type = pn2->pn_type;
-    pn_op = pn2->pn_op;
-    pn_arity = pn2->pn_arity;
-    pn_parens = pn2->pn_parens;
-    pn_u = pn2->pn_u;
-
-    /*
-     * If any pointers are pointing to pn2, change them to point to this
-     * instead, since pn2 will be cleared and probably recycled.
-     */
-    if (pn_arity == PN_LIST && !pn_head) {
-        /* Empty list: fix up the pn_tail pointer. */
-        JS_ASSERT(pn_count == 0);
-        JS_ASSERT(pn_tail == &pn2->pn_head);
-        pn_tail = &pn_head;
-    }
-
-    pn2->clear();
-}
-
-void
-ParseNode::clear()
-{
-    pn_type = PNK_LIMIT;
-    setOp(JSOP_NOP);
-    pn_used = pn_defn = false;
-    pn_arity = PN_NULLARY;
-    pn_parens = false;
-}
-
 #ifdef DEBUG
 void
 ParseNode::checkListConsistency()
