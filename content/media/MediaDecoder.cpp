@@ -610,12 +610,6 @@ nsresult MediaDecoder::Seek(double aTime)
   return ScheduleStateMachineThread();
 }
 
-nsresult MediaDecoder::PlaybackRateChanged()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 double MediaDecoder::GetCurrentTime()
 {
   MOZ_ASSERT(NS_IsMainThread());
