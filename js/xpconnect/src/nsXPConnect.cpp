@@ -496,7 +496,7 @@ private:
                            void *k, JSGCTraceKind kkind,
                            void *v, JSGCTraceKind vkind)
     {
-        MOZ_ASSERT(!js::IsIncrementalBarrierNeeded(trc->runtime),
+        MOZ_ASSERT(!js::IsIncrementalGCInProgress(trc->runtime),
                    "Don't call FixWeakMappingGrayBits during a GC.");
 
         FixWeakMappingGrayBitsTracer *tracer = static_cast<FixWeakMappingGrayBitsTracer*>(trc);
