@@ -100,7 +100,7 @@ class RangedPtr
 
     /* Equivalent to RangedPtr(arr, arr, N). */
     template<size_t N>
-    RangedPtr(T arr[N])
+    RangedPtr(T (&arr)[N])
       : ptr(arr)
 #ifdef DEBUG
       , rangeStart(arr), rangeEnd(arr + N)
