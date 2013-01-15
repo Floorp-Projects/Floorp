@@ -240,6 +240,27 @@ public class testHistoryTab extends PixelTest {
         }
     }
 
+    private ListView getHistoryList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("History");
+
+        listview = null;
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+               final ArrayList<ListView> views = mSolo.getCurrentListViews();
+               for (ListView view : views) {
+                   if (view.getTag().equals("history")) {
+                       listview = view;
+                       return true;
+                   }
+               }
+               return false;
+            }
+        }, MAX_WAIT_MS);
+
+        return listview;
+    }
+
     public void tearDown() throws Exception {
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");
