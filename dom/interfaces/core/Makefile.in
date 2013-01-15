@@ -36,8 +36,6 @@ XPIDLSRCS =                                     \
 	nsIDOMUserDataHandler.idl		\
 	nsIDOMNSEditableElement.idl		\
 	nsIDOMNodeSelector.idl			\
-	nsIDOMDOMTokenList.idl			\
-	nsIDOMDOMSettableTokenList.idl	\
 	nsIInlineEventHandlers.idl              \
 	$(NULL)
 
