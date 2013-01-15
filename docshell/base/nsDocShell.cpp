@@ -1415,6 +1415,16 @@ nsDocShell::LoadURI(nsIURI * aURI,
                 }
             } // parent
         } //parentDS
+        else {  
+            // This is the root docshell. If we got here while  
+            // executing an onLoad Handler,this load will not go 
+            // into session history.
+            bool inOnLoadHandler=false;
+            GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+            if (inOnLoadHandler) {
+                loadType = LOAD_NORMAL_REPLACE;
+            }
+        } 
     } // !shEntry
 
     if (shEntry) {
@@ -6520,7 +6530,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
 
     // Notify the ContentViewer that the Document has finished loading.  This
-    // will cause any OnLoad(...) handlers to fire.
+    // will cause any OnLoad(...) and PopState(...) handlers to fire.
     if (!mEODForCurrentDocument && mContentViewer) {
         mIsExecutingOnLoadHandler = true;
         mContentViewer->LoadComplete(aStatus);
@@ -10493,13 +10503,11 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
             NS_ASSERTION(entry == newEntry, "The new session history should be in the new entry");
         }
 
-        int32_t index = 0;   
-        mSessionHistory->GetIndex(&index);
-
         // This is the root docshell
-        if (-1 != index &&
-            LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {            
+        if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {            
             // Replace current entry in session history.
+            int32_t  index = 0;   
+            mSessionHistory->GetIndex(&index);
             nsCOMPtr<nsISHistoryInternal>   shPrivate(do_QueryInterface(mSessionHistory));
             // Replace the current entry with the new entry
             if (shPrivate)
@@ -10510,7 +10518,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
             nsCOMPtr<nsISHistoryInternal>
                 shPrivate(do_QueryInterface(mSessionHistory));
             NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
-            mPreviousTransIndex = index;
+            mSessionHistory->GetIndex(&mPreviousTransIndex);
             rv = shPrivate->AddEntry(entry, shouldPersist);
             mSessionHistory->GetIndex(&mLoadedTransIndex);
 #ifdef DEBUG_PAGE_CACHE

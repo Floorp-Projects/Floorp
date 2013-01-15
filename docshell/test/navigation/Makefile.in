@@ -46,7 +46,6 @@ MOCHITEST_FILES = \
 		frame3.html \
 		goback.html \
 		file_bug534178.html \
-		file_bug754029.html \
 		$(NULL)
 
 ifneq (mobile/android,$(MOZ_BUILD_APP))
