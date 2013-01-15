@@ -988,9 +988,13 @@ DownloadsDataCtor.prototype = {
       dataItem._download = aDownload;
     }
 
-    this._views.forEach(
-      function (view) view.getViewItem(dataItem).onStateChange(aOldState)
-    );
+    for (let view of this._views) {
+      try {
+        view.getViewItem(dataItem).onStateChange(aOldState);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
 
     if (isNew && !dataItem.newDownloadNotified) {
       dataItem.newDownloadNotified = true;
