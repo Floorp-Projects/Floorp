@@ -145,7 +145,7 @@ FileLocation::Data::Copy(char *buf, uint32_t len)
 {
   if (mFd) {
     for (uint32_t totalRead = 0; totalRead < len; ) {
-      int32_t read = PR_Read(mFd, buf + totalRead, NS_MIN(len - totalRead, uint32_t(INT32_MAX)));
+      int32_t read = PR_Read(mFd, buf + totalRead, XPCOM_MIN(len - totalRead, uint32_t(INT32_MAX)));
       if (read < 0)
         return NS_ErrorAccordingToNSPR();
       totalRead += read;

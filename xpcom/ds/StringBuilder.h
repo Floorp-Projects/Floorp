@@ -63,7 +63,7 @@ public:
     size_t EnsureCapacity(size_t capacity) {
         if (capacity > mCapacity) {
             // make sure we at least double in size
-            mCapacity = NS_MAX(capacity, mCapacity*2);
+            mCapacity = XPCOM_MAX(capacity, mCapacity*2);
             mBuffer = static_cast<char*>(realloc(mBuffer, mCapacity));
             mCapacity = moz_malloc_usable_size(mBuffer);
         }

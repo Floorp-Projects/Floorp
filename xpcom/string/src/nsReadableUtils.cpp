@@ -578,7 +578,7 @@ class CopyToUpperCase
       uint32_t
       write( const char* aSource, uint32_t aSourceLength )
         {
-          uint32_t len = NS_MIN(uint32_t(mIter.size_forward()), aSourceLength);
+          uint32_t len = XPCOM_MIN(uint32_t(mIter.size_forward()), aSourceLength);
           char* cp = mIter.get();
           const char* end = aSource + len;
           while (aSource != end) {
@@ -657,7 +657,7 @@ class CopyToLowerCase
       uint32_t
       write( const char* aSource, uint32_t aSourceLength )
         {
-          uint32_t len = NS_MIN(uint32_t(mIter.size_forward()), aSourceLength);
+          uint32_t len = XPCOM_MIN(uint32_t(mIter.size_forward()), aSourceLength);
           char* cp = mIter.get();
           const char* end = aSource + len;
           while (aSource != end) {
