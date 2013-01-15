@@ -83,15 +83,6 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         return new SimpleDateFormat(dateFormat).format(calendar.getTime());
     }
 
-    private class PromptButton {
-        public String label = "";
-        PromptButton(JSONObject aJSONButton) {
-            try {
-                label = aJSONButton.getString("label");
-            } catch(Exception ex) { }
-        }
-    }
-
     private class PromptInput {
         private String label = "";
         private String type  = "";
@@ -474,17 +465,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             text = geckoObject.getString("text");
         } catch(Exception ex) { }
 
-        JSONArray buttons = new JSONArray();
-        try {
-            buttons = geckoObject.getJSONArray("buttons");
-        } catch(Exception ex) { }
-        int length = buttons.length();
-        mButtons = new String[length];
-        for (int i = 0; i < length; i++) {
-            try {
-                mButtons[i] = buttons.getJSONObject(i).getString("label");
-            } catch(Exception ex) { }
-        }
+        mButtons = getStringArray(geckoObject, "buttons");
 
         JSONArray inputs = new JSONArray();
         try {
