@@ -85,6 +85,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_iframes.js \
 	browser_dbg_pause-exceptions.js \
 	browser_dbg_multiple-windows.js \
+	browser_dbg_bfcache.js \
 	browser_dbg_breakpoint-new-script.js \
 	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_progress-listener-bug.js \
@@ -92,14 +93,6 @@ MOCHITEST_BROWSER_TESTS = \
 	$(filter disabled-for-intermittent-failures--bug-753225, browser_dbg_createRemote.js) \
 	head.js \
 	$(NULL)
-
-ifneq ($(OS_ARCH),WINNT)
-MOCHITEST_BROWSER_TESTS += \
-	browser_dbg_bfcache.js \
-	$(NULL)
-else
-$(filter disabled-temporarily--bug-774619, browser_dbg_bfcache.js)
-endif
 
 MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_tab1.html \
