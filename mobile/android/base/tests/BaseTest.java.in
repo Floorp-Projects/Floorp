@@ -395,7 +395,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo.clickOnText("History");
 
         final ArrayList<ListView> views = mSolo.getCurrentListViews();
-        mSolo.waitForText("Today");
+        mSolo.waitForText("Today|Yesterday");
 
         listview = null;
         boolean success = waitForTest(new BooleanTest() {
