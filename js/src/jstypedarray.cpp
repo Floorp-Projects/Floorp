@@ -1015,7 +1015,7 @@ TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject tarray, HandleId id,
     JS_ASSERT(tarray->isTypedArray());
 
     if (isArrayIndex(tarray, id)) {
-        MarkImplicitPropertyFound(propp);
+        MarkNonNativePropertyFound(propp);
         objp.set(tarray);
         return true;
     }
@@ -1045,7 +1045,7 @@ TypedArray::obj_lookupElement(JSContext *cx, HandleObject tarray, uint32_t index
     JS_ASSERT(tarray->isTypedArray());
 
     if (index < length(tarray)) {
-        MarkImplicitPropertyFound(propp);
+        MarkNonNativePropertyFound(propp);
         objp.set(tarray);
         return true;
     }
