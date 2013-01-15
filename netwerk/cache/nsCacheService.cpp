@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,7 +21,6 @@
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheDeviceSQL.h"
 
-#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -1071,26 +1070,6 @@ private:
  *****************************************************************************/
 nsCacheService *   nsCacheService::gService = nullptr;
 
-static nsCOMPtr<nsIMemoryReporter> MemoryCacheReporter = nullptr;
-
-NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(NetworkMemoryCache,
-    "explicit/network/memory-cache",
-    KIND_HEAP,
-    UNITS_BYTES,
-    nsCacheService::MemoryDeviceSize,
-    "Memory used by the network memory cache.")
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(NetworkDiskCacheMallocSizeOf)
-
-static nsCOMPtr<nsIMemoryReporter> DiskCacheReporter = nullptr;
-
-NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(NetworkDiskCache,
-    "explicit/network/disk-cache",
-    KIND_HEAP,
-    UNITS_BYTES,
-    nsCacheService::DiskDeviceHeapSize,
-    "Memory used by the network disk cache.")
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
 
 nsCacheService::nsCacheService()
@@ -1244,14 +1223,6 @@ nsCacheService::Shutdown()
         // obtain the disk cache directory in case we need to sanitize it
         parentDir = mObserver->DiskCacheParentDirectory();
         shouldSanitize = mObserver->SanitizeAtShutdown();
-        
-        // unregister memory reporters, before deleting the devices, just
-        // to be safe
-        NS_UnregisterMemoryReporter(MemoryCacheReporter);
-        MemoryCacheReporter = nullptr;
-
-        NS_UnregisterMemoryReporter(DiskCacheReporter);
-        DiskCacheReporter = nullptr;
 
         // deallocate memory and disk caches
         delete mMemoryDevice;
@@ -1566,7 +1537,7 @@ nsCacheService::CreateDiskDevice()
     mDiskDevice->SetCacheParentDirectory(mObserver->DiskCacheParentDirectory());
     mDiskDevice->SetCapacity(mObserver->DiskCacheCapacity());
     mDiskDevice->SetMaxEntrySize(mObserver->DiskCacheMaxEntrySize());
-    
+
     nsresult rv = mDiskDevice->Init();
     if (NS_FAILED(rv)) {
 #if DEBUG
@@ -1575,7 +1546,7 @@ nsCacheService::CreateDiskDevice()
                static_cast<uint32_t>(rv));
         printf("###    - disabling disk cache for this session.\n");
         printf("###\n");
-#endif        
+#endif
         mEnableDiskDevice = false;
         delete mDiskDevice;
         mDiskDevice = nullptr;
@@ -1604,9 +1575,6 @@ nsCacheService::CreateDiskDevice()
     }
     // Ignore state of the timer and return success since the purpose of the
     // method (create the disk-device) has been fulfilled
-
-    DiskCacheReporter = new NS_MEMORY_REPORTER_NAME(NetworkDiskCache);
-    NS_RegisterMemoryReporter(DiskCacheReporter);
 
     return NS_OK;
 }
@@ -1772,10 +1740,6 @@ nsCacheService::CreateMemoryDevice()
         delete mMemoryDevice;
         mMemoryDevice = nullptr;
     }
-
-    MemoryCacheReporter =
-        new NS_MEMORY_REPORTER_NAME(NetworkMemoryCache);
-    NS_RegisterMemoryReporter(MemoryCacheReporter);
 
     return rv;
 }
@@ -2272,21 +2236,6 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
     if (device) 
         entry->SetCacheDevice(device);
     return device;
-}
-
-int64_t
-nsCacheService::MemoryDeviceSize()
-{
-    nsMemoryCacheDevice *memoryDevice = GlobalInstance()->mMemoryDevice;
-    return memoryDevice ? memoryDevice->TotalSize() : 0;
-}
-
-int64_t
-nsCacheService::DiskDeviceHeapSize()
-{
-    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_DISKDEVICEHEAPSIZE));
-    nsDiskCacheDevice *diskDevice = GlobalInstance()->mDiskDevice;
-    return (int64_t)(diskDevice ? diskDevice->SizeOfIncludingThis(NetworkDiskCacheMallocSizeOf) : 0);
 }
 
 nsresult

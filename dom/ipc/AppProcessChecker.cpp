@@ -35,8 +35,9 @@ AssertAppProcess(PBrowserParent* aActor,
   // isBrowser frames inherit their app descriptor to identify their
   // data storage, but they don't inherit the capability associated
   // with that descriptor.
-  if (app && !tab->IsBrowserElement()) {
+  if (app && (aType == ASSERT_APP_HAS_PERMISSION || !tab->IsBrowserElement())) {
     switch (aType) {
+      case ASSERT_APP_HAS_PERMISSION:
       case ASSERT_APP_PROCESS_PERMISSION:
         if (!NS_SUCCEEDED(app->HasPermission(aCapability, &aValid))) {
           aValid = false;

@@ -339,7 +339,7 @@ public:
   // false
   inline bool HasDirAuto() const {
     return (!HasFixedDir() &&
-            (HasValidDir() || NodeInfo()->Equals(nsGkAtoms::bdi)));
+            (HasValidDir() || IsHTML(nsGkAtoms::bdi)));
   }
 
 protected:

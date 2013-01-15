@@ -225,8 +225,8 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
                  * the consumer may still have pending reads of the
                  * buffers in flight.
                  */
-                bool isOlder = mSlots[i].mFrameNumber < mSlots[found].mFrameNumber;
-                if (found < 0 || isOlder) {
+                if (found < 0 ||
+                    mSlots[i].mFrameNumber < mSlots[found].mFrameNumber) {
                     found = i;
                 }
             }

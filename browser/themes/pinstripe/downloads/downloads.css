@@ -45,13 +45,20 @@
   margin: 1em;
 }
 
-#downloadsHistory:-moz-focusring > .button-box {
-  outline: 1px -moz-dialogtext dotted;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
+#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsSummary:focus,
+#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsHistory:focus {
+  outline: 2px -moz-mac-focusring solid;
+  outline-offset: -2px;
+  -moz-outline-radius-bottomleft: 5px;
+  -moz-outline-radius-bottomright: 5px;
 }
 
-#downloadsPanel:not([hasdownloads]) > #downloadsFooter > #downloadsHistory:-moz-focusring > .button-box {
+#downloadsPanel:not([hasdownloads]) > #downloadsFooter > #downloadsHistory:focus {
+  -moz-outline-radius-topleft: 5px;
+  -moz-outline-radius-topright: 5px;
+}
+
+#downloadsPanel:not([hasdownloads]) > #downloadsFooter > #downloadsHistory:focus > .button-box {
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
 }
@@ -69,11 +76,6 @@ richlistitem[type="download"] {
   padding: 8px 38px 8px 12px;
   cursor: pointer;
   -moz-user-focus: normal;
-}
-
-#downloadsSummary:-moz-focusring {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -5px;
 }
 
 #downloadsSummary > .downloadTypeIcon {
@@ -104,11 +106,6 @@ richlistitem[type="download"]:first-child {
 
 richlistitem[type="download"]:last-child {
   border-bottom: 1px solid transparent;
-}
-
-#downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
 }
 
 .downloadTypeIcon {
@@ -162,23 +159,27 @@ richlistitem[type="download"]:last-child {
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
 }
 
+.downloadButton:focus > .button-box {
+  outline: 2px -moz-mac-focusring solid;
+  outline-offset: -2px;
+}
+
 .downloadButton > .button-box {
   padding: 0;
 }
 
-.downloadButton:-moz-focusring > .button-box {
-  outline: 1px -moz-dialogtext dotted;
-}
-
 /*** Highlighted list items ***/
 
-richlistitem[type="download"][state="1"]:hover {
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected],
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover {
   border-radius: 3px;
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.4);
   background-color: Highlight;
-  background-image: linear-gradient(hsl(210,100%,50%), hsl(210,96%,41%));
   color: HighlightText;
+}
+
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover {
   cursor: pointer;
 }
 
@@ -196,17 +197,44 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hov
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadCancel {
+  -moz-image-region: rect(0px, 80px, 16px, 64px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel {
+  -moz-image-region: rect(0px, 96px, 16px, 80px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:hover {
+  -moz-image-region: rect(0px, 112px, 16px, 96px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:active {
+  -moz-image-region: rect(0px, 128px, 16px, 112px);
+}
 
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
-richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
+#downloadsPanel[keyfocus] > #downloadsListBox > richlistitem[type="download"][state="1"]:hover:not[selected] > stack > .downloadButton.downloadShow {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox > richlistitem[type="download"][state="1"]:hover:not[selected] > stack > .downloadButton.downloadShow:hover {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox > richlistitem[type="download"][state="1"]:hover:not[selected] > stack > .downloadButton.downloadShow:active {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadShow {
+  -moz-image-region: rect(16px, 80px, 32px, 64px);
+}
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow,
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 96px, 32px, 80px);
 }
-richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover,
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadShow:hover {
   -moz-image-region: rect(16px, 112px, 32px, 96px);
 }
-richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active,
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadShow:active {
   -moz-image-region: rect(16px, 128px, 32px, 112px);
 }
 
@@ -221,6 +249,18 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:hove
 }
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:active {
   -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadRetry {
+  -moz-image-region: rect(32px, 80px, 48px, 64px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadRetry {
+  -moz-image-region: rect(32px, 96px, 48px, 80px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadRetry:hover {
+  -moz-image-region: rect(32px, 112px, 48px, 96px);
+}
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadRetry:active {
+  -moz-image-region: rect(32px, 128px, 48px, 112px);
 }
 
 @media (min-resolution: 2dppx) {
@@ -244,17 +284,44 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
   richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
     -moz-image-region: rect(0px, 128px, 32px, 96px);
   }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadCancel {
+    -moz-image-region: rect(0px, 160px, 32px, 128px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel {
+    -moz-image-region: rect(0px, 192px, 32px, 160px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:hover {
+    -moz-image-region: rect(0px, 224px, 32px, 192px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:active {
+    -moz-image-region: rect(0px, 256px, 32px, 224px);
+  }
 
   .downloadButton.downloadShow {
     -moz-image-region: rect(32px, 32px, 64px, 0px);
   }
-  richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
+  #downloadsPanel[keyfocus] > #downloadsListBox > richlistitem[type="download"][state="1"]:hover:not[selected] > stack > .downloadButton.downloadShow {
+    -moz-image-region: rect(32px, 64px, 64px, 32px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox > richlistitem[type="download"][state="1"]:hover:not[selected] > stack > .downloadButton.downloadShow:hover {
+    -moz-image-region: rect(32px, 96px, 64px, 64px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox > richlistitem[type="download"][state="1"]:hover:not[selected] > stack > .downloadButton.downloadShow:active {
+    -moz-image-region: rect(32px, 128px, 64px, 96px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadShow {
+    -moz-image-region: rect(32px, 160px, 64px, 128px);
+  }
+  #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow,
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadShow {
     -moz-image-region: rect(32px, 192px, 64px, 160px);
   }
-  richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
+  #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover,
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadShow:hover {
     -moz-image-region: rect(32px, 224px, 64px, 192px);
   }
-  richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
+  #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active,
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadShow:active {
     -moz-image-region: rect(32px, 256px, 64px, 224px);
   }
 
@@ -269,6 +336,18 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
   }
   richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:active {
     -moz-image-region: rect(64px, 128px, 96px, 96px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadRetry {
+    -moz-image-region: rect(64px, 160px, 96px, 128px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadRetry {
+    -moz-image-region: rect(64px, 192px, 96px, 160px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadRetry:hover {
+    -moz-image-region: rect(64px, 224px, 96px, 192px);
+  }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadRetry:active {
+    -moz-image-region: rect(64px, 256px, 96px, 224px);
   }
 }
 

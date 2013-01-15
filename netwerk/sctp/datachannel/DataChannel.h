@@ -233,6 +233,10 @@ private:
   }
 #endif
 
+  // Exists solely for proxying release of the TransportFlow to the STS thread
+  static void ReleaseTransportFlow(nsRefPtr<TransportFlow> aFlow) {}
+
+  // Data:
   // NOTE: while these arrays will auto-expand, increases in the number of
   // channels available from the stack must be negotiated!
   nsAutoTArray<nsRefPtr<DataChannel>,16> mStreamsOut;

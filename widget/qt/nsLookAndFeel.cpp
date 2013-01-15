@@ -182,7 +182,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       break;
 
     case eColorID_menu:
-    case eColorID__moz_menubar:
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Window));
       break;
 

@@ -5557,7 +5557,7 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str);
  * written into the buffer.
  */
 JS_PUBLIC_API(size_t)
-JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length);
+JS_EncodeStringToBuffer(JSContext *cx, JSString *str, char *buffer, size_t length);
 
 class JSAutoByteString
 {

@@ -174,7 +174,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
         aColor = TEXT_NORMAL_COLOR;
         break;
     case eColorID_menu:
-    case eColorID__moz_menubar:
         // menu background
         aColor = BG_NORMAL_COLOR;
         break;

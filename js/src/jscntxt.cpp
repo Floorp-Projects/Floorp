@@ -23,6 +23,8 @@
 # include <string>
 #endif  // ANDROID
 
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsclist.h"
@@ -55,6 +57,7 @@
 # include "methodjit/MethodJIT.h"
 #endif
 #include "gc/Marking.h"
+#include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
@@ -69,6 +72,7 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::DebugOnly;
+using mozilla::PointerRangeSize;
 
 bool
 js::AutoCycleDetector::init()
@@ -832,8 +836,10 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
                 js_free(buffer);
-                *messagep = DeflateString(cx, reportp->ucmessage,
-                                          size_t(out - reportp->ucmessage));
+                TwoByteChars ucmsg(reportp->ucmessage,
+                                   PointerRangeSize(static_cast<const jschar *>(reportp->ucmessage),
+                                                    static_cast<const jschar *>(out)));
+                *messagep = LossyTwoByteCharsToNewLatin1CharsZ(cx, ucmsg).c_str();
                 if (!*messagep)
                     goto error;
             }

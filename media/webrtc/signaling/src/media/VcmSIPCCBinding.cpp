@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <ssl.h>
 #include <sslproto.h>
+#include <algorithm>
 
 extern "C" {
 #include "ccsdp.h"
@@ -2639,7 +2640,12 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
       CSFLogError(logTag, "Could not convert fingerprint");
       return NULL;
     }
-    res = dtls->SetVerificationDigest(fingerprint_alg, remote_digest, digest_len);
+
+    std::string fingerprint_str(fingerprint_alg);
+    // Downcase because SDP is case-insensitive.
+    std::transform(fingerprint_str.begin(), fingerprint_str.end(),
+                   fingerprint_str.begin(), ::tolower);
+    res = dtls->SetVerificationDigest(fingerprint_str, remote_digest, digest_len);
     if (!NS_SUCCEEDED(res)) {
       CSFLogError(logTag, "Could not set remote DTLS digest");
       return NULL;
