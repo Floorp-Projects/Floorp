@@ -94,21 +94,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
         public PromptInput(JSONObject aJSONInput) {
             mJSONInput = aJSONInput;
-            try {
-                label = aJSONInput.getString("label");
-            } catch(Exception ex) { }
-            try {
-                type  = aJSONInput.getString("type");
-            } catch(Exception ex) { }
-            try {
-                hint  = aJSONInput.getString("hint");
-            } catch(Exception ex) { }
-            try {
-                value  = aJSONInput.getString("value");
-            } catch(Exception ex) { }
-            try {
-                autofocus  = aJSONInput.getBoolean("autofocus");
-            } catch(Exception ex) { }
+            label = getSafeString(aJSONInput, "label");
+            type = getSafeString(aJSONInput, "type");
+            hint = getSafeString(aJSONInput, "hint");
+            value = getSafeString(aJSONInput, "value");
+            autofocus = getSafeBool(aJSONInput, "autofocus");
         }
 
         public View getView() throws UnsupportedOperationException {
@@ -116,10 +106,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 CheckBox checkbox = new CheckBox(GeckoApp.mAppContext);
                 checkbox.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
                 checkbox.setText(label);
-                try {
-                    Boolean value = mJSONInput.getBoolean("checked");
-                    checkbox.setChecked(value);
-                } catch(Exception ex) { }
+                checkbox.setChecked(getSafeBool(mJSONInput, "checked"));
                 view = (View)checkbox;
             } else if (type.equals("date")) {
                 try {
@@ -456,25 +443,14 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     private void processMessage(JSONObject geckoObject) {
-        String title = "";
-        try {
-            title = geckoObject.getString("title");
-        } catch(Exception ex) { }
-        String text = "";
-        try {
-            text = geckoObject.getString("text");
-        } catch(Exception ex) { }
+        String title = getSafeString(geckoObject, "title");
+        String text = getSafeString(geckoObject, "text");
 
         mButtons = getStringArray(geckoObject, "buttons");
 
-        JSONArray inputs = new JSONArray();
-        try {
-            inputs = geckoObject.getJSONArray("inputs");
-        } catch(Exception ex) { }
-        length = inputs.length();
-        mInputs = new PromptInput[length];
-        for (int i = 0; i < length; i++) {
-            Log.d(LOGTAG, "creating new input");
+        JSONArray inputs = getSafeArray(geckoObject, "inputs");
+        mInputs = new PromptInput[inputs.length()];
+        for (int i = 0; i < mInputs.length; i++) {
             try {
                 mInputs[i] = new PromptInput(inputs.getJSONObject(i));
             } catch(Exception ex) { }
@@ -482,18 +458,44 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
         PromptListItem[] menuitems = getListItemArray(geckoObject, "listitems");
         mSelected = getBooleanArray(geckoObject, "selected");
-        boolean multiple = false;
-        try {
-            multiple = geckoObject.getBoolean("multiple");
-        } catch(Exception ex) { }
+        boolean multiple = getSafeBool(geckoObject, "multiple");
         show(title, text, menuitems, multiple);
     }
 
-    private String[] getStringArray(JSONObject aObject, String aName) {
-        JSONArray items = new JSONArray();
+    private static String getSafeString(JSONObject json, String key) {
         try {
-            items = aObject.getJSONArray(aName);
-        } catch(Exception ex) { }
+            return json.getString(key);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static JSONArray getSafeArray(JSONObject json, String key) {
+        try {
+            return json.getJSONArray(key);
+        } catch (Exception e) {
+            return new JSONArray();
+        }
+    }
+
+    private static boolean getSafeBool(JSONObject json, String key) {
+        try {
+            return json.getBoolean(key);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static int getSafeInt(JSONObject json, String key ) {
+        try {
+            return json.getInt(key);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private String[] getStringArray(JSONObject aObject, String aName) {
+        JSONArray items = getSafeArray(aObject, aName);
         int length = items.length();
         String[] list = new String[length];
         for (int i = 0; i < length; i++) {
@@ -520,10 +522,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     private PromptListItem[] getListItemArray(JSONObject aObject, String aName) {
-        JSONArray items = new JSONArray();
-        try {
-            items = aObject.getJSONArray(aName);
-        } catch(Exception ex) { }
+        JSONArray items = getSafeArray(aObject, aName);
         int length = items.length();
         PromptListItem[] list = new PromptListItem[length];
         for (int i = 0; i < length; i++) {
@@ -546,12 +545,12 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         public Drawable icon = null;
 
         PromptListItem(JSONObject aObject) {
-            try { label = aObject.getString("label"); } catch(Exception ex) { }
-            try { isGroup = aObject.getBoolean("isGroup"); } catch(Exception ex) { }
-            try { inGroup = aObject.getBoolean("inGroup"); } catch(Exception ex) { }
-            try { disabled = aObject.getBoolean("disabled"); } catch(Exception ex) { }
-            try { id = aObject.getInt("id"); } catch(Exception ex) { }
-            try { isParent = aObject.getBoolean("isParent"); } catch(Exception ex) { }
+            label = getSafeString(aObject, "label");
+            isGroup = getSafeBool(aObject, "isGroup");
+            inGroup = getSafeBool(aObject, "inGroup");
+            disabled = getSafeBool(aObject, "disabled");
+            id = getSafeInt(aObject, "id");
+            isParent = getSafeBool(aObject, "isParent");
         }
 
         public PromptListItem(String aLabel) {
