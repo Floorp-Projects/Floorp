@@ -67,5 +67,10 @@ registerCleanupFunction(function tearDown() {
     gBrowser.removeCurrentTab();
   }
 
-  console = undefined;
+  // Force GC, because it seems that GCLI can outrun the garbage collector
+  // in some situations, which causes test failures in later tests
+  // Bug 774619 is an example.
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .garbageCollect();
 });
