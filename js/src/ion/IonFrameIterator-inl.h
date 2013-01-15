@@ -8,6 +8,7 @@
 #ifndef jsion_frame_iterator_inl_h__
 #define jsion_frame_iterator_inl_h__
 
+#include "ion/BaselineFrame.h"
 #include "ion/IonFrameIterator.h"
 
 namespace js {
@@ -102,6 +103,12 @@ IonFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned coun
     Value *argv = actualArgs();
     for (unsigned i = start; i < end; i++)
         op(argv[i]);
+}
+
+inline BaselineFrame *
+IonFrameIterator::baselineFrame() const
+{
+    return (BaselineFrame *)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
 }
 
 } // namespace ion
