@@ -3056,9 +3056,7 @@ let SessionStoreInternal = {
       if (!tabData.entries || tabData.entries.length == 0) {
         // make sure to blank out this tab's content
         // (just purging the tab's history won't be enough)
-        browser.loadURIWithFlags("about:blank",
-                                 Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                                 null, null, null);
+        browser.contentDocument.location = "about:blank";
         continue;
       }
 
