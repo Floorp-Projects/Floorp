@@ -91,6 +91,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
         private final String mLabel;
         private final String mType;
+        private final String mId;
         private final String mHint;
         private final boolean mAutofocus;
         private final String mValue;
@@ -101,6 +102,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             mJSONInput = aJSONInput;
             mLabel = getSafeString(aJSONInput, "label");
             mType = getSafeString(aJSONInput, "type");
+            String id = getSafeString(aJSONInput, "id");
+            mId = TextUtils.isEmpty(id) ? mType : id;
             mHint = getSafeString(aJSONInput, "hint");
             mValue = getSafeString(aJSONInput, "value");
             mAutofocus = getSafeBool(aJSONInput, "autofocus");
@@ -201,8 +204,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             return mView;
         }
 
-        public String getName() {
-            return mType;
+        public String getId() {
+            return mId;
         }
 
         public String getValue() {
@@ -388,7 +391,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             }
             if (mInputs != null) {
                 for (int i = 0; i < mInputs.length; i++) {
-                    ret.put(mInputs[i].getName(), mInputs[i].getValue());
+                    ret.put(mInputs[i].getId(), mInputs[i].getValue());
                 }
             }
         } catch(Exception ex) {
