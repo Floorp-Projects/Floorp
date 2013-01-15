@@ -201,7 +201,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   }
   else
   {
-    nsINode* child = mExistingRightNode->GetFirstChild();
+    nsCOMPtr<nsINode> child = mExistingRightNode->GetFirstChild();
     for (int32_t i=0; i<mOffset; i++)
     {
       if (!child) {return NS_ERROR_NULL_POINTER;}
