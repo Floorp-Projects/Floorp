@@ -59,17 +59,6 @@
 #else
               name="toolkit.telemetry.enabled"
 #endif
-              onchange="gAdvancedPane.telemetryEnabledChanged(event);"
-              type="bool"/>
-  <preference id="toolkit.telemetry.prompted"
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-              name="toolkit.telemetry.notifiedOptOut"
-#else
-              name="toolkit.telemetry.prompted"
-#endif
-              type="int"/>
-  <preference id="toolkit.telemetry.rejected"
-              name="toolkit.telemetry.rejected"
               type="bool"/>
 #endif
 

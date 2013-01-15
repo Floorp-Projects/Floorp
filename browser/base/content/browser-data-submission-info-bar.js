@@ -24,16 +24,6 @@ DataNotificationInfoBar.prototype = {
 
   _DATA_REPORTING_NOTIFICATION: "data-reporting",
 
-#ifdef MOZ_TELEMETRY_REPORTING
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-  _PREF_TELEMETRY_DISPLAYED: "toolkit.telemetry.notifiedOptOut",
-#else
-  _PREF_TELEMETRY_DISPLAYED: "toolkit.telemetry.prompted",
-#endif
-
-  _TELEMETRY_DISPLAY_REV: 2,
-#endif
-
   init: function() {
     window.addEventListener("unload", function onUnload() {
       window.removeEventListener("unload", onUnload, false);
@@ -130,12 +120,6 @@ DataNotificationInfoBar.prototype = {
 
     // Keep open until user closes it.
     notification.persistence = -1;
-
-    // This likely isn't needed in a world where Telemetry and FHR share a
-    // notification and data reporting policy. It is preserved until traces
-    // of this pref are wiped from the code base.
-    Services.prefs.setIntPref(this._PREF_TELEMETRY_DISPLAYED,
-                              this._TELEMETRY_DISPLAY_REV);
 
     // Tell the notification request we have displayed the notification.
     request.onUserNotifyComplete();
