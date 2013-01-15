@@ -14,7 +14,6 @@
  */
 
 #include "nsUnicodeToGBK.h"
-#include "nsUCvCnDll.h"
 #include "gbku.h"
 #include "uconvutil.h"
 #include "nsUnicharUtils.h"

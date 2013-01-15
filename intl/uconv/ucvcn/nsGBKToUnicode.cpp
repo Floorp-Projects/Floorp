@@ -11,7 +11,6 @@
  */
 
 #include "nsGBKToUnicode.h"
-#include "nsUCvCnDll.h"
 #include "gbku.h"
 
 

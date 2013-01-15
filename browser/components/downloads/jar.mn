@@ -15,3 +15,4 @@ browser.jar:
         content/browser/downloads/allDownloadsViewOverlay.css (content/allDownloadsViewOverlay.css)
 *       content/browser/downloads/contentAreaDownloadsView.xul (content/contentAreaDownloadsView.xul)
         content/browser/downloads/contentAreaDownloadsView.js  (content/contentAreaDownloadsView.js)
+        content/browser/downloads/contentAreaDownloadsView.css (content/contentAreaDownloadsView.css)

@@ -197,11 +197,11 @@ public:
   void SetContentEditable(const nsAString& aContentEditable,
                           mozilla::ErrorResult& aError)
   {
-    if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "inherit")) {
+    if (aContentEditable.LowerCaseEqualsLiteral("inherit")) {
       UnsetHTMLAttr(nsGkAtoms::contenteditable, aError);
-    } else if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "true")) {
+    } else if (aContentEditable.LowerCaseEqualsLiteral("true")) {
       SetHTMLAttr(nsGkAtoms::contenteditable, NS_LITERAL_STRING("true"), aError);
-    } else if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "false")) {
+    } else if (aContentEditable.LowerCaseEqualsLiteral("false")) {
       SetHTMLAttr(nsGkAtoms::contenteditable, NS_LITERAL_STRING("false"), aError);
     } else {
       aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);

@@ -4251,3 +4251,14 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 	gCSSProperties["display"].other_values.push("flex");
 	gCSSProperties["display"].other_values.push("inline-flex");
 }
+
+if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
+  gCSSProperties["paint-order"] = {
+    domProp: "paintOrder",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "normal" ],
+    other_values: [ "fill", "fill stroke", "fill stroke markers", "stroke markers fill" ],
+    invalid_values: [ "fill stroke markers fill", "fill normal" ]
+  };
+}

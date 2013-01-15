@@ -6936,18 +6936,18 @@ let gPrivateBrowsingUI = {
       return;
     }
 
-#ifdef XP_MACOSX
-    if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      document.documentElement.setAttribute("drawintitlebar", true);
-    }
-#endif
-
     // Disable the Clear Recent History... menu item when in PB mode
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
     // Adjust the window's title
     if (window.location.href == getBrowserURL()) {
+#ifdef XP_MACOSX
+      if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        document.documentElement.setAttribute("drawintitlebar", true);
+      }
+#endif
+
       let docElement = document.documentElement;
       docElement.setAttribute("title",
         docElement.getAttribute("title_privatebrowsing"));

@@ -40,10 +40,6 @@ struct THEBES_API gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> 
         return *this;
     }
 
-    nsIntPoint RoundedAwayFromZero() const {
-        return nsIntPoint(NS_lround(x), NS_lround(y));
-    }
-
     bool WithinEpsilonOf(const gfxPoint& aPoint, gfxFloat aEpsilon) {
         return fabs(aPoint.x - x) < aEpsilon && fabs(aPoint.y - y) < aEpsilon;
     }

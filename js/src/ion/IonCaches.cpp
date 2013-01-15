@@ -1704,10 +1704,11 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
     RootedValue lval(cx, ObjectValue(*obj));
- 
+
     if (cache.isDisabled()) {
         if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
             return false;
+        types::TypeScript::Monitor(cx, script, pc, res);
         return true;
     }
 

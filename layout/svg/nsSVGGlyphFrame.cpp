@@ -956,6 +956,20 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext,
     toDraw = DrawMode(toDraw | gfxFont::GLYPH_FILL);
   }
 
+  uint32_t paintOrder = GetStyleSVG()->mPaintOrder;
+  while (paintOrder) {
+    uint32_t component =
+      paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+    if (component == NS_STYLE_PAINT_ORDER_FILL) {
+      break;
+    }
+    if (component == NS_STYLE_PAINT_ORDER_STROKE) {
+      toDraw = DrawMode(toDraw | gfxFont::GLYPH_STROKE_UNDERNEATH);
+      break;
+    }
+    paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
+  }
+
   *aThisObjectPaint = thisObjectPaint;
 
   return toDraw;

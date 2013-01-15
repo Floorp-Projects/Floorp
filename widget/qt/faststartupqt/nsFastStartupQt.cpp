@@ -23,7 +23,7 @@ static nsFastStartup* sFastStartup = NULL;
 void
 GeckoThread::run()
 {
-  emit symbolsLoadingFinished(mFunc(mExecPath));
+  Q_EMIT symbolsLoadingFinished(mFunc(mExecPath));
 }
 
 void

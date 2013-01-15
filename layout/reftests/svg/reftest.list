@@ -205,6 +205,9 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
+pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
+pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
+pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == path-03.svg pass.svg

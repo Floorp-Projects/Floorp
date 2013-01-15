@@ -17,7 +17,6 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS		= \
-		nsGB2312ToUnicodeV2.cpp \
 		nsUnicodeToGB2312V2.cpp \
 		nsGBKToUnicode.cpp \
 		nsUnicodeToGBK.cpp \
