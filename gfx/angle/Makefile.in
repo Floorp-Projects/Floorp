@@ -124,17 +124,11 @@ ifdef MOZ_ANGLE_RENDERER
 # libEGL depends on (links against!) libGLESv2!
 DIRS = src/libGLESv2 src/libEGL
 
-
+libs::
 ifdef MOZ_D3DX9_CAB
-libs:: $(DIST)/bin/$(MOZ_D3DX9_DLL)
-
-$(DIST)/bin/$(MOZ_D3DX9_DLL): $(MOZ_D3DX9_CAB)
 	expand "$(MOZ_D3DX9_CAB)" -F:$(MOZ_D3DX9_DLL) "$(DIST)/bin"
 endif
 ifdef MOZ_D3DCOMPILER_CAB
-libs:: $(DIST)/bin/$(MOZ_D3DCOMPILER_DLL)
-
-$(DIST)/bin/$(MOZ_D3DCOMPILER_DLL): $(MOZ_D3DCOMPILER_CAB)
 	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
 endif
 
