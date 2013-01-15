@@ -29,7 +29,7 @@ class JSExtensibleString;
 class JSExternalString;
 ForwardDeclareJS(LinearString);
 class JSStableString;
-class JSInlineString;
+ForwardDeclareJS(InlineString);
 class JSRope;
 ForwardDeclareJS(FlatString);
 ForwardDeclareJS(Atom);
@@ -563,6 +563,12 @@ class JSStableString : public JSFlatString
         JS_ASSERT(!JSString::isInline());
         return JS::StableCharPtr(d.u1.chars, length());
     }
+
+    JS_ALWAYS_INLINE
+    JS::StableTwoByteChars range() const {
+        JS_ASSERT(!JSString::isInline());
+        return JS::StableTwoByteChars(d.u1.chars, length());
+    }
 };
 
 JS_STATIC_ASSERT(sizeof(JSStableString) == sizeof(JSString));
@@ -647,6 +653,7 @@ class JSInlineString : public JSFlatString
 
   public:
     static inline JSInlineString *new_(JSContext *cx);
+    static inline JSInlineString *tryNew_(JSContext *cx);
 
     inline jschar *init(size_t length);
 
@@ -678,6 +685,7 @@ class JSShortString : public JSInlineString
 
   public:
     static inline JSShortString *new_(JSContext *cx);
+    static inline JSShortString *tryNew_(JSContext *cx);
 
     static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
                                            INLINE_EXTENSION_CHARS
