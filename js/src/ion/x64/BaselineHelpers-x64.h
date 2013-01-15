@@ -9,6 +9,7 @@
 #define jsion_baseline_helpers_x64_h__
 
 #include "ion/IonMacroAssembler.h"
+#include "ion/BaselineFrame.h"
 #include "ion/BaselineRegisters.h"
 #include "ion/BaselineIC.h"
 

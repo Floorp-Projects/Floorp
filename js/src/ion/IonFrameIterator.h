@@ -68,6 +68,8 @@ class IonExitFrameLayout;
 class IonActivation;
 class IonActivationIterator;
 
+class BaselineFrame;
+
 class IonFrameIterator
 {
   protected:
@@ -185,10 +187,6 @@ class IonFrameIterator
     // overhead.
     const SafepointIndex *safepoint() const;
 
-    // Computes the number of values on the baseline stack.
-    size_t numBaselineStackValues() const;
-    Value baselineStackValue(size_t index) const;
-
     // Returns the OSI index associated with this JS frame. Incurs a lookup
     // overhead.
     const OsiIndex *osiIndex() const;
@@ -200,6 +198,8 @@ class IonFrameIterator
     inline void forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const;
 
     void dump() const;
+
+    inline BaselineFrame *baselineFrame() const;
 };
 
 class IonActivationIterator

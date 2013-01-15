@@ -24,6 +24,7 @@ class BaselineCompilerShared
     jsbytecode *pc;
     MacroAssembler masm;
     bool ionCompileable_;
+    bool debugMode_;
 
     FrameInfo frame;
 

@@ -12,8 +12,9 @@
 #include "jscompartment.h"
 
 #include "BaselineJIT.h"
+#include "BaselineFrame.h"
 #include "BaselineRegisters.h"
-#include "ion/IonMacroAssembler.h"
+#include "IonMacroAssembler.h"
 #include "FixedList.h"
 
 namespace js {

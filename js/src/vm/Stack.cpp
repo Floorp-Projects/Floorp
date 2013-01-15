@@ -11,6 +11,7 @@
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
 #ifdef JS_ION
+#include "ion/BaselineFrame.h"
 #include "ion/IonFrames.h"
 #include "ion/IonCompartment.h"
 #include "ion/Bailouts.h"
@@ -2026,14 +2027,16 @@ StackIter::numFrameSlots() const
       case DONE:
       case NATIVE:
         break;
-      case ION:
+     case ION: {
 #ifdef JS_ION
         if (data_.ionFrames_.isOptimizedJS())
             return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed;
-        return data_.ionFrames_.numBaselineStackValues() - data_.ionFrames_.script()->nfixed;
+        ion::BaselineFrame *frame = data_.ionFrames_.baselineFrame();
+        return frame->numValueSlots() - data_.ionFrames_.script()->nfixed;
 #else
         break;
 #endif
+      }
       case SCRIPTED:
         JS_ASSERT(data_.maybecx_);
         JS_ASSERT(data_.maybecx_->regs().spForStackDepth(0) == interpFrame()->base());
@@ -2060,7 +2063,7 @@ StackIter::frameSlotValue(size_t index) const
         }
 
         index += data_.ionFrames_.script()->nfixed;
-        return data_.ionFrames_.baselineStackValue(index);
+        return *data_.ionFrames_.baselineFrame()->valueSlot(index);
 #else
         break;
 #endif
