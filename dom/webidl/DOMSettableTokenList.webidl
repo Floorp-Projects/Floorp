@@ -11,5 +11,6 @@
  */
 
 interface DOMSettableTokenList : DOMTokenList {
+            [SetterThrows]
             attribute DOMString value;
 };

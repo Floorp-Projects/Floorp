@@ -44,7 +44,6 @@
 #include "nsIDOMAttr.h"
 #include "nsISMILAttr.h"
 #include "nsClientRect.h"
-#include "nsIDOMDOMTokenList.h"
 #include "nsEvent.h"
 
 class nsIDOMEventListener;
@@ -863,7 +862,7 @@ public:
   nsresult
     GetElementsByClassName(const nsAString& aClassNames,
                            nsIDOMHTMLCollection** aResult);
-  void GetClassList(nsIDOMDOMTokenList** aClassList);
+  void GetClassList(nsISupports** aClassList);
 
   virtual JSObject* WrapObject(JSContext *aCx, JSObject *aScope,
                                bool *aTriedToWrap) MOZ_FINAL;
@@ -1263,7 +1262,7 @@ NS_IMETHOD GetTagName(nsAString& aTagName) MOZ_FINAL                          \
   Element::GetTagName(aTagName);                                              \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClassList(nsIDOMDOMTokenList** aClassList) MOZ_FINAL            \
+NS_IMETHOD GetClassList(nsISupports** aClassList) MOZ_FINAL                   \
 {                                                                             \
   Element::GetClassList(aClassList);                                          \
   return NS_OK;                                                               \
