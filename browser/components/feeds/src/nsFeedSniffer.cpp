@@ -27,6 +27,7 @@
 #include "nsIMIMEHeaderParam.h"
 
 #include "nsMimeTypes.h"
+#include <algorithm>
 
 #define TYPE_ATOM "application/atom+xml"
 #define TYPE_RSS "application/rss+xml"
@@ -286,10 +287,10 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   const char* testData;
   if (mDecodedData.IsEmpty()) {
     testData = (const char*)data;
-    length = NS_MIN(length, MAX_BYTES);
+    length = std::min(length, MAX_BYTES);
   } else {
     testData = mDecodedData.get();
-    length = NS_MIN(mDecodedData.Length(), MAX_BYTES);
+    length = std::min(mDecodedData.Length(), MAX_BYTES);
   }
 
   // The strategy here is based on that described in:

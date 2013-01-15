@@ -5,6 +5,7 @@
 #include "nsIOService.h"
 #include "nsSyncStreamListener.h"
 #include "nsIPipe.h"
+#include <algorithm>
 
 nsresult
 nsSyncStreamListener::Init()
@@ -146,7 +147,7 @@ nsSyncStreamListener::Read(char     *buf,
     if (NS_FAILED(Available(&avail64)))
         return mStatus;
 
-    uint32_t avail = (uint32_t)NS_MIN(avail64, (uint64_t)bufLen);
+    uint32_t avail = (uint32_t)std::min(avail64, (uint64_t)bufLen);
     mStatus = mPipeIn->Read(buf, avail, result);
     return mStatus;
 }
@@ -166,7 +167,7 @@ nsSyncStreamListener::ReadSegments(nsWriteSegmentFun  writer,
     if (NS_FAILED(Available(&avail64)))
         return mStatus;
 
-    uint32_t avail = (uint32_t)NS_MIN(avail64, (uint64_t)count);
+    uint32_t avail = (uint32_t)std::min(avail64, (uint64_t)count);
     mStatus = mPipeIn->ReadSegments(writer, closure, avail, result);
     return mStatus;
 }

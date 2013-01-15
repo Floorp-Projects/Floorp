@@ -6,6 +6,7 @@
 #include "gfxMacFont.h"
 #include "gfxCoreTextShaper.h"
 #include "gfxHarfBuzzShaper.h"
+#include <algorithm>
 #ifdef MOZ_GRAPHITE
 #include "gfxGraphiteShaper.h"
 #endif
@@ -213,7 +214,7 @@ gfxMacFont::InitMetrics()
         return;
     }
 
-    mAdjustedSize = NS_MAX(mStyle.size, 1.0);
+    mAdjustedSize = std::max(mStyle.size, 1.0);
     mFUnitsConvFactor = mAdjustedSize / upem;
 
     // For CFF fonts, when scaling values read from CGFont* APIs, we need to

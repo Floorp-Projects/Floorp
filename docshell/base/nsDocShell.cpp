@@ -7,6 +7,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Util.h"
+#include <algorithm>
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds (but only for some things)
@@ -2421,8 +2422,8 @@ nsDocShell::HistoryPurged(int32_t aNumEntries)
     // eviction.  We need to adjust by the number of entries that we
     // just purged from history, so that we look at the right session history
     // entries during eviction.
-    mPreviousTransIndex = NS_MAX(-1, mPreviousTransIndex - aNumEntries);
-    mLoadedTransIndex = NS_MAX(0, mLoadedTransIndex - aNumEntries);
+    mPreviousTransIndex = std::max(-1, mPreviousTransIndex - aNumEntries);
+    mLoadedTransIndex = std::max(0, mLoadedTransIndex - aNumEntries);
 
     int32_t count = mChildList.Count();
     for (int32_t i = 0; i < count; ++i) {

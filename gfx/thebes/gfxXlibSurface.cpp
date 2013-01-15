@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsAlgorithm.h"
 #include "mozilla/Preferences.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -107,7 +108,7 @@ CreatePixmap(Screen *screen, const gfxIntSize& size, unsigned int depth,
     // X gives us a fatal error if we try to create a pixmap of width
     // or height 0
     return XCreatePixmap(dpy, relatedDrawable,
-                         NS_MAX(1, size.width), NS_MAX(1, size.height),
+                         std::max(1, size.width), std::max(1, size.height),
                          depth);
 }
 

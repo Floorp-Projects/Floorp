@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsViewportInfo.h"
+#include <algorithm>
 
 void
 nsViewportInfo::SetDefaultZoom(const double aDefaultZoom)
@@ -16,8 +17,8 @@ nsViewportInfo::ConstrainViewportValues()
 {
   // Constrain the min/max zoom as specified at:
   // dev.w3.org/csswg/css-device-adapt section 6.2
-  mMaxZoom = NS_MAX(mMinZoom, mMaxZoom);
+  mMaxZoom = std::max(mMinZoom, mMaxZoom);
 
-  mDefaultZoom = NS_MIN(mDefaultZoom, mMaxZoom);
-  mDefaultZoom = NS_MAX(mDefaultZoom, mMinZoom);
+  mDefaultZoom = std::min(mDefaultZoom, mMaxZoom);
+  mDefaultZoom = std::max(mDefaultZoom, mMinZoom);
 }

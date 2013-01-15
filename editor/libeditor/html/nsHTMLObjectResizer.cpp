@@ -44,6 +44,7 @@
 #include "nscore.h"
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
+#include <algorithm>
 
 class nsISelection;
 
@@ -798,7 +799,7 @@ nsHTMLEditor::GetNewResizingX(int32_t aX, int32_t aY)
   int32_t resized = mResizedObjectX +
                     GetNewResizingIncrement(aX, aY, kX) * mXIncrementFactor;
   int32_t max =   mResizedObjectX + mResizedObjectWidth;
-  return NS_MIN(resized, max);
+  return std::min(resized, max);
 }
 
 int32_t
@@ -807,7 +808,7 @@ nsHTMLEditor::GetNewResizingY(int32_t aX, int32_t aY)
   int32_t resized = mResizedObjectY +
                     GetNewResizingIncrement(aX, aY, kY) * mYIncrementFactor;
   int32_t max =   mResizedObjectY + mResizedObjectHeight;
-  return NS_MIN(resized, max);
+  return std::min(resized, max);
 }
 
 int32_t
@@ -816,7 +817,7 @@ nsHTMLEditor::GetNewResizingWidth(int32_t aX, int32_t aY)
   int32_t resized = mResizedObjectWidth +
                      GetNewResizingIncrement(aX, aY, kWidth) *
                          mWidthIncrementFactor;
-  return NS_MAX(resized, 1);
+  return std::max(resized, 1);
 }
 
 int32_t
@@ -825,7 +826,7 @@ nsHTMLEditor::GetNewResizingHeight(int32_t aX, int32_t aY)
   int32_t resized = mResizedObjectHeight +
                      GetNewResizingIncrement(aX, aY, kHeight) *
                          mHeightIncrementFactor;
-  return NS_MAX(resized, 1);
+  return std::max(resized, 1);
 }
 
 

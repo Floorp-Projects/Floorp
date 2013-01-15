@@ -26,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "nsBidiUtils.h"
 #include "nsFontInflationData.h"
+#include <algorithm>
 
 #ifdef DEBUG
 #undef NOISY_VERTICAL_ALIGN
@@ -1700,7 +1701,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
   }
 
   // Make sure not to return a negative height here!
-  return NS_MAX(result, 0);
+  return std::max(result, 0);
 }
 
 // Called by InitConstraints() to compute the containing block rectangle for
@@ -2480,19 +2481,19 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth, nsIAtom* aFrameT
   else if (isWidthDependent) {
     // We have to compute the value
     // clamp negative calc() results to 0
-    mComputedPadding.left = NS_MAX(0, nsLayoutUtils::
+    mComputedPadding.left = std::max(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
                                  stylePadding->mPadding.GetLeft()));
-    mComputedPadding.right = NS_MAX(0, nsLayoutUtils::
+    mComputedPadding.right = std::max(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
                                  stylePadding->mPadding.GetRight()));
 
     // According to the CSS2 spec, percentages are calculated with respect to
     // containing block width for padding-top and padding-bottom
-    mComputedPadding.top = NS_MAX(0, nsLayoutUtils::
+    mComputedPadding.top = std::max(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
                                  stylePadding->mPadding.GetTop()));
-    mComputedPadding.bottom = NS_MAX(0, nsLayoutUtils::
+    mComputedPadding.bottom = std::max(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
                                  stylePadding->mPadding.GetBottom()));
   }

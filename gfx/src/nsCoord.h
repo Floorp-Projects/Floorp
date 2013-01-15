@@ -13,6 +13,7 @@
 #include <float.h>
 
 #include "nsDebug.h"
+#include <algorithm>
 
 /*
  * Basic type used for the geometry classes.
@@ -119,8 +120,8 @@ inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
 
   float product = aCoord * aScale;
   if (requireNotNegative ? aCoord > 0 : (aCoord > 0) == (aScale > 0))
-    return NSToCoordRoundWithClamp(NS_MIN<float>(nscoord_MAX, product));
-  return NSToCoordRoundWithClamp(NS_MAX<float>(nscoord_MIN, product));
+    return NSToCoordRoundWithClamp(std::min<float>(nscoord_MAX, product));
+  return NSToCoordRoundWithClamp(std::max<float>(nscoord_MIN, product));
 #endif
 }
 
@@ -172,13 +173,13 @@ NSCoordSaturatingAdd(nscoord a, nscoord b)
                  "Doing nscoord addition with values > nscoord_MAX");
     NS_ASSERTION((int64_t)a + (int64_t)b > (int64_t)nscoord_MIN,
                  "nscoord addition will reach or pass nscoord_MIN");
-    // This one's only a warning because the NS_MIN below means that
+    // This one's only a warning because the std::min below means that
     // we'll handle this case correctly.
     NS_WARN_IF_FALSE((int64_t)a + (int64_t)b < (int64_t)nscoord_MAX,
                      "nscoord addition capped to nscoord_MAX");
 
     // Cap the result, just in case we're dealing with numbers near nscoord_MAX
-    return NS_MIN(nscoord_MAX, a + b);
+    return std::min(nscoord_MAX, a + b);
   }
 #endif
 }
@@ -231,13 +232,13 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
                    "Doing nscoord subtraction with values > nscoord_MAX");
       NS_ASSERTION((int64_t)a - (int64_t)b > (int64_t)nscoord_MIN,
                    "nscoord subtraction will reach or pass nscoord_MIN");
-      // This one's only a warning because the NS_MIN below means that
+      // This one's only a warning because the std::min below means that
       // we'll handle this case correctly.
       NS_WARN_IF_FALSE((int64_t)a - (int64_t)b < (int64_t)nscoord_MAX,
                        "nscoord subtraction capped to nscoord_MAX");
 
       // Cap the result, in case we're dealing with numbers near nscoord_MAX
-      return NS_MIN(nscoord_MAX, a - b);
+      return std::min(nscoord_MAX, a - b);
     }
   }
 #endif

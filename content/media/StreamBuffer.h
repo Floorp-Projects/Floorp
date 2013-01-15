@@ -10,6 +10,7 @@
 
 #include "MediaSegment.h"
 #include "nsAutoPtr.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -164,7 +165,7 @@ public:
     {
       mSegment->ForgetUpTo(aTime);
 #ifdef DEBUG
-      mForgottenUpTo = NS_MAX<TrackTicks>(mForgottenUpTo, aTime);
+      mForgottenUpTo = std::max<TrackTicks>(mForgottenUpTo, aTime);
 #endif
     }
 #ifdef DEBUG

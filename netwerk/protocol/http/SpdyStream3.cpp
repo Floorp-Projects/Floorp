@@ -14,6 +14,7 @@
 #include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
 #include "nsHttpHandler.h"
+#include <algorithm>
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -1234,7 +1235,7 @@ SpdyStream3::OnReadSegment(const char *buf,
     }
     mBlockedOnRwin = false;
 
-    dataLength = NS_MIN(count, mChunkSize);
+    dataLength = std::min(count, mChunkSize);
 
     if (dataLength > mRemoteWindow)
       dataLength = mRemoteWindow;

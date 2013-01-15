@@ -14,6 +14,7 @@
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Telemetry.h"
+#include <algorithm>
 
 // The memory cache implements the "LRU-SP" caching algorithm
 // described in "LRU-SP: A Size-Adjusted and Popularity-Aware LRU Replacement
@@ -399,7 +400,7 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
             if (entry != &mEvictionList[i]) {
                 entryCost = (uint64_t)
                     (now - entry->LastFetched()) * entry->DataSize() / 
-                    NS_MAX(1, entry->FetchCount());
+                    std::max(1, entry->FetchCount());
                 if (!maxEntry || (entryCost > maxCost)) {
                     maxEntry = entry;
                     maxCost = entryCost;
@@ -426,9 +427,9 @@ nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, int32_t  deltaSize)
     // compute which eviction queue this entry should go into,
     // based on floor(log2(size/nref))
     int32_t  size       = deltaSize + (int32_t)entry->DataSize();
-    int32_t  fetchCount = NS_MAX(1, entry->FetchCount());
+    int32_t  fetchCount = std::max(1, entry->FetchCount());
 
-    return NS_MIN(PR_FloorLog2(size / fetchCount), kQueueCount - 1);
+    return std::min(PR_FloorLog2(size / fetchCount), kQueueCount - 1);
 }
 
 

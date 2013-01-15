@@ -127,6 +127,7 @@
 #include "nsDASHMPDParser.h"
 #include "DASHRepDecoder.h"
 #include "DASHDecoder.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -939,7 +940,7 @@ DASHDecoder::PossiblySwitchDecoder(DASHRepDecoder* aRepDecoder)
   // increase in quality.
   uint32_t toDecoderIdx = mVideoRepDecoderIdx;
   if (bestRepIdx > toDecoderIdx) {
-    toDecoderIdx = NS_MIN(toDecoderIdx+1, mVideoRepDecoders.Length()-1);
+    toDecoderIdx = std::min(toDecoderIdx+1, mVideoRepDecoders.Length()-1);
   } else if (toDecoderIdx < bestRepIdx) {
     // If the bitrate is too much for the current bandwidth, just use that
     // stream directly.

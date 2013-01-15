@@ -32,6 +32,7 @@
 #include "mozilla/layout/FrameChildList.h"
 #include "FramePropertyTable.h"
 #include "mozilla/Attributes.h"
+#include <algorithm>
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -1358,8 +1359,8 @@ public:
     int32_t secondaryOffset;
     // Helpers for places that need the ends of the offsets and expect them in
     // numerical order, as opposed to wanting the primary and secondary offsets
-    int32_t StartOffset() { return NS_MIN(offset, secondaryOffset); }
-    int32_t EndOffset() { return NS_MAX(offset, secondaryOffset); }
+    int32_t StartOffset() { return std::min(offset, secondaryOffset); }
+    int32_t EndOffset() { return std::max(offset, secondaryOffset); }
     // This boolean indicates whether the associated content is before or after
     // the offset; the most visible use is to allow the caret to know which line
     // to display on.

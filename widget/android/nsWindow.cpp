@@ -12,6 +12,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/layers/RenderTrace.h"
+#include <algorithm>
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
@@ -844,8 +845,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 if (points.Length() > 0) {
                     pt = points[0];
                 }
-                pt.x = clamped(pt.x, 0, NS_MAX(gAndroidBounds.width - 1, 0));
-                pt.y = clamped(pt.y, 0, NS_MAX(gAndroidBounds.height - 1, 0));
+                pt.x = clamped(pt.x, 0, std::max(gAndroidBounds.width - 1, 0));
+                pt.y = clamped(pt.y, 0, std::max(gAndroidBounds.height - 1, 0));
                 nsWindow *target = win->FindWindowForPoint(pt);
 #if 0
                 ALOG("MOTION_EVENT %f,%f -> %p (visible: %d children: %d)", pt.x, pt.y, (void*)target,
@@ -869,8 +870,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             if (points.Length() > 0) {
                 pt = points[0];
             }
-            pt.x = clamped(pt.x, 0, NS_MAX(gAndroidBounds.width - 1, 0));
-            pt.y = clamped(pt.y, 0, NS_MAX(gAndroidBounds.height - 1, 0));
+            pt.x = clamped(pt.x, 0, std::max(gAndroidBounds.width - 1, 0));
+            pt.y = clamped(pt.y, 0, std::max(gAndroidBounds.height - 1, 0));
             nsWindow *target = win->FindWindowForPoint(pt);
 
             target->OnNativeGestureEvent(ae);

@@ -15,6 +15,7 @@
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
+#include <algorithm>
 class nsIContent;
 class nsAutoRollup;
 class gfxContext;
@@ -310,10 +311,10 @@ protected:
    */
   void ConstrainSize(int32_t* aWidth, int32_t* aHeight) const
   {
-    *aWidth = NS_MAX(mSizeConstraints.mMinSize.width,
-                     NS_MIN(mSizeConstraints.mMaxSize.width, *aWidth));
-    *aHeight = NS_MAX(mSizeConstraints.mMinSize.height,
-                      NS_MIN(mSizeConstraints.mMaxSize.height, *aHeight));
+    *aWidth = std::max(mSizeConstraints.mMinSize.width,
+                     std::min(mSizeConstraints.mMaxSize.width, *aWidth));
+    *aHeight = std::max(mSizeConstraints.mMinSize.height,
+                      std::min(mSizeConstraints.mMaxSize.height, *aHeight));
   }
 
   virtual CompositorChild* GetRemoteRenderer() MOZ_OVERRIDE;

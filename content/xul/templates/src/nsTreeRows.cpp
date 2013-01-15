@@ -5,6 +5,7 @@
 
 #include "nsString.h"
 #include "nsTreeRows.h"
+#include <algorithm>
 
 nsTreeRows::Subtree*
 nsTreeRows::EnsureSubtreeFor(Subtree* aParent,
@@ -231,7 +232,7 @@ nsTreeRows::iterator
 nsTreeRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, int32_t aIndex)
 {
     if (mCount >= mCapacity || aIndex >= mCapacity) {
-        int32_t newCapacity = NS_MAX(mCapacity * 2, aIndex + 1);
+        int32_t newCapacity = std::max(mCapacity * 2, aIndex + 1);
         Row* newRows = new Row[newCapacity];
         if (! newRows)
             return iterator();

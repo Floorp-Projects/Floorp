@@ -77,6 +77,7 @@
 #include "cert.h"
 
 #include "nsXULAppAPI.h"
+#include <algorithm>
 
 #ifdef XP_WIN
 #include "nsILocalFileWin.h"
@@ -2639,7 +2640,7 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
   
   while(NS_SUCCEEDED(rv) && len>0)
   {
-    readLimit = (uint32_t)NS_MIN<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
+    readLimit = (uint32_t)std::min<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
     
     rv = data->Read(buffer, readLimit, &read);
     
@@ -2832,7 +2833,7 @@ NS_IMETHODIMP nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t a
   
   while(NS_SUCCEEDED(rv) && len > 0)
   {
-    readLimit = (uint32_t)NS_MIN<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
+    readLimit = (uint32_t)std::min<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
     
     rv = aStream->Read(buffer, readLimit, &read);
     if (read == 0)

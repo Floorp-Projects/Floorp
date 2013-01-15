@@ -13,6 +13,7 @@
 #include "nsEscape.h"
 #include "nsIFile.h"
 #include "nsDebug.h"
+#include <algorithm>
 #if defined(XP_WIN)
 #include <windows.h>
 #endif
@@ -206,7 +207,7 @@ MOZ_WIN_MEM_TRY_BEGIN
 
       case MODE_COPY:
         if (mFd) {
-          uint32_t count = NS_MIN(aCount, mOutSize - uint32_t(mZs.total_out));
+          uint32_t count = std::min(aCount, mOutSize - uint32_t(mZs.total_out));
           if (count) {
               memcpy(aBuffer, mZs.next_in + mZs.total_out, count);
               mZs.total_out += count;
@@ -262,7 +263,7 @@ nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
     const uint32_t oldTotalOut = mZs.total_out;
     
     // make sure we aren't reading too much
-    mZs.avail_out = NS_MIN(aCount, (mOutSize-oldTotalOut));
+    mZs.avail_out = std::min(aCount, (mOutSize-oldTotalOut));
     mZs.next_out = (unsigned char*)aBuffer;
 
     // now inflate
@@ -359,7 +360,7 @@ nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount, uint32_t *aBytes
 uint32_t
 nsJARInputStream::CopyDataToBuffer(char* &aBuffer, uint32_t &aCount)
 {
-    const uint32_t writeLength = NS_MIN(aCount, mBuffer.Length() - mCurPos);
+    const uint32_t writeLength = std::min(aCount, mBuffer.Length() - mCurPos);
 
     if (writeLength > 0) {
         memcpy(aBuffer, mBuffer.get() + mCurPos, writeLength);

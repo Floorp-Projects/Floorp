@@ -14,6 +14,7 @@
 #include "nsMathMLmfracFrame.h"
 #include "nsDisplayList.h"
 #include "gfxContext.h"
+#include <algorithm>
 
 //
 // <mfrac> -- form a fraction from two subexpressions - implementation
@@ -242,10 +243,10 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     // container (we fetch values from the core since they may use units that
     // depend on style data, and style changes could have occurred in the
     // core since our last visit there)
-    nscoord leftSpace = NS_MAX(onePixel,
+    nscoord leftSpace = std::max(onePixel,
                                NS_MATHML_IS_RTL(mPresentationData.flags) ?
                                coreData.trailingSpace : coreData.leadingSpace);
-    nscoord rightSpace = NS_MAX(onePixel,
+    nscoord rightSpace = std::max(onePixel,
                                 NS_MATHML_IS_RTL(mPresentationData.flags) ?
                                 coreData.leadingSpace : coreData.trailingSpace);
 
@@ -326,7 +327,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
     // XXX Need revisiting the width. TeX uses the exact width
     // e.g. in $$\huge\frac{\displaystyle\int}{i}$$
-    nscoord width = NS_MAX(bmNum.width, bmDen.width);
+    nscoord width = std::max(bmNum.width, bmDen.width);
     nscoord dxNum = leftSpace + (width - sizeNum.width)/2;
     nscoord dxDen = leftSpace + (width - sizeDen.width)/2;
     width += leftSpace + rightSpace;
@@ -348,11 +349,11 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       dxDen = width - rightSpace - sizeDen.width;
 
     mBoundingMetrics.rightBearing =
-      NS_MAX(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
+      std::max(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
     if (mBoundingMetrics.rightBearing < width - rightSpace)
       mBoundingMetrics.rightBearing = width - rightSpace;
     mBoundingMetrics.leftBearing =
-      NS_MIN(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
+      std::min(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
     if (mBoundingMetrics.leftBearing > leftSpace)
       mBoundingMetrics.leftBearing = leftSpace;
     mBoundingMetrics.ascent = bmNum.ascent + numShift;
@@ -394,10 +395,10 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     // For large line thicknesses the minimum slash height is limited to the
     // largest expected height of a fraction
     nscoord slashMinHeight = slashRatio *
-      NS_MIN(2 * mLineThickness, slashMaxWidthConstant);
+      std::min(2 * mLineThickness, slashMaxWidthConstant);
 
-    nscoord leadingSpace = NS_MAX(padding, coreData.leadingSpace);
-    nscoord trailingSpace = NS_MAX(padding, coreData.trailingSpace);
+    nscoord leadingSpace = std::max(padding, coreData.leadingSpace);
+    nscoord trailingSpace = std::max(padding, coreData.trailingSpace);
     nscoord delta;
     
     //           ___________
@@ -415,7 +416,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
     // first, ensure that the top of the numerator is at least as high as the
     // top of the denominator (and the reverse for the bottoms)
-    delta = NS_MAX(bmDen.ascent - bmNum.ascent,
+    delta = std::max(bmDen.ascent - bmNum.ascent,
                    bmNum.descent - bmDen.descent) / 2;
     if (delta > 0) {
       numShift += delta;
@@ -423,7 +424,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     }
 
     if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
-      delta = NS_MIN(bmDen.ascent + bmDen.descent,
+      delta = std::min(bmDen.ascent + bmDen.descent,
                      bmNum.ascent + bmNum.descent) / 2;
       numShift += delta;
       denShift += delta;
@@ -452,7 +453,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       mLineRect.width = mLineThickness + slashMaxWidthConstant;
     } else {
       mLineRect.width = mLineThickness +
-        NS_MIN(slashMaxWidthConstant,
+        std::min(slashMaxWidthConstant,
                (mBoundingMetrics.ascent + mBoundingMetrics.descent) /
                slashRatio);
     }

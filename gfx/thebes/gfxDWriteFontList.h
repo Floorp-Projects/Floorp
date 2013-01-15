@@ -14,6 +14,7 @@
 
 #include "gfxPlatformFontList.h"
 #include "gfxPlatform.h"
+#include <algorithm>
 
 
 /**
@@ -80,8 +81,8 @@ public:
         mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
         uint16_t weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
-        weight = NS_MAX<uint16_t>(100, weight);
-        weight = NS_MIN<uint16_t>(900, weight);
+        weight = std::max<uint16_t>(100, weight);
+        weight = std::min<uint16_t>(900, weight);
         mWeight = weight;
 
         mIsCJK = UNINITIALIZED_VALUE;

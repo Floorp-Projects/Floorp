@@ -8,6 +8,7 @@
 #include "nsRenderingContext.h"
 #include "nsDeviceContext.h"
 #include "nsStyleConsts.h"
+#include <algorithm>
 
 namespace {
 
@@ -171,7 +172,7 @@ static gfxFloat ComputeMaxDescent(const gfxFont::Metrics& aMetrics,
     gfxFloat offset = floor(-aFontGroup->GetUnderlineOffset() + 0.5);
     gfxFloat size = NS_round(aMetrics.underlineSize);
     gfxFloat minDescent = floor(offset + size + 0.5);
-    return NS_MAX(minDescent, aMetrics.maxDescent);
+    return std::max(minDescent, aMetrics.maxDescent);
 }
 
 static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
@@ -253,7 +254,7 @@ nsFontMetrics::GetMaxStringLength()
     const gfxFont::Metrics& m = GetMetrics();
     const double x = 32767.0 / m.maxAdvance;
     int32_t len = (int32_t)floor(x);
-    return NS_MAX(1, len);
+    return std::max(1, len);
 }
 
 nscoord

@@ -12,6 +12,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsDisplayList.h"
 #include "nsCSSAnonBoxes.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -32,7 +33,7 @@ PaintCheckMark(nsIFrame* aFrame,
                                     // of the 7x7 unit checkmark
 
   // Scale the checkmark based on the smallest dimension
-  nscoord paintScale = NS_MIN(rect.width, rect.height) / checkSize;
+  nscoord paintScale = std::min(rect.width, rect.height) / checkSize;
   nsPoint paintCenter(rect.x + rect.width  / 2,
                       rect.y + rect.height / 2);
 

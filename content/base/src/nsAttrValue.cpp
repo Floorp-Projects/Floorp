@@ -23,6 +23,7 @@
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsCSSParser.h"
 #include "nsStyledElement.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -1451,7 +1452,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
     return false;
   }
 
-  int32_t val = NS_MAX(originalVal, 0);
+  int32_t val = std::max(originalVal, 0);
 
   // % (percent)
   if (isPercent || tmp.RFindChar('%') >= 0) {
@@ -1481,8 +1482,8 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
     return false;
   }
 
-  int32_t val = NS_MAX(originalVal, aMin);
-  val = NS_MIN(val, aMax);
+  int32_t val = std::max(originalVal, aMin);
+  val = std::min(val, aMax);
   strict = strict && (originalVal == val);
   SetIntValueAndType(val, eInteger, strict ? nullptr : &aString);
 

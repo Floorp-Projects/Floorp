@@ -104,6 +104,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
 #include "DocumentType.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -806,7 +807,7 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
   // Find where the parent chain differs and check indices in the parent.
   const nsINode* parent = top1;
   uint32_t len;
-  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
+  for (len = std::min(pos1, pos2); len > 0; --len) {
     const nsINode* child1 = parents1.ElementAt(--pos1);
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {

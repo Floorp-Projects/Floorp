@@ -67,6 +67,7 @@
 
 #include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -513,11 +514,11 @@ nsConvertToActualKeyGenParams(uint32_t keyGenMech, char *params,
               next_input, name, name_len, value, value_len,
               next_input))
       {
-        if (PL_strncmp(name, "curve", NS_MIN(name_len, 5)) == 0)
+        if (PL_strncmp(name, "curve", std::min(name_len, 5)) == 0)
         {
           curve = PL_strndup(value, value_len);
         }
-        else if (PL_strncmp(name, "popcert", NS_MIN(name_len, 7)) == 0)
+        else if (PL_strncmp(name, "popcert", std::min(name_len, 7)) == 0)
         {
           char *certstr = PL_strndup(value, value_len);
           if (certstr) {

@@ -24,6 +24,7 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsVoidArray.h"
 #include "mozilla/ipc/URIUtils.h"
+#include <algorithm>
 
 using namespace mozilla::ipc;
 
@@ -1049,7 +1050,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
     }
 
     // try to guess the capacity required for result...
-    result.SetCapacity(mSpec.Length() + NS_MIN<uint32_t>(32, mSpec.Length()/10));
+    result.SetCapacity(mSpec.Length() + std::min<uint32_t>(32, mSpec.Length()/10));
 
     result = Substring(mSpec, 0, mScheme.mLen + 3);
 

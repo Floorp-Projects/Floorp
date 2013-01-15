@@ -18,6 +18,7 @@
 #include "nsTableColFrame.h"
 #include "nsCOMPtr.h"
 #include "nsDisplayList.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -46,14 +47,14 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
   if (NS_UNCONSTRAINEDSIZE != ComputedWidth()) {
     nscoord computedWidth =
       aAvailSpace.width - mComputedBorderPadding.LeftRight();
-    computedWidth = NS_MAX(0, computedWidth);
+    computedWidth = std::max(0, computedWidth);
     SetComputedWidth(computedWidth);
   }
   if (NS_UNCONSTRAINEDSIZE != ComputedHeight() &&
       NS_UNCONSTRAINEDSIZE != aAvailSpace.height) {
     nscoord computedHeight =
       aAvailSpace.height - mComputedBorderPadding.TopBottom();
-    computedHeight = NS_MAX(0, computedHeight);
+    computedHeight = std::max(0, computedHeight);
     SetComputedHeight(computedHeight);
   }
 }
@@ -80,7 +81,7 @@ nsTableRowFrame::InitChildReflowState(nsPresContext&         aPresContext,
 void 
 nsTableRowFrame::SetFixedHeight(nscoord aValue)
 {
-  nscoord height = NS_MAX(0, aValue);
+  nscoord height = std::max(0, aValue);
   if (HasFixedHeight()) {
     if (height > mStyleFixedHeight) {
       mStyleFixedHeight = height;
@@ -98,7 +99,7 @@ void
 nsTableRowFrame::SetPctHeight(float  aPctValue,
                               bool aForce)
 {
-  nscoord height = NS_MAX(0, NSToCoordRound(aPctValue * 100.0f));
+  nscoord height = std::max(0, NSToCoordRound(aPctValue * 100.0f));
   if (HasPctHeight()) {
     if ((height > mStylePctHeight) || aForce) {
       mStylePctHeight = height;
@@ -400,7 +401,7 @@ nscoord nsTableRowFrame::GetRowBaseline()
    while (childFrame) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
       nsIFrame* firstKid = childFrame->GetFirstPrincipalChild();
-      ascent = NS_MAX(ascent, firstKid->GetRect().YMost());
+      ascent = std::max(ascent, firstKid->GetRect().YMost());
     }
     // Get the next child
     childFrame = iter.Next();
@@ -415,9 +416,9 @@ nsTableRowFrame::GetHeight(nscoord aPctBasis) const
     height = NSToCoordRound(GetPctHeight() * (float)aPctBasis);
   }
   if (HasFixedHeight()) {
-    height = NS_MAX(height, GetFixedHeight());
+    height = std::max(height, GetFixedHeight());
   }
-  return NS_MAX(height, GetContentHeight());
+  return std::max(height, GetContentHeight());
 }
 
 void 
@@ -759,7 +760,7 @@ nscoord CalcHeightFromUnpaginatedHeight(nsPresContext*   aPresContext,
       height -= prevInFlow->GetSize().height;
     }
   }
-  return NS_MAX(height, 0);
+  return std::max(height, 0);
 }
 
 nsresult
@@ -924,7 +925,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         UpdateHeight(desiredSize.height, ascent, descent, &aTableFrame, cellFrame);
       }
       else {
-        cellMaxHeight = NS_MAX(cellMaxHeight, desiredSize.height);
+        cellMaxHeight = std::max(cellMaxHeight, desiredSize.height);
         int32_t rowSpan = aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
         if (1 == rowSpan) {
           SetContentHeight(cellMaxHeight);
@@ -972,7 +973,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     aDesiredSize.height = CalcHeight(aReflowState);
     if (GetPrevInFlow()) {
       nscoord height = CalcHeightFromUnpaginatedHeight(aPresContext, *this);
-      aDesiredSize.height = NS_MAX(aDesiredSize.height, height);
+      aDesiredSize.height = std::max(aDesiredSize.height, height);
     }
     else {
       if (isPaginated && HasStyleHeight()) {
@@ -981,7 +982,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         SetUnpaginatedHeight(aPresContext, aDesiredSize.height);
       }
       if (isPaginated && HasUnpaginatedHeight()) {
-        aDesiredSize.height = NS_MAX(aDesiredSize.height, GetUnpaginatedHeight(aPresContext));
+        aDesiredSize.height = std::max(aDesiredSize.height, GetUnpaginatedHeight(aPresContext));
       }
     }
   }
@@ -993,7 +994,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       styleHeight = aReflowState.availableHeight;
       NS_FRAME_SET_INCOMPLETE(aStatus);
     }
-    aDesiredSize.height = NS_MAX(cellMaxHeight, styleHeight);
+    aDesiredSize.height = std::max(cellMaxHeight, styleHeight);
   }
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);

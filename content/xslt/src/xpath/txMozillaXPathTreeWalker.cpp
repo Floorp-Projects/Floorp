@@ -23,6 +23,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/StandardInteger.h"
+#include <algorithm>
 
 const uint32_t kUnknownIndex = uint32_t(-1);
 
@@ -647,7 +648,7 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
     int32_t otherTotal = otherParents.Length() - 1;
     NS_ASSERTION(total != otherTotal, "Can't have same number of parents");
 
-    int32_t lastIndex = NS_MIN(total, otherTotal);
+    int32_t lastIndex = std::min(total, otherTotal);
     int32_t i;
     parent = nullptr;
     for (i = 0; i <= lastIndex; ++i) {

@@ -9,6 +9,7 @@
 #include "mozilla/gfx/BasePoint4D.h"
 #include "gfx3DMatrix.h"
 #include "nsAlgorithm.h"
+#include <algorithm>
 
 struct THEBES_API gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion> {
     typedef mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion> Super;
@@ -17,10 +18,10 @@ struct THEBES_API gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfx
     gfxQuaternion(gfxFloat aX, gfxFloat aY, gfxFloat aZ, gfxFloat aW) : Super(aX, aY, aZ, aW) {}
 
     gfxQuaternion(const gfx3DMatrix& aMatrix) {
-        w = 0.5 * sqrt(NS_MAX(1 + aMatrix[0][0] + aMatrix[1][1] + aMatrix[2][2], 0.0f));
-        x = 0.5 * sqrt(NS_MAX(1 + aMatrix[0][0] - aMatrix[1][1] - aMatrix[2][2], 0.0f));
-        y = 0.5 * sqrt(NS_MAX(1 - aMatrix[0][0] + aMatrix[1][1] - aMatrix[2][2], 0.0f));
-        z = 0.5 * sqrt(NS_MAX(1 - aMatrix[0][0] - aMatrix[1][1] + aMatrix[2][2], 0.0f));
+        w = 0.5 * sqrt(std::max(1 + aMatrix[0][0] + aMatrix[1][1] + aMatrix[2][2], 0.0f));
+        x = 0.5 * sqrt(std::max(1 + aMatrix[0][0] - aMatrix[1][1] - aMatrix[2][2], 0.0f));
+        y = 0.5 * sqrt(std::max(1 - aMatrix[0][0] + aMatrix[1][1] - aMatrix[2][2], 0.0f));
+        z = 0.5 * sqrt(std::max(1 - aMatrix[0][0] - aMatrix[1][1] + aMatrix[2][2], 0.0f));
 
         if(aMatrix[2][1] > aMatrix[1][2])
             x = -x;

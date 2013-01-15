@@ -8,6 +8,7 @@
 
 #include "nsThreadUtils.h"
 #include "nsAlgorithm.h"
+#include <algorithm>
    
 namespace mozilla {
 namespace net {
@@ -58,7 +59,7 @@ nsPreloadedStream::Read(char *aBuf, uint32_t aCount,
     if (!mLen)
         return mStream->Read(aBuf, aCount, _retval);
     
-    uint32_t toRead = NS_MIN(mLen, aCount);
+    uint32_t toRead = std::min(mLen, aCount);
     memcpy(aBuf, mBuf + mOffset, toRead);
     mOffset += toRead;
     mLen -= toRead;
@@ -76,7 +77,7 @@ nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter,
 
     *result = 0;
     while (mLen > 0 && aCount > 0) {
-        uint32_t toRead = NS_MIN(mLen, aCount);
+        uint32_t toRead = std::min(mLen, aCount);
         uint32_t didRead = 0;
         nsresult rv;
 

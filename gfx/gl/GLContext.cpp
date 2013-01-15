@@ -546,10 +546,10 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         if (mWorkAroundDriverBugs &&
             mVendor == VendorIntel) {
             // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-            mMaxTextureSize        = NS_MIN(mMaxTextureSize,        4096);
-            mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 512);
+            mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
+            mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
             // for good measure, we align renderbuffers on what we do for 2D textures
-            mMaxRenderbufferSize   = NS_MIN(mMaxRenderbufferSize,   4096);
+            mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
             mNeedsTextureSizeChecks = true;
         }
 #endif
@@ -557,7 +557,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         if (mWorkAroundDriverBugs &&
             mVendor == VendorNouveau) {
             // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
-            mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 2048);
+            mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 2048);
             mNeedsTextureSizeChecks = true;
         }
 #endif
@@ -880,7 +880,7 @@ GLContext::ChooseGLFormats(ContextFormat& aCF, ColorByteOrder aByteOrder)
     GLsizei maxSamples = 0;
     if (SupportsFramebufferMultisample())
         fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&maxSamples);
-    samples = NS_MIN(samples, maxSamples);
+    samples = std::min(samples, maxSamples);
 
     // bug 778765
     if (WorkAroundDriverBugs() && samples == 1) {
@@ -1991,7 +1991,7 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                                   paddedWidth, paddedHeight, stride, pixelsize);
 
             fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    NS_MIN(GetAddressAlignment((ptrdiff_t)paddedPixels),
+                    std::min(GetAddressAlignment((ptrdiff_t)paddedPixels),
                             GetAddressAlignment((ptrdiff_t)paddedWidth * pixelsize)));
             fTexImage2D(target,
                         border,
@@ -2010,7 +2010,7 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
 
         if (stride == width * pixelsize) {
             fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
                             GetAddressAlignment((ptrdiff_t)stride)));
             fTexImage2D(target,
                         border,
@@ -2050,7 +2050,7 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
         // desktop GL (non-ES) path
 
         fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
                             GetAddressAlignment((ptrdiff_t)stride)));
         int rowLength = stride/pixelsize;
         fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
@@ -2078,7 +2078,7 @@ GLContext::TexSubImage2D(GLenum target, GLint level,
     if (mIsGLES2) {
         if (stride == width * pixelsize) {
             fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
                             GetAddressAlignment((ptrdiff_t)stride)));
             fTexSubImage2D(target,
                           level,
@@ -2103,7 +2103,7 @@ GLContext::TexSubImage2D(GLenum target, GLint level,
     } else {
         // desktop GL (non-ES) path
         fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
                             GetAddressAlignment((ptrdiff_t)stride)));
         int rowLength = stride/pixelsize;
         fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
@@ -2130,7 +2130,7 @@ GLContext::TexSubImage2DWithUnpackSubimageGLES(GLenum target, GLint level,
                                                const GLvoid* pixels)
 {
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                 std::min(GetAddressAlignment((ptrdiff_t)pixels),
                         GetAddressAlignment((ptrdiff_t)stride)));
     // When using GL_UNPACK_ROW_LENGTH, we need to work around a Tegra
     // driver crash where the driver apparently tries to read
@@ -2184,7 +2184,7 @@ GLContext::TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
 
     stride = width*pixelsize;
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    NS_MIN(GetAddressAlignment((ptrdiff_t)newPixels),
+                    std::min(GetAddressAlignment((ptrdiff_t)newPixels),
                             GetAddressAlignment((ptrdiff_t)stride)));
     fTexSubImage2D(target,
                     level,

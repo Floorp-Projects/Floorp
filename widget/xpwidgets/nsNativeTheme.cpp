@@ -22,6 +22,7 @@
 #include "nsMeterFrame.h"
 #include "nsMenuFrame.h"
 #include "mozilla/dom/Element.h"
+#include <algorithm>
 
 nsNativeTheme::nsNativeTheme()
 : mAnimatedContentTimeout(UINT32_MAX)
@@ -525,7 +526,7 @@ nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
                "aMinimumFrameRate must be less than 1000!");
 
   uint32_t timeout = 1000 / aMinimumFrameRate;
-  timeout = NS_MIN(mAnimatedContentTimeout, timeout);
+  timeout = std::min(mAnimatedContentTimeout, timeout);
 
   if (!mAnimatedContentTimer) {
     mAnimatedContentTimer = do_CreateInstance(NS_TIMER_CONTRACTID);

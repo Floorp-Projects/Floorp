@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGLengthListBinding.h"
+#include <algorithm>
 
 // See the comment in this file's header.
 
@@ -200,7 +201,7 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
     return nullptr;
   }
 
-  index = NS_MIN(index, LengthNoFlush());
+  index = std::min(index, LengthNoFlush());
   if (index >= DOMSVGLength::MaxListIndex()) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;

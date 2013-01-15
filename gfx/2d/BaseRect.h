@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <mozilla/Assertions.h>
+#include <algorithm>
 
 namespace mozilla {
 namespace gfx {
@@ -425,8 +426,8 @@ struct BaseRect {
    */
   Point ClampPoint(const Point& aPoint) const
   {
-    return Point(NS_MAX(x, NS_MIN(XMost(), aPoint.x)),
-                 NS_MAX(y, NS_MIN(YMost(), aPoint.y)));
+    return Point(std::max(x, std::min(XMost(), aPoint.x)),
+                 std::max(y, std::min(YMost(), aPoint.y)));
   }
 
 private:

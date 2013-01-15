@@ -5,6 +5,7 @@
 
 // Main header first:
 #include "nsSVGContainerFrame.h"
+#include <algorithm>
 
 // Keep others in (case-insensitive) order:
 #include "nsError.h"
@@ -218,13 +219,13 @@ nsSVGTextContainerFrame::GetSubStringLength(uint32_t charnum, uint32_t nchars)
   while (node) {
     uint32_t count = node->GetNumberOfChars();
     if (count > charnum) {
-      uint32_t fragmentChars = NS_MIN(nchars, count - charnum);
+      uint32_t fragmentChars = std::min(nchars, count - charnum);
       float fragmentLength = node->GetSubStringLength(charnum, fragmentChars);
       length += fragmentLength;
       nchars -= fragmentChars;
       if (nchars == 0) break;
     }
-    charnum -= NS_MIN(charnum, count);
+    charnum -= std::min(charnum, count);
     node = GetNextGlyphFragmentChildNode(node);
   }
 
@@ -334,12 +335,12 @@ nsSVGTextContainerFrame::CopyPositionList(nsTArray<float> *parentList,
   uint32_t strLength = GetNumberOfChars();
   uint32_t parentCount = 0;
   if (parentList && parentList->Length() > aOffset) {
-    parentCount = NS_MIN(parentList->Length() - aOffset, strLength);
+    parentCount = std::min(parentList->Length() - aOffset, strLength);
   }
 
-  uint32_t selfCount = NS_MIN(selfList->Length(), strLength);
+  uint32_t selfCount = std::min(selfList->Length(), strLength);
 
-  uint32_t count = NS_MAX(parentCount, selfCount);
+  uint32_t count = std::max(parentCount, selfCount);
 
   if (!dstList.SetLength(count))
     return;
@@ -364,11 +365,11 @@ nsSVGTextContainerFrame::CopyRotateList(nsTArray<float> *parentList,
   uint32_t strLength = GetNumberOfChars();
   uint32_t parentCount = 0;
   if (parentList && parentList->Length() > aOffset) {
-    parentCount = NS_MIN(parentList->Length() - aOffset, strLength);
+    parentCount = std::min(parentList->Length() - aOffset, strLength);
   }
 
-  uint32_t selfCount = NS_MIN(selfList ? selfList->Length() : 0, strLength);
-  uint32_t count = NS_MAX(parentCount, selfCount);
+  uint32_t selfCount = std::min(selfList ? selfList->Length() : 0, strLength);
+  uint32_t count = std::max(parentCount, selfCount);
 
   if (count > 0) {
     if (!dstList.SetLength(count))
