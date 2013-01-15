@@ -274,37 +274,38 @@ class Automation(object):
     cursor.execute("PRAGMA user_version=3");
 
     # SQL copied from nsPermissionManager.cpp
-    cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
-      id INTEGER PRIMARY KEY,
-      host TEXT,
-      type TEXT,
-      permission INTEGER,
-      expireType INTEGER,
-      expireTime INTEGER,
-      appId INTEGER,
-      isInBrowserElement INTEGER)""")
+    cursor.execute("""CREATE TABLE moz_hosts (
+       id INTEGER PRIMARY KEY,
+       host TEXT,
+       type TEXT,
+       permission INTEGER,
+       expireType INTEGER,
+       expireTime INTEGER,
+       appId INTEGER,
+       isInBrowserElement INTEGER)""")
 
     # Insert desired permissions
+    c = 0
     for perm in permissions.keys():
       for host,allow in permissions[perm]:
-        cursor.execute("INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0)",
-                       (host, perm, 1 if allow else 2))
+        c += 1
+        cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, ?, 0, 0, 0, 0)",
+                       (c, host, perm, 1 if allow else 2))
 
     # Commit and close
     permDB.commit()
     cursor.close()
 
   def setupTestApps(self, profileDir, apps):
-    webappJSONTemplate = Template(""""$id": {
-  "origin": "$origin",
-  "installOrigin": "$origin",
-  "receipt": null,
-  "installTime": 132333986000,
-  "manifestURL": "$manifestURL",
-  "localId": $localId,
-  "id": "$id",
-  "appStatus": $appStatus,
-  "csp": "$csp"
+    webappJSONTemplate = Template(""""$name": {
+"origin": "$origin",
+"installOrigin": "$origin",
+"receipt": null,
+"installTime": 132333986000,
+"manifestURL": "$manifestURL",
+"localId": $localId,
+"appStatus": $appStatus,
+"csp": "$csp"
 }""")
 
     manifestTemplate = Template("""{
@@ -332,73 +333,16 @@ class Automation(object):
 
     # Create webapps/webapps.json
     webappsDir = os.path.join(profileDir, "webapps")
-    if not os.access(webappsDir, os.F_OK):
-      os.mkdir(webappsDir)
+    os.mkdir(webappsDir);
 
-    lineRe = re.compile(r'(.*?)"(.*?)": (.*)')
-
-    webappsJSONFilename = os.path.join(webappsDir, "webapps.json")
     webappsJSON = []
-    if os.access(webappsJSONFilename, os.F_OK):
-      # If there is an existing webapps.json file (which will be the case for
-      # b2g), we parse the data in the existing file before appending test
-      # test apps to it.
-      startId = 1
-      webappsJSONFile = open(webappsJSONFilename, "r")
-      contents = webappsJSONFile.read()
-
-      for app_content in contents.split('},'):
-        app = {}
-        # ghetto json parser needed due to lack of json/simplejson on test slaves
-        for line in app_content.split('\n'):
-          m = lineRe.match(line)
-          if m:
-            value = m.groups()[2]
-            # remove any trailing commas
-            if value[-1:] == ',':
-              value = value[:-1]
-            # set the app name from a line that looks like this:
-            # "name.gaiamobile.org": {
-            if value == '{':
-              app['id'] = m.groups()[1]
-            # parse string, None, bool and int types
-            elif value[0:1] == '"':
-              app[m.groups()[1]] = value[1:-1]
-            elif value == "null":
-              app[m.groups()[1]] = None
-            elif value == "true":
-              app[m.groups()[1]] = True
-            elif value == "false":
-              app[m.groups()[1]] = False
-            else:
-              app[m.groups()[1]] = int(value)
-        if app:
-          webappsJSON.append(app)
-
-      webappsJSONFile.close()
-
-    startId = 1
-    for app in webappsJSON:
-      if app['localId'] >= startId:
-        startId = app['localId'] + 1
-      if not app.get('csp'):
-        app['csp'] = ''
-      if not app.get('appStatus'):
-        app['appStatus'] = 3
-
     for localId, app in enumerate(apps):
-      app['localId'] = localId + startId # localId must be from 1..N
-      if not app.get('id'):
-        app['id'] = app['name']
-      webappsJSON.append(app)
+      app['localId'] = localId + 1 # Has to be 1..n
+      webappsJSON.append(webappJSONTemplate.substitute(app))
+    webappsJSON = '{\n' + ',\n'.join(webappsJSON) + '\n}\n'
 
-    contents = []
-    for app in webappsJSON:
-      contents.append(webappJSONTemplate.substitute(app))
-    contents = '{\n' + ',\n'.join(contents) + '\n}\n'
-
-    webappsJSONFile = open(webappsJSONFilename, "w")
-    webappsJSONFile.write(contents)
+    webappsJSONFile = open(os.path.join(webappsDir, "webapps.json"), "a")
+    webappsJSONFile.write(webappsJSON)
     webappsJSONFile.close()
 
     # Create manifest file for each app.
@@ -412,19 +356,13 @@ class Automation(object):
       manifestFile.write(manifest)
       manifestFile.close()
 
-  def initializeProfile(self, profileDir, extraPrefs=[],
-                        useServerLocations=False,
-                        initialProfile=None):
+  def initializeProfile(self, profileDir, extraPrefs = [], useServerLocations = False):
     " Sets up the standard testing profile."
 
     prefs = []
     # Start with a clean slate.
     shutil.rmtree(profileDir, True)
-
-    if initialProfile:
-      shutil.copytree(initialProfile, profileDir)
-    else:
-      os.mkdir(profileDir)
+    os.mkdir(profileDir)
 
     # Set up permissions database
     locations = self.readLocations()
@@ -662,7 +600,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'manifestURL': 'https://example.com/manifest_csp_cert.webapp',
         'description': 'https://example.com Certified App with manifest policy',
         'appStatus': _APP_STATUS_CERTIFIED
-      },
+      }, 
       {
         'name': 'https_example_csp_installed',
         'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
@@ -670,7 +608,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'manifestURL': 'https://example.com/manifest_csp_inst.webapp',
         'description': 'https://example.com Installed App with manifest policy',
         'appStatus': _APP_STATUS_INSTALLED
-      },
+      }, 
       {
         'name': 'https_example_csp_privileged',
         'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
@@ -678,15 +616,15 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'manifestURL': 'https://example.com/manifest_csp_priv.webapp',
         'description': 'https://example.com Privileged App with manifest policy',
         'appStatus': _APP_STATUS_PRIVILEGED
-      },
+      }, 
       {
         'name': 'https_a_domain_certified',
-        'csp': "",
+        'csp' : "",
         'origin': 'https://acertified.com',
         'manifestURL': 'https://acertified.com/manifest.webapp',
         'description': 'https://acertified.com Certified App',
         'appStatus': _APP_STATUS_CERTIFIED
-      },
+      }, 
       {
         'name': 'https_a_domain_privileged',
         'csp': "",
@@ -694,7 +632,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'manifestURL': 'https://aprivileged.com/manifest.webapp',
         'description': 'https://aprivileged.com Privileged App ',
         'appStatus': _APP_STATUS_PRIVILEGED
-      },
+      }, 
     ];
     self.setupTestApps(profileDir, apps)
 
@@ -1095,7 +1033,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
              runSSLTunnel = False, utilityPath = None,
              xrePath = None, certPath = None,
              debuggerInfo = None, symbolsPath = None,
-             timeout = -1, maxTime = None, onLaunch = None):
+             timeout = -1, maxTime = None):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
@@ -1151,11 +1089,6 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                  stdout = outputPipe,
                  stderr = subprocess.STDOUT)
     self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
-
-    if onLaunch is not None:
-      # Allow callers to specify an onLaunch callback to be fired after the
-      # app is launched.
-      onLaunch()
 
     status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath)
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
