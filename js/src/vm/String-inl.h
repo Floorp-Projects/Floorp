@@ -22,25 +22,70 @@
 namespace js {
 
 static JS_ALWAYS_INLINE JSInlineString *
-NewShortString(JSContext *cx, const jschar *chars, size_t length)
+NewShortString(JSContext *cx, Latin1Chars chars)
 {
-    SkipRoot skip(cx, &chars);
+    size_t len = chars.length();
+    JS_ASSERT(JSShortString::lengthFits(len));
+    UnrootedInlineString str = JSInlineString::lengthFits(len)
+                               ? JSInlineString::new_(cx)
+                               : JSShortString::new_(cx);
+    if (!str)
+        return NULL;
+
+    jschar *p = str->init(len);
+    for (size_t i = 0; i < len; ++i)
+        p[i] = static_cast<jschar>(chars[i]);
+    p[len] = '\0';
+    Probes::createString(cx, str, len);
+    return str;
+}
+
+static JS_ALWAYS_INLINE JSInlineString *
+NewShortString(JSContext *cx, StableTwoByteChars chars)
+{
+    size_t len = chars.length();
 
     /*
      * Don't bother trying to find a static atom; measurement shows that not
      * many get here (for one, Atomize is catching them).
      */
-    JS_ASSERT(JSShortString::lengthFits(length));
-    JSInlineString *str = JSInlineString::lengthFits(length)
+    JS_ASSERT(JSShortString::lengthFits(len));
+    JSInlineString *str = JSInlineString::lengthFits(len)
                           ? JSInlineString::new_(cx)
                           : JSShortString::new_(cx);
     if (!str)
         return NULL;
 
-    jschar *storage = str->init(length);
-    PodCopy(storage, chars, length);
-    storage[length] = 0;
-    Probes::createString(cx, str, length);
+    jschar *storage = str->init(len);
+    PodCopy(storage, chars.start().get(), len);
+    storage[len] = 0;
+    Probes::createString(cx, str, len);
+    return str;
+}
+
+static JS_ALWAYS_INLINE JSInlineString *
+NewShortString(JSContext *cx, TwoByteChars chars)
+{
+    size_t len = chars.length();
+
+    /*
+     * Don't bother trying to find a static atom; measurement shows that not
+     * many get here (for one, Atomize is catching them).
+     */
+    JS_ASSERT(JSShortString::lengthFits(len));
+    JSInlineString *str = JSInlineString::lengthFits(len)
+                          ? JSInlineString::tryNew_(cx)
+                          : JSShortString::tryNew_(cx);
+    if (!str) {
+        jschar tmp[JSShortString::MAX_SHORT_LENGTH];
+        PodCopy(tmp, chars.start().get(), len);
+        return NewShortString(cx, StableTwoByteChars(tmp, len));
+    }
+
+    jschar *storage = str->init(len);
+    PodCopy(storage, chars.start().get(), len);
+    storage[len] = 0;
+    Probes::createString(cx, str, len);
     return str;
 }
 
@@ -192,7 +237,7 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
      * is more efficient to immediately undepend here.
      */
     if (JSShortString::lengthFits(length))
-        return js::NewShortString(cx, chars, length);
+        return js::NewShortString(cx, js::TwoByteChars(chars, length));
 
     JSDependentString *str = (JSDependentString *)js_NewGCString(cx);
     if (!str)
@@ -257,6 +302,12 @@ JSInlineString::new_(JSContext *cx)
     return (JSInlineString *)js_NewGCString(cx);
 }
 
+JS_ALWAYS_INLINE JSInlineString *
+JSInlineString::tryNew_(JSContext *cx)
+{
+    return (JSInlineString *)js_TryNewGCString(cx);
+}
+
 JS_ALWAYS_INLINE jschar *
 JSInlineString::init(size_t length)
 {
@@ -277,6 +328,12 @@ JS_ALWAYS_INLINE JSShortString *
 JSShortString::new_(JSContext *cx)
 {
     return js_NewGCShortString(cx);
+}
+
+JS_ALWAYS_INLINE JSShortString *
+JSShortString::tryNew_(JSContext *cx)
+{
+    return js_TryNewGCShortString(cx);
 }
 
 JS_ALWAYS_INLINE void

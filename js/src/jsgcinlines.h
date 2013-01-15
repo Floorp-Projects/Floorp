@@ -569,10 +569,22 @@ js_NewGCString(JSContext *cx)
     return js::gc::NewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
 }
 
+inline JSString *
+js_TryNewGCString(JSContext *cx)
+{
+    return js::gc::TryNewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
+}
+
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
     return js::gc::NewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
+}
+
+inline JSShortString *
+js_TryNewGCShortString(JSContext *cx)
+{
+    return js::gc::TryNewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
 }
 
 inline JSExternalString *
