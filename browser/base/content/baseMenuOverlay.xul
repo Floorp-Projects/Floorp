@@ -52,11 +52,13 @@
 #else
                   />
 #endif
+#ifdef MOZ_SERVICES_HEALTHREPORT
         <menuitem id="healthReport"
                   label="&healthReport.label;"
                   accesskey="&healthReport.accesskey;"
                   oncommand="openHealthReport()"
                   onclick="checkForMiddleClick(this, event);"/>
+#endif
         <menuitem id="troubleShooting"
                   accesskey="&helpTroubleshootingInfo.accesskey;"
                   label="&helpTroubleshootingInfo.label;"
