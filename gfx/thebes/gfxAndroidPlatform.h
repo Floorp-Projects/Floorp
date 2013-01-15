@@ -65,7 +65,6 @@ public:
                                           gfxUserFontSet* aUserFontSet);
 
     virtual bool FontHintingEnabled() MOZ_OVERRIDE;
-    virtual bool RequiresLinearZoom() MOZ_OVERRIDE;
 
     FT_Library GetFTLibrary();
 
