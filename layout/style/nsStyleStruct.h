@@ -2232,6 +2232,7 @@ struct nsStyleSVG {
   uint8_t          mColorInterpolationFilters; // [inherited] see nsStyleConsts.h
   uint8_t          mFillRule;         // [inherited] see nsStyleConsts.h
   uint8_t          mImageRendering;   // [inherited] see nsStyleConsts.h
+  uint8_t          mPaintOrder;       // [inherited] see nsStyleConsts.h
   uint8_t          mShapeRendering;   // [inherited] see nsStyleConsts.h
   uint8_t          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
   uint8_t          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h

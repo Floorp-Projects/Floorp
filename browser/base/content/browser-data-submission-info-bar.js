@@ -22,6 +22,8 @@ DataNotificationInfoBar.prototype = {
     "datareporting:notify-data-policy:close",
   ],
 
+  _DATA_REPORTING_NOTIFICATION: "data-reporting",
+
 #ifdef MOZ_TELEMETRY_REPORTING
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
   _PREF_TELEMETRY_DISPLAYED: "toolkit.telemetry.notifiedOptOut",
@@ -64,10 +66,17 @@ DataNotificationInfoBar.prototype = {
     this._notificationBox = nb;
   },
 
+  _getDataReportingNotification: function (name=this._DATA_REPORTING_NOTIFICATION) {
+    if (!this._notificationBox) {
+      return undefined;
+    }
+    return this._notificationBox.getNotificationWithValue(name);
+  },
+
   _displayDataPolicyInfoBar: function (request) {
     this._ensureNotificationBox();
 
-    if (this._notificationBox.getNotificationWithValue("data-reporting")) {
+    if (this._getDataReportingNotification()) {
       return;
     }
 
@@ -104,7 +113,7 @@ DataNotificationInfoBar.prototype = {
     this._log.info("Creating data reporting policy notification.");
     let notification = this._notificationBox.appendNotification(
       message,
-      "data-reporting",
+      this._DATA_REPORTING_NOTIFICATION,
       null,
       this._notificationBox.PRIORITY_INFO_HIGH,
       buttons,
@@ -133,12 +142,10 @@ DataNotificationInfoBar.prototype = {
   },
 
   _clearPolicyNotification: function () {
-    if (!this._notificationBox ||
-        !this._notificationBox.getNotificationWithValue("data-reporting")) {
-      return;
+    let notification = this._getDataReportingNotification();
+    if (notification) {
+      notification.close();
     }
-
-    this._notificationBox.getNotificationWithValue("date-reporting").close();
   },
 
   onNotifyDataPolicy: function (request) {

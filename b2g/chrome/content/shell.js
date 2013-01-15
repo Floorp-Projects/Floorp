@@ -769,7 +769,7 @@ var AlertsHelper = {
   },
 
   receiveMessage: function alert_receiveMessage(aMessage) {
-    if (!aMessage.target.assertPermission("desktop-notification")) {
+    if (!aMessage.target.assertAppHasPermission("desktop-notification")) {
       Cu.reportError("Desktop-notification message " + aMessage.name +
                      " from a content process with no desktop-notification privileges.");
       return null;

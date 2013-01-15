@@ -27,11 +27,12 @@ const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 // Number of milliseconds for each do_timeout call.
 const CHECK_TIMEOUT_MILLI = 1000;
 
+// How many of CHECK_TIMEOUT_MILLI to wait before we abort the test.
 const MAX_TIMEOUT_RUNS = 300;
 
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
-const APP_TIMER_TIMEOUT = 15000;
+const APP_TIMER_TIMEOUT = 20000;
 
 Components.utils.import("resource://gre/modules/ctypes.jsm");
 

@@ -12,7 +12,7 @@
     ],
     "zip_files": [
         ["{workdir}/out/target/product/unagi/*.img", "out/target/product/unagi/"],
-        "{workdir}/boot.img",
+        ["{workdir}/boot.img", "out/target/product/unagi/"],
         "{workdir}/flash.sh",
         "{workdir}/load-config.sh",
         "{workdir}/.config",

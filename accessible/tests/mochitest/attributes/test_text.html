@@ -559,6 +559,14 @@
       attrs = {};
       testTextAttrs(ID, 18, attrs, defAttrs, 17, 28);
 
+       //////////////////////////////////////////////////////////////////////////
+      // area20, "aOffset as -1 (Mozilla Bug 789621)" test
+
+      ID = "area20";
+      defAttrs = buildDefaultTextAttrs(ID, "15pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      testTextAttrs(ID, -1, {}, defAttrs, 0, 11);
       SimpleTest.finish();
     }
 
@@ -597,6 +605,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=445516"
      title="Support auto-generated text attribute on bullet lists">
     Mozilla Bug 445516
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=789621"
+     title="getTextAttributes doesn't work with magic offsets">
+    Mozilla Bug 789621
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -712,6 +725,8 @@
   <p id="area19">uncolored
     <mark>colored</mark> uncolored
   </p>
-   
+
+  <p id="area20" style="font-size: 15pt;">offset test</p>
+
 </body>
 </html>

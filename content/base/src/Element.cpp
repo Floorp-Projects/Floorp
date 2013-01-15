@@ -18,7 +18,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
-#include "nsIDocument.h"
+#include "nsIDocumentInlines.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIContentIterator.h"
@@ -1838,7 +1838,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
 
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::dir) {
-      hadValidDir = HasValidDir() || NodeInfo()->Equals(nsGkAtoms::bdi);
+      hadValidDir = HasValidDir() || IsHTML(nsGkAtoms::bdi);
     }
 
     // XXXbz Perhaps we should push up the attribute mapping function
@@ -2085,7 +2085,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   bool hadValidDir = false;
 
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {
-    hadValidDir = HasValidDir() || NodeInfo()->Equals(nsGkAtoms::bdi);
+    hadValidDir = HasValidDir() || IsHTML(nsGkAtoms::bdi);
   }
 
   nsAttrValue oldValue;

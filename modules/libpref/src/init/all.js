@@ -1800,6 +1800,13 @@ pref("svg.smil.enabled", true);
 pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
 
+// Is support for the SVG 2 paint-order property enabled?
+#ifdef RELEASE_BUILD
+pref("svg.paint-order.enabled", false);
+#else
+pref("svg.paint-order.enabled", true);
+#endif
+
 pref("font.minimum-size.ar", 0);
 pref("font.minimum-size.x-armn", 0);
 pref("font.minimum-size.x-beng", 0);
@@ -3962,3 +3969,7 @@ pref("wap.UAProf.tagname", "x-wap-profile");
 // tentatively deciding the gesture is actually a tap and activating
 // the target element?
 pref("ui.touch_activation.delay_ms", 50);
+
+// nsMemoryInfoDumper can watch a fifo in the temp directory and take various
+// actions when the fifo is written to.  Disable this in general.
+pref("memory_info_dumper.watch_fifo", false);

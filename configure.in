@@ -4568,6 +4568,7 @@ cairo-qt)
     TK_LIBS='$(MOZ_QT_LIBS)'
     AC_DEFINE(MOZ_WIDGET_QT)
     MOZ_PDF_PRINTING=1
+    AC_DEFINE(QT_NO_KEYWORDS)
     ;;
 
 cairo-os2)

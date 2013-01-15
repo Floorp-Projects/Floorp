@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsUCvKODll_h___
-#define nsUCvKODll_h___
-
-#include "prtypes.h"
+#ifndef nsUCvKODll_h_
+#define nsUCvKODll_h_
 
 extern const uint16_t g_utKSC5601Mapping[];
 extern const uint16_t g_ufKSC5601Mapping[];
@@ -14,4 +12,4 @@ extern const uint16_t g_ASCIIMappingTable[];
 extern const uint16_t g_HangulNullMapping[];
 extern const uint16_t g_ufJohabJamoMapping[];
 
-#endif /* nsUCvKODll_h___ */
+#endif /* nsUCvKODll_h_ */

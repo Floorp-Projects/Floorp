@@ -80,7 +80,7 @@ skip-if(B2G) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 skip-if(B2G) == feDisplacementMap-scale-01.svg pass.svg
 
-skip-if(B2G) fuzzy-if(cocoaWidget&&layersGPUAccelerated,2,93) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
+skip-if(B2G) fuzzy-if(cocoaWidget&&layersGPUAccelerated,4,93) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
