@@ -10,7 +10,7 @@ test-pref(layout.css.flexbox.enabled,true) == flexbox-pref-1.xhtml flexbox-pref-
 fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
 # This one fails on windows R (but not Ru, strangely). On Windows R, the
 # single-line <label> flex item has a different background size in test vs. ref
-random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
+fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
 == flexbox-align-self-horiz-1-block.xhtml  flexbox-align-self-horiz-1-ref.xhtml

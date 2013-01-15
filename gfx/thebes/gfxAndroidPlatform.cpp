@@ -247,20 +247,53 @@ gfxAndroidPlatform::FontHintingEnabled()
 {
     // In "mobile" builds, we sometimes use non-reflow-zoom, so we
     // might not want hinting.  Let's see.
+
 #ifdef MOZ_USING_ANDROID_JAVA_WIDGETS
     // On android-java, we currently only use gecko to render web
     // content that can always be be non-reflow-zoomed.  So turn off
     // hinting.
     // 
-    // XXX when gecko-android-java is used as an "app runtime", we'll
-    // want to re-enable hinting.
+    // XXX when gecko-android-java is used as an "app runtime", we may
+    // want to re-enable hinting for non-browser processes there.
     return false;
-#else
-    // Otherwise, enable hinting unless we're in a content process
-    // that might be used for non-reflowing zoom.
-    return XRE_GetProcessType() != GeckoProcessType_Content ||
-           !ContentChild::GetSingleton()->IsForBrowser();
+#endif
+
+#ifdef MOZ_B2G
+    // On B2G, the UX preference is currently to keep hinting disabled
+    // for all text (see bug 829523).
+    return false;
 #endif //  MOZ_USING_ANDROID_JAVA_WIDGETS
+
+    // Currently, we don't have any other targets, but if/when we do,
+    // decide how to handle them here.
+
+    NS_NOTREACHED("oops, what platform is this?");
+    return gfxPlatform::FontHintingEnabled();
+}
+
+bool
+gfxAndroidPlatform::RequiresLinearZoom()
+{
+#ifdef MOZ_USING_ANDROID_JAVA_WIDGETS
+    // On android-java, we currently only use gecko to render web
+    // content that can always be be non-reflow-zoomed.
+    //
+    // XXX when gecko-android-java is used as an "app runtime", we may
+    // want to treat it like B2G and use linear zoom only for the web
+    // browser process, not other apps.
+    return true;
+#endif
+
+#ifdef MOZ_B2G
+    // On B2G, we need linear zoom for the browser, but otherwise prefer
+    // the improved glyph spacing that results from respecting the device
+    // pixel resolution for glyph layout (see bug 816614).
+    return XRE_GetProcessType() == GeckoProcessType_Content &&
+           ContentChild::GetSingleton()->IsForBrowser();
+#endif
+
+    NS_NOTREACHED("oops, what platform is this?");
+    return gfxPlatform::RequiresLinearZoom();
 }
 
 int
