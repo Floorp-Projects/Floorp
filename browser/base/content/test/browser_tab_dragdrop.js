@@ -14,7 +14,7 @@ function test()
   ];
 
   function setLocation(i, url) {
-    gBrowser.getBrowserForTab(tabs[i]).contentWindow.location.assign(url);
+    gBrowser.getBrowserForTab(tabs[i]).contentWindow.location = url;
   }
   function moveTabTo(a, b) {
     gBrowser.swapBrowsersAndCloseOther(gBrowser.tabs[b], gBrowser.tabs[a]);

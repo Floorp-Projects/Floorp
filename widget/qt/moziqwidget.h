@@ -220,7 +220,7 @@ protected:
         return false;
     }
 
-private slots:
+private Q_SLOTS:
     void CheckTopLevelSize()
     {
         if (mTopLevelWidget) {

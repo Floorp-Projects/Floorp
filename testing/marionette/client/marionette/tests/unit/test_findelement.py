@@ -137,6 +137,13 @@ class TestElements(MarionetteTestCase):
         found_els = nav_el.find_elements("css selector", "a")
         self.assertFalse(el.id in [found_el.id for found_el in found_els])
 
+    def test_finding_active_element_returns_element(self):
+        test_html = self.marionette.absolute_url("test.html")
+        self.marionette.navigate(test_html)
+        fbody = self.marionette.find_element('tag name', 'body')
+        abody = self.marionette.get_active_element()
+        self.assertEqual(fbody, abody)
+
 class TestElementsChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)

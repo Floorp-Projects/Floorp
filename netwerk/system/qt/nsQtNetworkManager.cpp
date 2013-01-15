@@ -87,7 +87,7 @@ nsQtNetworkManager::openConnection(const QString& host)
         openSession();
     } else {
         // jump to mainthread and do the work there
-        emit openConnectionSignal();
+        Q_EMIT openConnectionSignal();
     }
 
     // if its claiming its online -> send one resolve request ahead.
