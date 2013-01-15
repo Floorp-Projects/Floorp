@@ -28,6 +28,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include <algorithm>
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1349,7 +1350,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
       ascent = fm->MaxAscent();
-      bulletSize = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
+      bulletSize = std::max(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
       aMetrics.width = mPadding.right + bulletSize;
@@ -1612,7 +1613,7 @@ nsBulletFrame::GetBaseline() const
       case NS_STYLE_LIST_STYLE_SQUARE:
         ascent = fm->MaxAscent();
         bottomPadding = NSToCoordRound(float(ascent) / 8.0f);
-        ascent = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
+        ascent = std::max(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                         NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
         ascent += bottomPadding;
         break;

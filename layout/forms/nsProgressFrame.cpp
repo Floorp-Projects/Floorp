@@ -21,6 +21,7 @@
 #include "nsFontMetrics.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentList.h"
+#include <algorithm>
 
 
 nsIFrame*
@@ -185,12 +186,12 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
 
       size -= reflowState.mComputedMargin.TopBottom() +
               reflowState.mComputedBorderPadding.TopBottom();
-      size = NS_MAX(size, 0);
+      size = std::max(size, 0);
       reflowState.SetComputedHeight(size);
     } else {
       size -= reflowState.mComputedMargin.LeftRight() +
               reflowState.mComputedBorderPadding.LeftRight();
-      size = NS_MAX(size, 0);
+      size = std::max(size, 0);
       reflowState.SetComputedWidth(size);
     }
   } else if (vertical) {

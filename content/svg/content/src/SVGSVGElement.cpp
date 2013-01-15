@@ -39,6 +39,7 @@
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
 #include "SVGAngle.h"
+#include <algorithm>
 
 DOMCI_NODE_DATA(SVGSVGElement, mozilla::dom::SVGSVGElement)
 
@@ -1212,8 +1213,8 @@ SVGSVGElement::GetLength(uint8_t aCtxType)
     h = mViewportHeight;
   }
 
-  w = NS_MAX(w, 0.0f);
-  h = NS_MAX(h, 0.0f);
+  w = std::max(w, 0.0f);
+  h = std::max(h, 0.0f);
 
   switch (aCtxType) {
   case SVGContentUtils::X:

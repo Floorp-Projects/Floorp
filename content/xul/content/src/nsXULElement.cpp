@@ -89,6 +89,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/Attributes.h"
+#include <algorithm>
 
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
@@ -821,7 +822,7 @@ nsXULElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
         int32_t treeRows;
         listBox->GetRowCount(&treeRows);
         if (treeRows > 0) {
-            newCurrentIndex = NS_MIN((treeRows - 1), newCurrentIndex);
+            newCurrentIndex = std::min((treeRows - 1), newCurrentIndex);
             nsCOMPtr<nsIDOMElement> newCurrentItem;
             listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
             nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);

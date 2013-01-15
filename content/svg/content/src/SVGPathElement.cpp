@@ -13,6 +13,7 @@
 #include "mozilla/dom/SVGPathElement.h"
 #include "DOMSVGPoint.h"
 #include "gfxContext.h"
+#include <algorithm>
 
 DOMCI_NODE_DATA(SVGPathElement, mozilla::dom::SVGPathElement)
 
@@ -94,8 +95,8 @@ SVGPathElement::GetPointAtLength(float distance, nsISupports **_retval)
     }
     distance *= totalLength / pathLength;
   }
-  distance = NS_MAX(0.f,         distance);
-  distance = NS_MIN(totalLength, distance);
+  distance = std::max(0.f,         distance);
+  distance = std::min(totalLength, distance);
 
   NS_ADDREF(*_retval = new DOMSVGPoint(flat->FindPoint(gfxPoint(distance, 0))));
   return NS_OK;

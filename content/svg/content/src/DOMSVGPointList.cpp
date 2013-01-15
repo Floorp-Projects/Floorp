@@ -12,6 +12,7 @@
 #include "nsSVGAttrTearoffTable.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGPointListBinding.h"
+#include <algorithm>
 
 // See the comment in this file's header.
 
@@ -253,7 +254,7 @@ DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
     return nullptr;
   }
 
-  aIndex = NS_MIN(aIndex, LengthNoFlush());
+  aIndex = std::min(aIndex, LengthNoFlush());
   if (aIndex >= DOMSVGPoint::MaxListIndex()) {
     aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;

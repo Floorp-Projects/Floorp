@@ -21,6 +21,7 @@
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 #include "nsIScriptSecurityManager.h"
+#include <algorithm>
 
 static const char kXPConnectServiceCID[] = "@mozilla.org/js/xpc/XPConnect;1";
 
@@ -606,7 +607,7 @@ nsJSONListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
   while (bytesRemaining) {
     unsigned int bytesRead;
     rv = aStream->Read(buffer,
-                       NS_MIN((unsigned long)sizeof(buffer), bytesRemaining),
+                       std::min((unsigned long)sizeof(buffer), bytesRemaining),
                        &bytesRead);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = ProcessBytes(buffer, bytesRead);

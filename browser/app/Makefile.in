@@ -31,8 +31,11 @@ DEFINES += \
   -DNEWWINDOW_ICO=\"$(DIST)/branding/newwindow.ico\" \
   -DNEWTAB_ICO=\"$(DIST)/branding/newtab.ico\" \
   -DPBMODE_ICO=\"$(DIST)/branding/pbmode.ico\" \
-
   $(NULL)
+
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
 
 ifdef LIBXUL_SDK #{
 PREF_JS_EXPORTS += $(srcdir)/profile/channel-prefs.js

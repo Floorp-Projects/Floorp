@@ -22,7 +22,7 @@ namespace js {
 
 /*
  * Announce to the debugger that the thread has entered a new JavaScript frame,
- * |fp|. Call whatever hooks have been registered to observe new frames, and
+ * |frame|. Call whatever hooks have been registered to observe new frames, and
  * return a JSTrapStatus code indication how execution should proceed:
  *
  * - JSTRAP_CONTINUE: Continue execution normally.
@@ -35,18 +35,18 @@ namespace js {
  *   exception.
  *
  * - JSTRAP_RETURN: Return from the new frame immediately. ScriptDebugPrologue
- *   has set |cx->fp()|'s return value appropriately.
+ *   has set |frame|'s return value appropriately.
  */
 extern JSTrapStatus
-ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
+ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame);
 
 /*
- * Announce to the debugger that the thread has exited a JavaScript frame, |fp|.
+ * Announce to the debugger that the thread has exited a JavaScript frame, |frame|.
  * If |ok| is true, the frame is returning normally; if |ok| is false, the frame
  * is throwing an exception or terminating.
  *
  * Call whatever hooks have been registered to observe frame exits. Change cx's
- * current exception and |fp|'s return value to reflect the changes in behavior
+ * current exception and |frame|'s return value to reflect the changes in behavior
  * the hooks request, if any. Return the new error/success value.
  *
  * This function may be called twice for the same outgoing frame; only the
@@ -56,7 +56,7 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
  * alternative path, containing its own call to ScriptDebugEpilogue.)
  */
 extern bool
-ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool ok);
+ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool ok);
 
 /*
  * For a given |call|, convert null/undefined |this| into the global object for

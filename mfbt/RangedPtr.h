@@ -46,6 +46,9 @@ class RangedPtr
     T* const rangeEnd;
 #endif
 
+    typedef void (RangedPtr::* ConvertibleToBool)();
+    void nonNull() {}
+
     void checkSanity() {
       MOZ_ASSERT(rangeStart <= ptr);
       MOZ_ASSERT(ptr <= rangeEnd);
@@ -97,7 +100,7 @@ class RangedPtr
 
     /* Equivalent to RangedPtr(arr, arr, N). */
     template<size_t N>
-    RangedPtr(T arr[N])
+    RangedPtr(T (&arr)[N])
       : ptr(arr)
 #ifdef DEBUG
       , rangeStart(arr), rangeEnd(arr + N)
@@ -109,6 +112,8 @@ class RangedPtr
     T* get() const {
       return ptr;
     }
+
+    operator ConvertibleToBool() const { return ptr ? &RangedPtr::nonNull : 0; }
 
     /*
      * You can only assign one RangedPtr into another if the two pointers have
@@ -242,7 +247,6 @@ class RangedPtr
   private:
     RangedPtr() MOZ_DELETE;
     T* operator&() MOZ_DELETE;
-    operator T*() const MOZ_DELETE;
 };
 
 } /* namespace mozilla */
