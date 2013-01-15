@@ -60,6 +60,8 @@ class BaselineFrame
         return (Value *)this - (slot + 1);
     }
 
+    void trace(JSTracer *trc);
+
     // Methods below are used by the compiler.
     static size_t offsetOfCalleeToken() {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfCalleeToken();

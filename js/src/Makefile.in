@@ -282,6 +282,7 @@ VPATH +=	$(srcdir)/ion/shared
 CPPSRCS +=	MIR.cpp \
 		BaselineCompiler.cpp \
 		BaselineIC.cpp \
+		BaselineFrame.cpp \
 		BaselineFrameInfo.cpp \
 		BaselineJIT.cpp \
 		BacktrackingAllocator.cpp \
