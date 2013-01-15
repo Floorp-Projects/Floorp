@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsCache.h"
+#include "nsIMemoryReporter.h"
 
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX)
@@ -368,16 +369,43 @@ nsDiskCache::Truncate(PRFileDesc *  fd, uint32_t  newEOF)
  *  nsDiskCacheDevice
  *****************************************************************************/
 
+class NetworkDiskCacheReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    NetworkDiskCacheReporter(nsDiskCacheDevice* aDevice)
+      : MemoryReporterBase(
+            "explicit/network/disk-cache",
+            KIND_HEAP,
+            UNITS_BYTES,
+            "Memory used by the network disk cache.")
+      , mDevice(aDevice)
+    {}
+
+private:
+    int64_t Amount()
+    {
+        nsCacheServiceAutoLock
+            lock(LOCK_TELEM(NSCACHESERVICE_DISKDEVICEHEAPSIZE));
+        return mDevice->SizeOfIncludingThis(MallocSizeOf);
+    }
+
+    nsDiskCacheDevice* mDevice;
+};
+
 nsDiskCacheDevice::nsDiskCacheDevice()
     : mCacheCapacity(0)
     , mMaxEntrySize(-1) // -1 means "no limit"
     , mInitialized(false)
     , mClearingDiskCache(false)
+    , mReporter(nullptr)
 {
+    mReporter = new NetworkDiskCacheReporter(this);
+    NS_RegisterMemoryReporter(mReporter);
 }
 
 nsDiskCacheDevice::~nsDiskCacheDevice()
 {
+    NS_UnregisterMemoryReporter(mReporter);
     Shutdown();
 }
 

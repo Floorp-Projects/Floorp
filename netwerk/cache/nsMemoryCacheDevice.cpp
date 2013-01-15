@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,8 +8,9 @@
 #include "nsMemoryCacheDevice.h"
 #include "nsCacheService.h"
 #include "nsICacheService.h"
-#include "nsIStorageStream.h"
 #include "nsICacheVisitor.h"
+#include "nsIStorageStream.h"
+#include "nsIMemoryReporter.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Telemetry.h"
@@ -26,6 +27,26 @@
 
 const char *gMemoryDeviceID      = "memory";
 
+class NetworkMemoryCacheReporter MOZ_FINAL :
+    public mozilla::MemoryReporterBase
+{
+public:
+    NetworkMemoryCacheReporter(nsMemoryCacheDevice* aDevice)
+      : MemoryReporterBase(
+            "explicit/network/memory-cache",
+            KIND_HEAP,
+            UNITS_BYTES,
+            "Memory used by the network memory cache.")
+      , mDevice(aDevice)
+    {}
+
+private:
+    int64_t Amount() { return mDevice->TotalSize(); }
+
+    nsMemoryCacheDevice* mDevice;
+};
+
+
 nsMemoryCacheDevice::nsMemoryCacheDevice()
     : mInitialized(false),
       mHardLimit(4 * 1024 * 1024),       // default, if no pref
@@ -34,15 +55,20 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
       mInactiveSize(0),
       mEntryCount(0),
       mMaxEntryCount(0),
-      mMaxEntrySize(-1) // -1 means "no limit"
+      mMaxEntrySize(-1), // -1 means "no limit"
+      mReporter(nullptr)
 {
     for (int i=0; i<kQueueCount; ++i)
         PR_INIT_CLIST(&mEvictionList[i]);
+
+    mReporter = new NetworkMemoryCacheReporter(this);
+    NS_RegisterMemoryReporter(mReporter);
 }
 
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
-{    
+{
+    NS_UnregisterMemoryReporter(mReporter);
     Shutdown();
 }
 
