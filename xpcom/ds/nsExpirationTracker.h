@@ -181,7 +181,7 @@ template <class T, uint32_t K> class nsExpirationTracker {
       for (;;) {
         // Objects could have been removed so index could be outside
         // the array
-        index = NS_MIN(index, generation.Length());
+        index = XPCOM_MIN(index, generation.Length());
         if (index == 0)
           break;
         --index;

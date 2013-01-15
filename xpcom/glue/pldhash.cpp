@@ -273,7 +273,7 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
                  "PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) >= 1");
     if (PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) < 1) {
         maxAlpha = (float)
-                   (PL_DHASH_MIN_SIZE - NS_MAX(PL_DHASH_MIN_SIZE / 256, 1))
+                   (PL_DHASH_MIN_SIZE - XPCOM_MAX(PL_DHASH_MIN_SIZE / 256, 1))
                    / PL_DHASH_MIN_SIZE;
     }
 
@@ -286,7 +286,7 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
                  "minAlpha < maxAlpha / 2");
     if (minAlpha >= maxAlpha / 2) {
         size = PL_DHASH_TABLE_SIZE(table);
-        minAlpha = (size * maxAlpha - NS_MAX(size / 256, 1u)) / (2 * size);
+        minAlpha = (size * maxAlpha - XPCOM_MAX(size / 256, 1u)) / (2 * size);
     }
 
     table->maxAlphaFrac = (uint8_t)(maxAlpha * 256);

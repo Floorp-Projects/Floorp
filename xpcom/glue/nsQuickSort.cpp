@@ -164,9 +164,9 @@ loop:	SWAPINIT(a, es);
 	}
 
 	pn = (char *)a + n * es;
-	r = NS_MIN(pa - (char *)a, pb - pa);
+	r = XPCOM_MIN(pa - (char *)a, pb - pa);
 	vecswap(a, pb - r, r);
-	r = NS_MIN<size_t>(pd - pc, pn - pd - es);
+	r = XPCOM_MIN<size_t>(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
 	if ((r = pb - pa) > (int)es)
         NS_QuickSort(a, r / es, es, cmp, data);
