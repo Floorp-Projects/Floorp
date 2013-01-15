@@ -1,0 +1,3 @@
+component {0A3BE523-0F2A-32CC-CCD8-1E5986D5A79D} GPSDGeolocationProvider.js
+contract @mozilla.org/geolocation/gpsd/provider;1 {0A3BE523-0F2A-32CC-CCD8-1E5986D5A79D}
+category geolocation-provider GPSDProvider @mozilla.org/geolocation/gpsd/provider;1
