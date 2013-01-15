@@ -25,6 +25,9 @@ NS_ROUNDUP( const T& a, const T& b )
     return ((a + (b - 1)) / b) * b;
   }
 
+// We use these instead of std::min/max because we can't include the algorithm
+// header in all of XPCOM because the stl wrappers will error out when included
+// in parts of XPCOM. These functions should never be used outside of XPCOM.
 template <class T>
 inline
 const T&
