@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.widget.DateTimePicker;
 
@@ -22,6 +21,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
@@ -124,7 +124,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                     // But we can fallback on the native one.
                     DatePicker input = new DatePicker(GeckoApp.mAppContext);
                     try {
-                        if (!mValue.equals("")) {
+                        if (!TextUtils.isEmpty(mValue)) {
                             GregorianCalendar calendar = new GregorianCalendar();
                             calendar.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(mValue));
                             input.updateDate(calendar.get(Calendar.YEAR),
@@ -145,7 +145,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 input.setIs24HourView(DateFormat.is24HourFormat(GeckoApp.mAppContext));
 
                 GregorianCalendar calendar = new GregorianCalendar();
-                if (!mValue.equals("")) {
+                if (!TextUtils.isEmpty(mValue)) {
                     try {
                         calendar.setTime(new SimpleDateFormat("kk:mm").parse(mValue));
                     } catch (Exception e) { }
@@ -171,7 +171,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 input.setInputType(inputtype);
                 input.setText(mValue);
 
-                if (!mHint.equals("")) {
+                if (!TextUtils.isEmpty(mHint)) {
                     input.setHint(mHint);
                 }
 
@@ -273,16 +273,15 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     public void show(String aTitle, String aText, PromptListItem[] aMenuList, boolean aMultipleSelection) {
         GeckoApp.assertOnUiThread();
 
-        final LayerView layerView = GeckoApp.mAppContext.getLayerView();
         // treat actions that show a dialog as if preventDefault by content to prevent panning
-        layerView.abortPanning();
+        GeckoApp.mAppContext.getLayerView().abortPanning();
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(GeckoApp.mAppContext);
-        if (!aTitle.equals("")) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(GeckoApp.mAppContext);
+        if (!TextUtils.isEmpty(aTitle)) {
             builder.setTitle(aTitle);
         }
 
-        if (!aText.equals("")) {
+        if (!TextUtils.isEmpty(aText)) {
             builder.setMessage(aText);
         }
 
