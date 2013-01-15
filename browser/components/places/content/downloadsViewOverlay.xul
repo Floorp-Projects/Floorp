@@ -35,6 +35,9 @@
 
   <toolbar id="placesToolbar">
     <toolbarbutton id="clearDownloadsButton"
+#ifdef XP_MACOSX
+                   class="tabbable"
+#endif
                    insertbefore="libraryToolbarSpacer"
                    label="&clearDownloadsButton.label;"
                    command="downloadsCmd_clearDownloads"

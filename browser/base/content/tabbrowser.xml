@@ -1649,7 +1649,7 @@
               if (closeWindow &&
                   aCloseWindowFastpath &&
                   this._removingTabs.length == 0 &&
-                  (this._windowIsClosing = window.closeWindow(true)))
+                  (this._windowIsClosing = window.closeWindow(true, window.warnAboutClosingWindow)))
                 return null;
 
               newTab = true;
@@ -1825,7 +1825,7 @@
             }
 
             if (aCloseWindow)
-              this._windowIsClosing = closeWindow(true);
+              this._windowIsClosing = closeWindow(true, window.warnAboutClosingWindow);
           ]]>
         </body>
       </method>

@@ -353,8 +353,8 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
                     other.UsesAutoArrayBuffer(),
                     "One of the arrays should be using its auto buffer.");
 
-  size_type smallerLength = NS_MIN(Length(), other.Length());
-  size_type largerLength = NS_MAX(Length(), other.Length());
+  size_type smallerLength = XPCOM_MIN(Length(), other.Length());
+  size_type largerLength = XPCOM_MAX(Length(), other.Length());
   void *smallerElements, *largerElements;
   if (Length() <= other.Length()) {
     smallerElements = Hdr() + 1;

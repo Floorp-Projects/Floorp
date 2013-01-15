@@ -13,6 +13,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
 #include "prprf.h"
+#include <algorithm>
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -1773,7 +1774,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
 
   if (mDownstreamState == DISCARDING_DATA_FRAME) {
     char trash[4096];
-    uint32_t count = NS_MIN(4096U, mInputFrameDataSize - mInputFrameDataRead);
+    uint32_t count = std::min(4096U, mInputFrameDataSize - mInputFrameDataRead);
 
     if (!count) {
       ResetDownstreamState();
@@ -2078,7 +2079,7 @@ SpdySession3::OnWriteSegment(char *buf,
       return NS_BASE_STREAM_CLOSED;
     }
     
-    count = NS_MIN(count, mInputFrameDataSize - mInputFrameDataRead);
+    count = std::min(count, mInputFrameDataSize - mInputFrameDataRead);
     rv = NetworkRead(mSegmentWriter, buf, count, countWritten);
     if (NS_FAILED(rv))
       return rv;
@@ -2104,7 +2105,7 @@ SpdySession3::OnWriteSegment(char *buf,
       return NS_BASE_STREAM_CLOSED;
     }
       
-    count = NS_MIN(count,
+    count = std::min(count,
                    mFlatHTTPResponseHeaders.Length() -
                    mFlatHTTPResponseHeadersOut);
     memcpy(buf,

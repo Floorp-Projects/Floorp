@@ -1,9 +1,8 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 #ifndef _nsCacheService_h_
 #define _nsCacheService_h_
@@ -66,7 +65,7 @@ class nsCacheService : public nsICacheService
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESERVICE
-    
+
     nsCacheService();
     virtual ~nsCacheService();
 
@@ -130,10 +129,6 @@ public:
     static
     nsCacheService * GlobalInstance()   { return gService; }
 
-    static int64_t   MemoryDeviceSize();
-
-    static int64_t   DiskDeviceHeapSize();
-    
     static nsresult  DoomEntry(nsCacheEntry * entry);
 
     static bool      IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
@@ -316,9 +311,9 @@ private:
      */
 
     static nsCacheService *         gService;  // there can be only one...
-    
+
     nsCacheProfilePrefObserver *    mObserver;
-    
+
     mozilla::Mutex                  mLock;
     mozilla::CondVar                mCondVar;
 
@@ -326,10 +321,10 @@ private:
 
     nsTArray<nsISupports*>          mDoomedObjects;
     nsCOMPtr<nsITimer>              mSmartSizeTimer;
-    
+
     bool                            mInitialized;
     bool                            mClearingEntries;
-    
+
     bool                            mEnableMemoryDevice;
     bool                            mEnableDiskDevice;
     bool                            mEnableOfflineDevice;
@@ -344,7 +339,7 @@ private:
     PRCList                         mDoomedEntries;
 
     // stats
-    
+
     uint32_t                        mTotalEntries;
     uint32_t                        mCacheHits;
     uint32_t                        mCacheMisses;

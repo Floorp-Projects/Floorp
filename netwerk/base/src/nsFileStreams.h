@@ -20,6 +20,7 @@
 #include "prio.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsReadLine.h"
+#include <algorithm>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +199,7 @@ public:
 
 private:
     uint64_t TruncateSize(uint64_t aSize) {
-          return NS_MIN<uint64_t>(mLength - mPosition, aSize);
+          return std::min<uint64_t>(mLength - mPosition, aSize);
     }
 
     uint64_t mStart;

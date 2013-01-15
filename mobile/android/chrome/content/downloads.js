@@ -23,13 +23,10 @@ var Downloads = {
     this._initialized = true;
 
     // Monitor downloads and display alerts
-    var os = Services.obs;
-    os.addObserver(this, "dl-start", true);
-    os.addObserver(this, "dl-failed", true);
-    os.addObserver(this, "dl-done", true);
-    os.addObserver(this, "dl-blocked", true);
-    os.addObserver(this, "dl-dirty", true);
-    os.addObserver(this, "dl-cancel", true);
+    this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    this._progressAlert = new AlertDownloadProgressListener();
+    this._dlmgr.addPrivacyAwareListener(this._progressAlert);
+    Services.obs.addObserver(this, "xpcom-shutdown", true);
   },
 
   openDownload: function dl_openDownload(aFileURI) {
@@ -40,7 +37,7 @@ var Downloads = {
   },
 
   cancelDownload: function dl_cancelDownload(aDownload) {
-    this._dlmgr.cancelDownload(aDownload.id);
+    aDownload.cancel();
     
     let fileURI = aDownload.target.spec;
     let f = this._getLocalFile(fileURI);
@@ -89,30 +86,13 @@ var Downloads = {
   },
 
   observe: function dl_observe(aSubject, aTopic, aData) {
-    let download = aSubject.QueryInterface(Ci.nsIDownload);
-    let msgKey = "";
-    if (aTopic == "dl-start") {
-      msgKey = "alertDownloadsStart2";
-      if (!this._progressAlert) {
-        if (!this._dlmgr)
-          this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-        this._progressAlert = new AlertDownloadProgressListener();
-        this._dlmgr.addListener(this._progressAlert);
-      }
-
-      NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
-    } else if (aTopic == "dl-done") {
-      msgKey = "alertDownloadsDone2";
-    }
-
-    if (msgKey)
-      this.showAlert(download, Strings.browser.GetStringFromName(msgKey), download.displayName);
+    this._dlmgr.removeListener(this._progressAlert);
   },
 
   QueryInterface: function (aIID) {
-    if (!aIID.equals(Ci.nsIObserver) &&
-        !aIID.equals(Ci.nsISupportsWeakReference) &&
-        !aIID.equals(Ci.nsISupports))
+    if (!aIID.equals(Ci.nsISupports) &&
+        !aIID.equals(Ci.nsIObserver) &&
+        !aIID.equals(Ci.nsISupportsWeakReference))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
   }
@@ -136,7 +116,7 @@ AlertDownloadProgressListener.prototype = {
       Downloads.showAlert(aDownload, strings.GetStringFromName("alertDownloadsNoSpace"),
                                      strings.GetStringFromName("alertDownloadsSize"));
 
-      Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager).cancelDownload(aDownload.id);
+      aDownload.cancel();
     }
 
     if (aDownload.percentComplete == -1) {
@@ -152,6 +132,11 @@ AlertDownloadProgressListener.prototype = {
   onDownloadStateChange: function(aState, aDownload) {
     let state = aDownload.state;
     switch (state) {
+      case Ci.nsIDownloadManager.DOWNLOAD_QUEUED:
+        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
+        Downloads.showAlert(aDownload, Strings.browser.GetStringFromName("alertDownloadsStart2"),
+                            aDownload.displayName);
+        break;
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
       case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
       case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL:
@@ -161,6 +146,11 @@ AlertDownloadProgressListener.prototype = {
         let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
         let notificationName = aDownload.target.spec.replace("file:", "download:");
         progressListener.onCancel(notificationName);
+
+        if (state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
+          Downloads.showAlert(aDownload, Strings.browser.GetStringFromName("alertDownloadsDone2"),
+                              aDownload.displayName);
+        }
         break;
       }
     }

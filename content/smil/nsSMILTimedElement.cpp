@@ -26,6 +26,7 @@
 #include "nsString.h"
 #include "mozilla/AutoRestore.h"
 #include "nsCharSeparatedTokenizer.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -1822,7 +1823,7 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
     nsSMILTime activeDur = aEnd.GetMillis() - aBegin.GetMillis();
 
     if (result.IsDefinite()) {
-      result.SetMillis(NS_MIN(result.GetMillis(), activeDur));
+      result.SetMillis(std::min(result.GetMillis(), activeDur));
     } else {
       result.SetMillis(activeDur);
     }
@@ -1847,7 +1848,7 @@ nsSMILTimedElement::GetRepeatDuration() const
     if (mSimpleDur.IsDefinite()) {
       nsSMILTime activeDur =
         nsSMILTime(mRepeatCount * double(mSimpleDur.GetMillis()));
-      result.SetMillis(NS_MIN(activeDur, mRepeatDur.GetMillis()));
+      result.SetMillis(std::min(activeDur, mRepeatDur.GetMillis()));
     } else {
       result = mRepeatDur;
     }
@@ -2186,7 +2187,7 @@ nsSMILTimedElement::GetNextMilestone(nsSMILMilestone& aNextMilestone) const
             (mCurrentRepeatIteration + 1) * mSimpleDur.GetMillis());
       }
       nsSMILTimeValue nextMilestone =
-        NS_MIN(mCurrentInterval->End()->Time(), nextRepeat);
+        std::min(mCurrentInterval->End()->Time(), nextRepeat);
 
       // Check for an early end before that time
       nsSMILInstanceTime* earlyEnd = CheckForEarlyEnd(nextMilestone);

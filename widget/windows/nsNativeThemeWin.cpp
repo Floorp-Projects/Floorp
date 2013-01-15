@@ -34,6 +34,7 @@
 
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
+#include <algorithm>
 
 using namespace mozilla::widget;
 
@@ -180,8 +181,8 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     SIZE itemSize;
     GetThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, NULL, TS_TRUE, &itemSize);
 
-    int width = NS_MAX(itemSize.cx, checkboxBGSize.cx + gutterSize.cx);
-    int height = NS_MAX(itemSize.cy, checkboxBGSize.cy);
+    int width = std::max(itemSize.cx, checkboxBGSize.cx + gutterSize.cx);
+    int height = std::max(itemSize.cy, checkboxBGSize.cy);
     SIZE ret;
     ret.cx = width;
     ret.cy = height;

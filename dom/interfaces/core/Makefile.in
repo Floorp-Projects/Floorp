@@ -20,7 +20,6 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMCharacterData.idl			\
 	nsIDOMComment.idl			\
 	nsIDOMDOMException.idl			\
-	nsIDOMDOMImplementation.idl		\
 	nsIDOMDocument.idl			\
 	nsIDOMDocumentFragment.idl		\
 	nsIDOMDocumentType.idl			\
@@ -37,8 +36,6 @@ XPIDLSRCS =                                     \
 	nsIDOMUserDataHandler.idl		\
 	nsIDOMNSEditableElement.idl		\
 	nsIDOMNodeSelector.idl			\
-	nsIDOMDOMTokenList.idl			\
-	nsIDOMDOMSettableTokenList.idl	\
 	nsIInlineEventHandlers.idl              \
 	$(NULL)
 
