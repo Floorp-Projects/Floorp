@@ -39,13 +39,14 @@ function testConsoleData(aMessageObject) {
 
   is(aMessageObject.level, gLevel, "expected level received");
   ok(aMessageObject.arguments, "we have arguments");
-  is(aMessageObject.arguments.length, gArgs.length, "arguments.length matches");
 
   if (gLevel == "trace") {
-    is(aMessageObject.arguments.toSource(), gArgs.toSource(),
+    is(aMessageObject.arguments.length, 0, "arguments.length matches");
+    is(aMessageObject.stacktrace.toSource(), gArgs.toSource(),
        "stack trace is correct");
   }
   else {
+    is(aMessageObject.arguments.length, gArgs.length, "arguments.length matches");
     gArgs.forEach(function (a, i) {
       is(aMessageObject.arguments[i], a, "correct arg " + i);
     });
@@ -101,13 +102,19 @@ function testConsoleGroup(aMessageObject) {
   ok(aMessageObject.lineNumber >= 45 && aMessageObject.lineNumber <= 47,
      "lineNumber matches");
   if (aMessageObject.level == "groupCollapsed") {
-    ok(aMessageObject.arguments == "a group", "groupCollapsed arguments matches");
+    is(aMessageObject.groupName, "a group", "groupCollapsed groupName matches");
+    is(aMessageObject.arguments[0], "a", "groupCollapsed arguments[0] matches");
+    is(aMessageObject.arguments[1], "group", "groupCollapsed arguments[0] matches");
   }
   else if (aMessageObject.level == "group") {
-    ok(aMessageObject.arguments == "b group", "group arguments matches");
+    is(aMessageObject.groupName, "b group", "group groupName matches");
+    is(aMessageObject.arguments[0], "b", "group arguments[0] matches");
+    is(aMessageObject.arguments[1], "group", "group arguments[1] matches");
   }
   else if (aMessageObject.level == "groupEnd") {
-    ok(Array.prototype.join.call(aMessageObject.arguments, " ") == "b group", "groupEnd arguments matches");
+    let groupName = Array.prototype.join.call(aMessageObject.arguments, " ");
+    is(groupName,"b group", "groupEnd arguments matches");
+    is(aMessageObject.groupName, "b group", "groupEnd groupName matches");
   }
 
   if (aMessageObject.level == "groupEnd") {
@@ -252,7 +259,10 @@ function startTimeTest() {
   };
   gLevel = "time";
   gArgs = [
-    {filename: TEST_URI, lineNumber: 23, functionName: "startTimer"},
+    {filename: TEST_URI, lineNumber: 23, functionName: "startTimer",
+     arguments: ["foo"],
+     timer: { name: "foo" },
+    }
   ];
 
   let button = gWindow.document.getElementById("test-time");
@@ -269,6 +279,12 @@ function testConsoleTime(aMessageObject) {
   is(aMessageObject.filename, gArgs[0].filename, "filename matches");
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
   is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  is(aMessageObject.timer.name, gArgs[0].timer.name, "timer.name matches");
+  ok(aMessageObject.timer.started, "timer.started exists");
+
+  gArgs[0].arguments.forEach(function (a, i) {
+    is(aMessageObject.arguments[i], a, "correct arg " + i);
+  });
 
   startTimeEndTest();
 }
@@ -286,7 +302,10 @@ function startTimeEndTest() {
   };
   gLevel = "timeEnd";
   gArgs = [
-    {filename: TEST_URI, lineNumber: 27, functionName: "stopTimer", arguments: { name: "foo" }},
+    {filename: TEST_URI, lineNumber: 27, functionName: "stopTimer",
+     arguments: ["foo"],
+     timer: { name: "foo" },
+    },
   ];
 
   let button = gWindow.document.getElementById("test-timeEnd");
@@ -305,9 +324,13 @@ function testConsoleTimeEnd(aMessageObject) {
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
   is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
   is(aMessageObject.arguments.length, gArgs[0].arguments.length, "arguments.length matches");
-  is(aMessageObject.arguments.name, gArgs[0].arguments.name, "timer name matches");
-  ok(typeof aMessageObject.arguments.duration == "number", "timer duration is a number");
-  ok(aMessageObject.arguments.duration > 0, "timer duration is positive");
+  is(aMessageObject.timer.name, gArgs[0].timer.name, "timer name matches");
+  is(typeof aMessageObject.timer.duration, "number", "timer duration is a number");
+  ok(aMessageObject.timer.duration > 0, "timer duration is positive");
+
+  gArgs[0].arguments.forEach(function (a, i) {
+    is(aMessageObject.arguments[i], a, "correct arg " + i);
+  });
 
   startEmptyTimerTest();
 }
@@ -335,7 +358,8 @@ function testEmptyTimer(aMessageObject) {
 
   ok(aMessageObject.level == "time" || aMessageObject.level == "timeEnd",
      "expected level received");
-  ok(!aMessageObject.arguments, "we don't have arguments");
+  is(aMessageObject.arguments.length, 0, "we don't have arguments");
+  ok(!aMessageObject.timer, "we don't have a timer");
 
   is(aMessageObject.functionName, "namelessTimer", "functionName matches");
   ok(aMessageObject.lineNumber == 31 || aMessageObject.lineNumber == 32,
