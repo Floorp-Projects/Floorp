@@ -188,12 +188,12 @@ typedef nsAutoString nsVoidableString;
 
 inline int32_t MinInt(int32_t x, int32_t y)
   {
-    return NS_MIN(x, y);
+    return XPCOM_MIN(x, y);
   }
 
 inline int32_t MaxInt(int32_t x, int32_t y)
   {
-    return NS_MAX(x, y);
+    return XPCOM_MAX(x, y);
   }
 
 /**

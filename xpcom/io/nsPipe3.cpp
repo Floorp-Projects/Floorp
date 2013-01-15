@@ -935,7 +935,7 @@ nsPipeInputStream::Search(const char *forString,
         len2 = limit2 - cursor2;
 
         // check if the string is straddling the next buffer segment
-        uint32_t lim = NS_MIN(strLen, len2 + 1);
+        uint32_t lim = XPCOM_MIN(strLen, len2 + 1);
         for (i = 0; i < lim; ++i) {
             uint32_t strPart1Len = strLen - i - 1;
             uint32_t strPart2Len = strLen - strPart1Len;

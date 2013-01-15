@@ -18,7 +18,7 @@ Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_Cha
 
     size_type lLength = leftIter.size_forward();
     size_type rLength = rightIter.size_forward();
-    size_type lengthToCompare = NS_MIN(lLength, rLength);
+    size_type lengthToCompare = XPCOM_MIN(lLength, rLength);
 
     int result;
     if ( (result = comp(leftIter.get(), rightIter.get(), lengthToCompare, lengthToCompare)) == 0 )

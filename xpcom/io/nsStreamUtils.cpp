@@ -629,7 +629,7 @@ NS_ConsumeStream(nsIInputStream *stream, uint32_t maxCount, nsACString &result)
         if (avail64 == 0)
             break;
 
-        uint32_t avail = (uint32_t)NS_MIN<uint64_t>(avail64, maxCount);
+        uint32_t avail = (uint32_t)XPCOM_MIN<uint64_t>(avail64, maxCount);
 
         // resize result buffer
         uint32_t length = result.Length();
