@@ -193,7 +193,7 @@ public:
     }
     for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f))
     {
-      if (f->IsTransformed()) {
+      if (f == mReferenceFrame || f->IsTransformed()) {
         mCachedOffsetFrame = aFrame;
         mCachedReferenceFrame = f;
         mCachedOffset = aFrame->GetOffsetToCrossDoc(f);

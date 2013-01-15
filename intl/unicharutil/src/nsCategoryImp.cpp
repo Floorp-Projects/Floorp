@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nscore.h"
-#include "pratom.h"
-#include "nsUUDll.h"
 #include "nsISupports.h"
 #include "nsCategoryImp.h"
 #include "nsUnicodeProperties.h"

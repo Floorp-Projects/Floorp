@@ -1321,8 +1321,16 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * Return the active element on the page
+   */
+  getActiveElement: function MDA_getActiveElement(){
+    let command_id = this.command_id = this.getCommandId();
+    this.sendAsync("getActiveElement", {command_id: command_id});
+  },
+
+  /**
    * Send click event to element
-   * 
+   *
    * @param object aRequest
    *        'element' member holds the reference id to
    *        the element that will be clicked
@@ -2011,7 +2019,8 @@ MarionetteDriverActor.prototype.requestTypes = {
   "addCookie": MarionetteDriverActor.prototype.addCookie,
   "getAllCookies": MarionetteDriverActor.prototype.getAllCookies,
   "deleteAllCookies": MarionetteDriverActor.prototype.deleteAllCookies,
-  "deleteCookie": MarionetteDriverActor.prototype.deleteCookie
+  "deleteCookie": MarionetteDriverActor.prototype.deleteCookie,
+  "getActiveElement": MarionetteDriverActor.prototype.getActiveElement
 };
 
 /**

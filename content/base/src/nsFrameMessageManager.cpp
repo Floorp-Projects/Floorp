@@ -446,6 +446,9 @@ nsFrameMessageManager::AssertProcessInternal(ProcessCheckerType aType,
     case PROCESS_CHECKER_MANIFEST_URL:
       *aValid = mCallback->CheckManifestURL(aCapability);
       break;
+    case ASSERT_APP_HAS_PERMISSION:
+      *aValid = mCallback->CheckAppHasPermission(aCapability);
+      break;
     default:
       break;
   }
@@ -468,6 +471,15 @@ nsFrameMessageManager::AssertContainApp(const nsAString& aManifestURL,
   return AssertProcessInternal(PROCESS_CHECKER_MANIFEST_URL,
                                aManifestURL,
                                aHasManifestURL);
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::AssertAppHasPermission(const nsAString& aPermission,
+                                              bool* aHasPermission)
+{
+  return AssertProcessInternal(ASSERT_APP_HAS_PERMISSION,
+                               aPermission,
+                               aHasPermission);
 }
 
 class MMListenerRemover
@@ -1130,6 +1142,12 @@ public:
   }
 
   bool CheckManifestURL(const nsAString& aManifestURL)
+  {
+    // In a single-process scenario, the child always has all capabilities.
+    return true;
+  }
+
+  bool CheckAppHasPermission(const nsAString& aPermission)
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;

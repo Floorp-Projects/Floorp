@@ -8,6 +8,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 // Enable loading extensions from the user scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
                           AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);
+// Enable installing distribution add-ons
+Services.prefs.setBoolPref("extensions.installDistroAddons", true);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -17,6 +19,10 @@ const userExtDir = gProfD.clone();
 userExtDir.append("extensions2");
 userExtDir.append(gAppInfo.ID);
 registerDirectory("XREUSysExt", userExtDir.parent);
+const distroDir = gProfD.clone();
+distroDir.append("distribution");
+distroDir.append("extensions");
+registerDirectory("XREAppDist", distroDir.parent);
 
 var chrome = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
   .getService(Components.interfaces.nsIXULChromeRegistry);
@@ -41,6 +47,8 @@ function run_test() {
 
 // Tests that installing doesn't require a restart
 function run_test_1() {
+  do_check_locale_not_registered("test-langpack");
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
@@ -194,6 +202,8 @@ function run_test_4() {
 // Tests that a restart shuts down and restarts the add-on
 function run_test_5() {
   shutdownManager();
+  // check chrome reg that language pack is not registered
+  do_check_locale_not_registered("test-langpack");
   startupManager(false);
   // check chrome reg that language pack is registered
   do_check_eq(chrome.getSelectedLocale("test-langpack"), "x-testing");
@@ -241,7 +251,78 @@ function check_test_7() {
     AddonManager.getAddonByID("langpack-x-testing@tests.mozilla.org", function(newb1) {
       do_check_eq(newb1, null);
 
-      do_test_finished();
+      run_test_8();
     });
+  });
+}
+
+// Tests that a locale detected in the profile starts working immediately
+function run_test_8() {
+  shutdownManager();
+
+  manuallyInstall(do_get_addon("test_langpack"), profileDir, "langpack-x-testing@tests.mozilla.org");
+
+  startupManager(false);
+
+  AddonManager.getAddonByID("langpack-x-testing@tests.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_false(b1.appDisabled);
+    do_check_false(b1.userDisabled);
+    do_check_true(b1.isActive);
+    // check chrome reg that language pack is registered
+    do_check_eq(chrome.getSelectedLocale("test-langpack"), "x-testing");
+    do_check_true(b1.hasResource("install.rdf"));
+    do_check_false(b1.hasResource("bootstrap.js"));
+
+    shutdownManager();
+    // check chrome reg that language pack is not registered
+    do_check_locale_not_registered("test-langpack");
+    startupManager(false);
+    // check chrome reg that language pack is registered
+    do_check_eq(chrome.getSelectedLocale("test-langpack"), "x-testing");
+
+    AddonManager.getAddonByID("langpack-x-testing@tests.mozilla.org", function(b2) {
+      prepare_test({
+        "langpack-x-testing@tests.mozilla.org": [
+          ["onUninstalling", false],
+          "onUninstalled"
+        ]
+      });
+
+      b2.uninstall();
+      ensure_test_completed();
+      run_test_9();
+    });
+  });
+}
+
+// Tests that a locale from distribution/extensions gets installed and starts
+// working immediately
+function run_test_9() {
+  shutdownManager();
+  manuallyInstall(do_get_addon("test_langpack"), distroDir, "langpack-x-testing@tests.mozilla.org");
+  gAppInfo.version = "2.0";
+  startupManager(true);
+
+  AddonManager.getAddonByID("langpack-x-testing@tests.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_false(b1.appDisabled);
+    do_check_false(b1.userDisabled);
+    do_check_true(b1.isActive);
+    // check chrome reg that language pack is registered
+    do_check_eq(chrome.getSelectedLocale("test-langpack"), "x-testing");
+    do_check_true(b1.hasResource("install.rdf"));
+    do_check_false(b1.hasResource("bootstrap.js"));
+
+    shutdownManager();
+    // check chrome reg that language pack is not registered
+    do_check_locale_not_registered("test-langpack");
+    startupManager(false);
+    // check chrome reg that language pack is registered
+    do_check_eq(chrome.getSelectedLocale("test-langpack"), "x-testing");
+
+    do_test_finished();
   });
 }

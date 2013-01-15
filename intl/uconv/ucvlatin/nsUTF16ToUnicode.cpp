@@ -5,10 +5,8 @@
 
 #include "nsUCConstructors.h"
 #include "nsUTF16ToUnicode.h"
-#include "nsUCvLatinDll.h"
 #include "nsCharTraits.h"
 #include <string.h>
-#include "prtypes.h"
 
 enum {
   STATE_NORMAL = 0,
