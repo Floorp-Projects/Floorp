@@ -97,6 +97,11 @@ static nsresult GetResident(int64_t *n)
     return GetProcSelfStatmField(1, n);
 }
 
+static nsresult GetResidentFast(int64_t *n)
+{
+    return GetResident(n);
+}
+
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__)
 
@@ -172,6 +177,11 @@ static nsresult GetResident(int64_t *n)
     return rv;
 }
 
+static nsresult GetResidentFast(int64_t *n)
+{
+    return GetResident(n);
+}
+
 #elif defined(SOLARIS)
 
 #include <procfs.h>
@@ -242,6 +252,11 @@ static nsresult GetResident(int64_t *n)
     return NS_OK;
 }
 
+static nsresult GetResidentFast(int64_t *n)
+{
+    return GetResident(n);
+}
+
 #elif defined(XP_MACOSX)
 
 #include <mach/mach_init.h>
@@ -269,17 +284,17 @@ static nsresult GetVsize(int64_t *n)
     return NS_OK;
 }
 
-static nsresult GetResident(int64_t *n)
+// If we're using jemalloc on Mac, we need to instruct jemalloc to purge the
+// pages it has madvise(MADV_FREE)'d before we read our RSS in order to get
+// an accurate result.  The OS will take away MADV_FREE'd pages when there's
+// memory pressure, so ideally, they shouldn't count against our RSS.
+//
+// Purging these pages can take a long time for some users (see bug 789975),
+// so we provide the option to get the RSS without purging first.
+static nsresult GetResident(int64_t *n, bool aDoPurge)
 {
 #ifdef HAVE_JEMALLOC_STATS
-    // If we're using jemalloc on Mac, we need to instruct jemalloc to purge
-    // the pages it has madvise(MADV_FREE)'d before we read our RSS.  The OS
-    // will take away MADV_FREE'd pages when there's memory pressure, so they
-    // shouldn't count against our RSS.
-    //
-    // Purging these pages shouldn't take more than 10ms or so, but we want to
-    // keep an eye on it since GetResident() is called on each Telemetry ping.
-    {
+    if (aDoPurge) {
       Telemetry::AutoTimer<Telemetry::MEMORY_FREE_PURGED_PAGES_MS> timer;
       jemalloc_purge_freed_pages();
     }
@@ -291,6 +306,16 @@ static nsresult GetResident(int64_t *n)
 
     *n = ti.resident_size;
     return NS_OK;
+}
+
+static nsresult GetResidentFast(int64_t *n)
+{
+    return GetResident(n, /* doPurge = */ false);
+}
+
+static nsresult GetResident(int64_t *n)
+{
+    return GetResident(n, /* doPurge = */ true);
 }
 
 #elif defined(XP_WIN)
@@ -323,6 +348,11 @@ static nsresult GetResident(int64_t *n)
 
     *n = pmc.WorkingSetSize;
     return NS_OK;
+}
+
+static nsresult GetResidentFast(int64_t *n)
+{
+    return GetResident(n);
 }
 
 #define HAVE_PRIVATE_REPORTER
@@ -358,13 +388,11 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Vsize,
     KIND_OTHER,
     UNITS_BYTES,
     GetVsize,
-    "Memory mapped by the process, including code and data segments, the "
-    "heap, thread stacks, memory explicitly mapped by the process via mmap "
-    "and similar operations, and memory shared with other processes. "
-    "This is the vsize figure as reported by 'top' and 'ps'.  This figure is of "
-    "limited use on Mac, where processes share huge amounts of memory with one "
-    "another.  But even on other operating systems, 'resident' is a much better "
-    "measure of the memory resources used by the process.")
+    "This is the same measurement as 'resident', but it tries to be as fast as "
+    "possible at the expense of accuracy.  On most platforms this is identical to "
+    "the 'resident' measurement, but on Mac it may over-count.  You should use "
+    "'resident-fast' where you care about latency of collection (e.g. in "
+    "telemetry).  Otherwise you should use 'resident'.")
 
 NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Resident,
     "resident",
@@ -377,6 +405,18 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Resident,
     "but it depends both on other processes being run and details of the OS "
     "kernel and so is best used for comparing the memory usage of a single "
     "process at different points in time.")
+
+NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(ResidentFast,
+    "resident-fast",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetResidentFast,
+    "This reporter measures the same value as the resident memory reporter, but "
+    "it tries to be as fast as possible, at the expense of accuracy.  On most "
+    "platforms this is identical to the vanilla resident reporter, but on MacOS"
+    "in particular, this reporter may over-count our RSS.  You should use "
+    "resident-fast where you care about latency of collection (e.g. in "
+    "telemetry).  Otherwise you should use the regular resident reporter.")
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
 #ifdef HAVE_PAGE_FAULT_REPORTERS
@@ -665,6 +705,7 @@ nsMemoryReporterManager::Init()
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
     REGISTER(Vsize);
     REGISTER(Resident);
+    REGISTER(ResidentFast);
 #endif
 
 #ifdef HAVE_PAGE_FAULT_REPORTERS
