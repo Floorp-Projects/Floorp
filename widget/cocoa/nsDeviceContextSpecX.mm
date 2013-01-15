@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDeviceContextSpecX.h"
-#include "nsObjCExceptions.h"
 
 #include "nsCRT.h"
 #include <unistd.h>
@@ -15,6 +14,9 @@
 
 #include "gfxQuartzSurface.h"
 #include "gfxImageSurface.h"
+
+// This must be the last include:
+#include "nsObjCExceptions.h"
 
 nsDeviceContextSpecX::nsDeviceContextSpecX()
 : mPrintSession(NULL)
