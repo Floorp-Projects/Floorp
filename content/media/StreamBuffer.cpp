@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StreamBuffer.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -14,7 +15,7 @@ StreamBuffer::GetEnd() const
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (!track->IsEnded()) {
-      t = NS_MIN(t, track->GetEndTimeRoundDown());
+      t = std::min(t, track->GetEndTimeRoundDown());
     }
   }
   return t;
@@ -52,7 +53,7 @@ StreamBuffer::ForgetUpTo(StreamTime aTime)
       --i;
       continue;
     }
-    TrackTicks forgetTo = NS_MIN(track->GetEnd() - 1, track->TimeToTicksRoundDown(forget));
+    TrackTicks forgetTo = std::min(track->GetEnd() - 1, track->TimeToTicksRoundDown(forget));
     track->ForgetUpTo(forgetTo);
   }
 }

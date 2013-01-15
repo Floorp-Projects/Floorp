@@ -24,6 +24,7 @@
 #include "nsChannelProperties.h"
 #include "prio.h"
 #include "prprf.h"
+#include <algorithm>
 
 // Default values used to initialize a nsIncrementalDownload object.
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
@@ -676,7 +677,7 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
 {
   while (count) {
     uint32_t space = mChunkSize - mChunkLen;
-    uint32_t n, len = NS_MIN(space, count);
+    uint32_t n, len = std::min(space, count);
 
     nsresult rv = input->Read(mChunk + mChunkLen, len, &n);
     if (NS_FAILED(rv))

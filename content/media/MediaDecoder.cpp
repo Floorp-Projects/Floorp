@@ -22,6 +22,7 @@
 #include "mozilla/Preferences.h"
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
+#include <algorithm>
 
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
@@ -899,12 +900,12 @@ void MediaDecoder::UpdatePlaybackRate()
   uint32_t rate = uint32_t(ComputePlaybackRate(&reliable));
   if (reliable) {
     // Avoid passing a zero rate
-    rate = NS_MAX(rate, 1u);
+    rate = std::max(rate, 1u);
   }
   else {
     // Set a minimum rate of 10,000 bytes per second ... sometimes we just
     // don't have good data
-    rate = NS_MAX(rate, 10000u);
+    rate = std::max(rate, 10000u);
   }
   mResource->SetPlaybackRate(rate);
 }
@@ -1332,7 +1333,7 @@ void MediaDecoder::MoveLoadsToBackground()
 void MediaDecoder::UpdatePlaybackOffset(int64_t aOffset)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mPlaybackPosition = NS_MAX(aOffset, mPlaybackPosition);
+  mPlaybackPosition = std::max(aOffset, mPlaybackPosition);
 }
 
 bool MediaDecoder::OnStateMachineThread() const

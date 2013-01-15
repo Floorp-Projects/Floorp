@@ -10,6 +10,7 @@
 #include "prprf.h"
 #include "prtime.h"
 #include "nsCRT.h"
+#include <algorithm>
 
 //-----------------------------------------------------------------------------
 // nsHttpResponseHead <public>
@@ -235,7 +236,7 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
 
     // Compute corrected received age
     if (NS_SUCCEEDED(GetAgeValue(&ageValue)))
-        *result = NS_MAX(*result, ageValue);
+        *result = std::max(*result, ageValue);
 
     NS_ASSERTION(now >= requestTime, "bogus request time");
 

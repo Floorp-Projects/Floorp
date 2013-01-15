@@ -12,6 +12,7 @@
 #include "mozilla/ModuleUtils.h"
 
 #include "nsIClassInfoImpl.h"
+#include <algorithm>
 
 // The minimum number of bytes that are needed to attempt to sniff an mp4 file.
 static const unsigned MP4_MIN_BYTES_COUNT = 12;
@@ -86,7 +87,7 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
     }
   }
 
-  const uint32_t clampedLength = NS_MIN(aLength, MAX_BYTES_SNIFFED);
+  const uint32_t clampedLength = std::min(aLength, MAX_BYTES_SNIFFED);
 
   for (uint32_t i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
     const nsMediaSnifferEntry& currentEntry = sSnifferEntries[i];

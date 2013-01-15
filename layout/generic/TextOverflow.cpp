@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextOverflow.h"
+#include <algorithm>
 
 // Please maintain alphabetical order below
 #include "nsBlockFrame.h"
@@ -120,13 +121,13 @@ InflateLeft(nsRect* aRect, nscoord aDelta)
 {
   nscoord xmost = aRect->XMost();
   aRect->x -= aDelta;
-  aRect->width = NS_MAX(xmost - aRect->x, 0);
+  aRect->width = std::max(xmost - aRect->x, 0);
 }
 
 static void
 InflateRight(nsRect* aRect, nscoord aDelta)
 {
-  aRect->width = NS_MAX(aRect->width + aDelta, 0);
+  aRect->width = std::max(aRect->width + aDelta, 0);
 }
 
 static bool
@@ -339,9 +340,9 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
 {
   nsRect borderRect(aFrame->GetOffsetTo(mBlock), aFrame->GetSize());
   nscoord leftOverlap =
-    NS_MAX(aInsideMarkersArea.x - borderRect.x, 0);
+    std::max(aInsideMarkersArea.x - borderRect.x, 0);
   nscoord rightOverlap =
-    NS_MAX(borderRect.XMost() - aInsideMarkersArea.XMost(), 0);
+    std::max(borderRect.XMost() - aInsideMarkersArea.XMost(), 0);
   bool insideLeftEdge = aInsideMarkersArea.x <= borderRect.XMost();
   bool insideRightEdge = borderRect.x <= aInsideMarkersArea.XMost();
 

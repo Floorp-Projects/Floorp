@@ -14,6 +14,7 @@
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 #include "mozilla/CheckedInt.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -198,7 +199,7 @@ bool WaveReader::DecodeAudioData()
   NS_ASSERTION(remaining >= 0, "Current wave position is greater than wave file length");
 
   static const int64_t BLOCK_SIZE = 4096;
-  int64_t readSize = NS_MIN(BLOCK_SIZE, remaining);
+  int64_t readSize = std::min(BLOCK_SIZE, remaining);
   int64_t frames = readSize / mFrameSize;
 
   PR_STATIC_ASSERT(uint64_t(BLOCK_SIZE) < UINT_MAX / sizeof(AudioDataValue) / MAX_CHANNELS);
@@ -262,7 +263,7 @@ nsresult WaveReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   double d = BytesToTime(GetDataLength());
   NS_ASSERTION(d < INT64_MAX / USECS_PER_S, "Duration overflow"); 
   int64_t duration = static_cast<int64_t>(d * USECS_PER_S);
-  double seekTime = NS_MIN(aTarget, duration) / static_cast<double>(USECS_PER_S);
+  double seekTime = std::min(aTarget, duration) / static_cast<double>(USECS_PER_S);
   int64_t position = RoundDownToFrame(static_cast<int64_t>(TimeToBytes(seekTime)));
   NS_ASSERTION(INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
@@ -494,8 +495,8 @@ WaveReader::GetDataLength()
   // the content length rather than the expected PCM data length.
   int64_t streamLength = mDecoder->GetResource()->GetLength();
   if (streamLength >= 0) {
-    int64_t dataLength = NS_MAX<int64_t>(0, streamLength - mWavePCMOffset);
-    length = NS_MIN(dataLength, length);
+    int64_t dataLength = std::max<int64_t>(0, streamLength - mWavePCMOffset);
+    length = std::min(dataLength, length);
   }
   return length;
 }
@@ -664,7 +665,7 @@ WaveReader::LoadAllChunks(nsAutoPtr<nsHTMLMediaElement::MetadataTags> &aTags)
     PR_STATIC_ASSERT(uint64_t(MAX_CHUNK_SIZE) < UINT_MAX / sizeof(char));
     nsAutoArrayPtr<char> chunk(new char[MAX_CHUNK_SIZE]);
     while (forward.value() > 0) {
-      int64_t size = NS_MIN(forward.value(), MAX_CHUNK_SIZE);
+      int64_t size = std::min(forward.value(), MAX_CHUNK_SIZE);
       if (!ReadAll(chunk.get(), size)) {
         return false;
       }

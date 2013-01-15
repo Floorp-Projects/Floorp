@@ -27,6 +27,7 @@
 #include "nsIMEStateManager.h"
 #include "nsIObjectFrame.h"
 #include "mozilla/dom/Element.h"
+#include <algorithm>
 
 using namespace mozilla::dom;
 
@@ -186,7 +187,7 @@ static uint32_t CountNewlinesInXPLength(nsIContent* aContent,
   NS_ABORT_IF_FALSE(
     (aXPLength == UINT32_MAX || aXPLength <= text->GetLength()),
     "aXPLength is out-of-bounds");
-  const uint32_t length = NS_MIN(aXPLength, text->GetLength());
+  const uint32_t length = std::min(aXPLength, text->GetLength());
   uint32_t newlines = 0;
   for (uint32_t i = 0; i < length; ++i) {
     if (text->CharAt(i) == '\n') {
@@ -247,7 +248,7 @@ nsContentEventHandler::GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLe
     const nsTextFragment* text = aContent->GetText();
     if (!text)
       return 0;
-    uint32_t length = NS_MIN(text->GetLength(), aMaxLength);
+    uint32_t length = std::min(text->GetLength(), aMaxLength);
     return length + textLengthDifference;
   } else if (IsContentBR(aContent)) {
 #if defined(XP_WIN)
@@ -1010,7 +1011,7 @@ static void AdjustRangeForSelection(nsIContent* aRoot,
     brContent = node->GetChildAt(--offset - 1);
   }
   *aNode = node;
-  *aOffset = NS_MAX(offset, 0);
+  *aOffset = std::max(offset, 0);
 }
 
 nsresult

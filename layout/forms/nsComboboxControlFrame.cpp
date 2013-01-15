@@ -55,6 +55,7 @@
 #include "mozilla/Preferences.h"
 #include "nsContentList.h"
 #include "mozilla/Likely.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -504,7 +505,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   nscoord forcedWidth = aReflowState.ComputedWidth() +
     aReflowState.mComputedBorderPadding.LeftRight() -
     kidReflowState.mComputedBorderPadding.LeftRight();
-  kidReflowState.SetComputedWidth(NS_MAX(kidReflowState.ComputedWidth(),
+  kidReflowState.SetComputedWidth(std::max(kidReflowState.ComputedWidth(),
                                          forcedWidth));
 
   // ensure we start off hidden
@@ -692,7 +693,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   }
 
   nsSize dropdownSize = mDropdownFrame->GetSize();
-  nscoord height = NS_MAX(above, below);
+  nscoord height = std::max(above, below);
   nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
   if (height < dropdownSize.height) {
     if (lcf->GetNumDisplayRows() > 1) {
@@ -802,7 +803,7 @@ nsComboboxControlFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
                                                      scrollbarWidth,
                                                      nscoord_MAX);
 
-    displayWidth = NS_MAX(dropdownContentWidth, displayWidth);
+    displayWidth = std::max(dropdownContentWidth, displayWidth);
   }
 
   // add room for the dropmarker button if there is one

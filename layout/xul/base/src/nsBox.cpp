@@ -20,6 +20,7 @@
 #include "nsIServiceManager.h"
 #include "nsBoxLayout.h"
 #include "FrameLayerBuilder.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -914,8 +915,8 @@ nsBox::BoundsCheck(nscoord aMin, nscoord aPref, nscoord aMax)
 nsSize
 nsBox::BoundsCheckMinMax(const nsSize& aMinSize, const nsSize& aMaxSize)
 {
-  return nsSize(NS_MAX(aMaxSize.width, aMinSize.width),
-                NS_MAX(aMaxSize.height, aMinSize.height));
+  return nsSize(std::max(aMaxSize.width, aMinSize.width),
+                std::max(aMaxSize.height, aMinSize.height));
 }
 
 nsSize

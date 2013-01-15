@@ -20,6 +20,7 @@
 #include "MediaResource.h"
 #include "DASHRepDecoder.h"
 #include "WebMReader.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -101,12 +102,12 @@ DASHRepDecoder::Load(MediaResource* aResource,
   // delta between it and the INIT byte ranges is less than
   // |SEEK_VS_READ_THRESHOLD|. To get around this, request all metadata bytes
   // now so |MediaCache| can assume the bytes are en route.
-  int64_t delta = NS_MAX(mIndexByteRange.mStart, mInitByteRange.mStart)
-                - NS_MIN(mIndexByteRange.mEnd, mInitByteRange.mEnd);
+  int64_t delta = std::max(mIndexByteRange.mStart, mInitByteRange.mStart)
+                - std::min(mIndexByteRange.mEnd, mInitByteRange.mEnd);
   MediaByteRange byteRange;
   if (delta <= SEEK_VS_READ_THRESHOLD) {
-    byteRange.mStart = NS_MIN(mIndexByteRange.mStart, mInitByteRange.mStart);
-    byteRange.mEnd = NS_MAX(mIndexByteRange.mEnd, mInitByteRange.mEnd);
+    byteRange.mStart = std::min(mIndexByteRange.mStart, mInitByteRange.mStart);
+    byteRange.mEnd = std::max(mIndexByteRange.mEnd, mInitByteRange.mEnd);
     // Loading everything in one chunk .
     mMetadataChunkCount = 1;
   } else {

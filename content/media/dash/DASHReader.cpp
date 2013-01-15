@@ -17,6 +17,7 @@
 #include "AbstractMediaDecoder.h"
 #include "DASHReader.h"
 #include "DASHDecoder.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -421,7 +422,7 @@ DASHReader::FindStartTime(int64_t& aOutStartTime)
     }
   }
 
-  int64_t startTime = NS_MIN(videoStartTime, audioStartTime);
+  int64_t startTime = std::min(videoStartTime, audioStartTime);
   if (startTime != INT64_MAX) {
     aOutStartTime = startTime;
   }

@@ -7,6 +7,7 @@
 #include "mozilla/XPCOM.h"
 #include "FileBlockCache.h"
 #include "VideoUtils.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -247,7 +248,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
   while (bytesToRead > 0) {
     int32_t blockIndex = static_cast<int32_t>(offset / BLOCK_SIZE);
     int32_t start = offset % BLOCK_SIZE;
-    int32_t amount = NS_MIN(BLOCK_SIZE - start, bytesToRead);
+    int32_t amount = std::min(BLOCK_SIZE - start, bytesToRead);
 
     // If the block is not yet written to file, we can just read from
     // the memory buffer, otherwise we need to read from file.
@@ -298,7 +299,7 @@ nsresult FileBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlock
   if (!mIsOpen)
     return NS_ERROR_FAILURE;
 
-  mBlockChanges.EnsureLengthAtLeast(NS_MAX(aSourceBlockIndex, aDestBlockIndex) + 1);
+  mBlockChanges.EnsureLengthAtLeast(std::max(aSourceBlockIndex, aDestBlockIndex) + 1);
 
   // The source block's contents may be the destination of another pending
   // move, which in turn can be the destination of another pending move,

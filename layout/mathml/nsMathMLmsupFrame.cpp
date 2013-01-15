@@ -10,6 +10,7 @@
 #include "nsStyleConsts.h"
 
 #include "nsMathMLmsupFrame.h"
+#include <algorithm>
 
 //
 // <msup> -- attach a superscript to a base - implementation
@@ -95,7 +96,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
 {
   // force the scriptSpace to be at least 1 pixel 
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  aScriptSpace = NS_MAX(onePixel, aScriptSpace);
+  aScriptSpace = std::max(onePixel, aScriptSpace);
 
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -153,7 +154,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
     float scaler2 = ((float) supScriptShift2) / supScriptShift1;
     float scaler3 = ((float) supScriptShift3) / supScriptShift1;
     supScriptShift1 = 
-      NS_MAX(supScriptShift1, aUserSupScriptShift);
+      std::max(supScriptShift1, aUserSupScriptShift);
     supScriptShift2 = NSToCoordRound(scaler2 * supScriptShift1);
     supScriptShift3 = NSToCoordRound(scaler3 * supScriptShift1);
   }
@@ -181,14 +182,14 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   // get actual supscriptshift to be used
   // Rule 18c, App. G, TeXbook
   nscoord actualSupScriptShift = 
-    NS_MAX(minSupScriptShift,NS_MAX(supScriptShift,minShiftFromXHeight));
+    std::max(minSupScriptShift,std::max(supScriptShift,minShiftFromXHeight));
 
   // bounding box
   nsBoundingMetrics boundingMetrics;
   boundingMetrics.ascent =
-    NS_MAX(bmBase.ascent, (bmSupScript.ascent + actualSupScriptShift));
+    std::max(bmBase.ascent, (bmSupScript.ascent + actualSupScriptShift));
   boundingMetrics.descent =
-    NS_MAX(bmBase.descent, (bmSupScript.descent - actualSupScriptShift));
+    std::max(bmBase.descent, (bmSupScript.descent - actualSupScriptShift));
 
   // leave aScriptSpace after superscript
   // add italicCorrection between base and superscript
@@ -204,9 +205,9 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
 
   // reflow metrics
   aDesiredSize.ascent =
-    NS_MAX(baseSize.ascent, (supScriptSize.ascent + actualSupScriptShift));
+    std::max(baseSize.ascent, (supScriptSize.ascent + actualSupScriptShift));
   aDesiredSize.height = aDesiredSize.ascent +
-    NS_MAX(baseSize.height - baseSize.ascent,
+    std::max(baseSize.height - baseSize.ascent,
            (supScriptSize.height - supScriptSize.ascent - actualSupScriptShift));
   aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;

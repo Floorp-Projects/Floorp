@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 #include "WebGLTexture.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -81,8 +82,8 @@ WebGLTexture::DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(size_t face) c
         const ImageInfo& actual = ImageInfoAt(level, face);
         if (actual != expected)
             return false;
-        expected.mWidth = NS_MAX(1, expected.mWidth >> 1);
-        expected.mHeight = NS_MAX(1, expected.mHeight >> 1);
+        expected.mWidth = std::max(1, expected.mWidth >> 1);
+        expected.mHeight = std::max(1, expected.mHeight >> 1);
 
         // if the current level has size 1x1, we can stop here: the spec doesn't seem to forbid the existence
         // of extra useless levels.
@@ -172,7 +173,7 @@ WebGLTexture::SetCustomMipmap() {
         ImageInfo imageInfo = ImageInfoAt(0, 0);
         NS_ASSERTION(imageInfo.IsPowerOfTwo(), "this texture is NPOT, so how could GenerateMipmap() ever accept it?");
 
-        WebGLsizei size = NS_MAX(imageInfo.mWidth, imageInfo.mHeight);
+        WebGLsizei size = std::max(imageInfo.mWidth, imageInfo.mHeight);
 
         // so, the size is a power of two, let's find its log in base 2.
         size_t maxLevel = 0;

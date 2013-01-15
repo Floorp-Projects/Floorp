@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "plstr.h"
 #include "prprf.h"
+#include <algorithm>
 
 #ifndef USE_CREATE_INSTANCE
 #include "nsICacheService.h"
@@ -104,7 +105,7 @@ TestListener::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
     uint32_t nread = 0;
 
     while (count) {
-        uint32_t amount = NS_MIN<uint32_t>(count, sizeof(buf));
+        uint32_t amount = std::min<uint32_t>(count, sizeof(buf));
 
         rv = is->Read(buf, amount, &nread);
         if (NS_FAILED(rv)) return rv;

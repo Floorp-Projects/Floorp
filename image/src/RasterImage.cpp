@@ -35,6 +35,7 @@
 #include "mozilla/gfx/Scale.h"
 
 #include "sampler.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::image;
@@ -2321,8 +2322,8 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
 
   if (aSrc->GetIsPaletted()) {
     // Larger than the destination frame, clip it
-    int32_t width = NS_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
-    int32_t height = NS_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
+    int32_t width = std::min(aSrcRect.width, dstRect.width - aSrcRect.x);
+    int32_t height = std::min(aSrcRect.height, dstRect.height - aSrcRect.y);
 
     // The clipped image must now fully fit within destination image frame
     NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
@@ -3195,7 +3196,7 @@ RasterImage::DecodeSomeData(uint32_t aMaxBytes)
 
 
   // write the proper amount of data
-  uint32_t bytesToDecode = NS_MIN(aMaxBytes,
+  uint32_t bytesToDecode = std::min(aMaxBytes,
                                   mSourceData.Length() - mBytesDecoded);
   nsresult rv = WriteToDecoder(mSourceData.Elements() + mBytesDecoded,
                                bytesToDecode);

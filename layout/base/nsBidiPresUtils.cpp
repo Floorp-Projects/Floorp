@@ -21,6 +21,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"
 #include "nsStyleStructInlines.h"
+#include <algorithm>
 
 #undef NOISY_BIDI
 #undef REALLY_NOISY_BIDI
@@ -720,7 +721,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
         frame->GetOffsets(start, end);
         NS_ASSERTION(!(contentTextLength < end - start),
                      "Frame offsets don't fit in content");
-        fragmentLength = NS_MIN(contentTextLength, end - start);
+        fragmentLength = std::min(contentTextLength, end - start);
         contentOffset = start;
         isTextFrame = true;
       }
@@ -1019,13 +1020,13 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                * into the next continuation
                */
               aBpd->AppendString(Substring(text, start,
-                                           NS_MIN(end, endLine) - start));
+                                           std::min(end, endLine) - start));
               while (end < endLine && nextSibling) { 
                 aBpd->AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
                 NS_ASSERTION(frame, "Premature end of continuation chain");
                 frame->GetOffsets(start, end);
                 aBpd->AppendString(Substring(text, start,
-                                             NS_MIN(end, endLine) - start));
+                                             std::min(end, endLine) - start));
               }
 
               if (end < endLine) {
@@ -1817,7 +1818,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
     int32_t subRunLength = limit - start;
     int32_t lineOffset = start;
-    int32_t typeLimit = NS_MIN(limit, aLength);
+    int32_t typeLimit = std::min(limit, aLength);
     int32_t subRunCount = 1;
     int32_t subRunLimit = typeLimit;
 

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <stdio.h>
 #include <signal.h>
+#include <algorithm>
 
 #ifdef WIN32
 #include <windows.h>
@@ -168,7 +169,7 @@ TestProvider::OnDataWritable(nsIRequest *request, nsISupports *context,
         return NS_BASE_STREAM_CLOSED;
 
     uint32_t writeCount, amount;
-    amount = NS_MIN(count, mDataLen - mOffset);
+    amount = std::min(count, mDataLen - mOffset);
     nsresult rv = output->Write(mData + mOffset, amount, &writeCount);
     if (NS_SUCCEEDED(rv)) {
         printf("wrote %u bytes\n", writeCount);

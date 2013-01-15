@@ -5,6 +5,7 @@
 
 // Main header first:
 #include "nsSVGGlyphFrame.h"
+#include <algorithm>
 
 // Keep others in (case-insensitive) order:
 #include "DOMSVGPoint.h"
@@ -1303,8 +1304,8 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, bool aForceGlobalTransfor
 
   nsTArray<float> xList, yList;
   GetEffectiveXY(strLength, xList, yList);
-  uint32_t xCount = NS_MIN(xList.Length(), strLength);
-  uint32_t yCount = NS_MIN(yList.Length(), strLength);
+  uint32_t xCount = std::min(xList.Length(), strLength);
+  uint32_t yCount = std::min(yList.Length(), strLength);
 
   // move aPosition to the last glyph position
   gfxFloat x = aPosition->x;
@@ -1333,14 +1334,14 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, bool aForceGlobalTransfor
   nsTArray<float> dxList, dyList;
   GetEffectiveDxDy(strLength, dxList, dyList);
 
-  uint32_t dxcount = NS_MIN(dxList.Length(), strLength);
+  uint32_t dxcount = std::min(dxList.Length(), strLength);
   if (dxcount > 0) {
     mPosition.x += dxList[0] * pathScale;
   }
   for (uint32_t i = 0; i < dxcount; i++) {
     aPosition->x += dxList[i] * pathScale;
   }
-  uint32_t dycount = NS_MIN(dyList.Length(), strLength);
+  uint32_t dycount = std::min(dyList.Length(), strLength);
   if (dycount > 0) {
     mPosition.y += dyList[0]* pathScale;
   }
@@ -1484,12 +1485,12 @@ nsSVGGlyphFrame::GetEffectiveXY(int32_t strLength, nsTArray<float> &aX, nsTArray
   nsTArray<float> x, y;
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetEffectiveXY(x, y);
 
-  int32_t xCount = NS_MAX((int32_t)(x.Length() - mStartIndex), 0);
-  xCount = NS_MIN(xCount, strLength);
+  int32_t xCount = std::max((int32_t)(x.Length() - mStartIndex), 0);
+  xCount = std::min(xCount, strLength);
   aX.AppendElements(x.Elements() + mStartIndex, xCount);
 
-  int32_t yCount = NS_MAX((int32_t)(y.Length() - mStartIndex), 0);
-  yCount = NS_MIN(yCount, strLength);
+  int32_t yCount = std::max((int32_t)(y.Length() - mStartIndex), 0);
+  yCount = std::min(yCount, strLength);
   aY.AppendElements(y.Elements() + mStartIndex, yCount);
 }
 
@@ -1505,12 +1506,12 @@ nsSVGGlyphFrame::GetEffectiveDxDy(int32_t strLength, nsTArray<float> &aDx, nsTAr
   nsTArray<float> dx, dy;
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetEffectiveDxDy(dx, dy);
 
-  int32_t dxCount = NS_MAX((int32_t)(dx.Length() - mStartIndex), 0);
-  dxCount = NS_MIN(dxCount, strLength);
+  int32_t dxCount = std::max((int32_t)(dx.Length() - mStartIndex), 0);
+  dxCount = std::min(dxCount, strLength);
   aDx.AppendElements(dx.Elements() + mStartIndex, dxCount);
 
-  int32_t dyCount = NS_MAX((int32_t)(dy.Length() - mStartIndex), 0);
-  dyCount = NS_MIN(dyCount, strLength);
+  int32_t dyCount = std::max((int32_t)(dy.Length() - mStartIndex), 0);
+  dyCount = std::min(dyCount, strLength);
   aDy.AppendElements(dy.Elements() + mStartIndex, dyCount);
 }
 
@@ -1530,8 +1531,8 @@ nsSVGGlyphFrame::GetEffectiveRotate(int32_t strLength, nsTArray<float> &aRotate)
   nsTArray<float> rotate;
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetEffectiveRotate(rotate);
 
-  int32_t rotateCount = NS_MAX((int32_t)(rotate.Length() - mStartIndex), 0);
-  rotateCount = NS_MIN(rotateCount, strLength);
+  int32_t rotateCount = std::max((int32_t)(rotate.Length() - mStartIndex), 0);
+  rotateCount = std::min(rotateCount, strLength);
   if (rotateCount > 0) {
     aRotate.AppendElements(rotate.Elements() + mStartIndex, rotateCount);
   } else if (!rotate.IsEmpty()) {
@@ -1824,8 +1825,8 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
       textRunSize = PRECISE_SIZE;
     } else {
       textRunSize = size*contextScale;
-      textRunSize = NS_MAX(textRunSize, double(CLAMP_MIN_SIZE));
-      textRunSize = NS_MIN(textRunSize, double(CLAMP_MAX_SIZE));
+      textRunSize = std::max(textRunSize, double(CLAMP_MIN_SIZE));
+      textRunSize = std::min(textRunSize, double(CLAMP_MAX_SIZE));
     }
 
     const nsFont& font = fontData->mFont;

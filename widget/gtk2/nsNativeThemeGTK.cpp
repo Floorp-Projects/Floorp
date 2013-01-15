@@ -29,6 +29,7 @@
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
 #include "gfxGdkNativeRenderer.h"
+#include <algorithm>
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNativeThemeGTK, nsNativeTheme, nsITheme,
                                                               nsIObserver)
@@ -148,8 +149,8 @@ nsNativeThemeGTK::GetTabMarginPixels(nsIFrame* aFrame)
     IsBottomTab(aFrame) ? aFrame->GetUsedMargin().top
     : aFrame->GetUsedMargin().bottom;
 
-  return NS_MIN<gint>(MOZ_GTK_TAB_MARGIN_MASK,
-                NS_MAX(0,
+  return std::min<gint>(MOZ_GTK_TAB_MARGIN_MASK,
+                std::max(0,
                        aFrame->PresContext()->AppUnitsToDevPixels(-margin)));
 }
 
@@ -1079,11 +1080,11 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
 
         if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL) {
           aResult->width = metrics.slider_width;
-          aResult->height = NS_MIN(NSAppUnitsToIntPixels(rect.height, p2a),
+          aResult->height = std::min(NSAppUnitsToIntPixels(rect.height, p2a),
                                    metrics.min_slider_size);
         } else {
           aResult->height = metrics.slider_width;
-          aResult->width = NS_MIN(NSAppUnitsToIntPixels(rect.width, p2a),
+          aResult->width = std::min(NSAppUnitsToIntPixels(rect.width, p2a),
                                   metrics.min_slider_size);
         }
 
