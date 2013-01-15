@@ -17,6 +17,11 @@
 // Silence "warning: #include_next is a GCC extension"
 #pragma GCC system_header
 
+#ifdef _WIN32
+// Suppress windef.h min and max macros - they make std::min/max not compile.
+#define NOMINMAX 1
+#endif
+
 // mozalloc.h wants <new>; break the cycle by always explicitly
 // including <new> here.  NB: this is a tad sneaky.  Sez the gcc docs:
 //

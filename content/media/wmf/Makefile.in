@@ -25,6 +25,10 @@ CPPSRCS		= \
 		WMFUtils.cpp \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+OS_CXXFLAGS += -DNOMINMAX
+endif
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
