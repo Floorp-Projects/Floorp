@@ -712,6 +712,7 @@ bool OggReader::ReadOggChain()
                                channels,
                                rate,
                                HasAudio(),
+                               HasVideo(),
                                tags);
     }
     return true;
