@@ -35,11 +35,11 @@
 
 <!ENTITY dataChoicesTab.label            "Data Choices">
 
-<!ENTITY FHRSection.label                "Firefox Health Report">
-<!ENTITY FHRDesc.label                   "Helps you understand your browser performance and shares data with &vendorShortName; about your browser health">
-<!ENTITY enableFHR.label                 "Enable Firefox Health Report">
-<!ENTITY enableFHR.accesskey             "F">
-<!ENTITY FHRLearnMore.label              "Learn More">
+<!ENTITY healthReportSection.label       "&brandShortName; Health Report">
+<!ENTITY healthReportDesc.label          "Helps you understand your browser performance and shares data with &vendorShortName; about your browser health">
+<!ENTITY enableHealthReport.label        "Enable &brandShortName; Health Report">
+<!ENTITY enableHealthReport.accesskey    "R">
+<!ENTITY healthReportLearnMore.label     "Learn More">
 
 <!ENTITY telemetrySection.label          "Telemetry">
 <!ENTITY telemetryDesc.label             "Shares performance, usage, hardware and customization data about your browser with &vendorShortName; to help us make &brandShortName; better">
