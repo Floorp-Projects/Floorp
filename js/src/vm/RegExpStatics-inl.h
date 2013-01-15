@@ -27,15 +27,6 @@ SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
     return mallocSizeOf(obj->getPrivate());
 }
 
-inline
-RegExpStatics::RegExpStatics()
-  : pendingLazyEvaluation(false),
-    bufferLink(NULL),
-    copied(false)
-{
-    clear();
-}
-
 inline bool
 RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out)
 {
@@ -231,15 +222,20 @@ RegExpStatics::copyTo(RegExpStatics &dst)
     if (!pendingLazyEvaluation)
         dst.matches.initArrayFrom(matches);
 
+    if (regexp.initialized())
+        dst.regexp.init(*regexp);
+    else
+        dst.regexp.release();
+
     dst.matchesInput = matchesInput;
-    dst.regexp = regexp;
     dst.lastIndex = lastIndex;
     dst.pendingInput = pendingInput;
     dst.flags = flags;
     dst.pendingLazyEvaluation = pendingLazyEvaluation;
 
-    JS_ASSERT_IF(pendingLazyEvaluation, regexp);
+    JS_ASSERT_IF(pendingLazyEvaluation, regexp.initialized());
     JS_ASSERT_IF(pendingLazyEvaluation, matchesInput);
+    JS_ASSERT(regexp.initialized() == dst.regexp.initialized());
 }
 
 inline void
@@ -261,17 +257,20 @@ RegExpStatics::restore()
 
 inline void
 RegExpStatics::updateLazily(JSContext *cx, JSLinearString *input,
-                            RegExpObject *regexp, size_t lastIndex)
+                            RegExpShared *shared, size_t lastIndex)
 {
-    JS_ASSERT(input && regexp);
+    JS_ASSERT(input && shared);
     aboutToWrite();
 
     BarrieredSetPair<JSString, JSLinearString>(cx->compartment,
                                                pendingInput, input,
                                                matchesInput, input);
-    pendingLazyEvaluation = true;
-    this->regexp = regexp;
+    if (regexp.initialized())
+        regexp.release();
+    regexp.init(*shared);
+
     this->lastIndex = lastIndex;
+    pendingLazyEvaluation = true;
 }
 
 inline bool
@@ -282,7 +281,7 @@ RegExpStatics::updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchP
 
     /* Unset all lazy state. */
     pendingLazyEvaluation = false;
-    this->regexp = NULL;
+    this->regexp.release();
     this->lastIndex = size_t(-1);
 
     BarrieredSetPair<JSString, JSLinearString>(cx->compartment,
@@ -301,11 +300,14 @@ inline void
 RegExpStatics::clear()
 {
     aboutToWrite();
-    flags = RegExpFlag(0);
-    pendingInput = NULL;
-    pendingLazyEvaluation = false;
-    matchesInput = NULL;
+
     matches.forgetArray();
+    matchesInput = NULL;
+    regexp.release();
+    lastIndex = size_t(-1);
+    pendingInput = NULL;
+    flags = RegExpFlag(0);
+    pendingLazyEvaluation = false;
 }
 
 inline void
@@ -363,8 +365,9 @@ RegExpStatics::checkInvariants()
 {
 #ifdef DEBUG
     if (pendingLazyEvaluation) {
-        JS_ASSERT(regexp);
+        JS_ASSERT(regexp.initialized());
         JS_ASSERT(pendingInput);
+        JS_ASSERT(lastIndex != size_t(-1));
         return;
     }
 

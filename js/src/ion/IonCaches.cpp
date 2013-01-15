@@ -1435,6 +1435,9 @@ IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject hol
     if (!shape)
         return false;
 
+    if (!holder->isNative())
+        return false;
+
     if (shape->hasSlot())
         return false;
 

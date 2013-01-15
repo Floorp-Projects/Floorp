@@ -44,7 +44,7 @@ parent:
 
   // Tells the parent side to dispose of its shared images (most likely because the
   // video element is still alive but will not be displayed for a moment).
-  async Flush();
+  sync Flush();
   
   // After receiving this message, the ImageContainerParent will not return images
   // back to the child side (to avoid a race between ReturnImage and __delete__) 
