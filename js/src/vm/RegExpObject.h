@@ -156,6 +156,9 @@ class RegExpShared
     void trace(JSTracer *trc) {
         MarkStringUnbarriered(trc, &source, "regexpshared source");
     }
+    void writeBarrierPre() {
+        JSString::writeBarrierPre(source);
+    }
 
     /* Static functions to expose some Yarr logic. */
     static inline bool isJITRuntimeEnabled(JSContext *cx);
@@ -272,6 +275,7 @@ class RegExpHeapGuard
     }
     void release() {
         if (re_) {
+            re_->writeBarrierPre();
             re_->decRef();
             re_ = NULL;
         }
