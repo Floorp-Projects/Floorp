@@ -728,7 +728,8 @@ MarionetteDriverActor.prototype = {
                                        args: aRequest.args,
                                        newSandbox: aRequest.newSandbox,
                                        timeout: this.scriptTimeout,
-                                       command_id: command_id});
+                                       command_id: command_id,
+                                       specialPowers: aRequest.specialPowers});
       return;
     }
 
@@ -814,7 +815,8 @@ MarionetteDriverActor.prototype = {
                                           newSandbox: aRequest.newSandbox,
                                           async: aRequest.async,
                                           timeout: this.scriptTimeout,
-                                          command_id: command_id });
+                                          command_id: command_id,
+                                          specialPowers: aRequest.specialPowers });
    }
   },
 
@@ -847,7 +849,8 @@ MarionetteDriverActor.prototype = {
                                             id: this.command_id,
                                             newSandbox: aRequest.newSandbox,
                                             timeout: this.scriptTimeout,
-                                            command_id: command_id});
+                                            command_id: command_id,
+                                            specialPowers: aRequest.specialPowers});
       return;
     }
 
