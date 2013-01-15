@@ -15,13 +15,13 @@
  * @status UNDER_DEVELOPMENT
  */
 
-interface nsIDOMDOMSettableTokenList;
 interface nsIDOMValidityState;
 
 [scriptable, uuid(01542000-CD00-4E8A-841C-9BAAD6BA0368)]
 interface nsIDOMHTMLOutputElement : nsIDOMHTMLElement
 {
-  readonly attribute nsIDOMDOMSettableTokenList htmlFor;
+  // DOMSettableTokenList
+  readonly attribute nsISupports                htmlFor;
   readonly attribute nsIDOMHTMLFormElement      form;
            attribute DOMString                  name;
 
