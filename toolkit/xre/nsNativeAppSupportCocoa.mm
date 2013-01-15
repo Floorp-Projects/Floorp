@@ -9,7 +9,6 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsCOMPtr.h"
-#include "nsObjCExceptions.h"
 #include "nsNativeAppSupportBase.h"
 
 #include "nsIAppShellService.h"
@@ -25,6 +24,9 @@
 #include "nsIWebNavigation.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
+
+// This must be included last:
+#include "nsObjCExceptions.h"
 
 nsresult
 GetNativeWindowPointerFromDOMWindow(nsIDOMWindow *a_window, NSWindow **a_nativeWindow)
