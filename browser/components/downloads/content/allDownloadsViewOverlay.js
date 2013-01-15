@@ -29,7 +29,7 @@ const nsIDM = Ci.nsIDownloadManager;
 
 const DESTINATION_FILE_URI_ANNO  = "downloads/destinationFileURI";
 const DESTINATION_FILE_NAME_ANNO = "downloads/destinationFileName";
-const DOWNLOAD_STATE_ANNO        = "downloads/state";
+const DOWNLOAD_META_DATA_ANNO    = "downloads/metaData";
 
 const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
  ["cmd_delete", "cmd_copy", "cmd_paste", "cmd_selectAll",
@@ -119,7 +119,7 @@ DownloadElementShell.prototype = {
     this._dataItem = aValue;
     let shouldUpdate = false;
     if (this._dataItem) {
-      this._targetFileInfoFetched = false;
+      this._invalidateMetaDataAndTargetFileInfo();
       // The dataItem can be replaced, in such a case the shell is already
       // active but must be updated regardless.
       shouldUpdate = !this.ensureActive();
@@ -155,11 +155,9 @@ DownloadElementShell.prototype = {
       if (!this._dataItem) {
         if (!this._placesNode)
           throw new Error("Should always have either a dataItem or a placesNode");
-        this._targetFileInfoFetched = false;
-        if (this.active) {
+        this._invalidateMetaDataAndTargetFileInfo();
+        if (this.active)
           this._updateStatusUI();
-          this._fetchTargetFileInfo();
-        }
       }
     }
     return aNode;
@@ -275,7 +273,7 @@ DownloadElementShell.prototype = {
         this._targetFileInfoFetched = true;
         this._targetFileExists = true;
         this._targetFileSize = fileInfo.size;
-        delete this._state;
+        this._getDownloadMetaData().fileSize = this._targetFileSize;
         this._updateDownloadStatusUI();
       }.bind(this),
 
@@ -295,36 +293,45 @@ DownloadElementShell.prototype = {
   },
 
   /**
-   * Get the state of the download (see nsIDownloadManager).
-   * For past downloads, for which we don't know the state at first,
-   * |undefined| is returned until we have info for the target file,
-   * indicating the state is unknown. |undefined| is also returned
-   * if the file was not found at last.
+   * Retrieve the meta data object for the download.  The following fields
+   * may be set.
    *
-   * @param [optional] aForceUpdate
-   *        Whether to force update the cached download state. Default: false.
-   * @return the download state if available, |undefined| otherwise.
+   * state - any download state defined in nsIDownloadManager.  If this field
+   * is not set, the download state is unknown.
+   * endTime - the end time of the download.
+   * fileSize (only set for downloads which completed succesfully) - the downloaded
+   * file size.  For downloads done after the landing of bug 826991, this value
+   * is "static" - that is, it does not necessarily mean that the file is in place
+   * and has this size.
    */
-  getDownloadState: function DES_getDownloadState(aForceUpdate = false) {
-    if (aForceUpdate || !("_state" in this)) {
+  _getDownloadMetaData: function DES__getDownloadMetaData() {
+    if (!this._metaData) {
       if (this._dataItem) {
-        this._state = this._dataItem.state;
+        this._metaData = {
+          state: this._dataItem.state,
+          endTime: this._dataItem.endTime
+        };
+        if (this._dataItem.done)
+          this._metaData.fileSize = this._dataItem.maxBytes;
       }
       else {
         try {
-          this._state = this._getAnnotation(DOWNLOAD_STATE_ANNO);
+          this._metaData = JSON.parse(this._getAnnotation(DOWNLOAD_META_DATA_ANNO));
         }
-        catch (ex) {
-          if (!this._targetFileInfoFetched || !this._targetFileExists)
-            this._state = undefined;
-          else if (this._targetFileSize > 0)
-            this._state = nsIDM.DOWNLOAD_FINISHED;
-          else
-            this._state = nsIDM.DOWNLOAD_FAILED;
+        catch(ex) {
+          this._metaData = { };
+          if (this._targetFileInfoFetched && this._targetFileExists) {
+            this._metaData.state = this._targetFileSize > 0 ?
+              nsIDM.DOWNLOAD_FINISHED : nsIDM.DOWNLOAD_FAILED;
+            this._metaData.fileSize = this._targetFileSize;
+          }
+
+          // This is actually the start-time, but it's the best we can get.
+          this._metaData.endTime = this._placesNode.time / 1000;
         }
       }
     }
-    return this._state;
+    return this._metaData;
   },
 
   // The status text for the download
@@ -361,7 +368,8 @@ DownloadElementShell.prototype = {
 
     // This is a not-in-progress or history download.
     let stateLabel = "";
-    switch (this.getDownloadState()) {
+    let state = this._getDownloadMetaData().state;
+    switch (state) {
       case nsIDM.DOWNLOAD_FAILED:
         stateLabel = s.stateFailed;
         break;
@@ -379,8 +387,9 @@ DownloadElementShell.prototype = {
         break;
       case nsIDM.DOWNLOAD_FINISHED:{
         // For completed downloads, show the file size (e.g. "1.5 MB")
-        if (this._targetFileInfoFetched && this._targetFileExists) {
-          let [size, unit] = DownloadUtils.convertByteUnits(this._targetFileSize);
+        let metaData = this._getDownloadMetaData();
+        if ("fileSize" in metaData) {
+          let [size, unit] = DownloadUtils.convertByteUnits(metaData.fileSize);
           stateLabel = s.sizeWithUnits(size, unit);
           break;
         }
@@ -396,10 +405,8 @@ DownloadElementShell.prototype = {
                    this.downloadURI;
     let [displayHost, fullHost] = DownloadUtils.getURIHost(referrer);
 
-    // TODO (bug 826991): history downloads should get endTime from annotations.
-    let date = this._dataItem && this._dataItem.endTime ||
-               (this._placesNode.time / 1000);
-    let [displayDate, fullDate] = DownloadUtils.getReadableDates(new Date(date));
+    let date = new Date(this._getDownloadMetaData().endTime);
+    let [displayDate, fullDate] = DownloadUtils.getReadableDates(date);
 
     // We use the same XUL label to display the state, the host name, and the
     // end time.
@@ -421,7 +428,7 @@ DownloadElementShell.prototype = {
   // appropriate buttons and context menu items), the status text label,
   // and the progress meter.
   _updateDownloadStatusUI: function  DES__updateDownloadStatusUI() {
-    let state = this.getDownloadState(true);
+    let state = this._getDownloadMetaData().state;
     if (state !== undefined)
       this._element.setAttribute("state", state);
 
@@ -486,12 +493,20 @@ DownloadElementShell.prototype = {
       else if (aAnnoName == DESTINATION_FILE_NAME_ANNO) {
         this._element.setAttribute("displayName", this._displayName);
       }
-      else if (aAnnoName == DOWNLOAD_STATE_ANNO) {
+      else if (aAnnoName == DOWNLOAD_META_DATA_ANNO) {
+        this._invalidateMetaDataAndTargetFileInfo();
         this._updateDownloadStatusUI();
         if (this._element.selected)
           goUpdateDownloadCommands();
       }
     }
+  },
+
+  _invalidateMetaDataAndTargetFileInfo: function DES__invalidateMetaDataAndTargetFileInfo() {
+    this._metaData = null;
+    this._targetFileInfoFetched = false;
+    if (this.active)
+      this._fetchTargetFileInfo();
   },
 
   /* DownloadView */
@@ -500,12 +515,11 @@ DownloadElementShell.prototype = {
         aOldState != this.dataItem.state) {
       // See comment in DVI_onStateChange in downloads.js (the panel-view)
       this._element.setAttribute("image", this._icon + "&state=normal");
-
-      this._targetFileInfoFetched = false;
       if (this.active)
         this._fetchTargetFileInfo();
     }
 
+    this._metaData = null;
     this._updateDownloadStatusUI();
     if (this._element.selected)
       goUpdateDownloadCommands();
@@ -664,7 +678,7 @@ DownloadElementShell.prototype = {
       }
       return "";
     }
-    let command = getDefaultCommandForState(this.getDownloadState());
+    let command = getDefaultCommandForState(this._getDownloadMetaData().state);
     if (this.isCommandEnabled(command))
       this.doCommand(command);
   }
@@ -745,7 +759,7 @@ DownloadsPlacesView.prototype = {
       this._cachedAnnotations = new Map();
       for (let name of [ DESTINATION_FILE_URI_ANNO,
                          DESTINATION_FILE_NAME_ANNO,
-                         DOWNLOAD_STATE_ANNO ]) {
+                         DOWNLOAD_META_DATA_ANNO ]) {
         let results = PlacesUtils.annotations.getAnnotationsWithName(name);
         for (let result of results) {
           let url = result.uri.spec;
@@ -765,9 +779,9 @@ DownloadsPlacesView.prototype = {
       annotations.set(DESTINATION_FILE_URI_ANNO, NOT_AVAILABLE);
       annotations.set(DESTINATION_FILE_NAME_ANNO, NOT_AVAILABLE);
     }
-    // The state annotation has been added recently, so it's likely missing.
-    if (!annotations.has(DOWNLOAD_STATE_ANNO)) {
-      annotations.set(DOWNLOAD_STATE_ANNO, NOT_AVAILABLE);
+    // The meta-data annotation has been added recently, so it's likely missing.
+    if (!annotations.has(DOWNLOAD_META_DATA_ANNO)) {
+      annotations.set(DOWNLOAD_META_DATA_ANNO, NOT_AVAILABLE);
     }
     return annotations;
   },
@@ -1325,7 +1339,7 @@ DownloadsPlacesView.prototype = {
 
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
-    let state = element._shell.getDownloadState();
+    let state = element._shell._getDownloadMetaData().state;
     if (state !== undefined)
       contextMenu.setAttribute("state", state);
     else

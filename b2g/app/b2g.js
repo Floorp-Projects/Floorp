@@ -455,6 +455,9 @@ pref("shutdown.watchdog.timeoutSecs", 5);
 pref("b2g.update.apply-prompt-timeout", 60000); // milliseconds
 // Amount of time to wait after the user is idle before prompting to apply an update
 pref("b2g.update.apply-idle-timeout", 600000); // milliseconds
+// Amount of time after which connection will be restarted if no progress
+pref("b2g.update.download-watchdog-timeout", 120000); // milliseconds
+pref("b2g.update.download-watchdog-max-retries", 5);
 
 pref("app.update.enabled", true);
 pref("app.update.auto", false);
@@ -628,3 +631,8 @@ pref("layers.orientation.sync.timeout", 1000);
 // Don't discard WebGL contexts for foreground apps on memory
 // pressure.
 pref("webgl.can-lose-context-in-foreground", false);
+
+// Allow nsMemoryInfoDumper to create a fifo in the temp directory.  We use
+// this fifo to trigger about:memory dumps, among other things.
+pref("memory_info_dumper.watch_fifo.enabled", true);
+pref("memory_info_dumper.watch_fifo.directory", "/data/local");

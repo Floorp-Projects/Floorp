@@ -270,7 +270,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 
     bool doGet = true;
     if (pobj->isNative()) {
-        desc->attrs = IsImplicitProperty(shape) ? JSPROP_ENUMERATE : shape->attributes();
+        desc->attrs = GetShapeAttributes(shape);
         if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
             doGet = false;
             if (desc->attrs & JSPROP_GETTER)
@@ -631,7 +631,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
          shapeHasGetterValue = false,
          shapeHasSetterValue = false;
     uint8_t shapeAttributes = JSPROP_ENUMERATE;
-    if (!IsImplicitProperty(shape)) {
+    if (!IsImplicitDenseElement(shape)) {
         shapeDataDescriptor = shape->isDataDescriptor();
         shapeAccessorDescriptor = shape->isAccessorDescriptor();
         shapeWritable = shape->writable();
@@ -672,7 +672,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
              * avoid calling a getter; we won't need the value if it's not a
              * data descriptor.
              */
-            if (IsImplicitProperty(shape)) {
+            if (IsImplicitDenseElement(shape)) {
                 v = obj->getDenseElement(JSID_TO_INT(id));
             } else if (shape->isDataDescriptor()) {
                 /*
@@ -814,8 +814,8 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
             changed |= JSPROP_ENUMERATE;
 
         attrs = (shapeAttributes & ~changed) | (desc.attributes() & changed);
-        getter = IsImplicitProperty(shape) ? JS_PropertyStub : shape->getter();
-        setter = IsImplicitProperty(shape) ? JS_StrictPropertyStub : shape->setter();
+        getter = IsImplicitDenseElement(shape) ? JS_PropertyStub : shape->getter();
+        setter = IsImplicitDenseElement(shape) ? JS_StrictPropertyStub : shape->setter();
     } else if (desc.isDataDescriptor()) {
         unsigned unchanged = 0;
         if (!desc.hasConfigurable())
@@ -3064,7 +3064,7 @@ js::DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
         if (!baseops::LookupProperty(cx, obj, id, &pobj, &shape))
             return false;
         if (shape && pobj == obj) {
-            if (IsImplicitProperty(shape)) {
+            if (IsImplicitDenseElement(shape)) {
                 if (!JSObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
                     return false;
                 shape = obj->nativeLookup(cx, id);
@@ -3237,7 +3237,7 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     }
 
     if (JSID_IS_INT(id) && objp->containsDenseElement(JSID_TO_INT(id))) {
-        MarkImplicitPropertyFound(propp);
+        MarkDenseElementFound(propp);
         return true;
     }
 
@@ -3263,7 +3263,7 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
         {
             if (JSID_IS_INT(id) && current->containsDenseElement(JSID_TO_INT(id))) {
                 objp.set(current);
-                MarkImplicitPropertyFound(propp);
+                MarkDenseElementFound(propp);
                 return true;
             }
 
@@ -3549,7 +3549,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
                : JSObject::getGeneric(cx, obj2, obj2, id, vp);
     }
 
-    if (IsImplicitProperty(shape)) {
+    if (IsImplicitDenseElement(shape)) {
         vp.set(obj2->getDenseElement(JSID_TO_INT(id)));
         return true;
     }
@@ -3804,7 +3804,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     getter = clasp->getProperty;
     setter = clasp->setProperty;
 
-    if (IsImplicitProperty(shape)) {
+    if (IsImplicitDenseElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
         if (pobj != obj)
             shape = NULL;
@@ -3877,7 +3877,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
         }
     }
 
-    if (IsImplicitProperty(shape)) {
+    if (IsImplicitDenseElement(shape)) {
         JSObject::setDenseElementWithType(cx, obj, JSID_TO_INT(id), vp);
         return true;
     }
@@ -3975,7 +3975,7 @@ baseops::GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
     if (!nobj->isNative())
         return JSObject::getGenericAttributes(cx, nobj, id, attrsp);
 
-    *attrsp = shape->attributes();
+    *attrsp = GetShapeAttributes(shape);
     return true;
 }
 
@@ -3993,7 +3993,7 @@ baseops::GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
     if (!nobj->isNative())
         return JSObject::getElementAttributes(cx, nobj, index, attrsp);
 
-    *attrsp = shape->attributes();
+    *attrsp = GetShapeAttributes(shape);
     return true;
 }
 
@@ -4006,6 +4006,11 @@ baseops::SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
         return false;
     if (!shape)
         return true;
+    if (nobj->isNative() && IsImplicitDenseElement(shape)) {
+        if (!JSObject::sparsifyDenseElement(cx, nobj, JSID_TO_INT(id)))
+            return false;
+        shape = obj->nativeLookup(cx, id);
+    }
     return nobj->isNative()
            ? JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp)
            : JSObject::setGenericAttributes(cx, nobj, id, attrsp);
@@ -4020,6 +4025,11 @@ baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
         return false;
     if (!shape)
         return true;
+    if (nobj->isNative() && IsImplicitDenseElement(shape)) {
+        if (!JSObject::sparsifyDenseElement(cx, obj, index))
+            return false;
+        shape = obj->nativeLookup(cx, INT_TO_JSID(index));
+    }
     return nobj->isNative()
            ? JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp)
            : JSObject::setElementAttributes(cx, nobj, index, attrsp);
@@ -4044,7 +4054,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHand
 
     GCPoke(cx->runtime);
 
-    if (IsImplicitProperty(shape)) {
+    if (IsImplicitDenseElement(shape)) {
         if (!CallJSPropertyOp(cx, obj->getClass()->delProperty, obj, id, rval))
             return false;
         if (rval.isFalse())
@@ -4282,13 +4292,12 @@ js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
             break;
         }
 
-        if (IsImplicitProperty(shape)) {
-            *attrsp = JSPROP_ENUMERATE;
-            if (!writing)
+        *attrsp = GetShapeAttributes(shape);
+
+        if (!writing) {
+            if (IsImplicitDenseElement(shape)) {
                 vp.set(pobj->getDenseElement(JSID_TO_INT(id)));
-        } else {
-            *attrsp = shape->attributes();
-            if (!writing) {
+            } else {
                 if (shape->hasSlot())
                     vp.set(pobj->nativeGetSlot(shape->slot()));
                 else

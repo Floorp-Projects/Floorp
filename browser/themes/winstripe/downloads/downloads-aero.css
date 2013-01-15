@@ -12,7 +12,7 @@
     border-bottom: 1px solid hsl(213,40%,90%);
   }
 
-  richlistitem[type="download"][state="1"]:hover {
+  #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover {
     border: 1px solid hsl(213,45%,65%);
     box-shadow: 0 0 0 1px hsla(0,0%,100%,.5) inset,
                 0 1px 0 hsla(0,0%,100%,.3) inset;

@@ -649,7 +649,6 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
-#webrtc-status-button /* temporary placeholder (bug 824825) */,
 #history-button {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
@@ -729,6 +728,10 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #feed-button[disabled="true"] > .toolbarbutton-icon {
   opacity: .3;
+}
+
+#webrtc-status-button {
+  -moz-image-region: rect(0px 192px 24px 168px);
 }
 
 /* 16px primary toolbar buttons */
@@ -880,6 +883,10 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
 
 toolbar[iconsize="small"] #feed-button {
   -moz-image-region: rect(0px 112px 16px 96px);
+}
+
+toolbar[iconsize="small"] #webrtc-status-button {
+  -moz-image-region: rect(0px 128px 16px 112px);
 }
 
 /* Fullscreen window controls */
@@ -1291,9 +1298,12 @@ toolbar[iconsize="small"] #feed-button {
   }
 }
 
-#webRTC-sharingDevices-notification-icon,
 #webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
+}
+
+#webRTC-sharingDevices-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16.png);
 }
 
 #treecolAutoCompleteImage {
@@ -2648,3 +2658,13 @@ chatbox[minimized="true"] {
 .center-item-button {
   min-width: 0;
 }
+
+%ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+#main-window[privatebrowsingmode=temporary] #TabsToolbar::before {
+  display: -moz-box;
+  content: "";
+  background: url("chrome://browser/skin/privatebrowsing-mask.png") center no-repeat;
+  width: 40px;
+}
+%endif
+

@@ -79,7 +79,8 @@
 <!ENTITY clearDownloadsButton.tooltip     "Clears completed, canceled and failed downloads">
 
 <!-- LOCALIZATION NOTE (downloadsListEmpty.label):
-     This string is shown when there are no items in the Downloads view.
+     This string is shown when there are no items in the Downloads view, when it
+     is displayed inside a browser tab.
      -->
 <!ENTITY downloadsListEmpty.label         "There are no downloads.">
 

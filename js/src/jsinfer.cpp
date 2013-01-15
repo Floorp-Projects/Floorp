@@ -3311,7 +3311,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
         return false;
     }
 
-    if (singleton) {
+    if (singleton && singleton->isNative()) {
         /*
          * Fill the property in with any type the object already has in an own
          * property. We are only interested in plain native properties and
@@ -3338,7 +3338,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
                     base->types.addType(cx, type);
                 }
             }
-        } else if (!JSID_IS_EMPTY(id) && singleton->isNative()) {
+        } else if (!JSID_IS_EMPTY(id)) {
             UnrootedShape shape = singleton->nativeLookup(cx, id);
             if (shape)
                 UpdatePropertyType(cx, &base->types, rSingleton, shape, false);

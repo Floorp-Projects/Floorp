@@ -224,9 +224,6 @@ InflateString(JSContext *cx, const char *bytes, size_t *length);
 extern jschar *
 InflateUTF8String(JSContext *cx, const char *bytes, size_t *length);
 
-extern char *
-DeflateString(JSContext *cx, const jschar *chars, size_t length);
-
 /*
  * Inflate bytes to JS chars in an existing buffer. 'chars' must be large
  * enough for 'length' jschars. The buffer is NOT null-terminated.

@@ -633,6 +633,10 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
              size
            );
 
+        if (!printSurface) {
+          continue;
+        }
+
         nsICanvasRenderingContextInternal* ctx = canvas->GetContextAtIndex(0);
 
         if (!ctx) {

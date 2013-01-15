@@ -2441,47 +2441,6 @@ ToInt32(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static const char* badUTF8 = "...\xC0...";
-static const char* bigUTF8 = "...\xFB\xBF\xBF\xBF\xBF...";
-static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
-
-static JSBool
-TestUTF8(JSContext *cx, unsigned argc, jsval *vp)
-{
-    int32_t mode = 1;
-    jschar chars[20];
-    size_t charsLength = 5;
-    char bytes[20];
-    size_t bytesLength = 20;
-    if (argc && !JS_ValueToInt32(cx, *JS_ARGV(cx, vp), &mode))
-        return false;
-
-    /* The following throw errors if compiled with UTF-8. */
-    switch (mode) {
-      /* mode 1: malformed UTF-8 string. */
-      case 1:
-        JS_NewStringCopyZ(cx, badUTF8);
-        break;
-      /* mode 2: big UTF-8 character. */
-      case 2:
-        JS_NewStringCopyZ(cx, bigUTF8);
-        break;
-      /* mode 3: bad surrogate character. */
-      case 3:
-        DeflateStringToBuffer(cx, badSurrogate, 6, bytes, &bytesLength);
-        break;
-      /* mode 4: use a too small buffer. */
-      case 4:
-        JS_DecodeBytes(cx, "1234567890", 10, chars, &charsLength);
-        break;
-      default:
-        JS_ReportError(cx, "invalid mode parameter");
-        return false;
-    }
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return !JS_IsExceptionPending (cx);
-}
-
 static JSBool
 ThrowError(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -3740,10 +3699,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("pc2line", PCToLine, 0, 0,
 "pc2line(fun[, pc])",
 "  Map PC to line number."),
-
-    JS_FN_HELP("testUTF8", TestUTF8, 1, 0,
-"testUTF8(mode)",
-"  Perform UTF-8 tests (modes are 1 to 4)."),
 
     JS_FN_HELP("throwError", ThrowError, 0, 0,
 "throwError()",

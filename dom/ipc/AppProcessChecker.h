@@ -21,7 +21,8 @@ class PHalParent;
 
 enum AssertAppProcessType {
   ASSERT_APP_PROCESS_PERMISSION,
-  ASSERT_APP_PROCESS_MANIFEST_URL
+  ASSERT_APP_PROCESS_MANIFEST_URL,
+  ASSERT_APP_HAS_PERMISSION
 };
 
 /**
@@ -79,6 +80,18 @@ AssertAppProcessManifestURL(T* aActor,
   return AssertAppProcess(aActor,
                           ASSERT_APP_PROCESS_MANIFEST_URL,
                           aManifestURL);
+}
+
+/**
+ * Inline function for asserting the process's manifest URL.
+ */
+template<typename T>
+inline bool
+AssertAppHasPermission(T* aActor,
+                       const char* aPermission) {
+  return AssertAppProcess(aActor,
+                          ASSERT_APP_HAS_PERMISSION,
+                          aPermission);
 }
 
 } // namespace mozilla

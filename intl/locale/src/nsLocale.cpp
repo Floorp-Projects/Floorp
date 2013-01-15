@@ -5,8 +5,6 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "pratom.h"
-#include "prtypes.h"
 #include "nsISupports.h"
 #include "nsILocale.h"
 #include "nsLocale.h"
