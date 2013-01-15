@@ -1380,10 +1380,6 @@ let ContentTree = {
   },
 
   onClick: function CT_onClick(aEvent) {
-    // Only handle clicks on tree children.
-    if (aEvent.target.localName != "treechildren")
-      return;
-
     let node = this.view.selectedNode;
     if (node) {
       let doubleClick = aEvent.button == 0 && aEvent.detail == 2;
