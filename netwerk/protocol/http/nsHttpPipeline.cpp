@@ -14,6 +14,7 @@
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include <algorithm>
 
 #ifdef DEBUG
 #include "prthread.h"
@@ -852,7 +853,7 @@ nsHttpPipeline::FillSendBuf()
             nsAHttpTransaction *response = Response(0);
             if (response && !response->PipelinePosition())
                 response->SetPipelinePosition(1);
-            rv = trans->ReadSegments(this, (uint32_t)NS_MIN(avail, (uint64_t)UINT32_MAX), &n);
+            rv = trans->ReadSegments(this, (uint32_t)std::min(avail, (uint64_t)UINT32_MAX), &n);
             if (NS_FAILED(rv)) return rv;
             
             if (n == 0) {

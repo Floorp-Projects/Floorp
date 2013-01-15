@@ -63,12 +63,14 @@
 #  ifndef __has_extension
 #    define __has_extension __has_feature /* compatibility, for older versions of clang */
 #  endif
-#  if __has_extension(cxx_deleted_functions)
-#    define MOZ_HAVE_CXX11_DELETE
-#  endif
-#  if __has_extension(cxx_override_control)
-#    define MOZ_HAVE_CXX11_OVERRIDE
-#    define MOZ_HAVE_CXX11_FINAL         final
+#  if __cplusplus >= 201103L
+#    if __has_extension(cxx_deleted_functions)
+#      define MOZ_HAVE_CXX11_DELETE
+#    endif
+#    if __has_extension(cxx_override_control)
+#      define MOZ_HAVE_CXX11_OVERRIDE
+#      define MOZ_HAVE_CXX11_FINAL         final
+#    endif
 #  endif
 #  if __has_extension(cxx_strong_enums)
 #    define MOZ_HAVE_CXX11_ENUM_TYPE

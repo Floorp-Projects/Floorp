@@ -53,6 +53,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
 #include "nsClientRect.h"
+#include <algorithm>
 #ifdef MOZ_MEDIA
 #include "nsHTMLVideoElement.h"
 #endif
@@ -265,12 +266,12 @@ nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
             AnimationPropertySegment& segment = prop.mSegments[segIdx];
             gfxSize from = GetScaleForValue(segment.mFromValue,
                                             aContent->GetPrimaryFrame());
-            result.width = NS_MAX<float>(result.width, from.width);
-            result.height = NS_MAX<float>(result.height, from.height);
+            result.width = std::max<float>(result.width, from.width);
+            result.height = std::max<float>(result.height, from.height);
             gfxSize to = GetScaleForValue(segment.mToValue,
                                           aContent->GetPrimaryFrame());
-            result.width = NS_MAX<float>(result.width, to.width);
-            result.height = NS_MAX<float>(result.height, to.height);
+            result.width = std::max<float>(result.width, to.width);
+            result.height = std::max<float>(result.height, to.height);
           }
         }
       }
@@ -290,12 +291,12 @@ nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
       if (pt.mProperty == eCSSProperty_transform) {
         gfxSize start = GetScaleForValue(pt.mStartValue,
                                          aContent->GetPrimaryFrame());
-        result.width = NS_MAX<float>(result.width, start.width);
-        result.height = NS_MAX<float>(result.height, start.height);
+        result.width = std::max<float>(result.width, start.width);
+        result.height = std::max<float>(result.height, start.height);
         gfxSize end = GetScaleForValue(pt.mEndValue,
                                        aContent->GetPrimaryFrame());
-        result.width = NS_MAX<float>(result.width, end.width);
-        result.height = NS_MAX<float>(result.height, end.height);
+        result.width = std::max<float>(result.width, end.width);
+        result.height = std::max<float>(result.height, end.height);
       }
     }
   }
@@ -1367,17 +1368,17 @@ nsLayoutUtils::RoundedRectIntersectRect(const nsRect& aRoundedRect,
   // rectFullHeight and rectFullWidth together will approximately contain
   // the total area of the frame minus the rounded corners.
   nsRect rectFullHeight = aRoundedRect;
-  nscoord xDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
+  nscoord xDiff = std::max(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
   rectFullHeight.x += xDiff;
-  rectFullHeight.width -= NS_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
+  rectFullHeight.width -= std::max(aRadii[NS_CORNER_TOP_RIGHT_X],
                                  aRadii[NS_CORNER_BOTTOM_RIGHT_X]) + xDiff;
   nsRect r1;
   r1.IntersectRect(rectFullHeight, aContainedRect);
 
   nsRect rectFullWidth = aRoundedRect;
-  nscoord yDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  nscoord yDiff = std::max(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
   rectFullWidth.y += yDiff;
-  rectFullWidth.height -= NS_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
+  rectFullWidth.height -= std::max(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
                                  aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) + yDiff;
   nsRect r2;
   r2.IntersectRect(rectFullWidth, aContainedRect);
@@ -2525,7 +2526,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
   }
 
   if (aStyle.IsCalcUnit()) {
-    aResult = NS_MAX(nsRuleNode::ComputeComputedCalc(aStyle, h), 0);
+    aResult = std::max(nsRuleNode::ComputeComputedCalc(aStyle, h), 0);
     return true;
   }
 
@@ -2724,14 +2725,14 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         nscoord h;
         if (GetAbsoluteCoord(styleHeight, h) ||
             GetPercentHeight(styleHeight, aFrame, h)) {
-          h = NS_MAX(0, h - heightTakenByBoxSizing);
+          h = std::max(0, h - heightTakenByBoxSizing);
           result =
             NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
         }
 
         if (GetAbsoluteCoord(styleMaxHeight, h) ||
             GetPercentHeight(styleMaxHeight, aFrame, h)) {
-          h = NS_MAX(0, h - heightTakenByBoxSizing);
+          h = std::max(0, h - heightTakenByBoxSizing);
           nscoord maxWidth =
             NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
           if (maxWidth < result)
@@ -2740,7 +2741,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 
         if (GetAbsoluteCoord(styleMinHeight, h) ||
             GetPercentHeight(styleMinHeight, aFrame, h)) {
-          h = NS_MAX(0, h - heightTakenByBoxSizing);
+          h = std::max(0, h - heightTakenByBoxSizing);
           nscoord minWidth =
             NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
           if (minWidth > result)
@@ -2935,7 +2936,7 @@ nsLayoutUtils::ComputeWidthValue(
                    min = aFrame->GetMinWidth(aRenderingContext),
                   fill = aContainingBlockWidth -
                          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
-          result = NS_MAX(min, NS_MIN(pref, fill));
+          result = std::max(min, std::min(pref, fill));
           NS_ASSERTION(result >= 0, "width less than zero");
         }
         break;
@@ -2945,7 +2946,7 @@ nsLayoutUtils::ComputeWidthValue(
     }
   }
 
-  return NS_MAX(0, result);
+  return std::max(0, result);
 }
 
 /* static */ nscoord
@@ -3460,7 +3461,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     nsCSSShadowItem* shadowDetails = textStyle->mTextShadow->ShadowAt(i - 1);
     nsPoint shadowOffset(shadowDetails->mXOffset,
                          shadowDetails->mYOffset);
-    nscoord blurRadius = NS_MAX(shadowDetails->mRadius, 0);
+    nscoord blurRadius = std::max(shadowDetails->mRadius, 0);
 
     nsRect shadowRect(aTextRect);
     shadowRect.MoveBy(shadowOffset);
@@ -3645,11 +3646,11 @@ CalculateBlockContentBottom(nsBlockFrame* aFrame)
     if (line->IsBlock()) {
       nsIFrame* child = line->mFirstChild;
       nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
-      contentBottom = NS_MAX(contentBottom,
+      contentBottom = std::max(contentBottom,
                         nsLayoutUtils::CalculateContentBottom(child) + offset);
     }
     else {
-      contentBottom = NS_MAX(contentBottom, line->mBounds.YMost());
+      contentBottom = std::max(contentBottom, line->mBounds.YMost());
     }
   }
   return contentBottom;
@@ -3671,7 +3672,7 @@ nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
     nsBlockFrame* blockFrame = GetAsBlock(aFrame);
     if (blockFrame) {
       contentBottom =
-        NS_MAX(contentBottom, CalculateBlockContentBottom(blockFrame));
+        std::max(contentBottom, CalculateBlockContentBottom(blockFrame));
       skip |= nsIFrame::kPrincipalList;
     }
     nsIFrame::ChildListIterator lists(aFrame);
@@ -3681,7 +3682,7 @@ nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
         for (; !childFrames.AtEnd(); childFrames.Next()) {
           nsIFrame* child = childFrames.get();
           nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
-          contentBottom = NS_MAX(contentBottom,
+          contentBottom = std::max(contentBottom,
                                  CalculateContentBottom(child) + offset);
         }
       }
@@ -4347,10 +4348,10 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
                                        nsRect* aHStrip, nsRect* aVStrip) {
   NS_ASSERTION(aR1.TopLeft() == aR2.TopLeft(),
                "expected rects at the same position");
-  nsRect unionRect(aR1.x, aR1.y, NS_MAX(aR1.width, aR2.width),
-                   NS_MAX(aR1.height, aR2.height));
-  nscoord VStripStart = NS_MIN(aR1.width, aR2.width);
-  nscoord HStripStart = NS_MIN(aR1.height, aR2.height);
+  nsRect unionRect(aR1.x, aR1.y, std::max(aR1.width, aR2.width),
+                   std::max(aR1.height, aR2.height));
+  nscoord VStripStart = std::min(aR1.width, aR2.width);
+  nscoord HStripStart = std::min(aR1.height, aR2.height);
   *aVStrip = unionRect;
   aVStrip->x += VStripStart;
   aVStrip->width -= VStripStart;
@@ -4806,8 +4807,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
 
   nsTextFrame* curr = static_cast<nsTextFrame*>(aFrame);
   do {
-    int32_t fstart = NS_MAX(curr->GetContentOffset(), aStartOffset);
-    int32_t fend = NS_MIN(curr->GetContentEnd(), aEndOffset);
+    int32_t fstart = std::max(curr->GetContentOffset(), aStartOffset);
+    int32_t fend = std::min(curr->GetContentEnd(), aEndOffset);
     if (fstart >= fend) {
       continue;
     }
@@ -5093,7 +5094,7 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
 
   // Clamp the container width to the device dimensions
   nscoord iFrameWidth = aPresContext->GetVisibleArea().width;
-  nscoord effectiveContainerWidth = NS_MIN(iFrameWidth, aContainerWidth);
+  nscoord effectiveContainerWidth = std::min(iFrameWidth, aContainerWidth);
 
   nscoord byLine = 0, byInch = 0;
   if (emPerLine != 0) {
@@ -5108,7 +5109,7 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
                             (deviceWidthInches * 1440 /
                              minTwips ));
   }
-  return NS_MAX(byLine, byInch);
+  return std::max(byLine, byInch);
 }
 
 /* static */ float

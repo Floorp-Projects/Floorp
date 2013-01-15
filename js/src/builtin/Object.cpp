@@ -159,7 +159,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
         int valcnt = 0;
         if (shape) {
             bool doGet = true;
-            if (obj2->isNative() && !IsImplicitProperty(shape)) {
+            if (obj2->isNative() && !IsImplicitDenseElement(shape)) {
                 unsigned attrs = shape->attributes();
                 if (attrs & JSPROP_GETTER) {
                     doGet = false;
@@ -456,7 +456,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         return JS_FALSE;
     args.rval().setUndefined();
     if (shape) {
-        if (pobj->isNative() && !IsImplicitProperty(shape)) {
+        if (pobj->isNative() && !IsImplicitDenseElement(shape)) {
             if (shape->hasGetterValue())
                 args.rval().set(shape->getterValue());
         }
@@ -492,7 +492,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         return JS_FALSE;
     args.rval().setUndefined();
     if (shape) {
-        if (pobj->isNative() && !IsImplicitProperty(shape)) {
+        if (pobj->isNative() && !IsImplicitDenseElement(shape)) {
             if (shape->hasSetterValue())
                 args.rval().set(shape->setterValue());
         }

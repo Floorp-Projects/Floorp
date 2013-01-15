@@ -7,6 +7,7 @@
 #include "nsTArray.h"
 #include "mozilla/ThreadLocal.h"
 #include "nsPrintfCString.h"
+#include <algorithm>
 
 /*
  * The SENTINEL values below guaranties that a < or >
@@ -41,13 +42,13 @@ inline bool nsRegion::nsRectFast::Intersects (const nsRect& aRect) const
 
 inline bool nsRegion::nsRectFast::IntersectRect (const nsRect& aRect1, const nsRect& aRect2)
 {
-  const nscoord xmost = NS_MIN (aRect1.XMost (), aRect2.XMost ());
-  x = NS_MAX (aRect1.x, aRect2.x);
+  const nscoord xmost = std::min (aRect1.XMost (), aRect2.XMost ());
+  x = std::max (aRect1.x, aRect2.x);
   width = xmost - x;
   if (width <= 0) return false;
 
-  const nscoord ymost = NS_MIN (aRect1.YMost (), aRect2.YMost ());
-  y = NS_MAX (aRect1.y, aRect2.y);
+  const nscoord ymost = std::min (aRect1.YMost (), aRect2.YMost ());
+  y = std::max (aRect1.y, aRect2.y);
   height = ymost - y;
   if (height <= 0) return false;
 
@@ -56,10 +57,10 @@ inline bool nsRegion::nsRectFast::IntersectRect (const nsRect& aRect1, const nsR
 
 inline void nsRegion::nsRectFast::UnionRect (const nsRect& aRect1, const nsRect& aRect2)
 {
-  const nscoord xmost = NS_MAX (aRect1.XMost (), aRect2.XMost ());
-  const nscoord ymost = NS_MAX (aRect1.YMost (), aRect2.YMost ());
-  x = NS_MIN(aRect1.x, aRect2.x);
-  y = NS_MIN(aRect1.y, aRect2.y);
+  const nscoord xmost = std::max (aRect1.XMost (), aRect2.XMost ());
+  const nscoord ymost = std::max (aRect1.YMost (), aRect2.YMost ());
+  x = std::min(aRect1.x, aRect2.x);
+  y = std::min(aRect1.y, aRect2.y);
   width  = xmost - x;
   height = ymost - y;
 }

@@ -86,11 +86,11 @@ this.SafeBrowsing = {
 
 
   updateProviderURLs: function() {
-#ifdef USE_HISTORIC_SAFEBROWSING_ID
-    let clientID = "navclient-auto-ffox";
-#else
-    let clientID = Services.appinfo.name;
-#endif
+    try {
+      var clientID = Services.prefs.getCharPref("browser.safebrowsing.id");
+    } catch(e) {
+      var clientID = Services.appinfo.name;
+    }
 
     log("initializing safe browsing URLs");
     let basePref = "browser.safebrowsing.";

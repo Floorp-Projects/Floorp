@@ -93,6 +93,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
+#include <algorithm>
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -12567,8 +12568,8 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
     NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
                      parentSize.height != NS_INTRINSICSIZE,
                      "parentSize should be valid");
-    parentReflowState.SetComputedWidth(NS_MAX(parentSize.width, 0));
-    parentReflowState.SetComputedHeight(NS_MAX(parentSize.height, 0));
+    parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
+    parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
     parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
     parentSize.height = NS_AUTOHEIGHT;
 

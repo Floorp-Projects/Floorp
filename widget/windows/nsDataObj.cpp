@@ -32,6 +32,7 @@
 
 #include "WinUtils.h"
 #include "mozilla/LazyIdleThread.h"
+#include <algorithm>
 
 
 using namespace mozilla;
@@ -193,7 +194,7 @@ STDMETHODIMP nsDataObj::CStream::Read(void* pvBuffer,
   // Bytes left for Windows to read out of our buffer
   ULONG bytesLeft = mChannelData.Length() - mStreamRead;
   // Let Windows know what we will hand back, usually this is the entire buffer
-  *nBytesRead = NS_MIN(bytesLeft, nBytesToRead);
+  *nBytesRead = std::min(bytesLeft, nBytesToRead);
   // Copy the buffer data over
   memcpy(pvBuffer, ((char*)mChannelData.Elements() + mStreamRead), *nBytesRead);
   // Update our bytes read tracking
@@ -941,7 +942,7 @@ CreateFilenameFromTextA(nsString & aText, const char * aExtension,
   // way ensures that even in MBCS environments there will be a valid MBCS filename of
   // the correct length.
   int maxUsableFilenameLen = aFilenameLen - strlen(aExtension) - 1; // space for ext + null byte
-  int currLen, textLen = (int) NS_MIN(aText.Length(), aFilenameLen);
+  int currLen, textLen = (int) std::min(aText.Length(), aFilenameLen);
   char defaultChar = '_';
   do {
     currLen = WideCharToMultiByte(CP_ACP, 

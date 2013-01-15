@@ -16,7 +16,7 @@ nsTDependentSubstring_CharT::Rebind( const substring_type& str, uint32_t startPo
       startPos = strLength;
 
     mData = const_cast<char_type*>(str.Data()) + startPos;
-    mLength = NS_MIN(length, strLength - startPos);
+    mLength = XPCOM_MIN(length, strLength - startPos);
 
     SetDataFlags(F_NONE);
   }

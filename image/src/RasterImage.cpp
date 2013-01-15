@@ -35,6 +35,7 @@
 #include "mozilla/gfx/Scale.h"
 
 #include "sampler.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::image;
@@ -1487,7 +1488,7 @@ RasterImage::SetFrameDisposalMethod(uint32_t aFrameNum,
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame,
                     "Calling SetFrameDisposalMethod on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
@@ -1507,7 +1508,7 @@ RasterImage::SetFrameTimeout(uint32_t aFrameNum, int32_t aTimeout)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameTimeout on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1526,7 +1527,7 @@ RasterImage::SetFrameBlendMethod(uint32_t aFrameNum, int32_t aBlendMethod)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameBlendMethod on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1545,7 +1546,7 @@ RasterImage::SetFrameHasNoAlpha(uint32_t aFrameNum)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameHasNoAlpha on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -1564,7 +1565,7 @@ RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
   if (aFrameNum >= mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
-  imgFrame* frame = GetImgFrame(aFrameNum);
+  imgFrame* frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling SetFrameAsNonPremult on frame that doesn't exist!");
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -2321,8 +2322,8 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
 
   if (aSrc->GetIsPaletted()) {
     // Larger than the destination frame, clip it
-    int32_t width = NS_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
-    int32_t height = NS_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
+    int32_t width = std::min(aSrcRect.width, dstRect.width - aSrcRect.x);
+    int32_t height = std::min(aSrcRect.height, dstRect.height - aSrcRect.y);
 
     // The clipped image must now fully fit within destination image frame
     NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
@@ -3195,7 +3196,7 @@ RasterImage::DecodeSomeData(uint32_t aMaxBytes)
 
 
   // write the proper amount of data
-  uint32_t bytesToDecode = NS_MIN(aMaxBytes,
+  uint32_t bytesToDecode = std::min(aMaxBytes,
                                   mSourceData.Length() - mBytesDecoded);
   nsresult rv = WriteToDecoder(mSourceData.Elements() + mBytesDecoded,
                                bytesToDecode);

@@ -134,7 +134,7 @@ class nsReadingIterator
         {
           if (n > 0)
             {
-              difference_type step = NS_MIN(n, size_forward());
+              difference_type step = XPCOM_MIN(n, size_forward());
 
               NS_ASSERTION(step>0, "can't advance a reading iterator beyond the end of a string");
 
@@ -142,7 +142,7 @@ class nsReadingIterator
             }
           else if (n < 0)
             {
-              difference_type step = NS_MAX(n, -size_backward());
+              difference_type step = XPCOM_MAX(n, -size_backward());
 
               NS_ASSERTION(step<0, "can't advance (backward) a reading iterator beyond the end of a string");
 
@@ -268,7 +268,7 @@ class nsWritingIterator
         {
           if (n > 0)
             {
-              difference_type step = NS_MIN(n, size_forward());
+              difference_type step = XPCOM_MIN(n, size_forward());
 
               NS_ASSERTION(step>0, "can't advance a writing iterator beyond the end of a string");
 
@@ -276,7 +276,7 @@ class nsWritingIterator
             }
           else if (n < 0)
             {
-              difference_type step = NS_MAX(n, -size_backward());
+              difference_type step = XPCOM_MAX(n, -size_backward());
 
               NS_ASSERTION(step<0, "can't advance (backward) a writing iterator beyond the end of a string");
 

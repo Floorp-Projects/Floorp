@@ -1779,6 +1779,8 @@ gsmsdp_get_remote_sdp_direction (fsmdef_dcb_t *dcb_p, uint16_t level,
     cc_sdp_t       *sdp_p = dcb_p->sdp;
     uint16_t       media_attr;
     uint16_t       i;
+    uint32         port;
+    int            sdpmode = 0;
     static const sdp_attr_e  dir_attr_array[] = {
         SDP_ATTR_INACTIVE,
         SDP_ATTR_RECVONLY,
@@ -1790,6 +1792,8 @@ gsmsdp_get_remote_sdp_direction (fsmdef_dcb_t *dcb_p, uint16_t level,
     if (!sdp_p->dest_sdp) {
         return direction;
     }
+
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     media_attr = 0; /* media level attr. count */
     /*
@@ -1841,6 +1845,17 @@ gsmsdp_get_remote_sdp_direction (fsmdef_dcb_t *dcb_p, uint16_t level,
      */
     if (dest_addr->type == CPR_IP_ADDR_IPV4 &&
         dest_addr->u.ip4 == 0) {
+
+        /*
+         * For WebRTC, we allow active media sections with IP=0.0.0.0, iff
+         * port != 0. This is to allow interop with existing Trickle ICE
+         * implementations. TODO: This may need to be updated to match the
+         * spec once the Trickle ICE spec is finalized.
+         */
+        port = sdp_get_media_portnum(sdp_p->dest_sdp, level);
+        if (sdpmode && port != 0) {
+            return direction;
+        }
 
         direction = SDP_DIRECTION_INACTIVE;
     } else {

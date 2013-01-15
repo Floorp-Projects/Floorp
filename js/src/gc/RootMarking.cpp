@@ -562,10 +562,8 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case REGEXPSTATICS: {
-          /*
         RegExpStatics::AutoRooter *rooter = static_cast<RegExpStatics::AutoRooter *>(this);
         rooter->trace(trc);
-          */
         return;
       }
 
@@ -646,15 +644,14 @@ Shape::Range::AutoRooter::trace(JSTracer *trc)
 void
 RegExpStatics::AutoRooter::trace(JSTracer *trc)
 {
-    if (statics->regexp)
-        MarkObjectRoot(trc, reinterpret_cast<JSObject**>(&statics->regexp),
-                       "RegExpStatics::AutoRooter regexp");
     if (statics->matchesInput)
         MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->matchesInput),
                        "RegExpStatics::AutoRooter matchesInput");
     if (statics->pendingInput)
         MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
                        "RegExpStatics::AutoRooter pendingInput");
+    if (statics->regexp.initialized())
+        statics->regexp->trace(trc);
 }
 
 void
@@ -731,13 +728,9 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
         if (IS_GC_MARKING_TRACER(trc) && !c->isCollecting())
             continue;
 
-        if (IS_GC_MARKING_TRACER(trc)) {
-            if ((c->activeAnalysis || c->isPreservingCode())) {
-                gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_TYPES);
-                c->markTypes(trc);
-            } else {
-                c->gcTypesMarked = false;
-            }
+        if (IS_GC_MARKING_TRACER(trc) && (c->activeAnalysis || c->isPreservingCode())) {
+            gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_TYPES);
+            c->markTypes(trc);
         }
 
         /* During a GC, these are treated as weak pointers. */

@@ -1,0 +1,54 @@
+From 5adadc5626ee2d5d3a3ca21e70fd195b9d002a0b Mon Sep 17 00:00:00 2001
+From: Jean-Marc Valin <jmvalin@jmvalin.ca>
+Date: Wed, 1 Aug 2012 13:19:38 -0400
+Subject: [PATCH] Properly save in_len for multiple channels in the resampler.
+
+This fixes issues with clicking in one channel and/or truncation
+with some unusual sample rates.
+---
+ src/resample.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/resample.c b/src/resample.c
+index 84aaf59..6e92bd0 100644
+--- a/src/resample.c
++++ b/src/resample.c
+@@ -966,13 +966,15 @@ SPX_RESAMPLE_EXPORT int speex_resampler_process_interleaved_float(SpeexResampler
+ {
+    spx_uint32_t i;
+    int istride_save, ostride_save;
+-   spx_uint32_t bak_len = *out_len;
++   spx_uint32_t bak_out_len = *out_len;
++   spx_uint32_t bak_in_len = *in_len;
+    istride_save = st->in_stride;
+    ostride_save = st->out_stride;
+    st->in_stride = st->out_stride = st->nb_channels;
+    for (i=0;i<st->nb_channels;i++)
+    {
+-      *out_len = bak_len;
++      *out_len = bak_out_len;
++      *in_len = bak_in_len;
+       if (in != NULL)
+          speex_resampler_process_float(st, i, in+i, in_len, out+i, out_len);
+       else
+@@ -987,13 +989,15 @@ SPX_RESAMPLE_EXPORT int speex_resampler_process_interleaved_int(SpeexResamplerSt
+ {
+    spx_uint32_t i;
+    int istride_save, ostride_save;
+-   spx_uint32_t bak_len = *out_len;
++   spx_uint32_t bak_out_len = *out_len;
++   spx_uint32_t bak_in_len = *in_len;
+    istride_save = st->in_stride;
+    ostride_save = st->out_stride;
+    st->in_stride = st->out_stride = st->nb_channels;
+    for (i=0;i<st->nb_channels;i++)
+    {
+-      *out_len = bak_len;
++      *out_len = bak_out_len;
++      *in_len = bak_in_len;
+       if (in != NULL)
+          speex_resampler_process_int(st, i, in+i, in_len, out+i, out_len);
+       else
+-- 
+1.7.2.5
+

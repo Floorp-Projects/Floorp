@@ -464,7 +464,7 @@ Element::GetClassList()
 }
 
 void
-Element::GetClassList(nsIDOMDOMTokenList** aClassList)
+Element::GetClassList(nsISupports** aClassList)
 {
   NS_IF_ADDREF(*aClassList = GetClassList());
 }

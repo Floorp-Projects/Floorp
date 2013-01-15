@@ -19,6 +19,7 @@
 #include "OpenDatabaseHelper.h"
 
 #include "IndexedDatabaseInlines.h"
+#include <algorithm>
 
 #define JOURNAL_DIRECTORY_NAME "journals"
 
@@ -129,7 +130,7 @@ FileManager::Init(nsIFile* aDirectory,
 
     mFileInfos.Put(id, fileInfo);
 
-    mLastFileId = NS_MAX(id, mLastFileId);
+    mLastFileId = std::max(id, mLastFileId);
   }
 
   return NS_OK;
