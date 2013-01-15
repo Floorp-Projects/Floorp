@@ -23,6 +23,7 @@
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
 #include <algorithm>
+#include <mozilla/FloatingPoint.h>
 
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
@@ -1194,7 +1195,14 @@ void MediaDecoder::DurationChanged()
 void MediaDecoder::SetDuration(double aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
+  if (MOZ_DOUBLE_IS_INFINITE(aDuration)) {
+    SetInfinite(true);
+  } else if (MOZ_DOUBLE_IS_NaN(aDuration)) {
+    mDuration = -1;
+    SetInfinite(true);
+  } else {
+    mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
+  }
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mDecoderStateMachine) {
