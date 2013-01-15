@@ -473,6 +473,9 @@
 @BINPATH@/components/DataReporting.manifest
 @BINPATH@/components/DataReportingService.js
 #endif
+#ifdef MOZ_SERVICES_HEALTHREPORT
+@BINPATH@/components/HealthReportComponents.manifest
+#endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
