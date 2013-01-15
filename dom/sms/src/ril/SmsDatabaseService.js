@@ -15,7 +15,7 @@ const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 7;
+const DB_VERSION = 6;
 const STORE_NAME = "sms";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
@@ -195,10 +195,6 @@ SmsDatabaseService.prototype = {
             if (DEBUG) debug("Upgrade to version 6. Use PhonenumberJS.")
             self.upgradeSchema5(event.target.transaction);
             break;
-          case 6:
-            if (DEBUG) debug("Upgrade to version 7. Use multiple entry indexes.")
-            self.upgradeSchema6(event.target.transaction);
-            break;
           default:
             event.target.transaction.abort();
             callback("Old database version: " + event.oldVersion, null);
@@ -275,6 +271,9 @@ SmsDatabaseService.prototype = {
   createSchema: function createSchema(db) {
     // This objectStore holds the main SMS data.
     let objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+    objectStore.createIndex("delivery", "delivery", { unique: false });
+    objectStore.createIndex("sender", "sender", { unique: false });
+    objectStore.createIndex("receiver", "receiver", { unique: false });
     objectStore.createIndex("timestamp", "timestamp", { unique: false });
     if (DEBUG) debug("Created object stores and indexes");
   },
@@ -368,251 +367,89 @@ SmsDatabaseService.prototype = {
     // Don't perform any upgrade. See Bug 819560.
   },
 
-  upgradeSchema6: function upgradeSchema6(transaction) {
-    let objectStore = transaction.objectStore(STORE_NAME);
+  /**
+   * Helper function to make the intersection of the partial result arrays
+   * obtained within createMessageList.
+   *
+   * @param keys
+   *        Object containing the partial result arrays.
+   * @param fiter
+   *        Object containing the filter search criteria used to retrieved the
+   *        partial results.
+   *
+   * return Array of keys containing the final result of createMessageList.
+   */
+  keyIntersection: function keyIntersection(keys, filter) {
+    // Always use keys[FILTER_TIMESTAMP] as base result set to be filtered.
+    // This ensures the result set is always sorted by timestamp.
+    let result = keys[FILTER_TIMESTAMP];
+    if (keys[FILTER_NUMBERS].length || filter.numbers) {
+      result = result.filter(function(i) {
+        return keys[FILTER_NUMBERS].indexOf(i) != -1;
+      });
+    }
+    if (keys[FILTER_DELIVERY].length || filter.delivery) {
+      result = result.filter(function(i) {
+        return keys[FILTER_DELIVERY].indexOf(i) != -1;
+      });
+    }
+    if (keys[FILTER_READ].length || filter.read) {
+      result = result.filter(function(i) {
+        return keys[FILTER_READ].indexOf(i) != -1;
+      });
+    }
+    return result;
+  },
 
-    // Delete "delivery" index.
-    if (objectStore.indexNames.contains("delivery")) {
-      objectStore.deleteIndex("delivery");
-    }
-    // Delete "sender" index.
-    if (objectStore.indexNames.contains("sender")) {
-      objectStore.deleteIndex("sender");
-    }
-    // Delete "receiver" index.
-    if (objectStore.indexNames.contains("receiver")) {
-      objectStore.deleteIndex("receiver");
-    }
-    // Delete "read" index.
-    if (objectStore.indexNames.contains("read")) {
-      objectStore.deleteIndex("read");
-    }
-
-    // Create new "delivery", "number" and "read" indexes.
-    objectStore.createIndex("delivery", "deliveryIndex");
-    objectStore.createIndex("number", "numberIndex", { multiEntry: true });
-    objectStore.createIndex("read", "readIndex");
-
-    // Populate new "deliverIndex", "numberIndex" and "readIndex" attributes.
-    objectStore.openCursor().onsuccess = function(event) {
-      let cursor = event.target.result;
-      if (!cursor) {
+  /**
+   * Helper function called after createMessageList gets the final result array
+   * containing the list of primary keys of records that matches the provided
+   * search criteria. This function retrieves from the store the message with
+   * the primary key matching the first one in the message list array and keeps
+   * the rest of this array in memory. It also notifies via nsISmsRequest.
+   *
+   * @param messageList
+   *        Array of primary keys retrieved within createMessageList.
+   * @param request
+   *        A nsISmsRequest object.
+   */
+  onMessageListCreated: function onMessageListCreated(messageList, aRequest) {
+    if (DEBUG) debug("Message list created: " + messageList);
+    let self = this;
+    self.newTxn(READ_ONLY, function (error, txn, store) {
+      if (error) {
+        aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
 
-      let message = cursor.value;
-      let timestamp = message.timestamp;
-      message.deliveryIndex = [message.delivery, timestamp];
-      message.numberIndex = [
-        [message.sender, timestamp],
-        [message.receiver, timestamp]
-      ];
-      message.readIndex = [message.read, timestamp];
-      cursor.update(message);
-      cursor.continue();
-    }
-  },
+      let messageId = messageList.shift();
+      if (DEBUG) debug ("Fetching message " + messageId);
+      let request = store.get(messageId);
+      let message;
+      request.onsuccess = function (event) {
+        message = request.result;
+      };
 
-  createMessageFromRecord: function createMessageFromRecord(record) {
-    if (DEBUG) debug("createMessageFromRecord: " + JSON.stringify(record));
-    return gSmsService.createSmsMessage(record.id,
-                                        record.delivery,
-                                        record.deliveryStatus,
-                                        record.sender,
-                                        record.receiver,
-                                        record.body,
-                                        record.messageClass,
-                                        record.timestamp,
-                                        record.read);
-  },
-
-  /**
-   * Queue up passed message id, reply if necessary. 'aMessageId' = 0 for no
-   * more messages, negtive for errors and valid otherwise.
-   */
-  onNextMessageInListGot: function onNextMessageInListGot(
-      aRequest, aObjectStore, aMessageList, aMessageId) {
-
-    if (DEBUG) debug("onNextMessageInListGot - " + aMessageId);
-    if (aMessageId) {
-      // Queue up any id but '0' and replies later accordingly.
-      aMessageList.results.push(aMessageId);
-    }
-    if (aMessageId <= 0) {
-      // No more processing.
-      aMessageList.processing = false;
-    }
-
-    if (!aMessageList.waitCount) {
-      if (DEBUG) debug("Cursor.continue() not called yet");
-      return;
-    }
-
-    aMessageList.waitCount -= 1;
-    if (!aMessageList.results.length) {
-      if (!aMessageList.processing) {
-        if (DEBUG) debug("No messages matching the filter criteria");
-        aRequest.notifyNoMessageInList();
-      }
-      return;
-    }
-
-    if (aMessageList.results[0] < 0) {
-      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
-      return;
-    }
-
-    let firstMessageId = aMessageList.results.shift();
-    if (DEBUG) debug ("Fetching message " + firstMessageId);
-    let request = aObjectStore.get(aMessageId);
-    let self = this;
-    request.onsuccess = function onsuccess(event) {
-      let sms = self.createMessageFromRecord(event.target.result);
-      if (aMessageList.listId >= 0) {
-        if (DEBUG) debug("notifyNextMessageInListGot " + firstMessageId);
-        aRequest.notifyNextMessageInListGot(sms);
-      } else {
+      txn.oncomplete = function oncomplete(event) {
+        if (DEBUG) debug("Transaction " + txn + " completed.");
+        if (!message) {
+          aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+          return;
+        }
         self.lastMessageListId += 1;
-        aMessageList.listId = self.lastMessageListId;
-        self.messageLists[self.lastMessageListId] = aMessageList;
-        if (DEBUG) debug("notifyMessageListCreated " + firstMessageId);
-        aRequest.notifyMessageListCreated(aMessageList.listId, sms);
-      }
-    }
-    request.onerror = function onerror(event) {
-      if (DEBUG) debug("notifyReadMessageListFailed " + firstMessageId);
-      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
-    }
-  },
-
-  /**
-   * Queue up {aMessageId, aTimestamp} pairs, find out intersections and report
-   * to onNextMessageInListGot. Return true if it is still possible to have
-   * another match.
-   */
-  onNextMessageInMultiFiltersGot: function onNextMessageInMultiFiltersGot(
-      aRequest, aObjectStore, aMessageList, aWhich, aMessageId, aTimestamp) {
-
-    if (DEBUG) {
-      debug("onNextMessageInMultiFiltersGot: "
-            + aWhich + ", " + aMessageId + ", " + aTimestamp);
-    }
-    let filters = aMessageList.filters;
-
-    if (!aMessageId) {
-      filters[aWhich].processing = false;
-      for (let i = 0; i < filters.length; i++) {
-        if (filters[i].processing) {
-          return false;
-        }
-      }
-
-      this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, 0);
-      return false;
-    }
-
-    // Search id in other existing results. If no other results has it,
-    // and A) the last timestamp is smaller-equal to current timestamp,
-    // we wait for further results; either B) record timestamp is larger
-    // then current timestamp or C) no more processing for a filter, then we
-    // drop this id because there can't be a match anymore.
-    for (let i = 0; i < filters.length; i++) {
-      if (i == aWhich) continue;
-
-      let ctx = filters[i];
-      let results = ctx.results;
-      let found = false;
-      for (let j = 0; j < results.length; j++) {
-        let result = results[j];
-        if (result.id == aMessageId) {
-          found = true;
-          break;
-        }
-        if ((!aMessageList.reverse && (result.timestamp > aTimestamp)) ||
-            (aMessageList.reverse && (result.timestamp < aTimestamp))) {
-          // B) Cannot find a match anymore. Drop.
-          return true;
-        }
-      }
-
-      if (!found) {
-        if (!ctx.processing) {
-          // C) Cannot find a match anymore. Drop.
-          if (results.length) {
-            let lastResult = results[results.length - 1];
-            if ((!aMessageList.reverse && (lastResult.timestamp >= aTimestamp)) ||
-                (aMessageList.reverse && (lastResult.timestamp <= aTimestamp))) {
-              // Still have a chance to get another match. Return true.
-              return true;
-            }
-          }
-
-          // Impossible to find another match because all results in ctx have
-          // timestamps smaller than aTimestamp.
-          return this.onNextMessageInMultiFiltersGot(aRequest, aObjectStore,
-                                                     aMessageList, aWhich, 0, 0);
-        }
-
-        // A) Pending.
-        filters[aWhich].results.push({
-          id: aMessageId,
-          timestamp: aTimestamp
-        });
-        return true;
-      }
-    }
-
-    // Now id is found in all other results. Report it.
-    this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, aMessageId);
-    return true;
-  },
-
-  onNextMessageInMultiNumbersGot: function onNextMessageInMultiNumbersGot(
-      aRequest, aObjectStore, aMessageList, aWhich,
-      aSingleFilter, aIndex, aMessageId, aTimestamp) {
-
-    if (DEBUG) {
-      debug("onNextMessageInMultiNumbersGot: "
-            + aIndex + ", " + aMessageId + ", " + aTimestamp);
-    }
-    let queues = aMessageList.filters[aWhich].queues;
-    let q = queues[aIndex];
-    if (aMessageId) {
-      if (!aIndex) { // Timestamp.
-        q.results.push({
-          id: aMessageId,
-          timestamp: aTimestamp
-        });
-      } else { // Numbers.
-        q.results.push(aMessageId);
-      }
-      return true;
-    }
-
-    q.processing -= 1;
-    if (queues[0].processing || queues[1].processing) {
-      return false;
-    }
-
-    let tres = queues[0].results;
-    let qres = queues[1].results;
-    tres = tres.filter(function (element) {
-      return qres.indexOf(element.id) != -1;
+        self.messageLists[self.lastMessageListId] = messageList;
+        let sms = gSmsService.createSmsMessage(message.id,
+                                               message.delivery,
+                                               message.deliveryStatus,
+                                               message.sender,
+                                               message.receiver,
+                                               message.body,
+                                               message.messageClass,
+                                               message.timestamp,
+                                               message.read);
+        aRequest.notifyMessageListCreated(self.lastMessageListId, sms);
+      };
     });
-    if (aSingleFilter) {
-      for (let i = 0; i < tres.length; i++) {
-        this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, tres[i].id);
-      }
-      this.onNextMessageInListGot(aRequest, aObjectStore, aMessageList, 0);
-    } else {
-      for (let i = 0; i < tres.length; i++) {
-        this.onNextMessageInMultiFiltersGot(aRequest, aObjectStore, aMessageList,
-                                            aWhich, tres[i].id, tres[i].timestamp);
-      }
-      this.onNextMessageInMultiFiltersGot(aRequest, aObjectStore, aMessageList,
-                                          aWhich, 0, 0);
-    }
-    return false;
   },
 
   saveMessage: function saveMessage(message) {
@@ -690,20 +527,14 @@ SmsDatabaseService.prototype = {
                : sender;
     }
 
-    let message = {
-      deliveryIndex:  [DELIVERY_RECEIVED, aDate],
-      numberIndex:    [[sender, aDate], [receiver, aDate]],
-      readIndex:      [FILTER_READ_UNREAD, aDate],
-
-      delivery:       DELIVERY_RECEIVED,
-      deliveryStatus: DELIVERY_STATUS_SUCCESS,
-      sender:         sender,
-      receiver:       receiver,
-      body:           aBody,
-      messageClass:   aMessageClass,
-      timestamp:      aDate,
-      read:           FILTER_READ_UNREAD
-    };
+    let message = {delivery:       DELIVERY_RECEIVED,
+                   deliveryStatus: DELIVERY_STATUS_SUCCESS,
+                   sender:         sender,
+                   receiver:       receiver,
+                   body:           aBody,
+                   messageClass:   aMessageClass,
+                   timestamp:      aDate,
+                   read:           FILTER_READ_UNREAD};
     return this.saveMessage(message);
   },
 
@@ -731,20 +562,14 @@ SmsDatabaseService.prototype = {
                : sender;
     }
 
-    let message = {
-      deliveryIndex:  [DELIVERY_SENDING, aDate],
-      numberIndex:    [[sender, aDate], [receiver, aDate]],
-      readIndex:      [FILTER_READ_READ, aDate],
-
-      delivery:       DELIVERY_SENDING,
-      deliveryStatus: DELIVERY_STATUS_PENDING,
-      sender:         sender,
-      receiver:       receiver,
-      body:           aBody,
-      messageClass:   MESSAGE_CLASS_NORMAL,
-      timestamp:      aDate,
-      read:           FILTER_READ_READ
-    };
+    let message = {delivery:       DELIVERY_SENDING,
+                   deliveryStatus: DELIVERY_STATUS_PENDING,
+                   sender:         sender,
+                   receiver:       receiver,
+                   body:           aBody,
+                   messageClass:   MESSAGE_CLASS_NORMAL,
+                   timestamp:      aDate,
+                   read:           FILTER_READ_READ};
     return this.saveMessage(message);
   },
 
@@ -783,7 +608,6 @@ SmsDatabaseService.prototype = {
           return;
         }
         message.delivery = delivery;
-        message.deliveryIndex = [delivery, message.timestamp];
         message.deliveryStatus = deliveryStatus;
         if (DEBUG) {
           debug("Message.delivery set to: " + delivery
@@ -800,7 +624,6 @@ SmsDatabaseService.prototype = {
 
   getMessage: function getMessage(messageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + messageId);
-    let self = this;
     this.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
         if (DEBUG) debug(error);
@@ -830,8 +653,16 @@ SmsDatabaseService.prototype = {
           aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
           return;
         }
-        let sms = self.createMessageFromRecord(data);
-        aRequest.notifyMessageGot(sms);
+        let message = gSmsService.createSmsMessage(data.id,
+                                                   data.delivery,
+                                                   data.deliveryStatus,
+                                                   data.sender,
+                                                   data.receiver,
+                                                   data.body,
+                                                   data.messageClass,
+                                                   data.timestamp,
+                                                   data.read);
+        aRequest.notifyMessageGot(message);
       };
 
       txn.onerror = function onerror(event) {
@@ -890,29 +721,44 @@ SmsDatabaseService.prototype = {
               }
 
               if (mostRecentEntry.id == messageId) {
-                // Check most recent sender/receiver.
-                let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
-                let numberRequest = smsStore.index("number")
-                                            .openCursor(numberRange, PREV);
-                numberRequest.onsuccess = function(event) {
+                // This sucks, we have to find a new most-recent message.
+                message = null;
+
+                // Check most recent sender.
+                smsStore.index("sender").openCursor(number, "prev").onsuccess = function(event) {
                   let cursor = event.target.result;
-                  if (!cursor) {
+                  if (cursor) {
+                    message = cursor.value;
+                  }
+                };
+
+                // Check most recent receiver.
+                smsStore.index("receiver").openCursor(number, "prev").onsuccess = function(event) {
+                  let cursor = event.target.result;
+                  if (cursor) {
+                    if (!message || cursor.value.timeStamp > message.timestamp) {
+                      message = cursor.value;
+                    }
+                  }
+
+                  // If we found a new message then we need to update the data
+                  // in the most-recent store. Otherwise we can delete it.
+                  if (message) {
+                    mostRecentEntry.id = message.id;
+                    mostRecentEntry.timestamp = message.timestamp;
+                    mostRecentEntry.body = message.body;
+                    if (DEBUG) {
+                      debug("Updating mru entry: " +
+                            JSON.stringify(mostRecentEntry));
+                    }
+                    mruStore.put(mostRecentEntry);
+                  }
+                  else {
                     if (DEBUG) {
                       debug("Deleting mru entry for number '" + number + "'");
                     }
                     mruStore.delete(number);
-                    return;
                   }
-
-                  let nextMsg = cursor.value;
-                  mostRecentEntry.id = nextMsg.id;
-                  mostRecentEntry.timestamp = nextMsg.timestamp;
-                  mostRecentEntry.body = nextMsg.body;
-                  if (DEBUG) {
-                    debug("Updating mru entry: " +
-                          JSON.stringify(mostRecentEntry));
-                  }
-                  mruStore.put(mostRecentEntry);
                 };
               } else if (!message.read) {
                 // Shortcut, just update the unread count.
@@ -942,262 +788,132 @@ SmsDatabaseService.prototype = {
             " read: " + filter.read +
             " reverse: " + reverse);
     }
+    // This object keeps the lists of keys retrieved by the search specific to
+    // each nsIMozSmsFilter. Once all the keys have been retrieved from the
+    // store, the final intersection of this arrays will contain all the
+    // keys for the message list that we are creating.
+    let filteredKeys = {};
+    filteredKeys[FILTER_TIMESTAMP] = [];
+    filteredKeys[FILTER_NUMBERS] = [];
+    filteredKeys[FILTER_DELIVERY] = [];
+    filteredKeys[FILTER_READ] = [];
+
+    // Callback function to iterate through request results via IDBCursor.
+    let successCb = function onsuccess(result, filter) {
+      // Once the cursor has retrieved all keys that matches its key range,
+      // the filter search is done.
+      if (!result) {
+        if (DEBUG) {
+          debug("These messages match the " + filter + " filter: " +
+                filteredKeys[filter]);
+        }
+        return;
+      }
+      // The cursor primaryKey is stored in its corresponding partial array
+      // according to the filter parameter.
+      let primaryKey = result.primaryKey;
+      filteredKeys[filter].push(primaryKey);
+      result.continue();
+    };
+
+    let errorCb = function onerror(event) {
+      //TODO look at event.target.errorCode, pick appropriate error constant.
+      if (DEBUG) debug("IDBRequest error " + event.target.errorCode);
+      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+      return;
+    };
 
     let self = this;
     this.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
-        //TODO look at event.target.errorCode, pick appropriate error constant.
-        if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
-        aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        errorCb(error);
         return;
       }
 
-      let messageList = {
-        listId: -1,
-        reverse: reverse,
-        processing: true,
-        stop: false,
-        // Local contexts for multiple filter targets' case.
-        filters: [],
-        // Pending message waiting count. Initialized with 1 for notifying
-        // message list created.
-        waitCount: 1,
-        results: []
-      };
-
-      let onNextMessageInListGotCb =
-        self.onNextMessageInListGot.bind(self, aRequest, store, messageList);
-
-      let singleFilterSuccessCb = function onSingleFilterSuccess(event) {
-        if (messageList.stop) {
-          return;
-        }
-
-        let cursor = event.target.result;
-        // Once the cursor has retrieved all keys that matches its key range,
-        // the filter search is done.
-        if (cursor) {
-          onNextMessageInListGotCb(cursor.primaryKey);
-          cursor.continue();
-        } else {
-          onNextMessageInListGotCb(0);
-        }
-      };
-
-      let singleFilterErrorCb = function onSingleFilterError(event) {
-        if (messageList.stop) {
-          return;
-        }
-
-        if (DEBUG) debug("IDBRequest error " + event.target.errorCode);
-        onNextMessageInListGotCb(-1);
-      };
-
+      // In first place, we retrieve the keys that match the filter.startDate
+      // and filter.endDate search criteria.
+      let timeKeyRange = null;
+      if (filter.startDate != null && filter.endDate != null) {
+        timeKeyRange = IDBKeyRange.bound(filter.startDate.getTime(),
+                                         filter.endDate.getTime());
+      } else if (filter.startDate != null) {
+        timeKeyRange = IDBKeyRange.lowerBound(filter.startDate.getTime());
+      } else if (filter.endDate != null) {
+        timeKeyRange = IDBKeyRange.upperBound(filter.endDate.getTime());
+      }
       let direction = reverse ? PREV : NEXT;
+      let timeRequest = store.index("timestamp").openKeyCursor(timeKeyRange,
+                                                               direction);
 
-      // We support filtering by date range only (see `else` block below) or
-      // by number/delivery status/read status with an optional date range.
-      if (filter.delivery || filter.numbers || filter.read != undefined) {
-        let multiFiltersGotCb = self.onNextMessageInMultiFiltersGot
-                                    .bind(self, aRequest, store, messageList);
+      timeRequest.onsuccess = function onsuccess(event) {
+        successCb(event.target.result, FILTER_TIMESTAMP);
+      };
+      timeRequest.onerror = errorCb;
 
-        let multiFiltersSuccessCb = function onMultiFiltersSuccess(which, event) {
-          if (messageList.stop) {
-            return;
-          }
-
-          let cursor = event.target.result;
-          if (cursor) {
-            if (multiFiltersGotCb(which, cursor.primaryKey, cursor.key[1])) {
-              cursor.continue();
-            }
-          } else {
-            multiFiltersGotCb(which, 0, 0);
-          }
+      // Retrieve the keys from the 'delivery' index that matches the
+      // value of filter.delivery.
+      if (filter.delivery) {
+        let deliveryKeyRange = IDBKeyRange.only(filter.delivery);
+        let deliveryRequest = store.index("delivery")
+                                   .openKeyCursor(deliveryKeyRange);
+        deliveryRequest.onsuccess = function onsuccess(event) {
+          successCb(event.target.result, FILTER_DELIVERY);
         };
-
-        let multiFiltersErrorCb = function onMultiFiltersError(which, event) {
-          if (messageList.stop) {
-            return;
-          }
-
-          // Act as no more matched records.
-          multiFiltersGotCb(which, 0, 0);
-        };
-
-        // Numeric 0 is smaller than any time stamp, and empty string is larger
-        // than all numeric values.
-        let startDate = 0, endDate = "";
-        if (filter.startDate != null) {
-          startDate = filter.startDate.getTime();
-        }
-        if (filter.endDate != null) {
-          endDate = filter.endDate.getTime();
-        }
-
-        let singleFilter;
-        {
-          let numFilterTargets = 0;
-          if (filter.delivery) numFilterTargets++;
-          if (filter.numbers) numFilterTargets++;
-          if (filter.read != undefined) numFilterTargets++;
-          singleFilter = numFilterTargets == 1;
-        }
-
-        let which = 0;
-
-        let createRangedRequest = function createRangedRequest(indexName, key) {
-          let range = IDBKeyRange.bound([key, startDate], [key, endDate]);
-          return store.index(indexName).openKeyCursor(range, direction);
-        };
-
-        let createSimpleRangedRequest =
-            function createSimpleRangedRequest(indexName, key) {
-          let request = createRangedRequest(indexName, key);
-          if (singleFilter) {
-            request.onsuccess = singleFilterSuccessCb;
-            request.onerror = singleFilterErrorCb;
-          } else {
-            let me = which++;
-            messageList.filters.push({
-              processing: true,
-              results: []
-            });
-            request.onsuccess = multiFiltersSuccessCb.bind(null, me);
-            request.onerror = multiFiltersErrorCb.bind(null, me);
-          }
-        };
-
-        // Retrieve the keys from the 'delivery' index that matches the
-        // value of filter.delivery.
-        if (filter.delivery) {
-          if (DEBUG) debug("filter.delivery " + filter.delivery);
-          createSimpleRangedRequest("delivery", filter.delivery);
-        }
-
-        // Retrieve the keys from the 'sender' and 'receiver' indexes that
-        // match the values of filter.numbers
-        if (filter.numbers) {
-          if (DEBUG) debug("filter.numbers " + filter.numbers.join(", "));
-          let me = which++;
-
-          let multiNumbersGotCb = self.onNextMessageInMultiNumbersGot
-                                      .bind(self, aRequest, store, messageList,
-                                            me, singleFilter);
-
-          let multiNumbersSuccessCb = function onMultiNumbersSuccess(index, event) {
-            if (messageList.stop) {
-              return;
-            }
-
-            let cursor = event.target.result;
-            if (cursor) {
-              if (multiNumbersGotCb(index, cursor.primaryKey,
-                                    index ? cursor.key[1] : cursor.key)) {
-                cursor.continue();
-              }
-            } else {
-              multiNumbersGotCb(index, 0, 0);
-            }
-          };
-
-          let multiNumbersErrorCb = function onMultiNumbersError(index, event) {
-            if (messageList.stop) {
-              return;
-            }
-
-            // Act as no more matched records.
-            multiNumbersGotCb(index, 0, 0);
-          };
-
-          let ctx = {};
-          if (!singleFilter) {
-            ctx.processing = true;
-            ctx.results = [];
-          }
-
-          let multiNumbers = filter.numbers.length > 1;
-          if (multiNumbers) {
-            ctx.queues = [];
-            // For timestamp.
-            let range = null;
-            if (filter.startDate != null && filter.endDate != null) {
-              range = IDBKeyRange.bound(filter.startDate.getTime(),
-                                        filter.endDate.getTime());
-            } else if (filter.startDate != null) {
-              range = IDBKeyRange.lowerBound(filter.startDate.getTime());
-            } else if (filter.endDate != null) {
-              range = IDBKeyRange.upperBound(filter.endDate.getTime());
-            }
-
-            let request = store.index("timestamp")
-                               .openKeyCursor(range, direction);
-            request.onsuccess = multiNumbersSuccessCb.bind(null, 0);
-            request.onerror = multiNumbersErrorCb.bind(null, 0);
-
-            ctx.queues.push({
-              processing: 1,
-              results: []
-            });
-            // For all numbers.
-            ctx.queues.push({
-              processing: filter.numbers.length,
-              results: []
-            });
-          }
-
-          messageList.filters.push(ctx);
-
-          for (let i = 0; i < filter.numbers.length; i++) {
-            let request = createRangedRequest("number", filter.numbers[i]);
-            if (multiNumbers) {
-              request.onsuccess = multiNumbersSuccessCb.bind(null, 1);
-              request.onerror = multiNumbersErrorCb.bind(null, 1);
-            } else if (singleFilter) {
-              request.onsuccess = singleFilterSuccessCb;
-              request.onerror = singleFilterErrorCb;
-            } else {
-              request.onsuccess = multiFiltersSuccessCb.bind(null, me);
-              request.onerror = multiFiltersErrorCb.bind(null, me);
-            }
-          }
-        }
-
-        // Retrieve the keys from the 'read' index that matches the value of
-        // filter.read
-        if (filter.read != undefined) {
-          let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
-          if (DEBUG) debug("filter.read " + read);
-          createSimpleRangedRequest("read", read);
-        }
-      } else {
-        // Filtering by date range only.
-        if (DEBUG) {
-          debug("filter.timestamp " + filter.startDate + ", " + filter.endDate);
-        }
-
-        let range = null;
-        if (filter.startDate != null && filter.endDate != null) {
-          range = IDBKeyRange.bound(filter.startDate.getTime(),
-                                    filter.endDate.getTime());
-        } else if (filter.startDate != null) {
-          range = IDBKeyRange.lowerBound(filter.startDate.getTime());
-        } else if (filter.endDate != null) {
-          range = IDBKeyRange.upperBound(filter.endDate.getTime());
-        }
-
-        let request = store.index("timestamp").openKeyCursor(range, direction);
-        request.onsuccess = singleFilterSuccessCb;
-        request.onerror = singleFilterErrorCb;
+        deliveryRequest.onerror = errorCb;
       }
 
-      if (DEBUG) {
-        txn.oncomplete = function oncomplete(event) {
-          debug("Transaction " + txn + " completed.");
-        };
+      // Retrieve the keys from the 'sender' and 'receiver' indexes that
+      // match the values of filter.numbers
+      if (filter.numbers) {
+        for (let i = 0; i < filter.numbers.length; i++) {
+          let numberKeyRange = IDBKeyRange.only(filter.numbers[i]);
+          let senderRequest = store.index("sender")
+                                   .openKeyCursor(numberKeyRange);
+          let receiverRequest = store.index("receiver")
+                                     .openKeyCursor(numberKeyRange);
+          senderRequest.onsuccess = receiverRequest.onsuccess =
+            function onsuccess(event){
+              successCb(event.target.result, FILTER_NUMBERS);
+            };
+          senderRequest.onerror = receiverRequest.onerror = errorCb;
+        }
       }
 
-      txn.onerror = singleFilterErrorCb;
+      // Retrieve the keys from the 'read' index that matches the value of
+      // filter.read
+      if (filter.read != undefined) {
+        let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
+        if (DEBUG) debug("filter.read " + read);
+        let readKeyRange = IDBKeyRange.only(read);
+        let readRequest = store.index("read")
+                               .openKeyCursor(readKeyRange);
+        readRequest.onsuccess = function onsuccess(event) {
+          successCb(event.target.result, FILTER_READ);
+        };
+        readRequest.onerror = errorCb;
+      }
+
+      txn.oncomplete = function oncomplete(event) {
+        if (DEBUG) debug("Transaction " + txn + " completed.");
+        // We need to get the intersection of all the partial searches to
+        // get the final result array.
+        let result =  self.keyIntersection(filteredKeys, filter);
+        if (!result.length) {
+          if (DEBUG) debug("No messages matching the filter criteria");
+          aRequest.notifyNoMessageInList();
+          return;
+        }
+
+        // At this point, filteredKeys should have all the keys that matches
+        // all the search filters. So we take the first key and retrieve the
+        // corresponding message. The rest of the keys are added to the
+        // messageLists object as a new list.
+        self.onMessageListCreated(result, aRequest);
+      };
+
+      txn.onerror = function onerror(event) {
+        errorCb(event);
+      };
     });
   },
 
@@ -1210,23 +926,12 @@ SmsDatabaseService.prototype = {
       aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
       return;
     }
-    if (list.processing) {
-      // Database transaction ongoing, let it reply for us so that we won't get
-      // blocked by the existing transaction.
-      list.waitCount++;
-      return;
-    }
-    if (!list.results.length) {
+    messageId = list.shift();
+    if (messageId == null) {
       if (DEBUG) debug("Reached the end of the list!");
       aRequest.notifyNoMessageInList();
       return;
     }
-    if (list.results[0] < 0) {
-      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
-      return;
-    }
-    messageId = list.results.shift();
-    let self = this;
     this.newTxn(READ_ONLY, function (error, txn, store) {
       if (DEBUG) debug("Fetching message " + messageId);
       let request = store.get(messageId);
@@ -1241,7 +946,15 @@ SmsDatabaseService.prototype = {
           if (DEBUG) debug("Could not get message id " + messageId);
           aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
         }
-        let sms = self.createMessageFromRecord(message);
+        let sms = gSmsService.createSmsMessage(message.id,
+                                               message.delivery,
+                                               message.deliveryStatus,
+                                               message.sender,
+                                               message.receiver,
+                                               message.body,
+                                               message.messageClass,
+                                               message.timestamp,
+                                               message.read);
         aRequest.notifyNextMessageInListGot(sms);
       };
 
@@ -1258,10 +971,7 @@ SmsDatabaseService.prototype = {
 
   clearMessageList: function clearMessageList(listId) {
     if (DEBUG) debug("Clearing message list: " + listId);
-    if (this.messageLists[listId]) {
-      this.messageLists[listId].stop = true;
-      delete this.messageLists[listId];
-    }
+    delete this.messageLists[listId];
   },
 
   markMessageRead: function markMessageRead(messageId, value, aRequest) {
@@ -1299,7 +1009,6 @@ SmsDatabaseService.prototype = {
           return;
         }
         message.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
-        message.readIndex = [message.read, message.timestamp];
         if (DEBUG) debug("Message.read set to: " + value);
         event.target.source.put(message).onsuccess = function onsuccess(event) {
           if (DEBUG) {
