@@ -46,11 +46,11 @@ SnapshotIterator::SnapshotIterator(const IonBailoutIterator &iter)
 {
 }
 
-InlineFrameIterator::InlineFrameIterator(const IonBailoutIterator *iter)
+InlineFrameIterator::InlineFrameIterator(JSContext *cx, const IonBailoutIterator *iter)
   : frame_(iter),
     framesRead_(0),
-    callee_(NULL),
-    script_(NULL)
+    callee_(cx),
+    script_(cx)
 {
     if (iter) {
         start_ = SnapshotIterator(*iter);
@@ -62,7 +62,7 @@ void
 IonBailoutIterator::dump() const
 {
     if (type_ == IonFrame_OptimizedJS) {
-        InlineFrameIterator frames(this);
+        InlineFrameIterator frames(GetIonContext()->cx, this);
         for (;;) {
             frames.dump();
             if (!frames.more())

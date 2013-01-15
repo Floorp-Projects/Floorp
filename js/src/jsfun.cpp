@@ -899,7 +899,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
             JS_ASSERT(frame.isNative());
             // Stop on the next Ion JS Frame.
             ++frame;
-            ion::InlineFrameIterator iter(&frame);
+            ion::InlineFrameIterator iter(cx, &frame);
 
             unsigned length = iter.numActualArgs();
             JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
@@ -912,7 +912,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
             args.setThis(vp[2]);
 
             /* Steps 7-8. */
-            iter.forEachCanonicalActualArg(CopyTo(args.array()), 0, -1);
+            iter.forEachCanonicalActualArg(cx, CopyTo(args.array()), 0, -1);
         } else
 #endif
         {

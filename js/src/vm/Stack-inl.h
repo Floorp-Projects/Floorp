@@ -601,11 +601,11 @@ ContextStack::currentScriptedScopeChain() const
 
 template <class Op>
 inline void
-StackIter::ionForEachCanonicalActualArg(Op op)
+StackIter::ionForEachCanonicalActualArg(JSContext *cx, Op op)
 {
     JS_ASSERT(isIon());
 #ifdef JS_ION
-    ionInlineFrames_.forEachCanonicalActualArg(op, 0, -1);
+    ionInlineFrames_.forEachCanonicalActualArg(cx, op, 0, -1);
 #endif
 }
 
