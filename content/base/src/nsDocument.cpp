@@ -41,7 +41,6 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"
 #include "nsIDOMDOMStringList.h"
-#include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentXBL.h"
 #include "mozilla/dom/Element.h"
 #include "nsGenericHTMLElement.h"
@@ -4491,7 +4490,7 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 }
 
 NS_IMETHODIMP
-nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
+nsDocument::GetImplementation(nsISupports** aImplementation)
 {
   ErrorResult rv;
   *aImplementation = GetImplementation(rv);
