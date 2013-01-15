@@ -609,6 +609,35 @@ StackIter::ionForEachCanonicalActualArg(Op op)
 #endif
 }
 
+inline void *
+AbstractFramePtr::maybeHookData() const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeHookData();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
+
+inline void
+AbstractFramePtr::setHookData(void *data) const
+{
+    if (isStackFrame()) {
+        asStackFrame()->setHookData(data);
+        return;
+    }
+    JS_NOT_REACHED("Invalid frame");
+}
+
+inline void
+AbstractFramePtr::setReturnValue(const Value &rval) const
+{
+    if (isStackFrame()) {
+        asStackFrame()->setReturnValue(rval);
+        return;
+    }
+    JS_NOT_REACHED("Invalid frame");
+}
+
 inline UnrootedObject
 AbstractFramePtr::scopeChain() const
 {
