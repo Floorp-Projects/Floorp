@@ -109,7 +109,7 @@ function step1B(aWebProgress, aRequest, aLocation, aFlags) {
 
 function step2A() {
   gListener.callback = step2B;
-  content.location.assign(kSecureURI);
+  content.location = kSecureURI;
 }
 
 function step2B(aWebProgress, aRequest, aLocation, aFlags) {
@@ -139,7 +139,7 @@ function step2B(aWebProgress, aRequest, aLocation, aFlags) {
 
 function step3A() {
   gListener.callback = step3B;
-  content.location.assign("#foo");
+  content.location += "#foo";
 }
 
 function step3B(aWebProgress, aRequest, aLocation, aFlags) {
