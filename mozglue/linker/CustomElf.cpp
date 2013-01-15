@@ -226,6 +226,10 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
 
 CustomElf::~CustomElf()
 {
+  /* While running the destructors, on-demand decompression may get new
+   * references on this object, and releasing these references would call
+   * the destructor again. Avoid this by always having the refcount > 0 */
+  AddRef();
   debug("CustomElf::~CustomElf(%p [\"%s\"])",
         reinterpret_cast<void *>(this), GetPath());
   CallFini();

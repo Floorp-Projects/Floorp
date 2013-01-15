@@ -741,9 +741,8 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   /* Check whether we segfaulted in the address space of a CustomElf. We're
    * only expecting that to happen as an access error. */
   if (info->si_code == SEGV_ACCERR) {
-    /* We may segfault when running destructors in CustomElf::~CustomElf, so we
-     * can't hold a RefPtr on the handle. */
-    LibHandle *handle = ElfLoader::Singleton.GetHandleByPtr(info->si_addr).drop();
+    mozilla::RefPtr<LibHandle> handle =
+      ElfLoader::Singleton.GetHandleByPtr(info->si_addr);
     if (handle && !handle->IsSystemElf()) {
       debug("Within the address space of a CustomElf");
       CustomElf *elf = static_cast<CustomElf *>(static_cast<LibHandle *>(handle));
