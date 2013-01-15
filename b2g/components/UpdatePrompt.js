@@ -118,6 +118,7 @@ UpdatePrompt.prototype = {
   _applyPromptTimer: null,
   _waitingForIdle: false,
   _updateCheckListner: null,
+  _pendingEvents: [],
 
   get applyPromptTimeout() {
     return Services.prefs.getIntPref(PREF_APPLY_PROMPT_TIMEOUT);
@@ -125,6 +126,16 @@ UpdatePrompt.prototype = {
 
   get applyIdleTimeout() {
     return Services.prefs.getIntPref(PREF_APPLY_IDLE_TIMEOUT);
+  },
+
+  handleContentStart: function UP_handleContentStart(shell) {
+    let content = shell.contentBrowser.contentWindow;
+    content.addEventListener("mozContentEvent", this);
+
+    for (let i = 0; i < this._pendingEvents.length; i++) {
+      shell.sendChromeEvent(this._pendingEvents[i]);
+    }
+    this._pendingEvents.length = 0;
   },
 
   // nsIUpdatePrompt
@@ -237,15 +248,16 @@ UpdatePrompt.prototype = {
   },
 
   sendChromeEvent: function UP_sendChromeEvent(aType, aDetail) {
-    let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!browser) {
-      log("Warning: Couldn't send update event " + aType +
-          ": no content browser");
-      return false;
-    }
-
     let detail = aDetail || {};
     detail.type = aType;
+
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!browser) {
+      this._pendingEvents.push(detail);
+      log("Warning: Couldn't send update event " + aType +
+          ": no content browser. Will send again when content becomes available.");
+      return false;
+    }
 
     browser.shell.sendChromeEvent(detail);
     return true;
