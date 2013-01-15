@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=78: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -247,25 +247,29 @@ static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable sEventListenerManagersHash;
-static nsCOMPtr<nsIMemoryReporter> sEventListenerManagersHashReporter;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(EventListenerManagersHashMallocSizeOf)
-
-static int64_t GetEventListenerManagersHash()
+class DOMEventListenerManagersHashReporter MOZ_FINAL : public MemoryReporterBase
 {
-  // We don't measure the |nsEventListenerManager| objects pointed to by the
-  // entries because those references are non-owning.
-  return PL_DHashTableSizeOfExcludingThis(&sEventListenerManagersHash,
-                                          nullptr,
-                                          EventListenerManagersHashMallocSizeOf);
-}
+public:
+  DOMEventListenerManagersHashReporter()
+    : MemoryReporterBase(
+        "explicit/dom/event-listener-managers-hash",
+        KIND_HEAP,
+        UNITS_BYTES,
+        "Memory used by the event listener manager's hash table.")
+  {}
 
-NS_MEMORY_REPORTER_IMPLEMENT(EventListenerManagersHash,
-  "explicit/dom/event-listener-managers-hash",
-  KIND_HEAP,
-  UNITS_BYTES,
-  GetEventListenerManagersHash,
-  "Memory used by the event listener manager's hash table.")
+private:
+  int64_t Amount()
+  {
+    // We don't measure the |nsEventListenerManager| objects pointed to by the
+    // entries because those references are non-owning.
+    return sEventListenerManagersHash.ops
+         ? PL_DHashTableSizeOfExcludingThis(&sEventListenerManagersHash,
+                                            nullptr, MallocSizeOf)
+         : 0;
+  }
+};
 
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
 {
@@ -403,9 +407,7 @@ nsContentUtils::Init()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    sEventListenerManagersHashReporter =
-      new NS_MEMORY_REPORTER_NAME(EventListenerManagersHash);
-    (void)::NS_RegisterMemoryReporter(sEventListenerManagersHashReporter);
+    NS_RegisterMemoryReporter(new DOMEventListenerManagersHashReporter);
   }
 
   sBlockedScriptRunners = new nsTArray< nsCOMPtr<nsIRunnable> >;
@@ -1487,9 +1489,6 @@ nsContentUtils::Shutdown()
     if (sEventListenerManagersHash.entryCount == 0) {
       PL_DHashTableFinish(&sEventListenerManagersHash);
       sEventListenerManagersHash.ops = nullptr;
-
-      (void)::NS_UnregisterMemoryReporter(sEventListenerManagersHashReporter);
-      sEventListenerManagersHashReporter = nullptr;
     }
   }
 
