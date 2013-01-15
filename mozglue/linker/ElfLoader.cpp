@@ -234,7 +234,9 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   }
 
   char *abs_path = NULL;
+#ifdef MOZ_DEBUG_LINKER
   const char *requested_path = path;
+#endif
 
   /* When the path is not absolute and the library is being loaded for
    * another, first try to load the library from the directory containing
@@ -574,7 +576,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
       break;
     }
   }
-  debug("DT_DEBUG points at %p", dbg);
+  debug("DT_DEBUG points at %p", static_cast<void *>(dbg));
 }
 
 /**
@@ -754,7 +756,8 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   /* Redispatch to the registered handler */
   SEGVHandler &that = ElfLoader::Singleton;
   if (that.action.sa_flags & SA_SIGINFO) {
-    debug("Redispatching to registered handler @%p", that.action.sa_sigaction);
+    debug("Redispatching to registered handler @%p",
+          FunctionPtr(that.action.sa_sigaction));
     that.action.sa_sigaction(signum, info, context);
   } else if (that.action.sa_handler == SIG_DFL) {
     debug("Redispatching to default handler");
@@ -762,7 +765,8 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
     sigaction(signum, &that.action, NULL);
     raise(signum);
   } else if (that.action.sa_handler != SIG_IGN) {
-    debug("Redispatching to registered handler @%p", that.action.sa_handler);
+    debug("Redispatching to registered handler @%p",
+          FunctionPtr(that.action.sa_handler));
     that.action.sa_handler(signum);
   } else {
     debug("Ignoring");

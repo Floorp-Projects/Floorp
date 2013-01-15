@@ -27,7 +27,6 @@
 #ifndef ELF_ST_BIND
 #define ELF_ST_BIND ELF64_ST_BIND
 #endif
-#define PRIxAddr "lx"
 #else
 #define Elf_(type) Elf32_ ## type
 #define ELFCLASS ELFCLASS32
@@ -36,7 +35,6 @@
 #ifndef ELF_ST_BIND
 #define ELF_ST_BIND ELF32_ST_BIND
 #endif
-#define PRIxAddr "x"
 #endif
 
 #ifndef __BYTE_ORDER
