@@ -41,14 +41,10 @@ public:
       if (!observerService)
         return;
 
-      nsresult rv = NS_OK;
-
-#ifdef MOZILLA_INTERNAL_API
-      rv = observerService->AddObserver(this,
-                                        NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                        false);
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
-#endif
+      nsresult rv = observerService->AddObserver(this,
+                                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                                 false);
+      MOZ_ASSERT(rv == NS_OK);
       (void) rv;
     }
 
