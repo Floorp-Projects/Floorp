@@ -769,7 +769,7 @@ var AlertsHelper = {
   },
 
   receiveMessage: function alert_receiveMessage(aMessage) {
-    if (!aMessage.target.assertPermission("desktop-notification")) {
+    if (!aMessage.target.assertAppHasPermission("desktop-notification")) {
       Cu.reportError("Desktop-notification message " + aMessage.name +
                      " from a content process with no desktop-notification privileges.");
       return null;
@@ -1005,9 +1005,11 @@ window.addEventListener('ContentStart', function cr_onContentStart() {
 window.addEventListener('ContentStart', function update_onContentStart() {
   let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"]
                        .createInstance(Ci.nsIUpdatePrompt);
+  if (!updatePrompt) {
+    return;
+  }
 
-  let content = shell.contentBrowser.contentWindow;
-  content.addEventListener("mozContentEvent", updatePrompt.wrappedJSObject);
+  updatePrompt.wrappedJSObject.handleContentStart(shell);
 });
 
 (function geolocationStatusTracker() {

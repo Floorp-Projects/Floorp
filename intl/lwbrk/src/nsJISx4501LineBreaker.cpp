@@ -7,8 +7,6 @@
 
 #include "nsJISx4501LineBreaker.h"
 
-#include "pratom.h"
-#include "nsLWBRKDll.h"
 #include "jisx4501class.h"
 #include "nsComplexBreaker.h"
 #include "nsTArray.h"

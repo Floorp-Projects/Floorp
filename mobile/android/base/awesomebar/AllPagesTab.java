@@ -575,7 +575,14 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 if (name.equals(suggestEngine) && suggestTemplate != null) {
                     // suggest engine should be at the front of the list
                     mSearchEngines.add(0, new SearchEngine(name, icon));
-                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+
+                    // The only time Tabs.getInstance().getSelectedTab() should
+                    // be null is when we're restoring after a crash. We should
+                    // never restore private tabs when that happens, so it
+                    // should be safe to assume that null means non-private.
+                    Tab tab = Tabs.getInstance().getSelectedTab();
+                    if (tab == null || !tab.isPrivate())
+                        mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 } else {
                     mSearchEngines.add(new SearchEngine(name, icon));
                 }

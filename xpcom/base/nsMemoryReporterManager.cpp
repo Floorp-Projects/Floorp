@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=4 et sw=4 tw=80: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -769,25 +769,6 @@ nsMemoryReporterManager::GetResident(int64_t *aResident)
 #endif
 }
 
-struct MemoryReport {
-    MemoryReport(const nsACString &path, int64_t amount) 
-    : path(path), amount(amount)
-    {
-        MOZ_COUNT_CTOR(MemoryReport);
-    }
-    MemoryReport(const MemoryReport& rhs)
-    : path(rhs.path), amount(rhs.amount)
-    {
-        MOZ_COUNT_CTOR(MemoryReport);
-    }
-    ~MemoryReport() 
-    {
-        MOZ_COUNT_DTOR(MemoryReport);
-    }
-    const nsCString path;
-    int64_t amount;
-};
-
 #if defined(DEBUG) && !defined(MOZ_DMD)
 // This is just a wrapper for int64_t that implements nsISupports, so it can be
 // passed to nsIMemoryMultiReporter::CollectReports.
@@ -1026,62 +1007,10 @@ nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback,
   return NS_DispatchToMainThread(runnable);
 }
 
-NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
-
-nsMemoryReporter::nsMemoryReporter(nsACString& process,
-                                   nsACString& path,
-                                   int32_t kind,
-                                   int32_t units,
-                                   int64_t amount,
-                                   nsACString& desc)
-: mProcess(process)
-, mPath(path)
-, mKind(kind)
-, mUnits(units)
-, mAmount(amount)
-, mDesc(desc)
-{
-}
-
-nsMemoryReporter::~nsMemoryReporter()
-{
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetProcess(nsACString &aProcess)
-{
-    aProcess.Assign(mProcess);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetPath(nsACString &aPath)
-{
-    aPath.Assign(mPath);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetKind(int32_t *aKind)
-{
-    *aKind = mKind;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetUnits(int32_t *aUnits)
-{
-  *aUnits = mUnits;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetAmount(int64_t *aAmount)
-{
-    *aAmount = mAmount;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMemoryReporter::GetDescription(nsACString &aDescription)
-{
-    aDescription.Assign(mDesc);
-    return NS_OK;
-}
+// Most memory reporters don't need thread safety, but some do.  Make them all
+// thread-safe just to be safe.  Memory reporters are created and destroyed
+// infrequently enough that the performance cost should be negligible.
+NS_IMPL_THREADSAFE_ISUPPORTS1(MemoryReporterBase, nsIMemoryReporter)
 
 nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)

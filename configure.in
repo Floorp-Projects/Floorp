@@ -73,7 +73,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.20
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.15.1
+SQLITE_VERSION=3.7.15.2
 
 MSMANIFEST_TOOL=
 
@@ -4568,6 +4568,7 @@ cairo-qt)
     TK_LIBS='$(MOZ_QT_LIBS)'
     AC_DEFINE(MOZ_WIDGET_QT)
     MOZ_PDF_PRINTING=1
+    AC_DEFINE(QT_NO_KEYWORDS)
     ;;
 
 cairo-os2)
@@ -5991,8 +5992,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
     AC_SUBST(MOZ_GTHREAD_CFLAGS)
     AC_SUBST(MOZ_GTHREAD_LIBS)
-
-    MOZ_CHECK_HEADERS([curl/curl.h], [], [AC_MSG_ERROR([Couldn't find curl/curl.h which is required for the crash reporter.  Use --disable-crashreporter to disable the crash reporter.])])
   fi
 
   if test "$OS_ARCH" != "$HOST_OS_ARCH"; then
@@ -6235,8 +6234,8 @@ dnl (unless in case of cross compiling, for which Unicode
 dnl is not yet sufficient).
 if test "$OS_ARCH" = "WINNT"; then
     REQ_NSIS_MAJOR_VER=2
-    MIN_NSIS_MINOR_VER=33
-    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensisu makensis)
+    MIN_NSIS_MINOR_VER=46
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-2.46 makensis)
     if test -n "$MAKENSISU" -a "$MAKENSISU" != ":"; then
       AC_MSG_RESULT([yes])
       changequote(,)

@@ -4,3 +4,8 @@
 
 @import url("chrome://global/skin/inContentUI.css");
 
+#downloadsListEmptyDescription {
+  margin: 1em;
+  text-align: center;
+  color: GrayText;
+}

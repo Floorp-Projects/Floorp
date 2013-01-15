@@ -95,7 +95,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
   }
 
   // note, it's ok for refContent to be null.  that means append
-  nsIContent* refContent = parent->GetChildAt(mOffset);
+  nsCOMPtr<nsIContent> refContent = parent->GetChildAt(mOffset);
 
   mEditor->MarkNodeDirty(mNode);
 

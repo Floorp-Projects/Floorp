@@ -2715,7 +2715,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
          */
         if (i.isIon())
             continue;
-        TaggedFramePtr frame = i.taggedFramePtr();
+        AbstractFramePtr frame = i.abstractFramePtr();
         if (frame.isFunctionFrame() && frame.script() == script) {
             ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, frame);
             if (!argsobj) {
