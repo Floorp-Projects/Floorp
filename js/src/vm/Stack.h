@@ -1790,6 +1790,9 @@ class AbstractFramePtr
         JS_NOT_REACHED("Invalid frame");
         return false;
     }
+    bool isFramePushedByExecute() const {
+        return isGlobalFrame() || isEvalFrame();
+    }
     bool isDebuggerFrame() const {
         if (isStackFrame())
             return asStackFrame()->isDebuggerFrame();
@@ -1898,6 +1901,10 @@ class AbstractFramePtr
         JS_NOT_REACHED("Invalid frame");
         return AbstractFramePtr();
     }
+
+    inline void *maybeHookData() const;
+    inline void setHookData(void *data) const;
+    inline void setReturnValue(const Value &rval) const;
 };
 
 template <>
