@@ -56,20 +56,13 @@ GlobalPCList.prototype = {
   addPC: function(pc) {
     let winID = pc._winID;
     if (this._list[winID]) {
-      this._list[winID].push(Components.utils.getWeakReference(pc));
+      this._list[winID].push(pc);
     } else {
-      this._list[winID] = [Components.utils.getWeakReference(pc)];
+      this._list[winID] = [pc];
     }
-    this.removeNullRefs(winID);
-  },
-
-  removeNullRefs: function(winID) {
-    this._list[winID] = this._list[winID].filter(
-      function (e,i,a) { return e.get() !== null; });
   },
 
   hasActivePeerConnection: function(winID) {
-    this.removeNullRefs(winID);
     return this._list[winID] ? true : false;
   },
 
@@ -77,13 +70,10 @@ GlobalPCList.prototype = {
     if (topic == "inner-window-destroyed") {
       let winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (this._list[winID]) {
-        this._list[winID].forEach(function(pcref) {
-          let pc = pcref.get();
-          if (pc !== null) {
-            pc._pc.close(false);
-            delete pc._observer;
-            pc._pc = null;
-          }
+        this._list[winID].forEach(function(pc) {
+          pc._pc.close(false);
+          delete pc._observer;
+          pc._pc = null;
         });
         delete this._list[winID];
       }
@@ -95,13 +85,10 @@ GlobalPCList.prototype = {
       // while offline, but attempts to connect them should fail.
       let array;
       while ((array = this._list.pop()) != undefined) {
-        array.forEach(function(pcref) {
-          let pc = pcref.get();
-          if (pc !== null) {
-            pc._pc.close(true);
-            delete pc._observer;
-            pc._pc = null;
-          }
+        array.forEach(function(pc) {
+          pc._pc.close(true);
+          delete pc._observer;
+          pc._pc = null;
         });
       };
       this._networkdown = true;
@@ -243,9 +230,7 @@ PeerConnection.prototype = {
                                     flags: Ci.nsIClassInfo.DOM_OBJECT}),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMRTCPeerConnection,
-    Ci.nsIDOMGlobalObjectConstructor,
-    Ci.nsISupportsWeakReference,
+    Ci.nsIDOMRTCPeerConnection, Ci.nsIDOMGlobalObjectConstructor
   ]),
 
   // Constructor is an explicit function, because of nsIDOMGlobalObjectConstructor.
@@ -561,8 +546,7 @@ function PeerConnectionObserver(dompc) {
   this._dompc = dompc;
 }
 PeerConnectionObserver.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.IPeerConnectionObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.IPeerConnectionObserver]),
 
   onCreateOfferSuccess: function(offer) {
     if (this._dompc._onCreateOfferSuccess) {

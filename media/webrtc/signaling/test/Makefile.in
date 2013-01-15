@@ -133,7 +133,6 @@ LOCAL_INCLUDES += \
  -I$(topsrcdir)/media/webrtc/signaling/src/peerconnection \
  -I$(topsrcdir)/media/webrtc/signaling/media-conduit\
  -I$(topsrcdir)/media/webrtc/trunk/third_party/libjingle/source/ \
- -I$(topsrcdir)/xpcom/base/ \
  $(NULL)
 
 ifneq ($(OS_TARGET),WINNT)
