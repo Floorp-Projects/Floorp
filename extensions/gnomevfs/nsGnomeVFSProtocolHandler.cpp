@@ -8,6 +8,7 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
+#include <algorithm>
 }
 
 #include "nsServiceManagerUtils.h"
@@ -495,7 +496,7 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
       uint32_t bufLen = mDirBuf.Length() - mDirBufCursor;
       if (bufLen)
       {
-        uint32_t n = NS_MIN(bufLen, aCount);
+        uint32_t n = std::min(bufLen, aCount);
         memcpy(aBuf, mDirBuf.get() + mDirBufCursor, n);
         *aCountRead += n;
         aBuf += n;

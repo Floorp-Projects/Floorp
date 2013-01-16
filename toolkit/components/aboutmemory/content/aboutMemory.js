@@ -720,12 +720,23 @@ function getTreesByProcess(aProcessMemoryReports, aTreesByProcess,
   // "ghost-windows" multi-reporters all the time.  (Note that reports from
   // these multi-reporters can reach here as single reports if they were in the
   // child process.)
+  //
+  // Also ignore the resident-fast reporter; we use the vanilla resident
+  // reporter because it's more important that we get accurate results than
+  // that we avoid the (small) possibility of a long pause when loading
+  // about:memory.
+  //
+  // We don't show both resident and resident-fast because running the resident
+  // reporter can purge pages on MacOS, which affects the results of the
+  // resident-fast reporter.  We don't want about:memory's results to be
+  // affected by the order of memory reporter execution.
 
   function ignoreSingle(aUnsafePath)
   {
     return (isSmapsPath(aUnsafePath) && !gVerbose && !aForceShowSmaps) ||
            aUnsafePath.startsWith("compartments/") ||
-           aUnsafePath.startsWith("ghost-windows/");
+           aUnsafePath.startsWith("ghost-windows/") ||
+           aUnsafePath == "resident-fast";
   }
 
   function ignoreMulti(aMRName)

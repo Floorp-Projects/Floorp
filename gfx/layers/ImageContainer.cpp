@@ -183,7 +183,7 @@ ImageContainer::SetCurrentImage(Image *aImage)
     if (aImage) {
       mImageContainerChild->SendImageAsync(this, aImage);
     } else {
-      mImageContainerChild->DispatchSetIdle();
+      mImageContainerChild->SetIdle();
     }
   }
   

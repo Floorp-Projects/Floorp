@@ -64,6 +64,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
+#include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Debugger.h"
 #include "vm/NumericConversions.h"
@@ -808,6 +809,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcSweepPhase(0),
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
+    gcAbortSweepAfterCurrentGroup(false),
     gcArenasAllocatedDuringSweep(NULL),
 #ifdef DEBUG
     gcMarkingValidator(NULL),
@@ -3571,7 +3573,7 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
         return JS_TRUE;
     }
 
-    if (IsImplicitProperty(shape)) {
+    if (!obj2->isNative()) {
         if (obj2->isProxy()) {
             AutoPropertyDescriptorRooter desc(cx);
             if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc, 0))
@@ -3580,10 +3582,10 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
                 *vp = desc.value;
                 return true;
             }
-        } else if (obj2->isNative()) {
-            *vp = obj2->getDenseElement(JSID_TO_INT(id));
-            return true;
         }
+    } else if (IsImplicitDenseElement(shape)) {
+        *vp = obj2->getDenseElement(JSID_TO_INT(id));
+        return true;
     } else {
         /* Peek at the native property's slot value, without doing a Get. */
         if (shape->hasSlot()) {
@@ -4061,7 +4063,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
     desc->obj = obj2;
     if (obj2->isNative()) {
-        if (IsImplicitProperty(shape)) {
+        if (IsImplicitDenseElement(shape)) {
             desc->attrs = JSPROP_ENUMERATE;
             desc->getter = NULL;
             desc->setter = NULL;
@@ -6230,27 +6232,24 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_
 }
 
 JS_PUBLIC_API(char *)
-JS_EncodeString(JSContext *cx, JSRawString strArg)
+JS_EncodeString(JSContext *cx, JSRawString str)
 {
-    RootedString str(cx, strArg);
-
+    AutoAssertNoGC nogc;
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
         return NULL;
-    return DeflateString(cx, chars, str->length());
+
+    return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
 }
 
 JS_PUBLIC_API(size_t)
 JS_GetStringEncodingLength(JSContext *cx, JSString *str)
 {
-    /* jsd calls us with a NULL cx. Ugh. */
-    if (cx) {
-        AssertHeapIsIdle(cx);
-        CHECK_REQUEST(cx);
-    }
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
 
     const jschar *chars = str->getChars(cx);
     if (!chars)
@@ -6259,8 +6258,11 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(size_t)
-JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
+JS_EncodeStringToBuffer(JSContext *cx, JSString *str, char *buffer, size_t length)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
     /*
      * FIXME bug 612141 - fix DeflateStringToBuffer interface so the result
      * would allow to distinguish between insufficient buffer and encoding

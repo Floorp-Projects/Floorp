@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/basictypes.h"
+#include <algorithm>
 
 /* This must occur *after* base/basictypes.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
@@ -291,7 +292,7 @@ inline int32_t
 nsGlobalWindow::DOMMinTimeoutValue() const {
   bool isBackground = !mOuterWindow || mOuterWindow->IsBackground();
   return
-    NS_MAX(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, 0);
+    std::max(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, 0);
 }
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
@@ -1293,18 +1294,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingStorageEvents)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleObservers)
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameElement)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedNode)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingStorageEvents)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleObservers)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioContexts)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1333,20 +1332,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingStorageEvents)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameElement)
-
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingStorageEvents)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
-
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioContexts)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 struct TraceData
@@ -3631,9 +3627,9 @@ nsGlobalWindow::GetInnerWidth(int32_t* aInnerWidth)
 {
   FORWARD_TO_OUTER(GetInnerWidth, (aInnerWidth), NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_STATE(mDocShell);
-
   EnsureSizeUpToDate();
+
+  NS_ENSURE_STATE(mDocShell);
 
   nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
@@ -3699,9 +3695,9 @@ nsGlobalWindow::GetInnerHeight(int32_t* aInnerHeight)
 {
   FORWARD_TO_OUTER(GetInnerHeight, (aInnerHeight), NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_STATE(mDocShell);
-
   EnsureSizeUpToDate();
+
+  NS_ENSURE_STATE(mDocShell);
 
   nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
@@ -4306,10 +4302,10 @@ nsGlobalWindow::GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY)
   nsRect scrollRange = sf->GetScrollRange();
 
   if (aScrollMaxX)
-    *aScrollMaxX = NS_MAX(0,
+    *aScrollMaxX = std::max(0,
       (int32_t)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.XMost())));
   if (aScrollMaxY)
-    *aScrollMaxY = NS_MAX(0,
+    *aScrollMaxY = std::max(0,
       (int32_t)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.YMost())));
 
   return NS_OK;
@@ -9541,7 +9537,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   // Disallow negative intervals.  If aIsInterval also disallow 0,
   // because we use that as a "don't repeat" flag.
-  interval = NS_MAX(aIsInterval ? 1 : 0, interval);
+  interval = std::max(aIsInterval ? 1 : 0, interval);
 
   // Make sure we don't proceed with an interval larger than our timer
   // code can handle. (Note: we already forced |interval| to be non-negative,
@@ -9562,7 +9558,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
-    realInterval = NS_MAX(realInterval, uint32_t(DOMMinTimeoutValue()));
+    realInterval = std::max(realInterval, uint32_t(DOMMinTimeoutValue()));
   }
 
   // Get principal of currently executing code, save for execution of timeout.
@@ -9804,7 +9800,7 @@ nsGlobalWindow::RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least DOMMinTimeoutValue().
   TimeDuration nextInterval =
-    TimeDuration::FromMilliseconds(NS_MAX(aTimeout->mInterval,
+    TimeDuration::FromMilliseconds(std::max(aTimeout->mInterval,
                                           uint32_t(DOMMinTimeoutValue())));
 
   // If we're running pending timeouts, set the next interval to be
@@ -10123,7 +10119,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
          mTimeoutInsertionPoint->getNext() : mTimeouts.getFirst();
        timeout; ) {
     // It's important that this check be <= so that we guarantee that
-    // taking NS_MAX with |now| won't make a quantity equal to
+    // taking std::max with |now| won't make a quantity equal to
     // timeout->mWhen below.
     if (timeout->mWhen <= now) {
       timeout = timeout->getNext();
@@ -10142,7 +10138,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
     // Compute the interval the timer should have had if it had not been set in a
     // background window
     TimeDuration interval =
-      TimeDuration::FromMilliseconds(NS_MAX(timeout->mInterval,
+      TimeDuration::FromMilliseconds(std::max(timeout->mInterval,
                                             uint32_t(DOMMinTimeoutValue())));
     uint32_t oldIntervalMillisecs = 0;
     timeout->mTimer->GetDelay(&oldIntervalMillisecs);
@@ -10150,7 +10146,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
     if (oldInterval > interval) {
       // unclamp
       TimeStamp firingTime =
-        NS_MAX(timeout->mWhen - oldInterval + interval, now);
+        std::max(timeout->mWhen - oldInterval + interval, now);
 
       NS_ASSERTION(firingTime < timeout->mWhen,
                    "Our firing time should strictly decrease!");
@@ -10652,7 +10648,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
       // makes no sense.  Are we trying to impose that min timeout value or
       // not???
       uint32_t delay =
-        NS_MAX(int32_t(t->mTimeRemaining.ToMilliseconds()),
+        std::max(int32_t(t->mTimeRemaining.ToMilliseconds()),
                DOMMinTimeoutValue());
 
       // Set mWhen back to the time when the timer is supposed to

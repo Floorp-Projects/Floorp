@@ -8,6 +8,7 @@
 #include "WebMBufferedParser.h"
 #include "nsTimeRanges.h"
 #include "nsThreadUtils.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -158,7 +159,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
     case SKIP_DATA:
       if (mSkipBytes) {
         uint32_t left = aLength - (p - aBuffer);
-        left = NS_MIN(left, mSkipBytes);
+        left = std::min(left, mSkipBytes);
         p += left;
         mSkipBytes -= left;
       } else {

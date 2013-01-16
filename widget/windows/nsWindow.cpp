@@ -55,6 +55,7 @@
  **************************************************************/
 
 #include "mozilla/ipc/RPCChannel.h"
+#include <algorithm>
 
 /* This must occur *after* ipc/RPCChannel.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
@@ -1314,8 +1315,8 @@ nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
 {
   SizeConstraints c = aConstraints;
   if (mWindowType != eWindowType_popup) {
-    c.mMinSize.width = NS_MAX(int32_t(::GetSystemMetrics(SM_CXMINTRACK)), c.mMinSize.width);
-    c.mMinSize.height = NS_MAX(int32_t(::GetSystemMetrics(SM_CYMINTRACK)), c.mMinSize.height);
+    c.mMinSize.width = std::max(int32_t(::GetSystemMetrics(SM_CXMINTRACK)), c.mMinSize.width);
+    c.mMinSize.height = std::max(int32_t(::GetSystemMetrics(SM_CYMINTRACK)), c.mMinSize.height);
   }
 
   nsBaseWidget::SetSizeConstraints(c);
@@ -2178,7 +2179,7 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
     // size by that amount.
 
     if (mNonClientMargins.top > 0 && glass) {
-      mNonClientOffset.top = NS_MIN(mCaptionHeight, mNonClientMargins.top);
+      mNonClientOffset.top = std::min(mCaptionHeight, mNonClientMargins.top);
     } else if (mNonClientMargins.top == 0) {
       mNonClientOffset.top = mCaptionHeight;
     } else {
@@ -2186,7 +2187,7 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
     }
 
     if (mNonClientMargins.bottom > 0 && glass) {
-      mNonClientOffset.bottom = NS_MIN(mVertResizeMargin, mNonClientMargins.bottom);
+      mNonClientOffset.bottom = std::min(mVertResizeMargin, mNonClientMargins.bottom);
     } else if (mNonClientMargins.bottom == 0) {
       mNonClientOffset.bottom = mVertResizeMargin;
     } else {
@@ -2194,7 +2195,7 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
     }
 
     if (mNonClientMargins.left > 0 && glass) {
-      mNonClientOffset.left = NS_MIN(mHorResizeMargin, mNonClientMargins.left);
+      mNonClientOffset.left = std::min(mHorResizeMargin, mNonClientMargins.left);
     } else if (mNonClientMargins.left == 0) {
       mNonClientOffset.left = mHorResizeMargin;
     } else {
@@ -2202,7 +2203,7 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
     }
 
     if (mNonClientMargins.right > 0 && glass) {
-      mNonClientOffset.right = NS_MIN(mHorResizeMargin, mNonClientMargins.right);
+      mNonClientOffset.right = std::min(mHorResizeMargin, mNonClientMargins.right);
     } else if (mNonClientMargins.right == 0) {
       mNonClientOffset.right = mHorResizeMargin;
     } else {
@@ -2608,7 +2609,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
     if (mCustomNonClient) {
       // The minimum glass height must be the caption buttons height,
       // otherwise the buttons are drawn incorrectly.
-      largest.y = NS_MAX<uint32_t>(largest.y,
+      largest.y = std::max<uint32_t>(largest.y,
                          nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
     }
     margins.cyTopHeight = largest.y;
@@ -3518,7 +3519,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
   }
 
   absComputedOverriddenDelta =
-    NS_MIN(absComputedOverriddenDelta, absDeltaLimit);
+    std::min(absComputedOverriddenDelta, absDeltaLimit);
 
   aOverriddenDelta = (aOriginalDelta > 0) ? absComputedOverriddenDelta :
                                             -absComputedOverriddenDelta;
@@ -5171,13 +5172,13 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // Set the constraints. The minimum size should also be constrained to the
       // default window maximum size so that it fits on screen.
       mmi->ptMinTrackSize.x =
-        NS_MIN((int32_t)mmi->ptMaxTrackSize.x,
-               NS_MAX((int32_t)mmi->ptMinTrackSize.x, mSizeConstraints.mMinSize.width));
+        std::min((int32_t)mmi->ptMaxTrackSize.x,
+               std::max((int32_t)mmi->ptMinTrackSize.x, mSizeConstraints.mMinSize.width));
       mmi->ptMinTrackSize.y =
-        NS_MIN((int32_t)mmi->ptMaxTrackSize.y,
-        NS_MAX((int32_t)mmi->ptMinTrackSize.y, mSizeConstraints.mMinSize.height));
-      mmi->ptMaxTrackSize.x = NS_MIN((int32_t)mmi->ptMaxTrackSize.x, mSizeConstraints.mMaxSize.width);
-      mmi->ptMaxTrackSize.y = NS_MIN((int32_t)mmi->ptMaxTrackSize.y, mSizeConstraints.mMaxSize.height);
+        std::min((int32_t)mmi->ptMaxTrackSize.y,
+        std::max((int32_t)mmi->ptMinTrackSize.y, mSizeConstraints.mMinSize.height));
+      mmi->ptMaxTrackSize.x = std::min((int32_t)mmi->ptMaxTrackSize.x, mSizeConstraints.mMaxSize.width);
+      mmi->ptMaxTrackSize.y = std::min((int32_t)mmi->ptMaxTrackSize.y, mSizeConstraints.mMaxSize.height);
     }
     break;
 
@@ -5540,13 +5541,13 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
 
   // Ensure being accessible to borders of window.  Even if contents are in
   // this area, the area must behave as border.
-  nsIntMargin nonClientSize(NS_MAX(mHorResizeMargin - mNonClientOffset.left,
+  nsIntMargin nonClientSize(std::max(mHorResizeMargin - mNonClientOffset.left,
                                    kResizableBorderMinSize),
-                            NS_MAX(mCaptionHeight - mNonClientOffset.top,
+                            std::max(mCaptionHeight - mNonClientOffset.top,
                                    kResizableBorderMinSize),
-                            NS_MAX(mHorResizeMargin - mNonClientOffset.right,
+                            std::max(mHorResizeMargin - mNonClientOffset.right,
                                    kResizableBorderMinSize),
-                            NS_MAX(mVertResizeMargin - mNonClientOffset.bottom,
+                            std::max(mVertResizeMargin - mNonClientOffset.bottom,
                                    kResizableBorderMinSize));
 
   bool allowContentOverride = mSizeMode == nsSizeMode_Maximized ||
@@ -5560,10 +5561,10 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
   // contents under the mouse cursor should be able to override the behavior.
   // E.g., user must expect that Firefox button always opens the popup menu
   // even when the user clicks on the above edge of it.
-  nsIntMargin borderSize(NS_MAX(nonClientSize.left, mHorResizeMargin),
-                         NS_MAX(nonClientSize.top, mVertResizeMargin),
-                         NS_MAX(nonClientSize.right, mHorResizeMargin),
-                         NS_MAX(nonClientSize.bottom, mVertResizeMargin));
+  nsIntMargin borderSize(std::max(nonClientSize.left, mHorResizeMargin),
+                         std::max(nonClientSize.top, mVertResizeMargin),
+                         std::max(nonClientSize.right, mHorResizeMargin),
+                         std::max(nonClientSize.bottom, mVertResizeMargin));
 
   bool top    = false;
   bool bottom = false;
@@ -6766,8 +6767,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 
   if (inputtingChars.mLength ||
       shiftedChars.mLength || unshiftedChars.mLength) {
-    uint32_t num = NS_MAX(inputtingChars.mLength,
-                          NS_MAX(shiftedChars.mLength, unshiftedChars.mLength));
+    uint32_t num = std::max(inputtingChars.mLength,
+                          std::max(shiftedChars.mLength, unshiftedChars.mLength));
     uint32_t skipUniChars = num - inputtingChars.mLength;
     uint32_t skipShiftedChars = num - shiftedChars.mLength;
     uint32_t skipUnshiftedChars = num - unshiftedChars.mLength;

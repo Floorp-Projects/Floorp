@@ -24,6 +24,7 @@
 #include "cairo.h"
 
 #include "nsCRT.h"
+#include <algorithm>
 
 #if defined(XP_WIN)
 #include "gfxWindowsPlatform.h"
@@ -317,7 +318,7 @@ GetKernValueFmt0(const void* aSubtable,
         if (aIsOverride) {
             aValue = int16_t(lo->value);
         } else if (aIsMinimum) {
-            aValue = NS_MAX(aValue, int32_t(lo->value));
+            aValue = std::max(aValue, int32_t(lo->value));
         } else {
             aValue += int16_t(lo->value);
         }
@@ -1192,7 +1193,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext      *aContext,
             // find the maximum glyph index covered by the clump so far
             for (int32_t i = charStart; i < charEnd; ++i) {
                 if (charToGlyph[i] != NO_GLYPH) {
-                    glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
+                    glyphEnd = std::max(glyphEnd, charToGlyph[i] + 1);
                     // update extent of glyph range
                 }
             }
@@ -1247,7 +1248,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext      *aContext,
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the textRun's text
-        endCharIndex = NS_MIN<int32_t>(endCharIndex, wordLength);
+        endCharIndex = std::min<int32_t>(endCharIndex, wordLength);
 
         // Now we're ready to set the glyph info in the textRun
         int32_t glyphsInClump = glyphEnd - glyphStart;

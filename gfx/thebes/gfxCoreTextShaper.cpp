@@ -27,6 +27,7 @@
 #include "gfxUserFontSet.h"
 
 #include "nsUnicodeRange.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -319,8 +320,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
         NS_WARN_IF_FALSE(charEnd >= 0 && charEnd < stringRange.length,
                          "glyph-to-char mapping points outside string range");
         // clamp charEnd to the valid range of the string
-        charEnd = NS_MAX(charEnd, 0);
-        charEnd = NS_MIN(charEnd, int32_t(stringRange.length));
+        charEnd = std::max(charEnd, 0);
+        charEnd = std::min(charEnd, int32_t(stringRange.length));
 
         int32_t glyphEnd = glyphStart;
         int32_t charLimit = isRightToLeft ? -1 : stringRange.length;
@@ -343,14 +344,14 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                 for (int32_t i = charStart; i > charEnd; --i) {
                     if (charToGlyph[i] != NO_GLYPH) {
                         // update extent of glyph range
-                        glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
+                        glyphEnd = std::max(glyphEnd, charToGlyph[i] + 1);
                     }
                 }
             } else {
                 for (int32_t i = charStart; i < charEnd; ++i) {
                     if (charToGlyph[i] != NO_GLYPH) {
                         // update extent of glyph range
-                        glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
+                        glyphEnd = std::max(glyphEnd, charToGlyph[i] + 1);
                     }
                 }
             }
@@ -439,8 +440,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the word's text
-        baseCharIndex = NS_MAX(baseCharIndex, 0);
-        endCharIndex = NS_MIN(endCharIndex, wordLength);
+        baseCharIndex = std::max(baseCharIndex, 0);
+        endCharIndex = std::min(endCharIndex, wordLength);
 
         // Now we're ready to set the glyph info in the textRun; measure the glyph width
         // of the first (perhaps only) glyph, to see if it is "Simple"

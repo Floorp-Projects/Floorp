@@ -21,6 +21,7 @@
 #include "nsNetUtil.h"
 #include "nsAutoLock.h"
 #include "prlog.h"
+#include <algorithm>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +65,7 @@ public:
         nsresult rv;
 
         while (count) {
-            uint32_t n, amt = NS_MIN<uint32_t>(count, sizeof(buf));
+            uint32_t n, amt = std::min<uint32_t>(count, sizeof(buf));
 
             rv = stream->Read(buf, amt, &n);
             if (NS_FAILED(rv)) {

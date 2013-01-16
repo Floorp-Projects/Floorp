@@ -21,6 +21,7 @@
 #include "nsStringFwd.h"
 #include "nsString.h"
 #include "nsAString.h"
+#include <algorithm>
 
 #ifdef DEBUG
 static bool gNoisy = false;
@@ -108,7 +109,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
   }
 
 
-  mOffsetInParent = NS_MIN(mOffsetInParent, mParent->GetChildCount());
+  mOffsetInParent = std::min(mOffsetInParent, mParent->GetChildCount());
 
   // note, it's ok for mRefNode to be null.  that means append
   mRefNode = mParent->GetChildAt(mOffsetInParent);

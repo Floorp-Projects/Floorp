@@ -51,12 +51,12 @@ NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
   if (!aEditor || !aLeftNode || !aRightNode) { return NS_ERROR_NULL_POINTER; }
   mEditor = aEditor;
   mLeftNode = aLeftNode;
-  nsINode* leftParent = mLeftNode->GetParentNode();
+  nsCOMPtr<nsINode> leftParent = mLeftNode->GetParentNode();
   if (!mEditor->IsModifiableNode(leftParent)) {
     return NS_ERROR_FAILURE;
   }
   mRightNode = aRightNode;
-  mOffset=0;
+  mOffset = 0;
   return NS_OK;
 }
 
@@ -138,7 +138,7 @@ NS_IMETHODIMP JoinElementTxn::UndoTransaction(void)
   }
   else
   {
-    for (nsINode* child = mRightNode->GetFirstChild();
+    for (nsCOMPtr<nsINode> child = mRightNode->GetFirstChild();
          child;
          child = child->GetNextSibling())
     {

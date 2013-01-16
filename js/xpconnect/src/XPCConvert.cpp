@@ -575,7 +575,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         if (!buffer) {
             return false;
         }
-        JS_EncodeStringToBuffer(str, buffer, length);
+        JS_EncodeStringToBuffer(cx, str, buffer, length);
         buffer[length] = '\0';
         *((void**)d) = buffer;
         return true;
@@ -701,7 +701,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         if (rs->Length() != uint32_t(length)) {
             return false;
         }
-        JS_EncodeStringToBuffer(str, rs->BeginWriting(), length);
+        JS_EncodeStringToBuffer(cx, str, rs->BeginWriting(), length);
 
         return true;
     }
@@ -1875,7 +1875,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
             if (!buffer) {
                 return false;
             }
-            JS_EncodeStringToBuffer(str, buffer, len);
+            JS_EncodeStringToBuffer(cx, str, buffer, len);
             buffer[len] = '\0';
             *((char**)d) = buffer;
 

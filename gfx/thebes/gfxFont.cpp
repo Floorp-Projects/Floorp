@@ -1456,8 +1456,8 @@ gfxFontShaper::MergeFontFeatures(
 void
 gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 {
-    mAscent = NS_MAX(mAscent, aOther.mAscent);
-    mDescent = NS_MAX(mDescent, aOther.mDescent);
+    mAscent = std::max(mAscent, aOther.mAscent);
+    mDescent = std::max(mDescent, aOther.mDescent);
     if (aOtherIsOnLeft) {
         mBoundingBox =
             (mBoundingBox + gfxPoint(aOther.mAdvanceWidth, 0)).Union(aOther.mBoundingBox);
@@ -2197,8 +2197,8 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
 static void
 UnionRange(gfxFloat aX, gfxFloat* aDestMin, gfxFloat* aDestMax)
 {
-    *aDestMin = NS_MIN(*aDestMin, aX);
-    *aDestMax = NS_MAX(*aDestMax, aX);
+    *aDestMin = std::min(*aDestMin, aX);
+    *aDestMax = std::max(*aDestMax, aX);
 }
 
 // We get precise glyph extents if the textrun creator requested them, or
@@ -3009,10 +3009,10 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
         aMetrics->subscriptOffset = aMetrics->xHeight;
     }
 
-    aMetrics->underlineSize = NS_MAX(1.0, aMetrics->underlineSize);
-    aMetrics->strikeoutSize = NS_MAX(1.0, aMetrics->strikeoutSize);
+    aMetrics->underlineSize = std::max(1.0, aMetrics->underlineSize);
+    aMetrics->strikeoutSize = std::max(1.0, aMetrics->strikeoutSize);
 
-    aMetrics->underlineOffset = NS_MIN(aMetrics->underlineOffset, -1.0);
+    aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, -1.0);
 
     if (aMetrics->maxAscent < 1.0) {
         // We cannot draw strikeout line and overline in the ascent...
@@ -3034,13 +3034,13 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     if (!mStyle.systemFont && aIsBadUnderlineFont) {
         // First, we need 2 pixels between baseline and underline at least. Because many CJK characters
         // put their glyphs on the baseline, so, 1 pixel is too close for CJK characters.
-        aMetrics->underlineOffset = NS_MIN(aMetrics->underlineOffset, -2.0);
+        aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, -2.0);
 
         // Next, we put the underline to bottom of below of the descent space.
         if (aMetrics->internalLeading + aMetrics->externalLeading > aMetrics->underlineSize) {
-            aMetrics->underlineOffset = NS_MIN(aMetrics->underlineOffset, -aMetrics->emDescent);
+            aMetrics->underlineOffset = std::min(aMetrics->underlineOffset, -aMetrics->emDescent);
         } else {
-            aMetrics->underlineOffset = NS_MIN(aMetrics->underlineOffset,
+            aMetrics->underlineOffset = std::min(aMetrics->underlineOffset,
                                                aMetrics->underlineSize - aMetrics->emDescent);
         }
     }
@@ -3048,7 +3048,7 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     // will stay within the boundary.
     else if (aMetrics->underlineSize - aMetrics->underlineOffset > aMetrics->maxDescent) {
         if (aMetrics->underlineSize > aMetrics->maxDescent)
-            aMetrics->underlineSize = NS_MAX(aMetrics->maxDescent, 1.0);
+            aMetrics->underlineSize = std::max(aMetrics->maxDescent, 1.0);
         // The max underlineOffset is 1px (the min underlineSize is 1px, and min maxDescent is 0px.)
         aMetrics->underlineOffset = aMetrics->underlineSize - aMetrics->maxDescent;
     }
@@ -3059,11 +3059,11 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     gfxFloat halfOfStrikeoutSize = floor(aMetrics->strikeoutSize / 2.0 + 0.5);
     if (halfOfStrikeoutSize + aMetrics->strikeoutOffset > aMetrics->maxAscent) {
         if (aMetrics->strikeoutSize > aMetrics->maxAscent) {
-            aMetrics->strikeoutSize = NS_MAX(aMetrics->maxAscent, 1.0);
+            aMetrics->strikeoutSize = std::max(aMetrics->maxAscent, 1.0);
             halfOfStrikeoutSize = floor(aMetrics->strikeoutSize / 2.0 + 0.5);
         }
         gfxFloat ascent = floor(aMetrics->maxAscent + 0.5);
-        aMetrics->strikeoutOffset = NS_MAX(halfOfStrikeoutSize, ascent / 2.0);
+        aMetrics->strikeoutOffset = std::max(halfOfStrikeoutSize, ascent / 2.0);
     }
 
     // If overline is larger than the ascent, the line should be resized.
@@ -3329,7 +3329,7 @@ gfxFontGroup::BuildFontList()
             if (font->GetFontEntry()->mIsBadUnderlineFont) {
                 gfxFloat first = mFonts[0].Font()->GetMetrics().underlineOffset;
                 gfxFloat bad = font->GetMetrics().underlineOffset;
-                mUnderlineOffset = NS_MIN(first, bad);
+                mUnderlineOffset = std::min(first, bad);
                 break;
             }
         }
@@ -4565,7 +4565,7 @@ gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont *aFont)
         // Setting advance width to zero will prevent drawing the hexbox
         details->mAdvance = 0;
     } else {
-        gfxFloat width = NS_MAX(aFont->GetMetrics().aveCharWidth,
+        gfxFloat width = std::max(aFont->GetMetrics().aveCharWidth,
                                 gfxFontMissingGlyphs::GetDesiredMinWidth(aChar));
         details->mAdvance = uint32_t(width * mAppUnitsPerDevUnit);
     }
@@ -4638,10 +4638,10 @@ gfxTextRun::GlyphRunIterator::NextRun()  {
     if (mGlyphRun->mCharacterOffset >= mEndOffset)
         return false;
 
-    mStringStart = NS_MAX(mStartOffset, mGlyphRun->mCharacterOffset);
+    mStringStart = std::max(mStartOffset, mGlyphRun->mCharacterOffset);
     uint32_t last = mNextIndex + 1 < mTextRun->mGlyphRuns.Length()
         ? mTextRun->mGlyphRuns[mNextIndex + 1].mCharacterOffset : mTextRun->GetLength();
-    mStringEnd = NS_MIN(mEndOffset, last);
+    mStringEnd = std::min(mEndOffset, last);
 
     ++mNextIndex;
     return true;
@@ -4661,7 +4661,7 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, int32_t aSign)
     int32_t bytes = length * sizeof(gfxTextRun::CompressedGlyph);
     bytes += sizeof(gfxTextRun);
     gTextRunStorage += bytes*aSign;
-    gTextRunStorageHighWaterMark = NS_MAX(gTextRunStorageHighWaterMark, gTextRunStorage);
+    gTextRunStorageHighWaterMark = std::max(gTextRunStorageHighWaterMark, gTextRunStorage);
 }
 #endif
 
@@ -4956,17 +4956,17 @@ ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
 {
     if (aLigature->mClipBeforePart) {
         if (aTextRun->IsRightToLeft()) {
-            *aRight = NS_MIN(*aRight, aXOrigin);
+            *aRight = std::min(*aRight, aXOrigin);
         } else {
-            *aLeft = NS_MAX(*aLeft, aXOrigin);
+            *aLeft = std::max(*aLeft, aXOrigin);
         }
     }
     if (aLigature->mClipAfterPart) {
         gfxFloat endEdge = aXOrigin + aTextRun->GetDirection()*aLigature->mPartWidth;
         if (aTextRun->IsRightToLeft()) {
-            *aLeft = NS_MAX(*aLeft, endEdge);
+            *aLeft = std::max(*aLeft, endEdge);
         } else {
-            *aRight = NS_MIN(*aRight, endEdge);
+            *aRight = std::min(*aRight, endEdge);
         }
     }    
 }
@@ -5280,12 +5280,12 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                                 bool aCanWordWrap,
                                 gfxBreakPriority *aBreakPriority)
 {
-    aMaxLength = NS_MIN(aMaxLength, GetLength() - aStart);
+    aMaxLength = std::min(aMaxLength, GetLength() - aStart);
 
     NS_ASSERTION(aStart + aMaxLength <= GetLength(), "Substring out of range");
 
     uint32_t bufferStart = aStart;
-    uint32_t bufferLength = NS_MIN<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE);
+    uint32_t bufferLength = std::min<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE);
     PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
     bool haveSpacing = aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
     if (haveSpacing) {
@@ -5324,7 +5324,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
         if (i >= bufferStart + bufferLength) {
             // Fetch more spacing and hyphenation data
             bufferStart = i;
-            bufferLength = NS_MIN(aStart + aMaxLength, i + MEASUREMENT_BUFFER_SIZE) - i;
+            bufferLength = std::min(aStart + aMaxLength, i + MEASUREMENT_BUFFER_SIZE) - i;
             if (haveSpacing) {
                 GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
                                    spacingBuffer);

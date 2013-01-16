@@ -29,6 +29,7 @@
 
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
+#include <algorithm>
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -1529,7 +1530,7 @@ ContainerState::ThebesLayerData::UpdateCommonClipCount(
     const FrameLayerBuilder::Clip& aCurrentClip)
 {
   if (mCommonClipCount >= 0) {
-    int32_t end = NS_MIN<int32_t>(aCurrentClip.mRoundedClipRects.Length(),
+    int32_t end = std::min<int32_t>(aCurrentClip.mRoundedClipRects.Length(),
                                   mCommonClipCount);
     int32_t clipCount = 0;
     for (; clipCount < end; ++clipCount) {
@@ -3439,7 +3440,7 @@ FrameLayerBuilder::Clip::ApplyRoundedRectsTo(gfxContext* aContext,
                                              int32_t A2D,
                                              uint32_t aBegin, uint32_t aEnd) const
 {
-  aEnd = NS_MIN<uint32_t>(aEnd, mRoundedClipRects.Length());
+  aEnd = std::min<uint32_t>(aEnd, mRoundedClipRects.Length());
 
   for (uint32_t i = aBegin; i < aEnd; ++i) {
     AddRoundedRectPathTo(aContext, A2D, mRoundedClipRects[i]);
@@ -3452,7 +3453,7 @@ FrameLayerBuilder::Clip::DrawRoundedRectsTo(gfxContext* aContext,
                                             int32_t A2D,
                                             uint32_t aBegin, uint32_t aEnd) const
 {
-  aEnd = NS_MIN<uint32_t>(aEnd, mRoundedClipRects.Length());
+  aEnd = std::min<uint32_t>(aEnd, mRoundedClipRects.Length());
 
   if (aEnd - aBegin == 0)
     return;
@@ -3711,8 +3712,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
 
   uint32_t maxSize = mManager->GetMaxTextureSize();
   NS_ASSERTION(maxSize > 0, "Invalid max texture size");
-  nsIntSize surfaceSize(NS_MIN<int32_t>(boundingRect.Width(), maxSize),
-                        NS_MIN<int32_t>(boundingRect.Height(), maxSize));
+  nsIntSize surfaceSize(std::min<int32_t>(boundingRect.Width(), maxSize),
+                        std::min<int32_t>(boundingRect.Height(), maxSize));
 
   // maskTransform is applied to the clip when it is painted into the mask (as a
   // component of imageTransform), and its inverse used when the mask is used for

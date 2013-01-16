@@ -3272,16 +3272,16 @@ nsGenericHTMLElement::GetTokenList(nsIAtom* aAtom)
     list = new nsDOMSettableTokenList(this, aAtom);
     NS_ADDREF(list);
     SetProperty(aAtom, list, nsDOMSettableTokenListPropertyDestructor);
-  }                       
+  }
   return list;
-}  
+}
 
 void
 nsGenericHTMLElement::GetTokenList(nsIAtom* aAtom, nsIVariant** aResult)
 {
-  nsIDOMDOMSettableTokenList* itemType = GetTokenList(aAtom);
+  nsISupports* itemType = GetTokenList(aAtom);
   nsCOMPtr<nsIWritableVariant> out = new nsVariant();
-  out->SetAsInterface(NS_GET_IID(nsIDOMDOMSettableTokenList), itemType);
+  out->SetAsInterface(NS_GET_IID(nsISupports), itemType);
   out.forget(aResult);
 }
 
@@ -3291,14 +3291,16 @@ nsGenericHTMLElement::SetTokenList(nsIAtom* aAtom, nsIVariant* aValue)
   nsDOMSettableTokenList* itemType = GetTokenList(aAtom);
   nsAutoString string;
   aValue->GetAsAString(string);
-  return itemType->SetValue(string);
+  ErrorResult rv;
+  itemType->SetValue(string, rv);
+  return rv.ErrorCode();
 }
 
 static void
 HTMLPropertiesCollectionDestructor(void *aObject, nsIAtom *aProperty,
                                    void *aPropertyValue, void *aData)
 {
-  HTMLPropertiesCollection* properties = 
+  HTMLPropertiesCollection* properties =
     static_cast<HTMLPropertiesCollection*>(aPropertyValue);
   NS_IF_RELEASE(properties);
 }
@@ -3306,7 +3308,7 @@ HTMLPropertiesCollectionDestructor(void *aObject, nsIAtom *aProperty,
 HTMLPropertiesCollection*
 nsGenericHTMLElement::Properties()
 {
-  HTMLPropertiesCollection* properties = 
+  HTMLPropertiesCollection* properties =
     static_cast<HTMLPropertiesCollection*>(GetProperty(nsGkAtoms::microdataProperties));
   if (!properties) {
      properties = new HTMLPropertiesCollection(this);

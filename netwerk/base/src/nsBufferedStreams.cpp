@@ -12,6 +12,7 @@
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include <algorithm>
 
 #ifdef DEBUG_brendan
 # define METERING
@@ -342,7 +343,7 @@ nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
 
     nsresult rv = NS_OK;
     while (count > 0) {
-        uint32_t amt = NS_MIN(count, mFillPoint - mCursor);
+        uint32_t amt = std::min(count, mFillPoint - mCursor);
         if (amt > 0) {
             uint32_t read = 0;
             rv = writer(this, closure, mBuffer + mCursor, *result, amt, &read);
@@ -605,7 +606,7 @@ nsBufferedOutputStream::Write(const char *buf, uint32_t count, uint32_t *result)
     nsresult rv = NS_OK;
     uint32_t written = 0;
     while (count > 0) {
-        uint32_t amt = NS_MIN(count, mBufferSize - mCursor);
+        uint32_t amt = std::min(count, mBufferSize - mCursor);
         if (amt > 0) {
             memcpy(mBuffer + mCursor, buf + written, amt);
             written += amt;
@@ -696,7 +697,7 @@ nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, u
     *_retval = 0;
     nsresult rv;
     while (count > 0) {
-        uint32_t left = NS_MIN(count, mBufferSize - mCursor);
+        uint32_t left = std::min(count, mBufferSize - mCursor);
         if (left == 0) {
             rv = Flush();
             if (NS_FAILED(rv))
@@ -713,7 +714,7 @@ nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, u
         mCursor += read;
         *_retval += read;
         count -= read;
-        mFillPoint = NS_MAX(mFillPoint, mCursor);
+        mFillPoint = std::max(mFillPoint, mCursor);
     }
     return NS_OK;
 }

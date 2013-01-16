@@ -128,7 +128,7 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
-    if (!gfxPlatform::GetPlatform()->FontHintingEnabled()) {
+    if (gfxPlatform::GetPlatform()->RequiresLinearZoom()) {
         cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
     }
 

@@ -761,6 +761,7 @@ struct JSRuntime : js::RuntimeFriendFields
     int                 gcSweepPhase;
     JSCompartment       *gcSweepCompartment;
     int                 gcSweepKindIndex;
+    bool                gcAbortSweepAfterCurrentGroup;
 
     /*
      * List head of arenas allocated during the sweep phase.

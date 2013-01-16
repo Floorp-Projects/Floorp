@@ -22,6 +22,7 @@
 #include "nsAutoPtr.h"
 
 #include "ParseFTPList.h"
+#include <algorithm>
 
 #if defined(PR_LOGGING)
 //
@@ -90,7 +91,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     uint64_t streamLen64;
     rv = inStr->Available(&streamLen64);
     NS_ENSURE_SUCCESS(rv, rv);
-    streamLen = (uint32_t)NS_MIN(streamLen64, uint64_t(UINT32_MAX - 1));
+    streamLen = (uint32_t)std::min(streamLen64, uint64_t(UINT32_MAX - 1));
 
     nsAutoArrayPtr<char> buffer(new char[streamLen + 1]);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);

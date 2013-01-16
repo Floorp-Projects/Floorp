@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsObjCExceptions.h"
 #include "RootAccessibleWrap.h"
 
 #import "mozDocAccessible.h"
 
 #import "mozView.h"
+
+// This must be included last:
+#include "nsObjCExceptions.h"
 
 using namespace mozilla::a11y;
 
