@@ -190,21 +190,9 @@
 #define PHONE_MODEL             "CP-9971"
 #define CCSIP_SIP_USER_AGENT    "CP9971"
 
-#define MAX_PHONE_LINES       8
-#define MAX_REG_LINES        51
 #define MAX_CALLS            51
-#define MAX_CALLS_PER_LINE   51
-
-/*
- * MAX_INSTANCES (call_instances) should equal to maximum number of calls
- * allowed by the phone but MAX_CALLS is defined to be 1 more than the
- * actual maximum capacity. Therefore define MAX_INSTANCES to MAX_CALLS -1
- */
-#define MAX_INSTANCES        (MAX_CALLS - 1) /* max number of instance ID */
-
-/* MAX_CONFIG_LINES - java side defined fixed number to 36 for non-Buckfast TNP
- * models so use 36 in call cases. Changing this needs java side change
- */
-#define MAX_CONFIG_LINES 51
+#define MAX_REG_LINES        MAX_CALLS
+#define MAX_CALLS_PER_LINE   MAX_CALLS
+#define MAX_CONFIG_LINES     MAX_CALLS
 
 #endif

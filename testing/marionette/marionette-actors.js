@@ -160,6 +160,7 @@ function MarionetteDriverActor(aConnection)
   this.importedScripts = FileUtils.getFile('TmpD', ['marionettescriptchrome']);
   this.currentRemoteFrame = null; // a member of remoteFrames
   this.testName = null;
+  this.mozBrowserClose = null;
 
   //register all message listeners
   this.addMessageManagerListeners(this.messageManager);
@@ -728,7 +729,8 @@ MarionetteDriverActor.prototype = {
                                        args: aRequest.args,
                                        newSandbox: aRequest.newSandbox,
                                        timeout: this.scriptTimeout,
-                                       command_id: command_id});
+                                       command_id: command_id,
+                                       specialPowers: aRequest.specialPowers});
       return;
     }
 
@@ -814,7 +816,8 @@ MarionetteDriverActor.prototype = {
                                           newSandbox: aRequest.newSandbox,
                                           async: aRequest.async,
                                           timeout: this.scriptTimeout,
-                                          command_id: command_id });
+                                          command_id: command_id,
+                                          specialPowers: aRequest.specialPowers });
    }
   },
 
@@ -847,7 +850,8 @@ MarionetteDriverActor.prototype = {
                                             id: this.command_id,
                                             newSandbox: aRequest.newSandbox,
                                             timeout: this.scriptTimeout,
-                                            command_id: command_id});
+                                            command_id: command_id,
+                                            specialPowers: aRequest.specialPowers});
       return;
     }
 
@@ -1350,6 +1354,18 @@ MarionetteDriverActor.prototype = {
       }
     }
     else {
+      // We need to protect against the click causing an OOP frame to close. 
+      // This fires the mozbrowserclose event when it closes so we need to 
+      // listen for it and then just send an error back. The person making the
+      // call should be aware something isnt right and handle accordingly
+      let curWindow = this.getCurrentWindow();
+      let self = this;
+      this.mozBrowserClose = function() { 
+        curWindow.removeEventListener('mozbrowserclose', self.mozBrowserClose, true);
+        self.switchToGlobalMessageManager();
+        self.sendError("The frame closed during the click, recovering to allow further communications", 500, null, command_id);
+      };
+      curWindow.addEventListener('mozbrowserclose', this.mozBrowserClose, true);
       this.sendAsync("clickElement", {element: aRequest.element,
                                       command_id: command_id});
     }
@@ -1845,6 +1861,13 @@ MarionetteDriverActor.prototype = {
    * Receives all messages from content messageManager
    */
   receiveMessage: function MDA_receiveMessage(message) {
+    // We need to just check if we need to remove the mozbrowserclose listener
+    if (this.mozBrowserClose !== null){
+      let curWindow = this.getCurrentWindow();
+      curWindow.removeEventListener('mozbrowserclose', this.mozBrowserClose, true);
+      this.mozBrowserClose = null;
+    }
+
     switch (message.name) {
       case "DOMContentLoaded":
         this.sendOk();

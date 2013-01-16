@@ -48,6 +48,11 @@ XPIDLSRCS = \
   nsIAudioChannelAgent.idl \
   $(NULL)
 
+
+ifdef ENABLE_TESTS
+TOOL_DIRS += tests
+endif
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

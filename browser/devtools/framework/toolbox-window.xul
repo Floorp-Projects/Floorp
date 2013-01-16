@@ -15,7 +15,7 @@
         macanimationtype="document"
         fullscreenbutton="true"
         windowtype="devtools:toolbox"
-        width="700" height="320"
+        width="900" height="320"
         persist="screenX screenY width height sizemode">
 
   <commandset id="toolbox-commandset">

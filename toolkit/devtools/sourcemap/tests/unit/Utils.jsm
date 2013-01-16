@@ -15,7 +15,7 @@
 Components.utils.import('resource://gre/modules/devtools/Require.jsm');
 Components.utils.import('resource://gre/modules/devtools/SourceMap.jsm');
 
-this.EXPORTED_SYMBOLS = [ "define", "runSourceMapTests" ];
+let EXPORTED_SYMBOLS = [ "define", "runSourceMapTests" ];
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -78,7 +78,7 @@ define('test/source-map/assert', ['exports'], function (exports) {
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('test/source-map/util', ['require', 'exports', 'module' ], function(require, exports, module) {
+define('test/source-map/util', ['require', 'exports', 'module' , ], function(require, exports, module) {
 
   // This is a test mapping which maps functions from two different files
   // (one.js and two.js) to a minified generated source.

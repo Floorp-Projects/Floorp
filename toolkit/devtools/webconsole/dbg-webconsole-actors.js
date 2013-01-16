@@ -721,37 +721,21 @@ WebConsoleActor.prototype =
   prepareConsoleMessageForRemote:
   function WCA_prepareConsoleMessageForRemote(aMessage)
   {
-    let result = {
-      level: aMessage.level,
-      filename: aMessage.filename,
-      lineNumber: aMessage.lineNumber,
-      functionName: aMessage.functionName,
-      timeStamp: aMessage.timeStamp,
-    };
+    let result = WebConsoleUtils.cloneObject(aMessage);
+    delete result.wrappedJSObject;
 
-    switch (result.level) {
-      case "trace":
-      case "group":
-      case "groupCollapsed":
-      case "time":
-      case "timeEnd":
-        result.arguments = aMessage.arguments;
-        break;
-      default:
-        result.arguments = Array.map(aMessage.arguments || [],
-          function(aObj) {
-            return this.createValueGrip(aObj);
-          }, this);
+    result.arguments = Array.map(aMessage.arguments || [],
+      function(aObj) {
+        return this.createValueGrip(aObj);
+      }, this);
 
-        if (result.level == "dir") {
-          result.objectProperties = [];
-          let first = result.arguments[0];
-          if (typeof first == "object" && first && first.inspectable) {
-            let actor = this.getActorByID(first.actor);
-            result.objectProperties = actor.onInspectProperties().properties;
-          }
-        }
-        break;
+    if (result.level == "dir") {
+      result.objectProperties = [];
+      let first = result.arguments[0];
+      if (typeof first == "object" && first && first.inspectable) {
+        let actor = this.getActorByID(first.actor);
+        result.objectProperties = actor.onInspectProperties().properties;
+      }
     }
 
     return result;
