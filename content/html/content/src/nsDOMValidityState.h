@@ -3,25 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ValidityState_h
-#define mozilla_dom_ValidityState_h
+#ifndef nsDOMValidityState_h__
+#define nsDOMValidityState_h__
 
 #include "nsIDOMValidityState.h"
 #include "nsIConstraintValidation.h"
 
-namespace mozilla {
-namespace dom {
 
-class ValidityState MOZ_FINAL : public nsIDOMValidityState
+class nsDOMValidityState MOZ_FINAL : public nsIDOMValidityState
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMVALIDITYSTATE
 
-  friend class ::nsIConstraintValidation;
+  friend class nsIConstraintValidation;
 
 protected:
-  ValidityState(nsIConstraintValidation* aConstraintValidation);
+  nsDOMValidityState(nsIConstraintValidation* aConstraintValidation);
 
   /**
    * This function should be called by nsIConstraintValidation
@@ -46,8 +44,5 @@ protected:
   nsIConstraintValidation*       mConstraintValidation;
 };
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_ValidityState_h
+#endif // nsDOMValidityState_h__
 
