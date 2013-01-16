@@ -91,7 +91,7 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                           true /* mElementHidden */,
                                                           true /* mMuted */);
   mAgents.Put(aAgent, data);
-  RegisterType(aType, CONTENT_PARENT_UNKNOWN_CHILD_ID);
+  RegisterType(aType, CONTENT_PARENT_NO_CHILD_ID);
 }
 
 void
@@ -115,7 +115,7 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   mAgents.RemoveAndForget(aAgent, data);
 
   if (data) {
-    UnregisterType(data->mType, data->mElementHidden, CONTENT_PARENT_UNKNOWN_CHILD_ID);
+    UnregisterType(data->mType, data->mElementHidden, CONTENT_PARENT_NO_CHILD_ID);
   }
 }
 
@@ -145,7 +145,7 @@ AudioChannelService::GetMuted(AudioChannelAgent* aAgent, bool aElementHidden)
     return true;
   }
 
-  bool muted = GetMutedInternal(data->mType, CONTENT_PARENT_UNKNOWN_CHILD_ID,
+  bool muted = GetMutedInternal(data->mType, CONTENT_PARENT_NO_CHILD_ID,
                                 aElementHidden, data->mElementHidden);
 
   // Update visibility.
