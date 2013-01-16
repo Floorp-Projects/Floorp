@@ -879,11 +879,22 @@ function switchToFrame(msg) {
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
   let foundFrame = null;
-  let frames = curWindow.document.getElementsByTagName("iframe");
-  //Until Bug 761935 lands, we won't have multiple nested OOP iframes. We will only have one.
-  //parWindow will refer to the iframe above the nested OOP frame.
-  let parWindow = curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  let frames = []; //curWindow.document.getElementsByTagName("iframe");
+  let parWindow = null; //curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+  // Check of the curWindow reference is dead
+  try {
+    frames = curWindow.document.getElementsByTagName("iframe");
+    //Until Bug 761935 lands, we won't have multiple nested OOP iframes. We will only have one.
+    //parWindow will refer to the iframe above the nested OOP frame.
+    parWindow = curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  } catch (e) {
+    // We probably have a dead compartment so accessing it is going to make Firefox
+    // very upset. Let's now try redirect everything to the top frame even if the 
+    // user has given us a frame since search doesnt look up.
+    msg.json.value = null;
+    msg.json.element = null;
+  }
   if ((msg.json.value == null) && (msg.json.element == null)) {
     curWindow = content;
     if(msg.json.focus == true) {
