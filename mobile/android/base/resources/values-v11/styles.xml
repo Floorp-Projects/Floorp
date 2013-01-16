@@ -63,4 +63,22 @@
          <item name="android:visibility">gone</item>
     </style>
 
+    <!-- DropDown List View -->
+    <style name="DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
+         <item name="android:listSelector">@drawable/action_bar_button</item>
+         <item name="android:divider">#FFD1D5DA</item>
+         <item name="android:dividerHeight">1dp</item>
+    </style>
+
+    <!-- Spinner Item -->
+    <style name="SpinnerItem" parent="@android:style/Widget.Holo.Light.TextView.SpinnerItem">
+         <item name="android:textColor">#FFFFFFFF</item>
+         <item name="android:textSize">18sp</item>
+    </style>
+
+    <!-- Spinner DropDown Item -->
+    <style name="SpinnerDropDownItem" parent="@android:style/Widget.Holo.DropDownItem.Spinner">
+         <item name="android:textColor">#FF222222</item>
+    </style>
+
 </resources>

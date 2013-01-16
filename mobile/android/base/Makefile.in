@@ -532,6 +532,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_status_logo.png \
   res/drawable/remote_tabs_off.png \
   res/drawable/remote_tabs_on.png \
+  res/drawable/spinner_default.9.png \
+  res/drawable/spinner_focused.9.png \
+  res/drawable/spinner_pressed.9.png \
   res/drawable/tab_indicator_divider.9.png \
   res/drawable/tab_indicator_selected.9.png \
   res/drawable/tab_indicator_selected_focused.9.png \
@@ -624,6 +627,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_status_logo.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
+  res/drawable-hdpi/spinner_default.9.png \
+  res/drawable-hdpi/spinner_focused.9.png \
+  res/drawable-hdpi/spinner_pressed.9.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
   res/drawable-hdpi/tab_indicator_selected_focused.9.png \
@@ -713,6 +719,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_new_tab_small.png \
   res/drawable-xhdpi/ic_menu_reload.png \
   res/drawable-xhdpi/ic_status_logo.png \
+  res/drawable-xhdpi/spinner_default.9.png \
+  res/drawable-xhdpi/spinner_focused.9.png \
+  res/drawable-xhdpi/spinner_pressed.9.png \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
   res/drawable-xhdpi/tab_indicator_selected.9.png \
   res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
@@ -1029,7 +1038,6 @@ RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
   res/menu/gecko_app_menu.xml \
   res/menu/tabs_menu.xml \
-  res/menu/tabs_switcher_menu.xml \
   res/menu/titlebar_contextmenu.xml \
   res/menu/abouthome_topsites_contextmenu.xml \
   res/menu-v11/tabs_menu.xml \
@@ -1079,6 +1087,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/remote_tabs_level.xml                  \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
+  mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
