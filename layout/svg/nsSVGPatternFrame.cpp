@@ -588,10 +588,10 @@ nsSVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
 
   // Get the pattern x,y,width, and height
   const nsSVGLength2 *tmpX, *tmpY, *tmpHeight, *tmpWidth;
-  tmpX = GetLengthValue(SVGPatternElement::X);
-  tmpY = GetLengthValue(SVGPatternElement::Y);
-  tmpHeight = GetLengthValue(SVGPatternElement::HEIGHT);
-  tmpWidth = GetLengthValue(SVGPatternElement::WIDTH);
+  tmpX = GetLengthValue(SVGPatternElement::ATTR_X);
+  tmpY = GetLengthValue(SVGPatternElement::ATTR_Y);
+  tmpHeight = GetLengthValue(SVGPatternElement::ATTR_HEIGHT);
+  tmpWidth = GetLengthValue(SVGPatternElement::ATTR_WIDTH);
 
   if (aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     x = nsSVGUtils::ObjectSpace(aTargetBBox, tmpX);
@@ -647,15 +647,15 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
     // Calling the nsIFrame* variant of GetAnimValue would look it up on
     // every call.
     viewportWidth =
-      GetLengthValue(SVGPatternElement::WIDTH)->GetAnimValue(ctx);
+      GetLengthValue(SVGPatternElement::ATTR_WIDTH)->GetAnimValue(ctx);
     viewportHeight =
-      GetLengthValue(SVGPatternElement::HEIGHT)->GetAnimValue(ctx);
+      GetLengthValue(SVGPatternElement::ATTR_HEIGHT)->GetAnimValue(ctx);
   } else {
     // No SVG target, call the nsIFrame* variant of GetAnimValue.
     viewportWidth =
-      GetLengthValue(SVGPatternElement::WIDTH)->GetAnimValue(aTarget);
+      GetLengthValue(SVGPatternElement::ATTR_WIDTH)->GetAnimValue(aTarget);
     viewportHeight =
-      GetLengthValue(SVGPatternElement::HEIGHT)->GetAnimValue(aTarget);
+      GetLengthValue(SVGPatternElement::ATTR_HEIGHT)->GetAnimValue(aTarget);
   }
 
   if (viewportWidth <= 0.0f || viewportHeight <= 0.0f) {

@@ -24,6 +24,8 @@ nsresult NS_NewSVGPatternElement(nsIContent **aResult,
                                  already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
+class DOMSVGAnimatedTransformList;
+
 namespace dom {
 
 typedef nsSVGElement SVGPatternElementBase;
@@ -40,6 +42,7 @@ protected:
   friend nsresult (::NS_NewSVGPatternElement(nsIContent **aResult,
                                              already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
@@ -77,6 +80,19 @@ public:
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::patternTransform;
   }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternUnits();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternContentUnits();
+  already_AddRefed<DOMSVGAnimatedTransformList> PatternTransform();
+  already_AddRefed<nsIDOMSVGAnimatedLength> X();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
@@ -86,7 +102,7 @@ protected:
   virtual StringAttributesInfo GetStringInfo();
 
   // nsIDOMSVGPatternElement values
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
