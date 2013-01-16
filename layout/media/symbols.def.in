@@ -25,7 +25,6 @@ nestegg_track_seek
 nestegg_track_type
 nestegg_track_video_params
 nestegg_tstamp_scale
-nestegg_has_cues
 #endif
 #ifdef MOZ_VP8
 #ifndef MOZ_NATIVE_LIBVPX

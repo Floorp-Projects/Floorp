@@ -1839,7 +1839,6 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
                                  mInfo.mAudioChannels,
                                  mInfo.mAudioRate,
                                  HasAudio(),
-                                 HasVideo(),
                                  tags);
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
@@ -2080,13 +2079,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         StopPlayback();
       }
 
-      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
-          !IsPlaying()) {
-        // We are playing, but the state machine does not know it yet. Tell it
-        // that it is, so that the clock can be properly queried.
-        StartPlayback();
-      }
-
       if (IsPausedAndDecoderWaiting()) {
         // The decode buffers are full, and playback is paused. Shutdown the
         // decode thread.
@@ -2275,8 +2267,11 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
 
   int64_t pos = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
   pos -= mBasePosition;
-  NS_ASSERTION(pos >= 0, "Video stream position should be positive.");
-  return mBasePosition + pos * mPlaybackRate + mStartTime;
+  if (pos >= 0) {
+    int64_t final = mBasePosition + pos * mPlaybackRate + mStartTime;
+    return final;
+  }
+  return mPlayDuration + mStartTime;
 }
 
 int64_t MediaDecoderStateMachine::GetClock() {
@@ -2358,9 +2353,9 @@ void MediaDecoderStateMachine::AdvanceFrame()
     // Current frame has already been presented, wait until it's time to
     // present the next frame.
     if (frame && !currentFrame) {
-      int64_t now = IsPlaying() ? clock_time : mPlayDuration + mStartTime;
+      int64_t now = IsPlaying() ? clock_time : mPlayDuration;
 
-      remainingTime = frame->mTime - now;
+      remainingTime = frame->mTime - mStartTime - now;
     }
   }
 
@@ -2407,7 +2402,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
       return;
     }
     mDecoder->GetFrameStatistics().NotifyPresentedFrame();
-    remainingTime = currentFrame->mEndTime - clock_time;
+    remainingTime = currentFrame->mEndTime - mStartTime - clock_time;
     currentFrame = nullptr;
   }
 
@@ -2735,14 +2730,12 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
   // Get position of the last time we changed the rate.
   if (!HasAudio()) {
     // mBasePosition is a position in the video stream, not an absolute time.
-    if (mState == DECODER_STATE_SEEKING) {
-      mBasePosition = mSeekTime;
-    } else {
-      mBasePosition = GetVideoStreamPosition();
+    mBasePosition = GetVideoStreamPosition();
+    if (IsPlaying()) {
+      mPlayDuration = mBasePosition - mStartTime;
+      mResetPlayStartTime = true;
+      mPlayStartTime = TimeStamp::Now();
     }
-    mPlayDuration = mBasePosition - mStartTime;
-    mResetPlayStartTime = true;
-    mPlayStartTime = TimeStamp::Now();
   }
 
   mPlaybackRate = aPlaybackRate;
@@ -2764,12 +2757,7 @@ bool MediaDecoderStateMachine::IsShutdown()
   return GetState() == DECODER_STATE_SHUTDOWN;
 }
 
-void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
-                                             int aChannels,
-                                             int aRate,
-                                             bool aHasAudio,
-                                             bool aHasVideo,
-                                             MetadataTags* aTags)
+void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
