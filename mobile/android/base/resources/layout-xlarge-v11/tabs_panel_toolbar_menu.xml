@@ -10,14 +10,15 @@
                android:layout_height="0dip"
                android:visibility="gone"/>
 
-    <Button android:id="@+id/tabs_menu"
-            android:layout_width="0dip"
-            android:layout_height="fill_parent"
-            android:layout_weight="1.0"
-            android:text="@string/tabs_normal"
-            android:textColor="#FFFFFFFF"
-            android:textSize="18sp"
-            android:background="@drawable/action_bar_button"/>
+    <Spinner android:id="@+id/tabs_menu"
+             android:layout_width="0dip"
+             android:layout_height="fill_parent"
+             android:layout_weight="1.0"
+             android:background="@drawable/spinner"
+             android:popupBackground="@drawable/menu_popup_bg"
+             android:dropDownHorizontalOffset="0dip"
+             android:dropDownSelector="@drawable/action_bar_button"
+             android:entries="@array/tabs_panel_spinner"/>
 
     <ImageButton android:id="@+id/add_tab"
                  android:layout_width="@dimen/browser_toolbar_height"
