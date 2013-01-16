@@ -169,6 +169,11 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
     mChannelCounters[oldType].RemoveElement(aChildID);
   }
 
+  // Let play any visible audio channel.
+  if (!aElementHidden) {
+    return false;
+  }
+
   bool muted = false;
 
   // We are not visible, maybe we have to mute.
