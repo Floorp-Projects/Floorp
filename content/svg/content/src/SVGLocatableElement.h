@@ -7,19 +7,19 @@
 #define SVGLocatableElement_h
 
 #include "nsSVGElement.h"
-#include "nsIDOMSVGLocatable.h"
 
 #define MOZILLA_SVGLOCATABLEELEMENT_IID \
   { 0xe20176ba, 0xc48d, 0x4704, \
     {0x89, 0xec, 0xe6, 0x69, 0x6c, 0xb7, 0xb8, 0xb3} }
+
+class nsIDOMSVGRect;
 
 namespace mozilla {
 
 namespace dom {
 class SVGMatrix;
 
-class SVGLocatableElement : public nsSVGElement,
-                            public nsIDOMSVGLocatable
+class SVGLocatableElement : public nsSVGElement
 {
 public:
   SVGLocatableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -28,7 +28,6 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_SVGLOCATABLEELEMENT_IID)
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGLOCATABLE
 
   // WebIDL
   nsSVGElement* GetNearestViewportElement();
@@ -36,7 +35,7 @@ public:
   already_AddRefed<nsIDOMSVGRect> GetBBox(ErrorResult& rv);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
-  already_AddRefed<SVGMatrix> GetTransformToElement(nsSVGElement& aElement,
+  already_AddRefed<SVGMatrix> GetTransformToElement(SVGLocatableElement& aElement,
                                                     ErrorResult& rv);
 };
 
