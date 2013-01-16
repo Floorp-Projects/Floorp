@@ -1281,7 +1281,6 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
 
   int32_t count = mDocument->GetNumberOfStyleSheets();
   nsAutoString title;
-  nsAutoString temp;
   for (int32_t index = 0; index < count; index++) {
     nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
     NS_ASSERTION(sheet, "Null sheet in sheet list!");
