@@ -1288,3 +1288,52 @@ add_test(function test_path_id_for_spid_and_spn() {
               EF_PATH_MF_SIM + EF_PATH_ADF_USIM);
   run_next_test();
 });
+
+/**
+ * Verify ICCUtilsHelper.parsePbrTlvs
+ */
+add_test(function test_parse_pbr_tlvs() {
+  let worker = newUint8Worker();
+  let buf = worker.Buf;
+  let pduHelper = worker.GsmPDUHelper;
+
+  let pbrTlvs = [
+    {tag: ICC_USIM_TYPE1_TAG,
+     length: 0x0F,
+     value: [{tag: ICC_USIM_EFADN_TAG,
+              length: 0x03,
+              value: [0x4F, 0x3A, 0x02]},
+             {tag: ICC_USIM_EFIAP_TAG,
+              length: 0x03,
+              value: [0x4F, 0x25, 0x01]},
+             {tag: ICC_USIM_EFPBC_TAG,
+              length: 0x03,
+              value: [0x4F, 0x09, 0x04]}]
+    },
+    {tag: ICC_USIM_TYPE2_TAG,
+     length: 0x05,
+     value: [{tag: ICC_USIM_EFEMAIL_TAG,
+              length: 0x03,
+              value: [0x4F, 0x50, 0x0B]}]
+    },
+    {tag: ICC_USIM_TYPE3_TAG,
+     length: 0x0A,
+     value: [{tag: ICC_USIM_EFCCP1_TAG,
+              length: 0x03,
+              value: [0x4F, 0x3D, 0x0A]},
+             {tag: ICC_USIM_EFEXT1_TAG,
+              length: 0x03,
+              value: [0x4F, 0x4A, 0x03]}]
+    },
+  ];
+
+  let pbr = worker.ICCUtilsHelper.parsePbrTlvs(pbrTlvs);
+  do_check_eq(pbr.adn.fileId, 0x4F3a);
+  do_check_eq(pbr.iap.fileId, 0x4F25);
+  do_check_eq(pbr.pbc.fileId, 0x4F09);
+  do_check_eq(pbr.email.fileId, 0x4F50);
+  do_check_eq(pbr.ccp1.fileId, 0x4F3D);
+  do_check_eq(pbr.ext1.fileId, 0x4F4A);
+
+  run_next_test();
+});
