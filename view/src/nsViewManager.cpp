@@ -390,12 +390,13 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 
       NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
 
-      SetPainting(true);
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
 #endif
       nsAutoScriptBlocker scriptBlocker;
       NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
+      aView->GetWidget()->WillPaint();
+      SetPainting(true);
       mPresShell->Paint(aView, nsRegion(),
                         nsIPresShell::PAINT_LAYERS |
                         nsIPresShell::PAINT_WILL_SEND_DID_PAINT);

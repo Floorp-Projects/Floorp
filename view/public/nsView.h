@@ -296,6 +296,13 @@ public:
   }
 
   /**
+   * Returns true if the view is currently painting
+   * into an alternate destination, such as the titlebar
+   * area on OSX.
+   */
+  bool InAlternatePaint() { return mInAlternatePaint; }
+
+  /**
    * Make aWidget direct its events to this view.
    * The caller must call DetachWidgetEventHandler before this view
    * is destroyed.
