@@ -17,9 +17,10 @@
 .devtools-toolbar {
   -moz-appearance: none;
   padding: 4px 3px;
-  box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
-  background-image: url(background-noise-toolbar.png), -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
   color: hsl(210,30%,85%);
+  background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
+  border-bottom: 1px solid #060a0d;
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, -1px 0 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(204,45%,98%,.05) inset;
 }
 
 .devtools-menulist,
@@ -233,12 +234,17 @@
 
 .devtools-sidebar-tabs > tabs {
   -moz-appearance: none;
+  font: inherit;
   position: static;
-  box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
-  background-image: url(background-noise-toolbar.png), linear-gradient(to bottom, hsl(210,11%,36%), hsl(210,11%,18%));
   color: hsl(210,30%,85%);
   margin-bottom: 0;
   padding: 0;
+  background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, -1px 0 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(204,45%,98%,.05) inset;
+  border-width: 0 0 1px 0;
+  border-color: hsla(210,8%,5%,.6);
+  border-style: solid;
+  overflow: hidden;
 }
 
 .devtools-sidebar-tabs > tabs > .tabs-right,
@@ -248,30 +254,90 @@
 
 .devtools-sidebar-tabs > tabs > tab {
   -moz-appearance: none;
+  /* We want to match the height of a toolbar with a toolbarbutton 
+   * First, we need to replicated the padding of toolbar (4px),
+   * then, the padding of the button itself from toolbarbutton.css (3px),
+   * Also, we need to take the border of the buttons into accout (1px).
+   * Minus the tab-text margin (2px).
+   * Padding-bottom is one pixel shorter because we need to include the
+   * black border.
+   */
+  padding: 6px 3px 5px !important;
+  -moz-padding-start: 6px;
   padding: 0;
   min-width: 78px;
-  min-height: 22px;
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   text-align: center;
   color: inherit;
   -moz-box-flex: 1;
   border-width: 0;
-  -moz-border-end-width: 1px;
-  border-color: hsla(210,8%,5%,.6);
-  border-style: solid;
+  position: static;
+  -moz-margin-start: -1px;
 }
 
 .devtools-sidebar-tabs > tabs > tab:-moz-focusring {
   position: static;
 }
 
+.devtools-sidebar-tabs > tabs > tab:first-of-type {
+  -moz-margin-start: -3px;
+}
+
+.devtools-sidebar-tabs > tabs > tab {
+  background-size: 100% 100%, 1px 100%, 1px 100%, 1px 100%;
+  background-repeat: no-repeat;
+  background-position: 2px, 0, 1px, 2px;
+}
+
+.devtools-sidebar-tabs:-moz-locale-dir(rtl) > tabs > tab {
+  background-position: calc(100% - 3px), 100%, calc(100% - 1px), calc(100% - 2px);
+}
+
 .devtools-sidebar-tabs > tabs > tab:last-of-type {
   -moz-border-end-width: 0;
 }
 
+%define smallSeparator linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)), linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)), linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0))
+%define solidSeparator linear-gradient(transparent, transparent), linear-gradient(hsla(206,37%,4%,.6), hsla(206,37%,4%,.7)), linear-gradient(hsla(204,45%,98%,.1), hsla(204,45%,98%,.1))
+
+.devtools-sidebar-tabs > tabs > tab {
+  background-image: linear-gradient(transparent, transparent), @smallSeparator@;
+}
+
+.devtools-sidebar-tabs > tabs > tab:hover {
+  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @smallSeparator@;
+}
+
+.devtools-sidebar-tabs > tabs > tab:hover:active {
+  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparator@;
+}
+
+.devtools-sidebar-tabs > tabs > tab[selected=true] + tab {
+  background-image: linear-gradient(transparent, transparent), @solidSeparator@;
+}
+
+.devtools-sidebar-tabs > tabs > tab[selected=true] + tab:hover {
+  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @solidSeparator@;
+}
+
+.devtools-sidebar-tabs > tabs > tab[selected=true] + tab:hover:active {
+  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparator@;
+}
+
 .devtools-sidebar-tabs > tabs > tab[selected=true] {
-  background-image: url(background-noise-toolbar.png), linear-gradient(to bottom, hsl(201,45%,34%), hsl(205,44%,22%));
-  color: white !important;
+  color: #f5f7fa;
+  background-image: linear-gradient(#2f607b, #294d68), @solidSeparator@;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
+}
+
+.devtools-sidebar-tabs > tabs > tab[selected=true]:hover {
+  background-image: linear-gradient(#274f64, #224056), @solidSeparator@;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
+}
+
+.devtools-sidebar-tabs > tabs > tab[selected=true]:hover:active {
+  background-image: linear-gradient(#1f3e4f, #1b3243), @solidSeparator@;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
 }
 
 /* Theme */
