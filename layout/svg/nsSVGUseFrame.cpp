@@ -197,8 +197,8 @@ nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
     SVGUseElement *use = static_cast<SVGUseElement*>(mContent);
-    if (use->mLengthAttributes[SVGUseElement::X].IsPercentage() ||
-        use->mLengthAttributes[SVGUseElement::Y].IsPercentage()) {
+    if (use->mLengthAttributes[SVGUseElement::ATTR_X].IsPercentage() ||
+        use->mLengthAttributes[SVGUseElement::ATTR_Y].IsPercentage()) {
       aFlags |= TRANSFORM_CHANGED;
       // Ancestor changes can't affect how we render from the perspective of
       // any rendering observers that we may have, so we don't need to
