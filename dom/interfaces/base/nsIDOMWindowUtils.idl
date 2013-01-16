@@ -39,8 +39,9 @@ interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
+interface nsIDOMEventTarget;
 
-[scriptable, uuid(c98249a5-d38a-4ec6-b6e0-6866ea87d6bb)]
+[scriptable, uuid(7cd26372-d2e2-463a-bce3-3f02d4b23fa8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -719,6 +720,15 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean dispatchDOMEventViaPresShell(in nsIDOMNode aTarget,
                                        in nsIDOMEvent aEvent,
                                        in boolean aTrusted);
+
+  /**
+   * Sets nsEvent::mFlags::mOnlyChromeDispatch to true to ensure that
+   * the event is propagated only to chrome.
+   * Event's .target property will be aTarget.
+   * Returns the same value as what EventTarget.dispatchEvent does.
+   */
+  boolean dispatchEventToChromeOnly(in nsIDOMEventTarget aTarget,
+                                    in nsIDOMEvent aEvent);
 
   /**
    * Returns the real classname (possibly of the mostly-transparent security
