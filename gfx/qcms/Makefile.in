@@ -52,6 +52,13 @@ else
 endif
 endif
 endif
+else
+ifeq (ppc,$(CPU_ARCH))
+ifdef GNU_CC
+	CSRCS += transform-altivec.c
+	ALTIVEC_FLAGS=-maltivec
+endif
+endif
 endif
 
 # -pedantic causes warnings that we don't care about
@@ -75,3 +82,5 @@ endif # GNU_CC
 transform-sse1.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(SSE1_FLAGS)
 
 transform-sse2.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(SSE2_FLAGS)
+
+transform-altivec.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(ALTIVEC_FLAGS)
