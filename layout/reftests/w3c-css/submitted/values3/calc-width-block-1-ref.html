@@ -1,11 +1,18 @@
 <!DOCTYPE HTML>
-<title>width: calc() and min-width: calc() on blocks</title>
-<style>
+<html>
+<head>
+  <title>CSS Reference: width: calc() and min-width: calc() on blocks</title>
+  <link rel="author" title="L. David Baron" href="http://dbaron.org/">
+  <link rel="help" href="http://www.w3.org/TR/css3-values/#calc-notation">
+  <meta name="flags" content="">
+<style type="text/css">
 
 body { width: 500px }
 p { background: green; color: white; margin: 1px 0; font-size: 10px }
 
 </style>
+</head>
+<body>
 
 <p style="width: 247px">50% - 3px</p>
 <p style="width: 247px">25% - 3px + 25%</p>
@@ -14,3 +21,5 @@ p { background: green; color: white; margin: 1px 0; font-size: 10px }
 <p style="width: 247px">25% - 3px + 2*12.5%</p>
 <p style="width: 247px">25% - 3px + 2 * 12.5%</p>
 <p style="width: 250px">30% + 20%</p>
+</body>
+</html>

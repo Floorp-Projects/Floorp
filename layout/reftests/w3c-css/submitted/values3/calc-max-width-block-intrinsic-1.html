@@ -1,6 +1,11 @@
 <!DOCTYPE HTML>
-<title>intrinsic width of max-width: calc() on blocks</title>
-<style>
+<html>
+<head>
+  <title>CSS Test: intrinsic width of max-width: calc() on blocks</title>
+  <link rel="author" title="L. David Baron" href="http://dbaron.org/">
+  <link rel="help" href="http://www.w3.org/TR/css3-values/#calc-notation">
+  <meta name="flags" content="">
+<style type="text/css">
 
 body { font-size: 10px }
 body > div { float: left; clear: left;
@@ -9,6 +14,8 @@ body > div > div { width: 400px }
 body > div > div > div { width: 200px }
 
 </style>
+</head>
+<body>
 
 <div><div style="max-width: calc(50% - 3px)"><div></div></div></div>
 <div><div style="max-width: calc(5em - 3px)"><div></div></div></div>
@@ -16,3 +23,5 @@ body > div > div > div { width: 200px }
 <div><div style="max-width: calc(50%)"><div></div></div></div>
 <div><div style="max-width: calc(50px)"><div></div></div></div>
 <div><div style="max-width: calc(25% + 25%)"><div></div></div></div>
+</body>
+</html>
