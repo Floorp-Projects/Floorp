@@ -698,6 +698,33 @@ var steps = [
     req.onerror = onFailure;
   },
   function() {
+    ok(true, "Test closed attribute on a valid lock");
+    var lock = mozSettings.createLock();
+    is(lock.closed, false, "closed attribute is false on creation");
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      is(lock.closed, false, "closed attribute is false on success callback");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test closed attribute on invalid lock");
+    var lockx = mozSettings.createLock();
+    var cb = function() {
+      var reqx = null;
+      try {
+        reqx = lockx.set(wifiNetworks0);
+        ok(false, "should have thrown");
+      } catch (ex) {
+        is(lockx.closed, true, "closed attribute is true");
+        ok(true, "Caught Exception");
+        next();
+      }
+    }
+    SimpleTest.executeSoon(cb);
+  },
+  function() {
     ok(true, "Clear DB");
     var lock = mozSettings.createLock();
     req = lock.clear();
