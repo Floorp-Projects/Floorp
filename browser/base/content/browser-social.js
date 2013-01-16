@@ -969,8 +969,11 @@ var SocialToolbar = {
       }
     });
 
-    let toolbarButtonIcon = document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-icon");
-    panel.openPopup(toolbarButtonIcon, "bottomcenter topright", 0, 0, false, false);
+    let navBar = document.getElementById("nav-bar");
+    let anchor = navBar.getAttribute("mode") == "text" ?
+                   document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-text") :
+                   document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-icon");
+    panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
   },
 
   setPanelErrorMessage: function SocialToolbar_setPanelErrorMessage(aNotificationFrame) {
