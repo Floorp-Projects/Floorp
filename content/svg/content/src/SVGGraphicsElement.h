@@ -23,8 +23,6 @@ protected:
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIDOMSVGLOCATABLE(SVGLocatableElement::)
-  NS_FORWARD_NSIDOMSVGTRANSFORMABLE(SVGTransformableElement::)
 };
 
 } // namespace dom

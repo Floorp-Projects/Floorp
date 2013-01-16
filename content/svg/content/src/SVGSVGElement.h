@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/FromParser.h"
 #include "nsIDOMSVGFitToViewBox.h"
-#include "nsIDOMSVGLocatable.h"
 #include "nsISVGPoint.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsSVGEnum.h"
