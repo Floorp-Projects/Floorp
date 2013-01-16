@@ -5,7 +5,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-var reportsDir, pendingDir;
+var reportsDir, submittedDir, pendingDir;
 var reportURL;
 
 Components.utils.import("resource://gre/modules/CrashSubmit.jsm");
@@ -94,11 +94,14 @@ function populateReportList() {
 
   reportsDir = directoryService.get("UAppData", Ci.nsIFile);
   reportsDir.append("Crash Reports");
-  reportsDir.append("submitted");
+
+  submittedDir = directoryService.get("UAppData", Ci.nsIFile);
+  submittedDir.append("Crash Reports");
+  submittedDir.append("submitted");
 
   var reports = [];
-  if (reportsDir.exists() && reportsDir.isDirectory()) {
-    var entries = reportsDir.directoryEntries;
+  if (submittedDir.exists() && submittedDir.isDirectory()) {
+    var entries = submittedDir.directoryEntries;
     while (entries.hasMoreElements()) {
       var file = entries.getNext().QueryInterface(Ci.nsIFile);
       var leaf = file.leafName;
@@ -200,7 +203,7 @@ function clearReports() {
                        bundle.GetStringFromName("deleteconfirm.description")))
     return;
 
-  var entries = reportsDir.directoryEntries;
+  var entries = submittedDir.directoryEntries;
   while (entries.hasMoreElements()) {
     var file = entries.getNext().QueryInterface(Ci.nsIFile);
     var leaf = file.leafName;
