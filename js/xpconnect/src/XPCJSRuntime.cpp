@@ -1554,77 +1554,85 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
     }
 }
 
-static int64_t
-GetGCChunkTotalBytes()
+// Telemetry relies on this being a single reporter (rather than part of the
+// "js" multi-reporter).
+class JSGCHeapReporter MOZ_FINAL : public MemoryReporterBase
 {
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize;
-}
+public:
+    JSGCHeapReporter()
+      : MemoryReporterBase("js-gc-heap", KIND_OTHER, UNITS_BYTES,
+"Memory used by the garbage-collected JavaScript heap.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
+               js::gc::ChunkSize;
+    }
+};
 
-// Telemetry relies on this memory reporter being a single-reporter (rather
-// than part of the "js" multi-reporter, which is too slow to run during a
-// telemetry ping).
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
-                             "js-gc-heap",
-                             KIND_OTHER,
-                             nsIMemoryReporter::UNITS_BYTES,
-                             GetGCChunkTotalBytes,
-                             "Memory used by the garbage-collected JavaScript heap.")
-
-static int64_t
-GetJSSystemCompartmentCount()
-{
-    return JS::SystemCompartmentCount(nsXPConnect::GetRuntimeInstance()->Runtime());
-}
-
-static int64_t
-GetJSUserCompartmentCount()
-{
-    return JS::UserCompartmentCount(nsXPConnect::GetRuntimeInstance()->Runtime());
-}
-
-// Nb: js-system-compartment-count + js-user-compartment-count could be
+// Nb: js-compartments/system + js-compartments/user could be
 // different to the number of compartments reported by
 // JSMemoryMultiReporter if a garbage collection occurred
 // between them being consulted.  We could move these reporters into
 // XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
-    "js-compartments/system",
-    KIND_OTHER,
-    nsIMemoryReporter::UNITS_COUNT,
-    GetJSSystemCompartmentCount,
-    "The number of JavaScript compartments for system code.  The sum of this "
-    "and 'js-compartments-user' might not match the number of compartments "
-    "listed under 'js' if a garbage collection occurs at an inopportune time, "
-    "but such cases should be rare.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
-    "js-compartments/user",
-    KIND_OTHER,
-    nsIMemoryReporter::UNITS_COUNT,
-    GetJSUserCompartmentCount,
-    "The number of JavaScript compartments for user code.  The sum of this "
-    "and 'js-compartments-system' might not match the number of compartments "
-    "listed under 'js' if a garbage collection occurs at an inopportune time, "
-    "but such cases should be rare.")
-
-static int64_t
-GetJSMainRuntimeTemporaryPeakSize()
+class JSCompartmentsSystemReporter MOZ_FINAL : public MemoryReporterBase
 {
-    return JS::PeakSizeOfTemporary(nsXPConnect::GetRuntimeInstance()->Runtime());
-}
+public:
+    JSCompartmentsSystemReporter()
+      : MemoryReporterBase("js-compartments/system", KIND_OTHER, UNITS_COUNT,
+"The number of JavaScript compartments for system code.  The sum of this and "
+"'js-compartments/user' might not match the number of compartments listed "
+"in the 'explicit' tree if a garbage collection occurs at an inopportune "
+"time, but such cases should be rare.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return JS::SystemCompartmentCount(rt);
+    }
+};
+
+class JSCompartmentsUserReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    JSCompartmentsUserReporter()
+      : MemoryReporterBase("js-compartments/user", KIND_OTHER, UNITS_COUNT,
+"The number of JavaScript compartments for user code.  The sum of this and "
+"'js-compartments/system' might not match the number of compartments listed "
+"under 'js' if a garbage collection occurs at an inopportune time, but such "
+"cases should be rare.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return JS::UserCompartmentCount(rt);
+    }
+};
 
 // This is also a single reporter so it can be used by telemetry.
-NS_MEMORY_REPORTER_IMPLEMENT(JSMainRuntimeTemporaryPeak,
-    "js-main-runtime-temporary-peak",
-    KIND_OTHER,
-    nsIMemoryReporter::UNITS_BYTES,
-    GetJSMainRuntimeTemporaryPeakSize,
-    "The peak size of the transient storage in the main JSRuntime (the "
-    "current size of which is reported as "
-    "'explicit/js-non-window/runtime/temporary').");
+class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    JSMainRuntimeTemporaryPeakReporter()
+      : MemoryReporterBase("js-main-runtime-temporary-peak",
+                           KIND_OTHER, UNITS_BYTES,
+"The peak size of the transient storage in the main JSRuntime (the current "
+"size of which is reported as 'explicit/js-non-window/runtime/temporary').")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return JS::PeakSizeOfTemporary(rt);
+    }
+};
 
 // The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
 // compartments and zones; they aggregate any entries smaller than
@@ -2972,10 +2980,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if (!xpc_LocalizeRuntime(runtime))
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(JSMainRuntimeTemporaryPeak));
+    NS_RegisterMemoryReporter(new JSGCHeapReporter());
+    NS_RegisterMemoryReporter(new JSCompartmentsSystemReporter());
+    NS_RegisterMemoryReporter(new JSCompartmentsUserReporter());
+    NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
