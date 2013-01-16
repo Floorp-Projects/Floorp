@@ -28,6 +28,7 @@
 #include "nsServiceManagerUtils.h"   // do_GetService
 #include "nsIHttpActivityObserver.h"
 #include "nsSocketTransportService2.h"
+#include <algorithm>
 
 
 using namespace mozilla;
@@ -864,7 +865,7 @@ nsHttpTransaction::RestartInProgress()
          this, mContentRead, mContentLength));
 
     mRestartInProgressVerifier.SetAlreadyProcessed(
-        NS_MAX(mRestartInProgressVerifier.AlreadyProcessed(), mContentRead));
+        std::max(mRestartInProgressVerifier.AlreadyProcessed(), mContentRead));
 
     if (!mResponseHeadTaken && !mForTakeResponseHead) {
         // TakeResponseHeader() has not been called yet and this
@@ -944,7 +945,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
     // mLineBuf can contain partial match from previous search
     if (!mLineBuf.IsEmpty()) {
         NS_ASSERTION(mLineBuf.Length() < HTTPHeaderLen, "ouch");
-        int32_t checkChars = NS_MIN(len, HTTPHeaderLen - mLineBuf.Length());
+        int32_t checkChars = std::min(len, HTTPHeaderLen - mLineBuf.Length());
         if (PL_strncasecmp(buf, HTTPHeader + mLineBuf.Length(),
                            checkChars) == 0) {
             mLineBuf.Append(buf, checkChars);
@@ -963,7 +964,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
 
     bool firstByte = true;
     while (len > 0) {
-        if (PL_strncasecmp(buf, HTTPHeader, NS_MIN<uint32_t>(len, HTTPHeaderLen)) == 0) {
+        if (PL_strncasecmp(buf, HTTPHeader, std::min<uint32_t>(len, HTTPHeaderLen)) == 0) {
             if (len < HTTPHeaderLen) {
                 // partial HTTPHeader sequence found
                 // save partial match to mLineBuf
@@ -1098,7 +1099,7 @@ nsHttpTransaction::ParseHead(char *buf,
         if (!mConnection || !mConnection->LastTransactionExpectedNoContent()) {
             // tolerate only minor junk before the status line
             mHttpResponseMatched = true;
-            char *p = LocateHttpStart(buf, NS_MIN<uint32_t>(count, 11), true);
+            char *p = LocateHttpStart(buf, std::min<uint32_t>(count, 11), true);
             if (!p) {
                 // Treat any 0.9 style response of a put as a failure.
                 if (mRequestHead->Method() == nsHttp::Put)
@@ -1328,7 +1329,7 @@ nsHttpTransaction::HandleContent(char *buf,
         if (mConnection->IsPersistent() || mPreserveStream ||
             mHttpVersion >= NS_HTTP_VERSION_1_1) {
             int64_t remaining = mContentLength - mContentRead;
-            *contentRead = uint32_t(NS_MIN<int64_t>(count, remaining));
+            *contentRead = uint32_t(std::min<int64_t>(count, remaining));
             *contentRemaining = count - *contentRead;
         }
         else {
@@ -1352,8 +1353,8 @@ nsHttpTransaction::HandleContent(char *buf,
 
     if (toReadBeforeRestart && *contentRead) {
         uint32_t ignore =
-            static_cast<uint32_t>(NS_MIN<int64_t>(toReadBeforeRestart, UINT32_MAX));
-        ignore = NS_MIN(*contentRead, ignore);
+            static_cast<uint32_t>(std::min<int64_t>(toReadBeforeRestart, UINT32_MAX));
+        ignore = std::min(*contentRead, ignore);
         LOG(("Due To Restart ignoring %d of remaining %ld",
              ignore, toReadBeforeRestart));
         *contentRead -= ignore;
@@ -1365,9 +1366,9 @@ nsHttpTransaction::HandleContent(char *buf,
     if (*contentRead) {
         // update count of content bytes read and report progress...
         mContentRead += *contentRead;
-        /* when uncommenting, take care of 64-bit integers w/ NS_MAX...
+        /* when uncommenting, take care of 64-bit integers w/ std::max...
         if (mProgressSink)
-            mProgressSink->OnProgress(nullptr, nullptr, mContentRead, NS_MAX(0, mContentLength));
+            mProgressSink->OnProgress(nullptr, nullptr, mContentRead, std::max(0, mContentLength));
         */
     }
 

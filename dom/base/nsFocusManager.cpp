@@ -54,6 +54,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include <algorithm>
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -1323,7 +1324,7 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
   uint32_t pos2 = parents2.Length();
   nsIDocShellTreeItem* parent = nullptr;
   uint32_t len;
-  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
+  for (len = std::min(pos1, pos2); len > 0; --len) {
     nsIDocShellTreeItem* child1 = parents1.ElementAt(--pos1);
     nsIDocShellTreeItem* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {

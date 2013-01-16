@@ -50,6 +50,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsClientRect.h"
+#include <algorithm>
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
 #include <gdk/gdk.h>
@@ -1311,10 +1312,10 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
 
           different++;
 
-          dc = NS_MAX((uint32_t)abs(p1[0] - p2[0]), dc);
-          dc = NS_MAX((uint32_t)abs(p1[1] - p2[1]), dc);
-          dc = NS_MAX((uint32_t)abs(p1[2] - p2[2]), dc);
-          dc = NS_MAX((uint32_t)abs(p1[3] - p2[3]), dc);
+          dc = std::max((uint32_t)abs(p1[0] - p2[0]), dc);
+          dc = std::max((uint32_t)abs(p1[1] - p2[1]), dc);
+          dc = std::max((uint32_t)abs(p1[2] - p2[2]), dc);
+          dc = std::max((uint32_t)abs(p1[3] - p2[3]), dc);
         }
 
         p1 += 4;

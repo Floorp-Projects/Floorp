@@ -13,6 +13,7 @@
 #include "nsWindow.h"
 #include "WinUtils.h"
 #include "KeyboardLayout.h"
+#include <algorithm>
 
 using namespace mozilla::widget;
 
@@ -1211,7 +1212,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
         uint32_t maxlen = compANSIStr.Length();
         mClauseArray[0] = 0; // first value must be 0
         for (int32_t i = 1; i < clauseArrayLength; i++) {
-          uint32_t len = NS_MIN(mClauseArray[i], maxlen);
+          uint32_t len = std::min(mClauseArray[i], maxlen);
           mClauseArray[i] = ::MultiByteToWideChar(GetKeyboardCodePage(), 
                                                   MB_PRECOMPOSED,
                                                   (LPCSTR)compANSIStr.get(),
@@ -1222,7 +1223,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
   }
   // compClauseArrayLength may be negative. I.e., ImmGetCompositionStringW
   // may return an error code.
-  mClauseArray.SetLength(NS_MAX<long>(0, clauseArrayLength));
+  mClauseArray.SetLength(std::max<long>(0, clauseArrayLength));
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleComposition, GCS_COMPCLAUSE, mClauseLength=%ld\n",
@@ -1248,7 +1249,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
 
   // attrStrLen may be negative. I.e., ImmGetCompositionStringW may return an
   // error code.
-  mAttributeArray.SetLength(NS_MAX<long>(0, attrArrayLength));
+  mAttributeArray.SetLength(std::max<long>(0, attrArrayLength));
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleComposition, GCS_COMPATTR, mAttributeLength=%ld\n",
@@ -1884,7 +1885,7 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     useCaretRect = false;
     if (mCursorPosition != NO_IME_CARET) {
       uint32_t cursorPosition =
-        NS_MIN<uint32_t>(mCursorPosition, mCompositionString.Length());
+        std::min<uint32_t>(mCursorPosition, mCompositionString.Length());
       offset -= cursorPosition;
       NS_ASSERTION(offset >= 0, "offset is negative!");
     }

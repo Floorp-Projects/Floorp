@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h" // for nsCaseInsensitiveStringComparator
 #include "prclist.h"
+#include <algorithm>
 
 
   /**
@@ -412,7 +413,7 @@ class nsScannerIterator
         {
           while ( n > 0 )
             {
-              difference_type one_hop = NS_MIN(n, size_forward());
+              difference_type one_hop = std::min(n, size_forward());
 
               NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a reading iterator beyond the end of a string");
                 // perhaps I should |break| if |!one_hop|?
@@ -425,7 +426,7 @@ class nsScannerIterator
           while ( n < 0 )
             {
               normalize_backward();
-              difference_type one_hop = NS_MAX(n, -size_backward());
+              difference_type one_hop = std::max(n, -size_backward());
 
               NS_ASSERTION(one_hop<0, "Infinite loop: can't advance (backward) a reading iterator beyond the end of a string");
                 // perhaps I should |break| if |!one_hop|?

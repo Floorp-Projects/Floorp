@@ -28,6 +28,7 @@
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "FrameLayerBuilder.h"
+#include <algorithm>
 
 //TABLECELL SELECTION
 #include "nsFrameSelection.h"
@@ -227,7 +228,7 @@ nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // row span needs to be clamped as we do not create rows in the cellmap
     // which do not have cells originating in them
     nsIntRect damageArea(colIndex, rowIndex, GetColSpan(),
-      NS_MIN(GetRowSpan(), tableFrame->GetRowCount() - rowIndex));
+      std::min(GetRowSpan(), tableFrame->GetRowCount() - rowIndex));
     tableFrame->AddBCDamageArea(damageArea);
   }
 }
@@ -574,7 +575,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
   }
   // if the content is larger than the cell height align from top
-  kidYTop = NS_MAX(0, kidYTop);
+  kidYTop = std::max(0, kidYTop);
 
   if (kidYTop != kidRect.y) {
     // Invalidate at the old position first

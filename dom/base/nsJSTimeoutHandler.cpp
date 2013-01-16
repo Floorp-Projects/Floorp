@@ -21,6 +21,7 @@
 #include "nsAlgorithm.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include <algorithm>
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
@@ -279,8 +280,8 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
     // and the delay, so only arguments after that need to go in our
     // array.
     nsCOMPtr<nsIJSArgArray> array;
-    // NS_MAX(argc - 2, 0) wouldn't work right because argc is unsigned.
-    rv = NS_CreateJSArgv(cx, NS_MAX(argc, 2u) - 2, nullptr,
+    // std::max(argc - 2, 0) wouldn't work right because argc is unsigned.
+    rv = NS_CreateJSArgv(cx, std::max(argc, 2u) - 2, nullptr,
                          getter_AddRefs(array));
     if (NS_FAILED(rv)) {
       return NS_ERROR_OUT_OF_MEMORY;

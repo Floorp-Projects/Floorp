@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 
 #include "nspr.h"
+#include <algorithm>
 
 #define ASYNC_TEST // undefine this if you want to test sycnronous conversion.
 
@@ -66,7 +67,7 @@ public:
         uint64_t len64;
         rv = inStr->Available(&len64);
         if (NS_FAILED(rv)) return rv;
-        uint32_t len = (uint32_t)NS_MIN(len64, (uint64_t)(UINT32_MAX - 1));
+        uint32_t len = (uint32_t)std::min(len64, (uint64_t)(UINT32_MAX - 1));
 
         char *buffer = (char*)nsMemory::Alloc(len + 1);
         if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
@@ -100,7 +101,7 @@ NS_IMPL_ISUPPORTS2(EndListener,
 static uint32_t 
 saturated(uint64_t aValue)
 {
-    return (uint32_t)NS_MIN(aValue, (uint64_t)UINT32_MAX);
+    return (uint32_t)std::min(aValue, (uint64_t)UINT32_MAX);
 }
  
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {

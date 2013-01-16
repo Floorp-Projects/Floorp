@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsCRT.h"
+#include <algorithm>
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -38,7 +39,7 @@ nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)
     uint32_t avail;
     nsresult rv = stream->Available(&avail64);
     if (NS_SUCCEEDED(rv)) {
-        avail = (uint32_t)NS_MIN(avail64, (uint64_t)sizeof(data));
+        avail = (uint32_t)std::min(avail64, (uint64_t)sizeof(data));
 
         uint32_t n;
         rv = stream->Read(data, avail, &n);

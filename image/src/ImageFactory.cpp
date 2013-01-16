@@ -15,6 +15,7 @@
 #include "VectorImage.h"
 
 #include "ImageFactory.h"
+#include <algorithm>
 
 namespace mozilla {
 namespace image {
@@ -153,7 +154,7 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
       // its source buffer
       if (len > 0) {
         uint32_t sizeHint = (uint32_t) len;
-        sizeHint = NS_MIN<uint32_t>(sizeHint, 20000000); // Bound by something reasonable
+        sizeHint = std::min<uint32_t>(sizeHint, 20000000); // Bound by something reasonable
         rv = newImage->SetSourceSizeHint(sizeHint);
         if (NS_FAILED(rv)) {
           // Flush memory, try to get some back, and try again

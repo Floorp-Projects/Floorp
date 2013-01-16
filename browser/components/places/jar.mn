@@ -31,4 +31,4 @@ browser.jar:
     content/browser/places/moveBookmarks.js              (content/moveBookmarks.js)
     content/browser/places/editBookmarkOverlay.xul       (content/editBookmarkOverlay.xul)
     content/browser/places/editBookmarkOverlay.js        (content/editBookmarkOverlay.js)
-    content/browser/places/downloadsViewOverlay.xul      (content/downloadsViewOverlay.xul)
+*   content/browser/places/downloadsViewOverlay.xul      (content/downloadsViewOverlay.xul)

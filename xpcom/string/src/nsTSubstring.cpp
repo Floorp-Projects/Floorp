@@ -75,9 +75,9 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, uint32_
         size_type temp = curCapacity;
         while (temp < capacity)
           temp <<= 1;
-        NS_ASSERTION(NS_MIN(temp, kMaxCapacity) >= capacity,
+        NS_ASSERTION(XPCOM_MIN(temp, kMaxCapacity) >= capacity,
                      "should have hit the early return at the top");
-        capacity = NS_MIN(temp, kMaxCapacity);
+        capacity = XPCOM_MIN(temp, kMaxCapacity);
       }
 
     //
@@ -451,7 +451,7 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
 void
 nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type c )
   {
-    cutStart = NS_MIN(cutStart, Length());
+    cutStart = XPCOM_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, 1))
       mData[cutStart] = c;
@@ -479,7 +479,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const cha
           }
       }
 
-    cutStart = NS_MIN(cutStart, Length());
+    cutStart = XPCOM_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copy(mData + cutStart, data, length);
@@ -502,7 +502,7 @@ nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, cons
       }
 #endif
 
-    cutStart = NS_MIN(cutStart, Length());
+    cutStart = XPCOM_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copyASCII(mData + cutStart, data, length);
@@ -520,7 +520,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
 
     size_type length = tuple.Length();
 
-    cutStart = NS_MIN(cutStart, Length());
+    cutStart = XPCOM_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       tuple.WriteTo(mData + cutStart, length);
@@ -554,7 +554,7 @@ nsTSubstring_CharT::SetCapacity( size_type capacity, const fallible_t& )
       return false; // out-of-memory
 
     // compute new string length
-    size_type newLen = NS_MIN(mLength, capacity);
+    size_type newLen = XPCOM_MIN(mLength, capacity);
 
     if (oldData)
       {

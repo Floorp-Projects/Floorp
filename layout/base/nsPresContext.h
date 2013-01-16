@@ -25,6 +25,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsChangeHint.h"
+#include <algorithm>
 // This also pulls in gfxTypes.h, which we cannot include directly.
 #include "gfxRect.h"
 #include "nsTArray.h"
@@ -510,7 +511,7 @@ public:
    */
   int32_t MinFontSize(nsIAtom *aLanguage) const {
     const LangGroupFontPrefs *prefs = GetFontPrefsForLang(aLanguage);
-    return NS_MAX(mMinFontSize, prefs->mMinimumFontSize);
+    return std::max(mMinFontSize, prefs->mMinimumFontSize);
   }
 
   void SetMinFontSize(int32_t aMinFontSize) {

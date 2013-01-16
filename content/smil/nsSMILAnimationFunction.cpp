@@ -19,6 +19,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include <math.h>
+#include <algorithm>
 
 //----------------------------------------------------------------------
 // Static members
@@ -554,7 +555,7 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
 
     NS_ASSERTION(curIntervalDist >= 0, "distance values must be non-negative");
     // Clamp distance value at 0, just in case ComputeDistance is evil.
-    curIntervalDist = NS_MAX(curIntervalDist, 0.0);
+    curIntervalDist = std::max(curIntervalDist, 0.0);
 
     if (remainingDist >= curIntervalDist) {
       remainingDist -= curIntervalDist;
@@ -605,7 +606,7 @@ nsSMILAnimationFunction::ComputePacedTotalDistance(
     // Clamp distance value to 0, just in case we have an evil ComputeDistance
     // implementation somewhere
     NS_ABORT_IF_FALSE(tmpDist >= 0.0f, "distance values must be non-negative");
-    tmpDist = NS_MAX(tmpDist, 0.0);
+    tmpDist = std::max(tmpDist, 0.0);
 
     totalDistance += tmpDist;
   }

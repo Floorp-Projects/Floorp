@@ -9,6 +9,7 @@
 from __future__ import with_statement
 from optparse import OptionParser
 import sys, re, os, posixpath, ntpath
+import errno
 from StringIO import StringIO
 # Standalone js doesn't have virtualenv.
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'config'))

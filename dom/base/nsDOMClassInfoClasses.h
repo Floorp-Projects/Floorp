@@ -20,8 +20,6 @@ DOMCI_CLASS(DOMConstructor)
 DOMCI_CLASS(XMLDocument)
 DOMCI_CLASS(DocumentType)
 DOMCI_CLASS(DOMException)
-DOMCI_CLASS(DOMTokenList)
-DOMCI_CLASS(DOMSettableTokenList)
 DOMCI_CLASS(DocumentFragment)
 DOMCI_CLASS(Element)
 DOMCI_CLASS(Attr)
@@ -128,6 +126,10 @@ DOMCI_CLASS(CSSGroupRuleRuleList)
 DOMCI_CLASS(MediaList)
 DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
+
+// CSSValueList object that represents an nsIDOMCSSValueList, used
+// by DOM CSS
+DOMCI_CLASS(CSSValueList)
 
 // Range classes
 DOMCI_CLASS(Range)

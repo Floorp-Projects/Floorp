@@ -915,19 +915,20 @@ jsdProperty::GetValue(jsdIValue **_rval)
 NS_IMPL_THREADSAFE_ISUPPORTS2(jsdScript, jsdIScript, jsdIEphemeral)
 
 static NS_IMETHODIMP
-AssignToJSString(nsACString *x, JSString *str)
+AssignToJSString(JSDContext *aCx, nsACString *x, JSString *str)
 {
     if (!str) {
         x->SetLength(0);
         return NS_OK;
     }
-    size_t length = JS_GetStringEncodingLength(NULL, str);
+    JSContext *cx = JSD_GetDefaultJSContext(aCx);
+    size_t length = JS_GetStringEncodingLength(cx, str);
     if (length == size_t(-1))
         return NS_ERROR_FAILURE;
     x->SetLength(uint32_t(length));
     if (x->Length() != uint32_t(length))
         return NS_ERROR_OUT_OF_MEMORY;
-    JS_EncodeStringToBuffer(str, x->BeginWriting(), length);
+    JS_EncodeStringToBuffer(cx, str, x->BeginWriting(), length);
     return NS_OK;
 }
 
@@ -953,7 +954,7 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(false),
         if (mFunctionName) {
             JSString *str = JSD_GetScriptFunctionId(mCx, mScript);
             if (str)
-                AssignToJSString(mFunctionName, str);
+                AssignToJSString(mCx, mFunctionName, str);
         }
         mBaseLineNumber = JSD_GetScriptBaseLineNumber(mCx, mScript);
         mLineExtent = JSD_GetScriptLineExtent(mCx, mScript);
@@ -1908,7 +1909,7 @@ jsdStackFrame::GetFunctionName(nsACString &_rval)
     ASSERT_VALID_EPHEMERAL;
     JSString *str = JSD_GetIdForStackFrame(mCx, mThreadState, mStackFrameInfo);
     if (str)
-        return AssignToJSString(&_rval, str);
+        return AssignToJSString(mCx, &_rval, str);
     
     _rval.Assign("anonymous");
     return NS_OK;
@@ -2238,7 +2239,7 @@ NS_IMETHODIMP
 jsdValue::GetJsFunctionName(nsACString &_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    return AssignToJSString(&_rval, JSD_GetValueFunctionId(mCx, mValue));
+    return AssignToJSString(mCx, &_rval, JSD_GetValueFunctionId(mCx, mValue));
 }
 
 NS_IMETHODIMP

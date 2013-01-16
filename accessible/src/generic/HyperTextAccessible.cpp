@@ -29,6 +29,7 @@
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
 #include "gfxSkipChars.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -178,7 +179,7 @@ HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRendere
     frame->GetOffsets(startFrameTextOffset, endFrameTextOffset);
     int32_t frameTotalTextLength = endFrameTextOffset - startFrameTextOffset;
     int32_t seekLength = endContentOffset - startContentOffset;
-    int32_t frameSubStringLength = NS_MIN(frameTotalTextLength - startContentOffsetInFrame, seekLength);
+    int32_t frameSubStringLength = std::min(frameTotalTextLength - startContentOffsetInFrame, seekLength);
 
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;

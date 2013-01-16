@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
+#include <algorithm>
 
 #ifdef MOZ_PLATFORM_MAEMO
 // needed to include hildon parts in gtk.h
@@ -4189,8 +4190,8 @@ nsWindow::ResizeTransparencyBitmap()
     memset(newBits, 0, newSize);
 
     // Now copy the intersection of the old and new areas into the new mask
-    int32_t copyWidth = NS_MIN(mBounds.width, mTransparencyBitmapWidth);
-    int32_t copyHeight = NS_MIN(mBounds.height, mTransparencyBitmapHeight);
+    int32_t copyWidth = std::min(mBounds.width, mTransparencyBitmapWidth);
+    int32_t copyHeight = std::min(mBounds.height, mTransparencyBitmapHeight);
     int32_t oldRowBytes = GetBitmapStride(mTransparencyBitmapWidth);
     int32_t copyBytes = GetBitmapStride(copyWidth);
 
@@ -5983,8 +5984,8 @@ nsWindow::GetThebesSurface(cairo_t *cr)
 #endif
 
     // Owen Taylor says this is the right thing to do!
-    width = NS_MIN(32767, width);
-    height = NS_MIN(32767, height);
+    width = std::min(32767, width);
+    height = std::min(32767, height);
     gfxIntSize size(width, height);
 
     GdkVisual *gdkVisual = gdk_window_get_visual(mGdkWindow);

@@ -6,6 +6,7 @@
 #
 # Copies the needed files from a directory containing the original
 # libspeex sources that we need for HTML5 media playback rate change.
+
 cp $1/libspeex/resample.c src
 cp $1/libspeex/arch.h src
 cp $1/libspeex/stack_alloc.h src
@@ -15,3 +16,6 @@ cp $1/include/speex/speex_types.h src
 sed -e 's/unsigned @SIZE16@/uint16_t/g' -e 's/unsigned @SIZE32@/uint32_t/g' -e 's/@SIZE16@/int16_t/g' -e 's/@SIZE32@/int32_t/g' < $1/include/speex/speex_config_types.h.in > src/speex_config_types.h
 cp $1/AUTHORS .
 cp $1/COPYING .
+
+# apply outstanding local patches
+patch -p1 < truncation.patch

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set cindent tabstop=4 expandtab shiftwidth=4: */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1041,6 +1041,8 @@ struct nsCycleCollector
     CC_BeforeUnlinkCallback mBeforeUnlinkCB;
     CC_ForgetSkippableCallback mForgetSkippableCB;
 
+    nsCOMPtr<nsIMemoryMultiReporter> mReporter;
+
     nsPurpleBuffer mPurpleBuf;
 
     void RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime);
@@ -1139,7 +1141,6 @@ public:
 
 
 static nsCycleCollector *sCollector = nullptr;
-static nsIMemoryMultiReporter *sCollectorReporter = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -2440,6 +2441,87 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
 }
 
 
+////////////////////////
+// Memory reporter
+////////////////////////
+
+class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
+{
+  public:
+    CycleCollectorMultiReporter(nsCycleCollector* aCollector)
+      : mCollector(aCollector)
+    {}
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetName(nsACString& name)
+    {
+        name.AssignLiteral("cycle-collector");
+        return NS_OK;
+    }
+
+    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback* aCb,
+                              nsISupports* aClosure)
+    {
+        size_t objectSize, graphNodesSize, graphEdgesSize, whiteNodesSize,
+               purpleBufferSize;
+        mCollector->SizeOfIncludingThis(MallocSizeOf,
+                                        &objectSize, &graphNodesSize,
+                                        &graphEdgesSize, &whiteNodesSize,
+                                        &purpleBufferSize);
+
+    #define REPORT(_path, _amount, _desc)                                     \
+        do {                                                                  \
+            size_t amount = _amount;  /* evaluate |_amount| only once */      \
+            if (amount > 0) {                                                 \
+                nsresult rv;                                                  \
+                rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
+                                   nsIMemoryReporter::KIND_HEAP,              \
+                                   nsIMemoryReporter::UNITS_BYTES, _amount,   \
+                                   NS_LITERAL_CSTRING(_desc), aClosure);      \
+                NS_ENSURE_SUCCESS(rv, rv);                                    \
+            }                                                                 \
+        } while (0)
+
+        REPORT("explicit/cycle-collector/collector-object", objectSize,
+               "Memory used for the cycle collector object itself.");
+
+        REPORT("explicit/cycle-collector/graph-nodes", graphNodesSize,
+               "Memory used for the nodes of the cycle collector's graph. "
+               "This should be zero when the collector is idle.");
+
+        REPORT("explicit/cycle-collector/graph-edges", graphEdgesSize,
+               "Memory used for the edges of the cycle collector's graph. "
+               "This should be zero when the collector is idle.");
+
+        REPORT("explicit/cycle-collector/white-nodes", whiteNodesSize,
+               "Memory used for the cycle collector's white nodes array. "
+               "This should be zero when the collector is idle.");
+
+        REPORT("explicit/cycle-collector/purple-buffer", purpleBufferSize,
+               "Memory used for the cycle collector's purple buffer.");
+
+    #undef REPORT
+
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetExplicitNonHeap(int64_t* n)
+    {
+        // This reporter does neither "explicit" nor NONHEAP measurements.
+        *n = 0;
+        return NS_OK;
+    }
+
+  private:
+    NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
+
+    nsCycleCollector* mCollector;
+};
+
+NS_IMPL_ISUPPORTS1(CycleCollectorMultiReporter, nsIMemoryMultiReporter)
+
+
 ////////////////////////////////////////////////////////////////////////
 // Collector implementation
 ////////////////////////////////////////////////////////////////////////
@@ -2455,6 +2537,7 @@ nsCycleCollector::nsCycleCollector() :
     mVisitedGCed(0),
     mBeforeUnlinkCB(nullptr),
     mForgetSkippableCB(nullptr),
+    mReporter(nullptr),
 #ifdef DEBUG_CC
     mPurpleBuf(mParams, mStats),
     mPtrLog(nullptr)
@@ -2470,10 +2553,11 @@ nsCycleCollector::nsCycleCollector() :
 
 nsCycleCollector::~nsCycleCollector()
 {
+    NS_UnregisterMemoryMultiReporter(mReporter);
 }
 
 
-void 
+void
 nsCycleCollector::RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime)
 {
     if (mParams.mDoNothing)
@@ -2483,9 +2567,18 @@ nsCycleCollector::RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime)
         Fault("multiple registrations of cycle collector JS runtime", aJSRuntime);
 
     mJSRuntime = aJSRuntime;
+
+    // We can't register the reporter in nsCycleCollector() because that runs
+    // before the memory reporter manager is initialized.  So we do it here
+    // instead.
+    static bool registered = false;
+    if (!registered) {
+        NS_RegisterMemoryMultiReporter(new CycleCollectorMultiReporter(this));
+        registered = true;
+    }
 }
 
-void 
+void
 nsCycleCollector::ForgetJSRuntime()
 {
     if (mParams.mDoNothing)
@@ -3023,13 +3116,6 @@ nsCycleCollector::WasFreed(nsISupports *n)
 }
 #endif
 
-
-////////////////////////
-// Memory reporter
-////////////////////////
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(CycleCollectorMallocSizeOf)
-
 void
 nsCycleCollector::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                       size_t *aObjectSize,
@@ -3057,73 +3143,6 @@ nsCycleCollector::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     // - mStats, mPtrLog, mExpectedGarbage: because they're DEBUG_CC-only.
 }
 
-class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
-{
-  public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetName(nsACString &name)
-    {
-        name.AssignLiteral("cycle-collector");
-        return NS_OK;
-    }
-
-    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCb,
-                              nsISupports *aClosure)
-    {
-        if (!sCollector)
-            return NS_OK;
-
-        size_t objectSize, graphNodesSize, graphEdgesSize, whiteNodesSize,
-               purpleBufferSize;
-        sCollector->SizeOfIncludingThis(CycleCollectorMallocSizeOf,
-                                        &objectSize, &graphNodesSize,
-                                        &graphEdgesSize, &whiteNodesSize,
-                                        &purpleBufferSize);
-
-    #define REPORT(_path, _amount, _desc)                                     \
-        do {                                                                  \
-            size_t amount = _amount;  /* evaluate |_amount| just once */      \
-            if (amount > 0) {                                                 \
-                nsresult rv;                                                  \
-                rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   nsIMemoryReporter::KIND_HEAP,              \
-                                   nsIMemoryReporter::UNITS_BYTES, _amount,   \
-                                   NS_LITERAL_CSTRING(_desc), aClosure);      \
-                NS_ENSURE_SUCCESS(rv, rv);                                    \
-            }                                                                 \
-        } while (0)
-
-        REPORT("explicit/cycle-collector/collector-object", objectSize,
-               "Memory used for the cycle collector object itself.");
-
-        REPORT("explicit/cycle-collector/graph-nodes", graphNodesSize,
-               "Memory used for the nodes of the cycle collector's graph. "
-               "This should be zero when the collector is idle.");
-
-        REPORT("explicit/cycle-collector/graph-edges", graphEdgesSize,
-               "Memory used for the edges of the cycle collector's graph. "
-               "This should be zero when the collector is idle.");
-
-        REPORT("explicit/cycle-collector/white-nodes", whiteNodesSize,
-               "Memory used for the cycle collector's white nodes array. "
-               "This should be zero when the collector is idle.");
-
-        REPORT("explicit/cycle-collector/purple-buffer", purpleBufferSize,
-               "Memory used for the cycle collector's purple buffer.");
-
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetExplicitNonHeap(int64_t *n)
-    {
-        // This reporter does neither "explicit" nor NONHEAP measurements.
-        *n = 0;
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS1(CycleCollectorMultiReporter, nsIMemoryMultiReporter)
 
 ////////////////////////////////////////////////////////////////////////
 // Module public API (exported in nsCycleCollector.h)
@@ -3133,14 +3152,8 @@ NS_IMPL_ISUPPORTS1(CycleCollectorMultiReporter, nsIMemoryMultiReporter)
 void
 nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *rt)
 {
-    static bool regMemReport = true;
     if (sCollector)
         sCollector->RegisterJSRuntime(rt);
-    if (regMemReport) {
-        regMemReport = false;
-        sCollectorReporter = new CycleCollectorMultiReporter;
-        NS_RegisterMemoryMultiReporter(sCollectorReporter);
-    }
 }
 
 void
@@ -3148,10 +3161,6 @@ nsCycleCollector_forgetJSRuntime()
 {
     if (sCollector)
         sCollector->ForgetJSRuntime();
-    if (sCollectorReporter) {
-        NS_UnregisterMemoryMultiReporter(sCollectorReporter);
-        sCollectorReporter = nullptr;
-    }
 }
 
 nsPurpleBufferEntry*

@@ -21,6 +21,7 @@
 #include "gfxPlatform.h"
 #include "gfxTeeSurface.h"
 #include "sampler.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -745,10 +746,10 @@ gfxContext::UserToDevice(const gfxRect& rect) const
     ymax = ymin;
     for (int i = 0; i < 3; i++) {
         cairo_user_to_device(mCairo, &x[i], &y[i]);
-        xmin = NS_MIN(xmin, x[i]);
-        xmax = NS_MAX(xmax, x[i]);
-        ymin = NS_MIN(ymin, y[i]);
-        ymax = NS_MAX(ymax, y[i]);
+        xmin = std::min(xmin, x[i]);
+        xmax = std::max(xmax, x[i]);
+        ymin = std::min(ymin, y[i]);
+        ymax = std::max(ymax, y[i]);
     }
 
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
@@ -799,9 +800,9 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, bool ignoreScale) const
       p1.Round();
       p3.Round();
 
-      rect.MoveTo(gfxPoint(NS_MIN(p1.x, p3.x), NS_MIN(p1.y, p3.y)));
-      rect.SizeTo(gfxSize(NS_MAX(p1.x, p3.x) - rect.X(),
-                          NS_MAX(p1.y, p3.y) - rect.Y()));
+      rect.MoveTo(gfxPoint(std::min(p1.x, p3.x), std::min(p1.y, p3.y)));
+      rect.SizeTo(gfxSize(std::max(p1.x, p3.x) - rect.X(),
+                          std::max(p1.y, p3.y) - rect.Y()));
       return true;
   }
 
@@ -2186,8 +2187,8 @@ gfxContext::PushNewDT(gfxASurface::gfxContentType content)
   Rect clipBounds = GetAzureDeviceSpaceClipBounds();
   clipBounds.RoundOut();
 
-  clipBounds.width = NS_MAX(1.0f, clipBounds.width);
-  clipBounds.height = NS_MAX(1.0f, clipBounds.height);
+  clipBounds.width = std::max(1.0f, clipBounds.width);
+  clipBounds.height = std::max(1.0f, clipBounds.height);
 
   RefPtr<DrawTarget> newDT =
     mDT->CreateSimilarDrawTarget(IntSize(int32_t(clipBounds.width), int32_t(clipBounds.height)),
