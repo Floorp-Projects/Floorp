@@ -9,11 +9,14 @@ how the build system gets started, you've come to the right place.
 Overview
 ========
 
-The build system is defined by a bunch of files in the source tree called
-*mozbuild* files. Each *mozbuild* file defines a unique part of the overall
-build system. This includes information like "compile file X," "copy this
-file here," "link these files together to form a library." Together,
-all the *mozbuild* files define how the entire build system works.
+Tree metadata (including the build system) is defined by a collection of
+files in the source tree called *mozbuild* files. These typically are files
+named *moz.build*. But, the actual name can vary.
+
+Each *mozbuild* file defines basic metadata about the part of the tree
+(typically directory scope) it resides in. This includes build system
+configuration, such as the list of C++ files to compile or headers to install
+or libraries to link together.
 
 *mozbuild* files are actually Python scripts. However, their execution
 is governed by special rules. This will be explained later.
@@ -22,7 +25,7 @@ Once a *mozbuild* file has executed, it is converted into a set of static
 data structures.
 
 The set of all data structures from all relevant *mozbuild* files
-constitutes the current build configuration.
+constitute all of the metadata from the tree.
 
 How *mozbuild* Files Work
 =========================
@@ -86,52 +89,49 @@ dicts are data structures, they aren't the final data structures that
 represent the build configuration.
 
 We feed the *mozbuild* execution output (actually *reader.MozbuildSandbox*
-instances) into a *BuildDefinitionEmitter* class instance. This class is
-defined in the *emitter* module. *BuildDefinitionEmitter* converts the
-*MozbuildSandbox* instances into instances of the *BuildDefinition*-derived
+instances) into a *TreeMetadataEmitter* class instance. This class is
+defined in the *emitter* module. *TreeMetadataEmitter* converts the
+*MozbuildSandbox* instances into instances of the *TreeMetadata*-derived
 classes from the *data* module.
 
 All the classes in the *data* module define a domain-specific
-component of the build configuration. File compilation and IDL generation
-are separate classes, for example. The only thing these classes have in
-common is that they inherit from *BuildDefinition*, which is merely an
-abstract base class.
+component of the tree metadata, including build configuration. File compilation
+and IDL generation are separate classes, for example. The only thing these
+classes have in common is that they inherit from *TreeMetadata*, which is
+merely an abstract base class.
 
-The set of all emitted *BuildDefinition* instances (converted from executed
-*mozbuild* files) constitutes the aggregate build configuration. This is
-the authoritative definition of the build system and is what's used by
-all downstream consumers, such as backends. There is no monolithic build
-system configuration class. Instead, the build system configuration is
-modeled as a collection/iterable of *BuildDefinition*.
+The set of all emitted *TreeMetadata* instances (converted from executed
+*mozbuild* files) constitutes the aggregate tree metadata. This is the
+the authoritative definition of the build system, etc and is what's used by
+all downstream consumers, such as build backends. There is no monolithic
+class or data structure. Instead, the tree metadata is modeled as a collection
+of *TreeMetadata* instances.
 
 There is no defined mapping between the number of
-*MozbuildSandbox*/*moz.build* instances and *BuildDefinition* instances.
-Some *mozbuild* files will emit only 1 *BuildDefinition* instance. Some
+*MozbuildSandbox*/*moz.build* instances and *TreeMetadata* instances.
+Some *mozbuild* files will emit only 1 *TreeMetadata* instance. Some
 will emit 7. Some may even emit 0!
 
 The purpose of this *emitter* layer between the raw *mozbuild* execution
-result and *BuildDefinition* is to facilitate additional normalization and
-verification of the output. The downstream consumer of the build
-configuration are build backends. And, there are several of these. There
-are common functions shared by backends related to examining the build
-configuration. It makes sense to move this functionality upstream as part
-of a shared pipe. Thus, *BuildDefinitionEmitter* exists.
+result and *TreeMetadata* is to facilitate additional normalization and
+verification of the output. There are multiple downstream consumers of
+this data and there is common functionality shared between them. An
+abstraction layer that provides high-level filtering is a useful feature.
+Thus *TreeMetadataEmitter* exists.
 
 Other Notes
 ===========
 
-*reader.BuildReader* and *emitter.BuildDefinitionEmitter* have a nice
+*reader.BuildReader* and *emitter.TreeMetadataEmitter* have a nice
 stream-based API courtesy of generators. When you hook them up properly,
-*BuildDefinition* instances can be consumed before all *mozbuild* files have
+*TreeMetadata* instances can be consumed before all *mozbuild* files have
 been read. This means that errors down the pipe can trigger before all
 upstream tasks (such as executing and converting) are complete. This should
 reduce the turnaround time in the event of errors. This likely translates to
 a more rapid pace for implementing backends, which require lots of iterative
 runs through the entire system.
 
-In theory, the frontend to the build system is generic and could be used
-by any project. In practice, parts are specifically tailored towards
-Mozilla's needs. With a little work, the core build system bits could be
-separated into its own package, independent of the Mozilla bits. Or, one
-could simply replace the Mozilla-specific pieces in the *variables*, *data*,
-and *emitter* modules to reuse the core logic.
+Lots of code in this sub-module is applicable to other systems, not just
+Mozilla's. However, some of the code is tightly coupled. If there is a will
+to extract the generic bits for re-use in other projects, that can and should
+be done.
