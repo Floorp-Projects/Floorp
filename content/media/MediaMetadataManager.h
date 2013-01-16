@@ -28,8 +28,6 @@ namespace mozilla {
       int mChannels;
       // True if this media has an audio track.
       bool mHasAudio;
-      // True if this media has a video track.
-      bool mHasVideo;
   };
 
   // This class encapsulate the logic to give the metadata from the reader to
@@ -55,7 +53,6 @@ namespace mozilla {
                                                   metadata->mChannels,
                                                   metadata->mRate,
                                                   metadata->mHasAudio,
-                                                  metadata->mHasVideo,
                                                   metadata->mTags.forget());
           NS_DispatchToMainThread(metadataUpdatedEvent, NS_DISPATCH_NORMAL);
           mMetadataQueue.popFirst();

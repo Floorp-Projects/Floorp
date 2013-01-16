@@ -75,6 +75,8 @@ class AudioClock
     int mInRate;
     // True if the we are timestretching, false if we are resampling.
     bool mPreservesPitch;
+    // The current playback rate.
+    double mPlaybackRate;
     // True if we are playing at the old playbackRate after it has been changed.
     bool mCompensatingLatency;
 };
