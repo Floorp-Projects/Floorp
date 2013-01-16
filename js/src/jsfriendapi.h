@@ -536,6 +536,9 @@ JS_FRIEND_API(bool)
 GetPropertyNames(JSContext *cx, RawObject obj, unsigned flags, js::AutoIdVector *props);
 
 JS_FRIEND_API(bool)
+AppendUnique(JSContext *cx, AutoIdVector &base, AutoIdVector &others);
+
+JS_FRIEND_API(bool)
 GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 
 JS_FRIEND_API(bool)

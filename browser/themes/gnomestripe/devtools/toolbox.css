@@ -121,7 +121,9 @@
   -moz-appearance: none;
   background-image: url("background-noise-toolbar.png"),
                     linear-gradient(#303840, #2d3640);
-  border-top: 1px solid #060a0d;
+  border-color: #060a0d;
+  border-style: solid;
+  border-width: 1px 0;
   box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset,
               0 -1px 0 hsla(206,37%,4%,.1) inset;
   min-height: 32px;

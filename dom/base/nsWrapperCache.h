@@ -67,8 +67,8 @@ public:
   }
   ~nsWrapperCache()
   {
-    NS_ASSERTION(!PreservingWrapper(),
-                 "Destroying cache with a preserved wrapper!");
+    MOZ_ASSERT(!PreservingWrapper(),
+               "Destroying cache with a preserved wrapper!");
   }
 
   /**
@@ -96,8 +96,8 @@ public:
 
   void SetWrapper(JSObject* aWrapper)
   {
-    NS_ASSERTION(!PreservingWrapper(), "Clearing a preserved wrapper!");
-    NS_ASSERTION(aWrapper, "Use ClearWrapper!");
+    MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
+    MOZ_ASSERT(aWrapper, "Use ClearWrapper!");
 
     SetWrapperBits(aWrapper);
   }
@@ -108,7 +108,7 @@ public:
    */
   void ClearWrapper()
   {
-    NS_ASSERTION(!PreservingWrapper(), "Clearing a preserved wrapper!");
+    MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
 
     SetWrapperBits(NULL);
   }
@@ -120,14 +120,14 @@ public:
 
   void SetIsDOMBinding()
   {
-    NS_ASSERTION(!mWrapperPtrBits,
-                 "This flag should be set before creating any wrappers.");
+    MOZ_ASSERT(!mWrapperPtrBits,
+               "This flag should be set before creating any wrappers.");
     mWrapperPtrBits = WRAPPER_IS_DOM_BINDING;
   }
   void ClearIsDOMBinding()
   {
-    NS_ASSERTION(!mWrapperPtrBits || mWrapperPtrBits == WRAPPER_IS_DOM_BINDING,
-                 "This flag should be cleared before creating any wrappers.");
+    MOZ_ASSERT(!mWrapperPtrBits || mWrapperPtrBits == WRAPPER_IS_DOM_BINDING,
+               "This flag should be cleared before creating any wrappers.");
     mWrapperPtrBits = 0;
   }
 

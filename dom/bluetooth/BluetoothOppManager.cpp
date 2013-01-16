@@ -621,6 +621,28 @@ BluetoothOppManager::ExtractBlobHeaders()
   return true;
 }
 
+bool
+BluetoothOppManager::IsReservedChar(PRUnichar c)
+{
+  return (c < 0x0020 ||
+          c == PRUnichar('?') || c == PRUnichar('|') || c == PRUnichar('<') ||
+          c == PRUnichar('>') || c == PRUnichar('"') || c == PRUnichar(':') ||
+          c == PRUnichar('/') || c == PRUnichar('*') || c == PRUnichar('\\'));
+}
+
+void
+BluetoothOppManager::ValidateFileName()
+{
+  int length = sFileName.Length();
+
+  for (int i = 0; i < length; ++i) {
+    // Replace reserved char of fat file system with '_'
+    if (IsReservedChar(sFileName.CharAt(i))) {
+      sFileName.Replace(i, 1, PRUnichar('_'));
+    }
+  }
+}
+
 void
 BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
 {
@@ -707,6 +729,7 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
                  mReceivedDataBufferOffset,
                  &pktHeaders);
     ExtractPacketHeaders(pktHeaders);
+    ValidateFileName();
 
     mReceivedDataBufferOffset = 0;
 

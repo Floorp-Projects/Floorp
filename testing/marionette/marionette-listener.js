@@ -284,7 +284,7 @@ function errUnload() {
 /**
  * Returns a content sandbox that can be used by the execute_foo functions.
  */
-function createExecuteContentSandbox(aWindow, timeout) {
+function createExecuteContentSandbox(aWindow, timeout, specialPowers) {
   let sandbox = new Cu.Sandbox(aWindow);
   sandbox.global = sandbox;
   sandbox.window = aWindow;
@@ -306,7 +306,9 @@ function createExecuteContentSandbox(aWindow, timeout) {
     }
   });
 
-  sandbox.SpecialPowers = new SpecialPowers(aWindow);
+  if (specialPowers) {
+    sandbox.SpecialPowers = new SpecialPowers(aWindow);
+  }
 
   sandbox.asyncComplete = function sandbox_asyncComplete(value, status) {
     curWindow.removeEventListener("unload", errUnload, false);
@@ -363,7 +365,9 @@ function executeScript(msg, directInject) {
   let script = msg.json.value;
 
   if (msg.json.newSandbox || !sandbox) {
-    sandbox = createExecuteContentSandbox(curWindow, msg.json.timeout);
+    sandbox = createExecuteContentSandbox(curWindow,
+                                          msg.json.timeout,
+                                          msg.json.specialPowers);
     if (!sandbox) {
       sendError("Could not create sandbox!", asyncTestCommandId);
       return;
@@ -465,7 +469,9 @@ function executeWithCallback(msg, useFinish) {
   let asyncTestCommandId = msg.json.command_id;
 
   if (msg.json.newSandbox || !sandbox) {
-    sandbox = createExecuteContentSandbox(curWindow, msg.json.timeout);
+    sandbox = createExecuteContentSandbox(curWindow,
+                                          msg.json.timeout,
+                                          msg.json.specialPowers);
     if (!sandbox) {
       sendError("Could not create sandbox!");
       return;
@@ -873,11 +879,22 @@ function switchToFrame(msg) {
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
   let foundFrame = null;
-  let frames = curWindow.document.getElementsByTagName("iframe");
-  //Until Bug 761935 lands, we won't have multiple nested OOP iframes. We will only have one.
-  //parWindow will refer to the iframe above the nested OOP frame.
-  let parWindow = curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  let frames = []; //curWindow.document.getElementsByTagName("iframe");
+  let parWindow = null; //curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+  // Check of the curWindow reference is dead
+  try {
+    frames = curWindow.document.getElementsByTagName("iframe");
+    //Until Bug 761935 lands, we won't have multiple nested OOP iframes. We will only have one.
+    //parWindow will refer to the iframe above the nested OOP frame.
+    parWindow = curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  } catch (e) {
+    // We probably have a dead compartment so accessing it is going to make Firefox
+    // very upset. Let's now try redirect everything to the top frame even if the 
+    // user has given us a frame since search doesnt look up.
+    msg.json.value = null;
+    msg.json.element = null;
+  }
   if ((msg.json.value == null) && (msg.json.element == null)) {
     curWindow = content;
     if(msg.json.focus == true) {
