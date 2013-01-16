@@ -164,6 +164,7 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   URL.webidl \
+  ValidityState.webidl \
   WebSocket.webidl \
   UndoManager.webidl \
   XMLHttpRequest.webidl \

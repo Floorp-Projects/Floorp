@@ -110,6 +110,7 @@ nsHTMLOutputElement::~nsHTMLOutputElement()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLOutputElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLOutputElement,
                                                 nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   if (tmp->mTokenList) {
     tmp->mTokenList->DropReference();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mTokenList)
@@ -117,6 +118,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLOutputElement,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLOutputElement,
                                                   nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTokenList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
