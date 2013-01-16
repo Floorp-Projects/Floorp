@@ -7,7 +7,7 @@
  */
 function runTests() {
   // Create a tab that shows an error page.
-  let tab = gBrowser.addTab("http://non-existant.url/");
+  let tab = gBrowser.addTab("http://127.0.0.1:1/");
   let browser = tab.linkedBrowser;
 
   yield browser.addEventListener("DOMContentLoaded", function onLoad() {
