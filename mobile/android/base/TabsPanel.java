@@ -351,7 +351,9 @@ public class TabsPanel extends TabHost
         mCurrentPanel = panel;
 
         int index = panel.ordinal();
+        setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
         setCurrentTab(index);
+        setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
         mTabsSpinner.setSelection(index);
 
         mPanel = (PanelView) getTabContentView().getChildAt(index);
