@@ -742,6 +742,18 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
+{
+  GetBounds(aRect);
+  if (!mParentWidget) {
+    // For top level widgets we want the position on screen, not the position
+    // of this view inside the window.
+    MOZ_ASSERT(mWindowType != eWindowType_plugin, "plugin widgets should have parents");
+    aRect.MoveTo(WidgetToScreenOffset());
+  }
+  return NS_OK;
+}
+
 double
 nsChildView::GetDefaultScaleInternal()
 {
