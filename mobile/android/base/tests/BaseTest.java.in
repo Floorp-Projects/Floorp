@@ -344,17 +344,20 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void selectMenuItem(String menuItemName) {
+
         //build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-
-        // Look for the 'More' menu if this device/OS uses it
-        if (mSolo.waitForText("^More$")) {
-            mSolo.clickOnText("^More$");
+	if (mSolo.waitForText(itemName)) {
+            mSolo.clickOnText(itemName);
+	}
+	else {
+	    if (mSolo.searchText("(^More$|^Tools$)")) {
+                mSolo.clickOnText("(^More$|^Tools$)");
+	      }
+            mSolo.waitForText(itemName);
+            mSolo.clickOnText(itemName);
         }
-
-        mSolo.waitForText(itemName);
-        mSolo.clickOnText(itemName);
     }
 
     public final void verifyPageTitle(String title) {
