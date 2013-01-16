@@ -138,7 +138,12 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLSelectElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLSelectElement,
                                                   nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOptions)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLSelectElement,
+                                                nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, Element)
