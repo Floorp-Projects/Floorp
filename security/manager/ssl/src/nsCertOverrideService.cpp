@@ -145,17 +145,7 @@ nsCertOverrideService::Observe(nsISupports     *,
     // or is going away because the application is shutting down.
 
     ReentrantMonitorAutoEnter lock(monitor);
-
-    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
-      RemoveAllFromMemory();
-      // delete the storage file
-      if (mSettingsFile) {
-        mSettingsFile->Remove(false);
-      }
-    } else {
-      RemoveAllFromMemory();
-    }
-
+    RemoveAllFromMemory();
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // The profile has already changed.
     // Now read from the new profile location.

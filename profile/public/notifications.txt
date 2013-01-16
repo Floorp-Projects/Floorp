@@ -55,7 +55,3 @@ observer's Observe() method.
 
 See https://wiki.mozilla.org/XPCOM_Shutdown for more details about the shutdown
 process.
-
-NOTE: Long ago there was be a "shutdown-cleanse" version of shutdown which was
-intended to clear profile data. This is no longer sent and observer code should
-remove support for it.
