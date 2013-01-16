@@ -4401,7 +4401,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 tmpvar = ExprVar('tmp')
                 ct = c.bareType()
                 readcase.addstmts([
-                    StmtDecl(Decl(ct, tmpvar.name)),
+                    StmtDecl(Decl(ct, tmpvar.name),
+                      init=c.defaultValue() if ct.ptr else None),
                     StmtExpr(ExprAssn(ExprDeref(var), tmpvar)),
                     StmtReturn(self.read(
                         c.ipdltype,
