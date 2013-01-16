@@ -16,7 +16,7 @@ toolkit.jar:
    content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
 *  content/global/aboutSupport.js
 *  content/global/aboutSupport.xhtml
-   content/global/aboutTelemetry.js
+*  content/global/aboutTelemetry.js
 *  content/global/aboutTelemetry.xhtml
    content/global/aboutTelemetry.css          (aboutTelemetry.css)
    content/global/directionDetector.html
