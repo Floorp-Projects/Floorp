@@ -3170,11 +3170,10 @@ pref("font.name.sans-serif.x-user-def", "Droid Sans");
 pref("font.name.monospace.x-user-def", "Droid Sans Mono");
 pref("font.name-list.sans-serif.x-user-def", "Roboto, Droid Sans");
 
-pref("font.name.serif.x-western", "Charis SIL, Droid Serif");
-pref("font.name.sans-serif.x-western", "Open Sans, Droid Sans");
+pref("font.name.serif.x-western", "Droid Serif");
+pref("font.name.sans-serif.x-western", "Droid Sans");
 pref("font.name.monospace.x-western", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-western", "Open Sans, Roboto, Droid Sans");
-
+pref("font.name-list.sans-serif.x-western", "Roboto, Droid Sans");
 
 pref("font.name.serif.zh-CN", "Droid Serif");
 pref("font.name.sans-serif.zh-CN", "Droid Sans");
