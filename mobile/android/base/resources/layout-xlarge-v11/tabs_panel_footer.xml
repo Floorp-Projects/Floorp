@@ -5,39 +5,22 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TabWidget android:id="@android:id/tabs"
-               android:layout_width="0dip"
-               android:layout_height="0dip"
-               android:visibility="gone"/>
-
-    <Spinner android:id="@+id/tabs_menu"
-             android:layout_width="0dip"
-             android:layout_height="fill_parent"
-             android:layout_weight="1.0"
-             android:background="@drawable/spinner"
-             android:popupBackground="@drawable/menu_popup_bg"
-             android:dropDownHorizontalOffset="0dip"
-             android:dropDownSelector="@drawable/action_bar_button"
-             android:entries="@array/tabs_panel_spinner"/>
-
     <ImageButton android:id="@+id/add_tab"
                  android:layout_width="@dimen/browser_toolbar_height"
                  android:layout_height="@dimen/browser_toolbar_height"
-                 android:paddingTop="15dip"
-                 android:paddingBottom="15dip"
-                 android:paddingLeft="20dip"
-                 android:paddingRight="20dip"
+                 android:padding="14dip"
                  android:src="@drawable/tab_new_level"
                  android:contentDescription="@string/new_tab"
                  android:background="@drawable/action_bar_button"/>
 
+    <View android:layout_width="0dip"
+          android:layout_height="@dimen/browser_toolbar_height"
+          android:layout_weight="1.0"/>
+
     <ImageButton android:id="@+id/menu"
                  android:layout_width="@dimen/browser_toolbar_height"
                  android:layout_height="@dimen/browser_toolbar_height"
-                 android:paddingTop="15dip"
-                 android:paddingBottom="15dip"
-                 android:paddingLeft="20dip"
-                 android:paddingRight="20dip"
+                 android:padding="14dip"
                  android:src="@drawable/tabs_menu"
                  android:contentDescription="@string/menu"
                  android:background="@drawable/action_bar_button"/>
