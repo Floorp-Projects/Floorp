@@ -18,6 +18,7 @@
 #include "nsIDOMNode.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -471,7 +472,7 @@ nsTableOuterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
           nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                mCaptionFrames.FirstChild(),
                                                iwt);
-        maxWidth = NS_MAX(maxWidth, capPref);
+        maxWidth = std::max(maxWidth, capPref);
       }
       break;
     }
@@ -605,23 +606,23 @@ nsTableOuterFrame::SetDesiredSize(uint8_t         aCaptionSide,
   }
   switch(aCaptionSide) {
     case NS_STYLE_CAPTION_SIDE_LEFT:
-      aWidth = NS_MAX(aInnerMargin.left, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
+      aWidth = std::max(aInnerMargin.left, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
                innerWidth + aInnerMargin.right;
       break;
     case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aWidth = NS_MAX(aInnerMargin.right, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
+      aWidth = std::max(aInnerMargin.right, aCaptionMargin.left + captionWidth + aCaptionMargin.right) +
                innerWidth + aInnerMargin.left;
       break;
     default:
       aWidth = aInnerMargin.left + innerWidth + aInnerMargin.right;
-      aWidth = NS_MAX(aWidth, captionRect.XMost() + aCaptionMargin.right);
+      aWidth = std::max(aWidth, captionRect.XMost() + aCaptionMargin.right);
   }
   aHeight = innerRect.YMost() + aInnerMargin.bottom;
   if (NS_STYLE_CAPTION_SIDE_BOTTOM != aCaptionSide) {
-    aHeight = NS_MAX(aHeight, captionRect.YMost() + aCaptionMargin.bottom);
+    aHeight = std::max(aHeight, captionRect.YMost() + aCaptionMargin.bottom);
   }
   else {
-    aHeight = NS_MAX(aHeight, captionRect.YMost() + aCaptionMargin.bottom +
+    aHeight = std::max(aHeight, captionRect.YMost() + aCaptionMargin.bottom +
                               aInnerMargin.bottom);
   }
 
@@ -688,10 +689,10 @@ nsTableOuterFrame::GetCaptionOrigin(uint32_t         aCaptionSide,
       aOrigin.y = aInnerMargin.top;
       switch (GetCaptionVerticalAlign()) {
         case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-          aOrigin.y = NS_MAX(0, aInnerMargin.top + ((aInnerSize.height - aCaptionSize.height) / 2));
+          aOrigin.y = std::max(0, aInnerMargin.top + ((aInnerSize.height - aCaptionSize.height) / 2));
           break;
         case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-          aOrigin.y = NS_MAX(0, aInnerMargin.top + aInnerSize.height - aCaptionSize.height);
+          aOrigin.y = std::max(0, aInnerMargin.top + aInnerSize.height - aCaptionSize.height);
           break;
         default:
           break;
@@ -746,7 +747,7 @@ nsTableOuterFrame::GetInnerOrigin(uint32_t         aCaptionSide,
     if (aInnerMargin.left < minCapWidth) {
       // shift the inner table to get some place for the caption
       aInnerMargin.right += aInnerMargin.left - minCapWidth;
-      aInnerMargin.right  = NS_MAX(0, aInnerMargin.right);
+      aInnerMargin.right  = std::max(0, aInnerMargin.right);
       aInnerMargin.left   = minCapWidth;
     }
     aOrigin.x = aInnerMargin.left;
@@ -774,10 +775,10 @@ nsTableOuterFrame::GetInnerOrigin(uint32_t         aCaptionSide,
       aOrigin.y = aInnerMargin.top;
       switch (GetCaptionVerticalAlign()) {
         case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-          aOrigin.y = NS_MAX(aInnerMargin.top, (aCaptionSize.height - aInnerSize.height) / 2);
+          aOrigin.y = std::max(aInnerMargin.top, (aCaptionSize.height - aInnerSize.height) / 2);
           break;
         case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-          aOrigin.y = NS_MAX(aInnerMargin.top, aCaptionSize.height - aInnerSize.height);
+          aOrigin.y = std::max(aInnerMargin.top, aCaptionSize.height - aInnerSize.height);
           break;
         default:
           break;
@@ -996,7 +997,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
         }
       }
       innerRS->availableHeight =
-        NS_MAX(0, innerRS->availableHeight - captionHeight);
+        std::max(0, innerRS->availableHeight - captionHeight);
     }
   } else {
     captionSize.SizeTo(0,0);

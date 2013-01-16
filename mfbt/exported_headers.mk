@@ -25,6 +25,7 @@ EXPORTS_mozilla += \
   MathAlgorithms.h \
   MSStdInt.h \
   NullPtr.h \
+  Range.h \
   RangedPtr.h \
   RefPtr.h \
   Scoped.h \

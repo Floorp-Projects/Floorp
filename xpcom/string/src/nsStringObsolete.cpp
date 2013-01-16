@@ -925,7 +925,7 @@ nsCString::Compare( const char* aString, bool aIgnoreCase, int32_t aCount ) cons
   {
     uint32_t strLen = char_traits::length(aString);
 
-    int32_t maxCount = int32_t(NS_MIN(mLength, strLen));
+    int32_t maxCount = int32_t(XPCOM_MIN(mLength, strLen));
 
     int32_t compareCount;
     if (aCount < 0 || aCount > maxCount)
@@ -954,7 +954,7 @@ nsString::EqualsIgnoreCase( const char* aString, int32_t aCount ) const
   {
     uint32_t strLen = nsCharTraits<char>::length(aString);
 
-    int32_t maxCount = int32_t(NS_MIN(mLength, strLen));
+    int32_t maxCount = int32_t(XPCOM_MIN(mLength, strLen));
 
     int32_t compareCount;
     if (aCount < 0 || aCount > maxCount)

@@ -5,13 +5,15 @@
 
 #include "nsLookAndFeel.h"
 #include "nsCocoaFeatures.h"
-#include "nsObjCExceptions.h"
 #include "nsIServiceManager.h"
 #include "nsNativeThemeColors.h"
 #include "nsStyleConsts.h"
 #include "gfxFont.h"
 
 #import <Cocoa/Cocoa.h>
+
+// This must be included last:
+#include "nsObjCExceptions.h"
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
@@ -189,7 +191,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xDA,0xDA,0xDA);
       break;
     case eColorID_menu:
-    case eColorID__moz_menubar:
       aColor = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
       break;
     case eColorID_infobackground:

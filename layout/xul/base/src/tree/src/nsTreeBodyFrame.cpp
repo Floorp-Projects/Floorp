@@ -62,6 +62,7 @@
 #include "nsTreeBoxObject.h"
 #include "nsRenderingContext.h"
 #include "nsIScriptableRegion.h"
+#include <algorithm>
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -411,7 +412,7 @@ nsTreeBodyFrame::ReflowFinished()
       mPageLength = mInnerBox.height / mRowHeight;
     }
 
-    int32_t lastPageTopRow = NS_MAX(0, mRowCount - mPageLength);
+    int32_t lastPageTopRow = std::max(0, mRowCount - mPageLength);
     if (mTopRowIndex > lastPageTopRow)
       ScrollToRowInternal(parts, lastPageTopRow);
 
@@ -1861,7 +1862,7 @@ nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount)
     else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
       if (mTopRowIndex + mPageLength > mRowCount - 1) {
-        mTopRowIndex = NS_MAX(0, mRowCount - 1 - mPageLength);
+        mTopRowIndex = std::max(0, mRowCount - 1 - mPageLength);
       }
       needsInvalidation = true;
     }
@@ -1893,7 +1894,7 @@ nsTreeBodyFrame::EndUpdateBatch()
       mView->GetRowCount(&mRowCount);
       if (countBeforeUpdate != mRowCount) {
         if (mTopRowIndex + mPageLength > mRowCount - 1) {
-          mTopRowIndex = NS_MAX(0, mRowCount - 1 - mPageLength);
+          mTopRowIndex = std::max(0, mRowCount - 1 - mPageLength);
         }
         FullScrollbarsUpdate(false);
       }
@@ -4263,8 +4264,8 @@ nsTreeBodyFrame::OffsetForHorzScroll(nsRect& rect, bool clip)
     return false;
 
   if (clip) {
-    nscoord leftEdge = NS_MAX(rect.x, mInnerBox.x);
-    nscoord rightEdge = NS_MIN(rect.XMost(), mInnerBox.XMost());
+    nscoord leftEdge = std::max(rect.x, mInnerBox.x);
+    nscoord rightEdge = std::min(rect.XMost(), mInnerBox.XMost());
     rect.x = leftEdge;
     rect.width = rightEdge - leftEdge;
 

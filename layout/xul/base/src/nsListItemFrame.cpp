@@ -10,6 +10,7 @@
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
 #include "nsBoxLayout.h"
+#include <algorithm>
 
 nsListItemFrame::nsListItemFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
@@ -31,7 +32,7 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState)
 
   // guarantee that our preferred height doesn't exceed the standard
   // listbox row height
-  size.height = NS_MAX(mRect.height, size.height);
+  size.height = std::max(mRect.height, size.height);
   return size;
 }
 

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIdleServiceOS2.h"
+#include <algorithm>
 
 // prototype for funtion imported from DSSaver
 static int (*_System DSSaver_GetInactivityTime)(ULONG *, ULONG *);
@@ -44,7 +45,7 @@ nsIdleServiceOS2::PollIdleTime(uint32_t *aIdleTime)
 
   // we are only interested in activity in general, so take the minimum
   // of both timers
-  *aIdleTime = NS_MIN(mouse, keyboard);
+  *aIdleTime = std::min(mouse, keyboard);
   return true;
 }
 

@@ -545,28 +545,32 @@ function todo_check_neq(left, right, stack) {
   _do_check_neq(left, right, stack, true);
 }
 
+function do_report_result(passed, text, stack, todo) {
+  if (passed) {
+    if (todo) {
+      do_throw_todo(text, stack);
+    } else {
+      ++_passedChecks;
+      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
+            stack.lineNumber + "] " + text + "\n");
+    }
+  } else {
+    if (todo) {
+      ++_todoChecks;
+      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
+            " : " + stack.lineNumber + "] " + text +"\n");
+    } else {
+      do_throw(text, stack);
+    }
+  }
+}
+
 function _do_check_eq(left, right, stack, todo) {
   if (!stack)
     stack = Components.stack.caller;
 
   var text = left + " == " + right;
-  if (left != right) {
-    if (!todo) {
-      do_throw(text, stack);
-    } else {
-      ++_todoChecks;
-      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
-    }
-  } else {
-    if (!todo) {
-      ++_passedChecks;
-      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-            stack.lineNumber + "] " + text + "\n");
-    } else {
-      do_throw_todo(text, stack);
-    }
-  }
+  do_report_result(left == right, text, stack, todo);
 }
 
 function do_check_eq(left, right, stack) {
@@ -617,6 +621,157 @@ function do_check_null(condition, stack=Components.stack.caller) {
 
 function todo_check_null(condition, stack=Components.stack.caller) {
   todo_check_eq(condition, null, stack);
+}
+
+/**
+ * Check that |value| matches |pattern|.
+ *
+ * A |value| matches a pattern |pattern| if any one of the following is true:
+ *
+ * - |value| and |pattern| are both objects; |pattern|'s enumerable
+ *   properties' values are valid patterns; and for each enumerable
+ *   property |p| of |pattern|, plus 'length' if present at all, |value|
+ *   has a property |p| whose value matches |pattern.p|. Note that if |j|
+ *   has other properties not present in |p|, |j| may still match |p|.
+ *
+ * - |value| and |pattern| are equal string, numeric, or boolean literals
+ *
+ * - |pattern| is |undefined| (this is a wildcard pattern)
+ *
+ * - typeof |pattern| == "function", and |pattern(value)| is true.
+ *
+ * For example:
+ *
+ * do_check_matches({x:1}, {x:1})       // pass
+ * do_check_matches({x:1}, {})          // fail: all pattern props required
+ * do_check_matches({x:1}, {x:2})       // fail: values must match
+ * do_check_matches({x:1}, {x:1, y:2})  // pass: extra props tolerated
+ *
+ * // Property order is irrelevant.
+ * do_check_matches({x:"foo", y:"bar"}, {y:"bar", x:"foo"}) // pass
+ *
+ * do_check_matches({x:undefined}, {x:1}) // pass: 'undefined' is wildcard
+ * do_check_matches({x:undefined}, {x:2})
+ * do_check_matches({x:undefined}, {y:2}) // fail: 'x' must still be there
+ *
+ * // Patterns nest.
+ * do_check_matches({a:1, b:{c:2,d:undefined}}, {a:1, b:{c:2,d:3}})
+ *
+ * // 'length' property counts, even if non-enumerable.
+ * do_check_matches([3,4,5], [3,4,5])     // pass
+ * do_check_matches([3,4,5], [3,5,5])     // fail; value doesn't match
+ * do_check_matches([3,4,5], [3,4,5,6])   // fail; length doesn't match
+ *
+ * // functions in patterns get applied.
+ * do_check_matches({foo:function (v) v.length == 2}, {foo:"hi"}) // pass
+ * do_check_matches({foo:function (v) v.length == 2}, {bar:"hi"}) // fail
+ * do_check_matches({foo:function (v) v.length == 2}, {foo:"hello"}) // fail
+ *
+ * // We don't check constructors, prototypes, or classes. However, if
+ * // pattern has a 'length' property, we require values to match that as
+ * // well, even if 'length' is non-enumerable in the pattern. So arrays
+ * // are useful as patterns.
+ * do_check_matches({0:0, 1:1, length:2}, [0,1])  // pass
+ * do_check_matches({0:1}, [1,2])                 // pass
+ * do_check_matches([0], {0:0, length:1})         // pass
+ *
+ * Notes:
+ *
+ * The 'length' hack gives us reasonably intuitive handling of arrays.
+ *
+ * This is not a tight pattern-matcher; it's only good for checking data
+ * from well-behaved sources. For example:
+ * - By default, we don't mind values having extra properties.
+ * - We don't check for proxies or getters.
+ * - We don't check the prototype chain.
+ * However, if you know the values are, say, JSON, which is pretty
+ * well-behaved, and if you want to tolerate additional properties
+ * appearing on the JSON for backward-compatibility, then do_check_matches
+ * is ideal. If you do want to be more careful, you can use function
+ * patterns to implement more stringent checks.
+ */
+function do_check_matches(pattern, value, stack=Components.stack.caller, todo=false) {
+  var matcher = pattern_matcher(pattern);
+  var text = "VALUE: " + uneval(value) + "\nPATTERN: " + uneval(pattern) + "\n";
+  var diagnosis = []
+  if (matcher(value, diagnosis)) {
+    do_report_result(true, "value matches pattern:\n" + text, stack, todo);
+  } else {
+    text = ("value doesn't match pattern:\n" +
+            text +
+            "DIAGNOSIS: " +
+            format_pattern_match_failure(diagnosis[0]) + "\n");
+    do_report_result(false, text, stack, todo);
+  }
+}
+
+function todo_check_matches(pattern, value, stack=Components.stack.caller) {
+  do_check_matches(pattern, value, stack, true);
+}
+
+// Return a pattern-matching function of one argument, |value|, that
+// returns true if |value| matches |pattern|.
+//
+// If the pattern doesn't match, and the pattern-matching function was
+// passed its optional |diagnosis| argument, the pattern-matching function
+// sets |diagnosis|'s '0' property to a JSON-ish description of the portion
+// of the pattern that didn't match, which can be formatted legibly by
+// format_pattern_match_failure.
+function pattern_matcher(pattern) {
+  function explain(diagnosis, reason) {
+    if (diagnosis) {
+      diagnosis[0] = reason;
+    }
+    return false;
+  }
+  if (typeof pattern == "function") {
+    return pattern;
+  } else if (typeof pattern == "object" && pattern) {
+    var matchers = [[p, pattern_matcher(pattern[p])] for (p in pattern)];
+    // Kludge: include 'length', if not enumerable. (If it is enumerable,
+    // we picked it up in the array comprehension, above.
+    ld = Object.getOwnPropertyDescriptor(pattern, 'length');
+    if (ld && !ld.enumerable) {
+      matchers.push(['length', pattern_matcher(pattern.length)])
+    }
+    return function (value, diagnosis) {
+      if (!(value && typeof value == "object")) {
+        return explain(diagnosis, "value not object");
+      }
+      for (let [p, m] of matchers) {
+        var element_diagnosis = [];
+        if (!(p in value && m(value[p], element_diagnosis))) {
+          return explain(diagnosis, { property:p,
+                                      diagnosis:element_diagnosis[0] });
+        }
+      }
+      return true;
+    };
+  } else if (pattern === undefined) {
+    return function(value) { return true; };
+  } else {
+    return function (value, diagnosis) {
+      if (value !== pattern) {
+        return explain(diagnosis, "pattern " + uneval(pattern) + " not === to value " + uneval(value));
+      }
+      return true;
+    };
+  }
+}
+
+// Format an explanation for a pattern match failure, as stored in the
+// second argument to a matching function.
+function format_pattern_match_failure(diagnosis, indent="") {
+  var a;
+  if (!diagnosis) {
+    a = "Matcher did not explain reason for mismatch.";
+  } else if (typeof diagnosis == "string") {
+    a = diagnosis;
+  } else if (diagnosis.property) {
+    a = "Property " + uneval(diagnosis.property) + " of object didn't match:\n";
+    a += format_pattern_match_failure(diagnosis.diagnosis, indent + "  ");
+  }
+  return indent + a;
 }
 
 function do_test_pending() {

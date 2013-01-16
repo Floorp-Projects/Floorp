@@ -2086,7 +2086,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       nscoord minimumFontSize = mPresContext->MinFontSize(fontData->mLanguage);
 
       if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
-        fontData->mFont.size = NS_MAX(fontData->mSize, minimumFontSize);
+        fontData->mFont.size = std::max(fontData->mSize, minimumFontSize);
       }
       else {
         fontData->mFont.size = fontData->mSize;
@@ -2510,11 +2510,11 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
   // Compute the size we would have had if minscriptsize had never been
   // applied, also prevent overflow (bug 413274)
   *aUnconstrainedSize =
-    NSToCoordRound(NS_MIN(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
+    NSToCoordRound(std::min(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
                           double(nscoord_MAX)));
   // Compute the size we could get via scriptlevel change
   nscoord scriptLevelSize =
-    NSToCoordRound(NS_MIN(aParentFont->mSize*scriptLevelScale,
+    NSToCoordRound(std::min(aParentFont->mSize*scriptLevelScale,
                           double(nscoord_MAX)));
   if (scriptLevelScale <= 1.0) {
     if (aParentFont->mSize <= minScriptSize) {
@@ -2524,12 +2524,12 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
       return aParentFont->mSize;
     }
     // We can decrease, so apply constraint #1
-    return NS_MAX(minScriptSize, scriptLevelSize);
+    return std::max(minScriptSize, scriptLevelSize);
   } else {
     // scriptminsize can only make sizes larger than the unconstrained size
     NS_ASSERTION(*aUnconstrainedSize <= scriptLevelSize, "How can this ever happen?");
     // Apply constraint #2
-    return NS_MIN(scriptLevelSize, NS_MAX(*aUnconstrainedSize, minScriptSize));
+    return std::min(scriptLevelSize, std::max(*aUnconstrainedSize, minScriptSize));
   }
 }
 
@@ -2724,7 +2724,7 @@ nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
     }
   }
   else { // smaller than HTML table, drop by 1px
-    smallerSize = NS_MAX(aFontSize - onePx, onePx);
+    smallerSize = std::max(aFontSize - onePx, onePx);
   }
   return smallerSize;
 }
@@ -3066,7 +3066,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
         //    the default proportional font.
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size -
+          std::max(defaultVariableFont->size -
                  nsPresContext::CSSPointsToAppUnits(2), 0);
       }
 #endif
@@ -5898,7 +5898,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                         aContext, mPresContext, canStoreInRuleTree)) {
         NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
         // clamp negative calc() to 0.
-        border->SetBorderWidth(side, NS_MAX(coord.GetCoordValue(), 0));
+        border->SetBorderWidth(side, std::max(coord.GetCoordValue(), 0));
       }
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         canStoreInRuleTree = false;
@@ -7061,7 +7061,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   // clamp negative calc() to 0
   if (column->mColumnGap.GetUnit() == eStyleUnit_Coord) {
     column->mColumnGap.SetCoordValue(
-      NS_MAX(column->mColumnGap.GetCoordValue(), 0));
+      std::max(column->mColumnGap.GetCoordValue(), 0));
   }
 
   // column-count: auto, integer, inherit
@@ -7072,7 +7072,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   } else if (eCSSUnit_Integer == columnCountValue->GetUnit()) {
     column->mColumnCount = columnCountValue->GetIntValue();
     // Max 1000 columns - wallpaper for bug 345583.
-    column->mColumnCount = NS_MIN(column->mColumnCount, 1000U);
+    column->mColumnCount = std::min(column->mColumnCount, 1000U);
   } else if (eCSSUnit_Inherit == columnCountValue->GetUnit()) {
     canStoreInRuleTree = false;
     column->mColumnCount = parent->mColumnCount;

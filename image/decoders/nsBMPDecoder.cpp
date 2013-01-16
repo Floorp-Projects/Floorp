@@ -15,6 +15,7 @@
 
 #include "nsIInputStream.h"
 #include "RasterImage.h"
+#include <algorithm>
 
 namespace mozilla {
 namespace image {
@@ -544,7 +545,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                             // the second byte
                             // Work around bitmaps that specify too many pixels
                             mState = eRLEStateInitial;
-                            uint32_t pixelsNeeded = NS_MIN<uint32_t>(mBIH.width - mCurPos, mStateData);
+                            uint32_t pixelsNeeded = std::min<uint32_t>(mBIH.width - mCurPos, mStateData);
                             if (pixelsNeeded) {
                                 uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, mCurPos);
                                 mCurPos += pixelsNeeded;
@@ -624,7 +625,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                         byte = *aBuffer++;
                         aCount--;
                         mState = eRLEStateInitial;
-                        mCurLine -= NS_MIN<int32_t>(byte, mCurLine);
+                        mCurLine -= std::min<int32_t>(byte, mCurLine);
                         break;
 
                     case eRLEStateAbsoluteMode: // Absolute Mode

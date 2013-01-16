@@ -1228,15 +1228,19 @@ this.DOMApplicationRegistry = {
           // "downloadapplied".
           let updateObserver = {
             observe: function(aSubject, aTopic, aObsData) {
+              debug("updateHostedApp: updateSvc.checkForUpdate return for " +
+                    app.manifestURL + " - event is " + aTopic);
               aData.event =
                 aTopic == "offline-cache-update-available" ? "downloadavailable"
                                                            : "downloadapplied";
-              aData.app.downloadAvailable = (aTopic == "downloadavailable");
+              aData.app.downloadAvailable = (aData.event == "downloadavailable");
               DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
                                                       aData);
             }
           }
-          updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
+          debug("updateHostedApp: updateSvc.checkForUpdate for " +
+                manifest.fullAppcachePath());
+          updateSvc.checkForUpdate(Services.io.newURI(manifest.fullAppcachePath(), null, null),
                                    app.localId, false, updateObserver);
         }
         delete app.manifest;
@@ -1287,7 +1291,9 @@ this.DOMApplicationRegistry = {
         // "downloadapplied".
         let updateObserver = {
           observe: function(aSubject, aTopic, aObsData) {
-            if (aData.event == "offline-cache-update-available") {
+            debug("onlyCheckAppCache updateSvc.checkForUpdate return for " +
+                  app.manifestURL + " - event is " + aTopic);
+            if (aTopic == "offline-cache-update-available") {
               aData.event = "downloadavailable";
               app.downloadAvailable = true;
               aData.app = app;
@@ -1299,7 +1305,10 @@ this.DOMApplicationRegistry = {
             }
           }
         }
-        updateSvc.checkForUpdate(Services.io.newURI(aData.manifestURL, null, null),
+        let helper = new ManifestHelper(manifest);
+        debug("onlyCheckAppCache - launch updateSvc.checkForUpdate for " +
+              helper.fullAppcachePath());
+        updateSvc.checkForUpdate(Services.io.newURI(helper.fullAppcachePath(), null, null),
                                  app.localId, false, updateObserver);
       });
       return;
@@ -1312,6 +1321,7 @@ this.DOMApplicationRegistry = {
     xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     xhr.responseType = "json";
     if (app.etag) {
+      debug("adding manifest etag:" + app.etag);
       xhr.setRequestHeader("If-None-Match", app.etag);
     }
     xhr.channel.notificationCallbacks =
@@ -1333,6 +1343,7 @@ this.DOMApplicationRegistry = {
           return;
         } else {
           app.etag = xhr.getResponseHeader("Etag");
+          debug("at update got app etag=" + app.etag);
           app.lastCheckedUpdate = Date.now();
           if (app.origin.startsWith("app://")) {
             updatePackagedApp.call(this, manifest);
@@ -1509,6 +1520,7 @@ this.DOMApplicationRegistry = {
           sendError("INSTALL_FROM_DENIED");
         } else {
           app.etag = xhr.getResponseHeader("Etag");
+          debug("at install package got app etag=" + app.etag);
           Services.obs.notifyObservers(aMm, "webapps-ask-install",
                                        JSON.stringify(aData));
         }
@@ -1832,7 +1844,7 @@ this.DOMApplicationRegistry = {
                                   .QueryInterface(Ci.nsIHttpChannel);
       requestChannel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
       if (app.packageEtag) {
-        debug('Add If-None-Match header: ' + app.packageEtag);
+        debug("Add If-None-Match header: " + app.packageEtag);
         requestChannel.setRequestHeader("If-None-Match", app.packageEtag, false);
       }
 

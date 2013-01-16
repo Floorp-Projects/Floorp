@@ -19,6 +19,7 @@
 #include "FileBlockCache.h"
 #include "mozilla/Attributes.h"
 #include "nsAnonymousTemporaryFile.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -643,8 +644,8 @@ static int32_t GetMaxBlocks()
   // Cache size is in KB
   int32_t cacheSize = Preferences::GetInt("media.cache_size", 500*1024);
   int64_t maxBlocks = static_cast<int64_t>(cacheSize)*1024/MediaCache::BLOCK_SIZE;
-  maxBlocks = NS_MAX<int64_t>(maxBlocks, 1);
-  return int32_t(NS_MIN<int64_t>(maxBlocks, INT32_MAX));
+  maxBlocks = std::max<int64_t>(maxBlocks, 1);
+  return int32_t(std::min<int64_t>(maxBlocks, INT32_MAX));
 }
 
 int32_t
@@ -720,14 +721,14 @@ MediaCache::FindReusableBlock(TimeStamp aNow,
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
-  uint32_t length = NS_MIN(uint32_t(aMaxSearchBlockIndex), mIndex.Length());
+  uint32_t length = std::min(uint32_t(aMaxSearchBlockIndex), mIndex.Length());
 
   if (aForStream && aForStreamBlock > 0 &&
       uint32_t(aForStreamBlock) <= aForStream->mBlocks.Length()) {
     int32_t prevCacheBlock = aForStream->mBlocks[aForStreamBlock - 1];
     if (prevCacheBlock >= 0) {
       uint32_t freeBlockScanEnd =
-        NS_MIN(length, prevCacheBlock + FREE_BLOCK_SCAN_LIMIT);
+        std::min(length, prevCacheBlock + FREE_BLOCK_SCAN_LIMIT);
       for (uint32_t i = prevCacheBlock; i < freeBlockScanEnd; ++i) {
         if (IsBlockFree(i))
           return i;
@@ -948,7 +949,7 @@ MediaCache::PredictNextUse(TimeStamp aNow, int32_t aBlock)
       int64_t millisecondsAhead =
         bytesAhead*1000/bo->mStream->mPlaybackBytesPerSecond;
       prediction = TimeDuration::FromMilliseconds(
-          NS_MIN<int64_t>(millisecondsAhead, INT32_MAX));
+          std::min<int64_t>(millisecondsAhead, INT32_MAX));
       break;
     }
     default:
@@ -976,7 +977,7 @@ MediaCache::PredictNextUseForIncomingData(MediaCacheStream* aStream)
     return TimeDuration(0);
   int64_t millisecondsAhead = bytesAhead*1000/aStream->mPlaybackBytesPerSecond;
   return TimeDuration::FromMilliseconds(
-      NS_MIN<int64_t>(millisecondsAhead, INT32_MAX));
+      std::min<int64_t>(millisecondsAhead, INT32_MAX));
 }
 
 enum StreamAction { NONE, SEEK, SEEK_AND_RESUME, RESUME, SUSPEND };
@@ -1026,7 +1027,7 @@ MediaCache::Update()
         continue;
       }
       TimeDuration predictedUse = PredictNextUse(now, blockIndex);
-      latestPredictedUseForOverflow = NS_MAX(latestPredictedUseForOverflow, predictedUse);
+      latestPredictedUseForOverflow = std::max(latestPredictedUseForOverflow, predictedUse);
     }
 
     // Now try to move overflowing blocks to the main part of the cache.
@@ -1562,7 +1563,7 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
     // be converted.
     int32_t blockIndex = aOldOffset/BLOCK_SIZE;
     int32_t endIndex =
-      NS_MIN<int64_t>((aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
+      std::min<int64_t>((aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
              aStream->mBlocks.Length());
     TimeStamp now = TimeStamp::Now();
     while (blockIndex < endIndex) {
@@ -1582,7 +1583,7 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
     int32_t blockIndex =
       (aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE;
     int32_t endIndex =
-      NS_MIN<int64_t>((aOldOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
+      std::min<int64_t>((aOldOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
              aStream->mBlocks.Length());
     while (blockIndex < endIndex) {
       int32_t cacheBlockIndex = aStream->mBlocks[endIndex - 1];
@@ -1626,7 +1627,7 @@ MediaCacheStream::NotifyDataStarted(int64_t aOffset)
   if (mStreamLength >= 0) {
     // If we started reading at a certain offset, then for sure
     // the stream is at least that long.
-    mStreamLength = NS_MAX(mStreamLength, mChannelOffset);
+    mStreamLength = std::max(mStreamLength, mChannelOffset);
   }
   // Ensure that |mDownloadCancelled| is set to false since we have new data.
   if (mDownloadCancelled) {
@@ -1671,7 +1672,7 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
   while (size > 0) {
     uint32_t blockIndex = mChannelOffset/BLOCK_SIZE;
     int32_t blockOffset = int32_t(mChannelOffset - blockIndex*BLOCK_SIZE);
-    int32_t chunkSize = NS_MIN<int64_t>(BLOCK_SIZE - blockOffset, size);
+    int32_t chunkSize = std::min<int64_t>(BLOCK_SIZE - blockOffset, size);
 
     // This gets set to something non-null if we have a whole block
     // of data to write to the cache
@@ -1712,7 +1713,7 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
   while (MediaCacheStream* stream = iter.Next()) {
     if (stream->mStreamLength >= 0) {
       // The stream is at least as long as what we've read
-      stream->mStreamLength = NS_MAX(stream->mStreamLength, mChannelOffset);
+      stream->mStreamLength = std::max(stream->mStreamLength, mChannelOffset);
     }
     stream->mClient->CacheClientNotifyDataReceived();
   }
@@ -1972,9 +1973,9 @@ MediaCacheStream::GetCachedDataEndInternal(int64_t aOffset)
   if (mStreamLength >= 0) {
     // The last block in the cache may only be partially valid, so limit
     // the cached range to the stream length
-    result = NS_MIN(result, mStreamLength);
+    result = std::min(result, mStreamLength);
   }
-  return NS_MAX(result, aOffset);
+  return std::max(result, aOffset);
 }
 
 int64_t
@@ -2103,7 +2104,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     uint32_t streamBlock = uint32_t(mStreamOffset/BLOCK_SIZE);
     uint32_t offsetInStreamBlock =
       uint32_t(mStreamOffset - streamBlock*BLOCK_SIZE);
-    int64_t size = NS_MIN(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
+    int64_t size = std::min(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
     if (mStreamLength >= 0) {
       // Don't try to read beyond the end of the stream
@@ -2112,9 +2113,9 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         // Get out of here and return NS_OK
         break;
       }
-      size = NS_MIN(size, bytesRemaining);
+      size = std::min(size, bytesRemaining);
       // Clamp size until 64-bit file size issues (bug 500784) are fixed.
-      size = NS_MIN(size, int64_t(INT32_MAX));
+      size = std::min(size, int64_t(INT32_MAX));
     }
 
     int32_t bytes;
@@ -2145,7 +2146,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         // We can just use the data in mPartialBlockBuffer. In fact we should
         // use it rather than waiting for the block to fill and land in
         // the cache.
-        bytes = NS_MIN<int64_t>(size, streamWithPartialBlock->mChannelOffset - mStreamOffset);
+        bytes = std::min<int64_t>(size, streamWithPartialBlock->mChannelOffset - mStreamOffset);
         memcpy(aBuffer,
           reinterpret_cast<char*>(streamWithPartialBlock->mPartialBlockBuffer) + offsetInStreamBlock, bytes);
         if (mCurrentMode == MODE_METADATA) {
@@ -2213,7 +2214,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer,
     uint32_t streamBlock = uint32_t(streamOffset/BLOCK_SIZE);
     uint32_t offsetInStreamBlock =
       uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
-    int64_t size = NS_MIN<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
+    int64_t size = std::min<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
     if (mStreamLength >= 0) {
       // Don't try to read beyond the end of the stream
@@ -2221,9 +2222,9 @@ MediaCacheStream::ReadFromCache(char* aBuffer,
       if (bytesRemaining <= 0) {
         return NS_ERROR_FAILURE;
       }
-      size = NS_MIN(size, bytesRemaining);
+      size = std::min(size, bytesRemaining);
       // Clamp size until 64-bit file size issues (bug 500784) are fixed.
-      size = NS_MIN(size, int64_t(INT32_MAX));
+      size = std::min(size, int64_t(INT32_MAX));
     }
 
     int32_t bytes;
@@ -2233,7 +2234,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer,
       // We can just use the data in mPartialBlockBuffer. In fact we should
       // use it rather than waiting for the block to fill and land in
       // the cache.
-      bytes = NS_MIN<int64_t>(size, mChannelOffset - streamOffset);
+      bytes = std::min<int64_t>(size, mChannelOffset - streamOffset);
       memcpy(aBuffer + count,
         reinterpret_cast<char*>(mPartialBlockBuffer) + offsetInStreamBlock, bytes);
     } else {

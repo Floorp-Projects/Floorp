@@ -39,6 +39,7 @@
 
 #include "prlog.h"
 #include "prprf.h"
+#include <algorithm>
 
 #define MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH 524288000 // 500 MiB
 
@@ -592,7 +593,7 @@ Connection::initializeInternal(nsIFile* aDatabaseFile)
   // The cache_size is calculated from the actual page_size, to save memory.
   nsAutoCString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                                "PRAGMA cache_size = ");
-  cacheSizeQuery.AppendInt(NS_MIN(DEFAULT_CACHE_SIZE_PAGES,
+  cacheSizeQuery.AppendInt(std::min(DEFAULT_CACHE_SIZE_PAGES,
                                   int32_t(MAX_CACHE_SIZE_BYTES / pageSize)));
   srv = executeSql(cacheSizeQuery.get());
   if (srv != SQLITE_OK) {

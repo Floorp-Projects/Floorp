@@ -18,6 +18,7 @@
 #include "nsUTF8Utils.h"
 #include "mozilla/SSE.h"
 #include "nsTextFragmentImpl.h"
+#include <algorithm>
 
 #define TEXTFRAG_WHITE_AFTER_NEWLINE 50
 #define TEXTFRAG_MAX_NEWLINES 7
@@ -127,7 +128,7 @@ FirstNon8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
 
   // Align ourselves to a word boundary.
   int32_t alignLen =
-    NS_MIN(len, int32_t(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(PRUnichar)));
+    std::min(len, int32_t(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(PRUnichar)));
   for (; i < alignLen; i++) {
     if (str[i] > 255)
       return i;

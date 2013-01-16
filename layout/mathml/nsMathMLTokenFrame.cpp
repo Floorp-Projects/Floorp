@@ -12,6 +12,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsMathMLTokenFrame.h"
 #include "nsTextFrame.h"
+#include <algorithm>
 
 nsIFrame*
 NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -213,9 +214,9 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.ascent = NS_MAX(mBoundingMetrics.ascent, ascent);
+  aDesiredSize.ascent = std::max(mBoundingMetrics.ascent, ascent);
   aDesiredSize.height = aDesiredSize.ascent +
-                        NS_MAX(mBoundingMetrics.descent, descent);
+                        std::max(mBoundingMetrics.descent, descent);
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;

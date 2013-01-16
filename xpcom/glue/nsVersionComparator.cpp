@@ -258,7 +258,7 @@ CompareVP(VersionPartW &v1, VersionPartW &v2)
   if (r)
     return r;
 
-  r = wcsncmp(v1.strB, v2.strB, NS_MIN(v1.strBlen,v2.strBlen));
+  r = wcsncmp(v1.strB, v2.strB, XPCOM_MIN(v1.strBlen,v2.strBlen));
   if (r)
     return r;
 

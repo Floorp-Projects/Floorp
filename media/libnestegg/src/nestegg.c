@@ -1155,6 +1155,37 @@ ne_get_timecode_scale(nestegg * ctx)
   return scale;
 }
 
+static int
+ne_map_track_number_to_index(nestegg * ctx,
+                             unsigned int track_number,
+                             unsigned int * track_index)
+{
+  struct ebml_list_node * node;
+  struct track_entry * t_entry;
+  uint64_t t_number = 0;
+
+  if (!track_index)
+    return -1;
+  *track_index = 0;
+
+  if (track_number == 0)
+    return -1;
+
+  node = ctx->segment.tracks.track_entry.head;
+  while (node) {
+    assert(node->id == ID_TRACK_ENTRY);
+    t_entry = node->data;
+    if (ne_get_uint(t_entry->number, &t_number) != 0)
+      return -1;
+    if (t_number == track_number)
+      return 0;
+    *track_index += 1;
+    node = node->next;
+  }
+
+  return -1;
+}
+
 static struct track_entry *
 ne_find_track_entry(nestegg * ctx, unsigned int track)
 {
@@ -1183,8 +1214,8 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   struct frame * f, * last;
   struct track_entry * entry;
   double track_scale;
-  uint64_t track, length, frame_sizes[256], cluster_tc, flags, frames, tc_scale, total;
-  unsigned int i, lacing;
+  uint64_t track_number, length, frame_sizes[256], cluster_tc, flags, frames, tc_scale, total;
+  unsigned int i, lacing, track;
   size_t consumed = 0;
 
   *data = NULL;
@@ -1192,11 +1223,11 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   if (block_size > LIMIT_BLOCK)
     return -1;
 
-  r = ne_read_vint(ctx->io, &track, &length);
+  r = ne_read_vint(ctx->io, &track_number, &length);
   if (r != 1)
     return r;
 
-  if (track == 0 || track > ctx->track_count)
+  if (track_number == 0)
     return -1;
 
   consumed += length;
@@ -1269,7 +1300,10 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   if (total > block_size)
     return -1;
 
-  entry = ne_find_track_entry(ctx, track - 1);
+  if (ne_map_track_number_to_index(ctx, track_number, &track) != 0)
+    return -1;
+
+  entry = ne_find_track_entry(ctx, track);
   if (!entry)
     return -1;
 
@@ -1287,7 +1321,7 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
     return -1;
 
   pkt = ne_alloc(sizeof(*pkt));
-  pkt->track = track - 1;
+  pkt->track = track;
   pkt->timecode = abs_timecode * tc_scale * track_scale;
 
   ctx->log(ctx, NESTEGG_LOG_DEBUG, "%sblock t %lld pts %f f %llx frames: %llu",
@@ -1586,6 +1620,13 @@ nestegg_track_count(nestegg * ctx, unsigned int * tracks)
 {
   *tracks = ctx->track_count;
   return 0;
+}
+
+int
+nestegg_has_cues(nestegg * ctx)
+{
+  return ctx->segment.cues.cue_point.head ||
+    ne_find_seek_for_id(ctx->segment.seek_head.head, ID_CUES);
 }
 
 int

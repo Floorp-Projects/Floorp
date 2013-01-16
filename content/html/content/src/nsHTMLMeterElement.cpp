@@ -9,6 +9,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsEventStateManager.h"
 #include "nsAlgorithm.h"
+#include <algorithm>
 
 using namespace mozilla::dom;
 
@@ -174,7 +175,7 @@ nsHTMLMeterElement::GetMax() const
     max = kDefaultMax;
   }
 
-  return NS_MAX(max, GetMin());
+  return std::max(max, GetMin());
 }
 
 double
@@ -203,7 +204,7 @@ nsHTMLMeterElement::GetValue() const
     return min;
   }
 
-  return NS_MIN(value, GetMax());
+  return std::min(value, GetMax());
 }
 
 double
@@ -231,7 +232,7 @@ nsHTMLMeterElement::GetLow() const
     return min;
   }
 
-  return NS_MIN(low, GetMax());
+  return std::min(low, GetMax());
 }
 
 double
@@ -259,7 +260,7 @@ nsHTMLMeterElement::GetHigh() const
     return max;
   }
 
-  return NS_MAX(high, GetLow());
+  return std::max(high, GetLow());
 }
 
 double
@@ -292,7 +293,7 @@ nsHTMLMeterElement::GetOptimum() const
     return min;
   }
 
-  return NS_MIN(optimum, max);
+  return std::min(optimum, max);
 }
 
 /*

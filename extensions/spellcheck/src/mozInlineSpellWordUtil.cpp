@@ -22,6 +22,7 @@
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -388,7 +389,7 @@ TextNodeContainsDOMWordSeparator(nsINode* aNode,
   nsIContent* content = static_cast<nsIContent*>(aNode);
   const nsTextFragment* textFragment = content->GetText();
   NS_ASSERTION(textFragment, "Where is our text?");
-  for (int32_t i = NS_MIN(aBeforeOffset, int32_t(textFragment->GetLength())) - 1; i >= 0; --i) {
+  for (int32_t i = std::min(aBeforeOffset, int32_t(textFragment->GetLength())) - 1; i >= 0; --i) {
     if (IsDOMWordSeparator(textFragment->CharAt(i))) {
       // Be greedy, find as many separators as we can
       for (int32_t j = i - 1; j >= 0; --j) {
