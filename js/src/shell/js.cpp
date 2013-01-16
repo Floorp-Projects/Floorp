@@ -5381,9 +5381,6 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
-#ifdef JS_GC_ZEAL
-    JS_SetGCZeal(cx, 0, 0);
-#endif
 
     /* Must be done before creating the global object */
     if (op.getBoolOption('D'))
