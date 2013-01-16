@@ -397,7 +397,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             if (type == ROW_SEARCH || type == ROW_SUGGEST) {
                 SearchEntryViewHolder viewHolder = null;
 
-                if (convertView == null) {
+                if (convertView == null || !(convertView.getTag() instanceof SearchEntryViewHolder)) {
                     convertView = getInflater().inflate(R.layout.awesomebar_suggestion_row, getListView(), false);
 
                     viewHolder = new SearchEntryViewHolder();
@@ -415,7 +415,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             } else {
                 AwesomeEntryViewHolder viewHolder = null;
 
-                if (convertView == null) {
+                if (convertView == null || !(convertView.getTag() instanceof AwesomeEntryViewHolder)) {
                     convertView = getInflater().inflate(R.layout.awesomebar_row, null);
 
                     viewHolder = new AwesomeEntryViewHolder();
