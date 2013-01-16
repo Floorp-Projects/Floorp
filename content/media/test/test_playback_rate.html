@@ -107,43 +107,6 @@ function onended(e) {
     ok(!t.muted, "The audio should be muted when playing at high speed, but should not appear as such.");
     is(t.currentTime, t.duration, "Current time should be equal to the duration (not change by playback rate).");
   }
-  t.removeEventListener("ended", onended);
-  testResetPlaybackRate(e);
-}
-
-function testResetPlaybackRate(e) {
-  var t = e.target;
-  t.addEventListener("timeupdate", ontimeupdate_resetPlabackRate);
-  t.currentTime = 0.0;
-  t.play();
-  t.timeUpdate = 0;
-}
-
-function ontimeupdate_resetPlabackRate(e) {
-  var t = e.target;
-  if (t.currentTime == 0.0) {
-    return;
-  }
-  if (t.timeUpdate == 0) {
-    t.playbackRate = 0.5;
-    t.timeUpdate++;
-  } else if (t.timeUpdate == 1) {
-    t.playbackRate = 1.0;
-    t.startTimestamp = Date.now();
-    t.oldCurrentTime = t.currentTime;
-    t.timeUpdate++;
-    t.removeEventListener("timeupdate", ontimeupdate_resetPlabackRate);
-    t.addEventListener("ended", onEnded_resetPlaybackRate);
-  }
-}
-
-function onEnded_resetPlaybackRate(e) {
-  var t = e.target;
-  var now = Date.now();
-  var delta = t.currentTime - t.oldCurrentTime,
-      delta_wallclock = (now - t.startTimestamp - t.bufferingTime) / 1000;
-  ok(checkPlaybackRate(delta_wallclock, delta, 1.0, 1.0), "The playbackRate should be reset.");
-  t.removeEventListener("ended", onEnded_resetPlaybackRate);
   test_defaultPlaybackRate(e);
 }
 
@@ -172,9 +135,9 @@ function ontimeupdate_defaultPlaybackRate(e) {
         "The default playback rate shoud be "+SLOW_RATE+"." + t.token);
     ok(delta_wallclock > delta , "We are effectively slowing down playback. (" + delta_wallclock + ", " + delta + ")");
     if (t.skippedFastPart) {
-      is(t.ratechangecount, 10, "We should have received 10 \"ratechange\" events.");
+      is(t.ratechangecount, 7, "We should have received 7 \"ratechange\" events.");
     } else {
-      is(t.ratechangecount, 11, "We should have received 11 \"ratechange\" events.");
+      is(t.ratechangecount, 8, "We should have received 8 \"ratechange\" events.");
     }
     finish_test(t);
   }

@@ -66,15 +66,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   mPaintTarget = aTargetTime;
 }
 
-void VideoFrameContainer::Reset()
-{
-  ClearCurrentFrame(true);
-  Invalidate();
-  mPaintDelay = TimeDuration();
-  mImageContainer->ResetPaintCount();
-}
-
-void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
+void VideoFrameContainer::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
 
@@ -85,7 +77,6 @@ void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
   mImageContainer->UnlockCurrentImage();
 
   mImageContainer->SetCurrentImage(nullptr);
-  mImageSizeChanged = aResetSize;
 
   // We removed the current image so we will have to invalidate once
   // again to setup the ImageContainer <-> Compositor pair.
@@ -95,6 +86,7 @@ void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
 ImageContainer* VideoFrameContainer::GetImageContainer() {
   return mImageContainer;
 }
+
 
 double VideoFrameContainer::GetFrameDelay()
 {
