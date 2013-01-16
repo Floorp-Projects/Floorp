@@ -331,10 +331,6 @@ PeerConnection.prototype = {
   },
 
   createOffer: function(onSuccess, onError, constraints) {
-    if (this._onCreateOfferSuccess) {
-      throw new Error("createOffer already called");
-    }
-
     if (!constraints) {
       constraints = {};
     }
@@ -354,10 +350,6 @@ PeerConnection.prototype = {
   },
 
   createAnswer: function(onSuccess, onError, constraints, provisional) {
-    if (this._onCreateAnswerSuccess) {
-      throw new Error("createAnswer already called");
-    }
-
     if (!this.remoteDescription) {
       throw new Error("setRemoteDescription not called");
     }
