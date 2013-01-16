@@ -18,7 +18,7 @@
 #include "nsStyleContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGGeometryFrame.h"
-#include "nsSVGPatternElement.h"
+#include "mozilla/dom/SVGPatternElement.h"
 #include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
@@ -243,9 +243,9 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   const nsSVGViewBox& viewBox = GetViewBox();
 
   uint16_t patternContentUnits =
-    GetEnumValue(nsSVGPatternElement::PATTERNCONTENTUNITS);
+    GetEnumValue(SVGPatternElement::PATTERNCONTENTUNITS);
   uint16_t patternUnits =
-    GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
+    GetEnumValue(SVGPatternElement::PATTERNUNITS);
 
   /*
    * Get the content geometry information.  This is a little tricky --
@@ -430,7 +430,7 @@ uint16_t
 nsSVGPatternFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 {
   nsSVGEnum& thisEnum =
-    static_cast<nsSVGPatternElement *>(mContent)->mEnumAttributes[aIndex];
+    static_cast<SVGPatternElement *>(mContent)->mEnumAttributes[aIndex];
 
   if (thisEnum.IsExplicitlySet())
     return thisEnum.GetAnimValue();
@@ -439,7 +439,7 @@ nsSVGPatternFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 
   nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
   return next ? next->GetEnumValue(aIndex, aDefault) :
-    static_cast<nsSVGPatternElement *>(aDefault)->
+    static_cast<SVGPatternElement *>(aDefault)->
       mEnumAttributes[aIndex].GetAnimValue();
 }
 
@@ -447,7 +447,7 @@ SVGAnimatedTransformList*
 nsSVGPatternFrame::GetPatternTransformList(nsIContent* aDefault)
 {
   SVGAnimatedTransformList *thisTransformList =
-    static_cast<nsSVGPatternElement *>(mContent)->GetAnimatedTransformList();
+    static_cast<SVGPatternElement *>(mContent)->GetAnimatedTransformList();
 
   if (thisTransformList && thisTransformList->IsExplicitlySet())
     return thisTransformList;
@@ -456,7 +456,7 @@ nsSVGPatternFrame::GetPatternTransformList(nsIContent* aDefault)
 
   nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
   return next ? next->GetPatternTransformList(aDefault) :
-    static_cast<nsSVGPatternElement *>(aDefault)->mPatternTransform.get();
+    static_cast<SVGPatternElement *>(aDefault)->mPatternTransform.get();
 }
 
 gfxMatrix
@@ -474,7 +474,7 @@ const nsSVGViewBox &
 nsSVGPatternFrame::GetViewBox(nsIContent* aDefault)
 {
   const nsSVGViewBox &thisViewBox =
-    static_cast<nsSVGPatternElement *>(mContent)->mViewBox;
+    static_cast<SVGPatternElement *>(mContent)->mViewBox;
 
   if (thisViewBox.IsExplicitlySet())
     return thisViewBox;
@@ -483,14 +483,14 @@ nsSVGPatternFrame::GetViewBox(nsIContent* aDefault)
 
   nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
   return next ? next->GetViewBox(aDefault) :
-    static_cast<nsSVGPatternElement *>(aDefault)->mViewBox;
+    static_cast<SVGPatternElement *>(aDefault)->mViewBox;
 }
 
 const SVGAnimatedPreserveAspectRatio &
 nsSVGPatternFrame::GetPreserveAspectRatio(nsIContent *aDefault)
 {
   const SVGAnimatedPreserveAspectRatio &thisPar =
-    static_cast<nsSVGPatternElement *>(mContent)->mPreserveAspectRatio;
+    static_cast<SVGPatternElement *>(mContent)->mPreserveAspectRatio;
 
   if (thisPar.IsExplicitlySet())
     return thisPar;
@@ -499,14 +499,14 @@ nsSVGPatternFrame::GetPreserveAspectRatio(nsIContent *aDefault)
 
   nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
   return next ? next->GetPreserveAspectRatio(aDefault) :
-    static_cast<nsSVGPatternElement *>(aDefault)->mPreserveAspectRatio;
+    static_cast<SVGPatternElement *>(aDefault)->mPreserveAspectRatio;
 }
 
 const nsSVGLength2 *
 nsSVGPatternFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 {
   const nsSVGLength2 *thisLength =
-    &static_cast<nsSVGPatternElement *>(mContent)->mLengthAttributes[aIndex];
+    &static_cast<SVGPatternElement *>(mContent)->mLengthAttributes[aIndex];
 
   if (thisLength->IsExplicitlySet())
     return thisLength;
@@ -515,7 +515,7 @@ nsSVGPatternFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 
   nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
   return next ? next->GetLengthValue(aIndex, aDefault) :
-    &static_cast<nsSVGPatternElement *>(aDefault)->mLengthAttributes[aIndex];
+    &static_cast<SVGPatternElement *>(aDefault)->mLengthAttributes[aIndex];
 }
 
 // Private (helper) methods
@@ -530,9 +530,9 @@ nsSVGPatternFrame::GetReferencedPattern()
 
   if (!property) {
     // Fetch our pattern element's xlink:href attribute
-    nsSVGPatternElement *pattern = static_cast<nsSVGPatternElement *>(mContent);
+    SVGPatternElement *pattern = static_cast<SVGPatternElement *>(mContent);
     nsAutoString href;
-    pattern->mStringAttributes[nsSVGPatternElement::HREF].GetAnimValue(href, pattern);
+    pattern->mStringAttributes[SVGPatternElement::HREF].GetAnimValue(href, pattern);
     if (href.IsEmpty()) {
       mNoHRefURI = true;
       return nullptr; // no URL
@@ -588,10 +588,10 @@ nsSVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
 
   // Get the pattern x,y,width, and height
   const nsSVGLength2 *tmpX, *tmpY, *tmpHeight, *tmpWidth;
-  tmpX = GetLengthValue(nsSVGPatternElement::X);
-  tmpY = GetLengthValue(nsSVGPatternElement::Y);
-  tmpHeight = GetLengthValue(nsSVGPatternElement::HEIGHT);
-  tmpWidth = GetLengthValue(nsSVGPatternElement::WIDTH);
+  tmpX = GetLengthValue(SVGPatternElement::X);
+  tmpY = GetLengthValue(SVGPatternElement::Y);
+  tmpHeight = GetLengthValue(SVGPatternElement::HEIGHT);
+  tmpWidth = GetLengthValue(SVGPatternElement::WIDTH);
 
   if (aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     x = nsSVGUtils::ObjectSpace(aTargetBBox, tmpX);
@@ -647,15 +647,15 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
     // Calling the nsIFrame* variant of GetAnimValue would look it up on
     // every call.
     viewportWidth =
-      GetLengthValue(nsSVGPatternElement::WIDTH)->GetAnimValue(ctx);
+      GetLengthValue(SVGPatternElement::WIDTH)->GetAnimValue(ctx);
     viewportHeight =
-      GetLengthValue(nsSVGPatternElement::HEIGHT)->GetAnimValue(ctx);
+      GetLengthValue(SVGPatternElement::HEIGHT)->GetAnimValue(ctx);
   } else {
     // No SVG target, call the nsIFrame* variant of GetAnimValue.
     viewportWidth =
-      GetLengthValue(nsSVGPatternElement::WIDTH)->GetAnimValue(aTarget);
+      GetLengthValue(SVGPatternElement::WIDTH)->GetAnimValue(aTarget);
     viewportHeight =
-      GetLengthValue(nsSVGPatternElement::HEIGHT)->GetAnimValue(aTarget);
+      GetLengthValue(SVGPatternElement::HEIGHT)->GetAnimValue(aTarget);
   }
 
   if (viewportWidth <= 0.0f || viewportHeight <= 0.0f) {
@@ -663,7 +663,7 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
   }
 
   gfxMatrix tm = SVGContentUtils::GetViewBoxTransform(
-    static_cast<nsSVGPatternElement*>(mContent),
+    static_cast<SVGPatternElement*>(mContent),
     viewportWidth, viewportHeight,
     viewBoxRect.x, viewBoxRect.y,
     viewBoxRect.width, viewBoxRect.height,

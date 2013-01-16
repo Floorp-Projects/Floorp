@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGPATTERNELEMENT_H__
-#define __NS_SVGPATTERNELEMENT_H__
+#ifndef mozilla_dom_SVGPatternElement_h
+#define mozilla_dom_SVGPatternElement_h
 
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGPatternElement.h"
@@ -18,22 +18,28 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedTransformList.h"
 
-//--------------------- Patterns ------------------------
+class nsSVGPatternFrame;
 
-typedef nsSVGElement nsSVGPatternElementBase;
+nsresult NS_NewSVGPatternElement(nsIContent **aResult,
+                                 already_AddRefed<nsINodeInfo> aNodeInfo);
 
-class nsSVGPatternElement : public nsSVGPatternElementBase,
-                            public nsIDOMSVGPatternElement,
-                            public nsIDOMSVGURIReference,
-                            public nsIDOMSVGFitToViewBox,
-                            public nsIDOMSVGUnitTypes
+namespace mozilla {
+namespace dom {
+
+typedef nsSVGElement SVGPatternElementBase;
+
+class SVGPatternElement MOZ_FINAL : public SVGPatternElementBase,
+                                    public nsIDOMSVGPatternElement,
+                                    public nsIDOMSVGURIReference,
+                                    public nsIDOMSVGFitToViewBox,
+                                    public nsIDOMSVGUnitTypes
 {
-  friend class nsSVGPatternFrame;
+  friend class ::nsSVGPatternFrame;
 
 protected:
-  friend nsresult NS_NewSVGPatternElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGPatternElement(nsIContent **aResult,
+                                             already_AddRefed<nsINodeInfo> aNodeInfo));
+  SVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
@@ -100,4 +106,7 @@ protected:
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGPatternElement_h
