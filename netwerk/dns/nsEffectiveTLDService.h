@@ -5,6 +5,7 @@
 
 #include "nsIEffectiveTLDService.h"
 
+#include "nsIMemoryReporter.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -12,7 +13,6 @@
 #include "mozilla/MemoryReporting.h"
 
 class nsIIDNService;
-class nsIMemoryReporter;
 
 #define ETLD_ENTRY_N_INDEX_BITS 30
 
@@ -118,7 +118,7 @@ private:
   nsresult NormalizeHostname(nsCString &aHostname);
   ~nsEffectiveTLDService();
 
-  nsIMemoryReporter*          mReporter;
+  nsCOMPtr<nsIMemoryReporter> mReporter;
   nsTHashtable<nsDomainEntry> mHash;
   nsCOMPtr<nsIIDNService>     mIDNService;
 };
