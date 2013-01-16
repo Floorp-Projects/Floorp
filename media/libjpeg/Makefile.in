@@ -164,8 +164,7 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-.PHONY: CONSTANT_TABLES
-CONSTANT_TABLES:
+jpeg_nbits_table.h: $(srcdir)/genTables.py
 	$(PYTHON) $(srcdir)/genTables.py
 
-jchuff.$(OBJ_SUFFIX): CONSTANT_TABLES
+jchuff.$(OBJ_SUFFIX): jpeg_nbits_table.h
