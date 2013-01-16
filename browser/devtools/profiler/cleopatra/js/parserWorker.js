@@ -239,16 +239,25 @@ function parseRawProfile(requestID, params, rawProfile) {
   var symbolicationTable = {};
   var symbols = [];
   var symbolIndices = {};
+  var resources = {};
   var functions = [];
   var functionIndices = {};
   var samples = [];
   var meta = {};
   var armIncludePCIndex = {};
 
+  if (rawProfile == null) {
+    throw "rawProfile is null";
+  }
+
   if (typeof rawProfile == "string" && rawProfile[0] == "{") {
     // rawProfile is a JSON string.
     rawProfile = JSON.parse(rawProfile);
+    if (rawProfile === null) {
+      throw "rawProfile couldn't not successfully be parsed using JSON.parse. Make sure that the profile is a valid JSON encoding.";
+    }
   }
+
 
   if (rawProfile.profileJSON && !rawProfile.profileJSON.meta && rawProfile.meta) {
     rawProfile.profileJSON.meta = rawProfile.meta;
@@ -271,149 +280,217 @@ function parseRawProfile(requestID, params, rawProfile) {
     parseProfileString(rawProfile);
   }
 
+  if (params.profileId) {
+    meta.profileId = params.profileId;
+  }
+
   function cleanFunctionName(functionName) {
     var ignoredPrefix = "non-virtual thunk to ";
-    if (functionName.substr(0, ignoredPrefix.length) == ignoredPrefix)
+    if (functionName.startsWith(ignoredPrefix))
       return functionName.substr(ignoredPrefix.length);
     return functionName;
   }
 
-  function resourceNameForAddon(addonID) {
-    for (var i in meta.addons) {
-      var addon = meta.addons[i];
-      if (addon.id.toLowerCase() == addonID.toLowerCase()) {
-        var iconHTML = "";
-        if (addon.iconURL)
-          iconHTML = "<img src=\"" + addon.iconURL + "\" style='width:12px; height:12px;'> "
-        return iconHTML + " " + (/@jetpack$/.exec(addonID) ? "Jetpack: " : "") + addon.name;
-      }
-    }
-    return "";
-  }
-
-  function parseResourceName(url) {
-    if (!url) {
-      return "No URL";
-    }
-    if (url.startsWith("resource:///")) {
-      // Take the last URL from a chained list of URLs.
-      var urls = url.split(" -> ");
-      url = urls[urls.length - 1];
-    }
-
-    // TODO Fix me, this certainly doesn't handle all URLs formats
-    var match = /^.*:\/\/(.*?)\/.*$/.exec(url);
-
-    if (!match)
-      return url;
-
-    var host = match[1];
-
-    if (meta && meta.addons) {
-      if (url.startsWith("resource:") && endsWith(host, "-at-jetpack")) {
-        // Assume this is a jetpack url
-        var jetpackID = host.substring(0, host.length - 11) + "@jetpack";
-        var resName = resourceNameForAddon(jetpackID);
-        if (resName)
-          return resName;
-      }
-      if (url.startsWith("file:///") && url.indexOf("/extensions/") != -1) {
-        var unpackedAddonNameMatch = /\/extensions\/(.*?)\//.exec(url);
-        if (unpackedAddonNameMatch) {
-          var resName = resourceNameForAddon(decodeURIComponent(unpackedAddonNameMatch[1]));
-          if (resName)
-            return resName;
-        }
-      }
-      if (url.startsWith("jar:file:///") && url.indexOf("/extensions/") != -1) {
-        var packedAddonNameMatch = /\/extensions\/(.*?).xpi/.exec(url);
-        if (packedAddonNameMatch) {
-          var resName = resourceNameForAddon(decodeURIComponent(packedAddonNameMatch[1]));
-          if (resName)
-            return resName;
-        }
-      }
-    }
+  function resourceNameForAddon(addon) {
+    if (!addon)
+      return "";
 
     var iconHTML = "";
-    if (url.indexOf("http://") == 0) {
-      iconHTML = "<img src=\"http://" + host + "/favicon.ico\" style='width:12px; height:12px;'> ";
-    } else if (url.indexOf("https://") == 0) {
-      iconHTML = "<img src=\"https://" + host + "/favicon.ico\" style='width:12px; height:12px;'> ";
+    if (addon.iconURL)
+      iconHTML = "<img src=\"" + addon.iconURL + "\" style='width:12px; height:12px;'> "
+    return iconHTML + " " + (/@jetpack$/.exec(addon.id) ? "Jetpack: " : "") + addon.name;
+  }
+
+  function addonWithID(addonID) {
+    return firstMatch(meta.addons, function addonHasID(addon) {
+      return addon.id.toLowerCase() == addonID.toLowerCase();
+    })
+  }
+
+  function resourceNameForAddonWithID(addonID) {
+    return resourceNameForAddon(addonWithID(addonID));
+  }
+
+  function findAddonForChromeURIHost(host) {
+    return firstMatch(meta.addons, function addonUsesChromeURIHost(addon) {
+      return addon.chromeURIHosts && addon.chromeURIHosts.indexOf(host) != -1;
+    });
+  }
+
+  function ensureResource(name, resourceDescription) {
+    if (!(name in resources)) {
+      resources[name] = resourceDescription;
     }
-    return iconHTML + host;
+    return name;
+  }
+
+  function resourceNameFromLibrary(library) {
+    return ensureResource("lib_" + library, {
+      type: "library",
+      name: library
+    });
+  }
+
+  function getAddonForScriptURI(url, host) {
+    if (!meta || !meta.addons)
+      return null;
+
+    if (url.startsWith("resource:") && endsWith(host, "-at-jetpack")) {
+      // Assume this is a jetpack url
+      var jetpackID = host.substring(0, host.length - 11) + "@jetpack";
+      return addonWithID(jetpackID);
+    }
+
+    if (url.startsWith("file:///") && url.indexOf("/extensions/") != -1) {
+      var unpackedAddonNameMatch = /\/extensions\/(.*?)\//.exec(url);
+      if (unpackedAddonNameMatch)
+        return addonWithID(decodeURIComponent(unpackedAddonNameMatch[1]));
+      return null;
+    }
+
+    if (url.startsWith("jar:file:///") && url.indexOf("/extensions/") != -1) {
+      var packedAddonNameMatch = /\/extensions\/(.*?).xpi/.exec(url);
+      if (packedAddonNameMatch)
+        return addonWithID(decodeURIComponent(packedAddonNameMatch[1]));
+      return null;
+    }
+
+    if (url.startsWith("chrome://")) {
+      var chromeURIMatch = /chrome\:\/\/(.*?)\//.exec(url);
+      if (chromeURIMatch)
+        return findAddonForChromeURIHost(chromeURIMatch[1]);
+      return null;
+    }
+
+    return null;
+  }
+
+  function resourceNameFromURI(url) {
+    if (!url)
+      return ensureResource("unknown", {type: "unknown", name: "<unknown>"});
+
+    var match = /^(.*):\/\/(.*?)\//.exec(url);
+
+    if (!match) {
+      // Can this happen? If so, we should change the regular expression above.
+      return ensureResource("url_" + url, {type: "url", name: url});
+    }
+
+    var urlRoot = match[0];
+    var protocol = match[1];
+    var host = match[2];
+
+    var addon = getAddonForScriptURI(url, host);
+    if (addon) {
+      return ensureResource("addon_" + addon.id, {
+        type: "addon",
+        name: addon.name,
+        addonID: addon.id,
+        icon: addon.iconURL
+      });
+    }
+
+    if (protocol.startsWith("http")) {
+      return ensureResource("webhost_" + host, {
+        type: "webhost",
+        name: host,
+        icon: urlRoot + "favicon.ico"
+      });
+    }
+
+    return ensureResource("otherhost_" + host, {
+      type: "otherhost",
+      name: host
+    });
   }
 
   function parseScriptFile(url) {
-     // TODO Fix me, this certainly doesn't handle all URLs formats
-     var match = /^.*\/(.*)\.js$/.exec(url);
+     var match = /([^\/]*)$/.exec(url);
+     if (match && match[1])
+       return match[1];
 
-     if (!match)
-       return url;
-
-     return match[1] + ".js";
+     return url;
   }
 
-  function parseScriptURI(url) {
+  // JS File information sometimes comes with multiple URIs which are chained
+  // with " -> ". We only want the last URI in this list.
+  function getRealScriptURI(url) {
     if (url) {
-      var urlTokens = url.split(" ");
-      url = urlTokens[urlTokens.length-1];
+      var urls = url.split(" -> ");
+      return urls[urls.length - 1];
     }
     return url;
   }
 
   function getFunctionInfo(fullName) {
-    var isJSFrame = false;
-    var match =
-      /^(.*) \(in ([^\)]*)\) (\+ [0-9]+)$/.exec(fullName) ||
-      /^(.*) \(in ([^\)]*)\) (\(.*:.*\))$/.exec(fullName) ||
-      /^(.*) \(in ([^\)]*)\)$/.exec(fullName);
-      // Try to parse a JS frame
-    var scriptLocation = null;
-    var jsMatch1 = match ||
-      /^(.*) \((.*):([0-9]+)\)$/.exec(fullName);
-    if (!match && jsMatch1) {
-      scriptLocation = {
-        scriptURI: parseScriptURI(jsMatch1[2]),
-        lineInformation: jsMatch1[3]
+
+    function getCPPFunctionInfo(fullName) {
+      var match =
+        /^(.*) \(in ([^\)]*)\) (\+ [0-9]+)$/.exec(fullName) ||
+        /^(.*) \(in ([^\)]*)\) (\(.*:.*\))$/.exec(fullName) ||
+        /^(.*) \(in ([^\)]*)\)$/.exec(fullName);
+
+      if (!match)
+        return null;
+
+      return {
+        functionName: cleanFunctionName(match[1]),
+        libraryName: resourceNameFromLibrary(match[2]),
+        lineInformation: match[3] || "",
+        isRoot: false,
+        isJSFrame: false
       };
-      match = [0, jsMatch1[1]+"() @ "+parseScriptFile(jsMatch1[2]) + ":" + jsMatch1[3], parseResourceName(jsMatch1[2]), ""];
-      isJSFrame = true;
     }
-    var jsMatch2 = match ||
-      /^(.*):([0-9]+)$/.exec(fullName);
-    if (!match && jsMatch2) {
-      scriptLocation = {
-        scriptURI: parseScriptURI(jsMatch2[1]),
-        lineInformation: jsMatch2[2]
+
+    function getJSFunctionInfo(fullName) {
+      var jsMatch =
+        /^(.*) \((.*):([0-9]+)\)$/.exec(fullName) ||
+        /^()(.*):([0-9]+)$/.exec(fullName);
+
+      if (!jsMatch)
+        return null;
+
+      var functionName = jsMatch[1] || "<Anonymous>";
+      var scriptURI = getRealScriptURI(jsMatch[2]);
+      var lineNumber = jsMatch[3];
+      var scriptFile = parseScriptFile(scriptURI);
+      var resourceName = resourceNameFromURI(scriptURI);
+
+      return {
+        functionName: functionName + "() @ " + scriptFile + ":" + lineNumber,
+        libraryName: resourceName,
+        lineInformation: "",
+        isRoot: false,
+        isJSFrame: true,
+        scriptLocation: {
+          scriptURI: scriptURI,
+          lineInformation: lineNumber
+        }
       };
-      match = [0, "<Anonymous> @ "+parseScriptFile(jsMatch2[1]) + ":" + jsMatch2[2], parseResourceName(jsMatch2[1]), ""];
-      isJSFrame = true;
     }
-    if (!match) {
-      match = [fullName, fullName];
+
+    function getFallbackFunctionInfo(fullName) {
+      return {
+        functionName: cleanFunctionName(fullName),
+        libraryName: "",
+        lineInformation: "",
+        isRoot: fullName == "(root)",
+        isJSFrame: false
+      };
     }
-    return {
-      functionName: cleanFunctionName(match[1]),
-      libraryName: match[2] || "",
-      lineInformation: match[3] || "",
-      isJSFrame: isJSFrame,
-      scriptLocation: scriptLocation
-    };
+
+    return getCPPFunctionInfo(fullName) ||
+           getJSFunctionInfo(fullName) ||
+           getFallbackFunctionInfo(fullName);
   }
 
-  function indexForFunction(symbol, functionName, libraryName, isJSFrame, scriptLocation) {
-    var resolve = functionName+"_LIBNAME_"+libraryName;
+  function indexForFunction(symbol, info) {
+    var resolve = info.functionName + "__" + info.libraryName;
     if (resolve in functionIndices)
       return functionIndices[resolve];
     var newIndex = functions.length;
-    functions[newIndex] = {
-      symbol: symbol,
-      functionName: functionName,
-      libraryName: libraryName,
-      isJSFrame: isJSFrame,
-      scriptLocation: scriptLocation
-    };
+    info.symbol = symbol;
+    functions[newIndex] = info;
     functionIndices[resolve] = newIndex;
     return newIndex;
   }
@@ -424,8 +501,9 @@ function parseRawProfile(requestID, params, rawProfile) {
     return {
       symbolName: symbol,
       functionName: info.functionName,
-      functionIndex: indexForFunction(symbol, info.functionName, info.libraryName, info.isJSFrame, info.scriptLocation),
+      functionIndex: indexForFunction(symbol, info),
       lineInformation: info.lineInformation,
+      isRoot: info.isRoot,
       isJSFrame: info.isJSFrame,
       scriptLocation: info.scriptLocation
     };
@@ -582,6 +660,9 @@ function parseRawProfile(requestID, params, rawProfile) {
       if (sample.responsiveness) {
         sample.extraInfo["responsiveness"] = sample.responsiveness;
       }
+      if (sample.marker) {
+        sample.extraInfo["marker"] = sample.marker;
+      }
       if (sample.time) {
         sample.extraInfo["time"] = sample.time;
       }
@@ -600,17 +681,22 @@ function parseRawProfile(requestID, params, rawProfile) {
         if (!sample) continue;
         // If length == 0 then the sample was filtered when saving the profile
         if (sample.frames.length >= 1 && sample.frames[0] != rootIndex)
-          sample.frames.splice(0, 0, rootIndex)
+          sample.frames.unshift(rootIndex)
       }
     }
   }
 
   progressReporter.finish();
-  var profileID = gNextProfileID++;
+  // Don't increment the profile ID now because (1) it's buggy
+  // and (2) for now there's no point in storing each profile
+  // here if we're storing them in the local storage.
+  //var profileID = gNextProfileID++;
+  var profileID = gNextProfileID;
   gProfiles[profileID] = JSON.parse(JSON.stringify({
     meta: meta,
     symbols: symbols,
     functions: functions,
+    resources: resources,
     allSamples: samples
   }));
   clearRegExpLastMatch();
@@ -619,7 +705,8 @@ function parseRawProfile(requestID, params, rawProfile) {
     numSamples: samples.length,
     profileID: profileID,
     symbols: symbols,
-    functions: functions
+    functions: functions,
+    resources: resources
   });
 }
 
@@ -688,7 +775,6 @@ function convertToCallTree(samples, isReverse) {
   function areSamplesMultiroot(samples) {
     var previousRoot;
     for (var i = 0; i < samples.length; ++i) {
-      if (!samples[i].frames) continue;
       if (!previousRoot) {
         previousRoot = samples[i].frames[0];
         continue;
@@ -706,8 +792,6 @@ function convertToCallTree(samples, isReverse) {
     return new TreeNode("(empty)", null, 0);
   var firstRoot = null;
   for (var i = 0; i < samples.length; ++i) {
-    if (!samples[i].frames) continue;
-    sendError(null, "got root: " + samples[i].frames[0]);
     firstRoot = samples[i].frames[0];
     break;
   }
@@ -718,9 +802,6 @@ function convertToCallTree(samples, isReverse) {
   var treeRoot = new TreeNode((isReverse || multiRoot) ? "(total)" : firstRoot, null, 0);
   for (var i = 0; i < samples.length; ++i) {
     var sample = samples[i];
-    if (!sample.frames) {
-      continue;
-    }
     var callstack = sample.frames.slice(0);
     callstack.shift();
     if (isReverse)
@@ -764,68 +845,72 @@ function filterBySymbol(samples, symbolOrFunctionIndex) {
   });
 }
 
-function filterByCallstackPrefix(samples, callstack) {
-  return samples.map(function filterSample(origSample) {
-    if (!origSample)
+function filterByCallstackPrefix(samples, symbols, functions, callstack, appliesToJS, useFunctions) {
+  var isJSFrameOrRoot = useFunctions ? function isJSFunctionOrRoot(functionIndex) {
+      return (functionIndex in functions) && (functions[functionIndex].isJSFrame || functions[functionIndex].isRoot);
+    } : function isJSSymbolOrRoot(symbolIndex) {
+      return (symbolIndex in symbols) && (symbols[symbolIndex].isJSFrame || symbols[symbolIndex].isRoot);
+    };
+  return samples.map(function filterSample(sample) {
+    if (!sample)
       return null;
-    if (origSample.frames.length < callstack.length)
+    if (sample.frames.length < callstack.length)
       return null;
-    var sample = cloneSample(origSample);
-    for (var i = 0; i < callstack.length; i++) {
-      if (sample.frames[i] != callstack[i])
+    for (var i = 0, j = 0; j < callstack.length; i++) {
+      if (i >= sample.frames.length)
         return null;
+      if (appliesToJS && !isJSFrameOrRoot(sample.frames[i]))
+        continue;
+      if (sample.frames[i] != callstack[j])
+        return null;
+      j++;
     }
-    sample.frames = sample.frames.slice(callstack.length - 1);
-    return sample;
+    return makeSample(sample.frames.slice(i - 1), sample.extraInfo);
   });
 }
 
-function filterByCallstackPostfix(samples, callstack) {
-  return samples.map(function filterSample(origSample) {
-    if (!origSample)
+function filterByCallstackPostfix(samples, symbols, functions, callstack, appliesToJS, useFunctions) {
+  var isJSFrameOrRoot = useFunctions ? function isJSFunctionOrRoot(functionIndex) {
+      return (functionIndex in functions) && (functions[functionIndex].isJSFrame || functions[functionIndex].isRoot);
+    } : function isJSSymbolOrRoot(symbolIndex) {
+      return (symbolIndex in symbols) && (symbols[symbolIndex].isJSFrame || symbols[symbolIndex].isRoot);
+    };
+  return samples.map(function filterSample(sample) {
+    if (!sample)
       return null;
-    if (origSample.frames.length < callstack.length)
+    if (sample.frames.length < callstack.length)
       return null;
-    var sample = cloneSample(origSample);
-    for (var i = 0; i < callstack.length; i++) {
-      if (sample.frames[sample.frames.length - i - 1] != callstack[i])
+    for (var i = 0, j = 0; j < callstack.length; i++) {
+      if (i >= sample.frames.length)
         return null;
+      if (appliesToJS && !isJSFrameOrRoot(sample.frames[sample.frames.length - i - 1]))
+        continue;
+      if (sample.frames[sample.frames.length - i - 1] != callstack[j])
+        return null;
+      j++;
     }
-    sample.frames = sample.frames.slice(0, sample.frames.length - callstack.length + 1);
-    return sample;
+    var newFrames = sample.frames.slice(0, sample.frames.length - i + 1);
+    return makeSample(newFrames, sample.extraInfo);
   });
 }
 
 function chargeNonJSToCallers(samples, symbols, functions, useFunctions) {
-  function isJSFrame(index, useFunction) {
-    if (useFunctions) {
-      if (!(index in functions))
-        return "";
-      return functions[index].isJSFrame;
-    }
-    if (!(index in symbols))
-      return "";
-    return symbols[index].isJSFrame;
-  }
+  var isJSFrameOrRoot = useFunctions ? function isJSFunctionOrRoot(functionIndex) {
+      return (functionIndex in functions) && (functions[functionIndex].isJSFrame || functions[functionIndex].isRoot);
+    } : function isJSSymbolOrRoot(symbolIndex) {
+      return (symbolIndex in symbols) && (symbols[symbolIndex].isJSFrame || symbols[symbolIndex].isRoot);
+    };
   samples = samples.slice(0);
   for (var i = 0; i < samples.length; ++i) {
     var sample = samples[i];
     if (!sample)
       continue;
-    var callstack = sample.frames;
-    var newFrames = [];
-    for (var j = 0; j < callstack.length; ++j) {
-      if (isJSFrame(callstack[j], useFunctions)) {
-        // Record Javascript frames
-        newFrames.push(callstack[j]);
-      }
-    }
+    var newFrames = sample.frames.filter(isJSFrameOrRoot);
     if (!newFrames.length) {
-      newFrames = null;
+      samples[i] = null;
     } else {
-      newFrames.splice(0, 0, "(total)");
+      samples[i].frames = newFrames;
     }
-    samples[i].frames = newFrames;
   }
   return samples;
 }
@@ -912,26 +997,28 @@ function FocusedFrameSampleFilter(focusedSymbol) {
   this._focusedSymbol = focusedSymbol;
 }
 FocusedFrameSampleFilter.prototype = {
-  filter: function FocusedFrameSampleFilter_filter(samples, symbols, functions) {
+  filter: function FocusedFrameSampleFilter_filter(samples, symbols, functions, useFunctions) {
     return filterBySymbol(samples, this._focusedSymbol);
   }
 };
 
-function FocusedCallstackPrefixSampleFilter(focusedCallstack) {
+function FocusedCallstackPrefixSampleFilter(focusedCallstack, appliesToJS) {
   this._focusedCallstackPrefix = focusedCallstack;
+  this._appliesToJS = appliesToJS;
 }
 FocusedCallstackPrefixSampleFilter.prototype = {
-  filter: function FocusedCallstackPrefixSampleFilter_filter(samples, symbols, functions) {
-    return filterByCallstackPrefix(samples, this._focusedCallstackPrefix);
+  filter: function FocusedCallstackPrefixSampleFilter_filter(samples, symbols, functions, useFunctions) {
+    return filterByCallstackPrefix(samples, symbols, functions, this._focusedCallstackPrefix, this._appliesToJS, useFunctions);
   }
 };
 
-function FocusedCallstackPostfixSampleFilter(focusedCallstack) {
+function FocusedCallstackPostfixSampleFilter(focusedCallstack, appliesToJS) {
   this._focusedCallstackPostfix = focusedCallstack;
+  this._appliesToJS = appliesToJS;
 }
 FocusedCallstackPostfixSampleFilter.prototype = {
-  filter: function FocusedCallstackPostfixSampleFilter_filter(samples, symbols, functions) {
-    return filterByCallstackPostfix(samples, this._focusedCallstackPostfix);
+  filter: function FocusedCallstackPostfixSampleFilter_filter(samples, symbols, functions, useFunctions) {
+    return filterByCallstackPostfix(samples, symbols, functions, this._focusedCallstackPostfix, this._appliesToJS, useFunctions);
   }
 };
 
@@ -951,9 +1038,9 @@ function unserializeSampleFilters(filters) {
       case "FocusedFrameSampleFilter":
         return new FocusedFrameSampleFilter(filter.focusedSymbol);
       case "FocusedCallstackPrefixSampleFilter":
-        return new FocusedCallstackPrefixSampleFilter(filter.focusedCallstack);
+        return new FocusedCallstackPrefixSampleFilter(filter.focusedCallstack, filter.appliesToJS);
       case "FocusedCallstackPostfixSampleFilter":
-        return new FocusedCallstackPostfixSampleFilter(filter.focusedCallstack);
+        return new FocusedCallstackPostfixSampleFilter(filter.focusedCallstack, filter.appliesToJS);
       case "RangeSampleFilter":
         return new RangeSampleFilter(filter.start, filter.end);
       case "PluginView":
@@ -975,14 +1062,6 @@ function updateFilters(requestID, profileID, filters) {
   if (filters.mergeFunctions) {
     samples = discardLineLevelInformation(samples, symbols, functions);
   }
-  if (filters.javascriptOnly) {
-    try {
-      //samples = filterByName(samples, symbols, functions, "runScript", filters.mergeFunctions);
-      samples = chargeNonJSToCallers(samples, symbols, functions, filters.mergeFunctions);
-    } catch (e) {
-      dump("Could not filer by javascript: " + e + "\n");
-    }
-  }
   if (filters.nameFilter) {
     try {
       samples = filterByName(samples, symbols, functions, filters.nameFilter, filters.mergeFunctions);
@@ -992,16 +1071,19 @@ function updateFilters(requestID, profileID, filters) {
   }
   samples = unserializeSampleFilters(filters.sampleFilters).reduce(function (filteredSamples, currentFilter) {
     if (currentFilter===null) return filteredSamples;
-    return currentFilter.filter(filteredSamples, symbols, functions);
+    return currentFilter.filter(filteredSamples, symbols, functions, filters.mergeFunctions);
   }, samples);
   if (filters.jankOnly) {
     samples = filterByJank(samples, gJankThreshold);
+  }
+  if (filters.javascriptOnly) {
+    samples = chargeNonJSToCallers(samples, symbols, functions, filters.mergeFunctions);
   }
 
   gProfiles[profileID].filterSettings = filters;
   gProfiles[profileID].filteredSamples = samples;
   sendFinishedInChunks(requestID, samples, 40000,
-                       function (sample) { return (sample && sample.frames) ? sample.frames.length : 1; });
+                       function (sample) { return sample ? sample.frames.length : 1; });
 }
 
 function updateViewOptions(requestID, profileID, options) {
@@ -1039,7 +1121,7 @@ function calculateHistogramData(requestID, profileID) {
   for (var i = 0; i < data.length; ++i) {
     if (!data[i])
       continue;
-    var value = data[i].frames ? data[i].frames.length : 0;
+    var value = data[i].frames.length;
     if (maxHeight < value)
       maxHeight = value;
   }
@@ -1053,7 +1135,7 @@ function calculateHistogramData(requestID, profileID) {
   var frameStart = {};
   for (var i = 0; i < data.length; i++) {
     var step = data[i];
-    if (!step || !step.frames) {
+    if (!step) {
       // Add a gap for the sample that was filtered out.
       nextX += 1 / samplesPerStep;
       continue;
@@ -1140,6 +1222,26 @@ var diagnosticList = [
     },
   },
   {
+    image: "cache.png",
+    title: "Bug 717761 - Main thread can be blocked by IO on the cache thread",
+    bugNumber: "717761",
+    check: function(frames, symbols, meta) {
+
+      return stepContains('nsCacheEntryDescriptor::GetStoragePolicy', frames, symbols)
+          ;
+    },
+  },
+  {
+    image: "js.png",
+    title: "Web Content Shutdown Notification",
+    check: function(frames, symbols, meta) {
+
+      return stepContains('nsAppStartup::Quit', frames, symbols)
+          && stepContains('nsDocShell::FirePageHideNotification', frames, symbols)
+          ;
+    },
+  },
+  {
     image: "js.png",
     title: "Bug 789193 - AMI_startup() takes 200ms on startup",
     bugNumber: "789193",
@@ -1149,6 +1251,44 @@ var diagnosticList = [
           ;
     },
   },
+  {
+    image: "js.png",
+    title: "Bug 818296 - [Shutdown] js::NukeCrossCompartmentWrappers takes up 300ms on shutdown",
+    bugNumber: "818296",
+    check: function(frames, symbols, meta) {
+      return stepContains('js::NukeCrossCompartmentWrappers', frames, symbols)
+          && (stepContains('WindowDestroyedEvent', frames, symbols) || stepContains('DoShutdown', frames, symbols))
+          ;
+    },
+  },
+  {
+    image: "js.png",
+    title: "Bug 818274 - [Shutdown] Telemetry takes ~10ms on shutdown",
+    bugNumber: "818274",
+    check: function(frames, symbols, meta) {
+      return stepContains('TelemetryPing.js', frames, symbols)
+          ;
+    },
+  },
+  {
+    image: "plugin.png",
+    title: "Bug 818265 - [Shutdown] Plug-in shutdown takes ~90ms on shutdown",
+    bugNumber: "818265",
+    check: function(frames, symbols, meta) {
+      return stepContains('PluginInstanceParent::Destroy', frames, symbols)
+          ;
+    },
+  },
+  {
+    image: "snapshot.png",
+    title: "Bug 720575 - Make thumbnailing faster and/or asynchronous",
+    bugNumber: "720575",
+    check: function(frames, symbols, meta) {
+      return stepContains('Thumbnails_capture()', frames, symbols)
+          ;
+    },
+  },
+
   {
     image: "js.png",
     title: "Bug 789185 - LoginManagerStorage_mozStorage.init() takes 300ms on startup ",
@@ -1238,7 +1378,6 @@ var diagnosticList = [
       var ccEvent = findCCEvent(frames, symbols, meta, step);
 
       if (ccEvent) {
-        dump("Found\n");
         return true;
       }
       return false;
@@ -1268,7 +1407,18 @@ var diagnosticList = [
     check: function(frames, symbols, meta) {
       return stepContainsRegEx(/.*Collect.*Runtime.*Invocation.*/, frames, symbols)
           || stepContains('GarbageCollectNow', frames, symbols) // Label
+          || stepContains('JS_GC(', frames, symbols) // Label
           || stepContains('CycleCollect__', frames, symbols) // Label
+          ;
+    },
+  },
+  {
+    image: "cc.png",
+    title: "Cycle Collect",
+    check: function(frames, symbols, meta) {
+      return stepContains('nsCycleCollector::Collect', frames, symbols)
+          || stepContains('CycleCollect__', frames, symbols) // Label
+          || stepContains('nsCycleCollectorRunner::Collect', frames, symbols) // Label
           ;
     },
   },
@@ -1296,6 +1446,7 @@ var diagnosticList = [
     check: function(frames, symbols, meta) {
       return stepContains('__getdirentries64', frames, symbols) 
           || stepContains('__open', frames, symbols) 
+          || stepContains('NtFlushBuffersFile', frames, symbols) 
           || stepContains('storage:::Statement::ExecuteStep', frames, symbols) 
           || stepContains('__unlink', frames, symbols) 
           || stepContains('fsync', frames, symbols) 
@@ -1371,6 +1522,8 @@ function findGCSlice(frames, symbols, meta, step) {
 }
 function stepContains(substring, frames, symbols) {
   for (var i = 0; frames && i < frames.length; i++) {
+    if (!(frames[i] in symbols))
+      continue;
     var frameSym = symbols[frames[i]].functionName || symbols[frames[i]].symbolName;
     if (frameSym.indexOf(substring) != -1) {
       return true;
@@ -1380,6 +1533,8 @@ function stepContains(substring, frames, symbols) {
 }
 function stepContainsRegEx(regex, frames, symbols) {
   for (var i = 0; frames && i < frames.length; i++) {
+    if (!(frames[i] in symbols))
+      continue;
     var frameSym = symbols[frames[i]].functionName || symbols[frames[i]].symbolName;
     if (regex.exec(frameSym)) {
       return true;
@@ -1390,6 +1545,8 @@ function stepContainsRegEx(regex, frames, symbols) {
 function symbolSequence(symbolsOrder, frames, symbols) {
   var symbolIndex = 0;
   for (var i = 0; frames && i < frames.length; i++) {
+    if (!(frames[i] in symbols))
+      continue;
     var frameSym = symbols[frames[i]].functionName || symbols[frames[i]].symbolName;
     var substring = symbolsOrder[symbolIndex];
     if (frameSym.indexOf(substring) != -1) {
@@ -1458,14 +1615,13 @@ function calculateDiagnosticItems(requestID, profileID, meta) {
 */
 
   data.forEach(function diagnoseStep(step, x) {
-    if (!step)
-      return;
+    if (step) {
+      var frames = step.frames;
 
-    var frames = step.frames;
-
-    var diagnostic = firstMatch(diagnosticList, function (diagnostic) {
-      return diagnostic.check(frames, symbols, meta, step);
-    });
+      var diagnostic = firstMatch(diagnosticList, function (diagnostic) {
+        return diagnostic.check(frames, symbols, meta, step);
+      });
+    }
 
     if (!diagnostic) {
       finishPendingDiagnostic(x);
