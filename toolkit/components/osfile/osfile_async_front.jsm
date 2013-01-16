@@ -240,37 +240,13 @@ File.prototype = {
    * @resolves {Uint8Array} An array containing the bytes read.
    */
   read: function read(nbytes) {
-    // FIXME: Once bug 720949 has landed, we might be able to simplify
-    // the implementation of |readAll|
-    let self = this;
-    let promise;
-    if (nbytes != null) {
-      promise = Promise.resolve(nbytes);
-    } else {
-      promise = this.stat();
-      promise = promise.then(function withStat(stat) {
-        return stat.size;
+    let promise = Scheduler.post("File_prototype_read",
+      [this._fdmsg,
+       nbytes]);
+    return promise.then(
+      function onSuccess(data) {
+        return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
       });
-    }
-    let array;
-    let size;
-    promise = promise.then(
-      function withSize(aSize) {
-        size = aSize;
-        array = new Uint8Array(size);
-        return self.readTo(array);
-      }
-    );
-    promise = promise.then(
-      function afterReadTo(bytes) {
-        if (bytes == size) {
-          return array;
-        } else {
-          return array.subarray(0, bytes);
-        }
-      }
-    );
-    return promise;
   },
 
   /**
@@ -475,8 +451,12 @@ File.makeDir = function makeDir(path, options) {
  * read from the file.
  */
 File.read = function read(path, bytes) {
-  return Scheduler.post("read",
+  let promise = Scheduler.post("read",
     [Type.path.toMsg(path), bytes], path);
+  return promise.then(
+    function onSuccess(data) {
+      return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    });
 };
 
 /**
