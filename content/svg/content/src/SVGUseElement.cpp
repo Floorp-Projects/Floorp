@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/SVGUseElement.h"
+#include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsIDOMSVGGElement.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -21,6 +22,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
 
 namespace mozilla {
 namespace dom {
+
+JSObject*
+SVGUseElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGUseElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // implementation
@@ -86,6 +93,7 @@ SVGUseElement::SVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 #pragma warning(pop)
 #endif
 {
+  SetIsDOMBinding();
 }
 
 SVGUseElement::~SVGUseElement()
@@ -126,7 +134,16 @@ SVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 /* readonly attribute nsIDOMSVGAnimatedString href; */
   NS_IMETHODIMP SVGUseElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
+  *aHref = Href().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGUseElement::Href()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> href;
+  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
+  return href.forget();
 }
 
 //----------------------------------------------------------------------
@@ -135,25 +152,53 @@ SVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP SVGUseElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
+  *aX = X().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGUseElement::X()
+{
+  return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP SVGUseElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
+  *aY = Y().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGUseElement::Y()
+{
+  return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP SVGUseElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
+  *aWidth = Width().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGUseElement::Width()
+{
+  return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP SVGUseElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
+  *aHeight = Height().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGUseElement::Height()
+{
+  return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
@@ -345,10 +390,10 @@ SVGUseElement::CreateAnonymousContent()
   if (symbol || svg) {
     nsSVGElement *newElement = static_cast<nsSVGElement*>(newcontent.get());
 
-    if (mLengthAttributes[WIDTH].IsExplicitlySet())
-      newElement->SetLength(nsGkAtoms::width, mLengthAttributes[WIDTH]);
-    if (mLengthAttributes[HEIGHT].IsExplicitlySet())
-      newElement->SetLength(nsGkAtoms::height, mLengthAttributes[HEIGHT]);
+    if (mLengthAttributes[ATTR_WIDTH].IsExplicitlySet())
+      newElement->SetLength(nsGkAtoms::width, mLengthAttributes[ATTR_WIDTH]);
+    if (mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet())
+      newElement->SetLength(nsGkAtoms::height, mLengthAttributes[ATTR_HEIGHT]);
   }
 
   // Set up its base URI correctly
@@ -398,7 +443,7 @@ SVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
 
   if (symbol || svg) {
     nsSVGElement *target = static_cast<nsSVGElement*>(mClone.get());
-    uint32_t index = *sLengthInfo[WIDTH].mName == aName ? WIDTH : HEIGHT;
+    uint32_t index = *sLengthInfo[ATTR_WIDTH].mName == aName ? ATTR_WIDTH : ATTR_HEIGHT;
 
     if (mLengthAttributes[index].IsExplicitlySet()) {
       target->SetLength(aName, mLengthAttributes[index]);
@@ -488,10 +533,10 @@ SVGUseElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
 /* virtual */ bool
 SVGUseElement::HasValidDimensions() const
 {
-  return (!mLengthAttributes[WIDTH].IsExplicitlySet() ||
-           mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
-         (!mLengthAttributes[HEIGHT].IsExplicitlySet() || 
-           mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0);
+  return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
+           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+         (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
+           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
 nsSVGElement::LengthAttributesInfo

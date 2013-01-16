@@ -9,12 +9,6 @@
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGGraphicsElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
-{
-  return SVGGraphicsElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 

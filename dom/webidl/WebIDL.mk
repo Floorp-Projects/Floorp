@@ -157,6 +157,7 @@ webidl_files = \
   SVGTransformList.webidl \
   SVGTSpanElement.webidl \
   SVGUnitTypes.webidl \
+  SVGUseElement.webidl \
   SVGURIReference.webidl \
   SVGViewElement.webidl \
   SVGZoomAndPan.webidl \
