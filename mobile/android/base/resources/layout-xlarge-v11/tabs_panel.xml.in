@@ -11,18 +11,25 @@
                   android:layout_height="fill_parent"
                   android:orientation="vertical">
 
-        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
-              android:id="@+id/tabs_panel_header"
-              android:layout_width="fill_parent"
-              android:layout_height="@dimen/browser_toolbar_height">
+        <LinearLayout android:id="@+id/tabs_panel_header"
+                      android:layout_width="fill_parent"
+                      android:layout_height="@dimen/browser_toolbar_height"
+                      android:orientation="vertical">
 
-            <include layout="@layout/tabs_panel_header"/>
+            <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+                  android:layout_width="fill_parent"
+                  android:layout_height="0dip"
+                  android:layout_weight="1.0">
 
-        </view>
+                <include layout="@layout/tabs_panel_header"/>
 
-        <View android:layout_width="fill_parent"
-              android:layout_height="2dp"
-              android:background="#FF313131"/>
+            </view>
+
+            <View android:layout_width="fill_parent"
+                  android:layout_height="2dp"
+                  android:background="#FF313131"/>
+
+        </LinearLayout>
 
         <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
               android:id="@android:id/tabcontent"
@@ -52,18 +59,25 @@
 
         </view>
 
-        <View android:layout_width="fill_parent"
-              android:layout_height="2dp"
-              android:background="#FF313131"/>
+        <LinearLayout android:id="@+id/tabs_panel_footer"
+                      android:layout_width="fill_parent"
+                      android:layout_height="@dimen/browser_toolbar_height"
+                      android:orientation="vertical">
 
-        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
-              android:id="@+id/tabs_panel_footer"
-              android:layout_width="fill_parent"
-              android:layout_height="@dimen/browser_toolbar_height">
+            <View android:layout_width="fill_parent"
+                  android:layout_height="2dp"
+                  android:background="#FF313131"/>
 
-            <include layout="@layout/tabs_panel_footer"/>
+            <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+                  android:layout_width="fill_parent"
+                  android:layout_height="0dip"
+                  android:layout_weight="1.0">
 
-        </view>
+                <include layout="@layout/tabs_panel_footer"/>
+
+            </view>
+
+        </LinearLayout>
 
    </LinearLayout>
 
