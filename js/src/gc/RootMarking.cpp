@@ -179,7 +179,7 @@ IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
 
 #ifdef JSGC_ROOT_ANALYSIS
 void *
-js::gc::IsAddressableGCThing(JSRuntime *rt, uintptr_t w)
+js::gc::GetAddressableGCThing(JSRuntime *rt, uintptr_t w)
 {
     void *thing;
     ArenaHeader *aheader;
