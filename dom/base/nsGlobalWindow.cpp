@@ -3627,9 +3627,9 @@ nsGlobalWindow::GetInnerWidth(int32_t* aInnerWidth)
 {
   FORWARD_TO_OUTER(GetInnerWidth, (aInnerWidth), NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_STATE(mDocShell);
-
   EnsureSizeUpToDate();
+
+  NS_ENSURE_STATE(mDocShell);
 
   nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
@@ -3695,9 +3695,9 @@ nsGlobalWindow::GetInnerHeight(int32_t* aInnerHeight)
 {
   FORWARD_TO_OUTER(GetInnerHeight, (aInnerHeight), NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_STATE(mDocShell);
-
   EnsureSizeUpToDate();
+
+  NS_ENSURE_STATE(mDocShell);
 
   nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
