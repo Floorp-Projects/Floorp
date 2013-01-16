@@ -3855,6 +3855,7 @@ js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
         for (size_t i = 0; i < dstlen; i++)
             dst[i] = (char) src[i];
         if (maybecx) {
+            AutoSuppressGC suppress(maybecx);
             JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
                                  JSMSG_BUFFER_TOO_SMALL);
         }
@@ -3876,6 +3877,7 @@ js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
             for (size_t i = 0; i < dstlen; i++)
                 dst[i] = (unsigned char) src[i];
             if (maybecx) {
+                AutoSuppressGC suppress(maybecx);
                 JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
                                      JSMSG_BUFFER_TOO_SMALL);
             }
@@ -3892,6 +3894,10 @@ bool
 js::InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
                               jschar *dst, size_t *dstlenp)
 {
+    mozilla::Maybe<AutoSuppressGC> suppress;
+    if (cx)
+        suppress.construct(cx);
+
     size_t dstlen, origDstlen, offset, j, n;
     uint32_t v;
 
