@@ -3874,8 +3874,9 @@ nsGlobalWindow::GetScreenX(int32_t* aScreenX)
 nsRect
 nsGlobalWindow::GetInnerScreenRect()
 {
-  if (!mDocShell)
+  if (!mDocShell) {
     return nsRect();
+  }
 
   nsGlobalWindow* rootWindow =
     static_cast<nsGlobalWindow*>(GetPrivateRoot());
@@ -3883,12 +3884,18 @@ nsGlobalWindow::GetInnerScreenRect()
     rootWindow->FlushPendingNotifications(Flush_Layout);
   }
 
+  if (!mDocShell) {
+    return nsRect();
+  }
+
   nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
-  if (!presShell)
+  if (!presShell) {
     return nsRect();
+  }
   nsIFrame* rootFrame = presShell->GetRootFrame();
-  if (!rootFrame)
+  if (!rootFrame) {
     return nsRect();
+  }
 
   return rootFrame->GetScreenRectInAppUnits();
 }
