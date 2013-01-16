@@ -51,7 +51,7 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    void *thing = IsAddressableGCThing(rt, *w);
+    void *thing = GetAddressableGCThing(rt, *w);
     if (!thing)
         return;
 
