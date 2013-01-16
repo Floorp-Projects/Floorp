@@ -356,6 +356,7 @@ BluetoothHfpManager::Reset()
   sCINDItems[CINDType::CALLSETUP].value = CallSetupState::NO_CALLSETUP;
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::NO_CALLHELD;
 
+  mCCWA = false;
   mCLIP = false;
   mCMEE = false;
   mCMER = false;
@@ -806,7 +807,16 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       goto respond_with_ok;
     }
 
-    mCLIP = (atCommandValues[0].EqualsLiteral("1"));
+    mCLIP = atCommandValues[0].EqualsLiteral("1");
+  } else if (msg.Find("AT+CCWA=") != -1) {
+    ParseAtCommand(msg, 8, atCommandValues);
+
+    if (atCommandValues.IsEmpty()) {
+      NS_WARNING("Could't get the value of command [AT+CCWA=]");
+      goto respond_with_ok;
+    }
+
+    mCCWA = atCommandValues[0].EqualsLiteral("1");
   } else if (msg.Find("AT+CKPD") != -1) {
     // For Headset Profile (HSP)
     switch (currentCallState) {
@@ -1074,13 +1084,26 @@ BluetoothHfpManager::SetupCIND(uint32_t aCallIndex, uint16_t aCallState,
     case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
       mCurrentCallArray[aCallIndex].mDirection = true;
       sCINDItems[CINDType::CALLSETUP].value = CallSetupState::INCOMING;
-      if (!aInitial) {
-        SendCommand("+CIEV: ", CINDType::CALLSETUP);
-      }
 
-      if (!mCurrentCallIndex) {
+      if (mCurrentCallIndex) {
+        if (mCCWA) {
+          nsAutoCString ccwaMsg("+CCWA: \"");
+          ccwaMsg += NS_ConvertUTF16toUTF8(aNumber).get();
+          ccwaMsg += "\",";
+          ccwaMsg.AppendInt(mCurrentCallArray[aCallIndex].mType);
+          SendLine(ccwaMsg.get());
+        }
+
+        if (!aInitial) {
+          SendCommand("+CIEV: ", CINDType::CALLSETUP);
+        }
+      } else {
         // Start sending RING indicator to HF
         sStopSendingRingFlag = false;
+
+        if (!aInitial) {
+          SendCommand("+CIEV: ", CINDType::CALLSETUP);
+        }
 
         nsAutoString number(aNumber);
         if (!mCLIP) {
