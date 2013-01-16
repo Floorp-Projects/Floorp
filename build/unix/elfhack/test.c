@@ -122,8 +122,12 @@ int print_status() {
 /* On ARM, this creates a .tbss section before .init_array, which
  * elfhack could then pick instead of .init_array.
  * Also, when .tbss is big enough, elfhack may wrongfully consider
- * following sections as part of the PT_TLS segment. */
-__thread int foo[1024];
+ * following sections as part of the PT_TLS segment.
+ * Finally, gold makes TLS segments end on an aligned virtual address,
+ * even when the underlying section ends before that, and elfhack
+ * sanity checks may yield an error. */
+__thread int foo;
+__thread long long int bar[512];
 
 void end_test() {
     static int count = 0;

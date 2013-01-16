@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=830600
+-->
+<head>
+  <title>Test for Bug 830600</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=830600">Mozilla Bug 830600</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <input type="text" id="t1" />
+  <pre id="test">
+    <script type="application/javascript;version=1.7">
+
+      /** Test for Bug 830600 **/
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(function() {
+        const Ci = Components.interfaces;
+        function test(str, expected, callback) {
+          var t = document.getElementById("t1");
+          t.QueryInterface(Ci.nsIDOMNSEditableElement);
+          t.focus();
+          t.value = "";
+          t.editor.QueryInterface(Ci.nsIPlaintextEditor);
+          var origNewlineHandling = t.editor.newlineHandling;
+          t.editor.newlineHandling = Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace
+          SimpleTest.waitForClipboard(str,
+            function() {
+              Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                        .getService(Components.interfaces.nsIClipboardHelper)
+                        .copyString(str, document);
+            },
+            function() {
+              synthesizeKey("V", {accelKey: true});
+              is(t.value, expected, "New line handling works correctly");
+              t.value = "";
+              callback();
+            },
+            function() {
+              ok(false, "Failed to copy the string");
+              SimpleTest.finish();
+            }
+          );
+        }
+
+        function runNextTest() {
+          if (tests.length) {
+            var currentTest = tests.shift();
+            test(currentTest[0], currentTest[1], runNextTest);
+          } else {
+            SimpleTest.finish();
+          }
+        }
+
+        var tests = [
+          ["abc", "abc"],
+          ["\n", ""],
+          [" \n", ""],
+          ["\n ", ""],
+          [" \n ", ""],
+          [" a", " a"],
+          ["a ", "a "],
+          [" a ", " a "],
+          [" \nabc", "abc"],
+          ["\n abc", "abc"],
+          [" \n abc", "abc"],
+          [" \nabc ", "abc "],
+          ["\n abc ", "abc "],
+          [" \n abc ", "abc "],
+          ["abc\n ", "abc"],
+          ["abc \n", "abc"],
+          ["abc \n ", "abc"],
+          [" abc\n ", " abc"],
+          [" abc \n", " abc"],
+          [" abc \n ", " abc"],
+          [" abc  \n  def \n ", " abcdef"],
+          ["\n abc  \n  def \n ", "abcdef"],
+          [" \n abc  \n  def ", "abcdef "],
+          [" abc\n\ndef ", " abcdef "],
+          [" abc \n\n def ", " abcdef "],
+        ];
+
+        runNextTest();
+      });
+
+   </script>
+  </pre>
+</body>
+</html>

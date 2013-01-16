@@ -1439,6 +1439,7 @@ ic::SplatApplyArgs(VMFrame &f)
         /* Steps 7-8. */
         f.regs.fp()->forEachUnaliasedActual(CopyTo(f.regs.sp));
 
+        f.regs.fp()->setJitRevisedStack();
         f.regs.sp += length;
         f.u.call.dynamicArgc = length;
         return true;
@@ -1483,6 +1484,7 @@ ic::SplatApplyArgs(VMFrame &f)
         MakeRangeGCSafe(f.regs.sp, delta);
     }
 
+    f.regs.fp()->setJitRevisedStack();
     f.regs.sp += delta;
 
     /* Steps 7-8. */
