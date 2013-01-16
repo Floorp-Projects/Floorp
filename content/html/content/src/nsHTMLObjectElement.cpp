@@ -24,21 +24,21 @@
 #include "nsIConstraintValidation.h"
 #include "nsIWidget.h"
 
-namespace mozilla {
-namespace dom {
+using namespace mozilla;
+using namespace mozilla::dom;
 
-class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
-                                  , public nsObjectLoadingContent
-                                  , public nsIDOMHTMLObjectElement
-                                  , public nsIConstraintValidation
-                                  , public nsIDOMGetSVGDocument
+class nsHTMLObjectElement : public nsGenericHTMLFormElement
+                          , public nsObjectLoadingContent
+                          , public nsIDOMHTMLObjectElement
+                          , public nsIConstraintValidation
+                          , public nsIDOMGetSVGDocument
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                    FromParser aFromParser = NOT_FROM_PARSER);
-  virtual ~HTMLObjectElement();
+  nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                      mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
+  virtual ~nsHTMLObjectElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -106,7 +106,7 @@ public:
 
   void StartObjectLoad() { StartObjectLoad(true); }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLObjectElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLObjectElement,
                                                      nsGenericHTMLFormElement)
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -130,8 +130,12 @@ private:
   bool mIsDoneAddingChildren;
 };
 
-HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                     FromParser aFromParser)
+
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Object)
+
+
+nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                         FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)
 {
@@ -145,20 +149,20 @@ HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   AddStatesSilently(NS_EVENT_STATE_LOADING);
 }
 
-HTMLObjectElement::~HTMLObjectElement()
+nsHTMLObjectElement::~nsHTMLObjectElement()
 {
   UnregisterFreezableElement();
   DestroyImageLoadingContent();
 }
 
 bool
-HTMLObjectElement::IsDoneAddingChildren()
+nsHTMLObjectElement::IsDoneAddingChildren()
 {
   return mIsDoneAddingChildren;
 }
 
 void
-HTMLObjectElement::DoneAddingChildren(bool aHaveNotified)
+nsHTMLObjectElement::DoneAddingChildren(bool aHaveNotified)
 {
   mIsDoneAddingChildren = true;
 
@@ -169,62 +173,64 @@ HTMLObjectElement::DoneAddingChildren(bool aHaveNotified)
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLObjectElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLObjectElement,
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLObjectElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLObjectElement,
                                                   nsGenericHTMLFormElement)
   nsObjectLoadingContent::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLObjectElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLObjectElement, Element)
+NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, Element)
+NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, Element)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(HTMLObjectElement)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIDOMHTMLObjectElement)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, imgINotificationObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIRequestObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIStreamListener)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIFrameLoaderOwner)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIObjectLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIImageLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, imgIOnloadBlocker)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIInterfaceRequestor)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIChannelEventSink)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIConstraintValidation)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIDOMGetSVGDocument)
+DOMCI_NODE_DATA(HTMLObjectElement, nsHTMLObjectElement)
+
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLObjectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(nsHTMLObjectElement)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMHTMLObjectElement)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, imgINotificationObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIRequestObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIStreamListener)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIFrameLoaderOwner)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIObjectLoadingContent)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIImageLoadingContent)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, imgIOnloadBlocker)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIInterfaceRequestor)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIChannelEventSink)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIConstraintValidation)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMGetSVGDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLObjectElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLObjectElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLObjectElement)
 
-NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLObjectElement)
 
 // nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION(HTMLObjectElement)
+NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLObjectElement)
 
 NS_IMETHODIMP
-HTMLObjectElement::GetForm(nsIDOMHTMLFormElement **aForm)
+nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement **aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 void
-HTMLObjectElement::GetItemValueText(nsAString& aValue)
+nsHTMLObjectElement::GetItemValueText(nsAString& aValue)
 {
   GetData(aValue);
 }
 
 void
-HTMLObjectElement::SetItemValueText(const nsAString& aValue)
+nsHTMLObjectElement::SetItemValueText(const nsAString& aValue)
 {
   SetData(aValue);
 }
 
 nsresult
-HTMLObjectElement::BindToTree(nsIDocument *aDocument,
-                              nsIContent *aParent,
-                              nsIContent *aBindingParent,
-                              bool aCompileEventHandlers)
+nsHTMLObjectElement::BindToTree(nsIDocument *aDocument,
+                                nsIContent *aParent,
+                                nsIContent *aBindingParent,
+                                bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
                                                      aBindingParent,
@@ -243,7 +249,7 @@ HTMLObjectElement::BindToTree(nsIDocument *aDocument,
 
   // If we already have all the children, start the load.
   if (mIsDoneAddingChildren && !pluginDoc) {
-    void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
+    void (nsHTMLObjectElement::*start)() = &nsHTMLObjectElement::StartObjectLoad;
     nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, start));
   }
 
@@ -251,8 +257,8 @@ HTMLObjectElement::BindToTree(nsIDocument *aDocument,
 }
 
 void
-HTMLObjectElement::UnbindFromTree(bool aDeep,
-                                  bool aNullParent)
+nsHTMLObjectElement::UnbindFromTree(bool aDeep,
+                                    bool aNullParent)
 {
   nsObjectLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
@@ -261,9 +267,9 @@ HTMLObjectElement::UnbindFromTree(bool aDeep,
 
 
 nsresult
-HTMLObjectElement::SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
-                           nsIAtom *aPrefix, const nsAString &aValue,
-                           bool aNotify)
+nsHTMLObjectElement::SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
+                             nsIAtom *aPrefix, const nsAString &aValue,
+                             bool aNotify)
 {
   nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                                   aValue, aNotify);
@@ -285,8 +291,8 @@ HTMLObjectElement::SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
 }
 
 nsresult
-HTMLObjectElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify)
+nsHTMLObjectElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                               bool aNotify)
 {
   nsresult rv = nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID,
                                                     aAttribute, aNotify);
@@ -302,7 +308,7 @@ HTMLObjectElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 }
 
 bool
-HTMLObjectElement::IsFocusableForTabIndex()
+nsHTMLObjectElement::IsFocusableForTabIndex()
 {
   nsIDocument* doc = GetCurrentDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
@@ -315,8 +321,8 @@ HTMLObjectElement::IsFocusableForTabIndex()
 }
 
 bool
-HTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
-                                   bool *aIsFocusable, int32_t *aTabIndex)
+nsHTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
+                                     bool *aIsFocusable, int32_t *aTabIndex)
 {
   // TODO: this should probably be managed directly by IsHTMLFocusable.
   // See bug 597242.
@@ -360,7 +366,7 @@ HTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
 }
 
 nsIContent::IMEState
-HTMLObjectElement::GetDesiredIMEState()
+nsHTMLObjectElement::GetDesiredIMEState()
 {
   if (Type() == eType_Plugin) {
     return IMEState(IMEState::PLUGIN);
@@ -370,13 +376,13 @@ HTMLObjectElement::GetDesiredIMEState()
 }
 
 NS_IMETHODIMP
-HTMLObjectElement::Reset()
+nsHTMLObjectElement::Reset()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission)
+nsHTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission)
 {
   nsAutoString name;
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
@@ -406,31 +412,31 @@ HTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission)
   return aFormSubmission->AddNameValuePair(name, value);
 }
 
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Archive, archive)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Border, border)
-NS_IMPL_URI_ATTR_WITH_BASE(HTMLObjectElement, Code, code, codebase)
-NS_IMPL_URI_ATTR(HTMLObjectElement, CodeBase, codebase)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, CodeType, codetype)
-NS_IMPL_URI_ATTR_WITH_BASE(HTMLObjectElement, Data, data, codebase)
-NS_IMPL_BOOL_ATTR(HTMLObjectElement, Declare, declare)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Height, height)
-NS_IMPL_INT_ATTR(HTMLObjectElement, Hspace, hspace)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Name, name)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Standby, standby)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Type, type)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, UseMap, usemap)
-NS_IMPL_INT_ATTR(HTMLObjectElement, Vspace, vspace)
-NS_IMPL_STRING_ATTR(HTMLObjectElement, Width, width)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Archive, archive)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Border, border)
+NS_IMPL_URI_ATTR_WITH_BASE(nsHTMLObjectElement, Code, code, codebase)
+NS_IMPL_URI_ATTR(nsHTMLObjectElement, CodeBase, codebase)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, CodeType, codetype)
+NS_IMPL_URI_ATTR_WITH_BASE(nsHTMLObjectElement, Data, data, codebase)
+NS_IMPL_BOOL_ATTR(nsHTMLObjectElement, Declare, declare)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Height, height)
+NS_IMPL_INT_ATTR(nsHTMLObjectElement, Hspace, hspace)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Standby, standby)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
+NS_IMPL_INT_ATTR(nsHTMLObjectElement, Vspace, vspace)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Width, width)
 
 int32_t
-HTMLObjectElement::TabIndexDefault()
+nsHTMLObjectElement::TabIndexDefault()
 {
   return IsFocusableForTabIndex() ? 0 : -1;
 }
 
 NS_IMETHODIMP
-HTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
+nsHTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
 {
   NS_ENSURE_ARG_POINTER(aContentDocument);
 
@@ -450,16 +456,16 @@ HTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
 }
 
 NS_IMETHODIMP
-HTMLObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
+nsHTMLObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
 {
   return GetContentDocument(aResult);
 }
 
 bool
-HTMLObjectElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom *aAttribute,
-                                  const nsAString &aValue,
-                                  nsAttrValue &aResult)
+nsHTMLObjectElement::ParseAttribute(int32_t aNamespaceID,
+                                    nsIAtom *aAttribute,
+                                    const nsAString &aValue,
+                                    nsAttrValue &aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::align) {
@@ -486,7 +492,7 @@ MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
+nsHTMLObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap,
@@ -500,13 +506,13 @@ HTMLObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 
 
 nsMapRuleToAttributesFunc
-HTMLObjectElement::GetAttributeMappingFunction() const
+nsHTMLObjectElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
 
 void
-HTMLObjectElement::StartObjectLoad(bool aNotify)
+nsHTMLObjectElement::StartObjectLoad(bool aNotify)
 {
   // BindToTree can call us asynchronously, and we may be removed from the tree
   // in the interim
@@ -519,40 +525,33 @@ HTMLObjectElement::StartObjectLoad(bool aNotify)
 }
 
 nsEventStates
-HTMLObjectElement::IntrinsicState() const
+nsHTMLObjectElement::IntrinsicState() const
 {
   return nsGenericHTMLFormElement::IntrinsicState() | ObjectState();
 }
 
 uint32_t
-HTMLObjectElement::GetCapabilities() const
+nsHTMLObjectElement::GetCapabilities() const
 {
   return nsObjectLoadingContent::GetCapabilities() | eSupportClassID;
 }
 
 void
-HTMLObjectElement::DestroyContent()
+nsHTMLObjectElement::DestroyContent()
 {
   nsObjectLoadingContent::DestroyContent();
   nsGenericHTMLFormElement::DestroyContent();
 }
 
 nsresult
-HTMLObjectElement::CopyInnerTo(Element* aDest)
+nsHTMLObjectElement::CopyInnerTo(Element* aDest)
 {
   nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {
-    CreateStaticClone(static_cast<HTMLObjectElement*>(aDest));
+    CreateStaticClone(static_cast<nsHTMLObjectElement*>(aDest));
   }
 
   return rv;
 }
-
-} // namespace dom
-} // namespace mozilla
-
-DOMCI_NODE_DATA(HTMLObjectElement, mozilla::dom::HTMLObjectElement)
-
-NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Object)

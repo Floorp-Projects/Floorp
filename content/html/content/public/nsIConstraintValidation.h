@@ -10,13 +10,8 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
+class nsDOMValidityState;
 class nsIDOMValidityState;
-
-namespace mozilla {
-namespace dom {
-class ValidityState;
-}
-}
 
 #define NS_ICONSTRAINTVALIDATION_IID \
 { 0xca3824dc, 0x4f5c, 0x4878, \
@@ -35,7 +30,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONSTRAINTVALIDATION_IID);
 
-  friend class mozilla::dom::ValidityState;
+  friend class nsDOMValidityState;
 
   static const uint16_t sContentSpecifiedMaxLengthMessage;
 
@@ -95,7 +90,7 @@ private:
   /**
    * A pointer to the ValidityState object.
    */
-  nsRefPtr<mozilla::dom::ValidityState>  mValidity;
+  nsRefPtr<nsDOMValidityState>  mValidity;
 
   /**
    * Keeps track whether the element is barred from constraint validation.
