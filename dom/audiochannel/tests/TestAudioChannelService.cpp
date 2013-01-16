@@ -278,6 +278,69 @@ TestPriorities()
   NS_ENSURE_SUCCESS(rv, rv);
   TEST_ENSURE_BASE(!playing, "Test4: A ringer channel unvisible agent should not be playing when a public notification is playing");
 
+  // Settings visible the normal channel.
+  rv = normalAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Normal should be playing because visible.
+  rv = normalAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A normal channel visible agent should be playing");
+
+  // Settings visible the content channel.
+  rv = contentAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Content should be playing because visible.
+  rv = contentAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A content channel visible agent should be playing");
+
+  // Settings visible the notification channel.
+  rv = notificationAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notification should be playing because visible.
+  rv = notificationAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A notification channel visible agent should be playing");
+
+  // Settings visible the alarm channel.
+  rv = alarmAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Alarm should be playing because visible.
+  rv = alarmAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A alarm channel visible agent should be playing");
+
+  // Settings visible the telephony channel.
+  rv = telephonyAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Telephony should be playing because visible.
+  rv = telephonyAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A telephony channel visible agent should be playing");
+
+  // Settings visible the ringer channel.
+  rv = ringerAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Ringer should be playing because visible.
+  rv = ringerAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A ringer channel visible agent should be playing");
+
+  // Settings visible the pNotification channel.
+  rv = pNotificationAgent.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // pNotification should be playing because visible.
+  rv = pNotificationAgent.StartPlaying(&playing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playing, "Test4: A pNotification channel visible agent should be playing");
+
   return rv;
 }
 
