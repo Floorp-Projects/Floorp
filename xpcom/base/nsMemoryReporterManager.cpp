@@ -34,36 +34,6 @@ using namespace mozilla;
 #  include "mozmemory.h"
 #endif  // MOZ_MEMORY
 
-#ifdef XP_UNIX
-
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#define HAVE_PAGE_FAULT_REPORTERS 1
-static nsresult GetHardPageFaults(int64_t *n)
-{
-    struct rusage usage;
-    int err = getrusage(RUSAGE_SELF, &usage);
-    if (err != 0) {
-        return NS_ERROR_FAILURE;
-    }
-    *n = usage.ru_majflt;
-    return NS_OK;
-}
-
-static nsresult GetSoftPageFaults(int64_t *n)
-{
-    struct rusage usage;
-    int err = getrusage(RUSAGE_SELF, &usage);
-    if (err != 0) {
-        return NS_ERROR_FAILURE;
-    }
-    *n = usage.ru_minflt;
-    return NS_OK;
-}
-
-#endif  // HAVE_PAGE_FAULT_REPORTERS
-
 #if defined(XP_LINUX)
 
 #include <unistd.h>
@@ -81,7 +51,7 @@ static nsresult GetProcSelfStatmField(int field, int64_t *n)
         if (nread == MAX_FIELD) {
             *n = fields[field] * getpagesize();
             return NS_OK;
-        } 
+        }
     }
     return NS_ERROR_FAILURE;
 }
@@ -356,101 +326,148 @@ static nsresult GetResidentFast(int64_t *n)
 }
 
 #define HAVE_PRIVATE_REPORTER
-static nsresult GetPrivate(int64_t *n)
+class PrivateReporter MOZ_FINAL : public MemoryReporterBase
 {
-    PROCESS_MEMORY_COUNTERS_EX pmcex;
-    pmcex.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
+public:
+    PrivateReporter()
+      : MemoryReporterBase("private", KIND_OTHER, UNITS_BYTES,
+"Memory that cannot be shared with other processes, including memory that is "
+"committed and marked MEM_PRIVATE, data that is not mapped, and executable "
+"pages that have been written to.")
+    {}
 
-    if (!GetProcessMemoryInfo(GetCurrentProcess(),
-                              (PPROCESS_MEMORY_COUNTERS) &pmcex, sizeof(pmcex)))
+    NS_IMETHOD GetAmount(int64_t *aAmount)
     {
-        return NS_ERROR_FAILURE;
+        PROCESS_MEMORY_COUNTERS_EX pmcex;
+        pmcex.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
+
+        if (!GetProcessMemoryInfo(
+                GetCurrentProcess(),
+                (PPROCESS_MEMORY_COUNTERS) &pmcex, sizeof(pmcex))) {
+            return NS_ERROR_FAILURE;
+        }
+
+        *aAmount = pmcex.PrivateUsage;
+        return NS_OK;
     }
-
-    *n = pmcex.PrivateUsage;
-    return NS_OK;
-}
-
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Private,
-    "private",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetPrivate,
-    "Memory that cannot be shared with other processes, including memory that "
-    "is committed and marked MEM_PRIVATE, data that is not mapped, and "
-    "executable pages that have been written to.")
+};
 
 #endif  // XP_<PLATFORM>
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Vsize,
-    "vsize",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetVsize,
-    "Memory mapped by the process, including code and data segments, the "
-    "heap, thread stacks, memory explicitly mapped by the process via mmap "
-    "and similar operations, and memory shared with other processes. "
-    "This is the vsize figure as reported by 'top' and 'ps'.  This figure is of "
-    "limited use on Mac, where processes share huge amounts of memory with one "
-    "another.  But even on other operating systems, 'resident' is a much better "
-    "measure of the memory resources used by the process.")
+class VsizeReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    VsizeReporter()
+      : MemoryReporterBase("vsize", KIND_OTHER, UNITS_BYTES,
+"Memory mapped by the process, including code and data segments, the heap, "
+"thread stacks, memory explicitly mapped by the process via mmap and similar "
+"operations, and memory shared with other processes. This is the vsize figure "
+"as reported by 'top' and 'ps'.  This figure is of limited use on Mac, where "
+"processes share huge amounts of memory with one another.  But even on other "
+"operating systems, 'resident' is a much better measure of the memory "
+"resources used by the process.")
+    {}
 
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Resident,
-    "resident",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetResident,
-    "Memory mapped by the process that is present in physical memory, "
-    "also known as the resident set size (RSS).  This is the best single "
-    "figure to use when considering the memory resources used by the process, "
-    "but it depends both on other processes being run and details of the OS "
-    "kernel and so is best used for comparing the memory usage of a single "
-    "process at different points in time.")
+    NS_IMETHOD GetAmount(int64_t *aAmount) { return GetVsize(aAmount); }
+};
 
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(ResidentFast,
-    "resident-fast",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetResidentFast,
-    "This is the same measurement as 'resident', but it tries to be as fast as "
-    "possible at the expense of accuracy.  On most platforms this is identical to "
-    "the 'resident' measurement, but on Mac it may over-count.  You should use "
-    "'resident-fast' where you care about latency of collection (e.g. in "
-    "telemetry).  Otherwise you should use 'resident'.")
+class ResidentReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    ResidentReporter()
+      : MemoryReporterBase("resident", KIND_OTHER, UNITS_BYTES,
+"Memory mapped by the process that is present in physical memory, also known "
+"as the resident set size (RSS).  This is the best single figure to use when "
+"considering the memory resources used by the process, but it depends both on "
+"other processes being run and details of the OS kernel and so is best used "
+"for comparing the memory usage of a single process at different points in "
+"time.")
+    {}
+
+    NS_IMETHOD GetAmount(int64_t *aAmount) { return GetResident(aAmount); }
+};
+
+class ResidentFastReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    ResidentFastReporter()
+      : MemoryReporterBase("resident-fast", KIND_OTHER, UNITS_BYTES,
+"This is the same measurement as 'resident', but it tries to be as fast as "
+"possible at the expense of accuracy.  On most platforms this is identical to "
+"the 'resident' measurement, but on Mac it may over-count.  You should use "
+"'resident-fast' where you care about latency of collection (e.g. in "
+"telemetry).  Otherwise you should use 'resident'.")
+    {}
+
+    NS_IMETHOD GetAmount(int64_t *aAmount) { return GetResidentFast(aAmount); }
+};
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
-#ifdef HAVE_PAGE_FAULT_REPORTERS
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(PageFaultsSoft,
-    "page-faults-soft",
-    KIND_OTHER,
-    UNITS_COUNT_CUMULATIVE,
-    GetSoftPageFaults,
-    "The number of soft page faults (also known as 'minor page faults') that "
-    "have occurred since the process started.  A soft page fault occurs when the "
-    "process tries to access a page which is present in physical memory but is "
-    "not mapped into the process's address space.  For instance, a process might "
-    "observe soft page faults when it loads a shared library which is already "
-    "present in physical memory. A process may experience many thousands of soft "
-    "page faults even when the machine has plenty of available physical memory, "
-    "and because the OS services a soft page fault without accessing the disk, "
-    "they impact performance much less than hard page faults.")
+#ifdef XP_UNIX
 
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
-    "page-faults-hard",
-    KIND_OTHER,
-    UNITS_COUNT_CUMULATIVE,
-    GetHardPageFaults,
-    "The number of hard page faults (also known as 'major page faults') that "
-    "have occurred since the process started.  A hard page fault occurs when a "
-    "process tries to access a page which is not present in physical memory. "
-    "The operating system must access the disk in order to fulfill a hard page "
-    "fault. When memory is plentiful, you should see very few hard page faults. "
-    "But if the process tries to use more memory than your machine has "
-    "available, you may see many thousands of hard page faults. Because "
-    "accessing the disk is up to a million times slower than accessing RAM, "
-    "the program may run very slowly when it is experiencing more than 100 or "
-    "so hard page faults a second.")
+#include <sys/time.h>
+#include <sys/resource.h>
+
+#define HAVE_PAGE_FAULT_REPORTERS 1
+
+class PageFaultsSoftReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    PageFaultsSoftReporter()
+      : MemoryReporterBase("page-faults-soft", KIND_OTHER,
+                           UNITS_COUNT_CUMULATIVE,
+"The number of soft page faults (also known as 'minor page faults') that "
+"have occurred since the process started.  A soft page fault occurs when the "
+"process tries to access a page which is present in physical memory but is "
+"not mapped into the process's address space.  For instance, a process might "
+"observe soft page faults when it loads a shared library which is already "
+"present in physical memory. A process may experience many thousands of soft "
+"page faults even when the machine has plenty of available physical memory, "
+"and because the OS services a soft page fault without accessing the disk, "
+"they impact performance much less than hard page faults.")
+    {}
+
+    NS_IMETHOD GetAmount(int64_t *aAmount)
+    {
+        struct rusage usage;
+        int err = getrusage(RUSAGE_SELF, &usage);
+        if (err != 0) {
+            return NS_ERROR_FAILURE;
+        }
+        *aAmount = usage.ru_minflt;
+        return NS_OK;
+    }
+};
+
+class PageFaultsHardReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    PageFaultsHardReporter()
+      : MemoryReporterBase("page-faults-hard", KIND_OTHER,
+                           UNITS_COUNT_CUMULATIVE,
+"The number of hard page faults (also known as 'major page faults') that have "
+"occurred since the process started.  A hard page fault occurs when a process "
+"tries to access a page which is not present in physical memory. The "
+"operating system must access the disk in order to fulfill a hard page fault. "
+"When memory is plentiful, you should see very few hard page faults. But if "
+"the process tries to use more memory than your machine has available, you "
+"may see many thousands of hard page faults. Because accessing the disk is up "
+"to a million times slower than accessing RAM, the program may run very "
+"slowly when it is experiencing more than 100 or so hard page faults a second.")
+    {}
+
+    NS_IMETHOD GetAmount(int64_t *aAmount)
+    {
+        struct rusage usage;
+        int err = getrusage(RUSAGE_SELF, &usage);
+        if (err != 0) {
+            return NS_ERROR_FAILURE;
+        }
+        *aAmount = usage.ru_majflt;
+        return NS_OK;
+    }
+};
 #endif  // HAVE_PAGE_FAULT_REPORTERS
 
 /**
@@ -459,159 +476,171 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
  ** at least -- on OSX, there are sometimes other zones in use).
  **/
 
-#if HAVE_JEMALLOC_STATS
+#ifdef HAVE_JEMALLOC_STATS
 
-static int64_t GetHeapUnused()
+class HeapCommittedReporter MOZ_FINAL : public MemoryReporterBase
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) (stats.mapped - stats.allocated);
-}
+public:
+    HeapCommittedReporter()
+      : MemoryReporterBase("heap-committed", KIND_OTHER, UNITS_BYTES,
+"Memory mapped by the heap allocator that is committed, i.e. in physical "
+"memory or paged to disk.  When 'heap-committed' is larger than "
+"'heap-allocated', the difference between the two values is likely due to "
+"external fragmentation; that is, the allocator allocated a large block of "
+"memory and is unable to decommit it because a small part of that block is "
+"currently in use.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) stats.committed;
+    }
+};
 
-static int64_t GetHeapAllocated()
+class HeapCommittedUnusedReporter MOZ_FINAL : public MemoryReporterBase
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) stats.allocated;
-}
+public:
+    HeapCommittedUnusedReporter()
+      : MemoryReporterBase("heap-committed-unused", KIND_OTHER, UNITS_BYTES,
+"Committed bytes which do not correspond to an active allocation; i.e., "
+"'heap-committed' - 'heap-allocated'.  Although the allocator will waste some "
+"space under any circumstances, a large value here may indicate that the "
+"heap is highly fragmented.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return stats.committed - stats.allocated;
+    }
+};
 
-static int64_t GetHeapCommitted()
+class HeapCommittedUnusedRatioReporter MOZ_FINAL : public MemoryReporterBase
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) stats.committed;
-}
+public:
+    HeapCommittedUnusedRatioReporter()
+      : MemoryReporterBase("heap-committed-unused-ratio", KIND_OTHER,
+                           UNITS_PERCENTAGE,
+"Ratio of committed, unused bytes to allocated bytes; i.e., "
+"'heap-committed-unused' / 'heap-allocated'.  This measures the overhead of "
+"the heap allocator relative to amount of memory allocated.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) 10000 * (stats.committed - stats.allocated) /
+                                  ((double)stats.allocated);
+    }
+};
 
-static int64_t GetHeapCommittedUnused()
+class HeapDirtyReporter MOZ_FINAL : public MemoryReporterBase
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return stats.committed - stats.allocated;
-}
+public:
+    HeapDirtyReporter()
+      : MemoryReporterBase("heap-dirty", KIND_OTHER, UNITS_BYTES,
+"Memory which the allocator could return to the operating system, but hasn't. "
+"The allocator keeps this memory around as an optimization, so it doesn't "
+"have to ask the OS the next time it needs to fulfill a request. This value "
+"is typically not larger than a few megabytes.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) stats.dirty;
+    }
+};
 
-static int64_t GetHeapCommittedUnusedRatio()
+class HeapUnusedReporter MOZ_FINAL : public MemoryReporterBase
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) 10000 * (stats.committed - stats.allocated) /
-                              ((double)stats.allocated);
-}
+public:
+    HeapUnusedReporter()
+      : MemoryReporterBase("heap-unused", KIND_OTHER, UNITS_BYTES,
+"Memory mapped by the heap allocator that is not part of an active "
+"allocation. Much of this memory may be uncommitted -- that is, it does not "
+"take up space in physical memory or in the swap file.")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) (stats.mapped - stats.allocated);
+    }
+};
 
-static int64_t GetHeapDirty()
+class HeapAllocatedReporter MOZ_FINAL : public MemoryReporterBase
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) stats.dirty;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
-    "heap-committed",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetHeapCommitted,
-    "Memory mapped by the heap allocator that is committed, i.e. in physical "
-    "memory or paged to disk.  When heap-committed is larger than "
-    "heap-allocated, the difference between the two values is likely due to "
-    "external fragmentation; that is, the allocator allocated a large block of "
-    "memory and is unable to decommit it because a small part of that block is "
-    "currently in use.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedUnused,
-    "heap-committed-unused",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetHeapCommittedUnused,
-    "Committed bytes which do not correspond to an active allocation; i.e., "
-    "'heap-committed' - 'heap-allocated'.  Although the allocator will waste some "
-    "space under any circumstances, a large value here may indicate that the "
-    "heap is highly fragmented.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedUnusedRatio,
-    "heap-committed-unused-ratio",
-    KIND_OTHER,
-    UNITS_PERCENTAGE,
-    GetHeapCommittedUnusedRatio,
-    "Ratio of committed, unused bytes to allocated bytes; i.e., "
-    "'heap-committed-unused' / 'heap-allocated'.  This measures the overhead "
-    "of the heap allocator relative to amount of memory allocated.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
-    "heap-dirty",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetHeapDirty,
-    "Memory which the allocator could return to the operating system, but "
-    "hasn't.  The allocator keeps this memory around as an optimization, so it "
-    "doesn't have to ask the OS the next time it needs to fulfill a request. "
-    "This value is typically not larger than a few megabytes.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(HeapUnused,
-    "heap-unused",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetHeapUnused,
-    "Memory mapped by the heap allocator that is not part of an active "
-    "allocation. Much of this memory may be uncommitted -- that is, it does not "
-    "take up space in physical memory or in the swap file.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
-    "heap-allocated",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetHeapAllocated,
-    "Memory mapped by the heap allocator that is currently allocated to the "
-    "application.  This may exceed the amount of memory requested by the "
-    "application because the allocator regularly rounds up request sizes. (The "
-    "exact amount requested is not recorded.)")
+public:
+    HeapAllocatedReporter()
+      : MemoryReporterBase("heap-allocated", KIND_OTHER, UNITS_BYTES,
+"Memory mapped by the heap allocator that is currently allocated to the "
+"application.  This may exceed the amount of memory requested by the "
+"application because the allocator regularly rounds up request sizes. (The "
+"exact amount requested is not recorded.)")
+    {}
+private:
+    int64_t Amount()
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        return (int64_t) stats.allocated;
+    }
+};
 
 // The computation of "explicit" fails if "heap-allocated" isn't available,
 // which is why this is depends on HAVE_JEMALLOC_STATS.
-static nsresult GetExplicit(int64_t *n)
+class ExplicitReporter MOZ_FINAL : public MemoryReporterBase
 {
-    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nullptr)
-        return NS_ERROR_FAILURE;
+public:
+    ExplicitReporter()
+      : MemoryReporterBase("explicit", KIND_OTHER, UNITS_BYTES,
+"This is the same measurement as the root of the 'explicit' tree.  However, "
+"it is measured at a different time and so gives slightly different results.")
+    {}
 
-    return mgr->GetExplicit(n);
-}
+    NS_IMETHOD GetAmount(int64_t *aAmount)
+    {
+        nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+        if (mgr == nullptr)
+            return NS_ERROR_FAILURE;
 
-NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Explicit,
-    "explicit",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetExplicit,
-    "This is the same measurement as the root of the 'explicit' tree.  "
-    "However, it is measured at a different time and so gives slightly "
-    "different results.")
+        return mgr->GetExplicit(aAmount);
+    }
+};
 #endif  // HAVE_JEMALLOC_STATS
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(AtomTableMallocSizeOf)
-
-static int64_t GetAtomTableSize() {
-  return NS_SizeOfAtomTablesIncludingThis(AtomTableMallocSizeOf);
-}
 
 // Why is this here?  At first glance, you'd think it could be defined and
 // registered with nsMemoryReporterManager entirely within nsAtomTable.cpp.
 // However, the obvious time to register it is when the table is initialized,
 // and that happens before XPCOM components are initialized, which means the
 // NS_RegisterMemoryReporter call fails.  So instead we do it here.
-NS_MEMORY_REPORTER_IMPLEMENT(AtomTable,
-    "explicit/atom-tables",
-    KIND_HEAP,
-    UNITS_BYTES,
-    GetAtomTableSize,
-    "Memory used by the dynamic and static atoms tables.")
+class AtomTablesReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    AtomTablesReporter()
+      : MemoryReporterBase("explicit/atom-tables", KIND_HEAP, UNITS_BYTES,
+"Memory used by the dynamic and static atoms tables.")
+    {}
+private:
+    int64_t Amount() { return NS_SizeOfAtomTablesIncludingThis(MallocSizeOf); }
+};
 
 #ifdef MOZ_DMD
 
 namespace mozilla {
 namespace dmd {
 
-class MemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
+class DMDMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 public:
-  MemoryReporter()
+  DMDMultiReporter()
   {}
 
   NS_DECL_ISUPPORTS
@@ -667,10 +696,9 @@ public:
     *n = 0;
     return NS_OK;
   }
-
 };
 
-NS_IMPL_ISUPPORTS1(MemoryReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(DMDMultiReporter, nsIMemoryMultiReporter)
 
 } // namespace dmd
 } // namespace mozilla
@@ -686,42 +714,40 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryReporterManager, nsIMemoryReporterManager)
 NS_IMETHODIMP
 nsMemoryReporterManager::Init()
 {
-#if HAVE_JEMALLOC_STATS && defined(XP_LINUX)
+#if defined(HAVE_JEMALLOC_STATS) && defined(XP_LINUX)
     if (!jemalloc_stats)
         return NS_ERROR_FAILURE;
 #endif
 
-#define REGISTER(_x)  RegisterReporter(new NS_MEMORY_REPORTER_NAME(_x))
-
 #ifdef HAVE_JEMALLOC_STATS
-    REGISTER(HeapAllocated);
-    REGISTER(HeapUnused);
-    REGISTER(HeapCommitted);
-    REGISTER(HeapCommittedUnused);
-    REGISTER(HeapCommittedUnusedRatio);
-    REGISTER(HeapDirty);
-    REGISTER(Explicit);
+    RegisterReporter(new HeapAllocatedReporter);
+    RegisterReporter(new HeapUnusedReporter);
+    RegisterReporter(new HeapCommittedReporter);
+    RegisterReporter(new HeapCommittedUnusedReporter);
+    RegisterReporter(new HeapCommittedUnusedRatioReporter);
+    RegisterReporter(new HeapDirtyReporter);
+    RegisterReporter(new ExplicitReporter);
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    REGISTER(Vsize);
-    REGISTER(Resident);
-    REGISTER(ResidentFast);
+    RegisterReporter(new VsizeReporter);
+    RegisterReporter(new ResidentReporter);
+    RegisterReporter(new ResidentFastReporter);
 #endif
 
 #ifdef HAVE_PAGE_FAULT_REPORTERS
-    REGISTER(PageFaultsSoft);
-    REGISTER(PageFaultsHard);
+    RegisterReporter(new PageFaultsSoftReporter);
+    RegisterReporter(new PageFaultsHardReporter);
 #endif
 
 #ifdef HAVE_PRIVATE_REPORTER
-    REGISTER(Private);
+    RegisterReporter(new PrivateReporter);
 #endif
 
-    REGISTER(AtomTable);
+    RegisterReporter(new AtomTablesReporter);
 
 #ifdef MOZ_DMD
-    RegisterMultiReporter(new mozilla::dmd::MemoryReporter);
+    RegisterMultiReporter(new mozilla::dmd::DMDMultiReporter);
 #endif
 
 #if defined(XP_LINUX)
@@ -803,7 +829,7 @@ nsMemoryReporterManager::UnregisterMultiReporter(nsIMemoryMultiReporter *reporte
 NS_IMETHODIMP
 nsMemoryReporterManager::GetResident(int64_t *aResident)
 {
-#if HAVE_VSIZE_AND_RESIDENT_REPORTERS
+#ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
     return ::GetResident(aResident);
 #else
     *aResident = 0;
