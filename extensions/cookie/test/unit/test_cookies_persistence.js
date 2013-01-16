@@ -60,13 +60,6 @@ function do_run_test() {
   do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 4);
   do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
-  // cleanse them
-  do_close_profile(test_generator, "shutdown-cleanse");
-  yield;
-  do_load_profile();
-  do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
-
   // test with cookies set to session-only
   Services.prefs.setIntPref("network.cookie.lifetimePolicy", 2);
   do_set_cookies(uri1, channel1, false, [1, 2, 3, 4]);
