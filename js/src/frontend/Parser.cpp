@@ -3702,13 +3702,6 @@ Parser::expressionStatement()
         if (!pn)
             return NULL;
 
-        /* Normalize empty statement to empty block for the decompiler. */
-        if (pn->isKind(PNK_SEMI) && !pn->pn_kid) {
-            pn->setKind(PNK_STATEMENTLIST);
-            pn->setArity(PN_LIST);
-            pn->makeEmpty();
-        }
-
         /* Pop the label, set pn_expr, and return early. */
         PopStatementPC(context, pc);
         pn2->setKind(PNK_COLON);
