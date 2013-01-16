@@ -12,10 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= storage
 
-ifndef MOZ_NATIVE_SQLITE
-DIRS		= ../db/sqlite3/src
-endif
-
 DIRS		+= public \
 		   src \
 		   build \
