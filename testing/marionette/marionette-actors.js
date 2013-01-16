@@ -328,7 +328,7 @@ MarionetteDriverActor.prototype = {
     let type = null;
     if (this.curFrame == null) {
       if (this.curBrowser == null) {
-        if (appName != "B2G" && this.context == "content") {
+        if (this.context == "content") {
           type = 'navigator:browser';
         }
         return Services.wm.getMostRecentWindow(type);
