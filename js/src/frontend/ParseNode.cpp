@@ -264,40 +264,44 @@ ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, Parser *parser)
 }
 
 ParseNode *
-ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right)
+ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right, Parser *parser)
 {
     if (!left || !right)
         return NULL;
 
     JS_ASSERT(left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC));
 
-    if (left->pn_arity != PN_LIST) {
+    ListNode *list;
+    if (left->pn_arity == PN_LIST) {
+        list = &left->as<ListNode>();
+    } else {
         ParseNode *pn1 = left->pn_left, *pn2 = left->pn_right;
-        left->setArity(PN_LIST);
-        left->pn_parens = false;
-        left->initList(pn1);
-        left->append(pn2);
+        list = parser->new_<ListNode>(kind, op, pn1);
+        if (!list)
+            return NULL;
+        list->append(pn2);
         if (kind == PNK_ADD) {
             if (pn1->isKind(PNK_STRING))
-                left->pn_xflags |= PNX_STRCAT;
+                list->pn_xflags |= PNX_STRCAT;
             else if (!pn1->isKind(PNK_NUMBER))
-                left->pn_xflags |= PNX_CANTFOLD;
+                list->pn_xflags |= PNX_CANTFOLD;
             if (pn2->isKind(PNK_STRING))
-                left->pn_xflags |= PNX_STRCAT;
+                list->pn_xflags |= PNX_STRCAT;
             else if (!pn2->isKind(PNK_NUMBER))
-                left->pn_xflags |= PNX_CANTFOLD;
+                list->pn_xflags |= PNX_CANTFOLD;
         }
     }
-    left->append(right);
-    left->pn_pos.end = right->pn_pos.end;
+
+    list->append(right);
+    list->pn_pos.end = right->pn_pos.end;
     if (kind == PNK_ADD) {
         if (right->isKind(PNK_STRING))
-            left->pn_xflags |= PNX_STRCAT;
+            list->pn_xflags |= PNX_STRCAT;
         else if (!right->isKind(PNK_NUMBER))
-            left->pn_xflags |= PNX_CANTFOLD;
+            list->pn_xflags |= PNX_CANTFOLD;
     }
 
-    return left;
+    return list;
 }
 
 ParseNode *
@@ -312,7 +316,7 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
      * a list to reduce js::FoldConstants and js::frontend::EmitTree recursion.
      */
     if (left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC))
-        return append(kind, op, left, right);
+        return append(kind, op, left, right, parser);
 
     /*
      * Fold constant addition immediately, to conserve node space and, what's
