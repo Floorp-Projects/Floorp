@@ -148,6 +148,7 @@ webidl_files = \
   SVGStyleElement.webidl \
   SVGSVGElement.webidl \
   SVGSwitchElement.webidl \
+  SVGSymbolElement.webidl \
   SVGTests.webidl \
   SVGTextContentElement.webidl \
   SVGTextElement.webidl \

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGSymbolElement.h"
+#include "mozilla/dom/SVGSymbolElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Symbol)
 
@@ -11,6 +12,12 @@ DOMCI_NODE_DATA(SVGSymbolElement, mozilla::dom::SVGSymbolElement)
 
 namespace mozilla {
 namespace dom {
+
+JSObject*
+SVGSymbolElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGSymbolElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -31,6 +38,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGSymbolElementBase)
 SVGSymbolElement::SVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGSymbolElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 
@@ -45,7 +53,16 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSymbolElement)
 /* readonly attribute nsIDOMSVGAnimatedRect viewBox; */
 NS_IMETHODIMP SVGSymbolElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
 {
-  return mViewBox.ToDOMAnimatedRect(aViewBox, this);
+  *aViewBox = ViewBox().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedRect>
+SVGSymbolElement::ViewBox()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedRect> rect;
+  mViewBox.ToDOMAnimatedRect(getter_AddRefs(rect), this);
+  return rect.forget();
 }
 
 /* readonly attribute SVGPreserveAspectRatio preserveAspectRatio; */
@@ -53,10 +70,16 @@ NS_IMETHODIMP
 SVGSymbolElement::GetPreserveAspectRatio(nsISupports
                                          **aPreserveAspectRatio)
 {
+  *aPreserveAspectRatio = PreserveAspectRatio().get();
+  return NS_OK;
+}
+
+already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
+SVGSymbolElement::PreserveAspectRatio()
+{
   nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> ratio;
   mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(getter_AddRefs(ratio), this);
-  ratio.forget(aPreserveAspectRatio);
-  return NS_OK;
+  return ratio.forget();
 }
 
 //----------------------------------------------------------------------
