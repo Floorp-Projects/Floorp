@@ -4,19 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/SVG2/
+ * http://www.w3.org/TR/SVG2/struct.html#InterfaceSVGSymbolElement
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedRect;
-
-[NoInterfaceObject]
-interface SVGFitToViewBox {
-  [Constant]
-  readonly attribute SVGAnimatedRect viewBox;
-  [Constant]
-  readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
+interface SVGSymbolElement : SVGElement {
 };
 
+SVGSymbolElement implements SVGFitToViewBox;
+SVGSymbolElement implements SVGTests;

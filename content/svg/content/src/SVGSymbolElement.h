@@ -31,6 +31,7 @@ protected:
   friend nsresult (::NS_NewSVGSymbolElement(nsIContent **aResult,
                                             already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   // interfaces:
@@ -52,6 +53,11 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+
 protected:
   virtual nsSVGViewBox *GetViewBox();
   virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
