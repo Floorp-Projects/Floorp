@@ -217,6 +217,7 @@ TabTarget.prototype = {
     this.tab.linkedBrowser.addProgressListener(this._webProgressListener);
     this.tab.addEventListener("TabClose", this);
     this.tab.parentNode.addEventListener("TabSelect", this);
+    this.tab.ownerDocument.defaultView.addEventListener("close", this);
     this._handleThreadState = this._handleThreadState.bind(this);
     this.on("thread-resumed", this._handleThreadState);
     this.on("thread-paused", this._handleThreadState);
@@ -228,6 +229,7 @@ TabTarget.prototype = {
   handleEvent: function (event) {
     switch (event.type) {
       case "TabClose":
+      case "close":
         this.destroy();
         break;
       case "TabSelect":
@@ -264,6 +266,7 @@ TabTarget.prototype = {
       this.tab.linkedBrowser.removeProgressListener(this._webProgressListener)
       this._webProgressListener.target = null;
       this._webProgressListener = null;
+      this.tab.ownerDocument.defaultView.removeEventListener("close", this);
       this.tab.removeEventListener("TabClose", this);
       this.tab.parentNode.removeEventListener("TabSelect", this);
       this.off("thread-resumed", this._handleThreadState);
