@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGPatternElement.h"
+#include "mozilla/dom/SVGPatternElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Pattern)
 
@@ -17,6 +18,12 @@ DOMCI_NODE_DATA(SVGPatternElement, mozilla::dom::SVGPatternElement)
 
 namespace mozilla {
 namespace dom {
+
+JSObject*
+SVGPatternElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGPatternElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //--------------------- Patterns ------------------------
 
@@ -65,6 +72,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGPatternElementBase)
 SVGPatternElement::SVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGPatternElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
@@ -78,18 +86,32 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPatternElement)
 /* readonly attribute nsIDOMSVGAnimatedRect viewBox; */
 NS_IMETHODIMP SVGPatternElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
 {
-  return mViewBox.ToDOMAnimatedRect(aViewBox, this);
+  *aViewBox = ViewBox().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedRect>
+SVGPatternElement::ViewBox()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedRect> rect;
+  mViewBox.ToDOMAnimatedRect(getter_AddRefs(rect), this);
+  return rect.forget();
 }
 
 /* readonly attribute SVGPreserveAspectRatio preserveAspectRatio; */
 NS_IMETHODIMP
-SVGPatternElement::GetPreserveAspectRatio(nsISupports
-                                          **aPreserveAspectRatio)
+SVGPatternElement::GetPreserveAspectRatio(nsISupports **aPreserveAspectRatio)
+{
+  *aPreserveAspectRatio = PreserveAspectRatio().get();
+  return NS_OK;
+}
+
+already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
+SVGPatternElement::PreserveAspectRatio()
 {
   nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> ratio;
   mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(getter_AddRefs(ratio), this);
-  ratio.forget(aPreserveAspectRatio);
-  return NS_OK;
+  return ratio.forget();
 }
 
 //----------------------------------------------------------------------
@@ -98,49 +120,96 @@ SVGPatternElement::GetPreserveAspectRatio(nsISupports
 /* readonly attribute nsIDOMSVGAnimatedEnumeration patternUnits; */
 NS_IMETHODIMP SVGPatternElement::GetPatternUnits(nsIDOMSVGAnimatedEnumeration * *aPatternUnits)
 {
-  return mEnumAttributes[PATTERNUNITS].ToDOMAnimatedEnum(aPatternUnits, this);
+  *aPatternUnits = PatternUnits().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGPatternElement::PatternUnits()
+{
+  return mEnumAttributes[PATTERNUNITS].ToDOMAnimatedEnum(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration patternContentUnits; */
 NS_IMETHODIMP SVGPatternElement::GetPatternContentUnits(nsIDOMSVGAnimatedEnumeration * *aPatternUnits)
 {
-  return mEnumAttributes[PATTERNCONTENTUNITS].ToDOMAnimatedEnum(aPatternUnits, this);
+  *aPatternUnits = PatternContentUnits().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGPatternElement::PatternContentUnits()
+{
+  return mEnumAttributes[PATTERNCONTENTUNITS].ToDOMAnimatedEnum(this);
 }
 
 /* readonly attribute nsISupports patternTransform; */
 NS_IMETHODIMP SVGPatternElement::GetPatternTransform(nsISupports * *aPatternTransform)
 {
+  *aPatternTransform = PatternTransform().get();
+  return NS_OK;
+}
+
+already_AddRefed<DOMSVGAnimatedTransformList>
+SVGPatternElement::PatternTransform()
+{
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
   // to allocate the SVGAnimatedTransformList if it hasn't already done so:
-  *aPatternTransform = DOMSVGAnimatedTransformList::GetDOMWrapper(
-                         GetAnimatedTransformList(DO_ALLOCATE), this).get();
-  return NS_OK;
+  return DOMSVGAnimatedTransformList::GetDOMWrapper(
+           GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP SVGPatternElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
+  *aX = X().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGPatternElement::X()
+{
+  return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP SVGPatternElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
+  *aY = Y().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGPatternElement::Y()
+{
+  return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP SVGPatternElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
+  *aWidth = Width().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGPatternElement::Width()
+{
+  return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP SVGPatternElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
+  *aHeight = Height().get();
+  return NS_OK;
 }
 
+already_AddRefed<nsIDOMSVGAnimatedLength>
+SVGPatternElement::Height()
+{
+  return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods:
@@ -149,7 +218,16 @@ NS_IMETHODIMP SVGPatternElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 NS_IMETHODIMP
 SVGPatternElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
+  *aHref = Href().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGPatternElement::Href()
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> href;
+  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
+  return href.forget();
 }
 
 //----------------------------------------------------------------------
@@ -188,10 +266,10 @@ SVGPatternElement::GetAnimatedTransformList(uint32_t aFlags)
 /* virtual */ bool
 SVGPatternElement::HasValidDimensions() const
 {
-  return mLengthAttributes[WIDTH].IsExplicitlySet() &&
-         mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[HEIGHT].IsExplicitlySet() &&
-         mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0;
+  return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
+         mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
+         mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
+         mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
 }
 
 nsSVGElement::LengthAttributesInfo

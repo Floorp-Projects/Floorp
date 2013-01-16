@@ -135,6 +135,7 @@ webidl_files = \
   SVGPathElement.webidl \
   SVGPathSeg.webidl \
   SVGPathSegList.webidl \
+  SVGPatternElement.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
   SVGPolygonElement.webidl \
