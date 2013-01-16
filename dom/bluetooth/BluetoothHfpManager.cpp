@@ -171,7 +171,7 @@ public:
   }
 };
 
-class GetVolumeTask : public nsISettingsServiceCallback
+class BluetoothHfpManager::GetVolumeTask : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -190,7 +190,7 @@ public:
     }
 
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->SetVolume(aResult.toNumber());
+    hfp->mCurrentVgs = aResult.toNumber();
 
     return NS_OK;
   }
@@ -203,7 +203,8 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(GetVolumeTask, nsISettingsServiceCallback);
+NS_IMPL_ISUPPORTS1(BluetoothHfpManager::GetVolumeTask,
+                   nsISettingsServiceCallback);
 
 NS_IMETHODIMP
 BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
@@ -249,15 +250,20 @@ public:
       return;
     }
 
-    gBluetoothHfpManager->SendLine("RING");
+    const char* kHfpCrlf = "\xd\xa";
+    nsAutoCString ringMsg(kHfpCrlf);
+    ringMsg += "RING";
+    ringMsg += kHfpCrlf;
+    gBluetoothHfpManager->SendSocketData(ringMsg);
 
     if (!mNumber.IsEmpty()) {
-      nsAutoCString resultCode("+CLIP: \"");
-      resultCode += mNumber;
-      resultCode += "\",";
-      resultCode.AppendInt(mType);
-
-      gBluetoothHfpManager->SendLine(resultCode.get());
+      nsAutoCString clipMsg(kHfpCrlf);
+      clipMsg += "+CLIP: \"";
+      clipMsg += mNumber;
+      clipMsg += "\",";
+      clipMsg.AppendInt(mType);
+      clipMsg += kHfpCrlf;
+      gBluetoothHfpManager->SendSocketData(clipMsg);
     }
 
     MessageLoop::current()->
@@ -300,7 +306,7 @@ CloseScoSocket()
   sco->Disconnect();
 }
 
-bool
+static bool
 IsValidDtmf(const char aChar) {
   // Valid DTMF: [*#0-9ABCD]
   if (aChar == '*' || aChar == '#') {
@@ -401,12 +407,6 @@ BluetoothHfpManager::Get()
 
   gBluetoothHfpManager = manager;
   return gBluetoothHfpManager;
-}
-
-void
-BluetoothHfpManager::SetVolume(const int aVolume)
-{
-  mCurrentVgs = aVolume;
 }
 
 void
