@@ -52,7 +52,7 @@ public class TabsPanel extends TabHost
     private Context mContext;
     private GeckoApp mActivity;
     private PanelView mPanel;
-    private TabsPanelToolbar mFooter;
+    private LinearLayout mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private static ImageButton mMenuButton;
@@ -144,7 +144,7 @@ public class TabsPanel extends TabHost
     }
 
     void initToolbar() {
-        mFooter = (TabsPanelToolbar) findViewById(R.id.tabs_panel_footer);
+        mFooter = (LinearLayout) findViewById(R.id.tabs_panel_footer);
 
         mTabWidget = (TabWidget) findViewById(android.R.id.tabs);
 
