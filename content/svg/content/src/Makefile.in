@@ -55,7 +55,6 @@ CPPSRCS		= \
 		nsSVGNumberPair.cpp \
 		nsSVGPathDataParser.cpp \
 		nsSVGPathGeometryElement.cpp \
-		nsSVGPatternElement.cpp \
 		nsSVGPolyElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
@@ -109,6 +108,7 @@ CPPSRCS		= \
 		SVGPathElement.cpp \
 		SVGPathSegUtils.cpp \
 		SVGPathSegListSMILType.cpp \
+		SVGPatternElement.cpp \
 		SVGPointList.cpp \
 		SVGPointListSMILType.cpp \
 		SVGPolygonElement.cpp \
@@ -177,6 +177,7 @@ EXPORTS_mozilla/dom = \
 	SVGMetadataElement.h \
 	SVGMPathElement.h \
 	SVGPathElement.h \
+	SVGPatternElement.h \
 	SVGPolygonElement.h \
 	SVGPolylineElement.h \
 	SVGRectElement.h \
