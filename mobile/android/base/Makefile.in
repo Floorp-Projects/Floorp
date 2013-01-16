@@ -565,7 +565,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/menu_pb.png \
   res/drawable/menu_panel_bg.9.png \
   res/drawable/menu_popup_bg.9.png \
-  res/drawable/menu_popup_arrow.png \
+  res/drawable/menu_popup_arrow_bottom.png \
+  res/drawable/menu_popup_arrow_top.png \
   res/drawable/menu_item_check.png \
   res/drawable/menu_item_more.png \
   res/drawable/menu_item_uncheck.png \
@@ -660,7 +661,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_pb.png \
   res/drawable-hdpi/menu_panel_bg.9.png \
   res/drawable-hdpi/menu_popup_bg.9.png \
-  res/drawable-hdpi/menu_popup_arrow.png \
+  res/drawable-hdpi/menu_popup_arrow_bottom.png \
+  res/drawable-hdpi/menu_popup_arrow_top.png \
   res/drawable-hdpi/menu_item_check.png \
   res/drawable-hdpi/menu_item_more.png \
   res/drawable-hdpi/menu_item_uncheck.png \
@@ -749,7 +751,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/menu_pb.png \
   res/drawable-xhdpi/menu_panel_bg.9.png \
   res/drawable-xhdpi/menu_popup_bg.9.png \
-  res/drawable-xhdpi/menu_popup_arrow.png \
+  res/drawable-xhdpi/menu_popup_arrow_bottom.png \
+  res/drawable-xhdpi/menu_popup_arrow_top.png \
   res/drawable-xhdpi/menu_item_check.png \
   res/drawable-xhdpi/menu_item_more.png \
   res/drawable-xhdpi/menu_item_uncheck.png \
