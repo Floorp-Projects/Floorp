@@ -59,6 +59,9 @@ public:
                       FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~nsHTMLButtonElement();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLButtonElement,
+                                           nsGenericHTMLFormElement)
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -151,6 +154,16 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 }
 
 // nsISupports
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLButtonElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLButtonElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLButtonElement,
+                                                nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, Element)
 NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, Element)

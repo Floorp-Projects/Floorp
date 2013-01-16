@@ -42,12 +42,14 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLFieldSetElement,
                                                 nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLFieldSetElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFieldSetElement,
                                                   nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
