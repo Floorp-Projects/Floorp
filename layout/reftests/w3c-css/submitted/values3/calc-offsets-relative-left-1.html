@@ -1,9 +1,16 @@
 <!DOCTYPE HTML>
-<title>Test for left:calc() on relatively positioned elements</title>
-<style>
+<html>
+<head>
+  <title>CSS Test: Test for left:calc() on relatively positioned elements</title>
+  <link rel="author" title="L. David Baron" href="http://dbaron.org/">
+  <link rel="help" href="http://www.w3.org/TR/css3-values/#calc-notation">
+  <meta name="flags" content="">
+<style type="text/css">
 body { margin: 0 100px; width: 100px }
 div[style] { background: blue; position: relative; height: 3px; }
 </style>
+</head>
+<body>
 
 <div style="left: calc(50px)"></div>
 <div style="left: calc(-50%)"></div>
@@ -11,3 +18,5 @@ div[style] { background: blue; position: relative; height: 3px; }
 <div style="left: calc(-150% / 2 + 30px)"></div>
 <div style="left: calc(40px + 10% - 20% / 2)"></div>
 <div style="left: calc(10% - 40px)"></div>
+</body>
+</html>
