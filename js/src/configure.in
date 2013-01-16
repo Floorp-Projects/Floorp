@@ -55,7 +55,6 @@ NSPR_VERSION=4
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 PERL_VERSION=5.006
-PYTHON_VERSION=2.7
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 
@@ -665,10 +664,7 @@ else
     AC_MSG_RESULT([yes])
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python)
-if test -z "$PYTHON"; then
-    AC_MSG_ERROR([python was not found in \$PATH])
-fi
+MOZ_PYTHON
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
@@ -1462,17 +1458,6 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 esac
-
-dnl We require version 2.7 of Python to build.
-AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION but not 3.x])
-changequote(,)
-$PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1] or sys.version[:2] != '2.')" $PYTHON_VERSION
-_python_res=$?
-changequote([,])
-if test "$_python_res" != 0; then
-    AC_MSG_ERROR([Python $PYTHON_VERSION or higher (but not Python 3.x) is required.])
-fi
-AC_MSG_RESULT([yes])
 
 dnl Check for using a custom <stdint.h> implementation
 dnl ========================================================
@@ -4268,7 +4253,6 @@ dnl win32 options
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
-AC_SUBST(PYTHON)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
