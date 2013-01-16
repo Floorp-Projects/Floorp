@@ -16,6 +16,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
 class BluetoothHfpManagerObserver;
+class Call;
 
 /**
  * These costants are defined in 4.33.2 "AT Capabilities Re-Used from GSM 07.07
@@ -60,10 +61,10 @@ public:
   void Disconnect();
   bool Listen();
 
-  void CallStateChanged(int aCallIndex, int aCallState,
-                        const char* aNumber, bool aIsActive);
-  void EnumerateCallState(int aCallIndex, int aCallState,
-                          const char* aNumber, bool aIsActive);
+  void CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
+                        const nsAString& aNumber, bool aIsActive);
+  void EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
+                          const nsAString& aNumber, bool aIsActive);
 
 private:
   class GetVolumeTask;
@@ -81,18 +82,19 @@ private:
   void Cleanup();
   void NotifyDialer(const nsAString& aCommand);
   void NotifySettings();
-  bool SendCommand(const char* aCommand, const int aValue);
+  void Reset();
+  void ResetCallArray();
+  bool SendCommand(const char* aCommand, const uint16_t aValue = 0);
   bool SendLine(const char* aMessage);
-  void SetupCIND(int aCallIndex, int aCallState,
-                 const char* aPhoneNumber, bool aInitial);
-
+  void SetupCIND(uint32_t aCallIndex, uint16_t aCallState,
+                 const nsAString& aNumber, bool aInitial);
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
   virtual void OnDisconnect() MOZ_OVERRIDE;
 
   int mCurrentVgs;
   int mCurrentVgm;
-  int mCurrentCallIndex;
+  uint32_t mCurrentCallIndex;
   bool mCLIP;
   bool mCMEE;
   bool mCMER;
@@ -100,7 +102,8 @@ private:
   nsString mDevicePath;
   nsString mMsisdn;
   enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
-  nsTArray<int> mCurrentCallStateArray;
+
+  nsTArray<Call> mCurrentCallArray;
   nsAutoPtr<BluetoothRilListener> mListener;
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
