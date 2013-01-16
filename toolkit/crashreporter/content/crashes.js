@@ -9,6 +9,9 @@ var reportsDir, submittedDir, pendingDir;
 var reportURL;
 
 Components.utils.import("resource://gre/modules/CrashSubmit.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+const buildID = Services.appinfo.appBuildID;
 
 function submitSuccess(dumpid, ret) {
   let link = document.getElementById(dumpid);
@@ -209,6 +212,17 @@ function clearReports() {
     var leaf = file.leafName;
     if (leaf.substr(0, 3) == "bp-" &&
         leaf.substr(-4) == ".txt") {
+      file.remove(false);
+    }
+  }
+  entries = reportsDir.directoryEntries;
+  var oneYearAgo = Date.now() - 31586000000;
+  while (entries.hasMoreElements()) {
+    var file = entries.getNext().QueryInterface(Ci.nsIFile);
+    var leaf = file.leafName;
+    if (leaf.substr(0, 11) == "InstallTime" &&
+        file.lastModifiedTime < oneYearAgo &&
+        leaf != "InstallTime" + buildID) {
       file.remove(false);
     }
   }
