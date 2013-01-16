@@ -1789,6 +1789,16 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     return NULL;
   }
 
+  // That might have ended up wrapping us already, due to the wonders
+  // of XBL.  Check for that, and bail out as needed.  Scope so we don't
+  // collide with the "obj" we declare in CreateBindingJSObject.
+  {
+    JSObject* obj = aCache->GetWrapper();
+    if (obj) {
+      return obj;
+    }
+  }
+
   JSAutoCompartment ac(aCx, parent);
   JSObject* global = JS_GetGlobalForObject(aCx, parent);
 %s

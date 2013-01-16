@@ -27,6 +27,9 @@
 #include "nsCRT.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
+#include "mozilla/DebugOnly.h"
+
+using namespace mozilla;
 
 // Yikes!  Casting a char to unichar can fill with ones!
 #define CHAR_TO_UNICHAR(c) ((PRUnichar)(const unsigned char)c)
@@ -1202,7 +1205,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
       if (matchAnchorNode != mIterNode)
       {
         nsCOMPtr<nsIContent> content (do_QueryInterface(matchAnchorNode));
-        nsresult rv = NS_ERROR_UNEXPECTED;
+        DebugOnly<nsresult> rv = NS_ERROR_UNEXPECTED;
         if (content)
           rv = mIterator->PositionAt(content);
         frag = 0;

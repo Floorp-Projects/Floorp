@@ -129,6 +129,19 @@ SPSProfiler::exit(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFu
         const char *str = profileString(cx, script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
         JS_ASSERT(str != NULL);
+
+        // Bug 822041
+        if (!stack_[*size_].js()) {
+            fprintf(stderr, "--- ABOUT TO FAIL ASSERTION ---\n");
+            fprintf(stderr, " stack=%p size=%d/%d\n", (void*) stack_, *size_, max_);
+            for (int32_t i = *size_; i >= 0; i--) {
+                if (stack_[i].js())
+                    fprintf(stderr, "  [%d] JS %s\n", i, stack_[i].label());
+                else
+                    fprintf(stderr, "  [%d] C line %d %s\n", i, stack_[i].line(), stack_[i].label());
+            }
+        }
+
         JS_ASSERT(stack_[*size_].js());
         JS_ASSERT(stack_[*size_].script() == script);
         JS_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);

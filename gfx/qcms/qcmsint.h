@@ -273,6 +273,15 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
                                           unsigned char *dest,
                                           size_t length);
 
+void qcms_transform_data_rgb_out_lut_altivec(qcms_transform *transform,
+                                             unsigned char *src,
+                                             unsigned char *dest,
+                                             size_t length);
+void qcms_transform_data_rgba_out_lut_altivec(qcms_transform *transform,
+                                              unsigned char *src,
+                                              unsigned char *dest,
+                                              size_t length);
+
 extern qcms_bool qcms_supports_iccv4;
 
 #ifdef NATIVE_OUTPUT

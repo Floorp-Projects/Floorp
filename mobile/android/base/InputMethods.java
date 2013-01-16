@@ -88,6 +88,6 @@ final class InputMethods {
     public static boolean needsSoftResetWorkaround(String inputMethod) {
         // Stock latin IME on Android 4.2 and above
         return Build.VERSION.SDK_INT >= 17 &&
-               inputMethod.equals(METHOD_STOCK_LATINIME);
+               METHOD_STOCK_LATINIME.equals(inputMethod);
     }
 }

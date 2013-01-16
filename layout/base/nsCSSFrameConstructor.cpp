@@ -8208,6 +8208,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       // the style resolution we will do for the frame construction
       // happens async when we're not in an animation restyle already,
       // problems could arise.
+      if (content->GetPrimaryFrame()) {
+        aTracker.RemoveFrameAndDescendants(content->GetPrimaryFrame());
+      }
       RecreateFramesForContent(content, false);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");

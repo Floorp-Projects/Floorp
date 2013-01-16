@@ -226,7 +226,7 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
                     errno = 0;
                     strtoul_result = strtoul(temp_p, &strtoul_end, 10);
 
-                    if (errno || temp_p == strtoul_end || strtoul_result > MAX_INSTANCES) {
+                    if (errno || temp_p == strtoul_end || strtoul_result > (MAX_CALLS - 1)) {
                         /*
                          * Call instance ID should not exceed max instances
                          * or calls.
