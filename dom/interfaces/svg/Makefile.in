@@ -46,7 +46,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \
 		nsIDOMSVGLineElement.idl \
-		nsIDOMSVGLocatable.idl \
 		nsIDOMSVGMarkerElement.idl \
 		nsIDOMSVGMaskElement.idl \
 		nsIDOMSVGMetadataElement.idl \
@@ -72,7 +71,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGTextPathElement.idl \
 		nsIDOMSVGTextPositionElem.idl \
 		nsIDOMSVGTitleElement.idl \
-		nsIDOMSVGTransformable.idl \
 		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUnitTypes.idl \
