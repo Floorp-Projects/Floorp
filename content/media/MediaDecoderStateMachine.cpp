@@ -109,9 +109,6 @@ static const uint32_t QUICK_BUFFERING_LOW_DATA_USECS = 1000000;
 // QUICK_BUFFERING_LOW_DATA_USECS.
 PR_STATIC_ASSERT(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS);
 
-// This value has been chosen empirically.
-static const uint32_t AUDIOSTREAM_MIN_WRITE_BEFORE_START_USECS = 200000;
-
 static TimeDuration UsecsToDuration(int64_t aUsecs) {
   return TimeDuration::FromMilliseconds(static_cast<double>(aUsecs) / USECS_PER_MS);
 }
@@ -955,19 +952,6 @@ bool MediaDecoderStateMachine::IsPlaying()
   return !mPlayStartTime.IsNull();
 }
 
-// If we have already written enough frames to the AudioStream, start the
-// playback.
-static void
-StartAudioStreamPlaybackIfNeeded(AudioStream* aStream)
-{
-  // We want to have enough data in the buffer to start the stream.
-  if (!aStream->IsStarted() &&
-      static_cast<double>(aStream->GetWritten()) / aStream->GetRate() >=
-      static_cast<double>(AUDIOSTREAM_MIN_WRITE_BEFORE_START_USECS) / USECS_PER_S) {
-    aStream->Start();
-  }
-}
-
 static void WriteSilence(AudioStream* aStream, uint32_t aFrames)
 {
   uint32_t numSamples = aFrames * aStream->GetChannels();
@@ -975,8 +959,6 @@ static void WriteSilence(AudioStream* aStream, uint32_t aFrames)
   buf.SetLength(numSamples);
   memset(buf.Elements(), 0, numSamples * sizeof(AudioDataValue));
   aStream->Write(buf.Elements(), aFrames);
-
-  StartAudioStreamPlaybackIfNeeded(aStream);
 }
 
 void MediaDecoderStateMachine::AudioLoop()
@@ -1126,11 +1108,6 @@ void MediaDecoderStateMachine::AudioLoop()
         mState != DECODER_STATE_SHUTDOWN &&
         !mStopAudioThread)
     {
-      // If the media was too short to trigger the start of the audio stream,
-      // start it now.
-      if (!mAudioStream->IsStarted()) {
-        mAudioStream->Start();
-      }
       // Last frame pushed to audio hardware, wait for the audio to finish,
       // before the audio thread terminates.
       bool seeking = false;
@@ -1234,8 +1211,6 @@ uint32_t MediaDecoderStateMachine::PlayFromAudioQueue(uint64_t aFrameOffset,
   }
   mAudioStream->Write(audio->mAudioData,
                       audio->mFrames);
-
-  StartAudioStreamPlaybackIfNeeded(mAudioStream);
 
   offset = audio->mOffset;
   frames = audio->mFrames;
