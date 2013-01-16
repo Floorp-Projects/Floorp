@@ -52,7 +52,7 @@ public class TabsPanel extends TabHost
     private Context mContext;
     private GeckoApp mActivity;
     private PanelView mPanel;
-    private TabsPanelToolbar mToolbar;
+    private TabsPanelToolbar mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private static ImageButton mMenuButton;
@@ -144,21 +144,21 @@ public class TabsPanel extends TabHost
     }
 
     void initToolbar() {
-        mToolbar = (TabsPanelToolbar) findViewById(R.id.toolbar);
+        mFooter = (TabsPanelToolbar) findViewById(R.id.tabs_panel_footer);
 
         mTabWidget = (TabWidget) findViewById(android.R.id.tabs);
 
-        mAddTab = (ImageButton) mToolbar.findViewById(R.id.add_tab);
+        mAddTab = (ImageButton) findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 TabsPanel.this.addTab();
             }
         });
 
-        mTabsSpinner = (Spinner) mToolbar.findViewById(R.id.tabs_menu);
+        mTabsSpinner = (Spinner) findViewById(R.id.tabs_menu);
         mTabsSpinner.setOnItemSelectedListener(this);
 
-        mMenuButton = (ImageButton) mToolbar.findViewById(R.id.menu);
+        mMenuButton = (ImageButton) findViewById(R.id.menu);
         mMenuButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View view) {
                 TabsPanel.this.openTabsMenu();
@@ -304,8 +304,6 @@ public class TabsPanel extends TabHost
                                                           (int) context.getResources().getDimension(R.dimen.browser_toolbar_height)));
 
             setOrientation(LinearLayout.HORIZONTAL);
-
-            LayoutInflater.from(context).inflate(R.layout.tabs_panel_toolbar_menu, this);
         }
 
         @Override
@@ -360,9 +358,15 @@ public class TabsPanel extends TabHost
         mPanel.show();
 
         if (mCurrentPanel == Panel.REMOTE_TABS) {
+            if (mFooter != null)
+                mFooter.setVisibility(View.GONE);
+
             mAddTab.setVisibility(View.INVISIBLE);
             mMenuButton.setVisibility(View.INVISIBLE);
         } else {
+            if (mFooter != null)
+                mFooter.setVisibility(View.VISIBLE);
+
             mAddTab.setVisibility(View.VISIBLE);
             mAddTab.setImageLevel(index);
             mMenuButton.setVisibility(View.VISIBLE);

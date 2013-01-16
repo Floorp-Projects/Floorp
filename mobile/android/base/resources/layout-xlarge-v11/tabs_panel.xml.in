@@ -8,7 +8,7 @@
        xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
     <LinearLayout android:layout_width="fill_parent"
-                  android:layout_height="wrap_content"
+                  android:layout_height="fill_parent"
                   android:orientation="vertical">
 
         <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
@@ -27,7 +27,8 @@
         <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
               android:id="@android:id/tabcontent"
               android:layout_width="fill_parent"
-              android:layout_height="wrap_content">
+              android:layout_height="0dip"
+              android:layout_weight="1.0">
 
             <org.mozilla.gecko.TabsTray android:id="@+id/normal_tabs"
                                         style="@style/TabsList"
@@ -48,6 +49,19 @@
                                           android:paddingLeft="@dimen/tabs_panel_list_padding"
                                           android:paddingRight="@dimen/tabs_panel_list_padding"
                                           android:scrollbarStyle="outsideOverlay"/>
+
+        </view>
+
+        <View android:layout_width="fill_parent"
+              android:layout_height="2dp"
+              android:background="#FF313131"/>
+
+        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+              android:id="@+id/tabs_panel_footer"
+              android:layout_width="fill_parent"
+              android:layout_height="@dimen/browser_toolbar_height">
+
+            <include layout="@layout/tabs_panel_footer"/>
 
         </view>
 

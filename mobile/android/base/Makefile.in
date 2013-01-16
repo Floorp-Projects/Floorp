@@ -254,6 +254,7 @@ FENNEC_PP_XML_FILES = \
   res/layout-xlarge-land-v11/abouthome_content.xml \
   res/layout-xlarge-v11/awesomebar_search.xml \
   res/layout-xlarge-v11/gecko_app.xml \
+  res/layout-xlarge-v11/tabs_panel.xml \
   res/xml/preferences.xml \
   res/xml/searchable.xml \
   res/menu/browser_app_menu.xml \
@@ -406,7 +407,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel_indicator.xml \
-  res/layout/tabs_panel_toolbar_menu.xml \
+  res/layout/tabs_panel_header.xml \
   res/layout/tabs_row.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
@@ -428,7 +429,8 @@ RES_LAYOUT_XLARGE_V11 = \
   res/layout-xlarge-v11/font_size_preference.xml \
   res/layout-xlarge-v11/remote_tabs_child.xml \
   res/layout-xlarge-v11/remote_tabs_group.xml \
-  res/layout-xlarge-v11/tabs_panel_toolbar_menu.xml \
+  res/layout-xlarge-v11/tabs_panel_header.xml \
+  res/layout-xlarge-v11/tabs_panel_footer.xml \
   res/layout-xlarge-v11/tabs_row.xml \
   $(NULL)
 
