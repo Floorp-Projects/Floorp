@@ -18,6 +18,7 @@
 
 class nsIContent;
 class nsINodeInfo;
+class nsSVGUseFrame;
 
 #define NS_SVG_USE_ELEMENT_IMPL_CID \
 { 0x55fb86fe, 0xd81f, 0x4ae4, \
@@ -40,12 +41,13 @@ class SVGUseElement MOZ_FINAL : public SVGUseElementBase,
                                 public nsIDOMSVGURIReference,
                                 public nsStubMutationObserver
 {
-  friend class nsSVGUseFrame;
+  friend class ::nsSVGUseFrame;
 protected:
   friend nsresult (::NS_NewSVGUseElement(nsIContent **aResult,
                                          already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~SVGUseElement();
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_USE_ELEMENT_IMPL_CID)
@@ -86,6 +88,14 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<nsIDOMSVGAnimatedLength> X();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
+  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+
 protected:
   class SourceReference : public nsReferencedElement {
   public:
@@ -116,7 +126,7 @@ protected:
   void TriggerReclone();
   void UnlinkSource();
 
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
