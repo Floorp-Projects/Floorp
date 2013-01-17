@@ -251,6 +251,15 @@ public:
     eIntID_WindowsClassic,
 
     /*
+     * A Boolean value to determine whether the current Windows desktop theme
+     * supports Aero Glass.
+     *
+     * This is Windows-specific and is not implemented on other platforms
+     * (will return the default of NS_ERROR_FAILURE).
+     */
+    eIntID_WindowsGlass,
+
+    /*
      * A Boolean value to determine whether the device is a touch enabled
      * device. Currently this is only supported by the Windows 7 Touch API.
      *
