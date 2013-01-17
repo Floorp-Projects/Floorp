@@ -11,8 +11,6 @@ function run_test()
 
 add_task(function test_execute()
 {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
   var testURI = uri("wyciwyg://nodontjudgeabookbyitscover");
 
   try
@@ -22,9 +20,4 @@ add_task(function test_execute()
   } catch (ex if ex && ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
     // Adding wyciwyg URIs should raise NS_ERROR_ILLEGAL_VALUE.
   }
-
-  // test codepath of docshell caller
-  histsvc.QueryInterface(Ci.nsIGlobalHistory2);
-  placeID = histsvc.addURI(testURI, false, false, null);
-  do_check_false(placeID > 0);
 });
