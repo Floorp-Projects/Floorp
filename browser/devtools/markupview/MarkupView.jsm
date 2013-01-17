@@ -784,6 +784,9 @@ function MarkupContainer(aMarkupView, aNode)
   }.bind(this), false);
 
   if (this.editor.closeElt) {
+    this.editor.closeElt.addEventListener("mousedown", function(evt) {
+      this.markup.navigate(this);
+    }.bind(this), false);
     this.codeBox.appendChild(this.editor.closeElt);
   }
 
