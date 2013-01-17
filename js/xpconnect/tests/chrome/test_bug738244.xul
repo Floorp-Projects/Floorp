@@ -43,6 +43,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         is(win.frame1.name, "frame1",
            "IFrames cannot be found by name on the window through xray");
 
+        is(win[0].name, "frame1",
+           "IFrames cannot be found by index on the window through xray");
+
+        win["1000"] = "foopy";
+        ok(!("1000" in win), "Shouldn't be able to add indexed expandos to xray");
+        
+        win["1000a"] = "foopy";
+        ok("1000a" in win, "Should be able to add named expandos to xray");
+
         SimpleTest.finish();
       }
 
