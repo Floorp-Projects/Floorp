@@ -44,15 +44,6 @@ public:
 
   virtual nsIScriptObjectPrincipal* GetObjectPrincipal();
 
-  virtual nsresult EvaluateString(const nsAString& aScript,
-                                  JSObject* aScopeObject,
-                                  nsIPrincipal *principal,
-                                  nsIPrincipal *originPrincipal,
-                                  const char *aURL,
-                                  uint32_t aLineNo,
-                                  JSVersion aVersion,
-                                  nsAString *aRetValue,
-                                  bool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
                                            JSObject& aScopeObject,
                                            JS::CompileOptions &aOptions,
