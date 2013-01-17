@@ -17,7 +17,7 @@ class nsDOMMultipartFile : public nsDOMFile,
 {
 public:
   // Create as a file
-  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs,
+  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
                      const nsAString& aName,
                      const nsAString& aContentType)
     : nsDOMFile(aName, aContentType, UINT64_MAX),
@@ -34,15 +34,14 @@ public:
   }
 
   // Create as a file to be later initialized
-  nsDOMMultipartFile(const nsAString& aName,
-                     const nsAString& aContentType)
-    : nsDOMFile(aName, aContentType, UINT64_MAX)
+  nsDOMMultipartFile(const nsAString& aName)
+    : nsDOMFile(aName, EmptyString(), UINT64_MAX)
   {
   }
 
   // Create as a blob to be later initialized
-  nsDOMMultipartFile(const nsAString& aContentType)
-    : nsDOMFile(aContentType, UINT64_MAX)
+  nsDOMMultipartFile()
+    : nsDOMFile(EmptyString(), UINT64_MAX)
   {
   }
 
@@ -89,12 +88,6 @@ public:
 
   virtual const nsTArray<nsCOMPtr<nsIDOMBlob> >*
   GetSubBlobs() const { return &mBlobs; }
-
-  void
-  AddBlob(nsIDOMBlob* aBlob)
-  {
-    mBlobs.AppendElement(aBlob);
-  }
 
 protected:
   nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
