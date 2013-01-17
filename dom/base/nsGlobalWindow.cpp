@@ -9752,8 +9752,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
     JS::Value ignored;
-    aScx->EvaluateStringWithValue(nsDependentString(script), *FastGetGlobalJSObject(),
-                                  options, /*aCoerceToString = */ false, ignored);
+    aScx->EvaluateString(nsDependentString(script), *FastGetGlobalJSObject(),
+                         options, /*aCoerceToString = */ false, ignored);
   } else {
     nsCOMPtr<nsIVariant> dummy;
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
