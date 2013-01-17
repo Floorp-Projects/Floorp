@@ -898,6 +898,8 @@ this.DOMApplicationRegistry = {
       return;
     }
 
+    let app = this.webapps[download.appId];
+
     if (download.cacheUpdate) {
       // Cancel hosted app download.
       try {
@@ -905,7 +907,12 @@ this.DOMApplicationRegistry = {
       } catch (e) { debug (e); }
     } else if (download.channel) {
       // Cancel packaged app download.
-      download.channel.cancel(Cr.NS_BINDING_ABORTED);
+      app.isCanceling = true;
+      try {
+        download.channel.cancel(Cr.NS_BINDING_ABORTED);
+      } catch(e) {
+        delete app.isCanceling;
+      }
     } else {
       return;
     }
@@ -1217,12 +1224,12 @@ this.DOMApplicationRegistry = {
       this.webapps[id] = app;
 
       this._saveApps(function() {
+        let reg = DOMApplicationRegistry;
         aData.app = app;
         app.manifest = aNewManifest || aOldManifest;
         if (!manifest.appcache_path) {
           aData.event = "downloadapplied";
-          DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
-                                                  aData);
+          reg.broadcastMessage("Webapps:CheckForUpdate:Return:OK", aData);
         } else {
           // Check if the appcache is updatable, and send "downloadavailable" or
           // "downloadapplied".
@@ -1234,8 +1241,8 @@ this.DOMApplicationRegistry = {
                 aTopic == "offline-cache-update-available" ? "downloadavailable"
                                                            : "downloadapplied";
               aData.app.downloadAvailable = (aData.event == "downloadavailable");
-              DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
-                                                      aData);
+              reg._saveApps();
+              reg.broadcastMessage("Webapps:CheckForUpdate:Return:OK", aData);
             }
           }
           debug("updateHostedApp: updateSvc.checkForUpdate for " +
@@ -1818,7 +1825,8 @@ this.DOMApplicationRegistry = {
       // We avoid notifying the error to the DOM side if the app download
       // was cancelled via cancelDownload, which already sends its own
       // notification.
-      if (!app.downloading && !app.downloadAvailable && !app.downloadSize) {
+      if (app.isCanceling) {
+        delete app.isCanceling;
         return;
       }
 
