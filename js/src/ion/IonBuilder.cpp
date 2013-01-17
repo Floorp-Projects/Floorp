@@ -1596,10 +1596,10 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
     if (current) {
         current->end(MGoto::New(successor));
         successor->addPredecessor(current);
-
-        // Insert successor after the current block, to maintain RPO.
-        graph().moveBlockToEnd(successor);
     }
+
+    // Insert successor after the current block, to maintain RPO.
+    graph().moveBlockToEnd(successor);
 
     // If this is the last successor the block should stop at the end of the tableswitch
     // Else it should stop at the start of the next successor
