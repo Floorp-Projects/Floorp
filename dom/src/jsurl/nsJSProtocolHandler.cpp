@@ -326,11 +326,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         JS::CompileOptions options(cx);
         options.setFileAndLine(mURL.get(), 1)
                .setVersion(JSVERSION_DEFAULT);
-        rv = scriptContext->EvaluateStringWithValue(NS_ConvertUTF8toUTF16(script),
-                                                    *globalJSObject,
-                                                    options,
-                                                    /* aCoerceToString = */ true,
-                                                    v);
+        rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
+                                           *globalJSObject, options,
+                                           /* aCoerceToString = */ true, v);
 
         // If there's an error on cx as a result of that call, report
         // it now -- either we're just running under the event loop,

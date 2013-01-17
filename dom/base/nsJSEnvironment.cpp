@@ -1229,13 +1229,13 @@ nsJSContext::GetCCRefcnt()
 }
 
 nsresult
-nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
-                                     JSObject& aScopeObject,
-                                     JS::CompileOptions& aOptions,
-                                     bool aCoerceToString,
-                                     JS::Value& aRetValue)
+nsJSContext::EvaluateString(const nsAString& aScript,
+                            JSObject& aScopeObject,
+                            JS::CompileOptions& aOptions,
+                            bool aCoerceToString,
+                            JS::Value& aRetValue)
 {
-  SAMPLE_LABEL("JS", "EvaluateStringWithValue");
+  SAMPLE_LABEL("JS", "EvaluateString");
 
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
   aRetValue = JSVAL_VOID;

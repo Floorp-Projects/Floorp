@@ -90,7 +90,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
 
   nsAutoMicroTask mt;
 
-  // EvaluateStringWithValue and JS_DefineUCProperty can both trigger GC, so
+  // EvaluateString and JS_DefineUCProperty can both trigger GC, so
   // protect |result| here.
   nsresult rv;
 
@@ -111,11 +111,11 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   options.setFileAndLine(uriSpec.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST)
          .setUserBit(true); // Flag us as XBL
-  rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
-                                                          mFieldTextLength),
-                                        *aBoundNode, options,
-                                        /* aCoerceToString = */ false,
-                                        result);
+  rv = context->EvaluateString(nsDependentString(mFieldText,
+                                                 mFieldTextLength),
+                               *aBoundNode, options,
+                               /* aCoerceToString = */ false,
+                               result);
   if (NS_FAILED(rv)) {
     return rv;
   }
