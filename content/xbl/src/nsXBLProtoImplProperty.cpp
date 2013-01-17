@@ -11,6 +11,7 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsIScriptContext.h"
+#include "nsJSUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLSerialize.h"
@@ -213,18 +214,17 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     if (!getter.IsEmpty()) {
       // Compile into a temp object so we don't wipe out mGetterText
       JSObject* getterObject = nullptr;
-      rv = aContext->CompileFunction(aClassObject,
-                                     NS_LITERAL_CSTRING("get_") +
-                                     NS_ConvertUTF16toUTF8(mName),
-                                     0,
-                                     nullptr,
-                                     getter, 
-                                     functionUri.get(),
-                                     mGetterText->GetLineNumber(),
-                                     JSVERSION_LATEST,
-                                     /* aShared = */ true,
-                                     /* aIsXBL = */ true,
-                                     &getterObject);
+      JSContext* cx = aContext->GetNativeContext();
+      JSAutoRequest ar(cx);
+      JSAutoCompartment ac(cx, aClassObject);
+      JS::CompileOptions options(cx);
+      options.setFileAndLine(functionUri.get(), mGetterText->GetLineNumber())
+             .setVersion(JSVERSION_LATEST)
+             .setUserBit(true); // Flag us as XBL
+      nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
+      js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+      rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 0, nullptr,
+                                      getter, &getterObject);
 
       // Make sure we free mGetterText here before setting mJSGetterObject, since
       // that'll overwrite mGetterText
@@ -264,18 +264,17 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     if (!setter.IsEmpty()) {
       // Compile into a temp object so we don't wipe out mSetterText
       JSObject* setterObject = nullptr;
-      rv = aContext->CompileFunction(aClassObject,
-                                     NS_LITERAL_CSTRING("set_") +
-                                     NS_ConvertUTF16toUTF8(mName),
-                                     1,
-                                     gPropertyArgs,
-                                     setter, 
-                                     functionUri.get(),
-                                     mSetterText->GetLineNumber(),
-                                     JSVERSION_LATEST,
-                                     /* aShared = */ true,
-                                     /* aIsXBL = */ true,
-                                     &setterObject);
+      JSContext* cx = aContext->GetNativeContext();
+      JSAutoRequest ar(cx);
+      JSAutoCompartment ac(cx, aClassObject);
+      JS::CompileOptions options(cx);
+      options.setFileAndLine(functionUri.get(), mSetterText->GetLineNumber())
+             .setVersion(JSVERSION_LATEST)
+             .setUserBit(true); // Flag us as XBL
+      nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
+      js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+      rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 1,
+                                      gPropertyArgs, setter, &setterObject);
 
       // Make sure we free mSetterText here before setting mJSGetterObject, since
       // that'll overwrite mSetterText
