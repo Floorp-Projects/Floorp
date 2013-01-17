@@ -188,6 +188,10 @@ bool LaunchApp(const CommandLine& cl,
   return LaunchApp(cl.argv(), no_files, wait, process_handle);
 }
 
+void SetCurrentProcessPrivileges(ChildPrivileges privs) {
+
+}
+
 NamedProcessIterator::NamedProcessIterator(const std::wstring& executable_name,
                                            const ProcessFilter* filter)
   : executable_name_(executable_name),
