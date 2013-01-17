@@ -255,7 +255,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         useSandbox = !subsumes;
     }
 
-    JS::Value v = JSVAL_VOID;
+    JS::Value v = JS::UndefinedValue();
     // Finally, we have everything needed to evaluate the expression.
 
     JSContext *cx = scriptContext->GetNativeContext();
@@ -348,7 +348,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     }
     else {
         nsDependentJSString result;
-        if (!result.init(cx, JSVAL_TO_STRING(v))) {
+        if (!result.init(cx, v)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
 

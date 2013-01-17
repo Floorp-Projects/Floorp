@@ -159,13 +159,13 @@ nsJSUtils::CompileFunction(JSContext* aCx,
                            JSObject** aFunctionObject)
 {
   MOZ_ASSERT(js::GetEnterCompartmentDepth(aCx) > 0);
-  MOZ_ASSERT(!aTarget || js::IsObjectInContextCompartment(aTarget, aCx));
+  MOZ_ASSERT_IF(aTarget, js::IsObjectInContextCompartment(aTarget, aCx));
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
 
   // Since aTarget and aCx are same-compartment, there should be no distinction
   // between the object principal and the cx principal.
   // However, aTarget may be null in the wacky aShared case. So use the cx.
-  JSPrincipals *p = JS_GetCompartmentPrincipals(js::GetContextCompartment(aCx));
+  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetContextCompartment(aCx));
   aOptions.setPrincipals(p);
 
   // Do the junk Gecko is supposed to do before calling into JSAPI.
@@ -177,8 +177,7 @@ nsJSUtils::CompileFunction(JSContext* aCx,
                                         aArgCount, aArgArray,
                                         PromiseFlatString(aBody).get(),
                                         aBody.Length());
-  if (!fun)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(fun, NS_ERROR_FAILURE);
 
   *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
