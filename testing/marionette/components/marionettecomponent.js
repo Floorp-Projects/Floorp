@@ -28,7 +28,7 @@ function MarionetteComponent() {
   let logf = FileUtils.getFile('ProfD', ['marionette.log']);
   
   let formatter = new Log4Moz.BasicFormatter();
-  this.logger.addAppender(new Log4Moz.FileAppender(logf, formatter));
+  this.logger.addAppender(new Log4Moz.RotatingFileAppender(logf, formatter));
   this.logger.addAppender(new Log4Moz.DumpAppender(formatter));
   this.logger.info("MarionetteComponent loaded");
 }
