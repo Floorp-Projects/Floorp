@@ -22,6 +22,19 @@
   min-height: 28px;
   min-width: 28px;
   border: none;
+  opacity: 0.7;
+}
+
+.playButton:hover,
+.muteButton:hover,
+.fullscreenButton:hover {
+  opacity: 1;
+}
+
+.playButton:hover:active,
+.muteButton:hover:active,
+.fullscreenButton:hover:active {
+  opacity: 0.4;
 }
 
 .playButton {
