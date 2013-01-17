@@ -74,14 +74,6 @@ struct RunnableMethodTraits<GeckoChildProcessHost>
     static void ReleaseCallee(GeckoChildProcessHost* obj) { }
 };
 
-/*static*/
-base::ChildPrivileges
-GeckoChildProcessHost::DefaultChildPrivileges()
-{
-  return (kLowRightsSubprocesses ?
-          base::PRIVILEGES_UNPRIVILEGED : base::PRIVILEGES_INHERIT);
-}
-
 GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              ChildPrivileges aPrivileges)
   : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
@@ -498,7 +490,8 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   base::environment_map newEnvVars;
   ChildPrivileges privs = mPrivileges;
   if (privs == base::PRIVILEGES_DEFAULT) {
-    privs = DefaultChildPrivileges();
+    privs = kLowRightsSubprocesses ?
+            base::PRIVILEGES_UNPRIVILEGED : base::PRIVILEGES_INHERIT;
   }
   // XPCOM may not be initialized in some subprocesses.  We don't want
   // to initialize XPCOM just for the directory service, especially
