@@ -2210,6 +2210,7 @@ private:
   bool mPushedSomething;
 #ifdef DEBUG
   JSContext* mPushedContext;
+  unsigned mCompartmentDepthOnEntry;
 #endif
 };
 
