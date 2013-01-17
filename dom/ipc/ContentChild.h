@@ -80,8 +80,6 @@ public:
     AllocPImageBridge(mozilla::ipc::Transport* aTransport,
                       base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    virtual bool RecvSetProcessPrivileges(const ChildPrivileges& aPrivs);
-
     virtual PBrowserChild* AllocPBrowser(const IPCTabContext &aContext,
                                          const uint32_t &chromeFlags);
     virtual bool DeallocPBrowser(PBrowserChild*);
