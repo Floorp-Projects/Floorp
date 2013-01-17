@@ -3540,7 +3540,7 @@ nsXULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObjec
 
     // Execute the precompiled script with the given version
     JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
-    return aContext->ExecuteScript(aScriptObject, global, nullptr, nullptr);
+    return aContext->ExecuteScript(aScriptObject, global);
 }
 
 nsresult
