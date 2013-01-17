@@ -593,51 +593,62 @@ nsresult
 PeerConnectionImpl::ConvertConstraints(
   const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx)
 {
-  size_t i;
   jsval mandatory, optional;
   JSObject& constraints = aConstraints.toObject();
 
-  // Mandatory constraints.
-  if (JS_GetProperty(aCx, &constraints, "mandatory", &mandatory)) {
-    if (mandatory.isObject()) {
-      JSObject* opts = JSVAL_TO_OBJECT(mandatory);
-      JS::AutoIdArray mandatoryOpts(aCx, JS_Enumerate(aCx, opts));
+  // Mandatory constraints.  Note that we only care if the constraint array exists
+  if (!JS_GetProperty(aCx, &constraints, "mandatory", &mandatory)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!mandatory.isNullOrUndefined()) {
+    if (!mandatory.isObject()) {
+      return NS_ERROR_FAILURE;
+    }
 
-      // Iterate over each property.
-      for (i = 0; i < mandatoryOpts.length(); i++) {
-        jsval option, optionName;
-        if (JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option)) {
-          if (JS_IdToValue(aCx, mandatoryOpts[i], &optionName)) {
-            // We only support boolean constraints for now.
-            if (JSVAL_IS_BOOLEAN(option)) {
-              JSString* optionNameString = JS_ValueToString(aCx, optionName);
-              NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
-              aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), true);
-            }
-          }
-        }
+    JSObject* opts = JSVAL_TO_OBJECT(mandatory);
+    JS::AutoIdArray mandatoryOpts(aCx, JS_Enumerate(aCx, opts));
+
+    // Iterate over each property.
+    for (size_t i = 0; i < mandatoryOpts.length(); i++) {
+      jsval option, optionName;
+      if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option) ||
+          !JS_IdToValue(aCx, mandatoryOpts[i], &optionName) ||
+          // We only support boolean constraints for now.
+          !JSVAL_IS_BOOLEAN(option)) {
+        return NS_ERROR_FAILURE;
       }
+      JSString* optionNameString = JS_ValueToString(aCx, optionName);
+      if (!optionNameString) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
+      aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), true);
     }
   }
 
   // Optional constraints.
-  if (JS_GetProperty(aCx, &constraints, "optional", &optional)) {
-    if (optional.isObject()) {
-      JSObject* opts = JSVAL_TO_OBJECT(optional);
-      if (JS_IsArrayObject(aCx, opts)) {
-        uint32_t length;
-        if (!JS_GetArrayLength(aCx, opts, &length)) {
-          return NS_ERROR_FAILURE;
-        }
-        for (i = 0; i < length; i++) {
-          jsval val;
-          JS_GetElement(aCx, opts, i, &val);
-          if (val.isObject()) {
-            // Extract name & value and store.
-            // FIXME: MediaConstraints does not support optional constraints?
-          }
-        }
+  if (!JS_GetProperty(aCx, &constraints, "optional", &optional)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!optional.isNullOrUndefined()) {
+    if (!optional.isObject()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    JSObject* opts = JSVAL_TO_OBJECT(optional);
+    uint32_t length;
+    if (!JS_IsArrayObject(aCx, opts) ||
+        !JS_GetArrayLength(aCx, opts, &length)) {
+      return NS_ERROR_FAILURE;
+    }
+    for (size_t i = 0; i < length; i++) {
+      jsval val;
+      if (!JS_GetElement(aCx, opts, i, &val) ||
+          !val.isObject()) {
+        return NS_ERROR_FAILURE;
       }
+      // Extract name & value and store.
+      // FIXME: MediaConstraints does not support optional constraints?
     }
   }
 
