@@ -861,8 +861,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     JS::CompileOptions options(context->GetNativeContext());
     options.setFileAndLine(url.get(), aRequest->mLineNo)
            .setVersion(JSVersion(aRequest->mJSVersion));
-    if (aRequest->mOriginPrincipal)
+    if (aRequest->mOriginPrincipal) {
       options.setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
+    }
     JS::Value ignored;
     rv = context->EvaluateString(aScript, *globalObject->GetGlobalJSObject(),
                                  options, /* aCoerceToString = */ false, &ignored);
