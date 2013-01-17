@@ -59,9 +59,7 @@ public:
                                  nsScriptObjectHolder<JSScript>& aScriptObject,
                                  bool aSaveSource = false);
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
-                                 JSObject* aScopeObject,
-                                 nsAString* aRetValue,
-                                 bool* aIsUndefined);
+                                 JSObject* aScopeObject);
 
   virtual nsresult CompileEventHandler(nsIAtom *aName,
                                        uint32_t aArgCount,
