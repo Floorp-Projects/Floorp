@@ -24,14 +24,14 @@ BEGIN_TEST(testConservativeGC)
     char strCopy[sizeof(JSString)];
     js_memcpy(&strCopy, JSVAL_TO_STRING(v3), sizeof(JSString));
 
-    jsval tmp;
-    EVAL("({foo2: 'bar2'});", &tmp);
+    js::RootedValue tmp(cx);
+    EVAL("({foo2: 'bar2'});", tmp.address());
     CHECK(tmp.isObject());
     js::RootedObject obj2(cx, JSVAL_TO_OBJECT(tmp));
     char obj2Copy[sizeof(JSObject)];
     js_memcpy(&obj2Copy, obj2, sizeof(JSObject));
 
-    EVAL("String(Math.sqrt(3));", &tmp);
+    EVAL("String(Math.sqrt(3));", tmp.address());
     CHECK(JSVAL_IS_STRING(tmp));
     js::RootedString str2(cx, JSVAL_TO_STRING(tmp));
     char str2Copy[sizeof(JSString)];
@@ -44,7 +44,7 @@ BEGIN_TEST(testConservativeGC)
     EVAL("var a = [];\n"
          "for (var i = 0; i != 10000; ++i) {\n"
          "a.push(i + 0.1, [1, 2], String(Math.sqrt(i)), {a: i});\n"
-         "}", &tmp);
+         "}", tmp.address());
 
     JS_GC(rt);
 

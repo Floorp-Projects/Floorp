@@ -151,8 +151,8 @@ JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCas
             return script;
     }
 
-    JS::Value v;
-    JSBool ok = JS_ExecuteScript(cx, global, script, &v);
+    js::RootedValue v(cx);
+    JSBool ok = JS_ExecuteScript(cx, global, script, v.address());
     if (!ok || !v.isObject())
         return NULL;
     js::RootedObject funobj(cx, &v.toObject());
@@ -182,8 +182,8 @@ BEGIN_TEST(testXDR_atline)
     CHECK(script = FreezeThaw(cx, script));
     CHECK(!strcmp("bar", JS_GetScriptFilename(cx, script)));
 
-    JS::Value v;
-    JSBool ok = JS_ExecuteScript(cx, global, script, &v);
+    js::RootedValue v(cx);
+    JSBool ok = JS_ExecuteScript(cx, global, script, v.address());
     CHECK(ok);
     CHECK(v.isObject());
 
@@ -273,8 +273,9 @@ BEGIN_TEST(testXDR_sourceMap)
         "file:///var/source-map.json",
         NULL
     };
+    js::RootedScript script(cx);
     for (const char **sm = sourceMaps; *sm; sm++) {
-        JSScript *script = JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__);
+        script = JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__);
         CHECK(script);
 
         size_t len = strlen(*sm);
