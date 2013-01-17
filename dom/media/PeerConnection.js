@@ -291,9 +291,7 @@ PeerConnection.prototype = {
    * call _executeNext, false if it doesn't have a callback.
    */
   _queueOrRun: function(obj) {
-    if (this._closed) {
-	return;
-    }
+    this._checkClosed();
     if (!this._pending) {
       if (obj.type !== undefined) {
         this._pendingType = obj.type;
@@ -356,6 +354,16 @@ PeerConnection.prototype = {
     return true;
   },
 
+  // Ideally, this should be of the form _checkState(state),
+  // where the state is taken from an enumeration containing
+  // the valid peer connection states defined in the WebRTC
+  // spec. See Bug 831756.
+  _checkClosed: function() {
+    if (this._closed) {
+      throw new Error ("Peer connection is closed");
+    }
+  },
+
   createOffer: function(onSuccess, onError, constraints) {
     if (!constraints) {
       constraints = {};
@@ -408,6 +416,9 @@ PeerConnection.prototype = {
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
+    // TODO -- if we have two setLocalDescriptions in the
+    // queue,this code overwrites the callbacks for the first
+    // one with the callbacks for the second one. See Bug 831759.
     this._onSetLocalDescriptionSuccess = onSuccess;
     this._onSetLocalDescriptionFailure = onError;
 
@@ -435,6 +446,9 @@ PeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
+    // TODO -- if we have two setRemoteDescriptions in the
+    // queue, this code overwrites the callbacks for the first
+    // one with the callbacks for the second one. See Bug 831759.
     this._onSetRemoteDescriptionSuccess = onSuccess;
     this._onSetRemoteDescriptionFailure = onError;
 
@@ -508,14 +522,17 @@ PeerConnection.prototype = {
   },
 
   get localStreams() {
+    this._checkClosed();
     return this._pc.localStreams;
   },
 
   get remoteStreams() {
+    this._checkClosed();
     return this._pc.remoteStreams;
   },
 
   get localDescription() {
+    this._checkClosed();
     let sdp = this._pc.localDescription;
     if (sdp.length == 0) {
       return null;
@@ -527,6 +544,7 @@ PeerConnection.prototype = {
   },
 
   get remoteDescription() {
+    this._checkClosed();
     let sdp = this._pc.remoteDescription;
     if (sdp.length == 0) {
       return null;
@@ -538,6 +556,7 @@ PeerConnection.prototype = {
   },
 
   createDataChannel: function(label, dict) {
+    this._checkClosed();
     if (dict &&
         dict.maxRetransmitTime != undefined &&
         dict.maxRetransmitNum != undefined) {
@@ -555,6 +574,8 @@ PeerConnection.prototype = {
     }
 
     // Synchronous since it doesn't block.
+    // TODO -- this may need to be revisited, based on how the
+    // spec ends up defining data channel handling
     let channel = this._pc.createDataChannel(
       label, type, dict.outOfOrderAllowed, dict.maxRetransmitTime,
       dict.maxRetransmitNum
@@ -574,7 +595,7 @@ PeerConnection.prototype = {
   }
 };
 
-// This is a seperate object because we don't want to expose it to DOM.
+// This is a separate object because we don't want to expose it to DOM.
 function PeerConnectionObserver(dompc) {
   this._dompc = dompc;
 }
