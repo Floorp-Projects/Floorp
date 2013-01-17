@@ -6,6 +6,7 @@
 #include "gfxDWriteFonts.h"
 #include "gfxDWriteShaper.h"
 #include "gfxHarfBuzzShaper.h"
+#include <algorithm>
 #ifdef MOZ_GRAPHITE
 #include "gfxGraphiteShaper.h"
 #endif
@@ -252,7 +253,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
         mFontFace->ReleaseFontTable(tableContext);
     }
 
-    mMetrics->internalLeading = NS_MAX(mMetrics->maxHeight - mMetrics->emHeight, 0.0);
+    mMetrics->internalLeading = std::max(mMetrics->maxHeight - mMetrics->emHeight, 0.0);
     mMetrics->externalLeading = ceil(fontMetrics.lineGap * mFUnitsConvFactor);
 
     UINT16 glyph = (uint16_t)GetSpaceGlyph();

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <olectl.h>
+#include <algorithm>
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
@@ -1181,9 +1182,9 @@ nsTextStore::SendTextEventForCompositionString()
   if (mCompositionSelection.acpStart != mCompositionSelection.acpEnd &&
       textRanges.Length() == 1) {
     nsTextRange& range = textRanges[0];
-    LONG start = NS_MIN(mCompositionSelection.acpStart,
+    LONG start = std::min(mCompositionSelection.acpStart,
                         mCompositionSelection.acpEnd);
-    LONG end = NS_MAX(mCompositionSelection.acpStart,
+    LONG end = std::max(mCompositionSelection.acpStart,
                       mCompositionSelection.acpEnd);
     if ((LONG)range.mStartOffset == start - mCompositionStart &&
         (LONG)range.mEndOffset == end - mCompositionStart &&
@@ -1195,7 +1196,7 @@ nsTextStore::SendTextEventForCompositionString()
   }
 
   // The caret position has to be collapsed.
-  LONG caretPosition = NS_MAX(mCompositionSelection.acpStart,
+  LONG caretPosition = std::max(mCompositionSelection.acpStart,
                               mCompositionSelection.acpEnd);
   caretPosition -= mCompositionStart;
   nsTextRange caretRange;
@@ -1405,11 +1406,11 @@ nsTextStore::GetText(LONG acpStart,
       // OnUpdateComposition. In this case the returned text would
       // be out of sync because we haven't sent NS_TEXT_TEXT in
       // OnUpdateComposition yet. Manually resync here.
-      compOldEnd = NS_MIN(LONG(length) + acpStart,
+      compOldEnd = std::min(LONG(length) + acpStart,
                        mCompositionLength + mCompositionStart);
-      compNewEnd = NS_MIN(LONG(length) + acpStart,
+      compNewEnd = std::min(LONG(length) + acpStart,
                        LONG(mCompositionString.Length()) + mCompositionStart);
-      compNewStart = NS_MAX(acpStart, mCompositionStart);
+      compNewStart = std::max(acpStart, mCompositionStart);
       // Check if the range is affected
       if (compOldEnd > compNewStart || compNewEnd > compNewStart) {
         NS_ASSERTION(compOldEnd >= mCompositionStart &&
@@ -1432,7 +1433,7 @@ nsTextStore::GetText(LONG acpStart,
     if (compOldEnd > compNewStart || compNewEnd > compNewStart) {
       // Resync composition string
       const PRUnichar* compStrStart = mCompositionString.BeginReading() +
-          NS_MAX<LONG>(compNewStart - mCompositionStart, 0);
+          std::max<LONG>(compNewStart - mCompositionStart, 0);
       event.mReply.mString.Replace(compNewStart - acpStart,
           compOldEnd - mCompositionStart, compStrStart,
           compNewEnd - mCompositionStart);
@@ -1444,7 +1445,7 @@ nsTextStore::GetText(LONG acpStart,
               "unexpected length=%lu", this, length));
       return TS_E_INVALIDPOS;
     }
-    length = NS_MIN(length, event.mReply.mString.Length());
+    length = std::min(length, event.mReply.mString.Length());
 
     if (pchPlain && cchPlainReq) {
       memcpy(pchPlain, event.mReply.mString.BeginReading(),
@@ -2346,7 +2347,7 @@ GetLayoutChangeIntervalTime()
   if (sTime > 0)
     return uint32_t(sTime);
 
-  sTime = NS_MAX(10,
+  sTime = std::max(10,
     Preferences::GetInt("intl.tsf.on_layout_change_interval", 100));
   return uint32_t(sTime);
 }
@@ -2617,9 +2618,9 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
           mTextChange.acpStart, mTextChange.acpOldEnd, mTextChange.acpNewEnd));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_TEXT_CHANGE)) {
-    mTextChange.acpStart = NS_MIN(mTextChange.acpStart, LONG(aStart));
-    mTextChange.acpOldEnd = NS_MAX(mTextChange.acpOldEnd, LONG(aOldEnd));
-    mTextChange.acpNewEnd = NS_MAX(mTextChange.acpNewEnd, LONG(aNewEnd));
+    mTextChange.acpStart = std::min(mTextChange.acpStart, LONG(aStart));
+    mTextChange.acpOldEnd = std::max(mTextChange.acpOldEnd, LONG(aOldEnd));
+    mTextChange.acpNewEnd = std::max(mTextChange.acpNewEnd, LONG(aNewEnd));
     ::PostMessageW(mWidget->GetWindowHandle(),
                    WM_USER_TSF_TEXTCHANGE, 0, 0);
   }

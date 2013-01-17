@@ -23,6 +23,7 @@
 #include "nsViewManager.h"
 #include "nsContainerFrame.h"
 #include "nsDisplayList.h"
+#include <algorithm>
 
 //
 // NS_NewLeafBoxFrame
@@ -282,7 +283,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // height.  The only problem is that those are content-box sizes,
   // while computedSize.height is a border-box size.  So subtract off
   // m.TopBottom() before adjusting, then readd it.
-  computedSize.height = NS_MAX(0, computedSize.height - m.TopBottom());
+  computedSize.height = std::max(0, computedSize.height - m.TopBottom());
   computedSize.height = NS_CSS_MINMAX(computedSize.height,
                                       aReflowState.mComputedMinHeight,
                                       aReflowState.mComputedMaxHeight);

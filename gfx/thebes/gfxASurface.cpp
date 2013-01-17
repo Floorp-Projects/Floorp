@@ -16,6 +16,7 @@
 #include "nsRect.h"
 
 #include "cairo.h"
+#include <algorithm>
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
 #include "gfxWindowsSurface.h"
@@ -756,8 +757,8 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   nsCOMPtr<imgIEncoder> encoder =
     do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
   if (!encoder) {
-    int32_t w = NS_MIN(size.width, 8);
-    int32_t h = NS_MIN(size.height, 8);
+    int32_t w = std::min(size.width, 8);
+    int32_t h = std::min(size.height, 8);
     printf("Could not create encoder. Printing %dx%d pixels.\n", w, h);
     for (int32_t y = 0; y < h; ++y) {
       for (int32_t x = 0; x < w; ++x) {

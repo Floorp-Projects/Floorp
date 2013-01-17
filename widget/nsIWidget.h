@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x476D5716, 0xE225, 0x4497, \
-    { 0x80, 0x41, 0x92, 0xF8, 0x67, 0x59, 0xC4, 0x38 } }
+  { 0xDAEE334D, 0x9031, 0x4928, \
+    { 0x9D, 0xD7, 0x75, 0x2E, 0x8B, 0x6B, 0xF7, 0x0E } }
 
 /*
  * Window shadow styles
@@ -1643,6 +1643,14 @@ class nsIWidget : public nsISupports {
     virtual bool NeedsPaint() {
       return true;
     }
+
+    /**
+     * This function is called by nsViewManager right before the retained layer 
+     * tree for this widget is about to be updated, and any required
+     * ThebesLayer painting occurs.
+     */
+    virtual void WillPaint() { }
+
     /**
      * Get the natural bounds of this widget.  This method is only
      * meaningful for widgets for which Gecko implements screen

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TestCommon.h"
+#include <algorithm>
 #ifdef WIN32 
 #include <windows.h>
 #endif
@@ -73,7 +74,7 @@ InputTestConsumer::OnDataAvailable(nsIRequest *request,
   nsresult rv;
 
   while (aLength) {
-    size = NS_MIN<uint32_t>(aLength, sizeof(buf));
+    size = std::min<uint32_t>(aLength, sizeof(buf));
     rv = aIStream->Read(buf, size, &amt);
     if (NS_FAILED(rv)) {
       NS_ASSERTION((NS_BASE_STREAM_WOULD_BLOCK != rv), 

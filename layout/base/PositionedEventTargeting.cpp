@@ -11,6 +11,7 @@
 #include "nsEventListenerManager.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/Element.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -190,8 +191,8 @@ GetTargetRect(nsIFrame* aRootFrame, const nsPoint& aPointRelativeToRootFrame,
 static float
 ComputeDistanceFromRect(const nsPoint& aPoint, const nsRect& aRect)
 {
-  nscoord dx = NS_MAX(0, NS_MAX(aRect.x - aPoint.x, aPoint.x - aRect.XMost()));
-  nscoord dy = NS_MAX(0, NS_MAX(aRect.y - aPoint.y, aPoint.y - aRect.YMost()));
+  nscoord dx = std::max(0, std::max(aRect.x - aPoint.x, aPoint.x - aRect.XMost()));
+  nscoord dy = std::max(0, std::max(aRect.y - aPoint.y, aPoint.y - aRect.YMost()));
   return float(NS_hypot(dx, dy));
 }
 

@@ -536,10 +536,13 @@ class GeckoInputConnection
         // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is greater than 11, for datetime/month/week as well.
-        if (typeHint.equals("date") || typeHint.equals("time") ||
-            (Build.VERSION.SDK_INT > 10 &&
-            (typeHint.equals("datetime") || typeHint.equals("month") ||
-            typeHint.equals("week") || typeHint.equals("datetime-local")))) {
+        if (typeHint != null &&
+            (typeHint.equals("date") ||
+             typeHint.equals("time") ||
+             (Build.VERSION.SDK_INT > 10 && (typeHint.equals("datetime") ||
+                                             typeHint.equals("month") ||
+                                             typeHint.equals("week") ||
+                                             typeHint.equals("datetime-local"))))) {
             mIMEState = IME_STATE_DISABLED;
             return;
         }

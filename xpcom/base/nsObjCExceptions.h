@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Undo the damage that exception_defines.h does.
+#undef try
+#undef catch
+
 #ifndef nsObjCExceptions_h_
 #define nsObjCExceptions_h_
 
@@ -21,6 +25,10 @@
 #include <unistd.h>
 #include <signal.h>
 #include "nsError.h"
+
+// Undo the damage that exception_defines.h does.
+#undef try
+#undef catch
 
 /* NOTE: Macros that claim to abort no longer abort, see bug 486574.
  * If you actually want to log and abort, call "nsObjCExceptionLogAbort"

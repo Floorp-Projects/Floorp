@@ -42,8 +42,8 @@ body.private h1 {
 img {
   display: block;
   width: 125px;
-  height: 125px;
-  margin: -30px auto;
+  height: auto;
+  margin: 0 auto;
 }
 
 @media all and (max-height: 399px) {

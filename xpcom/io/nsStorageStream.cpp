@@ -180,7 +180,7 @@ nsStorageStream::Write(const char *aBuffer, uint32_t aCount, uint32_t *aNumWritt
                 this, mWriteCursor, mSegmentEnd));
         }
 	
-        count = NS_MIN(availableInSegment, remaining);
+        count = XPCOM_MIN(availableInSegment, remaining);
         memcpy(mWriteCursor, readCursor, count);
         remaining -= count;
         readCursor += count;
@@ -418,12 +418,12 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uin
 
             mSegmentNum++;
             mReadCursor = 0;
-            mSegmentEnd = NS_MIN(mSegmentSize, available);
+            mSegmentEnd = XPCOM_MIN(mSegmentSize, available);
             availableInSegment = mSegmentEnd;
         }
         const char *cur = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum);
 	
-        count = NS_MIN(availableInSegment, remainingCapacity);
+        count = XPCOM_MIN(availableInSegment, remainingCapacity);
         rv = writer(this, closure, cur + mReadCursor, aCount - remainingCapacity,
                     count, &bytesConsumed);
         if (NS_FAILED(rv) || (bytesConsumed == 0))
@@ -513,7 +513,7 @@ nsStorageInputStream::Seek(uint32_t aPosition)
     mSegmentNum = SegNum(aPosition);
     mReadCursor = SegOffset(aPosition);
     uint32_t available = length - aPosition;
-    mSegmentEnd = mReadCursor + NS_MIN(mSegmentSize - mReadCursor, available);
+    mSegmentEnd = mReadCursor + XPCOM_MIN(mSegmentSize - mReadCursor, available);
     mLogicalCursor = aPosition;
     return NS_OK;
 }

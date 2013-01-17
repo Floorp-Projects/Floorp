@@ -4262,11 +4262,12 @@ nsDocumentViewer::OnDonePrinting()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   if (mPrintEngine) {
+    nsRefPtr<nsPrintEngine> pe = mPrintEngine;
+    mPrintEngine = nullptr;
     if (GetIsPrintPreview()) {
-      mPrintEngine->DestroyPrintingData();
+      pe->DestroyPrintingData();
     } else {
-      mPrintEngine->Destroy();
-      mPrintEngine = nullptr;
+      pe->Destroy();
     }
 
     // We are done printing, now cleanup 

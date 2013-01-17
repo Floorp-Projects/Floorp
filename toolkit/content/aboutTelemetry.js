@@ -1,4 +1,3 @@
-#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,13 +23,9 @@ const MAX_BAR_HEIGHT = 18;
 const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabledPreRelease";
-const PREF_TELEMETRY_DISPLAYED = "toolkit.telemetry.notifiedOptOut";
 #else
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
-const PREF_TELEMETRY_DISPLAYED = "toolkit.telemetry.prompted";
 #endif
-const PREF_TELEMETRY_REJECTED  = "toolkit.telemetry.rejected";
-const TELEMETRY_DISPLAY_REV = @MOZ_TELEMETRY_DISPLAY_REV@;
 const PREF_DEBUG_SLOW_SQL = "toolkit.telemetry.debugSlowSql";
 const PREF_SYMBOL_SERVER_URI = "profiler.symbolicationUrl";
 const DEFAULT_SYMBOL_SERVER_URI = "http://symbolapi.mozilla.org";
@@ -84,10 +79,6 @@ let observer = {
   observe: function observe(aSubject, aTopic, aData) {
     if (aData == PREF_TELEMETRY_ENABLED) {
       this.updatePrefStatus();
-      Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED,
-                                 !getPref(PREF_TELEMETRY_ENABLED, false));
-      Services.prefs.setIntPref(PREF_TELEMETRY_DISPLAYED,
-                                TELEMETRY_DISPLAY_REV);
     }
   },
 
@@ -685,20 +676,6 @@ function onLoad() {
 
   // Set up event listeners
   setupListeners();
-
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-  /**
-   * When telemetry is opt-out, verify if the user explicitly rejected the
-   * telemetry prompt, and if so reflect his choice in the current preference
-   * value. This doesn't cover the case where the user refused telemetry in the
-   * prompt but later enabled it in preferences in builds before the fix for
-   * bug 737600.
-   */
-  if (getPref(PREF_TELEMETRY_ENABLED, false) &&
-      getPref(PREF_TELEMETRY_REJECTED, false)) {
-    Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, false);
-  }
-#endif
 
   // Show slow SQL stats
   SlowSQL.render();

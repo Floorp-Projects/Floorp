@@ -30,6 +30,7 @@ extern sm_rcs_t dcsm_process_event(void *event, int event_id);
 static fim_scb_t *fim_scbs;
 static fim_icb_t *fim_icbs;
 
+static const char* logTag = "fim.c";
 
 static void
 fim_mwi (cc_mwi_t *msg)
@@ -204,6 +205,11 @@ fim_get_new_call_chn (callid_t call_id)
 
         if (icb->scb->get_cb) {
             icb->scb->get_cb(icb, call_id);
+            if (!icb->cb) {
+              CSFLogError(logTag, "%s - unable to get control block for call %d", __FUNCTION__, call_id);
+              fim_free_call_chn(call_chn, 0, FALSE);
+              return NULL;
+            }
             icb->call_id = call_id;
             icb->ui_locked = FALSE;
         }

@@ -21,8 +21,6 @@ nsDOMXULCommandEvent::nsDOMXULCommandEvent(nsPresContext* aPresContext,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMXULCommandEvent)
-
 NS_IMPL_ADDREF_INHERITED(nsDOMXULCommandEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMXULCommandEvent, nsDOMUIEvent)
 

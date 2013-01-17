@@ -41,6 +41,7 @@
 #include "mozilla/Likely.h"
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -89,14 +90,14 @@ struct nsTableReflowState {
     if (NS_UNCONSTRAINEDSIZE != availSize.width) {
       availSize.width -= borderPadding.left + borderPadding.right
                          + (2 * cellSpacingX);
-      availSize.width = NS_MAX(0, availSize.width);
+      availSize.width = std::max(0, availSize.width);
     }
 
     availSize.height = aAvailHeight;
     if (NS_UNCONSTRAINEDSIZE != availSize.height) {
       availSize.height -= borderPadding.top + borderPadding.bottom
                           + (2 * table->GetCellSpacingY());
-      availSize.height = NS_MAX(0, availSize.height);
+      availSize.height = std::max(0, availSize.height);
     }
   }
 
@@ -1334,7 +1335,7 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
   nsTableIterator iter(mColGroups);
   nsIFrame* colGroupFrame = iter.First();
   bool tableIsLTR = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
-  int32_t colX =tableIsLTR ? 0 : NS_MAX(0, GetColCount() - 1);
+  int32_t colX =tableIsLTR ? 0 : std::max(0, GetColCount() - 1);
   int32_t tableColIncr = tableIsLTR ? 1 : -1;
   nsPoint colGroupOrigin(aBorderPadding.left + cellSpacingX,
                          aBorderPadding.top + cellSpacingY);
@@ -3133,7 +3134,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
         nsRect rowRect = rowFrame->GetRect();
         if ((amountUsed < aAmount) && rowFrame->HasPctHeight()) {
           nscoord pctHeight = rowFrame->GetHeight(pctBasis);
-          nscoord amountForRow = NS_MIN(aAmount - amountUsed, pctHeight - rowRect.height);
+          nscoord amountForRow = std::min(aAmount - amountUsed, pctHeight - rowRect.height);
           if (amountForRow > 0) {
             nsRect oldRowRect = rowRect;
             rowRect.height += amountForRow;
@@ -3291,7 +3292,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
           // gets the remainder
           nscoord amountForRow = (rowFrame == lastEligibleRow)
                                  ? aAmount - amountUsed : NSToCoordRound(((float)(heightToDistribute)) * ratio);
-          amountForRow = NS_MIN(amountForRow, aAmount - amountUsed);
+          amountForRow = std::min(amountForRow, aAmount - amountUsed);
 
           if (yOriginRow != rowRect.y) {
             rowFrame->InvalidateFrameSubtree();
@@ -3441,7 +3442,7 @@ nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState)
     nsMargin borderPadding = GetChildAreaOffset(&aState);
     height += borderPadding.top + borderPadding.bottom;
   }
-  height = NS_MAX(0, height);
+  height = std::max(0, height);
 
   return height;
 }
@@ -4152,7 +4153,7 @@ BCMapCellInfo::SetInfo(nsTableRowFrame*   aNewRow,
   // col group frame info
   mColGroup = static_cast<nsTableColGroupFrame*>(mLeftCol->GetParent());
   int32_t cgStart = mColGroup->GetStartColumnIndex();
-  int32_t cgEnd = NS_MAX(0, cgStart + mColGroup->GetColCount() - 1);
+  int32_t cgEnd = std::max(0, cgStart + mColGroup->GetColCount() - 1);
   mCgAtLeft  = (cgStart == aColIndex);
   mCgAtRight = (cgEnd == aColIndex + mColSpan - 1);
 }
@@ -4981,7 +4982,7 @@ nsTableFrame::ExpandBCDamageArea(nsIntRect& aRect) const
       if ((dStartY >= rgStartY) && (dStartY <= rgEndY)) {
         // the damage area starts in the row group
         iterStartY = dStartY;
-        iterEndY   = NS_MIN(dEndY, rgEndY);
+        iterEndY   = std::min(dEndY, rgEndY);
       }
       else if ((dEndY >= rgStartY) && (dEndY <= rgEndY)) {
         // the damage area ends in the row group
@@ -5200,7 +5201,7 @@ BCMapCellInfo::SetRowRightContBCBorder()
 void
 BCMapCellInfo::SetTableTopBorderWidth(BCPixelSize aWidth)
 {
-  mTableBCData->mTopBorderWidth = NS_MAX(mTableBCData->mTopBorderWidth, aWidth);
+  mTableBCData->mTopBorderWidth = std::max(mTableBCData->mTopBorderWidth, aWidth);
 }
 
 void
@@ -5215,7 +5216,7 @@ BCMapCellInfo::SetTableLeftBorderWidth(int32_t aRowY, BCPixelSize aWidth)
       mTableBCData->mRightCellBorderWidth = aWidth;
     }
   }
-  mTableBCData->mLeftBorderWidth = NS_MAX(mTableBCData->mLeftBorderWidth,
+  mTableBCData->mLeftBorderWidth = std::max(mTableBCData->mLeftBorderWidth,
                                           aWidth);
 }
 
@@ -5231,7 +5232,7 @@ BCMapCellInfo::SetTableRightBorderWidth(int32_t aRowY, BCPixelSize aWidth)
       mTableBCData->mLeftCellBorderWidth = aWidth;
     }
   }
-  mTableBCData->mRightBorderWidth = NS_MAX(mTableBCData->mRightBorderWidth,
+  mTableBCData->mRightBorderWidth = std::max(mTableBCData->mRightBorderWidth,
                                            aWidth);
 }
 
@@ -5240,12 +5241,12 @@ BCMapCellInfo::SetRightBorderWidths(BCPixelSize aWidth)
 {
    // update the borders of the cells and cols affected
   if (mCell) {
-    mCell->SetBorderWidth(mEndSide, NS_MAX(aWidth,
+    mCell->SetBorderWidth(mEndSide, std::max(aWidth,
                           mCell->GetBorderWidth(mEndSide)));
   }
   if (mRightCol) {
     BCPixelSize half = BC_BORDER_LEFT_HALF(aWidth);
-    mRightCol->SetRightBorderWidth(NS_MAX(nscoord(half),
+    mRightCol->SetRightBorderWidth(std::max(nscoord(half),
                                    mRightCol->GetRightBorderWidth()));
   }
 }
@@ -5255,12 +5256,12 @@ BCMapCellInfo::SetBottomBorderWidths(BCPixelSize aWidth)
 {
   // update the borders of the affected cells and rows
   if (mCell) {
-    mCell->SetBorderWidth(NS_SIDE_BOTTOM, NS_MAX(aWidth,
+    mCell->SetBorderWidth(NS_SIDE_BOTTOM, std::max(aWidth,
                           mCell->GetBorderWidth(NS_SIDE_BOTTOM)));
   }
   if (mBottomRow) {
     BCPixelSize half = BC_BORDER_TOP_HALF(aWidth);
-    mBottomRow->SetBottomBCBorderWidth(NS_MAX(nscoord(half),
+    mBottomRow->SetBottomBCBorderWidth(std::max(nscoord(half),
                                        mBottomRow->GetBottomBCBorderWidth()));
   }
 }
@@ -5268,12 +5269,12 @@ void
 BCMapCellInfo::SetTopBorderWidths(BCPixelSize aWidth)
 {
  if (mCell) {
-     mCell->SetBorderWidth(NS_SIDE_TOP, NS_MAX(aWidth,
+     mCell->SetBorderWidth(NS_SIDE_TOP, std::max(aWidth,
                            mCell->GetBorderWidth(NS_SIDE_TOP)));
   }
   if (mTopRow) {
     BCPixelSize half = BC_BORDER_BOTTOM_HALF(aWidth);
-    mTopRow->SetTopBCBorderWidth(NS_MAX(nscoord(half),
+    mTopRow->SetTopBCBorderWidth(std::max(nscoord(half),
                                         mTopRow->GetTopBCBorderWidth()));
   }
 }
@@ -5281,12 +5282,12 @@ void
 BCMapCellInfo::SetLeftBorderWidths(BCPixelSize aWidth)
 {
   if (mCell) {
-    mCell->SetBorderWidth(mStartSide, NS_MAX(aWidth,
+    mCell->SetBorderWidth(mStartSide, std::max(aWidth,
                           mCell->GetBorderWidth(mStartSide)));
   }
   if (mLeftCol) {
     BCPixelSize half = BC_BORDER_RIGHT_HALF(aWidth);
-    mLeftCol->SetLeftBorderWidth(NS_MAX(nscoord(half),
+    mLeftCol->SetLeftBorderWidth(std::max(nscoord(half),
                                         mLeftCol->GetLeftBorderWidth()));
   }
 }
@@ -5294,7 +5295,7 @@ BCMapCellInfo::SetLeftBorderWidths(BCPixelSize aWidth)
 void
 BCMapCellInfo::SetTableBottomBorderWidth(BCPixelSize aWidth)
 {
-  mTableBCData->mBottomBorderWidth = NS_MAX(mTableBCData->mBottomBorderWidth,
+  mTableBCData->mBottomBorderWidth = std::max(mTableBCData->mBottomBorderWidth,
                                             aWidth);
 }
 
@@ -5639,8 +5640,8 @@ nsTableFrame::CalcBCBorders()
         currentBorder = CompareBorders(!CELL_CORNER, currentBorder,
                                         adjacentBorder, !HORIZONTAL);
 
-        segLength = NS_MAX(1, ajaInfo.mRowIndex + ajaInfo.mRowSpan - rowY);
-        segLength = NS_MIN(segLength, info.mRowIndex + info.mRowSpan - rowY);
+        segLength = std::max(1, ajaInfo.mRowIndex + ajaInfo.mRowSpan - rowY);
+        segLength = std::min(segLength, info.mRowIndex + info.mRowSpan - rowY);
 
         // update lastVerBorders and see if a new segment starts
         startSeg = SetBorder(currentBorder,
@@ -5775,8 +5776,8 @@ nsTableFrame::CalcBCBorders()
         adjacentBorder = ajaInfo.GetTopInternalBorder();
         currentBorder = CompareBorders(!CELL_CORNER, currentBorder,
                                         adjacentBorder, HORIZONTAL);
-        segLength = NS_MAX(1, ajaInfo.mColIndex + ajaInfo.mColSpan - colX);
-        segLength = NS_MIN(segLength, info.mColIndex + info.mColSpan - colX);
+        segLength = std::max(1, ajaInfo.mColIndex + ajaInfo.mColSpan - colX);
+        segLength = std::min(segLength, info.mColIndex + info.mColSpan - colX);
 
         // update, store the bottom left corner
         BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
@@ -6592,7 +6593,7 @@ BCVerticalSeg::Start(BCPaintBorderIterator& aIter,
                                aIter.mBCData->GetCorner(ownerSide, bevel) : 0;
 
   bool    topBevel        = (aVerSegWidth > 0) ? bevel : false;
-  BCPixelSize maxHorSegHeight = NS_MAX(aIter.mPrevHorSegHeight, aHorSegHeight);
+  BCPixelSize maxHorSegHeight = std::max(aIter.mPrevHorSegHeight, aHorSegHeight);
   nscoord offset          = CalcVerCornerOffset(ownerSide, cornerSubWidth,
                                                 maxHorSegHeight, true,
                                                 topBevel);
@@ -6654,7 +6655,7 @@ BCVerticalSeg::GetBottomCorner(BCPaintBorderIterator& aIter,
      cornerSubWidth = aIter.mBCData->GetCorner(ownerSide, bevel);
    }
    mIsBottomBevel = (mWidth > 0) ? bevel : false;
-   mBottomHorSegHeight = NS_MAX(aIter.mPrevHorSegHeight, aHorSegHeight);
+   mBottomHorSegHeight = std::max(aIter.mPrevHorSegHeight, aHorSegHeight);
    mBottomOffset = CalcVerCornerOffset(ownerSide, cornerSubWidth,
                                     mBottomHorSegHeight,
                                     false, mIsBottomBevel);
@@ -6796,7 +6797,7 @@ BCHorizontalSeg::Start(BCPaintBorderIterator& aIter,
 
   bool    leftBevel = (aHorSegHeight > 0) ? bevel : false;
   int32_t relColIndex = aIter.GetRelativeColIndex();
-  nscoord maxVerSegWidth = NS_MAX(aIter.mVerInfo[relColIndex].mWidth,
+  nscoord maxVerSegWidth = std::max(aIter.mVerInfo[relColIndex].mWidth,
                                   aBottomVerSegWidth);
   nscoord offset = CalcHorCornerOffset(cornerOwnerSide, cornerSubWidth,
                                        maxVerSegWidth, true, leftBevel,
@@ -6836,7 +6837,7 @@ BCHorizontalSeg::GetRightCorner(BCPaintBorderIterator& aIter,
 
   mIsRightBevel = (mWidth > 0) ? bevel : 0;
   int32_t relColIndex = aIter.GetRelativeColIndex();
-  nscoord verWidth = NS_MAX(aIter.mVerInfo[relColIndex].mWidth, aLeftSegWidth);
+  nscoord verWidth = std::max(aIter.mVerInfo[relColIndex].mWidth, aLeftSegWidth);
   mEndOffset = CalcHorCornerOffset(ownerSide, cornerSubWidth, verWidth,
                                    false, mIsRightBevel, aIter.mTableIsLTR);
   mLength += mEndOffset;

@@ -208,8 +208,8 @@ InstallXBLField(JSContext* cx,
     return true;
   }
 
-  nsresult rv = field->InstallField(context, thisObj, xblNode->NodePrincipal(),
-                                    protoBinding->DocURI(), installed);
+  nsresult rv = field->InstallField(context, thisObj, protoBinding->DocURI(),
+                                    installed);
   if (NS_SUCCEEDED(rv)) {
     return true;
   }
@@ -446,7 +446,6 @@ TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.

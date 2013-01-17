@@ -17,39 +17,6 @@
 
 using namespace mozilla;
 
-// We could use NS_IMPL_CYCLE_COLLECTION_1, except that in Unlink() we need to
-// clear our list's weak ref to us to be safe. (The other option would be to
-// not unlink and rely on the breaking of the other edges in the cycle, as
-// NS_SVG_VAL_IMPL_CYCLE_COLLECTION does.)
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPoint)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPoint)
-  // We may not belong to a list, so we must null check tmp->mList.
-  if (tmp->mList) {
-    tmp->mList->mItems[tmp->mListIndex] = nullptr;
-  }
-NS_IMPL_CYCLE_COLLECTION_UNLINK(mList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGPoint)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGPoint)
-NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGPoint)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGPoint)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPoint)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(DOMSVGPoint) // pseudo-interface
-  NS_INTERFACE_MAP_ENTRY(nsISVGPoint)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 float
 DOMSVGPoint::X()
 {
@@ -124,42 +91,3 @@ DOMSVGPoint::MatrixTransform(dom::SVGMatrix& matrix)
   nsCOMPtr<nsISVGPoint> newPoint = new DOMSVGPoint(pt);
   return newPoint.forget();
 }
-
-void
-DOMSVGPoint::InsertingIntoList(DOMSVGPointList *aList,
-                               uint32_t aListIndex,
-                               bool aIsAnimValItem)
-{
-  NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that already has an owner");
-
-  mList = aList;
-  mListIndex = aListIndex;
-  mIsReadonly = false;
-  mIsAnimValItem = aIsAnimValItem;
-
-  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGPoint!");
-}
-
-void
-DOMSVGPoint::RemovingFromList()
-{
-  mPt = InternalItem();
-  mList = nullptr;
-  NS_ABORT_IF_FALSE(!mIsReadonly, "mIsReadonly set for list");
-  mIsAnimValItem = false;
-}
-
-SVGPoint&
-DOMSVGPoint::InternalItem()
-{
-  return mList->InternalList().mItems[mListIndex];
-}
-
-#ifdef DEBUG
-bool
-DOMSVGPoint::IndexIsValid()
-{
-  return mListIndex < mList->InternalList().Length();
-}
-#endif
-

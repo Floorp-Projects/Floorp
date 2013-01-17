@@ -1471,6 +1471,9 @@ void
 js::FreeScriptFilenames(JSRuntime *rt)
 {
     ScriptFilenameTable &table = rt->scriptFilenameTable;
+    if (!table.initialized())
+        return;
+
     for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront())
         js_free(e.front());
 

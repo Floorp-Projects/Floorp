@@ -785,6 +785,13 @@ struct JSObject : public js::ObjectImpl
         return addProperty(cx, self, id, NULL, NULL, slot, attrs, 0, 0);
     }
 
+    js::UnrootedShape addDataProperty(JSContext *cx, js::HandlePropertyName name, uint32_t slot, unsigned attrs) {
+        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+        js::RootedObject self(cx, this);
+        js::RootedId id(cx, NameToId(name));
+        return addProperty(cx, self, id, NULL, NULL, slot, attrs, 0, 0);
+    }
+
     /* Add or overwrite a property for id in this scope. */
     static js::UnrootedShape putProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                                          JSPropertyOp getter, JSStrictPropertyOp setter,
@@ -1412,7 +1419,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags);
  * If protoKey is constant and scope is non-null, use GlobalObject's prototype
  * methods instead.
  */
-extern JS_FRIEND_API(bool)
+extern bool
 js_GetClassPrototype(JSContext *cx, JSProtoKey protoKey, js::MutableHandleObject protop,
                      js::Class *clasp = NULL);
 

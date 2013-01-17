@@ -5,13 +5,15 @@
 
 #include "nsLookAndFeel.h"
 #include "nsCocoaFeatures.h"
-#include "nsObjCExceptions.h"
 #include "nsIServiceManager.h"
 #include "nsNativeThemeColors.h"
 #include "nsStyleConsts.h"
 #include "gfxFont.h"
 
 #import <Cocoa/Cocoa.h>
+
+// This must be included last:
+#include "nsObjCExceptions.h"
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {

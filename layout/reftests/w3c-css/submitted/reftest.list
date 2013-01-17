@@ -50,4 +50,4 @@ include multicol3/reftest.list
 # include ui3/reftest.list
 
 # Values and Units Level 3
-# include values/reftest.list
+include values3/reftest.list

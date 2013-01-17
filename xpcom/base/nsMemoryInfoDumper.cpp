@@ -826,6 +826,10 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   // Dump the memory reports to the file.
 
   // Increment this number if the format changes.
+  //
+  // This is the first write to the file, and it causes |writer| to allocate
+  // over 200 KiB of memory.
+  //
   DUMP(writer, "{\n  \"version\": 1,\n");
 
   DUMP(writer, "  \"hasMozMallocUsableSize\": ");
@@ -890,9 +894,6 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
 
   DUMP(writer, "\n  ]\n}");
 
-  rv = writer->Finish();
-  NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef MOZ_DMD
   // Open a new file named something like
   //
@@ -923,6 +924,14 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   rv = dmdWriter->Finish();
   NS_ENSURE_SUCCESS(rv, rv);
 #endif  // MOZ_DMD
+
+  // The call to Finish() deallocates the memory allocated by the first DUMP()
+  // above.  Because that memory was live while the memory reporters ran and
+  // thus measured by them -- by "heap-allocated" if nothing else -- we want
+  // DMD to see it as well.  So we deliberately don't call Finish() until after
+  // DMD finishes.
+  rv = writer->Finish();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Rename the file, now that we're done dumping the report.  The file's
   // ultimate destination is "memory-report<-identifier>-<pid>.json.gz".

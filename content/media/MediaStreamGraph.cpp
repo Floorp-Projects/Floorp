@@ -21,6 +21,7 @@
 #include "TrackUnionStream.h"
 #include "ImageContainer.h"
 #include "AudioChannelCommon.h"
+#include <algorithm>
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -519,7 +520,7 @@ MediaStreamGraphImpl::GetDesiredBufferEnd(MediaStream* aStream)
 {
   StreamTime current = mCurrentTime - aStream->mBufferStartTime;
   return current +
-      MillisecondsToMediaTime(NS_MAX(AUDIO_TARGET_MS, VIDEO_TARGET_MS));
+      MillisecondsToMediaTime(std::max(AUDIO_TARGET_MS, VIDEO_TARGET_MS));
 }
 
 void
@@ -691,18 +692,18 @@ MediaStreamGraphImpl::GraphTimeToStreamTime(MediaStream* aStream,
   NS_ASSERTION(aTime <= mStateComputedTime,
                "Don't ask about times where we haven't made blocking decisions yet");
   if (aTime <= mCurrentTime) {
-    return NS_MAX<StreamTime>(0, aTime - aStream->mBufferStartTime);
+    return std::max<StreamTime>(0, aTime - aStream->mBufferStartTime);
   }
   GraphTime t = mCurrentTime;
   StreamTime s = t - aStream->mBufferStartTime;
   while (t < aTime) {
     GraphTime end;
     if (!aStream->mBlocked.GetAt(t, &end)) {
-      s += NS_MIN(aTime, end) - t;
+      s += std::min(aTime, end) - t;
     }
     t = end;
   }
-  return NS_MAX<StreamTime>(0, s);
+  return std::max<StreamTime>(0, s);
 }  
 
 GraphTime
@@ -727,7 +728,7 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
     GraphTime end;
     if (t < mStateComputedTime) {
       blocked = aStream->mBlocked.GetAt(t, &end);
-      end = NS_MIN(end, mStateComputedTime);
+      end = std::min(end, mStateComputedTime);
     } else {
       blocked = false;
       end = GRAPH_TIME_MAX;
@@ -739,7 +740,7 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
         // No more stream time to consume at time t, so we're done.
         break;
       }
-      MediaTime consume = NS_MIN(end - t, streamAmount);
+      MediaTime consume = std::min(end - t, streamAmount);
       streamAmount -= consume;
       t += consume;
     }
@@ -806,7 +807,7 @@ MediaStreamGraphImpl::UpdateCurrentTime()
       GraphTime end;
       bool blocked = stream->mBlocked.GetAt(t, &end);
       if (blocked) {
-        blockedTime += NS_MIN(end, nextCurrentTime) - t;
+        blockedTime += std::min(end, nextCurrentTime) - t;
       }
       if (blocked != stream->mNotifiedBlocked) {
         for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
@@ -882,7 +883,7 @@ MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream, GraphTime aTime,
     return true;
   }
   // Reconsider decisions at bufferEnd
-  *aEnd = NS_MIN(*aEnd, bufferEnd);
+  *aEnd = std::min(*aEnd, bufferEnd);
   return false;
 }
 
@@ -1083,13 +1084,13 @@ MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams
         LOG(PR_LOG_DEBUG, ("MediaStream %p is finished, but not blocked yet (end at %f, with blocking at %f)",
                            stream, MediaTimeToSeconds(stream->GetBufferEnd()),
                            MediaTimeToSeconds(endTime)));
-        *aEnd = NS_MIN(*aEnd, endTime);
+        *aEnd = std::min(*aEnd, endTime);
       }
     }
 
     GraphTime end;
     bool explicitBlock = stream->mExplicitBlockerCount.GetAt(aTime, &end) > 0;
-    *aEnd = NS_MIN(*aEnd, end);
+    *aEnd = std::min(*aEnd, end);
     if (explicitBlock) {
       LOG(PR_LOG_DEBUG, ("MediaStream %p is blocked due to explicit blocker", stream));
       MarkStreamBlocking(stream);
@@ -1207,7 +1208,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     while (t < aTo) {
       GraphTime end;
       bool blocked = aStream->mBlocked.GetAt(t, &end);
-      end = NS_MIN(end, aTo);
+      end = std::min(end, aTo);
 
       AudioSegment output;
       output.InitFrom(*audio);
@@ -1234,7 +1235,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
         // will just be silence, which is fine here. But if endTicks is after
         // the track end, then 'audio' won't be long enough, so we'll need
         // to explicitly play silence.
-        TrackTicks sliceEnd = NS_MIN(endTicks, audio->GetDuration());
+        TrackTicks sliceEnd = std::min(endTicks, audio->GetDuration());
         if (sliceEnd > startTicks) {
           output.AppendSlice(*audio, startTicks, sliceEnd);
         }
@@ -1458,7 +1459,7 @@ MediaStreamGraphImpl::RunThread()
           int64_t((now - mCurrentTimeStamp).ToMilliseconds());
         // Make sure timeoutMS doesn't overflow 32 bits by waking up at
         // least once a minute, if we need to wake up at all
-        timeoutMS = NS_MAX<int64_t>(0, NS_MIN<int64_t>(timeoutMS, 60*1000));
+        timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
         timeout = PR_MillisecondsToInterval(uint32_t(timeoutMS));
         LOG(PR_LOG_DEBUG, ("Waiting for next iteration; at %f, timeout=%f",
                            (now - mInitialTimeStamp).ToSeconds(), timeoutMS/1000.0));
@@ -2175,7 +2176,7 @@ MediaInputPort::GetNextInputInterval(GraphTime aTime)
   result.mStart = t;
   GraphTime sourceEnd;
   result.mInputIsBlocked = mSource->mBlocked.GetAt(t, &sourceEnd);
-  result.mEnd = NS_MIN(end, sourceEnd);
+  result.mEnd = std::min(end, sourceEnd);
   return result;
 }
 

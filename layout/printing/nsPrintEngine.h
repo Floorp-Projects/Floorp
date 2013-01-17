@@ -280,6 +280,7 @@ protected:
 
   int32_t mLoadCounter;
   bool mDidLoadDataForPrinting;
+  bool mIsDestroying;
 
   nsresult AfterNetworkPrint(bool aHandleError);
 

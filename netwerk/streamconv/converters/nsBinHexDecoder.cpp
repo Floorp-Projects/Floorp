@@ -18,6 +18,7 @@
 
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
+#include <algorithm>
 
 
 // sadly I couldn't find char defintions for CR LF elsehwere in the code (they are defined as strings in nsCRT.h)
@@ -130,7 +131,7 @@ nsBinHexDecoder::OnDataAvailable(nsIRequest* request,
     uint32_t numBytesRead = 0;
     while (aCount > 0) // while we still have bytes to copy...
     {
-      aStream->Read(mDataBuffer, NS_MIN(aCount, nsIOService::gDefaultSegmentSize - 1), &numBytesRead);
+      aStream->Read(mDataBuffer, std::min(aCount, nsIOService::gDefaultSegmentSize - 1), &numBytesRead);
       if (aCount >= numBytesRead)
         aCount -= numBytesRead; // subtract off the number of bytes we just read
       else

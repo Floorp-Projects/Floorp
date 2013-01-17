@@ -38,6 +38,7 @@ class nsIImageLoadingContent;
 #include "FrameMetrics.h"
 
 #include <limits>
+#include <algorithm>
 
 class nsBlockFrame;
 class gfxDrawable;
@@ -643,7 +644,8 @@ public:
     PAINT_ALL_CONTINUATIONS = 0x40,
     PAINT_TO_WINDOW = 0x80,
     PAINT_EXISTING_TRANSACTION = 0x100,
-    PAINT_NO_COMPOSITE = 0x200
+    PAINT_NO_COMPOSITE = 0x200,
+    PAINT_NO_CLEAR_INVALIDATIONS = 0x400
   };
 
   /**
@@ -967,7 +969,7 @@ public:
     nscoord result =
       nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockHeight);
     // Clamp calc(), and the subtraction for box-sizing.
-    return NS_MAX(0, result - aContentEdgeToBoxSizingBoxEdge);
+    return std::max(0, result - aContentEdgeToBoxSizingBoxEdge);
   }
 
   static bool IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
@@ -1962,7 +1964,7 @@ nsLayoutUtils::PointIsCloserToRect(PointType aPoint, const RectType& aRect,
   if (fromLeft >= 0 && fromRight <= 0) {
     xDistance = 0;
   } else {
-    xDistance = NS_MIN(abs(fromLeft), abs(fromRight));
+    xDistance = std::min(abs(fromLeft), abs(fromRight));
   }
 
   if (xDistance <= aClosestXDistance) {
@@ -1977,7 +1979,7 @@ nsLayoutUtils::PointIsCloserToRect(PointType aPoint, const RectType& aRect,
     if (fromTop >= 0 && fromBottom <= 0) {
       yDistance = 0;
     } else {
-      yDistance = NS_MIN(abs(fromTop), abs(fromBottom));
+      yDistance = std::min(abs(fromTop), abs(fromBottom));
     }
 
     if (yDistance < aClosestYDistance) {

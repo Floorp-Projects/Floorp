@@ -42,6 +42,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -1373,7 +1374,7 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
       }
 
       aSize.width =
-        tmpSize.width + NS_MAX(borderPadding.LeftRight(), scrollbarWidth);
+        tmpSize.width + std::max(borderPadding.LeftRight(), scrollbarWidth);
 
       return true;
     }

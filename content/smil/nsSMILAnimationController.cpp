@@ -13,6 +13,7 @@
 #include "nsISMILAnimationElement.h"
 #include "nsIDOMSVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -118,7 +119,7 @@ nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
   // doing so we get sampled by a refresh driver whose most recent refresh time
   // predates when we were initialised, so to be safe we make sure to take the
   // most recent time here.
-  aTime = NS_MAX(mCurrentSampleTime, aTime);
+  aTime = std::max(mCurrentSampleTime, aTime);
 
   // Sleep detection: If the time between samples is a whole lot greater than we
   // were expecting then we assume the computer went to sleep or someone's
@@ -562,7 +563,7 @@ nsSMILAnimationController::DoMilestoneSamples()
     // Because we're only performing this clamping at the last moment, the
     // animations will still all get sampled in the correct order and
     // dependencies will be appropriately resolved.
-    sampleTime = NS_MAX(nextMilestone.mTime, sampleTime);
+    sampleTime = std::max(nextMilestone.mTime, sampleTime);
 
     for (uint32_t i = 0; i < length; ++i) {
       nsISMILAnimationElement* elem = params.mElements[i].get();
@@ -579,7 +580,7 @@ nsSMILAnimationController::DoMilestoneSamples()
         continue;
 
       // Clamp the converted container time to non-negative values.
-      nsSMILTime containerTime = NS_MAX<nsSMILTime>(0, containerTimeValue.GetMillis());
+      nsSMILTime containerTime = std::max<nsSMILTime>(0, containerTimeValue.GetMillis());
 
       if (nextMilestone.mIsEnd) {
         elem->TimedElement().SampleEndAt(containerTime);

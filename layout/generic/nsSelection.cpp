@@ -39,6 +39,7 @@
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsTextFragment.h"
+#include <algorithm>
 
 // for IBMBIDI
 #include "nsFrameTraversal.h"
@@ -492,7 +493,6 @@ nsFrameSelection::nsFrameSelection()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   int32_t i;
   for (i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; ++i) {
@@ -1342,7 +1342,7 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
-      aPresShell->SetCaretBidiLevel(NS_MIN(firstLevel, secondLevel));
+      aPresShell->SetCaretBidiLevel(std::min(firstLevel, secondLevel));
       break;
       */
 
@@ -2474,10 +2474,10 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
   if (!tableFrame)
     return NS_ERROR_FAILURE;
 
-  int32_t minRowIndex = NS_MIN(aStartRowIndex, aEndRowIndex);
-  int32_t maxRowIndex = NS_MAX(aStartRowIndex, aEndRowIndex);
-  int32_t minColIndex = NS_MIN(aStartColumnIndex, aEndColumnIndex);
-  int32_t maxColIndex = NS_MAX(aStartColumnIndex, aEndColumnIndex);
+  int32_t minRowIndex = std::min(aStartRowIndex, aEndRowIndex);
+  int32_t maxRowIndex = std::max(aStartRowIndex, aEndRowIndex);
+  int32_t minColIndex = std::min(aStartColumnIndex, aEndColumnIndex);
+  int32_t maxColIndex = std::max(aStartColumnIndex, aEndColumnIndex);
 
   // Strong reference because we sometimes remove the range
   nsRefPtr<nsRange> range = GetFirstCellRange();
@@ -3146,7 +3146,6 @@ Selection::~Selection()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Selection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // Unlink the selection listeners *before* we do RemoveAllRanges since
   // we don't want to notify the listeners during JS GC (they could be
@@ -4111,8 +4110,8 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
       if (startOffset < (aContentOffset + aContentLength)  &&
           endOffset > aContentOffset) {
         // this range is totally inside the requested content range
-        start = NS_MAX(0, startOffset - aContentOffset);
-        end = NS_MIN(aContentLength, endOffset - aContentOffset);
+        start = std::max(0, startOffset - aContentOffset);
+        end = std::min(aContentLength, endOffset - aContentOffset);
       }
       // otherwise, range is inside the requested node, but does not intersect
       // the requested content range, so ignore it
@@ -4120,7 +4119,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
       if (startOffset < (aContentOffset + aContentLength)) {
         // the beginning of the range is inside the requested node, but the
         // end is outside, select everything from there to the end
-        start = NS_MAX(0, startOffset - aContentOffset);
+        start = std::max(0, startOffset - aContentOffset);
         end = aContentLength;
       }
     } else if (endNode == aContent) {
@@ -4128,7 +4127,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
         // the end of the range is inside the requested node, but the beginning
         // is outside, select everything from the beginning to there
         start = 0;
-        end = NS_MIN(aContentLength, endOffset - aContentOffset);
+        end = std::min(aContentLength, endOffset - aContentOffset);
       }
     } else {
       // this range does not begin or end in the requested node, but since
@@ -5573,7 +5572,7 @@ Selection::SelectionLanguageChange(bool aLangRTL)
     //  (if the new language corresponds to the orientation of that character) and this level plus 1
     //  (if the new language corresponds to the opposite orientation)
     if ((level != levelBefore) && (level != levelAfter))
-      level = NS_MIN(levelBefore, levelAfter);
+      level = std::min(levelBefore, levelAfter);
     if ((level & 1) == aLangRTL)
       mFrameSelection->SetCaretBidiLevel(level);
     else

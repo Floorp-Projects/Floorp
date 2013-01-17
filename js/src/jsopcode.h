@@ -345,7 +345,7 @@ namespace js {
  * errors containing decompiled values that are useful for the user, instead of
  * values used internally by the self-hosted code.
  *
- * The caller must call JS_free on the result after a succsesful call.
+ * The caller must call JS_free on the result after a successful call.
  */
 char *
 DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,

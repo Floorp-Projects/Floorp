@@ -49,6 +49,7 @@
 #include "nsTextEditRules.h"
 #include "nsTextEditUtils.h"
 #include "nscore.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -144,7 +145,7 @@ nsHTMLEditor::RelativeChangeElementZIndex(nsIDOMElement * aElement,
   nsresult res = GetElementZIndex(aElement, &zIndex);
   NS_ENSURE_SUCCESS(res, res);
 
-  zIndex = NS_MAX(zIndex + aChange, 0);
+  zIndex = std::max(zIndex + aChange, 0);
   SetElementZIndex(aElement, zIndex);
   *aReturn = zIndex;
 

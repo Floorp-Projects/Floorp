@@ -2502,6 +2502,18 @@
     "n_values": 100,
     "description": "Security UI Telemetry"
   },
+  "SEARCH_SERVICE_INIT_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 15,
+    "description": "Time (ms) it takes to initialize the search service"
+  },
+  "SEARCH_SERVICE_BUILD_CACHE_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 15,
+    "description": "Time (ms) it takes to build the cache of the search service"
+  },
   "SOCIAL_ENABLED_ON_SESSION": {
     "kind": "flag",
     "description": "Social has been enabled at least once on the current session"
