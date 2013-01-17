@@ -1244,32 +1244,20 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     return NS_OK;
   }
 
+  nsCxPusher pusher;
+  if (!pusher.Push(mContext))
+    return NS_ERROR_FAILURE;
+
   xpc_UnmarkGrayObject(&aScopeObject);
   nsAutoMicroTask mt;
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(GetGlobalObject());
-  if (!objPrincipal)
-    return NS_ERROR_FAILURE;
-  principal = objPrincipal->GetPrincipal();
-  if (!principal)
-    return NS_ERROR_FAILURE;
-  aOptions.setPrincipals(nsJSPrincipals::get(principal));
+  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(&aScopeObject));
+  aOptions.setPrincipals(p);
 
   bool ok = false;
 
-  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
+  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, nsJSPrincipals::get(p), &ok);
   if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Push our JSContext on the current thread's context stack so JS called
-  // from native code via XPConnect uses the right context.  Do this whether
-  // or not the SecurityManager said "ok", in order to simplify control flow
-  // below where we pop before returning.
-  nsCOMPtr<nsIJSContextStack> stack =
-           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1305,11 +1293,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     }
   }
 
-  // Pop here, after JS_ValueToString and any other possible evaluation.
-  if (NS_FAILED(stack->Pop(nullptr)))
-    rv = NS_ERROR_FAILURE;
-
   // ScriptEvaluated needs to come after we pop the stack
+  pusher.Pop();
   ScriptEvaluated(true);
 
   return rv;
