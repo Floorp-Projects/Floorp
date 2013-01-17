@@ -36,6 +36,7 @@ MOCHITEST_FILES = \
 	test_drawImageIncomplete.html \
 	test_canvas_font_setter.html \
 	test_2d.clearRect.image.offscreen.html \
+	test_2d.clip.winding.html \
 	test_2d.composite.canvas.destination-atop.html \
 	test_2d.composite.canvas.destination-in.html \
 	test_2d.composite.canvas.source-in.html \
@@ -93,6 +94,8 @@ MOCHITEST_FILES = \
 	test_2d.composite.uncovered.fill.color.html \
 	test_2d.composite.uncovered.fill.luminosity.html \
 	test_2d.drawImage.zerocanvas.html \
+	test_2d.fill.winding.html \
+	test_2d.isPointInPath.winding.html \
 	test_2d.strokeRect.zero.5.html \
 	test_toBlob.html \
 	test_toDataURL_alpha.html \
