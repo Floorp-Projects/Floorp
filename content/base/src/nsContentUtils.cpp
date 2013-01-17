@@ -2331,6 +2331,17 @@ nsContentUtils::GetSubjectPrincipal()
 }
 
 // static
+nsIPrincipal*
+nsContentUtils::GetObjectPrincipal(JSObject* aObj)
+{
+  // This is duplicated from nsScriptSecurityManager. We don't call through there
+  // because the API unnecessarily requires a JSContext for historical reasons.
+  JSCompartment *compartment = js::GetObjectCompartment(aObj);
+  JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
+  return nsJSPrincipals::get(principals);
+}
+
+// static
 nsresult
 nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
                                           const nsAString& aSpec,
