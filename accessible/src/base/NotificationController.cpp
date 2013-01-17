@@ -58,8 +58,6 @@ NotificationController::~NotificationController()
 NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(NotificationController)
 NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(NotificationController)
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationController)
   if (tmp->mDocument)
     tmp->Shutdown();
@@ -865,16 +863,8 @@ NotificationController::ContentInsertion::
   return haveToUpdate;
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController::ContentInsertion)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationController::ContentInsertion)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContainer)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController::ContentInsertion)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContainer");
-  cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mContainer.get()));
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_1(NotificationController::ContentInsertion,
+                           mContainer)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(NotificationController::ContentInsertion,
                                      AddRef)

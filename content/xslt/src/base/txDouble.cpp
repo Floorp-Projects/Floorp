@@ -10,6 +10,7 @@
 #include "txXMLUtils.h"
 #include <math.h>
 #include <stdlib.h>
+#include <algorithm>
 #ifdef WIN32
 #include <float.h>
 #endif
@@ -195,7 +196,7 @@ void txDouble::toString(double aValue, nsAString& aDest)
         }
     }
     // mantissa
-    int firstlen = NS_MIN<size_t>(intDigits, endp - buf);
+    int firstlen = std::min<size_t>(intDigits, endp - buf);
     for (i = 0; i < firstlen; i++) {
         *dest = buf[i]; ++dest;
     }

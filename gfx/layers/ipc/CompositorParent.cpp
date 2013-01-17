@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "base/basictypes.h"
+#include <algorithm>
 
 #if defined(MOZ_WIDGET_ANDROID)
 # include <android/log.h>
@@ -983,7 +984,7 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   // within the page boundaries.
   if (mContentRect.width * tempScaleDiffX < metrics.mCompositionBounds.width) {
     offset.x = -metricsScrollOffset.x;
-    scaleDiff.width = NS_MIN(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
+    scaleDiff.width = std::min(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
   } else {
     offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
                        mContentRect.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) -
@@ -993,7 +994,7 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
 
   if (mContentRect.height * tempScaleDiffY < metrics.mCompositionBounds.height) {
     offset.y = -metricsScrollOffset.y;
-    scaleDiff.height = NS_MIN(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
+    scaleDiff.height = std::min(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
   } else {
     offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
                        mContentRect.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) -

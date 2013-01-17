@@ -14,8 +14,9 @@ const reporter = Cc["@mozilla.org/datareporting/service;1"]
                    .healthReporter;
 
 const policy = Cc["@mozilla.org/datareporting/service;1"]
-                .getService(Ci.nsISupports)
-                .wrappedJSObject.policy;
+                 .getService(Ci.nsISupports)
+                 .wrappedJSObject
+                 .policy;
 
 const prefs = new Preferences("datareporting.healthreport.about.");
 
@@ -26,7 +27,7 @@ function getLocale() {
 }
 
 function init() {
-  refreshWithDataSubmissionFlag(reporter.willUploadData);
+  refreshWithDataSubmissionFlag(policy.healthReportUploadEnabled);
   refreshJSONPayload();
   document.getElementById("details-link").href = prefs.get("glossaryUrl");
 }
@@ -38,10 +39,11 @@ function init() {
  *        (bool) Whether data submission is enabled.
  */
 function refreshWithDataSubmissionFlag(enabled) {
-  if (!enabled)
+  if (!enabled) {
     updateView("disabled");
-  else
+  } else {
     updateView("default");
+  }
 }
 
 function updateView(state="default") {
@@ -57,8 +59,9 @@ function refreshDataView(data) {
 
   noData.style.display = data ? "none" : "inline";
   dataEl.style.display = data ? "block" : "none";
-  if (data)
+  if (data) {
     dataEl.innerHTML = JSON.stringify(data, null, 2);
+  }
 }
 
 /**
@@ -69,7 +72,7 @@ function refreshJSONPayload() {
 }
 
 function onOptInClick() {
-  policy.healthReportUploadEnable = true;
+  policy.healthReportUploadEnabled = true;
   refreshWithDataSubmissionFlag(true);
 }
 
@@ -85,14 +88,8 @@ function onOptOutClick() {
     return;
   }
 
-  policy.healthReportUploadEnable = false;
-  let promise = reporter.requestDeleteRemoteData("Clicked opt out button on about page.");
-  if (promise) {
-    promise.then(function onDelete() {
-      refreshWithDataSubmissionFlag(reporter.willUploadData);
-    });
-  }
-
+  policy.healthReportUploadEnabled = false;
+  reporter.requestDeleteRemoteData("Clicked opt out button on about page.");
   refreshWithDataSubmissionFlag(false);
   updateView("disabled");
 }
@@ -115,3 +112,4 @@ function onHideReportClick() {
   updateView("default");
   document.getElementById("remote-report").src = "";
 }
+

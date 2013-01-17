@@ -7,6 +7,7 @@
 #define MOZILLA_AUDIOSAMPLEFORMAT_H_
 
 #include "nsAlgorithm.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -74,7 +75,7 @@ template <> inline int16_t
 FloatToAudioSample<int16_t>(float aValue)
 {
   float v = aValue*32768.0f;
-  float clamped = NS_MAX(-32768.0f, NS_MIN(32767.0f, v));
+  float clamped = std::max(-32768.0f, std::min(32767.0f, v));
   return int16_t(clamped);
 }
 

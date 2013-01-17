@@ -31,6 +31,7 @@
 #include "xpcpublic.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
+#include <algorithm>
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -55,8 +56,6 @@ IsChromeProcess()
   rt->GetProcessType(&type);
   return type == nsIXULRuntime::PROCESS_TYPE_DEFAULT;
 }
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameMessageManager)
   uint32_t count = tmp->mListeners.Length();
@@ -949,7 +948,7 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
       return;
     }
     nsCString buffer;
-    uint32_t avail = (uint32_t)NS_MIN(avail64, (uint64_t)UINT32_MAX);
+    uint32_t avail = (uint32_t)std::min(avail64, (uint64_t)UINT32_MAX);
     if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, avail))) {
       return;
     }

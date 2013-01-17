@@ -710,7 +710,7 @@ class nsTSubstring_CharT
       bool ReplacePrep(index_type cutStart, size_type cutLength,
                        size_type newLength) NS_WARN_UNUSED_RESULT
       {
-        cutLength = NS_MIN(cutLength, mLength - cutStart);
+        cutLength = XPCOM_MIN(cutLength, mLength - cutStart);
         uint32_t newTotalLen = mLength - cutLength + newLength;
         if (cutStart == mLength && Capacity() > newTotalLen) {
           mFlags &= ~F_VOIDED;

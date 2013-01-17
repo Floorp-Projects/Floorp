@@ -54,6 +54,7 @@ EXPORTS_mozilla/dom = \
 		HTMLTitleElement.h \
 		HTMLUnknownElement.h \
 		UndoManager.h \
+		ValidityState.h \
 		$(NULL)
 
 CPPSRCS		= \
@@ -93,7 +94,7 @@ CPPSRCS		= \
 		nsHTMLMetaElement.cpp \
 		nsHTMLMeterElement.cpp \
 		nsHTMLModElement.cpp \
-		nsHTMLObjectElement.cpp \
+		HTMLObjectElement.cpp \
 		nsHTMLSharedObjectElement.cpp \
 		nsHTMLOptionElement.cpp \
 		nsHTMLOptGroupElement.cpp \
@@ -116,7 +117,7 @@ CPPSRCS		= \
 		nsHTMLTextAreaElement.cpp \
 		HTMLTitleElement.cpp \
 		HTMLUnknownElement.cpp \
-		nsDOMValidityState.cpp \
+		ValidityState.cpp \
 		nsIConstraintValidation.cpp \
 		nsRadioVisitor.cpp \
 		nsDOMStringMap.cpp \

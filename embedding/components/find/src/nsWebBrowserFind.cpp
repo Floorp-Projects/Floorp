@@ -499,12 +499,15 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     // There is a selection.
     int32_t count = -1;
     nsresult rv = aSel->GetRangeCount(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (count < 1)
         return SetRangeAroundDocument(aSearchRange, aStartPt, aEndPt, aDoc);
 
     // Need bodyNode, for the start/end of the document
     nsCOMPtr<nsIDOMNode> bodyNode;
     rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIContent> bodyContent (do_QueryInterface(bodyNode));
     NS_ENSURE_ARG_POINTER(bodyContent);
 

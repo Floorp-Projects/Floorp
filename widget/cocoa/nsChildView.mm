@@ -653,6 +653,45 @@ nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void
+nsChildView::WillPaint()
+{
+  if (!mView || ![mView isKindOfClass:[ChildView class]])
+    return;
+  NSWindow* win = [mView window];
+  if (!win || ![win isKindOfClass:[ToolbarWindow class]])
+    return;
+  if (![(ToolbarWindow*)win drawsContentsIntoWindowFrame])
+    return;
+
+  NSRect titlebarRect = [(ToolbarWindow*)win titlebarRect];
+  gfxSize titlebarSize(titlebarRect.size.width, titlebarRect.size.height);
+  if (!mTitlebarSurf || mTitlebarSize != titlebarSize) {
+    mTitlebarSize = titlebarSize;
+    mTitlebarSurf = new gfxQuartzSurface(titlebarSize, gfxASurface::ImageFormatARGB32);
+  }
+  NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
+  CGContextRef context = mTitlebarSurf->GetCGContext();
+  [(ChildView*)mView drawRect:flippedTitlebarRect inTitlebarContext:context];
+}
+
+void
+nsChildView::CompositeTitlebar(const gfxSize& aSize, CGContextRef aContext)
+{
+  NS_ASSERTION(mTitlebarSurf, "Must have titlebar surface");
+  if (!mTitlebarSurf) {
+    return;
+  }
+
+  CGImageRef image = CGBitmapContextCreateImage(mTitlebarSurf->GetCGContext());
+
+  CGContextDrawImage(aContext, 
+                     CGRectMake(0, 0, mTitlebarSize.width, mTitlebarSize.height), 
+                     image);
+
+  CGImageRelease(image);
+}
+
 void nsChildView::ResetParent()
 {
   if (!mOnDestroyCalled) {
@@ -738,6 +777,18 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
     aRect = mBounds;
   } else {
     aRect = CocoaPointsToDevPixels([mView frame]);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
+{
+  GetBounds(aRect);
+  if (!mParentWidget) {
+    // For top level widgets we want the position on screen, not the position
+    // of this view inside the window.
+    MOZ_ASSERT(mWindowType != eWindowType_plugin, "plugin widgets should have parents");
+    aRect.MoveTo(WidgetToScreenOffset());
   }
   return NS_OK;
 }
@@ -2403,6 +2454,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // but we can't tell the difference here except by retrieving
     // the backing scale factor and comparing to the old value
     mGeckoChild->BackingScaleFactorChanged();
+  }
+}
+
+- (void)drawTitlebar:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext
+{
+  if (mGeckoChild) {
+    gfxSize size(aRect.size.width, aRect.size.height);
+    mGeckoChild->CompositeTitlebar(size, aContext);
   }
 }
 

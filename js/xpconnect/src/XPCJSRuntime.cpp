@@ -34,6 +34,7 @@
 
 #include "sampler.h"
 #include "nsJSPrincipals.h"
+#include <algorithm>
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -571,7 +572,7 @@ ReleaseSliceNow(uint32_t slice, void *data)
     MOZ_ASSERT(slice > 0, "nonsensical/useless call with slice == 0");
     nsTArray<nsISupports *> *items = static_cast<nsTArray<nsISupports *>*>(data);
 
-    slice = NS_MIN(slice, items->Length());
+    slice = std::min(slice, items->Length());
     for (uint32_t i = 0; i < slice; ++i) {
         // Remove (and NS_RELEASE) the last entry in "items":
         uint32_t lastItemIdx = items->Length() - 1;

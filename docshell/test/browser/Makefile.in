@@ -32,7 +32,6 @@ MOCHITEST_BROWSER_FILES =	\
 		browser_bug670318.js \
 		file_bug670318.html \
 		browser_bug673467.js \
-		browser_bug808035.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

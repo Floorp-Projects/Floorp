@@ -5900,7 +5900,7 @@ struct ExpressionDecompiler
     JSAtom *loadAtom(jsbytecode *pc);
     bool quote(JSString *s, uint32_t quote);
     bool write(const char *s);
-    bool write(JSString *s);
+    bool write(JSString *str);
     bool getOutput(char **out);
 };
 
@@ -5983,14 +5983,13 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
         JSAtom *prop = (op == JSOP_LENGTH) ? cx->names().length : loadAtom(pc);
         if (!decompilePC(pcstack[-1]))
             return false;
-        if (IsIdentifier(prop))
+        if (IsIdentifier(prop)) {
             return write(".") &&
                    quote(prop, '\0');
-        else
-            return write("[") &&
-                   quote(prop, '\'') &&
-                   write("]");
-        return true;
+        }
+        return write("[") &&
+               quote(prop, '\'') &&
+               write("]");
       }
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
@@ -6047,6 +6046,18 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_FUNCALL:
         return decompilePC(pcstack[-int32_t(GET_ARGC(pc) + 2)]) &&
                write("(...)");
+      case JSOP_NEWARRAY:
+        return write("[]");
+      case JSOP_REGEXP:
+      case JSOP_OBJECT: {
+        JSObject *obj = (op == JSOP_REGEXP)
+                        ? script->getRegExp(GET_UINT32_INDEX(pc))
+                        : script->getObject(GET_UINT32_INDEX(pc));
+        JSString *str = js_ValueToSource(cx, ObjectValue(*obj));
+        if (!str)
+            return false;
+        return write(str);
+      }
       default:
         break;
     }
@@ -6081,9 +6092,9 @@ ExpressionDecompiler::write(const char *s)
 }
 
 bool
-ExpressionDecompiler::write(JSString *s)
+ExpressionDecompiler::write(JSString *str)
 {
-    return sprinter.putString(s) >= 0;
+    return sprinter.putString(str) >= 0;
 }
 
 bool
@@ -6161,6 +6172,18 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
     if (spindex == JSDVG_IGNORE_STACK)
         return true;
 
+    /*
+     * Fall back on *valuepc as start pc if this frame is calling .apply and
+     * the methodjit has "splatted" the arguments array, bumping the caller's
+     * stack pointer and skewing it from what static analysis in pcstack.init
+     * would compute.
+     *
+     * FIXME: also fall back if iter.isIon(), since the stack snapshot may be
+     * for the previous pc (see bug 831120).
+     */
+    if (iter.isIon() || iter.interpFrame()->jitRevisedStack())
+        return true;
+
     *valuepc = NULL;
 
     PCStack pcstack;
@@ -6169,19 +6192,25 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
 
     if (spindex == JSDVG_SEARCH_STACK) {
         size_t index = iter.numFrameSlots();
-        Value s;
+        JS_ASSERT(index >= size_t(pcstack.depth()));
 
         // We search from fp->sp to base to find the most recently calculated
-        // value matching v under assumption that it is it that caused
-        // exception.
+        // value matching v under assumption that it is the value that caused
+        // the exception.
         int stackHits = 0;
+        Value s;
         do {
             if (!index)
                 return true;
             s = iter.frameSlotValue(--index);
         } while (s != v || stackHits++ != skipStackHits);
+
+        // If index is out of bounds in pcstack, the blamed value must be one
+        // pushed by the current bytecode, so restore *valuepc.
         if (index < size_t(pcstack.depth()))
             *valuepc = pcstack[index];
+        else
+            *valuepc = current;
     } else {
         *valuepc = pcstack[spindex];
     }

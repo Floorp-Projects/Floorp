@@ -247,7 +247,7 @@ PointerRangeSize(T* begin, T* end)
  * Beware of the implicit trailing '\0' when using this with string constants.
  */
 template<typename T, size_t N>
-size_t
+MOZ_CONSTEXPR size_t
 ArrayLength(T (&arr)[N])
 {
   return N;
@@ -259,7 +259,7 @@ ArrayLength(T (&arr)[N])
  * Beware of the implicit trailing '\0' when using this with string constants.
  */
 template<typename T, size_t N>
-T*
+MOZ_CONSTEXPR T*
 ArrayEnd(T (&arr)[N])
 {
   return arr + ArrayLength(arr);
@@ -274,6 +274,10 @@ ArrayEnd(T (&arr)[N])
  * that can't use C++ template functions and for MOZ_STATIC_ASSERT() calls that
  * can't call ArrayLength() when it is not a C++11 constexpr function.
  */
-#define MOZ_ARRAY_LENGTH(array) (sizeof(array)/sizeof((array)[0]))
+#ifdef MOZ_HAVE_CXX11_CONSTEXPR
+#  define MOZ_ARRAY_LENGTH(array)   mozilla::ArrayLength(array)
+#else
+#  define MOZ_ARRAY_LENGTH(array)   (sizeof(array)/sizeof((array)[0]))
+#endif
 
 #endif  /* mozilla_Util_h_ */

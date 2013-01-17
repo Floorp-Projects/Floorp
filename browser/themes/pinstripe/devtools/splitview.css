@@ -72,7 +72,6 @@
   height: 26px;
   background-origin: border-box;
   background-clip: border-box;
-  border-top: 1px solid hsla(210,8%,5%,.5);
   border-bottom: 1px solid hsla(210,8%,5%,.65);
   padding: 3px;
 }

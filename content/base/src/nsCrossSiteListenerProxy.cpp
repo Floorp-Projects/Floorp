@@ -27,6 +27,7 @@
 #include "nsHashKeys.h"
 #include "nsStreamUtils.h"
 #include "mozilla/Preferences.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -883,7 +884,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
     }
     age = age * 10 + (*iter - '0');
     // Cap at 24 hours. This also avoids overflow
-    age = NS_MIN(age, 86400U);
+    age = std::min(age, 86400U);
     ++iter;
   }
 

@@ -993,11 +993,23 @@ WebConsoleFrame.prototype = {
   {
     let body = null;
     let clipboardText = null;
-    let sourceURL = null;
-    let sourceLine = 0;
+    let sourceURL = aMessage.filename;
+    let sourceLine = aMessage.lineNumber;
     let level = aMessage.level;
     let args = aMessage.arguments;
     let objectActors = [];
+
+    // Gather the actor IDs.
+    args.forEach(function(aValue) {
+      if (aValue && typeof aValue == "object" && aValue.actor) {
+        objectActors.push(aValue.actor);
+        let displayStringIsLong = typeof aValue.displayString == "object" &&
+                                  aValue.displayString.type == "longString";
+        if (displayStringIsLong) {
+          objectActors.push(aValue.displayString.actor);
+        }
+      }
+    }, this);
 
     switch (level) {
       case "log":
@@ -1012,51 +1024,32 @@ WebConsoleFrame.prototype = {
         args.forEach(function(aValue) {
           clipboardArray.push(WebConsoleUtils.objectActorGripToString(aValue));
           if (aValue && typeof aValue == "object" && aValue.actor) {
-            objectActors.push(aValue.actor);
             let displayStringIsLong = typeof aValue.displayString == "object" &&
                                       aValue.displayString.type == "longString";
             if (aValue.type == "longString" || displayStringIsLong) {
               clipboardArray.push(l10n.getStr("longStringEllipsis"));
             }
-            if (displayStringIsLong) {
-              objectActors.push(aValue.displayString.actor);
-            }
           }
         }, this);
         clipboardText = clipboardArray.join(" ");
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
 
         if (level == "dir") {
           body.objectProperties = aMessage.objectProperties;
         }
-        else if (level == "groupEnd") {
-          objectActors.forEach(this._releaseObject, this);
-
-          if (this.groupDepth > 0) {
-            this.groupDepth--;
-          }
-          return; // no need to continue
-        }
-
         break;
       }
 
       case "trace": {
-        let filename = WebConsoleUtils.abbreviateSourceURL(args[0].filename);
-        let functionName = args[0].functionName ||
+        let filename = WebConsoleUtils.abbreviateSourceURL(aMessage.filename);
+        let functionName = aMessage.functionName ||
                            l10n.getStr("stacktrace.anonymousFunction");
-        let lineNumber = args[0].lineNumber;
 
         body = l10n.getFormatStr("stacktrace.outputMessage",
-                                 [filename, functionName, lineNumber]);
-
-        sourceURL = args[0].filename;
-        sourceLine = args[0].lineNumber;
+                                 [filename, functionName, sourceLine]);
 
         clipboardText = "";
 
-        args.forEach(function(aFrame) {
+        aMessage.stacktrace.forEach(function(aFrame) {
           clipboardText += aFrame.filename + " :: " +
                            aFrame.functionName + " :: " +
                            aFrame.lineNumber + "\n";
@@ -1068,39 +1061,57 @@ WebConsoleFrame.prototype = {
 
       case "group":
       case "groupCollapsed":
-        clipboardText = body = args;
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
+        clipboardText = body = aMessage.groupName;
         this.groupDepth++;
         break;
 
-      case "time":
-        if (!args) {
+      case "time": {
+        let timer = aMessage.timer;
+        if (!timer) {
           return;
         }
-        if (args.error) {
-          Cu.reportError(l10n.getStr(args.error));
+        if (timer.error) {
+          Cu.reportError(l10n.getStr(timer.error));
           return;
         }
-        body = l10n.getFormatStr("timerStarted", [args.name]);
+        body = l10n.getFormatStr("timerStarted", [timer.name]);
         clipboardText = body;
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
         break;
+      }
 
-      case "timeEnd":
-        if (!args) {
+      case "timeEnd": {
+        let timer = aMessage.timer;
+        if (!timer) {
           return;
         }
-        body = l10n.getFormatStr("timeEnd", [args.name, args.duration]);
+        body = l10n.getFormatStr("timeEnd", [timer.name, timer.duration]);
         clipboardText = body;
-        sourceURL = aMessage.filename;
-        sourceLine = aMessage.lineNumber;
         break;
+      }
 
       default:
         Cu.reportError("Unknown Console API log level: " + level);
         return;
+    }
+
+    // Release object actors for arguments coming from console API methods that
+    // we ignore their arguments.
+    switch (level) {
+      case "group":
+      case "groupCollapsed":
+      case "groupEnd":
+      case "trace":
+      case "time":
+      case "timeEnd":
+        objectActors.forEach(this._releaseObject, this);
+        objectActors = [];
+    }
+
+    if (level == "groupEnd") {
+      if (this.groupDepth > 0) {
+        this.groupDepth--;
+      }
+      return; // no need to continue
     }
 
     let node = this.createMessageNode(CATEGORY_WEBDEV, LEVELS[level], body,
@@ -1114,7 +1125,7 @@ WebConsoleFrame.prototype = {
     // Make the node bring up the property panel, to allow the user to inspect
     // the stack trace.
     if (level == "trace") {
-      node._stacktrace = args;
+      node._stacktrace = aMessage.stacktrace;
 
       this.makeOutputMessageLink(node, function _traceNodeClickCallback() {
         if (node._panelOpen) {

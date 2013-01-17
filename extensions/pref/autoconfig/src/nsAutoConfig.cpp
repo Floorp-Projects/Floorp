@@ -21,6 +21,7 @@
 #include "nsIStringBundle.h"
 #include "nsCRT.h"
 #include "nspr.h"
+#include <algorithm>
 
 PRLogModuleInfo *MCD;
 
@@ -103,7 +104,7 @@ nsAutoConfig::OnDataAvailable(nsIRequest *request,
     char buf[1024];
     
     while (aLength) {
-        size = NS_MIN<size_t>(aLength, sizeof(buf));
+        size = std::min<size_t>(aLength, sizeof(buf));
         rv = aIStream->Read(buf, size, &amt);
         if (NS_FAILED(rv))
             return rv;

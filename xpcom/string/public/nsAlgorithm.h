@@ -25,10 +25,13 @@ NS_ROUNDUP( const T& a, const T& b )
     return ((a + (b - 1)) / b) * b;
   }
 
+// We use these instead of std::min/max because we can't include the algorithm
+// header in all of XPCOM because the stl wrappers will error out when included
+// in parts of XPCOM. These functions should never be used outside of XPCOM.
 template <class T>
 inline
 const T&
-NS_MIN( const T& a, const T& b )
+XPCOM_MIN( const T& a, const T& b )
   {
     return b < a ? b : a;
   }
@@ -37,7 +40,7 @@ NS_MIN( const T& a, const T& b )
 template <class T>
 inline
 const T&
-NS_MAX( const T& a, const T& b )
+XPCOM_MAX( const T& a, const T& b )
   {
     return a > b ? a : b;
   }
@@ -61,7 +64,7 @@ const T&
 clamped( const T& a, const T& min, const T& max )
   {
     NS_ABORT_IF_FALSE(max >= min, "clamped(): max must be greater than or equal to min");
-    return NS_MIN(NS_MAX(a, min), max);
+    return XPCOM_MIN(XPCOM_MAX(a, min), max);
   }
 
 }

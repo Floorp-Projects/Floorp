@@ -431,7 +431,6 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [implementation]
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsCharsetMenu)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsCharsetMenu)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCharsetMenu)
   cb.NoteXPCOMChild(nsCharsetMenu::mInner);

@@ -22,6 +22,7 @@
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -515,8 +516,8 @@ VectorImage::ExtractFrame(uint32_t aWhichFrame,
   extractedImg->mRestrictedRegion.y = aRegion.y;
 
   // (disallow negative width/height on our restricted region)
-  extractedImg->mRestrictedRegion.width  = NS_MAX(aRegion.width,  0);
-  extractedImg->mRestrictedRegion.height = NS_MAX(aRegion.height, 0);
+  extractedImg->mRestrictedRegion.width  = std::max(aRegion.width,  0);
+  extractedImg->mRestrictedRegion.height = std::max(aRegion.height, 0);
 
   extractedImg->mIsInitialized = true;
   extractedImg->mIsFullyLoaded = true;

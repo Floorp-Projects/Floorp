@@ -173,8 +173,9 @@ ZipCollection::Forget(Zip *zip)
 {
   debug("ZipCollection::Forget(\"%s\")", zip->GetName());
   std::vector<Zip *>::iterator it = std::find(zips.begin(), zips.end(), zip);
-  if (*it == zip)
+  if (*it == zip) {
     zips.erase(it);
-  else
+  } else {
     debug("ZipCollection::Forget: didn't find \"%s\" in bookkeeping", zip->GetName());
+  }
 }

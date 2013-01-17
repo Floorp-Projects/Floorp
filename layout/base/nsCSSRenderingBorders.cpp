@@ -35,6 +35,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
+#include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -327,17 +328,17 @@ nsCSSBorderRenderer::ComputeInnerRadii(const gfxCornerSizes& aRadii,
 {
   gfxCornerSizes& iRadii = *aInnerRadiiRet;
 
-  iRadii[C_TL].width = NS_MAX(0.0, aRadii[C_TL].width - aBorderSizes[NS_SIDE_LEFT]);
-  iRadii[C_TL].height = NS_MAX(0.0, aRadii[C_TL].height - aBorderSizes[NS_SIDE_TOP]);
+  iRadii[C_TL].width = std::max(0.0, aRadii[C_TL].width - aBorderSizes[NS_SIDE_LEFT]);
+  iRadii[C_TL].height = std::max(0.0, aRadii[C_TL].height - aBorderSizes[NS_SIDE_TOP]);
 
-  iRadii[C_TR].width = NS_MAX(0.0, aRadii[C_TR].width - aBorderSizes[NS_SIDE_RIGHT]);
-  iRadii[C_TR].height = NS_MAX(0.0, aRadii[C_TR].height - aBorderSizes[NS_SIDE_TOP]);
+  iRadii[C_TR].width = std::max(0.0, aRadii[C_TR].width - aBorderSizes[NS_SIDE_RIGHT]);
+  iRadii[C_TR].height = std::max(0.0, aRadii[C_TR].height - aBorderSizes[NS_SIDE_TOP]);
 
-  iRadii[C_BR].width = NS_MAX(0.0, aRadii[C_BR].width - aBorderSizes[NS_SIDE_RIGHT]);
-  iRadii[C_BR].height = NS_MAX(0.0, aRadii[C_BR].height - aBorderSizes[NS_SIDE_BOTTOM]);
+  iRadii[C_BR].width = std::max(0.0, aRadii[C_BR].width - aBorderSizes[NS_SIDE_RIGHT]);
+  iRadii[C_BR].height = std::max(0.0, aRadii[C_BR].height - aBorderSizes[NS_SIDE_BOTTOM]);
 
-  iRadii[C_BL].width = NS_MAX(0.0, aRadii[C_BL].width - aBorderSizes[NS_SIDE_LEFT]);
-  iRadii[C_BL].height = NS_MAX(0.0, aRadii[C_BL].height - aBorderSizes[NS_SIDE_BOTTOM]);
+  iRadii[C_BL].width = std::max(0.0, aRadii[C_BL].width - aBorderSizes[NS_SIDE_LEFT]);
+  iRadii[C_BL].height = std::max(0.0, aRadii[C_BL].height - aBorderSizes[NS_SIDE_BOTTOM]);
 }
 
 /* static */ void
@@ -352,23 +353,23 @@ nsCSSBorderRenderer::ComputeOuterRadii(const gfxCornerSizes& aRadii,
 
   // round the edges that have radii > 0.0 to start with
   if (aRadii[C_TL].width > 0.0 && aRadii[C_TL].height > 0.0) {
-    oRadii[C_TL].width = NS_MAX(0.0, aRadii[C_TL].width + aBorderSizes[NS_SIDE_LEFT]);
-    oRadii[C_TL].height = NS_MAX(0.0, aRadii[C_TL].height + aBorderSizes[NS_SIDE_TOP]);
+    oRadii[C_TL].width = std::max(0.0, aRadii[C_TL].width + aBorderSizes[NS_SIDE_LEFT]);
+    oRadii[C_TL].height = std::max(0.0, aRadii[C_TL].height + aBorderSizes[NS_SIDE_TOP]);
   }
 
   if (aRadii[C_TR].width > 0.0 && aRadii[C_TR].height > 0.0) {
-    oRadii[C_TR].width = NS_MAX(0.0, aRadii[C_TR].width + aBorderSizes[NS_SIDE_RIGHT]);
-    oRadii[C_TR].height = NS_MAX(0.0, aRadii[C_TR].height + aBorderSizes[NS_SIDE_TOP]);
+    oRadii[C_TR].width = std::max(0.0, aRadii[C_TR].width + aBorderSizes[NS_SIDE_RIGHT]);
+    oRadii[C_TR].height = std::max(0.0, aRadii[C_TR].height + aBorderSizes[NS_SIDE_TOP]);
   }
 
   if (aRadii[C_BR].width > 0.0 && aRadii[C_BR].height > 0.0) {
-    oRadii[C_BR].width = NS_MAX(0.0, aRadii[C_BR].width + aBorderSizes[NS_SIDE_RIGHT]);
-    oRadii[C_BR].height = NS_MAX(0.0, aRadii[C_BR].height + aBorderSizes[NS_SIDE_BOTTOM]);
+    oRadii[C_BR].width = std::max(0.0, aRadii[C_BR].width + aBorderSizes[NS_SIDE_RIGHT]);
+    oRadii[C_BR].height = std::max(0.0, aRadii[C_BR].height + aBorderSizes[NS_SIDE_BOTTOM]);
   }
 
   if (aRadii[C_BL].width > 0.0 && aRadii[C_BL].height > 0.0) {
-    oRadii[C_BL].width = NS_MAX(0.0, aRadii[C_BL].width + aBorderSizes[NS_SIDE_LEFT]);
-    oRadii[C_BL].height = NS_MAX(0.0, aRadii[C_BL].height + aBorderSizes[NS_SIDE_BOTTOM]);
+    oRadii[C_BL].width = std::max(0.0, aRadii[C_BL].width + aBorderSizes[NS_SIDE_LEFT]);
+    oRadii[C_BL].height = std::max(0.0, aRadii[C_BL].height + aBorderSizes[NS_SIDE_BOTTOM]);
   }
 }
 
@@ -393,14 +394,14 @@ ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
     // Always round up to whole pixels for the corners; it's safe to
     // make the corners bigger than necessary, and this way we ensure
     // that we avoid seams.
-    (*aDimsRet)[C_TL] = gfxSize(ceil(NS_MAX(leftWidth, aRadii[C_TL].width)),
-                                ceil(NS_MAX(topWidth, aRadii[C_TL].height)));
-    (*aDimsRet)[C_TR] = gfxSize(ceil(NS_MAX(rightWidth, aRadii[C_TR].width)),
-                                ceil(NS_MAX(topWidth, aRadii[C_TR].height)));
-    (*aDimsRet)[C_BR] = gfxSize(ceil(NS_MAX(rightWidth, aRadii[C_BR].width)),
-                                ceil(NS_MAX(bottomWidth, aRadii[C_BR].height)));
-    (*aDimsRet)[C_BL] = gfxSize(ceil(NS_MAX(leftWidth, aRadii[C_BL].width)),
-                                ceil(NS_MAX(bottomWidth, aRadii[C_BL].height)));
+    (*aDimsRet)[C_TL] = gfxSize(ceil(std::max(leftWidth, aRadii[C_TL].width)),
+                                ceil(std::max(topWidth, aRadii[C_TL].height)));
+    (*aDimsRet)[C_TR] = gfxSize(ceil(std::max(rightWidth, aRadii[C_TR].width)),
+                                ceil(std::max(topWidth, aRadii[C_TR].height)));
+    (*aDimsRet)[C_BR] = gfxSize(ceil(std::max(rightWidth, aRadii[C_BR].width)),
+                                ceil(std::max(bottomWidth, aRadii[C_BR].height)));
+    (*aDimsRet)[C_BL] = gfxSize(ceil(std::max(leftWidth, aRadii[C_BL].width)),
+                                ceil(std::max(bottomWidth, aRadii[C_BL].height)));
   }
 }
 
@@ -601,7 +602,7 @@ MaybeMoveToMidPoint(gfxPoint& aP0, gfxPoint& aP1, const gfxPoint& aMidPoint)
     if (ps.y == 0.0) {
       aP1.x = aMidPoint.x;
     } else {
-      gfxFloat k = NS_MIN((aMidPoint.x - aP0.x) / ps.x,
+      gfxFloat k = std::min((aMidPoint.x - aP0.x) / ps.x,
                           (aMidPoint.y - aP0.y) / ps.y);
       aP1 = aP0 + ps * k;
     }
@@ -849,7 +850,7 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(int aSides, const nsBorderCo
   gfxRect soRect = mOuterRect;
   gfxFloat maxBorderWidth = 0;
   NS_FOR_CSS_SIDES (i) {
-    maxBorderWidth = NS_MAX(maxBorderWidth, mBorderWidths[i]);
+    maxBorderWidth = std::max(maxBorderWidth, mBorderWidths[i]);
   }
 
   gfxFloat fakeBorderSizes[4];
@@ -867,11 +868,11 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(int aSides, const nsBorderCo
     gfxPoint tl = siRect.TopLeft();
     gfxPoint br = siRect.BottomRight();
 
-    tl.x = NS_MIN(tl.x, itl.x);
-    tl.y = NS_MIN(tl.y, itl.y);
+    tl.x = std::min(tl.x, itl.x);
+    tl.y = std::min(tl.y, itl.y);
 
-    br.x = NS_MAX(br.x, ibr.x);
-    br.y = NS_MAX(br.y, ibr.y);
+    br.x = std::max(br.x, ibr.x);
+    br.y = std::max(br.y, ibr.y);
 
     siRect = gfxRect(tl.x, tl.y, br.x - tl.x , br.y - tl.y);
 

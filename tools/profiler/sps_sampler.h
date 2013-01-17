@@ -11,6 +11,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 #include "nsAlgorithm.h"
+#include <algorithm>
 
 
 /* QT has a #define for the word "slots" and jsfriendapi.h has a struct with
@@ -362,7 +363,7 @@ public:
   }
   uint32_t stackSize() const
   {
-    return NS_MIN<uint32_t>(mStackPointer, mozilla::ArrayLength(mStack));
+    return std::min<uint32_t>(mStackPointer, mozilla::ArrayLength(mStack));
   }
 
   void sampleRuntime(JSRuntime *runtime) {

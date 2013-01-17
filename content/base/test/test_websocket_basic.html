@@ -124,13 +124,13 @@ function testWebSocket2() {
 }
 
 /**
- * Sends 100+1 test messages, then receives them, calling forcegc() at each step.
+ * Sends testcount+1 test messages, then receives them, calling forcegc() at each step.
  */
 function testWebSocket3() {
   gTestElement.textContent = "Running testWebSocket3() [can take a little while]";
 
   const displayInterval = 10;
-  const testCount = 100;
+  const testCount = 10;
   const testMessage = "test message 3.";
 
   var messageCount = 0;

@@ -13,6 +13,7 @@
 
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
+#include <algorithm>
 
 #define PL_ARENA_CONST_ALIGN_MASK 7
 // We want page-sized arenas so there's no fragmentation involved.
@@ -704,7 +705,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcesso
 
   if (mEnumListSize < testCount) {
     delete [] mEnumList;
-    mEnumListSize = NS_MAX(testCount, MIN_ENUM_LIST_SIZE);
+    mEnumListSize = std::max(testCount, MIN_ENUM_LIST_SIZE);
     mEnumList = new EnumData[mEnumListSize];
   }
 
@@ -2029,7 +2030,18 @@ static bool SelectorMatches(Element* aElement,
         break;
 
       case nsCSSPseudoClasses::ePseudoClass_scope:
-        if (aTreeMatchContext.HasSpecifiedScope()) {
+        if (aTreeMatchContext.mForScopedStyle) {
+          if (aTreeMatchContext.mCurrentStyleScope) {
+            // If mCurrentStyleScope is null, aElement must be the style
+            // scope root.  This is because the PopStyleScopeForSelectorMatching
+            // call in SelectorMatchesTree sets mCurrentStyleScope to null
+            // as soon as we visit the style scope element, and we won't
+            // progress further up the tree after this call to
+            // SelectorMatches.  Thus if mCurrentStyleScope is still set,
+            // we know the selector does not match.
+            return false;
+          }
+        } else if (aTreeMatchContext.HasSpecifiedScope()) {
           if (!aTreeMatchContext.IsScopeElement(aElement)) {
             return false;
           }

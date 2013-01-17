@@ -47,8 +47,6 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   // to drop our reference when it goes away.
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 

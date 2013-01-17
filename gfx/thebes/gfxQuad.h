@@ -8,6 +8,7 @@
 
 #include "gfxTypes.h"
 #include "gfxLineSegment.h"
+#include <algorithm>
 
 struct THEBES_API gfxQuad {
     gfxQuad(const gfxPoint& aOne, const gfxPoint& aTwo, const gfxPoint& aThree, const gfxPoint& aFour)
@@ -35,10 +36,10 @@ struct THEBES_API gfxQuad {
         min_y = max_y = mPoints[0].y;
 
         for (int i=1; i<4; i++) {
-          min_x = NS_MIN(mPoints[i].x, min_x);
-          max_x = NS_MAX(mPoints[i].x, max_x);
-          min_y = NS_MIN(mPoints[i].y, min_y);
-          max_y = NS_MAX(mPoints[i].y, max_y);
+          min_x = std::min(mPoints[i].x, min_x);
+          max_x = std::max(mPoints[i].x, max_x);
+          min_y = std::min(mPoints[i].y, min_y);
+          max_y = std::max(mPoints[i].y, max_y);
         }
         return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
     }
