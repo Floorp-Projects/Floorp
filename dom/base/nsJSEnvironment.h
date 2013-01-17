@@ -54,14 +54,10 @@ public:
                                   nsAString *aRetValue,
                                   bool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
-                                           JSObject* aScopeObject,
-                                           nsIPrincipal* aPrincipal,
-                                           const char* aURL,
-                                           uint32_t aLineNo,
-                                           uint32_t aVersion,
-                                           bool aIsXBL,
-                                           JS::Value* aRetValue,
-                                           bool* aIsUndefined);
+                                           JSObject& aScopeObject,
+                                           JS::CompileOptions &aOptions,
+                                           bool aCoerceToString,
+                                           JS::Value& aRetValue);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  int32_t aTextLength,

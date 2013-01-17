@@ -1230,34 +1230,23 @@ nsJSContext::GetCCRefcnt()
 
 nsresult
 nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
-                                     JSObject* aScopeObject,
-                                     nsIPrincipal *aPrincipal,
-                                     const char *aURL,
-                                     uint32_t aLineNo,
-                                     uint32_t aVersion,
-                                     bool aIsXBL,
-                                     JS::Value* aRetValue,
-                                     bool* aIsUndefined)
+                                     JSObject& aScopeObject,
+                                     JS::CompileOptions& aOptions,
+                                     bool aCoerceToString,
+                                     JS::Value& aRetValue)
 {
   SAMPLE_LABEL("JS", "EvaluateStringWithValue");
-  NS_ABORT_IF_FALSE(aScopeObject,
-    "Shouldn't call EvaluateStringWithValue with null scope object.");
 
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+  aRetValue = JSVAL_VOID;
 
   if (!mScriptsEnabled) {
-    if (aIsUndefined) {
-      *aIsUndefined = true;
-    }
-
     return NS_OK;
   }
 
-  xpc_UnmarkGrayObject(aScopeObject);
+  xpc_UnmarkGrayObject(&aScopeObject);
   nsAutoMicroTask mt;
 
-  // Ignore the principal that was passed in, and just assert that it matches
-  // the one we pull off the global.
   nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(GetGlobalObject());
   if (!objPrincipal)
@@ -1265,16 +1254,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   principal = objPrincipal->GetPrincipal();
   if (!principal)
     return NS_ERROR_FAILURE;
-#ifdef DEBUG
-  bool equal = false;
-  principal->Equals(aPrincipal, &equal);
-  MOZ_ASSERT(equal);
-  nsIPrincipal *scopeObjectPrincipal =
-    nsJSPrincipals::get(JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject)));
-  equal = false;
-  principal->Equals(scopeObjectPrincipal, &equal);
-  MOZ_ASSERT(equal);
-#endif
+  aOptions.setPrincipals(nsJSPrincipals::get(principal));
 
   bool ok = false;
 
@@ -1293,29 +1273,27 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_ERROR_FAILURE;
   }
 
-  jsval val;
-
   nsJSContext::TerminationFuncHolder holder(this);
 
   // SecurityManager said "ok", but don't compile if aVersion is unknown.
   // Since the caller is responsible for parsing the version strings, we just
   // check it isn't JSVERSION_UNKNOWN.
-  if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
+  if (ok && !(aOptions.versionSet && aOptions.version == JSVERSION_UNKNOWN)) {
 
     XPCAutoRequest ar(mContext);
-    JSAutoCompartment ac(mContext, aScopeObject);
+    JSAutoCompartment ac(mContext, &aScopeObject);
 
     ++mExecuteDepth;
 
-    JS::CompileOptions options(mContext);
-    options.setFileAndLine(aURL, aLineNo)
-           .setVersion(JSVersion(aVersion))
-           .setPrincipals(nsJSPrincipals::get(principal))
-           .setUserBit(aIsXBL);
-    js::RootedObject rootedScope(mContext, aScopeObject);
-    ok = JS::Evaluate(mContext, rootedScope, options, PromiseFlatString(aScript).get(),
-                      aScript.Length(), &val);
-
+    js::RootedObject rootedScope(mContext, &aScopeObject);
+    ok = JS::Evaluate(mContext, rootedScope, aOptions,
+                      PromiseFlatString(aScript).get(),
+                      aScript.Length(), &aRetValue);
+    if (ok && !JSVAL_IS_VOID(aRetValue) && aCoerceToString) {
+      JSString* str = JS_ValueToString(mContext, aRetValue);
+      ok = !!str;
+      aRetValue = ok ? JS::StringValue(str) : JSVAL_VOID;
+    }
     --mExecuteDepth;
 
     if (!ok) {
@@ -1324,23 +1302,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
       // nested calls through XPConnect.
 
       ReportPendingException();
-    }
-  }
-
-  // If all went well, convert val to a string (XXXbe unless undefined?).
-  if (ok) {
-    if (aIsUndefined) {
-      *aIsUndefined = JSVAL_IS_VOID(val);
-    }
-
-    *aRetValue = val;
-    // XXX - nsScriptObjectHolder should be used once this method moves to
-    // the new world order. However, use of 'jsval' appears to make this
-    // tricky...
-  }
-  else {
-    if (aIsUndefined) {
-      *aIsUndefined = true;
     }
   }
 
