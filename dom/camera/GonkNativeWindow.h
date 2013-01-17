@@ -99,13 +99,14 @@ protected:
     virtual int setBuffersTimestamp(int64_t timestamp);
     virtual int setUsage(uint32_t reqUsage);
 
-    // freeBufferLocked frees the resources (both GraphicBuffer and EGLImage)
-    // for the given slot.
-    void freeBufferLocked(int index);
-
     // freeAllBuffersLocked frees the resources (both GraphicBuffer and
-    // EGLImage) for all slots.
-    void freeAllBuffersLocked();
+    // EGLImage) for all slots by removing them from the slots and appending
+    // then to the freeList.  This must be called with mMutex locked.
+    void freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList);
+
+    // releaseBufferFreeListUnlocked releases the resources in the freeList;
+    // this must be called with mMutex unlocked.
+    void releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList);
 
 private:
     void init();
