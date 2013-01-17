@@ -509,6 +509,90 @@ SmsDatabaseService.prototype = {
     }
   },
 
+  /**
+   * Queue up {aMessageId, aTimestamp} pairs, find out intersections and report
+   * to onNextMessageInListGot. Return true if it is still possible to have
+   * another match.
+   */
+  onNextMessageInMultiFiltersGot: function onNextMessageInMultiFiltersGot(
+      aObjectStore, aMessageList, aContextIndex, aMessageId, aTimestamp) {
+
+    if (DEBUG) {
+      debug("onNextMessageInMultiFiltersGot: "
+            + aContextIndex + ", " + aMessageId + ", " + aTimestamp);
+    }
+    let contexts = aMessageList.contexts;
+
+    if (!aMessageId) {
+      contexts[aContextIndex].processing = false;
+      for (let i = 0; i < contexts.length; i++) {
+        if (contexts[i].processing) {
+          return false;
+        }
+      }
+
+      this.onNextMessageInListGot(aObjectStore, aMessageList, 0);
+      return false;
+    }
+
+    // Search id in other existing results. If no other results has it,
+    // and A) the last timestamp is smaller-equal to current timestamp,
+    // we wait for further results; either B) record timestamp is larger
+    // then current timestamp or C) no more processing for a filter, then we
+    // drop this id because there can't be a match anymore.
+    for (let i = 0; i < contexts.length; i++) {
+      if (i == aContextIndex) {
+        continue;
+      }
+
+      let ctx = contexts[i];
+      let results = ctx.results;
+      let found = false;
+      for (let j = 0; j < results.length; j++) {
+        let result = results[j];
+        if (result.id == aMessageId) {
+          found = true;
+          break;
+        }
+        if ((!aMessageList.reverse && (result.timestamp > aTimestamp)) ||
+            (aMessageList.reverse && (result.timestamp < aTimestamp))) {
+          // B) Cannot find a match anymore. Drop.
+          return true;
+        }
+      }
+
+      if (!found) {
+        if (!ctx.processing) {
+          // C) Cannot find a match anymore. Drop.
+          if (results.length) {
+            let lastResult = results[results.length - 1];
+            if ((!aMessageList.reverse && (lastResult.timestamp >= aTimestamp)) ||
+                (aMessageList.reverse && (lastResult.timestamp <= aTimestamp))) {
+              // Still have a chance to get another match. Return true.
+              return true;
+            }
+          }
+
+          // Impossible to find another match because all results in ctx have
+          // timestamps smaller than aTimestamp.
+          return this.onNextMessageInMultiFiltersGot(aObjectStore, aMessageList,
+                                                     aContextIndex, 0, 0);
+        }
+
+        // A) Pending.
+        contexts[aContextIndex].results.push({
+          id: aMessageId,
+          timestamp: aTimestamp
+        });
+        return true;
+      }
+    }
+
+    // Now id is found in all other results. Report it.
+    this.onNextMessageInListGot(aObjectStore, aMessageList, aMessageId);
+    return true;
+  },
+
   saveMessage: function saveMessage(message) {
     this.lastKey += 1;
     message.id = this.lastKey;
@@ -848,8 +932,11 @@ SmsDatabaseService.prototype = {
 
       let messageList = {
         listId: -1,
+        reverse: reverse,
         processing: true,
         stop: false,
+        // Local contexts for multiple filter targets' case.
+        contexts: null,
         // Pending createMessageList or getNextMessageInList SmsRequest.
         requestWaiting: aRequest,
         results: []
@@ -888,6 +975,34 @@ SmsDatabaseService.prototype = {
       // We support filtering by date range only (see `else` block below) or
       // by number/delivery status/read status with an optional date range.
       if (filter.delivery || filter.numbers || filter.read != undefined) {
+        let multiFiltersGotCb = self.onNextMessageInMultiFiltersGot
+                                    .bind(self, store, messageList);
+
+        let multiFiltersSuccessCb = function onmfsuccess(contextIndex, event) {
+          if (messageList.stop) {
+            return;
+          }
+
+          let cursor = event.target.result;
+          if (cursor) {
+            if (multiFiltersGotCb(contextIndex,
+                                  cursor.primaryKey, cursor.key[1])) {
+              cursor.continue();
+            }
+          } else {
+            multiFiltersGotCb(contextIndex, 0, 0);
+          }
+        };
+
+        let multiFiltersErrorCb = function onmferror(contextIndex, event) {
+          if (messageList.stop) {
+            return;
+          }
+
+          // Act as no more matched records.
+          multiFiltersGotCb(contextIndex, 0, 0);
+        };
+
         // Numeric 0 is smaller than any time stamp, and empty string is larger
         // than all numeric values.
         let startDate = 0, endDate = "";
@@ -906,11 +1021,12 @@ SmsDatabaseService.prototype = {
           if (filter.read != undefined) numberOfContexts++;
           singleFilter = numberOfContexts == 1;
         }
+
         if (!singleFilter) {
-          // TODO: Multi-filter is supported in later patch.
-          aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
-          return;
+          messageList.contexts = [];
         }
+
+        let numberOfContexts = 0;
 
         let createRangedRequest = function crr(indexName, key) {
           let range = IDBKeyRange.bound([key, startDate], [key, endDate]);
@@ -919,8 +1035,18 @@ SmsDatabaseService.prototype = {
 
         let createSimpleRangedRequest = function csrr(indexName, key) {
           let request = createRangedRequest(indexName, key);
-          request.onsuccess = singleFilterSuccessCb;
-          request.onerror = singleFilterErrorCb;
+          if (singleFilter) {
+            request.onsuccess = singleFilterSuccessCb;
+            request.onerror = singleFilterErrorCb;
+          } else {
+            let contextIndex = numberOfContexts++;
+            messageList.contexts.push({
+              processing: true,
+              results: []
+            });
+            request.onsuccess = multiFiltersSuccessCb.bind(null, contextIndex);
+            request.onerror = multiFiltersErrorCb.bind(null, contextIndex);
+          }
         };
 
         // Retrieve the keys from the 'delivery' index that matches the
