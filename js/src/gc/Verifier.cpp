@@ -70,8 +70,14 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
             return;
     }
 
+    SkipRoot *skip = TlsPerThreadData.get()->skipGCRooters;
+    while (skip) {
+        if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
+            return;
+        skip = skip->previous();
+    }
     for (ContextIter cx(rt); !cx.done(); cx.next()) {
-        SkipRoot *skip = cx->skipGCRooters;
+        skip = cx->skipGCRooters;
         while (skip) {
             if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
                 return;
@@ -239,14 +245,8 @@ JS::CheckStackRoots(JSContext *cx)
     // Gather up all of the rooters
     Vector< Rooter, 0, SystemAllocPolicy> rooters;
     for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-        Rooted<void*> *rooter = rt->mainThread.thingGCRooters[i];
-        while (rooter) {
-            Rooter r = { rooter, ThingRootKind(i) };
-            JS_ALWAYS_TRUE(rooters.append(r));
-            rooter = rooter->previous();
-        }
         for (ContextIter cx(rt); !cx.done(); cx.next()) {
-            rooter = cx->thingGCRooters[i];
+            Rooted<void*> *rooter = cx->thingGCRooters[i];
             while (rooter) {
                 Rooter r = { rooter, ThingRootKind(i) };
                 JS_ALWAYS_TRUE(rooters.append(r));
