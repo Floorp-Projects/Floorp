@@ -1811,39 +1811,17 @@ nsJSContext::CompileFunction(JSObject* aTarget,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  xpc_UnmarkGrayObject(aTarget);
-
-  nsIScriptGlobalObject *global = GetGlobalObject();
-  nsCOMPtr<nsIPrincipal> principal;
-  if (global) {
-    // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
-    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
-    if (globalData) {
-      principal = globalData->GetPrincipal();
-      if (!principal)
-        return NS_ERROR_FAILURE;
-    }
-  }
-
+  JSAutoRequest ar(mContext);
+  JSAutoCompartment ac(mContext, aTarget);
   js::RootedObject target(mContext, aShared ? NULL : aTarget);
 
-  XPCAutoRequest ar(mContext);
-
   JS::CompileOptions options(mContext);
-  options.setPrincipals(nsJSPrincipals::get(principal))
-         .setVersion(JSVersion(aVersion))
+  options.setVersion(JSVersion(aVersion))
          .setFileAndLine(aURL, aLineNo)
          .setUserBit(aIsXBL);
-  JSFunction* fun = JS::CompileFunction(mContext, target,
-                                        options, PromiseFlatCString(aName).get(),
-                                        aArgCount, aArgArray,
-                                        PromiseFlatString(aBody).get(), aBody.Length());
 
-  if (!fun)
-    return NS_ERROR_FAILURE;
-
-  *aFunctionObject = JS_GetFunctionObject(fun);
-  return NS_OK;
+  return nsJSUtils::CompileFunction(mContext, target, options, aName, aArgCount,
+                                    aArgArray, aBody, aFunctionObject);
 }
 
 nsresult
