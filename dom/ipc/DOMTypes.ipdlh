@@ -31,49 +31,5 @@ struct FileBlobConstructorParams
   uint64_t modDate;
 };
 
-union BlobOrFileConstructorParams
-{
-  NormalBlobConstructorParams;
-  FileBlobConstructorParams;
-};
-
-struct MemoryBlobOrFileConstructorParams
-{
-  BlobOrFileConstructorParams constructorParams;
-  uint8_t[] data;
-};
-
-struct SlicedBlobConstructorParams
-{
-  PBlob source;
-  uint64_t begin;
-  uint64_t end;
-  nsString contentType;
-};
-
-struct MysteryBlobConstructorParams
-{
-  // Nothing is known about this type of blob.
-};
-
-union BlobConstructorNoMultipartParams
-{
-  BlobOrFileConstructorParams;
-  MemoryBlobOrFileConstructorParams;
-  SlicedBlobConstructorParams;
-  MysteryBlobConstructorParams;
-};
-
-struct MultipartBlobOrFileConstructorParams
-{
-  BlobOrFileConstructorParams constructorParams;
-};
-
-union BlobConstructorParams
-{
-  BlobConstructorNoMultipartParams;
-  MultipartBlobOrFileConstructorParams;
-};
-
 } // namespace dom
 } // namespace mozilla
