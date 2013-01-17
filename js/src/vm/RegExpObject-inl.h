@@ -17,6 +17,7 @@
 #include "jsstrinlines.h"
 
 #include "RegExpStatics-inl.h"
+#include "String-inl.h"
 
 inline js::RegExpObject &
 JSObject::asRegExp()
@@ -99,6 +100,12 @@ RegExpObject::setSticky(bool enabled)
     setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
 }
 
+inline void
+RegExpShared::writeBarrierPre()
+{
+    JSString::writeBarrierPre(source);
+}
+
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
 inline bool
 RegExpShared::isJITRuntimeEnabled(JSContext *cx)
@@ -127,6 +134,69 @@ inline void
 RegExpShared::prepareForUse(JSContext *cx)
 {
     gcNumberWhenUsed = cx->runtime->gcNumber;
+}
+
+RegExpGuard::RegExpGuard(JSContext *cx)
+  : re_(NULL), source_(cx)
+{
+}
+
+RegExpGuard::RegExpGuard(JSContext *cx, RegExpShared &re)
+  : re_(&re), source_(cx, re.source)
+{
+    re_->incRef();
+}
+
+RegExpGuard::~RegExpGuard()
+{
+    release();
+}
+
+inline void
+RegExpGuard::init(RegExpShared &re)
+{
+    JS_ASSERT(!initialized());
+    re_ = &re;
+    re_->incRef();
+    source_ = re_->source;
+}
+
+inline void
+RegExpGuard::release()
+{
+    if (re_) {
+        re_->decRef();
+        re_ = NULL;
+        source_ = NULL;
+    }
+}
+
+RegExpHeapGuard::RegExpHeapGuard(RegExpShared &re)
+{
+    init(re);
+}
+
+RegExpHeapGuard::~RegExpHeapGuard()
+{
+    release();
+}
+
+inline void
+RegExpHeapGuard::init(RegExpShared &re)
+{
+    JS_ASSERT(!initialized());
+    re_ = &re;
+    re_->incRef();
+}
+
+inline void
+RegExpHeapGuard::release()
+{
+    if (re_) {
+        re_->writeBarrierPre();
+        re_->decRef();
+        re_ = NULL;
+    }
 }
 
 } /* namespace js */
