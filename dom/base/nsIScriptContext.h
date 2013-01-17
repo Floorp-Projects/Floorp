@@ -65,37 +65,6 @@ public:
    * Compile and execute a script.
    *
    * @param aScript a string representing the script to be executed
-   * @param aScopeObject a script object for the scope to execute in, or
-   *                     nullptr to use a default scope
-   * @param aPrincipal the principal the script should be evaluated with
-   * @param aOriginPrincipal the principal the script originates from.  If null,
-   *                         aPrincipal is used.
-   * @param aURL the URL or filename for error messages
-   * @param aLineNo the starting line number of the script for error messages
-   * @param aVersion the script language version to use when executing
-   * @param aRetValue the result of executing the script, or null for no result.
-   *        If this is a JS context, it's the caller's responsibility to
-   *        preserve aRetValue from GC across this call
-   * @param aIsUndefined true if the result of executing the script is the
-   *                     undefined value
-   *
-   * @return NS_OK if the script was valid and got executed
-   *
-   **/
-  virtual nsresult EvaluateString(const nsAString& aScript,
-                                  JSObject* aScopeObject,
-                                  nsIPrincipal *aPrincipal,
-                                  nsIPrincipal *aOriginPrincipal,
-                                  const char *aURL,
-                                  uint32_t aLineNo,
-                                  JSVersion aVersion,
-                                  nsAString *aRetValue,
-                                  bool* aIsUndefined) = 0;
-
-  /**
-   * Compile and execute a script.
-   *
-   * @param aScript a string representing the script to be executed
    * @param aScopeObject a script object for the scope to execute in.
    * @param aOptions an options object. You probably want to at least set
    *                 filename and line number. The principal is computed
