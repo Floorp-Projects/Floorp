@@ -7,6 +7,7 @@
 #ifndef __IPC_GLUE_IPCMESSAGEUTILS_H__
 #define __IPC_GLUE_IPCMESSAGEUTILS_H__
 
+#include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/TimeStamp.h"
@@ -146,6 +147,13 @@ struct EnumSerializer {
     return true;
   }
 };
+
+template <>
+struct ParamTraits<base::ChildPrivileges>
+  : public EnumSerializer<base::ChildPrivileges,
+                          base::PRIVILEGES_DEFAULT,
+                          base::PRIVILEGES_LAST>
+{ };
 
 template<>
 struct ParamTraits<int8_t>
