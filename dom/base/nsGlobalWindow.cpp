@@ -9748,11 +9748,12 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     uint32_t lineNo = 0;
     handler->GetLocation(&filename, &lineNo);
 
-    bool is_undefined;
-    aScx->EvaluateString(nsDependentString(script), FastGetGlobalJSObject(),
-                         timeout->mPrincipal, timeout->mPrincipal,
-                         filename, lineNo, JSVERSION_DEFAULT, nullptr,
-                         &is_undefined);
+    JS::CompileOptions options(aScx->GetNativeContext());
+    options.setFileAndLine(filename, lineNo)
+           .setVersion(JSVERSION_DEFAULT);
+    JS::Value ignored;
+    aScx->EvaluateStringWithValue(nsDependentString(script), *FastGetGlobalJSObject(),
+                                  options, /*aCoerceToString = */ false, ignored);
   } else {
     nsCOMPtr<nsIVariant> dummy;
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));

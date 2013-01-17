@@ -255,11 +255,11 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         useSandbox = !subsumes;
     }
 
-    nsString result;
-    bool isUndefined;
-
+    JS::Value v = JSVAL_VOID;
     // Finally, we have everything needed to evaluate the expression.
 
+    JSContext *cx = scriptContext->GetNativeContext();
+    JSAutoRequest ar(cx);
     if (useSandbox) {
         // We were asked to use a sandbox, or the channel owner isn't allowed
         // to execute in this context.  Evaluate the javascript URL in a
@@ -268,9 +268,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
         // First check to make sure it's OK to evaluate this script to
         // start with.  For example, script could be disabled.
-        JSContext *cx = scriptContext->GetNativeContext();
-        JSAutoRequest ar(cx);
-
         bool ok;
         rv = securityManager->CanExecuteScripts(cx, principal, &ok);
         if (NS_FAILED(rv)) {
@@ -301,8 +298,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         rv = xpc->HoldObject(cx, sandboxObj, getter_AddRefs(sandbox));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        jsval rval = JSVAL_VOID;
-
         // Push our JSContext on the context stack so the JS_ValueToString call (and
         // JS_ReportPendingException, if relevant) will use the principal of cx.
         // Note that we do this as late as possible to make popping simpler.
@@ -316,42 +311,26 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         }
 
         rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script), cx,
-                                      sandbox, true, &rval);
+                                      sandbox, true, &v);
 
         // Propagate and report exceptions that happened in the
         // sandbox.
         if (JS_IsExceptionPending(cx)) {
             JS_ReportPendingException(cx);
-            isUndefined = true;
-        } else {
-            isUndefined = rval == JSVAL_VOID;
-        }
-
-        if (!isUndefined && NS_SUCCEEDED(rv)) {
-            NS_ASSERTION(JSVAL_IS_STRING(rval), "evalInSandbox is broken");
-
-            nsDependentJSString depStr;
-            if (!depStr.init(cx, JSVAL_TO_STRING(rval))) {
-                JS_ReportPendingException(cx);
-                isUndefined = true;
-            } else {
-                result = depStr;
-            }
         }
 
         stack->Pop(nullptr);
     } else {
         // No need to use the sandbox, evaluate the script directly in
         // the given scope.
-        rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
-                                           globalJSObject, // obj
-                                           principal,
-                                           principal,
-                                           mURL.get(),     // url
-                                           1,              // line no
-                                           JSVERSION_DEFAULT,
-                                           &result,
-                                           &isUndefined);
+        JS::CompileOptions options(cx);
+        options.setFileAndLine(mURL.get(), 1)
+               .setVersion(JSVERSION_DEFAULT);
+        rv = scriptContext->EvaluateStringWithValue(NS_ConvertUTF8toUTF16(script),
+                                                    *globalJSObject,
+                                                    options,
+                                                    /* aCoerceToString = */ true,
+                                                    v);
 
         // If there's an error on cx as a result of that call, report
         // it now -- either we're just running under the event loop,
@@ -360,18 +339,21 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         // lose the error), or it might be JS that then proceeds to
         // cause an error of its own (which will also make us lose
         // this error).
-        JSContext *cx = scriptContext->GetNativeContext();
-        JSAutoRequest ar(cx);
         ::JS_ReportPendingException(cx);
     }
-    
+
     if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
     }
-    else if (isUndefined) {
+    else if (v.isUndefined()) {
         rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
     else {
+        nsDependentJSString result;
+        if (!result.init(cx, JSVAL_TO_STRING(v))) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
         char *bytes;
         uint32_t bytesLen;
         NS_NAMED_LITERAL_CSTRING(isoCharset, "ISO-8859-1");
