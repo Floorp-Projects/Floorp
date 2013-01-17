@@ -865,7 +865,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
       options.setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
     JS::Value ignored;
     rv = context->EvaluateString(aScript, *globalObject->GetGlobalJSObject(),
-                                 options, /* aCoerceToString = */ false, ignored);
+                                 options, /* aCoerceToString = */ false, &ignored);
   }
 
   // Put the old script back in case it wants to do anything else.

@@ -77,7 +77,7 @@ public:
                                   JSObject& aScopeObject,
                                   JS::CompileOptions& aOptions,
                                   bool aCoerceToString,
-                                  JS::Value& aRetValue) = 0;
+                                  JS::Value* aRetValue) = 0;
 
   /**
    * Compile a script.
