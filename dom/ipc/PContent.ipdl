@@ -35,6 +35,7 @@ using PrefTuple;
 using ChromePackage;
 using ResourceMapping;
 using OverrideMapping;
+using base::ChildPrivileges;
 using IPC::Permission;
 using IPC::Principal;
 using mozilla::null_t;
@@ -243,6 +244,13 @@ both:
     async PBlob(BlobConstructorParams params);
 
 child:
+    /**
+     * Update OS process privileges to |privs|.  Can usually only be
+     * performed zero or one times.  The child will abnormally exit if
+     * the privilege update fails.
+     */
+    async SetProcessPrivileges(ChildPrivileges privs);
+
     PMemoryReportRequest();
 
     /**
