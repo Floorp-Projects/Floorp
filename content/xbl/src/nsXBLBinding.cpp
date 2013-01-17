@@ -208,8 +208,8 @@ InstallXBLField(JSContext* cx,
     return true;
   }
 
-  nsresult rv = field->InstallField(context, thisObj, xblNode->NodePrincipal(),
-                                    protoBinding->DocURI(), installed);
+  nsresult rv = field->InstallField(context, thisObj, protoBinding->DocURI(),
+                                    installed);
   if (NS_SUCCEEDED(rv)) {
     return true;
   }

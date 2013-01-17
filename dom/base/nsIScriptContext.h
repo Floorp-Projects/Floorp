@@ -92,15 +92,23 @@ public:
                                   nsAString *aRetValue,
                                   bool* aIsUndefined) = 0;
 
+  /**
+   * Compile and execute a script.
+   *
+   * @param aScript a string representing the script to be executed
+   * @param aScopeObject a script object for the scope to execute in.
+   * @param aOptions an options object. You probably want to at least set
+   *                 filename and line number. The principal is computed
+   *                 internally, though 'originPrincipals' may be passed.
+   * @param aCoerceToString if the return value is not JSVAL_VOID, convert it
+   *                        to a string before returning.
+   * @param aRetValue the result of executing the script.
+   **/
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
-                                           JSObject* aScopeObject,
-                                           nsIPrincipal *aPrincipal,
-                                           const char *aURL,
-                                           uint32_t aLineNo,
-                                           uint32_t aVersion,
-                                           bool aIsXBL,
-                                           JS::Value* aRetValue,
-                                           bool* aIsUndefined) = 0;
+                                           JSObject& aScopeObject,
+                                           JS::CompileOptions& aOptions,
+                                           bool aCoerceToString,
+                                           JS::Value& aRetValue) = 0;
 
   /**
    * Compile a script.

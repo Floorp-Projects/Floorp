@@ -1592,8 +1592,12 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
                  ("NPN_Evaluate(npp %p, npobj %p, script <<<%s>>>) called\n",
                   npp, npobj, script->UTF8Characters));
 
-  nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
-                                             spec, 0, 0, false, rval, nullptr);
+  JS::CompileOptions options(cx);
+  options.setFileAndLine(spec, 0)
+         .setVersion(JSVERSION_DEFAULT);
+  nsresult rv = scx->EvaluateStringWithValue(utf16script, *obj, options,
+                                             /* aCoerceToString = */ false,
+                                             *rval);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, *rval, result));
