@@ -45,7 +45,7 @@ class Destructor {
     *destroyed_ = true;
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Destructor);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Destructor)
 
  private:
   bool *destroyed_;
