@@ -167,13 +167,18 @@ public:
 
       case REMOTESTREAMADD:
         {
-          nsDOMMediaStream* stream;
+          nsDOMMediaStream* stream = nullptr;
           uint32_t hint;
 
           if (!mRemoteStream) {
             CSFLogErrorS(logTag, __FUNCTION__ << " GetRemoteStream returned NULL");
           } else {
             stream = mRemoteStream->GetMediaStream();
+          }
+
+          if (!stream) {
+            CSFLogErrorS(logTag, __FUNCTION__ << " GetMediaStream returned NULL");
+          } else {
             hint = stream->GetHintContents();
             if (hint == nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
               mObserver->OnAddStream(stream, "audio");
