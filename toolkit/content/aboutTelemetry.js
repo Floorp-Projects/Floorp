@@ -258,6 +258,33 @@ let StackRenderer = {
 
     aDiv.appendChild(document.createElement("br"));
     aDiv.appendChild(document.createElement("br"));
+  },
+  renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
+                                                    aMemoryMap, aRenderHeader) {
+    let div = document.getElementById(aPrefix + '-data');
+    clearDivData(div);
+
+    let fetchE = document.getElementById(aPrefix + '-fetch-symbols');
+    if (fetchE) {
+      fetchE.classList.remove("hidden");
+    }
+    let hideE = document.getElementById(aPrefix + '-hide-symbols');
+    if (hideE) {
+      hideE.classList.add("hidden");
+    }
+
+    if (aStacks.length == 0) {
+      showEmptySectionMessage(aPrefix + '-section');
+      return;
+    }
+
+    this.renderMemoryMap(div, aMemoryMap);
+
+    for (let i = 0; i < aStacks.length; ++i) {
+      let stack = aStacks[i];
+      aRenderHeader(i);
+      this.renderStack(div, stack)
+    }
   }
 };
 
@@ -271,27 +298,17 @@ let ChromeHangs = {
    * Renders raw chrome hang data
    */
   render: function ChromeHangs_render() {
-    let hangsDiv = document.getElementById("chrome-hangs-data");
-    clearDivData(hangsDiv);
-    document.getElementById("fetch-symbols").classList.remove("hidden");
-    document.getElementById("hide-symbols").classList.add("hidden");
-
     let hangs = Telemetry.chromeHangs;
     let stacks = hangs.stacks;
-    if (stacks.length == 0) {
-      showEmptySectionMessage("chrome-hangs-section");
-      return;
-    }
-
     let memoryMap = hangs.memoryMap;
-    StackRenderer.renderMemoryMap(hangsDiv, memoryMap);
-
     let durations = hangs.durations;
-    for (let i = 0; i < stacks.length; ++i) {
-      let stack = stacks[i];
-      this.renderHangHeader(hangsDiv, i + 1, durations[i]);
-      StackRenderer.renderStack(hangsDiv, stack)
+    let div = document.getElementById("chrome-hangs-data");
+    function f(i) {
+      this.renderHangHeader(div, i + 1, durations[i]);
     }
+
+    StackRenderer.renderStacks("chrome-hangs", stacks, memoryMap,
+			       f.bind(this));
   },
 
   /**
@@ -345,8 +362,8 @@ let ChromeHangs = {
     if (this.symbolRequest.readyState != 4)
       return;
 
-    document.getElementById("fetch-symbols").classList.add("hidden");
-    document.getElementById("hide-symbols").classList.remove("hidden");
+    document.getElementById("chrome-hangs-fetch-symbols").classList.add("hidden");
+    document.getElementById("chrome-hangs-hide-symbols").classList.remove("hidden");
 
     let hangsDiv = document.getElementById("chrome-hangs-data");
     clearDivData(hangsDiv);
@@ -645,12 +662,12 @@ function setupListeners() {
       Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, !value);
   }, false);
 
-  document.getElementById("fetch-symbols").addEventListener("click",
+  document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
     function () {
       ChromeHangs.fetchSymbols();
   }, false);
 
-  document.getElementById("hide-symbols").addEventListener("click",
+  document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
     function () {
       ChromeHangs.render();
   }, false);
@@ -715,23 +732,10 @@ function onLoad() {
 
 let LateWritesSingleton = {
   renderLateWrites: function LateWritesSingleton_renderLateWrites(lateWrites) {
-    let writesDiv = document.getElementById("late-writes-data");
-    clearDivData(writesDiv);
-    // FIXME: Add symbolication support. Refactor with the chrome hang one.
-
     let stacks = lateWrites.stacks;
-    if (stacks.length == 0) {
-      showEmptySectionMessage("late-writes-section");
-      return;
-    }
-
     let memoryMap = lateWrites.memoryMap;
-    StackRenderer.renderMemoryMap(writesDiv, memoryMap);
-
-    for (let i = 0; i < stacks.length; ++i) {
-      let stack = stacks[i];
-      StackRenderer.renderStack(writesDiv, stack);
-    }
+    function f() {}
+    StackRenderer.renderStacks('late-writes', stacks, memoryMap, f);
   }
 };
 
