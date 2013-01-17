@@ -2625,8 +2625,28 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
                               rtcp ? 2 : 1));
 
     ScopedDeletePtr<TransportLayerDtls> dtls(new TransportLayerDtls());
+
+    // RFC 5763 says:
+    //
+    //   The endpoint MUST use the setup attribute defined in [RFC4145].
+    //   The endpoint that is the offerer MUST use the setup attribute
+    //   value of setup:actpass and be prepared to receive a client_hello
+    //   before it receives the answer.  The answerer MUST use either a
+    //   setup attribute value of setup:active or setup:passive.  Note that
+    //   if the answerer uses setup:passive, then the DTLS handshake will
+    //   not begin until the answerer is received, which adds additional
+    //   latency. setup:active allows the answer and the DTLS handshake to
+    //   occur in parallel.  Thus, setup:active is RECOMMENDED.  Whichever
+    //   party is active MUST initiate a DTLS handshake by sending a
+    //   ClientHello over each flow (host/port quartet).
+    //
+    // Currently we just hardwire the roles to be that the offerer is the
+    // server, which is what you would expect from the "recommended"
+    // behavior above.
+    //
+    // TODO(ekr@rtfm.com): implement the actpass logic above.
     dtls->SetRole(pc->GetRole() == sipcc::PeerConnectionImpl::kRoleOfferer ?
-                  TransportLayerDtls::CLIENT : TransportLayerDtls::SERVER);
+                  TransportLayerDtls::SERVER : TransportLayerDtls::CLIENT);
     dtls->SetIdentity(pc->GetIdentity());
 
     unsigned char remote_digest[TransportLayerDtls::kMaxDigestLength];
