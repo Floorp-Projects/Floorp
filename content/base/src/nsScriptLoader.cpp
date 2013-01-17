@@ -856,14 +856,17 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   nsAutoCString url;
   nsContentUtils::GetWrapperSafeScriptFilename(mDocument, aRequest->mURI, url);
 
-  JS::CompileOptions options(context->GetNativeContext());
-  options.setFileAndLine(url.get(), aRequest->mLineNo)
-         .setVersion(JSVersion(aRequest->mJSVersion));
-  if (aRequest->mOriginPrincipal)
-    options.setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
-  JS::Value ignored;
-  rv = context->EvaluateString(aScript, *globalObject->GetGlobalJSObject(),
-                               options, /* aCoerceToString = */ false, ignored);
+  JSVersion version = JSVersion(aRequest->mJSVersion);
+  if (version != JSVERSION_UNKNOWN) {
+    JS::CompileOptions options(context->GetNativeContext());
+    options.setFileAndLine(url.get(), aRequest->mLineNo)
+           .setVersion(JSVersion(aRequest->mJSVersion));
+    if (aRequest->mOriginPrincipal)
+      options.setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
+    JS::Value ignored;
+    rv = context->EvaluateString(aScript, *globalObject->GetGlobalJSObject(),
+                                 options, /* aCoerceToString = */ false, ignored);
+  }
 
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
