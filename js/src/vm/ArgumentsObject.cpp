@@ -161,10 +161,8 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
     RawObject obj = JSObject::create(cx, FINALIZE_KIND, shape, type, NULL);
-    if (!obj) {
-        cx->free_(data);
+    if (!obj)
         return NULL;
-    }
 
     obj->initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(numActuals << PACKED_BITS_COUNT));
     obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
