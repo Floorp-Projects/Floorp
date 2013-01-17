@@ -21,10 +21,8 @@ class SVGPoint
 public:
 
   SVGPoint()
-#ifdef DEBUG
     : mX(0.0f)
     , mY(0.0f)
-#endif
   {}
 
   SVGPoint(float aX, float aY)
@@ -64,6 +62,19 @@ public:
     return NS_finite(mX) && NS_finite(mY);
   }
 #endif
+
+  void SetX(float aX)
+    { mX = aX; }
+  void SetY(float aY)
+    { mY = aY; }
+  float GetX() const
+    { return mX; }
+  float GetY() const
+    { return mY; }
+
+  bool operator!=(const SVGPoint &rhs) const {
+    return mX != rhs.mX || mY != rhs.mY;
+  }
 
   float mX;
   float mY;
