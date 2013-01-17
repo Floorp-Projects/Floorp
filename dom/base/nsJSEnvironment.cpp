@@ -1785,45 +1785,6 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   return aHandler.set(handler);
 }
 
-// XXX - note that CompileFunction doesn't yet play the nsScriptObjectHolder
-// game - caller must still ensure JS GC root.
-nsresult
-nsJSContext::CompileFunction(JSObject* aTarget,
-                             const nsACString& aName,
-                             uint32_t aArgCount,
-                             const char** aArgArray,
-                             const nsAString& aBody,
-                             const char* aURL,
-                             uint32_t aLineNo,
-                             uint32_t aVersion,
-                             bool aShared,
-                             bool aIsXBL,
-                             JSObject** aFunctionObject)
-{
-  NS_ABORT_IF_FALSE(aFunctionObject,
-    "Shouldn't call CompileFunction with null return value.");
-
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  // Don't compile if aVersion is unknown.  Since the caller is responsible for
-  // parsing the version strings, we just check it isn't JSVERSION_UNKNOWN.
-  if ((JSVersion)aVersion == JSVERSION_UNKNOWN) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  JSAutoRequest ar(mContext);
-  JSAutoCompartment ac(mContext, aTarget);
-  js::RootedObject target(mContext, aShared ? NULL : aTarget);
-
-  JS::CompileOptions options(mContext);
-  options.setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo)
-         .setUserBit(aIsXBL);
-
-  return nsJSUtils::CompileFunction(mContext, target, options, aName, aArgCount,
-                                    aArgArray, aBody, aFunctionObject);
-}
-
 nsresult
 nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
                               JSObject* aHandler, nsIArray* aargv,
