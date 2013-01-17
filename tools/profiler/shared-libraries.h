@@ -71,7 +71,7 @@ public:
   const std::string &GetName() const { return mName; }
 
 private:
-  explicit SharedLibrary() {}
+  SharedLibrary() {}
 
   uintptr_t mStart;
   uintptr_t mEnd;
