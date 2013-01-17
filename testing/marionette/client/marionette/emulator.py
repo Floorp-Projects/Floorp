@@ -288,9 +288,7 @@ waitFor(
         self.dm = devicemanagerADB.DeviceManagerADB(adbPath=self.adb,
                                                     deviceSerial='emulator-%d' % self.port)
 
-    def add_prefs_to_profile(self, prefs=None):
-        if not prefs:
-            prefs = ['user_pref("marionette.loadearly", true);']
+    def add_prefs_to_profile(self, prefs=()):
         local_user_js = tempfile.mktemp(prefix='localuserjs')
         self.dm.getFile(self.remote_user_js, local_user_js)
         with open(local_user_js, 'a') as f:
@@ -338,26 +336,14 @@ waitFor(
         # setup DNS fix for networking
         self._run_adb(['shell', 'setprop', 'net.dns1', '10.0.2.3'])
 
-    def setup(self, marionette, gecko_path=None, load_early=False, busybox=None):
+    def setup(self, marionette, gecko_path=None, busybox=None):
         if busybox:
             self.install_busybox(busybox)
 
         if gecko_path:
-            if load_early:
-                # Inject prefs into the profile now, since we have to restart
-                # B2G after installing a new gecko anyway.
-                self.add_prefs_to_profile()
             self.install_gecko(gecko_path, marionette)
-        elif load_early:
-            self.add_prefs_to_profile()
-            self.restart_b2g()
 
-        if load_early:
-            # If we're loading early, we have to wait for the
-            # system-message-listener-ready event again after restarting B2G.
-            # If we're not loading early, we skip this because Marionette
-            # doesn't load until after this event has fired.
-            self.wait_for_system_message(marionette)
+        self.wait_for_system_message(marionette)
 
     def restart_b2g(self):
         print 'restarting B2G'
