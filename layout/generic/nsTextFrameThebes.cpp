@@ -104,8 +104,9 @@ struct TabWidth {
 };
 
 struct TabWidthStore {
-  TabWidthStore()
+  TabWidthStore(int32_t aValidForContentOffset)
     : mLimit(0)
+    , mValidForContentOffset(aValidForContentOffset)
   { }
 
   // Apply tab widths to the aSpacing array, which corresponds to characters
@@ -118,7 +119,10 @@ struct TabWidthStore {
   // been calculated yet but may be appended if needed later.  It's a DOM
   // offset relative to the current frame's offset.
   uint32_t mLimit;
-  
+ 
+  // Need to recalc tab offsets if frame content offset differs from this.
+  int32_t mValidForContentOffset;
+
   // A TabWidth record for each tab character measured so far.
   nsTArray<TabWidth> mWidths;
 };
@@ -2477,6 +2481,11 @@ nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
       static const gfxSkipChars emptySkipChars;
       return gfxSkipCharsIterator(emptySkipChars, 0);
     }
+    TabWidthStore* tabWidths =
+      static_cast<TabWidthStore*>(Properties().Get(TabWidthProperty()));
+    if (tabWidths && tabWidths->mValidForContentOffset != GetContentOffset()) {
+      Properties().Delete(TabWidthProperty());
+    }
   }
 
   if (textRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
@@ -3064,7 +3073,7 @@ PropertyProvider::CalcTabWidths(uint32_t aStart, uint32_t aLength)
         }
       } else {
         if (!mTabWidths) {
-          mTabWidths = new TabWidthStore();
+          mTabWidths = new TabWidthStore(mFrame->GetContentOffset());
           mFrame->Properties().Set(TabWidthProperty(), mTabWidths);
         }
         double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
