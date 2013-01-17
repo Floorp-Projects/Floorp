@@ -1316,56 +1316,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
 }
 
-// Helper function to convert a jsval to an nsAString, and set
-// exception flags if the conversion fails.
-static nsresult
-JSValueToAString(JSContext *cx, jsval val, nsAString *result,
-                 bool *isUndefined)
-{
-  if (isUndefined) {
-    *isUndefined = JSVAL_IS_VOID(val);
-  }
-
-  if (!result) {
-    return NS_OK;
-  }
-
-  JSString* jsstring = ::JS_ValueToString(cx, val);
-  if (!jsstring) {
-    goto error;
-  }
-
-  size_t length;
-  const jschar *chars;
-  chars = ::JS_GetStringCharsAndLength(cx, jsstring, &length);
-  if (!chars) {
-    goto error;
-  }
-
-  result->Assign(chars, length);
-  return NS_OK;
-
-error:
-  // We failed to convert val to a string. We're either OOM, or the
-  // security manager denied access to .toString(), or somesuch, on
-  // an object. Treat this case as if the result were undefined.
-
-  result->Truncate();
-
-  if (isUndefined) {
-    *isUndefined = true;
-  }
-
-  if (!::JS_IsExceptionPending(cx)) {
-    // JS_ValueToString()/JS_GetStringCharsAndLength returned null w/o an
-    // exception pending. That means we're OOM.
-
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
 nsIScriptObjectPrincipal*
 nsJSContext::GetObjectPrincipal()
 {
@@ -1431,21 +1381,11 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
 nsresult
 nsJSContext::ExecuteScript(JSScript* aScriptObject,
-                           JSObject* aScopeObject,
-                           nsAString* aRetValue,
-                           bool* aIsUndefined)
+                           JSObject* aScopeObject)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (!mScriptsEnabled) {
-    if (aIsUndefined) {
-      *aIsUndefined = true;
-    }
-
-    if (aRetValue) {
-      aRetValue->Truncate();
-    }
-
     return NS_OK;
   }
 
@@ -1475,22 +1415,8 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
   // not be a GC root currently, provided we run the GC only from the
   // operation callback or from ScriptEvaluated.
   jsval val;
-  bool ok = JS_ExecuteScript(mContext, aScopeObject, aScriptObject, &val);
-  if (ok) {
-    // If all went well, convert val to a string (XXXbe unless undefined?).
-    rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
-  } else {
+  if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, &val))
     ReportPendingException();
-
-    if (aIsUndefined) {
-      *aIsUndefined = true;
-    }
-
-    if (aRetValue) {
-      aRetValue->Truncate();
-    }
-  }
-
   --mExecuteDepth;
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
