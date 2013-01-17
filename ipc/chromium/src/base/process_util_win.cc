@@ -337,6 +337,10 @@ bool WaitForExitCode(ProcessHandle handle, int* exit_code) {
   return true;
 }
 
+void SetCurrentProcessPrivileges(ChildPrivileges privs) {
+
+}
+
 NamedProcessIterator::NamedProcessIterator(const std::wstring& executable_name,
                                            const ProcessFilter* filter)
     : started_iteration_(false),
