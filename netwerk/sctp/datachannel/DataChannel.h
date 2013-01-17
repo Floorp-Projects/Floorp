@@ -138,7 +138,7 @@ public:
                                      DataChannelListener *aListener,
                                      nsISupports *aContext);
 
-  void Close(uint16_t stream);
+  void Close(DataChannel *aChannel);
   void CloseAll();
 
   int32_t SendMsg(uint16_t stream, const nsACString &aMsg)
