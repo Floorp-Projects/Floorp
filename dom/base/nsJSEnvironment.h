@@ -91,17 +91,6 @@ public:
                                             JSObject *aScope,
                                             JSObject* aHandler,
                                             nsScriptObjectHolder<JSObject>& aBoundHandler);
-  virtual nsresult CompileFunction(JSObject* aTarget,
-                                   const nsACString& aName,
-                                   uint32_t aArgCount,
-                                   const char** aArgArray,
-                                   const nsAString& aBody,
-                                   const char* aURL,
-                                   uint32_t aLineNo,
-                                   uint32_t aVersion,
-                                   bool aShared,
-                                   bool aIsXBL,
-                                   JSObject** aFunctionObject);
 
   virtual nsIScriptGlobalObject *GetGlobalObject();
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
