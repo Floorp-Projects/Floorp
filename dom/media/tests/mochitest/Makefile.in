@@ -19,6 +19,7 @@ MOCHITEST_FILES = \
   test_peerConnection_basicAudioVideo.html \
   test_peerConnection_basicAudioVideoCombined.html \
   test_peerConnection_basicVideo.html \
+  test_peerConnection_bug827843.html \
   head.js \
   mediaStreamPlayback.js \
   pc.js \
