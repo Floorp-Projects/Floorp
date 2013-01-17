@@ -82,13 +82,17 @@ PermissionSettings.prototype = {
                     aBrowserFlag) {
     debug("Set called with: " + aPermName + ", " + aManifestURL + ", " +
           aOrigin + ",  " + aPermValue + ", " + aBrowserFlag); 
+    let currentPermValue = this.get(aPermName, aManifestURL, aOrigin, 
+                                    aBrowserFlag);
     let action;
     // Check for invalid calls so that we throw an exception rather than get
     // killed by parent process
-    if (aPermValue === "unknown" ||
+    if (currentPermValue === "unknown" || 
+        aPermValue === "unknown" ||
         !this.isExplicit(aPermName, aManifestURL, aOrigin, aBrowserFlag)) {
       let errorMsg = "PermissionSettings.js: '" + aPermName + "'" +
-                     " is an implicit permission for '" + aManifestURL+"'";
+                     " is an implicit permission for '" + aManifestURL +
+                     "' or the permission isn't set";
       Cu.reportError(errorMsg);
       throw new Components.Exception(errorMsg);
     }
