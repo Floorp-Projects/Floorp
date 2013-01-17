@@ -48,7 +48,7 @@ public:
                                   JSObject& aScopeObject,
                                   JS::CompileOptions &aOptions,
                                   bool aCoerceToString,
-                                  JS::Value& aRetValue);
+                                  JS::Value* aRetValue);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  int32_t aTextLength,

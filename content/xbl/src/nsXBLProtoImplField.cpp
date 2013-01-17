@@ -115,7 +115,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
                                                  mFieldTextLength),
                                *aBoundNode, options,
                                /* aCoerceToString = */ false,
-                               result);
+                               &result);
   if (NS_FAILED(rv)) {
     return rv;
   }
