@@ -185,8 +185,7 @@ class MarionetteTestRunner(object):
                  es_server=None, rest_server=None, logger=None,
                  testgroup="marionette", noWindow=False, logcat_dir=None,
                  xml_output=None, repeat=0, perf=False, perfserv=None,
-                 gecko_path=None, testvars=None, tree=None, load_early=False,
-                 device=None):
+                 gecko_path=None, testvars=None, tree=None, device=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -214,7 +213,6 @@ class MarionetteTestRunner(object):
         self.gecko_path = gecko_path
         self.testvars = {}
         self.tree = tree
-        self.load_early = load_early
         self.device = device
 
         if testvars:
@@ -299,8 +297,7 @@ class MarionetteTestRunner(object):
                                          baseurl=self.baseurl,
                                          noWindow=self.noWindow,
                                          logcat_dir=self.logcat_dir,
-                                         gecko_path=self.gecko_path,
-                                         load_early=self.load_early)
+                                         gecko_path=self.gecko_path)
         else:
             raise Exception("must specify binary, address or emulator")
 
@@ -655,11 +652,6 @@ def parse_options():
         print "must specify --binary, --emulator or --address"
         parser.exit()
 
-    if options.load_early and not options.emulator:
-        parser.print_usage()
-        print "must specify --load-early on when using --emulator"
-        parser.exit()
-
     # default to storing logcat output for emulator runs
     if options.emulator and not options.logcat_dir:
         options.logcat_dir = 'logcat'
@@ -701,7 +693,6 @@ def startTestRunner(runner_class, options, tests):
                           perfserv=options.perfserv,
                           gecko_path=options.gecko_path,
                           testvars=options.testvars,
-                          load_early=options.load_early,
                           device=options.device)
     runner.run_tests(tests, testtype=options.type)
     return runner
