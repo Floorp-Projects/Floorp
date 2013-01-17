@@ -237,7 +237,7 @@ JMChunkInfo::JMChunkInfo(mjit::JSActiveFrame *frame,
 {}
 
 // Use RawScript instead of UnrootedScript because this may be called from a
-// signal handler
+// signal handler.
 jsbytecode*
 SPSProfiler::ipToPC(RawScript script, size_t ip)
 {
@@ -266,8 +266,10 @@ SPSProfiler::ipToPC(RawScript script, size_t ip)
     return NULL;
 }
 
+// Use RawScript instead of UnrootedScript because this may be called from a
+// signal handler.
 jsbytecode*
-JMChunkInfo::convert(UnrootedScript script, size_t ip)
+JMChunkInfo::convert(RawScript script, size_t ip)
 {
     if (mainStart <= ip && ip < mainEnd) {
         size_t offset = 0;
