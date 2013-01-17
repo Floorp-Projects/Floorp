@@ -122,10 +122,10 @@ LayoutView.prototype = {
         this.inspector.selection.reason != "highlighter") {
       this.cssLogic.highlight(this.inspector.selection.node);
       this.undim();
-      this.update();
     } else {
       this.dim();
     }
+    this.update();
   },
 
   /**
