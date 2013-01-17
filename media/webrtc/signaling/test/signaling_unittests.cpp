@@ -694,6 +694,19 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
   }
 
 
+  void DoTrickleIceChrome(ParsedSDP &sdp) {
+    for (std::multimap<int, std::string>::iterator it = sdp.ice_candidates_.begin();
+         it != sdp.ice_candidates_.end(); ++it) {
+      if ((*it).first != 0) {
+        std::string candidate = "a=" + (*it).second + "\r\n";
+        std::cerr << "Adding trickle ICE candidate " << candidate << std::endl;
+
+        ASSERT_TRUE(NS_SUCCEEDED(pc->AddIceCandidate(candidate.c_str(), "", (*it).first)));
+      }
+    }
+  }
+
+
   bool IceCompleted() {
     uint32_t state;
     pc->GetIceState(&state);
@@ -945,6 +958,26 @@ public:
     // Now set the trickle ICE candidates
     a1_.DoTrickleIce(a2_answer);
     a2_.DoTrickleIce(a1_offer);
+    ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
+    ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
+  }
+
+
+  void OfferAnswerTrickleChrome(sipcc::MediaConstraints& aconstraints,
+                          sipcc::MediaConstraints& bconstraints,
+                          uint32_t offerSdpCheck, uint32_t answerSdpCheck) {
+    a1_.CreateOffer(aconstraints, OFFER_AV, offerSdpCheck);
+    a1_.SetLocal(TestObserver::OFFER, a1_.offer());
+    ParsedSDP a1_offer(a1_.offer());
+    a2_.SetRemote(TestObserver::OFFER, a1_offer.sdp_without_ice_);
+    a2_.CreateAnswer(bconstraints, a1_offer.sdp_without_ice_,
+                     OFFER_AV|ANSWER_AV, answerSdpCheck);
+    a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
+    ParsedSDP a2_answer(a2_.answer());
+    a1_.SetRemote(TestObserver::ANSWER, a2_answer.sdp_without_ice_);
+    // Now set the trickle ICE candidates
+    a1_.DoTrickleIceChrome(a2_answer);
+    a2_.DoTrickleIceChrome(a1_offer);
     ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
     ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
   }
@@ -1416,6 +1449,22 @@ TEST_F(SignalingTest, FullCallTrickle)
   sipcc::MediaConstraints constraints;
   OfferAnswerTrickle(constraints, constraints,
                      SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
+
+  std::cerr << "ICE handshake completed" << std::endl;
+  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
+  ASSERT_GE(a1_.GetPacketsSent(0), 40);
+  ASSERT_GE(a2_.GetPacketsReceived(0), 40);
+}
+
+// Offer answer with trickle but with chrome-style candidates
+TEST_F(SignalingTest, FullCallTrickleChrome)
+{
+  sipcc::MediaConstraints constraints;
+  OfferAnswerTrickleChrome(constraints, constraints,
+                           SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
 
   std::cerr << "ICE handshake completed" << std::endl;
   PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
