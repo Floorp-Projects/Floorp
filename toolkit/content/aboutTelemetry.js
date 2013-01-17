@@ -285,14 +285,48 @@ let StackRenderer = {
       aRenderHeader(i);
       this.renderStack(div, stack)
     }
+  },
+  renderSymbolicatedStacks:
+    function StackRenderer_renderSymbolicatedStacks(aPrefix, aRequest,
+                                                    aRenderHeader) {
+    if (aRequest.readyState != 4)
+      return;
+
+    document.getElementById(aPrefix + "-fetch-symbols").classList.add("hidden");
+    document.getElementById(aPrefix + "-hide-symbols").classList.remove("hidden");
+    let div = document.getElementById(aPrefix + "-data");
+    clearDivData(div);
+    let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
+
+    if (aRequest.status != 200) {
+      div.appendChild(document.createTextNode(errorMessage));
+      return;
+    }
+
+    let jsonResponse = {};
+    try {
+      jsonResponse = JSON.parse(aRequest.responseText);
+    } catch (e) {
+      div.appendChild(document.createTextNode(errorMessage));
+      return;
+    }
+
+    for (let i = 0; i < jsonResponse.length; ++i) {
+      let stack = jsonResponse[i];
+      aRenderHeader(i);
+
+      for (let symbol of stack) {
+        div.appendChild(document.createTextNode(symbol));
+        div.appendChild(document.createElement("br"));
+      }
+      div.appendChild(document.createElement("br"));
+    }
   }
 };
 
 let ChromeHangs = {
 
   symbolRequest: null,
-
-  errorMessage: bundle.GetStringFromName("errorFetchingSymbols"),
 
   /**
    * Renders raw chrome hang data
@@ -301,14 +335,9 @@ let ChromeHangs = {
     let hangs = Telemetry.chromeHangs;
     let stacks = hangs.stacks;
     let memoryMap = hangs.memoryMap;
-    let durations = hangs.durations;
-    let div = document.getElementById("chrome-hangs-data");
-    function f(i) {
-      this.renderHangHeader(div, i + 1, durations[i]);
-    }
 
     StackRenderer.renderStacks("chrome-hangs", stacks, memoryMap,
-			       f.bind(this));
+			       this.renderHangHeader);
   },
 
   /**
@@ -318,16 +347,19 @@ let ChromeHangs = {
    * @param aIndex The number of the hang
    * @param aDuration The duration of the hang
    */
-  renderHangHeader: function ChromeHangs_renderHangHeader(aDiv, aIndex, aDuration) {
+  renderHangHeader: function ChromeHangs_renderHangHeader(aIndex) {
+    let div = document.getElementById("chrome-hangs-data");
+
     let titleElement = document.createElement("span");
     titleElement.className = "hang-title";
 
+    let durations = Telemetry.chromeHangs.durations;
     let titleText = bundle.formatStringFromName(
-      "hangTitle", [aIndex, aDuration], 2);
+      "hangTitle", [aIndex + 1, durations[aIndex]], 2);
     titleElement.appendChild(document.createTextNode(titleText));
 
-    aDiv.appendChild(titleElement);
-    aDiv.appendChild(document.createElement("br"));
+    div.appendChild(titleElement);
+    div.appendChild(document.createElement("br"));
   },
 
   /**
@@ -359,42 +391,8 @@ let ChromeHangs = {
    * about state 4 ("completed") - handling the response data.
    */
   handleSymbolResponse: function ChromeHangs_handleSymbolResponse() {
-    if (this.symbolRequest.readyState != 4)
-      return;
-
-    document.getElementById("chrome-hangs-fetch-symbols").classList.add("hidden");
-    document.getElementById("chrome-hangs-hide-symbols").classList.remove("hidden");
-
-    let hangsDiv = document.getElementById("chrome-hangs-data");
-    clearDivData(hangsDiv);
-
-    if (this.symbolRequest.status != 200) {
-      hangsDiv.appendChild(document.createTextNode(this.errorMessage));
-      return;
-    }
-
-    let jsonResponse = {};
-    try {
-      jsonResponse = JSON.parse(this.symbolRequest.responseText);
-    } catch (e) {
-      hangsDiv.appendChild(document.createTextNode(this.errorMessage));
-      return;
-    }
-
-    let hangs = Telemetry.chromeHangs;
-    let stacks = hangs.stacks;
-    let durations = hangs.durations;
-    for (let i = 0; i < jsonResponse.length; ++i) {
-      let stack = jsonResponse[i];
-      let hangDuration = durations[i];
-      this.renderHangHeader(hangsDiv, i + 1, hangDuration);
-
-      for (let symbol of stack) {
-        hangsDiv.appendChild(document.createTextNode(symbol));
-        hangsDiv.appendChild(document.createElement("br"));
-      }
-      hangsDiv.appendChild(document.createElement("br"));
-    }
+    StackRenderer.renderSymbolicatedStacks("chrome-hangs", this.symbolRequest,
+                                           this.renderHangHeader);
   }
 };
 
