@@ -19,6 +19,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIChromeRegistry.h"
+#include <algorithm>
 
 NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
                    nsIDirIndexListener,
@@ -822,7 +823,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         descriptionAffix.Cut(0, descriptionAffix.Length() - 25);
         if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
             descriptionAffix.Cut(0, 1);
-        description.Truncate(NS_MIN<uint32_t>(71, description.Length() - 28));
+        description.Truncate(std::min<uint32_t>(71, description.Length() - 28));
         if (NS_IS_HIGH_SURROGATE(description.Last()))
             description.Truncate(description.Length() - 1);
 

@@ -21,6 +21,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_target_events.js \
 		browser_toolbox_tool_ready.js \
 		browser_toolbox_sidebar.js \
+		browser_toolbox_window_shortcuts.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

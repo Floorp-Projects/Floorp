@@ -34,6 +34,7 @@
 #include "nptest_platform.h"
 #include "nsAlgorithm.h"
 #include <CoreServices/CoreServices.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -175,8 +176,8 @@ pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
 
     // Initialize a rectangular path.
     CGMutablePathRef path = CGPathCreateMutable();
-    CGRect bounds = CGRectMake(10.0, 10.0, NS_MAX(0.0, windowWidth - 20.0),
-                               NS_MAX(0.0, windowHeight - 20.0));
+    CGRect bounds = CGRectMake(10.0, 10.0, std::max(0.0, windowWidth - 20.0),
+                               std::max(0.0, windowHeight - 20.0));
     CGPathAddRect(path, NULL, bounds);
 
     // Initialize an attributed string.

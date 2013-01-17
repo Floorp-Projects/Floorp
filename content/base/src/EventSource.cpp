@@ -79,8 +79,6 @@ EventSource::~EventSource()
 // EventSource::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(EventSource)
-
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(EventSource)
   bool isBlack = tmp->IsBlack();
   if (isBlack || tmp->mWaitingForOnStopRequest) {
@@ -530,15 +528,7 @@ private:
   nsRefPtr<EventSource> mEventSource;
 };
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AsyncVerifyRedirectCallbackFwr)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AsyncVerifyRedirectCallbackFwr)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventSource)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AsyncVerifyRedirectCallbackFwr)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventSource)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_1(AsyncVerifyRedirectCallbackFwr, mEventSource)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackFwr)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

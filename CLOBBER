@@ -15,4 +15,4 @@
 #
 # Note: The description below will be part of the error message shown to users.
 #
-Bug 816576 - libsoundtouch is now part of libxul and not a separate dynamic library.
+Bug 830231 - Remove nsIDOMDOM(Settable)TokenList (Needs clobber on at least Windows)

@@ -286,7 +286,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 
       size_type Right( self_type& aResult, size_type aCount ) const
         {
-          aCount = NS_MIN(mLength, aCount);
+          aCount = XPCOM_MIN(mLength, aCount);
           return Mid(aResult, mLength - aCount, aCount);
         }
 

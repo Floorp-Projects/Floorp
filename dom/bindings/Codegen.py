@@ -837,7 +837,7 @@ class CGDeferredFinalize(CGAbstractStaticMethod):
         return """  MOZ_ASSERT(slice > 0, "nonsensical/useless call with slice == 0");
   nsTArray<%(smartPtr)s >* pointers = static_cast<nsTArray<%(smartPtr)s >*>(data);
   uint32_t oldLen = pointers->Length();
-  slice = NS_MIN(oldLen, slice);
+  slice = std::min(oldLen, slice);
   uint32_t newLen = oldLen - slice;
   pointers->RemoveElementsAt(newLen, slice);
   if (newLen == 0) {
@@ -1787,6 +1787,16 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   JSObject* parent = WrapNativeParent(aCx, aScope, aObject->GetParentObject());
   if (!parent) {
     return NULL;
+  }
+
+  // That might have ended up wrapping us already, due to the wonders
+  // of XBL.  Check for that, and bail out as needed.  Scope so we don't
+  // collide with the "obj" we declare in CreateBindingJSObject.
+  {
+    JSObject* obj = aCache->GetWrapper();
+    if (obj) {
+      return obj;
+    }
   }
 
   JSAutoCompartment ac(aCx, parent);
@@ -4117,7 +4127,7 @@ class CGMethodCall(CGThing):
 
         overloadCGThings = []
         overloadCGThings.append(
-            CGGeneric("unsigned argcount = NS_MIN(argc, %du);" %
+            CGGeneric("unsigned argcount = std::min(argc, %du);" %
                       maxArgCount))
         overloadCGThings.append(
             CGSwitch("argcount",

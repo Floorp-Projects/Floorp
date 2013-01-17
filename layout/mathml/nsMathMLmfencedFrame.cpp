@@ -12,6 +12,7 @@
 #include "nsRenderingContext.h"
 
 #include "nsMathMLmfencedFrame.h"
+#include <algorithm>
 
 //
 // <mfenced> -- surround content with a pair of fences
@@ -316,7 +317,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   // adjust the origin of children.
 
   // we need to center around the axis
-  nscoord delta = NS_MAX(containerSize.ascent - axisHeight, 
+  nscoord delta = std::max(containerSize.ascent - axisHeight, 
                          containerSize.descent + axisHeight);
   containerSize.ascent = delta + axisHeight;
   containerSize.descent = delta - axisHeight;

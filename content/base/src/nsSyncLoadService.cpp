@@ -24,6 +24,7 @@
 #include "nsAutoPtr.h"
 #include "nsStreamUtils.h"
 #include "nsCrossSiteListenerProxy.h"
+#include <algorithm>
 
 /**
  * This class manages loading a single XML document
@@ -342,7 +343,7 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
         if (NS_FAILED(rv)) {
             chunkSize = 4096;
         }
-        chunkSize = NS_MIN(int64_t(UINT16_MAX), chunkSize);
+        chunkSize = std::min(int64_t(UINT16_MAX), chunkSize);
 
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), aIn,
                                        chunkSize);
@@ -370,7 +371,7 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
                 readCount = UINT32_MAX;
 
             rv = aListener->OnDataAvailable(aChannel, nullptr, aIn,
-                                            (uint32_t)NS_MIN(sourceOffset, (uint64_t)UINT32_MAX),
+                                            (uint32_t)std::min(sourceOffset, (uint64_t)UINT32_MAX),
                                             (uint32_t)readCount);
             if (NS_FAILED(rv)) {
                 break;

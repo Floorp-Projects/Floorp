@@ -28,6 +28,7 @@ from mozbuild.mozconfig import (
 class TestMozconfigLoader(unittest.TestCase):
     def setUp(self):
         self._old_env = dict(os.environ)
+        os.environ.pop('MOZCONFIG', None)
         self._temp_dirs = set()
 
     def tearDown(self):

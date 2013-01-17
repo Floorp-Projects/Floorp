@@ -105,6 +105,7 @@ webidl_files = \
   SVGAnimatedBoolean.webidl \
   SVGAnimatedLengthList.webidl \
   SVGAnimatedNumberList.webidl \
+  SVGAnimatedPathData.webidl \
   SVGAnimatedPoints.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
@@ -131,8 +132,10 @@ webidl_files = \
   SVGMetadataElement.webidl \
   SVGMPathElement.webidl \
   SVGNumberList.webidl \
+  SVGPathElement.webidl \
   SVGPathSeg.webidl \
   SVGPathSegList.webidl \
+  SVGPatternElement.webidl \
   SVGPoint.webidl \
   SVGPointList.webidl \
   SVGPolygonElement.webidl \
@@ -146,6 +149,7 @@ webidl_files = \
   SVGStyleElement.webidl \
   SVGSVGElement.webidl \
   SVGSwitchElement.webidl \
+  SVGSymbolElement.webidl \
   SVGTests.webidl \
   SVGTextContentElement.webidl \
   SVGTextElement.webidl \
@@ -157,6 +161,7 @@ webidl_files = \
   SVGTransformList.webidl \
   SVGTSpanElement.webidl \
   SVGUnitTypes.webidl \
+  SVGUseElement.webidl \
   SVGURIReference.webidl \
   SVGViewElement.webidl \
   SVGZoomAndPan.webidl \
@@ -164,6 +169,7 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   URL.webidl \
+  ValidityState.webidl \
   WebSocket.webidl \
   UndoManager.webidl \
   XMLHttpRequest.webidl \

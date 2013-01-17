@@ -302,10 +302,10 @@ public:
 
     // We need to enlarge and possibly offset our temporary surface
     // so that things outside of the canvas may cast shadows.
-    mTempRect.Inflate(Margin(blurRadius + NS_MAX<Float>(state.shadowOffset.x, 0),
-                             blurRadius + NS_MAX<Float>(state.shadowOffset.y, 0),
-                             blurRadius + NS_MAX<Float>(-state.shadowOffset.x, 0),
-                             blurRadius + NS_MAX<Float>(-state.shadowOffset.y, 0)));
+    mTempRect.Inflate(Margin(blurRadius + std::max<Float>(state.shadowOffset.x, 0),
+                             blurRadius + std::max<Float>(state.shadowOffset.y, 0),
+                             blurRadius + std::max<Float>(-state.shadowOffset.x, 0),
+                             blurRadius + std::max<Float>(-state.shadowOffset.y, 0)));
 
     if (aBounds) {
       // We actually include the bounds of the shadow blur, this makes it
@@ -1636,9 +1636,9 @@ CanvasRenderingContext2D::BeginPath()
 }
 
 void
-CanvasRenderingContext2D::Fill()
+CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
 {
-  EnsureUserSpacePath();
+  EnsureUserSpacePath(winding);
 
   if (!mPath) {
     return;
@@ -1687,9 +1687,9 @@ CanvasRenderingContext2D::Stroke()
 }
 
 void
-CanvasRenderingContext2D::Clip()
+CanvasRenderingContext2D::Clip(const CanvasWindingRule& winding)
 {
-  EnsureUserSpacePath();
+  EnsureUserSpacePath(winding);
 
   if (!mPath) {
     return;
@@ -1848,9 +1848,11 @@ CanvasRenderingContext2D::EnsureWritablePath()
 }
 
 void
-CanvasRenderingContext2D::EnsureUserSpacePath()
+CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
 {
   FillRule fillRule = CurrentState().fillRule;
+  if(winding == CanvasWindingRuleValues::Evenodd)
+    fillRule = FILL_EVEN_ODD;
 
   if (!mPath && !mPathBuilder && !mDSPathBuilder) {
     EnsureTarget();
@@ -2836,19 +2838,21 @@ CanvasRenderingContext2D::SetMozDashOffset(double mozDashOffset)
 }
 
 bool
-CanvasRenderingContext2D::IsPointInPath(double x, double y)
+CanvasRenderingContext2D::IsPointInPath(double x, double y, const CanvasWindingRule& winding)
 {
   if (!FloatValidate(x,y)) {
     return false;
   }
 
-  EnsureUserSpacePath();
+  EnsureUserSpacePath(winding);
   if (!mPath) {
     return false;
   }
+
   if (mPathTransformWillUpdate) {
     return mPath->ContainsPoint(Point(x, y), mPathToDS);
   }
+
   return mPath->ContainsPoint(Point(x, y), mTarget->GetTransform());
 }
 

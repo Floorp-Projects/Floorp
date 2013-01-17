@@ -30,6 +30,7 @@
 #include "mozilla/StandardInteger.h"
 
 #include <stdlib.h>
+#include <algorithm>
 
 class nsIPresShell;
 class nsIContent;
@@ -1389,7 +1390,8 @@ public:
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_FLUSH_LAYERS = 0x02,
     PAINT_EXISTING_TRANSACTION = 0x04,
-    PAINT_NO_COMPOSITE = 0x08
+    PAINT_NO_COMPOSITE = 0x08,
+    PAINT_NO_CLEAR_INVALIDATIONS = 0x10
   };
   void PaintRoot(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                  uint32_t aFlags) const;
@@ -2911,12 +2913,12 @@ public:
       nsRect r = aItem.GetUnderlyingFrame()->GetScrollableOverflowRect() +
                  aItem.ToReferenceFrame();
       mX = aLeftEdge > 0 ? r.x + aLeftEdge : nscoord_MIN;
-      mXMost = aRightEdge > 0 ? NS_MAX(r.XMost() - aRightEdge, mX) : nscoord_MAX;
+      mXMost = aRightEdge > 0 ? std::max(r.XMost() - aRightEdge, mX) : nscoord_MAX;
     }
     void Intersect(nscoord* aX, nscoord* aWidth) const {
       nscoord xmost1 = *aX + *aWidth;
-      *aX = NS_MAX(*aX, mX);
-      *aWidth = NS_MAX(NS_MIN(xmost1, mXMost) - *aX, 0);
+      *aX = std::max(*aX, mX);
+      *aWidth = std::max(std::min(xmost1, mXMost) - *aX, 0);
     }
     nscoord mX;
     nscoord mXMost;

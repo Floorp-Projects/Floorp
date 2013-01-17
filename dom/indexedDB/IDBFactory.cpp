@@ -42,6 +42,7 @@
 #include "Key.h"
 
 #include "ipc/IndexedDBChild.h"
+#include <algorithm>
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -445,7 +446,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
   int64_t version = 0;
   rv = stmt->GetInt64(0, &version);
 
-  *aVersion = NS_MAX<int64_t>(version, 0);
+  *aVersion = std::max<int64_t>(version, 0);
 
   return rv;
 }
@@ -483,8 +484,6 @@ IDBFactory::SetDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
 
   return NS_OK;
 }
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(IDBFactory)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBFactory)

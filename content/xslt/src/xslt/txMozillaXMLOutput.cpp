@@ -39,6 +39,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsIFrame.h"
+#include <algorithm>
 
 using namespace mozilla::dom;
 
@@ -656,7 +657,7 @@ txMozillaXMLOutput::createTxWrapper()
             // The new documentElement should go after the document type.
             // This is needed for cases when there is no existing
             // documentElement in the document.
-            rootLocation = NS_MAX(rootLocation, j + 1);
+            rootLocation = std::max(rootLocation, j + 1);
 #endif
             ++j;
         }

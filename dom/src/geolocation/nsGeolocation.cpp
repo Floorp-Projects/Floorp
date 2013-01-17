@@ -45,6 +45,7 @@
 #include "mozilla/ClearOnShutdown.h"
 
 #include <math.h>
+#include <algorithm>
 
 #ifdef MOZ_MAEMO_LIBLOCATION
 #include "MaemoLocationProvider.h"
@@ -941,7 +942,7 @@ nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
   // The threshold is when the distance between the two
   // positions exceeds the worse (larger value) of the two
   // accuracies.
-  double max_accuracy = NS_MAX(oldAccuracy, newAccuracy);
+  double max_accuracy = std::max(oldAccuracy, newAccuracy);
   if (delta > max_accuracy)
     return true;
 
@@ -1110,7 +1111,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGeolocation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocation)
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGeolocation)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGeolocation)
   tmp->mPendingRequests.Clear();

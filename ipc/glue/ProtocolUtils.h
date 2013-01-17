@@ -115,9 +115,10 @@ LoggingEnabled()
 inline void
 ProtocolErrorBreakpoint(const char* aMsg)
 {
-    if (LoggingEnabled()) {
-        printf_stderr("Protocol error: %s\n", aMsg);
-    }
+    // Bugs that generate these error messages can be tough to
+    // reproduce.  Log always in the hope that someone finds the error
+    // message.
+    printf_stderr("IPDL protocol error: %s\n", aMsg);
 }
 
 typedef IPCMessageStart ProtocolId;

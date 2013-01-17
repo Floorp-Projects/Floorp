@@ -12,6 +12,7 @@
 #include "OggReader.h"
 #include "VideoUtils.h"
 #include "theora/theoradec.h"
+#include <algorithm>
 #ifdef MOZ_OPUS
 #include "opus/opus.h"
 extern "C" {
@@ -455,8 +456,8 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
   // If this is the last packet, perform end trimming.
   if (aPacket->e_o_s && mOpusState->mPrevPacketGranulepos != -1) {
     startFrame = mOpusState->mPrevPacketGranulepos;
-    frames = static_cast<int32_t>(NS_MAX(static_cast<int64_t>(0),
-                                         NS_MIN(endFrame - startFrame,
+    frames = static_cast<int32_t>(std::max(static_cast<int64_t>(0),
+                                         std::min(endFrame - startFrame,
                                                 static_cast<int64_t>(frames))));
   } else {
     startFrame = endFrame - frames;
@@ -464,7 +465,7 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
 
   // Trim the initial frames while the decoder is settling.
   if (mOpusState->mSkip > 0) {
-    int32_t skipFrames = NS_MIN(mOpusState->mSkip, frames);
+    int32_t skipFrames = std::min(mOpusState->mSkip, frames);
     if (skipFrames == frames) {
       // discard the whole packet
       mOpusState->mSkip -= frames;
@@ -989,20 +990,20 @@ int64_t OggReader::RangeEndTime(int64_t aStartOffset,
         prevChecksumAfterSeek = checksumAfterSeek;
         checksumAfterSeek = 0;
         ogg_sync_reset(&sync.mState);
-        readStartOffset = NS_MAX(static_cast<int64_t>(0), readStartOffset - step);
+        readStartOffset = std::max(static_cast<int64_t>(0), readStartOffset - step);
         // There's no point reading more than the maximum size of
         // an Ogg page into data we've previously scanned. Any data
         // between readLimitOffset and aEndOffset must be garbage
         // and we can ignore it thereafter.
-        readLimitOffset = NS_MIN(readLimitOffset,
+        readLimitOffset = std::min(readLimitOffset,
                                  readStartOffset + maxOggPageSize);
-        readHead = NS_MAX(aStartOffset, readStartOffset);
+        readHead = std::max(aStartOffset, readStartOffset);
       }
 
-      int64_t limit = NS_MIN(static_cast<int64_t>(UINT32_MAX),
+      int64_t limit = std::min(static_cast<int64_t>(UINT32_MAX),
                              aEndOffset - readHead);
-      limit = NS_MAX(static_cast<int64_t>(0), limit);
-      limit = NS_MIN(limit, static_cast<int64_t>(step));
+      limit = std::max(static_cast<int64_t>(0), limit);
+      limit = std::min(limit, static_cast<int64_t>(step));
       uint32_t bytesToRead = static_cast<uint32_t>(limit);
       uint32_t bytesRead = 0;
       char* buffer = ogg_sync_buffer(&sync.mState, bytesToRead);
@@ -1278,7 +1279,7 @@ nsresult OggReader::SeekInBufferedRange(int64_t aTarget,
       int64_t keyframeTime = mTheoraState->StartTime(keyframeGranulepos);
       SEEK_LOG(PR_LOG_DEBUG, ("Keyframe for %lld is at %lld, seeking back to it",
                               video->mTime, keyframeTime));
-      aAdjustedTarget = NS_MIN(aAdjustedTarget, keyframeTime);
+      aAdjustedTarget = std::min(aAdjustedTarget, keyframeTime);
     }
   }
   if (aAdjustedTarget < aTarget) {
@@ -1317,9 +1318,9 @@ nsresult OggReader::SeekInUnbuffered(int64_t aTarget,
   }
   // Add in the Opus pre-roll if necessary, as well.
   if (HasAudio() && mOpusState) {
-    keyframeOffsetMs = NS_MAX(keyframeOffsetMs, SEEK_OPUS_PREROLL);
+    keyframeOffsetMs = std::max(keyframeOffsetMs, SEEK_OPUS_PREROLL);
   }
-  int64_t seekTarget = NS_MAX(aStartTime, aTarget - keyframeOffsetMs);
+  int64_t seekTarget = std::max(aStartTime, aTarget - keyframeOffsetMs);
   // Minimize the bisection search space using the known timestamps from the
   // buffered ranges.
   SeekRange k = SelectSeekRange(aRanges, seekTarget, aStartTime, aEndTime, false);
@@ -1340,7 +1341,7 @@ nsresult OggReader::Seek(int64_t aTarget,
   NS_ENSURE_TRUE(resource != nullptr, NS_ERROR_FAILURE);
   int64_t adjustedTarget = aTarget;
   if (HasAudio() && mOpusState){
-    adjustedTarget = NS_MAX(aStartTime, aTarget - SEEK_OPUS_PREROLL);
+    adjustedTarget = std::max(aStartTime, aTarget - SEEK_OPUS_PREROLL);
   }
 
   if (adjustedTarget == aStartTime) {
@@ -1418,7 +1419,7 @@ PageSync(MediaResource* aResource,
       NS_ASSERTION(buffer, "Must have a buffer");
 
       // Read from the file into the buffer
-      int64_t bytesToRead = NS_MIN(static_cast<int64_t>(PAGE_STEP),
+      int64_t bytesToRead = std::min(static_cast<int64_t>(PAGE_STEP),
                                    aEndOffset - readHead);
       NS_ASSERTION(bytesToRead <= UINT32_MAX, "bytesToRead range check");
       if (bytesToRead <= 0) {
@@ -1489,7 +1490,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
   ogg_int64_t endTime = aRange.mTimeEnd;
 
   ogg_int64_t seekTarget = aTarget;
-  int64_t seekLowerBound = NS_MAX(static_cast<int64_t>(0), aTarget - aFuzz);
+  int64_t seekLowerBound = std::max(static_cast<int64_t>(0), aTarget - aFuzz);
   int hops = 0;
   DebugOnly<ogg_int64_t> previousGuess = -1;
   int backsteps = 0;
@@ -1536,7 +1537,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
       target = (double)(seekTarget - startTime) / (double)duration;
       guess = startOffset + startLength +
               static_cast<ogg_int64_t>((double)interval * target);
-      guess = NS_MIN(guess, endOffset - PAGE_STEP);
+      guess = std::min(guess, endOffset - PAGE_STEP);
       if (mustBackoff) {
         // We previously failed to determine the time at the guess offset,
         // probably because we ran out of data to decode. This usually happens
@@ -1556,14 +1557,14 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
           break;
         }
 
-        backsteps = NS_MIN(backsteps + 1, maxBackStep);
+        backsteps = std::min(backsteps + 1, maxBackStep);
         // We reset mustBackoff. If we still need to backoff further, it will
         // be set to true again.
         mustBackoff = false;
       } else {
         backsteps = 0;
       }
-      guess = NS_MAX(guess, startOffset + startLength);
+      guess = std::max(guess, startOffset + startLength);
 
       SEEK_LOG(PR_LOG_DEBUG, ("Seek loop start[o=%lld..%lld t=%lld] "
                               "end[o=%lld t=%lld] "
@@ -1674,7 +1675,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
 
       // We've found appropriate time stamps here. Proceed to bisect
       // the search space.
-      granuleTime = NS_MAX(audioTime, videoTime);
+      granuleTime = std::max(audioTime, videoTime);
       NS_ASSERTION(granuleTime > 0, "Must get a granuletime");
       break;
     } // End of "until we determine time at guess offset" loop.

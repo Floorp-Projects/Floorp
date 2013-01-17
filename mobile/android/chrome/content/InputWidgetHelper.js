@@ -27,9 +27,9 @@ var InputWidgetHelper = {
       type: "Prompt:Show",
       title: Strings.browser.GetStringFromName("inputWidgetHelper." + aElement.getAttribute('type')),
       buttons: [
-        { label: Strings.browser.GetStringFromName("inputWidgetHelper.set") },
-        { label: Strings.browser.GetStringFromName("inputWidgetHelper.clear") },
-        { label: Strings.browser.GetStringFromName("inputWidgetHelper.cancel") }
+        Strings.browser.GetStringFromName("inputWidgetHelper.set"),
+        Strings.browser.GetStringFromName("inputWidgetHelper.clear"),
+        Strings.browser.GetStringFromName("inputWidgetHelper.cancel")
       ],
       inputs: [
         { type: type, value: aElement.value }

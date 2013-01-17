@@ -13,6 +13,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
 #include "prprf.h"
+#include <algorithm>
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -495,8 +496,8 @@ SpdySession3::ResetDownstreamState()
   mInputFrameDataStream = nullptr;
 }
 
-void
-SpdySession3::EnsureBuffer(nsAutoArrayPtr<char> &buf,
+template<typename T> void
+SpdySession3::EnsureBuffer(nsAutoArrayPtr<T> &buf,
                           uint32_t newSize,
                           uint32_t preserve,
                           uint32_t &objSize)
@@ -509,11 +510,25 @@ SpdySession3::EnsureBuffer(nsAutoArrayPtr<char> &buf,
   // boundary.
 
   objSize = (newSize + 2048 + 4095) & ~4095;
-  
-  nsAutoArrayPtr<char> tmp(new char[objSize]);
+
+  MOZ_STATIC_ASSERT(sizeof(T) == 1, "sizeof(T) must be 1");
+  nsAutoArrayPtr<T> tmp(new T[objSize]);
   memcpy(tmp, buf, preserve);
   buf = tmp;
 }
+
+// Instantiate supported templates explicitly.
+template void
+SpdySession3::EnsureBuffer(nsAutoArrayPtr<char> &buf,
+                           uint32_t newSize,
+                           uint32_t preserve,
+                           uint32_t &objSize);
+
+template void
+SpdySession3::EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf,
+                           uint32_t newSize,
+                           uint32_t preserve,
+                           uint32_t &objSize);
 
 void
 SpdySession3::zlibInit()
@@ -1773,7 +1788,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
 
   if (mDownstreamState == DISCARDING_DATA_FRAME) {
     char trash[4096];
-    uint32_t count = NS_MIN(4096U, mInputFrameDataSize - mInputFrameDataRead);
+    uint32_t count = std::min(4096U, mInputFrameDataSize - mInputFrameDataRead);
 
     if (!count) {
       ResetDownstreamState();
@@ -2078,7 +2093,7 @@ SpdySession3::OnWriteSegment(char *buf,
       return NS_BASE_STREAM_CLOSED;
     }
     
-    count = NS_MIN(count, mInputFrameDataSize - mInputFrameDataRead);
+    count = std::min(count, mInputFrameDataSize - mInputFrameDataRead);
     rv = NetworkRead(mSegmentWriter, buf, count, countWritten);
     if (NS_FAILED(rv))
       return rv;
@@ -2104,7 +2119,7 @@ SpdySession3::OnWriteSegment(char *buf,
       return NS_BASE_STREAM_CLOSED;
     }
       
-    count = NS_MIN(count,
+    count = std::min(count,
                    mFlatHTTPResponseHeaders.Length() -
                    mFlatHTTPResponseHeadersOut);
     memcpy(buf,

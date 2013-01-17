@@ -179,7 +179,7 @@ IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
 }
 
 #ifdef JSGC_ROOT_ANALYSIS
-bool
+void *
 js::gc::IsAddressableGCThing(JSRuntime *rt, uintptr_t w)
 {
     void *thing;
@@ -187,7 +187,9 @@ js::gc::IsAddressableGCThing(JSRuntime *rt, uintptr_t w)
     AllocKind thingKind;
     ConservativeGCTest status =
         IsAddressableGCThing(rt, w, false, &thingKind, &aheader, &thing);
-    return status == CGCT_VALID;
+    if (status != CGCT_VALID)
+        return NULL;
+    return thing;
 }
 #endif
 

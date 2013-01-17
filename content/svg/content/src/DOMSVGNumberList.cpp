@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGNumberListBinding.h"
+#include <algorithm>
 
 // See the comment in this file's header.
 
@@ -39,7 +40,6 @@ void UpdateListIndicesFromIndex(nsTArray<DOMSVGNumber*>& aItemsArray,
 // clear our DOMSVGAnimatedNumberList's weak ref to us to be safe. (The other
 // option would be to not unlink and rely on the breaking of the other edges in
 // the cycle, as NS_SVG_VAL_IMPL_CYCLE_COLLECTION does.)
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGNumberList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGNumberList)
   if (tmp->mAList) {
     if (tmp->IsAnimValList()) {
@@ -198,7 +198,7 @@ DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
     return nullptr;
   }
 
-  index = NS_MIN(index, LengthNoFlush());
+  index = std::min(index, LengthNoFlush());
   if (index >= DOMSVGNumber::MaxListIndex()) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;

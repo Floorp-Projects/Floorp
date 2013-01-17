@@ -58,6 +58,7 @@
 #include "nsXULAppAPI.h"
 #include "OrientationObserver.h"
 #include "UeventPoller.h"
+#include <algorithm>
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #define NsecPerMsec  1000000LL
@@ -503,7 +504,7 @@ bool ReadFromFile(const char *filename, char (&buf)[n])
     return false;
   }
 
-  buf[NS_MIN(numRead, n - 1)] = '\0';
+  buf[std::min(numRead, n - 1)] = '\0';
   return true;
 }
 

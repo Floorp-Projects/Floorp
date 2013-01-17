@@ -29,8 +29,9 @@ EXPORTS_mozilla += \
   RangedPtr.h \
   RefPtr.h \
   Scoped.h \
-  StandardInteger.h \
   SHA1.h \
+  SplayTree.h \
+  StandardInteger.h \
   ThreadLocal.h \
   TypeTraits.h \
   Types.h \

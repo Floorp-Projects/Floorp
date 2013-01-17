@@ -5,8 +5,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMDeviceMotionEvent.h"
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDeviceMotionEvent)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAcceleration)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccelerationIncludingGravity)
