@@ -22,20 +22,20 @@ END_TEST(testDeepFreeze_bug535703)
 
 BEGIN_TEST(testDeepFreeze_deep)
 {
-    jsval a, o;
+    js::RootedValue a(cx), o(cx);
     EXEC("var a = {}, o = a;\n"
          "for (var i = 0; i < 5000; i++)\n"
          "    a = {x: a, y: a};\n");
-    EVAL("a", &a);
-    EVAL("o", &o);
+    EVAL("a", a.address());
+    EVAL("o", o.address());
 
     js::RootedObject aobj(cx, JSVAL_TO_OBJECT(a));
     CHECK(JS_DeepFreezeObject(cx, aobj));
 
-    jsval b;
-    EVAL("Object.isFrozen(a)", &b);
+    js::RootedValue b(cx);
+    EVAL("Object.isFrozen(a)", b.address());
     CHECK_SAME(b, JSVAL_TRUE);
-    EVAL("Object.isFrozen(o)", &b);
+    EVAL("Object.isFrozen(o)", b.address());
     CHECK_SAME(b, JSVAL_TRUE);
     return true;
 }
@@ -43,18 +43,18 @@ END_TEST(testDeepFreeze_deep)
 
 BEGIN_TEST(testDeepFreeze_loop)
 {
-    jsval x, y;
+    js::RootedValue x(cx), y(cx);
     EXEC("var x = [], y = {x: x}; y.y = y; x.push(x, y);");
-    EVAL("x", &x);
-    EVAL("y", &y);
+    EVAL("x", x.address());
+    EVAL("y", y.address());
 
     js::RootedObject xobj(cx, JSVAL_TO_OBJECT(x));
     CHECK(JS_DeepFreezeObject(cx, xobj));
 
-    jsval b;
-    EVAL("Object.isFrozen(x)", &b);
+    js::RootedValue b(cx);
+    EVAL("Object.isFrozen(x)", b.address());
     CHECK_SAME(b, JSVAL_TRUE);
-    EVAL("Object.isFrozen(y)", &b);
+    EVAL("Object.isFrozen(y)", b.address());
     CHECK_SAME(b, JSVAL_TRUE);
     return true;
 }

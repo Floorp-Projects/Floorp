@@ -133,9 +133,9 @@ TryParse(JSContext *cx, const char (&input)[N], const jsval &expectedArg)
 {
     AutoInflatedString str(cx);
     js::RootedValue expected(cx, expectedArg);
-    jsval v;
+    RootedValue v(cx);
     str = input;
-    CHECK(JS_ParseJSON(cx, str.chars(), str.length(), &v));
+    CHECK(JS_ParseJSON(cx, str.chars(), str.length(), v.address()));
     CHECK_SAME(v, expected);
     return true;
 }

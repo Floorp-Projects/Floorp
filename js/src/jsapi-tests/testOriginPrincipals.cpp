@@ -85,8 +85,8 @@ testOuter(const char *asciiChars)
 bool
 testInner(const char *asciiChars, JSPrincipals *principal, JSPrincipals *originPrincipal)
 {
-    jsval rval;
-    CHECK(eval(asciiChars, principal, originPrincipal, &rval));
+    js::RootedValue rval(cx);
+    CHECK(eval(asciiChars, principal, originPrincipal, rval.address()));
 
     JSScript *script = JS_GetFunctionScript(cx, JSVAL_TO_OBJECT(rval)->toFunction());
     CHECK(JS_GetScriptPrincipals(script) == principal);

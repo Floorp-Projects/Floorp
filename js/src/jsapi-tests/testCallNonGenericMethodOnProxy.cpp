@@ -54,8 +54,8 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
   JSFunction *customMethodA = JS_NewFunction(cx, CustomMethod, 0, 0, customA, "customMethodA");
   CHECK(customMethodA);
 
-  jsval rval;
-  CHECK(JS_CallFunction(cx, customA, customMethodA, 0, NULL, &rval));
+  js::RootedValue rval(cx);
+  CHECK(JS_CallFunction(cx, customA, customMethodA, 0, NULL, rval.address()));
   CHECK_SAME(rval, Int32Value(17));
 
   // Now create the second global object and compartment...
@@ -69,18 +69,18 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
     CHECK(customB);
     JS_SetReservedSlot(customB, CUSTOM_SLOT, Int32Value(42));
 
-    JSFunction *customMethodB = JS_NewFunction(cx, CustomMethod, 0, 0, customB, "customMethodB");
+    js::RootedFunction customMethodB(cx, JS_NewFunction(cx, CustomMethod, 0, 0, customB, "customMethodB"));
     CHECK(customMethodB);
 
-    jsval rval;
-    CHECK(JS_CallFunction(cx, customB, customMethodB, 0, NULL, &rval));
+    js::RootedValue rval(cx);
+    CHECK(JS_CallFunction(cx, customB, customMethodB, 0, NULL, rval.address()));
     CHECK_SAME(rval, Int32Value(42));
 
     js::RootedObject wrappedCustomA(cx, customA);
     CHECK(JS_WrapObject(cx, wrappedCustomA.address()));
 
-    jsval rval2;
-    CHECK(JS_CallFunction(cx, wrappedCustomA, customMethodB, 0, NULL, &rval2));
+    js::RootedValue rval2(cx);
+    CHECK(JS_CallFunction(cx, wrappedCustomA, customMethodB, 0, NULL, rval2.address()));
     CHECK_SAME(rval, Int32Value(42));
   }
 
