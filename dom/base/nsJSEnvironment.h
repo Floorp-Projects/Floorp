@@ -44,11 +44,11 @@ public:
 
   virtual nsIScriptObjectPrincipal* GetObjectPrincipal();
 
-  virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
-                                           JSObject& aScopeObject,
-                                           JS::CompileOptions &aOptions,
-                                           bool aCoerceToString,
-                                           JS::Value& aRetValue);
+  virtual nsresult EvaluateString(const nsAString& aScript,
+                                  JSObject& aScopeObject,
+                                  JS::CompileOptions &aOptions,
+                                  bool aCoerceToString,
+                                  JS::Value& aRetValue);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  int32_t aTextLength,

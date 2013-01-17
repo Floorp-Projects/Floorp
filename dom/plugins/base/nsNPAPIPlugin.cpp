@@ -1595,9 +1595,9 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   JS::CompileOptions options(cx);
   options.setFileAndLine(spec, 0)
          .setVersion(JSVERSION_DEFAULT);
-  nsresult rv = scx->EvaluateStringWithValue(utf16script, *obj, options,
-                                             /* aCoerceToString = */ false,
-                                             *rval);
+  nsresult rv = scx->EvaluateString(utf16script, *obj, options,
+                                    /* aCoerceToString = */ false,
+                                    *rval);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, *rval, result));
