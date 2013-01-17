@@ -1236,7 +1236,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             JS::Value& aRetValue)
 {
   SAMPLE_LABEL("JS", "EvaluateString");
-
+  MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
   aRetValue = JSVAL_VOID;
 
@@ -1255,19 +1255,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   aOptions.setPrincipals(p);
 
   bool ok = false;
-
   nsresult rv = sSecurityManager->CanExecuteScripts(mContext, nsJSPrincipals::get(p), &ok);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(ok, NS_OK);
 
   nsJSContext::TerminationFuncHolder holder(this);
 
-  // SecurityManager said "ok", but don't compile if aVersion is unknown.
-  // Since the caller is responsible for parsing the version strings, we just
-  // check it isn't JSVERSION_UNKNOWN.
-  if (ok && !(aOptions.versionSet && aOptions.version == JSVERSION_UNKNOWN)) {
-
+  // Scope the JSAutoCompartment so that it gets destroyed before we pop the
+  // cx and potentially call JS_RestoreFrameChain.
+  {
     XPCAutoRequest ar(mContext);
     JSAutoCompartment ac(mContext, &aScopeObject);
 
@@ -1283,22 +1279,21 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       aRetValue = ok ? JS::StringValue(str) : JSVAL_VOID;
     }
     --mExecuteDepth;
+  }
 
-    if (!ok) {
-      // Tell XPConnect about any pending exceptions. This is needed
-      // to avoid dropping JS exceptions in case we got here through
-      // nested calls through XPConnect.
+  if (!ok) {
+    // Tell XPConnect about any pending exceptions. This is needed
+    // to avoid dropping JS exceptions in case we got here through
+    // nested calls through XPConnect.
 
-      ReportPendingException();
-    }
+    ReportPendingException();
   }
 
   // ScriptEvaluated needs to come after we pop the stack
   pusher.Pop();
   ScriptEvaluated(true);
 
-  return rv;
-
+  return NS_OK;
 }
 
 nsIScriptObjectPrincipal*
