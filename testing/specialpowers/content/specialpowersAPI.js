@@ -1111,7 +1111,7 @@ SpecialPowersAPI.prototype = {
   },
 
   getFocusedElementForWindow: function(targetWindow, aDeep, childTargetWindow) {
-    this.focusManager.getFocusedElementForWindow(targetWindow, aDeep, childTargetWindow);
+    return this.focusManager.getFocusedElementForWindow(targetWindow, aDeep, childTargetWindow);
   },
 
   activeWindow: function() {
