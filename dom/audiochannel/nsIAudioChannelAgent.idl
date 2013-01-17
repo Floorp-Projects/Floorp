@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(35dddb4c-3d35-11e2-978c-10bf48d64bd4)]
+[function, scriptable, uuid(c7227506-5f8e-11e2-8bb3-10bf48d64bd4)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
