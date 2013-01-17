@@ -1233,12 +1233,12 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             JSObject& aScopeObject,
                             JS::CompileOptions& aOptions,
                             bool aCoerceToString,
-                            JS::Value& aRetValue)
+                            JS::Value* aRetValue)
 {
   SAMPLE_LABEL("JS", "EvaluateString");
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  aRetValue = JSVAL_VOID;
+  *aRetValue = JSVAL_VOID;
 
   if (!mScriptsEnabled) {
     return NS_OK;
@@ -1272,11 +1272,11 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     js::RootedObject rootedScope(mContext, &aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, aOptions,
                       PromiseFlatString(aScript).get(),
-                      aScript.Length(), &aRetValue);
-    if (ok && !JSVAL_IS_VOID(aRetValue) && aCoerceToString) {
-      JSString* str = JS_ValueToString(mContext, aRetValue);
+                      aScript.Length(), aRetValue);
+    if (ok && !JSVAL_IS_VOID(*aRetValue) && aCoerceToString) {
+      JSString* str = JS_ValueToString(mContext, *aRetValue);
       ok = !!str;
-      aRetValue = ok ? JS::StringValue(str) : JSVAL_VOID;
+      *aRetValue = ok ? JS::StringValue(str) : JSVAL_VOID;
     }
     --mExecuteDepth;
   }

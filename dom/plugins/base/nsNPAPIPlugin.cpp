@@ -1597,7 +1597,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
          .setVersion(JSVERSION_DEFAULT);
   nsresult rv = scx->EvaluateString(utf16script, *obj, options,
                                     /* aCoerceToString = */ false,
-                                    *rval);
+                                    rval);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, *rval, result));

@@ -9753,7 +9753,7 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
            .setVersion(JSVERSION_DEFAULT);
     JS::Value ignored;
     aScx->EvaluateString(nsDependentString(script), *FastGetGlobalJSObject(),
-                         options, /*aCoerceToString = */ false, ignored);
+                         options, /*aCoerceToString = */ false, &ignored);
   } else {
     nsCOMPtr<nsIVariant> dummy;
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
