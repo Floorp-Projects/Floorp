@@ -20,6 +20,7 @@
 
 #include "assembler/wtf/Platform.h"
 #include "gc/Marking.h"
+#include "gc/Root.h"
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -243,6 +244,9 @@ bool
 JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &wrapper)
 {
     JS_ASSERT(wrapped.wrapped);
+    JS_ASSERT(!IsPoisonedPtr(wrapped.wrapped));
+    JS_ASSERT(!IsPoisonedPtr(wrapped.debugger));
+    JS_ASSERT(!IsPoisonedPtr(wrapper.toGCThing()));
     JS_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
     JS_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
     // todo: uncomment when bug 815999 is fixed:
@@ -251,8 +255,9 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existing)
+JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
 {
+    RootedObject existing(cx, existingArg);
     JS_ASSERT(cx->compartment == this);
     JS_ASSERT_IF(existing, existing->compartment() == cx->compartment);
     JS_ASSERT_IF(existing, vp->isObject());
