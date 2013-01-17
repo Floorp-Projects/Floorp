@@ -227,7 +227,9 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mIdentity(NULL)
   , mSTSThread(NULL)
   , mMedia(new PeerConnectionMedia(this)) {
+#ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
+#endif
 }
 
 PeerConnectionImpl::~PeerConnectionImpl()
@@ -293,10 +295,13 @@ NS_IMETHODIMP
 PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
                                nsIThread* aThread) {
+#ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
+#endif
   MOZ_ASSERT(aObserver);
   MOZ_ASSERT(aThread);
-  mPCObserver = aObserver;
+
+  mPCObserver = do_GetWeakReference(aObserver);
 
   nsresult res;
 
@@ -526,8 +531,12 @@ PeerConnectionImpl::NotifyConnection()
   CSFLogDebugS(logTag, __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
   RUN_ON_THREAD(mThread,
-                WrapRunnable(mPCObserver,
+                WrapRunnable(pco,
                              &IPeerConnectionObserver::NotifyConnection),
                 NS_DISPATCH_NORMAL);
 #endif
@@ -541,10 +550,13 @@ PeerConnectionImpl::NotifyClosedConnection()
   CSFLogDebugS(logTag, __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
   RUN_ON_THREAD(mThread,
-                WrapRunnable(mPCObserver,
-                             &IPeerConnectionObserver::NotifyClosedConnection),
-                NS_DISPATCH_NORMAL);
+    WrapRunnable(pco, &IPeerConnectionObserver::NotifyClosedConnection),
+    NS_DISPATCH_NORMAL);
 #endif
 }
 
@@ -570,15 +582,20 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aCh
   CSFLogDebugS(logTag, __FUNCTION__ << ": channel: " << static_cast<void*>(aChannel.get()));
 
 #ifdef MOZILLA_INTERNAL_API
-   nsCOMPtr<nsIDOMDataChannel> domchannel;
-   nsresult rv = NS_NewDOMDataChannel(aChannel, mWindow,
-                                      getter_AddRefs(domchannel));
+  nsCOMPtr<nsIDOMDataChannel> domchannel;
+  nsresult rv = NS_NewDOMDataChannel(aChannel, mWindow,
+                                     getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
 
   RUN_ON_THREAD(mThread,
                 WrapRunnableNM(NotifyDataChannel_m,
                                domchannel.get(),
-                               mPCObserver),
+                               pco),
                 NS_DISPATCH_NORMAL);
 #endif
 }
@@ -1012,16 +1029,20 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
       break;
   }
 
-  if (mPCObserver) {
-    PeerConnectionObserverDispatch* runnable =
-        new PeerConnectionObserverDispatch(aInfo, this, mPCObserver);
-
-    if (mThread) {
-      mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-      return;
-    }
-    runnable->Run();
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return;
   }
+
+  PeerConnectionObserverDispatch* runnable =
+      new PeerConnectionObserverDispatch(aInfo, this, pco);
+
+  if (mThread) {
+    mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    return;
+  }
+  runnable->Run();
+  delete runnable;
 }
 
 void
@@ -1032,7 +1053,11 @@ PeerConnectionImpl::ChangeReadyState(PeerConnectionImpl::ReadyState aReadyState)
 
   // Note that we are passing an nsRefPtr<IPeerConnectionObserver> which
   // keeps the observer live.
-  RUN_ON_THREAD(mThread, WrapRunnable(mPCObserver,
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
+  RUN_ON_THREAD(mThread, WrapRunnable(pco,
                                       &IPeerConnectionObserver::OnStateChange,
                                       // static_cast needed to work around old Android NDK r5c compiler
                                       static_cast<int>(IPeerConnectionObserver::kReadyState)),
@@ -1086,14 +1111,16 @@ PeerConnectionImpl::IceGatheringCompleted_m(NrIceCtx *aCtx)
   mIceState = kIceWaiting;
 
 #ifdef MOZILLA_INTERNAL_API
-  if (mPCObserver) {
-    RUN_ON_THREAD(mThread,
-                  WrapRunnable(mPCObserver,
-                               &IPeerConnectionObserver::OnStateChange,
-                               // static_cast required to work around old C++ compiler on Android NDK r5c
-                               static_cast<int>(IPeerConnectionObserver::kIceState)),
-                  NS_DISPATCH_NORMAL);
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
   }
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pco,
+                             &IPeerConnectionObserver::OnStateChange,
+                             // static_cast required to work around old C++ compiler on Android NDK r5c
+                             static_cast<int>(IPeerConnectionObserver::kIceState)),
+                NS_DISPATCH_NORMAL);
 #endif
   return NS_OK;
 }
@@ -1121,14 +1148,16 @@ PeerConnectionImpl::IceCompleted_m(NrIceCtx *aCtx)
   mIceState = kIceConnected;
 
 #ifdef MOZILLA_INTERNAL_API
-  if (mPCObserver) {
-    RUN_ON_THREAD(mThread,
-                  WrapRunnable(mPCObserver,
-                               &IPeerConnectionObserver::OnStateChange,
-                               // static_cast required to work around old C++ compiler on Android NDK r5c
-			       static_cast<int>(IPeerConnectionObserver::kIceState)),
-                  NS_DISPATCH_NORMAL);
+  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
   }
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pco,
+                             &IPeerConnectionObserver::OnStateChange,
+                             // static_cast required to work around old C++ compiler on Android NDK r5c
+                             static_cast<int>(IPeerConnectionObserver::kIceState)),
+                NS_DISPATCH_NORMAL);
 #endif
   return NS_OK;
 }
