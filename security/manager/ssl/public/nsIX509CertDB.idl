@@ -30,7 +30,7 @@ interface nsIOpenSignedJARFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(a18df2a5-84a9-46cd-9140-3fdb3879d9ff)]
+[scriptable, uuid(ab0a1c52-f7fd-4fe7-9e65-7d3705a8580e)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -250,11 +250,6 @@ interface nsIX509CertDB : nsISupports {
                         in nsIFile aFile,
                         in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
-
-  /**
-   *  Whether OCSP is enabled in preferences.
-   */
-  readonly attribute boolean isOcspOn;
 
   /*
    *  Decode a raw data presentation and instantiate an object in memory.
