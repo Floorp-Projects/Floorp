@@ -188,6 +188,10 @@ private:
 
   void FireFailureNotification();
 
+  static void SyncNotifyState(imgRequestProxy* proxy, bool hasImage,
+                              uint32_t state, nsIntRect& dirtyRect,
+                              bool hadLastPart);
+
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
   // The invalid area of the most recent frame we know about. (All previous
