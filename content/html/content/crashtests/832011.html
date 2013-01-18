@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    var canvas = document.createElement('canvas');
+    var m = Components.lookupMethod(canvas, "itemProp")
+    m();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
