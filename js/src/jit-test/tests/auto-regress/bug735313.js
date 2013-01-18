@@ -1,4 +1,4 @@
-// |jit-test| allow-oom;
+// |jit-test| slow; allow-oom;
 
 // Binary: cache/js-dbg-64-dfcb11712ec2-linux
 // Flags:
