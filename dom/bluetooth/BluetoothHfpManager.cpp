@@ -724,31 +724,42 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     ParseAtCommand(msg, 8, atCommandValues);
 
     if (atCommandValues.IsEmpty()) {
-      NS_WARNING("Could't get the value of command [AT+VGS=]");
+      NS_WARNING("Could't get the value of command [AT+CHLD=]");
       goto respond_with_ok;
     }
 
-    nsresult rv;
-    int chld = atCommandValues[0].ToInteger(&rv);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to extract volume value from bluetooth headset!");
-      goto respond_with_ok;
+    char chld = atCommandValues[0][0];
+    if (chld < '0' || chld > '4') {
+      NS_WARNING("Wrong value of command [AT+CHLD]");
+      SendLine("ERROR");
+      return;
     }
 
-    switch(chld) {
-      case 1:
-        // Releases active calls and accepts the other (held or waiting) call
-        NotifyDialer(NS_LITERAL_STRING("CHUP+ATA"));
-        break;
-      case 2:
-        // Places active calls on hold and accepts the other (held or waiting) call
-        NotifyDialer(NS_LITERAL_STRING("CHLD+ATA"));
-        break;
-      default:
-#ifdef DEBUG
-        NS_WARNING("Not handling chld value");
-#endif
-        break;
+    /**
+     * The following two cases are supported:
+     * AT+CHLD=1 - Releases active calls and accepts the other (held or
+     *             waiting) call
+     * AT+CHLD=2 - Places active calls on hold and accepts the other (held
+     *             or waiting) call
+     *
+     * The following cases are NOT supported yet:
+     * AT+CHLD=0, AT+CHLD=1<idx>, AT+CHLD=2<idx>, AT+CHLD=3, AT+CHLD=4
+     * Please see 4.33.2 in Bluetooth hands-free profile 1.6 for more
+     * information.
+     */
+
+    // No idx shall be included
+    if (atCommandValues[0].Length() > 1) {
+      SendLine("ERROR");
+      return;
+    }
+
+    if (chld == '1') {
+      NotifyDialer(NS_LITERAL_STRING("CHUP+ATA"));
+    } else if (chld == '2') {
+      NotifyDialer(NS_LITERAL_STRING("CHLD+ATA"));
+    } else {
+      NS_WARNING("Not handling chld value");
     }
   } else if (msg.Find("AT+VGS=") != -1) {
     // Adjust volume by headset
@@ -771,9 +782,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       goto respond_with_ok;
     }
 
-#ifdef DEBUG
     NS_ASSERTION(newVgs >= 0 && newVgs <= 15, "Received invalid VGS value");
-#endif
 
     nsString data;
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -789,6 +798,8 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     // Currently, we don't support memory dialing in Dialer app
     SendLine("ERROR");
     return;
+  } else if (msg.Find("AT+CLCC") != -1) {
+    SendCommand("+CLCC: ");
   } else if (msg.Find("ATD") != -1) {
     nsAutoCString message(msg), newMsg;
     int end = message.FindChar(';');
