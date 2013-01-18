@@ -35,7 +35,8 @@ enum {
   stateDecodeStopped     = 1u << 3,
   stateFrameStopped      = 1u << 4,
   stateRequestStopped    = 1u << 5,
-  stateBlockingOnload    = 1u << 6
+  stateBlockingOnload    = 1u << 6,
+  stateImageIsAnimated   = 1u << 7
 };
 
 /*
