@@ -62,8 +62,8 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
     case SRTP_AES128_CM_HMAC_SHA1_32:
       MOZ_MTLOG(PR_LOG_DEBUG, "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
       crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtcp);
-      break;
+      crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // 80-bit per RFC 5764
+      break;                                                   // S 4.1.2.
     default:
       MOZ_MTLOG(PR_LOG_ERROR, "Request to set unknown SRTP cipher suite");
       return NULL;
