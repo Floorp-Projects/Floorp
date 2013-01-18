@@ -13,6 +13,7 @@
 #include "ImageLogging.h"
 #include "RasterImage.h"
 #include "nsIObserverService.h"
+#include "RasterImage.h"
 
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
@@ -291,15 +292,21 @@ imgStatusTracker::imgStatusTracker(Image* aImage)
     mHadLastPart(false)
 {}
 
+// Private, used only by CloneForRecording.
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),
+    mTrackerObserver(new imgStatusTrackerNotifyingObserver(this)),
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
     mIsMultipart(aOther.mIsMultipart),
     mHadLastPart(aOther.mHadLastPart)
-    // Note: we explicitly don't copy mRequestRunnable, because it won't be
-    // nulled out when the mRequestRunnable's Run function eventually gets
-    // called.
+    // Note: we explicitly don't copy several fields:
+    //  - mRequestRunnable, because it won't be nulled out when the
+    //    mRequestRunnable's Run function eventually gets called.
+    //  - mProperties, because we don't need it and it'd just point at the same
+    //    object
+    //  - mConsumers, because we don't need to talk to consumers
+    //  - mInvalidRect, because the point of it is to be fired off and reset
 {}
 
 imgStatusTracker::~imgStatusTracker()
@@ -478,6 +485,53 @@ imgStatusTracker::SyncNotifyState(imgRequestProxy* proxy, bool hasImage, uint32_
   if (state & stateRequestStopped) {
     proxy->OnStopRequest(hadLastPart);
   }
+}
+
+void
+imgStatusTracker::SyncAndSyncNotifyDifference(imgStatusTracker* other)
+{
+  uint32_t diffState = ~mState & other->mState;
+  bool unblockedOnload = mState & stateBlockingOnload && !(other->mState & stateBlockingOnload);
+  bool foundError = mImageStatus == imgIRequest::STATUS_ERROR;
+
+  // Now that we've calculated the difference in state, synchronize our state
+  // with the other tracker.
+
+  // First, actually synchronize our state.
+  mInvalidRect = mInvalidRect.Union(other->mInvalidRect);
+  mState |= other->mState;
+  mImageStatus = other->mImageStatus;
+  mIsMultipart = other->mIsMultipart;
+  mHadLastPart = other->mHadLastPart;
+
+  // Now that we've updated our state, notify all the consumers about the state
+  // that's changed.
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  while (iter.HasMore()) {
+    imgRequestProxy* proxy = iter.GetNext();
+
+    if (!proxy->NotificationsDeferred()) {
+      SyncNotifyState(proxy, mImage, diffState, mInvalidRect, other->mHadLastPart);
+
+      if (unblockedOnload) {
+        SendUnblockOnload(proxy);
+      }
+    }
+  }
+
+  // Reset the other rectangle for another go, if it's going to have one.
+  other->mInvalidRect.SetEmpty();
+
+  if (foundError) {
+    FireFailureNotification();
+  }
+}
+
+imgStatusTracker*
+imgStatusTracker::CloneForRecording()
+{
+  imgStatusTracker* clone = new imgStatusTracker(*this);
+  return clone;
 }
 
 void
