@@ -302,50 +302,6 @@ interface nsIMemoryReporterManager : nsISupports
 
 #include "nsStringGlue.h"
 
-// The NS_*MEMORY_REPORTER_IMPLEMENT* macros are the deprecated short-cut way
-// of defining memory reporters.   You should instead subclass the
-// MemoryReporterBase class below.
-
-// Note that this defaults 'process' to "", which is usually what's desired.
-#define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
-    class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
-    public:                                                                                   \
-      NS_DECL##_ts##ISUPPORTS                                                                 \
-      NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
-      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
-      NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
-      NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
-      NS_IMETHOD GetAmount(int64_t *amount) { *amount = _amountFunction(); return NS_OK; }    \
-      NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }       \
-    };                                                                                        \
-    NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
-
-// The only difference between this and NS_MEMORY_REPORTER_IMPLEMENT_HELPER
-// is that the function used to implement GetAmount is fallible.
-#define NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
-    class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
-    public:                                                                                   \
-      NS_DECL##_ts##ISUPPORTS                                                                 \
-      NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
-      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
-      NS_IMETHOD GetKind(int32_t *kind) { *kind = _kind; return NS_OK; }                      \
-      NS_IMETHOD GetUnits(int32_t *units) { *units = _units; return NS_OK; }                  \
-      NS_IMETHOD GetAmount(int64_t *amount) { return _amountFunction(amount); }               \
-      NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }\
-    };                                                                                        \
-    NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
-
-#define NS_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
-        NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
-#define NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
-        NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _THREADSAFE_)
-#define NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
-        NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
-#define NS_FALLIBLE_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
-        NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _THREADSAFE_)
-
-#define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
-
 // Note that the memory reporters are held in an nsCOMArray, which means
 // that individual reporters should be referenced with |nsIMemoryReporter *|
 // instead of nsCOMPtr<nsIMemoryReporter>.
