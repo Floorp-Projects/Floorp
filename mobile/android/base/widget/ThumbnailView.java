@@ -54,7 +54,7 @@ public class ThumbnailView extends ImageView {
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // OnLayout.changed isn't a reliable measure of whether or not the size of this view has changed
         // neither is onSizeChanged called often enough. Instead, we track changes in size ourselves, and
         // only invalidate this matrix if we have a new width/height spec
