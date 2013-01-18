@@ -134,6 +134,8 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *rtS
         rtSizes->unusedCode = 0;
     }
 
+    rtSizes->regexpData = bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
+
     rtSizes->stack = stackSpace.sizeOf();
 
     rtSizes->gcMarker = gcMarker.sizeOfExcludingThis(mallocSizeOf);
@@ -148,15 +150,18 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *rtS
 size_t
 JSRuntime::sizeOfExplicitNonHeap()
 {
-    size_t size = stackSpace.sizeOf();
+    size_t n = stackSpace.sizeOf();
 
     if (execAlloc_) {
         size_t jaegerCode, ionCode, regexpCode, unusedCode;
         execAlloc_->sizeOfCode(&jaegerCode, &ionCode, &regexpCode, &unusedCode);
-        size += jaegerCode + ionCode + regexpCode + unusedCode;
+        n += jaegerCode + ionCode + regexpCode + unusedCode;
     }
 
-    return size;
+    if (bumpAlloc_)
+        n += bumpAlloc_->sizeOfNonHeapData();
+
+    return n;
 }
 
 void
