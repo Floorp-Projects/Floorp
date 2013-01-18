@@ -19,10 +19,8 @@
 #define kCharsetFromIrreversibleAutoDetection 10
 #define kCharsetFromChannel            11
 #define kCharsetFromOtherComponent     12
-#define kCharsetFromByteOrderMark      13
-// Levels below here will be forced onto childframes too
-#define kCharsetFromParentForced       14
-#define kCharsetFromUserForced         15
-#define kCharsetFromPreviousLoading    16
+#define kCharsetFromParentForced       13 // propagates to child frames
+#define kCharsetFromUserForced         14 // propagates to child frames
+#define kCharsetFromByteOrderMark      15
 
 #endif /* nsCharsetSource_h_ */
