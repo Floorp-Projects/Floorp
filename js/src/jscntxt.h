@@ -789,6 +789,11 @@ struct JSRuntime : js::RuntimeFriendFields
     bool                gcIncrementalEnabled;
 
     /*
+     * GGC can be enabled from the command line while testing.
+     */
+    bool                gcGenerationalEnabled;
+
+    /*
      * Whether exact stack scanning is enabled for this runtime. This is
      * currently only used for dynamic root analysis. Exact scanning starts out
      * enabled, and is disabled if e4x has been used.

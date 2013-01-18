@@ -52,6 +52,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     global_(NULL),
     enterCompartmentDepth(0),
 #ifdef JSGC_GENERATIONAL
+    gcNursery(),
     gcStoreBuffer(&gcNursery),
 #endif
     ionUsingBarriers_(false),

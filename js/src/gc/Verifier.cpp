@@ -10,6 +10,7 @@
 #include "jsgc.h"
 #include "jsprf.h"
 #include "jsutil.h"
+#include "jswatchpoint.h"
 
 #include "mozilla/Util.h"
 
@@ -690,7 +691,7 @@ AssertStoreBufferContainsEdge(StoreBuffer *storebuf, void *loc, void *dst)
 }
 
 void
-gc::PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPostTracer *trc = (VerifyPostTracer *)jstrc;
     Cell *dst = (Cell *)*thingp;

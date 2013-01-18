@@ -538,7 +538,6 @@ TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
                  t->arenaHeader()->allocatedDuringIncremental);
 
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    JSCompartment *comp = cx->compartment;
     if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind) && !IsAtomsCompartment(comp))
         comp->gcNursery.insertPointer(t);
 #endif
