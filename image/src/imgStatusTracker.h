@@ -187,6 +187,10 @@ private:
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
+  // The invalid area of the most recent frame we know about. (All previous
+  // frames are assumed to be fully valid.)
+  nsIntRect mInvalidRect;
+
   // Weak pointer to the image. The image owns the status tracker.
   mozilla::image::Image* mImage;
 
