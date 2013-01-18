@@ -28,7 +28,7 @@ class  nsWatcherWindowEnumerator;
 class  nsIScriptContext;
 class  nsPromptService;
 struct JSContext;
-class JSObject;
+struct JSObject;
 struct nsWatcherWindowEntry;
 struct SizeSpec;
 

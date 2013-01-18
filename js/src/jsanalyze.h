@@ -993,8 +993,7 @@ class ScriptAnalysis
     void addTypeBarrier(JSContext *cx, const jsbytecode *pc,
                         types::TypeSet *target, types::Type type);
     void addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc,
-                                 types::TypeSet *target,
-                                 HandleObject singleton, HandleId singletonId);
+                                 types::TypeSet *target, HandleObject singleton, jsid singletonId);
 
     /* Remove obsolete type barriers at the given offset. */
     void pruneTypeBarriers(JSContext *cx, uint32_t offset);

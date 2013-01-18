@@ -91,7 +91,7 @@
  * a single BaseShape.
  */
 
-class JSObject;
+struct JSObject;
 
 namespace js {
 

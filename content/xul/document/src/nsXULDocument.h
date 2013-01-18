@@ -41,7 +41,7 @@ class nsIXULPrototypeScript;
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 
-class JSObject;
+struct JSObject;
 struct JSTracer;
 struct PRLogModuleInfo;
 

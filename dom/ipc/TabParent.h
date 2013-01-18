@@ -24,7 +24,7 @@
 
 struct gfxMatrix;
 struct JSContext;
-class JSObject;
+struct JSObject;
 class mozIApplication;
 class nsFrameLoader;
 class nsIDOMElement;

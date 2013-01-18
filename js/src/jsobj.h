@@ -271,7 +271,7 @@ class WithObject;
  * The JSFunction struct is an extension of this struct allocated from a larger
  * GC size-class.
  */
-class JSObject : public js::ObjectImpl
+struct JSObject : public js::ObjectImpl
 {
   private:
     friend class js::Shape;
@@ -1342,13 +1342,12 @@ GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, 
  * store the property value in *vp.
  */
 extern bool
-HasDataProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+HasDataProperty(JSContext *cx, HandleObject obj, jsid id, Value *vp);
 
 inline bool
 HasDataProperty(JSContext *cx, HandleObject obj, PropertyName *name, Value *vp)
 {
-    RootedId id(cx, NameToId(name));
-    return HasDataProperty(cx, obj, id, vp);
+    return HasDataProperty(cx, obj, NameToId(name), vp);
 }
 
 extern JSBool

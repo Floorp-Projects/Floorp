@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 
 struct JSContext;
-class JSObject;
+struct JSObject;
 
 BEGIN_BLUETOOTH_NAMESPACE
 

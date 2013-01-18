@@ -4029,8 +4029,7 @@ baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
     if (nobj->isNative() && IsImplicitDenseElement(shape)) {
         if (!JSObject::sparsifyDenseElement(cx, obj, index))
             return false;
-        RawId id = INT_TO_JSID(index);
-        shape = obj->nativeLookup(cx, HandleId::fromMarkedLocation(&id)); // not a gcthing
+        shape = obj->nativeLookup(cx, INT_TO_JSID(index));
     }
     return nobj->isNative()
            ? JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp)
@@ -4112,7 +4111,7 @@ baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 bool
-js::HasDataProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
+js::HasDataProperty(JSContext *cx, HandleObject obj, jsid id, Value *vp)
 {
     if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
         *vp = obj->getDenseElement(JSID_TO_INT(id));

@@ -12,7 +12,7 @@
 
 class nsITCPSocketInternal;
 struct JSContext;
-class JSObject;
+struct JSObject;
 
 namespace mozilla {
 namespace dom {
