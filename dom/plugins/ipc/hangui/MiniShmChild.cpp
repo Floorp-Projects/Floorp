@@ -28,11 +28,13 @@ MiniShmChild::~MiniShmChild()
   if (mRegWait) {
     ::UnregisterWaitEx(mRegWait, INVALID_HANDLE_VALUE);
   }
+  if (mParentGuard) {
+    // Try to avoid shutting down while the parent's event handler is running.
+    ::WaitForSingleObject(mParentGuard, mTimeout);
+    ::CloseHandle(mParentGuard);
+  }
   if (mParentEvent) {
     ::CloseHandle(mParentEvent);
-  }
-  if (mParentGuard) {
-    ::CloseHandle(mParentGuard);
   }
   if (mChildEvent) {
     ::CloseHandle(mChildEvent);
@@ -95,6 +97,10 @@ MiniShmChild::Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
       !initStruct->mChildEvent || !initStruct->mChildGuard) {
     return NS_ERROR_FAILURE;
   }
+  rv = SetGuard(initStruct->mParentGuard, aTimeout);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   if (!::RegisterWaitForSingleObject(&mRegWait,
                                      initStruct->mChildEvent,
                                      &SOnEvent,
@@ -146,11 +152,8 @@ MiniShmChild::Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
 nsresult
 MiniShmChild::Send()
 {
-  if (!mParentEvent || !mParentGuard) {
+  if (!mParentEvent) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-  if (::WaitForSingleObject(mParentGuard, mTimeout) != WAIT_OBJECT_0) {
-    return NS_ERROR_FAILURE;
   }
   if (!::SetEvent(mParentEvent)) {
     return NS_ERROR_FAILURE;
