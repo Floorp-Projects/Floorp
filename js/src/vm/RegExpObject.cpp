@@ -652,8 +652,7 @@ RegExpCompartment::~RegExpCompartment()
      * RegExpStatics may have prevented a single RegExpShared from
      * being collected during RegExpCompartment::sweep().
      */
-    if (!inUse_.empty()) {
-        PendingSet::Enum e(inUse_);
+    for (PendingSet::Enum e(inUse_); !e.empty(); e.popFront()) {
         RegExpShared *shared = e.front();
         JS_ASSERT(shared->activeUseCount == 0);
         js_delete(shared);
