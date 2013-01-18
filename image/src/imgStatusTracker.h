@@ -58,7 +58,6 @@ public:
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(mozilla::image::Image* aImage);
-  imgStatusTracker(const imgStatusTracker& aOther);
   ~imgStatusTracker();
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
@@ -180,17 +179,22 @@ public:
 
   inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
+  imgStatusTracker* CloneForRecording();
+
 private:
   friend class imgStatusNotifyRunnable;
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
   friend class imgStatusTrackerNotifyingObserver;
+  imgStatusTracker(const imgStatusTracker& aOther);
 
   void FireFailureNotification();
 
   static void SyncNotifyState(imgRequestProxy* proxy, bool hasImage,
                               uint32_t state, nsIntRect& dirtyRect,
                               bool hadLastPart);
+
+  void SyncAndSyncNotifyDifference(imgStatusTracker* other);
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
