@@ -39,7 +39,7 @@ nsDefaultURIFixup::~nsDefaultURIFixup()
   /* destructor code */
 }
 
-/* nsIURI createExposableURI (in nsIRUI aURI); */
+/* nsIURI createExposableURI (in nsIURI aURI); */
 NS_IMETHODIMP
 nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
 {
