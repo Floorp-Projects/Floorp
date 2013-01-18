@@ -88,6 +88,12 @@ nsSVGElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
   return SVGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
+bool
+nsSVGElement::PrefEnabled()
+{
+  return nsGenericHTMLElement::PrefEnabled();
+}
+
 //----------------------------------------------------------------------
 
 /* readonly attribute nsIDOMSVGAnimatedString className; */

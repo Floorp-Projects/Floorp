@@ -21,8 +21,6 @@ import java.util.HashMap;
 import android.view.View;
 import android.os.Build;
 import android.util.DisplayMetrics;
-import android.widget.ListView;
-import java.util.ArrayList;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
@@ -35,8 +33,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
     public static final int MAX_WAIT_MS = 3000;
-    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
-    private static ListView listview;
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -388,28 +384,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         String tabCountText = tabCount.getText();
         int tabCountInt = Integer.parseInt(tabCountText);
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
-    }
-
-    public ListView getHistoryList() {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.clickOnText("History");
-
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
-        mSolo.waitForText("Today");
-
-        listview = null;
-        boolean success = waitForTest(new BooleanTest() {
-            public boolean test() {
-               for (ListView view : views) {
-                   if (view.getTag() == "history") {
-                       listview = view;
-                       return true;
-                   }
-               }
-               return false;
-            }
-        }, WAIT_FOR_CHILD_TIMEOUT);
-        return listview;
     }
 
     public void addTab(String url) {

@@ -2970,8 +2970,7 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
     CGContextScaleCTM(aContext, 1.0f, -1.0f);
     CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
 
-    NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
-    [(ChildView*)view drawRect:flippedTitlebarRect inTitlebarContext:aContext];
+    [(ChildView*)view drawTitlebar:[window frame] inTitlebarContext:aContext];
   } else {
     BOOL isMain = [window isMainWindow];
     NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];

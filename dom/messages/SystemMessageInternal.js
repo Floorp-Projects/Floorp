@@ -39,7 +39,7 @@ const kMessages =["SystemMessageManager:GetPendingMessages",
                   "child-process-shutdown"]
 
 function debug(aMsg) {
-  dump("-- SystemMessageInternal " + Date.now() + " : " + aMsg + "\n");
+  // dump("-- SystemMessageInternal " + Date.now() + " : " + aMsg + "\n");
 }
 
 // Implementation of the component used by internal users.
@@ -67,16 +67,6 @@ function SystemMessageInternal() {
   }, this);
 
   Services.obs.notifyObservers(this, "system-message-internal-ready", null);
-}
-
-function findTarget(aListeners, aTarget) {
-  for (let i = 0; i < aListeners.length; ++i) {
-    let listener = aListeners[i];
-    if (listener.target === aTarget)
-      return listener;
-  }
-
-  return null;
 }
 
 SystemMessageInternal.prototype = {
@@ -182,6 +172,49 @@ SystemMessageInternal.prototype = {
                        pendingMessages: [] });
   },
 
+  _findTargetIndex: function _findTargetIndex(aTargets, aTarget) {
+    if (!aTargets || !aTarget) {
+      return -1;
+    }
+    for (let index = 0; index < aTargets.length; ++index) {
+      let target = aTargets[index];
+      if (target.target === aTarget) {
+        return index;
+      }
+    }
+    return -1;
+  },
+
+  _removeTargetFromListener: function _removeTargetFromListener(aTarget, aManifest, aRemoveListener) {
+    let targets = this._listeners[aManifest];
+    if (!targets) {
+      return false;
+    }
+
+    let index = this._findTargetIndex(targets, aTarget);
+    if (index === -1) {
+      return false;
+    }
+
+    if (aRemoveListener) {
+      debug("remove the listener for " + aManifest);
+      delete this._listeners[aManifest];
+      return true;
+    }
+
+    if (--targets[index].winCount === 0) {
+      if (targets.length === 1) {
+        // If it's the only one, get rid of this manifest entirely.
+        debug("remove the listener for " + aManifest);
+        delete this._listeners[aManifest];
+      } else {
+        // If more than one left, remove this one and leave the rest.
+        targets.splice(index, 1);
+      }
+    }
+    return true;
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
     let msg = aMessage.json;
 
@@ -205,17 +238,15 @@ SystemMessageInternal.prototype = {
       case "SystemMessageManager:Register":
       {
         debug("Got Register from " + msg.manifest);
-        let targets, target;
+        let targets, index;
         if (!(targets = this._listeners[msg.manifest])) {
-          this._listeners[msg.manifest] =
-            [ { target: aMessage.target, winCount: 1 } ];
-        } else if (!(target = findTarget(targets, aMessage.target))) {
-          targets[msg.manifest].push({
-            target: aMessage.target,
-            winCount: 1
-          });
+          this._listeners[msg.manifest] = [{ target: aMessage.target,
+                                             winCount: 1 }];
+        } else if ((index = this._findTargetIndex(targets, aMessage.target)) === -1) {
+          targets.push({ target: aMessage.target,
+                         winCount: 1 });
         } else {
-          target.winCount++;
+          targets[index].winCount++;
         }
 
         debug("listeners for " + msg.manifest + " innerWinID " + msg.innerWindowID);
@@ -226,20 +257,8 @@ SystemMessageInternal.prototype = {
         debug("Got child-process-shutdown from " + aMessage.target);
         for (let manifest in this._listeners) {
           // See if any processes in this manifest have this target.
-          let targets = this._listeners[manifest];
-          for (let target = 0; target < targets.length; ++target) {
-            if (targets[target].target === aMessage.target) {
-              // One does: if it's the only one, get rid of this manifest
-              // entirely.
-              if (targets.length === 1) {
-                debug("remove " + manifest );
-                delete this._listeners[manifest];
-              } else {
-                // There are other targets for this manifest, get rid of this
-                // one.
-                targets.splice(target, 1);
-              }
-            }
+          if (this._removeTargetFromListener(aMessage.target, manifest, true)) {
+            break;
           }
         }
         break;
@@ -247,24 +266,7 @@ SystemMessageInternal.prototype = {
       case "SystemMessageManager:Unregister":
       {
         debug("Got Unregister from " + aMessage.target + "innerWinID " + msg.innerWindowID);
-        let targets = this._listeners[msg.manifest];
-        for (let i = 0; i < targets.length; ++i) {
-          if (targets[i].target === aMessage.target) {
-            if (--targets[i].winCount === 0) {
-              if (targets.length === 1) {
-                // Only one listener left, remove the target.
-                delete this._listeners[msg.manifest];
-              } else {
-                // More than one left, remove this one and leave the rest.
-                targets.splice(i, 1);
-              }
-
-            }
-          }
-        }
-
-        debug("Removing " + aMessage.target + "innerWinID " + msg.innerWindowID );
-
+        this._removeTargetFromListener(aMessage.target, msg.manifest, false);
         break;
       }
       case "SystemMessageManager:GetPendingMessages":
@@ -438,10 +440,10 @@ SystemMessageInternal.prototype = {
       return false;
     }
 
-    let winTargets = this._listeners[aManifestURI];
-    if (winTargets) {
-      for (let target = 0; target < winTargets.length; ++target) {
-          let manager = winTargets[target].target;
+    let targets = this._listeners[aManifestURI];
+    if (targets) {
+      for (let index = 0; index < targets.length; ++index) {
+          let manager = targets[index].target;
           manager.sendAsyncMessage("SystemMessageManager:Message",
                                    { type: aType,
                                      msg: aMessage,

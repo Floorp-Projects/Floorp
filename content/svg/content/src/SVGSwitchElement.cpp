@@ -28,7 +28,6 @@ SVGSwitchElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(SVGSwitchElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGSwitchElement,
                                                   SVGSwitchElementBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveChild)

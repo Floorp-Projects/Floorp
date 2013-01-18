@@ -164,8 +164,6 @@ protected:
   nsStringBuffer*   mCachedBuffer;
 };
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocumentEncoder)
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocumentEncoder)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDocumentEncoder)
 

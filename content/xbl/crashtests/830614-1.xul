@@ -1,0 +1,24 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('trigger');">
+  <box style="display: none">
+    <bindings xmlns="http://www.mozilla.org/xbl">
+      <binding id="crash">
+        <implementation>
+          <constructor>
+            // Fetch it
+            var obj = this.getElementsByTagName("box")[0];
+            // And make it preserve its wrapper.  Note that this will happen
+            // while we're wrapping our box as the parent for id="trigger",
+            // so then we'll unwind and things will be bad.
+            if (obj) obj.expando = 5;
+          </constructor>
+        </implementation>
+      </binding>
+    </bindings>
+    <box style="-moz-binding:url(#crash);">
+      <box id="trigger"/>
+    </box>
+  </box>
+  <!-- Make sure we load our XBL before we try to run our test -->
+  <box style="-moz-binding:url(#crash);"/>
+</window>

@@ -2293,8 +2293,8 @@ Proxy::delete_(JSContext *cx, JSObject *proxy_, jsid id, bool *bp)
     return GetProxyHandler(proxy)->delete_(cx, proxy, id, bp);
 }
 
-static bool
-AppendUnique(JSContext *cx, AutoIdVector &base, AutoIdVector &others)
+JS_FRIEND_API(bool)
+js::AppendUnique(JSContext *cx, AutoIdVector &base, AutoIdVector &others)
 {
     AutoIdVector uniqueOthers(cx);
     if (!uniqueOthers.reserve(others.length()))

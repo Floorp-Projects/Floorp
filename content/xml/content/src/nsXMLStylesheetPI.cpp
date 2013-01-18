@@ -79,7 +79,6 @@ NS_INTERFACE_MAP_END_INHERITING(ProcessingInstruction)
 NS_IMPL_ADDREF_INHERITED(nsXMLStylesheetPI, ProcessingInstruction)
 NS_IMPL_RELEASE_INHERITED(nsXMLStylesheetPI, ProcessingInstruction)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLStylesheetPI)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLStylesheetPI,
                                                   ProcessingInstruction)
   tmp->nsStyleLinkElement::Traverse(cb);

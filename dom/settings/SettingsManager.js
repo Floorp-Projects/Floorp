@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 
 const nsIClassInfo            = Ci.nsIClassInfo;
 const SETTINGSLOCK_CONTRACTID = "@mozilla.org/settingsLock;1";
-const SETTINGSLOCK_CID        = Components.ID("{ef95ddd0-6308-11e1-b86c-0800200c9a66}");
+const SETTINGSLOCK_CID        = Components.ID("{60c9357c-3ae0-4222-8f55-da01428470d5}");
 const nsIDOMSettingsLock      = Ci.nsIDOMSettingsLock;
 
 function SettingsLock(aSettingsManager)
@@ -37,6 +37,10 @@ function SettingsLock(aSettingsManager)
 }
 
 SettingsLock.prototype = {
+
+  get closed() {
+    return !this._open;
+  },
 
   process: function process() {
     let lock = this;

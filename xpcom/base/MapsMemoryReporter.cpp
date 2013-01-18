@@ -335,6 +335,19 @@ MapsReporter::ParseMapping(
   return NS_OK;
 }
 
+static bool
+IsAnonymous(const nsACString &aName)
+{
+  // Recent kernels (e.g. 3.5) have multiple [stack:nnnn] entries, where |nnnn|
+  // is a thread ID.  However, [stack:nnnn] entries count both stack memory
+  // *and* anonymous memory because the kernel only knows about the start of
+  // each thread stack, not its end.  So we treat such entries as anonymous
+  // memory instead of stack.  This is consistent with older kernels that don't
+  // even show [stack:nnnn] entries.
+  return aName.IsEmpty() ||
+         StringBeginsWith(aName, NS_LITERAL_CSTRING("[stack:"));
+}
+
 void
 MapsReporter::GetReporterNameAndDescription(
   const char *aPath,
@@ -376,7 +389,7 @@ MapsReporter::GetReporterNameAndDescription(
                  "perform some privileged actions without the overhead of a "
                  "syscall.");
   }
-  else if (!basename.IsEmpty()) {
+  else if (!IsAnonymous(basename)) {
     nsAutoCString dirname;
     GetDirname(absPath, dirname);
 

@@ -22,7 +22,6 @@
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsAutoCompleteController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAutoCompleteController)
   tmp->SetInput(nullptr);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -574,7 +573,7 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
 
     // Complete to the new current value.
     bool shouldComplete = false;
-    mInput->GetCompleteDefaultIndex(&shouldComplete);
+    input->GetCompleteDefaultIndex(&shouldComplete);
     if (shouldComplete) {
       nsAutoString value;
       if (NS_SUCCEEDED(GetResultValueAt(index, true, value))) {
@@ -1171,7 +1170,7 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
   popup->GetOverrideValue(value);
   if (value.IsEmpty()) {
     bool shouldComplete;
-    mInput->GetCompleteDefaultIndex(&shouldComplete);
+    input->GetCompleteDefaultIndex(&shouldComplete);
     bool completeSelection;
     input->GetCompleteSelectedIndex(&completeSelection);
 
@@ -1376,7 +1375,7 @@ nsAutoCompleteController::PostSearchCleanup()
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
   uint32_t minResults;
-  mInput->GetMinResultsForPopup(&minResults);
+  input->GetMinResultsForPopup(&minResults);
 
   if (mRowCount || minResults == 0) {
     OpenPopup();
@@ -1535,6 +1534,7 @@ nsAutoCompleteController::GetDefaultCompleteValue(int32_t aResultIndex,
 nsresult
 nsAutoCompleteController::GetFinalDefaultCompleteValue(nsAString &_retval)
 {
+  MOZ_ASSERT(mInput, "Must have a valid input");
   nsIAutoCompleteResult *result;
   int32_t defaultIndex = -1;
   nsresult rv = GetDefaultCompleteResult(-1, &result, &defaultIndex);
@@ -1572,6 +1572,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
  * selectDifference is true, select the remaining portion of aValue not
  * contained in mSearchString. */
 {
+  MOZ_ASSERT(mInput, "Must have a valid input");
   const int32_t mSearchStringLength = mSearchString.Length();
   int32_t endSelect = aValue.Length();  // By default, select all of aValue.
 

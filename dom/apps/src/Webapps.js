@@ -72,14 +72,28 @@ WebappsRegistry.prototype = {
     return uri.prePath;
   },
 
-  _validateScheme: function(aURL) {
-    let scheme = Services.io.newURI(aURL, null, null).scheme;
-    if (scheme != "http" && scheme != "https") {
+  _validateURL: function(aURL) {
+    let uri;
+    let res;
+    try {
+      uri = Services.io.newURI(aURL, null, null);
+      if (uri.schemeIs("http") || uri.schemeIs("https")) {
+        res = uri.spec;
+      }
+    } catch(e) {
       throw new Components.Exception(
-        "INVALID_URL_SCHEME: '" + scheme + "'; must be 'http' or 'https'",
+        "INVALID_URL: '" + aURL, Cr.NS_ERROR_FAILURE
+      );
+    }
+
+    // The scheme is incorrect, throw an exception.
+    if (!res) {
+      throw new Components.Exception(
+        "INVALID_URL_SCHEME: '" + uri.scheme + "'; must be 'http' or 'https'",
         Cr.NS_ERROR_FAILURE
       );
     }
+    return uri.spec;
   },
 
   // Checks that we run as a foreground page, and fire an error on the
@@ -105,13 +119,13 @@ WebappsRegistry.prototype = {
   // mozIDOMApplicationRegistry implementation
 
   install: function(aURL, aParams) {
+    let uri = this._validateURL(aURL);
+
     let request = this.createRequest();
 
     if (!this._ensureForeground(request)) {
       return request;
     }
-
-    this._validateScheme(aURL);
 
     let installURL = this._window.location.href;
     let requestID = this.getRequestId(request);
@@ -126,8 +140,8 @@ WebappsRegistry.prototype = {
     cpmm.sendAsyncMessage("Webapps:Install",
                           { app: {
                               installOrigin: this._getOrigin(installURL),
-                              origin: this._getOrigin(aURL),
-                              manifestURL: aURL,
+                              origin: this._getOrigin(uri),
+                              manifestURL: uri,
                               receipts: receipts,
                               categories: categories
                             },
@@ -184,13 +198,13 @@ WebappsRegistry.prototype = {
   // mozIDOMApplicationRegistry2 implementation
 
   installPackage: function(aURL, aParams) {
+    let uri = this._validateURL(aURL);
+
     let request = this.createRequest();
 
     if (!this._ensureForeground(request)) {
       return request;
     }
-
-    this._validateScheme(aURL);
 
     let installURL = this._window.location.href;
     let requestID = this.getRequestId(request);
@@ -205,8 +219,8 @@ WebappsRegistry.prototype = {
     cpmm.sendAsyncMessage("Webapps:InstallPackage",
                           { app: {
                               installOrigin: this._getOrigin(installURL),
-                              origin: this._getOrigin(aURL),
-                              manifestURL: aURL,
+                              origin: this._getOrigin(uri),
+                              manifestURL: uri,
                               receipts: receipts,
                               categories: categories
                             },

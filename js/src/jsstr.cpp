@@ -1885,19 +1885,17 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    MatchPair match;
 
-    RegExpRunStatus status = g.regExp().execute(cx, chars, length, &i, matches);
+    RegExpRunStatus status = g.regExp().executeMatchOnly(cx, chars, length, &i, match);
     if (status == RegExpRunStatus_Error)
         return false;
 
-    if (status == RegExpRunStatus_Success) {
-        res->updateFromMatchPairs(cx, stableStr, matches);
-        args.rval().setInt32(matches[0].start);
-    } else {
-        args.rval().setInt32(-1);
-    }
+    if (status == RegExpRunStatus_Success)
+        res->updateLazily(cx, stableStr, &g.regExp(), 0);
 
+    JS_ASSERT_IF(status == RegExpRunStatus_Success_NotFound, match.start == -1);
+    args.rval().setInt32(match.start);
     return true;
 }
 
@@ -3431,8 +3429,8 @@ StringObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(nativeEmpty());
 
-    RootedId lengthid(cx, NameToId(cx->names().length));
-    return addDataProperty(cx, lengthid, LENGTH_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
+    return addDataProperty(cx, cx->names().length, LENGTH_SLOT,
+                           JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 JSObject *
@@ -3857,6 +3855,7 @@ js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
         for (size_t i = 0; i < dstlen; i++)
             dst[i] = (char) src[i];
         if (maybecx) {
+            AutoSuppressGC suppress(maybecx);
             JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
                                  JSMSG_BUFFER_TOO_SMALL);
         }
@@ -3878,6 +3877,7 @@ js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
             for (size_t i = 0; i < dstlen; i++)
                 dst[i] = (unsigned char) src[i];
             if (maybecx) {
+                AutoSuppressGC suppress(maybecx);
                 JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
                                      JSMSG_BUFFER_TOO_SMALL);
             }
@@ -3894,6 +3894,10 @@ bool
 js::InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
                               jschar *dst, size_t *dstlenp)
 {
+    mozilla::Maybe<AutoSuppressGC> suppress;
+    if (cx)
+        suppress.construct(cx);
+
     size_t dstlen, origDstlen, offset, j, n;
     uint32_t v;
 

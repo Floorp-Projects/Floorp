@@ -10,8 +10,13 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-class nsDOMValidityState;
 class nsIDOMValidityState;
+
+namespace mozilla {
+namespace dom {
+class ValidityState;
+}
+}
 
 #define NS_ICONSTRAINTVALIDATION_IID \
 { 0xca3824dc, 0x4f5c, 0x4878, \
@@ -30,7 +35,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONSTRAINTVALIDATION_IID);
 
-  friend class nsDOMValidityState;
+  friend class mozilla::dom::ValidityState;
 
   static const uint16_t sContentSpecifiedMaxLengthMessage;
 
@@ -59,6 +64,13 @@ public:
   void SetValidityState(ValidityStateType mState,
                         bool mValue);
 
+  // Web IDL binding methods
+  bool WillValidate() const {
+    return IsCandidateForConstraintValidation();
+  }
+  mozilla::dom::ValidityState* Validity();
+  bool CheckValidity();
+
 protected:
 
   // You can't instantiate an object from that class.
@@ -79,6 +91,12 @@ protected:
                      return NS_OK;
                    }
 
+protected:
+  /**
+   * A pointer to the ValidityState object.
+   */
+  nsRefPtr<mozilla::dom::ValidityState>  mValidity;
+
 private:
 
   /**
@@ -86,11 +104,6 @@ private:
    * Each bit represent an error. All bits to zero means the element is valid.
    */
   int8_t                        mValidityBitField;
-
-  /**
-   * A pointer to the ValidityState object.
-   */
-  nsRefPtr<nsDOMValidityState>  mValidity;
 
   /**
    * Keeps track whether the element is barred from constraint validation.
@@ -111,14 +124,15 @@ private:
   NS_IMETHOD GetValidity(nsIDOMValidityState** aValidity) {                   \
     return nsIConstraintValidation::GetValidity(aValidity);                   \
   }                                                                           \
-  NS_IMETHOD GetWillValidate(bool* aWillValidate) {                         \
-    *aWillValidate = IsCandidateForConstraintValidation();                    \
+  NS_IMETHOD GetWillValidate(bool* aWillValidate) {                           \
+    *aWillValidate = WillValidate();                                          \
     return NS_OK;                                                             \
   }                                                                           \
   NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage) {            \
     return nsIConstraintValidation::GetValidationMessage(aValidationMessage); \
   }                                                                           \
-  NS_IMETHOD CheckValidity(bool* aValidity) {                               \
+  using nsIConstraintValidation::CheckValidity;                               \
+  NS_IMETHOD CheckValidity(bool* aValidity) {                                 \
     return nsIConstraintValidation::CheckValidity(aValidity);                 \
   }
 
@@ -135,8 +149,8 @@ private:
   NS_IMETHODIMP _from::GetValidity(nsIDOMValidityState** aValidity) {         \
     return nsIConstraintValidation::GetValidity(aValidity);                   \
   }                                                                           \
-  NS_IMETHODIMP _from::GetWillValidate(bool* aWillValidate) {               \
-    *aWillValidate = IsCandidateForConstraintValidation();                    \
+  NS_IMETHODIMP _from::GetWillValidate(bool* aWillValidate) {                 \
+    *aWillValidate = WillValidate();                                          \
     return NS_OK;                                                             \
   }                                                                           \
   NS_IMETHODIMP _from::GetValidationMessage(nsAString& aValidationMessage) {  \

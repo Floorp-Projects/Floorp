@@ -25,8 +25,6 @@ class nsIEditor;
 
 #define kNullCh (PRUnichar('\0'))
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ChangeCSSInlineStyleTxn)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ChangeCSSInlineStyleTxn,
                                                 EditTxn)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)

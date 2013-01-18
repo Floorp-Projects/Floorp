@@ -25,6 +25,9 @@
 
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
+#include "nsContentUtils.h"
+#include "nsJSPrincipals.h"
+
 #include "mozilla/dom/BindingUtils.h"
 
 JSBool
@@ -143,4 +146,39 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
       JS_RestoreFrameChain(aContext);
     }
   }
+}
+
+nsresult
+nsJSUtils::CompileFunction(JSContext* aCx,
+                           JS::HandleObject aTarget,
+                           JS::CompileOptions& aOptions,
+                           const nsACString& aName,
+                           uint32_t aArgCount,
+                           const char** aArgArray,
+                           const nsAString& aBody,
+                           JSObject** aFunctionObject)
+{
+  MOZ_ASSERT(js::GetEnterCompartmentDepth(aCx) > 0);
+  MOZ_ASSERT_IF(aTarget, js::IsObjectInContextCompartment(aTarget, aCx));
+  MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
+
+  // Since aTarget and aCx are same-compartment, there should be no distinction
+  // between the object principal and the cx principal.
+  // However, aTarget may be null in the wacky aShared case. So use the cx.
+  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetContextCompartment(aCx));
+  aOptions.setPrincipals(p);
+
+  // Do the junk Gecko is supposed to do before calling into JSAPI.
+  xpc_UnmarkGrayObject(aTarget);
+
+  // Compile.
+  JSFunction* fun = JS::CompileFunction(aCx, aTarget, aOptions,
+                                        PromiseFlatCString(aName).get(),
+                                        aArgCount, aArgArray,
+                                        PromiseFlatString(aBody).get(),
+                                        aBody.Length());
+  NS_ENSURE_TRUE(fun, NS_ERROR_FAILURE);
+
+  *aFunctionObject = JS_GetFunctionObject(fun);
+  return NS_OK;
 }

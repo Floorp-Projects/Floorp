@@ -106,7 +106,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     vp.setNull();
 
     /* Find fun's top-most activation record. */
-    StackIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx);
     for (; !iter.done(); ++iter) {
         if (!iter.isFunctionFrame() || iter.isEvalFrame())
             continue;

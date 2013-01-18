@@ -159,8 +159,8 @@ struct NS_STACK_CLASS TreeMatchContext {
  
   bool PopStyleScopeForSelectorMatching(mozilla::dom::Element* aElement)
   {
-    NS_ASSERTION(mForScopedStyle, "only call PopScopeForSelectorMatching when "
-                                  "mForScopedStyle is true");
+    NS_ASSERTION(mForScopedStyle, "only call PopStyleScopeForSelectorMatching "
+                                  "when mForScopedStyle is true");
 
     if (!mCurrentStyleScope) {
       return false;

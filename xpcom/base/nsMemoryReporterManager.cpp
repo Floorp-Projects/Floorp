@@ -388,11 +388,13 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Vsize,
     KIND_OTHER,
     UNITS_BYTES,
     GetVsize,
-    "This is the same measurement as 'resident', but it tries to be as fast as "
-    "possible at the expense of accuracy.  On most platforms this is identical to "
-    "the 'resident' measurement, but on Mac it may over-count.  You should use "
-    "'resident-fast' where you care about latency of collection (e.g. in "
-    "telemetry).  Otherwise you should use 'resident'.")
+    "Memory mapped by the process, including code and data segments, the "
+    "heap, thread stacks, memory explicitly mapped by the process via mmap "
+    "and similar operations, and memory shared with other processes. "
+    "This is the vsize figure as reported by 'top' and 'ps'.  This figure is of "
+    "limited use on Mac, where processes share huge amounts of memory with one "
+    "another.  But even on other operating systems, 'resident' is a much better "
+    "measure of the memory resources used by the process.")
 
 NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Resident,
     "resident",
@@ -411,12 +413,11 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(ResidentFast,
     KIND_OTHER,
     UNITS_BYTES,
     GetResidentFast,
-    "This reporter measures the same value as the resident memory reporter, but "
-    "it tries to be as fast as possible, at the expense of accuracy.  On most "
-    "platforms this is identical to the vanilla resident reporter, but on MacOS"
-    "in particular, this reporter may over-count our RSS.  You should use "
-    "resident-fast where you care about latency of collection (e.g. in "
-    "telemetry).  Otherwise you should use the regular resident reporter.")
+    "This is the same measurement as 'resident', but it tries to be as fast as "
+    "possible at the expense of accuracy.  On most platforms this is identical to "
+    "the 'resident' measurement, but on Mac it may over-count.  You should use "
+    "'resident-fast' where you care about latency of collection (e.g. in "
+    "telemetry).  Otherwise you should use 'resident'.")
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
 #ifdef HAVE_PAGE_FAULT_REPORTERS
