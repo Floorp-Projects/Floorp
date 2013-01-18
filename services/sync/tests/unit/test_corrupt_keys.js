@@ -11,8 +11,9 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
+Cu.import("resource://gre/modules/commonjs/promise/core.js");
 
-add_test(function test_locally_changed_keys() {
+add_task(function test_locally_changed_keys() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
   let hmacErrorCount = 0;
@@ -145,11 +146,11 @@ add_test(function test_locally_changed_keys() {
 
     // And look! We downloaded history!
     let store = Service.engineManager.get("history")._store;
-    do_check_true(store.urlExists("http://foo/bar?record-no--0"));
-    do_check_true(store.urlExists("http://foo/bar?record-no--1"));
-    do_check_true(store.urlExists("http://foo/bar?record-no--2"));
-    do_check_true(store.urlExists("http://foo/bar?record-no--3"));
-    do_check_true(store.urlExists("http://foo/bar?record-no--4"));
+    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--0"));
+    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--1"));
+    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--2"));
+    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--3"));
+    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--4"));
     do_check_eq(hmacErrorCount, 1);
 
     _("Busting some new server values.");
@@ -188,15 +189,16 @@ add_test(function test_locally_changed_keys() {
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
     do_check_true(johndoe.modified("crypto") > old_key_time);
     do_check_eq(hmacErrorCount, 6);
-    do_check_false(store.urlExists("http://foo/bar?record-no--5"));
-    do_check_false(store.urlExists("http://foo/bar?record-no--6"));
-    do_check_false(store.urlExists("http://foo/bar?record-no--7"));
-    do_check_false(store.urlExists("http://foo/bar?record-no--8"));
-    do_check_false(store.urlExists("http://foo/bar?record-no--9"));
-
+    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--5"));
+    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--6"));
+    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--7"));
+    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--8"));
+    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--9"));
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(run_next_test);
+    let deferred = Promise.defer();
+    server.stop(deferred.resolve);
+    yield deferred.promise;
   }
 });
 
@@ -205,4 +207,20 @@ function run_test() {
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
   run_next_test();
+}
+
+/**
+ * Asynchronously check a url is visited.
+ * @param url the url
+ * @return {Promise}
+ * @resolves When the check has been added successfully.
+ * @rejects JavaScript exception.
+ */
+function promiseIsURIVisited(url) {
+  let deferred = Promise.defer();
+  PlacesUtils.asyncHistory.isURIVisited(Utils.makeURI(url), function(aURI, aIsVisited) {
+    deferred.resolve(aIsVisited);
+  });
+
+  return deferred.promise;
 }
