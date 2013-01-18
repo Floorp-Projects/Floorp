@@ -599,6 +599,7 @@ RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length
         start = 0;
     }
 
+#ifndef _WIN64 /* Temporary stopgap: see Bug 831884 */
 #if ENABLE_YARR_JIT
     if (!codeBlock.isFallBack()) {
         MatchResult result = codeBlock.execute(chars.get(), start, length);
@@ -611,6 +612,7 @@ RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length
         return RegExpRunStatus_Success;
     }
 #endif
+#endif /* _WIN64 */
 
     /*
      * The JIT could not be used, so fall back to the Yarr interpreter.
