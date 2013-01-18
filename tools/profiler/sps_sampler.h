@@ -368,6 +368,11 @@ public:
 
   void sampleRuntime(JSRuntime *runtime) {
     mRuntime = runtime;
+    if (!runtime) {
+      // JS shut down
+      return;
+    }
+
     JS_STATIC_ASSERT(sizeof(mStack[0]) == sizeof(js::ProfileEntry));
     js::SetRuntimeProfilingStack(runtime,
                                  (js::ProfileEntry*) mStack,
