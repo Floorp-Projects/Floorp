@@ -46,6 +46,7 @@
 #include "jsxml.h"
 
 #include "builtin/MapObject.h"
+#include "builtin/Module.h"
 #include "builtin/ParallelArray.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
