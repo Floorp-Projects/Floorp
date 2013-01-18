@@ -79,6 +79,9 @@
 #define SAMPLE_LABEL_PRINTF(name_space, info, format, ...)
 #define SAMPLE_LABEL_FN(name_space, info)
 #define SAMPLE_MARKER(info)
+#define SAMPLE_MAIN_THREAD_LABEL_PRINTF(name_space, info, format, ...)
+#define SAMPLE_MAIN_THREAD_LABEL_FN(name_space, info)
+#define SAMPLE_MAIN_THREAD_MARKER(info)
 
 // Tracing features
 #define SAMPLER_PRINT_LOCATION()
