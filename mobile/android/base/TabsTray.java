@@ -92,6 +92,7 @@ public class TabsTray extends ListView
 
     @Override
     public void show() {
+        setVisibility(View.VISIBLE);
         Tabs.getInstance().refreshThumbnails();
         Tabs.registerOnTabsChangedListener(mTabsAdapter);
         mTabsAdapter.refreshTabsData();
@@ -99,6 +100,7 @@ public class TabsTray extends ListView
 
     @Override
     public void hide() {
+        setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(mTabsAdapter);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
         mTabsAdapter.clear();

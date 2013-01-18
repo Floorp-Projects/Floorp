@@ -406,7 +406,6 @@ RES_LAYOUT = \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
-  res/layout/tabs_panel_indicator.xml \
   res/layout/tabs_panel_header.xml \
   res/layout/tabs_row.xml \
   res/layout/list_item_header.xml \
@@ -541,9 +540,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/spinner_default.9.png \
   res/drawable/spinner_focused.9.png \
   res/drawable/spinner_pressed.9.png \
-  res/drawable/tab_indicator_divider.9.png \
-  res/drawable/tab_indicator_selected.9.png \
-  res/drawable/tab_indicator_selected_focused.9.png \
   res/drawable/tab_new.png \
   res/drawable/tab_new_pb.png \
   res/drawable/tab_close.png \
@@ -637,9 +633,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/spinner_default.9.png \
   res/drawable-hdpi/spinner_focused.9.png \
   res/drawable-hdpi/spinner_pressed.9.png \
-  res/drawable-hdpi/tab_indicator_divider.9.png \
-  res/drawable-hdpi/tab_indicator_selected.9.png \
-  res/drawable-hdpi/tab_indicator_selected_focused.9.png \
   res/drawable-hdpi/tab_new.png \
   res/drawable-hdpi/tab_new_pb.png \
   res/drawable-hdpi/tab_close.png \
@@ -730,9 +723,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/spinner_default.9.png \
   res/drawable-xhdpi/spinner_focused.9.png \
   res/drawable-xhdpi/spinner_pressed.9.png \
-  res/drawable-xhdpi/tab_indicator_divider.9.png \
-  res/drawable-xhdpi/tab_indicator_selected.9.png \
-  res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
   res/drawable-xhdpi/tab_new.png \
   res/drawable-xhdpi/tab_new_pb.png \
   res/drawable-xhdpi/tab_close.png \
@@ -1102,7 +1092,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
-  mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
   mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
