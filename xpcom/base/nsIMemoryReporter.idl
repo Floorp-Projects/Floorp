@@ -423,9 +423,11 @@ namespace mozilla {
 // - The constant values: path, kind, units, and description.  They are passed
 //   to the MemoryReporterBase constructor.
 // - A (private) Amount() or (public) GetAmount() method.  It can use the 
-//   MallocSizeOf method if necessary.  Use Amount() if the reporter is
-//   infallible, and GetAmount() otherwise.  (If you fail to provide one or the
-//   other, you'll get assertion failures when the memory reporter runs.)
+//   MallocSizeOf method if necessary.  (There is also
+//   MallocSizeOfOn{Alloc,Free}, which can be useful.)  Use Amount() if the
+//   reporter is infallible, and GetAmount() otherwise.  (If you fail to
+//   provide one or the other, you'll get assertion failures when the memory
+//   reporter runs.)
 //
 // The class name of subclasses should match the path, minus the "explicit"
 // (if present), and with "Reporter" at the end.  For example:
@@ -492,6 +494,8 @@ protected:
   }
 
   NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
+  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(MallocSizeOfOnAlloc)
+  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(MallocSizeOfOnFree)
 
   const nsCString mPath;
   const int32_t   mKind;
