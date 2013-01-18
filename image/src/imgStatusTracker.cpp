@@ -433,6 +433,53 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
   NS_DispatchToCurrentThread(ev);
 }
 
+/* static */ void
+imgStatusTracker::SyncNotifyState(imgRequestProxy* proxy, bool hasImage, uint32_t state, nsIntRect& dirtyRect, bool hadLastPart)
+{
+  nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
+
+  // OnStartRequest
+  if (state & stateRequestStarted)
+    proxy->OnStartRequest();
+
+  // OnStartContainer
+  if (state & stateHasSize)
+    proxy->OnStartContainer();
+
+  // OnStartDecode
+  if (state & stateDecodeStarted)
+    proxy->OnStartDecode();
+
+  // BlockOnload
+  if (state & stateBlockingOnload)
+    proxy->BlockOnload();
+
+  if (hasImage) {
+    // OnFrameUpdate
+    // If there's any content in this frame at all (always true for
+    // vector images, true for raster images that have decoded at
+    // least one frame) then send OnFrameUpdate.
+    if (!dirtyRect.IsEmpty())
+      proxy->OnFrameUpdate(&dirtyRect);
+
+    if (state & stateFrameStopped)
+      proxy->OnStopFrame();
+
+    // OnImageIsAnimated
+    if (state & stateImageIsAnimated)
+      proxy->OnImageIsAnimated();
+  }
+
+  if (state & stateDecodeStopped) {
+    NS_ABORT_IF_FALSE(hasImage, "stopped decoding without ever having an image?");
+    proxy->OnStopDecode();
+  }
+
+  if (state & stateRequestStopped) {
+    proxy->OnStopRequest(hadLastPart);
+  }
+}
+
 void
 imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 {
@@ -444,52 +491,14 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgStatusTracker::SyncNotify", "uri", spec.get());
 #endif
 
-  nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
-
-  // OnStartRequest
-  if (mState & stateRequestStarted)
-    proxy->OnStartRequest();
-
-  // OnStartContainer
-  if (mState & stateHasSize)
-    proxy->OnStartContainer();
-
-  // OnStartDecode
-  if (mState & stateDecodeStarted)
-    proxy->OnStartDecode();
-
-  // BlockOnload
-  if (mState & stateBlockingOnload)
-    proxy->BlockOnload();
-
+  nsIntRect r;
   if (mImage) {
-    // OnFrameUpdate
     // XXX - Should only send partial rects here, but that needs to
     // wait until we fix up the observer interface
-    nsIntRect r(mImage->FrameRect(imgIContainer::FRAME_CURRENT));
-
-    // If there's any content in this frame at all (always true for
-    // vector images, true for raster images that have decoded at
-    // least one frame) then send OnFrameUpdate.
-    if (!r.IsEmpty())
-      proxy->OnFrameUpdate(&r);
-
-    if (mState & stateFrameStopped)
-      proxy->OnStopFrame();
-
-    // OnImageIsAnimated
-    if (mState & stateImageIsAnimated)
-      proxy->OnImageIsAnimated();
+    r = mImage->FrameRect(imgIContainer::FRAME_CURRENT);
   }
 
-  if (mState & stateDecodeStopped) {
-    NS_ABORT_IF_FALSE(mImage, "stopped decoding without ever having an image?");
-    proxy->OnStopDecode();
-  }
-
-  if (mState & stateRequestStopped) {
-    proxy->OnStopRequest(mHadLastPart);
-  }
+  SyncNotifyState(proxy, !!mImage, mState, r, mHadLastPart);
 }
 
 void
