@@ -678,11 +678,10 @@ extern void TypeDynamicResult(JSContext *cx, HandleScript script, jsbytecode *pc
 inline bool
 UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 {
-
     if (!fp->isConstructing() || !cx->typeInferenceEnabled() || !fp->prev())
         return false;
 
-    RootedScript prevScript(cx, fp->prev()->script());
+    JSScript *prevScript = fp->prev()->script();
     return UseNewType(cx, prevScript, fp->prevpc());
 }
 
@@ -917,7 +916,7 @@ TypeScript::MonitorUnknown(JSContext *cx, HandleScript script, jsbytecode *pc)
 }
 
 /* static */ inline void
-TypeScript::GetPcScript(JSContext *cx, MutableHandleScript script, jsbytecode **pc)
+TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
 {
     AutoAssertNoGC nogc;
 #ifdef JS_ION
@@ -926,7 +925,7 @@ TypeScript::GetPcScript(JSContext *cx, MutableHandleScript script, jsbytecode **
         return;
     }
 #endif
-    script.set(cx->fp()->script());
+    *script = cx->fp()->script();
     *pc = cx->regs().pc;
 }
 
@@ -935,7 +934,7 @@ TypeScript::MonitorOverflow(JSContext *cx)
 {
     RootedScript script(cx);
     jsbytecode *pc;
-    GetPcScript(cx, &script, &pc);
+    GetPcScript(cx, script.address(), &pc);
     MonitorOverflow(cx, script, pc);
 }
 
@@ -944,7 +943,7 @@ TypeScript::MonitorString(JSContext *cx)
 {
     RootedScript script(cx);
     jsbytecode *pc;
-    GetPcScript(cx, &script, &pc);
+    GetPcScript(cx, script.address(), &pc);
     MonitorString(cx, script, pc);
 }
 
@@ -953,7 +952,7 @@ TypeScript::MonitorUnknown(JSContext *cx)
 {
     RootedScript script(cx);
     jsbytecode *pc;
-    GetPcScript(cx, &script, &pc);
+    GetPcScript(cx, script.address(), &pc);
     MonitorUnknown(cx, script, pc);
 }
 
@@ -962,7 +961,7 @@ TypeScript::Monitor(JSContext *cx, const js::Value &rval)
 {
     RootedScript script(cx);
     jsbytecode *pc;
-    GetPcScript(cx, &script, &pc);
+    GetPcScript(cx, script.address(), &pc);
     Monitor(cx, script, pc, rval);
 }
 

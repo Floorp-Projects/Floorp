@@ -2418,14 +2418,14 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
 }
 
 static inline jsid
-GetAtomId(JSContext *cx, HandleScript script, const jsbytecode *pc, unsigned offset)
+GetAtomId(JSContext *cx, UnrootedScript script, const jsbytecode *pc, unsigned offset)
 {
     PropertyName *name = script->getName(GET_UINT32_INDEX(pc + offset));
     return MakeTypeId(cx, NameToId(name));
 }
 
 bool
-types::UseNewType(JSContext *cx, HandleScript script, jsbytecode *pc)
+types::UseNewType(JSContext *cx, UnrootedScript script, jsbytecode *pc)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
 
