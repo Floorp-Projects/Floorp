@@ -135,6 +135,13 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
       }
     }
   }
+
+  // Set image metadata before calling DecodingComplete, because DecodingComplete calls Optimize().
+  mImageMetadata.SetOnImage(&mImage);
+
+  if (mDecodeDone) {
+    mImage.DecodingComplete();
+  }
 }
 
 void
@@ -154,9 +161,6 @@ Decoder::FlushInvalidations()
   // If we've got an empty invalidation rect, we have nothing to do
   if (mInvalidRect.IsEmpty())
     return;
-
-  // Tell the image that it's been updated
-  mImage.FrameUpdated(mFrameCount - 1, mInvalidRect);
 
   if (mObserver) {
 #ifdef XP_MACOSX
@@ -285,15 +289,9 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   NS_ABORT_IF_FALSE(!mDecodeDone, "Decode already done!");
   mDecodeDone = true;
 
-  // Set metadata before DecodingComplete(), since DecodingComplete() calls Optimize()
   mImageMetadata.SetLoopCount(aLoopCount);
   mImageMetadata.SetIsNonPremultiplied(GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA);
 
-  // Sync metadata to image
-  mImageMetadata.SetOnImage(&mImage);
-
-  // Notify
-  mImage.DecodingComplete();
   if (mObserver) {
     mObserver->OnStopDecode(NS_OK);
   }
