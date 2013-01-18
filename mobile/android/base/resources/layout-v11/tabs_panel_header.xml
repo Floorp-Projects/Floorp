@@ -10,22 +10,21 @@
                android:layout_height="0dip"
                android:visibility="gone"/>
 
-    <Spinner android:id="@+id/tabs_menu"
-             android:layout_width="0dip"
-             android:layout_height="0dip"
-             android:visibility="gone"/>
+    <Button android:id="@id/tabs_switcher_menu"
+            android:layout_width="0dip"
+            android:layout_height="0dip"
+            android:visibility="gone"/>
 
-    <Button android:id="@+id/tabs_switcher_menu"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:minWidth="200dp"
-            android:gravity="left|center_vertical"
-            android:textColor="#FFFFFFFF"
-            android:textSize="18sp"
-            android:text="@string/tabs_normal"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:background="@drawable/spinner"/>
+    <Spinner android:id="@+id/tabs_menu"
+             android:layout_width="wrap_content"
+             android:layout_height="fill_parent"
+             android:minWidth="200dp"
+             android:gravity="left"
+             android:background="@drawable/spinner"
+             android:popupBackground="@drawable/menu_popup_bg"
+             android:dropDownHorizontalOffset="0dip"
+             android:dropDownSelector="@drawable/action_bar_button"
+             android:entries="@array/tabs_panel_spinner"/>
 
     <View android:layout_width="0dip"
           android:layout_height="fill_parent"
