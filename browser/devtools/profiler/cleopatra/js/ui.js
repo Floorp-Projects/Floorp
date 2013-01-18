@@ -59,26 +59,45 @@ FileList.prototype = {
     return this._container;
   },
 
+  clearFiles: function FileList_clearFiles() {
+    this.fileItemList = [];
+    this._selectedFileItem = null;
+    this._container.innerHTML = "";
+  },
+
   loadProfileListFromLocalStorage: function FileList_loadProfileListFromLocalStorage() {
     var self = this;
     gLocalStorage.getProfileList(function(profileList) {
-      for (var i = 0; i < profileList.length; i++) {
+      for (var i = profileList.length - 1; i >= 0; i--) {
         (function closure() {
           // This only carries info about the profile and the access key to retrieve it.
           var profileInfo = profileList[i];
           //PROFILERTRACE("Profile list from local storage: " + JSON.stringify(profileInfo));
-          var fileEntry = self.addFile(profileInfo.profileKey, "local storage", function fileEntryClick() {
+          var dateObj = new Date(profileInfo.date);
+          var fileEntry = self.addFile(profileInfo, dateObj.toLocaleString(), function fileEntryClick() {
+            PROFILERLOG("open: " + profileInfo.profileKey + "\n");
             loadLocalStorageProfile(profileInfo.profileKey);
           });
         })();
       }
     });
+    gLocalStorage.onProfileListChange(function(profileList) {
+      self.clearFiles();
+      self.loadProfileListFromLocalStorage();
+    });
   },
 
-  addFile: function FileList_addFile(fileName, description, onselect) {
+  addFile: function FileList_addFile(profileInfo, description, onselect) {
     var li = document.createElement("li");
 
-    li.fileName = fileName || "New Profile";
+    var fileName;
+    if (profileInfo.profileKey && profileInfo.profileKey.indexOf("http://profile-store.commondatastorage.googleapis.com/") >= 0) {
+      fileName = profileInfo.profileKey.substring(54);
+      fileName = fileName.substring(0, 8) + "..." + fileName.substring(28);
+    } else {
+      fileName = profileInfo.name;
+    }
+    li.fileName = fileName || "(New Profile)";
     li.description = description || "(empty)";
 
     li.className = "fileListItem";
@@ -87,10 +106,11 @@ FileList.prototype = {
       this._selectedFileItem = li;
     }
 
-    li.onselect = onselect;
     var self = this;
     li.onclick = function() {
       self.setSelection(li);
+      if (onselect)
+        onselect();
     }
 
     var fileListItemTitleSpan = document.createElement("span");
@@ -121,8 +141,8 @@ FileList.prototype = {
   },
 
   profileParsingFinished: function FileList_profileParsingFinished() {
-    this._container.querySelector(".fileListItemTitle").textContent = "Current Profile";
-    this._container.querySelector(".fileListItemDescription").textContent = gNumSamples + " Samples";
+    //this._container.querySelector(".fileListItemTitle").textContent = "Current Profile";
+    //this._container.querySelector(".fileListItemDescription").textContent = gNumSamples + " Samples";
   }
 }
 
@@ -135,11 +155,15 @@ function ProfileTreeManager() {
   this.treeView.setColumns([
     { name: "sampleCount", title: "Running time" },
     { name: "selfSampleCount", title: "Self" },
-    { name: "symbolName", title: "Symbol Name"},
+    { name: "resource", title: "" },
+    { name: "symbolName", title: "Symbol Name"}
   ]);
   var self = this;
   this.treeView.addEventListener("select", function (frameData) {
     self.highlightFrame(frameData);
+    if (window.comparator_setSelection) {
+      window.comparator_setSelection(gTreeManager.serializeCurrentSelectionSnapshot(), frameData);
+    }
   });
   this.treeView.addEventListener("contextMenuClick", function (e) {
     self._onContextMenuClick(e);
@@ -165,11 +189,20 @@ ProfileTreeManager.prototype = {
   dataIsOutdated: function ProfileTreeManager_dataIsOutdated() {
     this.treeView.dataIsOutdated();
   },
-  saveSelectionSnapshot: function ProfileTreeManager_getSelectionSnapshot(isJavascriptOnly) {
+  saveSelectionSnapshot: function ProfileTreeManager_saveSelectionSnapshot(isJavascriptOnly) {
     this._savedSnapshot = this.treeView.getSelectionSnapshot(isJavascriptOnly);
   },
-  saveReverseSelectionSnapshot: function ProfileTreeManager_getReverseSelectionSnapshot(isJavascriptOnly) {
+  saveReverseSelectionSnapshot: function ProfileTreeManager_saveReverseSelectionSnapshot(isJavascriptOnly) {
     this._savedSnapshot = this.treeView.getReverseSelectionSnapshot(isJavascriptOnly);
+  },
+  hasNonTrivialSelection: function ProfileTreeManager_hasNonTrivialSelection() {
+    return this.treeView.getSelectionSnapshot().length > 1;
+  },
+  serializeCurrentSelectionSnapshot: function ProfileTreeManager_serializeCurrentSelectionSnapshot() {
+    return JSON.stringify(this.treeView.getSelectionSnapshot());
+  },
+  restoreSerializedSelectionSnapshot: function ProfileTreeManager_restoreSerializedSelectionSnapshot(selection) {
+    this._savedSnapshot = JSON.parse(selection);
   },
   _restoreSelectionSnapshot: function ProfileTreeManager__restoreSelectionSnapshot(snapshot, allowNonContigous) {
     return this.treeView.restoreSelectionSnapshot(snapshot, allowNonContigous);
@@ -231,11 +264,12 @@ ProfileTreeManager.prototype = {
   setAllowNonContigous: function ProfileTreeManager_setAllowNonContigous() {
     this._allowNonContigous = true;
   },
-  display: function ProfileTreeManager_display(tree, symbols, functions, useFunctions, filterByName) {
-    this.treeView.display(this.convertToJSTreeData(tree, symbols, functions, useFunctions), filterByName);
+  display: function ProfileTreeManager_display(tree, symbols, functions, resources, useFunctions, filterByName) {
+    this.treeView.display(this.convertToJSTreeData(tree, symbols, functions, useFunctions), resources, filterByName);
     if (this._savedSnapshot) {
+      var old = this._savedSnapshot.clone();
       this._restoreSelectionSnapshot(this._savedSnapshot, this._allowNonContigous);
-      this._savedSnapshot = null;
+      this._savedSnapshot = old;
       this._allowNonContigous = false;
     }
   },
@@ -252,7 +286,7 @@ ProfileTreeManager.prototype = {
       curObj.selfCounter = selfCounter;
       curObj.ratio = node.counter / totalSamples;
       curObj.fullFrameNamesAsInSample = node.mergedNames ? node.mergedNames : [node.name];
-      if (useFunctions ? !(node.name in functions) : !(node.name in symbols)) {
+      if (!(node.name in (useFunctions ? functions : symbols))) {
         curObj.name = node.name;
         curObj.library = "";
       } else {
@@ -261,7 +295,7 @@ ProfileTreeManager.prototype = {
           functionName: functionObj.functionName,
           libraryName: functionObj.libraryName,
           lineInformation: useFunctions ? "" : symbols[node.name].lineInformation
-        };
+        };  
         curObj.name = (info.functionName + " " + info.lineInformation).trim();
         curObj.library = info.libraryName;
         curObj.isJSFrame = functionObj.isJSFrame;
@@ -281,7 +315,7 @@ ProfileTreeManager.prototype = {
         return {
           getData: function () {
             if (!createdNode) {
-              createdNode = createTreeViewNode(child, parent);
+              createdNode = createTreeViewNode(child, parent); 
             }
             return createdNode;
           }
@@ -302,7 +336,7 @@ function SampleBar() {
   this._header.alt = "This shows the heaviest leaf of the selected sample. Use this to get a quick glimpse of where the selection is spending most of its time.";
   this._container.appendChild(this._header);
 
-  this._text = document.createElement("span");
+  this._text = document.createElement("ul");
   this._text.style.whiteSpace = "pre";
   this._text.innerHTML = "Sample text";
   this._container.appendChild(this._text);
@@ -322,11 +356,12 @@ SampleBar.prototype = {
       var functionObj = gMergeFunctions ? gFunctions[sample[i]] : gFunctions[symbols[sample[i]].functionIndex];
       if (!functionObj)
         continue;
+      var functionItem = document.createElement("li");
       var functionLink = document.createElement("a");
-      functionLink.textContent = "- " + functionObj.functionName;
+      functionLink.textContent = functionLink.title = functionObj.functionName;
       functionLink.href = "#";
-      this._text.appendChild(functionLink);
-      this._text.appendChild(document.createElement("br"));
+      functionItem.appendChild(functionLink);
+      this._text.appendChild(functionItem);
       list.push(functionObj.functionName);
       functionLink.selectIndex = i;
       functionLink.onclick = function() {
@@ -378,11 +413,9 @@ PluginView.prototype = {
     this._iframe.src = "js/plugins/" + pluginName + "/index.html";
     var self = this;
     this._iframe.onload = function() {
-      console.log("Pluginview '" + pluginName + " iframe onload");
       self._iframe.contentWindow.initCleopatraPlugin(data, param, gSymbols);
     }
     this.show();
-    //console.log(gSymbols);
   },
 }
 
@@ -416,6 +449,9 @@ HistogramView.prototype = {
   },
   getContainer: function HistogramView_getContainer() {
     return this._container;
+  },
+  selectRange: function HistogramView_selectRange(start, end) {
+    this._rangeSelector._finishSelection(start, end);
   },
   showVideoFramePosition: function HistogramView_showVideoFramePosition(frame) {
     if (!this._frameStart || !this._frameStart[frame])
@@ -451,17 +487,14 @@ HistogramView.prototype = {
     return Math.ceil(minWidth / this._widthSum);
   },
   histogramClick: function HistogramView_histogramClick(index) {
-    var sample = this._histogramData[index];
+    var sample = this._histogramData[index]; 
     var frames = sample.frames;
-    if (gSampleBar) {
-      var list = gSampleBar.setSample(frames[0]);
-      gTreeManager.setSelection(list);
-      setHighlightedCallstack(frames[0], frames[0]);
-    }
+    var list = gSampleBar.setSample(frames[0]);
+    gTreeManager.setSelection(list);
+    setHighlightedCallstack(frames[0], frames[0]);
   },
   display: function HistogramView_display(histogramData, frameStart, widthSum, highlightedCallstack) {
     this._histogramData = histogramData;
-    PROFILERTRACE("FRAME START: " + frameStart + "\n");
     this._frameStart = frameStart;
     this._widthSum = widthSum;
     this._widthMultiplier = this._calculateWidthMultiplier();
@@ -469,13 +502,26 @@ HistogramView.prototype = {
     this._render(highlightedCallstack);
     this._busyCover.classList.remove("busy");
   },
+  _scheduleRender: function HistogramView__scheduleRender(highlightedCallstack) {
+    var self = this;
+    if (self._pendingAnimationFrame != null) {
+      return;
+    }
+    self._pendingAnimationFrame = requestAnimationFrame(function anim_frame() {
+      cancelAnimationFrame(self._pendingAnimationFrame);
+      self._pendingAnimationFrame = null;
+      self._render(highlightedCallstack);
+    });
+  },
   _render: function HistogramView__render(highlightedCallstack) {
     var ctx = this._canvas.getContext("2d");
     var height = this._canvas.height;
     ctx.setTransform(this._widthMultiplier, 0, 0, 1, 0, 0);
+    ctx.font = "20px Georgia";
     ctx.clearRect(0, 0, this._widthSum, height);
 
     var self = this;
+    var markerCount = 0;
     for (var i = 0; i < this._histogramData.length; i++) {
       var step = this._histogramData[i];
       var isSelected = self._isStepSelected(step, highlightedCallstack);
@@ -489,12 +535,22 @@ HistogramView.prototype = {
       }
       var roundedHeight = Math.round(step.value * height);
       ctx.fillRect(step.x, height - roundedHeight, step.width, roundedHeight);
+      if (step.marker) {
+        var x = step.x + step.width + 2;
+        var endPoint = x + ctx.measureText(step.marker).width;
+        var lastDataPoint = this._histogramData[this._histogramData.length-1];
+        if (endPoint >= lastDataPoint.x + lastDataPoint.width) {
+          x -= endPoint - (lastDataPoint.x + lastDataPoint.width) - 1;
+        }
+        ctx.fillText(step.marker, x, 15 + ((markerCount % 2) == 0 ? 0 : 20));
+        markerCount++;
+      }
     }
 
     this._finishedRendering = true;
   },
   highlightedCallstackChanged: function HistogramView_highlightedCallstackChanged(highlightedCallstack) {
-    this._render(highlightedCallstack);
+    this._scheduleRender(highlightedCallstack);
   },
   _isInRangeSelector: function HistogramView_isInRangeSelector(index) {
     return false;
@@ -502,29 +558,33 @@ HistogramView.prototype = {
   _isStepSelected: function HistogramView__isStepSelected(step, highlightedCallstack) {
     if ("marker" in step)
       return false;
-    return step.frames.some(function isCallstackSelected(frames) {
+
+    search_frames: for (var i = 0; i < step.frames.length; i++) {
+      var frames = step.frames[i];
+
       if (frames.length < highlightedCallstack.length ||
           highlightedCallstack.length <= (gInvertCallstack ? 0 : 1))
-        return false;
+        continue;
 
       var compareFrames = frames;
       if (gInvertCallstack) {
         for (var j = 0; j < highlightedCallstack.length; j++) {
           var compareFrameIndex = compareFrames.length - 1 - j;
           if (highlightedCallstack[j] != compareFrames[compareFrameIndex]) {
-            return false;
+            continue search_frames;
           }
         }
       } else {
         for (var j = 0; j < highlightedCallstack.length; j++) {
           var compareFrameIndex = j;
           if (highlightedCallstack[j] != compareFrames[compareFrameIndex]) {
-            return false;
+            continue search_frames;
           }
         }
       }
       return true;
-    });
+    };
+    return false;
   },
   getHistogramData: function HistogramView__getHistogramData() {
     return this._histogramData;
@@ -606,6 +666,9 @@ RangeSelector.prototype = {
     var isDrawingRectangle = false;
     var origX, origY;
     var self = this;
+    // Compute this on the mouse down rather then forcing a sync reflow
+    // every frame.
+    var boundingRect = null;
     function histogramClick(clickX, clickY) {
       clickX = Math.min(clickX, graph.parentNode.getBoundingClientRect().right);
       clickX = clickX - graph.parentNode.getBoundingClientRect().left;
@@ -613,8 +676,8 @@ RangeSelector.prototype = {
       self._histogram.histogramClick(index);
     }
     function updateHiliteRectangle(newX, newY) {
-      newX = Math.min(newX, graph.parentNode.getBoundingClientRect().right);
-      var startX = Math.min(newX, origX) - graph.parentNode.getBoundingClientRect().left;
+      newX = Math.min(newX, boundingRect.right);
+      var startX = Math.min(newX, origX) - boundingRect.left;
       var startY = 0;
       var width = Math.abs(newX - origX);
       var height = graph.parentNode.clientHeight;
@@ -637,6 +700,7 @@ RangeSelector.prototype = {
       self.beginHistogramSelection();
       origX = e.pageX;
       origY = e.pageY;
+      boundingRect = graph.parentNode.getBoundingClientRect();
       if (this.setCapture)
         this.setCapture();
       // Reset the highlight rectangle
@@ -659,14 +723,12 @@ RangeSelector.prototype = {
           var index = self._sampleIndexFromPoint(e.pageX - graph.parentNode.getBoundingClientRect().left);
           // TODO Select this sample in the tree view
           var sample = gCurrentlyShownSampleData[index];
-          console.log("Should select: " + sample);
         }
       }
     }, false);
     graph.addEventListener("mousemove", function(e) {
       this._movedDuringClick = true;
       if (isDrawingRectangle) {
-        console.log(e.pageX);
         updateMouseMarker(-1); // Clear
         updateHiliteRectangle(e.pageX, e.pageY);
       } else {
@@ -739,11 +801,12 @@ function videoPaneTimeChange(video) {
   //var frameStart = gMeta.frameStart[frame];
   //var frameEnd = gMeta.frameStart[frame+1]; // If we don't have a frameEnd assume the end of the profile
 
-  gHistogramView.showVideoFramePosition(frame);
+  gHistogramView.showVideoFramePosition(frame); 
 }
 
 
 window.onpopstate = function(ev) {
+  return; // Conflicts with document url
   if (!gBreadcrumbTrail)
     return;
   console.log("pop: " + JSON.stringify(ev.state));
@@ -820,10 +883,17 @@ BreadcrumbTrail.prototype = {
     if (this._breadcrumbs.length-2 >= 0)
       this._enter(this._breadcrumbs.length-2);
   },
-  _enter: function BreadcrumbTrail__select(index) {
+  enterLastItem: function BreadcrumbTrail_enterLastItem(forceSelection) {
+    this._enter(this._breadcrumbs.length-1, forceSelection);
+  },
+  _enter: function BreadcrumbTrail__select(index, forceSelection) {
     if (index == this._selectedBreadcrumbIndex)
       return;
-    gTreeManager.saveSelectionSnapshot();
+    if (forceSelection) {
+      gTreeManager.restoreSerializedSelectionSnapshot(forceSelection);
+    } else {
+      gTreeManager.saveSelectionSnapshot();
+    }
     var prevSelected = this._breadcrumbs[this._selectedBreadcrumbIndex];
     if (prevSelected)
       prevSelected.classList.remove("selected");
@@ -935,7 +1005,7 @@ function copyProfile() {
 
 function saveProfileToLocalStorage() {
   Parser.getSerializedProfile(true, function (serializedProfile) {
-    gLocalStorage.storeLocalProfile(serializedProfile, function profileSaved() {
+    gLocalStorage.storeLocalProfile(serializedProfile, gMeta.profileId, function profileSaved() {
 
     });
   });
@@ -947,36 +1017,114 @@ function downloadProfile() {
   });
 }
 
+function promptUploadProfile(selected) {
+  var overlay = document.createElement("div");
+  overlay.style.position = "absolute";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.backgroundColor = "transparent";
+
+  var bg = document.createElement("div");
+  bg.style.position = "absolute";
+  bg.style.top = 0;
+  bg.style.left = 0;
+  bg.style.width = "100%";
+  bg.style.height = "100%";
+  bg.style.opacity = "0.6";
+  bg.style.backgroundColor = "#aaaaaa";
+  overlay.appendChild(bg);
+
+  var contentDiv = document.createElement("div");
+  contentDiv.className = "sideBar";
+  contentDiv.style.position = "absolute";
+  contentDiv.style.top = "50%";
+  contentDiv.style.left = "50%";
+  contentDiv.style.width = "40em";
+  contentDiv.style.height = "20em";
+  contentDiv.style.marginLeft = "-20em";
+  contentDiv.style.marginTop = "-10em";
+  contentDiv.style.padding = "10px";
+  contentDiv.style.border = "2px solid black";
+  contentDiv.style.backgroundColor = "rgb(219, 223, 231)";
+  overlay.appendChild(contentDiv);
+
+  var noticeHTML = "";
+  noticeHTML += "<center><h2 style='font-size: 2em'>Upload Profile - Privacy Notice</h2></center>";
+  noticeHTML += "You're about to upload your profile publicly where anyone will be able to access it. ";
+  noticeHTML += "To better diagnose performance problems profiles include the following information:";
+  noticeHTML += "<ul>";
+  noticeHTML += " <li>The <b>URLs</b> and scripts of the tabs that were executing.</li>";
+  noticeHTML += " <li>The <b>metadata of all your Add-ons</b> to identify slow Add-ons.</li>";
+  noticeHTML += " <li>Firefox build and runtime configuration.</li>";
+  noticeHTML += "</ul><br>";
+  noticeHTML += "To view all the information you can download the full profile to a file and open the json structure with a text editor.<br><br>";
+  contentDiv.innerHTML = noticeHTML;
+
+  var cancelButton = document.createElement("input");
+  cancelButton.style.position = "absolute";
+  cancelButton.style.bottom = "10px";
+  cancelButton.type = "button";
+  cancelButton.value = "Cancel";
+  cancelButton.onclick = function() {
+    document.body.removeChild(overlay);
+  }
+  contentDiv.appendChild(cancelButton);
+
+  var uploadButton = document.createElement("input");
+  uploadButton.style.position = "absolute";
+  uploadButton.style.right = "10px";
+  uploadButton.style.bottom = "10px";
+  uploadButton.type = "button";
+  uploadButton.value = "Upload";
+  uploadButton.onclick = function() {
+    document.body.removeChild(overlay);
+    uploadProfile(selected);
+  }
+  contentDiv.appendChild(uploadButton);
+
+  document.body.appendChild(overlay);
+}
+
 function uploadProfile(selected) {
   Parser.getSerializedProfile(!selected, function (dataToUpload) {
     var oXHR = new XMLHttpRequest();
-    oXHR.open("POST", "http://profile-store.appspot.com/store", true);
     oXHR.onload = function (oEvent) {
-      if (oXHR.status == 200) {
-        document.getElementById("upload_status").innerHTML = "Success! Use this <a href='" + document.URL.split('?')[0] + "?report=" + oXHR.responseText + "'>link</a>";
-      } else {
+      if (oXHR.status == 200) {  
+        gReportID = oXHR.responseText;
+        updateDocumentURL();
+        document.getElementById("upload_status").innerHTML = "Success! Use this <a id='linkElem'>link</a>";
+        document.getElementById("linkElem").href = document.URL;
+      } else {  
         document.getElementById("upload_status").innerHTML = "Error " + oXHR.status + " occurred uploading your file.";
-      }
+      }  
     };
     oXHR.onerror = function (oEvent) {
       document.getElementById("upload_status").innerHTML = "Error " + oXHR.status + " occurred uploading your file.";
     }
-    oXHR.onprogress = function (oEvent) {
+    oXHR.upload.onprogress = function(oEvent) {
       if (oEvent.lengthComputable) {
-        document.getElementById("upload_status").innerHTML = "Uploading: " + ((oEvent.loaded / oEvent.total)*100) + "%";
+        var progress = Math.round((oEvent.loaded / oEvent.total)*100);
+        if (progress == 100) {
+          document.getElementById("upload_status").innerHTML = "Uploading: Waiting for server side compression";
+        } else {
+          document.getElementById("upload_status").innerHTML = "Uploading: " + Math.round((oEvent.loaded / oEvent.total)*100) + "%";
+        }
       }
-    }
+    };
 
     var dataSize;
     if (dataToUpload.length > 1024*1024) {
-      dataSize = (dataToUpload.length/1024/1024) + " MB(s)";
+      dataSize = (dataToUpload.length/1024/1024).toFixed(1) + " MB(s)";
     } else {
-      dataSize = (dataToUpload.length/1024) + " KB(s)";
+      dataSize = (dataToUpload.length/1024).toFixed(1) + " KB(s)";
     }
 
     var formData = new FormData();
     formData.append("file", dataToUpload);
     document.getElementById("upload_status").innerHTML = "Uploading Profile (" + dataSize + ")";
+    oXHR.open("POST", "http://profile-store.appspot.com/store", true);
     oXHR.send(formData);
   });
 }
@@ -990,7 +1138,7 @@ function populate_skip_symbol() {
     elOptNew.value = gSkipSymbols[i];
     elSel.add(elOptNew);
   }
-
+    
 }
 
 function delete_skip_symbol() {
@@ -998,7 +1146,7 @@ function delete_skip_symbol() {
 }
 
 function add_skip_symbol() {
-
+  
 }
 
 var gFilterChangeCallback = null;
@@ -1014,12 +1162,12 @@ function filterOnChange() {
 function filterUpdate() {
   gFilterChangeCallback = null;
 
-  filtersChanged();
+  filtersChanged(); 
 
   var filterNameInput = document.getElementById("filterName");
   if (filterNameInput != null) {
-    filterNameInput.focus();
-  }
+    changeFocus(filterNameInput);
+  } 
 }
 
 // Maps document id to a tooltip description
@@ -1037,7 +1185,7 @@ var tooltip = {
 
 function addTooltips() {
   for (var elemId in tooltip) {
-    var elem = document.getElementById(elemId);
+    var elem = document.getElementById(elemId); 
     if (!elem)
       continue;
     if (elem.parentNode.nodeName.toLowerCase() == "label")
@@ -1083,15 +1231,15 @@ InfoBar.prototype = {
     infoText += "<h2>Pre Filtering</h2>\n";
     // Disable for now since it's buggy and not useful
     //infoText += "<label><input type='checkbox' id='mergeFunctions' " + (gMergeFunctions ?" checked='true' ":" ") + " onchange='toggleMergeFunctions()'/>Functions, not lines</label><br>\n";
-    infoText += "<label><input type='checkbox' id='showJS' " + (gJavascriptOnly ?" checked='true' ":" ") + " onchange='toggleJavascriptOnly()'/>Javascript only</label><br>\n";
 
     var filterNameInputOld = document.getElementById("filterName");
-    infoText += "<label>Filter:\n";
-    infoText += "<input type='search' id='filterName' oninput='filterOnChange()'/></label>\n";
+    infoText += "<a>Filter:\n";
+    infoText += "<input type='search' id='filterName' oninput='filterOnChange()'/></a>\n";
 
     infoText += "<h2>Post Filtering</h2>\n";
     infoText += "<label><input type='checkbox' id='showJank' " + (gJankOnly ?" checked='true' ":" ") + " onchange='toggleJank()'/>Show Jank only</label>\n";
     infoText += "<h2>View Options</h2>\n";
+    infoText += "<label><input type='checkbox' id='showJS' " + (gJavascriptOnly ?" checked='true' ":" ") + " onchange='toggleJavascriptOnly()'/>Javascript only</label><br>\n";
     infoText += "<label><input type='checkbox' id='mergeUnbranched' " + (gMergeUnbranched ?" checked='true' ":" ") + " onchange='toggleMergeUnbranched()'/>Merge unbranched call paths</label><br>\n";
     infoText += "<label><input type='checkbox' id='invertCallstack' " + (gInvertCallstack ?" checked='true' ":" ") + " onchange='toggleInvertCallStack()'/>Invert callstack</label><br>\n";
 
@@ -1101,12 +1249,15 @@ InfoBar.prototype = {
     infoText += "<input type='button' id='upload_select' value='Upload view'><br>\n";
     infoText += "<input type='button' id='download' value='Download full profile'>\n";
 
+    infoText += "<h2>Compare</h2>\n";
+    infoText += "<input type='button' id='compare' value='Compare'>\n";
+
     //infoText += "<br>\n";
     //infoText += "Skip functions:<br>\n";
     //infoText += "<select size=8 id='skipsymbol'></select><br />"
     //infoText += "<input type='button' id='delete_skipsymbol' value='Delete'/><br />\n";
     //infoText += "<input type='button' id='add_skipsymbol' value='Add'/><br />\n";
-
+    
     infobar.innerHTML = infoText;
     addTooltips();
 
@@ -1114,13 +1265,19 @@ InfoBar.prototype = {
     if (filterNameInputOld != null && filterNameInputNew != null) {
       filterNameInputNew.parentNode.replaceChild(filterNameInputOld, filterNameInputNew);
       //filterNameInputNew.value = filterNameInputOld.value;
+    } else if (gQueryParamFilterName != null) {
+      filterNameInputNew.value = gQueryParamFilterName;
+      gQueryParamFilterName = null;
+    }
+    document.getElementById('compare').onclick = function() {
+      openProfileCompare();
     }
     document.getElementById('upload').onclick = function() {
-      uploadProfile(false);
+      promptUploadProfile(false);
     };
     document.getElementById('download').onclick = downloadProfile;
     document.getElementById('upload_select').onclick = function() {
-      uploadProfile(true);
+      promptUploadProfile(true);
     };
     //document.getElementById('delete_skipsymbol').onclick = delete_skip_symbol;
     //document.getElementById('add_skipsymbol').onclick = add_skip_symbol;
@@ -1129,13 +1286,13 @@ InfoBar.prototype = {
   }
 }
 
-// in light mode we simplify the UI by default
-var gLightMode = false;
 var gNumSamples = 0;
 var gMeta = null;
 var gSymbols = {};
 var gFunctions = {};
+var gResources = {};
 var gHighlightedCallstack = [];
+var gFrameView = null;
 var gTreeManager = null;
 var gSampleBar = null;
 var gBreadcrumbTrail = null;
@@ -1149,6 +1306,9 @@ var gMainArea = null;
 var gCurrentlyShownSampleData = null;
 var gSkipSymbols = ["test2", "test1"];
 var gAppendVideoCapture = null;
+var gQueryParamFilterName = null;
+var gRestoreSelection = null;
+var gReportID = null;
 
 function getTextData() {
   var data = [];
@@ -1190,7 +1350,7 @@ function loadLocalStorageProfile(profileKey) {
 
   gLocalStorage.getProfile(profileKey, function(profile) {
     subreporters.fileLoading.finish();
-    loadRawProfile(subreporters.parsing, JSON.stringify(profile));
+    loadRawProfile(subreporters.parsing, profile, profileKey);
   });
   subreporters.fileLoading.begin("Reading local storage...");
 }
@@ -1254,14 +1414,18 @@ function loadProfileURL(url) {
   xhr.open("GET", url, true);
   xhr.responseType = "text";
   xhr.onreadystatechange = function (e) {
-    if (xhr.readyState === 4 && xhr.status === 200) {
+    if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
       subreporters.fileLoading.finish();
       PROFILERLOG("Got profile from '" + url + "'.");
-      loadRawProfile(subreporters.parsing, xhr.responseText);
+      if (xhr.responseText == null || xhr.responseText === "") {
+        subreporters.fileLoading.begin("Profile '" + url + "' is empty. Did you set the CORS headers?");
+        return;
+      }
+      loadRawProfile(subreporters.parsing, xhr.responseText, url);
     }
   };
-  xhr.onerror = function (e) {
-    subreporters.fileLoading.begin("Error fetching profile :(. URL:  " + url);
+  xhr.onerror = function (e) { 
+    subreporters.fileLoading.begin("Error fetching profile :(. URL: '" + url + "'. Did you set the CORS headers?");
   }
   xhr.onprogress = function (e) {
     if (e.lengthComputable && (e.loaded <= e.total)) {
@@ -1281,12 +1445,17 @@ function loadProfile(rawProfile) {
   loadRawProfile(reporter, rawProfile);
 }
 
-function loadRawProfile(reporter, rawProfile) {
+function loadRawProfile(reporter, rawProfile, profileId) {
   PROFILERLOG("Parse raw profile: ~" + rawProfile.length + " bytes");
   reporter.begin("Parsing...");
+  if (rawProfile == null || rawProfile.length === 0) {
+    reporter.begin("Profile is null or empty");
+    return;
+  }
   var startTime = Date.now();
   var parseRequest = Parser.parse(rawProfile, {
-    appendVideoCapture : gAppendVideoCapture,
+    appendVideoCapture : gAppendVideoCapture,  
+    profileId: profileId,
   });
   gVideoCapture = null;
   parseRequest.addEventListener("progress", function (progress, action) {
@@ -1301,9 +1470,9 @@ function loadRawProfile(reporter, rawProfile) {
     gNumSamples = result.numSamples;
     gSymbols = result.symbols;
     gFunctions = result.functions;
+    gResources = result.resources;
     enterFinishedProfileUI();
-    if (gFileList)
-      gFileList.profileParsingFinished();
+    gFileList.profileParsingFinished();
   });
 }
 
@@ -1330,15 +1499,8 @@ window.addEventListener("message", function messageFromAddon(msg) {
     case "importFromAddonFinish":
       importFromAddonFinish(o.rawProfile);
       break;
-    case "receiveProfileData":
-      receiveProfileData(o.rawProfile);
-      break;
   }
 });
-
-function receiveProfileData(data) {
- loadProfile(JSON.stringify(data));
-}
 
 function importFromAddonFinish(rawProfile) {
   gImportFromAddonSubreporters.import.finish();
@@ -1357,13 +1519,13 @@ function toggleInvertCallStack() {
 var gMergeUnbranched = false;
 function toggleMergeUnbranched() {
   gMergeUnbranched = !gMergeUnbranched;
-  viewOptionsChanged();
+  viewOptionsChanged(); 
 }
 
 var gMergeFunctions = true;
 function toggleMergeFunctions() {
   gMergeFunctions = !gMergeFunctions;
-  filtersChanged();
+  filtersChanged(); 
 }
 
 var gJankOnly = false;
@@ -1393,7 +1555,7 @@ function toggleJavascriptOnly() {
 
 var gSampleFilters = [];
 function focusOnSymbol(focusSymbol, name) {
-  var newFilterChain = gSampleFilters.concat([{type: "FocusedFrameSampleFilter", focusedSymbol: focusSymbol}]);
+  var newFilterChain = gSampleFilters.concat([{type: "FocusedFrameSampleFilter", name: name, focusedSymbol: focusSymbol}]);
   gBreadcrumbTrail.addAndEnter({
     title: name,
     enterCallback: function () {
@@ -1403,10 +1565,16 @@ function focusOnSymbol(focusSymbol, name) {
   });
 }
 
-function focusOnCallstack(focusedCallstack, name) {
+function focusOnCallstack(focusedCallstack, name, overwriteCallstack) {
+  var invertCallback =  gInvertCallstack;
+  if (overwriteCallstack != null) {
+    invertCallstack = overwriteCallstack;
+  }
   var filter = {
-    type: gInvertCallstack ? "FocusedCallstackPostfixSampleFilter" : "FocusedCallstackPrefixSampleFilter",
-    focusedCallstack: focusedCallstack
+    type: !invertCallstack ? "FocusedCallstackPostfixSampleFilter" : "FocusedCallstackPrefixSampleFilter",
+    name: name,
+    focusedCallstack: focusedCallstack,
+    appliesToJS: gJavascriptOnly
   };
   var newFilterChain = gSampleFilters.concat([filter]);
   gBreadcrumbTrail.addAndEnter({
@@ -1450,30 +1618,24 @@ function setHighlightedCallstack(samples, heaviestSample) {
     // Always show heavy
     heaviestSample = heaviestSample.clone().reverse();
   }
-  if (gSampleBar)
+  
+  if (gSampleBar) {
     gSampleBar.setSample(heaviestSample);
+  }
 }
 
-function enterMainUI(isLightMode) {
-  if (isLightMode !== undefined) {
-    gLightMode = isLightMode;
-    if (gLightMode) {
-      gJavascriptOnly = true;
-    }
-  }
-
+function enterMainUI() {
   var uiContainer = document.createElement("div");
   uiContainer.id = "ui";
 
-  //gFileList.loadProfileListFromLocalStorage();
-  if (!gLightMode) {
-    gFileList = new FileList();
-    uiContainer.appendChild(gFileList.getContainer());
+  gFileList = new FileList();
+  uiContainer.appendChild(gFileList.getContainer());
 
-    gFileList.addFile();
-    gInfoBar = new InfoBar();
-    uiContainer.appendChild(gInfoBar.getContainer());
-  }
+  //gFileList.addFile();
+  gFileList.loadProfileListFromLocalStorage();
+
+  gInfoBar = new InfoBar();
+  uiContainer.appendChild(gInfoBar.getContainer());
 
   gMainArea = document.createElement("div");
   gMainArea.id = "mainarea";
@@ -1522,9 +1684,7 @@ function enterProgressUI() {
 }
 
 function enterFinishedProfileUI() {
-  //dump("prepare to save\n");
-  //saveProfileToLocalStorage();
-  //dump("prepare to saved\n");
+  saveProfileToLocalStorage();
 
   var finishedProfilePaneBackgroundCover = document.createElement("div");
   finishedProfilePaneBackgroundCover.className = "finishedProfilePaneBackgroundCover";
@@ -1544,7 +1704,7 @@ function enterFinishedProfileUI() {
     // until some actions happen such as focusing this box
     var filterNameInput = document.getElementById("filterName");
     if (filterNameInput != null) {
-      filterNameInput.focus();
+      changeFocus(filterNameInput);
      }
   }, 100);
 
@@ -1556,27 +1716,32 @@ function enterFinishedProfileUI() {
   currRow = finishedProfilePane.insertRow(rowIndex++);
   currRow.insertCell(0).appendChild(gHistogramView.getContainer());
 
-  if (typeof DiagnosticBar !== "undefined") {
-    gDiagnosticBar = new DiagnosticBar();
-    gDiagnosticBar.setDetailsListener(function(details) {
-      if (details.indexOf("bug ") == 0) {
-        window.open('https://bugzilla.mozilla.org/show_bug.cgi?id=' + details.substring(4));
-      } else {
-        var sourceView = new SourceView();
-        sourceView.setText("Diagnostic", js_beautify(details));
-        gMainArea.appendChild(sourceView.getContainer());
-      }
-    });
+  if (false && gLocation.indexOf("file:") == 0) {
+    // Local testing for frameView
+    gFrameView = new FrameView();
     currRow = finishedProfilePane.insertRow(rowIndex++);
-    currRow.insertCell(0).appendChild(gDiagnosticBar.getContainer());
+    currRow.insertCell(0).appendChild(gFrameView.getContainer());
   }
+
+  gDiagnosticBar = new DiagnosticBar();
+  gDiagnosticBar.setDetailsListener(function(details) {
+    if (details.indexOf("bug ") == 0) {
+      window.open('https://bugzilla.mozilla.org/show_bug.cgi?id=' + details.substring(4));
+    } else {
+      var sourceView = new SourceView();
+      sourceView.setText("Diagnostic", js_beautify(details));
+      gMainArea.appendChild(sourceView.getContainer());
+    }
+  });
+  currRow = finishedProfilePane.insertRow(rowIndex++);
+  currRow.insertCell(0).appendChild(gDiagnosticBar.getContainer());
 
   // For testing:
   //gMeta.videoCapture = {
   //  src: "http://videos-cdn.mozilla.net/brand/Mozilla_Firefox_Manifesto_v0.2_640.webm",
   //};
 
-  if (!gLightMode && gMeta && gMeta.videoCapture) {
+  if (gMeta && gMeta.videoCapture) {
     gVideoPane = new VideoPane(gMeta.videoCapture);
     gVideoPane.onTimeChange(videoPaneTimeChange);
     currRow = finishedProfilePane.insertRow(rowIndex++);
@@ -1595,22 +1760,19 @@ function enterFinishedProfileUI() {
   cell.appendChild(treeContainerDiv);
   treeContainerDiv.appendChild(gTreeManager.getContainer());
 
-  if (!gLightMode) {
-    gSampleBar = new SampleBar();
-    treeContainerDiv.appendChild(gSampleBar.getContainer());
-  }
+  gSampleBar = new SampleBar();
+  treeContainerDiv.appendChild(gSampleBar.getContainer());
 
   // sampleBar
 
-  if (!gLightMode) {
-    gPluginView = new PluginView();
-    //currRow = finishedProfilePane.insertRow(4);
-    treeContainerDiv.appendChild(gPluginView.getContainer());
-  }
+  gPluginView = new PluginView();
+  //currRow = finishedProfilePane.insertRow(4);
+  treeContainerDiv.appendChild(gPluginView.getContainer());
 
   gMainArea.appendChild(finishedProfilePaneBackgroundCover);
   gMainArea.appendChild(finishedProfilePane);
 
+  var currentBreadcrumb = gSampleFilters;
   gBreadcrumbTrail.add({
     title: "Complete Profile",
     enterCallback: function () {
@@ -1618,16 +1780,66 @@ function enterFinishedProfileUI() {
       filtersChanged();
     }
   });
+  if (currentBreadcrumb == null || currentBreadcrumb.length == 0) {
+    gTreeManager.restoreSerializedSelectionSnapshot(gRestoreSelection);
+    viewOptionsChanged();
+  }
+  for (var i = 0; i < currentBreadcrumb.length; i++) {
+    var filter = currentBreadcrumb[i];
+    var forceSelection = null;
+    if (gRestoreSelection != null && i == currentBreadcrumb.length - 1) {
+      forceSelection = gRestoreSelection;
+    }
+    switch (filter.type) {
+      case "FocusedFrameSampleFilter":
+        focusOnSymbol(filter.name, filter.symbolName);
+        gBreadcrumbTrail.enterLastItem(forceSelection);
+      case "FocusedCallstackPrefixSampleFilter":
+        focusOnCallstack(filter.focusedCallstack, filter.name, false);
+        gBreadcrumbTrail.enterLastItem(forceSelection);
+      case "FocusedCallstackPostfixSampleFilter":
+        focusOnCallstack(filter.focusedCallstack, filter.name, true);
+        gBreadcrumbTrail.enterLastItem(forceSelection);
+      case "RangeSampleFilter":
+        gHistogramView.selectRange(filter.start, filter.end);
+        gBreadcrumbTrail.enterLastItem(forceSelection);
+    }
+  }
+}
+
+// Make all focus change events go through this function.
+// This function will mediate the focus changes in case
+// that we're in a compare view. In a compare view an inactive
+// instance of cleopatra should not steal focus from the active
+// cleopatra instance.
+function changeFocus(elem) {
+  if (window.comparator_changeFocus) {
+    window.comparator_changeFocus(elem);
+  } else {
+    PROFILERLOG("FOCUS\n\n\n\n\n\n\n\n\n");
+    elem.focus();
+  }
+}
+
+function comparator_receiveSelection(snapshot, frameData) {
+  gTreeManager.restoreSerializedSelectionSnapshot(snapshot); 
+  if (frameData)
+    gTreeManager.highlightFrame(frameData);
+  viewOptionsChanged();
 }
 
 function filtersChanged() {
+  if (window.comparator_setSelection) {
+  //  window.comparator_setSelection(gTreeManager.serializeCurrentSelectionSnapshot(), null);
+  }
+  updateDocumentURL();
   var data = { symbols: {}, functions: {}, samples: [] };
 
   gHistogramView.dataIsOutdated();
   var filterNameInput = document.getElementById("filterName");
   var updateRequest = Parser.updateFilters({
     mergeFunctions: gMergeFunctions,
-    nameFilter: (filterNameInput && filterNameInput.value) || "",
+    nameFilter: (filterNameInput && filterNameInput.value) || gQueryParamFilterName || "",
     sampleFilters: gSampleFilters,
     jankOnly: gJankOnly,
     javascriptOnly: gJavascriptOnly
@@ -1636,15 +1848,14 @@ function filtersChanged() {
   updateRequest.addEventListener("finished", function (filteredSamples) {
     console.log("profile filtering (in worker): " + (Date.now() - start) + "ms.");
     gCurrentlyShownSampleData = filteredSamples;
-    if (gInfoBar)
-      gInfoBar.display();
+    gInfoBar.display();
 
-    if (gPluginView && gSampleFilters.length > 0 && gSampleFilters[gSampleFilters.length-1].type === "PluginView") {
+    if (gSampleFilters.length > 0 && gSampleFilters[gSampleFilters.length-1].type === "PluginView") {
       start = Date.now();
       gPluginView.display(gSampleFilters[gSampleFilters.length-1].pluginName, gSampleFilters[gSampleFilters.length-1].param,
                           gCurrentlyShownSampleData, gHighlightedCallstack);
       console.log("plugin displaying: " + (Date.now() - start) + "ms.");
-    } else if (gPluginView) {
+    } else {
       gPluginView.hide();
     }
   });
@@ -1653,6 +1864,8 @@ function filtersChanged() {
   histogramRequest.addEventListener("finished", function (data) {
     start = Date.now();
     gHistogramView.display(data.histogramData, data.frameStart, data.widthSum, gHighlightedCallstack);
+    if (gFrameView)
+      gFrameView.display(data.histogramData, data.frameStart, data.widthSum, gHighlightedCallstack);
     console.log("histogram displaying: " + (Date.now() - start) + "ms.");
   });
 
@@ -1677,7 +1890,118 @@ function viewOptionsChanged() {
   });
   updateViewOptionsRequest.addEventListener("finished", function (calltree) {
     var start = Date.now();
-    gTreeManager.display(calltree, gSymbols, gFunctions, gMergeFunctions, filterNameInput && filterNameInput.value);
+    gTreeManager.display(calltree, gSymbols, gFunctions, gResources, gMergeFunctions, filterNameInput && filterNameInput.value);
     console.log("tree displaying: " + (Date.now() - start) + "ms.");
   });
 }
+
+function loadQueryData(queryData) {
+  var isFiltersChanged = false;
+  var queryDataOriginal = queryData;
+  var queryData = {};
+  for (var i in queryDataOriginal) {
+    queryData[i] = unQueryEscape(queryDataOriginal[i]);
+  }
+  if (queryData.search) {
+    gQueryParamFilterName = queryData.search;
+    isFiltersChanged = true;
+  }
+  if (queryData.jankOnly) {
+    gJankOnly = queryData.jankOnly;
+    isFiltersChanged = true;
+  }
+  if (queryData.javascriptOnly) {
+    gJavascriptOnly = queryData.javascriptOnly;
+    isFiltersChanged = true;
+  }
+  if (queryData.mergeUnbranched) {
+    gMergeUnbranched = queryData.mergeUnbranched;
+    isFiltersChanged = true;
+  }
+  if (queryData.invertCallback) {
+    gInvertCallstack = queryData.invertCallback;
+    isFiltersChanged = true;
+  }
+  if (queryData.report) {
+    gReportID = queryData.report;
+  }
+  if (queryData.filter) {
+    var filterChain = JSON.parse(queryData.filter);
+    gSampleFilters = filterChain;
+  }
+  if (queryData.selection) {
+    var selection = queryData.selection;
+    gRestoreSelection = selection;
+  }
+
+  if (isFiltersChanged) {
+    //filtersChanged();
+  }
+}
+
+function unQueryEscape(str) {
+  return decodeURIComponent(str);
+}
+
+function queryEscape(str) {
+  return encodeURIComponent(encodeURIComponent(str));
+}
+
+function updateDocumentURL() {
+  location.hash = getDocumentHashString();
+  return document.location;
+}
+
+function getDocumentHashString() {
+  var query = "";
+  if (gReportID) {
+    if (query != "")
+      query += "&";
+    query += "report=" + queryEscape(gReportID);
+  }
+  if (document.getElementById("filterName") != null &&
+      document.getElementById("filterName").value != null &&
+      document.getElementById("filterName").value != "") {
+    if (query != "")
+      query += "&";
+    query += "search=" + queryEscape(document.getElementById("filterName").value);
+  }
+  // For now don't restore the view rest
+  return query;
+  if (gJankOnly) {
+    if (query != "")
+      query += "&";
+    query += "jankOnly=" + queryEscape(gJankOnly);
+  }
+  if (gJavascriptOnly) {
+    if (query != "")
+      query += "&";
+    query += "javascriptOnly=" + queryEscape(gJavascriptOnly);
+  }
+  if (gMergeUnbranched) {
+    if (query != "")
+      query += "&";
+    query += "mergeUnbranched=" + queryEscape(gMergeUnbranched);
+  }
+  if (gInvertCallstack) {
+    if (query != "")
+      query += "&";
+    query += "invertCallback=" + queryEscape(gInvertCallstack);
+  }
+  if (gSampleFilters && gSampleFilters.length != 0) {
+    if (query != "")
+      query += "&";
+    query += "filter=" + queryEscape(JSON.stringify(gSampleFilters));
+  }
+  if (gTreeManager.hasNonTrivialSelection()) {
+    if (query != "")
+      query += "&";
+    query += "selection=" + queryEscape(gTreeManager.serializeCurrentSelectionSnapshot());
+  }
+  if (!gReportID) {
+    query = "uploadProfileFirst!";
+  }
+
+  return query;
+}
+
