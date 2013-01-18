@@ -40,7 +40,7 @@ class nsWBMPDecoder : public Decoder
 {
 public:
 
-  nsWBMPDecoder(RasterImage &aImage, imgDecoderObserver* aObserver);
+  nsWBMPDecoder(RasterImage &aImage);
   virtual ~nsWBMPDecoder();
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount);

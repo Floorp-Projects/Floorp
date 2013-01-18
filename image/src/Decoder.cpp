@@ -13,9 +13,8 @@
 namespace mozilla {
 namespace image {
 
-Decoder::Decoder(RasterImage &aImage, imgDecoderObserver* aObserver)
+Decoder::Decoder(RasterImage &aImage)
   : mImage(aImage)
-  , mObserver(aObserver)
   , mDecodeFlags(0)
   , mDecodeDone(false)
   , mDataError(false)
@@ -42,9 +41,10 @@ Decoder::Init()
 {
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
+  NS_ABORT_IF_FALSE(mObserver, "Need an observer!");
 
   // Fire OnStartDecode at init time to support bug 512435.
-  if (!IsSizeDecode() && mObserver)
+  if (!IsSizeDecode())
       mObserver->OnStartDecode();
 
   // Implementation-specific initialization
@@ -52,7 +52,7 @@ Decoder::Init()
   mInitialized = true;
 }
 
-// Initializes a decoder whose aImage and aObserver is already being used by a
+// Initializes a decoder whose image and observer is already being used by a
 // parent decoder
 void
 Decoder::InitSharedDecoder()
