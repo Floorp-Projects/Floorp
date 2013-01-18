@@ -18,7 +18,7 @@
 #include "jstypes.h"
 
 extern "C" {
-class JSObject;
+struct JSObject;
 struct JSContext;
 }
 

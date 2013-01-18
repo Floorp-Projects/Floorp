@@ -2017,8 +2017,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         }
 
         Value v;
-        RootedId id(cx, AtomToId(atom));
-        if (HasDataProperty(cx, base, id, &v) && v.isString()) {
+        if (HasDataProperty(cx, base, AtomToId(atom), &v) && v.isString()) {
             rdata.repstr = v.toString()->ensureLinear(cx);
             if (!rdata.repstr)
                 return false;

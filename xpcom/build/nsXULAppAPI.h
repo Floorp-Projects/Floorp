@@ -433,7 +433,7 @@ XRE_API(bool,
         XRE_SendTestShellCommand, (JSContext* aCx,
                                    JSString* aCommand,
                                    void* aCallback))
-class JSObject;
+struct JSObject;
 
 XRE_API(bool,
         XRE_GetChildGlobalObject, (JSContext* aCx,

@@ -16,7 +16,7 @@
 #include "AudioContext.h"
 
 struct JSContext;
-class JSObject;
+struct JSObject;
 
 namespace mozilla {
 

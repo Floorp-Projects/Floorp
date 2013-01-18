@@ -10,7 +10,7 @@
 #include "nsWrapperCache.h"
 
 struct JSContext;
-class JSObject;
+struct JSObject;
 class nsINode;
 namespace mozilla {
 class ErrorResult;

@@ -9,7 +9,7 @@
 #include "nsIDOMTCPSocket.h"
 
 struct JSContext;
-class JSObject;
+struct JSObject;
 
 namespace mozilla {
 namespace dom {
