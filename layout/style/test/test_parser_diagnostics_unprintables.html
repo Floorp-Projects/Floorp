@@ -213,8 +213,7 @@ function nextTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set':[["layout.css.report_errors", true]]},
-                          function() { nextTest(); });
+nextTest();
 </script>
 </body>
 </html>

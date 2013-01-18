@@ -72,8 +72,7 @@ function doTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set':[["layout.css.report_errors", true]]},
-                          function() { doTest(); });
+doTest();
 </script>
 </body>
 </html>
