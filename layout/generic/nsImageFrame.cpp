@@ -905,7 +905,12 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     nsRect altFeedbackSize(0, 0,
                            nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+2*(ICON_PADDING+ALT_BORDER_WIDTH)),
                            nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+2*(ICON_PADDING+ALT_BORDER_WIDTH)));
-    aMetrics.mOverflowAreas.UnionAllWith(altFeedbackSize);
+    // We include the altFeedbackSize in our visual overflow, but not in our
+    // scrollable overflow, since it doesn't really need to be scrolled to
+    // outside the image.
+    MOZ_STATIC_ASSERT(eOverflowType_LENGTH == 2, "Unknown overflow types?");
+    nsRect& visualOverflow = aMetrics.VisualOverflow();
+    visualOverflow.UnionRect(visualOverflow, altFeedbackSize);
   }
   FinishAndStoreOverflow(&aMetrics);
 
