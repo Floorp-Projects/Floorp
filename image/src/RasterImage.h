@@ -334,6 +334,15 @@ public:
   };
 
 private:
+  imgStatusTracker& CurrentStatusTracker()
+  {
+    if (mDecodeRequest) {
+      return *mDecodeRequest->mStatusTracker;
+    } else {
+      return *mStatusTracker;
+    }
+  }
+
   struct Anim
   {
     //! Area of the first frame that needs to be redrawn on subsequent loops.
@@ -381,15 +390,27 @@ private:
   {
     DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
+      , mBytesToDecode(0)
+      , mChunkCount(0)
       , mIsASAP(false)
     {
+      mStatusTracker = aImage->mStatusTracker->CloneForRecording();
     }
 
+    // The status tracker that is associated with a given decode request, to
+    // ensure their lifetimes are linked.
+    nsRefPtr<imgStatusTracker> mStatusTracker;
+
     RasterImage* mImage;
+
+    uint32_t mBytesToDecode;
 
     /* Keeps track of how much time we've burned decoding this particular decode
      * request. */
     TimeDuration mDecodeTime;
+
+    /* The number of chunks it took to decode this image. */
+    int32_t mChunkCount;
 
     /* True if we need to handle this decode as soon as possible. */
     bool mIsASAP;
@@ -459,6 +480,8 @@ private:
 
     NS_IMETHOD Run();
 
+    virtual ~DecodeWorker();
+
   private: /* statics */
     static StaticRefPtr<DecodeWorker> sSingleton;
 
@@ -472,7 +495,7 @@ private:
 
     /* Add the given request to the appropriate list of decode requests, but
      * don't ensure that we're pending in the event loop. */
-    void AddDecodeRequest(DecodeRequest* aRequest);
+    void AddDecodeRequest(DecodeRequest* aRequest, uint32_t bytesToDecode);
 
     enum DecodeType {
       DECODE_TYPE_NORMAL,
@@ -480,9 +503,11 @@ private:
     };
 
     /* Decode some chunks of the given image.  If aDecodeType is UNTIL_SIZE,
-     * decode until we have the image's size, then stop. */
+     * decode until we have the image's size, then stop. If bytesToDecode is
+     * non-0, at most bytesToDecode bytes will be decoded. */
     nsresult DecodeSomeOfImage(RasterImage* aImg,
-                               DecodeType aDecodeType = DECODE_TYPE_NORMAL);
+                               DecodeType aDecodeType = DECODE_TYPE_NORMAL,
+                               uint32_t bytesToDecode = 0);
 
     /* Create a new DecodeRequest suitable for doing some decoding and set it
      * as aImg's mDecodeRequest. */
@@ -497,6 +522,33 @@ private:
      * be called sometime in the future. */
     bool mPendingInEventLoop;
   };
+
+  class DecodeDoneWorker : public nsRunnable
+  {
+  public:
+    /**
+     * Called by the DecodeWorker with an image when it's done some significant
+     * portion of decoding that needs to be notified about.
+     *
+     * Ensures the decode state accumulated by the decoding process gets
+     * applied to the image.
+     */
+    static void DidSomeDecoding(RasterImage* image, DecodeRequest* request);
+
+    NS_IMETHOD Run();
+
+  private: /* methods */
+    DecodeDoneWorker(RasterImage* image, DecodeRequest* request);
+
+  private: /* members */
+
+    nsRefPtr<RasterImage> mImage;
+    nsRefPtr<DecodeRequest> mRequest;
+  };
+
+  static void FinishedSomeDecoding(RasterImage* image,
+                                   eShutdownIntent intent = eShutdownIntent_Done,
+                                   DecodeRequest* request = nullptr);
 
   void DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                     gfxContext *aContext,
@@ -567,7 +619,7 @@ private:
       LockImage();
 
       // Notify our observers that we are starting animation.
-      mStatusTracker->RecordImageIsAnimated();
+      CurrentStatusTracker().RecordImageIsAnimated();
     }
   }
 

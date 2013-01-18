@@ -94,7 +94,16 @@ function run_loadImage_tests() {
   });
 }
 
+function cleanup()
+{
+  for (var i = 0; i < requests.length; ++i) {
+    requests[i].cancelAndForgetObserver(0);
+  }
+}
+
 function run_test() {
+  do_register_cleanup(cleanup);
+
   do_test_pending();
  
   // We create a public channel that loads an image, then an identical

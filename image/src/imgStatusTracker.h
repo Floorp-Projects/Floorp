@@ -89,6 +89,11 @@ public:
   // OnStartRequest).
   void SyncNotify(imgRequestProxy* proxy);
 
+  // "Replays" all of the decode notifications (i.e., not
+  // OnStartRequest/OnStopRequest) that have happened to us to all of our
+  // non-deferred proxies.
+  void SyncNotifyDecodeState();
+
   // Send some notifications that would be necessary to make |proxy| believe
   // the request is finished downloading and decoding.  We only send
   // OnStopRequest and UnblockOnload, and only if necessary.
@@ -161,6 +166,8 @@ public:
   void OnDataAvailable();
   void OnStopRequest(bool aLastPart, nsresult aStatus);
   void OnDiscard();
+  void FrameChanged(const nsIntRect* aDirtyRect);
+  void OnUnlockedDraw();
 
   /* non-virtual imgIOnloadBlocker methods */
   // NB: If UnblockOnload is sent, and then we are asked to replay the
@@ -181,6 +188,9 @@ public:
   inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
   imgStatusTracker* CloneForRecording();
+  void SyncAndSyncNotifyDifference(imgStatusTracker* other);
+
+  nsIntRect GetInvalidRect() const { return mInvalidRect; }
 
 private:
   friend class imgStatusNotifyRunnable;
@@ -191,11 +201,9 @@ private:
 
   void FireFailureNotification();
 
-  static void SyncNotifyState(imgRequestProxy* proxy, bool hasImage,
-                              uint32_t state, nsIntRect& dirtyRect,
-                              bool hadLastPart);
-
-  void SyncAndSyncNotifyDifference(imgStatusTracker* other);
+  static void SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
+                              bool hasImage, uint32_t state,
+                              nsIntRect& dirtyRect, bool hadLastPart);
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
