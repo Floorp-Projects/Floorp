@@ -1308,6 +1308,11 @@ XPCJSRuntime::~XPCJSRuntime()
         fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mJSRuntime);
 #endif
     }
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    // Tell the profiler that the runtime is gone
+    if (ProfileStack *stack = mozilla_profile_stack())
+        stack->sampleRuntime(nullptr);
+#endif
 
 #ifdef DEBUG
     for (uint32_t i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
