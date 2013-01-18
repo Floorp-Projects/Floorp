@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,6 +36,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsISizeOfEventTarget.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -124,7 +126,8 @@ class nsXMLHttpRequest : public nsXHREventTarget,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
                          public nsIJSNativeInitializer,
-                         public nsITimerCallback
+                         public nsITimerCallback,
+                         public nsISizeOfEventTarget
 {
   friend class nsXHRParseEndListener;
   friend class nsXMLHttpRequestXPCOMifier;
@@ -228,6 +231,10 @@ public:
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                        uint32_t argc, jsval* argv);
+
+  // nsISizeOfEventTarget
+  virtual size_t
+    SizeOfEventTargetIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
 
@@ -491,6 +498,7 @@ public:
   void RootJSResultObjects();
 
   virtual void DisconnectFromOwner();
+
 protected:
   friend class nsMultipartProxyListener;
 
@@ -573,7 +581,7 @@ protected:
   // accessed.
   // Only used for DEFAULT and TEXT responseTypes.
   nsString mResponseText;
-  
+
   // For DEFAULT responseType we use this to keep track of how far we've
   // lazily decoded from mResponseBody to mResponseText
   uint32_t mResponseBodyDecodedPos;
