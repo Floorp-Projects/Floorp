@@ -135,8 +135,6 @@ public:
   void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
-  void RecordDataAvailable();
-  void SendDataAvailable(imgRequestProxy* aProxy, const nsIntRect* aRect);
   void RecordFrameChanged(const nsIntRect* aDirtyRect);
   void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
   void RecordStopFrame();

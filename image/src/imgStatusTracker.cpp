@@ -76,20 +76,6 @@ public:
     }
   }
 
-  virtual void OnDataAvailable(const nsIntRect* rect)
-  {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnDataAvailable");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
-                      "OnDataAvailable callback before we've created our image");
-
-    mTracker->RecordDataAvailable();
-
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
-    while (iter.HasMore()) {
-      mTracker->SendDataAvailable(iter.GetNext(), rect);
-    }
-  }
-
   virtual void FrameChanged(const nsIntRect* dirtyRect)
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
@@ -374,7 +360,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     proxy->BlockOnload();
 
   if (mImage) {
-    // OnDataAvailable
+    // OnFrameUpdate
     // XXX - Should only send partial rects here, but that needs to
     // wait until we fix up the observer interface
     nsIntRect r(mImage->FrameRect(imgIContainer::FRAME_CURRENT));
@@ -505,24 +491,6 @@ imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy)
   if (!aProxy->NotificationsDeferred())
     aProxy->OnStartContainer();
 }
-
-void
-imgStatusTracker::RecordDataAvailable()
-{
-  NS_ABORT_IF_FALSE(mImage,
-                    "RecordDataAvailable called before we have an Image");
-  // no bookkeeping necessary here - this is implied by imgIContainer's
-  // number of frames and frame rect
-}
-
-void
-imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy,
-                                    const nsIntRect* aRect)
-{
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnFrameUpdate(aRect);
-}
-
 
 void
 imgStatusTracker::RecordStopFrame()
