@@ -33,6 +33,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/RefPtr.h"
 #include "gfx2DGlue.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
@@ -372,9 +373,11 @@ private:
    * DecodeWorker keeps a linked list of DecodeRequests to keep track of the
    * images it needs to decode.
    *
-   * Each RasterImage has a single DecodeRequest member.
+   * Each RasterImage has a pointer to one or zero heap-allocated
+   * DecodeRequests.
    */
-  struct DecodeRequest : public LinkedListElement<DecodeRequest>
+  struct DecodeRequest : public LinkedListElement<DecodeRequest>,
+                         public RefCounted<DecodeRequest>
   {
     DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
@@ -382,7 +385,7 @@ private:
     {
     }
 
-    RasterImage* const mImage;
+    RasterImage* mImage;
 
     /* Keeps track of how much time we've burned decoding this particular decode
      * request. */
@@ -480,6 +483,10 @@ private:
      * decode until we have the image's size, then stop. */
     nsresult DecodeSomeOfImage(RasterImage* aImg,
                                DecodeType aDecodeType = DECODE_TYPE_NORMAL);
+
+    /* Create a new DecodeRequest suitable for doing some decoding and set it
+     * as aImg's mDecodeRequest. */
+    void CreateRequestForImage(RasterImage* aImg);
 
   private: /* members */
 
@@ -667,7 +674,7 @@ private: // data
 
   // Decoder and friends
   nsRefPtr<Decoder>              mDecoder;
-  DecodeRequest                  mDecodeRequest;
+  nsRefPtr<DecodeRequest>        mDecodeRequest;
   uint32_t                       mBytesDecoded;
 
   // How many times we've decoded this image.
