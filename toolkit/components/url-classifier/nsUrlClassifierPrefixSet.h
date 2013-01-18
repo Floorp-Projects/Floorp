@@ -12,7 +12,6 @@
 #include "nsIFile.h"
 #include "nsIMutableArray.h"
 #include "nsIUrlClassifierPrefixSet.h"
-#include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/MemoryReporting.h"
@@ -20,7 +19,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
 
-class nsPrefixSetReporter;
+class nsIMemoryReporter;
 
 class nsUrlClassifierPrefixSet : public nsIUrlClassifierPrefixSet
 {
@@ -47,7 +46,7 @@ protected:
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
-  nsRefPtr<nsPrefixSetReporter> mReporter;
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
