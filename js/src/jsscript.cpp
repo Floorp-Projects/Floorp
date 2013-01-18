@@ -2745,7 +2745,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 #endif
 
     if (script->hasAnalysis() && script->analysis()->ranInference()) {
-        types::AutoEnterTypeInference enter(cx);
+        types::AutoEnterAnalysis enter(cx);
         types::TypeScript::MonitorUnknown(cx, script, script->argumentsBytecode());
     }
 

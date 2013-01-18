@@ -456,7 +456,7 @@ ReflowArgTypes(JSContext *cx)
     unsigned nargs = fp->fun()->nargs;
     RootedScript script(cx, fp->script());
 
-    types::AutoEnterTypeInference enter(cx);
+    types::AutoEnterAnalysis enter(cx);
 
     if (!fp->isConstructing())
         types::TypeScript::SetThis(cx, script, fp->thisValue());
@@ -486,7 +486,7 @@ ion::ReflowTypeInfo(uint32_t bailoutResult)
     IonSpew(IonSpew_Bailouts, "reflowing type info at %s:%d pcoff %d", script->filename,
             script->lineno, pc - script->code);
 
-    types::AutoEnterTypeInference enter(cx);
+    types::AutoEnterAnalysis enter(cx);
     if (bailoutResult == BAILOUT_RETURN_TYPE_BARRIER)
         script->analysis()->breakTypeBarriers(cx, pc - script->code, false);
     else
