@@ -3858,7 +3858,9 @@ nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSID* aIID, ErrorResult& aRv)
   aRv = GetInterface(*iid, getter_AddRefs(result));
   NS_ENSURE_FALSE(aRv.Failed(), JSVAL_NULL);
 
-  JSObject* global = JS_GetGlobalForObject(aCx, GetWrapper());
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(aCx, wrapper);
+  JSObject* global = JS_GetGlobalForObject(aCx, wrapper);
   aRv = nsContentUtils::WrapNative(aCx, global, result, iid, &v);
   return aRv.Failed() ? JSVAL_NULL : v;
 }
