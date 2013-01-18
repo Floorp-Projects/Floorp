@@ -642,8 +642,8 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
     JS_ASSERT(!shape->writable());
     JS_ASSERT(shape->hasDefaultGetter());
 
-    jsval usage;
-    if (!JS_LookupProperty(cx, callee, "usage", &usage))
+    RootedValue usage(cx);
+    if (!JS_LookupProperty(cx, callee, "usage", usage.address()))
         return;
 
     if (JSVAL_IS_VOID(usage)) {

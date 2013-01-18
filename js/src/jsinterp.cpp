@@ -2398,7 +2398,7 @@ BEGIN_CASE(JSOP_FUNCALL)
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
     RootedScript funScript(cx, fun->nonLazyScript());
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;
 
     SET_SCRIPT(regs.fp()->script());
