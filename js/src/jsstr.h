@@ -149,14 +149,13 @@ ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
 
 } /* namespace js */
 
+namespace js {
 /*
  * Convert a value to its source expression, returning null after reporting
  * an error, otherwise returning a new string reference.
  */
-extern JS_FRIEND_API(JSString *)
-js_ValueToSource(JSContext *cx, const js::Value &v);
-
-namespace js {
+extern JSString *
+ValueToSource(JSContext *cx, const js::Value &v);
 
 /*
  * Test if strings are equal. The caller can call the function even if str1

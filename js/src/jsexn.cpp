@@ -708,7 +708,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
     RootedValue messageVal(cx);
     RootedString message(cx);
     if (!JSObject::getProperty(cx, obj, obj, cx->names().message, &messageVal) ||
-        !(message = js_ValueToSource(cx, messageVal)))
+        !(message = ValueToSource(cx, messageVal)))
     {
         return false;
     }
@@ -716,7 +716,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
     RootedValue filenameVal(cx);
     RootedString filename(cx);
     if (!JSObject::getProperty(cx, obj, obj, cx->names().fileName, &filenameVal) ||
-        !(filename = js_ValueToSource(cx, filenameVal)))
+        !(filename = ValueToSource(cx, filenameVal)))
     {
         return false;
     }
