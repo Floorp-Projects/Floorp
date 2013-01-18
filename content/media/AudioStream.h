@@ -160,7 +160,7 @@ public:
   int GetChannels() { return mChannels; }
 
   // This should be called before attempting to use the time stretcher.
-  void EnsureTimeStretcherInitialized();
+  virtual void EnsureTimeStretcherInitialized();
   // Set playback rate as a multiple of the intrinsic playback rate. This is to
   // be called only with aPlaybackRate > 0.0.
   virtual nsresult SetPlaybackRate(double aPlaybackRate);

@@ -604,6 +604,10 @@ class BufferedAudioStream : public AudioStream
   int64_t GetPositionInFramesInternal();
   bool IsPaused();
   int32_t GetMinWriteSize();
+  // This method acquires the monitor and forward the call to the base
+  // class, to prevent a race on |mTimeStretcher|, in
+  // |AudioStream::EnsureTimeStretcherInitialized|.
+  void EnsureTimeStretcherInitialized();
 
 private:
   static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
@@ -700,6 +704,13 @@ BufferedAudioStream::BufferedAudioStream()
 BufferedAudioStream::~BufferedAudioStream()
 {
   Shutdown();
+}
+
+void
+BufferedAudioStream::EnsureTimeStretcherInitialized()
+{
+  MonitorAutoLock mon(mMonitor);
+  AudioStream::EnsureTimeStretcherInitialized();
 }
 
 nsresult
@@ -962,7 +973,8 @@ BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
 {
   long processedFrames = 0;
 
-  EnsureTimeStretcherInitialized();
+  // We need to call the non-locking version, because we already have the lock.
+  AudioStream::EnsureTimeStretcherInitialized();
 
   uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
   double playbackRate = static_cast<double>(mInRate) / mOutRate;
