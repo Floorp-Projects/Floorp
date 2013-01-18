@@ -938,17 +938,17 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
   
   nsCOMPtr<nsIWyciwygChannel> wyciwygChannel(do_QueryInterface(mRequest));
-  if (wyciwygChannel) {
-    mReparseForbidden = true;
-    mFeedChardet = false;
-    // If we are reloading a document.open()ed doc, fall through to converter
-    // instantiation here and avoid BOM sniffing.
-  } else if (mCharsetSource < kCharsetFromParentForced) {
+  if (!wyciwygChannel) {
     // we aren't ready to commit to an encoding yet
     // leave converter uninstantiated for now
     return NS_OK;
   }
-  
+
+  // We are reloading a document.open()ed doc.
+  mReparseForbidden = true;
+  mFeedChardet = false;
+
+  // Instantiate the converter here to avoid BOM sniffing.
   nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
