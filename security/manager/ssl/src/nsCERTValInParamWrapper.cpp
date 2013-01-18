@@ -35,6 +35,8 @@ nsresult nsCERTValInParamWrapper::Construct(missing_cert_download_config mcdc,
   if (mAlreadyConstructed)
     return NS_ERROR_FAILURE;
 
+  mOCSPDownloadEnabled = odc == ocsp_on;
+
   CERTValInParam *p = (CERTValInParam*)PORT_Alloc(3 * sizeof(CERTValInParam));
   if (!p)
     return NS_ERROR_OUT_OF_MEMORY;
