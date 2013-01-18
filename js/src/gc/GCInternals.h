@@ -87,7 +87,7 @@ IncrementalSafety
 IsIncrementalGCSafe(JSRuntime *rt);
 
 #ifdef JSGC_ROOT_ANALYSIS
-bool
+void *
 IsAddressableGCThing(JSRuntime *rt, uintptr_t w);
 #endif
 

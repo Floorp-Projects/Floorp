@@ -196,10 +196,12 @@ sync/setup/activities/ActivityUtils.java
 sync/setup/activities/ClientRecordArrayAdapter.java
 sync/setup/activities/RedirectToSetupActivity.java
 sync/setup/activities/SendTabActivity.java
+sync/setup/activities/SendTabData.java
 sync/setup/activities/SetupFailureActivity.java
 sync/setup/activities/SetupSuccessActivity.java
 sync/setup/activities/SetupSyncActivity.java
 sync/setup/activities/SyncActivity.java
+sync/setup/activities/WebURLFinder.java
 sync/setup/activities/WebViewActivity.java
 sync/setup/auth/AccountAuthenticator.java
 sync/setup/auth/AuthenticateAccountStage.java

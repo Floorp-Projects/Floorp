@@ -739,7 +739,8 @@ var AlertsHelper = {
         title: title,
         text: text,
         appName: appName,
-        appIcon: appIcon
+        appIcon: appIcon,
+        manifestURL: manifestUrl
       });
     }
 

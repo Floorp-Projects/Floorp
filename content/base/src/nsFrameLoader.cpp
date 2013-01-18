@@ -257,8 +257,6 @@ nsContentView::GetId(nsContentViewId* aId)
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameLoader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)

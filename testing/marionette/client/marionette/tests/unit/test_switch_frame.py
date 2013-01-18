@@ -39,6 +39,25 @@ class TestSwitchFrame(MarionetteTestCase):
         except JavascriptException as e:
             self.assertTrue("foo" in e.msg)
 
+    def testShouldBeAbleToCarryOnWorkingIfTheFrameIsDeletedFromUnderUs(self):
+        test_html = self.marionette.absolute_url("deletingFrame.html")
+        self.marionette.navigate(test_html)
+
+        self.marionette.switch_to_frame("iframe1");
+        killIframe = self.marionette.find_element("id" ,"killIframe")
+        killIframe.click()
+        self.marionette.switch_to_frame()
+
+        self.assertEqual(0, len(self.marionette.find_elements("id", "iframe1")))
+
+        addIFrame = self.marionette.find_element("id", "addBackFrame")
+        addIFrame.click()
+        self.marionette.find_element("id", "iframe1")
+
+        self.marionette.switch_to_frame("iframe1");
+
+        self.marionette.find_element("id", "checkbox")
+
 class TestSwitchFrameChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)

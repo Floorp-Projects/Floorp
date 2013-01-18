@@ -57,6 +57,8 @@ MOCHITEST_CHROME_FILES = \
 		test_sandbox_eventhandler.xul \
 		test_DOM_element_instanceof.xul \
 		file_DOM_element_instanceof.xul \
+		test_bug830858.xul \
+		file_bug830858.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))

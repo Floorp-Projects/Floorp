@@ -18,7 +18,10 @@ class MarionetteTouchMixin(object):
         self.import_script(self.library)
 
     def tap(self, element):
-        self.execute_script("%s.tap(arguments[0]);" % self.library_name, [element])
+        # we pass in touch/mouse/click events if mouse_event_shim.js isn't included in the gaia app
+        # otherwise, we just send touch events. See Bug 829566
+        send_all = self.execute_script("return typeof window.wrappedJSObject.MouseEventShim === 'undefined';") 
+        self.execute_script("%s.tap(arguments[0], null, null, null, null, arguments[1]);" % self.library_name, [element, send_all])
 
     def double_tap(self, element):
         self.execute_script("%s.dbltap(arguments[0]);" % self.library_name, [element])

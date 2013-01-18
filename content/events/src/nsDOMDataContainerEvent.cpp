@@ -13,8 +13,6 @@ nsDOMDataContainerEvent::nsDOMDataContainerEvent(nsPresContext *aPresContext,
   mData.Init();
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDataContainerEvent)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDataContainerEvent,
                                                 nsDOMEvent)
   if (tmp->mData.IsInitialized())

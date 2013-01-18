@@ -155,8 +155,6 @@ nsInProcessTabChildGlobal::Init()
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsInProcessTabChildGlobal)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
                                                 nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)

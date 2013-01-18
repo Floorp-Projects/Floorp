@@ -2331,6 +2331,17 @@ nsContentUtils::GetSubjectPrincipal()
 }
 
 // static
+nsIPrincipal*
+nsContentUtils::GetObjectPrincipal(JSObject* aObj)
+{
+  // This is duplicated from nsScriptSecurityManager. We don't call through there
+  // because the API unnecessarily requires a JSContext for historical reasons.
+  JSCompartment *compartment = js::GetObjectCompartment(aObj);
+  JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
+  return nsJSPrincipals::get(principals);
+}
+
+// static
 nsresult
 nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
                                           const nsAString& aSpec,
@@ -3076,6 +3087,8 @@ nsCxPusher::DoPush(JSContext* cx)
   mPushedSomething = true;
 #ifdef DEBUG
   mPushedContext = cx;
+  if (cx)
+    mCompartmentDepthOnEntry = js::GetEnterCompartmentDepth(cx);
 #endif
   return true;
 }
@@ -3099,6 +3112,14 @@ nsCxPusher::Pop()
 
     return;
   }
+
+  // When we push a context, we may save the frame chain and pretend like we
+  // haven't entered any compartment. This gets restored on Pop(), but we can
+  // run into trouble if a Push/Pop are interleaved with a
+  // JSAutoEnterCompartment. Make sure the compartment depth right before we
+  // pop is the same as it was right after we pushed.
+  MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
+                                js::GetEnterCompartmentDepth(mPushedContext));
 
   JSContext *unused;
   stack->Pop(&unused);

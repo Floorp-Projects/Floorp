@@ -25,6 +25,16 @@ endif
 
 tier_platform_dirs += xpcom
 
+ifndef MOZ_NATIVE_SQLITE
+tier_platform_dirs += db/sqlite3/src
+endif
+
+ifdef MOZ_PSM
+tier_platform_dirs += \
+  security/build \
+  $(NULL)
+endif
+
 tier_platform_dirs += \
 		modules/libpref \
 		intl \
@@ -127,12 +137,6 @@ ifdef MOZ_SYDNEYAUDIO
 tier_platform_dirs += \
 		media/libsydneyaudio \
 		$(NULL)
-endif
-
-ifdef MOZ_PSM
-tier_platform_dirs += \
-  security/build \
-  $(NULL)
 endif
 
 ifdef MOZ_WEBRTC

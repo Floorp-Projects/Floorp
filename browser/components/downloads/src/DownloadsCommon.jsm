@@ -736,11 +736,11 @@ DownloadsDataCtor.prototype = {
   {
     if (aDownloadId in this.dataItems) {
       let dataItem = this.dataItems[aDownloadId];
+      this.dataItems[aDownloadId] = null;
       this._views.forEach(
         function (view) view.onDataItemRemoved(dataItem)
       );
     }
-    this.dataItems[aDownloadId] = null;
   },
 
   //////////////////////////////////////////////////////////////////////////////

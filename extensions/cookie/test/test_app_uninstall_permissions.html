@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=786296
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=786296">Mozilla Bug 786296</a>
 <p id="display"></p>
 <div id="content">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.7">
@@ -73,7 +73,7 @@ SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
 permManager.addFromPrincipal(window.document.nodePrincipal, "webapps-manage",
                              Ci.nsIPermissionManager.ALLOW_ACTION);
 
-var gManifestURL = "http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+var gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
 
 confirmNextInstall();
 

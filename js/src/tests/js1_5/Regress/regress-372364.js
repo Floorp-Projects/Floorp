@@ -32,7 +32,7 @@ function test()
   }
   reportMatch(expect, actual, summary);
 
-  expect = /TypeError: \(intermediate value\).exec\(.+\) (has no properties|is null)/;
+  expect = /TypeError: \/a\/.exec\(.+\) (has no properties|is null)/;
   try
   {
     /a/.exec("b")[0];

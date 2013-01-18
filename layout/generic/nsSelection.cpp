@@ -493,7 +493,6 @@ nsFrameSelection::nsFrameSelection()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   int32_t i;
   for (i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; ++i) {
@@ -3147,7 +3146,6 @@ Selection::~Selection()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Selection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // Unlink the selection listeners *before* we do RemoveAllRanges since
   // we don't want to notify the listeners during JS GC (they could be

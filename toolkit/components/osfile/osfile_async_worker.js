@@ -62,7 +62,12 @@ if (this.Components) {
          if (DEBUG) {
            LOG("Sending positive reply", JSON.stringify(result), "id is", id);
          }
-         self.postMessage({ok: result, id:id});
+         if (result instanceof Transfer) {
+           // Take advantage of zero-copy transfers
+           self.postMessage({ok: result.data, id: id}, result.transfers);
+         } else {
+           self.postMessage({ok: result, id:id});
+         }
        } else if (exn == StopIteration) {
          // StopIteration cannot be serialized automatically
          if (DEBUG) {
@@ -174,6 +179,21 @@ if (this.Components) {
      let File = exports.OS.File;
 
      /**
+      * A constructor used to transfer data to the caller
+      * without copy.
+      *
+      * @param {*} data The data to return to the caller.
+      * @param {Array} transfers An array of Transferable
+      * values that should be moved instead of being copied.
+      *
+      * @constructor
+      */
+     let Transfer = function Transfer(data, transfers) {
+       this.data = data;
+       this.transfers = transfers;
+     };
+
+     /**
       * The agent.
       *
       * It is in charge of performing method-specific deserialization
@@ -214,7 +234,8 @@ if (this.Components) {
          return OpenedFiles.add(file);
        },
        read: function read(path, bytes) {
-         return File.read(Type.path.fromMsg(path), bytes);
+         let data = File.read(Type.path.fromMsg(path), bytes);
+         return new Transfer({buffer: data.buffer, byteOffset: data.byteOffset, byteLength: data.byteLength}, [data.buffer]);
        },
        exists: function exists(path) {
          return File.exists(Type.path.fromMsg(path));
@@ -248,6 +269,14 @@ if (this.Components) {
            function do_stat() {
              return exports.OS.File.Info.toMsg(this.stat());
            });
+       },
+       File_prototype_read: function read(fd, nbytes, options) {
+         return withFile(fd,
+           function do_read() {
+             let data = this.read(nbytes, options);
+             return new Transfer({buffer: data.buffer, byteOffset: data.byteOffset, byteLength: data.byteLength}, [data.buffer]);
+           }
+         );
        },
        File_prototype_readTo: function readTo(fd, buffer, options) {
          return withFile(fd,

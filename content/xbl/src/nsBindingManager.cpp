@@ -110,8 +110,6 @@ nsAnonymousContentList::~nsAnonymousContentList()
   delete mElements;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnonymousContentList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
 
@@ -419,8 +417,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager)
   // No need to traverse mProcessAttachedQueueEvent, since it'll just
   // fire at some point or become revoke and drop its ref to us.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsBindingManager)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBindingManager)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)

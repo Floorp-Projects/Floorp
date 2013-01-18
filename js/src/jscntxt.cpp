@@ -554,8 +554,10 @@ js_ReportOverRecursed(JSContext *maybecx)
 void
 js_ReportAllocationOverflow(JSContext *maybecx)
 {
-    if (maybecx)
+    if (maybecx) {
+        AutoSuppressGC suppressGC(maybecx);
         JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL, JSMSG_ALLOC_OVERFLOW);
+    }
 }
 
 /*

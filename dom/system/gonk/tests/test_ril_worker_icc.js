@@ -969,6 +969,43 @@ add_test(function test_stk_proactive_command_more_time() {
   run_next_test();
 });
 
+/**
+ * Verify Proactive Command : Set Up Call
+ */
+add_test(function test_stk_proactive_command_set_up_call() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+  let cmdFactory = worker.StkCommandParamsFactory;
+
+  let set_up_call_1 = [
+    0xD0,
+    0x29,
+    0x81, 0x03, 0x01, 0x10, 0x04,
+    0x82, 0x02, 0x81, 0x82,
+    0x05, 0x0A, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x6E, 0x6E, 0x65, 0x63, 0x74,
+    0x86, 0x09, 0x81, 0x10, 0x32, 0x04, 0x21, 0x43, 0x65, 0x1C, 0x2C,
+    0x05, 0x07, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65];
+
+  for (let i = 0 ; i < set_up_call_1.length; i++) {
+    pduHelper.writeHexOctet(set_up_call_1[i]);
+  }
+
+  let berTlv = berHelper.decode(set_up_call_1.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SET_UP_CALL);
+
+  let setupCall = cmdFactory.createParam(tlv.value, ctlvs);
+  do_check_eq(setupCall.address, "012340123456,1,2");
+  do_check_eq(setupCall.confirmMessage, "Disconnect");
+  do_check_eq(setupCall.callMessage, "Message");
+
+  run_next_test();
+});
+
 add_test(function read_network_name() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;

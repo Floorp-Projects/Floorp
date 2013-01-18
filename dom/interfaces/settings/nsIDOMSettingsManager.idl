@@ -11,6 +11,9 @@ interface nsIVariant;
 [scriptable, uuid(ef95ddd0-6308-11e1-b86c-0800200c9a66)]
 interface nsIDOMSettingsLock : nsISupports
 {
+  // Whether this lock is invalid
+  readonly attribute boolean closed;
+
   // Contains a JSON object with name/value pairs to be set.
   nsIDOMDOMRequest set(in nsIVariant settings);
 

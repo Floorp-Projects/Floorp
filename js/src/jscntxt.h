@@ -1459,6 +1459,11 @@ struct JSContext : js::ContextFriendFields,
     bool hasEnteredCompartment() const {
         return enterCompartmentDepth_ > 0;
     }
+#ifdef DEBUG
+    unsigned getEnterCompartmentDepth() const {
+        return enterCompartmentDepth_;
+    }
+#endif
 
     inline void enterCompartment(JSCompartment *c);
     inline void leaveCompartment(JSCompartment *oldCompartment);
