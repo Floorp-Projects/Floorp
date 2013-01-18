@@ -158,7 +158,6 @@ Decoder::FlushInvalidations()
   // Tell the image that it's been updated
   mImage.FrameUpdated(mFrameCount - 1, mInvalidRect);
 
-  // Fire OnDataAvailable
   if (mObserver) {
 #ifdef XP_MACOSX
     // Bug 703231
@@ -174,7 +173,7 @@ Decoder::FlushInvalidations()
     mInvalidRect.Inflate(1);
     mInvalidRect = mInvalidRect.Intersect(mImageBound);
 #endif
-    mObserver->OnDataAvailable(&mInvalidRect);
+    mObserver->FrameChanged(&mInvalidRect);
   }
 
   // Clear the invalidation rectangle
