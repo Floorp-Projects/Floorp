@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -72,13 +73,19 @@ static const int kSupportedFeatureLevels[] =
   { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0,
     D3D10_FEATURE_LEVEL_9_3 };
 
-NS_MEMORY_REPORTER_IMPLEMENT(
-    D2DCache,
-    "gfx-d2d-surfacecache",
-    KIND_OTHER,
-    UNITS_BYTES,
-    cairo_d2d_get_image_surface_cache_usage,
-    "Memory used by the Direct2D internal surface cache.")
+class GfxD2DSurfaceCacheReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    GfxD2DSurfaceCacheReporter()
+      : MemoryReporterBase("gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES,
+"Memory used by the Direct2D internal surface cache.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        return cairo_d2d_get_image_surface_cache_usage();
+    }
+};
 
 namespace
 {
@@ -101,55 +108,53 @@ bool OncePreferenceDirect2DForceEnabled()
   return !!preferenceValue;
 }
 
-int64_t GetD2DSurfaceVramUsage() {
-  cairo_device_t *device =
-      gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
-  if (device) {
-      return cairo_d2d_get_surface_vram_usage(device);
-  }
-  return 0;
-}
-
 } // anonymous namespace
 
-NS_MEMORY_REPORTER_IMPLEMENT(
-    D2DVram,
-    "gfx-d2d-surfacevram",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetD2DSurfaceVramUsage,
-    "Video memory used by D2D surfaces.")
+class GfxD2DSurfaceVramReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    GfxD2DSurfaceVramReporter()
+      : MemoryReporterBase("gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES,
+                           "Video memory used by D2D surfaces.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE {
+      cairo_device_t *device =
+          gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
+      return device ? cairo_d2d_get_surface_vram_usage(device) : 0;
+    }
+};
 
 #endif
 
-namespace
+class GfxD2DVramDrawTargetReporter MOZ_FINAL : public MemoryReporterBase
 {
+public:
+    GfxD2DVramDrawTargetReporter()
+      : MemoryReporterBase("gfx-d2d-vram-draw-target", KIND_OTHER, UNITS_BYTES,
+                           "Video memory used by D2D DrawTargets.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        return Factory::GetD2DVRAMUsageDrawTarget();
+    }
+};
 
-int64_t GetD2DVRAMUsageDrawTarget() {
-    return mozilla::gfx::Factory::GetD2DVRAMUsageDrawTarget();
-}
-
-int64_t GetD2DVRAMUsageSourceSurface() {
-    return mozilla::gfx::Factory::GetD2DVRAMUsageSourceSurface();
-}
-
-} // anonymous namespace
-
-NS_MEMORY_REPORTER_IMPLEMENT(
-    D2DVRAMDT,
-    "gfx-d2d-vram-drawtarget",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetD2DVRAMUsageDrawTarget,
-    "Video memory used by D2D DrawTargets.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(
-    D2DVRAMSS,
-    "gfx-d2d-vram-sourcesurface",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetD2DVRAMUsageSourceSurface,
-    "Video memory used by D2D SourceSurfaces.")
+class GfxD2DVramSourceSurfaceReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    GfxD2DVramSourceSurfaceReporter()
+      : MemoryReporterBase("gfx-d2d-vram-source-surface",
+                           KIND_OTHER, UNITS_BYTES,
+                           "Video memory used by D2D SourceSurfaces.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        return Factory::GetD2DVRAMUsageSourceSurface();
+    }
+};
 
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
 #define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
@@ -371,12 +376,12 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     mScreenDC = GetDC(nullptr);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(D2DCache));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(D2DVram));
+    NS_RegisterMemoryReporter(new GfxD2DSurfaceCacheReporter());
+    NS_RegisterMemoryReporter(new GfxD2DSurfaceVramReporter());
     mD2DDevice = nullptr;
 #endif
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(D2DVRAMDT));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(D2DVRAMSS));
+    NS_RegisterMemoryReporter(new GfxD2DVramDrawTargetReporter());
+    NS_RegisterMemoryReporter(new GfxD2DVramSourceSurfaceReporter());
 
     UpdateRenderMode();
 
