@@ -133,6 +133,8 @@
 
 namespace js {
 
+class Module;
+
 template <typename T> class Rooted;
 template <typename T> class Unrooted;
 
@@ -259,6 +261,7 @@ class Handle : public js::HandleBase<T>
 };
 
 typedef Handle<JSObject*>    HandleObject;
+typedef Handle<js::Module*>  HandleModule;
 typedef Handle<JSFunction*>  HandleFunction;
 typedef Handle<JSScript*>    HandleScript;
 typedef Handle<JSString*>    HandleString;
@@ -762,6 +765,7 @@ Unrooted<T>::Unrooted(const Rooted<S> &root,
 #endif /* DEBUG */
 
 typedef Rooted<JSObject*>    RootedObject;
+typedef Rooted<js::Module*>  RootedModule;
 typedef Rooted<JSFunction*>  RootedFunction;
 typedef Rooted<JSScript*>    RootedScript;
 typedef Rooted<JSString*>    RootedString;
