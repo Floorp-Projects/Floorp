@@ -150,6 +150,10 @@ dictionary CameraPictureOptions
         January 1, 1970.
     */
     jsval     position;
+
+    /* the number of seconds from January 1, 1970 UTC.  This can be
+       different from the positional timestamp (above). */
+    long long dateTime;
 };
 
 /* These properties affect the video recording preview, e.g.
@@ -163,7 +167,7 @@ dictionary CameraPictureOptions
    an arbitrary profile will be chosen.
 
    'rotation' is the degrees clockwise to rotate the preview; if
-   this options is not supported, it will be ignored; if this option
+   this option is not supported, it will be ignored; if this option
    is missing, the default is 0.
 */
 dictionary CameraRecorderOptions
