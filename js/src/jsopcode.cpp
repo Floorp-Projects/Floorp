@@ -4938,7 +4938,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
               case JSOP_OBJECT:
                 obj = jp->script->getObject(GET_UINT32_INDEX(pc));
-                str = js_ValueToSource(cx, ObjectValue(*obj));
+                str = ValueToSource(cx, ObjectValue(*obj));
                 if (!str)
                     return NULL;
                 goto sprint_string;
@@ -6053,7 +6053,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
         JSObject *obj = (op == JSOP_REGEXP)
                         ? script->getRegExp(GET_UINT32_INDEX(pc))
                         : script->getObject(GET_UINT32_INDEX(pc));
-        JSString *str = js_ValueToSource(cx, ObjectValue(*obj));
+        JSString *str = ValueToSource(cx, ObjectValue(*obj));
         if (!str)
             return false;
         return write(str);
@@ -6286,7 +6286,7 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
     if (!fallback) {
         if (v.isUndefined())
             return JS_strdup(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
-        fallback = js_ValueToSource(cx, v);
+        fallback = ValueToSource(cx, v);
         if (!fallback)
             return NULL;
     }
@@ -6378,7 +6378,7 @@ js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
     }
     if (v.isUndefined())
         return JS_strdup(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
-    RootedString fallback(cx, js_ValueToSource(cx, v));
+    RootedString fallback(cx, ValueToSource(cx, v));
     if (!fallback)
         return NULL;
 
@@ -6928,7 +6928,7 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
 
     AppendJSONProperty(buf, "file", NO_COMMA);
     JSString *str = JS_NewStringCopyZ(cx, script->filename);
-    if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
+    if (!str || !(str = ValueToSource(cx, StringValue(str))))
         return NULL;
     buf.append(str);
 
@@ -6939,7 +6939,7 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
         JSAtom *atom = script->function()->displayAtom();
         if (atom) {
             AppendJSONProperty(buf, "name");
-            if (!(str = JS_ValueToSource(cx, StringValue(atom))))
+            if (!(str = ValueToSource(cx, StringValue(atom))))
                 return NULL;
             buf.append(str);
         }
@@ -7055,7 +7055,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
             return false;
     }
     JSString *str = js_GetPrinterOutput(jp);
-    if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
+    if (!str || !(str = ValueToSource(cx, StringValue(str))))
         return false;
 
     buf.append(str);
@@ -7118,7 +7118,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
         if (text && *text != 0) {
             AppendJSONProperty(buf, "text");
             JSString *str = JS_NewStringCopyZ(cx, text);
-            if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
+            if (!str || !(str = ValueToSource(cx, StringValue(str))))
                 return false;
             buf.append(str);
         }
@@ -7179,7 +7179,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
 
                 AppendJSONProperty(buf, "code");
                 JSString *str = JS_NewStringCopyZ(cx, block.code());
-                if (!str || !(str = JS_ValueToSource(cx, StringValue(str))))
+                if (!str || !(str = ValueToSource(cx, StringValue(str))))
                     return false;
                 buf.append(str);
 
