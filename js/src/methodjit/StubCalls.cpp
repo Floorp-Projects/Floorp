@@ -1516,7 +1516,7 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32_t which)
      */
     RootedScript fscript(f.cx, f.script());
     if (fscript->hasAnalysis() && fscript->analysis()->ranInference()) {
-        AutoEnterTypeInference enter(f.cx);
+        AutoEnterAnalysis enter(f.cx);
         fscript->analysis()->breakTypeBarriers(f.cx, f.pc() - fscript->code, false);
     }
 
@@ -1530,7 +1530,7 @@ stubs::StubTypeHelper(VMFrame &f, int32_t which)
 
     RootedScript fscript(f.cx, f.script());
     if (fscript->hasAnalysis() && fscript->analysis()->ranInference()) {
-        AutoEnterTypeInference enter(f.cx);
+        AutoEnterAnalysis enter(f.cx);
         fscript->analysis()->breakTypeBarriers(f.cx, f.pc() - fscript->code, false);
     }
 
@@ -1566,7 +1566,7 @@ stubs::CheckArgumentTypes(VMFrame &f)
 
     {
         /* Postpone recompilations until all args have been updated. */
-        types::AutoEnterTypeInference enter(f.cx);
+        types::AutoEnterAnalysis enter(f.cx);
 
         if (!f.fp()->isConstructing())
             TypeScript::SetThis(f.cx, fscript, fp->thisValue());

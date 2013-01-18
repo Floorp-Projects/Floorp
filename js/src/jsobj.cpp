@@ -2349,7 +2349,7 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
         gc::AllocKind kind = obj->type()->newScript->allocKind;
         unsigned newScriptSlots = gc::GetGCKindSlots(kind);
         if (newScriptSlots == obj->numFixedSlots() && gc::TryIncrementAllocKind(&kind)) {
-            AutoEnterTypeInference enter(cx);
+            AutoEnterAnalysis enter(cx);
 
             Rooted<TypeObject*> typeObj(cx, obj->type());
             RootedShape shape(cx, typeObj->newScript->shape);
