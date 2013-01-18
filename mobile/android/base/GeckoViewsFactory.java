@@ -5,7 +5,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.widget.ThumbnailView;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -111,8 +110,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new GeckoTextSwitcher(context, attrs);
             else if (TextUtils.equals(viewName, "TextView"))
                 return new GeckoTextView(context, attrs);
-            else if (TextUtils.equals(viewName, "widget.ThumbnailView"))
-                return new ThumbnailView(context, attrs);
             else
                 Log.d(LOGTAG, "Warning: unknown custom view: " + viewName);
         }
