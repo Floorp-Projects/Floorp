@@ -2249,6 +2249,25 @@ nsDocShell::SetFullscreenAllowed(bool aFullscreenAllowed)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetMayEnableCharacterEncodingMenu(bool* aMayEnableCharacterEncodingMenu)
+{
+  *aMayEnableCharacterEncodingMenu = false;
+  if (!mContentViewer) {
+    return NS_OK;
+  }
+  nsIDocument* doc = mContentViewer->GetDocument();
+  if (!doc) {
+    return NS_OK;
+  }
+  if (doc->WillIgnoreCharsetOverride()) {
+    return NS_OK;
+  }
+
+  *aMayEnableCharacterEncodingMenu = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetDocShellEnumerator(int32_t aItemType, int32_t aDirection, nsISimpleEnumerator **outEnum)
 {
     NS_ENSURE_ARG_POINTER(outEnum);
