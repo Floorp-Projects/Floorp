@@ -875,7 +875,7 @@ static inline bool
 InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned count)
 {
     if (cx->typeInferenceEnabled() && !type->unknownProperties()) {
-        AutoEnterTypeInference enter(cx);
+        AutoEnterAnalysis enter(cx);
 
         TypeSet *types = type->getProperty(cx, JSID_VOID, true);
         if (!types)

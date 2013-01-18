@@ -806,6 +806,9 @@ MaybeVerifyPreBarriers(JSRuntime *rt, bool always)
     if (rt->gcZeal() != ZealVerifierPreValue)
         return;
 
+    if (rt->mainThread.suppressGC)
+        return;
+
     if (VerifyPreTracer *trc = (VerifyPreTracer *)rt->gcVerifyPreData) {
         if (++trc->count < rt->gcZealFrequency && !always)
             return;
@@ -819,6 +822,9 @@ static void
 MaybeVerifyPostBarriers(JSRuntime *rt, bool always)
 {
     if (rt->gcZeal() != ZealVerifierPostValue)
+        return;
+
+    if (rt->mainThread.suppressGC)
         return;
 
     if (VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData) {

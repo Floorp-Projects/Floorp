@@ -1080,7 +1080,7 @@ AttachFinishedCompilations(JSContext *cx)
             // previously, though any GC activity would discard the builder.
             codegen->masm.constructRoot(cx);
 
-            types::AutoEnterTypeInference enterTypes(cx);
+            types::AutoEnterAnalysis enterTypes(cx);
 
             ExecutionMode executionMode = builder->info().executionMode();
             types::AutoEnterCompilation enterCompiler(cx, CompilerOutputKind(executionMode));
@@ -1149,7 +1149,7 @@ IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *o
     if (!info)
         return AbortReason_Alloc;
 
-    types::AutoEnterTypeInference enter(cx, true);
+    types::AutoEnterAnalysis enter(cx);
     TypeInferenceOracle oracle;
 
     if (!oracle.init(cx, script))

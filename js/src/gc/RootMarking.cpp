@@ -668,6 +668,8 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     JSRuntime *rt = trc->runtime;
     JS_ASSERT(trc->callback != GCMarker::GrayCallback);
 
+    JS_ASSERT(!rt->mainThread.suppressGC);
+
     if (IS_GC_MARKING_TRACER(trc)) {
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             if (!c->isCollecting())
@@ -730,7 +732,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
         if (IS_GC_MARKING_TRACER(trc) && !c->isCollecting())
             continue;
 
-        if (IS_GC_MARKING_TRACER(trc) && (c->activeAnalysis || c->isPreservingCode())) {
+        if (IS_GC_MARKING_TRACER(trc) && c->isPreservingCode()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_TYPES);
             c->markTypes(trc);
         }
