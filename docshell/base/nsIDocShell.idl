@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(008f5c86-b915-458c-aaf1-78de3b484e68)]
+[scriptable, builtinclass, uuid(ca15d803-1330-4154-b3f9-063fb2b443e7)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -583,7 +583,7 @@ interface nsIDocShell : nsISupports
 
   /*
    * In a child docshell, this is the source of parentCharset
-   * @see nsIParser
+   * @see nsCharsetSource.h
    */
   attribute int32_t parentCharsetSource;
 
@@ -725,4 +725,10 @@ interface nsIDocShell : nsISupports
   [infallible] readonly attribute boolean fullscreenAllowed;
   
   void setFullscreenAllowed(in boolean allowed);
+
+  /**
+   * Indicates whether the UI may enable the character encoding menu. The UI
+   * must disable the menu when this property is false.
+   */
+  [infallible] readonly attribute boolean mayEnableCharacterEncodingMenu;
 };
