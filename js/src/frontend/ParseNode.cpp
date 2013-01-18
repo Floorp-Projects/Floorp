@@ -805,6 +805,14 @@ ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
     emitLink(NULL)
 {
     JS_ASSERT(object->isFunction());
+    JS_ASSERT(asFunctionBox()->function() == function);
+}
+
+FunctionBox *
+ObjectBox::asFunctionBox()
+{
+    JS_ASSERT(isFunctionBox());
+    return static_cast<FunctionBox *>(this);
 }
 
 void
