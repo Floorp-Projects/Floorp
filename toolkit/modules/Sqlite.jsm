@@ -147,6 +147,13 @@ function openConnection(options) {
 function OpenedConnection(connection, basename, number) {
   let log = Log4Moz.repository.getLogger("Sqlite.Connection." + basename);
 
+  // getLogger() returns a shared object. We can't modify the functions on this
+  // object since they would have effect on all instances and last write would
+  // win. So, we create a "proxy" object with our custom functions. Everything
+  // else is proxied back to the shared logger instance via prototype
+  // inheritance.
+  let logProxy = {__proto__: log};
+
   // Automatically prefix all log messages with the identifier.
   for (let level in Log4Moz.Level) {
     if (level == "Desc") {
@@ -154,12 +161,12 @@ function OpenedConnection(connection, basename, number) {
     }
 
     let lc = level.toLowerCase();
-    log[lc] = function (msg) {
-      return Log4Moz.Logger.prototype[lc].call(log, "Conn #" + number + ": " + msg);
-    }
+    logProxy[lc] = function (msg) {
+      return log[lc].call(log, "Conn #" + number + ": " + msg);
+    };
   }
 
-  this._log = log;
+  this._log = logProxy;
 
   this._log.info("Opened");
 
