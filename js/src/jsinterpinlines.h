@@ -733,7 +733,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
     uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
         if (analyze && !obj->isNative()) {
-            RootedScript script(cx, NULL);
+            JSScript *script = NULL;
             jsbytecode *pc = NULL;
             types::TypeScript::GetPcScript(cx, &script, &pc);
 
@@ -745,7 +745,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
             return false;
     } else {
         if (analyze) {
-            RootedScript script(cx, NULL);
+            JSScript *script = NULL;
             jsbytecode *pc = NULL;
             types::TypeScript::GetPcScript(cx, &script, &pc);
 
@@ -843,7 +843,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         uint32_t length = obj->getDenseInitializedLength();
         int32_t i = JSID_TO_INT(id);
         if ((uint32_t)i >= length && !cx->fp()->beginsIonActivation()) {
-            RootedScript script(cx);
+            JSScript *script = NULL;
             jsbytecode *pc;
             types::TypeScript::GetPcScript(cx, &script, &pc);
 

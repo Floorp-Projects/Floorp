@@ -204,13 +204,13 @@ js::ToBooleanSlow(const Value &v)
 }
 
 bool
-js::BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
+js::BooleanGetPrimitiveValueSlow(JSContext *cx, HandleObject obj, Value *vp)
 {
     InvokeArgsGuard ag;
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;
     ag.setCallee(cx->compartment->maybeGlobal()->booleanValueOf());
-    ag.setThis(ObjectValue(obj));
+    ag.setThis(ObjectValue(*obj));
     if (!Invoke(cx, ag))
         return false;
     *vp = ag.rval();

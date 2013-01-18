@@ -18,13 +18,13 @@
 
 namespace js {
 
-bool BooleanGetPrimitiveValueSlow(JSContext *, JSObject &, Value *);
+bool BooleanGetPrimitiveValueSlow(JSContext *, HandleObject, Value *);
 
 inline bool
-BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp)
+BooleanGetPrimitiveValue(JSContext *cx, HandleObject obj, Value *vp)
 {
-    if (obj.isBoolean()) {
-        *vp = BooleanValue(obj.asBoolean().unbox());
+    if (obj->isBoolean()) {
+        *vp = BooleanValue(obj->asBoolean().unbox());
         return true;
     }
 

@@ -208,7 +208,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     if (JSOp(*regs.pc) == JSOP_NEW)
         flags = INITIAL_CONSTRUCT;
 
-    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, *fun, script, flags, DONT_REPORT_ERROR))
+    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, fun, script, flags, DONT_REPORT_ERROR))
         return NULL;
 
     StackFrame *fp = cx->stack.fp();

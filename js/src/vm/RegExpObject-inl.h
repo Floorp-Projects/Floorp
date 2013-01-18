@@ -124,7 +124,6 @@ RegExpShared::isJITRuntimeEnabled(JSContext *cx)
 inline bool
 RegExpToShared(JSContext *cx, JSObject &obj, RegExpGuard *g)
 {
-    JS_ASSERT(ObjectClassIs(obj, ESClass_RegExp, cx));
     if (obj.isRegExp())
         return obj.asRegExp().getShared(cx, g);
     return Proxy::regexp_toShared(cx, &obj, g);
