@@ -3606,6 +3606,7 @@ JSString *
 js::ValueToSource(JSContext *cx, const Value &v)
 {
     JS_CHECK_RECURSION(cx, return NULL);
+    assertSameCompartment(cx, v);
 
     if (v.isUndefined())
         return cx->names().void0;
