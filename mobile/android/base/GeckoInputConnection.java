@@ -200,14 +200,18 @@ class GeckoInputConnection
         }
     }
 
-    private void restartInput() {
+    private void tryRestartInput() {
         // Coalesce restartInput calls because InputMethodManager.restartInput()
         // is expensive and successive calls to it can lock up the keyboard
-        long time = SystemClock.uptimeMillis();
-        if (time < mLastRestartInputTime + 200) {
+        if (SystemClock.uptimeMillis() < mLastRestartInputTime + 200) {
             return;
         }
-        mLastRestartInputTime = time;
+        restartInput();
+    }
+
+    private void restartInput() {
+
+        mLastRestartInputTime = SystemClock.uptimeMillis();
 
         final InputMethodManager imm = getInputMethodManager();
         if (imm == null) {
@@ -515,7 +519,7 @@ class GeckoInputConnection
             case NOTIFY_IME_RESETINPUTSTATE:
                 // Commit and end composition
                 finishComposingText();
-                restartInput();
+                tryRestartInput();
                 break;
 
             case NOTIFY_IME_FOCUSCHANGE:
