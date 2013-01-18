@@ -68,6 +68,13 @@ public:
   /**
    * Decode notification.
    *
+   * Called when we know a frame has begun decoding.
+   */
+  virtual void OnStartFrame() = 0;
+
+  /**
+   * Decode notification.
+   *
    * called when there is more to paint.
    */
   virtual void FrameChanged(const nsIntRect * aDirtyRect) = 0;
