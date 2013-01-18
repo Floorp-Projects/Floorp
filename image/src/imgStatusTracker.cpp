@@ -507,6 +507,7 @@ imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordStartFrame()
 {
+  mInvalidRect.SetEmpty();
 }
 
 // No SendStartFrame since it's not observed below us.
@@ -610,8 +611,7 @@ imgStatusTracker::RecordFrameChanged(const nsIntRect* aDirtyRect)
 {
   NS_ABORT_IF_FALSE(mImage,
                     "RecordFrameChanged called before we have an Image");
-  // no bookkeeping necessary here - this is only for in-frame updates, which we
-  // don't fire while we're recording
+  mInvalidRect = mInvalidRect.Union(*aDirtyRect);
 }
 
 void
