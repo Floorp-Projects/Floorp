@@ -2252,6 +2252,15 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       NS_ABORT_IF_FALSE(firstStop >= 0.0, "Failed to fix stop offsets");
     }
 
+    if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR && !aGradient->mRepeating) {
+      // Direct2D can only handle a particular class of radial gradients because
+      // of the way the it specifies gradients. Setting firstStop to 0, when we
+      // can, will help us stay on the fast path. Currently we don't do this
+      // for repeating gradients but we could by adjusting the stop collection
+      // to start at 0
+      firstStop = 0;
+    }
+
     double lastStop = stops[stops.Length() - 1].mPosition;
     // Cairo gradients must have stop positions in the range [0, 1]. So,
     // stop positions will be normalized below by subtracting firstStop and then
