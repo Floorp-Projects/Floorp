@@ -1503,7 +1503,7 @@ class ObjectBox {
 
     ObjectBox(JSObject *object, ObjectBox *traceLink);
     bool isFunctionBox() { return object->isFunction(); }
-    FunctionBox *asFunctionBox() { JS_ASSERT(isFunctionBox()); return (FunctionBox *)(this); }
+    FunctionBox *asFunctionBox();
     void trace(JSTracer *trc);
 
   protected:
