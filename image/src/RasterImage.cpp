@@ -2589,35 +2589,36 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
                                                 : nullptr;
   switch (type) {
     case eDecoderType_png:
-      mDecoder = new nsPNGDecoder(*this, observer);
+      mDecoder = new nsPNGDecoder(*this);
       break;
     case eDecoderType_gif:
-      mDecoder = new nsGIFDecoder2(*this, observer);
+      mDecoder = new nsGIFDecoder2(*this);
       break;
     case eDecoderType_jpeg:
       // If we have all the data we don't want to waste cpu time doing
       // a progressive decode
-      mDecoder = new nsJPEGDecoder(*this, observer,
+      mDecoder = new nsJPEGDecoder(*this,
                                    mHasBeenDecoded ? Decoder::SEQUENTIAL :
                                                      Decoder::PROGRESSIVE);
       break;
     case eDecoderType_bmp:
-      mDecoder = new nsBMPDecoder(*this, observer);
+      mDecoder = new nsBMPDecoder(*this);
       break;
     case eDecoderType_ico:
-      mDecoder = new nsICODecoder(*this, observer);
+      mDecoder = new nsICODecoder(*this);
       break;
     case eDecoderType_icon:
-      mDecoder = new nsIconDecoder(*this, observer);
+      mDecoder = new nsIconDecoder(*this);
       break;
     case eDecoderType_wbmp:
-      mDecoder = new nsWBMPDecoder(*this, observer);
+      mDecoder = new nsWBMPDecoder(*this);
       break;
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
   }
 
   // Initialize the decoder
+  mDecoder->SetObserver(observer);
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
   mDecoder->Init();

@@ -18,26 +18,19 @@ class Decoder
 {
 public:
 
-  Decoder(RasterImage& aImage, imgDecoderObserver* aObserver);
+  Decoder(RasterImage& aImage);
   virtual ~Decoder();
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
    *
-   * @param aContainer The image container to decode to.
-   * @param aObserver The observer for decode notification events.
-   *
    * Notifications Sent: TODO
    */
   void Init();
 
-
   /**
-   * Initializes a decoder whose aImage and aObserver is already being used by a
+   * Initializes a decoder whose image and observer is already being used by a
    * parent decoder. Decoders may not be re-initialized.
-   *
-   * @param aContainer The image container to decode to.
-   * @param aObserver The observer for decode notification events.
    *
    * Notifications Sent: TODO
    */
@@ -95,6 +88,12 @@ public:
   {
     NS_ABORT_IF_FALSE(!mInitialized, "Can't set size decode after Init()!");
     mSizeDecode = aSizeDecode;
+  }
+
+  void SetObserver(imgDecoderObserver* aObserver)
+  {
+    MOZ_ASSERT(aObserver);
+    mObserver = aObserver;
   }
 
   // The number of frames we have, including anything in-progress. Thus, this

@@ -72,8 +72,8 @@ namespace image {
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 
-nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage, imgDecoderObserver* aObserver)
-  : Decoder(aImage, aObserver)
+nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage)
+  : Decoder(aImage)
   , mCurrentRow(-1)
   , mLastFlushedRow(-1)
   , mImageData(nullptr)

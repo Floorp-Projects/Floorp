@@ -9,7 +9,6 @@
 
 #include "nsAutoPtr.h"
 #include "Decoder.h"
-#include "imgDecoderObserver.h"
 #include "nsBMPDecoder.h"
 #include "nsPNGDecoder.h"
 #include "ICOFileHeaders.h"
@@ -23,7 +22,7 @@ class nsICODecoder : public Decoder
 {
 public:
 
-  nsICODecoder(RasterImage &aImage, imgDecoderObserver* aObserver);
+  nsICODecoder(RasterImage &aImage);
   virtual ~nsICODecoder();
 
   // Obtains the width of the icon directory entry

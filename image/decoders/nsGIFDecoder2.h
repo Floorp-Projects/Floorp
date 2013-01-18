@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "Decoder.h"
-#include "imgDecoderObserver.h"
 
 #include "GIF2.h"
 
@@ -24,7 +23,7 @@ class nsGIFDecoder2 : public Decoder
 {
 public:
 
-  nsGIFDecoder2(RasterImage &aImage, imgDecoderObserver* aObserver);
+  nsGIFDecoder2(RasterImage &aImage);
   ~nsGIFDecoder2();
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
