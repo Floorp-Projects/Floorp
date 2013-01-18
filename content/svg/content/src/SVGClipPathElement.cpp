@@ -5,12 +5,17 @@
 
 #include "mozilla/Util.h"
 
-#include "nsSVGClipPathElement.h"
+#include "mozilla/dom/SVGClipPathElement.h"
 #include "nsGkAtoms.h"
 
-using namespace mozilla;
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ClipPath)
 
-nsSVGElement::EnumInfo nsSVGClipPathElement::sEnumInfo[1] =
+DOMCI_NODE_DATA(SVGClipPathElement, mozilla::dom::SVGClipPathElement)
+
+namespace mozilla {
+namespace dom {
+
+nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] =
 {
   { &nsGkAtoms::clipPathUnits,
     sSVGUnitTypesMap,
@@ -18,40 +23,36 @@ nsSVGElement::EnumInfo nsSVGClipPathElement::sEnumInfo[1] =
   }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(ClipPath)
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGClipPathElement,nsSVGClipPathElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGClipPathElement,nsSVGClipPathElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGClipPathElement,SVGClipPathElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGClipPathElement,SVGClipPathElementBase)
 
-DOMCI_NODE_DATA(SVGClipPathElement, nsSVGClipPathElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGClipPathElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGClipPathElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD(SVGClipPathElement)
+  NS_NODE_INTERFACE_TABLE5(SVGClipPathElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGClipPathElement,
                            nsIDOMSVGUnitTypes)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGClipPathElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGClipPathElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGClipPathElement::nsSVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsSVGClipPathElementBase(aNodeInfo)
+SVGClipPathElement::SVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : SVGClipPathElementBase(aNodeInfo)
 {
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration clipPathUnits; */
-NS_IMETHODIMP nsSVGClipPathElement::GetClipPathUnits(nsIDOMSVGAnimatedEnumeration * *aClipPathUnits)
+NS_IMETHODIMP SVGClipPathElement::GetClipPathUnits(nsIDOMSVGAnimatedEnumeration * *aClipPathUnits)
 {
   return mEnumAttributes[CLIPPATHUNITS].ToDOMAnimatedEnum(aClipPathUnits, this);
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGClipPathElement::GetEnumInfo()
+SVGClipPathElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
@@ -60,5 +61,7 @@ nsSVGClipPathElement::GetEnumInfo()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGClipPathElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGClipPathElement)
 
+} // namespace dom
+} // namespace mozilla
