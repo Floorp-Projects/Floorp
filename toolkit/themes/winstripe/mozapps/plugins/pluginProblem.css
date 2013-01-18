@@ -112,7 +112,7 @@ html|a {
   right: 4px;
   border: none;
   background-color: transparent;
-  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 16, 16, 0);
+  background-image: url("chrome://global/skin/icons/close.png");
   background-repeat: no-repeat;
 }
 
@@ -122,9 +122,9 @@ html|a {
 }
 
 .closeIcon:hover {
-  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 32, 16, 16);
+  background-position: -16px 0;
 }
 
 .closeIcon:hover:active {
-  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 48, 16, 32);
+  background-position: -32px 0;
 }
