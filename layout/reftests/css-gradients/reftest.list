@@ -50,9 +50,9 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-ver
 == linear-zero-length-1c.html linear-zero-length-1-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fails-if(Android) random-if(d2d) == radial-1a.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fails-if(Android) random-if(d2d) == radial-1b.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fails-if(Android) random-if(d2d) == radial-1c.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) fails-if(Android) random-if(d2d) == radial-1a.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) fails-if(Android) random-if(d2d) == radial-1b.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) fails-if(Android) random-if(d2d) == radial-1c.html radial-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2a.html radial-2-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2b.html radial-2-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2c.html radial-2-ref.html
