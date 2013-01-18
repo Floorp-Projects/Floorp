@@ -84,7 +84,7 @@ public:
 
 class nsAXPCNativeCallContext;
 struct JSContext;
-class JSObject;
+struct JSObject;
 
 struct nsMessageListenerInfo
 {

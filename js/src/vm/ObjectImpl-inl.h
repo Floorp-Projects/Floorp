@@ -43,8 +43,7 @@ Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
 inline js::UnrootedShape
 js::ObjectImpl::nativeLookup(JSContext *cx, PropertyId pid)
 {
-    RootedId id(cx, pid.asId());
-    return nativeLookup(cx, id);
+    return nativeLookup(cx, pid.asId());
 }
 
 inline js::UnrootedShape
@@ -80,8 +79,7 @@ js::ObjectImpl::nativeContains(JSContext *cx, JS::Handle<PropertyName*> name)
 inline bool
 js::ObjectImpl::nativeContains(JSContext *cx, JS::Handle<Shape*> shape)
 {
-    RootedId id(cx, shape->propid());
-    return nativeLookup(cx, id) == shape;
+    return nativeLookup(cx, shape->propid()) == shape;
 }
 
 inline bool

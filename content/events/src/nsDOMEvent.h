@@ -20,7 +20,7 @@
 class nsIContent;
 class nsPresContext;
 struct JSContext;
-class JSObject;
+struct JSObject;
  
 class nsDOMEvent : public nsIDOMEvent,
                    public nsIJSNativeInitializer

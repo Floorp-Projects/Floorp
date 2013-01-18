@@ -11,7 +11,7 @@
 
 struct CharacterDataChangeInfo;
 struct JSContext;
-class JSObject;
+struct JSObject;
 class nsIVariant;
 class nsIDOMNode;
 class nsIDOMUserDataHandler;

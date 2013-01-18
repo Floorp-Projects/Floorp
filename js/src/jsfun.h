@@ -18,6 +18,7 @@
 #include "gc/Barrier.h"
 
 ForwardDeclareJS(Atom);
+ForwardDeclareJS(Script);
 
 namespace js { class FunctionExtended; }
 

@@ -842,7 +842,7 @@ LoopState::invariantLength(const CrossSSAValue &obj)
 }
 
 FrameEntry *
-LoopState::invariantProperty(const CrossSSAValue &obj, RawId id)
+LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
 {
     if (skipAnalysis)
         return NULL;
@@ -872,7 +872,7 @@ LoopState::invariantProperty(const CrossSSAValue &obj, RawId id)
     if (objTypes->unknownObject() || objTypes->getObjectCount() != 1)
         return NULL;
     TypeObject *object = objTypes->getTypeObject(0);
-    if (!object || object->unknownProperties() || hasModifiedProperty(object, id) || id != IdToTypeId(id))
+    if (!object || object->unknownProperties() || hasModifiedProperty(object, id) || id != MakeTypeId(cx, id))
         return NULL;
     HeapTypeSet *propertyTypes = object->getProperty(cx, id, false);
     if (!propertyTypes)
@@ -1589,7 +1589,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 
           case JSOP_SETPROP: {
             PropertyName *name = script->getName(GET_UINT32_INDEX(pc));
-            RawId id = IdToTypeId(NameToId(name));
+            jsid id = MakeTypeId(cx, NameToId(name));
 
             TypeSet *objTypes = analysis->poppedTypes(pc, 1);
             if (objTypes->unknownObject()) {
@@ -1743,7 +1743,7 @@ LoopState::hasModifiedProperty(TypeObject *object, jsid id)
 {
     if (unknownModset)
         return true;
-    id = IdToTypeId(id);
+    id = MakeTypeId(cx, id);
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
         if (modifiedProperties[i].object == object && modifiedProperties[i].id == id)
             return true;
