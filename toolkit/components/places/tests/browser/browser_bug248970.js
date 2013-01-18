@@ -68,18 +68,19 @@ function test() {
     is(PlacesUtils.history.hasHistoryEntries, false,
        "History database should be empty");
     // Create a handful of history items with various visit types
-    fillHistoryVisitedURI(window);
-    placeItemsCount += 7;
-    // History database should have entries
-    is(PlacesUtils.history.hasHistoryEntries, true,
-       "History database should have entries");
-    // We added 7 new items to history.
-    is(getPlacesItemsCount(window), placeItemsCount,
-       "Check the total items count");
-    // Test on windows.
-    testOnWindow(false, function() {
-      testOnWindow(true, function() {
-        testOnWindow(false, finish);
+    fillHistoryVisitedURI(window, function() {
+      placeItemsCount += 7;
+      // History database should have entries
+      is(PlacesUtils.history.hasHistoryEntries, true,
+         "History database should have entries");
+      // We added 7 new items to history.
+      is(getPlacesItemsCount(window), placeItemsCount,
+         "Check the total items count");
+      // Test on windows.
+      testOnWindow(false, function() {
+        testOnWindow(true, function() {
+          testOnWindow(false, finish);
+        });
       });
     });
   });
@@ -127,24 +128,17 @@ function getPlacesItemsCount(aWin){
   return cc;
 }
 
-function addVisit(aWin, aURI, aType) {
-  aWin.PlacesUtils.history.addVisit(
-    NetUtil.newURI(aURI), Date.now() * 1000, null, aType, false, 0);
-}
-
-function fillHistoryVisitedURI(aWin) {
-  aWin.PlacesUtils.history.runInBatchMode({
-    runBatched: function (aUserData) {
-      addVisit(aWin, visitedURIs[0], PlacesUtils.history.TRANSITION_LINK);
-      addVisit(aWin, visitedURIs[1], PlacesUtils.history.TRANSITION_TYPED);
-      addVisit(aWin, visitedURIs[2], PlacesUtils.history.TRANSITION_BOOKMARK);
-      addVisit(aWin, visitedURIs[3], PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT);
-      addVisit(aWin, visitedURIs[4], PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY);
-      addVisit(aWin, visitedURIs[5], PlacesUtils.history.TRANSITION_EMBED);
-      addVisit(aWin, visitedURIs[6], PlacesUtils.history.TRANSITION_FRAMED_LINK);
-      addVisit(aWin, visitedURIs[7], PlacesUtils.history.TRANSITION_DOWNLOAD);
-    }
-  }, null);
+function fillHistoryVisitedURI(aWin, aCallback) {
+  addVisits([
+    {uri: NetUtil.newURI(visitedURIs[0]), transition: PlacesUtils.history.TRANSITION_LINK},
+    {uri: NetUtil.newURI(visitedURIs[1]), transition: PlacesUtils.history.TRANSITION_TYPED},
+    {uri: NetUtil.newURI(visitedURIs[2]), transition: PlacesUtils.history.TRANSITION_BOOKMARK},
+    {uri: NetUtil.newURI(visitedURIs[3]), transition: PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT},
+    {uri: NetUtil.newURI(visitedURIs[4]), transition: PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY},
+    {uri: NetUtil.newURI(visitedURIs[5]), transition: PlacesUtils.history.TRANSITION_EMBED},
+    {uri: NetUtil.newURI(visitedURIs[6]), transition: PlacesUtils.history.TRANSITION_FRAMED_LINK},
+    {uri: NetUtil.newURI(visitedURIs[7]), transition: PlacesUtils.history.TRANSITION_DOWNLOAD}],
+    aWin, aCallback);
 }
 
 function checkHistoryItems(aWin) {
