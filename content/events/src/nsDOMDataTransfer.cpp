@@ -30,7 +30,6 @@
 
 using namespace mozilla;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDataTransfer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMDataTransfer)
   if (tmp->mFiles) {
     tmp->mFiles->Disconnect();

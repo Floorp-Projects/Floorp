@@ -933,6 +933,14 @@ js::GetTestingFunctions(JSContext *cx)
     return obj;
 }
 
+#ifdef DEBUG
+JS_FRIEND_API(unsigned)
+js::GetEnterCompartmentDepth(JSContext *cx)
+{
+  return cx->getEnterCompartmentDepth();
+}
+#endif
+
 JS_FRIEND_API(void)
 js::SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size, uint32_t max)
 {

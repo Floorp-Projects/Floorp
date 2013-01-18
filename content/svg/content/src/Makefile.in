@@ -35,6 +35,7 @@ CPPSRCS		= \
 		DOMSVGTransformList.cpp \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
+		nsISVGPoint.cpp \
 		nsSVGAngle.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGClass.cpp \
@@ -55,13 +56,10 @@ CPPSRCS		= \
 		nsSVGNumberPair.cpp \
 		nsSVGPathDataParser.cpp \
 		nsSVGPathGeometryElement.cpp \
-		nsSVGPatternElement.cpp \
 		nsSVGPolyElement.cpp \
 		nsSVGString.cpp \
 		nsSVGRect.cpp \
-		nsSVGSymbolElement.cpp \
 		nsSVGUnknownElement.cpp \
-		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
 		SVGAElement.cpp \
 		SVGAltGlyphElement.cpp \
@@ -111,6 +109,7 @@ CPPSRCS		= \
 		SVGPathElement.cpp \
 		SVGPathSegUtils.cpp \
 		SVGPathSegListSMILType.cpp \
+		SVGPatternElement.cpp \
 		SVGPointList.cpp \
 		SVGPointListSMILType.cpp \
 		SVGPolygonElement.cpp \
@@ -122,6 +121,7 @@ CPPSRCS		= \
 		SVGStopElement.cpp \
 		SVGStringList.cpp \
 		SVGStyleElement.cpp \
+		SVGSymbolElement.cpp \
 		SVGSVGElement.cpp \
 		SVGSwitchElement.cpp \
 		SVGTextContentElement.cpp \
@@ -135,6 +135,7 @@ CPPSRCS		= \
 		SVGTransformListParser.cpp \
 		SVGTransformListSMILType.cpp \
 		SVGTSpanElement.cpp \
+		SVGUseElement.cpp \
 		SVGViewBoxSMILType.cpp \
 		SVGViewElement.cpp \
 		$(NULL)
@@ -177,6 +178,7 @@ EXPORTS_mozilla/dom = \
 	SVGMetadataElement.h \
 	SVGMPathElement.h \
 	SVGPathElement.h \
+	SVGPatternElement.h \
 	SVGPolygonElement.h \
 	SVGPolylineElement.h \
 	SVGRectElement.h \
@@ -184,6 +186,7 @@ EXPORTS_mozilla/dom = \
 	SVGSetElement.h \
 	SVGStopElement.h \
 	SVGStyleElement.h \
+	SVGSymbolElement.h \
 	SVGSVGElement.h \
 	SVGSwitchElement.h \
 	SVGTextContentElement.h \
@@ -193,6 +196,7 @@ EXPORTS_mozilla/dom = \
 	SVGTitleElement.h \
 	SVGTransformableElement.h \
 	SVGTSpanElement.h \
+	SVGUseElement.h \
 	SVGViewElement.h \
 	$(NULL)
 

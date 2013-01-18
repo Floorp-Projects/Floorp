@@ -154,6 +154,7 @@ CPPSRCS = \
 	SkAAClip.cpp \
 	SkAdvancedTypefaceMetrics.cpp \
 	SkAlphaRuns.cpp \
+	SkAnnotation.cpp \
 	SkBBoxRecord.cpp \
 	SkBBoxHierarchyRecord.cpp \
 	SkBase64.cpp \

@@ -18,6 +18,7 @@
 #include <string.h>
 
 namespace mozilla {
+class nsISVGPoint;
 
 /**
  * ATTENTION! WARNING! WATCH OUT!!
@@ -30,6 +31,7 @@ namespace mozilla {
  */
 class SVGPointList
 {
+  friend class mozilla::nsISVGPoint;
   friend class SVGAnimatedPointList;
   friend class DOMSVGPointList;
   friend class DOMSVGPoint;

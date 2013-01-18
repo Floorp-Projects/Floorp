@@ -11,6 +11,8 @@ from optparse import OptionParser
 import sys, re, os, posixpath, ntpath
 import errno
 from StringIO import StringIO
+from os.path import relpath
+
 # Standalone js doesn't have virtualenv.
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'config'))
 from Preprocessor import Preprocessor
@@ -21,29 +23,6 @@ def log(string):
     if verbose:
         print >>sys.stderr, string
 
-# We need relpath, but it is introduced in python 2.6
-# http://docs.python.org/library/os.path.html
-def my_relpath(path, start):
-    """
-    Return a relative version of a path
-    from /usr/lib/python2.6/posixpath.py
-    """
-
-    if not path:
-        raise ValueError("no path specified")
-
-    start_list = os.path.abspath(start).split(os.path.sep)
-    path_list = os.path.abspath(path).split(os.path.sep)
-
-    # Work out how much of the filepath is shared by start and path.
-    i = len(os.path.commonprefix([start_list, path_list]))
-
-    rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
-    if not rel_list:
-        return os.curdir
-    return os.path.join(*rel_list)
-
-relpath = getattr(os.path, "relpath", my_relpath)
 
 def ensureParentDir(file):
     '''Ensures the directory parent to the given file exists'''

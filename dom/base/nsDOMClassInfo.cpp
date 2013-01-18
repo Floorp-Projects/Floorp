@@ -315,7 +315,6 @@
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGAnimatedNumber.h"
-#include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGAnimateElement.h"
@@ -343,7 +342,6 @@
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGLineElement.h"
-#include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGMarkerElement.h"
 #include "nsIDOMSVGMaskElement.h"
 #include "nsIDOMSVGMetadataElement.h"
@@ -364,7 +362,6 @@
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGTitleElement.h"
-#include "nsIDOMSVGTransformable.h"
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGURIReference.h"
@@ -3000,8 +2997,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
 
 #define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLocatable)       \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformable)   \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)           \
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
 
@@ -3298,7 +3293,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGPathElement, nsIDOMSVGPathElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPathData)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3353,7 +3347,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGSVGElement, nsIDOMSVGSVGElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGSVGElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFitToViewBox)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLocatable)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 

@@ -20,20 +20,8 @@ NS_IMPL_ADDREF_INHERITED(SVGTransformableElement, SVGLocatableElement)
 NS_IMPL_RELEASE_INHERITED(SVGTransformableElement, SVGLocatableElement)
 
 NS_INTERFACE_MAP_BEGIN(SVGTransformableElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransformable)
+  NS_INTERFACE_MAP_ENTRY(mozilla::dom::SVGTransformableElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGLocatableElement)
-
-
-//----------------------------------------------------------------------
-// nsIDOMSVGTransformable methods
-/* readonly attribute nsISupports transform; */
-
-NS_IMETHODIMP
-SVGTransformableElement::GetTransform(nsISupports **aTransform)
-{
-  *aTransform = Transform().get();
-  return NS_OK;
-}
 
 already_AddRefed<DOMSVGAnimatedTransformList>
 SVGTransformableElement::Transform()

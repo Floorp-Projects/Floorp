@@ -394,15 +394,7 @@ class GlobalObject : public JSObject
         return true;
     }
 
-    bool setIntrinsicValue(JSContext *cx, PropertyName *name, HandleValue value) {
-#ifdef DEBUG
-        RootedObject self(cx, this);
-        JS_ASSERT(cx->runtime->isSelfHostingGlobal(self));
-#endif
-        RootedObject holder(cx, intrinsicsHolder());
-        RootedValue valCopy(cx, value);
-        return JSObject::setProperty(cx, holder, holder, name, &valCopy, false);
-     }
+    inline bool setIntrinsicValue(JSContext *cx, PropertyName *name, HandleValue value);
 
     inline RegExpStatics *getRegExpStatics() const;
 

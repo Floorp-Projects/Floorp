@@ -25,8 +25,6 @@ BluetoothPropertyEvent::Create(const nsAString& aPropertyName)
   return event.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothPropertyEvent)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothPropertyEvent,
                                                   nsDOMEvent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

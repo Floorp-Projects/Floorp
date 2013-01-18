@@ -3122,3 +3122,18 @@ nsDOMWindowUtils::IsNodeDisabledForEvents(nsIDOMNode* aNode, bool* aRetVal)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
+                                            nsIDOMEvent* aEvent,
+                                            bool* aRetVal)
+{
+  *aRetVal = false;
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  NS_ENSURE_STATE(aTarget && aEvent);
+  aEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  aTarget->DispatchEvent(aEvent, aRetVal);
+  return NS_OK;
+}

@@ -148,7 +148,8 @@ public:
   static nsresult HandleHeaders(SpdySession3 *);
   static nsresult HandleWindowUpdate(SpdySession3 *);
 
-  static void EnsureBuffer(nsAutoArrayPtr<char> &,
+  template<typename T>
+  static void EnsureBuffer(nsAutoArrayPtr<T> &,
                            uint32_t, uint32_t, uint32_t &);
 
   // For writing the SPDY data stream to LOG4

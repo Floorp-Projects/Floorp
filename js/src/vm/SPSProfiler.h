@@ -200,7 +200,7 @@ class SPSProfiler
                     mjit::PCLengthEntry *pcLengths,
                     mjit::JITChunk *chunk);
 
-        jsbytecode *convert(UnrootedScript script, size_t ip);
+        jsbytecode *convert(RawScript script, size_t ip);
     };
 
     struct JMScriptInfo
