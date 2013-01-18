@@ -82,7 +82,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsILineInputStream.h"
 #include "nsIMemory.h"
-#include "nsIMemoryReporter.h"
 #include "nsIMutable.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
