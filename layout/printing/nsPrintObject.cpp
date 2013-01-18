@@ -14,10 +14,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
                                                    
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
-
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
@@ -105,12 +101,6 @@ void
 nsPrintObject::DestroyPresentation()
 {
   if (mPresShell) {
-#ifdef MOZ_CRASHREPORTER
-    if (mPresShell->GetPresContext() && !mPresShell->GetPresContext()->GetPresShell()) {
-      NS_ASSERTION(false, "about to destroy print object's PresShell when its pres context no longer has it");
-      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("about to destroy print object's PresShell when its pres context no longer has it\n"));
-    }
-#endif
     mPresShell->EndObservingDocument();
     nsAutoScriptBlocker scriptBlocker;
     nsCOMPtr<nsIPresShell> shell = mPresShell;
