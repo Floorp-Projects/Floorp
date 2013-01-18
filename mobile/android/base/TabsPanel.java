@@ -22,11 +22,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TabHost;
-import android.widget.TabHost.TabSpec;
-import android.widget.TabWidget;
 
-public class TabsPanel extends TabHost
+public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
                                   LightweightTheme.OnChangeListener,
                                   AdapterView.OnItemSelectedListener {
@@ -52,12 +49,14 @@ public class TabsPanel extends TabHost
     private Context mContext;
     private GeckoApp mActivity;
     private PanelView mPanel;
+    private PanelView mPanelNormal;
+    private PanelView mPanelPrivate;
+    private PanelView mPanelRemote;
     private LinearLayout mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private static ImageButton mMenuButton;
     private static ImageButton mAddTab;
-    private TabWidget mTabWidget;
     private Button mTabsMenuButton;
     private Spinner mTabsSpinner;
 
@@ -76,6 +75,10 @@ public class TabsPanel extends TabHost
         super(context, attrs);
         mContext = context;
         mActivity = (GeckoApp) context;
+
+        setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+                                                      LinearLayout.LayoutParams.FILL_PARENT));
+        setOrientation(LinearLayout.VERTICAL);
 
         mCurrentPanel = Panel.NORMAL_TABS;
         mVisible = false;
@@ -113,50 +116,17 @@ public class TabsPanel extends TabHost
         initialize();
     }
 
-    private void initialize() {
-        // This should be called before adding any tabs
-        // to the TabHost.
-        setup();
+    void initialize() {
+        mPanelNormal = (TabsTray) findViewById(R.id.normal_tabs);
+        mPanelNormal.setTabsPanel(this);
 
-        initToolbar();
-        addTab(R.string.tabs_normal, R.id.normal_tabs);
-        addTab(R.string.tabs_private, R.id.private_tabs);
-        addTab(R.string.tabs_synced, R.id.synced_tabs);
-    }
+        mPanelPrivate = (TabsTray) findViewById(R.id.private_tabs);
+        mPanelPrivate.setTabsPanel(this);
 
-    private void addTab(int resId, int contentId) {
-        String title = mContext.getString(resId);
-        TabSpec spec = newTabSpec(title);
-        GeckoTextView indicatorView = (GeckoTextView) LayoutInflater.from(mContext).inflate(R.layout.tabs_panel_indicator, null);
-        indicatorView.setText(title);
+        mPanelRemote = (RemoteTabs) findViewById(R.id.synced_tabs);
+        mPanelRemote.setTabsPanel(this);
 
-        spec.setIndicator(indicatorView);
-        spec.setContent(contentId);
-
-        final int index = mTabWidget.getTabCount();
-        PanelView panel = (PanelView) findViewById(contentId);
-        panel.setTabsPanel(this);
-        panel.show();
-
-        addTab(spec);
-
-        indicatorView.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Panel panel = Panel.NORMAL_TABS;
-                if (index == 1)
-                    panel = Panel.PRIVATE_TABS;
-                else if (index == 2)
-                    panel = Panel.REMOTE_TABS;
-
-                TabsPanel.this.show(panel);
-            }
-        });
-    }
-
-    void initToolbar() {
         mFooter = (LinearLayout) findViewById(R.id.tabs_panel_footer);
-
-        mTabWidget = (TabWidget) findViewById(android.R.id.tabs);
 
         mAddTab = (ImageButton) findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
@@ -319,7 +289,7 @@ public class TabsPanel extends TabHost
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             if (!GeckoApp.mAppContext.hasTabsSideBar()) {
-                int heightSpec = MeasureSpec.makeMeasureSpec(getTabContainerHeight(this), MeasureSpec.EXACTLY);
+                int heightSpec = MeasureSpec.makeMeasureSpec(getTabContainerHeight(TabsListContainer.this), MeasureSpec.EXACTLY);
                 super.onMeasure(widthMeasureSpec, heightSpec);
             } else {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -387,19 +357,19 @@ public class TabsPanel extends TabHost
         mCurrentPanel = panel;
 
         int index = panel.ordinal();
-        setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-        setCurrentTab(index);
-        setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
         mTabsSpinner.setSelection(index);
 
-        if (index == 0)
+        if (index == 0) {
+            mPanel = mPanelNormal;
             mTabsMenuButton.setText(R.string.tabs_normal);
-        else if (index == 1)
+        } else if (index == 1) {
+            mPanel = mPanelPrivate;
             mTabsMenuButton.setText(R.string.tabs_private);
-        else
+        } else {
+            mPanel = mPanelRemote;
             mTabsMenuButton.setText(R.string.tabs_synced);
+        }
 
-        mPanel = (PanelView) getTabContentView().getChildAt(index);
         mPanel.show();
 
         if (mCurrentPanel == Panel.REMOTE_TABS) {
@@ -422,7 +392,7 @@ public class TabsPanel extends TabHost
                 dispatchLayoutChange(getWidth(), getHeight());
         } else {
             int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
-            int height = actionBarHeight + getTabContainerHeight(getTabContentView());
+            int height = actionBarHeight + getTabContainerHeight(this);
             dispatchLayoutChange(getWidth(), height);
         }
     }
@@ -433,13 +403,14 @@ public class TabsPanel extends TabHost
             mPopupMenu.dismiss();
             dispatchLayoutChange(0, 0);
 
-            mPanel.hide();
-            mPanel = null;
+            if (mPanel != null) {
+                mPanel.hide();
+                mPanel = null;
+            }
         }
     }
 
     public void refresh() {
-        clearAllTabs();
         removeAllViews();
 
         LayoutInflater.from(mContext).inflate(R.layout.tabs_panel, this);
