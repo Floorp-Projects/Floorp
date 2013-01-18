@@ -476,7 +476,6 @@ user_pref("toolkit.telemetry.notifiedOptOut", 999);
 // Existing tests assume there is no font size inflation.
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
-user_pref("extensions.testpilot.alreadyCustomizedToolbar", true);
 
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
@@ -487,6 +486,7 @@ user_pref("extensions.getAddons.cache.enabled", false);
 user_pref("extensions.installDistroAddons", false);
 
 user_pref("extensions.testpilot.runStudies", false);
+user_pref("extensions.testpilot.alreadyCustomizedToolbar", true);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
