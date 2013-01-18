@@ -1,4 +1,5 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -52,42 +53,45 @@
 namespace mozilla {
 namespace scache {
 
-static int64_t
-GetStartupCacheMappingSize()
+class StartupCacheMappingReporter MOZ_FINAL : public MemoryReporterBase
 {
-    mozilla::scache::StartupCache* sc = mozilla::scache::StartupCache::GetSingleton();
+public:
+  StartupCacheMappingReporter()
+    : MemoryReporterBase("explicit/startup-cache/mapping",
+                         KIND_NONHEAP, UNITS_BYTES,
+"Memory used to hold the mapping of the startup cache from file.  This memory "
+"is likely to be swapped out shortly after start-up.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    mozilla::scache::StartupCache* sc =
+      mozilla::scache::StartupCache::GetSingleton();
     return sc ? sc->SizeOfMapping() : 0;
-}
+  }
+};
 
-NS_MEMORY_REPORTER_IMPLEMENT(StartupCacheMapping,
-    "explicit/startup-cache/mapping",
-    KIND_NONHEAP,
-    nsIMemoryReporter::UNITS_BYTES,
-    GetStartupCacheMappingSize,
-    "Memory used to hold the mapping of the startup cache from file.  This "
-    "memory is likely to be swapped out shortly after start-up.")
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(StartupCacheDataMallocSizeOf)
-
-static int64_t
-GetStartupCacheDataSize()
+class StartupCacheDataReporter MOZ_FINAL : public MemoryReporterBase
 {
-    mozilla::scache::StartupCache* sc = mozilla::scache::StartupCache::GetSingleton();
-    return sc ? sc->HeapSizeOfIncludingThis(StartupCacheDataMallocSizeOf) : 0;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(StartupCacheData,
-    "explicit/startup-cache/data",
-    KIND_HEAP,
-    nsIMemoryReporter::UNITS_BYTES,
-    GetStartupCacheDataSize,
-    "Memory used by the startup cache for things other than the file mapping.")
+public:
+  StartupCacheDataReporter()
+    : MemoryReporterBase("explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
+"Memory used by the startup cache for things other than the file mapping.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    mozilla::scache::StartupCache* sc =
+      mozilla::scache::StartupCache::GetSingleton();
+    return sc ? sc->HeapSizeOfIncludingThis(MallocSizeOf) : 0;
+  }
+};
 
 static const char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 StartupCache*
-StartupCache::GetSingleton() 
+StartupCache::GetSingleton()
 {
   if (!gStartupCache) {
     if (XRE_GetProcessType() != GeckoProcessType_Default) {
@@ -104,10 +108,11 @@ void
 StartupCache::DeleteSingleton()
 {
   delete StartupCache::gStartupCache;
+  StartupCache::gStartupCache = nullptr;
 }
 
 nsresult
-StartupCache::InitSingleton() 
+StartupCache::InitSingleton()
 {
   nsresult rv;
   StartupCache::gStartupCache = new StartupCache();
@@ -125,18 +130,18 @@ bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
-StartupCache::StartupCache() 
-  : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr),
-    mMappingMemoryReporter(nullptr), mDataMemoryReporter(nullptr) { }
+StartupCache::StartupCache()
+  : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr)
+{ }
 
-StartupCache::~StartupCache() 
+StartupCache::~StartupCache()
 {
   if (mTimer) {
     mTimer->Cancel();
   }
 
   // Generally, the in-memory table should be empty here,
-  // but an early shutdown means either mTimer didn't run 
+  // but an early shutdown means either mTimer didn't run
   // or the write thread is still running.
   WaitOnWriteThread();
 
@@ -149,18 +154,16 @@ StartupCache::~StartupCache()
   }
 
   gStartupCache = nullptr;
-  (void)::NS_UnregisterMemoryReporter(mMappingMemoryReporter);
-  (void)::NS_UnregisterMemoryReporter(mDataMemoryReporter);
-  mMappingMemoryReporter = nullptr;
-  mDataMemoryReporter = nullptr;
+  NS_UnregisterMemoryReporter(mMappingReporter);
+  NS_UnregisterMemoryReporter(mDataReporter);
 }
 
 nsresult
-StartupCache::Init() 
+StartupCache::Init()
 {
   // workaround for bug 653936
   nsCOMPtr<nsIProtocolHandler> jarInitializer(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar"));
-  
+
   nsresult rv;
   mTable.Init();
 #ifdef DEBUG
@@ -206,20 +209,20 @@ StartupCache::Init()
     rv = file->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
 
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     mFile = do_QueryInterface(file);
   }
 
   NS_ENSURE_TRUE(mFile, NS_ERROR_UNEXPECTED);
 
   mObserverService = do_GetService("@mozilla.org/observer-service;1");
-  
+
   if (!mObserverService) {
     NS_WARNING("Could not get observerService.");
     return NS_ERROR_UNEXPECTED;
   }
-  
-  mListener = new StartupCacheListener();  
+
+  mListener = new StartupCacheListener();
   rv = mObserverService->AddObserver(mListener, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -228,7 +231,7 @@ StartupCache::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = LoadArchive(RECORD_AGE);
-  
+
   // Sometimes we don't have a cache yet, that's ok.
   // If it's corrupted, just remove it and start over.
   if (gIgnoreDiskCache || (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)) {
@@ -236,15 +239,15 @@ StartupCache::Init()
     InvalidateCache();
   }
 
-  mMappingMemoryReporter = new NS_MEMORY_REPORTER_NAME(StartupCacheMapping);
-  mDataMemoryReporter    = new NS_MEMORY_REPORTER_NAME(StartupCacheData);
-  (void)::NS_RegisterMemoryReporter(mMappingMemoryReporter);
-  (void)::NS_RegisterMemoryReporter(mDataMemoryReporter);
+  mMappingReporter = new StartupCacheMappingReporter();
+  mDataReporter    = new StartupCacheDataReporter();
+  NS_RegisterMemoryReporter(mMappingReporter);
+  NS_RegisterMemoryReporter(mDataReporter);
 
   return NS_OK;
 }
 
-/** 
+/**
  * LoadArchive can be called from the main thread or while reloading cache on write thread.
  */
 nsresult
