@@ -35,6 +35,13 @@ SharedContext::asGlobalSharedContext()
     return static_cast<GlobalSharedContext*>(this);
 }
 
+inline ModuleBox *
+SharedContext::asModuleBox()
+{
+    JS_ASSERT(isModuleBox());
+    return static_cast<ModuleBox*>(this);
+}
+
 inline FunctionBox *
 SharedContext::asFunctionBox()
 {

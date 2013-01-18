@@ -147,8 +147,10 @@ class SharedContext
 
     virtual ObjectBox *toObjectBox() = 0;
     inline bool isGlobalSharedContext() { return toObjectBox() == NULL; }
+    inline bool isModuleBox() { return toObjectBox() && toObjectBox()->isModuleBox(); }
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
     inline GlobalSharedContext *asGlobalSharedContext();
+    inline ModuleBox *asModuleBox();
     inline FunctionBox *asFunctionBox();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
@@ -171,6 +173,19 @@ class GlobalSharedContext : public SharedContext
 
     ObjectBox *toObjectBox() { return NULL; }
     JSObject *scopeChain() const { return scopeChain_; }
+};
+
+
+class ModuleBox : public ObjectBox, public SharedContext {
+public:
+    size_t      bufStart;
+    size_t      bufEnd;
+    Bindings    bindings;
+
+    ModuleBox(JSContext *cx, ParseContext *pc, Module *module,
+              ObjectBox *traceListHead);
+    ObjectBox *toObjectBox() { return this; }
+    Module *module() const { return &object->asModule(); }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
