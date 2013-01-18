@@ -40,6 +40,7 @@ class GeckoInputConnection
 
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
+    // Managed only by notifyIMEEnabled; see comments in notifyIMEEnabled
     private int mIMEState;
     private String mIMETypeHint = "";
     private String mIMEModeHint = "";
@@ -244,9 +245,9 @@ class GeckoInputConnection
         mBatchTextChanged = false;
         mUpdateRequest = null;
 
-        mIMEState = IME_STATE_DISABLED;
-        mIMETypeHint = mIMEModeHint = mIMEActionHint = "";
         mCurrentInputMethod = "";
+
+        // Do not reset mIMEState here; see comments in notifyIMEEnabled
     }
 
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
@@ -551,6 +552,13 @@ class GeckoInputConnection
             return;
         }
 
+        // mIMEState and the mIME*Hint fields should only be changed by notifyIMEEnabled,
+        // and not reset anywhere else. Usually, notifyIMEEnabled is called right after a
+        // focus or blur, so resetting mIMEState during the focus or blur seems harmless.
+        // However, this behavior is not guaranteed. Gecko may call notifyIMEEnabled
+        // independent of focus change; that is, a focus change may not be accompanied by
+        // a notifyIMEEnabled call. So if we reset mIMEState inside focus, there may not
+        // be another notifyIMEEnabled call to set mIMEState to a proper value (bug 829318)
         /* When IME is 'disabled', IME processing is disabled.
            In addition, the IME UI is hidden */
         mIMEState = state;
