@@ -262,6 +262,8 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     uint32_t containerID = mContainer->GetAsyncContainerID();
     BasicManager()->PaintedImage(BasicManager()->Hold(this), 
                                  SharedImageID(containerID));
+    AutoLockImage autoLock(mContainer);
+    mContainer->NotifyPaintedImage(autoLock.GetImage());
     return;
   }
 
@@ -287,6 +289,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     SharedTextureDescriptor texture(data->mShareType, data->mHandle, data->mSize, data->mInverted);
     SurfaceDescriptor descriptor(texture);
     BasicManager()->PaintedImage(BasicManager()->Hold(this), descriptor);
+    mContainer->NotifyPaintedImage(image);
     return;
   }
 
@@ -345,6 +348,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
     BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                  yuv);
+    mContainer->NotifyPaintedImage(image);
     return;
   }
 
