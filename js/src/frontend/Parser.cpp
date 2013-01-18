@@ -394,7 +394,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
         // outerpc->parsingWith is true.
         inWith = true;
 
-    } else if (!outerpc->sc->isFunctionBox()) {
+    } else if (outerpc->sc->isGlobalSharedContext()) {
         // This covers the case where a function is nested within an eval()
         // within a |with| statement.
         //
@@ -447,6 +447,13 @@ Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, bool strict)
     traceListHead = funbox;
 
     return funbox;
+}
+
+ModuleBox::ModuleBox(JSContext *cx, ParseContext *pc, Module *module,
+                     ObjectBox *traceListHead)
+    : ObjectBox(module, traceListHead),
+      SharedContext(cx, true)
+{
 }
 
 void

@@ -1673,7 +1673,10 @@ BytecodeEmitter::needsImplicitThis()
     if (!script->compileAndGo)
         return true;
 
-    if (sc->isFunctionBox()) {
+    if (sc->isModuleBox()) {
+        /* Modules can never occur inside a with-statement */
+        return false;
+    } if (sc->isFunctionBox()) {
         if (sc->asFunctionBox()->inWith)
             return true;
     } else {
