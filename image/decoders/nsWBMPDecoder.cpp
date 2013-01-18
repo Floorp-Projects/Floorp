@@ -66,8 +66,8 @@ static WbmpIntDecodeStatus DecodeEncodedInt (uint32_t& aField, const char*& aBuf
   return IntParseInProgress;
 }
 
-nsWBMPDecoder::nsWBMPDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
- : Decoder(aImage, aObserver),
+nsWBMPDecoder::nsWBMPDecoder(RasterImage &aImage)
+ : Decoder(aImage),
    mWidth(0),
    mHeight(0),
    mImageData(nullptr),

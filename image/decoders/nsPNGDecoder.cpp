@@ -113,8 +113,8 @@ struct AnimFrameInfo
 const uint8_t 
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-nsPNGDecoder::nsPNGDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
- : Decoder(aImage, aObserver),
+nsPNGDecoder::nsPNGDecoder(RasterImage &aImage)
+ : Decoder(aImage),
    mPNG(nullptr), mInfo(nullptr),
    mCMSLine(nullptr), interlacebuf(nullptr),
    mInProfile(nullptr), mTransform(nullptr),
