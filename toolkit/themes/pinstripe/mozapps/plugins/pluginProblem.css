@@ -123,13 +123,6 @@ html|a {
 @media (min-resolution: 2dppx) {
   .closeIcon {
     background-image: url("chrome://global/skin/icons/close@2x.png");
-  }
-
-  .closeIcon:hover {
-    background-position: -32px 0;
-  }
-
-  .closeIcon:hover:active {
-    background-position: -64px 0;
+    background-size: auto 16px;
   }
 }
