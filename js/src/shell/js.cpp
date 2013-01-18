@@ -5334,6 +5334,9 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",
                                "Compile scripts off thread (default: off)")
 #endif
+#ifdef JSGC_GENERATIONAL
+        || !op.addBoolOption('\0', "ggc", "Enable Generational GC")
+#endif
     )
     {
         return EXIT_FAILURE;
@@ -5373,6 +5376,9 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
+#ifdef JSGC_GENERATIONAL
+    JS_SetGCParameter(rt, JSGC_ENABLE_GENERATIONAL, op.getBoolOption("ggc"));
+#endif
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetSecurityCallbacks(rt, &securityCallbacks);
