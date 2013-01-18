@@ -368,16 +368,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mLoopCount(-1),
   mLockCount(0),
   mDecoder(nullptr),
-// We know DecodeRequest won't touch members of RasterImage
-// until this constructor completes
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4355)
-#endif
-  mDecodeRequest(this),
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
   mBytesDecoded(0),
   mDecodeCount(0),
 #ifdef DEBUG
@@ -2634,7 +2624,7 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       // to go negative, which is not kosher.
       if (sMaxDecodeCount > 0) {
         Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Subtract(sMaxDecodeCount);
-      }
+  }
       sMaxDecodeCount = mDecodeCount;
       Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Add(sMaxDecodeCount);
     }
@@ -3376,7 +3366,13 @@ RasterImage::DecodeWorker::Singleton()
 void
 RasterImage::DecodeWorker::MarkAsASAP(RasterImage* aImg)
 {
-  DecodeRequest* request = &aImg->mDecodeRequest;
+  // We can be marked as ASAP before we've been asked to decode. If we are,
+  // create the request so we have somewhere to write down our status.
+  if (aImg->mDecodeRequest) {
+    CreateRequestForImage(aImg);
+  }
+
+  DecodeRequest* request = aImg->mDecodeRequest;
 
   // If we're already an ASAP request, there's nothing to do here.
   if (request->mIsASAP) {
@@ -3421,9 +3417,19 @@ RasterImage::DecodeWorker::AddDecodeRequest(DecodeRequest* aRequest)
 }
 
 void
+RasterImage::DecodeWorker::CreateRequestForImage(RasterImage* aImg)
+{
+  aImg->mDecodeRequest = new DecodeRequest(aImg);
+}
+
+void
 RasterImage::DecodeWorker::RequestDecode(RasterImage* aImg)
 {
-  AddDecodeRequest(&aImg->mDecodeRequest);
+  if (!aImg->mDecodeRequest) {
+    CreateRequestForImage(aImg);
+  }
+
+  AddDecodeRequest(aImg->mDecodeRequest);
   EnsurePendingInEventLoop();
 }
 
@@ -3454,12 +3460,14 @@ RasterImage::DecodeWorker::EnsurePendingInEventLoop()
 void
 RasterImage::DecodeWorker::StopDecoding(RasterImage* aImg)
 {
-  DecodeRequest* request = &aImg->mDecodeRequest;
-  if (request->isInList()) {
-    request->remove();
+  // If we haven't got a decode request, we're not currently decoding. (Having
+  // a decode request doesn't imply we *are* decoding, though.)
+  if (aImg->mDecodeRequest) {
+    if (aImg->mDecodeRequest->isInList()) {
+      aImg->mDecodeRequest->remove();
+    }
+    aImg->mDecodeRequest = nullptr;
   }
-  request->mDecodeTime = TimeDuration(0);
-  request->mIsASAP = false;
 }
 
 NS_IMETHODIMP
@@ -3484,7 +3492,7 @@ RasterImage::DecodeWorker::Run()
 
     // This has to be a strong pointer, because DecodeSomeOfImage may destroy
     // image->mDecoder, which may be holding the only other reference to image.
-    nsRefPtr<RasterImage> image = request->mImage;
+    RefPtr<RasterImage> image = request->mImage;
     DecodeSomeOfImage(image);
 
     // If we aren't yet finished decoding and we have more data in hand, add
@@ -3572,7 +3580,13 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
       break;
   }
 
-  aImg->mDecodeRequest.mDecodeTime += (TimeStamp::Now() - start);
+  if (!aImg->mDecodeRequest) {
+    MOZ_ASSERT(aDecodeType == DECODE_TYPE_UNTIL_SIZE);
+  }
+
+  if (aImg->mDecodeRequest) {
+    aImg->mDecodeRequest->mDecodeTime += (TimeStamp::Now() - start);
+  }
 
   if (chunkCount && !aImg->mDecoder->IsSizeDecode()) {
     Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, chunkCount);
@@ -3607,8 +3621,8 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
   if (aImg->mDecoder && aImg->IsDecodeFinished()) {
 
     // Do some telemetry if this isn't a size decode.
-    DecodeRequest* request = &aImg->mDecodeRequest;
-    if (!aImg->mDecoder->IsSizeDecode()) {
+    DecodeRequest* request = aImg->mDecodeRequest;
+    if (request && !aImg->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
                             int32_t(request->mDecodeTime.ToMicroseconds()));
 
