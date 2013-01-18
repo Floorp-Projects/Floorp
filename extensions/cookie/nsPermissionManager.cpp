@@ -1231,6 +1231,9 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
     data.permissions[i]->GetIsInBrowserElement(&isInBrowserElement);
     data.permissions[i]->GetType(type);
 
+    if (aBrowserOnly && !isInBrowserElement)
+      continue;
+
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipal(host, aAppId, isInBrowserElement,
                                getter_AddRefs(principal)))) {
