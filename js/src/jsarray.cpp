@@ -652,7 +652,7 @@ array_toSource_impl(JSContext *cx, CallArgs args)
         if (hole) {
             str = cx->runtime->emptyString;
         } else {
-            str = js_ValueToSource(cx, elt);
+            str = ValueToSource(cx, elt);
             if (!str)
                 return false;
         }
