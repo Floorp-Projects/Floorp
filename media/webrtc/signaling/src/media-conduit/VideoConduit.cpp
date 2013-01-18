@@ -563,7 +563,7 @@ WebrtcVideoConduit::ReceivedRTCPPacket(const void *data, int len)
   CSFLogError(logTag, " %s Channel %d, Len %d ", __FUNCTION__, mChannel, len);
 
   //Media Engine should be receiving already
-  if(mEngineReceiving)
+  if(mEngineTransmitting)
   {
     //let the engine know of RTCP packet to decode.
     if(mPtrViENetwork->ReceivedRTCPPacket(mChannel,data,len) == -1)
@@ -591,7 +591,7 @@ int WebrtcVideoConduit::SendPacket(int channel, const void* data, int len)
   if(mTransport && (mTransport->SendRtpPacket(data, len) == NS_OK))
   {
     CSFLogDebug(logTag, "%s Sent RTP Packet ", __FUNCTION__);
-    return 0;
+    return len;
   } else {
     CSFLogError(logTag, "%s  Failed", __FUNCTION__);
     return -1;
@@ -605,7 +605,7 @@ int WebrtcVideoConduit::SendRTCPPacket(int channel, const void* data, int len)
   if(mTransport && (mTransport->SendRtcpPacket(data, len) == NS_OK))
    {
       CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
-      return 0;
+      return len;
    } else {
       CSFLogError(logTag, "%s Failed", __FUNCTION__);
       return -1;
