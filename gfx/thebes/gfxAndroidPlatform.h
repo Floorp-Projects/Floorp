@@ -9,7 +9,10 @@
 #include "gfxFT2Fonts.h"
 #include "gfxPlatform.h"
 #include "gfxUserFontSet.h"
+#include "nsCOMPtr.h"
 #include "nsTArray.h"
+
+class nsIMemoryReporter;
 
 namespace mozilla {
     namespace dom {
@@ -78,6 +81,8 @@ public:
 private:
     int mScreenDepth;
     gfxImageFormat mOffscreenFormat;
+
+    nsCOMPtr<nsIMemoryReporter> mFreetypeReporter;
 };
 
 #endif /* GFX_PLATFORM_ANDROID_H */
