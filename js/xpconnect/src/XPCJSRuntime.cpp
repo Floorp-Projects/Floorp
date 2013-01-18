@@ -1857,6 +1857,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   "Memory allocated by one of the JITs to hold the "
                   "runtime's code, but which is currently unused.");
 
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-data"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.regexpData,
+                  "Memory used by the regexp JIT to hold data.");
+
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/stack"),
                   nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.stack,
                   "Memory used for the JS call stack.  This is the committed "

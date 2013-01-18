@@ -96,6 +96,18 @@ public:
         return deallocCrossPool(this, position);
     }
 
+    size_t sizeOfNonHeapData() const
+    {
+        ASSERT(!m_previous);
+        size_t n = 0;
+        const BumpPointerPool *curr = this;
+        while (curr) {
+            n += m_allocation.size();
+            curr = curr->m_next;
+        }
+        return n;
+    }
+
 private:
     // Placement operator new, returns the last 'size' bytes of allocation for use as this.
     void* operator new(size_t size, const PageAllocation& allocation)
@@ -247,6 +259,11 @@ public:
     {
         if (m_head)
             m_head->shrink();
+    }
+
+    size_t sizeOfNonHeapData() const
+    {
+        return m_head ? m_head->sizeOfNonHeapData() : 0;
     }
 
 private:
