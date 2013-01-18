@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,21 +17,21 @@
 #include "nsIXULRuntime.h"
 #include "nsCSSStyleSheet.h"
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutStyleSheetCacheMallocSizeOf)
-
-static int64_t
-GetStylesheetCacheSize()
+class LayoutStyleSheetCacheReporter MOZ_FINAL
+  : public mozilla::MemoryReporterBase
 {
-  return nsLayoutStylesheetCache::SizeOfIncludingThis(
-           LayoutStyleSheetCacheMallocSizeOf);
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(StyleSheetCache,
-  "explicit/layout/style-sheet-cache",
-  KIND_HEAP,
-  nsIMemoryReporter::UNITS_BYTES,
-  GetStylesheetCacheSize,
-  "Memory used for some built-in style sheets.")
+public:
+  LayoutStyleSheetCacheReporter()
+    : MemoryReporterBase("explicit/layout/style-sheet-cache",
+                         KIND_HEAP, UNITS_BYTES,
+                         "Memory used for some built-in style sheets.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    return nsLayoutStylesheetCache::SizeOfIncludingThis(MallocSizeOf);
+  }
+};
 
 NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
 
@@ -160,12 +161,10 @@ nsLayoutStylesheetCache::Shutdown()
 size_t
 nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
-  if (!nsLayoutStylesheetCache::gStyleCache) {
-    return 0;
-  }
-
-  return nsLayoutStylesheetCache::gStyleCache->
-      SizeOfIncludingThisHelper(aMallocSizeOf);
+  return nsLayoutStylesheetCache::gStyleCache
+       ? nsLayoutStylesheetCache::gStyleCache->
+           SizeOfIncludingThisHelper(aMallocSizeOf)
+       : 0;
 }
 
 size_t
@@ -226,14 +225,14 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   }
   NS_ASSERTION(mFullScreenOverrideSheet, "Could not load full-screen-override.css");
 
-  mReporter = new NS_MEMORY_REPORTER_NAME(StyleSheetCache);
-  (void)::NS_RegisterMemoryReporter(mReporter);
+  mReporter = new LayoutStyleSheetCacheReporter();
+  NS_RegisterMemoryReporter(mReporter);
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()
 {
-  (void)::NS_UnregisterMemoryReporter(mReporter);
-  mReporter = nullptr;
+  NS_UnregisterMemoryReporter(mReporter);
+  gStyleCache = nullptr;
 }
 
 void
@@ -301,7 +300,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
     return;
   }
 
-  if (!gCSSLoader) { 
+  if (!gCSSLoader) {
     gCSSLoader = new mozilla::css::Loader();
     NS_IF_ADDREF(gCSSLoader);
   }
