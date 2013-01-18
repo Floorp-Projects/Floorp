@@ -46,19 +46,20 @@ interface nsIMarkupDocumentViewer : nsISupports
 	*/
 	attribute ACString defaultCharacterSet;
 
-	/*
-	XXX Comment here!
-	*/
+	/**
+	 * XXX comm-central only: bug 829543. Not the Character Encoding menu in 
+     * browser!
+	 */
 	attribute ACString forceCharacterSet;
 
-	/*
-	XXX Comment here!
-	*/
+	/**
+	 * XXX comm-central only: bug 829543.
+	 */
 	attribute ACString hintCharacterSet;
 
-	/*
-	XXX Comment here!
-	*/
+	/**
+	 * XXX comm-central only: bug 829543.
+	 */
 	attribute int32_t hintCharacterSetSource;
 
 	/*
