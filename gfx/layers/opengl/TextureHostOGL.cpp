@@ -848,8 +848,9 @@ TiledDeprecatedTextureHostOGL::DeleteTextures()
     mGL->MakeCurrent();
     mGL->fDeleteTextures(1, &mTextureHandle);
 
-    gl::GLContext::UpdateTextureMemoryUsage(gl::GLContext::MemoryFreed, mGLFormat,
-                                            GetTileType(), TILEDLAYERBUFFER_TILE_SIZE);
+    gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
+                                          mGLFormat, GetTileType(),
+                                          TILEDLAYERBUFFER_TILE_SIZE);
     mTextureHandle = 0;
   }
 }
@@ -871,8 +872,9 @@ TiledDeprecatedTextureHostOGL::Update(gfxReusableSurfaceWrapper* aReusableSurfac
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
     // We're re-using a texture, but the format may change. Update the memory
     // reporter with a free and alloc (below) using the old and new formats.
-    gl::GLContext::UpdateTextureMemoryUsage(gl::GLContext::MemoryFreed, mGLFormat,
-                                            GetTileType(), TILEDLAYERBUFFER_TILE_SIZE);
+    gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
+                                          mGLFormat, GetTileType(),
+                                          TILEDLAYERBUFFER_TILE_SIZE);
   }
 
   GLenum type;
@@ -883,8 +885,9 @@ TiledDeprecatedTextureHostOGL::Update(gfxReusableSurfaceWrapper* aReusableSurfac
                    TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE, 0,
                    mGLFormat, type, buf);
 
-  gl::GLContext::UpdateTextureMemoryUsage(gl::GLContext::MemoryAllocated, mGLFormat,
-                                          type, TILEDLAYERBUFFER_TILE_SIZE);
+  gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryAllocated,
+                                        mGLFormat, type,
+                                        TILEDLAYERBUFFER_TILE_SIZE);
 
   if (mGLFormat == LOCAL_GL_RGB) {
     mFormat = FORMAT_R8G8B8X8;
