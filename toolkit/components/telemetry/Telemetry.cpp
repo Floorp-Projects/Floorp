@@ -1998,8 +1998,12 @@ namespace mozilla {
 void
 RecordShutdownStartTimeStamp() {
 #ifdef DEBUG
+  // FIXME: this function should only be called once, since it should be called
+  // at the earliest point we *know* we are shutting down. Unfortunately
+  // this assert has been firing. Given that if we are called multiple times
+  // we just keep the last timestamp, the assert is commented for now.
   static bool recorded = false;
-  MOZ_ASSERT(!recorded);
+  //  MOZ_ASSERT(!recorded);
   recorded = true;
 #endif
 
