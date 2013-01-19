@@ -11,7 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 TEST_DIRS += tests
 
-MODULES_FILES := policy.jsm
+MODULES_FILES := policy.jsm sessions.jsm
 MODULES_DEST = $(FINAL_TARGET)/modules/services/datareporting
 INSTALL_TARGETS += MODULES
 
