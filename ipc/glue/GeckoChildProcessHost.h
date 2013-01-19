@@ -29,6 +29,8 @@ public:
   typedef base::ChildPrivileges ChildPrivileges;
   typedef base::ProcessHandle ProcessHandle;
 
+  static ChildPrivileges DefaultChildPrivileges();
+
   GeckoChildProcessHost(GeckoProcessType aProcessType,
                         ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
 

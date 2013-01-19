@@ -604,8 +604,8 @@ struct ParseNode {
         struct {                        /* name, labeled statement, etc. */
             union {
                 JSAtom        *atom;    /* lexical name or label atom */
-                FunctionBox   *funbox;  /* function object */
                 ObjectBox     *objbox;  /* block or regexp object */
+                FunctionBox   *funbox;  /* function object */
             };
             union {
                 ParseNode    *expr;     /* function body, var initializer, argument default,
@@ -1497,13 +1497,17 @@ LinkUseToDef(ParseNode *pn, Definition *dn)
     pn->pn_lexdef = dn;
 }
 
+class ModuleBox;
+
 class ObjectBox {
   public:
     JSObject *object;
 
     ObjectBox(JSObject *object, ObjectBox *traceLink);
+    bool isModuleBox() { return object->isModule(); }
     bool isFunctionBox() { return object->isFunction(); }
-    FunctionBox *asFunctionBox() { JS_ASSERT(isFunctionBox()); return (FunctionBox *)(this); }
+    ModuleBox *asModuleBox();
+    FunctionBox *asFunctionBox();
     void trace(JSTracer *trc);
 
   protected:
@@ -1513,6 +1517,7 @@ class ObjectBox {
     ObjectBox *emitLink;
 
     ObjectBox(JSFunction *function, ObjectBox *traceLink);
+    ObjectBox(Module *module, ObjectBox *traceLink);
 };
 
 } /* namespace frontend */

@@ -7,7 +7,7 @@ const enteredText2="\u03BE\u03B5\u03C3\u03BA\u03B5\u03C0\u03AC\u03B6\u03C9\u0020
 function test() {
   waitForExplicitFinish();
 
-  var rootDir = getRootDirectory(gTestPath);
+  var rootDir = "http://mochi.test:8888/browser/docshell/test/browser/";
   gBrowser.selectedTab = gBrowser.addTab(rootDir + "test-form_sjis.html");
   gBrowser.selectedBrowser.addEventListener("load", afterOpen, true);
 }

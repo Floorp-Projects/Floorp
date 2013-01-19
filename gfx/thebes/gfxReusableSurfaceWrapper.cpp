@@ -15,24 +15,25 @@ gfxReusableSurfaceWrapper::gfxReusableSurfaceWrapper(gfxImageSurface* aSurface)
   MOZ_COUNT_CTOR(gfxReusableSurfaceWrapper);
 }
 
+class DeleteImageOnMainThread : public nsRunnable {
+public:
+  DeleteImageOnMainThread(gfxImageSurface *aImage)
+  : mImage(aImage)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    return NS_OK;
+  }
+private:
+  nsRefPtr<gfxImageSurface> mImage;
+};
+
 gfxReusableSurfaceWrapper::~gfxReusableSurfaceWrapper()
 {
   NS_ABORT_IF_FALSE(mReadCount == 0, "Should not be locked when released");
   MOZ_COUNT_DTOR(gfxReusableSurfaceWrapper);
   if (!NS_IsMainThread()) {
-    class DeleteImageOnMainThread : public nsRunnable {
-    public:
-      DeleteImageOnMainThread(gfxImageSurface *aImage)
-        : mImage(aImage)
-      {}
-
-      NS_IMETHOD Run()
-      {
-        return NS_OK;
-      }
-    private:
-      nsRefPtr<gfxImageSurface> mImage;
-    };
     NS_DispatchToMainThread(new DeleteImageOnMainThread(mSurface));
   }
 }

@@ -20,7 +20,9 @@ def TemporaryDirectory():
 
 class CPPUnitTests(object):
     # Time (seconds) to wait for test process to complete
-    TEST_PROC_TIMEOUT = 300
+    TEST_PROC_TIMEOUT = 1200
+    # Time (seconds) in which process will be killed if it produces no output.
+    TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
     def run_one_test(self, prog, env, symbols_path=None):
         """
@@ -42,7 +44,8 @@ class CPPUnitTests(object):
                                              env=env)
             #TODO: After bug 811320 is fixed, don't let .run() kill the process,
             # instead use a timeout in .wait() and then kill to get a stack.
-            proc.run(timeout=CPPUnitTests.TEST_PROC_TIMEOUT)
+            proc.run(timeout=CPPUnitTests.TEST_PROC_TIMEOUT,
+                     outputTimeout=CPPUnitTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
             proc.wait()
             if proc.timedOut:
                 log.testFail("%s | timed out after %d seconds",

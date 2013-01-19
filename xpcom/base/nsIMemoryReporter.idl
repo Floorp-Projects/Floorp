@@ -430,7 +430,10 @@ namespace mozilla {
 // memory reporters.  You just need to provide the following.
 // - The constant values: path, kind, units, and description.  They are passed
 //   to the MemoryReporterBase constructor.
-// - An Amount() method.  It can use the MallocSizeOf method if necessary.
+// - A (private) Amount() or (public) GetAmount() method.  It can use the 
+//   MallocSizeOf method if necessary.  Use Amount() if the reporter is
+//   infallible, and GetAmount() otherwise.  (If you fail to provide one or the
+//   other, you'll get assertion failures when the memory reporter runs.)
 //
 // The class name of subclasses should match the path, minus the "explicit"
 // (if present), and with "Reporter" at the end.  For example:
@@ -489,7 +492,12 @@ public:
   }
 
 protected:
-  virtual int64_t Amount() = 0; 
+  virtual int64_t Amount()
+  {
+    // We only reach here if neither GetAmount() nor Amount() was overridden.
+    MOZ_ASSERT(false);
+    return 0;
+  }
 
   NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
 

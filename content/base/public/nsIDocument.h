@@ -100,8 +100,8 @@ template<typename> class Sequence;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xff03d72f, 0x87cd, 0x4d11, \
- { 0x81, 0x8d, 0xa8, 0xb4, 0xf5, 0x98, 0x1a, 0x10 } }
+{ 0x2df7f766, 0xf70b, 0x4de4, \
+ { 0xb0, 0xba, 0x78, 0x25, 0x07, 0x41, 0xd6, 0xce } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -568,6 +568,12 @@ public:
   virtual nsViewportInfo GetViewportInfo(uint32_t aDisplayWidth,
                                          uint32_t aDisplayHeight) = 0;
 
+  /**
+   * True iff this doc will ignore manual character encoding overrides.
+   */
+  virtual bool WillIgnoreCharsetOverride() {
+    return true;
+  }
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;

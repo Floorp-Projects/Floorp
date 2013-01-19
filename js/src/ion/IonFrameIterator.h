@@ -264,8 +264,8 @@ class InlineFrameIterator
     SnapshotIterator start_;
     SnapshotIterator si_;
     unsigned framesRead_;
-    HeapPtr<JSFunction> callee_;
-    HeapPtr<JSScript> script_;
+    RootedFunction callee_;
+    RootedScript script_;
     jsbytecode *pc_;
     uint32_t numActualArgs_;
 
@@ -273,9 +273,9 @@ class InlineFrameIterator
     void findNextFrame();
 
   public:
-    InlineFrameIterator(const IonFrameIterator *iter);
-    InlineFrameIterator(const IonBailoutIterator *iter);
-    InlineFrameIterator(const InlineFrameIterator *iter);
+    InlineFrameIterator(JSContext *cx, const IonFrameIterator *iter);
+    InlineFrameIterator(JSContext *cx, const IonBailoutIterator *iter);
+    InlineFrameIterator(JSContext *cx, const InlineFrameIterator *iter);
 
     bool more() const {
         return frame_ && framesRead_ < start_.frameCount();
@@ -290,10 +290,10 @@ class InlineFrameIterator
     unsigned numActualArgs() const;
 
     template <class Op>
-    inline void forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const;
+    inline void forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const;
 
     UnrootedScript script() const {
-        return script_.get();
+        return script_;
     }
     jsbytecode *pc() const {
         return pc_;
@@ -308,6 +308,12 @@ class InlineFrameIterator
     InlineFrameIterator &operator++();
 
     void dump() const;
+
+    void resetOn(const IonFrameIterator *iter);
+
+  private:
+    InlineFrameIterator() MOZ_DELETE;
+    InlineFrameIterator(const InlineFrameIterator &iter) MOZ_DELETE;
 };
 
 } // namespace ion

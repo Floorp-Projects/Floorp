@@ -31,7 +31,7 @@ enum Scale {
 };
 
 static inline Scale
-ScaleFromShift(int shift)
+ScaleFromElemWidth(int shift)
 {
     switch (shift) {
       case 1:
@@ -100,13 +100,17 @@ struct ImmGCPtr
     uintptr_t value;
 
     explicit ImmGCPtr(const gc::Cell *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
-    { }
+    {
+        JS_ASSERT(!IsPoisonedPtr(ptr));
+    }
 
     // ImmGCPtr is rooted so we can convert safely directly from Unrooted<T>.
     template <typename T>
     explicit ImmGCPtr(Unrooted<T> ptr)
       : value(reinterpret_cast<uintptr_t>(static_cast<T>(ptr)))
-    { }
+    {
+        JS_ASSERT(!IsPoisonedPtr(static_cast<T>(ptr)));
+    }
 };
 
 // Specifies a hardcoded, absolute address.

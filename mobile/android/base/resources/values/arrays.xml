@@ -96,4 +96,9 @@
         <item>wifi</item>
         <item>disabled</item>
     </string-array>
+    <string-array name="tabs_panel_spinner">
+        <item>@string/tabs_normal</item>
+        <item>@string/tabs_private</item>
+        <item>@string/tabs_synced</item>
+    </string-array>
 </resources>

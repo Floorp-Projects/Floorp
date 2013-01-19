@@ -20,6 +20,7 @@
               0 1px 0 rgba(255,255,255,0.2);
   padding: 5px;
   -moz-user-select: none;
+  position: relative;
 }
 
 html|a {
@@ -91,4 +92,37 @@ html|a {
   min-width: 16px;
   min-height: 16px;
   background: url(chrome://mozapps/skin/plugins/pluginHelp-16.png) no-repeat;
+}
+
+.closeIcon {
+  display: block;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 4px;
+  right: 4px;
+  border: none;
+  background-color: transparent;
+  background-image: url("chrome://global/skin/icons/close.png");
+  background-repeat: no-repeat;
+}
+
+.closeIcon:-moz-locale-dir(rtl) {
+  right: auto;
+  left: 4px;
+}
+
+.closeIcon:hover {
+  background-position: -16px 0;
+}
+
+.closeIcon:hover:active {
+  background-position: -32px 0;
+}
+
+@media (min-resolution: 2dppx) {
+  .closeIcon {
+    background-image: url("chrome://global/skin/icons/close@2x.png");
+    background-size: auto 16px;
+  }
 }

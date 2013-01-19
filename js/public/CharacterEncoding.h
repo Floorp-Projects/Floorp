@@ -29,6 +29,9 @@ class Latin1Chars : public mozilla::Range<unsigned char>
   public:
     Latin1Chars() : Base() {}
     Latin1Chars(char *bytes, size_t length) : Base(reinterpret_cast<unsigned char *>(bytes), length) {}
+    Latin1Chars(const char *bytes, size_t length)
+      : Base(reinterpret_cast<unsigned char *>(const_cast<char *>(bytes)), length)
+    {}
 };
 
 /*
@@ -89,6 +92,21 @@ class TwoByteChars : public mozilla::Range<jschar>
     TwoByteChars() : Base() {}
     TwoByteChars(jschar *chars, size_t length) : Base(chars, length) {}
     TwoByteChars(const jschar *chars, size_t length) : Base(const_cast<jschar *>(chars), length) {}
+};
+
+/*
+ * A non-convertible variant of TwoByteChars that does not refer to characters
+ * inlined inside a JSShortString or a JSInlineString. StableTwoByteChars are
+ * thus safe to hold across a GC.
+ */
+class StableTwoByteChars : public mozilla::Range<jschar>
+{
+    typedef mozilla::Range<jschar> Base;
+
+  public:
+    StableTwoByteChars() : Base() {}
+    StableTwoByteChars(jschar *chars, size_t length) : Base(chars, length) {}
+    StableTwoByteChars(const jschar *chars, size_t length) : Base(const_cast<jschar *>(chars), length) {}
 };
 
 /*

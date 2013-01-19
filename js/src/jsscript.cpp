@@ -1750,7 +1750,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    uint32_t nfixed = bce->sc->isFunction ? script->bindings.numVars() : 0;
+    uint32_t nfixed = bce->sc->isFunctionBox() ? script->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1768,7 +1768,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     }
     script->nslots = script->nfixed + bce->maxStackDepth;
 
-    FunctionBox *funbox = bce->sc->isFunction ? bce->sc->asFunbox() : NULL;
+    FunctionBox *funbox = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox() : NULL;
 
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return false;
@@ -2745,7 +2745,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 #endif
 
     if (script->hasAnalysis() && script->analysis()->ranInference()) {
-        types::AutoEnterTypeInference enter(cx);
+        types::AutoEnterAnalysis enter(cx);
         types::TypeScript::MonitorUnknown(cx, script, script->argumentsBytecode());
     }
 

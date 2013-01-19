@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <string.h>
 #include <stdlib.h>
 #include <mozilla/StandardInteger.h>
 #include <nsID.h>
@@ -25,8 +24,8 @@ public:
   SharedLibrary(unsigned long aStart,
                 unsigned long aEnd,
                 unsigned long aOffset,
-                const std::string &aBreakpadId,
-                const std::string &aName)
+                const std::string& aBreakpadId,
+                const std::string& aName)
     : mStart(aStart)
     , mEnd(aEnd)
     , mOffset(aOffset)

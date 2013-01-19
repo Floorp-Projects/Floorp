@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="windows-1252">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>meta declaration in parent and BOMless UTF-16 with HTTP charset in child</title>
+</head>
+<body>
+<h1>meta declaration in parent and BOMless UTF-16 with HTTP charset in child</h1>
+
+<p>Euro sign if decoded as Windows-1252: €</p>
+<p>a with diaeresis if decoded as Windows-1252: ä</p>
+
+<iframe src="file_bug234628-6-child.html"></iframe>
+
+</body>
+</html>
+

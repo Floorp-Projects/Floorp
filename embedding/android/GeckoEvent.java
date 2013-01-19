@@ -25,12 +25,13 @@ import android.util.Log;
  */
 
 public class GeckoEvent {
+    // these constants should match the ones in mobile/android/base/GeckoEvent.java
+    // as much as possible
     public static final int INVALID = -1;
     public static final int NATIVE_POKE = 0;
     public static final int KEY_EVENT = 1;
     public static final int MOTION_EVENT = 2;
-    public static final int ORIENTATION_EVENT = 3;
-    public static final int ACCELERATION_EVENT = 4;
+    public static final int SENSOR_EVENT = 3;
     public static final int LOCATION_EVENT = 5;
     public static final int IME_EVENT = 6;
     public static final int DRAW = 7;
@@ -48,8 +49,7 @@ public class GeckoEvent {
     public static final int VIEWPORT = 20;
     public static final int VISITED = 21;
     public static final int NETWORK_CHANGED = 22;
-    public static final int PROXIMITY_EVENT = 23;
-    public static final int SCREENORIENTATION_CHANGED = 26;
+    public static final int SCREENORIENTATION_CHANGED = 27;
 
     /**
      * These DOM_KEY_LOCATION constants mirror the DOM KeyboardEvent's constants.
@@ -92,8 +92,6 @@ public class GeckoEvent {
     public Point[] mPointRadii;
     public Rect mRect;
     public double mX, mY, mZ;
-    public double mAlpha, mBeta, mGamma;
-    public double mDistance;
 
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
@@ -285,25 +283,30 @@ public class GeckoEvent {
  
         switch(sensor_type) {
         case Sensor.TYPE_ACCELEROMETER:
-            mType = ACCELERATION_EVENT;
+            mType = SENSOR_EVENT;
+            mFlags = 1; // hal::SENSOR_ACCELERATION
             mX = s.values[0];
             mY = s.values[1];
             mZ = s.values[2];
             break;
             
         case Sensor.TYPE_ORIENTATION:
-            mType = ORIENTATION_EVENT;
-            mAlpha = -s.values[0];
-            mBeta = -s.values[1];
-            mGamma = -s.values[2];
-            Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mAlpha + " " + mBeta + " " + mGamma );
+            mType = SENSOR_EVENT;
+            mFlags = 0; // hal::SENSOR_ORIENTATION
+            mX = s.values[0];
+            mY = s.values[1];
+            mZ = s.values[2];
+            Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mX + " " + mY + " " + mZ );
             break;
 
         case Sensor.TYPE_PROXIMITY:
-            mType = PROXIMITY_EVENT;
-            mDistance = s.values[0];
+            mType = SENSOR_EVENT;
+            mFlags = 2; // hal:SENSOR_PROXIMITY
+            mX = s.values[0];
+            mY = 0;
+            mZ = s.sensor.getMaximumRange();
             Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + 
-                  " " + s.sensor.getName() + " " + mDistance);
+                  " " + s.sensor.getName() + " " + mX);
             break;
         }
     }

@@ -227,7 +227,7 @@ class Assembler : public AssemblerX86Shared
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
-    void flush() { }
+    void finish() { }
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.

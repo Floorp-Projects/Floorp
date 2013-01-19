@@ -3509,12 +3509,14 @@ NS_IMETHODIMP nsHTMLMediaElement::SetPlaybackRate(double aPlaybackRate)
 
   mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
 
-  if (mPlaybackRate < 0 ||
-      mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
-      mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO) {
-    SetMutedInternal(true);
-  } else {
-    SetMutedInternal(false);
+  if (!mMuted) {
+    if (mPlaybackRate < 0 ||
+        mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
+        mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO) {
+      SetMutedInternal(true);
+    } else {
+      SetMutedInternal(false);
+    }
   }
 
   if (mDecoder) {

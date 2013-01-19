@@ -239,7 +239,9 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
 {
     LDivI *lir = new LDivI(useFixed(div->lhs(), r0), use(div->rhs(), r1),
                            tempFixed(r2), tempFixed(r3));
-    return assignSnapshot(lir) && defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+    if (div->fallible() && !assignSnapshot(lir))
+        return false;
+    return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
 }
 
 bool
@@ -258,18 +260,24 @@ LIRGeneratorARM::lowerModI(MMod *mod)
         int32_t rhs = mod->rhs()->toConstant()->value().toInt32();
         int32_t shift;
         JS_FLOOR_LOG2(shift, rhs);
-        if (1 << shift == rhs) {
+        if (rhs > 0 && 1 << shift == rhs) {
             LModPowTwoI *lir = new LModPowTwoI(useRegister(mod->lhs()), shift);
-            return (assignSnapshot(lir) && define(lir, mod));
+            if (mod->fallible() && !assignSnapshot(lir))
+                return false;
+            return define(lir, mod);
         } else if (shift < 31 && (1 << (shift+1)) - 1 == rhs) {
             LModMaskI *lir = new LModMaskI(useRegister(mod->lhs()), temp(LDefinition::GENERAL), shift+1);
-            return (assignSnapshot(lir) && define(lir, mod));
+            if (mod->fallible() && !assignSnapshot(lir))
+                return false;
+            return define(lir, mod);
         }
     }
     LModI *lir = new LModI(useFixed(mod->lhs(), r0), use(mod->rhs(), r1),
                            tempFixed(r2), tempFixed(r3), temp(LDefinition::GENERAL));
 
-    return assignSnapshot(lir) && defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+    if (mod->fallible() && !assignSnapshot(lir))
+        return false;
+    return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
 }
 
 bool
