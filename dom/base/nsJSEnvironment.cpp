@@ -1293,9 +1293,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   pusher.Pop();
   ScriptEvaluated(true);
 
-  // Wrap the return value into whatever compartment mContext was in.
-  if (!JS_WrapValue(mContext, aRetValue))
-    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
