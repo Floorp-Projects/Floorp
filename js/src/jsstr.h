@@ -40,6 +40,9 @@ class MutatingRopeSegmentRange;
  */
 class RopeBuilder;
 
+extern JSString *
+ConcatStringsNoGC(JSContext *cx, JSString *s1, JSString *s2);
+
 }  /* namespace js */
 
 extern JSString *

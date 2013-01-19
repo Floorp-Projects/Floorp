@@ -525,8 +525,8 @@ InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 }
 
 static JS_ALWAYS_INLINE bool
-AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &lhs, const Value &rhs,
-             Value *res)
+AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
+             MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
@@ -537,62 +537,71 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &lh
         } else {
             res->setInt32(sum);
         }
-    } else
+        return true;
+    }
+
 #if JS_HAS_XML_SUPPORT
     if (IsXML(lhs) && IsXML(rhs)) {
         if (!js_ConcatenateXML(cx, &lhs.toObject(), &rhs.toObject(), res))
             return false;
         types::TypeScript::MonitorUnknown(cx, script, pc);
-    } else
+        return true;
+    }
 #endif
-    {
-        RootedValue lval(cx, lhs);
-        RootedValue rval(cx, rhs);
 
-        /*
-         * If either operand is an object, any non-integer result must be
-         * reported to inference.
-         */
-        bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
+    /*
+     * If either operand is an object, any non-integer result must be
+     * reported to inference.
+     */
+    bool lIsObject = lhs.isObject(), rIsObject = rhs.isObject();
 
-        if (!ToPrimitive(cx, lval.address()))
-            return false;
-        if (!ToPrimitive(cx, rval.address()))
-            return false;
-        bool lIsString, rIsString;
-        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
-            RootedString lstr(cx), rstr(cx);
-            if (lIsString) {
-                lstr = lval.toString();
-            } else {
-                lstr = ToString(cx, lval);
-                if (!lstr)
-                    return false;
-            }
-            if (rIsString) {
-                rstr = rval.toString();
-            } else {
-                rstr = ToString(cx, rval);
-                if (!rstr)
-                    return false;
-            }
-            JSString *str = js_ConcatStrings(cx, lstr, rstr);
+    if (!ToPrimitive(cx, lhs.address()))
+        return false;
+    if (!ToPrimitive(cx, rhs.address()))
+        return false;
+    bool lIsString, rIsString;
+    if ((lIsString = lhs.isString()) | (rIsString = rhs.isString())) {
+        JSString *lstr, *rstr;
+        if (lIsString) {
+            lstr = lhs.toString();
+        } else {
+            lstr = ToString(cx, lhs);
+            if (!lstr)
+                return false;
+        }
+        if (rIsString) {
+            rstr = rhs.toString();
+        } else {
+            // Save/restore lstr in case of GC activity under ToString.
+            lhs.setString(lstr);
+            rstr = ToString(cx, rhs);
+            if (!rstr)
+                return false;
+            lstr = lhs.toString();
+        }
+        JSString *str = ConcatStringsNoGC(cx, lstr, rstr);
+        if (!str) {
+            RootedString nlstr(cx, lstr), nrstr(cx, rstr);
+            str = js_ConcatStrings(cx, nlstr, nrstr);
             if (!str)
                 return false;
-            if (lIsObject || rIsObject)
-                types::TypeScript::MonitorString(cx, script, pc);
-            res->setString(str);
-        } else {
-            double l, r;
-            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
-                return false;
-            l += r;
-            if (!res->setNumber(l) &&
-                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
-                types::TypeScript::MonitorOverflow(cx, script, pc);
-            }
         }
+        if (lIsObject || rIsObject)
+            types::TypeScript::MonitorString(cx, script, pc);
+        res->setString(str);
+    } else {
+        double l, r;
+        if (!ToNumber(cx, lhs, &l) || !ToNumber(cx, rhs, &r))
+            return false;
+        l += r;
+        Value nres = NumberValue(l);
+        if (nres.isDouble() &&
+            (lIsObject || rIsObject || (!lhs.isDouble() && !rhs.isDouble()))) {
+            types::TypeScript::MonitorOverflow(cx, script, pc);
+        }
+        *res = nres;
     }
+
     return true;
 }
 
