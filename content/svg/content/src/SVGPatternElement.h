@@ -87,10 +87,10 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternUnits();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternContentUnits();
   already_AddRefed<DOMSVGAnimatedTransformList> PatternTransform();
-  already_AddRefed<nsIDOMSVGAnimatedLength> X();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+  already_AddRefed<SVGAnimatedLength> X();
+  already_AddRefed<SVGAnimatedLength> Y();
+  already_AddRefed<SVGAnimatedLength> Width();
+  already_AddRefed<SVGAnimatedLength> Height();
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
 
 protected:

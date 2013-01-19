@@ -10,18 +10,12 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGRectElement : SVGGraphicsElement {
+interface SVGLength;
+
+interface SVGAnimatedLength {
   [Constant]
-  readonly attribute SVGAnimatedLength x;
+  readonly attribute SVGLength baseVal;
   [Constant]
-  readonly attribute SVGAnimatedLength y;
-  [Constant]
-  readonly attribute SVGAnimatedLength width;
-  [Constant]
-  readonly attribute SVGAnimatedLength height;
-  [Constant]
-  readonly attribute SVGAnimatedLength rx;
-  [Constant]
-  readonly attribute SVGAnimatedLength ry;
+  readonly attribute SVGLength animVal;
 };
 

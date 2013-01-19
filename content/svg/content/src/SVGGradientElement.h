@@ -129,10 +129,10 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedLength> X1();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Y1();
-  already_AddRefed<nsIDOMSVGAnimatedLength> X2();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Y2();
+  already_AddRefed<SVGAnimatedLength> X1();
+  already_AddRefed<SVGAnimatedLength> Y1();
+  already_AddRefed<SVGAnimatedLength> X2();
+  already_AddRefed<SVGAnimatedLength> Y2();
 
 protected:
 
@@ -184,11 +184,11 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedLength> Cx();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Cy();
-  already_AddRefed<nsIDOMSVGAnimatedLength> R();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Fx();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Fy();
+  already_AddRefed<SVGAnimatedLength> Cx();
+  already_AddRefed<SVGAnimatedLength> Cy();
+  already_AddRefed<SVGAnimatedLength> R();
+  already_AddRefed<SVGAnimatedLength> Fx();
+  already_AddRefed<SVGAnimatedLength> Fy();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();

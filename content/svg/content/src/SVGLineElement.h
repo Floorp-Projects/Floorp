@@ -52,10 +52,10 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedLength> X1();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Y1();
-  already_AddRefed<nsIDOMSVGAnimatedLength> X2();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Y2();
+  already_AddRefed<SVGAnimatedLength> X1();
+  already_AddRefed<SVGAnimatedLength> Y1();
+  already_AddRefed<SVGAnimatedLength> X2();
+  already_AddRefed<SVGAnimatedLength> Y2();
 
 protected:
 
