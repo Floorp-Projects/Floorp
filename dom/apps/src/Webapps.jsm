@@ -787,7 +787,10 @@ this.DOMApplicationRegistry = {
         this.getNotInstalled(msg, mm);
         break;
       case "Webapps:GetAll":
-        this.getAll(msg, mm);
+        if (msg.hasPrivileges)
+          this.getAll(msg, mm);
+        else
+          mm.sendAsyncMessage("Webapps:GetAll:Return:KO", msg);
         break;
       case "Webapps:InstallPackage":
         this.doInstallPackage(msg, mm);
