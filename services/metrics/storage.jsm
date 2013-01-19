@@ -5,6 +5,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
+  "DailyValues",
   "MetricsStorageBackend",
   "dateToDays",
   "daysToDate",
@@ -43,9 +44,9 @@ function daysToDate(days) {
  *
  * All days are defined in terms of UTC (as opposed to local time).
  */
-function DailyValues() {
+this.DailyValues = function () {
   this._days = new Map();
-}
+};
 
 DailyValues.prototype = Object.freeze({
   __iterator__: function () {
@@ -1261,6 +1262,18 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
     }
 
     return deferred.promise;
+  },
+
+  /**
+   * Enqueue a function to be performed as a transaction.
+   *
+   * The passed function should be a generator suitable for calling with
+   * `executeTransaction` from the SQLite connection.
+   */
+  enqueueTransaction: function (func, type) {
+    return this.enqueueOperation(
+      this._connection.executeTransaction.bind(this._connection, func, type)
+    );
   },
 
   _popAndPerformQueuedOperation: function () {
