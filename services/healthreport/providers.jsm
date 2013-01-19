@@ -355,6 +355,8 @@ SysInfoProvider.prototype = Object.freeze({
  *
  * The fields within the current session are moved to daily session fields when
  * the application is shut down.
+ *
+ * This measurement is backed by the SessionRecorder, not the database.
  */
 function CurrentSessionMeasurement() {
   Metrics.Measurement.call(this);
@@ -364,35 +366,33 @@ CurrentSessionMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "current",
-  version: 1,
-
-  LAST_NUMERIC_FIELDS: [
-    // Day on which the session was started.
-    // This is used to determine which day the record will be moved under when
-    // moved to daily sessions.
-    "startDay",
-
-    // Time in milliseconds the session was active for.
-    "activeTime",
-
-    // Total time in milliseconds of the session.
-    "totalTime",
-
-    // Startup times, in milliseconds.
-    "main",
-    "firstPaint",
-    "sessionRestored",
-  ],
+  version: 2,
 
   configureStorage: function () {
-    return Task.spawn(function configureStorage() {
-      for (let field of this.LAST_NUMERIC_FIELDS) {
-        yield this.registerStorageField(field, this.storage.FIELD_LAST_NUMERIC);
-      }
-    }.bind(this));
+    return Promise.resolve();
+  },
+
+  /**
+   * All data is stored in prefs, so we have a custom implementation.
+   */
+  getValues: function () {
+    let sessions = this.provider.healthReporter.sessionRecorder;
+
+    let fields = new Map();
+    let now = new Date();
+    fields.set("startDay", [now, Metrics.dateToDays(sessions.startDate)]);
+    fields.set("activeTicks", [now, sessions.activeTicks]);
+    fields.set("totalTime", [now, sessions.totalTime]);
+    fields.set("main", [now, sessions.main]);
+    fields.set("firstPaint", [now, sessions.firstPaint]);
+    fields.set("sessionRestored", [now, sessions.sessionRestored]);
+
+    return Promise.resolve({
+      days: new Metrics.DailyValues(),
+      singular: fields,
+    });
   },
 });
-
 
 /**
  * Records a history of all application sessions.
@@ -405,15 +405,15 @@ PreviousSessionsMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "previous",
-  version: 1,
+  version: 2,
 
   DAILY_DISCRETE_NUMERIC_FIELDS: [
     // Milliseconds of sessions that were properly shut down.
-    "cleanActiveTime",
+    "cleanActiveTicks",
     "cleanTotalTime",
 
     // Milliseconds of sessions that were not properly shut down.
-    "abortedActiveTime",
+    "abortedActiveTicks",
     "abortedTotalTime",
 
     // Startup times in milliseconds.
@@ -453,11 +453,6 @@ PreviousSessionsMeasurement.prototype = Object.freeze({
  */
 this.SessionsProvider = function () {
   Metrics.Provider.call(this);
-
-  this._startDate = null;
-  this._currentActiveTime = null;
-  this._lastActivityDate = null;
-  this._lastActivityWasInactive = false;
 };
 
 SessionsProvider.prototype = Object.freeze({
@@ -467,183 +462,32 @@ SessionsProvider.prototype = Object.freeze({
 
   measurementTypes: [CurrentSessionMeasurement, PreviousSessionsMeasurement],
 
-  _OBSERVERS: ["user-interaction-active", "user-interaction-inactive"],
+  collectConstantData: function () {
+    let previous = this.getMeasurement("previous", 2);
 
-  onInit: function () {
-    return Task.spawn(this._onInit.bind(this));
+    return this.storage.enqueueTransaction(this._recordAndPruneSessions.bind(this));
   },
 
-  _onInit: function () {
-    // We could cross day boundary between the application started and when
-    // this code is called. Meh.
-    let now = new Date();
-    this._startDate = now;
-    let current = this.getMeasurement("current", 1);
+  _recordAndPruneSessions: function () {
+    this._log.info("Moving previous sessions from session recorder to storage.");
+    let recorder = this.healthReporter.sessionRecorder;
+    let sessions = recorder.getPreviousSessions();
+    this._log.debug("Found " + Object.keys(sessions).length + " previous sessions.");
 
-    // Initialization occurs serially so we don't need to enqueue
-    // storage operations.
-    let currentData = yield this.storage.getMeasurementLastValuesFromMeasurementID(current.id);
+    let daily = this.getMeasurement("previous", 2);
 
-    // Normal shutdown should purge all data for this measurement. If
-    // there is data here, the session was aborted.
-    if (currentData.size) {
-      this._log.info("Data left over from old session. Counting as aborted.");
-      yield Task.spawn(this._moveCurrentToDaily.bind(this, currentData, true));
-    }
+    for each (let session in sessions) {
+      let type = session.clean ? "clean" : "aborted";
+      let date = session.startDate;
+      yield daily.addDailyDiscreteNumeric(type + "ActiveTicks", session.activeTicks, date);
+      yield daily.addDailyDiscreteNumeric(type + "TotalTime", session.totalTime, date);
 
-    this._currentActiveTime = 0;
-    this._lastActivityDate = now;
-
-    this._log.debug("Registering new/current session.");
-    yield current.setLastNumeric("activeTime", 0, now);
-    yield current.setLastNumeric("totalTime", 0, now);
-    yield current.setLastNumeric("startDay", this._dateToDays(now), now);
-
-    let si = this._getStartupInfo();
-
-    for (let field of ["main", "firstPaint", "sessionRestored"]) {
-      if (!(field in si)) {
-        continue;
+      for (let field of ["main", "firstPaint", "sessionRestored"]) {
+        yield daily.addDailyDiscreteNumeric(field, session[field], date);
       }
-
-      // si.process is the Date when the process actually started.
-      let value = si[field] - si.process;
-      yield current.setLastNumeric(field, value, now);
     }
 
-    for (let channel of this._OBSERVERS) {
-      Services.obs.addObserver(this, channel, false);
-    }
-  },
-
-  onShutdown: function () {
-    for (let channel of this._OBSERVERS) {
-      Services.obs.removeObserver(this, channel);
-    }
-
-    return Task.spawn(this._onShutdown.bind(this));
-  },
-
-  _onShutdown: function () {
-    this._log.debug("Recording clean shutdown.");
-    yield this.recordBrowserActivity(true);
-    let current = this.getMeasurement("current", 1);
-
-    let self = this;
-    yield this.enqueueStorageOperation(function doShutdown() {
-      return Task.spawn(function shutdownTask() {
-        let data = yield self.storage.getMeasurementLastValuesFromMeasurementID(current.id);
-        yield self._moveCurrentToDaily(data, false);
-      });
-    });
-  },
-
-  /**
-   * Record browser activity.
-   *
-   * This should be called periodically to update the stored times of how often
-   * the user was active with the browser.
-   *
-   * The underlying browser activity observer fires every 5 seconds if there
-   * is activity. If there is inactivity, it fires after 5 seconds of inactivity
-   * and doesn't fire again until there is activity.
-   *
-   * @param active
-   *        (bool) Whether the browser was active or inactive.
-   */
-  recordBrowserActivity: function (active) {
-    // There is potential for clock skew to result in incorrect measurements
-    // here. We should count ticks instead of calculating intervals.
-    // FUTURE count ticks not intervals.
-    let now = new Date();
-    this._log.trace("Recording browser activity. Active? " + !!active);
-
-    let m = this.getMeasurement("current", 1);
-
-    let updateActive = active && !this._lastActivityWasInactive;
-    this._lastActivityWasInactive = !active;
-
-    if (updateActive) {
-      this._currentActiveTime += now - this._lastActivityDate;
-    }
-
-    this._lastActivityDate = now;
-
-    let totalTime = now - this._startDate;
-    let activeTime = this._currentActiveTime;
-
-    return this.enqueueStorageOperation(function op() {
-      let promise = m.setLastNumeric("totalTime", totalTime, now);
-
-      if (!updateActive) {
-        return promise;
-      }
-
-      return m.setLastNumeric("activeTime", activeTime, now);
-    });
-  },
-
-  _moveCurrentToDaily: function (fields, aborted) {
-    this._log.debug("Moving current session to past. Aborted? " + aborted);
-    let current = this.getMeasurement("current", 1);
-
-    function clearCurrent() {
-      current.deleteLastNumeric("startDay");
-      current.deleteLastNumeric("activeTime");
-      current.deleteLastNumeric("totalTime");
-      current.deleteLastNumeric("main");
-      current.deleteLastNumeric("firstPaint");
-      return current.deleteLastNumeric("sessionRestored");
-    }
-
-    // We should never have incomplete values. But if we do, handle it
-    // gracefully.
-    if (!fields.has("startDay") || !fields.has("activeTime") || !fields.has("totalTime")) {
-      yield clearCurrent();
-      return;
-    }
-
-    let daily = this.getMeasurement("previous", 1);
-
-    let startDays = fields.get("startDay")[1];
-    let activeTime = fields.get("activeTime")[1];
-    let totalTime = fields.get("totalTime")[1];
-
-    let date = this._daysToDate(startDays);
-    let type = aborted ? "aborted" : "clean";
-
-    yield daily.addDailyDiscreteNumeric(type + "ActiveTime", activeTime, date);
-    yield daily.addDailyDiscreteNumeric(type + "TotalTime", totalTime, date);
-
-    for (let field of ["main", "firstPaint", "sessionRestored"]) {
-      if (!fields.has(field)) {
-        this._log.info(field + " field not recorded for current session.");
-        continue;
-      }
-
-      yield daily.addDailyDiscreteNumeric(field, fields.get(field)[1], date);
-    }
-
-    yield clearCurrent();
-  },
-
-  observe: function (subject, topic, data) {
-    switch (topic) {
-      case "user-interaction-active":
-        this.recordBrowserActivity(true);
-        break;
-
-      case "user-interaction-inactive":
-        this.recordBrowserActivity(false);
-        break;
-    }
-  },
-
-  // Implemented as a function to allow for monkeypatching in tests.
-  _getStartupInfo: function () {
-    return Cc["@mozilla.org/toolkit/app-startup;1"]
-             .getService(Ci.nsIAppStartup)
-             .getStartupInfo();
+    recorder.pruneOldSessions(new Date());
   },
 });
 
