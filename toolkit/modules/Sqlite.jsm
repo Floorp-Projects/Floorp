@@ -147,6 +147,13 @@ function openConnection(options) {
 function OpenedConnection(connection, basename, number) {
   let log = Log4Moz.repository.getLogger("Sqlite.Connection." + basename);
 
+  // getLogger() returns a shared object. We can't modify the functions on this
+  // object since they would have effect on all instances and last write would
+  // win. So, we create a "proxy" object with our custom functions. Everything
+  // else is proxied back to the shared logger instance via prototype
+  // inheritance.
+  let logProxy = {__proto__: log};
+
   // Automatically prefix all log messages with the identifier.
   for (let level in Log4Moz.Level) {
     if (level == "Desc") {
@@ -154,12 +161,12 @@ function OpenedConnection(connection, basename, number) {
     }
 
     let lc = level.toLowerCase();
-    log[lc] = function (msg) {
-      return Log4Moz.Logger.prototype[lc].call(log, "Conn #" + number + ": " + msg);
-    }
+    logProxy[lc] = function (msg) {
+      return log[lc].call(log, "Conn #" + number + ": " + msg);
+    };
   }
 
-  this._log = log;
+  this._log = logProxy;
 
   this._log.info("Opened");
 
@@ -176,9 +183,11 @@ function OpenedConnection(connection, basename, number) {
 }
 
 OpenedConnection.prototype = Object.freeze({
-  TRANSACTION_DEFERRED: Ci.mozIStorageConnection.TRANSACTION_DEFERRED,
-  TRANSACTION_IMMEDIATE: Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE,
-  TRANSACTION_EXCLUSIVE: Ci.mozIStorageConnection.TRANSACTION_EXCLUSIVE,
+  TRANSACTION_DEFERRED: "DEFERRED",
+  TRANSACTION_IMMEDIATE: "IMMEDIATE",
+  TRANSACTION_EXCLUSIVE: "EXCLUSIVE",
+
+  TRANSACTION_TYPES: ["DEFERRED", "IMMEDIATE", "EXCLUSIVE"],
 
   get connectionReady() {
     return this._open && this._connection.connectionReady;
@@ -249,21 +258,35 @@ OpenedConnection.prototype = Object.freeze({
       return Promise.resolve();
     }
 
-    this._log.debug("Closing.");
+    this._log.debug("Request to close connection.");
 
-    // Abort in-progress transaction.
-    if (this._inProgressTransaction) {
-      this._log.warn("Transaction in progress at time of close.");
-      try {
-        this._connection.rollbackTransaction();
-      } catch (ex) {
-        this._log.warn("Error rolling back transaction: " +
-                       CommonUtils.exceptionStr(ex));
-      }
-      this._inProgressTransaction.reject(new Error("Connection being closed."));
-      this._inProgressTransaction = null;
+    let deferred = Promise.defer();
+
+    // We need to take extra care with transactions during shutdown.
+    //
+    // If we don't have a transaction in progress, we can proceed with shutdown
+    // immediately.
+    if (!this._inProgressTransaction) {
+      this._finalize(deferred);
+      return deferred.promise;
     }
 
+    // Else if we do have a transaction in progress, we forcefully roll it
+    // back. This is an async task, so we wait on it to finish before
+    // performing finalization.
+    this._log.warn("Transaction in progress at time of close. Rolling back.");
+
+    let onRollback = this._finalize.bind(this, deferred);
+
+    this.execute("ROLLBACK TRANSACTION").then(onRollback, onRollback);
+    this._inProgressTransaction.reject(new Error("Connection being closed."));
+    this._inProgressTransaction = null;
+
+    return deferred.promise;
+  },
+
+  _finalize: function (deferred) {
+    this._log.debug("Finalizing connection.");
     // Cancel any in-progress statements.
     for (let [k, statement] of this._inProgressStatements) {
       statement.cancel();
@@ -285,8 +308,6 @@ OpenedConnection.prototype = Object.freeze({
     // function and asyncClose() finishing. See also bug 726990.
     this._open = false;
 
-    let deferred = Promise.defer();
-
     this._log.debug("Calling asyncClose().");
     this._connection.asyncClose({
       complete: function () {
@@ -295,8 +316,6 @@ OpenedConnection.prototype = Object.freeze({
         deferred.resolve();
       }.bind(this),
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -423,7 +442,7 @@ OpenedConnection.prototype = Object.freeze({
    * Whether a transaction is currently in progress.
    */
   get transactionInProgress() {
-    return this._open && this._connection.transactionInProgress;
+    return this._open && !!this._inProgressTransaction;
   },
 
   /**
@@ -450,34 +469,76 @@ OpenedConnection.prototype = Object.freeze({
    *        One of the TRANSACTION_* constants attached to this type.
    */
   executeTransaction: function (func, type=this.TRANSACTION_DEFERRED) {
+    if (this.TRANSACTION_TYPES.indexOf(type) == -1) {
+      throw new Error("Unknown transaction type: " + type);
+    }
+
     this._ensureOpen();
 
-    if (this.transactionInProgress) {
+    if (this._inProgressTransaction) {
       throw new Error("A transaction is already active. Only one transaction " +
                       "can be active at a time.");
     }
 
     this._log.debug("Beginning transaction");
-    this._connection.beginTransactionAs(type);
-
     let deferred = Promise.defer();
     this._inProgressTransaction = deferred;
+    Task.spawn(function doTransaction() {
+      // It's tempting to not yield here and rely on the implicit serial
+      // execution of issued statements. However, the yield serves an important
+      // purpose: catching errors in statement execution.
+      yield this.execute("BEGIN " + type + " TRANSACTION");
 
-    Task.spawn(func(this)).then(
-      function onSuccess (result) {
-        this._connection.commitTransaction();
+      let result;
+      try {
+        result = yield Task.spawn(func(this));
+      } catch (ex) {
+        // It's possible that a request to close the connection caused the
+        // error.
+        // Assertion: close() will unset this._inProgressTransaction when
+        // called.
+        if (!this._inProgressTransaction) {
+          this._log.warn("Connection was closed while performing transaction. " +
+                         "Received error should be due to closed connection: " +
+                         CommonUtils.exceptionStr(ex));
+          throw ex;
+        }
+
+        this._log.warn("Error during transaction. Rolling back: " +
+                       CommonUtils.exceptionStr(ex));
+        try {
+          yield this.execute("ROLLBACK TRANSACTION");
+        } catch (inner) {
+          this._log.warn("Could not roll back transaction. This is weird: " +
+                         CommonUtils.exceptionStr(inner));
+        }
+
+        throw ex;
+      }
+
+      // See comment above about connection being closed during transaction.
+      if (!this._inProgressTransaction) {
+        this._log.warn("Connection was closed while performing transaction. " +
+                       "Unable to commit.");
+        throw new Error("Connection closed before transaction committed.");
+      }
+
+      try {
+        yield this.execute("COMMIT TRANSACTION");
+      } catch (ex) {
+        this._log.warn("Error committing transaction: " +
+                       CommonUtils.exceptionStr(ex));
+        throw ex;
+      }
+
+      throw new Task.Result(result);
+    }.bind(this)).then(
+      function onSuccess(result) {
         this._inProgressTransaction = null;
-        this._log.debug("Transaction committed.");
-
         deferred.resolve(result);
       }.bind(this),
-
-      function onError (error) {
-        this._log.warn("Error during transaction. Rolling back: " +
-                       CommonUtils.exceptionStr(error));
-        this._connection.rollbackTransaction();
+      function onError(error) {
         this._inProgressTransaction = null;
-
         deferred.reject(error);
       }.bind(this)
     );
