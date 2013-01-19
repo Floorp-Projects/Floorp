@@ -6316,6 +6316,10 @@ nsHTMLEditRules::ReturnInHeader(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     if (!sibling || !nsTextEditUtils::IsBreak(sibling))
     {
+      res = ClearCachedStyles();
+      NS_ENSURE_SUCCESS(res, res);
+      mHTMLEditor->mTypeInState->ClearAllProps();
+
       // create a paragraph
       NS_NAMED_LITERAL_STRING(pType, "p");
       nsCOMPtr<nsIDOMNode> pNode;
@@ -6562,6 +6566,10 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       res = mHTMLEditor->DeleteNode(aListItem);
       NS_ENSURE_SUCCESS(res, res);
       
+      res = ClearCachedStyles();
+      NS_ENSURE_SUCCESS(res, res);
+      mHTMLEditor->mTypeInState->ClearAllProps();
+
       // time to insert a paragraph
       NS_NAMED_LITERAL_STRING(pType, "p");
       nsCOMPtr<nsIDOMNode> pNode;
