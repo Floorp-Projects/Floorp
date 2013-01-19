@@ -22,6 +22,6 @@ for var in os.environ:
 
 for var in config.__all__:
     value = getattr(config, var)
-    if isinstance(value, list) and isinstance(value[0], tuple):
+    if isinstance(value, list) and value and isinstance(value[0], tuple):
         value = dict(value)
     setattr(sys.modules[__name__], var, value)
