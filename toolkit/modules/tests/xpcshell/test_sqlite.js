@@ -213,6 +213,22 @@ add_task(function test_on_row_stop_iteration() {
   yield c.close();
 });
 
+add_task(function test_invalid_transaction_type() {
+  let c = yield getDummyDatabase("invalid_transaction_type");
+
+  let errored = false;
+  try {
+    c.executeTransaction(function () {}, "foobar");
+  } catch (ex) {
+    errored = true;
+    do_check_true(ex.message.startsWith("Unknown transaction type"));
+  } finally {
+    do_check_true(errored);
+  }
+
+  yield c.close();
+});
+
 add_task(function test_execute_transaction_success() {
   let c = yield getDummyDatabase("execute_transaction_success");
 
@@ -253,6 +269,56 @@ add_task(function test_execute_transaction_rollback() {
 
   let rows = yield c.execute("SELECT * FROM dirs");
   do_check_eq(rows.length, 0);
+
+  yield c.close();
+});
+
+add_task(function test_close_during_transaction() {
+  let c = yield getDummyDatabase("close_during_transaction");
+
+  yield c.execute("INSERT INTO dirs (path) VALUES ('foo')");
+
+  let errored = false;
+  try {
+    yield c.executeTransaction(function transaction(conn) {
+      yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
+      yield c.close();
+    });
+  } catch (ex) {
+    errored = true;
+    do_check_eq(ex.message, "Connection being closed.");
+  } finally {
+    do_check_true(errored);
+  }
+
+  let c2 = yield getConnection("close_during_transaction");
+  let rows = yield c2.execute("SELECT * FROM dirs");
+  do_check_eq(rows.length, 1);
+
+  yield c2.close();
+});
+
+add_task(function test_detect_multiple_transactions() {
+  let c = yield getDummyDatabase("detect_multiple_transactions");
+
+  yield c.executeTransaction(function main() {
+    yield c.execute("INSERT INTO dirs (path) VALUES ('foo')");
+
+    let errored = false;
+    try {
+      yield c.executeTransaction(function child() {
+        yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
+      });
+    } catch (ex) {
+      errored = true;
+      do_check_true(ex.message.startsWith("A transaction is already active."));
+    } finally {
+      do_check_true(errored);
+    }
+  });
+
+  let rows = yield c.execute("SELECT * FROM dirs");
+  do_check_eq(rows.length, 1);
 
   yield c.close();
 });

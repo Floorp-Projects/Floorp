@@ -326,14 +326,6 @@ HistoryStore.prototype = {
     return !!this._findURLByGUID(id);
   },
 
-  urlExists: function HistStore_urlExists(url) {
-    if (typeof(url) == "string") {
-      url = Utils.makeURI(url);
-    }
-    // Don't call isVisited on a null URL to work around crasher bug 492442.
-    return url ? PlacesUtils.history.isVisited(url) : false;
-  },
-
   createRecord: function createRecord(id, collection) {
     let foo = this._findURLByGUID(id);
     let record = new HistoryRec(collection, id);
