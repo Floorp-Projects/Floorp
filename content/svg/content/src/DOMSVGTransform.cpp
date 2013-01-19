@@ -38,6 +38,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGTransform)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
+  SVGMatrix* matrix =
+    sSVGMatrixTearoffTable.GetTearoff(tmp);
+  CycleCollectionNoteChild(cb, matrix, "matrix");
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -111,7 +114,11 @@ DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
 
 DOMSVGTransform::~DOMSVGTransform()
 {
-  sSVGMatrixTearoffTable.RemoveTearoff(this);
+  SVGMatrix* matrix = sSVGMatrixTearoffTable.GetTearoff(this);
+  if (matrix) {
+    sSVGMatrixTearoffTable.RemoveTearoff(this);
+    NS_RELEASE(matrix);
+  }
   // Our mList's weak ref to us must be nulled out when we die. If GC has
   // unlinked us using the cycle collector code, then that has already
   // happened, and mList is null.
@@ -126,16 +133,16 @@ DOMSVGTransform::Type() const
   return Transform().Type();
 }
 
-already_AddRefed<SVGMatrix>
+SVGMatrix*
 DOMSVGTransform::Matrix()
 {
-  nsRefPtr<SVGMatrix> wrapper =
+  SVGMatrix* wrapper =
     sSVGMatrixTearoffTable.GetTearoff(this);
   if (!wrapper) {
-    wrapper = new SVGMatrix(*this);
+    NS_ADDREF(wrapper = new SVGMatrix(*this));
     sSVGMatrixTearoffTable.AddTearoff(this, wrapper);
   }
-  return wrapper.forget();
+  return wrapper;
 }
 
 float
