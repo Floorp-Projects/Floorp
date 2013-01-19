@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=832025
+-->
+<head>
+  <title>Test for Bug 832025</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=832025">Mozilla Bug 832025</a>
+<div id="test" contenteditable="true">header1</div>
+<script type="application/javascript">
+
+/**
+ * Test for Bug 832025
+ *
+ */
+
+document.execCommand("stylewithcss", false, "true");
+var test = document.getElementById("test");
+test.focus();
+
+// place caret at end of editable area
+var sel = getSelection();
+sel.collapse(test, test.childNodes.length);
+
+// make it a H1
+document.execCommand("heading", false, "H1");
+// simulate a CR key
+sendKey("return");
+// insert some text
+document.execCommand("insertText", false, "abc");
+
+is(test.innerHTML == '<h1>header1</h1><p>abc<br></p>',
+   true, "A paragraph automatically created after a CR at the end of an H1 should not be bold");
+
+</script>
+</body>
+</html>
