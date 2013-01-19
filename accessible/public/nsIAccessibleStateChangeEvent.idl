@@ -1,0 +1,29 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+/**
+ * Fired when a state of an accessible changes.
+ */
+[scriptable, builtinclass, uuid(0d2d77c5-7b16-4a15-8b20-c484ceb5ac0d)]
+interface nsIAccessibleStateChangeEvent : nsIAccessibleEvent
+{
+  /**
+   * Returns the state of accessible (see constants declared
+   * in nsIAccessibleStates).
+   */
+  readonly attribute unsigned long state;
+
+  /**
+   * Returns true if the state is extra state.
+   */
+  readonly attribute boolean isExtraState;
+
+  /**
+   * Returns true if the state is turned on.
+   */
+  readonly attribute boolean isEnabled;
+};

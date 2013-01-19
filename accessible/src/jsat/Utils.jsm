@@ -219,7 +219,7 @@ this.Logger = {
     let str = Utils.AccRetrieval.getStringEventType(aEvent.eventType);
     if (aEvent.eventType == Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE) {
       let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
-      let stateStrings = (event.isExtraState()) ?
+      let stateStrings = event.isExtraState ?
         Utils.AccRetrieval.getStringStates(0, event.state) :
         Utils.AccRetrieval.getStringStates(event.state, 0);
       str += ' (' + stateStrings.item(0) + ')';

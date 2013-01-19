@@ -44,7 +44,7 @@
           return;
 
         is(event.state, STATE_BUSY, "Wrong state of statechange event.");
-        is(event.isEnabled(), aIsEnabled,
+        is(event.isEnabled, aIsEnabled,
            "Wrong value of state of statechange event");
 
         testStates(event.accessible, (aIsEnabled ? STATE_BUSY : 0), 0,
