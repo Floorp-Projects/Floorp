@@ -160,3 +160,23 @@ add_task(function test_collect() {
   yield storage.close();
 });
 
+add_task(function test_serialization() {
+  let [provider, storage, recorder] = yield getProvider("serialization");
+
+  let current = provider.getMeasurement("current", 2);
+  let data = yield current.getValues();
+  do_check_true("singular" in data);
+
+  let serializer = current.serializer(current.SERIALIZE_JSON);
+  let fields = serializer.singular(data.singular);
+
+  do_check_eq(fields.activeTicks, 0);
+  do_check_eq(fields.startDay, Metrics.dateToDays(recorder.startDate));
+  do_check_eq(fields.main, 500);
+  do_check_eq(fields.firstPaint, 1000);
+  do_check_eq(fields.sessionRestored, 1500);
+  do_check_true(fields.totalTime > 0);
+
+  yield provider.shutdown();
+  yield storage.close();
+});
