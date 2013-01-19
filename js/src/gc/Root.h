@@ -797,6 +797,34 @@ class SkipRoot
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/*
+ * Types for a variable that either should or shouldn't be rooted, depending on
+ * the template parameter Rooted. Used for implementing functions that can
+ * operate on either rooted or unrooted data.
+ */
+enum AllowGC {
+    DONT_ALLOW_GC = 0,
+    ALLOW_GC = 1
+};
+template <typename T, AllowGC allowGC>
+class MaybeRooted
+{
+};
+
+template <typename T> class MaybeRooted<T, ALLOW_GC>
+{
+  public:
+    typedef Rooted<T> RootType;
+    typedef Handle<T> HandleType;
+};
+
+template <typename T> class MaybeRooted<T, DONT_ALLOW_GC>
+{
+  public:
+    typedef T RootType;
+    typedef T HandleType;
+};
+
 } /* namespace js */
 
 namespace JS {
