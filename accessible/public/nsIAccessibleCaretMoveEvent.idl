@@ -1,0 +1,18 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+/**
+ * Fired when the caret changes position in text.
+ */
+[scriptable, builtinclass, uuid(5675c486-a230-4d85-a4bd-33670826d5ff)]
+interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
+{
+  /**
+   * Return caret offset.
+   */
+  readonly attribute long caretOffset;
+};
