@@ -4,45 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get history service
-try {
-  var gh = Cc["@mozilla.org/browser/global-history;2"].
-           getService(Ci.nsIGlobalHistory2);
-} catch(ex) {
-  do_throw("Could not get the global history service\n");
-} 
-
-function add_uri_to_history(aURI, aCheckForGuid) {
-  var referrer = uri("about:blank");
-  gh.addURI(aURI,
-            false, // not redirect
-            true, // top level 
-            referrer);
-  if (aCheckForGuid === undefined) {
-    do_check_guid_for_uri(aURI);
-  }
+function run_test()
+{
+  run_next_test();
 }
 
-// main
-function run_test() {
+add_task(function test_execute()
+{
+  var referrer = uri("about:blank");
+
   // add a http:// uri 
   var uri1 = uri("http://mozilla.com");
-  add_uri_to_history(uri1);
-  do_check_true(gh.isVisited(uri1));
+  yield promiseAddVisits({uri: uri1, referrer: referrer});
+  do_check_guid_for_uri(uri1);
+  do_check_true(yield promiseIsURIVisited(uri1));
  
   // add a https:// uri
   var uri2 = uri("https://etrade.com");
-  add_uri_to_history(uri2);
-  do_check_true(gh.isVisited(uri2));
+  yield promiseAddVisits({uri: uri2, referrer: referrer});
+  do_check_guid_for_uri(uri2);
+  do_check_true(yield promiseIsURIVisited(uri2));
 
   // add a ftp:// uri
   var uri3 = uri("ftp://ftp.mozilla.org");
-  add_uri_to_history(uri3);
-  do_check_true(gh.isVisited(uri3));
+  yield promiseAddVisits({uri: uri3, referrer: referrer});
+  do_check_guid_for_uri(uri3);
+  do_check_true(yield promiseIsURIVisited(uri3));
 
   // check if a nonexistent uri is visited
   var uri4 = uri("http://foobarcheese.com");
-  do_check_false(gh.isVisited(uri4));
+  do_check_false(yield promiseIsURIVisited(uri4));
 
   // check that certain schemes never show up as visited
   // even if we attempt to add them to history
@@ -60,7 +51,7 @@ function run_test() {
     "wyciwyg:/0/http://mozilla.org",
     "javascript:alert('hello wolrd!');",
   ];
-  URLS.forEach(function(currentURL) {
+  for (let currentURL of URLS) {
     try {
       var cantAddUri = uri(currentURL);
     }
@@ -71,8 +62,13 @@ function run_test() {
       do_log_info("Could not construct URI for '" + currentURL + "'; ignoring");
     }
     if (cantAddUri) {
-      add_uri_to_history(cantAddUri, false);
-      do_check_false(gh.isVisited(cantAddUri));
+      try {
+        yield promiseAddVisits({uri: cantAddUri, referrer: referrer});
+        do_throw("Should have generated an exception.");
+      } catch(ex if ex && ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
+      }
+      do_check_false(yield promiseIsURIVisited(cantAddUri));
     }
-  });
-}
+  }
+});
+

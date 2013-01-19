@@ -699,12 +699,12 @@ EnclosingStaticScope(BytecodeEmitter *bce)
     if (bce->blockChain)
         return bce->blockChain;
 
-    if (!bce->sc->isFunction) {
+    if (!bce->sc->isFunctionBox()) {
         JS_ASSERT(!bce->parent);
         return NULL;
     }
 
-    return bce->sc->asFunbox()->function();
+    return bce->sc->asFunctionBox()->function();
 }
 
 // Push a block scope statement and link blockObj into bce->blockChain.
@@ -920,7 +920,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
          */
         for (unsigned i = pn->pn_cookie.level(); i; i--) {
             skippedScopes += ClonedBlockDepth(bceOfDef);
-            JSFunction *funOfDef = bceOfDef->sc->asFunbox()->function();
+            JSFunction *funOfDef = bceOfDef->sc->asFunctionBox()->function();
             if (funOfDef->isHeavyweight()) {
                 skippedScopes++;
                 if (funOfDef->isNamedLambda())
@@ -1082,7 +1082,7 @@ static int
 AdjustBlockSlot(JSContext *cx, BytecodeEmitter *bce, int slot)
 {
     JS_ASSERT((unsigned) slot < bce->maxStackDepth);
-    if (bce->sc->isFunction) {
+    if (bce->sc->isFunctionBox()) {
         slot += bce->script->bindings.numVars();
         if ((unsigned) slot >= SLOTNO_LIMIT) {
             bce->reportError(NULL, JSMSG_TOO_MANY_LOCALS);
@@ -1180,7 +1180,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
     }
     if (bce->script->compileAndGo &&
         bce->hasGlobalScope &&
-        !(bce->sc->isFunction && bce->sc->asFunbox()->mightAliasLocals()) &&
+        !(bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->mightAliasLocals()) &&
         !pn->isDeoptimized() &&
         !bce->sc->strict)
     {
@@ -1382,7 +1382,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (dn->pn_cookie.level() != bce->script->staticLevel)
             return true;
 
-        RootedFunction fun(cx, bce->sc->asFunbox()->function());
+        RootedFunction fun(cx, bce->sc->asFunctionBox()->function());
         JS_ASSERT(fun->isLambda());
         JS_ASSERT(pn->pn_atom == fun->atom());
 
@@ -1445,7 +1445,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         BytecodeEmitter *bceSkipped = bce;
         for (unsigned i = 0; i < skip; i++)
             bceSkipped = bceSkipped->parent;
-        if (!bceSkipped->sc->isFunction)
+        if (!bceSkipped->sc->isFunctionBox())
             return true;
     }
 
@@ -1657,7 +1657,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
 bool
 BytecodeEmitter::checkSingletonContext()
 {
-    if (!script->compileAndGo || sc->isFunction)
+    if (!script->compileAndGo || sc->isFunctionBox())
         return false;
     for (StmtInfoBCE *stmt = topStmt; stmt; stmt = stmt->down) {
         if (stmt->isLoop())
@@ -1673,11 +1673,14 @@ BytecodeEmitter::needsImplicitThis()
     if (!script->compileAndGo)
         return true;
 
-    if (sc->isFunction) {
-        if (sc->asFunbox()->inWith)
+    if (sc->isModuleBox()) {
+        /* Modules can never occur inside a with-statement */
+        return false;
+    } if (sc->isFunctionBox()) {
+        if (sc->asFunctionBox()->inWith)
             return true;
     } else {
-        JSObject *scope = sc->asGlobal()->scopeChain();
+        JSObject *scope = sc->asGlobalSharedContext()->scopeChain();
         while (scope) {
             if (scope->isWith())
                 return true;
@@ -2260,7 +2263,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     uint32_t caseCount = pn2->pn_count;
     uint32_t tableLength = 0;
-    js::ScopedFreePtr<ParseNode*> table(NULL);
+    ScopedJSFreePtr<ParseNode*> table(NULL);
 
     if (caseCount == 0 ||
         (caseCount == 1 &&
@@ -2452,7 +2455,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         /*
          * Use malloc to avoid arena bloat for programs with many switches.
-         * ScopedFreePtr takes care of freeing it on exit.
+         * ScopedJSFreePtr takes care of freeing it on exit.
          */
         if (tableLength != 0) {
             table = cx->pod_calloc<ParseNode*>(tableLength);
@@ -2547,7 +2550,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
      * execution starts from script->code, so this has no semantic effect.
      */
 
-    FunctionBox *funbox = bce->sc->asFunbox();
+    FunctionBox *funbox = bce->sc->asFunctionBox();
     if (funbox->argumentsHasLocalBinding()) {
         JS_ASSERT(bce->next() == bce->base());  /* See JSScript::argumentsBytecode. */
         bce->switchToProlog();
@@ -2624,7 +2627,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->isFunction || bce->sc->asFunbox()->function()->isHeavyweight()))
+        (!bce->sc->isFunctionBox() || bce->sc->asFunctionBox()->function()->isHeavyweight()))
     {
         bce->switchToProlog();
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
@@ -4400,7 +4403,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         (stmtInfo.down
          ? stmtInfo.down->type == STMT_BLOCK &&
            (!stmtInfo.down->down || stmtInfo.down->down->type != STMT_FOR_IN_LOOP)
-         : !bce->sc->isFunction))
+         : !bce->sc->isFunctionBox()))
     {
         /* There must be no source note already output for the next op. */
         JS_ASSERT(bce->noteCount() == 0 ||
@@ -4793,7 +4796,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * comments in EmitStatementList.
          */
         JS_ASSERT(pn->functionIsHoisted());
-        JS_ASSERT(bce->sc->isFunction);
+        JS_ASSERT(bce->sc->isFunctionBox());
         return EmitFunctionDefNop(cx, bce, pn->pn_index);
     }
 
@@ -4801,7 +4804,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         SharedContext *outersc = bce->sc;
         FunctionBox *funbox = pn->pn_funbox;
 
-        if (outersc->isFunction && outersc->asFunbox()->mightAliasLocals())
+        if (outersc->isFunctionBox() && outersc->asFunctionBox()->mightAliasLocals())
             funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
         JS_ASSERT_IF(outersc->strict, funbox->strict);
 
@@ -4854,7 +4857,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * invocation of the emitter and calls to EmitTree for function
      * definitions can be scheduled before generating the rest of code.
      */
-    if (!bce->sc->isFunction) {
+    if (!bce->sc->isFunctionBox()) {
         JS_ASSERT(pn->pn_cookie.isFree());
         JS_ASSERT(pn->getOp() == JSOP_NOP);
         JS_ASSERT(!bce->topStmt);
@@ -5147,7 +5150,7 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     bool wantval = false;
     bool useful = false;
-    if (bce->sc->isFunction) {
+    if (bce->sc->isFunctionBox()) {
         JS_ASSERT(!bce->script->noScriptRval);
     } else {
         useful = wantval = !bce->script->noScriptRval;
@@ -5962,7 +5965,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_ARGSBODY:
       {
-        RootedFunction fun(cx, bce->sc->asFunbox()->function());
+        RootedFunction fun(cx, bce->sc->asFunctionBox()->function());
         ParseNode *pnlast = pn->last();
 
         // Carefully emit everything in the right order:
@@ -6000,7 +6003,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             ParseNode *rest = NULL;
             bool restIsDefn = false;
             if (fun->hasRest()) {
-                JS_ASSERT(!bce->sc->asFunbox()->argumentsHasLocalBinding());
+                JS_ASSERT(!bce->sc->asFunctionBox()->argumentsHasLocalBinding());
                 // Defaults with a rest parameter need special handling. The
                 // rest parameter needs to be undefined while defaults are being
                 // processed. To do this, we create the rest argument and let it
@@ -6045,7 +6048,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return false;
             if (pn2->pn_next == pnlast && fun->hasRest() && !fun->hasDefaults()) {
                 // Fill rest parameter. We handled the case with defaults above.
-                JS_ASSERT(!bce->sc->asFunbox()->argumentsHasLocalBinding());
+                JS_ASSERT(!bce->sc->asFunctionBox()->argumentsHasLocalBinding());
                 bce->switchToProlog();
                 if (Emit1(cx, bce, JSOP_REST) < 0)
                     return false;
@@ -6115,7 +6118,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_GENERATORS
       case PNK_YIELD:
-        JS_ASSERT(bce->sc->isFunction);
+        JS_ASSERT(bce->sc->isFunctionBox());
         if (pn->pn_kid) {
             if (!EmitTree(cx, bce, pn->pn_kid))
                 return false;

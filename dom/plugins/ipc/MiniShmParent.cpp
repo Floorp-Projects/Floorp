@@ -126,6 +126,8 @@ MiniShmParent::Init(MiniShmObserver* aObserver, const DWORD aTimeout,
   }
   nsresult rv = SetView(view, aSectionSize, false);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetGuard(childGuard, aTimeout);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   MiniShmInit* initStruct = nullptr;
   rv = GetWritePtrInternal(initStruct);
@@ -174,11 +176,8 @@ MiniShmParent::GetCookie(std::wstring& cookie)
 nsresult
 MiniShmParent::Send()
 {
-  if (!mChildEvent || !mChildGuard) {
+  if (!mChildEvent) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-  if (::WaitForSingleObject(mChildGuard, mTimeout) != WAIT_OBJECT_0) {
-    return NS_ERROR_FAILURE;
   }
   if (!::SetEvent(mChildEvent)) {
     return NS_ERROR_FAILURE;

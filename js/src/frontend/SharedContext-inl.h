@@ -15,9 +15,8 @@ namespace js {
 namespace frontend {
 
 inline
-SharedContext::SharedContext(JSContext *cx, bool isFun, bool strict)
+SharedContext::SharedContext(JSContext *cx, bool strict)
   : context(cx),
-    isFunction(isFun),
     anyCxFlags(),
     strict(strict)
 {
@@ -30,21 +29,28 @@ SharedContext::needStrictChecks()
 }
 
 inline GlobalSharedContext *
-SharedContext::asGlobal()
+SharedContext::asGlobalSharedContext()
 {
-    JS_ASSERT(!isFunction);
+    JS_ASSERT(isGlobalSharedContext());
     return static_cast<GlobalSharedContext*>(this);
 }
 
-inline FunctionBox *
-SharedContext::asFunbox()
+inline ModuleBox *
+SharedContext::asModuleBox()
 {
-    JS_ASSERT(isFunction);
+    JS_ASSERT(isModuleBox());
+    return static_cast<ModuleBox*>(this);
+}
+
+inline FunctionBox *
+SharedContext::asFunctionBox()
+{
+    JS_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
 }
 
 GlobalSharedContext::GlobalSharedContext(JSContext *cx, JSObject *scopeChain, bool strict)
-  : SharedContext(cx, /* isFunction = */ false, strict),
+  : SharedContext(cx, strict),
     scopeChain_(cx, scopeChain)
 {
 }

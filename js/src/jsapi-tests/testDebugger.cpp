@@ -161,15 +161,15 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 
     js::RootedObject debuggeeWrapper(cx, debuggee);
     CHECK(JS_WrapObject(cx, debuggeeWrapper.address()));
-    jsval v = OBJECT_TO_JSVAL(debuggeeWrapper);
-    CHECK(JS_SetProperty(cx, global, "debuggee", &v));
+    js::RootedValue v(cx, JS::ObjectValue(*debuggeeWrapper));
+    CHECK(JS_SetProperty(cx, global, "debuggee", v.address()));
 
     EVAL("var dbg = new Debugger(debuggee);\n"
          "var hits = 0;\n"
          "dbg.onDebuggerStatement = function () { hits++; };\n"
          "debuggee.eval('debugger;');\n"
          "hits;\n",
-         &v);
+         v.address());
     CHECK_SAME(v, JSVAL_ONE);
 
     {
@@ -179,7 +179,7 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 
     EVAL("debuggee.eval('debugger; debugger; debugger;');\n"
          "hits;\n",
-         &v);
+         v.address());
     CHECK_SAME(v, INT_TO_JSVAL(4));
 
     return true;
@@ -199,8 +199,8 @@ BEGIN_TEST(testDebugger_newScriptHook)
 
     js::RootedObject gWrapper(cx, g);
     CHECK(JS_WrapObject(cx, gWrapper.address()));
-    jsval v = OBJECT_TO_JSVAL(gWrapper);
-    CHECK(JS_SetProperty(cx, global, "g", &v));
+    js::RootedValue v(cx, JS::ObjectValue(*gWrapper));
+    CHECK(JS_SetProperty(cx, global, "g", v.address()));
 
     EXEC("var dbg = Debugger(g);\n"
          "var hits = 0;\n"
@@ -226,6 +226,7 @@ bool testIndirectEval(JS::HandleObject scope, const char *code)
         JSString *codestr = JS_NewStringCopyZ(cx, code);
         CHECK(codestr);
         jsval argv[1] = { STRING_TO_JSVAL(codestr) };
+        JS::AutoArrayRooter rooter(cx, 1, argv);
         jsval v;
         CHECK(JS_CallFunctionName(cx, scope, "eval", 1, argv, &v));
     }

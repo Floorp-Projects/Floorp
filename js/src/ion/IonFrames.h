@@ -277,7 +277,7 @@ GetTopIonJSScript(JSContext *cx,
                   void **returnAddrOut = NULL);
 
 void
-GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRes);
+GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes);
 
 // Given a slot index, returns the offset, in bytes, of that slot from an
 // IonJSFrameLayout. Slot distances are uniform across architectures, however,

@@ -2582,10 +2582,12 @@ nsPluginHost::WritePluginInfo()
   return rv;
 }
 
-#define PLUGIN_REG_MIMETYPES_ARRAY_SIZE 12
 nsresult
 nsPluginHost::ReadPluginInfo()
 {
+  const long PLUGIN_REG_MIMETYPES_ARRAY_SIZE = 12;
+  const long PLUGIN_REG_MAX_MIMETYPES = 1000;
+
   nsresult rv;
 
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID,&rv));
@@ -2793,7 +2795,11 @@ nsPluginHost::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
 
-    int mimetypecount = atoi(reader.LinePtr());
+    long mimetypecount = std::strtol(reader.LinePtr(), nullptr, 10);
+    if (mimetypecount == LONG_MAX || mimetypecount == LONG_MIN ||
+        mimetypecount >= PLUGIN_REG_MAX_MIMETYPES || mimetypecount < 0) {
+      return NS_ERROR_FAILURE;
+    }
 
     char *stackalloced[PLUGIN_REG_MIMETYPES_ARRAY_SIZE * 3];
     char **mimetypes;

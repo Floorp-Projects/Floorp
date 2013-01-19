@@ -269,7 +269,7 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
 
         Type type = GetValueType(cx, value);
 
-        AutoEnterTypeInference enter(cx);
+        AutoEnterAnalysis enter(cx);
 
         /*
          * We don't track types for properties inherited from prototypes which
@@ -375,7 +375,7 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
         return;
     }
 
-    JS_ASSERT(cx->compartment->activeInference);
+    JS_ASSERT(cx->compartment->activeAnalysis);
 
     InferSpew(ISpewOps, "addConstraint: %sT%p%s %sC%p%s %s",
               InferSpewColor(this), this, InferSpewColorReset(),
@@ -442,7 +442,7 @@ TypeSet::print()
 StackTypeSet *
 StackTypeSet::make(JSContext *cx, const char *name)
 {
-    JS_ASSERT(cx->compartment->activeInference);
+    JS_ASSERT(cx->compartment->activeAnalysis);
 
     StackTypeSet *res = cx->analysisLifoAlloc().new_<StackTypeSet>();
     if (!res) {
@@ -2348,7 +2348,7 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
 TypeObject *
 TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key)
 {
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (!allocationSiteTable) {
         allocationSiteTable = cx->new_<AllocationSiteTable>();
@@ -2418,14 +2418,14 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
 }
 
 static inline jsid
-GetAtomId(JSContext *cx, HandleScript script, const jsbytecode *pc, unsigned offset)
+GetAtomId(JSContext *cx, UnrootedScript script, const jsbytecode *pc, unsigned offset)
 {
     PropertyName *name = script->getName(GET_UINT32_INDEX(pc + offset));
     return MakeTypeId(cx, NameToId(name));
 }
 
 bool
-types::UseNewType(JSContext *cx, HandleScript script, jsbytecode *pc)
+types::UseNewType(JSContext *cx, UnrootedScript script, jsbytecode *pc)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
 
@@ -2473,7 +2473,7 @@ types::UseNewTypeForInitializer(JSContext *cx, HandleScript script, jsbytecode *
     if (key != JSProto_Object && !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
         return false;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (!JSScript::ensureRanAnalysis(cx, script))
         return false;
@@ -2572,7 +2572,7 @@ TypeCompartment::setPendingNukeTypes(JSContext *cx)
 void
 TypeCompartment::setPendingNukeTypesNoReport()
 {
-    JS_ASSERT(compartment()->activeInference);
+    JS_ASSERT(compartment()->activeAnalysis);
     if (!pendingNukeTypes)
         pendingNukeTypes = true;
 }
@@ -2764,7 +2764,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
     JS_ASSERT(target->unknownProperties());
     target->flags |= OBJECT_FLAG_SETS_MARKED_UNKNOWN;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /*
      * Mark both persistent and transient type sets which contain obj as having
@@ -2928,7 +2928,7 @@ TypeCompartment::print(JSContext *cx, bool force)
     gc::AutoSuppressGC suppressGC(cx);
 
     JSCompartment *compartment = this->compartment();
-    AutoEnterAnalysis enter(compartment);
+    AutoEnterAnalysis enter(NULL, compartment);
 
     if (!force && !InferSpewActive(ISpewResult))
         return;
@@ -3016,7 +3016,7 @@ struct types::ArrayTableKey
 void
 TypeCompartment::fixArrayType(JSContext *cx, HandleObject obj)
 {
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (!arrayTypeTable) {
         arrayTypeTable = cx->new_<ArrayTypeTable>();
@@ -3136,7 +3136,7 @@ struct types::ObjectTableEntry
 void
 TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
 {
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (!objectTypeTable) {
         objectTypeTable = cx->new_<ObjectTypeTable>();
@@ -3369,7 +3369,7 @@ TypeObject::addDefiniteProperties(JSContext *cx, HandleObject obj)
         return true;
 
     /* Mark all properties of obj as definite properties of this type. */
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     RootedShape shape(cx, obj->lastProperty());
     while (!shape->isEmptyShape()) {
@@ -3421,7 +3421,7 @@ InlineAddTypeProperty(JSContext *cx, TypeObject *obj, jsid id, Type type)
     AssertCanGC();
     JS_ASSERT(id == MakeTypeId(cx, id));
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     TypeSet *types = obj->getProperty(cx, id, true);
     if (!types || types->hasType(type))
@@ -3452,7 +3452,7 @@ TypeObject::addPropertyType(JSContext *cx, const char *name, Type type)
     if (name) {
         JSAtom *atom = Atomize(cx, name, strlen(name));
         if (!atom) {
-            AutoEnterTypeInference enter(cx);
+            AutoEnterAnalysis enter(cx);
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
         }
@@ -3470,7 +3470,7 @@ TypeObject::addPropertyType(JSContext *cx, const char *name, const Value &value)
 void
 TypeObject::markPropertyConfigured(JSContext *cx, jsid id)
 {
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     id = MakeTypeId(cx, id);
 
@@ -3487,7 +3487,7 @@ TypeObject::markStateChange(JSContext *cx)
     if (unknownProperties())
         return;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
     TypeSet *types = maybeGetProperty(cx, JSID_EMPTY);
     if (types) {
         TypeConstraint *constraint = types->constraintList;
@@ -3504,7 +3504,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
     if ((this->flags & flags) == flags)
         return;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (singleton) {
         /* Make sure flags are consistent with persistent object state. */
@@ -3524,9 +3524,9 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 void
 TypeObject::markUnknown(JSContext *cx)
 {
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
-    JS_ASSERT(cx->compartment->activeInference);
+    JS_ASSERT(cx->compartment->activeAnalysis);
     JS_ASSERT(!unknownProperties());
 
     if (!(flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED))
@@ -3572,7 +3572,7 @@ TypeObject::clearNewScript(JSContext *cx)
     if (!newScript)
         return;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /*
      * Any definite properties we added due to analysis of the new script when
@@ -5144,7 +5144,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
 void
 ScriptAnalysis::printTypes(JSContext *cx)
 {
-    AutoEnterAnalysis enter(script_->compartment());
+    AutoEnterAnalysis enter(NULL, script_->compartment());
     TypeCompartment *compartment = &script_->compartment()->types;
 
     /*
@@ -5292,7 +5292,7 @@ types::MarkIteratorUnknownSlow(JSContext *cx)
     if (JSOp(*pc) != JSOP_ITER)
         return;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /*
      * This script is iterating over an actual Iterator or Generator object, or
@@ -5377,7 +5377,7 @@ void
 types::TypeDynamicResult(JSContext *cx, HandleScript script, jsbytecode *pc, Type type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /* Directly update associated type sets for applicable bytecodes. */
     if (js_CodeSpec[*pc].format & JOF_TYPESET) {
@@ -5482,7 +5482,7 @@ types::TypeMonitorResult(JSContext *cx, HandleScript script, jsbytecode *pc, con
     if (!(js_CodeSpec[*pc].format & JOF_TYPESET))
         return;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (!JSScript::ensureRanAnalysis(cx, script)) {
         cx->compartment->types.setPendingNukeTypes(cx);
@@ -5593,7 +5593,7 @@ JSScript::makeTypes(JSContext *cx)
         return true;
     }
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     unsigned count = TypeScript::NumTypeSets(this);
 
@@ -5703,7 +5703,7 @@ JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool s
 /* static */ void
 TypeScript::CheckBytecode(JSContext *cx, HandleScript script, jsbytecode *pc, const js::Value *sp)
 {
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
         return;
@@ -5798,7 +5798,7 @@ JSObject::splicePrototype(JSContext *cx, Handle<TaggedProto> proto)
 
     type->proto = proto.raw();
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     if (protoType && protoType->unknownProperties() && !type->unknownProperties()) {
         type->markUnknown(cx);
@@ -5847,7 +5847,7 @@ JSObject::makeLazyType(JSContext *cx)
         return type;
     }
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /* Fill in the type according to the state of this object. */
 
@@ -5997,7 +5997,7 @@ JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, JSFunction *fun_, b
     if (!cx->typeInferenceEnabled())
         return type;
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /*
      * Set the special equality flag for types whose prototype also has the
@@ -6570,7 +6570,7 @@ TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
             return;
     }
 
-    AutoEnterTypeInference enter(cx);
+    AutoEnterAnalysis enter(cx);
 
     /* Reset the analysis pool, making its memory available for reuse. */
     cx->compartment->analysisLifoAlloc.releaseAll();

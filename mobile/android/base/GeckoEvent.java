@@ -37,12 +37,10 @@ import java.nio.ByteBuffer;
 public class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 
-    private static final int INVALID = -1;
     private static final int NATIVE_POKE = 0;
     private static final int KEY_EVENT = 1;
     private static final int MOTION_EVENT = 2;
     private static final int SENSOR_EVENT = 3;
-    private static final int UNUSED1_EVENT = 4;
     private static final int LOCATION_EVENT = 5;
     private static final int IME_EVENT = 6;
     private static final int DRAW = 7;
@@ -51,18 +49,14 @@ public class GeckoEvent {
     private static final int ACTIVITY_PAUSING = 10;
     private static final int ACTIVITY_SHUTDOWN = 11;
     private static final int LOAD_URI = 12;
-    private static final int SURFACE_CREATED = 13;
-    private static final int SURFACE_DESTROYED = 14;
     private static final int GECKO_EVENT_SYNC = 15;
     private static final int ACTIVITY_START = 17;
     private static final int BROADCAST = 19;
     private static final int VIEWPORT = 20;
     private static final int VISITED = 21;
     private static final int NETWORK_CHANGED = 22;
-    private static final int UNUSED3_EVENT = 23;
     private static final int ACTIVITY_RESUMING = 24;
     private static final int THUMBNAIL = 25;
-    private static final int UNUSED2_EVENT = 26;
     private static final int SCREENORIENTATION_CHANGED = 27;
     private static final int COMPOSITOR_PAUSE = 28;
     private static final int COMPOSITOR_RESUME = 29;

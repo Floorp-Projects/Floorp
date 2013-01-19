@@ -40,7 +40,6 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
                      MDefinition *rhs);
 
     bool lowerConstantDouble(double d, MInstruction *ins);
-    bool lowerDivI(MDiv *div);
 
   public:
     bool visitConstant(MConstant *ins);

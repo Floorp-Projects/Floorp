@@ -206,7 +206,7 @@ private:
 
   mozilla::LinkedList<PendingPACQuery> mPendingQ; /* pac thread only */
 
-  nsCString                    mPACURISpec; // Not an nsIRUI for use off main thread
+  nsCString                    mPACURISpec; // Not an nsIURI for use off main thread
   nsCString                    mPACURIRedirectSpec;
   nsCOMPtr<nsIStreamLoader>    mLoader;
   bool                         mLoadPending;

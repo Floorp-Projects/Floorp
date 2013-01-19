@@ -125,7 +125,10 @@ public:
     if (mStream && !mRemoved) {
       MM_LOG(("Listener removed on purpose, mFinished = %d", (int) mFinished));
       mRemoved = true; // RemoveListener is async, avoid races
-      mStream->RemoveListener(this);
+      // If it's destroyed, don't call - listener will be removed and we'll be notified!
+      if (!mStream->IsDestroyed()) {
+        mStream->RemoveListener(this);
+      }
     }
   }
 

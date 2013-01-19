@@ -23,9 +23,11 @@ using namespace std;
 #include "FakeMediaStreams.h"
 #include "FakeMediaStreamsImpl.h"
 #include "PeerConnectionImpl.h"
+#include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
 #include "nsStaticComponents.h"
 #include "nsIDOMRTCPeerConnection.h"
+#include "nsWeakReference.h"
 
 #include "mtransport_test_utils.h"
 MtransportTestUtils *test_utils;
@@ -118,7 +120,8 @@ enum offerAnswerFlags
 };
 
 
-class TestObserver : public IPeerConnectionObserver
+class TestObserver : public IPeerConnectionObserver,
+                     public nsSupportsWeakReference
 {
 public:
   enum Action {
@@ -163,7 +166,9 @@ private:
   std::vector<nsDOMMediaStream *> streams;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TestObserver, IPeerConnectionObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(TestObserver,
+                              IPeerConnectionObserver,
+                              nsISupportsWeakReference)
 
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer)
@@ -489,7 +494,7 @@ class SignalingAgent {
       NS_DISPATCH_SYNC);
   }
 
-  void Init(nsCOMPtr<nsIThread> thread)
+  void Init_m(nsCOMPtr<nsIThread> thread)
   {
     size_t found = 2;
     ASSERT_TRUE(found > 0);
@@ -501,6 +506,14 @@ class SignalingAgent {
     ASSERT_TRUE(pObserver);
 
     ASSERT_EQ(pc->Initialize(pObserver, nullptr, thread), NS_OK);
+
+  }
+
+  void Init(nsCOMPtr<nsIThread> thread)
+  {
+    thread->Dispatch(
+      WrapRunnable(this, &SignalingAgent::Init_m, thread),
+      NS_DISPATCH_SYNC);
 
     ASSERT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
@@ -689,6 +702,19 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
         std::cerr << "Adding trickle ICE candidate " << (*it).second << std::endl;
 
         ASSERT_TRUE(NS_SUCCEEDED(pc->AddIceCandidate((*it).second.c_str(), "", (*it).first)));
+      }
+    }
+  }
+
+
+  void DoTrickleIceChrome(ParsedSDP &sdp) {
+    for (std::multimap<int, std::string>::iterator it = sdp.ice_candidates_.begin();
+         it != sdp.ice_candidates_.end(); ++it) {
+      if ((*it).first != 0) {
+        std::string candidate = "a=" + (*it).second + "\r\n";
+        std::cerr << "Adding trickle ICE candidate " << candidate << std::endl;
+
+        ASSERT_TRUE(NS_SUCCEEDED(pc->AddIceCandidate(candidate.c_str(), "", (*it).first)));
       }
     }
   }
@@ -945,6 +971,26 @@ public:
     // Now set the trickle ICE candidates
     a1_.DoTrickleIce(a2_answer);
     a2_.DoTrickleIce(a1_offer);
+    ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
+    ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
+  }
+
+
+  void OfferAnswerTrickleChrome(sipcc::MediaConstraints& aconstraints,
+                          sipcc::MediaConstraints& bconstraints,
+                          uint32_t offerSdpCheck, uint32_t answerSdpCheck) {
+    a1_.CreateOffer(aconstraints, OFFER_AV, offerSdpCheck);
+    a1_.SetLocal(TestObserver::OFFER, a1_.offer());
+    ParsedSDP a1_offer(a1_.offer());
+    a2_.SetRemote(TestObserver::OFFER, a1_offer.sdp_without_ice_);
+    a2_.CreateAnswer(bconstraints, a1_offer.sdp_without_ice_,
+                     OFFER_AV|ANSWER_AV, answerSdpCheck);
+    a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
+    ParsedSDP a2_answer(a2_.answer());
+    a1_.SetRemote(TestObserver::ANSWER, a2_answer.sdp_without_ice_);
+    // Now set the trickle ICE candidates
+    a1_.DoTrickleIceChrome(a2_answer);
+    a2_.DoTrickleIceChrome(a1_offer);
     ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
     ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
   }
@@ -1426,6 +1472,22 @@ TEST_F(SignalingTest, FullCallTrickle)
   ASSERT_GE(a2_.GetPacketsReceived(0), 40);
 }
 
+// Offer answer with trickle but with chrome-style candidates
+TEST_F(SignalingTest, FullCallTrickleChrome)
+{
+  sipcc::MediaConstraints constraints;
+  OfferAnswerTrickleChrome(constraints, constraints,
+                           SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
+
+  std::cerr << "ICE handshake completed" << std::endl;
+  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+
+  a1_.CloseSendStreams();
+  a2_.CloseReceiveStreams();
+  ASSERT_GE(a1_.GetPacketsSent(0), 40);
+  ASSERT_GE(a2_.GetPacketsReceived(0), 40);
+}
+
 // This test comes from Bug 810220
 TEST_F(SignalingTest, AudioOnlyG711Call)
 {
@@ -1759,6 +1821,13 @@ int main(int argc, char **argv) {
 
   ::testing::AddGlobalTestEnvironment(new test::SignalingEnvironment);
   int result = RUN_ALL_TESTS();
+
+  // Because we don't initialize on the main thread, we can't register for
+  // XPCOM shutdown callbacks (where the context is usually shut down) --
+  // so we need to explictly destroy the context.
+  sipcc::PeerConnectionCtx::Destroy();
   delete test_utils;
+
+
   return result;
 }

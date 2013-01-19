@@ -59,6 +59,8 @@ class NativeAudioStream : public AudioStream
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
+  nsresult Start();
+  bool IsStarted();
   void Pause();
   void Resume();
   int64_t GetPosition();
@@ -181,6 +183,7 @@ AudioStream::AudioStream()
 : mInRate(0),
   mOutRate(0),
   mChannels(0),
+  mWritten(0),
   mAudioClock(this)
 {}
 
@@ -274,6 +277,11 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
   mAudioClock.SetPreservesPitch(aPreservesPitch);
 
   return NS_OK;
+}
+
+int64_t AudioStream::GetWritten()
+{
+  return mWritten;
 }
 
 NativeAudioStream::NativeAudioStream() :
@@ -386,6 +394,8 @@ nsresult NativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
     written = WriteToBackend(aBuf, samples);
   }
 
+  mWritten += aFrames;
+
   if (written == -1) {
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_write error"));
     mInError = true;
@@ -453,6 +463,19 @@ void NativeAudioStream::Drain()
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_drain error"));
     mInError = true;
   }
+}
+
+nsresult NativeAudioStream::Start()
+{
+  // Since sydneyaudio is a push API, the playback is started when enough frames
+  // have been written. Hence, Start() is a noop.
+  return NS_OK;
+}
+
+bool NativeAudioStream::IsStarted()
+{
+  // See the comment for the |Start()| method.
+  return true;
 }
 
 void NativeAudioStream::Pause()
@@ -597,6 +620,8 @@ class BufferedAudioStream : public AudioStream
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
+  nsresult Start();
+  bool IsStarted();
   void Pause();
   void Resume();
   int64_t GetPosition();
@@ -604,6 +629,10 @@ class BufferedAudioStream : public AudioStream
   int64_t GetPositionInFramesInternal();
   bool IsPaused();
   int32_t GetMinWriteSize();
+  // This method acquires the monitor and forward the call to the base
+  // class, to prevent a race on |mTimeStretcher|, in
+  // |AudioStream::EnsureTimeStretcherInitialized|.
+  void EnsureTimeStretcherInitialized();
 
 private:
   static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
@@ -702,6 +731,13 @@ BufferedAudioStream::~BufferedAudioStream()
   Shutdown();
 }
 
+void
+BufferedAudioStream::EnsureTimeStretcherInitialized()
+{
+  MonitorAutoLock mon(mMonitor);
+  AudioStream::EnsureTimeStretcherInitialized();
+}
+
 nsresult
 BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
                             const dom::AudioChannelType aAudioChannelType)
@@ -782,23 +818,18 @@ BufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
     src += available;
     bytesToCopy -= available;
 
-    if (mState != STARTED) {
-      int r;
-      {
-        MonitorAutoUnlock mon(mMonitor);
-        r = cubeb_stream_start(mCubebStream);
-      }
-      mState = r == CUBEB_OK ? STARTED : ERRORED;
-    }
-
-    if (mState != STARTED) {
-      return NS_ERROR_FAILURE;
-    }
-
     if (bytesToCopy > 0) {
+      // If we are not playing, but our buffer is full, start playing to make
+      // room for soon-to-be-decoded data.
+      if (!IsStarted()) {
+        MonitorAutoUnlock mon(mMonitor);
+        Start();
+      }
       mon.Wait();
     }
   }
+
+  mWritten += aFrames;
 
   return NS_OK;
 }
@@ -836,6 +867,26 @@ BufferedAudioStream::Drain()
   while (mState == DRAINING) {
     mon.Wait();
   }
+}
+
+nsresult
+BufferedAudioStream::Start()
+{
+  if (!mCubebStream) {
+    return NS_ERROR_FAILURE;
+  }
+  if (mState != STARTED) {
+    int r = cubeb_stream_start(mCubebStream);
+    mState = r == CUBEB_OK ? STARTED : ERRORED;
+    return mState == STARTED ? NS_OK : NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+bool
+BufferedAudioStream::IsStarted()
+{
+  return mState == STARTED ? true : false;
 }
 
 void
@@ -962,7 +1013,8 @@ BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
 {
   long processedFrames = 0;
 
-  EnsureTimeStretcherInitialized();
+  // We need to call the non-locking version, because we already have the lock.
+  AudioStream::EnsureTimeStretcherInitialized();
 
   uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
   double playbackRate = static_cast<double>(mInRate) / mOutRate;

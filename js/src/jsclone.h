@@ -15,7 +15,7 @@
 namespace js {
 
 bool
-WriteStructuredClone(JSContext *cx, const Value &v, uint64_t **bufp, size_t *nbytesp,
+WriteStructuredClone(JSContext *cx, HandleValue v, uint64_t **bufp, size_t *nbytesp,
                      const JSStructuredCloneCallbacks *cb, void *cbClosure,
                      jsval transferable);
 

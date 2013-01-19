@@ -1471,10 +1471,11 @@ ReportInvalidTrapResult(JSContext *cx, JSObject *proxy, JSAtom *atom)
 // This function is shared between getOwnPropertyNames, enumerate, and keys
 static bool
 ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleValue v,
-                AutoIdVector &props, unsigned flags, JSAtom *trapName)
+                AutoIdVector &props, unsigned flags, JSAtom *trapName_)
 {
     JS_ASSERT(v.isObject());
     RootedObject array(cx, &v.toObject());
+    RootedAtom trapName(cx, trapName_);
 
     // steps g-h
     uint32_t n;

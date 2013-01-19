@@ -1198,9 +1198,6 @@ class AssemblerX86Shared
     void flushBuffer() {
     }
 
-    void finish() {
-    }
-
     // Patching.
 
     static size_t patchWrite_NearCallSize() {

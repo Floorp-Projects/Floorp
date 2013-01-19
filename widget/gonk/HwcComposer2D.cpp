@@ -15,8 +15,6 @@
  */
 
 #include <android/log.h>
-#include <EGL/egl.h>
-#include <hardware/hardware.h>
 
 #include "Framebuffer.h"
 #include "HwcComposer2D.h"
@@ -24,10 +22,8 @@
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIScreenManager.h"
-#include "nsMathUtils.h"
-#include "nsServiceManagerUtils.h"
 #include "cutils/properties.h"
+#include "gfxUtils.h"
 
 #define LOG_TAG "HWComposer"
 
@@ -85,8 +81,7 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur)
     nsIntSize screenSize;
 
     mozilla::Framebuffer::GetSize(&screenSize);
-    mScreenWidth  = screenSize.width;
-    mScreenHeight = screenSize.height;
+    mScreenRect  = nsIntRect(nsIntPoint(0, 0), screenSize);
 
     char propValue[PROPERTY_VALUE_MAX];
     property_get("ro.display.colorfill", propValue, "0");
@@ -129,45 +124,6 @@ HwcComposer2D::ReallocLayerList()
     mList = listrealloc;
     mMaxLayerCount += LAYER_COUNT_INCREMENTS;
     return true;
-}
-
-int
-HwcComposer2D::GetRotation()
-{
-    int halrotation = 0;
-    uint32_t screenrotation;
-
-    if (!mScreen) {
-        nsCOMPtr<nsIScreenManager> screenMgr =
-            do_GetService("@mozilla.org/gfx/screenmanager;1");
-        if (screenMgr) {
-            screenMgr->GetPrimaryScreen(getter_AddRefs(mScreen));
-        }
-    }
-
-    if (mScreen) {
-        if (NS_SUCCEEDED(mScreen->GetRotation(&screenrotation))) {
-            switch (screenrotation) {
-            case nsIScreen::ROTATION_0_DEG:
-                 halrotation = 0;
-                 break;
-
-            case nsIScreen::ROTATION_90_DEG:
-                 halrotation = HWC_TRANSFORM_ROT_90;
-                 break;
-
-            case nsIScreen::ROTATION_180_DEG:
-                 halrotation = HWC_TRANSFORM_ROT_180;
-                 break;
-
-            case nsIScreen::ROTATION_270_DEG:
-                 halrotation = HWC_TRANSFORM_ROT_270;
-                 break;
-            }
-        }
-    }
-
-    return halrotation;
 }
 
 /**
@@ -237,9 +193,51 @@ PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
     return true;
 }
 
+/**
+ * Calculates the layer's clipping rectangle
+ *
+ * @param aTransform Input. A transformation matrix
+ *        It transforms the clip rect to screen space
+ * @param aLayerClip Input. The layer's internal clipping rectangle.
+ *        This may be NULL which means the layer has no internal clipping
+ *        The origin is the top-left corner of the layer
+ * @param aParentClip Input. The parent layer's rendering clipping rectangle
+ *        The origin is the top-left corner of the screen
+ * @param aRenderClip Output. The layer's rendering clipping rectangle
+ *        The origin is the top-left corner of the screen
+ * @return true if the layer should be rendered.
+ *         false if the layer can be skipped
+ */
+static bool
+CalculateClipRect(const gfxMatrix& aTransform, const nsIntRect* aLayerClip,
+                  nsIntRect aParentClip, nsIntRect* aRenderClip) {
+
+    *aRenderClip = aParentClip;
+
+    if (!aLayerClip) {
+        return true;
+    }
+
+    if (aLayerClip->IsEmpty()) {
+        return false;
+    }
+
+    nsIntRect clip = *aLayerClip;
+
+    gfxRect r(clip);
+    gfxRect trClip = aTransform.TransformBounds(r);
+    trClip.Round();
+    gfxUtils::GfxRectToIntRect(trClip, &clip);
+
+    aRenderClip->IntersectRect(*aRenderClip, clip);
+    return true;
+}
+
 bool
 HwcComposer2D::PrepareLayerList(Layer* aLayer,
-                                const nsIntRect& aClip)
+                                const nsIntRect& aClip,
+                                const gfxMatrix& aParentTransform,
+                                const gfxMatrix& aGLWorldTransform)
 {
     // NB: we fall off this path whenever there are container layers
     // that require intermediate surfaces.  That means all the
@@ -268,6 +266,23 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return false;
     }
 
+    nsIntRect clip;
+    if (!CalculateClipRect(aParentTransform * aGLWorldTransform,
+                           aLayer->GetEffectiveClipRect(),
+                           aClip,
+                           &clip))
+    {
+        LOGD("Clip rect is empty. Skip layer");
+        return true;
+    }
+
+    gfxMatrix transform;
+    const gfx3DMatrix& transform3D = aLayer->GetEffectiveTransform();
+    if (!transform3D.Is2D(&transform) || !transform.PreservesAxisAlignedRectangles()) {
+        LOGD("Layer has a 3D transform or a non-square angle rotation");
+        return false;
+    }
+
 
     if (ContainerLayer* container = aLayer->AsContainerLayer()) {
         if (container->UseIntermediateSurface()) {
@@ -277,9 +292,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         nsAutoTArray<Layer*, 12> children;
         container->SortChildrenBy3DZOrder(children);
 
-        //FIXME/bug 810334
         for (uint32_t i = 0; i < children.Length(); i++) {
-            if (!PrepareLayerList(children[i], aClip)) {
+            if (!PrepareLayerList(children[i], clip, transform, aGLWorldTransform)) {
                 return false;
             }
         }
@@ -303,12 +317,6 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return false;
     }
 
-    gfxMatrix transform;
-    const gfx3DMatrix& transform3D = aLayer->GetEffectiveTransform();
-    if (!transform3D.Is2D(&transform) || !transform.PreservesAxisAlignedRectangles()) {
-        LOGD("Layer has a 3D transform or a non-square angle rotation");
-        return false;
-    }
 
     // OK!  We can compose this layer with hwc.
 
@@ -339,9 +347,13 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     hwc_layer_t& hwcLayer = mList->hwLayers[current];
 
-    //FIXME/bug 810334
-    if(!PrepareLayerRects(visibleRect, transform, aClip, bufferRect,
-                          &(hwcLayer.sourceCrop), &(hwcLayer.displayFrame))) {
+    if(!PrepareLayerRects(visibleRect,
+                          transform * aGLWorldTransform,
+                          clip,
+                          bufferRect,
+                          &(hwcLayer.sourceCrop),
+                          &(hwcLayer.displayFrame)))
+    {
         return true;
     }
 
@@ -392,20 +404,12 @@ HwcComposer2D::TryRender(Layer* aRoot,
     if (mList) {
         mList->numHwLayers = 0;
     }
-    // XXX use GL world transform instead of GetRotation()
-    int rotation = GetRotation();
 
-    int fbHeight, fbWidth;
-
-    if (rotation == 0 || rotation == HWC_TRANSFORM_ROT_180) {
-        fbWidth = mScreenWidth;
-        fbHeight = mScreenHeight;
-    } else {
-        fbWidth = mScreenHeight;
-        fbHeight = mScreenWidth;
-    }
-
-    if (!PrepareLayerList(aRoot, nsIntRect(0, 0, fbWidth, fbHeight))) {
+    if (!PrepareLayerList(aRoot,
+                          mScreenRect,
+                          gfxMatrix(),
+                          aGLWorldTransform))
+    {
         LOGD("Render aborted. Nothing was drawn to the screen");
         return false;
     }

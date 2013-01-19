@@ -32,7 +32,6 @@
 #endif
 
 #include "mozilla/StandardInteger.h"
-#include "mozilla/Scoped.h"
 
 using namespace std;
 
@@ -6939,7 +6938,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
     return TypeError(cx, "(an object with known size)", valData);
   }
 
-  ScopedFreePtr<void> cargs(malloc(sizeArg));
+  ScopedJSFreePtr<void> cargs(malloc(sizeArg));
 
   if (!ImplicitConvert(cx, valData, objArgType, cargs.get(),
                        false, &freePointer)) {
@@ -6954,7 +6953,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   // 4. Prepare buffer for holding return value
 
-  ScopedFreePtr<void> rvalue;
+  ScopedJSFreePtr<void> rvalue;
   if (CType::GetTypeCode(returnType) != TYPE_void_t) {
     rvalue = malloc(Align(CType::GetSize(returnType),
                           sizeof(ffi_arg)));
@@ -7010,7 +7009,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
   }
 
   // 7. Store C information as private
-  ScopedFreePtr<CDataFinalizer::Private>
+  ScopedJSFreePtr<CDataFinalizer::Private>
     p((CDataFinalizer::Private*)malloc(sizeof(CDataFinalizer::Private)));
 
   memmove(&p->CIF, &funInfoFinalizer->mCIF, sizeof(ffi_cif));

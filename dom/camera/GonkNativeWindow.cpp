@@ -50,15 +50,20 @@ GonkNativeWindow::GonkNativeWindow()
 
 GonkNativeWindow::~GonkNativeWindow()
 {
-    freeAllBuffersLocked();
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
+    freeAllBuffersLocked(freeList);
+    releaseBufferFreeListUnlocked(freeList);
 }
 
 void GonkNativeWindow::abandon()
 {
-    Mutex::Autolock lock(mMutex);
-    ++mGeneration;
-    CNW_LOGD("abandon: new generation %d", mGeneration);
-    freeAllBuffersLocked();
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
+    {
+        Mutex::Autolock lock(mMutex);
+        freeAllBuffersLocked(freeList);
+    }
+
+    releaseBufferFreeListUnlocked(freeList);
     mDequeueCondition.signal();
 }
 
@@ -133,158 +138,224 @@ int GonkNativeWindow::hook_perform(ANativeWindow* window, int operation, ...)
     return c->perform(operation, args);
 }
 
-void GonkNativeWindow::freeBufferLocked(int i)
+void GonkNativeWindow::freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList)
 {
+    CNW_LOGD("freeAllBuffersLocked: from generation %d", mGeneration);
+    ++mGeneration;
+
+    for (int i = 0; i < NUM_BUFFER_SLOTS; ++i) {
+        if (mSlots[i].mGraphicBuffer != NULL) {
+            // Don't try to destroy the gralloc buffer if it is still in the
+            // video stream awaiting rendering.
+            if (mSlots[i].mBufferState != BufferSlot::RENDERING) {
+                SurfaceDescriptor* desc = freeList.AppendElement();
+                *desc = mSlots[i].mSurfaceDescriptor;
+            }
+            mSlots[i].mGraphicBuffer = NULL;
+            mSlots[i].mBufferState = BufferSlot::FREE;
+            mSlots[i].mFrameNumber = 0;
+        }
+    }
+}
+
+void GonkNativeWindow::releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList)
+{
+    // This function MUST ONLY be called with mMutex unlocked; else there
+    // is a risk of deadlock with the ImageBridge thread.
+
+    CNW_LOGD("releaseBufferFreeListUnlocked: E");
     ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-    if (mSlots[i].mGraphicBuffer != NULL) {
-        // Don't destroy the gralloc buffer if it is still in the
-        // video stream awaiting rendering.
-        if (mSlots[i].mBufferState != BufferSlot::RENDERING) {
-            ibc->DeallocSurfaceDescriptorGralloc(mSlots[i].mSurfaceDescriptor);
-        }
-        mSlots[i].mGraphicBuffer = NULL;
-        mSlots[i].mBufferState = BufferSlot::FREE;
-        mSlots[i].mFrameNumber = 0;
+
+    for (uint32_t i = 0; i < freeList.Length(); ++i) {
+        ibc->DeallocSurfaceDescriptorGralloc(freeList[i]);
     }
+
+    freeList.Clear();
+    CNW_LOGD("releaseBufferFreeListUnlocked: X");
 }
 
-void GonkNativeWindow::freeAllBuffersLocked()
+int GonkNativeWindow::setBufferCount(int bufferCount)
 {
-    for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
-        freeBufferLocked(i);
-    }
-}
-
-int GonkNativeWindow::setBufferCount(int bufferCount) {
     CNW_LOGD("setBufferCount: count=%d", bufferCount);
-    Mutex::Autolock lock(mMutex);
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
 
-    if (bufferCount > NUM_BUFFER_SLOTS) {
-        CNW_LOGE("setBufferCount: bufferCount larger than slots available");
-        return BAD_VALUE;
-    }
+    {
+        Mutex::Autolock lock(mMutex);
 
-    // special-case, nothing to do
-    if (bufferCount == mBufferCount) {
-        return OK;
-    }
-
-    if (bufferCount < MIN_BUFFER_SLOTS) {
-        CNW_LOGE("setBufferCount: requested buffer count (%d) is less than "
-                "minimum (%d)", bufferCount, MIN_BUFFER_SLOTS);
-        return BAD_VALUE;
-    }
-
-    // Error out if the user has dequeued buffers or sent buffers to
-    // video stream
-    for (int i=0 ; i<mBufferCount ; i++) {
-        if (mSlots[i].mBufferState == BufferSlot::DEQUEUED ||
-            mSlots[i].mBufferState == BufferSlot::RENDERING) {
-            CNW_LOGE("setBufferCount: client owns some buffers");
-            return -EINVAL;
+        if (bufferCount > NUM_BUFFER_SLOTS) {
+            CNW_LOGE("setBufferCount: bufferCount larger than slots available");
+            return BAD_VALUE;
         }
-    }
 
-    if (bufferCount > mBufferCount) {
-        // easy, we just have more buffers
+        // special-case, nothing to do
+        if (bufferCount == mBufferCount) {
+            return OK;
+        }
+
+        if (bufferCount < MIN_BUFFER_SLOTS) {
+            CNW_LOGE("setBufferCount: requested buffer count (%d) is less than "
+                    "minimum (%d)", bufferCount, MIN_BUFFER_SLOTS);
+            return BAD_VALUE;
+        }
+
+        // Error out if the user has dequeued buffers or sent buffers to
+        // video stream
+        for (int i=0 ; i<mBufferCount ; i++) {
+            if (mSlots[i].mBufferState == BufferSlot::DEQUEUED ||
+                mSlots[i].mBufferState == BufferSlot::RENDERING) {
+                CNW_LOGE("setBufferCount: client owns some buffers");
+                return -EINVAL;
+            }
+        }
+
+        if (bufferCount > mBufferCount) {
+            // easy, we just have more buffers
+            mBufferCount = bufferCount;
+            mDequeueCondition.signal();
+            return OK;
+        }
+
+        // reducing the number of buffers
+        // here we're guaranteed that the client doesn't have dequeued buffers
+        // and will release all of its buffer references.
+        freeAllBuffersLocked(freeList);
         mBufferCount = bufferCount;
         mDequeueCondition.signal();
-        return OK;
     }
 
-    // reducing the number of buffers
-    // here we're guaranteed that the client doesn't have dequeued buffers
-    // and will release all of its buffer references.
-    freeAllBuffersLocked();
-    mBufferCount = bufferCount;
-    mDequeueCondition.signal();
+    releaseBufferFreeListUnlocked(freeList);
     return OK;
 }
 
 int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
 {
-    Mutex::Autolock lock(mMutex);
+    uint32_t defaultWidth;
+    uint32_t defaultHeight;
+    uint32_t pixelFormat;
+    uint32_t usage;
+    uint32_t generation;
+    bool alloc = false;
+    int buf = INVALID_BUFFER_SLOT;
 
-    int found = -1;
-    int dequeuedCount = 0;
-    bool tryAgain = true;
+    {
+        Mutex::Autolock lock(mMutex);
+        generation = mGeneration;
 
-    CNW_LOGD("dequeueBuffer: E");
-    while (tryAgain) {
-        // look for a free buffer to give to the client
-        found = INVALID_BUFFER_SLOT;
-        dequeuedCount = 0;
-        for (int i = 0; i < mBufferCount; i++) {
-            const int state = mSlots[i].mBufferState;
-            if (state == BufferSlot::DEQUEUED) {
-                dequeuedCount++;
-            }
-            else if (state == BufferSlot::FREE) {
-                /* We return the oldest of the free buffers to avoid
-                 * stalling the producer if possible.  This is because
-                 * the consumer may still have pending reads of the
-                 * buffers in flight.
-                 */
-                if (found < 0 ||
-                    mSlots[i].mFrameNumber < mSlots[found].mFrameNumber) {
-                    found = i;
+        int found = -1;
+        int dequeuedCount = 0;
+        bool tryAgain = true;
+
+        CNW_LOGD("dequeueBuffer: E");
+        while (tryAgain) {
+            // look for a free buffer to give to the client
+            found = INVALID_BUFFER_SLOT;
+            dequeuedCount = 0;
+            for (int i = 0; i < mBufferCount; i++) {
+                const int state = mSlots[i].mBufferState;
+                if (state == BufferSlot::DEQUEUED) {
+                    dequeuedCount++;
+                }
+                else if (state == BufferSlot::FREE) {
+                    /* We return the oldest of the free buffers to avoid
+                     * stalling the producer if possible.  This is because
+                     * the consumer may still have pending reads of the
+                     * buffers in flight.
+                     */
+                    if (found < 0 ||
+                        mSlots[i].mFrameNumber < mSlots[found].mFrameNumber) {
+                        found = i;
+                    }
                 }
             }
+
+            // we're in synchronous mode and didn't find a buffer, we need to
+            // wait for some buffers to be consumed
+            tryAgain = (found == INVALID_BUFFER_SLOT);
+            if (tryAgain) {
+                CNW_LOGD("dequeueBuffer: Try again");
+                mDequeueCondition.wait(mMutex);
+                CNW_LOGD("dequeueBuffer: Now");
+            }
         }
 
-        // we're in synchronous mode and didn't find a buffer, we need to
-        // wait for some buffers to be consumed
-        tryAgain = (found == INVALID_BUFFER_SLOT);
-        if (tryAgain) {
-            CNW_LOGD("dequeueBuffer: Try again");
-            mDequeueCondition.wait(mMutex);
-            CNW_LOGD("dequeueBuffer: Now");
+        if (found == INVALID_BUFFER_SLOT) {
+            // This should not happen.
+            CNW_LOGE("dequeueBuffer: no available buffer slots");
+            return -EBUSY;
+        }
+
+        buf = found;
+
+        // buffer is now in DEQUEUED
+        mSlots[buf].mBufferState = BufferSlot::DEQUEUED;
+
+        const sp<GraphicBuffer>& gbuf(mSlots[buf].mGraphicBuffer);
+        alloc = (gbuf == NULL);
+        if (alloc) {
+            // get local copies for graphics buffer allocations
+            defaultWidth = mDefaultWidth;
+            defaultHeight = mDefaultHeight;
+            pixelFormat = mPixelFormat;
+            usage = mUsage;
         }
     }
+    
+    // At this point, the buffer is now marked DEQUEUED, and no one else
+    // should touch it, except for freeAllBuffersLocked(); we handle that
+    // after trying to create the surface descriptor below.
+    //
+    // So we don't need mMutex locked, which would otherwise run the risk
+    // of a deadlock on calling AllocSurfaceDescriptorGralloc().    
 
-    if (found == INVALID_BUFFER_SLOT) {
-        // This should not happen.
-        CNW_LOGE("dequeueBuffer: no available buffer slots");
-        return -EBUSY;
-    }
-
-    const int buf = found;
-
-    // buffer is now in DEQUEUED
-    mSlots[buf].mBufferState = BufferSlot::DEQUEUED;
-
-    const sp<GraphicBuffer>& gbuf(mSlots[buf].mGraphicBuffer);
-
-    if (gbuf == NULL) {
+    SurfaceDescriptor desc;
+    ImageBridgeChild* ibc;
+    sp<GraphicBuffer> graphicBuffer;
+    if (alloc) {
         status_t error;
-        SurfaceDescriptor buffer;
-        ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-        ibc->AllocSurfaceDescriptorGralloc(gfxIntSize(mDefaultWidth, mDefaultHeight),
-                                           mPixelFormat,
-                                           mUsage,
-                                           &buffer);
+        ibc = ImageBridgeChild::GetSingleton();
+        CNW_LOGD("dequeueBuffer: about to alloc surface descriptor");
+        ibc->AllocSurfaceDescriptorGralloc(gfxIntSize(defaultWidth, defaultHeight),
+                                           pixelFormat,
+                                           usage,
+                                           &desc);
         // We can only use a gralloc buffer here.  If we didn't get
         // one back, something went wrong.
-        if (SurfaceDescriptor::TSurfaceDescriptorGralloc != buffer.type()) {
-            MOZ_ASSERT(SurfaceDescriptor::T__None == buffer.type());
+        CNW_LOGD("dequeueBuffer: got surface descriptor");
+        if (SurfaceDescriptor::TSurfaceDescriptorGralloc != desc.type()) {
+            MOZ_ASSERT(SurfaceDescriptor::T__None == desc.type());
             CNW_LOGE("dequeueBuffer: failed to alloc gralloc buffer");
             return -ENOMEM;
         }
-        sp<GraphicBuffer> graphicBuffer =
-          GrallocBufferActor::GetFrom(buffer.get_SurfaceDescriptorGralloc());
+        graphicBuffer = GrallocBufferActor::GetFrom(desc.get_SurfaceDescriptorGralloc());
         error = graphicBuffer->initCheck();
         if (error != NO_ERROR) {
-            CNW_LOGE("dequeueBuffer: createGraphicBuffer failed with error %d",error);
+            CNW_LOGE("dequeueBuffer: createGraphicBuffer failed with error %d", error);
             return error;
         }
-        mSlots[buf].mGraphicBuffer = graphicBuffer;
-        mSlots[buf].mSurfaceDescriptor = buffer;
-        mSlots[buf].mSurfaceDescriptor.get_SurfaceDescriptorGralloc().external() = true;
     }
-    *buffer = mSlots[buf].mGraphicBuffer.get();
 
-    CNW_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
-            mSlots[buf].mGraphicBuffer->handle );
+    bool tooOld = false;
+    {
+        Mutex::Autolock lock(mMutex);
+        if (generation == mGeneration) {
+            if (alloc) {
+                mSlots[buf].mGraphicBuffer = graphicBuffer;
+                mSlots[buf].mSurfaceDescriptor = desc;
+                mSlots[buf].mSurfaceDescriptor.get_SurfaceDescriptorGralloc().external() = true;
+            }
+            *buffer = mSlots[buf].mGraphicBuffer.get();
+
+            CNW_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
+                    mSlots[buf].mGraphicBuffer->handle);
+        } else {
+            *buffer = nullptr;
+            tooOld = true;
+        }
+    }
+
+    if (alloc && tooOld) {
+        ibc->DeallocSurfaceDescriptorGralloc(desc);
+    }
 
     CNW_LOGD("dequeueBuffer: X");
     return NO_ERROR;
@@ -402,7 +473,7 @@ GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration)
       aGeneration, mGeneration);
     return false;
   }
-  if (aIndex < 0 || aIndex >= mBufferCount) {
+  if (aIndex >= mBufferCount) {
     CNW_LOGE("returnBuffer: slot index out of range [0, %d]: %d",
              mBufferCount, aIndex);
     return false;

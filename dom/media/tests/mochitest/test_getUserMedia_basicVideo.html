@@ -12,33 +12,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<video id="testVideo"></video>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">mozGetUserMedia Basic Video Test</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-
+  <video id="testVideo"></video>
 </div>
 <pre id="test">
 <script type="application/javascript">
 
-/**
- * Run a test to verify that we can complete a start and stop media playback
- * cycle for an video LocalMediaStream on a video HTMLMediaElement.
- */
-runTest(function () {
-  try {
-    navigator.mozGetUserMedia({video: true, fake: true}, function(stream) {
-      var testVideo = document.getElementById('testVideo');
-      var videoStreamPlayback = new MediaStreamPlayback(testVideo, stream);
-      videoStreamPlayback.playMedia(10000, function() {
-				stream.stop();
-				SimpleTest.finish();
-			}, unexpectedCallbackAndFinish);
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for an video LocalMediaStream on a video HTMLMediaElement.
+   */
+  runTest(function () {
+    var testVideo = document.getElementById('testVideo');
+
+    navigator.mozGetUserMedia({video: true, fake: true}, function (aStream) {
+      var playback = new MediaStreamPlayback(testVideo, aStream);
+      playback.playMedia(10000, function () {
+        aStream.stop();
+        SimpleTest.finish();
+      }, unexpectedCallbackAndFinish);
     }, unexpectedCallbackAndFinish);
-  } catch (err) {
-    unexpectedCallbackAndFinish(err);
-  }
-}, true);
+  }, true);
 
 </script>
 </pre>

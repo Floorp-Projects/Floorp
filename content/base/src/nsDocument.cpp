@@ -1281,7 +1281,6 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
 
   int32_t count = mDocument->GetNumberOfStyleSheets();
   nsAutoString title;
-  nsAutoString temp;
   for (int32_t index = 0; index < count; index++) {
     nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
     NS_ASSERTION(sheet, "Null sheet in sheet list!");
@@ -3187,16 +3186,12 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
   }
 }
 
-bool
+void
 nsDocument::TryChannelCharset(nsIChannel *aChannel,
                               int32_t& aCharsetSource,
                               nsACString& aCharset,
                               nsHtml5TreeOpExecutor* aExecutor)
 {
-  if(kCharsetFromChannel <= aCharsetSource) {
-    return true;
-  }
-
   if (aChannel) {
     nsAutoCString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
@@ -3205,13 +3200,12 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
       if(EncodingUtils::FindEncodingForLabel(charsetVal, preferred)) {
         aCharset = preferred;
         aCharsetSource = kCharsetFromChannel;
-        return true;
+        return;
       } else if (aExecutor && !charsetVal.IsEmpty()) {
         aExecutor->ComplainAboutBogusProtocolCharset(this);
       }
     }
   }
-  return false;
 }
 
 nsresult

@@ -12,35 +12,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<video id="testVideoAudio"></video>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">mozGetUserMedia Basic Video & Audio Test</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-
+  <video id="testVideoAudio"></video>
 </div>
 <pre id="test">
 <script type="application/javascript">
 
-/**
- * Run a test to verify that we can complete a start and stop media playback
- * cycle for a video and audio LocalMediaStream on a video HTMLMediaElement.
- */
-runTest(function () {
-  try {
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for a video and audio LocalMediaStream on a video HTMLMediaElement.
+   */
+  runTest(function () {
+    var testVideoAudio = document.getElementById('testVideoAudio');
+
     navigator.mozGetUserMedia({video: true, audio: true, fake: true},
-      function(stream) {
-      var testVideoAudio = document.getElementById('testVideoAudio');
-      var videoAudioStreamPlayback = new MediaStreamPlayback(testVideoAudio,
-        stream);
-      videoAudioStreamPlayback.playMedia(10000, function() {
-				stream.stop();
-				SimpleTest.finish();
-			}, unexpectedCallbackAndFinish);
+      function (aStream) {
+        var playback = new MediaStreamPlayback(testVideoAudio, aStream);
+        playback.playMedia(10000, function () {
+          aStream.stop();
+          SimpleTest.finish();
+        }, unexpectedCallbackAndFinish);
     }, unexpectedCallbackAndFinish);
-  } catch (err) {
-    unexpectedCallbackAndFinish(err);
-  }
-}, true);
+  }, true);
 
 </script>
 </pre>

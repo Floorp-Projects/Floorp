@@ -368,8 +368,6 @@ public:
   MediaDecoderReader(AbstractMediaDecoder* aDecoder);
   virtual ~MediaDecoderReader();
 
-  NS_INLINE_DECL_REFCOUNTING(MediaDecoderReader)
-
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
   virtual nsresult Init(MediaDecoderReader* aCloneDonor) = 0;

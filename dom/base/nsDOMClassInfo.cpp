@@ -5032,7 +5032,7 @@ NS_IMETHODIMP
 nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, jsval *vp, bool *_retval)
 {
-  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
+  DebugOnly<nsGlobalWindow*> win = nsGlobalWindow::FromWrapper(wrapper);
 
   JSAutoRequest ar(cx);
 
@@ -5058,48 +5058,6 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // The order in which things are done in this method are a bit
   // whacky, that's because this method is *extremely* performace
   // critical. Don't touch this unless you know what you're doing.
-
-  if (JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) {
-    // If we're accessing a numeric property we'll treat that as if
-    // window.frames[n] is accessed (since window.frames === window),
-    // if window.frames[n] is a child frame, wrap the frame and return
-    // it without doing a security check.
-    uint32_t index = uint32_t(JSID_TO_INT(id));
-    bool found = false;
-    if (nsCOMPtr<nsIDOMWindow> frame = win->IndexedGetter(index, found)) {
-      // A numeric property accessed and the numeric property is a
-      // child frame, wrap the child frame without doing a security
-      // check and return.
-
-      nsGlobalWindow *frameWin = (nsGlobalWindow *)frame.get();
-      NS_ASSERTION(frameWin->IsOuterWindow(), "IndexedGetter gave us an inner?");
-
-      frameWin->EnsureInnerWindow();
-      JSObject *global = frameWin->GetGlobalJSObject();
-
-      // This null check fixes a hard-to-reproduce crash that occurs when we
-      // get here when we're mid-call to nsDocShell::Destroy. See bug 640904
-      // comment 105.
-      if (MOZ_UNLIKELY(!global)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      jsval v;
-      nsresult rv = WrapNative(cx, xpc_UnmarkGrayObject(global), frame,
-                               &NS_GET_IID(nsIDOMWindow), true, &v,
-                               getter_AddRefs(holder));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!JS_WrapValue(cx, &v)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      *vp = v;
-    }
-
-    return NS_SUCCESS_I_DID_SOMETHING;
-  }
 
   if (JSID_IS_STRING(id) && !JSVAL_IS_PRIMITIVE(*vp) &&
       ::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
@@ -6600,33 +6558,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   js::RootedObject obj(cx, obj_);
   js::RootedId id(cx, id_);
 
-  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-  MOZ_ASSERT(win->IsInnerWindow());
-
   if (!JSID_IS_STRING(id)) {
-    if (JSID_IS_INT(id) && JSID_TO_INT(id) >= 0 && !(flags & JSRESOLVE_ASSIGNING)) {
-      // If we're resolving a numeric property, treat that as if
-      // window.frames[n] is resolved (since window.frames ===
-      // window), if window.frames[n] is a child frame, define a
-      // property for this index.
-      uint32_t index = uint32_t(JSID_TO_INT(id));
-      bool found;
-      nsCOMPtr<nsIDOMWindow> frame = win->IndexedGetter(index, found);
-      if (found) {
-        // A numeric property accessed and the numeric property is a
-        // child frame. Define a property for this index.
-
-        *_retval = ::JS_DefineElement(cx, obj, index, JSVAL_VOID,
-                                      nullptr, nullptr, JSPROP_SHARED);
-
-        if (*_retval) {
-          *objp = obj;
-        }
-      }
-    }
-
     return NS_OK;
   }
+
+  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
+  MOZ_ASSERT(win->IsInnerWindow());
 
   nsIScriptContext *my_context = win->GetContextInternal();
 
@@ -6841,6 +6778,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSObject *windowObj = win->GetGlobalJSObject();
 
+    JSAutoCompartment ac(cx, windowObj);
     JSAutoRequest ar(cx);
 
     JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,

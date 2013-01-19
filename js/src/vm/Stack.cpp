@@ -1398,7 +1398,7 @@ StackIter::settleOnNewState()
                 }
 
                 data_.state_ = ION;
-                ionInlineFrames_ = ion::InlineFrameIterator(&data_.ionFrames_);
+                ionInlineFrames_.resetOn(&data_.ionFrames_);
                 data_.pc_ = ionInlineFrames_.pc();
                 return;
             }
@@ -1432,7 +1432,7 @@ StackIter::settleOnNewState()
 
 StackIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption)
   : perThread_(perThread),
-    maybecx_(cx),
+    cx_(cx),
     savedOption_(savedOption),
     poppedCallDuringSettle_(false)
 #ifdef JS_ION
@@ -1442,9 +1442,9 @@ StackIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption saved
 {
 }
 
-StackIter::Data::Data(JSRuntime *rt, StackSegment *seg)
+StackIter::Data::Data(JSContext *cx, JSRuntime *rt, StackSegment *seg)
   : perThread_(&rt->mainThread),
-    maybecx_(NULL),
+    cx_(cx),
     savedOption_(STOP_AT_SAVED),
     poppedCallDuringSettle_(false)
 #ifdef JS_ION
@@ -1456,7 +1456,7 @@ StackIter::Data::Data(JSRuntime *rt, StackSegment *seg)
 
 StackIter::Data::Data(const StackIter::Data &other)
   : perThread_(other.perThread_),
-    maybecx_(other.maybecx_),
+    cx_(other.cx_),
     savedOption_(other.savedOption_),
     state_(other.state_),
     fp_(other.fp_),
@@ -1475,7 +1475,7 @@ StackIter::Data::Data(const StackIter::Data &other)
 StackIter::StackIter(JSContext *cx, SavedOption savedOption)
   : data_(cx, &cx->runtime->mainThread, savedOption)
 #ifdef JS_ION
-    , ionInlineFrames_((js::ion::IonFrameIterator*) NULL)
+    , ionInlineFrames_(cx, (js::ion::IonFrameIterator*) NULL)
 #endif
 {
 #ifdef JS_METHODJIT
@@ -1493,9 +1493,9 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 }
 
 StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
-  : data_(rt, &seg)
+  : data_(seg.cx(), rt, &seg)
 #ifdef JS_ION
-    , ionInlineFrames_((js::ion::IonFrameIterator*) NULL)
+    , ionInlineFrames_(seg.cx(), (js::ion::IonFrameIterator*) NULL)
 #endif
 {
 #ifdef JS_METHODJIT
@@ -1510,7 +1510,7 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
 StackIter::StackIter(const StackIter &other)
   : data_(other.data_)
 #ifdef JS_ION
-    , ionInlineFrames_(other.ionInlineFrames_)
+    , ionInlineFrames_(other.data_.seg_->cx(), &other.ionInlineFrames_)
 #endif
 {
 }
@@ -1518,9 +1518,10 @@ StackIter::StackIter(const StackIter &other)
 StackIter::StackIter(const Data &data)
   : data_(data)
 #ifdef JS_ION
-    , ionInlineFrames_(data_.ionFrames_.isScripted() ? &data_.ionFrames_ : NULL)
+    , ionInlineFrames_(data.cx_, data_.ionFrames_.isScripted() ? &data_.ionFrames_ : NULL)
 #endif
 {
+    JS_ASSERT(data.cx_);
 }
 
 #ifdef JS_ION
@@ -1539,7 +1540,7 @@ StackIter::popIonFrame()
             ++data_.ionFrames_;
 
         if (!data_.ionFrames_.done()) {
-            ionInlineFrames_ = ion::InlineFrameIterator(&data_.ionFrames_);
+            ionInlineFrames_.resetOn(&data_.ionFrames_);
             data_.pc_ = ionInlineFrames_.pc();
             return;
         }
@@ -1614,7 +1615,7 @@ StackIter::copyData() const
      */
     JS_ASSERT(data_.ionFrames_.type() != ion::IonFrame_OptimizedJS);
 #endif
-    return data_.maybecx_->new_<Data>(data_);
+    return data_.cx_->new_<Data>(data_);
 }
 
 JSCompartment *
@@ -1771,7 +1772,7 @@ StackIter::updatePcQuadratic()
       case DONE:
         break;
       case SCRIPTED:
-        data_.pc_ = interpFrame()->pcQuadratic(data_.maybecx_);
+        data_.pc_ = interpFrame()->pcQuadratic(data_.cx_);
         return;
       case ION:
         break;
@@ -1939,8 +1940,8 @@ bool
 StackIter::computeThis() const
 {
     if (isScript() && !isIon()) {
-        JS_ASSERT(data_.maybecx_);
-        return ComputeThis(data_.maybecx_, interpFrame());
+        JS_ASSERT(data_.cx_);
+        return ComputeThis(data_.cx_, interpFrame());
     }
     return true;
 }
@@ -2014,9 +2015,9 @@ StackIter::numFrameSlots() const
         break;
 #endif
       case SCRIPTED:
-        JS_ASSERT(data_.maybecx_);
-        JS_ASSERT(data_.maybecx_->regs().spForStackDepth(0) == interpFrame()->base());
-        return data_.maybecx_->regs().sp - interpFrame()->base();
+        JS_ASSERT(data_.cx_);
+        JS_ASSERT(data_.cx_->regs().spForStackDepth(0) == interpFrame()->base());
+        return data_.cx_->regs().sp - interpFrame()->base();
     }
     JS_NOT_REACHED("Unexpected state");
     return 0;

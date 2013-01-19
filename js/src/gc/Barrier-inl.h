@@ -348,7 +348,7 @@ inline void
 HeapSlot::writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot)
 {
 #ifdef JSGC_GENERATIONAL
-    obj->compartment()->gcStoreBuffer.putSlot(obj, slot);
+    obj->compartment()->gcStoreBuffer.putSlot(obj, kind, slot);
 #endif
 }
 
@@ -356,7 +356,7 @@ inline void
 HeapSlot::writeBarrierPost(JSCompartment *comp, JSObject *obj, Kind kind, uint32_t slot)
 {
 #ifdef JSGC_GENERATIONAL
-    comp->gcStoreBuffer.putSlot(obj, slot);
+    comp->gcStoreBuffer.putSlot(obj, kind, slot);
 #endif
 }
 
@@ -373,59 +373,42 @@ HeapSlot::post(JSCompartment *comp, JSObject *owner, Kind kind, uint32_t slot)
 }
 
 #ifdef JSGC_GENERATIONAL
-class SlotRangeRef : public gc::BufferableRef
+class DenseRangeRef : public gc::BufferableRef
 {
     JSObject *owner;
     uint32_t start;
     uint32_t end;
 
   public:
-    SlotRangeRef(JSObject *obj, uint32_t start, uint32_t end)
+    DenseRangeRef(JSObject *obj, uint32_t start, uint32_t end)
       : owner(obj), start(start), end(end)
     {
         JS_ASSERT(start < end);
     }
 
     bool match(void *location) {
-        if (owner->isDenseArray()) {
-            uint32_t len = owner->getDenseArrayInitializedLength();
-            for (uint32_t i = Min(start, len); i < Min(end, len); ++i) {
-                if (&owner->getDenseArrayElement(i) == location)
-                    return true;
-            }
-            return false;
-        }
-        uint32_t span = owner->slotSpan();
-        for (uint32_t i = Min(start, span); i < Min(end, span); ++i) {
-            if (owner->getSlotAddress(i) == location)
-                return true;
-        }
-        return false;
+        uint32_t len = owner->getDenseInitializedLength();
+        return location >= &owner->getDenseElement(Min(start, len)) &&
+               location <= &owner->getDenseElement(Min(end, len)) - 1;
     }
 
     void mark(JSTracer *trc) {
         /* Apply forwarding, if we have already visited owner. */
         IsObjectMarked(&owner);
-        if (owner->isDenseArray()) {
-            uint32_t initLen = owner->getDenseArrayInitializedLength();
-            uint32_t clampedStart = Min(start, initLen);
-            gc::MarkArraySlots(trc, Min(end, initLen) - clampedStart,
-                               owner->getDenseArrayElements() + clampedStart, "element");
-            return;
-        }
-        uint32_t span = owner->slotSpan();
-        uint32_t clampedStart = Min(start, span);
-        MarkObjectSlots(trc, owner, clampedStart, Min(end, span) - clampedStart);
+        uint32_t initLen = owner->getDenseInitializedLength();
+        uint32_t clampedStart = Min(start, initLen);
+        gc::MarkArraySlots(trc, Min(end, initLen) - clampedStart,
+                           owner->getDenseElements() + clampedStart, "element");
     }
 };
 #endif
 
 inline void
-SlotRangeWriteBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t start, uint32_t count)
+DenseRangeWriteBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t start, uint32_t count)
 {
 #ifdef JSGC_GENERATIONAL
     if (count > 0)
-        comp->gcStoreBuffer.putGeneric(SlotRangeRef(obj, start, start + count));
+        comp->gcStoreBuffer.putGeneric(DenseRangeRef(obj, start, start + count));
 #endif
 }
 

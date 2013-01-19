@@ -525,7 +525,7 @@ JSObject::moveDenseElements(unsigned dstStart, unsigned srcStart, unsigned count
         }
     } else {
         memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
-        SlotRangeWriteBarrierPost(comp, this, dstStart, count);
+        DenseRangeWriteBarrierPost(comp, this, dstStart, count);
     }
 }
 
@@ -908,6 +908,7 @@ inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); 
 inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
 inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
 inline bool JSObject::isMapIterator() const { return hasClass(&js::MapIteratorClass); }
+inline bool JSObject::isModule() const { return hasClass(&js::ModuleClass); }
 inline bool JSObject::isNestedScope() const { return isBlock() || isWith(); }
 inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
 inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }

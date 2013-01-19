@@ -17,15 +17,14 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="10dip">
 
-        <ImageView android:id="@+id/thumbnail"
+        <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
                    android:layout_width="@dimen/tab_thumbnail_width"
                    android:layout_height="@dimen/tab_thumbnail_height"
                    android:layout_marginLeft="1dip"
                    android:layout_marginTop="1dip"
                    android:layout_alignParentLeft="true"
                    android:layout_centerVertical="true"
-                   android:src="@drawable/tab_thumbnail_default"
-                   android:scaleType="centerCrop"/>
+                   android:src="@drawable/tab_thumbnail_default"/>
 
         <ImageView android:id="@+id/shadow"
                    android:layout_width="138dip"

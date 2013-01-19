@@ -123,13 +123,12 @@ public class AnnouncementsBroadcastService extends IntentService {
       Logger.error(LOG_TAG, "Method " + BackgroundConstants.GECKO_PREFERENCES_CLASS + "/" + BackgroundConstants.GECKO_BROADCAST_METHOD + " not found!");
       return;
     } catch (IllegalArgumentException e) {
-      // Fall through.
+      Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
     } catch (IllegalAccessException e) {
-      // Fall through.
+      Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
     } catch (InvocationTargetException e) {
-      // Fall through.
+      Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
     }
-    Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
   }
 
   /**
