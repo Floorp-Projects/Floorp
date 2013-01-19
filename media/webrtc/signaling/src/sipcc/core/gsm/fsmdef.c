@@ -3610,7 +3610,8 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
     callid_t            call_id = msg->call_id;
     char                *remote_sdp = 0;
     uint32_t            remote_sdp_len = 0;
-
+    char                *candidate = 0;
+    char                candidate_tmp[CANDIDATE_SIZE];
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -3630,12 +3631,30 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
     cause = gsmsdp_find_level_from_mid(dcb, (const char *)msg->data.candidate.mid, &level);
     */
 
+    /* XXX: Bug 833043. Need to sanity check that this is actually a valid candidate */
     /* Update remote SDP with new candidate information */
+    candidate = (char *)msg->data.candidate.candidate;
+    if (!strncasecmp(candidate, "a=", 2)) {
+      char *cr;
+
+      /* Strip off Chrome's inappropriate leading a=.
+         TODO(ekr@rtfm.com): remove once Chrome conforms to the specification
+         or revisit if the specification changes. */
+      sstrncpy(candidate_tmp, candidate + 2, sizeof(candidate_tmp));
+
+      /* Strip off \r\n if it exists */
+      cr = strchr(candidate_tmp, '\r');
+      if (cr)
+        *cr = '\0';
+
+      candidate = candidate_tmp;
+    }
+
     level = msg->data.candidate.level;
     gsmsdp_set_ice_attribute (SDP_ATTR_ICE_CANDIDATE, level,
-      dcb->sdp->dest_sdp, (char *)msg->data.candidate.candidate);
+      dcb->sdp->dest_sdp, candidate);
 
-    vcm_res = vcmSetIceCandidate(dcb->peerconnection, (char *)msg->data.candidate.candidate, msg->data.candidate.level);
+    vcm_res = vcmSetIceCandidate(dcb->peerconnection, candidate, msg->data.candidate.level);
     if(vcm_res) {
         FSM_DEBUG_SM(DEB_F_PREFIX"failure setting ice candidate.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
     }
