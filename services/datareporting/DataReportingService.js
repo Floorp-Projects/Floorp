@@ -7,13 +7,16 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
+Cu.import("resource://gre/modules/services/datareporting/sessions.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-common/utils.js");
 
 
 const ROOT_BRANCH = "datareporting.";
 const POLICY_BRANCH = ROOT_BRANCH + "policy.";
+const SESSIONS_BRANCH = ROOT_BRANCH + "sessions.";
 const HEALTHREPORT_BRANCH = ROOT_BRANCH + "healthreport.";
 const HEALTHREPORT_LOGGING_BRANCH = HEALTHREPORT_BRANCH + "logging.";
 const DEFAULT_LOAD_DELAY_MSEC = 10 * 1000;
@@ -106,15 +109,37 @@ DataReportingService.prototype = Object.freeze({
         this._os.removeObserver(this, "profile-after-change");
         this._os.addObserver(this, "sessionstore-windows-restored", true);
 
+        this._prefs = new Preferences(HEALTHREPORT_BRANCH);
+
+        // We don't initialize the sessions recorder unless Health Report is
+        // around to provide pruning of data.
+        //
+        // FUTURE consider having the SessionsRecorder always enabled and/or
+        // living in its own XPCOM service.
+        if (this._prefs.get("service.enabled", true)) {
+          this.sessionRecorder = new SessionRecorder(SESSIONS_BRANCH);
+          this.sessionRecorder.onStartup();
+        }
+
         // We can't interact with prefs until after the profile is present.
         let policyPrefs = new Preferences(POLICY_BRANCH);
-        this._prefs = new Preferences(HEALTHREPORT_BRANCH);
         this.policy = new DataReportingPolicy(policyPrefs, this._prefs, this);
+
         break;
 
       case "sessionstore-windows-restored":
         this._os.removeObserver(this, "sessionstore-windows-restored");
         this._os.addObserver(this, "quit-application", false);
+
+        // When the session recorder starts up above, first paint and session
+        // restore times likely aren't available. So, we wait until they are (here)
+        // and record them. In the case of session restore time, that appears
+        // to be set by an observer of this notification. So, we delay
+        // recording until the next tick of the event loop.
+        if (this.sessionRecorder) {
+          CommonUtils.nextTick(this.sessionRecorder.recordStartupFields,
+                               this.sessionRecorder);
+        }
 
         this.policy.startPolling();
 
@@ -225,7 +250,8 @@ DataReportingService.prototype = Object.freeze({
 
     // The reporter initializes in the background.
     this._healthReporter = new ns.HealthReporter(HEALTHREPORT_BRANCH,
-                                                 this.policy);
+                                                 this.policy,
+                                                 this.sessionRecorder);
   },
 });
 

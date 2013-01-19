@@ -83,7 +83,7 @@ const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
  * @param policy
  *        (HealthReportPolicy) Policy driving execution of HealthReporter.
  */
-function HealthReporter(branch, policy) {
+function HealthReporter(branch, policy, sessionRecorder) {
   if (!branch.endsWith(".")) {
     throw new Error("Branch must end with a period (.): " + branch);
   }
@@ -95,6 +95,7 @@ function HealthReporter(branch, policy) {
   this._log = Log4Moz.repository.getLogger("Services.HealthReport.HealthReporter");
   this._log.info("Initializing health reporter instance against " + branch);
 
+  this._branch = branch;
   this._prefs = new Preferences(branch);
 
   if (!this.serverURI) {
@@ -106,6 +107,7 @@ function HealthReporter(branch, policy) {
   }
 
   this._policy = policy;
+  this.sessionRecorder = sessionRecorder;
 
   this._dbName = this._prefs.get("dbName") || DEFAULT_DATABASE_NAME;
 
@@ -539,6 +541,8 @@ HealthReporter.prototype = Object.freeze({
         Cu.import(uri, ns);
 
         let provider = new ns[entry]();
+        provider.initPreferences(this._branch + "provider.");
+        provider.healthReporter = this;
         promises.push(this.registerProvider(provider));
       } catch (ex) {
         this._log.warn("Error registering provider from category manager: " +

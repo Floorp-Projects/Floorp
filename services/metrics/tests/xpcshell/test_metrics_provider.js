@@ -7,6 +7,7 @@ const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 
 
@@ -58,6 +59,18 @@ add_task(function test_init() {
   do_check_false(m.hasField("does-not-exist"));
 
   yield storage.close();
+});
+
+add_test(function test_prefs_integration() {
+  let branch = "testing.prefs_integration.";
+  let provider = new DummyProvider();
+  provider.initPreferences(branch);
+  let prefs = new Preferences(branch);
+
+  prefs.set("DummyProvider.foo", "bar");
+  do_check_eq(provider._prefs.get("foo"), "bar");
+
+  run_next_test();
 });
 
 add_task(function test_default_collectors() {
