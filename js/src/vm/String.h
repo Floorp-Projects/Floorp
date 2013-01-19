@@ -446,8 +446,12 @@ class JSRope : public JSString
     void init(JSString *left, JSString *right, size_t length);
 
   public:
-    static inline JSRope *new_(JSContext *cx, js::HandleString left,
-                               js::HandleString right, size_t length);
+    template <js::AllowGC allowGC>
+    static inline JSRope *
+    newStringMaybeAllowGC(JSContext *cx,
+                          typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
+                          typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
+                          size_t length);
 
     inline JSString *leftChild() const {
         JS_ASSERT(isRope());
