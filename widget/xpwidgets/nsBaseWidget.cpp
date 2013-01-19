@@ -940,7 +940,7 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
       }
     }
     if (!mLayerManager) {
-      mBasicLayerManager = mLayerManager = CreateBasicLayerManager();
+      mLayerManager = CreateBasicLayerManager();
     }
   }
   if (mTemporarilyUseBasicLayerManager && !mBasicLayerManager) {
