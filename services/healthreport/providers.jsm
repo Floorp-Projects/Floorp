@@ -392,6 +392,16 @@ CurrentSessionMeasurement.prototype = Object.freeze({
       singular: fields,
     });
   },
+
+  _serializeJSONSingular: function (data) {
+    let result = {};
+
+    for (let [field, value] of data) {
+      result[field] = value[1];
+    }
+
+    return result;
+  },
 });
 
 /**

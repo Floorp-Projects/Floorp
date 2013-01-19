@@ -640,7 +640,7 @@ HealthReporter.prototype = Object.freeze({
 
         let data;
         try {
-          data = yield this._storage.getMeasurementValues(measurement.id);
+          data = yield measurement.getValues();
         } catch (ex) {
           this._log.warn("Error obtaining data for measurement: " +
                          name + ": " + CommonUtils.exceptionStr(ex));
