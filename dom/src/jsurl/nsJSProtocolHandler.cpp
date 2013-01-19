@@ -340,12 +340,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         ::JS_ReportPendingException(cx);
     }
 
-    // If we took the sandbox path above, v might be in the sandbox
-    // compartment.
-    if (!JS_WrapValue(cx, &v)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
     }
