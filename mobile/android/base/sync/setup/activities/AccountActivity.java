@@ -322,7 +322,6 @@ public class AccountActivity extends AccountAuthenticatorActivity {
         }
       }
     });
-    return;
   }
 
   /**
