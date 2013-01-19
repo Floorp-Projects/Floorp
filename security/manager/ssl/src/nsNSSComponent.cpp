@@ -42,6 +42,7 @@
 #include "nsCRT.h"
 #include "nsCRLInfo.h"
 #include "nsCertOverrideService.h"
+#include "nsNTLMAuthModule.h"
 
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -1914,6 +1915,10 @@ nsNSSComponent::Init()
     NS_ASSERTION(mPrefBranch, "Unable to get pref service");
   }
 
+  bool sendLM = false;
+  mPrefBranch->GetBoolPref("network.ntlm.send-lm-response", &sendLM);
+  nsNTLMAuthModule::SetSendLM(sendLM);
+
   // Do that before NSS init, to make sure we won't get unloaded.
   RegisterObservers();
 
@@ -2246,6 +2251,10 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.OCSP.require")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(mPrefBranch);
+    } else if (prefName.Equals("network.ntlm.send-lm-response")) {
+      bool sendLM = false;
+      mPrefBranch->GetBoolPref("network.ntlm.send-lm-response", &sendLM);
+      nsNTLMAuthModule::SetSendLM(sendLM);
     } else {
       /* Look through the cipher table and set according to pref setting */
       for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
