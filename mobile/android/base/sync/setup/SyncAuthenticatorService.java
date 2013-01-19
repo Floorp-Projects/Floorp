@@ -117,8 +117,10 @@ public class SyncAuthenticatorService extends Service {
       result.putString(Constants.OPTION_USERNAME, username);
     } catch (NoSuchAlgorithmException e) {
       // Do nothing. Calling code must check for missing value.
+      Logger.debug(LOG_TAG, "Exception in account lookup: " + e);
     } catch (UnsupportedEncodingException e) {
       // Do nothing. Calling code must check for missing value.
+      Logger.debug(LOG_TAG, "Exception in account lookup: " + e);
     }
 
     // Sync key.
