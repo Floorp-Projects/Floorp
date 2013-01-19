@@ -9,16 +9,24 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = ../locales locales base chrome components modules themes/core app fonts
+packaged_fonts =  \
+	CharisSILCompact-R.ttf \
+	CharisSILCompact-B.ttf \
+	CharisSILCompact-I.ttf \
+	CharisSILCompact-BI.ttf \
+	OpenSans-Regular.ttf \
+	OpenSans-Bold.ttf \
+	OpenSans-Light.ttf \
+	OpenSans-Italic.ttf \
+	OpenSans-BoldItalic.ttf \
+	OpenSans-LightItalic.ttf \
+	$(NULL)
 
-ifndef LIBXUL_SDK
-PARALLEL_DIRS += $(DEPTH)/xulrunner/tools/redit
-endif
+GARBAGE += $(packaged_fonts)
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/testing/testsuite-targets.mk
 
-package-mobile-tests:
-	$(MAKE) stage-mochitest DIST_BIN=$(DEPTH)/$(DIST)/bin/xulrunner
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > $(DIST)/$(PKG_PATH)$(TEST_PACKAGE)
+libs:: $(packaged_fonts)
+	$(INSTALL) $^ $(DIST)/bin/res/fonts/
+

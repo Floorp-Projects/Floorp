@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=832025
+-->
+<head>
+  <title>Test for Bug 832025</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=832025">Mozilla Bug 832025</a>
+<div id="test" contenteditable="true"><ul><li>listitem <strong id="s">strong</strong></li></ul></div>
+<script type="application/javascript">
+
+/**
+ * Second Test for Bug 832025
+ *
+ */
+
+document.execCommand("stylewithcss", false, "true");
+var test = document.getElementById("test");
+var s = document.getElementById("s");
+test.focus();
+
+// place caret at end of editable area
+var sel = getSelection();
+sel.collapse(s, s.childNodes.length);
+
+// simulate two CR keys
+sendKey("return");
+sendKey("return");
+// insert some text
+document.execCommand("insertText", false, "abc");
+
+is(test.innerHTML == '<ul><li>listitem <strong id="s">strong</strong></li></ul><p>abc<br></p>',
+   true, "A paragraph automatically created after two CRs at the end of a bold listitem should not be bold");
+
+</script>
+</body>
+</html>
