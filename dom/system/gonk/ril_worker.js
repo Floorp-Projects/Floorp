@@ -1713,6 +1713,19 @@ let RIL = {
     Buf.sendParcel();
   },
 
+  /**
+   * Acknowledge the receipt and handling of an SMS.
+   *
+   * @param success
+   *        Boolean indicating whether the message was successfuly handled.
+   */
+  ackSMS: function ackSMS(options) {
+    if (options.result == PDU_FCS_RESERVED) {
+      return;
+    }
+    this.acknowledgeSMS(options.result == PDU_FCS_OK, options.result);
+  },
+
   setCellBroadcastSearchList: function setCellBroadcastSearchList(options) {
     try {
       let str = options.searchListStr;
@@ -3510,6 +3523,7 @@ let RIL = {
             // short message waiting.` ~ 3GPP TS 31.111 7.1.1.1
             return PDU_FCS_RESERVED;
           }
+          // Fall through!
 
           // If the service "data download via SMS-PP" is not available in the
           // (U)SIM Service Table, ..., then the ME shall store the message in
@@ -3549,14 +3563,18 @@ let RIL = {
     }
 
     if (message) {
+      message.result = PDU_FCS_OK;
+      if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
+        // `MS shall ensure that the message has been to the SMS data field in
+        // the (U)SIM before sending an ACK to the SC.`  ~ 3GPP 23.038 clause 4
+        message.result = PDU_FCS_RESERVED;
+      }
       message.rilMessageType = "sms-received";
       this.sendDOMMessage(message);
-    }
 
-    if (message && message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
-      // `MS shall ensure that the message has been to the SMS data field in
-      // the (U)SIM before sending an ACK to the SC.`  ~ 3GPP 23.038 clause 4
-      return PDU_FCS_RESERVED;
+      // We will acknowledge receipt of the SMS after we try to store it
+      // in the database.
+      return MOZ_FCS_WAIT_FOR_EXPLICIT_ACK;
     }
 
     return PDU_FCS_OK;
@@ -4964,10 +4982,11 @@ RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RES
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
   let result = this._processSmsDeliver(length);
-  if (result != PDU_FCS_RESERVED) {
-    // Not reserved FCS values, send ACK now.
-    this.acknowledgeSMS(result == PDU_FCS_OK, result);
+  if (result == PDU_FCS_RESERVED || result == MOZ_FCS_WAIT_FOR_EXPLICIT_ACK) {
+    return;
   }
+  // Not reserved FCS values, send ACK now.
+  this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
   let result = this._processSmsStatusReport(length);
