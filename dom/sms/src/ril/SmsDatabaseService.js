@@ -179,24 +179,24 @@ SmsDatabaseService.prototype = {
             self.upgradeSchema(objectStore);
             break;
           case 2:
-            if (DEBUG) debug("Upgrade to version 3. Fix existing entries.")
+            if (DEBUG) debug("Upgrade to version 3. Fix existing entries.");
             objectStore = event.target.transaction.objectStore(STORE_NAME);
             self.upgradeSchema2(objectStore);
             break;
           case 3:
-            if (DEBUG) debug("Upgrade to version 4. Add quick threads view.")
+            if (DEBUG) debug("Upgrade to version 4. Add quick threads view.");
             self.upgradeSchema3(db, event.target.transaction);
             break;
           case 4:
-            if (DEBUG) debug("Upgrade to version 5. Populate quick threads view.")
+            if (DEBUG) debug("Upgrade to version 5. Populate quick threads view.");
             self.upgradeSchema4(event.target.transaction);
             break;
           case 5:
-            if (DEBUG) debug("Upgrade to version 6. Use PhonenumberJS.")
+            if (DEBUG) debug("Upgrade to version 6. Use PhonenumberJS.");
             self.upgradeSchema5(event.target.transaction);
             break;
           case 6:
-            if (DEBUG) debug("Upgrade to version 7. Use multiple entry indexes.")
+            if (DEBUG) debug("Upgrade to version 7. Use multiple entry indexes.");
             self.upgradeSchema6(event.target.transaction);
             break;
           default:
@@ -206,7 +206,7 @@ SmsDatabaseService.prototype = {
         }
         currentVersion++;
       }
-    }
+    };
     request.onerror = function (event) {
       //TODO look at event.target.Code and change error constant accordingly
       callback("Error opening database!", null);
@@ -298,7 +298,7 @@ SmsDatabaseService.prototype = {
       message.deliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
       cursor.update(message);
       cursor.continue();
-    }
+    };
   },
 
   upgradeSchema3: function upgradeSchema3(db, transaction) {
@@ -358,10 +358,10 @@ SmsDatabaseService.prototype = {
           timestamp: message.timestamp,
           body: message.body,
           unreadCount: message.read ? 0 : 1
-        }
+        };
       }
       cursor.continue();
-    }
+    };
   },
 
   upgradeSchema5: function upgradeSchema5(transaction) {
@@ -410,7 +410,7 @@ SmsDatabaseService.prototype = {
       message.readIndex = [message.read, timestamp];
       cursor.update(message);
       cursor.continue();
-    }
+    };
   },
 
   createMessageFromRecord: function createMessageFromRecord(record) {
@@ -499,14 +499,14 @@ SmsDatabaseService.prototype = {
         }
         smsRequest.notifyMessageListCreated(aMessageList.listId, sms);
       }
-    }
+    };
     getRequest.onerror = function onerror(event) {
       if (DEBUG) {
         debug("notifyReadMessageListFailed - listId: "
               + aMessageList.listId + ", messageId: " + firstMessageId);
       }
       smsRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
-    }
+    };
   },
 
   /**
@@ -647,21 +647,41 @@ SmsDatabaseService.prototype = {
     return false;
   },
 
-  saveMessage: function saveMessage(message) {
+  saveMessage: function saveMessage(message, callback) {
     this.lastKey += 1;
     message.id = this.lastKey;
     if (DEBUG) debug("Going to store " + JSON.stringify(message));
-    this.newTxn(READ_WRITE, function(error, txn, stores) {
-      if (error) {
+
+    let self = this;
+    function notifyResult(rv) {
+      if (!callback) {
         return;
       }
+      let sms = self.createMessageFromRecord(message);
+      callback.notify(rv, sms);
+    }
+
+    this.newTxn(READ_WRITE, function(error, txn, stores) {
+      if (error) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+        return;
+      }
+      txn.oncomplete = function oncomplete(event) {
+        notifyResult(Cr.NS_OK);
+      };
+      txn.onabort = function onabort(event) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+      };
+
       // First add to main objectStore.
       stores[0].put(message);
 
       let number = numberFromMessage(message);
 
       // Next update the other objectStore.
-      stores[1].get(number).onsuccess = function(event) {
+      stores[1].get(number).onsuccess = function onsuccess(event) {
         let mostRecentEntry = event.target.result;
         if (mostRecentEntry) {
           let needsUpdate = false;
@@ -687,7 +707,7 @@ SmsDatabaseService.prototype = {
                                     id: message.id,
                                     unreadCount: message.read ? 0 : 1 });
         }
-      }
+      };
     }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
     // We return the key that we expect to store in the db
     return message.id;
@@ -698,8 +718,11 @@ SmsDatabaseService.prototype = {
    * nsIRilSmsDatabaseService API
    */
 
-  saveReceivedMessage: function saveReceivedMessage(aSender, aBody, aMessageClass, aDate) {
-    let receiver = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
+  saveReceivedMessage: function saveReceivedMessage(
+      aSender, aBody, aMessageClass, aDate, aCallback) {
+    let receiver = this.mRIL.rilContext.icc
+                 ? this.mRIL.rilContext.icc.msisdn
+                 : null;
 
     // Workaround an xpconnect issue with undefined string objects.
     // See bug 808220
@@ -736,11 +759,14 @@ SmsDatabaseService.prototype = {
       timestamp:      aDate,
       read:           FILTER_READ_UNREAD
     };
-    return this.saveMessage(message);
+    return this.saveMessage(message, aCallback);
   },
 
-  saveSendingMessage: function saveSendingMessage(aReceiver, aBody, aDate) {
-    let sender = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
+  saveSendingMessage: function saveSendingMessage(
+      aReceiver, aBody, aDeliveryStatus, aDate, aCallback) {
+    let sender = this.mRIL.rilContext.icc
+               ? this.mRIL.rilContext.icc.msisdn
+               : null;
 
     // Workaround an xpconnect issue with undefined string objects.
     // See bug 808220
@@ -748,7 +774,7 @@ SmsDatabaseService.prototype = {
       sender = null;
     }
 
-    let receiver = aReceiver
+    let receiver = aReceiver;
     if (receiver) {
       let parsedNumber = PhoneNumberUtils.parse(receiver.toString());
       receiver = (parsedNumber && parsedNumber.internationalNumber)
@@ -769,7 +795,7 @@ SmsDatabaseService.prototype = {
       readIndex:      [FILTER_READ_READ, aDate],
 
       delivery:       DELIVERY_SENDING,
-      deliveryStatus: DELIVERY_STATUS_PENDING,
+      deliveryStatus: aDeliveryStatus,
       sender:         sender,
       receiver:       receiver,
       body:           aBody,
@@ -777,23 +803,46 @@ SmsDatabaseService.prototype = {
       timestamp:      aDate,
       read:           FILTER_READ_READ
     };
-    return this.saveMessage(message);
+    return this.saveMessage(message, aCallback);
   },
 
-  setMessageDelivery: function setMessageDelivery(messageId, delivery, deliveryStatus) {
+  setMessageDelivery: function setMessageDelivery(
+      messageId, delivery, deliveryStatus, callback) {
     if (DEBUG) {
       debug("Setting message " + messageId + " delivery to " + delivery
             + ", and deliveryStatus to " + deliveryStatus);
     }
-    this.newTxn(READ_WRITE, function (error, txn, store) {
-      if (error) {
-        if (DEBUG) debug(error);
+
+    let self = this;
+    let message;
+    function notifyResult(rv) {
+      if (!callback) {
         return;
       }
+      let sms = null;
+      if (message) {
+        sms = self.createMessageFromRecord(message);
+      }
+      callback.notify(rv, sms);
+    }
+
+    this.newTxn(READ_WRITE, function (error, txn, store) {
+      if (error) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+        return;
+      }
+      txn.oncomplete = function oncomplete(event) {
+        notifyResult(Cr.NS_OK);
+      };
+      txn.onabort = function onabort(event) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+      };
 
       let getRequest = store.get(messageId);
       getRequest.onsuccess = function onsuccess(event) {
-        let message = event.target.result;
+        message = event.target.result;
         if (!message) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
           return;
