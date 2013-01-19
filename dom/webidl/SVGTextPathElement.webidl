@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGAnimatedLength;
 interface SVGAnimatedEnumeration;
 
 interface SVGTextPathElement : SVGTextContentElement {

@@ -39,6 +39,7 @@
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
 #include "SVGAngle.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 #include <algorithm>
 
 DOMCI_NODE_DATA(SVGSVGElement, mozilla::dom::SVGSVGElement)
@@ -208,7 +209,7 @@ SVGSVGElement::GetX(nsIDOMSVGAnimatedLength * *aX)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGSVGElement::X()
 {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
@@ -222,7 +223,7 @@ SVGSVGElement::GetY(nsIDOMSVGAnimatedLength * *aY)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGSVGElement::Y()
 {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
@@ -236,7 +237,7 @@ SVGSVGElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGSVGElement::Width()
 {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
@@ -250,7 +251,7 @@ SVGSVGElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGSVGElement::Height()
 {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
