@@ -7,6 +7,7 @@
 
 #include "gfxAndroidPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
 
 #include "gfxFT2FontList.h"
 #include "gfxImageSurface.h"
@@ -102,6 +103,11 @@ gfxAndroidPlatform::gfxAndroidPlatform()
     mOffscreenFormat = mScreenDepth == 16
                        ? gfxASurface::ImageFormatRGB16_565
                        : gfxASurface::ImageFormatRGB24;
+
+    if (Preferences::GetBool("gfx.android.rgb16.force", false)) {
+        mOffscreenFormat = gfxASurface::ImageFormatRGB16_565;
+    }
+
 }
 
 gfxAndroidPlatform::~gfxAndroidPlatform()

@@ -46,7 +46,10 @@
     <style name="Gecko.App">
         <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
         <item name="android:panelBackground">@drawable/menu_panel_bg</item>
+        <item name="android:dropDownListViewStyle">@style/DropDownListView</item>
         <item name="android:listViewStyle">@style/GeckoList</item>
+        <item name="android:spinnerItemStyle">@style/SpinnerItem</item>
+        <item name="android:spinnerDropDownItemStyle">@style/SpinnerDropDownItem</item>
     </style>
 
     <style name="Gecko.Light.AwesomeBar">

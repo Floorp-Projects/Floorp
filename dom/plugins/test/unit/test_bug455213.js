@@ -48,18 +48,6 @@ function write_registry(version, info) {
   os.close();
 }
 
-// Finds the test nsIPluginTag
-function get_test_plugintag() {
-  var host = Cc["@mozilla.org/plugin/host;1"].
-             getService(Ci.nsIPluginHost);
-  var tags = host.getPluginTags();
-  for (var i = 0; i < tags.length; i++) {
-    if (tags[i].name == "Test Plug-in")
-      return tags[i];
-  }
-  return null;
-}
-
 function run_test() {
   var file = get_test_plugin();
   if (!file)

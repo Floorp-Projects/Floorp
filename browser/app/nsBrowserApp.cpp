@@ -92,16 +92,6 @@ static bool IsArg(const char* arg, const char* s)
   return false;
 }
 
-/**
- * A helper class which calls NS_LogInit/NS_LogTerm in its scope.
- */
-class ScopedLogging
-{
-public:
-  ScopedLogging() { NS_LogInit(); }
-  ~ScopedLogging() { NS_LogTerm(); }
-};
-
 XRE_GetFileFromPathType XRE_GetFileFromPath;
 XRE_CreateAppDataType XRE_CreateAppData;
 XRE_FreeAppDataType XRE_FreeAppData;
@@ -315,14 +305,16 @@ InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
     return rv;
   }
 
+  NS_LogInit();
+
   // chop XPCOM_DLL off exePath
   *lastSlash = '\0';
 #ifdef XP_WIN
-  NS_NewLocalFile(NS_ConvertUTF8toUTF16(exePath), false,
-                  xreDirectory);
+  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(exePath), false,
+                       xreDirectory);
 #else
-  NS_NewNativeLocalFile(nsDependentCString(exePath), false,
-                        xreDirectory);
+  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), false,
+                             xreDirectory);
 #endif
 
   return rv;
@@ -382,11 +374,9 @@ int main(int argc, char* argv[])
 #endif
   }
 
-  int result;
-  {
-    ScopedLogging log;
-    result = do_main(argc, argv, xreDirectory);
-  }
+  int result = do_main(argc, argv, xreDirectory);
+
+  NS_LogTerm();
 
 #ifdef XP_MACOSX
   // Allow writes again. While we would like to catch writes from static

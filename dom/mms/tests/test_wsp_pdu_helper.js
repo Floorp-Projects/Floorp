@@ -1018,7 +1018,34 @@ add_test(function test_WellKnownCharset_decode() {
   // Test for Any-Charset
   wsp_decode_test(WSP.WellKnownCharset, [128], {charset: "*"});
   // Test for number-typed return value from IntegerValue
-  wsp_decode_test(WSP.WellKnownCharset, [1, 3], {charset: "ansi_x3.4-1968"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 3], {charset: "us-ascii"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 4], {charset: "iso-8859-1"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 5], {charset: "iso-8859-2"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 6], {charset: "iso-8859-3"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 7], {charset: "iso-8859-4"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 8], {charset: "iso-8859-5"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 9], {charset: "iso-8859-6"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 10], {charset: "iso-8859-7"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 11], {charset: "iso-8859-8"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 12], {charset: "iso-8859-9"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 13], {charset: "iso-8859-10"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 17], {charset: "shift_jis"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 18], {charset: "euc-jp"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 37], {charset: "iso-2022-kr"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 38], {charset: "euc-kr"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 39], {charset: "iso-2022-jp"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 40], {charset: "iso-2022-jp-2"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 81], {charset: "iso-8859-6-e"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 82], {charset: "iso-8859-6-i"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 84], {charset: "iso-8859-8-e"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 85], {charset: "iso-8859-8-i"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 1000], {charset: "iso-10646-ucs-2"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 1015], {charset: "utf-16"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 2025], {charset: "gb2312"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 2026], {charset: "big5"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 2084], {charset: "koi8-r"});
+  wsp_decode_test(WSP.WellKnownCharset, [1, 2252], {charset: "windows-1252"});
+  wsp_decode_test(WSP.WellKnownCharset, [2, 3, 247], {charset: "utf-16"});
   // Test for array-typed return value from IntegerValue
   wsp_decode_test(WSP.WellKnownCharset, [7, 0, 0, 0, 0, 0, 0, 0, 3], null, "CodeError");
 
@@ -1030,7 +1057,34 @@ add_test(function test_WellKnownCharset_decode() {
 add_test(function test_WellKnownCharset_encode() {
   // Test for Any-charset
   wsp_encode_test(WSP.WellKnownCharset, {charset: "*"}, [0x80]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "us-ascii"}, [128 + 3]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-1"}, [128 + 4]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-2"}, [128 + 5]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-3"}, [128 + 6]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-4"}, [128 + 7]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-5"}, [128 + 8]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-6"}, [128 + 9]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-7"}, [128 + 10]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-8"}, [128 + 11]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-9"}, [128 + 12]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-10"}, [128 + 13]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "shift_jis"}, [128 + 17]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "euc-jp"}, [128 + 18]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-2022-kr"}, [128 + 37]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "euc-kr"}, [128 + 38]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-2022-jp"}, [128 + 39]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-2022-jp-2"}, [128 + 40]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-6-e"}, [128 + 81]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-6-i"}, [128 + 82]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-8-e"}, [128 + 84]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-8859-8-i"}, [128 + 85]);
   wsp_encode_test(WSP.WellKnownCharset, {charset: "UTF-8"}, [128 + 106]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "iso-10646-ucs-2"}, [2, 0x3, 0xe8]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "UTF-16"}, [2, 0x3, 0xf7]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "gb2312"}, [2, 0x7, 0xe9]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "big5"}, [2, 0x7, 0xea]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "koi8-r"}, [2, 0x8, 0x24]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "windows-1252"}, [2, 0x8, 0xcc]);
 
   run_next_test();
 });
@@ -1222,3 +1276,41 @@ add_test(function test_PduHelper_parseHeaders() {
   run_next_test();
 });
 
+//// PduHelper.decodeStringContent ////
+
+add_test(function StringContent_decode() {
+  //Test for utf-8
+  let (entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
+    // "Mozilla" in full width.
+    let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
+
+    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+               .createInstance(Ci.nsIScriptableUnicodeConverter);
+    conv.charset = entry.converter;
+
+    let raw = conv.convertToByteArray(str);
+    let data = {array: raw, offset: 0};
+    let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
+    wsp_decode_test_ex(function (data) {
+        return WSP.PduHelper.decodeStringContent(data.array, "utf-8");
+      }, octetArray, str);
+  }
+
+  let (entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-16"]) {
+    // "Mozilla" in full width.
+    let str = "\u004d\u006F\u007A\u0069\u006C\u006C\u0061";
+
+    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+               .createInstance(Ci.nsIScriptableUnicodeConverter);
+    conv.charset = entry.converter;
+
+    let raw = conv.convertToByteArray(str);
+    let data = {array: raw, offset: 0};
+    let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
+    wsp_decode_test_ex(function (data) {
+        return WSP.PduHelper.decodeStringContent(data.array, "utf-16");
+      }, raw, str);
+  }
+
+  run_next_test();
+});

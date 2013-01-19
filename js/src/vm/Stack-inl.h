@@ -457,7 +457,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSFunction &callee, HandleScript script,
+                              HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, MaybeReportError report)
 {
     mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
@@ -469,15 +469,15 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(callee.nonLazyScript() == script);
+    JS_ASSERT(callee->nonLazyScript() == script);
 
     StackFrame::Flags flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, report, args, &callee, script, &flags);
+    StackFrame *fp = getCallFrame(cx, report, args, callee, script, &flags);
     if (!fp)
         return false;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, callee, script, args.length(), flags);
+    fp->initCallFrame(cx, *callee, script, args.length(), flags);
 
     /*
      * N.B. regs may differ from the active registers, if the parent is about
@@ -489,7 +489,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
 
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSFunction &callee, HandleScript script,
+                              HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, Value **stackLimit)
 {
     AssertCanGC();
@@ -561,7 +561,7 @@ ContextStack::currentScript(jsbytecode **ppc,
 
 #ifdef JS_ION
     if (fp->beginsIonActivation()) {
-        RootedScript script(cx_);
+        JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
             return UnrootedScript(NULL);
@@ -601,11 +601,11 @@ ContextStack::currentScriptedScopeChain() const
 
 template <class Op>
 inline void
-StackIter::ionForEachCanonicalActualArg(Op op)
+StackIter::ionForEachCanonicalActualArg(JSContext *cx, Op op)
 {
     JS_ASSERT(isIon());
 #ifdef JS_ION
-    ionInlineFrames_.forEachCanonicalActualArg(op, 0, -1);
+    ionInlineFrames_.forEachCanonicalActualArg(cx, op, 0, -1);
 #endif
 }
 

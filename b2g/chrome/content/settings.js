@@ -96,6 +96,7 @@ for each (let [setting, maxValue, streamTypes] in audioChannelSettings) {
 
 SettingsListener.observe('debug.console.enabled', true, function(value) {
   Services.prefs.setBoolPref('consoleservice.enabled', value);
+  Services.prefs.setBoolPref('layout.css.report_errors', value);
 });
 
 // =================== Languages ====================

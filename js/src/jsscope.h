@@ -827,7 +827,7 @@ class Shape : public js::gc::Cell
     void removeChild(UnrootedShape child);
 
     static inline void writeBarrierPre(UnrootedShape shape);
-    static inline void writeBarrierPost(UnrootedShape shape, void *addr);
+    static inline void writeBarrierPost(RawShape shape, void *addr);
 
     /*
      * All weak references need a read barrier for incremental GC. This getter

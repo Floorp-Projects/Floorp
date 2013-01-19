@@ -39,9 +39,9 @@ function runTest(aCallback, desktopSupportedOnly) {
  * A callback function fired only under unexpected circumstances while
  * running the tests. Kills off the test as well gracefully.
  *
- * @param {String} obj the object fired back from the callback
+ * @param {object} aObj The object fired back from the callback
  */
-function unexpectedCallbackAndFinish(obj) {
-  ok(false, "Unexpected error callback with " + obj);
+function unexpectedCallbackAndFinish(aObj) {
+  ok(false, "Unexpected error callback with " + aObj);
   SimpleTest.finish();
 }

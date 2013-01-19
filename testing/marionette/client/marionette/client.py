@@ -5,15 +5,18 @@
 import json
 import socket
 
-from errors import MarionetteException, InvalidResponseException, ErrorCodes
+from errors import InvalidResponseException, ErrorCodes
+
 
 class MarionetteClient(object):
     """ The Marionette socket client.  This speaks the same protocol
         as the remote debugger inside Gecko, in which messages are
         always preceded by the message length and a colon, e.g.,
-        
+
         20:{'command': 'test'}
     """
+
+    max_packet_length = 4096
 
     def __init__(self, addr, port):
         self.addr = addr
@@ -83,7 +86,12 @@ class MarionetteClient(object):
         if 'to' not in msg:
             msg['to'] = self.actor
         data = json.dumps(msg)
-        self.sock.send('%s:%s' % (len(data), data))
+        data = '%s:%s' % (len(data), data)
+
+        for packet in [data[i:i + self.max_packet_length] for i in
+                       range(0, len(data), self.max_packet_length)]:
+            self.sock.send(packet)
+
         response = self.receive()
         return response
 

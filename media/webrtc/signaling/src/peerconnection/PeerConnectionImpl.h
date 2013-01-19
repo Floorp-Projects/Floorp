@@ -12,6 +12,8 @@
 
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
+#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h" // for the definition of nsWeakPtr
 #include "IPeerConnection.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
@@ -230,7 +232,9 @@ private:
   IceState mIceState;
 
   nsCOMPtr<nsIThread> mThread;
-  nsCOMPtr<IPeerConnectionObserver> mPCObserver;
+  // Weak pointer to IPeerConnectionObserver
+  // This is only safe to use on the main thread
+  nsWeakPtr mPCObserver;
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
   // The SDP sent in from JS - here for debugging.
