@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/services/metrics/storage.jsm");
 
 this.Metrics = {
   Collector: Collector,
+  DailyValues: DailyValues,
   Measurement: Measurement,
   Provider: Provider,
   Storage: MetricsStorageBackend,
