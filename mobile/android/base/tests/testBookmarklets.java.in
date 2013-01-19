@@ -3,11 +3,12 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
-import android.content.ContentValues;
-import android.content.ContentResolver;
 import android.database.Cursor;
-import android.net.Uri;
-import android.provider.Browser;
+
+import android.view.View;
+import android.widget.ListView;
+import java.util.ArrayList;
+
 
 public class testBookmarklets extends PixelTest {
     @Override
@@ -38,13 +39,31 @@ public class testBookmarklets extends PixelTest {
 
         // add the bookmarklet to the database. there's currently no way to
         // add this using the UI, so we go through the content provider.
-        addOrUpdateBookmarklet(title, js);
+        addOrUpdateBookmark(title, js, true);
 
         // verify that bookmarklets clicked in awesomescreen work
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-        getInstrumentation().waitForIdleSync();
-        mSolo.clickOnText(title);
+        ListView bookmarks = getBookmarksList();
+
+        Boolean found = false;
+        if (bookmarks == null) {
+            mAsserter.is(true, true, "Did not find the bookmarks section in the awesomebar");
+        } else if (mSolo.waitForText(title)) {
+            for (int i = 0; i < bookmarks.getChildCount(); i++) {
+                Cursor c = (Cursor)bookmarks.getItemAtPosition(i);
+                String turl = c.getString(c.getColumnIndexOrThrow("url"));
+                if (turl.equals(js)) {
+                    found = true;
+                    mAsserter.is(1, 1, "Found bookmarklet added to bookmarks: " + js);
+                    mSolo.clickOnView(bookmarks.getChildAt(i));
+                }
+            }
+        } else {
+            mAsserter.is(true, true, "Did not find the title '" + title + "' of the bookmark in the list");
+        }
+        if (!found) {
+            mAsserter.is(found, true, "Found the bookmark: " + js + " and clicked on it");
+        }
+
         alerted = waitForTest(new BooleanTest() {
             public boolean test() {
                 return mSolo.searchButton("OK", true) && mSolo.searchText("12.34", true);
@@ -53,43 +72,6 @@ public class testBookmarklets extends PixelTest {
         mAsserter.is(alerted, true, "Alert was shown for clicked bookmarklet");
 
         // remove the bookmarklet
-        removeBookmarklet(js);
-    }
-
-    private void addOrUpdateBookmarklet(String title, String url) {
-        ContentResolver resolver = getActivity().getContentResolver();
-        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
-        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
-        long mobileFolderId = -1;
-
-        Cursor c = resolver.query(bookmarksUri,
-                                  new String[] { "_id" },
-                                  "guid = ?",
-                                  new String[] { "mobile" },
-                                  null);
-        if (c.moveToFirst())
-            mobileFolderId = c.getLong(c.getColumnIndexOrThrow("_id"));
-        c.close();
-
-        ContentValues values = new ContentValues();
-        values.put(Browser.BookmarkColumns.TITLE, title);
-        values.put("url", url);
-        values.put("parent", mobileFolderId);
-        values.put("modified", System.currentTimeMillis());
-
-        int updated = resolver.update(bookmarksUri,
-                                      values,
-                                      "url = ?",
-                                      new String[] { url });
-        if (updated == 0)
-            resolver.insert(bookmarksUri, values);
-    }
-
-    private void removeBookmarklet(String url) {
-        ContentResolver resolver = getActivity().getContentResolver();
-        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
-        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
-
-        resolver.delete(bookmarksUri, "url = ?", new String[] { url });
+        deleteBookmark(js);
     }
 }
