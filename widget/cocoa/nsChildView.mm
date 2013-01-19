@@ -672,7 +672,10 @@ nsChildView::WillPaint()
   }
   NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
   CGContextRef context = mTitlebarSurf->GetCGContext();
+
+  CGContextSaveGState(context);
   [(ChildView*)mView drawRect:flippedTitlebarRect inTitlebarContext:context];
+  CGContextRestoreGState(context);
 }
 
 void
@@ -2518,7 +2521,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   const NSRect *rects;
   NSInteger count, i;
   [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
-  if (count < MAX_RECTS_IN_REGION) {
+  if (count < MAX_RECTS_IN_REGION && !aIsAlternate) {
     for (i = 0; i < count; ++i) {
       // Add the rect to the region.
       NSRect r = [self convertRect:rects[i] fromView:[NSView focusView]];
