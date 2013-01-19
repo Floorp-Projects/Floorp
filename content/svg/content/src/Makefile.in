@@ -65,6 +65,7 @@ CPPSRCS		= \
 		SVGAngle.cpp \
 		SVGAnimatedAngle.cpp \
 		SVGAnimatedBoolean.cpp \
+		SVGAnimatedLength.cpp \
 		SVGAnimatedLengthList.cpp \
 		SVGAnimatedNumberList.cpp \
 		SVGAnimatedPathSegList.cpp \
@@ -159,6 +160,7 @@ EXPORTS_mozilla/dom = \
 	SVGAngle.h \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
+	SVGAnimatedLength.h \
 	SVGAnimateElement.h \
 	SVGAnimateTransformElement.h \
 	SVGAnimateMotionElement.h \
