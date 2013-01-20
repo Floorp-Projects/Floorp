@@ -111,9 +111,6 @@ DEFINES += \
   -DOS_LINUX=1 \
   $(NULL)
 
-# NB: to stop gcc warnings about exporting template instantiation
-OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
-
 endif # }
 endif # }
 endif # }
