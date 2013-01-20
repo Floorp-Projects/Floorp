@@ -324,6 +324,33 @@ let StackRenderer = {
   }
 };
 
+function SymbolicationRequest(aPrefix, aRenderHeader, aMemoryMap, aStacks) {
+  this.prefix = aPrefix;
+  this.renderHeader = aRenderHeader;
+  this.memoryMap = aMemoryMap;
+  this.stacks = aStacks;
+}
+SymbolicationRequest.prototype.handleSymbolResponse = function() {
+  StackRenderer.renderSymbolicatedStacks(this.prefix, this.symbolRequest,
+                                         this.renderHeader);
+};
+SymbolicationRequest.prototype.fetchSymbols = function() {
+  let symbolServerURI =
+    getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
+  let request = {"memoryMap" : this.memoryMap, "stacks" : this.stacks,
+                 "version" : 3};
+  let requestJSON = JSON.stringify(request);
+
+  this.symbolRequest = XMLHttpRequest();
+  this.symbolRequest.open("POST", symbolServerURI, true);
+  this.symbolRequest.setRequestHeader("Content-type", "application/json");
+  this.symbolRequest.setRequestHeader("Content-length",
+                                      requestJSON.length);
+  this.symbolRequest.setRequestHeader("Connection", "close");
+  this.symbolRequest.onreadystatechange = this.handleSymbolResponse.bind(this);
+  this.symbolRequest.send(requestJSON);
+}
+
 let ChromeHangs = {
 
   symbolRequest: null,
@@ -360,39 +387,6 @@ let ChromeHangs = {
 
     div.appendChild(titleElement);
     div.appendChild(document.createElement("br"));
-  },
-
-  /**
-   * Sends a symbolication request for the recorded hangs
-   */
-  fetchSymbols: function ChromeHangs_fetchSymbols() {
-    let symbolServerURI =
-      getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
-
-    let hangs = Telemetry.chromeHangs;
-    let memoryMap = hangs.memoryMap;
-    let stacks = hangs.stacks;
-    let request = {"memoryMap" : memoryMap, "stacks" : stacks,
-                   "version" : 3};
-    let requestJSON = JSON.stringify(request);
-
-    this.symbolRequest = XMLHttpRequest();
-    this.symbolRequest.open("POST", symbolServerURI, true);
-    this.symbolRequest.setRequestHeader("Content-type", "application/json");
-    this.symbolRequest.setRequestHeader("Content-length", requestJSON.length);
-    this.symbolRequest.setRequestHeader("Connection", "close");
-
-    this.symbolRequest.onreadystatechange = this.handleSymbolResponse.bind(this);
-    this.symbolRequest.send(requestJSON);
-  },
-
-  /**
-   * Called when the 'readyState' of the XMLHttpRequest changes. We only care
-   * about state 4 ("completed") - handling the response data.
-   */
-  handleSymbolResponse: function ChromeHangs_handleSymbolResponse() {
-    StackRenderer.renderSymbolicatedStacks("chrome-hangs", this.symbolRequest,
-                                           this.renderHangHeader);
   }
 };
 
@@ -662,13 +656,33 @@ function setupListeners() {
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
     function () {
-      ChromeHangs.fetchSymbols();
+      let hangs = Telemetry.chromeHangs;
+      let req = new SymbolicationRequest("chrome-hangs",
+                                         ChromeHangs.renderHangHeader,
+                                         hangs.memoryMap, hangs.stacks);
+      req.fetchSymbols();
   }, false);
 
   document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
     function () {
       ChromeHangs.render();
   }, false);
+
+  document.getElementById("late-writes-fetch-symbols").addEventListener("click",
+    function () {
+      let lateWrites = TelemetryPing.getPayload().lateWrites;
+      let req = new SymbolicationRequest("late-writes", function() {},
+                                         lateWrites.memoryMap,
+                                         lateWrites.stacks);
+      req.fetchSymbols();
+  }, false);
+
+  document.getElementById("late-writes-hide-symbols").addEventListener("click",
+    function () {
+      let ping = TelemetryPing.getPayload();
+      LateWritesSingleton.renderLateWrites(ping.lateWrites);
+  }, false);
+
 
   // Clicking on the section name will toggle its state
   let sectionHeaders = document.getElementsByClassName("section-name");
