@@ -10,10 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef GNU_CC
-OS_CFLAGS := $(filter-out -pedantic,$(OS_CFLAGS))
-endif
-
 DEFINES += -DHAVE_CONFIG_H=vpx_config.h
 
 MODULE = vpx
