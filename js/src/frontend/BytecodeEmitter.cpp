@@ -119,6 +119,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     typesetCount(0),
     hasSingletons(false),
     emittingForInit(false),
+    emittingRunOnceLambda(false),
     hasGlobalScope(hasGlobalScope),
     selfHostingMode(selfHostingMode)
 {
@@ -1655,14 +1656,20 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
 }
 
 bool
-BytecodeEmitter::checkSingletonContext()
+BytecodeEmitter::isInLoop()
 {
-    if (!script->compileAndGo || sc->isFunctionBox())
-        return false;
     for (StmtInfoBCE *stmt = topStmt; stmt; stmt = stmt->down) {
         if (stmt->isLoop())
-            return false;
+            return true;
     }
+    return false;
+}
+
+bool
+BytecodeEmitter::checkSingletonContext()
+{
+    if (!script->compileAndGo || sc->isFunctionBox() || isInLoop())
+        return false;
     hasSingletons = true;
     return true;
 }
@@ -2593,12 +2600,27 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
     if (!JSScript::fullyInitFromEmitter(cx, bce->script, bce))
         return false;
 
+    /*
+     * If this function is only expected to run once, mark the script so that
+     * initializers created within it may be given more precise types.
+     */
+    if (bce->parent && bce->parent->emittingRunOnceLambda)
+        bce->script->treatAsRunOnce = true;
 
-    /* Mark functions which will only be executed once as singletons. */
+    /*
+     * Mark as singletons any function which will only be executed once, or
+     * which is inner to a lambda we only expect to run once. In the latter
+     * case, if the lambda runs multiple times then CloneFunctionObject will
+     * make a deep clone of its contents.
+     */
     bool singleton =
         cx->typeInferenceEnabled() &&
+        bce->script->compileAndGo &&
         bce->parent &&
-        bce->parent->checkSingletonContext();
+        (bce->parent->checkSingletonContext() ||
+         (!bce->parent->isInLoop() &&
+          bce->parent->parent &&
+          bce->parent->parent->emittingRunOnceLambda));
 
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
     RootedFunction fun(cx, bce->script->function());
@@ -5360,6 +5382,24 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         callop = true;          /* suppress JSOP_UNDEFINED after */
         break;
 #endif
+      case PNK_FUNCTION:
+        /*
+         * Top level lambdas which are immediately invoked should be
+         * treated as only running once. Every time they execute we will
+         * create new types and scripts for their contents, to increase
+         * the quality of type information within them and enable more
+         * backend optimizations. Note that this does not depend on the
+         * lambda being invoked at most once (it may be named or be
+         * accessed via foo.caller indirection), as multiple executions
+         * will just cause the inner scripts to be repeatedly cloned.
+         */
+        JS_ASSERT(!bce->emittingRunOnceLambda);
+        bce->emittingRunOnceLambda = true;
+        if (!EmitTree(cx, bce, pn2))
+            return false;
+        bce->emittingRunOnceLambda = false;
+        callop = false;
+        break;
       default:
         if (!EmitTree(cx, bce, pn2))
             return false;
