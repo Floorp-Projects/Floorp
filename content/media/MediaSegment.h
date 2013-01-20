@@ -119,9 +119,7 @@ template <class C, class Chunk> class MediaSegmentBase : public MediaSegment {
 public:
   virtual MediaSegment* CreateEmptyClone() const
   {
-    C* s = new C();
-    s->InitFrom(*static_cast<const C*>(this));
-    return s;
+    return new C();
   }
   virtual void AppendFrom(MediaSegment* aSource)
   {
@@ -140,11 +138,6 @@ public:
   }
   void AppendSlice(const C& aOther, TrackTicks aStart, TrackTicks aEnd)
   {
-    AppendSliceInternal(aOther, aStart, aEnd);
-  }
-  void InitToSlice(const C& aOther, TrackTicks aStart, TrackTicks aEnd)
-  {
-    static_cast<C*>(this)->InitFrom(aOther);
     AppendSliceInternal(aOther, aStart, aEnd);
   }
   /**
@@ -215,7 +208,6 @@ protected:
    */
   void AppendFromInternal(MediaSegmentBase<C, Chunk>* aSource)
   {
-    static_cast<C*>(this)->CheckCompatible(*static_cast<C*>(aSource));
     MOZ_ASSERT(aSource->mDuration >= 0);
     mDuration += aSource->mDuration;
     aSource->mDuration = 0;
@@ -230,7 +222,6 @@ protected:
   void AppendSliceInternal(const MediaSegmentBase<C, Chunk>& aSource,
                            TrackTicks aStart, TrackTicks aEnd)
   {
-    static_cast<C*>(this)->CheckCompatible(static_cast<const C&>(aSource));
     NS_ASSERTION(aStart <= aEnd, "Endpoints inverted");
     NS_ASSERTION(aStart >= 0 && aEnd <= aSource.mDuration,
                  "Slice out of range");

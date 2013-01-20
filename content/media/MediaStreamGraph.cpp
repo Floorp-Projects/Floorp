@@ -1158,14 +1158,14 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         // XXX allocating a AudioStream could be slow so we're going to have to do
         // something here ... preallocation, async allocation, multiplexing onto a single
         // stream ...
-        AudioSegment* audio = tracks->Get<AudioSegment>();
         MediaStream::AudioOutputStream* audioOutputStream =
           aStream->mAudioOutputStreams.AppendElement();
         audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
         audioOutputStream->mBlockedAudioTime = 0;
         audioOutputStream->mStream = AudioStream::AllocateStream();
-        audioOutputStream->mStream->Init(audio->GetChannels(),
-                                         tracks->GetRate(), AUDIO_CHANNEL_NORMAL);
+        // XXX for now, allocate stereo output. But we need to fix this to
+        // match the system's ideal channel configuration.
+        audioOutputStream->mStream->Init(2, tracks->GetRate(), AUDIO_CHANNEL_NORMAL);
         audioOutputStream->mTrackID = tracks->GetID();
       }
     }
@@ -1211,7 +1211,6 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
       end = std::min(end, aTo);
 
       AudioSegment output;
-      output.InitFrom(*audio);
       if (blocked) {
         // Track total blocked time in aStream->mBlockedAudioTime so that
         // the amount of silent samples we've inserted for blocking never gets

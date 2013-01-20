@@ -517,9 +517,6 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
   aStream->mLastAudioPacketTime = aAudio->mTime;
   aStream->mLastAudioPacketEndTime = aAudio->GetEnd();
 
-  NS_ASSERTION(aOutput->GetChannels() == int32_t(aAudio->mChannels),
-               "Wrong number of channels");
-
   // This logic has to mimic AudioLoop closely to make sure we write
   // the exact same silences
   CheckedInt64 audioWrittenOffset = UsecsToFrames(mInfo.mAudioRate,
@@ -532,7 +529,6 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
     LOG(PR_LOG_DEBUG, ("%p Decoder writing %d frames of silence to MediaStream",
                        mDecoder.get(), int32_t(frameOffset.value() - audioWrittenOffset.value())));
     AudioSegment silence;
-    silence.InitFrom(*aOutput);
     silence.InsertNullDataAtStart(frameOffset.value() - audioWrittenOffset.value());
     aStream->mAudioFramesWritten += silence.GetDuration();
     aOutput->AppendFrom(&silence);
@@ -604,7 +600,6 @@ void MediaDecoderStateMachine::SendStreamData()
   if (!stream->mStreamInitialized) {
     if (mInfo.mHasAudio) {
       AudioSegment* audio = new AudioSegment();
-      audio->Init(mInfo.mAudioChannels);
       mediaStream->AddTrack(TRACK_AUDIO, mInfo.mAudioRate, 0, audio);
     }
     if (mInfo.mHasVideo) {
@@ -620,7 +615,6 @@ void MediaDecoderStateMachine::SendStreamData()
     // is captured, only the decoder thread pops from the queue (see below).
     mReader->AudioQueue().GetElementsAfter(stream->mLastAudioPacketTime, &audio);
     AudioSegment output;
-    output.Init(mInfo.mAudioChannels);
     for (uint32_t i = 0; i < audio.Length(); ++i) {
       SendStreamAudio(audio[i], stream, &output);
     }
