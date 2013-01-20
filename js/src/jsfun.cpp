@@ -1501,15 +1501,15 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         clone->initializeExtended();
     }
 
-    if (cx->compartment == fun->compartment() && !types::UseNewTypeForClone(fun)) {
+    if (cx->compartment == fun->compartment() &&
+        !fun->hasSingletonType() &&
+        !types::UseNewTypeForClone(fun))
+    {
         /*
-         * We can use the same type as the original function provided that (a)
-         * its prototype is correct, and (b) its type is not a singleton. The
-         * first case will hold in all compileAndGo code, and the second case
-         * will have been caught by CloneFunctionObject coming from function
-         * definitions or read barriers, so will not get here.
+         * Clone the function, reusing its script. We can use the same type as
+         * the original function provided that its prototype is correct.
          */
-        if (fun->getProto() == proto && !fun->hasSingletonType())
+        if (fun->getProto() == proto)
             clone->setType(fun->type());
     } else {
         if (!JSObject::setSingletonType(cx, clone))

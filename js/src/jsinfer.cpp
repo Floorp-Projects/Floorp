@@ -2477,7 +2477,7 @@ types::UseNewTypeForInitializer(JSContext *cx, HandleScript script, jsbytecode *
      * arrays, but not normal arrays.
      */
 
-    if (!cx->typeInferenceEnabled() || script->function())
+    if (!cx->typeInferenceEnabled() || (script->function() && !script->treatAsRunOnce))
         return false;
 
     if (key != JSProto_Object && !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
@@ -4211,24 +4211,24 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
         break;
 
-      case JSOP_LAMBDA:
-      case JSOP_DEFFUN: {
+      case JSOP_LAMBDA: {
         RootedObject obj(cx, script_->getObject(GET_UINT32_INDEX(pc)));
+        TypeSet *res = &pushed[0];
 
-        TypeSet *res = NULL;
-        if (op == JSOP_LAMBDA)
-            res = &pushed[0];
-
-        if (res) {
-            if (script_->compileAndGo && !UseNewTypeForClone(obj->toFunction()))
-                res->addType(cx, Type::ObjectType(obj));
-            else
-                res->addType(cx, Type::UnknownType());
-        } else {
-            cx->compartment->types.monitorBytecode(cx, script, offset);
-        }
+        // If the lambda may produce values with different types than the
+        // original function, despecialize the type produced here. This includes
+        // functions that are deep cloned at each lambda, as well as inner
+        // functions to run-once lambdas which may actually execute multiple times.
+        if (script_->compileAndGo && !script_->treatAsRunOnce && !UseNewTypeForClone(obj->toFunction()))
+            res->addType(cx, Type::ObjectType(obj));
+        else
+            res->addType(cx, Type::AnyObjectType());
         break;
       }
+
+      case JSOP_DEFFUN:
+        cx->compartment->types.monitorBytecode(cx, script, offset);
+        break;
 
       case JSOP_DEFVAR:
         break;
@@ -4536,14 +4536,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         pushed[0].addType(cx, Type::UnknownType());
         break;
 
-      case JSOP_CALLEE: {
-        JSFunction *fun = script_->function();
-        if (script_->compileAndGo && !UseNewTypeForClone(fun))
-            pushed[0].addType(cx, Type::ObjectType(fun));
-        else
-            pushed[0].addType(cx, Type::UnknownType());
+      case JSOP_CALLEE:
+        pushed[0].addType(cx, Type::AnyObjectType());
         break;
-      }
 
       default:
         /* Display fine-grained debug information first */
