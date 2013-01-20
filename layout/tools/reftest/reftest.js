@@ -47,7 +47,7 @@ var gContainingWindow = null;
 var gFilter = null;
 
 // "<!--CLEAR-->"
-const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
+const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
 
 var gBrowser;
 // Are we testing web content loaded in a separate process?
