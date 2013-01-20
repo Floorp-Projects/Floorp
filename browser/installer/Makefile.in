@@ -80,7 +80,7 @@ ifdef WIN32_REDIST_DIR
 DEFINES += -DMOZ_MSVC_REDIST=$(_MSC_VER)
 endif
 
-ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
+ifneq (,$(filter beta,$(MOZ_UPDATE_CHANNEL)))
 DEFINES += -DSHIP_FEEDBACK=1
 endif
 
