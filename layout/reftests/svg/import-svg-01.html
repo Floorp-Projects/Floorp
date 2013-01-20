@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<script>
+function setup() {
+ var data =
+ '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -100 50 100" width="100%" height="100%">' +
+ '    <rect transform="rotate(180,0,0)" fill="red" x="-50" y="-50" width="100" height="100" />'+
+ '    <rect fill="lime" x="-55" y="-55" width="110" height="110" />'+
+ '</svg>';
+ var drawing = document.getElementById("drawing");
+ var parser = new DOMParser();
+ var svg1 = document.importNode(parser.parseFromString(data, "text/xml").documentElement, true);
+ drawing.appendChild(svg1);
+ document.documentElement.className = "";
+}
+</script>
+</head>
+<body style="background-color: lime;" onload="setup()">
+<div id="drawing">
+</div>
+</body>
+</html>
