@@ -279,8 +279,9 @@ void nsPrintEngine::Destroy()
 void nsPrintEngine::DestroyPrintingData()
 {
   if (mPrt) {
-    delete mPrt;
+    nsPrintData* data = mPrt;
     mPrt = nullptr;
+    delete data;
   }
 }
 
