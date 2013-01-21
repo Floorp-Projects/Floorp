@@ -122,6 +122,7 @@ pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
+pref("layout.css.report_errors", false);
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
