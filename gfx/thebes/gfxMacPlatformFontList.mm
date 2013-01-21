@@ -264,13 +264,25 @@ MacOSFontEntry::ReadCMAP()
     }
   
     if (NS_SUCCEEDED(rv)) {
+#ifdef MOZ_GRAPHITE
+        // TODO: when we remove the MOZ_GRAPHITE conditional,
+        // we can merge this into the preceding if().
+        // Hence not (temporarily) indenting the code below
+        // by an extra level, only to undo that next time we
+        // touch it.
+        //
+        // We assume a Graphite font knows what it's doing,
+        // and provides whatever shaping is needed for the
+        // characters it supports, so only check/clear the
+        // complex-script ranges for non-Graphite fonts
+        if (!HasGraphiteTables()) {
+#endif
         // for layout support, check for the presence of mort/morx and/or
         // opentype layout tables
         bool hasAATLayout = HasFontTable(TRUETYPE_TAG('m','o','r','x')) ||
                             HasFontTable(TRUETYPE_TAG('m','o','r','t'));
         bool hasGSUB = HasFontTable(TRUETYPE_TAG('G','S','U','B'));
         bool hasGPOS = HasFontTable(TRUETYPE_TAG('G','P','O','S'));
-
         if (hasAATLayout && !(hasGSUB || hasGPOS)) {
             mRequiresAAT = true; // prefer CoreText if font has no OTL tables
         }
@@ -299,6 +311,9 @@ MacOSFontEntry::ReadCMAP()
                 charmap->ClearRange(sr.rangeStart, sr.rangeEnd);
             }
         }
+#ifdef MOZ_GRAPHITE
+        }
+#endif
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);
