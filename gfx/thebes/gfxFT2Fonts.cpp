@@ -39,15 +39,6 @@
 
 #include "mozilla/Preferences.h"
 
-static PRLogModuleInfo *
-GetFontLog()
-{
-    static PRLogModuleInfo *sLog;
-    if (!sLog)
-        sLog = PR_NewLogModule("ft2fonts");
-    return sLog;
-}
-
 // rounding and truncation functions for a Freetype floating point number
 // (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
 // part and low 6 bits for the fractional part.
@@ -60,6 +51,15 @@ GetFontLog()
 /**
  * gfxFT2FontGroup
  */
+
+static PRLogModuleInfo *
+GetFontLog()
+{
+    static PRLogModuleInfo *sLog;
+    if (!sLog)
+        sLog = PR_NewLogModule("ft2fonts");
+    return sLog;
+}
 
 bool
 gfxFT2FontGroup::FontCallback(const nsAString& fontName,
