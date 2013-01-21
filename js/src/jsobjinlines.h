@@ -157,7 +157,7 @@ JSObject::setSpecialAttributes(JSContext *cx, js::HandleObject obj,
 
 /* static */ inline bool
 JSObject::changePropertyAttributes(JSContext *cx, js::HandleObject obj,
-                                   js::Shape *shape, unsigned attrs)
+                                   js::HandleShape shape, unsigned attrs)
 {
     return !!changeProperty(cx, obj, shape, attrs, 0, shape->getter(), shape->setter());
 }
