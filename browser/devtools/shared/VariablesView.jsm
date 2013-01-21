@@ -12,8 +12,11 @@ const LAZY_APPEND_DELAY = 100; // ms
 const LAZY_APPEND_BATCH = 100; // nodes
 const SEARCH_ACTION_MAX_DELAY = 1000; // ms
 
-Components.utils.import('resource://gre/modules/Services.jsm');
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this,
+  "WebConsoleUtils", "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["VariablesView", "create"];
 
@@ -2062,11 +2065,7 @@ VariablesView.getGrip = function VV_getGrip(aValue) {
     return { type: "null" };
   }
   if (typeof aValue == "object" || typeof aValue == "function") {
-    if (aValue.constructor) {
-      return { type: "object", class: aValue.constructor.name };
-    } else {
-      return { type: "object", class: "Object" };
-    }
+    return { type: "object", class: WebConsoleUtils.getObjectClassName(aValue) };
   }
   return aValue;
 };
