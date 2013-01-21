@@ -128,8 +128,6 @@ let SocialUI = {
         case "nsPref:changed":
           if (data == "social.sidebar.open") {
             SocialSidebar.update();
-          } else if (data == "social.toast-notifications.enabled") {
-            SocialToolbar.updateButton();
           }
           break;
       }
