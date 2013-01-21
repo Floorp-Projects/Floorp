@@ -24,7 +24,6 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<ClientRecord> {
   public static final String LOG_TAG = "ClientRecArrayAdapter";
 
   private boolean[] checkedItems;
-  private int numCheckedGUIDs;
   private SendTabActivity sendTabActivity;
 
   public ClientRecordArrayAdapter(Context context,
@@ -37,7 +36,6 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<ClientRecord> {
   public synchronized void setClientRecordList(final Collection<ClientRecord> clientRecordList) {
     this.clear();
     this.checkedItems = new boolean[clientRecordList.size()];
-    this.numCheckedGUIDs = 0;
     for (ClientRecord clientRecord : clientRecordList) {
       this.add(clientRecord);
     }
@@ -72,10 +70,8 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<ClientRecord> {
     }
 
     checkedItems[position] = checked;
-    numCheckedGUIDs += checked ? 1 : -1;
-    if (numCheckedGUIDs <= 0) {
-      sendTabActivity.enableSend(numCheckedGUIDs > 0);
-    }
+    sendTabActivity.enableSend(getNumCheckedGUIDs() > 0);
+
     return true;
   }
 
@@ -118,6 +114,11 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<ClientRecord> {
     return row;
   }
 
+  /**
+   * Get list of checked GUIDs.
+   *
+   * @return non-null list.
+   */
   public synchronized List<String> getCheckedGUIDs() {
     final List<String> guids = new ArrayList<String>();
     for (int i = 0; i < checkedItems.length; i++) {
@@ -128,7 +129,18 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<ClientRecord> {
     return guids;
   }
 
+  /**
+   * Get number of checked GUIDs.
+   *
+   * @return non-negative integer.
+   */
   public synchronized int getNumCheckedGUIDs() {
+    int numCheckedGUIDs = 0;
+    for (int i = 0; i < checkedItems.length; i++) {
+      if (checkedItems[i]) {
+        numCheckedGUIDs += 1;
+      }
+    }
     return numCheckedGUIDs;
   }
 
