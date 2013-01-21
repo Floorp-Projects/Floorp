@@ -70,6 +70,12 @@ function testVariablesView()
   testThirdLevelContents();
   testIntegrity(arr, obj);
 
+  gVariablesView.clearHierarchy();
+  is (gVariablesView._prevHierarchy.size, 0,
+    "The previous hierarchy should have been cleared.");
+  is (gVariablesView._currHierarchy.size, 0,
+    "The current hierarchy should have been cleared.");
+
   closeDebuggerAndFinish();
 }
 
