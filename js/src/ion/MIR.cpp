@@ -786,16 +786,16 @@ MDiv::analyzeEdgeCasesForward()
 
     // Try removing divide by zero check
     if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(0))
-        canBeDivideByZero_ =  false;
+        canBeDivideByZero_ = false;
 
     // If lhs is a constant int != INT32_MIN, then
     // negative overflow check can be skipped.
     if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(INT32_MIN))
-        setCanBeNegativeZero(false);
+        canBeNegativeOverflow_ = false;
 
     // If rhs is a constant int != -1, likewise.
     if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(-1))
-        setCanBeNegativeZero(false);
+        canBeNegativeOverflow_ = false;
 
     // If lhs is != 0, then negative zero check can be skipped.
     if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(0))
