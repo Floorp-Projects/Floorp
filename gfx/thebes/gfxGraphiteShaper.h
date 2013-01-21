@@ -44,7 +44,8 @@ public:
     };
 
 protected:
-    nsresult SetGlyphsFromSegment(gfxShapedText   *aShapedText,
+    nsresult SetGlyphsFromSegment(gfxContext      *aContext,
+                                  gfxShapedText   *aShapedText,
                                   uint32_t         aOffset,
                                   uint32_t         aLength,
                                   const PRUnichar *aText,
