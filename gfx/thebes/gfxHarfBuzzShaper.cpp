@@ -26,10 +26,6 @@
 #include "nsCRT.h"
 #include <algorithm>
 
-#if defined(XP_WIN)
-#include "gfxWindowsPlatform.h"
-#endif
-
 #define FloatToFixed(f) (65536 * (f))
 #define FixedToFloat(f) ((f) * (1.0 / 65536.0))
 // Right shifts of negative (signed) integers are undefined, as are overflows
@@ -1028,80 +1024,6 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     return NS_SUCCEEDED(rv);
 }
 
-/**
- * Work out whether cairo will snap inter-glyph spacing to pixels.
- *
- * Layout does not align text to pixel boundaries, so, with font drawing
- * backends that snap glyph positions to pixels, it is important that
- * inter-glyph spacing within words is always an integer number of pixels.
- * This ensures that the drawing backend snaps all of the word's glyphs in the
- * same direction and so inter-glyph spacing remains the same.
- */
-static void
-GetRoundOffsetsToPixels(gfxContext *aContext,
-                        bool *aRoundX, bool *aRoundY)
-{
-    *aRoundX = false;
-    // Could do something fancy here for ScaleFactors of
-    // AxisAlignedTransforms, but we leave things simple.
-    // Not much point rounding if a matrix will mess things up anyway.
-    if (aContext->CurrentMatrix().HasNonTranslation()) {
-        *aRoundY = false;
-        return;
-    }
-
-    // All raster backends snap glyphs to pixels vertically.
-    // Print backends set CAIRO_HINT_METRICS_OFF.
-    *aRoundY = true;
-
-    cairo_t *cr = aContext->GetCairo();
-    cairo_scaled_font_t *scaled_font = cairo_get_scaled_font(cr);
-    // Sometimes hint metrics gets set for us, most notably for printing.
-    cairo_font_options_t *font_options = cairo_font_options_create();
-    cairo_scaled_font_get_font_options(scaled_font, font_options);
-    cairo_hint_metrics_t hint_metrics =
-        cairo_font_options_get_hint_metrics(font_options);
-    cairo_font_options_destroy(font_options);
-
-    switch (hint_metrics) {
-    case CAIRO_HINT_METRICS_OFF:
-        *aRoundY = false;
-        return;
-    case CAIRO_HINT_METRICS_DEFAULT:
-        // Here we mimic what cairo surface/font backends do.  Printing
-        // surfaces have already been handled by hint_metrics.  The
-        // fallback show_glyphs implementation composites pixel-aligned
-        // glyph surfaces, so we just pick surface/font combinations that
-        // override this.
-        switch (cairo_scaled_font_get_type(scaled_font)) {
-#if CAIRO_HAS_DWRITE_FONT // dwrite backend is not in std cairo releases yet
-        case CAIRO_FONT_TYPE_DWRITE:
-            // show_glyphs is implemented on the font and so is used for
-            // all surface types; however, it may pixel-snap depending on
-            // the dwrite rendering mode
-            if (!cairo_dwrite_scaled_font_get_force_GDI_classic(scaled_font) &&
-                gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
-                    DWRITE_MEASURING_MODE_NATURAL) {
-                return;
-            }
-#endif
-        case CAIRO_FONT_TYPE_QUARTZ:
-            // Quartz surfaces implement show_glyphs for Quartz fonts
-            if (cairo_surface_get_type(cairo_get_target(cr)) ==
-                CAIRO_SURFACE_TYPE_QUARTZ) {
-                return;
-            }
-        default:
-            break;
-        }
-        // fall through:
-    case CAIRO_HINT_METRICS_ON:
-        break;
-    }
-    *aRoundX = true;
-    return;
-}
-
 #define SMALL_GLYPH_RUN 128 // some testing indicates that 90%+ of text runs
                             // will fit without requiring separate allocation
                             // for charToGlyphArray
@@ -1146,7 +1068,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext      *aContext,
 
     bool roundX;
     bool roundY;
-    GetRoundOffsetsToPixels(aContext, &roundX, &roundY);
+    aContext->GetRoundOffsetsToPixels(&roundX, &roundY);
 
     int32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
     gfxShapedText::CompressedGlyph *charGlyphs =
