@@ -636,3 +636,7 @@ pref("webgl.can-lose-context-in-foreground", false);
 // this fifo to trigger about:memory dumps, among other things.
 pref("memory_info_dumper.watch_fifo.enabled", true);
 pref("memory_info_dumper.watch_fifo.directory", "/data/local");
+
+// <input type='file'> implementation is not complete. We have to disable the
+// type to web content to help them do feature detection.
+pref("dom.disable_input_file", true);
