@@ -58,10 +58,6 @@ protected:
 
     nsDataHashtable<nsUint32HashKey,TableRec> mTables;
 
-    // Whether the font implements GetGlyphWidth, or we should read tables
-    // directly to get ideal widths
-    bool mUseFontGlyphWidths;
-
     // Convert HTML 'lang' (BCP47) to Graphite language code
     static uint32_t GetGraphiteTagForLang(const nsCString& aLang);
     static nsTHashtable<nsUint32HashKey> sLanguageTags;

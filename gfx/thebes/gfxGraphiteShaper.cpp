@@ -41,8 +41,7 @@ using namespace mozilla; // for AutoSwap_* types
 gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
       mGrFace(nullptr),
-      mGrFont(nullptr),
-      mUseFontGlyphWidths(false)
+      mGrFont(nullptr)
 {
     mTables.Init();
     mCallbackData.mFont = aFont;
@@ -157,11 +156,19 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
         if (!mGrFace) {
             return false;
         }
-        mGrFont = mUseFontGlyphWidths ?
-            gr_make_font_with_advance_fn(mFont->GetAdjustedSize(),
-                                         &mCallbackData, GrGetAdvance,
-                                         mGrFace) :
-            gr_make_font(mFont->GetAdjustedSize(), mGrFace);
+
+        if (mFont->ProvidesGlyphWidths()) {
+            gr_font_ops ops = {
+                sizeof(gr_font_ops),
+                &GrGetAdvance,
+                nullptr // vertical text not yet implemented
+            };
+            mGrFont = gr_make_font_with_ops(mFont->GetAdjustedSize(),
+                                            &mCallbackData, &ops, mGrFace);
+        } else {
+            mGrFont = gr_make_font(mFont->GetAdjustedSize(), mGrFace);
+        }
+
         if (!mGrFont) {
             gr_face_destroy(mGrFace);
             mGrFace = nullptr;
