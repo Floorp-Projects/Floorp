@@ -47,6 +47,12 @@ html|applet:not([height]), html|applet[height=""] {
   unicode-bidi: embed;
   /* used to block inherited properties */
   text-transform: none;
+  text-indent: 0;
+  cursor: initial;
+  white-space: initial;
+  word-spacing: initial;
+  letter-spacing: initial;
+  line-height: initial;
 }
 
 .mainBox[chromedir="rtl"] {

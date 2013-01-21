@@ -24,7 +24,7 @@ class nsObjectHashtable;
 class nsXBLInsertionPoint;
 typedef nsTArray<nsRefPtr<nsXBLInsertionPoint> > nsInsertionPointList;
 struct JSContext;
-struct JSObject;
+class JSObject;
 
 // *********************************************************************/
 // The XBLBinding class

@@ -137,20 +137,21 @@ class GlobalSharedContext;
 class SharedContext
 {
   public:
-    JSContext       *const context;
-
-    const bool isFunction;          /* true for function code, false for
-                                       global code */
+    JSContext *const context;
     AnyContextFlags anyCxFlags;
-
     bool strict;
 
     // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
     // If it's global code, funbox must be NULL.
-    inline SharedContext(JSContext *cx, bool isFun, bool strict);
+    inline SharedContext(JSContext *cx, bool strict);
 
-    inline GlobalSharedContext *asGlobal();
-    inline FunctionBox *asFunbox();
+    virtual ObjectBox *toObjectBox() = 0;
+    inline bool isGlobalSharedContext() { return toObjectBox() == NULL; }
+    inline bool isModuleBox() { return toObjectBox() && toObjectBox()->isModuleBox(); }
+    inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
+    inline GlobalSharedContext *asGlobalSharedContext();
+    inline ModuleBox *asModuleBox();
+    inline FunctionBox *asFunctionBox();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const { return anyCxFlags.bindingsAccessedDynamically; }
@@ -170,7 +171,21 @@ class GlobalSharedContext : public SharedContext
   public:
     inline GlobalSharedContext(JSContext *cx, JSObject *scopeChain, bool strict);
 
+    ObjectBox *toObjectBox() { return NULL; }
     JSObject *scopeChain() const { return scopeChain_; }
+};
+
+
+class ModuleBox : public ObjectBox, public SharedContext {
+public:
+    size_t      bufStart;
+    size_t      bufEnd;
+    Bindings    bindings;
+
+    ModuleBox(JSContext *cx, ParseContext *pc, Module *module,
+              ObjectBox *traceListHead);
+    ObjectBox *toObjectBox() { return this; }
+    Module *module() const { return &object->asModule(); }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
@@ -189,6 +204,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun, ParseContext *pc,
                 bool strict);
 
+    ObjectBox *toObjectBox() { return this; }
     JSFunction *function() const { return object->toFunction(); }
 
     bool isGenerator()              const { return funCxFlags.isGenerator; }

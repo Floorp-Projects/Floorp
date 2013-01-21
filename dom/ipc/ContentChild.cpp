@@ -22,6 +22,7 @@
 #include "mozilla/dom/StorageChild.h"
 #include "mozilla/Hal.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
@@ -502,6 +503,17 @@ ContentChild::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
                                 base::ProcessId aOtherProcess)
 {
     return ImageBridgeChild::StartUpInChildProcess(aTransport, aOtherProcess);
+}
+
+bool
+ContentChild::RecvSetProcessPrivileges(const ChildPrivileges& aPrivs)
+{
+  ChildPrivileges privs = (aPrivs == PRIVILEGES_DEFAULT) ?
+                          GeckoChildProcessHost::DefaultChildPrivileges() :
+                          aPrivs;
+  // If this fails, we die.
+  SetCurrentProcessPrivileges(privs);
+  return true;
 }
 
 static CancelableTask* sFirstIdleTask;

@@ -1000,7 +1000,7 @@
                          !this.isAudioOnly &&
                          !this.video.mozHasAudio;
                 },
-               
+
                 toggleMute : function () {
                     if (this.isVideoWithoutAudioTrack()) {
                         return;
@@ -1392,8 +1392,9 @@
                     //
                     // (Note: the |controls| attribute is already handled via layout/style/html.css)
                     var shouldShow = (!(this.video.autoplay && this.video.mozAutoplayEnabled) || !this.dynamicControls);
-                    // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
-                    this.startFade(this.clickToPlay, shouldShow && !this.isAudioOnly &&
+                    // Hide the overlay if the video time is non-zero or if the video is already playing
+                    // or if an error occurred to workaround bug 718107.
+                    this.startFade(this.clickToPlay, shouldShow && this.video.paused && !this.isAudioOnly &&
                                    this.video.currentTime == 0 && !this.hasError(), true);
                     this.startFade(this.controlBar, shouldShow, true);
 

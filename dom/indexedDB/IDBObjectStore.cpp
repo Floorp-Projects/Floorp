@@ -3005,8 +3005,9 @@ AddHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
 
       BlobChild* actor =
         contentChild->GetOrCreateActorForBlob(file.mFile);
-      NS_ASSERTION(actor, "This should never fail without aborting!");
-
+      if (!actor) {
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
       blobsChild.AppendElement(actor);
     }
   }

@@ -70,7 +70,8 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 
     uint32_t slot;
     {
-        RootedShape shape(f.cx, obj->nativeLookup(f.cx, NameToId(name)));
+        RootedId id(f.cx, NameToId(name));
+        RootedShape shape(f.cx, obj->nativeLookup(f.cx, id));
 
         if (monitor.recompiled()) {
             stubs::Name(f);
@@ -166,7 +167,8 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
     RecompilationMonitor monitor(f.cx);
 
     {
-        UnrootedShape shape = obj->nativeLookup(f.cx, NameToId(name));
+        RootedId id(f.cx, NameToId(name));
+        UnrootedShape shape = obj->nativeLookup(f.cx, id);
 
         if (!monitor.recompiled()) {
             LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);

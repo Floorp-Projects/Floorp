@@ -19,7 +19,6 @@ public class testBookmark extends PixelTest  {
     private static final String ABOUT_HOME_URL = "about:firefox";
     private static String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
     private static String BOOKMARK_TITLE = "Browser Blank Page 01";
-    private ListView mList;
     private ClassLoader mClassLoader;
     private Method mAddBookmark;
     private Method mRemoveBookmark;
@@ -77,7 +76,7 @@ public class testBookmark extends PixelTest  {
         blockForGeckoReady();
 
         // Open the bookmark list and check the root folder view
-        ListView bookmarksList = openBookmarksList();
+        ListView bookmarksList = getBookmarksList();
 
         // Wait for bookmark to appear in list
         mSolo.waitForText(ABOUT_HOME_URL);
@@ -153,28 +152,6 @@ public class testBookmark extends PixelTest  {
         } catch(java.lang.reflect.InvocationTargetException ex) {
             mAsserter.is(true, false, "Error calling removeBookmark");
         }
-    }
-
-    private ListView openBookmarksList() {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-
-        // Click the "Bookmarks" tab to switch to bookmarks list
-        mSolo.clickOnText("Bookmarks");
-
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
-        mList = null;
-        boolean success = waitForTest(new BooleanTest() {
-            public boolean test() {
-               for (ListView view : views) {
-                   if (view.getTag().equals("bookmarks")) {
-                       mList = view;
-                       return true;
-                   }
-               }
-               return false;
-            }
-        }, MAX_WAIT_MS);
-        return mList;
     }
 
     // This method opens the menu and selects the "Bookmark" menu item

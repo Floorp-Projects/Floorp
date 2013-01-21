@@ -4181,6 +4181,13 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
   background-color: -moz-mac-chrome-active;
 }
 
+@media (min-resolution: 2dppx) {
+  #main-window[privatebrowsingmode=temporary] {
+    background-image: url("chrome://browser/skin/privatebrowsing-mask@2x.png");
+    background-size: 38px;
+  }
+}
+
 @media (-moz-mac-lion-theme) {
   #main-window[privatebrowsingmode=temporary] {
     background-position: top right 40px;

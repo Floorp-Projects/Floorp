@@ -519,7 +519,7 @@ WebrtcAudioConduit::ReceivedRTCPPacket(const void *data, int len)
 {
   CSFLogDebug(logTag,  "%s : channel %d",__FUNCTION__, mChannel);
 
-  if(mEngineReceiving)
+  if(mEngineTransmitting)
   {
     if(mPtrVoENetwork->ReceivedRTCPPacket(mChannel, data, len) == -1)
     {
@@ -549,7 +549,7 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
    if(mTransport && (mTransport->SendRtpPacket(data, len) == NS_OK))
    {
       CSFLogDebug(logTag, "%s Sent RTP Packet ", __FUNCTION__);
-      return 0;
+      return len;
    } else {
      CSFLogError(logTag, "%s RTP Packet Send Failed ", __FUNCTION__);
      return -1;
@@ -563,7 +563,7 @@ int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, int len)
   if(mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
   {
     CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
-    return 0;
+    return len;
   } else {
     CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
     return -1;

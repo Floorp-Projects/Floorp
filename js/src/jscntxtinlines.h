@@ -160,31 +160,6 @@ class AutoNamespaceArray : protected AutoGCRooter {
 
 #endif /* JS_HAS_XML_SUPPORT */
 
-template <typename T>
-class AutoPtr
-{
-    JSContext *cx;
-    T *value;
-
-    AutoPtr(const AutoPtr &other) MOZ_DELETE;
-
-  public:
-    explicit AutoPtr(JSContext *cx) : cx(cx), value(NULL) {}
-    ~AutoPtr() {
-        js_delete<T>(value);
-    }
-
-    void operator=(T *ptr) { value = ptr; }
-
-    typedef void ***** ConvertibleToBool;
-    operator ConvertibleToBool() const { return (ConvertibleToBool) value; }
-
-    const T *operator->() const { return value; }
-    T *operator->() { return value; }
-
-    T *get() { return value; }
-};
-
 #ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
 {

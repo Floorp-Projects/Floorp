@@ -48,7 +48,7 @@ const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const PRINTSETTINGS_CONTRACTID = "@mozilla.org/gfx/printsettings-service;1";
 
 // "<!--CLEAR-->"
-const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
+const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
 
 var gBrowserIsRemote;
 var gHaveCanvasSnapshot = false;

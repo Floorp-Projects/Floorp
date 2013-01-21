@@ -1,0 +1,32 @@
+<!-- Important: needs to be in quirks mode for the test to be meaningful -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=831780
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 831780</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=831780">Mozilla Bug 831780</a>
+<p id="display" style="width: 1px; height: 1px; overflow: hidden">
+  <!-- No src so it'll be a broken image, but that only happens in quirks
+       mode.  In standards mode the test would end up timing-dependent -->
+  <img style="width: 1px; height: 1px">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 831780 **/
+  is($("display").scrollWidth, 1, "scrollWidth should be 1");
+  is($("display").scrollHeight, 1, "scrollHeight should be 1");
+
+  </script>
+</body>
+</html>

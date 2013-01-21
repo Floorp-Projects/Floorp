@@ -1173,7 +1173,8 @@ nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey
   for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
     nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
 
-    if (entry->GetKey()->mAppId != data->appId) {
+    if (entry->GetKey()->mAppId != data->appId ||
+        (data->browserOnly && !entry->GetKey()->mIsInBrowserElement)) {
       continue;
     }
 
@@ -1219,7 +1220,7 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
   rv = removeStmt->ExecuteAsync(nullptr, getter_AddRefs(pending));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  GetPermissionsForAppStruct data(aAppId);
+  GetPermissionsForAppStruct data(aAppId, aBrowserOnly);
   mPermissionTable.EnumerateEntries(GetPermissionsForApp, &data);
 
   for (int32_t i=0; i<data.permissions.Count(); ++i) {

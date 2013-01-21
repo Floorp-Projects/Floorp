@@ -81,12 +81,12 @@ struct ParseContext                 /* tree context for semantic checks */
     }
 
     uint32_t numArgs() const {
-        JS_ASSERT(sc->isFunction);
+        JS_ASSERT(sc->isFunctionBox());
         return args_.length();
     }
 
     uint32_t numVars() const {
-        JS_ASSERT(sc->isFunction);
+        JS_ASSERT(sc->isFunctionBox());
         return vars_.length();
     }
 

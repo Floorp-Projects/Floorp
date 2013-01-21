@@ -2767,7 +2767,6 @@ class MDiv : public MBinaryArithInstruction
         setResultType(type);
     }
 
-
   public:
     INSTRUCTION_HEADER(Div)
     static MDiv *New(MDefinition *left, MDefinition *right) {
@@ -2808,14 +2807,18 @@ class MDiv : public MBinaryArithInstruction
     bool canBeDivideByZero() {
         return canBeDivideByZero_;
     }
-    bool updateForReplacement(MDefinition *ins);
 
+    bool updateForReplacement(MDefinition *ins);
+    bool fallible();
 };
 
 class MMod : public MBinaryArithInstruction
 {
+    int implicitTruncate_;
+
     MMod(MDefinition *left, MDefinition *right)
-      : MBinaryArithInstruction(left, right)
+      : MBinaryArithInstruction(left, right),
+        implicitTruncate_(0)
     {
         setResultType(MIRType_Value);
     }
@@ -2827,12 +2830,23 @@ class MMod : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
+    void analyzeTruncateBackward();
+
     double getIdentity() {
         JS_NOT_REACHED("not used");
         return 1;
     }
 
+    int isTruncated() const {
+        return implicitTruncate_;
+    }
+    void setTruncated(int truncate) {
+        implicitTruncate_ = truncate;
+    }
+
+    bool updateForReplacement(MDefinition *ins);
     void computeRange();
+    bool fallible();
 };
 
 class MConcat

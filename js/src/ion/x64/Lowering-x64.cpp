@@ -149,13 +149,6 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock 
 }
 
 bool
-LIRGeneratorX64::lowerDivI(MDiv *div)
-{
-    LDivI *lir = new LDivI(useFixed(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
-    return assignSnapshot(lir) && defineFixed(lir, div, LAllocation(AnyRegister(rax)));
-}
-
-bool
 LIRGeneratorX64::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);

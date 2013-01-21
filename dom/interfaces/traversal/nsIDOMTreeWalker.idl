@@ -10,13 +10,12 @@ interface nsIDOMTreeWalker;
 interface nsIDOMNodeFilter;
 
 
-[scriptable, uuid(400af3ca-1dd2-11b2-a50a-887ecca2e63a)]
+[scriptable, uuid(c4ffa159-237c-4dde-b0ba-20b9f9270cf6)]
 // Introduced in DOM Level 2:
 interface nsIDOMTreeWalker : nsISupports {
   readonly attribute nsIDOMNode       root;
   readonly attribute unsigned long    whatToShow;
   readonly attribute nsIDOMNodeFilter filter;
-  readonly attribute boolean          expandEntityReferences;
            attribute nsIDOMNode       currentNode;
                                         // raises(DOMException) on setting
 

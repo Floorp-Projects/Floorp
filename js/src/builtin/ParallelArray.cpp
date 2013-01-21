@@ -1145,7 +1145,7 @@ ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
 
     // Propagate element types.
     if (cx->typeInferenceEnabled()) {
-        AutoEnterTypeInference enter(cx);
+        AutoEnterAnalysis enter(cx);
         TypeObject *bufferType = buffer->getType(cx);
         TypeObject *resultType = result->getType(cx);
         if (!bufferType->unknownProperties() && !resultType->unknownProperties()) {

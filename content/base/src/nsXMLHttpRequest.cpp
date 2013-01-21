@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=80: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -638,6 +638,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISizeOfEventTarget)
 NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
@@ -650,6 +651,33 @@ nsXMLHttpRequest::DisconnectFromOwner()
 {
   nsXHREventTarget::DisconnectFromOwner();
   Abort();
+}
+
+size_t
+nsXMLHttpRequest::SizeOfEventTargetIncludingThis(
+  nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mResponseBody.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+
+  // Why is this safe?  Because no-one else will report this string.  The
+  // other possible sharers of this string are as follows.
+  //
+  // - The JS engine could hold copies if the JS code holds references, e.g.
+  //   |var text = XHR.responseText|.  However, those references will be via JS
+  //   external strings, for which the JS memory reporter does *not* report the
+  //   chars.
+  //
+  // - Binary extensions, but they're *extremely* unlikely to do any memory
+  //   reporting.
+  //
+  n += mResponseText.SizeOfExcludingThisEvenIfShared(aMallocSizeOf);
+
+  return n;
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - lots
 }
 
 /* readonly attribute nsIChannel channel; */
@@ -3858,7 +3886,9 @@ nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSID* aIID, ErrorResult& aRv)
   aRv = GetInterface(*iid, getter_AddRefs(result));
   NS_ENSURE_FALSE(aRv.Failed(), JSVAL_NULL);
 
-  JSObject* global = JS_GetGlobalForObject(aCx, GetWrapper());
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(aCx, wrapper);
+  JSObject* global = JS_GetGlobalForObject(aCx, wrapper);
   aRv = nsContentUtils::WrapNative(aCx, global, result, iid, &v);
   return aRv.Failed() ? JSVAL_NULL : v;
 }
