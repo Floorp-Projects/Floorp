@@ -735,8 +735,8 @@ JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 /* static */ UnrootedShape
-JSObject::changeProperty(JSContext *cx, HandleObject obj, RawShape shape, unsigned attrs, unsigned mask,
-                         PropertyOp getter, StrictPropertyOp setter)
+JSObject::changeProperty(JSContext *cx, HandleObject obj, HandleShape shape, unsigned attrs,
+                         unsigned mask, PropertyOp getter, StrictPropertyOp setter)
 {
     JS_ASSERT(obj->nativeContains(cx, shape));
 

@@ -1050,8 +1050,8 @@ GetSingletonPropertyType(JSContext *cx, RawObject rawObjArg, HandleId id)
         if (!obj->isNative())
             return Type::UnknownType();
 
-        Value v;
-        if (HasDataProperty(cx, obj, id, &v)) {
+        RootedValue v(cx);
+        if (HasDataProperty(cx, obj, id, v.address())) {
             if (v.isUndefined())
                 return Type::UnknownType();
             return GetValueType(cx, v);
@@ -2404,7 +2404,6 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
         if (!js_GetClassPrototype(cx, key.kind, &proto, NULL))
             return NULL;
 
-        RootedScript keyScript(cx, key.script);
         Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
         res = newTypeObject(cx, GetClassForProtoKey(key.kind), tagged);
         if (!res) {
