@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(ca15d803-1330-4154-b3f9-063fb2b443e7)]
+[scriptable, builtinclass, uuid(fc7e18cd-c671-4d78-a022-7de87555e15f)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -725,6 +725,8 @@ interface nsIDocShell : nsISupports
   [infallible] readonly attribute boolean fullscreenAllowed;
   
   void setFullscreenAllowed(in boolean allowed);
+
+  [noscript, infallible] attribute boolean affectPrivateSessionLifetime;
 
   /**
    * Indicates whether the UI may enable the character encoding menu. The UI
