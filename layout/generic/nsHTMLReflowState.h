@@ -30,6 +30,15 @@ struct nsStylePadding;
 struct nsStyleText;
 struct nsHypotheticalBox;
 
+
+/**
+ * @return aValue clamped to [aMinValue, aMaxValue].
+ *
+ * @note This function needs to handle aMinValue > aMaxValue. In that case,
+ *       aMinValue is returned.
+ * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+ * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-heights
+ */
 template <class NumericType>
 NumericType
 NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue, NumericType aMaxValue)
