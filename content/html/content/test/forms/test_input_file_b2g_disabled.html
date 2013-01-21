@@ -11,7 +11,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=801635
   <script type="application/javascript">
 
   /** Test for Bug 801635 **/
-  var oldPrefValue = SpecialPowers.getBoolPref('dom.disable_input_file');
+  var oldPrefValue = null;
+  try {
+    oldPrefValue = SpecialPowers.getBoolPref('dom.disable_input_file');
+  } catch(e) {
+  }
 
   var input = document.createElement('input');
 
