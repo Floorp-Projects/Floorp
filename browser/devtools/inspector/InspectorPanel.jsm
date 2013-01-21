@@ -80,15 +80,16 @@ InspectorPanel.prototype = {
       this.highlighter = new Highlighter(this.target, this, this._toolbox);
       let button = this.panelDoc.getElementById("inspector-inspect-toolbutton");
       button.hidden = false;
-      this.updateInspectorButton = function() {
+      this.onLockStateChanged = function() {
         if (this.highlighter.locked) {
           button.removeAttribute("checked");
+          this._toolbox.raise();
         } else {
           button.setAttribute("checked", "true");
         }
       }.bind(this);
-      this.highlighter.on("locked", this.updateInspectorButton);
-      this.highlighter.on("unlocked", this.updateInspectorButton);
+      this.highlighter.on("locked", this.onLockStateChanged);
+      this.highlighter.on("unlocked", this.onLockStateChanged);
 
       // Show a warning when the debugger is paused.
       // We show the warning only when the inspector
@@ -361,8 +362,8 @@ InspectorPanel.prototype = {
     this.target.off("navigate", this.onNavigatedAway);
 
     if (this.highlighter) {
-      this.highlighter.off("locked", this.updateInspectorButton);
-      this.highlighter.off("unlocked", this.updateInspectorButton);
+      this.highlighter.off("locked", this.onLockStateChanged);
+      this.highlighter.off("unlocked", this.onLockStateChanged);
       this.highlighter.destroy();
     }
 

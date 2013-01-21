@@ -57,7 +57,7 @@ function setupHighlighterTests()
   ok(h1, "we have the header");
 
   let i = getActiveInspector();
-  i.highlighter.unlock();
+  i.highlighter.unlockAndFocus();
   i.highlighter.outline.setAttribute("disable-transitions", "true");
 
   executeSoon(function() {
