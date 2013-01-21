@@ -77,7 +77,7 @@ BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified);
  * an optimization to avoid global-this computation).
  */
 inline bool
-ComputeThis(JSContext *cx, StackFrame *fp);
+ComputeThis(JSContext *cx, AbstractFramePtr frame);
 
 enum MaybeConstruct {
     NO_CONSTRUCT = INITIAL_NONE,
@@ -160,7 +160,7 @@ InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *argv, 
  */
 extern bool
 ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
-              ExecuteType type, StackFrame *evalInFrame, Value *result);
+              ExecuteType type, AbstractFramePtr evalInFrame, Value *result);
 
 /* Execute a script with the given scopeChain as global code. */
 extern bool
