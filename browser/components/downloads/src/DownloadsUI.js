@@ -60,10 +60,10 @@ DownloadsUI.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadManagerUI
 
-  show: function DUI_show(aWindowContext, aID, aReason, aUsePrivateUI)
+  show: function DUI_show(aWindowContext, aDownload, aReason, aUsePrivateUI)
   {
     if (DownloadsCommon.useToolkitUI) {
-      this._toolkitUI.show(aWindowContext, aID, aReason, aUsePrivateUI);
+      this._toolkitUI.show(aWindowContext, aDownload, aReason, aUsePrivateUI);
       return;
     }
 
@@ -76,19 +76,19 @@ DownloadsUI.prototype = {
       let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
 
       if (!browserWin || browserWin.windowState == kMinimized) {
-        this._showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI);
+        this._showDownloadManagerUI(aWindowContext, aUsePrivateUI);
       }
       else {
         // If the indicator is visible, then new download notifications are
         // already handled by the panel service.
         browserWin.DownloadsButton.checkIsVisible(function(isVisible) {
           if (!isVisible) {
-            this._showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI);
+            this._showDownloadManagerUI(aWindowContext, aUsePrivateUI);
           }
         }.bind(this));
       }
     } else {
-      this._showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI);
+      this._showDownloadManagerUI(aWindowContext, aUsePrivateUI);
     }
   },
 
@@ -112,7 +112,7 @@ DownloadsUI.prototype = {
    * Helper function that opens the download manager UI.
    */
   _showDownloadManagerUI:
-  function DUI_showDownloadManagerUI(aWindowContext, aID, aReason, aUsePrivateUI)
+  function DUI_showDownloadManagerUI(aWindowContext, aUsePrivateUI)
   {
     // If we weren't given a window context, try to find a browser window
     // to use as our parent - and if that doesn't work, error out and give up.

@@ -24,7 +24,7 @@ nsDownloadManagerUI.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadManagerUI
 
-  show: function show(aWindowContext, aID, aReason, aUsePrivateUI)
+  show: function show(aWindowContext, aDownload, aReason, aUsePrivateUI)
   {
     if (!aReason)
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
@@ -52,15 +52,7 @@ nsDownloadManagerUI.prototype = {
 
     // We pass the download manager and the nsIDownload we want selected (if any)
     var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-
-    // Don't fail if our passed in ID is invalid
-    var download = null;
-    try {
-      let dm = Cc["@mozilla.org/download-manager;1"].
-               getService(Ci.nsIDownloadManager);
-      download = dm.getDownload(aID);
-    } catch (ex) {}
-    params.appendElement(download, false);
+    params.appendElement(aDownload, false);
 
     // Pass in the reason as well
     let reason = Cc["@mozilla.org/supports-PRInt16;1"].

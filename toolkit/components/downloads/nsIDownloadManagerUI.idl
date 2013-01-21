@@ -4,8 +4,9 @@
 
 #include "nsISupports.idl"
 interface nsIInterfaceRequestor;
+interface nsIDownload;
 
-[scriptable, uuid(bc54ef90-5215-11e2-bcfd-0800200c9a66)]
+[scriptable, uuid(0c76d4cf-0b06-4c1a-9bea-520c7bbdba99)]
 interface nsIDownloadManagerUI : nsISupports {
   /**
    * The reason that should be passed when the user requests to show the
@@ -24,8 +25,8 @@ interface nsIDownloadManagerUI : nsISupports {
   *
   * @param [optional] aWindowContext
   *        The parent window context to show the UI.
-  * @param [optional] aID
-  *        The id of the download to be preselected upon opening.
+  * @param [optional] aDownload
+  *        The download to be preselected upon opening.
   * @param [optional] aReason
   *        The reason to show the download manager's UI.  This defaults to
   *        REASON_USER_INTERACTED, and should be one of the previously listed
@@ -35,7 +36,7 @@ interface nsIDownloadManagerUI : nsISupports {
   *        should only display private downloads in the UI, if possible.
   */
   void show([optional] in nsIInterfaceRequestor aWindowContext,
-            [optional] in unsigned long aID,
+            [optional] in nsIDownload aDownload,
             [optional] in short aReason,
             [optional] in boolean aUsePrivateUI);
 
