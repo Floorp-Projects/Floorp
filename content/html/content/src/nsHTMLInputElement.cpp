@@ -1103,7 +1103,7 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         jsval rval;
         jsval fullYear[3];
         fullYear[0].setInt32(year);
-        fullYear[1].setInt32(month-1);
+        fullYear[1].setInt32(month - 1);
         fullYear[2].setInt32(day);
         if (!JS::Call(ctx, date, "setUTCFullYear", 3, fullYear, &rval)) {
           JS_ClearPendingException(ctx);
@@ -1323,45 +1323,73 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
 NS_IMETHODIMP
 nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
 {
-  if (mType != NS_FORM_INPUT_DATE) {
+  if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     aDate->setNull();
     return NS_OK;
   }
 
-  uint32_t year, month, day;
-  nsAutoString value;
-  GetValueInternal(value);
-  if (!GetValueAsDate(value, &year, &month, &day)) {
-    aDate->setNull();
-    return NS_OK;
+  switch (mType) {
+    case NS_FORM_INPUT_DATE:
+    {
+      uint32_t year, month, day;
+      nsAutoString value;
+      GetValueInternal(value);
+      if (!GetValueAsDate(value, &year, &month, &day)) {
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      JSObject* date = JS_NewDateObjectMsec(aCtx, 0);
+      if (!date) {
+        JS_ClearPendingException(aCtx);
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      jsval rval;
+      jsval fullYear[3];
+      fullYear[0].setInt32(year);
+      fullYear[1].setInt32(month - 1);
+      fullYear[2].setInt32(day);
+      if(!JS::Call(aCtx, date, "setUTCFullYear", 3, fullYear, &rval)) {
+        JS_ClearPendingException(aCtx);
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      aDate->setObjectOrNull(date);
+      return NS_OK;
+    }
+    case NS_FORM_INPUT_TIME:
+    {
+      uint32_t millisecond;
+      nsAutoString value;
+      GetValueInternal(value);
+      if (!ParseTime(value, &millisecond)) {
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      JSObject* date = JS_NewDateObjectMsec(aCtx, millisecond);
+      if (!date) {
+        JS_ClearPendingException(aCtx);
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      aDate->setObjectOrNull(date);
+      return NS_OK;
+    }
   }
 
-  JSObject* date = JS_NewDateObjectMsec(aCtx, 0);
-  if (!date) {
-    JS_ClearPendingException(aCtx);
-    aDate->setNull();
-    return NS_OK;
-  }
-
-  jsval rval;
-  jsval fullYear[3];
-  fullYear[0].setInt32(year);
-  fullYear[1].setInt32(month-1);
-  fullYear[2].setInt32(day);
-  if(!JS::Call(aCtx, date, "setUTCFullYear", 3, fullYear, &rval)) {
-    JS_ClearPendingException(aCtx);
-    aDate->setNull();
-    return NS_OK;
-  }
-
-  aDate->setObjectOrNull(date);
-  return NS_OK;
+  MOZ_NOT_REACHED();
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
 {
-  if (mType != NS_FORM_INPUT_DATE) {
+  if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
