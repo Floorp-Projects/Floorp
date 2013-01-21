@@ -86,8 +86,8 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
                                    cx->runtime->debugHooks.callHookData));
     }
 
-    Value rval;
-    JSTrapStatus status = Debugger::onEnterFrame(cx, &rval);
+    RootedValue rval(cx);
+    JSTrapStatus status = Debugger::onEnterFrame(cx, rval.address());
     switch (status) {
       case JSTRAP_CONTINUE:
         break;
@@ -206,9 +206,11 @@ CheckDebugMode(JSContext *cx)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
+JS_SetSingleStepMode(JSContext *cx, JSScript *scriptArg, JSBool singleStep)
 {
+    RootedScript script(cx, scriptArg);
     assertSameCompartment(cx, script);
+
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
@@ -216,8 +218,10 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handler, jsval closure)
+JS_SetTrap(JSContext *cx, JSScript *scriptArg, jsbytecode *pc, JSTrapHandler handler, jsval closureArg)
 {
+    RootedScript script(cx, scriptArg);
+    RootedValue closure(cx, closureArg);
     assertSameCompartment(cx, script, closure);
 
     if (!CheckDebugMode(cx))
@@ -286,10 +290,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
 {
     assertSameCompartment(cx, obj_);
 
-    RootedObject obj(cx, obj_), closure(cx, closure_);
-
-    JSObject *origobj = obj;
-    obj = GetInnerObject(cx, obj);
+    RootedObject origobj(cx, obj_), closure(cx, closure_);
+    RootedObject obj(cx, GetInnerObject(cx, origobj));
     if (!obj)
         return false;
 
@@ -831,7 +833,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc
     RootedObject obj(cx, obj_);
 
     JSBool wasThrowing = cx->isExceptionPending();
-    Value lastException = UndefinedValue();
+    RootedValue lastException(cx, UndefinedValue());
     if (wasThrowing)
         lastException = cx->getPendingException();
     cx->clearPendingException();
@@ -918,22 +920,29 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
     pd = cx->pod_malloc<JSPropertyDesc>(obj->propertyCount());
     if (!pd)
         return false;
-    for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-        pd[i].id = JSVAL_NULL;
-        pd[i].value = JSVAL_NULL;
-        pd[i].alias = JSVAL_NULL;
-        if (!js_AddRoot(cx, &pd[i].id, NULL))
-            goto bad;
-        if (!js_AddRoot(cx, &pd[i].value, NULL))
-            goto bad;
-        RootedShape shape(cx, const_cast<Shape *>(&r.front()));
-        if (!GetPropertyDesc(cx, obj, shape, &pd[i]))
-            goto bad;
-        if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
-            goto bad;
-        if (++i == obj->propertyCount())
-            break;
+
+    {
+        Shape::Range r(obj->lastProperty()->all());
+        Shape::Range::AutoRooter rooter(cx, &r);
+        RootedShape shape(cx);
+        for (; !r.empty(); r.popFront()) {
+            pd[i].id = JSVAL_NULL;
+            pd[i].value = JSVAL_NULL;
+            pd[i].alias = JSVAL_NULL;
+            if (!js_AddRoot(cx, &pd[i].id, NULL))
+                goto bad;
+            if (!js_AddRoot(cx, &pd[i].value, NULL))
+                goto bad;
+            shape = const_cast<Shape *>(&r.front());
+            if (!GetPropertyDesc(cx, obj, shape, &pd[i]))
+                goto bad;
+            if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
+                goto bad;
+            if (++i == obj->propertyCount())
+                break;
+        }
     }
+
     pda->length = i;
     pda->array = pd;
     return true;
