@@ -291,9 +291,15 @@
   min-height: 10px;
 }
 
-.dbg-variables-delete:not(:hover) {
+.dbg-variable-delete:not(:hover) {
   -moz-image-region: rect(0, 32px, 16px, 16px);
   opacity: 0.5;
+}
+
+.dbg-variable-throbber {
+  background: url("chrome://global/skin/icons/loading_16.png");
+  width: 16px;
+  height: 16px;
 }
 
 /**
