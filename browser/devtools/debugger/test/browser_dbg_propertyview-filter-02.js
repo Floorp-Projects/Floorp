@@ -38,7 +38,7 @@ function testSearchbox()
   ok(!gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
     "The searchbox element should not be found.");
 
-  gDebugger.DebuggerView.Variables.enableSearch();
+  gDebugger.DebuggerView.Variables._enableSearch();
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling.");
   ok(gDebugger.DebuggerView.Variables._parent.parentNode.querySelector(".variables-searchinput.devtools-searchinput"),
