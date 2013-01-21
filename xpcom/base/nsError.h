@@ -223,9 +223,4 @@ inline bool NS_ERROR_GET_SEVERITY(nsresult err) {
 #pragma warning(disable: 4275) /* non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode' */
 #endif
 
-#if defined(XP_WIN) && defined(__cplusplus)
-extern bool sXPCOMHasLoadedNewDLLs;
-NS_EXPORT void NS_SetHasLoadedNewDLLs();
-#endif
-
 #endif

@@ -15,10 +15,6 @@
 #include "mozilla/widget/AudioSession.h"
 #include "mozilla/HangMonitor.h"
 
-// For skidmark code
-#include <windows.h> 
-#include <tlhelp32.h> 
-
 const PRUnichar* kAppShellEventId = L"nsAppShell:EventID";
 const PRUnichar* kTaskbarButtonEventId = L"TaskbarButtonCreated";
 
@@ -147,84 +143,10 @@ nsAppShell::Init()
   return nsBaseAppShell::Init();
 }
 
-/**
- * This is some temporary code to keep track of where in memory dlls are
- * loaded. This is useful in case someone calls into a dll that has been
- * unloaded. This code lets us see which dll used to be loaded at the given
- * called address.
- */
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#define LOADEDMODULEINFO_STRSIZE 23
-#define NUM_LOADEDMODULEINFO 250
-
-struct LoadedModuleInfo {
-  void* mStartAddr;
-  void* mEndAddr;
-  char mName[LOADEDMODULEINFO_STRSIZE + 1];
-};
-
-static LoadedModuleInfo* sLoadedModules = 0;
-
-static void
-CollectNewLoadedModules()
-{
-  HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
-  MODULEENTRY32W module;
-
-  // Take a snapshot of all modules in our process.
-  hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0);
-  if (hModuleSnap == INVALID_HANDLE_VALUE)
-    return;
-
-  // Set the size of the structure before using it.
-  module.dwSize = sizeof(MODULEENTRY32W);
-
-  // Now walk the module list of the process,
-  // and display information about each module
-  bool done = !Module32FirstW(hModuleSnap, &module);
-  while (!done) {
-    NS_LossyConvertUTF16toASCII moduleName(module.szModule);
-    bool found = false;
-    uint32_t i;
-    for (i = 0; i < NUM_LOADEDMODULEINFO &&
-                sLoadedModules[i].mStartAddr; ++i) {
-      if (sLoadedModules[i].mStartAddr == module.modBaseAddr &&
-          !strcmp(moduleName.get(),
-                  sLoadedModules[i].mName)) {
-        found = true;
-        break;
-      }
-    }
-
-    if (!found && i < NUM_LOADEDMODULEINFO) {
-      sLoadedModules[i].mStartAddr = module.modBaseAddr;
-      sLoadedModules[i].mEndAddr = module.modBaseAddr + module.modBaseSize;
-      strncpy(sLoadedModules[i].mName, moduleName.get(),
-              LOADEDMODULEINFO_STRSIZE);
-      sLoadedModules[i].mName[LOADEDMODULEINFO_STRSIZE] = 0;
-    }
-
-    done = !Module32NextW(hModuleSnap, &module);
-  }
-
-  uint32_t i;
-  for (i = 0; i < NUM_LOADEDMODULEINFO &&
-              sLoadedModules[i].mStartAddr; ++i) {}
-
-  CloseHandle(hModuleSnap);
-}
-#endif // defined(_MSC_VER) && defined(_M_IX86)
 
 NS_IMETHODIMP
 nsAppShell::Run(void)
 {
-#if defined(_MSC_VER) && defined(_M_IX86)
-  LoadedModuleInfo modules[NUM_LOADEDMODULEINFO];
-  memset(modules, 0, sizeof(modules));
-  sLoadedModules = modules;	
-#endif
-
   // Ignore failure; failing to start the application is not exactly an
   // appropriate response to failing to start an audio session.
   mozilla::widget::StartAudioSession();
@@ -232,11 +154,6 @@ nsAppShell::Run(void)
   nsresult rv = nsBaseAppShell::Run();
 
   mozilla::widget::StopAudioSession();
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-  // Don't forget to null this out!
-  sLoadedModules = nullptr;
-#endif
 
   return rv;
 }
@@ -295,13 +212,6 @@ nsAppShell::ScheduleNativeEventCallback()
 bool
 nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
-#if defined(_MSC_VER) && defined(_M_IX86)
-  if (sXPCOMHasLoadedNewDLLs && sLoadedModules) {
-    sXPCOMHasLoadedNewDLLs = false;
-    CollectNewLoadedModules();
-  }
-#endif
-
   // Notify ipc we are spinning a (possibly nested) gecko event loop.
   mozilla::ipc::RPCChannel::NotifyGeckoEventDispatch();
 
