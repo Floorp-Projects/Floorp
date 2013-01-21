@@ -84,6 +84,14 @@ void LaunchMacPostProcess(const char* aAppExe);
 # include "automounter_gonk.h"
 # include <unistd.h>
 # include <android/log.h>
+# include <linux/ioprio.h>
+# include <sys/resource.h>
+
+// The only header file in bionic which has a function prototype for ioprio_set
+// is libc/include/sys/linux-unistd.h. However, linux-unistd.h conflicts
+// badly with unistd.h, so we declare the prototype for ioprio_set directly.
+extern "C" int ioprio_set(int which, int who, int ioprio);
+
 # define MAYBE_USE_HARD_LINKS 1
 static bool sUseHardLinks = true;
 #else
@@ -2400,6 +2408,35 @@ int NS_main(int argc, NS_tchar **argv)
   } else if (sReplaceRequest) {
     LOG(("Performing a replace request"));
   }
+
+#ifdef MOZ_WIDGET_GONK
+  const char *prioEnv = getenv("MOZ_UPDATER_PRIO");
+  if (prioEnv) {
+    int32_t prioVal;
+    int32_t oomScoreAdj;
+    int32_t ioprioClass;
+    int32_t ioprioLevel;
+    if (sscanf(prioEnv, "%d/%d/%d/%d",
+               &prioVal, &oomScoreAdj, &ioprioClass, &ioprioLevel) == 4) {
+      LOG(("MOZ_UPDATER_PRIO=%s", prioEnv));
+      if (setpriority(PRIO_PROCESS, 0, prioVal)) {
+        LOG(("setpriority(%d) failed, errno = %d", prioVal, errno));
+      }
+      if (ioprio_set(IOPRIO_WHO_PROCESS, 0,
+                     IOPRIO_PRIO_VALUE(ioprioClass, ioprioLevel))) {
+        LOG(("ioprio_set(%d,%d) failed: errno = %d",
+             ioprioClass, ioprioLevel, errno));
+      }
+      FILE *fs = fopen("/proc/self/oom_score_adj", "w");
+      if (fs) {
+        fprintf(fs, "%d", oomScoreAdj);
+        fclose(fs);
+      } else {
+        LOG(("Unable to open /proc/self/oom_score_adj for writing, errno = %d", errno));
+      }
+    }
+  }
+#endif
 
 #ifdef XP_WIN
   int possibleWriteError; // Variable holding one of the errors 46-48
