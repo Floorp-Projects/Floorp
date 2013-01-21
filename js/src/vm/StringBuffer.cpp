@@ -51,7 +51,7 @@ StringBuffer::finishString()
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
-        return NewShortString(cx, cb.begin(), length);
+        return NewShortString(cx, TwoByteChars(cb.begin(), length));
 
     if (!cb.append('\0'))
         return UnrootedFlatString();

@@ -359,6 +359,19 @@ add_test(function test_EncodedStringValue_decode() {
                     [raw.length + 2, 0x80 | entry.number, 127].concat(raw), str);
   }
 
+  let (entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-16"]) {
+    // "Mozilla" in full width.
+    let str = "\u004d\u006F\u007A\u0069\u006C\u006C\u0061";
+
+    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+               .createInstance(Ci.nsIScriptableUnicodeConverter);
+    conv.charset = entry.converter;
+
+    let raw = conv.convertToByteArray(str).concat([0]);
+    wsp_decode_test(MMS.EncodedStringValue,
+                    [raw.length + 3, 2, 3, 247].concat(raw), str);
+  }
+
   run_next_test();
 });
 

@@ -236,8 +236,12 @@ class HashMap
             remove(p);
     }
 
+    // HashMap is movable
+    HashMap(MoveRef<HashMap> rhs) : impl(Move(rhs->impl)) {}
+    void operator=(MoveRef<HashMap> rhs) { impl = Move(rhs->impl); }
+
   private:
-    // Not implicitly copyable (expensive). May add explicit |clone| later.
+    // HashMap is not copyable or assignable
     HashMap(const HashMap &hm) MOZ_DELETE;
     HashMap &operator=(const HashMap &hm) MOZ_DELETE;
 
@@ -426,8 +430,12 @@ class HashSet
             remove(p);
     }
 
+    // HashSet is movable
+    HashSet(MoveRef<HashSet> rhs) : impl(Move(rhs->impl)) {}
+    void operator=(MoveRef<HashSet> rhs) { impl = Move(rhs->impl); }
+
   private:
-    // Not implicitly copyable (expensive). May add explicit |clone| later.
+    // HashSet is not copyable or assignable
     HashSet(const HashSet &hs) MOZ_DELETE;
     HashSet &operator=(const HashSet &hs) MOZ_DELETE;
 
@@ -778,6 +786,25 @@ class HashTable : private AllocPolicy
                 table.compactIfUnderloaded();
         }
     };
+
+    // HashTable is movable
+    HashTable(MoveRef<HashTable> rhs)
+      : AllocPolicy(*rhs)
+    {
+        PodAssign(this, &*rhs);
+        rhs->table = NULL;
+    }
+    void operator=(MoveRef<HashTable> rhs) {
+        if (table)
+            destroyTable(*this, table, capacity());
+        PodAssign(this, &*rhs);
+        rhs->table = NULL;
+    }
+
+  private:
+    // HashTable is not copyable or assignable
+    HashTable(const HashTable &) MOZ_DELETE;
+    void operator=(const HashTable &) MOZ_DELETE;
 
   private:
     uint32_t    hashShift;      // multiplicative hash shift

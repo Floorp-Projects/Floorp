@@ -18,7 +18,7 @@ DIRS = \
 
 include $(topsrcdir)/config/config.mk
 
-ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
+ifneq (,$(filter beta,$(MOZ_UPDATE_CHANNEL)))
 EXTENSIONS = \
   testpilot@labs.mozilla.com \
   $(NULL)

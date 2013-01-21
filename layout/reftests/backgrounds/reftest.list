@@ -16,10 +16,10 @@ random-if(bug685516) == translucent-color-2.html translucent-color-ref.html
 random-if(bug685516) == translucent-color-3.html translucent-color-ref.html
 != translucent-color-ref.html about:blank
 skip-if(B2G) == root-element-display-none-1.html root-element-display-none-ref.html
-random-if(bug685516) == continuous-inline-1a.html continuous-inline-1-ref.html
-random-if(bug685516) == continuous-inline-1b.html continuous-inline-1-ref.html
-random-if(bug685516) == continuous-inline-1c.html continuous-inline-1-ref.html
-random-if(bug685516) == continuous-inline-1d.html continuous-inline-1-ref.html
+random-if(bug685516) == continuous-inline-1a.html continuous-inline-1ab-ref.html
+random-if(bug685516) == continuous-inline-1b.html continuous-inline-1ab-ref.html
+random-if(bug685516) == continuous-inline-1c.html continuous-inline-1cd-ref.html
+random-if(bug685516) == continuous-inline-1d.html continuous-inline-1cd-ref.html
 random-if(bug685516) == continuous-inline-2a.html continuous-inline-2-ref.html
 random-if(bug685516) == continuous-inline-2b.html continuous-inline-2-ref.html
 random-if(bug685516) == continuous-inline-3.html continuous-inline-3-ref.html

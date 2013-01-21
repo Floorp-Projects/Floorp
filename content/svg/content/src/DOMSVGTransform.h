@@ -133,7 +133,7 @@ public:
   DOMSVGTransformList* GetParentObject() const { return mList; }
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
   uint16_t Type() const;
-  already_AddRefed<dom::SVGMatrix> Matrix();
+  dom::SVGMatrix* Matrix();
   float Angle() const;
   void SetMatrix(dom::SVGMatrix& matrix, ErrorResult& rv);
   void SetTranslate(float tx, float ty, ErrorResult& rv);

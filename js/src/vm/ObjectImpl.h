@@ -1205,7 +1205,7 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
 
-    UnrootedShape nativeLookup(JSContext *cx, jsid id);
+    UnrootedShape nativeLookup(JSContext *cx, HandleId id);
     inline UnrootedShape nativeLookup(JSContext *cx, PropertyId pid);
     inline UnrootedShape nativeLookup(JSContext *cx, PropertyName *name);
 

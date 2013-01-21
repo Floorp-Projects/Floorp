@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -169,11 +170,6 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   nsWindowSizes windowSizes(WindowsMallocSizeOf);
   aWindow->SizeOfIncludingThis(&windowSizes);
 
-  REPORT("/dom/other", windowSizes.mDOMOther,
-         "Memory used by a window's DOM, excluding element, text, CDATA, "
-         "and comment nodes.");
-  aWindowTotalSizes->mDOMOther += windowSizes.mDOMOther;
-
   REPORT("/dom/element-nodes", windowSizes.mDOMElementNodes,
          "Memory used by the element nodes in a window's DOM.");
   aWindowTotalSizes->mDOMElementNodes += windowSizes.mDOMElementNodes;
@@ -189,6 +185,16 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   REPORT("/dom/comment-nodes", windowSizes.mDOMCommentNodes,
          "Memory used by the comment nodes in a window's DOM.");
   aWindowTotalSizes->mDOMCommentNodes += windowSizes.mDOMCommentNodes;
+
+  REPORT("/dom/event-targets", windowSizes.mDOMEventTargets,
+         "Memory used by the event targets table in a window's DOM, and the "
+         "objects it points to, which include XHRs.");
+  aWindowTotalSizes->mDOMEventTargets += windowSizes.mDOMEventTargets;
+
+  REPORT("/dom/other", windowSizes.mDOMOther,
+         "Memory used by a window's DOM that isn't measured by the other "
+         "'dom/' numbers.");
+  aWindowTotalSizes->mDOMOther += windowSizes.mDOMOther;
 
   REPORT("/property-tables",
          windowSizes.mPropertyTables,
@@ -263,7 +269,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
            "The sum of all memory used by frames which were too small "
            "to be shown individually.");
   }
- 
+
 #undef REPORT
 
   return NS_OK;
@@ -332,66 +338,53 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
     NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
 
-  REPORT("window-objects/dom/other", windowTotalSizes.mDOMOther, 
-         "Memory used for the DOM within windows, "
-         "excluding element, text, CDATA, and comment nodes. "
-         "This is the sum of all windows' 'dom/other' numbers.");
-
   REPORT("window-objects/dom/element-nodes", windowTotalSizes.mDOMElementNodes,
-         "Memory used for DOM element nodes within windows. "
          "This is the sum of all windows' 'dom/element-nodes' numbers.");
 
   REPORT("window-objects/dom/text-nodes", windowTotalSizes.mDOMTextNodes,
-         "Memory used for DOM text nodes within windows. "
          "This is the sum of all windows' 'dom/text-nodes' numbers.");
 
   REPORT("window-objects/dom/cdata-nodes", windowTotalSizes.mDOMCDATANodes,
-         "Memory used for DOM CDATA nodes within windows. "
          "This is the sum of all windows' 'dom/cdata-nodes' numbers.");
 
   REPORT("window-objects/dom/comment-nodes", windowTotalSizes.mDOMCommentNodes,
-         "Memory used for DOM comment nodes within windows. "
          "This is the sum of all windows' 'dom/comment-nodes' numbers.");
+
+  REPORT("window-objects/dom/event-targets", windowTotalSizes.mDOMEventTargets,
+         "This is the sum of all windows' 'dom/event-targets' numbers.");
+
+  REPORT("window-objects/dom/other", windowTotalSizes.mDOMOther,
+         "This is the sum of all windows' 'dom/other' numbers.");
 
   REPORT("window-objects/property-tables",
          windowTotalSizes.mPropertyTables,
-         "Memory used for property tables within windows. "
          "This is the sum of all windows' 'property-tables' numbers.");
 
-  REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheets, 
-         "Memory used for style sheets within windows. "
+  REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheets,
          "This is the sum of all windows' 'style-sheets' numbers.");
-    
-  REPORT("window-objects/layout/pres-shell", windowTotalSizes.mLayoutPresShell, 
-         "Memory used by layout PresShell and other related "
-         "areas within windows. This is the sum of all windows' "
-         "'layout/arenas' numbers.");
-    
+
+  REPORT("window-objects/layout/pres-shell", windowTotalSizes.mLayoutPresShell,
+         "This is the sum of all windows' 'layout/arenas' numbers.");
+
   REPORT("window-objects/layout/line-boxes",
-         windowTotalSizes.mArenaStats.mLineBoxes, 
-         "Memory used for line-boxes within windows. "
+         windowTotalSizes.mArenaStats.mLineBoxes,
          "This is the sum of all windows' 'layout/line-boxes' numbers.");
 
   REPORT("window-objects/layout/rule-nodes",
          windowTotalSizes.mArenaStats.mRuleNodes,
-         "Memory used for CSS rule nodes within windows. "
          "This is the sum of all windows' 'layout/rule-nodes' numbers.");
 
   REPORT("window-objects/layout/style-contexts",
          windowTotalSizes.mArenaStats.mStyleContexts,
-         "Memory used for style contexts within windows. "
          "This is the sum of all windows' 'layout/style-contexts' numbers.");
 
-  REPORT("window-objects/layout/style-sets", windowTotalSizes.mLayoutStyleSets, 
-         "Memory used for style sets within windows. "
+  REPORT("window-objects/layout/style-sets", windowTotalSizes.mLayoutStyleSets,
          "This is the sum of all windows' 'layout/style-sets' numbers.");
-    
-  REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRuns, 
-         "Memory used for text runs within windows. "
+
+  REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRuns,
          "This is the sum of all windows' 'layout/text-runs' numbers.");
 
   REPORT("window-objects/layout/pres-contexts", windowTotalSizes.mLayoutPresContext,
-         "Memory used for layout PresContexts within windows. "
          "This is the sum of all windows' 'layout/pres-contexts' numbers.");
 
   size_t frameTotal = 0;
@@ -405,7 +398,7 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
          "This is the sum of all windows' 'layout/frames/' numbers.");
 
 #undef REPORT
-    
+
   return NS_OK;
 }
 
@@ -463,7 +456,7 @@ BackdateTimeStampsEnumerator(nsISupports *aKey, TimeStamp &aTimeStamp,
                              void* aClosure)
 {
   TimeStamp *minTimeStamp = static_cast<TimeStamp*>(aClosure);
-  
+
   if (!aTimeStamp.IsNull() && aTimeStamp > *minTimeStamp) {
     aTimeStamp = *minTimeStamp;
   }

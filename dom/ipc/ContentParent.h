@@ -178,7 +178,8 @@ private:
 
     // Transform a pre-allocated app process into a "real" app
     // process, for the specified manifest URL.
-    void SetManifestFromPreallocated(const nsAString& aAppManifestURL);
+    void TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
+                                      ChildPrivileges aPrivs);
 
     /**
      * Mark this ContentParent as dead for the purposes of Get*().

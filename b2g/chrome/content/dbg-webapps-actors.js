@@ -213,6 +213,24 @@ WebappsActor.prototype = {
     }
 
     let appType = aRequest.appType || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+
+    // Check that we are not overriding a preinstalled application.
+    let reg = DOMApplicationRegistry;
+    if (appId in reg.webapps && reg.webapps[appId].removable === false) {
+      return { error: "badParameterType",
+               message: "The application " + appId + " can't be overriden."
+             }
+    }
+
+    // In production builds, don't allow installation of certified apps.
+#ifdef MOZ_OFFICIAL
+    if (appType == Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
+      return { error: "badParameterType",
+               message: "Installing certified apps is not allowed."
+             }
+    }
+#endif
+
     let appDir = FileUtils.getDir("TmpD", ["b2g", appId], false, false);
 
     if (!appDir || !appDir.exists()) {

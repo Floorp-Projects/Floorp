@@ -148,6 +148,17 @@ class nsStringBuffer
        * This measures the size only if the StringBuffer is unshared.
        */
       size_t SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun aMallocSizeOf) const;
+
+      /**
+       * This measures the size regardless of whether the StringBuffer is
+       * unshared.
+       *
+       * WARNING: Only use this if you really know what you are doing, because
+       * it can easily lead to double-counting strings.  If you do use them,
+       * please explain clearly in a comment why it's safe and won't lead to
+       * double-counting.
+       */
+      size_t SizeOfIncludingThisEvenIfShared(nsMallocSizeOfFun aMallocSizeOf) const;
   };
 
 #endif /* !defined(nsStringBuffer_h__ */

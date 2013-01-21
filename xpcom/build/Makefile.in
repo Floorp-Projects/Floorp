@@ -42,7 +42,9 @@ CPPSRCS = \
   $(NULL)
 
 ifeq (Darwin, $(OS_ARCH))
-CPPSRCS += mozPoisonWriteMac.cpp
+CPPSRCS += mozPoisonWriteBase.cpp mozPoisonWriteMac.cpp
+else ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += mozPoisonWriteBase.cpp mozPoisonWriteWin.cpp
 else
 CPPSRCS += mozPoisonWriteStub.cpp
 endif

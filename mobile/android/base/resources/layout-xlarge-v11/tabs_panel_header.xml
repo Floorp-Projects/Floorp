@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Button android:id="@id/tabs_switcher_menu"
+            android:layout_width="0dip"
+            android:layout_height="0dip"
+            android:visibility="gone"/>
+
+    <Spinner android:id="@+id/tabs_menu"
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent"
+             android:layout_marginLeft="12dp"
+             android:layout_marginRight="12dp"
+             android:background="@drawable/spinner"
+             android:popupBackground="@drawable/menu_popup_bg"
+             android:dropDownHorizontalOffset="0dip"
+             android:dropDownSelector="@drawable/action_bar_button"
+             android:entries="@array/tabs_panel_spinner"/>
+
+</merge>

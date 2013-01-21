@@ -538,13 +538,41 @@ TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
                  t->arenaHeader()->allocatedDuringIncremental);
 
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    JSCompartment *comp = cx->compartment;
     if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind) && !IsAtomsCompartment(comp))
         comp->gcNursery.insertPointer(t);
 #endif
 
     return t;
 }
+
+/*
+ * Instances of this class set the |JSRuntime::suppressGC| flag for the duration
+ * that they are live. Use of this class is highly discouraged. Please carefully
+ * read the comment in jscntxt.h above |suppressGC| and take all appropriate
+ * precautions before instantiating this class.
+ */
+class AutoSuppressGC
+{
+    int32_t &suppressGC_;
+
+  public:
+    AutoSuppressGC(JSContext *cx)
+      : suppressGC_(cx->runtime->mainThread.suppressGC)
+    {
+        suppressGC_++;
+    }
+
+    AutoSuppressGC(JSCompartment *comp)
+      : suppressGC_(comp->rt->mainThread.suppressGC)
+    {
+        suppressGC_++;
+    }
+
+    ~AutoSuppressGC()
+    {
+        suppressGC_--;
+    }
+};
 
 } /* namespace gc */
 } /* namespace js */
@@ -569,10 +597,22 @@ js_NewGCString(JSContext *cx)
     return js::gc::NewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
 }
 
+inline JSString *
+js_TryNewGCString(JSContext *cx)
+{
+    return js::gc::TryNewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
+}
+
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
     return js::gc::NewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
+}
+
+inline JSShortString *
+js_TryNewGCShortString(JSContext *cx)
+{
+    return js::gc::TryNewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
 }
 
 inline JSExternalString *

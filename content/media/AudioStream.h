@@ -44,6 +44,8 @@ class AudioClock
     // Get the current pitch preservation state.
     // Called on the audio thread.
     bool GetPreservesPitch();
+    // Get the number of frames written to the backend.
+    int64_t GetWritten();
   private:
     // This AudioStream holds a strong reference to this AudioClock. This
     // pointer is garanteed to always be valid.
@@ -130,10 +132,20 @@ public:
   // Block until buffered audio data has been consumed.
   virtual void Drain() = 0;
 
-  // Pause audio playback
+  // Start the stream.
+  virtual nsresult Start() = 0;
+
+  // Check if the stream is started.
+  virtual bool IsStarted() = 0;
+
+  // Return the number of frames written so far in the stream. This allow the
+  // caller to check if it is safe to start the stream, if needed.
+  virtual int64_t GetWritten();
+
+  // Pause audio playback.
   virtual void Pause() = 0;
 
-  // Resume audio playback
+  // Resume audio playback.
   virtual void Resume() = 0;
 
   // Return the position in microseconds of the audio frame being played by
@@ -160,7 +172,7 @@ public:
   int GetChannels() { return mChannels; }
 
   // This should be called before attempting to use the time stretcher.
-  void EnsureTimeStretcherInitialized();
+  virtual void EnsureTimeStretcherInitialized();
   // Set playback rate as a multiple of the intrinsic playback rate. This is to
   // be called only with aPlaybackRate > 0.0.
   virtual nsresult SetPlaybackRate(double aPlaybackRate);
@@ -173,6 +185,8 @@ protected:
   // Output rate in Hz (characteristic of the playback rate)
   int mOutRate;
   int mChannels;
+  // Number of frames written to the buffers.
+  int64_t mWritten;
   AudioClock mAudioClock;
   nsAutoPtr<soundtouch::SoundTouch> mTimeStretcher;
 };

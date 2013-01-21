@@ -11,7 +11,6 @@
  */
 
 interface SVGAnimatedString;
-interface SVGAnimatedLength;
 interface SVGViewSpec;
 interface SVGPoint;
 interface SVGRect;

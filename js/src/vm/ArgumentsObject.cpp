@@ -64,7 +64,7 @@ struct CopyFrameArgs
       : frame_(frame)
     { }
 
-    void copyArgs(HeapValue *dst) const {
+    void copyArgs(JSContext *, HeapValue *dst) const {
         CopyStackFrameArguments(frame_, dst);
     }
 
@@ -85,14 +85,14 @@ struct CopyStackIterArgs
       : iter_(iter)
     { }
 
-    void copyArgs(HeapValue *dstBase) const {
+    void copyArgs(JSContext *cx, HeapValue *dstBase) const {
         if (!iter_.isIon()) {
             CopyStackFrameArguments(iter_.abstractFramePtr(), dstBase);
             return;
         }
 
         /* Copy actual arguments. */
-        iter_.ionForEachCanonicalActualArg(CopyToHeap(dstBase));
+        iter_.ionForEachCanonicalActualArg(cx, CopyToHeap(dstBase));
 
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
@@ -155,14 +155,16 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
 
     /* Copy [0, numArgs) into data->slots. */
     HeapValue *dst = data->args, *dstEnd = data->args + numArgs;
-    copy.copyArgs(dst);
+    copy.copyArgs(cx, dst);
 
     data->deletedBits = reinterpret_cast<size_t *>(dstEnd);
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
     RawObject obj = JSObject::create(cx, FINALIZE_KIND, shape, type, NULL);
-    if (!obj)
+    if (!obj) {
+        js_free(data);
         return NULL;
+    }
 
     obj->initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(numActuals << PACKED_BITS_COUNT));
     obj->initFixedSlot(DATA_SLOT, PrivateValue(data));

@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
 
@@ -67,7 +68,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetX(nsIDOMSVGAnimatedLength * *aX)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGForeignObjectElement::X()
 {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
@@ -80,7 +81,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetY(nsIDOMSVGAnimatedLength * *aY)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGForeignObjectElement::Y()
 {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
@@ -94,7 +95,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidt
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGForeignObjectElement::Width()
 {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
@@ -108,7 +109,7 @@ NS_IMETHODIMP SVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aHei
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMSVGAnimatedLength>
+already_AddRefed<SVGAnimatedLength>
 SVGForeignObjectElement::Height()
 {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);

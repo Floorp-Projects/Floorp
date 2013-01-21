@@ -88,7 +88,7 @@ IsIncrementalGCSafe(JSRuntime *rt);
 
 #ifdef JSGC_ROOT_ANALYSIS
 void *
-IsAddressableGCThing(JSRuntime *rt, uintptr_t w);
+GetAddressableGCThing(JSRuntime *rt, uintptr_t w);
 #endif
 
 #ifdef JS_GC_ZEAL

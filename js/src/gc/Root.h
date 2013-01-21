@@ -133,6 +133,8 @@
 
 namespace js {
 
+class Module;
+
 template <typename T> class Rooted;
 template <typename T> class Unrooted;
 
@@ -248,6 +250,7 @@ class Handle : public js::HandleBase<T>
     T operator->() const { return get(); }
 
     bool operator!=(const T &other) { return *ptr != other; }
+    bool operator==(const T &other) { return *ptr == other; }
 
   private:
     Handle() {}
@@ -259,6 +262,7 @@ class Handle : public js::HandleBase<T>
 };
 
 typedef Handle<JSObject*>    HandleObject;
+typedef Handle<js::Module*>  HandleModule;
 typedef Handle<JSFunction*>  HandleFunction;
 typedef Handle<JSScript*>    HandleScript;
 typedef Handle<JSString*>    HandleString;
@@ -606,40 +610,7 @@ class Rooted : public RootedBase<T>
 #endif
     }
 
-    void init(JSRuntime *rtArg) {
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        PerThreadDataFriendFields *pt = PerThreadDataFriendFields::getMainThread(rtArg);
-        commonInit(pt->thingGCRooters);
-#endif
-    }
-
-    void init(js::PerThreadData *ptArg) {
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        PerThreadDataFriendFields *pt = PerThreadDataFriendFields::get(ptArg);
-        commonInit(pt->thingGCRooters);
-#endif
-#if defined(JSGC_ROOT_ANALYSIS)
-        scanned = false;
-#endif
-    }
-
   public:
-    Rooted(JSRuntime *rt
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(RootMethods<T>::initial())
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(rt);
-    }
-
-    Rooted(JSRuntime *rt, T initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(rt);
-    }
-
     Rooted(JSContext *cx
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(RootMethods<T>::initial())
@@ -654,22 +625,6 @@ class Rooted : public RootedBase<T>
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(cx);
-    }
-
-    Rooted(js::PerThreadData *pt
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(RootMethods<T>::initial())
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
-    }
-
-    Rooted(js::PerThreadData *pt, T initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
     }
 
     template <typename S>
@@ -709,6 +664,9 @@ class Rooted : public RootedBase<T>
         ptr = value;
         return ptr;
     }
+
+    bool operator!=(const T &other) { return ptr != other; }
+    bool operator==(const T &other) { return ptr == other; }
 
   private:
     void commonInit(Rooted<void*> **thingGCRooters) {
@@ -762,6 +720,7 @@ Unrooted<T>::Unrooted(const Rooted<S> &root,
 #endif /* DEBUG */
 
 typedef Rooted<JSObject*>    RootedObject;
+typedef Rooted<js::Module*>  RootedModule;
 typedef Rooted<JSFunction*>  RootedFunction;
 typedef Rooted<JSScript*>    RootedScript;
 typedef Rooted<JSString*>    RootedString;
@@ -783,8 +742,8 @@ class SkipRoot
     const uint8_t *end;
 
     template <typename T>
-    void init(ContextFriendFields *cx, const T *ptr, size_t count) {
-        this->stack = &cx->skipGCRooters;
+    void init(SkipRoot **head, const T *ptr, size_t count) {
+        this->stack = head;
         this->prev = *stack;
         *stack = this;
         this->start = (const uint8_t *) ptr;
@@ -796,7 +755,16 @@ class SkipRoot
     SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
-        init(ContextFriendFields::get(cx), ptr, count);
+        init(&ContextFriendFields::get(cx)->skipGCRooters, ptr, count);
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    template <typename T>
+    SkipRoot(js::PerThreadData *ptd, const T *ptr, size_t count = 1
+             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        PerThreadDataFriendFields *ptff = PerThreadDataFriendFields::get(ptd);
+        init(&ptff->skipGCRooters, ptr, count);
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -821,9 +789,44 @@ class SkipRoot
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
+    template <typename T>
+    SkipRoot(PerThreadData *ptd, const T *ptr, size_t count = 1
+             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
 #endif /* DEBUG && JSGC_ROOT_ANALYSIS */
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/*
+ * Types for a variable that either should or shouldn't be rooted, depending on
+ * the template parameter Rooted. Used for implementing functions that can
+ * operate on either rooted or unrooted data.
+ */
+enum AllowGC {
+    DONT_ALLOW_GC = 0,
+    ALLOW_GC = 1
+};
+template <typename T, AllowGC allowGC>
+class MaybeRooted
+{
+};
+
+template <typename T> class MaybeRooted<T, ALLOW_GC>
+{
+  public:
+    typedef Rooted<T> RootType;
+    typedef Handle<T> HandleType;
+};
+
+template <typename T> class MaybeRooted<T, DONT_ALLOW_GC>
+{
+  public:
+    typedef T RootType;
+    typedef T HandleType;
 };
 
 } /* namespace js */
@@ -930,5 +933,6 @@ class CompilerRootNode
 
 ForwardDeclareJS(Script);
 ForwardDeclareJS(Function);
+ForwardDeclareJS(Object);
 
 #endif  /* jsgc_root_h___ */

@@ -277,7 +277,7 @@ ProfilerPanel.prototype = {
    *   If the instance is already loaded, onLoad will be
    *   called synchronously.
    */
-  switchToProfile: function PP_switchToProfile(profile, onLoad) {
+  switchToProfile: function PP_switchToProfile(profile, onLoad=function() {}) {
     let doc = this.document;
 
     if (this.activeProfile) {

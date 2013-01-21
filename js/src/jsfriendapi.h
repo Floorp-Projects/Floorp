@@ -492,10 +492,16 @@ SetReservedSlot(RawObject obj, size_t slot, const Value &value)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
-    if (sobj->slotRef(slot).isMarkable())
+    if (sobj->slotRef(slot).isMarkable()
+#ifdef JSGC_GENERATIONAL
+        || value.isMarkable()
+#endif
+       )
+    {
         SetReservedSlotWithBarrier(obj, slot, value);
-    else
+    } else {
         sobj->slotRef(slot) = value;
+    }
 }
 
 JS_FRIEND_API(uint32_t)

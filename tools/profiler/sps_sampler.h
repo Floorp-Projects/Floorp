@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include "mozilla/ThreadLocal.h"
 #include "nscore.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 #include "nsAlgorithm.h"
@@ -65,6 +66,9 @@ extern bool stack_key_initialized;
 #define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
 #define SAMPLE_LABEL_PRINTF(name_space, info, ...) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
 #define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info)
+#define SAMPLE_MAIN_THREAD_LABEL(name_space, info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
+#define SAMPLE_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define SAMPLE_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
 
 #define SAMPLER_PRINT_LOCATION() mozilla_sampler_print_location()
 
@@ -368,6 +372,11 @@ public:
 
   void sampleRuntime(JSRuntime *runtime) {
     mRuntime = runtime;
+    if (!runtime) {
+      // JS shut down
+      return;
+    }
+
     JS_STATIC_ASSERT(sizeof(mStack[0]) == sizeof(js::ProfileEntry));
     js::SetRuntimeProfilingStack(runtime,
                                  (js::ProfileEntry*) mStack,

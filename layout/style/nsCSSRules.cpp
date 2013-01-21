@@ -2010,13 +2010,15 @@ nsCSSKeyframeRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF(nsCSSKeyframeRule)
-NS_IMPL_RELEASE(nsCSSKeyframeRule)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSKeyframeRule)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSKeyframeRule)
+
+NS_IMPL_CYCLE_COLLECTION_1(nsCSSKeyframeRule, mDOMDeclaration);
 
 DOMCI_DATA(MozCSSKeyframeRule, nsCSSKeyframeRule)
 
 // QueryInterface implementation for nsCSSKeyframeRule
-NS_INTERFACE_MAP_BEGIN(nsCSSKeyframeRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
