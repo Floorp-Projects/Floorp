@@ -1226,9 +1226,9 @@ let RIL = {
    *         String type, check the 'pathid' parameter from TS 27.007 +CRSM.
    *  @param p1, p2, p3
    *         Arbitrary integer parameters for the command.
-   *  @param data
-   *         String parameter for the command.
-   *  @param pin2
+   *  @param [optional] dataWriter
+   *         The function for writing string parameter for the ICC_COMMAND_UPDATE_RECORD.
+   *  @param [optional] pin2
    *         String containing the PIN2.
    *  @param [optional] aid
    *         AID value.
@@ -1241,7 +1241,12 @@ let RIL = {
     Buf.writeUint32(options.p1);
     Buf.writeUint32(options.p2);
     Buf.writeUint32(options.p3);
-    Buf.writeString(options.data || null);
+    if (options.command == ICC_COMMAND_UPDATE_RECORD &&
+        options.dataWriter) {
+      options.dataWriter(options.p3);
+    } else {
+      Buf.writeString(null);
+    }
     Buf.writeString(options.pin2 || null);
     if (!RILQUIRKS_V5_LEGACY) {
       Buf.writeString(options.aid || this.aid);
@@ -8396,6 +8401,39 @@ let ICCIOHelper = {
   },
 
   /**
+   * Update EF with type 'Linear Fixed'.
+   *
+   * @param fileId
+   *        The file to operate on, one of the ICC_EF_* constants.
+   * @param recordNumber
+   *        The number of the record shall be updated.
+   * @param dataWriter [optional]
+   *        The function for writing string parameter for the ICC_COMMAND_UPDATE_RECORD.
+   * @param callback [optional]
+   *        The callback function shall be called when the record is updated.
+   * @param onerror [optional]
+   *        The callback function shall be called when failure.
+   */
+  updateLinearFixedEF: function updateLinearFixedEF(options) {
+    if (!options.fileId || !options.recordNumber) {
+      throw new Error("Unexpected fileId " + options.fileId +
+                      " or recordNumber " + options.recordNumber);
+    }
+
+    options.type = EF_TYPE_LINEAR_FIXED;
+    let cb = options.callback;
+    options.callback = function callback(options) {
+      options.callback = cb;
+      options.command = ICC_COMMAND_UPDATE_RECORD;
+      options.p1 = options.recordNumber;
+      options.p2 = READ_RECORD_ABSOLUTE_MODE;
+      options.p3 = options.recordSize;
+      RIL.iccIO(options);
+    }.bind(this);
+    this.getResponse(options);
+  },
+
+  /**
    * Load EF with type 'Transparent'.
    *
    * @param fileId
@@ -8520,6 +8558,15 @@ let ICCIOHelper = {
   },
 
   /**
+   * Process a ICC_COMMAND_UPDATE_RECORD type command for REQUEST_SIM_IO.
+   */
+  processICCIOUpdateRecord: function processICCIOUpdateRecord(options) {
+    if (options.callback) {
+      options.callback(options);
+    }
+  },
+
+  /**
    * Process ICC IO error.
    */
   processICCIOError: function processICCIOError(options) {
@@ -8547,7 +8594,9 @@ ICCIOHelper[ICC_COMMAND_GET_RESPONSE] = function ICC_COMMAND_GET_RESPONSE(option
   this.processICCIOGetResponse(options);
 };
 ICCIOHelper[ICC_COMMAND_UPDATE_BINARY] = null;
-ICCIOHelper[ICC_COMMAND_UPDATE_RECORD] = null;
+ICCIOHelper[ICC_COMMAND_UPDATE_RECORD] = function ICC_COMMAND_UPDATE_RECORD(options) {
+  this.processICCIOUpdateRecord(options);
+};
 
 /**
  * Helper for ICC records.
