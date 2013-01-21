@@ -134,6 +134,8 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *rtS
         rtSizes->unusedCode = 0;
     }
 
+    rtSizes->regexpData = bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
+
     rtSizes->stack = stackSpace.sizeOf();
 
     rtSizes->gcMarker = gcMarker.sizeOfExcludingThis(mallocSizeOf);
@@ -148,15 +150,18 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *rtS
 size_t
 JSRuntime::sizeOfExplicitNonHeap()
 {
-    size_t size = stackSpace.sizeOf();
+    size_t n = stackSpace.sizeOf();
 
     if (execAlloc_) {
         size_t jaegerCode, ionCode, regexpCode, unusedCode;
         execAlloc_->sizeOfCode(&jaegerCode, &ionCode, &regexpCode, &unusedCode);
-        size += jaegerCode + ionCode + regexpCode + unusedCode;
+        n += jaegerCode + ionCode + regexpCode + unusedCode;
     }
 
-    return size;
+    if (bumpAlloc_)
+        n += bumpAlloc_->sizeOfNonHeapData();
+
+    return n;
 }
 
 void
@@ -632,13 +637,14 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
 {
     const char *usageStr = "usage";
     PropertyName *usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
-    DebugOnly<RawShape> shape = static_cast<RawShape>(callee->nativeLookup(cx, NameToId(usageAtom)));
+    RootedId id(cx, NameToId(usageAtom));
+    DebugOnly<RawShape> shape = static_cast<RawShape>(callee->nativeLookup(cx, id));
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(!shape->writable());
     JS_ASSERT(shape->hasDefaultGetter());
 
-    jsval usage;
-    if (!JS_LookupProperty(cx, callee, "usage", &usage))
+    RootedValue usage(cx);
+    if (!JS_LookupProperty(cx, callee, "usage", usage.address()))
         return;
 
     if (JSVAL_IS_VOID(usage)) {
@@ -1081,7 +1087,7 @@ js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumb
     return ok;
 }
 
-JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
+const JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count, exception } ,
 #include "js.msg"

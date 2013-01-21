@@ -9,7 +9,7 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = ../locales locales base chrome components modules themes/core app
+DIRS = ../locales locales base chrome components modules themes/core app fonts
 
 ifndef LIBXUL_SDK
 PARALLEL_DIRS += $(DEPTH)/xulrunner/tools/redit

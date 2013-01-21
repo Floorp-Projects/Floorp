@@ -16,7 +16,7 @@ extern "C" {
     typedef jsword  jsval;
     typedef struct JSRuntime JSRuntime;
     typedef struct JSContext JSContext;
-    typedef struct JSObject JSObject;
+    typedef class JSObject JSObject;
 }
 
 class SkString;

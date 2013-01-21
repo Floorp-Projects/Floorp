@@ -4443,7 +4443,6 @@ MAKEFILES="
   shell/Makefile
   config/Makefile
   config/autoconf.mk
-  config/expandlibs_config.py
 "
 
 if test "$JS_NATIVE_EDITLINE"; then

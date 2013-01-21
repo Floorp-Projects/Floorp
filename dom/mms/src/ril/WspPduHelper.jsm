@@ -2143,6 +2143,28 @@ this.ApplicationIdValue = {
 
 this.PduHelper = {
   /**
+   * @param data
+   *        A UInt8Array of data for decode.
+   * @param charset
+   *        charset for decode
+   *
+   * @return Decoded string.
+   */
+  decodeStringContent: function decodeStringContent(data, charset) {
+      let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                 .createInstance(Ci.nsIScriptableUnicodeConverter);
+
+      let entry = WSP_WELL_KNOWN_CHARSETS[charset];
+      // Set converter to default one if (entry && entry.converter) is null.
+      // @see OMA-TS-MMS-CONF-V1_3-20050526-D 7.1.9
+      conv.charset = (entry && entry.converter) || "UTF-8";
+      try {
+        return conv.convertFromByteArray(data, data.length);
+      } catch (e) {
+      }
+      return null;
+  },
+  /**
    * Parse multiple header fields with end mark.
    *
    * @param data
@@ -2240,8 +2262,14 @@ this.PduHelper = {
         let octetArray = Octet.decodeMultiple(data, contentEnd);
         let content = null;
         if (octetArray) {
-          content = new Blob([octetArray],
-            {"type" : headers["content-type"].media});
+          if (headers["content-type"].media.indexOf("text/") === 0) {
+            content = this.decodeStringContent(octetArray,
+              headers["content-type"].params.charset["charset"]);
+          }
+          if (!content) {
+            content = new Blob([octetArray],
+              {"type" : headers["content-type"].media});
+          }
         }
 
         parts[i] = {
@@ -2676,9 +2704,33 @@ this.WSP_WELL_KNOWN_CHARSETS = (function () {
     charsets[name] = charsets[number] = entry;
   }
 
-  add("ansi_x3.4-1968",     3, null);
-  add("iso_8859-1:1987",    4, "ISO-8859-1");
+  add("us-ascii",           3, null);
+  add("iso-8859-1",         4, "ISO-8859-1");
+  add("iso-8859-2",         5, "ISO-8859-2");
+  add("iso-8859-3",         6, "ISO-8859-3");
+  add("iso-8859-4",         7, "ISO-8859-4");
+  add("iso-8859-5",         8, "ISO-8859-5");
+  add("iso-8859-6",         9, "ISO-8859-6");
+  add("iso-8859-7",        10, "ISO-8859-7");
+  add("iso-8859-8",        11, "ISO-8859-8");
+  add("iso-8859-9",        12, "ISO-8859-9");
+  add("iso-8859-10",       13, "ISO-8859-10");
+  add("shift_jis",         17, "Shift_JIS");
+  add("euc-jp",            18, "EUC-JP");
+  add("iso-2022-kr",       37, "ISO-2022-KR");
+  add("euc-kr",            38, "EUC-KR");
+  add("iso-2022-jp",       39, "ISO-2022-JP");
+  add("iso-2022-jp-2",     40, "iso-2022-jp-2");
+  add("iso-8859-6-e",      81, "ISO-8859-6-E");
+  add("iso-8859-6-i",      82, "ISO-8859-6-I");
+  add("iso-8859-8-e",      84, "ISO-8859-8-E");
+  add("iso-8859-8-i",      85, "ISO-8859-8-I");
   add("utf-8",            106, "UTF-8");
+  add("iso-10646-ucs-2", 1000, "iso-10646-ucs-2");
+  add("utf-16",          1015, "UTF-16");
+  add("gb2312",          2025, "GB2312");
+  add("big5",            2026, "Big5");
+  add("koi8-r",          2084, "KOI8-R");
   add("windows-1252",    2252, "windows-1252");
 
   return charsets;

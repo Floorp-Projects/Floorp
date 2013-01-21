@@ -16,7 +16,7 @@
 #include "nsStringGlue.h"
 
 struct JSContext;
-struct JSObject;
+class JSObject;
 struct JSPrincipals;
 
 class nsIJSContextStack;

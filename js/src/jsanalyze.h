@@ -993,7 +993,8 @@ class ScriptAnalysis
     void addTypeBarrier(JSContext *cx, const jsbytecode *pc,
                         types::TypeSet *target, types::Type type);
     void addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc,
-                                 types::TypeSet *target, HandleObject singleton, jsid singletonId);
+                                 types::TypeSet *target,
+                                 HandleObject singleton, HandleId singletonId);
 
     /* Remove obsolete type barriers at the given offset. */
     void pruneTypeBarriers(JSContext *cx, uint32_t offset);
@@ -1202,39 +1203,6 @@ class ScriptAnalysis
 #else
     void assertMatchingDebugMode() { }
 #endif
-};
-
-/* Protect analysis structures from GC while they are being used. */
-class AutoEnterAnalysis
-{
-    JSCompartment *compartment;
-    bool oldActiveAnalysis;
-    bool left;
-
-    void construct(JSCompartment *compartment)
-    {
-        this->compartment = compartment;
-        oldActiveAnalysis = compartment->activeAnalysis;
-        compartment->activeAnalysis = true;
-        left = false;
-    }
-
-  public:
-    AutoEnterAnalysis(JSContext *cx) { construct(cx->compartment); }
-    AutoEnterAnalysis(JSCompartment *compartment) { construct(compartment); }
-
-    void leave()
-    {
-        if (!left) {
-            left = true;
-            compartment->activeAnalysis = oldActiveAnalysis;
-        }
-    }
-
-    ~AutoEnterAnalysis()
-    {
-        leave();
-    }
 };
 
 /* SSA value as used by CrossScriptSSA, identifies the frame it came from. */

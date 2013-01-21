@@ -300,7 +300,7 @@
           if (pos == 1)
             this.scrollbox._stopSmoothScroll();
           else
-            window.mozRequestAnimationFrame(this);
+            this.requestHandle = window.mozRequestAnimationFrame(this);
         }
       })]]></field>
 
@@ -663,7 +663,7 @@
           const scrollDelta = 0.5 * timePassed * scrollIndex;
           this.scrollbox.scrollPosition += scrollDelta;
 
-          window.mozRequestAnimationFrame(this);
+          this.requestHandle = window.mozRequestAnimationFrame(this);
         }
       })]]></field>
 

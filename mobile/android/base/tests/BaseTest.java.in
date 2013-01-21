@@ -7,10 +7,13 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.app.Instrumentation;
+import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
 import java.io.File;
@@ -21,6 +24,8 @@ import java.util.HashMap;
 import android.view.View;
 import android.os.Build;
 import android.util.DisplayMetrics;
+import android.widget.ListView;
+import java.util.ArrayList;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
@@ -44,6 +49,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected String mRawBaseUrl;
     private String mLogFile;
     protected String mProfile;
+    private static ListView bookmarkList;
 
     protected void blockForGeckoReady() {
         try {
@@ -384,6 +390,92 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         String tabCountText = tabCount.getText();
         int tabCountInt = Integer.parseInt(tabCountText);
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
+    }
+
+    public ListView getBookmarksList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("Bookmarks");
+
+        final ArrayList<ListView> views = mSolo.getCurrentListViews();
+
+        bookmarkList = null;
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+               for (ListView view : views) {
+                   if (view.getTag().equals("bookmarks")) {
+                       bookmarkList = view;
+                       return true;
+                   }
+               }
+               return false;
+            }
+        }, MAX_WAIT_MS);
+        return bookmarkList;
+    }
+
+    public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
+        long folderId = -1;
+        Cursor c = null;
+
+        // NOTE: this is hardcoded to toolbar/mobile and triggered from bookmarklet because the existing
+        //       testcases were written this way
+        String location = "toolbar";
+        if (bookmarklet) {
+            location = "mobile";
+        }
+
+        try {
+            c = resolver.query(bookmarksUri,
+                               new String[] { "_id" },
+                               "guid = ?",
+                               new String[] { location },
+                               null);
+
+            if (c.moveToFirst())
+                folderId = c.getLong(c.getColumnIndexOrThrow("_id"));
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("title", title);
+        values.put("url", url);
+        values.put("parent", folderId);
+        long now = System.currentTimeMillis();
+        values.put("modified", now);
+
+        if (!bookmarklet) {
+            values.put("type", 1);
+            values.put("guid", url);
+            values.put("position", 10);
+            values.put("created", now);
+        }
+
+        int updated = resolver.update(bookmarksUri,
+                                      values,
+                                      "url = ?",
+                                      new String[] { url });
+        if (updated == 0) {
+            Uri uri = resolver.insert(bookmarksUri, values);
+            mAsserter.ok(true, "Inserted at: ", uri.toString());
+            return ContentUris.parseId(uri);
+        }
+
+        return ContentUris.parseId(bookmarksUri);
+    }
+
+    public void deleteBookmark(String title) {
+
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        resolver.delete(uri, "title = ?", new String[] { title });
     }
 
     public void addTab(String url) {

@@ -16,7 +16,7 @@ class nsIURI;
 class nsITimedChannel;
 class nsIDOMWindow;
 class nsPerformance;
-struct JSObject;
+class JSObject;
 struct JSContext;
 
 // Script "performance.timing" object

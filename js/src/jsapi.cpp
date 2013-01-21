@@ -491,7 +491,7 @@ JS_ValueToSource(JSContext *cx, jsval valueArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    return js_ValueToSource(cx, value);
+    return ValueToSource(cx, value);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -586,9 +586,8 @@ JS_ValueToUint16(JSContext *cx, jsval valueArg, uint16_t *ip)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ValueToBoolean(JSContext *cx, jsval valueArg, JSBool *bp)
+JS_ValueToBoolean(JSContext *cx, jsval value, JSBool *bp)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
@@ -615,10 +614,8 @@ JS_GetTypeName(JSContext *cx, JSType type)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StrictlyEqual(JSContext *cx, jsval value1Arg, jsval value2Arg, JSBool *equal)
+JS_StrictlyEqual(JSContext *cx, jsval value1, jsval value2, JSBool *equal)
 {
-    RootedValue value1(cx, value1Arg);
-    RootedValue value2(cx, value2Arg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value1, value2);
@@ -645,10 +642,8 @@ JS_LooselyEqual(JSContext *cx, jsval value1Arg, jsval value2Arg, JSBool *equal)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SameValue(JSContext *cx, jsval value1Arg, jsval value2Arg, JSBool *same)
+JS_SameValue(JSContext *cx, jsval value1, jsval value2, JSBool *same)
 {
-    RootedValue value1(cx, value1Arg);
-    RootedValue value2(cx, value2Arg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value1, value2);
@@ -1589,8 +1584,8 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
     AutoMaybeTouchDeadCompartments agc(cx);
 
     JSCompartment *destination = target->compartment();
-    Value origv = ObjectValue(*origobj);
-    JSObject *newIdentity;
+    RootedValue origv(cx, ObjectValue(*origobj));
+    RootedObject newIdentity(cx);
 
     if (origobj->compartment() == destination) {
         // If the original object is in the same compartment as the
@@ -1667,7 +1662,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     JS_ASSERT(!IsCrossCompartmentWrapper(targetobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(targetwrapper));
 
-    JSObject *newWrapper;
+    RootedObject newWrapper(cx);
     JSCompartment *destination = targetobj->compartment();
 
     // |origv| is the map entry we're looking up. The map entries are going to
@@ -1917,7 +1912,6 @@ JS_PUBLIC_API(JSBool)
 JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolved)
 {
     RootedObject obj(cx, objArg);
-    JSString *idstr;
     JSRuntime *rt;
     JSAtom *atom;
     JSStdName *stdnm;
@@ -1932,7 +1926,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolv
     if (!rt->hasContexts() || !JSID_IS_ATOM(id))
         return true;
 
-    idstr = JSID_TO_STRING(id);
+    RootedString idstr(cx, JSID_TO_STRING(id));
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.undefined;
@@ -3009,6 +3003,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       case JSGC_ALLOCATION_THRESHOLD:
         rt->gcAllocationThreshold = value * 1024 * 1024;
+        break;
+      case JSGC_ENABLE_GENERATIONAL:
+        rt->gcGenerationalEnabled = bool(value);
         break;
       default:
         JS_ASSERT(key == JSGC_MODE);
@@ -4319,9 +4316,10 @@ JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyDefault(JSContext *cx, JSObject *objArg, const char *name, jsval def, jsval *vp)
+JS_GetPropertyDefault(JSContext *cx, JSObject *objArg, const char *name, jsval defArg, jsval *vp)
 {
     RootedObject obj(cx, objArg);
+    RootedValue def(cx, defArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
     return atom && JS_GetPropertyByIdDefault(cx, obj, AtomToId(atom), def, vp);
 }
@@ -4357,8 +4355,9 @@ JS_GetMethodById(JSContext *cx, JSObject *objArg, jsid idArg, JSObject **objp, j
 JS_PUBLIC_API(JSBool)
 JS_GetMethod(JSContext *cx, JSObject *objArg, const char *name, JSObject **objp, jsval *vp)
 {
+    RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_GetMethodById(cx, objArg, AtomToId(atom), objp, vp);
+    return atom && JS_GetMethodById(cx, obj, AtomToId(atom), objp, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6367,7 +6366,7 @@ JS_WriteStructuredClone(JSContext *cx, jsval valueArg, uint64_t **bufp, size_t *
         optionalCallbacks ?
         optionalCallbacks :
         cx->runtime->structuredCloneCallbacks;
-    return WriteStructuredClone(cx, valueArg, (uint64_t **) bufp, nbytesp,
+    return WriteStructuredClone(cx, value, (uint64_t **) bufp, nbytesp,
                                 callbacks, closure, transferable);
 }
 

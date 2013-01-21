@@ -10,6 +10,7 @@
 #include "jsgc.h"
 #include "jsprf.h"
 #include "jsutil.h"
+#include "jswatchpoint.h"
 
 #include "mozilla/Util.h"
 
@@ -51,7 +52,7 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    void *thing = IsAddressableGCThing(rt, *w);
+    void *thing = GetAddressableGCThing(rt, *w);
     if (!thing)
         return;
 
@@ -70,8 +71,14 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
             return;
     }
 
+    SkipRoot *skip = TlsPerThreadData.get()->skipGCRooters;
+    while (skip) {
+        if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
+            return;
+        skip = skip->previous();
+    }
     for (ContextIter cx(rt); !cx.done(); cx.next()) {
-        SkipRoot *skip = cx->skipGCRooters;
+        skip = cx->skipGCRooters;
         while (skip) {
             if (skip->contains(reinterpret_cast<uint8_t*>(w), sizeof(w)))
                 return;
@@ -239,14 +246,8 @@ JS::CheckStackRoots(JSContext *cx)
     // Gather up all of the rooters
     Vector< Rooter, 0, SystemAllocPolicy> rooters;
     for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-        Rooted<void*> *rooter = rt->mainThread.thingGCRooters[i];
-        while (rooter) {
-            Rooter r = { rooter, ThingRootKind(i) };
-            JS_ALWAYS_TRUE(rooters.append(r));
-            rooter = rooter->previous();
-        }
         for (ContextIter cx(rt); !cx.done(); cx.next()) {
-            rooter = cx->thingGCRooters[i];
+            Rooted<void*> *rooter = cx->thingGCRooters[i];
             while (rooter) {
                 Rooter r = { rooter, ThingRootKind(i) };
                 JS_ALWAYS_TRUE(rooters.append(r));
@@ -690,7 +691,7 @@ AssertStoreBufferContainsEdge(StoreBuffer *storebuf, void *loc, void *dst)
 }
 
 void
-gc::PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPostTracer *trc = (VerifyPostTracer *)jstrc;
     Cell *dst = (Cell *)*thingp;
@@ -806,6 +807,9 @@ MaybeVerifyPreBarriers(JSRuntime *rt, bool always)
     if (rt->gcZeal() != ZealVerifierPreValue)
         return;
 
+    if (rt->mainThread.suppressGC)
+        return;
+
     if (VerifyPreTracer *trc = (VerifyPreTracer *)rt->gcVerifyPreData) {
         if (++trc->count < rt->gcZealFrequency && !always)
             return;
@@ -819,6 +823,9 @@ static void
 MaybeVerifyPostBarriers(JSRuntime *rt, bool always)
 {
     if (rt->gcZeal() != ZealVerifierPostValue)
+        return;
+
+    if (rt->mainThread.suppressGC)
         return;
 
     if (VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData) {

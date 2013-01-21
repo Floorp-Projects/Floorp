@@ -91,10 +91,10 @@ public:
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
-  already_AddRefed<nsIDOMSVGAnimatedLength> X();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Y();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Width();
-  already_AddRefed<nsIDOMSVGAnimatedLength> Height();
+  already_AddRefed<SVGAnimatedLength> X();
+  already_AddRefed<SVGAnimatedLength> Y();
+  already_AddRefed<SVGAnimatedLength> Width();
+  already_AddRefed<SVGAnimatedLength> Height();
 
 protected:
   class SourceReference : public nsReferencedElement {

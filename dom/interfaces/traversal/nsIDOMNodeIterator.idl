@@ -10,14 +10,13 @@ interface nsIDOMNodeIterator;
 interface nsIDOMNodeFilter;
 
 
-[scriptable, uuid(5af83f50-c8d5-4824-be29-1aa9d640bacb)]
+[scriptable, uuid(a86bdac9-ff89-4c94-8160-4fe86733bab8)]
 // Introduced in DOM Level 2, updated to DOM Level 4:
 interface nsIDOMNodeIterator : nsISupports
 {
   readonly attribute nsIDOMNode       root;
   readonly attribute unsigned long    whatToShow;
   readonly attribute nsIDOMNodeFilter filter;
-  readonly attribute boolean          expandEntityReferences;
   nsIDOMNode         nextNode()
                                         raises(DOMException);
   nsIDOMNode         previousNode()

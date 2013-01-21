@@ -1235,7 +1235,7 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
 
         // We remove sizeof(void*) from argvOffset because withtout it we target
         // the address after the memory area that we want to copy.
-        BaseIndex disp(StackPointer, argcreg, ScaleFromShift(sizeof(Value)), argvOffset - sizeof(void*));
+        BaseIndex disp(StackPointer, argcreg, ScaleFromElemWidth(sizeof(Value)), argvOffset - sizeof(void*));
 
         // Do not use Push here because other this account to 1 in the framePushed
         // instead of 0.  These push are only counted by argcreg.
@@ -1253,7 +1253,7 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
 
     // Compute the stack usage.
     masm.movePtr(argcreg, extraStackSpace);
-    masm.lshiftPtr(Imm32::ShiftOf(ScaleFromShift(sizeof(Value))), extraStackSpace);
+    masm.lshiftPtr(Imm32::ShiftOf(ScaleFromElemWidth(sizeof(Value))), extraStackSpace);
 
     // Join with all arguments copied and the extra stack usage computed.
     masm.bind(&end);
@@ -2303,7 +2303,7 @@ CodeGenerator::visitModD(LModD *ins)
 }
 
 typedef bool (*BinaryFn)(JSContext *, HandleScript, jsbytecode *,
-                         HandleValue, HandleValue, Value *);
+                         MutableHandleValue, MutableHandleValue, Value *);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
@@ -3527,7 +3527,7 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
         masm.loadValue(argPtr, result);
     } else {
         Register i = ToRegister(index);
-        BaseIndex argPtr(StackPointer, i, ScaleFromShift(sizeof(Value)), argvOffset);
+        BaseIndex argPtr(StackPointer, i, ScaleFromElemWidth(sizeof(Value)), argvOffset);
         masm.loadValue(argPtr, result);
     }
     return true;
@@ -4411,14 +4411,14 @@ CodeGenerator::visitLoadTypedArrayElement(LLoadTypedArrayElement *lir)
     AnyRegister out = ToAnyRegister(lir->output());
 
     int arrayType = lir->mir()->arrayType();
-    int shift = TypedArray::slotWidth(arrayType);
+    int width = TypedArray::slotWidth(arrayType);
 
     Label fail;
     if (lir->index()->isConstant()) {
-        Address source(elements, ToInt32(lir->index()) * shift);
+        Address source(elements, ToInt32(lir->index()) * width);
         masm.loadFromTypedArray(arrayType, source, out, temp, &fail);
     } else {
-        BaseIndex source(elements, ToRegister(lir->index()), ScaleFromShift(shift));
+        BaseIndex source(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
         masm.loadFromTypedArray(arrayType, source, out, temp, &fail);
     }
 
@@ -4468,14 +4468,14 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
     masm.loadPtr(Address(object, TypedArray::dataOffset()), scratch);
 
     int arrayType = lir->mir()->arrayType();
-    int shift = TypedArray::slotWidth(arrayType);
+    int width = TypedArray::slotWidth(arrayType);
 
     Label fail;
     if (key.isConstant()) {
-        Address source(scratch, key.constant() * shift);
+        Address source(scratch, key.constant() * width);
         masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
     } else {
-        BaseIndex source(scratch, key.reg(), ScaleFromShift(shift));
+        BaseIndex source(scratch, key.reg(), ScaleFromElemWidth(width));
         masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
     }
 
@@ -4535,13 +4535,13 @@ CodeGenerator::visitStoreTypedArrayElement(LStoreTypedArrayElement *lir)
     const LAllocation *value = lir->value();
 
     int arrayType = lir->mir()->arrayType();
-    int shift = TypedArray::slotWidth(arrayType);
+    int width = TypedArray::slotWidth(arrayType);
 
     if (lir->index()->isConstant()) {
-        Address dest(elements, ToInt32(lir->index()) * shift);
+        Address dest(elements, ToInt32(lir->index()) * width);
         StoreToTypedArray(masm, arrayType, value, dest);
     } else {
-        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromShift(shift));
+        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
         StoreToTypedArray(masm, arrayType, value, dest);
     }
 

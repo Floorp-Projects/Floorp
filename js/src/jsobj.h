@@ -217,6 +217,7 @@ extern Class IntlClass;
 extern Class JSONClass;
 extern Class MapIteratorClass;
 extern Class MathClass;
+extern Class ModuleClass;
 extern Class NumberClass;
 extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
@@ -243,6 +244,7 @@ class ElementIteratorObject;
 class GlobalObject;
 class MapObject;
 class MapIteratorObject;
+class Module;
 class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
@@ -269,7 +271,7 @@ class WithObject;
  * The JSFunction struct is an extension of this struct allocated from a larger
  * GC size-class.
  */
-struct JSObject : public js::ObjectImpl
+class JSObject : public js::ObjectImpl
 {
   private:
     friend class js::Shape;
@@ -975,6 +977,7 @@ struct JSObject : public js::ObjectImpl
     inline bool isGenerator() const;
     inline bool isGlobal() const;
     inline bool isMapIterator() const;
+    inline bool isModule() const;
     inline bool isObject() const;
     inline bool isPrimitive() const;
     inline bool isPropertyIterator() const;
@@ -1031,6 +1034,7 @@ struct JSObject : public js::ObjectImpl
     inline js::GlobalObject &asGlobal();
     inline js::MapObject &asMap();
     inline js::MapIteratorObject &asMapIterator();
+    inline js::Module &asModule();
     inline js::NestedScopeObject &asNestedScope();
     inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
@@ -1338,12 +1342,13 @@ GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, 
  * store the property value in *vp.
  */
 extern bool
-HasDataProperty(JSContext *cx, HandleObject obj, jsid id, Value *vp);
+HasDataProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
 
 inline bool
 HasDataProperty(JSContext *cx, HandleObject obj, PropertyName *name, Value *vp)
 {
-    return HasDataProperty(cx, obj, NameToId(name), vp);
+    RootedId id(cx, NameToId(name));
+    return HasDataProperty(cx, obj, id, vp);
 }
 
 extern JSBool

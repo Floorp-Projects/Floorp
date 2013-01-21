@@ -144,7 +144,7 @@ intrinsic_DecompileArg(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args.length() == 2);
 
     RootedValue value(cx, args[1]);
-    ScopedFreePtr<char> str(DecompileArgument(cx, args[0].toInt32(), value));
+    ScopedJSFreePtr<char> str(DecompileArgument(cx, args[0].toInt32(), value));
     if (!str)
         return false;
     RootedAtom atom(cx, Atomize(cx, str, strlen(str)));

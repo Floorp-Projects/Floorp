@@ -156,6 +156,7 @@ CPPSRCS		= \
 		StringBuffer.cpp \
 		Unicode.cpp \
 		Xdr.cpp \
+		Module.cpp \
 		$(NULL)
 
 # Changes to internal header files, used externally, massively slow down

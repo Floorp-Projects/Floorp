@@ -863,23 +863,47 @@ function runTest(testNum) {
 
     case 28:
         // Context menu for selected text in input[type="password"]
-          checkContextMenu(["context-undo",        false,
-                            "---",                 null,
-                            "context-cut",         true,
-                            "context-copy",        true,
-                            "context-paste",       null, // ignore clipboard state
-                            "context-delete",      true,
-                            "---",                 null,
-                            "context-selectall",   true,
-                            "---",                 null,
-                            "spell-check-enabled", true,
-                            //spell checker is shown on input[type="password"] on this testcase
-                            "spell-dictionaries",  true,
-                                ["spell-check-dictionary-en-US", true,
-                                 "---",                          null,
-                                 "spell-add-dictionaries",       true], null
-                           ].concat(inspectItems));
+        checkContextMenu(["context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         true,
+                          "context-copy",        true,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      true,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-check-enabled", true,
+                          //spell checker is shown on input[type="password"] on this testcase
+                          "spell-dictionaries",  true,
+                              ["spell-check-dictionary-en-US", true,
+                               "---",                          null,
+                               "spell-add-dictionaries",       true], null
+                         ].concat(inspectItems));
         closeContextMenu();
+        subwindow.getSelection().removeAllRanges();
+        openContextMenuFor(plugin);
+        return;
+
+    case 29:
+        // Context menu for click-to-play blocked plugin
+        checkContextMenu(["context-ctp-play",     true,
+                          "context-ctp-hide",     true,
+                          "---",                  null,
+                          "context-back",         false,
+                          "context-forward",      false,
+                          "context-reload",       true,
+                          "---",                  null,
+                          "context-bookmarkpage", true,
+                          "context-savepage",     true,
+                          "---",                  null,
+                          "context-viewbgimage",  false,
+                          "context-selectall",    true,
+                          "---",                  null,
+                          "context-viewsource",   true,
+                          "context-viewinfo",     true
+                         ].concat(inspectItems));
+        closeContextMenu();
+        SpecialPowers.clearUserPref("plugins.click_to_play");
 
         // finish test
         subwindow.close();
@@ -908,7 +932,8 @@ var subwindow, chromeWin, contextMenu, lastElement;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
     inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
-    selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password;
+    selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password,
+    plugin;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -956,6 +981,7 @@ function startTest() {
     selecttextlink = subwindow.document.getElementById("test-select-text-link");
     select_inputtext = subwindow.document.getElementById("test-select-input-text");
     select_inputtext_password = subwindow.document.getElementById("test-select-input-text-type-password");
+    plugin = subwindow.document.getElementById("test-plugin");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);
@@ -979,6 +1005,8 @@ function waitForEvents(event)
     startTest();
   }
 }
+
+SpecialPowers.setBoolPref("plugins.click_to_play", true);
 
 var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=800");
 subwindow.addEventListener("MozAfterPaint", waitForEvents, false);

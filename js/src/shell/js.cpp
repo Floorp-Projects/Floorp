@@ -94,17 +94,15 @@ typedef enum JSShellExitCode {
 
 size_t gStackChunkSize = 8192;
 
-/* Assume that we can not use more than 5e5 bytes of C stack by default. */
-#if (defined(DEBUG) && defined(__SUNPRO_CC))  || defined(JS_CPU_SPARC)
-/* Sun compiler uses larger stack space for js_Interpret() with debug
-   Use a bigger gMaxStackSize to make "make check" happy. */
-#define DEFAULT_MAX_STACK_SIZE 5000000
+/*
+ * Note: This limit should match the stack limit set by the browser in
+ *       js/xpconnect/src/XPCJSRuntime.cpp
+ */
+#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
+size_t gMaxStackSize = 2 * 128 * sizeof(size_t) * 1024;
 #else
-#define DEFAULT_MAX_STACK_SIZE 500000
+size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
 #endif
-
-size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
-
 
 #ifdef JS_THREADSAFE
 static unsigned gStackBaseThreadIndex;
@@ -5344,6 +5342,9 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addBoolOption('\0', "baseline", "Enable baseline compiler (default)")
         || !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler")
+#ifdef JSGC_GENERATIONAL
+        || !op.addBoolOption('\0', "ggc", "Enable Generational GC")
+#endif
     )
     {
         return EXIT_FAILURE;
@@ -5383,6 +5384,9 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
+#ifdef JSGC_GENERATIONAL
+    JS_SetGCParameter(rt, JSGC_ENABLE_GENERATIONAL, op.getBoolOption("ggc"));
+#endif
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetSecurityCallbacks(rt, &securityCallbacks);

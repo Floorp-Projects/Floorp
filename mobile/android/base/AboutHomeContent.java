@@ -195,10 +195,12 @@ public class AboutHomeContent extends ScrollView
                     menu.findItem(R.id.abouthome_topsites_unpinall).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 } else {
-                    // If there's nothing pinned here, hide the clear item
                     PinnedSite site = cursor.getPinnedSite(info.position);
                     if (site == null) {
+                        // If there's nothing pinned here, hide the clear item
                         menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
+                    } else {
+                        menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                     }
                 }
             }

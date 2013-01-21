@@ -172,13 +172,16 @@ IonFrameIterator::script() const
 }
 
 void
-IonFrameIterator::baselineScriptAndPc(MutableHandleScript scriptRes, jsbytecode **pcRes) const
+IonFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) const
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(isBaselineJS());
-    scriptRes.set(script());
+    UnrootedScript script = this->script();
+    if (scriptRes)
+        *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
-    *pcRes = scriptRes->baseline->icEntryFromReturnAddress(retAddr).pc(scriptRes);
+    if (pcRes)
+        *pcRes = script->baseline->icEntryFromReturnAddress(retAddr).pc(script);
 }
 
 Value *
@@ -328,7 +331,7 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
 
     RootedScript script(cx);
     jsbytecode *pc;
-    frame.baselineScriptAndPc(&script, &pc);
+    frame.baselineScriptAndPc(script.address(), &pc);
 
     if (!script->hasTrynotes())
         return;
@@ -389,7 +392,7 @@ ion::HandleException(ResumeFromException *rfe)
         if (iter.isOptimizedJS()) {
             // Search each inlined frame for live iterator objects, and close
             // them.
-            InlineFrameIterator frames(&iter);
+            InlineFrameIterator frames(cx, &iter);
             for (;;) {
                 CloseLiveIterators(cx, frames);
 
@@ -765,7 +768,7 @@ ion::AutoTempAllocatorRooter::trace(JSTracer *trc)
 }
 
 void
-ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRes)
+ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
     JS_ASSERT(cx->fp()->beginsIonActivation());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
@@ -794,8 +797,8 @@ ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRe
     jsbytecode *pc = NULL;
 
     if (it.isOptimizedJS()) {
-        InlineFrameIterator ifi(&it);
-        scriptRes.set(ifi.script());
+        InlineFrameIterator ifi(cx, &it);
+        *scriptRes = ifi.script();
         pc = ifi.pc();
     } else {
         if (it.isBaselineStub())
@@ -809,7 +812,7 @@ ion::GetPcScript(JSContext *cx, MutableHandleScript scriptRes, jsbytecode **pcRe
 
     // Add entry to cache.
     if (rt->ionPcScriptCache)
-        rt->ionPcScriptCache->add(hash, retAddr, pc, (RawScript)scriptRes);
+        rt->ionPcScriptCache->add(hash, retAddr, pc, *scriptRes);
 }
 
 void
@@ -982,23 +985,30 @@ IonFrameIterator::osiIndex() const
     return ionScript()->getOsiIndex(reader.osiReturnPointOffset());
 }
 
-InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter)
-  : frame_(iter),
-    framesRead_(0),
-    callee_(NULL),
-    script_(NULL)
+InlineFrameIterator::InlineFrameIterator(JSContext *cx, const IonFrameIterator *iter)
+  : callee_(cx),
+    script_(cx)
 {
+    resetOn(iter);
+}
+
+void
+InlineFrameIterator::resetOn(const IonFrameIterator *iter)
+{
+    frame_ = iter;
+    framesRead_ = 0;
+
     if (iter) {
         start_ = SnapshotIterator(*iter);
         findNextFrame();
     }
 }
 
-InlineFrameIterator::InlineFrameIterator(const InlineFrameIterator *iter)
+InlineFrameIterator::InlineFrameIterator(JSContext *cx, const InlineFrameIterator *iter)
   : frame_(iter->frame_),
     framesRead_(0),
-    callee_(NULL),
-    script_(NULL)
+    callee_(cx),
+    script_(cx)
 {
     if (frame_) {
         start_ = SnapshotIterator(*frame_);
@@ -1087,7 +1097,7 @@ InlineFrameIterator::isConstructing() const
 {
     // Skip the current frame and look at the caller's.
     if (more()) {
-        InlineFrameIterator parent(*this);
+        InlineFrameIterator parent(GetIonContext()->cx, this);
         ++parent;
 
         // Inlined Getters and Setters are never constructing.
@@ -1115,7 +1125,7 @@ IonFrameIterator::isConstructing() const
 
     if (parent.isOptimizedJS()) {
         // In the case of a JS frame, look up the pc from the snapshot.
-        InlineFrameIterator inlinedParent(&parent);
+        InlineFrameIterator inlinedParent(GetIonContext()->cx, &parent);
 
         //Inlined Getters and Setters are never constructing.
         if (IsGetterPC(inlinedParent.pc()) || IsSetterPC(inlinedParent.pc()))
@@ -1127,11 +1137,8 @@ IonFrameIterator::isConstructing() const
     }
 
     if (parent.isBaselineJS()) {
-        JSContext *cx = GetIonContext()->cx;
-        RootedScript script(cx);
         jsbytecode *pc;
-
-        parent.baselineScriptAndPc(&script, &pc);
+        parent.baselineScriptAndPc(NULL, &pc);
 
         JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
 
@@ -1242,7 +1249,7 @@ IonFrameIterator::dump() const
         break;
       case IonFrame_OptimizedJS:
       {
-        InlineFrameIterator frames(this);
+        InlineFrameIterator frames(GetIonContext()->cx, this);
         for (;;) {
             frames.dump();
             if (!frames.more())
@@ -1307,7 +1314,7 @@ IonFrameIterator::dumpBaseline() const
     JSContext *cx = GetIonContext()->cx;
     RootedScript script(cx);
     jsbytecode *pc;
-    baselineScriptAndPc(&script, &pc);
+    baselineScriptAndPc(script.address(), &pc);
 
     fprintf(stderr, "  script = %p, pc = %p (offset %u)\n", (void *)script, pc, uint32_t(pc - script->code));
     fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
@@ -1372,7 +1379,7 @@ InlineFrameIterator::dump() const
             else {
                 if (i - 2 == callee()->nargs && numActualArgs() > callee()->nargs) {
                     DumpOp d(callee()->nargs);
-                    forEachCanonicalActualArg(d, d.i_, numActualArgs() - d.i_);
+                    forEachCanonicalActualArg(GetIonContext()->cx, d, d.i_, numActualArgs() - d.i_);
                 }
 
                 fprintf(stderr, "  slot %d: ", i - 2 - callee()->nargs);

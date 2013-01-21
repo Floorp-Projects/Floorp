@@ -258,40 +258,113 @@ let StackRenderer = {
 
     aDiv.appendChild(document.createElement("br"));
     aDiv.appendChild(document.createElement("br"));
+  },
+  renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
+                                                    aMemoryMap, aRenderHeader) {
+    let div = document.getElementById(aPrefix + '-data');
+    clearDivData(div);
+
+    let fetchE = document.getElementById(aPrefix + '-fetch-symbols');
+    if (fetchE) {
+      fetchE.classList.remove("hidden");
+    }
+    let hideE = document.getElementById(aPrefix + '-hide-symbols');
+    if (hideE) {
+      hideE.classList.add("hidden");
+    }
+
+    if (aStacks.length == 0) {
+      showEmptySectionMessage(aPrefix + '-section');
+      return;
+    }
+
+    this.renderMemoryMap(div, aMemoryMap);
+
+    for (let i = 0; i < aStacks.length; ++i) {
+      let stack = aStacks[i];
+      aRenderHeader(i);
+      this.renderStack(div, stack)
+    }
+  },
+  renderSymbolicatedStacks:
+    function StackRenderer_renderSymbolicatedStacks(aPrefix, aRequest,
+                                                    aRenderHeader) {
+    if (aRequest.readyState != 4)
+      return;
+
+    document.getElementById(aPrefix + "-fetch-symbols").classList.add("hidden");
+    document.getElementById(aPrefix + "-hide-symbols").classList.remove("hidden");
+    let div = document.getElementById(aPrefix + "-data");
+    clearDivData(div);
+    let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
+
+    if (aRequest.status != 200) {
+      div.appendChild(document.createTextNode(errorMessage));
+      return;
+    }
+
+    let jsonResponse = {};
+    try {
+      jsonResponse = JSON.parse(aRequest.responseText);
+    } catch (e) {
+      div.appendChild(document.createTextNode(errorMessage));
+      return;
+    }
+
+    for (let i = 0; i < jsonResponse.length; ++i) {
+      let stack = jsonResponse[i];
+      aRenderHeader(i);
+
+      for (let symbol of stack) {
+        div.appendChild(document.createTextNode(symbol));
+        div.appendChild(document.createElement("br"));
+      }
+      div.appendChild(document.createElement("br"));
+    }
   }
 };
+
+function SymbolicationRequest(aPrefix, aRenderHeader, aMemoryMap, aStacks) {
+  this.prefix = aPrefix;
+  this.renderHeader = aRenderHeader;
+  this.memoryMap = aMemoryMap;
+  this.stacks = aStacks;
+}
+SymbolicationRequest.prototype.handleSymbolResponse = function() {
+  StackRenderer.renderSymbolicatedStacks(this.prefix, this.symbolRequest,
+                                         this.renderHeader);
+};
+SymbolicationRequest.prototype.fetchSymbols = function() {
+  let symbolServerURI =
+    getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
+  let request = {"memoryMap" : this.memoryMap, "stacks" : this.stacks,
+                 "version" : 3};
+  let requestJSON = JSON.stringify(request);
+
+  this.symbolRequest = XMLHttpRequest();
+  this.symbolRequest.open("POST", symbolServerURI, true);
+  this.symbolRequest.setRequestHeader("Content-type", "application/json");
+  this.symbolRequest.setRequestHeader("Content-length",
+                                      requestJSON.length);
+  this.symbolRequest.setRequestHeader("Connection", "close");
+  this.symbolRequest.onreadystatechange = this.handleSymbolResponse.bind(this);
+  this.symbolRequest.send(requestJSON);
+}
 
 let ChromeHangs = {
 
   symbolRequest: null,
 
-  errorMessage: bundle.GetStringFromName("errorFetchingSymbols"),
-
   /**
    * Renders raw chrome hang data
    */
   render: function ChromeHangs_render() {
-    let hangsDiv = document.getElementById("chrome-hangs-data");
-    clearDivData(hangsDiv);
-    document.getElementById("fetch-symbols").classList.remove("hidden");
-    document.getElementById("hide-symbols").classList.add("hidden");
-
     let hangs = Telemetry.chromeHangs;
     let stacks = hangs.stacks;
-    if (stacks.length == 0) {
-      showEmptySectionMessage("chrome-hangs-section");
-      return;
-    }
-
     let memoryMap = hangs.memoryMap;
-    StackRenderer.renderMemoryMap(hangsDiv, memoryMap);
 
-    let durations = hangs.durations;
-    for (let i = 0; i < stacks.length; ++i) {
-      let stack = stacks[i];
-      this.renderHangHeader(hangsDiv, i + 1, durations[i]);
-      StackRenderer.renderStack(hangsDiv, stack)
-    }
+    StackRenderer.renderStacks("chrome-hangs", stacks, memoryMap,
+			       this.renderHangHeader);
   },
 
   /**
@@ -301,83 +374,19 @@ let ChromeHangs = {
    * @param aIndex The number of the hang
    * @param aDuration The duration of the hang
    */
-  renderHangHeader: function ChromeHangs_renderHangHeader(aDiv, aIndex, aDuration) {
+  renderHangHeader: function ChromeHangs_renderHangHeader(aIndex) {
+    let div = document.getElementById("chrome-hangs-data");
+
     let titleElement = document.createElement("span");
     titleElement.className = "hang-title";
 
+    let durations = Telemetry.chromeHangs.durations;
     let titleText = bundle.formatStringFromName(
-      "hangTitle", [aIndex, aDuration], 2);
+      "hangTitle", [aIndex + 1, durations[aIndex]], 2);
     titleElement.appendChild(document.createTextNode(titleText));
 
-    aDiv.appendChild(titleElement);
-    aDiv.appendChild(document.createElement("br"));
-  },
-
-  /**
-   * Sends a symbolication request for the recorded hangs
-   */
-  fetchSymbols: function ChromeHangs_fetchSymbols() {
-    let symbolServerURI =
-      getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
-
-    let hangs = Telemetry.chromeHangs;
-    let memoryMap = hangs.memoryMap;
-    let stacks = hangs.stacks;
-    let request = {"memoryMap" : memoryMap, "stacks" : stacks,
-                   "version" : 3};
-    let requestJSON = JSON.stringify(request);
-
-    this.symbolRequest = XMLHttpRequest();
-    this.symbolRequest.open("POST", symbolServerURI, true);
-    this.symbolRequest.setRequestHeader("Content-type", "application/json");
-    this.symbolRequest.setRequestHeader("Content-length", requestJSON.length);
-    this.symbolRequest.setRequestHeader("Connection", "close");
-
-    this.symbolRequest.onreadystatechange = this.handleSymbolResponse.bind(this);
-    this.symbolRequest.send(requestJSON);
-  },
-
-  /**
-   * Called when the 'readyState' of the XMLHttpRequest changes. We only care
-   * about state 4 ("completed") - handling the response data.
-   */
-  handleSymbolResponse: function ChromeHangs_handleSymbolResponse() {
-    if (this.symbolRequest.readyState != 4)
-      return;
-
-    document.getElementById("fetch-symbols").classList.add("hidden");
-    document.getElementById("hide-symbols").classList.remove("hidden");
-
-    let hangsDiv = document.getElementById("chrome-hangs-data");
-    clearDivData(hangsDiv);
-
-    if (this.symbolRequest.status != 200) {
-      hangsDiv.appendChild(document.createTextNode(this.errorMessage));
-      return;
-    }
-
-    let jsonResponse = {};
-    try {
-      jsonResponse = JSON.parse(this.symbolRequest.responseText);
-    } catch (e) {
-      hangsDiv.appendChild(document.createTextNode(this.errorMessage));
-      return;
-    }
-
-    let hangs = Telemetry.chromeHangs;
-    let stacks = hangs.stacks;
-    let durations = hangs.durations;
-    for (let i = 0; i < jsonResponse.length; ++i) {
-      let stack = jsonResponse[i];
-      let hangDuration = durations[i];
-      this.renderHangHeader(hangsDiv, i + 1, hangDuration);
-
-      for (let symbol of stack) {
-        hangsDiv.appendChild(document.createTextNode(symbol));
-        hangsDiv.appendChild(document.createElement("br"));
-      }
-      hangsDiv.appendChild(document.createElement("br"));
-    }
+    div.appendChild(titleElement);
+    div.appendChild(document.createElement("br"));
   }
 };
 
@@ -645,15 +654,35 @@ function setupListeners() {
       Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, !value);
   }, false);
 
-  document.getElementById("fetch-symbols").addEventListener("click",
+  document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
     function () {
-      ChromeHangs.fetchSymbols();
+      let hangs = Telemetry.chromeHangs;
+      let req = new SymbolicationRequest("chrome-hangs",
+                                         ChromeHangs.renderHangHeader,
+                                         hangs.memoryMap, hangs.stacks);
+      req.fetchSymbols();
   }, false);
 
-  document.getElementById("hide-symbols").addEventListener("click",
+  document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
     function () {
       ChromeHangs.render();
   }, false);
+
+  document.getElementById("late-writes-fetch-symbols").addEventListener("click",
+    function () {
+      let lateWrites = TelemetryPing.getPayload().lateWrites;
+      let req = new SymbolicationRequest("late-writes", function() {},
+                                         lateWrites.memoryMap,
+                                         lateWrites.stacks);
+      req.fetchSymbols();
+  }, false);
+
+  document.getElementById("late-writes-hide-symbols").addEventListener("click",
+    function () {
+      let ping = TelemetryPing.getPayload();
+      LateWritesSingleton.renderLateWrites(ping.lateWrites);
+  }, false);
+
 
   // Clicking on the section name will toggle its state
   let sectionHeaders = document.getElementsByClassName("section-name");
@@ -715,23 +744,10 @@ function onLoad() {
 
 let LateWritesSingleton = {
   renderLateWrites: function LateWritesSingleton_renderLateWrites(lateWrites) {
-    let writesDiv = document.getElementById("late-writes-data");
-    clearDivData(writesDiv);
-    // FIXME: Add symbolication support. Refactor with the chrome hang one.
-
     let stacks = lateWrites.stacks;
-    if (stacks.length == 0) {
-      showEmptySectionMessage("late-writes-section");
-      return;
-    }
-
     let memoryMap = lateWrites.memoryMap;
-    StackRenderer.renderMemoryMap(writesDiv, memoryMap);
-
-    for (let i = 0; i < stacks.length; ++i) {
-      let stack = stacks[i];
-      StackRenderer.renderStack(writesDiv, stack);
-    }
+    function f() {}
+    StackRenderer.renderStacks('late-writes', stacks, memoryMap, f);
   }
 };
 

@@ -57,7 +57,7 @@ BaselineCompiler::compile()
     }
 
     // Pin analysis info during compilation.
-    analyze::AutoEnterAnalysis autoEnterAnalysis(cx);
+    types::AutoEnterAnalysis autoEnterAnalysis(cx);
 
     if (!emitPrologue())
         return Method_Error;

@@ -412,7 +412,6 @@ user_pref("reftest.uri", "%s");
 // Set a future policy version to avoid the telemetry prompt.
 user_pref("toolkit.telemetry.prompted", 999);
 user_pref("toolkit.telemetry.notifiedOptOut", 999);
-user_pref("marionette.loadearly", true);
 """ % reftestlist)
 
         #workaround for jsreftests.

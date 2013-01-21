@@ -12,9 +12,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/promise/core.js");
 
 const COOKIE_EXPIRY = Math.round(Date.now() / 1000) + 60;
 const COOKIE_NAME = "testcookie";
@@ -48,32 +52,87 @@ function uri(aURIString)
 }
 
 /**
- * Adds a visit to history.
+ * Asynchronously adds visits to a page.
  *
- * @param aURI
- *        The URI to add.
+ * @param aPlaceInfo
+ *        Can be an nsIURI, in such a case a single LINK visit will be added.
+ *        Otherwise can be an object describing the visit to add, or an array
+ *        of these objects:
+ *          { uri: nsIURI of the page,
+ *            transition: one of the TRANSITION_* from nsINavHistoryService,
+ *            [optional] title: title of the page,
+ *            [optional] visitDate: visit date in microseconds from the epoch
+ *            [optional] referrer: nsIURI of the referrer for this visit
+ *          }
+ *
+ * @return {Promise}
+ * @resolves When all visits have been added successfully.
+ * @rejects JavaScript exception.
  */
-function add_visit(aURI)
+function promiseAddVisits(aPlaceInfo)
 {
-  check_visited(aURI, false);
-  PlacesUtils.history.addVisit(aURI, Date.now() * 1000, null,
-                               Ci.nsINavHistoryService.TRANSITION_LINK, false,
-                               0);
-  check_visited(aURI, true);
+  let deferred = Promise.defer();
+  let places = [];
+  if (aPlaceInfo instanceof Ci.nsIURI) {
+    places.push({ uri: aPlaceInfo });
+  }
+  else if (Array.isArray(aPlaceInfo)) {
+    places = places.concat(aPlaceInfo);
+  } else {
+    places.push(aPlaceInfo)
+  }
+
+  // Create mozIVisitInfo for each entry.
+  let now = Date.now();
+  for (let i = 0; i < places.length; i++) {
+    if (!places[i].title) {
+      places[i].title = "test visit for " + places[i].uri.spec;
+    }
+    places[i].visits = [{
+      transitionType: places[i].transition === undefined ? Ci.nsINavHistoryService.TRANSITION_LINK
+                                                         : places[i].transition,
+      visitDate: places[i].visitDate || (now++) * 1000,
+      referrerURI: places[i].referrer
+    }];
+  }
+
+  PlacesUtils.asyncHistory.updatePlaces(
+    places,
+    {
+      handleError: function handleError(aResultCode, aPlaceInfo) {
+        let ex = new Components.Exception("Unexpected error in adding visits.",
+                                          aResultCode);
+        deferred.reject(ex);
+      },
+      handleResult: function () {},
+      handleCompletion: function handleCompletion() {
+        deferred.resolve();
+      }
+    }
+  );
+
+  return deferred.promise;
 }
 
+
 /**
- * Checks to ensure a URI string is visited or not.
+ * Asynchronously check a url is visited.
  *
  * @param aURI
- *        The URI to check.
- * @param aIsVisited
- *        True if the URI should be visited, false otherwise.
+ *        The URI.
+ *
+ * @return {Promise}
+ * @resolves When the check has been added successfully.
+ * @rejects JavaScript exception.
  */
-function check_visited(aURI, aIsVisited)
+function promiseIsURIVisited(aURI)
 {
-  let checker = aIsVisited ? do_check_true : do_check_false;
-  checker(PlacesUtils.ghistory2.isVisited(aURI));
+  let deferred = Promise.defer();
+  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+    deferred.resolve(aIsVisited);
+  });
+
+  return deferred.promise;
 }
 
 /**
@@ -323,25 +382,31 @@ function check_preference_exists(aURI, aExists)
 function test_history_cleared_with_direct_match()
 {
   const TEST_URI = uri("http://mozilla.org/foo");
-  add_visit(TEST_URI);
+  do_check_false(yield promiseIsURIVisited(TEST_URI));
+  yield promiseAddVisits(TEST_URI);
+  do_check_true(yield promiseIsURIVisited(TEST_URI));
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_visited(TEST_URI, false);
+  do_check_false(yield promiseIsURIVisited(TEST_URI));
 }
 
 function test_history_cleared_with_subdomain()
 {
   const TEST_URI = uri("http://www.mozilla.org/foo");
-  add_visit(TEST_URI);
+  do_check_false(yield promiseIsURIVisited(TEST_URI));
+  yield promiseAddVisits(TEST_URI);
+  do_check_true(yield promiseIsURIVisited(TEST_URI));
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_visited(TEST_URI, false);
+  do_check_false(yield promiseIsURIVisited(TEST_URI));
 }
 
 function test_history_not_cleared_with_uri_contains_domain()
 {
   const TEST_URI = uri("http://ilovemozilla.org/foo");
-  add_visit(TEST_URI);
+  do_check_false(yield promiseIsURIVisited(TEST_URI));
+  yield promiseAddVisits(TEST_URI);
+  do_check_true(yield promiseIsURIVisited(TEST_URI));
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_visited(TEST_URI, true);
+  do_check_true(yield promiseIsURIVisited(TEST_URI));
 
   // Clear history since we left something there from this test.
   PlacesUtils.bhistory.removeAllPages();
@@ -544,6 +609,8 @@ function test_cache_cleared()
     observe: function(aSubject, aTopic, aData)
     {
       os.removeObserver(observer, "cacheservice:empty-cache");
+      // Shutdown the download manager.
+      Services.obs.notifyObservers(null, "quit-application", null);
       do_test_finished();
     }
   };
@@ -635,8 +702,7 @@ function run_test()
   Services.prefs.setBoolPref("places.history.enabled", true);
 
   for (let i = 0; i < tests.length; i++)
-    tests[i]();
+    add_task(tests[i]);
 
-  // Shutdown the download manager.
-  Services.obs.notifyObservers(null, "quit-application", null);
+  run_next_test();
 }

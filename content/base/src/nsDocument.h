@@ -1050,7 +1050,7 @@ protected:
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
-  bool TryChannelCharset(nsIChannel *aChannel,
+  void TryChannelCharset(nsIChannel *aChannel,
                          int32_t& aCharsetSource,
                          nsACString& aCharset,
                          nsHtml5TreeOpExecutor* aExecutor);

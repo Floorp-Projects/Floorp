@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH      = @DEPTH@
+topsrcdir  = @top_srcdir@
+srcdir     = @srcdir@
+VPATH      = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+packaged_fonts =  \
+	CharisSILCompact-R.ttf \
+	CharisSILCompact-B.ttf \
+	CharisSILCompact-I.ttf \
+	CharisSILCompact-BI.ttf \
+	OpenSans-Regular.ttf \
+	OpenSans-Bold.ttf \
+	OpenSans-Light.ttf \
+	OpenSans-Italic.ttf \
+	OpenSans-BoldItalic.ttf \
+	OpenSans-LightItalic.ttf \
+	$(NULL)
+
+GARBAGE += $(packaged_fonts)
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/testing/testsuite-targets.mk
+
+libs:: $(packaged_fonts)
+	$(INSTALL) $^ $(DIST)/bin/res/fonts/
+

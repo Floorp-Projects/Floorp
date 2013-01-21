@@ -2013,8 +2013,8 @@ END_CASE(JSOP_URSH)
 
 BEGIN_CASE(JSOP_ADD)
 {
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
     if (!AddOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
@@ -2416,7 +2416,7 @@ BEGIN_CASE(JSOP_FUNCALL)
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
     RootedScript funScript(cx, fun->nonLazyScript());
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;
 
     SET_SCRIPT(regs.fp()->script());
@@ -3984,43 +3984,49 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 }
 
 bool
-js::AddValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+js::AddValues(JSContext *cx, HandleScript script, jsbytecode *pc,
+              MutableHandleValue lhs, MutableHandleValue rhs,
               Value *res)
 {
     return AddOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::SubValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+js::SubValues(JSContext *cx, HandleScript script, jsbytecode *pc,
+              MutableHandleValue lhs, MutableHandleValue rhs,
               Value *res)
 {
     return SubOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::MulValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+js::MulValues(JSContext *cx, HandleScript script, jsbytecode *pc,
+              MutableHandleValue lhs, MutableHandleValue rhs,
               Value *res)
 {
     return MulOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::DivValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+js::DivValues(JSContext *cx, HandleScript script, jsbytecode *pc,
+              MutableHandleValue lhs, MutableHandleValue rhs,
               Value *res)
 {
     return DivOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::ModValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+js::ModValues(JSContext *cx, HandleScript script, jsbytecode *pc,
+              MutableHandleValue lhs, MutableHandleValue rhs,
               Value *res)
 {
     return ModOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::UrshValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
-              Value *res)
+js::UrshValues(JSContext *cx, HandleScript script, jsbytecode *pc,
+               MutableHandleValue lhs, MutableHandleValue rhs,
+               Value *res)
 {
     return UrshOperation(cx, script, pc, lhs, rhs, res);
 }

@@ -173,6 +173,15 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
                                         data->GetSize().width,
                                         data->GetSize().height,
                                         data->Stride());
+
+  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+  // covers the details of how to run into it, but the full detailed
+  // investigation hasn't been done to determine the underlying cause.  We
+  // will just handle the failure to allocate the surface to avoid a crash.
+  if (cairo_surface_status(surf)) {
+    return nullptr;
+  }
+
   cairo_surface_set_user_data(surf,
  				                      &surfaceDataKey,
  				                      data.forget().drop(),
@@ -746,6 +755,13 @@ CopyDataToCairoSurface(cairo_surface_t* aSurface,
                        int32_t aPixelWidth)
 {
   unsigned char* surfData = cairo_image_surface_get_data(aSurface);
+  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+  // covers the details of how to run into it, but the full detailed
+  // investigation hasn't been done to determine the underlying cause.  We
+  // will just handle the failure to allocate the surface to avoid a crash.
+  if (!surfData) {
+    return;
+  }
   for (int32_t y = 0; y < aSize.height; ++y) {
     memcpy(surfData + y * aSize.width * aPixelWidth,
            aData + y * aStride,
@@ -763,6 +779,14 @@ DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
   cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
                                                      aSize.width,
                                                      aSize.height);
+  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+  // covers the details of how to run into it, but the full detailed
+  // investigation hasn't been done to determine the underlying cause.  We
+  // will just handle the failure to allocate the surface to avoid a crash.
+  if (cairo_surface_status(surf)) {
+    return nullptr;
+  }
+
   CopyDataToCairoSurface(surf, aData, aSize, aStride, BytesPerPixel(aFormat));
 
   RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);

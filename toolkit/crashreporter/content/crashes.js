@@ -226,6 +226,10 @@ function clearReports() {
       file.remove(false);
     }
   }
+  entries = pendingDir.directoryEntries;
+  while (entries.hasMoreElements()) {
+    entries.getNext().QueryInterface(Ci.nsIFile).remove(false);
+  }
   document.getElementById("clear-reports").style.display = "none";
   document.getElementById("reportList").style.display = "none";
   document.getElementById("noReports").style.display = "block";

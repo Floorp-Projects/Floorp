@@ -652,7 +652,7 @@ array_toSource_impl(JSContext *cx, CallArgs args)
         if (hole) {
             str = cx->runtime->emptyString;
         } else {
-            str = js_ValueToSource(cx, elt);
+            str = ValueToSource(cx, elt);
             if (!str)
                 return false;
         }
@@ -875,7 +875,7 @@ static inline bool
 InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned count)
 {
     if (cx->typeInferenceEnabled() && !type->unknownProperties()) {
-        AutoEnterTypeInference enter(cx);
+        AutoEnterAnalysis enter(cx);
 
         TypeSet *types = type->getProperty(cx, JSID_VOID, true);
         if (!types)
@@ -950,14 +950,14 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     JS_ASSERT(start == MAX_ARRAY_INDEX + 1);
     RootedValue value(cx);
     RootedId id(cx);
-    Value idval = DoubleValue(MAX_ARRAY_INDEX + 1);
+    double index = MAX_ARRAY_INDEX + 1;
     do {
         value = *vector++;
-        if (!ValueToId(cx, idval, &id) ||
+        if (!ValueToId(cx, DoubleValue(index), &id) ||
             !JSObject::setGeneric(cx, obj, obj, id, &value, true)) {
             return false;
         }
-        idval.getDoubleRef() += 1;
+        index += 1;
     } while (vector != end);
 
     return true;
@@ -1007,10 +1007,12 @@ array_reverse(JSContext *cx, unsigned argc, Value *vp)
         /* Fill out the array's initialized length to its proper length. */
         obj->ensureDenseInitializedLength(cx, len, 0);
 
+        RootedValue origlo(cx), orighi(cx);
+
         uint32_t lo = 0, hi = len - 1;
         for (; lo < hi; lo++, hi--) {
-            Value origlo = obj->getDenseElement(lo);
-            Value orighi = obj->getDenseElement(hi);
+            origlo = obj->getDenseElement(lo);
+            orighi = obj->getDenseElement(hi);
             obj->setDenseElement(lo, orighi);
             if (orighi.isMagic(JS_ELEMENTS_HOLE) &&
                 !js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(lo))) {
@@ -1750,7 +1752,7 @@ TryReuseArrayType(JSObject *obj, JSObject *nobj)
  * modifications.
  */
 static inline bool
-CanOptimizeForDenseStorage(JSObject *arr, uint32_t startingIndex, uint32_t count, JSContext *cx)
+CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t count, JSContext *cx)
 {
     /* If the desired properties overflow dense storage, we can't optimize. */
     if (UINT32_MAX - startingIndex < count)

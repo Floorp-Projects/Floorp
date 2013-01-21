@@ -917,27 +917,32 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BinaryArith(%s)", js_CodeName[op]);
 
+    // Don't pass lhs/rhs directly, we need the original values when
+    // generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    RootedValue rhsCopy(cx, rhs);
+
     // Perform the compare operation.
     switch(op) {
       case JSOP_ADD:
         // Do an add.
-        if (!AddValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+        if (!AddValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_SUB:
-        if (!SubValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+        if (!SubValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_MUL:
-        if (!MulValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+        if (!MulValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_DIV:
-        if (!DivValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+        if (!DivValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_MOD:
-        if (!ModValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+        if (!ModValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_BITOR: {
@@ -1037,8 +1042,8 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     return true;
 }
 
-typedef bool (*DoBinaryArithFallbackFn)(JSContext *, ICBinaryArith_Fallback *, HandleValue, HandleValue,
-                                        MutableHandleValue);
+typedef bool (*DoBinaryArithFallbackFn)(JSContext *, ICBinaryArith_Fallback *, HandleValue,
+                                        HandleValue, MutableHandleValue);
 static const VMFunction DoBinaryArithFallbackInfo =
     FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback);
 
