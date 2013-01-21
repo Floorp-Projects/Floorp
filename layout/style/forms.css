@@ -76,15 +76,16 @@ input::-moz-placeholder {
   line-height: -moz-block-height;
 }
 
-/* Make sure that the location bar's alignment in RTL mode changes according
-   to the input box direction if the user switches the text direction using
-   cmd_switchTextDirection (which applies a dir attribute to the input box's
-   anonymous div. */
 @-moz-document url-prefix(chrome://) {
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div {
+  input.uri-element-right-align:-moz-locale-dir(rtl) {
+    direction: ltr !important;
     text-align: right !important;
   }
 
+  /* Make sure that the location bar's alignment in RTL mode changes according
+     to the input box direction if the user switches the text direction using
+     cmd_switchTextDirection (which applies a dir attribute to the input box's
+     anonymous div). */
   input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr] {
     text-align: left !important;
   }

@@ -221,8 +221,6 @@ splitmenu {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
-.uri-element-right-align:-moz-locale-dir(rtl),
-html|input.uri-element-right-align:-moz-locale-dir(rtl),
 .ac-url-text:-moz-locale-dir(rtl),
 .ac-title:-moz-locale-dir(rtl) > description {
   direction: ltr !important;
