@@ -1051,7 +1051,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
 bool
 ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thisv,
                                JSObject &scopeChain, ExecuteType type,
-                               StackFrame *evalInFrame, ExecuteFrameGuard *efg)
+                               AbstractFramePtr evalInFrame, ExecuteFrameGuard *efg)
 {
     AssertCanGC();
 
@@ -1071,14 +1071,14 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     MaybeExtend extend;
     if (evalInFrame) {
         /* Though the prev-frame is given, need to search for prev-call. */
-        StackSegment &seg = cx->stack.space().containingSegment(evalInFrame);
+        StackSegment &seg = cx->stack.space().containingSegment(evalInFrame.asStackFrame());
         StackIter iter(cx->runtime, seg);
         /* Debug-mode currently disables Ion compilation. */
-        JS_ASSERT(!evalInFrame->runningInIon());
-        JS_ASSERT_IF(evalInFrame->compartment() == iter.compartment(), !iter.isIon());
-        while (!iter.isScript() || iter.isIon() || iter.interpFrame() != evalInFrame) {
+        JS_ASSERT(!evalInFrame.asStackFrame()->runningInIon());
+        JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIon());
+        while (!iter.isScript() || iter.isIon() || iter.abstractFramePtr() != evalInFrame) {
             ++iter;
-            JS_ASSERT_IF(evalInFrame->compartment() == iter.compartment(), !iter.isIon());
+            JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIon());
         }
         evalInFrameCalls = iter.data_.calls_;
         extend = CANT_EXTEND;
@@ -1091,7 +1091,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     if (!firstUnused)
         return false;
 
-    StackFrame *prev = evalInFrame ? evalInFrame : maybefp();
+    StackFrame *prev = evalInFrame ? evalInFrame.asStackFrame() : maybefp();
     StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused + 2);
     fp->initExecuteFrame(script, prev, seg_->maybeRegs(), thisv, scopeChain, type);
     fp->initVarsToUndefined();
@@ -1762,7 +1762,7 @@ StackIter::abstractFramePtr() const
         break;
     }
     JS_NOT_REACHED("Unexpected state");
-    return AbstractFramePtr();
+    return NullFramePtr();
 }
 
 void
@@ -2155,5 +2155,5 @@ AllFramesIter::abstractFramePtr() const
         break;
     }
     JS_NOT_REACHED("Unexpected state");
-    return AbstractFramePtr();
+    return NullFramePtr();
 }
