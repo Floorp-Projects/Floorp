@@ -718,8 +718,10 @@ var gDownloadDNDObserver =
       url = dt.getData("text/x-moz-url") || dt.getData("text/plain");
       [url, name] = url.split("\n");
     }
-    if (url)
-      saveURL(url, name ? name : url, null, true, true, document);
+    if (url) {
+      let sourceDoc = dt.mozSourceNode ? dt.mozSourceNode.ownerDocument : document;
+      saveURL(url, name ? name : url, null, true, true, null, sourceDoc);
+    }
   }
 }
 
@@ -743,7 +745,7 @@ function pasteHandler() {
 
     let uri = Services.io.newURI(url, null, null);
 
-    saveURL(uri.spec, name || uri.spec, null, true, true, document);
+    saveURL(uri.spec, name || uri.spec, null, true, true, null, document);
   } catch (ex) {}
 }
 
