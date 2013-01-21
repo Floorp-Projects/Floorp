@@ -36,7 +36,6 @@
 #include "nsIFrame.h"
 #include "nsEventStates.h"
 #include "nsIServiceManager.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
 #include "nsGUIEvent.h"
@@ -1084,10 +1083,8 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
       }
     case NS_FORM_INPUT_DATE:
       {
-        JSContext* ctx = nsContentUtils::GetContextFromDocument(OwnerDoc());
-        if (!ctx) {
-          return false;
-        }
+        SafeAutoJSContext ctx;
+        JSAutoRequest ar(ctx);
 
         uint32_t year, month, day;
         if (!GetValueAsDate(aValue, &year, &month, &day)) {
@@ -1244,10 +1241,8 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
       return true;
     case NS_FORM_INPUT_DATE:
       {
-        JSContext* ctx = nsContentUtils::GetContextFromDocument(OwnerDoc());
-        if (!ctx) {
-          return false;
-        }
+        SafeAutoJSContext ctx;
+        JSAutoRequest ar(ctx);
 
         // The specs require |aValue| to be truncated.
         aValue = floor(aValue);
