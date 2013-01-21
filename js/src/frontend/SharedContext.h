@@ -15,6 +15,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+#include "builtin/Module.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
 #include "vm/ScopeObject.h"
