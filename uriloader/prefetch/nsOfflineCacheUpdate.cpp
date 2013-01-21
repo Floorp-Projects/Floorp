@@ -1171,18 +1171,18 @@ nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
                                      nsISupports *aContext,
                                      nsresult aStatus)
 {
-    // handle any leftover manifest data
-    nsCString::const_iterator begin, end;
-    mReadBuf.BeginReading(begin);
-    mReadBuf.EndReading(end);
-    nsresult rv = HandleManifestLine(begin, end);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     if (mBytesRead == 0) {
-        // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
-        // specified.)
+        // We didn't need to read (because LOAD_ONLY_IF_MODIFIED was
+        // specified).
         mNeedsUpdate = false;
     } else {
+        // Handle any leftover manifest data.
+        nsCString::const_iterator begin, end;
+        mReadBuf.BeginReading(begin);
+        mReadBuf.EndReading(end);
+        nsresult rv = HandleManifestLine(begin, end);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         rv = CheckNewManifestContentHash(aRequest);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2301,10 +2301,10 @@ nsOfflineCacheUpdate::AddURI(nsIURI *aURI, uint32_t aType)
     }
 
     nsRefPtr<nsOfflineCacheUpdateItem> item =
-        new nsOfflineCacheUpdateItem(aURI, 
+        new nsOfflineCacheUpdateItem(aURI,
                                      mDocumentURI,
                                      mApplicationCache,
-                                     mPreviousApplicationCache, 
+                                     mPreviousApplicationCache,
                                      aType);
     if (!item) return NS_ERROR_OUT_OF_MEMORY;
 
