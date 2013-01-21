@@ -1881,6 +1881,15 @@ Property.prototype.__iterator__ = function VV_iterator() {
 };
 
 /**
+ * Forget everything recorded about added scopes, variables or properties.
+ * @see VariablesView.createHierarchy
+ */
+VariablesView.prototype.clearHierarchy = function VV_clearHierarchy() {
+  this._prevHierarchy = new Map();
+  this._currHierarchy = new Map();
+};
+
+/**
  * Start recording a hierarchy of any added scopes, variables or properties.
  * @see VariablesView.commitHierarchy
  */
