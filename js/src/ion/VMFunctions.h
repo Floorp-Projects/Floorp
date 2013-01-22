@@ -471,6 +471,8 @@ bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
 
+bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn);
+
 } // namespace ion
 } // namespace js
 
