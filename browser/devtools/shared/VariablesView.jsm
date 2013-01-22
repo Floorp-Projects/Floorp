@@ -789,6 +789,18 @@ Scope.prototype = {
   set twisty(aFlag) aFlag ? this.showArrow() : this.hideArrow(),
 
   /**
+   * Gets the expand lock state.
+   * @return boolean
+   */
+  get locked() this._locked,
+
+  /**
+   * Sets the expand lock state.
+   * @param boolean aFlag
+   */
+  set locked(aFlag) this._locked = aFlag,
+
+  /**
    * Adds an event listener for a certain event on this scope's title.
    * @param string aName
    * @param function aCallback
@@ -1995,9 +2007,9 @@ VariablesView.isPrimitive = function VV_isPrimitive(aDescriptor) {
     return true;
   }
 
-  // For convenience, undefined and null are both considered types.
+  // For convenience, undefined, null and long strings are considered primitives.
   let type = grip.type;
-  if (type == "undefined" || type == "null") {
+  if (type == "undefined" || type == "null" || type == "longString") {
     return true;
   }
 
@@ -2092,6 +2104,8 @@ VariablesView.getString = function VV_getString(aGrip, aConciseFlag) {
         return "undefined";
       case "null":
         return "null";
+      case "longString":
+        return "\"" + aGrip.initial + "\"";
       default:
         if (!aConciseFlag) {
           return "[" + aGrip.type + " " + aGrip.class + "]";
