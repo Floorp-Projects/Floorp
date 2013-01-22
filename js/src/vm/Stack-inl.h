@@ -150,7 +150,6 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
     blockChain_= NULL;
     JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
 
     initVarsToUndefined();
 }

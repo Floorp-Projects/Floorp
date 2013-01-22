@@ -88,11 +88,7 @@ StackFrame::initExecuteFrame(UnrootedScript script, StackFrame *prev, FrameRegs 
     ncode_ = (void *)0xbad;
     Debug_SetValueRangeToCrashOnTouch(&rval_, 1);
     hookData_ = (void *)0xbad;
-    annotation_ = (void *)0xbad;
 #endif
-
-    if (prev && prev->annotation())
-        setAnnotation(prev->annotation());
 }
 
 template <StackFrame::TriggerPostBarriers doPostBarrier>
