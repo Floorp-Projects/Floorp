@@ -15,6 +15,17 @@ const NEW_SCRIPT_DISPLAY_DELAY = 200; // ms
 const FETCH_SOURCE_RESPONSE_DELAY = 50; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
 const CALL_STACK_PAGE_SIZE = 25; // frames
+const VARIABLES_VIEW_NON_SORTABLE = [
+  "Array",
+  "Int8Array",
+  "Uint8Array",
+  "Int16Array",
+  "Uint16Array",
+  "Int32Array",
+  "Uint32Array",
+  "Float32Array",
+  "Float64Array"
+];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -50,7 +61,6 @@ let DebuggerController = {
       return;
     }
     this._isInitialized = true;
-
     window.removeEventListener("load", this._startupDebugger, true);
 
     DebuggerView.initialize(function() {
@@ -365,6 +375,7 @@ ThreadState.prototype = {
     this.activeThread.addListener("paused", this._update);
     this.activeThread.addListener("resumed", this._update);
     this.activeThread.addListener("detached", this._update);
+    this.activeThread.pauseOnExceptions(Prefs.pauseOnExceptions);
     this._handleTabNavigation();
   },
 
@@ -671,7 +682,7 @@ StackFrames.prototype = {
       let label = this._getScopeLabel(environment);
       let scope = DebuggerView.Variables.addScope(label);
 
-      // Special additions to the innermost scope.
+      // Handle additions to the innermost scope.
       if (environment == frame.environment) {
         this._insertScopeFrameReferences(scope, frame);
         this._fetchScopeVariables(scope, environment);
@@ -703,7 +714,7 @@ StackFrames.prototype = {
     let callback = this._fetchScopeVariables.bind(this, aScope, aEnv);
 
     // It's a good idea to be prepared in case of an expansion.
-    aScope.onmouseover = callback;
+    aScope.addEventListener("mouseover", callback, false);
     // Make sure that variables are always available on expansion.
     aScope.onexpand = callback;
   },
@@ -727,7 +738,7 @@ StackFrames.prototype = {
     // Some variables are likely to contain a very large number of properties.
     // It's a good idea to be prepared in case of an expansion.
     if (aVar.name == "window" || aVar.name == "this") {
-      aVar.onmouseover = callback;
+      aVar.addEventListener("mouseover", callback, false);
     }
     // Make sure that properties are always available on expansion.
     aVar.onexpand = callback;
@@ -742,11 +753,11 @@ StackFrames.prototype = {
    *        The grip of the evaluation results.
    */
   _fetchWatchExpressions: function SF__fetchWatchExpressions(aScope, aExp) {
-    // Retrieve the expressions only once.
-    if (aScope.fetched) {
+    // Fetch the expressions only once.
+    if (aScope._fetched) {
       return;
     }
-    aScope.fetched = true;
+    aScope._fetched = true;
 
     // Add nodes for every watch expression in scope.
     this.activeThread.pauseGrip(aExp).getPrototypeAndProperties(function(aResponse) {
@@ -776,11 +787,11 @@ StackFrames.prototype = {
    *        The scope's environment.
    */
   _fetchScopeVariables: function SF__fetchScopeVariables(aScope, aEnv) {
-    // Retrieve the variables only once.
-    if (aScope.fetched) {
+    // Fetch the variables only once.
+    if (aScope._fetched) {
       return;
     }
-    aScope.fetched = true;
+    aScope._fetched = true;
 
     switch (aEnv.type) {
       case "with":
@@ -799,6 +810,10 @@ StackFrames.prototype = {
         // Add nodes for every argument and every other variable in scope.
         this._insertScopeArguments(aEnv.bindings.arguments, aScope);
         this._insertScopeVariables(aEnv.bindings.variables, aScope);
+
+        // No need to signal that variables have been fetched, since
+        // the scope arguments and variables are already attached to the
+        // environment bindings, so pausing the active thread is unnecessary.
         break;
       default:
         Cu.reportError("Unknown Debugger.Environment type: " + aEnv.type);
@@ -861,11 +876,11 @@ StackFrames.prototype = {
     }
     let variableNames = Object.keys(aVariables);
 
-    // Sort all of the variables before adding them if preferred.
+    // Sort all of the variables before adding them, if preferred.
     if (Prefs.variablesSortingEnabled) {
       variableNames.sort();
     }
-    // Add the sorted variables to the specified scope.
+    // Add the variables to the specified scope.
     for (let name of variableNames) {
       let varRef = aScope.addVar(name, aVariables[name]);
       let varVal = aVariables[name].value;
@@ -883,18 +898,19 @@ StackFrames.prototype = {
    *        The grip of the variable.
    */
   _fetchVarProperties: function SF__fetchVarProperties(aVar, aGrip) {
-    // Retrieve the properties only once.
-    if (aVar.fetched) {
+    // Fetch the properties only once.
+    if (aVar._fetched) {
       return;
     }
-    aVar.fetched = true;
+    aVar._fetched = true;
 
     this.activeThread.pauseGrip(aGrip).getPrototypeAndProperties(function(aResponse) {
       let { ownProperties, prototype } = aResponse;
+      let sortable = VARIABLES_VIEW_NON_SORTABLE.indexOf(aGrip.class) == -1;
 
       // Add all the variable properties.
       if (ownProperties) {
-        aVar.addProperties(ownProperties);
+        aVar.addProperties(ownProperties, { sorted: sortable });
         // Expansion handlers must be set after the properties are added.
         for (let name in ownProperties) {
           this._addVarExpander(aVar.get(name), ownProperties[name].value);
@@ -908,6 +924,7 @@ StackFrames.prototype = {
         this._addVarExpander(aVar.get("__proto__"), prototype);
       }
 
+      // Mark the variable as having retrieved all its properties.
       aVar._retrieved = true;
 
       // Signal that properties have been fetched.
@@ -1637,6 +1654,7 @@ Prefs.map("Int", "windowWidth", "devtools.debugger.ui.win-width");
 Prefs.map("Int", "windowHeight", "devtools.debugger.ui.win-height");
 Prefs.map("Int", "stackframesWidth", "devtools.debugger.ui.stackframes-width");
 Prefs.map("Int", "variablesWidth", "devtools.debugger.ui.variables-width");
+Prefs.map("Bool", "pauseOnExceptions", "devtools.debugger.ui.pause-on-exceptions");
 Prefs.map("Bool", "panesVisibleOnStartup", "devtools.debugger.ui.panes-visible-on-startup");
 Prefs.map("Bool", "variablesSortingEnabled", "devtools.debugger.ui.variables-sorting-enabled");
 Prefs.map("Bool", "variablesOnlyEnumVisible", "devtools.debugger.ui.variables-only-enum-visible");
