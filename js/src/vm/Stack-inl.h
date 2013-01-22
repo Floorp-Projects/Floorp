@@ -803,6 +803,14 @@ AbstractFramePtr::callee() const
     JS_NOT_REACHED("Invalid frame");
     return asStackFrame()->callee();
 }
+inline Value
+AbstractFramePtr::calleev() const
+{
+    if (isStackFrame())
+        return asStackFrame()->calleev();
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->calleev();
+}
 inline bool
 AbstractFramePtr::isNonEvalFunctionFrame() const
 {
