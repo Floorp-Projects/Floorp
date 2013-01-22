@@ -25,26 +25,14 @@ function test()
 
 function testFrameParameters()
 {
-  dump("Started testFrameParameters!\n");
-
   gDebugger.addEventListener("Debugger:FetchedVariables", function test() {
-    dump("Entered Debugger:FetchedVariables!\n");
-
     gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
     Services.tm.currentThread.dispatch({ run: function() {
-
-      dump("After currentThread.dispatch!\n");
 
       var frames = gDebugger.DebuggerView.StackFrames._container._list,
           localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[0],
           localNodes = localScope.querySelector(".details").childNodes,
           localNonEnums = localScope.querySelector(".nonenum").childNodes;
-
-      dump("Got our variables:\n");
-      dump("frames     - " + frames.constructor + "\n");
-      dump("localScope - " + localScope.constructor + "\n");
-      dump("localNodes - " + localNodes.constructor + "\n");
-      dump("localNonEnums - " + localNonEnums.constructor + "\n");
 
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
@@ -57,29 +45,58 @@ function testFrameParameters()
 
       is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
         "Should have the right property value for 'this'.");
+      is(localNodes[8].querySelector(".value").getAttribute("value"), "[object Arguments]",
+        "Should have the right property value for 'arguments'.");
+      is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Object]",
+        "Should have the right property value for 'c'.");
 
-      let thisNode, argumentsNode, cNode;
-      for (let [id, scope] in gDebugger.DebuggerView.Variables) {
-        if (scope.target === localScope) {
-          for (let [name, variable] in scope) {
-            if (variable.target === localNodes[0]) {
-              thisNode = variable;
-            }
-            if (variable.target === localNodes[8]) {
-              argumentsNode = variable;
-            }
-            if (variable.target === localNodes[10]) {
-              cNode = variable;
-            }
-          }
-        }
-      }
+
+      let gVars = gDebugger.DebuggerView.Variables;
+
+      is(gVars.getScopeForNode(
+         gVars._list.querySelectorAll(".scope")[0]).target,
+         gVars._list.querySelectorAll(".scope")[0],
+        "getScopeForNode([0]) didn't return the expected scope.");
+      is(gVars.getScopeForNode(
+         gVars._list.querySelectorAll(".scope")[1]).target,
+         gVars._list.querySelectorAll(".scope")[1],
+        "getScopeForNode([1]) didn't return the expected scope.");
+      is(gVars.getScopeForNode(
+         gVars._list.querySelectorAll(".scope")[2]).target,
+         gVars._list.querySelectorAll(".scope")[2],
+        "getScopeForNode([2]) didn't return the expected scope.");
+
+      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".scope")[0]).expanded, true,
+        "The local scope should be expanded by default.");
+      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".scope")[1]).expanded, false,
+        "The block scope should be collapsed by default.");
+      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".scope")[2]).expanded, false,
+        "The global scope should be collapsed by default.");
+
+
+      let thisNode = gVars.getVariableOrPropertyForNode(localNodes[0]);
+      let argumentsNode = gVars.getVariableOrPropertyForNode(localNodes[8]);
+      let cNode = gVars.getVariableOrPropertyForNode(localNodes[10]);
+
+      is(thisNode.expanded, false,
+        "The thisNode should not be expanded at this point.");
+      is(argumentsNode.expanded, false,
+        "The argumentsNode should not be expanded at this point.");
+      is(cNode.expanded, false,
+        "The cNode should not be expanded at this point.");
 
       // Expand the 'this', 'arguments' and 'c' tree nodes. This causes
       // their properties to be retrieved and displayed.
       thisNode.expand();
       argumentsNode.expand();
       cNode.expand();
+
+      is(thisNode.expanded, true,
+        "The thisNode should be expanded at this point.");
+      is(argumentsNode.expanded, true,
+        "The argumentsNode should be expanded at this point.");
+      is(cNode.expanded, true,
+        "The cNode should be expanded at this point.");
 
       // Poll every few milliseconds until the properties are retrieved.
       // It's important to set the timer in the chrome window, because the
@@ -98,51 +115,102 @@ function testFrameParameters()
           return;
         }
         window.clearInterval(intervalID);
-        is(thisNode.target.querySelector(".property > .title > .name")
-                        .getAttribute("value"), "InstallTrigger",
-          "Should have the right property name for InstallTrigger.");
-        ok(thisNode.target.querySelector(".property > .title > .value")
-                        .getAttribute("value").search(/object/) == -1,
-          "InstallTrigger should not be an object.");
+
+        is(thisNode.target.querySelector(".value")
+           .getAttribute("value"), "[object Proxy]",
+          "Should have the right property value for 'this'.");
+
+        is(thisNode.get("window").target.querySelector(".name")
+           .getAttribute("value"), "window",
+          "Should have the right property name for 'window'.");
+        ok(thisNode.get("window").target.querySelector(".value")
+           .getAttribute("value").search(/object/) != -1,
+          "'window' should be an object.");
+
+        is(thisNode.get("document").target.querySelector(".name")
+           .getAttribute("value"), "document",
+          "Should have the right property name for 'document'.");
+        ok(thisNode.get("document").target.querySelector(".value")
+           .getAttribute("value").search(/object/) != -1,
+          "'document' should be an object.");
+
 
         is(argumentsNode.target.querySelector(".value")
-                        .getAttribute("value"), "[object Arguments]",
-         "Should have the right property value for 'arguments'.");
-        ok(argumentsNode.target.querySelector(".property > .title > .value")
-                        .getAttribute("value").search(/object/) != -1,
-          "Arguments should be an object.");
+           .getAttribute("value"), "[object Arguments]",
+          "Should have the right property value for 'arguments'.");
+
+        is(argumentsNode.target.querySelectorAll(".property > .title > .name")[0]
+           .getAttribute("value"), "0",
+          "Should have the right property name for 'arguments[0]'.");
+        ok(argumentsNode.target.querySelectorAll(".property > .title > .value")[0]
+           .getAttribute("value").search(/object/) != -1,
+          "'arguments[0]' should be an object.");
 
         is(argumentsNode.target.querySelectorAll(".property > .title > .name")[7]
-                        .getAttribute("value"), "__proto__",
-         "Should have the right property name for '__proto__'.");
+           .getAttribute("value"), "__proto__",
+          "Should have the right property name for '__proto__'.");
         ok(argumentsNode.target.querySelectorAll(".property > .title > .value")[7]
-                        .getAttribute("value").search(/object/) != -1,
-          "__proto__ should be an object.");
+           .getAttribute("value").search(/object/) != -1,
+          "'__proto__' should be an object.");
+
 
         is(cNode.target.querySelector(".value")
-                         .getAttribute("value"), "[object Object]",
+           .getAttribute("value"), "[object Object]",
           "Should have the right property value for 'c'.");
 
         is(cNode.target.querySelectorAll(".property > .title > .name")[0]
-                         .getAttribute("value"), "a",
+           .getAttribute("value"), "a",
           "Should have the right property name for 'c.a'.");
         is(cNode.target.querySelectorAll(".property > .title > .value")[0]
-                         .getAttribute("value"), "1",
+           .getAttribute("value"), "1",
           "Should have the right value for 'c.a'.");
 
         is(cNode.target.querySelectorAll(".property > .title > .name")[1]
-                         .getAttribute("value"), "b",
+           .getAttribute("value"), "b",
           "Should have the right property name for 'c.b'.");
         is(cNode.target.querySelectorAll(".property > .title > .value")[1]
-                         .getAttribute("value"), "\"beta\"",
+           .getAttribute("value"), "\"beta\"",
           "Should have the right value for 'c.b'.");
 
         is(cNode.target.querySelectorAll(".property > .title > .name")[2]
-                         .getAttribute("value"), "c",
+           .getAttribute("value"), "c",
           "Should have the right property name for 'c.c'.");
         is(cNode.target.querySelectorAll(".property > .title > .value")[2]
-                         .getAttribute("value"), "true",
+           .getAttribute("value"), "true",
           "Should have the right value for 'c.c'.");
+
+
+        is(gVars.getVariableOrPropertyForNode(
+           cNode.target.querySelectorAll(".property")[0]).target,
+           cNode.target.querySelectorAll(".property")[0],
+          "getVariableOrPropertyForNode([0]) didn't return the expected property.");
+
+        is(gVars.getVariableOrPropertyForNode(
+           cNode.target.querySelectorAll(".property")[1]).target,
+           cNode.target.querySelectorAll(".property")[1],
+          "getVariableOrPropertyForNode([1]) didn't return the expected property.");
+
+        is(gVars.getVariableOrPropertyForNode(
+           cNode.target.querySelectorAll(".property")[2]).target,
+           cNode.target.querySelectorAll(".property")[2],
+          "getVariableOrPropertyForNode([2]) didn't return the expected property.");
+
+
+        is(cNode.find(
+           cNode.target.querySelectorAll(".property")[0]).target,
+           cNode.target.querySelectorAll(".property")[0],
+          "find([0]) didn't return the expected property.");
+
+        is(cNode.find(
+           cNode.target.querySelectorAll(".property")[1]).target,
+           cNode.target.querySelectorAll(".property")[1],
+          "find([1]) didn't return the expected property.");
+
+        is(cNode.find(
+           cNode.target.querySelectorAll(".property")[2]).target,
+           cNode.target.querySelectorAll(".property")[2],
+          "find([2]) didn't return the expected property.");
+
 
         resumeAndFinish();
       }, 100);

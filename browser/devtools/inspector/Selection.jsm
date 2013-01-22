@@ -42,6 +42,7 @@ this.EXPORTED_SYMBOLS = ["Selection"];
  *
  * Events:
  *   "new-node" when the inner node changed
+ *   "before-new-node" when the inner node is set to change
  *   "attribute-changed" when an attribute is changed (only if tracked)
  *   "detached" when the node (or one of its parents) is removed from the document (only if tracked)
  *   "reparented" when the node (or one of its parents) is moved under a different node (only if tracked)
@@ -126,6 +127,7 @@ Selection.prototype = {
   setNode: function SN_setNode(value, reason="unknown") {
     this.reason = reason;
     if (value !== this._node) {
+      this.emit("before-new-node", value, reason);
       let previousNode = this._node;
       this._detachEvents();
       this._node = value;
