@@ -526,8 +526,6 @@ private:
             if (AsyncPanZoomController* apzc = state->mController) {
               referent->SetUserData(&sPanZoomUserDataKey,
                                     new PanZoomUserData(apzc));
-            } else {
-              CompensateForContentScrollOffset(ref, referent);
             }
           } else {
             ref->DetachReferentLayer(referent);
@@ -540,31 +538,6 @@ private:
          child; child = child->GetNextSibling()) {
       WalkTheTree<OP>(child, aLayer);
     }
-  }
-
-  // XXX the fact that we have to do this evidence of bad API design.
-  void CompensateForContentScrollOffset(Layer* aContainer,
-                                        Layer* aShadowContent)
-  {
-    ContainerLayer* c = aShadowContent->AsContainerLayer();
-    if (!c) {
-      return;
-    }
-    const FrameMetrics& fm = c->GetFrameMetrics();
-    gfx3DMatrix m(aContainer->GetTransform());
-    m.Translate(gfxPoint3D(-fm.GetScrollOffsetInLayerPixels().x,
-                           -fm.GetScrollOffsetInLayerPixels().y, 0));
-
-    // The transform already takes the resolution scale into account.  Since we
-    // will apply the resolution scale again when computing the effective
-    // transform, we must apply the inverse resolution scale here.
-    m.Scale(1.0f/c->GetPreXScale(),
-            1.0f/c->GetPreYScale(),
-            1);
-    m.ScalePost(1.0f/c->GetPostXScale(),
-                1.0f/c->GetPostYScale(),
-                1);
-    aContainer->AsShadowLayer()->SetShadowTransform(m);
   }
 
   bool IsSameDimension(ScreenOrientation o1, ScreenOrientation o2) {
