@@ -41,6 +41,10 @@ class nsCycleCollectionParticipant;
 // changes.
 #define DOM_PROTO_INSTANCE_CLASS_SLOT 0
 
+// Interface objects store a number of reserved slots equal to
+// DOM_INTERFACE_BASE_SLOTS + number of named constructors.
+#define DOM_INTERFACE_SLOTS_BASE (DOM_XRAY_EXPANDO_SLOT + 1)
+
 MOZ_STATIC_ASSERT(DOM_PROTO_INSTANCE_CLASS_SLOT != DOM_XRAY_EXPANDO_SLOT,
                   "Interface prototype object use both of these, so they must "
                   "not be the same slot.");
