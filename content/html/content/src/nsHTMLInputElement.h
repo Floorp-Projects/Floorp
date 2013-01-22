@@ -496,7 +496,7 @@ protected:
   /**
    * Returns if valueAsNumber attribute applies for the current type.
    */
-  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+  bool DoesValueAsNumberApply() const { return DoesMinMaxApply() || mType == NS_FORM_INPUT_TIME; }
 
   /**
    * Returns if the maxlength attribute applies for the current type.
@@ -634,6 +634,19 @@ protected:
    * @return Whether the string is a valid time per HTML specifications.
    */
   bool IsValidTime(const nsAString& aValue) const;
+
+  /**
+   * Returns the time expressed in milliseconds of |aValue| being parsed as a
+   * time following the HTML specifications:
+   * http://www.whatwg.org/specs/web-apps/current-work/#parse-a-time-string
+   *
+   * Note: |aResult| can be null.
+   *
+   * @param aValue  the string to be parsed.
+   * @param aResult the time expressed in milliseconds representing the time [out]
+   * @return Whether the parsing was successful.
+   */
+  static bool ParseTime(const nsAString& aValue, uint32_t* aResult);
 
   /**
    * Sets the value of the element to the string representation of the double.
