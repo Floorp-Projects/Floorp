@@ -27,14 +27,9 @@
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#    if __GNUC__ > 4
+#    if MOZ_GCC_VERSION_AT_LEAST(4, 5, 1)
 #      define MOZ_HAVE_CXX11_ENUM_TYPE
 #      define MOZ_HAVE_CXX11_STRONG_ENUMS
-#    elif __GNUC__ == 4
-#      if __GNUC_MINOR__ >= 5
-#        define MOZ_HAVE_CXX11_ENUM_TYPE
-#        define MOZ_HAVE_CXX11_STRONG_ENUMS
-#      endif
 #    endif
 #  endif
 #elif defined(_MSC_VER)
