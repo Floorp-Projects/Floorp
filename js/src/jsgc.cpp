@@ -1178,8 +1178,6 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
     ArenaList *al = &arenaLists[thingKind];
     AutoLockGC maybeLock;
 
-    JS_ASSERT(!comp->scheduledForDestruction);
-
 #ifdef JS_THREADSAFE
     volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
     if (*bfs != BFS_DONE) {
