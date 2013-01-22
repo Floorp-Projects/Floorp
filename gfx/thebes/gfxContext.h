@@ -684,6 +684,9 @@ public:
 
     bool IsCairo() const { return !mDT; }
 
+    // Work out whether cairo will snap inter-glyph spacing to pixels.
+    void GetRoundOffsetsToPixels(bool *aRoundX, bool *aRoundY);
+
 #ifdef MOZ_DUMP_PAINTING
     /**
      * Debug functions to encode the current surface as a PNG and export it.

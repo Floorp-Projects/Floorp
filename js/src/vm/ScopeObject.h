@@ -472,7 +472,7 @@ class ScopeIterKey
     ScopeIter::Type type_;
 
   public:
-    ScopeIterKey() : frame_(), cur_(NULL), block_(NULL), type_() {}
+    ScopeIterKey() : frame_(NullFramePtr()), cur_(NULL), block_(NULL), type_() {}
     ScopeIterKey(const ScopeIter &si)
       : frame_(si.frame_), cur_(si.cur_), block_(si.block_), type_(si.type_)
     {}

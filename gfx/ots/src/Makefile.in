@@ -95,8 +95,3 @@ ifeq (WINNT,$(OS_TARGET))
 DEFINES += -DOTS_DLL -DOTS_DLL_EXPORTS
 endif
 
-# Suppress ANSI strict warnings
-# because Googlers don't care about comma-at-end-of-enumerator errors.
-CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
-CFLAGS := $(filter-out -pedantic,$(CFLAGS))
-

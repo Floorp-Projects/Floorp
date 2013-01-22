@@ -3110,6 +3110,20 @@ MacroAssemblerARMCompat::toggledJump(Label *label)
     return ret;
 }
 
+CodeOffsetLabel
+MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
+{
+    CodeOffsetLabel offset(size());
+    BufferOffset bo = m_buffer.nextOffset();
+    addPendingJump(bo, target->raw(), Relocation::IONCODE);
+    ma_movPatchable(Imm32(uint32_t(target->raw())), ScratchRegister, Always, L_MOVWT);
+    if (enabled)
+        ma_blx(ScratchRegister);
+    else
+        ma_nop();
+    return offset;
+}
+
 void
 MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail, FloatRegister tmp)
 {

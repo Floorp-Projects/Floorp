@@ -881,7 +881,7 @@ js::CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<St
 
 ScopeIter::ScopeIter(JSContext *cx
                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : frame_(),
+  : frame_(NullFramePtr()),
     cur_(cx, reinterpret_cast<JSObject *>(-1)),
     block_(cx, reinterpret_cast<StaticBlockObject *>(-1)),
     type_(Type(-1))
@@ -902,7 +902,7 @@ ScopeIter::ScopeIter(const ScopeIter &si, JSContext *cx
 
 ScopeIter::ScopeIter(JSObject &enclosingScope, JSContext *cx
                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : frame_(),
+  : frame_(NullFramePtr()),
     cur_(cx, &enclosingScope),
     block_(cx, reinterpret_cast<StaticBlockObject *>(-1)),
     type_(Type(-1))
@@ -986,7 +986,7 @@ ScopeIter::operator++()
             if (CallObjectLambdaName(*frame_.fun()))
                 cur_ = &cur_->asDeclEnv().enclosingScope();
         }
-        frame_ = AbstractFramePtr();
+        frame_ = NullFramePtr();
         break;
       case Block:
         block_ = block_->enclosingBlock();
@@ -1002,7 +1002,7 @@ ScopeIter::operator++()
       case StrictEvalScope:
         if (hasScopeObject_)
             cur_ = &cur_->asCall().enclosingScope();
-        frame_ = AbstractFramePtr();
+        frame_ = NullFramePtr();
         break;
     }
     return *this;
@@ -1049,14 +1049,14 @@ ScopeIter::settle()
             type_ = Block;
             hasScopeObject_ = false;
         } else {
-            frame_ = AbstractFramePtr();
+            frame_ = NullFramePtr();
         }
     } else if (frame_.isNonEvalFunctionFrame() && !frame_.hasCallObj()) {
         JS_ASSERT(cur_ == frame_.fun()->environment());
-        frame_ = AbstractFramePtr();
+        frame_ = NullFramePtr();
     } else if (frame_.isStrictEvalFrame() && !frame_.hasCallObj()) {
         JS_ASSERT(cur_ == frame_.evalPrev().scopeChain());
-        frame_ = AbstractFramePtr();
+        frame_ = NullFramePtr();
     } else if (cur_->isWith()) {
         JS_ASSERT_IF(frame_.isFunctionFrame(), frame_.fun()->isHeavyweight());
         JS_ASSERT_IF(block_, block_->needsClone());
@@ -1075,7 +1075,7 @@ ScopeIter::settle()
     } else {
         JS_ASSERT(!cur_->isScope());
         JS_ASSERT(frame_.isGlobalFrame() || frame_.isDebuggerFrame());
-        frame_ = AbstractFramePtr();
+        frame_ = NullFramePtr();
     }
 }
 
@@ -1959,7 +1959,7 @@ DebugScopes::hasLiveFrame(ScopeObject &scope)
 {
     DebugScopes *scopes = scope.compartment()->debugScopes;
     if (!scopes)
-        return AbstractFramePtr();
+        return NullFramePtr();
 
     if (LiveScopeMap::Ptr p = scopes->liveScopes.lookup(&scope)) {
         AbstractFramePtr frame = p->value;
@@ -1980,7 +1980,7 @@ DebugScopes::hasLiveFrame(ScopeObject &scope)
 
         return frame;
     }
-    return AbstractFramePtr();
+    return NullFramePtr();
 }
 
 /*****************************************************************************/
