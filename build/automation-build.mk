@@ -60,6 +60,12 @@ else
 AUTOMATION_PPARGS += -DCRASHREPORTER=0
 endif
 
+ifdef MOZ_ASAN
+AUTOMATION_PPARGS += -DIS_ASAN=1
+else
+AUTOMATION_PPARGS += -DIS_ASAN=0
+endif
+
 automation.py: $(MOZILLA_DIR)/build/automation.py.in $(MOZILLA_DIR)/build/automation-build.mk
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@

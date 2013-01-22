@@ -53,6 +53,7 @@ _IS_CYGWIN = False
 #expand _IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand _IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
 #expand _CRASHREPORTER = __CRASHREPORTER__ == 1
+#expand _IS_ASAN = __IS_ASAN__ == 1
 
 
 if _IS_WIN32:
@@ -121,6 +122,7 @@ class Automation(object):
   IS_TEST_BUILD = _IS_TEST_BUILD
   IS_DEBUG_BUILD = _IS_DEBUG_BUILD
   CRASHREPORTER = _CRASHREPORTER
+  IS_ASAN = _IS_ASAN
 
   # timeout, in seconds
   DEFAULT_TIMEOUT = 60.0
@@ -813,6 +815,23 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
     env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
+
+    # ASan specific environment stuff
+    if self.IS_ASAN and (self.IS_LINUX or self.IS_MAC):
+      try:
+        totalMemory = int(os.popen("free").readlines()[1].split()[1])
+
+        # Only 2 GB RAM or less available? Use custom ASan options to reduce
+        # the amount of resources required to do the tests. Standard options 
+        # will otherwise lead to OOM conditions on the current test slaves.
+        if totalMemory <= 1024 * 1024 * 2:
+          self.log.info("INFO | automation.py | ASan running in low-memory configuration")
+          env["ASAN_OPTIONS"] = "quarantine_size=50331648:redzone=64"
+      except OSError,err:
+        self.log.info("Failed determine available memory, disabling ASan low-memory configuration: %s", err.strerror)
+      except:
+        self.log.info("Failed determine available memory, disabling ASan low-memory configuration")
+
     return env
 
   if IS_WIN32:
