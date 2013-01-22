@@ -59,6 +59,25 @@ extern bool
 ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool ok);
 
 /*
+ * Announce to the debugger that an exception has been thrown and propagated
+ * to |frame|. Call whatever hooks have been registered to observe this and
+ * return a JSTrapStatus code indication how execution should proceed:
+ *
+ * - JSTRAP_CONTINUE: Continue throwing the current exception.
+ *
+ * - JSTRAP_THROW: Throw another value. DebugExceptionUnwind has set |cx|'s
+ *   pending exception to the new value.
+ *
+ * - JSTRAP_ERROR: Terminate execution. DebugExceptionUnwind has cleared |cx|'s
+ *   pending exception.
+ *
+ * - JSTRAP_RETURN: Return from |frame|. DebugExceptionUnwind has cleared
+ *   |cx|'s pending exception and set |frame|'s return value.
+ */
+extern JSTrapStatus
+DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
+
+/*
  * For a given |call|, convert null/undefined |this| into the global object for
  * the callee and replace other primitives with boxed versions. This assumes
  * that call.callee() is not strict mode code. This is the special/slow case of

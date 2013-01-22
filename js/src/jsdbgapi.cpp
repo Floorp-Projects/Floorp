@@ -125,6 +125,48 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
     return Debugger::onLeaveFrame(cx, ok);
 }
 
+JSTrapStatus
+js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
+{
+    JS_ASSERT(cx->compartment->debugMode());
+
+    if (!cx->runtime->debugHooks.throwHook && cx->compartment->getDebuggees().empty())
+        return JSTRAP_CONTINUE;
+
+    /* Call debugger throw hook if set. */
+    Value rval;
+    JSTrapStatus status = Debugger::onExceptionUnwind(cx, &rval);
+    if (status == JSTRAP_CONTINUE) {
+        if (JSThrowHook handler = cx->runtime->debugHooks.throwHook) {
+            RootedScript script(cx, frame.script());
+            status = handler(cx, script, pc, &rval, cx->runtime->debugHooks.throwHookData);
+        }
+    }
+
+    switch (status) {
+      case JSTRAP_ERROR:
+        cx->clearPendingException();
+        break;
+
+      case JSTRAP_RETURN:
+        cx->clearPendingException();
+        frame.setReturnValue(rval);
+        break;
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        break;
+
+      case JSTRAP_CONTINUE:
+        break;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
+
+    return status;
+}
+
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForAllCompartments(JSContext *cx, JSBool debug)
 {
