@@ -13,6 +13,8 @@
 
 #include "vm/Stack-inl.h"
 
+#include "jsopcodeinlines.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -382,4 +384,35 @@ BaselineScript::nativeCodeForPC(HandleScript script, jsbytecode *pc)
 
     JS_NOT_REACHED("Invalid pc");
     return NULL;
+}
+
+void
+BaselineScript::toggleDebugTraps(UnrootedScript script, jsbytecode *pc)
+{
+    JS_ASSERT(script->baseline == this);
+
+    SrcNoteLineScanner scanner(script->notes(), script->lineno);
+    uint32_t pcOffset = pc ? pc - script->code : 0;
+
+    IonContext ictx(NULL, script->compartment(), NULL);
+    AutoFlushCache afc("DebugTraps");
+
+    for (size_t i = 0; i < numPCMappingEntries(); i++) {
+        PCMappingEntry &entry = pcMappingEntry(i);
+
+        // If we have a pc, only toggle traps at that pc.
+        if (pc && pcOffset != entry.pcOffset)
+            continue;
+
+        scanner.advanceTo(entry.pcOffset);
+        if (!scanner.isLineHeader())
+            continue;
+
+        jsbytecode *trapPc = script->code + entry.pcOffset;
+        bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(trapPc);
+
+        // Patch the trap.
+        CodeLocationLabel label(method(), entry.nativeOffset);
+        Assembler::ToggleCall(label, enabled);
+    }
 }

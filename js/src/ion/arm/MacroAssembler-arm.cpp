@@ -8,6 +8,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "ion/arm/MacroAssembler-arm.h"
+#include "ion/BaselineFrame.h"
 #include "ion/MoveEmitter.h"
 
 using namespace js;

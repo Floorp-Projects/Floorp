@@ -469,6 +469,8 @@ bool CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval);
 bool DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn);
 bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 
+bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
+
 } // namespace ion
 } // namespace js
 

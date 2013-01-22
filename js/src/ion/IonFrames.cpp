@@ -413,9 +413,11 @@ ion::HandleException(ResumeFromException *rfe)
         }
 
         if (iter.isBaselineJS()) {
-            HandleException(cx, iter, rfe);
-            if (rfe->kind == ResumeFromException::RESUME_CATCH)
-                return;
+            if (cx->isExceptionPending()) {
+                HandleException(cx, iter, rfe);
+                if (rfe->kind == ResumeFromException::RESUME_CATCH)
+                    return;
+            }
 
             if (cx->compartment->debugMode()) {
                 // If DebugEpilogue returns |true|, we have to perform a forced
