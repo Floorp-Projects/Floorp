@@ -603,7 +603,8 @@ public abstract class ServerSyncStage implements
     final SynchronizerSession synchronizerSession = synchronizer.getSynchronizerSession();
     int inboundCount = synchronizerSession.getInboundCount();
     int outboundCount = synchronizerSession.getOutboundCount();
-    Logger.info(LOG_TAG, "Received " + inboundCount + " and sent " + outboundCount +
+    Logger.info(LOG_TAG, "Stage " + getEngineName() +
+        " received " + inboundCount + " and sent " + outboundCount +
         " records in " + getStageDurationString() + ".");
     Logger.info(LOG_TAG, "Advancing session.");
     session.advance();
