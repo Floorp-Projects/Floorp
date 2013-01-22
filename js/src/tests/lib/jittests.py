@@ -8,7 +8,7 @@
 
 import os, sys, tempfile, traceback, time, shlex
 import subprocess
-from subprocess import *
+from subprocess import Popen, PIPE, call
 from threading import Thread
 import signal
 
