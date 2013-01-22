@@ -652,9 +652,12 @@ bool
 nsOuterWindowProxy::defineProperty(JSContext* cx, JSObject* proxy,
                                    jsid id, JSPropertyDescriptor* desc)
 {
-  if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
-    // Don't define anything; we're done here, since the spec requires
-    // that we treat our indexed properties as readonly.
+  int32_t index = GetArrayIndexFromId(cx, id);
+  if (IsArrayIndex(index)) {
+    // Spec says to Reject whether this is a supported index or not,
+    // since we have no indexed setter or indexed creator.  That means
+    // throwing in strict mode (FIXME: Bug 828137), doing nothing in
+    // non-strict mode.
     return true;
   }
 
@@ -682,9 +685,16 @@ nsOuterWindowProxy::delete_(JSContext *cx, JSObject *proxy, jsid id,
                             bool *bp)
 {
   if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
-    // Reject (which means throw if and only if strict) the set.
+    // Reject (which means throw if strict, else return false) the delete.
     // Except we don't even know whether we're strict.  See bug 803157.
     *bp = false;
+    return true;
+  }
+
+  int32_t index = GetArrayIndexFromId(cx, id);
+  if (IsArrayIndex(index)) {
+    // Indexed, but not supported.  Spec says return true.
+    *bp = true;
     return true;
   }
 
@@ -755,7 +765,8 @@ bool
 nsOuterWindowProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
                         jsid id, bool strict, JS::Value *vp)
 {
-  if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
+  int32_t index = GetArrayIndexFromId(cx, id);
+  if (IsArrayIndex(index)) {
     // Reject (which means throw if and only if strict) the set.
     if (strict) {
       // XXXbz This needs to throw, but see bug 828137.
