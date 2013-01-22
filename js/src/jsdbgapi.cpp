@@ -36,7 +36,6 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "vm/Debugger.h"
-#include "ion/Ion.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -533,45 +532,6 @@ JS_GetFramePC(JSContext *cx, JSStackFrame *fpArg)
      * recursion and a backtrace.
      */
     return Valueify(fpArg)->pcQuadratic(cx->stack, 100);
-}
-
-JS_PUBLIC_API(void *)
-JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
-{
-    StackFrame *fp = Valueify(fpArg);
-    if (fp->annotation() && fp->scopeChain()->compartment()->principals) {
-        /*
-         * Give out an annotation only if privileges have not been revoked
-         * or disabled globally.
-         */
-        return fp->annotation();
-    }
-
-    return NULL;
-}
-
-JS_PUBLIC_API(void)
-JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
-{
-    AutoAssertNoGC nogc;
-    StackFrame *fp = cx->fp();
-    JS_ASSERT_IF(fp->beginsIonActivation(), !fp->annotation());
-
-    // Note that if this frame is running in Ion, the actual calling frame
-    // could be inlined or a callee and thus we won't have a correct |fp|.
-    // To account for this, ion::InvalidationBailout will transfer an
-    // annotation from the old cx->fp() to the new top frame. This works
-    // because we will never EnterIon on a frame with an annotation.
-    fp->setAnnotation(annotation);
-
-    UnrootedScript script = fp->script();
-
-    ReleaseAllJITCode(cx->runtime->defaultFreeOp());
-
-    // Ensure that we'll never try to compile this again.
-    JS_ASSERT(!script->hasAnyIonScript());
-    script->ion = ION_DISABLED_SCRIPT;
-    script->parallelIon = ION_DISABLED_SCRIPT;
 }
 
 JS_PUBLIC_API(JSObject *)

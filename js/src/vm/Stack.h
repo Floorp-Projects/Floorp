@@ -320,7 +320,7 @@ class NullFramePtr : public AbstractFramePtr
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
     INITIAL_CONSTRUCT      =       0x20, /* == StackFrame::CONSTRUCTING, asserted below */
-    INITIAL_LOWERED        =    0x80000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
+    INITIAL_LOWERED        =    0x40000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
@@ -361,27 +361,26 @@ class StackFrame
 
         /* Lazy frame initialization */
         HAS_HOOK_DATA      =     0x1000,  /* frame has hookData_ set */
-        HAS_ANNOTATION     =     0x2000,  /* frame has annotation_ set */
-        HAS_RVAL           =     0x4000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =     0x8000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =    0x10000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =    0x20000,  /* frame has blockChain_ set */
+        HAS_RVAL           =     0x2000,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =     0x4000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =     0x8000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =    0x10000,  /* frame has blockChain_ set */
 
         /* Method JIT state */
-        DOWN_FRAMES_EXPANDED =  0x40000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   =  0x80000,  /* Pushed by a lowered call/apply */
+        DOWN_FRAMES_EXPANDED =  0x20000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   =  0x40000,  /* Pushed by a lowered call/apply */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =   0x100000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE    =    0x80000,  /* see DebugScopes::updateLiveScopes */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME = 0x200000,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME = 0x100000,  /* SPS was notified of enty */
 
         /* Ion frame state */
-        RUNNING_IN_ION       = 0x400000,  /* frame is running in Ion */
-        CALLING_INTO_ION     = 0x800000,  /* frame is calling into Ion */
+        RUNNING_IN_ION       = 0x200000,  /* frame is running in Ion */
+        CALLING_INTO_ION     = 0x400000,  /* frame is calling into Ion */
 
-        JIT_REVISED_STACK   = 0x1000000   /* sp was revised by JIT for lowered apply */
+        JIT_REVISED_STACK    = 0x800000   /* sp was revised by JIT for lowered apply */
     };
 
   private:
@@ -403,7 +402,6 @@ class StackFrame
     jsbytecode          *prevpc_;       /* if HAS_PREVPC, pc of previous frame*/
     InlinedSite         *prevInline_;   /* for a jit frame, inlined site in previous frame */
     void                *hookData_;     /* if HAS_HOOK_DATA, closure returned by call hook */
-    void                *annotation_;   /* if HAS_ANNOTATION, perhaps remove with bug 546848 */
     FrameRejoinState    rejoin_;        /* for a jit frame rejoining the interpreter
                                          * from JIT code, state at rejoin. */
 
@@ -859,17 +857,6 @@ class StackFrame
      */
 
     inline JSCompartment *compartment() const;
-
-    /* Annotation (will be removed after bug 546848) */
-
-    void* annotation() const {
-        return (flags_ & HAS_ANNOTATION) ? annotation_ : NULL;
-    }
-
-    void setAnnotation(void *annot) {
-        flags_ |= HAS_ANNOTATION;
-        annotation_ = annot;
-    }
 
     /* JIT rejoin state */
 
