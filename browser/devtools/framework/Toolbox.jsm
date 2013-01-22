@@ -319,6 +319,13 @@ Toolbox.prototype = {
       return;
     }
 
+    let closeButton = this.doc.getElementById("toolbox-close");
+    if (this.hostType === this.HostType.WINDOW) {
+      closeButton.setAttribute("hidden", "true");
+    } else {
+      closeButton.removeAttribute("hidden");
+    }
+
     let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
 
     for each (let position in this.HostType) {

@@ -247,22 +247,6 @@
    ...
 }
 {
-   Bug 812423
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js15ArgumentsObject6createI18CopyStackFrameArgsEEPS0_P9JSContextN2JS6HandleIP8JSScriptEENS7_IP10JSFunctionEEjRT_
-   fun:_ZN2js15ArgumentsObject14createExpectedEP9JSContextPNS_10StackFrameE
-   ...
-}
-{
-   Bug 812423
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js15ArgumentsObject6createI13CopyFrameArgsEEPS0_P9JSContextN2JS6HandleIP8JSScriptEENS7_IP10JSFunctionEEjRT_
-   fun:_ZN2js15ArgumentsObject14createExpectedEP9JSContextNS_16AbstractFramePtrE
-   ...
-}
-{
    Bug 823782
    Memcheck:Leak
    fun:malloc
