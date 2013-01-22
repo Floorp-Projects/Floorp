@@ -351,8 +351,12 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     // initial challenge
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
         // NTLM service name format is 'HTTP@host' for both http and https
+        nsCOMPtr<nsIURI> uri;
+        rv = authChannel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv))
+            return rv;
         nsAutoCString serviceName, host;
-        rv = authChannel->GetAsciiHostForAuth(host);
+        rv = uri->GetAsciiHost(host);
         if (NS_FAILED(rv))
             return rv;
         serviceName.AppendLiteral("HTTP@");

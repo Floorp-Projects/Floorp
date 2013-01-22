@@ -4174,19 +4174,6 @@ NS_IMETHODIMP nsHttpChannel::OnAuthCancelled(bool userCancel)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsHttpChannel::GetAsciiHostForAuth(nsACString &host)
-{
-    if (mAuthProvider)
-        return mAuthProvider->GetAsciiHostForAuth(host);
-
-    nsresult rv;
-    nsCOMPtr<nsIURI> uri;
-    rv = GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv))
-        return rv;
-    return uri->GetAsciiHost(host);
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
