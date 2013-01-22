@@ -1246,6 +1246,12 @@ class AssemblerX86Shared
         JS_ASSERT(*ptr == 0xE9);
         *ptr = 0x3D;
     }
+    static void ToggleCall(CodeLocationLabel inst, bool enabled) {
+        uint8_t *ptr = (uint8_t *)inst.raw();
+        JS_ASSERT(*ptr == 0x3D || // CMP
+                  *ptr == 0xE8);  // CALL
+        *ptr = enabled ? 0xE8 : 0x3D;
+    }
 };
 
 } // namespace ion
