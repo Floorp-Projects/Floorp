@@ -607,6 +607,13 @@ MacroAssembler::loadBaselineOrIonCode(Register script)
     bind(&done);
 }
 
+void
+MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
+{
+    movePtr(framePtr, dest);
+    subPtr(Imm32(BaselineFrame::Size()), dest);
+}
+
 void printf0_(const char *output) {
     printf("%s", output);
 }
