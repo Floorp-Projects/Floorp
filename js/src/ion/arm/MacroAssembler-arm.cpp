@@ -1136,6 +1136,12 @@ MacroAssemblerARM::ma_bl(Label *dest, Assembler::Condition c)
     as_bl(dest, c);
 }
 
+void
+MacroAssemblerARM::ma_blx(Register reg, Assembler::Condition c)
+{
+    as_blx(reg, c);
+}
+
 // VFP/ALU
 void
 MacroAssemblerARM::ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister dst)
@@ -3017,6 +3023,20 @@ MacroAssemblerARMCompat::toggledJump(Label *label)
     CodeOffsetLabel ret(nextOffset().getOffset());
     ma_b(label, Always, true);
     return ret;
+}
+
+CodeOffsetLabel
+MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
+{
+    CodeOffsetLabel offset(size());
+    BufferOffset bo = m_buffer.nextOffset();
+    addPendingJump(bo, target->raw(), Relocation::IONCODE);
+    ma_movPatchable(Imm32(uint32_t(target->raw())), ScratchRegister, Always, L_MOVWT);
+    if (enabled)
+        ma_blx(ScratchRegister);
+    else
+        ma_nop();
+    return offset;
 }
 
 void
