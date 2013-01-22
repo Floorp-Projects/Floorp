@@ -77,7 +77,7 @@ GSETTINGS_FUNCTIONS
 
 static PRLibrary *gioLib = nullptr;
 
-class nsGSettingsCollection : public nsIGSettingsCollection
+class nsGSettingsCollection MOZ_FINAL : public nsIGSettingsCollection
 {
 public:
   NS_DECL_ISUPPORTS
