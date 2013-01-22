@@ -1054,7 +1054,7 @@ JSObject::preventExtensions(JSContext *cx)
      * new dense elements can be added without calling growElements(), which
      * checks isExtensible().
      */
-    if (isNative() && !JSObject::sparsifyDenseElements(cx, self))
+    if (self->isNative() && !JSObject::sparsifyDenseElements(cx, self))
         return false;
 
     return self->setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);

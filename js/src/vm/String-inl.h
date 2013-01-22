@@ -157,10 +157,10 @@ JSString::readBarrier(JSString *str)
 }
 
 JS_ALWAYS_INLINE bool
-JSString::validateLength(JSContext *cx, size_t length)
+JSString::validateLength(JSContext *maybecx, size_t length)
 {
     if (JS_UNLIKELY(length > JSString::MAX_LENGTH)) {
-        js_ReportAllocationOverflow(cx);
+        js_ReportAllocationOverflow(maybecx);
         return false;
     }
 
