@@ -192,7 +192,6 @@ public class AboutHomeContent extends ScrollView
                 // If nothing is pinned at all, hide both clear items
                 TopSitesCursorWrapper cursor = (TopSitesCursorWrapper)mTopSitesAdapter.getCursor();
                 if (!cursor.hasPinnedSites()) {
-                    menu.findItem(R.id.abouthome_topsites_unpinall).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 } else {
                     PinnedSite site = cursor.getPinnedSite(info.position);
@@ -942,32 +941,6 @@ public class AboutHomeContent extends ScrollView
         holder.url = "";
         holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
         holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-    }
-
-    public void unpinAllSites() {
-        final ContentResolver resolver = mActivity.getContentResolver();
-
-        // Clear the view quickly to make things appear responsive
-        for (int i = 0; i < mTopSitesGrid.getChildCount(); i++) {
-            View v = mTopSitesGrid.getChildAt(i);
-            TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-            clearThumbnail(holder);
-            holder.setPinned(false);
-        }
-
-        (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
-            @Override
-            public Void doInBackground(Void... params) {
-                ContentResolver resolver = mActivity.getContentResolver();
-                BrowserDB.unpinAllSites(resolver);
-                return null;
-            }
-
-            @Override
-            public void onPostExecute(Void v) {
-                update(EnumSet.of(UpdateFlags.TOP_SITES));
-            }
-        }).execute();
     }
 
     public void unpinSite() {
