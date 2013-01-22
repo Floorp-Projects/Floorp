@@ -14,6 +14,7 @@ EXPORTS_mozilla += \
   BloomFilter.h \
   Char16.h \
   CheckedInt.h \
+  Compiler.h \
   Constants.h \
   DebugOnly.h \
   EnumSet.h \
