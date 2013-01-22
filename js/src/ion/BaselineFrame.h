@@ -26,14 +26,25 @@ namespace ion {
 //        stack values
 class BaselineFrame
 {
+  public:
+    enum Flags {
+        // The frame has a valid return value. See also StackFrame::HAS_RVAL.
+        HAS_RVAL         = 1 << 0,
+
+        // See StackFrame::PREV_UP_TO_DATE.
+        PREV_UP_TO_DATE  = 1 << 1
+    };
+
   protected: // Silence Clang warning about unused private fields.
     // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loScratchValue_;
     uint32_t hiScratchValue_;
+    uint32_t loReturnValue_;
+    uint32_t hiReturnValue_;
     size_t frameSize_;
     JSObject *scopeChain_;
-    uint32_t dummy; // Keep frame 8-byte aligned.
+    uint32_t flags_;
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -45,6 +56,19 @@ class BaselineFrame
     }
     inline UnrootedObject scopeChain() const {
         return scopeChain_;
+    }
+    CalleeToken calleeToken() const {
+        uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
+        return *(CalleeToken *)pointer;
+    }
+    inline UnrootedScript script() const {
+        return ScriptFromCalleeToken(calleeToken());
+    }
+    inline UnrootedFunction fun() const {
+        return CalleeTokenToFunction(calleeToken());
+    }
+    inline UnrootedFunction callee() const {
+        return CalleeTokenToFunction(calleeToken());
     }
     inline size_t numValueSlots() const {
         size_t size = frameSize();
@@ -60,7 +84,50 @@ class BaselineFrame
         return (Value *)this - (slot + 1);
     }
 
+    unsigned numFormalArgs() const {
+        return script()->function()->nargs;
+    }
+    Value *formals() const {
+        return (Value *)(reinterpret_cast<const uint8_t *>(this) +
+                         BaselineFrame::Size() +
+                         offsetOfArg(0));
+    }
+
+    bool copyRawFrameSlots(AutoValueVector *vec) const;
+
+    inline bool hasReturnValue() const {
+        return flags_ & HAS_RVAL;
+    }
+    inline Value *returnValue() {
+        return reinterpret_cast<Value *>(&loReturnValue_);
+    }
+    inline void setReturnValue(const Value &v) {
+        flags_ |= HAS_RVAL;
+        *returnValue() = v;
+    }
+
+    bool prevUpToDate() const {
+        return flags_ & PREV_UP_TO_DATE;
+    }
+    void setPrevUpToDate() {
+        flags_ |= PREV_UP_TO_DATE;
+    }
+
+    void *maybeHookData() const {
+        return NULL;
+    }
+
     void trace(JSTracer *trc);
+
+    bool isGlobalFrame() const {
+        return !script()->function();
+    }
+    bool isEvalFrame() const {
+        return false;
+    }
+    bool isNonEvalFunctionFrame() const {
+        return !!script()->function();
+    }
 
     // Methods below are used by the compiler.
     static size_t offsetOfCalleeToken() {
@@ -87,6 +154,12 @@ class BaselineFrame
     }
     static inline size_t reverseOffsetOfScopeChain() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, scopeChain_);
+    }
+    static inline size_t reverseOffsetOfFlags() {
+        return -BaselineFrame::Size() + offsetof(BaselineFrame, flags_);
+    }
+    static inline size_t reverseOffsetOfReturnValue() {
+        return -BaselineFrame::Size() + offsetof(BaselineFrame, loReturnValue_);
     }
     static inline size_t reverseOffsetOfLocal(size_t index) {
         return -BaselineFrame::Size() - (index + 1) * sizeof(Value);

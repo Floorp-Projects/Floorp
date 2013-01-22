@@ -15,7 +15,7 @@ using namespace js::ion;
 BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, HandleScript script)
   : cx(cx),
     script(cx, script),
-    pc(NULL),
+    pc(script->code),
     ionCompileable_(ion::IsEnabled(cx) && CanIonCompileScript(cx, script)),
     debugMode_(cx->compartment->debugMode()),
     frame(cx, script, masm),

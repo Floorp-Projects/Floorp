@@ -241,10 +241,18 @@ class AbstractFramePtr
     bool isStackFrame() const {
         return ptr_ & 0x1;
     }
-
     StackFrame *asStackFrame() const {
         JS_ASSERT(isStackFrame());
         StackFrame *res = (StackFrame *)(ptr_ & ~0x1);
+        JS_ASSERT(res);
+        return res;
+    }
+    bool isBaselineFrame() const {
+        return ptr_ && !isStackFrame();
+    }
+    ion::BaselineFrame *asBaselineFrame() const {
+        JS_ASSERT(isBaselineFrame());
+        ion::BaselineFrame *res = (ion::BaselineFrame *)ptr_;
         JS_ASSERT(res);
         return res;
     }
@@ -274,7 +282,7 @@ class AbstractFramePtr
 
     inline UnrootedScript script() const;
     inline JSFunction *fun() const;
-    inline JSFunction &callee() const;
+    inline JSFunction *callee() const;
     inline Value calleev() const;
     inline Value &thisValue() const;
 
@@ -1939,6 +1947,9 @@ class StackIter
         JS_ASSERT(!done());
         return data_.state_ == ION;
     }
+
+    bool isIonOptimizedJS() const { return isIon() && data_.ionFrames_.isOptimizedJS(); }
+
     bool isNativeCall() const {
         JS_ASSERT(!done());
 #ifdef JS_ION
@@ -2052,6 +2063,7 @@ class AllFramesIter
     AllFramesIter& operator++();
 
     bool isIon() const { return state_ == ION; }
+    bool isIonOptimizedJS() const { return isIon() && ionFrames_.isOptimizedJS(); }
     StackFrame *interpFrame() const { JS_ASSERT(state_ == SCRIPTED); return fp_; }
     StackSegment *seg() const { return seg_; }
 

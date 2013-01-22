@@ -13,7 +13,12 @@ using namespace js::ion;
 void
 BaselineFrame::trace(JSTracer *trc)
 {
+    // Mark scope chain.
     gc::MarkObjectRoot(trc, &scopeChain_, "baseline-scopechain");
+
+    // Mark return value.
+    if (hasReturnValue())
+        gc::MarkValueRoot(trc, returnValue(), "baseline-rval");
 
     // Mark locals and stack values.
     size_t nvalues = numValueSlots();
@@ -22,4 +27,19 @@ BaselineFrame::trace(JSTracer *trc)
         Value *last = valueSlot(nvalues - 1);
         gc::MarkValueRootRange(trc, nvalues, last, "baseline-stack");
     }
+}
+
+bool
+BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
+{
+    unsigned nfixed = script()->nfixed;
+    unsigned nformals = numFormalArgs();
+
+    if (!vec->resize(nformals + nfixed))
+        return false;
+
+    PodCopy(vec->begin(), formals(), nformals);
+    for (unsigned i = 0; i < nfixed; i++)
+        (*vec)[nformals + i] = *valueSlot(i);
+    return true;
 }

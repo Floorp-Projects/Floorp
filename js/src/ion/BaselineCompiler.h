@@ -162,6 +162,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitStackCheck();
     bool emitInterruptCheck();
     bool emitUseCountIncrement();
+    bool emitDebugPrologue();
 
     bool initScopeChain();
 
@@ -180,6 +181,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     // Handles JSOP_LT, JSOP_GT, and friends
     bool emitCompare();
+
+    bool emitReturn();
 
     bool emitToBoolean();
     bool emitTest(bool branchIfTrue);

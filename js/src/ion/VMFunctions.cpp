@@ -506,5 +506,42 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
     return true;
 }
 
+bool
+DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
+{
+    JSTrapStatus status = ScriptDebugPrologue(cx, frame);
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        *mustReturn = false;
+        return true;
+
+      case JSTRAP_RETURN:
+        // The script is going to return immediately, so we have to call the
+        // debug epilogue handler as well.
+        JS_ASSERT(frame->hasReturnValue());
+        *mustReturn = true;
+        return ScriptDebugEpilogue(cx, frame, true);
+
+      case JSTRAP_THROW:
+      case JSTRAP_ERROR:
+        return false;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
+}
+
+bool
+DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
+{
+    // If ScriptDebugEpilogue returns |true| we have to return the frame's
+    // return value. If it returns |false|, the debugger threw an exception.
+    // In both cases we have to pop debug scopes.
+    ok = ScriptDebugEpilogue(cx, frame, ok);
+    JS_ASSERT_IF(ok, frame->hasReturnValue());
+    DebugScopes::onPopCall(frame, cx);
+    return ok;
+}
+
 } // namespace ion
 } // namespace js
