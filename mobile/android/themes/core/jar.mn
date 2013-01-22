@@ -27,8 +27,6 @@ chrome.jar:
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
-  skin/fonts/opensans-regular.ttf           (fonts/opensans-regular.ttf)
-  skin/fonts/opensans-light.ttf             (fonts/opensans-light.ttf)
   skin/images/5stars.png                    (images/5stars.png)
   skin/images/addons-32.png                 (images/addons-32.png)
   skin/images/arrowleft-16.png              (images/arrowleft-16.png)

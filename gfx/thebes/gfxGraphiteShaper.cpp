@@ -41,8 +41,7 @@ using namespace mozilla; // for AutoSwap_* types
 gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
       mGrFace(nullptr),
-      mGrFont(nullptr),
-      mUseFontGlyphWidths(false)
+      mGrFont(nullptr)
 {
     mTables.Init();
     mCallbackData.mFont = aFont;
@@ -157,11 +156,19 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
         if (!mGrFace) {
             return false;
         }
-        mGrFont = mUseFontGlyphWidths ?
-            gr_make_font_with_advance_fn(mFont->GetAdjustedSize(),
-                                         &mCallbackData, GrGetAdvance,
-                                         mGrFace) :
-            gr_make_font(mFont->GetAdjustedSize(), mGrFace);
+
+        if (mFont->ProvidesGlyphWidths()) {
+            gr_font_ops ops = {
+                sizeof(gr_font_ops),
+                &GrGetAdvance,
+                nullptr // vertical text not yet implemented
+            };
+            mGrFont = gr_make_font_with_ops(mFont->GetAdjustedSize(),
+                                            &mCallbackData, &ops, mGrFace);
+        } else {
+            mGrFont = gr_make_font(mFont->GetAdjustedSize(), mGrFace);
+        }
+
         if (!mGrFont) {
             gr_face_destroy(mGrFace);
             mGrFace = nullptr;
@@ -202,7 +209,7 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
         return false;
     }
 
-    nsresult rv = SetGlyphsFromSegment(aShapedText, aOffset, aLength,
+    nsresult rv = SetGlyphsFromSegment(aContext, aShapedText, aOffset, aLength,
                                        aText, seg);
 
     gr_seg_destroy(seg);
@@ -222,7 +229,8 @@ struct Cluster {
 };
 
 nsresult
-gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
+gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
+                                        gfxShapedText   *aShapedText,
                                         uint32_t         aOffset,
                                         uint32_t         aLength,
                                         const PRUnichar *aText,
@@ -294,6 +302,10 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
         }
     }
 
+    bool roundX;
+    bool roundY;
+    aContext->GetRoundOffsetsToPixels(&roundX, &roundY);
+
     gfxShapedText::CompressedGlyph *charGlyphs =
         aShapedText->GetCharacterGlyphs() + aOffset;
 
@@ -326,7 +338,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
             continue;
         }
 
-        uint32_t appAdvance = adv * dev2appUnits;
+        uint32_t appAdvance = roundX ? NSToIntRound(adv) * dev2appUnits :
+                                       NSToIntRound(adv * dev2appUnits);
         if (c.nGlyphs == 1 &&
             gfxShapedText::CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
             gfxShapedText::CompressedGlyph::IsSimpleAdvance(appAdvance) &&
@@ -340,15 +353,17 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
             for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
                 gfxShapedText::DetailedGlyph* d = details.AppendElement();
                 d->mGlyphID = gids[j];
-                d->mYOffset = -yLocs[j] * dev2appUnits;
+                d->mYOffset = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits :
+                              -yLocs[j] * dev2appUnits;
                 if (j == c.baseGlyph) {
                     d->mXOffset = 0;
                     d->mAdvance = appAdvance;
                     clusterLoc = xLocs[j];
                 } else {
-                    d->mXOffset = dev2appUnits *
-                        (rtl ? (xLocs[j] - clusterLoc) :
-                               (xLocs[j] - clusterLoc - adv));
+                    float dx = rtl ? (xLocs[j] - clusterLoc) :
+                                     (xLocs[j] - clusterLoc - adv);
+                    d->mXOffset = roundX ? NSToIntRound(dx) * dev2appUnits :
+                                           dx * dev2appUnits;
                     d->mAdvance = 0;
                 }
             }

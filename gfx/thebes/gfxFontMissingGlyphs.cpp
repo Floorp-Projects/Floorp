@@ -144,6 +144,7 @@ static const gfxFloat BOX_BORDER_OPACITY = 0.5;
  * Quartz cairo backend which doesn't generally support masking with surfaces.
  * So for now we just paint a bunch of rectangles...
  */
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
 static void
 DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, uint32_t aDigit)
 {
@@ -160,6 +161,7 @@ DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, uint32_t aDigit)
     }
     aContext->Fill();
 }
+#endif // MOZ_GFX_OPTIMIZE_MOBILE
 
 void
 gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRect,

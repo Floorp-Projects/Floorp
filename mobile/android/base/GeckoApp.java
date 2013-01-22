@@ -1284,6 +1284,9 @@ abstract public class GeckoApp
             @Override
             protected Boolean doInBackground(Void... params) {
                 WallpaperManager mgr = WallpaperManager.getInstance(mAppContext);
+                if (mgr == null) {
+                    return false;
+                }
 
                 // Determine the ideal width and height of the wallpaper
                 // for the device
@@ -1297,7 +1300,7 @@ abstract public class GeckoApp
                 // the ideal width and height from the device's display 
                 // resolution (excluding the decorated area)
 
-                if(idealWidth <= 0 || idealHeight <= 0) {
+                if (idealWidth <= 0 || idealHeight <= 0) {
                     int orientation;
                     Display defaultDisplay = getWindowManager().getDefaultDisplay();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
