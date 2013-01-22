@@ -54,6 +54,7 @@ PaymentUI.prototype = {
     let detail = {
       type: kOpenPaymentConfirmationEvent,
       id: id,
+      requestId: aRequestId,
       paymentRequests: aRequests
     };
 
@@ -99,6 +100,7 @@ PaymentUI.prototype = {
     let detail = {
       type: kOpenPaymentFlowEvent,
       id: id,
+      requestId: aRequestId,
       uri: aPaymentFlowInfo.uri,
       method: aPaymentFlowInfo.requestMethod,
       jwt: aPaymentFlowInfo.jwt

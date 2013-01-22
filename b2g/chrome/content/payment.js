@@ -61,7 +61,8 @@ function closePaymentFlowDialog(aCallback) {
 
   let detail = {
     type: kClosePaymentFlowEvent,
-    id: id
+    id: id,
+    requestId: requestId
   };
 
   // In order to avoid race conditions, we wait for the UI to notify that
