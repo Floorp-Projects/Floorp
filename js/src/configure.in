@@ -4048,7 +4048,7 @@ dnl ========================================================
 dnl = Disable -fstrict-aliasing with GCC 4.4 and earlier.
 dnl = See bugs 821502 and 832623.
 dnl ========================================================
-if test "$GNU_CC"; then
+if test -n "$GNU_CC" -a -z "$CLANG_CC"; then
     changequote(,)
     GCC_VERSION_FULL=`echo "$CXX_VERSION" | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
     GCC_VERSION=`echo "$GCC_VERSION_FULL" | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
