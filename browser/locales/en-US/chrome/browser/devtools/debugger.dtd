@@ -86,7 +86,7 @@
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchLine): This is the text that appears
   -  in the source editor's context menu for the line search operation. -->
-<!ENTITY debuggerUI.searchLine          "Jump to line...">
+<!ENTITY debuggerUI.searchLine          "Jump to line…">
 <!ENTITY debuggerUI.searchLine.key      "J">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchVariable): This is the text that appears
