@@ -511,10 +511,11 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
 bool
 DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
 {
+    *mustReturn = false;
+
     JSTrapStatus status = ScriptDebugPrologue(cx, frame);
     switch (status) {
       case JSTRAP_CONTINUE:
-        *mustReturn = false;
         return true;
 
       case JSTRAP_RETURN:
@@ -591,6 +592,42 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *m
     }
 
     return true;
+}
+
+bool
+OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn)
+{
+    *mustReturn = false;
+
+    RootedScript script(cx, frame->script());
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    Value rval;
+
+    if (JSDebuggerHandler handler = cx->runtime->debugHooks.debuggerHandler)
+        status = handler(cx, script, pc, &rval, cx->runtime->debugHooks.debuggerHandlerData);
+
+    if (status == JSTRAP_CONTINUE)
+        status = Debugger::onDebuggerStatement(cx, &rval);
+
+    switch (status) {
+      case JSTRAP_ERROR:
+        return false;
+
+      case JSTRAP_CONTINUE:
+        return true;
+
+      case JSTRAP_RETURN:
+        frame->setReturnValue(rval);
+        *mustReturn = true;
+        return ion::DebugEpilogue(cx, frame, true);
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        return false;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
 }
 
 } // namespace ion
