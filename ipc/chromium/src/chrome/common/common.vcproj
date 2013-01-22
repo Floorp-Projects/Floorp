@@ -146,38 +146,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="gfx"
-			>
-			<File
-				RelativePath=".\gfx\color_utils.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\gfx\color_utils.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gfx\emf.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\gfx\emf.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gfx\text_elider.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\gfx\text_elider.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gfx\utils.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="ipc"
 			>
 			<File
@@ -266,26 +234,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="extensions"
-			>
-			<File
-				RelativePath=".\extensions\url_pattern.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\extensions\url_pattern.h"
-				>
-			</File>
-			<File
-				RelativePath=".\extensions\user_script.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\extensions\user_script.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="app_cache"
 			>
 			<File
@@ -313,10 +261,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\accessibility_types.h"
-			>
-		</File>
 		<File
 			RelativePath=".\bindings_policy.h"
 			>
@@ -558,22 +502,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\page_action.cc"
-			>
-		</File>
-		<File
-			RelativePath=".\page_action.h"
-			>
-		</File>
-		<File
-			RelativePath=".\page_transition_types.h"
-			>
-		</File>
-		<File
-			RelativePath=".\page_zoom.h"
-			>
-		</File>
-		<File
 			RelativePath=".\platform_util.h"
 			>
 		</File>
@@ -595,30 +523,6 @@
 		</File>
 		<File
 			RelativePath="..\tools\build\win\precompiled.h"
-			>
-		</File>
-		<File
-			RelativePath=".\pref_member.cc"
-			>
-		</File>
-		<File
-			RelativePath=".\pref_member.h"
-			>
-		</File>
-		<File
-			RelativePath=".\pref_names.cc"
-			>
-		</File>
-		<File
-			RelativePath=".\pref_names.h"
-			>
-		</File>
-		<File
-			RelativePath=".\pref_service.cc"
-			>
-		</File>
-		<File
-			RelativePath=".\pref_service.h"
 			>
 		</File>
 		<File
