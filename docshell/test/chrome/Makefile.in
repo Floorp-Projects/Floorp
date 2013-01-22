@@ -94,6 +94,7 @@ MOCHITEST_CHROME_FILES =	\
 		test_mozFrameType.xul \
 		mozFrameType_window.xul \
 		test_bug789773.xul \
+		test_private_hidden_window.html \
     docshell_helpers.js \
     generic.html \
     $(NULL)

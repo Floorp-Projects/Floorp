@@ -222,13 +222,6 @@ static int32_t gDocShellCount = 0;
 // Global count of docshells with the private attribute set
 static uint32_t gNumberOfPrivateDocShells = 0;
 
-// Global count of private docshells which will always remain open
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-static uint32_t gNumberOfAlwaysOpenPrivateDocShells = 0; // the private hidden window
-#else
-static const uint32_t gNumberOfAlwaysOpenPrivateDocShells = 0;
-#endif
-
 // Global reference to the URI fixup service.
 nsIURIFixup *nsDocShell::sURIFixup = 0;
 
@@ -693,26 +686,10 @@ ConvertLoadTypeToNavigationType(uint32_t aLoadType)
 static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 
 static void
-AdjustAlwaysOpenPrivateDocShellCount()
-{
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    nsCOMPtr<nsIAppShellService> appShell
-      (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    bool hasHiddenPrivateWindow = false;
-    if (appShell) {
-      appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
-    }
-    gNumberOfAlwaysOpenPrivateDocShells = hasHiddenPrivateWindow ? 1 : 0;
-#endif
-}
-
-static void
 IncreasePrivateDocShellCount()
 {
-    AdjustAlwaysOpenPrivateDocShellCount();
-
     gNumberOfPrivateDocShells++;
-    if (gNumberOfPrivateDocShells > gNumberOfAlwaysOpenPrivateDocShells + 1 ||
+    if (gNumberOfPrivateDocShells > 1 ||
         XRE_GetProcessType() != GeckoProcessType_Content) {
         return;
     }
@@ -724,11 +701,9 @@ IncreasePrivateDocShellCount()
 static void
 DecreasePrivateDocShellCount()
 {
-    AdjustAlwaysOpenPrivateDocShellCount();
-
     MOZ_ASSERT(gNumberOfPrivateDocShells > 0);
     gNumberOfPrivateDocShells--;
-    if (gNumberOfPrivateDocShells == gNumberOfAlwaysOpenPrivateDocShells)
+    if (!gNumberOfPrivateDocShells)
     {
         if (XRE_GetProcessType() == GeckoProcessType_Content) {
             mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
@@ -795,6 +770,7 @@ nsDocShell::nsDocShell():
 #ifdef DEBUG
     mInEnsureScriptEnv(false),
 #endif
+    mAffectPrivateSessionLifetime(true),
     mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
     mParentCharsetSource(0)
@@ -2069,10 +2045,12 @@ nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
     bool changed = aUsePrivateBrowsing != mInPrivateBrowsing;
     if (changed) {
         mInPrivateBrowsing = aUsePrivateBrowsing;
-        if (aUsePrivateBrowsing) {
-            IncreasePrivateDocShellCount();
-        } else {
-            DecreasePrivateDocShellCount();
+        if (mAffectPrivateSessionLifetime) {
+            if (aUsePrivateBrowsing) {
+                IncreasePrivateDocShellCount();
+            } else {
+                DecreasePrivateDocShellCount();
+            }
         }
     }
 
@@ -2096,6 +2074,36 @@ nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
             }
         }
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAffectPrivateSessionLifetime(bool aAffectLifetime)
+{
+    bool change = aAffectLifetime != mAffectPrivateSessionLifetime;
+    if (change && mInPrivateBrowsing) {
+        if (aAffectLifetime) {
+            IncreasePrivateDocShellCount();
+        } else {
+            DecreasePrivateDocShellCount();
+        }
+    }
+    mAffectPrivateSessionLifetime = aAffectLifetime;
+
+    int32_t count = mChildList.Count();
+    for (int32_t i = 0; i < count; ++i) {
+        nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
+        if (shell) {
+            shell->SetAffectPrivateSessionLifetime(aAffectLifetime);
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetAffectPrivateSessionLifetime(bool* aAffectLifetime)
+{
+    *aAffectLifetime = mAffectPrivateSessionLifetime;
     return NS_OK;
 }
 
@@ -2833,6 +2841,8 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
             value = false;
         }
         SetAllowDNSPrefetch(value);
+        value = parentAsDocShell->GetAffectPrivateSessionLifetime();
+        SetAffectPrivateSessionLifetime(value);
     }
 
     nsCOMPtr<nsILoadContext> parentAsLoadContext(do_QueryInterface(parent));
@@ -4977,7 +4987,9 @@ nsDocShell::Destroy()
 
     if (mInPrivateBrowsing) {
         mInPrivateBrowsing = false;
-        DecreasePrivateDocShellCount();
+        if (mAffectPrivateSessionLifetime) {
+            DecreasePrivateDocShellCount();
+        }
     }
 
     return NS_OK;
