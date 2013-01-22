@@ -36,6 +36,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_scratchpad_bug_751744_revert_to_saved.js \
 		browser_scratchpad_bug740948_reload_and_run.js \
 		browser_scratchpad_bug_661762_wrong_window_focus.js \
+		browser_scratchpad_bug_644413_modeline.js \
 		head.js \
 
 include $(topsrcdir)/config/rules.mk

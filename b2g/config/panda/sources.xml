@@ -10,12 +10,12 @@
   <default remote="linaro" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
 
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="69380784721ae11af93ef4e1b5ce8a54e8570574">
+  <project name="platform_build" path="build" remote="b2g" revision="0784cdcb29ae45e5bf903cc03fa1bc206162665b">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="22629c7597d0d658fb472f76f2bf35e7eaaf98fd"/>
-  <project name="rilproxy" path="rilproxy" remote="b2g" revision="167b4c59a82b9130e385de786e8056d89a1cb8c3"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2f8c7d3546bda16b02a61b422786919875c19f15"/>
+  <project name="rilproxy" path="rilproxy" remote="b2g" revision="2d380d27c86263537f6b829cd0238f5dd702c735"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="6ee1f8987ef36d688f97064c003ad57849dfadf2"/>
 
   <!-- Stock Android things -->
@@ -29,7 +29,7 @@
   <!-- Information: platform/external/bluetooth/glib is tagged with android-4.1.1_r6.1 --><project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="1143b9918eab068401b604eb11c3f651f4e38b25"/>
   <!-- Information: platform/external/bluetooth/hcidump is tagged with android-4.1.1_r6.1 --><project name="platform/external/bluetooth/hcidump" path="external/bluetooth/hcidump" revision="7322661808c2006b7848e79e6bb72b37fbcf6710"/>
   <!-- Information: platform/external/bsdiff is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.041 --><project name="platform/external/bsdiff" path="external/bsdiff" revision="81872540236d9bb15cccf963d05b9de48baa5375"/>
-  <project name="platform/external/busybox" path="external/busybox" remote="linaro" revision="4fa5717aed10a5617c52def848dbd42ec7eca35b"/>
+  <project name="platform/external/busybox" path="external/busybox" remote="linaro" revision="0a41b083cdaf2ddd602fb5c955329494da25f2b9"/>
   <!-- Information: platform/external/bzip2 is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.00.00.19.138 --><project name="platform/external/bzip2" path="external/bzip2" revision="048dacdca43eed1534689ececcf2781c63e1e4ba"/>
   <!-- Information: platform/external/dbus is tagged with android-4.1.1_r6.1 --><project name="platform/external/dbus" path="external/dbus" revision="537eaff5de9aace3348436166d4cde7adc1e488e"/>
   <!-- Information: platform/external/dhcpcd is tagged with android-sdk-adt_r20 --><project name="platform/external/dhcpcd" path="external/dhcpcd" revision="ddaa48f57b54b2862b3e6dcf18a44c9647f3baaa"/>
@@ -94,6 +94,6 @@
   <!-- Information: platform/hardware/ti/omap4xxx is tagged with android-4.0.4_r2.1 --><project name="platform/hardware/ti/omap4xxx" path="hardware/ti/omap4xxx" revision="8be8e9a68c96b6cf43c08a58e7ecd7708737c599"/>
   <project name="platform/hardware/ti/wlan" path="hardware/ti/wlan" revision="60dfeb6e4448bfed707946ebca6612980f525e69"/>
   <project name="platform/hardware/ti/wpan" path="hardware/ti/wpan" revision="3ece7d9e08052989401e008bc397dbcd2557cfd0"/>
-  <project name="Negatus" path="external/negatus" remote="mozilla" revision="7ed4efcee655f605455f9375a4e6c68cd078c459"/>
+  <project name="Negatus" path="external/negatus" remote="mozilla" revision="151697c638a6781e83c76d4a01fb001aabde4e79"/>
   
 </manifest>

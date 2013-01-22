@@ -92,14 +92,14 @@ function onAttach(aState, aResponse)
       name: "getterAndSetter",
       get: {
         type: "function",
-        className: "function",
+        className: "Function",
         displayString: /function fooGet/,
         actor: /[a-z]/,
         inspectable: false,
       },
       set: {
         type: "function",
-        className: "function",
+        className: "Function",
         displayString: /function fooSet/,
         actor: /[a-z]/,
         inspectable: false,
@@ -137,7 +137,7 @@ function onAttach(aState, aResponse)
       name: "omgfn",
       value: {
         type: "function",
-        className: "function",
+        className: "Function",
         displayString: /function _omgfn/,
         actor: /[a-z]/,
         inspectable: false,
