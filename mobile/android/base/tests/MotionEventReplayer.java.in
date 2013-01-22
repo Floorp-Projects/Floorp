@@ -23,16 +23,24 @@ import android.view.MotionEvent;
 class MotionEventReplayer {
     private static final String LOGTAG = "RobocopMotionEventReplayer";
 
+    // the inner dimensions of the window on which the motion event capture was taken from
+    private static final int CAPTURE_WINDOW_WIDTH = 720;
+    private static final int CAPTURE_WINDOW_HEIGHT = 1038;
+
     private final Instrumentation mInstrumentation;
     private final int mSurfaceOffsetX;
     private final int mSurfaceOffsetY;
+    private final int mSurfaceWidth;
+    private final int mSurfaceHeight;
     private final Map<String, Integer> mActionTypes;
     private Method mObtainNanoMethod;
 
-    public MotionEventReplayer(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
+    public MotionEventReplayer(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY, int surfaceWidth, int surfaceHeight) {
         mInstrumentation = inst;
         mSurfaceOffsetX = surfaceOffsetX;
         mSurfaceOffsetY = surfaceOffsetY;
+        mSurfaceWidth = surfaceWidth;
+        mSurfaceHeight = surfaceHeight;
         Log.i(LOGTAG, "Initialized using offset (" + mSurfaceOffsetX + "," + mSurfaceOffsetY + ")");
 
         mActionTypes = new HashMap<String, Integer>();
@@ -67,6 +75,14 @@ class MotionEventReplayer {
             return Integer.parseInt(value.substring(2), 16);
         }
         return Integer.parseInt(value);
+    }
+
+    private float scaleX(float value) {
+        return value * (float)mSurfaceWidth / (float)CAPTURE_WINDOW_WIDTH;
+    }
+
+    private float scaleY(float value) {
+        return value * (float)mSurfaceHeight / (float)CAPTURE_WINDOW_HEIGHT;
     }
 
     public void replayEvents(InputStream eventDescriptions)
@@ -131,8 +147,8 @@ class MotionEventReplayer {
                     for (int i = 0; i < pointerCount; i++) {
                         pointerIds[i] = Integer.parseInt(eventProperties.get("id[" + i + "]"));
                         pointerCoords[i] = new MotionEvent.PointerCoords();
-                        pointerCoords[i].x = mSurfaceOffsetX + Float.parseFloat(eventProperties.get("x[" + i + "]"));
-                        pointerCoords[i].y = mSurfaceOffsetY + Float.parseFloat(eventProperties.get("y[" + i + "]"));
+                        pointerCoords[i].x = mSurfaceOffsetX + scaleX(Float.parseFloat(eventProperties.get("x[" + i + "]")));
+                        pointerCoords[i].y = mSurfaceOffsetY + scaleY(Float.parseFloat(eventProperties.get("y[" + i + "]")));
                     }
                     pointerData = pointerCoords;
                 } else {
@@ -145,9 +161,9 @@ class MotionEventReplayer {
                     for (int i = 0; i < pointerCount; i++) {
                         pointerIds[i] = Integer.parseInt(eventProperties.get("id[" + i + "]"));
                         sampleData[(i * NUM_SAMPLE_DATA) + SAMPLE_X] =
-                                mSurfaceOffsetX + Float.parseFloat(eventProperties.get("x[" + i + "]"));
+                                mSurfaceOffsetX + scaleX(Float.parseFloat(eventProperties.get("x[" + i + "]")));
                         sampleData[(i * NUM_SAMPLE_DATA) + SAMPLE_Y] =
-                                mSurfaceOffsetY + Float.parseFloat(eventProperties.get("y[" + i + "]"));
+                                mSurfaceOffsetY + scaleY(Float.parseFloat(eventProperties.get("y[" + i + "]")));
                     }
                     pointerData = sampleData;
                 }
