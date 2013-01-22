@@ -108,6 +108,7 @@ IonFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned coun
 inline BaselineFrame *
 IonFrameIterator::baselineFrame() const
 {
+    JS_ASSERT(isBaselineJS());
     return (BaselineFrame *)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
 }
 

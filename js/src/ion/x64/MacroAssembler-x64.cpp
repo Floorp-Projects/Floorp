@@ -193,11 +193,14 @@ MacroAssemblerX64::handleException()
 
     Label catch_;
     Label entryFrame;
+    Label return_;
 
     branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
              Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
     branch32(Assembler::Equal, Address(rsp, offsetof(ResumeFromException, kind)),
              Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, Address(esp, offsetof(ResumeFromException, kind)),
+             Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
 
     breakpoint(); // Invalid kind.
 
@@ -215,6 +218,15 @@ MacroAssemblerX64::handleException()
     movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
     movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
     jmp(Operand(rax));
+
+    // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
+    bind(&return_);
+    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    loadValue(Address(rbp, BaselineFrame::reverseOffsetOfReturnValue()), JSReturnOperand);
+    movq(rbp, rsp);
+    pop(rbp);
+    ret();
 }
 
 Assembler::Condition

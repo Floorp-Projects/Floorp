@@ -154,13 +154,29 @@ BaselineCompiler::emitPrologue()
     masm.mov(BaselineStackReg, BaselineFrameReg);
 
     masm.subPtr(Imm32(BaselineFrame::Size()), BaselineStackReg);
-
     masm.checkStackAlignment();
+
+    // Initialize BaselineFrame::flags.
+    masm.store32(Imm32(0), frame.addressOfFlags());
 
     // Initialize locals to |undefined|. Use R0 to minimize code size.
     masm.moveValue(UndefinedValue(), R0);
     for (size_t i = 0; i < frame.nlocals(); i++)
         masm.pushValue(R0);
+
+    // Initialize the scope chain before any operation that may
+    // call into the VM and trigger a GC.
+    if (!initScopeChain())
+        return false;
+
+    if (!emitStackCheck())
+        return false;
+
+    if (!emitDebugPrologue())
+        return false;
+
+    if (!emitUseCountIncrement())
+        return false;
 
     return true;
 }
@@ -190,6 +206,36 @@ BaselineCompiler::emitIC(ICStub *stub)
     if (!addICLoadLabel(patchOffset))
         return false;
 
+    return true;
+}
+
+typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, JSBool *);
+static const VMFunction DebugPrologueInfo = FunctionInfo<DebugPrologueFn>(ion::DebugPrologue);
+
+bool
+BaselineCompiler::emitDebugPrologue()
+{
+    if (!debugMode_)
+        return true;
+
+    // Load pointer to BaselineFrame in R0.
+    masm.movePtr(BaselineFrameReg, R0.scratchReg());
+    masm.subPtr(Imm32(BaselineFrame::Size()), R0.scratchReg());
+
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+    if (!callVM(DebugPrologueInfo))
+        return false;
+
+    // If the stub returns |true|, we have to return the value stored in the
+    // frame's return value slot.
+    Label done;
+    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
+    {
+        masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+        masm.jump(return_);
+    }
+    masm.bind(&done);
     return true;
 }
 
@@ -288,18 +334,7 @@ BaselineCompiler::emitUseCountIncrement()
 MethodStatus
 BaselineCompiler::emitBody()
 {
-    pc = script->code;
-
-    // Initialize the scope chain before any operation that may
-    // call into the VM and trigger a GC.
-    if (!initScopeChain())
-        return Method_Error;
-
-    if (!emitStackCheck())
-        return Method_Error;
-
-    if (!emitUseCountIncrement())
-        return Method_Error;
+    JS_ASSERT(pc == script->code);
 
     while (true) {
         SPEW_OPCODE();
@@ -1369,14 +1404,46 @@ BaselineCompiler::emit_JSOP_EXCEPTION()
     return true;
 }
 
+typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, JSBool);
+static const VMFunction DebugEpilogueInfo = FunctionInfo<DebugEpilogueFn>(ion::DebugEpilogue);
+
+bool
+BaselineCompiler::emitReturn()
+{
+    if (debugMode_) {
+        // Move return value into the frame's rval slot.
+        masm.storeValue(JSReturnOperand, frame.addressOfReturnValue());
+        masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
+
+        // Load BaselineFrame pointer in R0.
+        masm.movePtr(BaselineFrameReg, R0.scratchReg());
+        masm.subPtr(Imm32(BaselineFrame::Size()), R0.scratchReg());
+
+        prepareVMCall();
+        pushArg(Imm32(1));
+        pushArg(R0.scratchReg());
+        if (!callVM(DebugEpilogueInfo))
+            return false;
+
+        masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+    }
+
+    if (JSOp(*pc) != JSOP_STOP) {
+        // JSOP_STOP is immediately followed by the return label, so we don't
+        // need a jump.
+        masm.jump(return_);
+    }
+
+    return true;
+}
+
 bool
 BaselineCompiler::emit_JSOP_RETURN()
 {
     JS_ASSERT(frame.stackDepth() == 1);
 
     frame.popValue(JSReturnOperand);
-    masm.jump(return_);
-    return true;
+    return emitReturn();
 }
 
 bool
@@ -1385,7 +1452,5 @@ BaselineCompiler::emit_JSOP_STOP()
     JS_ASSERT(frame.stackDepth() == 0);
 
     masm.moveValue(UndefinedValue(), JSReturnOperand);
-
-    // No need to jump to return_, epilogue follows immediately.
-    return true;
+    return emitReturn();
 }
