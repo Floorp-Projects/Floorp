@@ -8,10 +8,12 @@
 #include "Ion.h"
 #include "IonCompartment.h"
 #include "jsinterp.h"
+#include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
 #include "ion/IonFrames-inl.h" // for GetTopIonJSScript
 
 #include "vm/StringObject-inl.h"
+#include "vm/Debugger.h"
 
 #include "jsboolinlines.h"
 #include "jsinterpinlines.h"
@@ -520,7 +522,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
         // debug epilogue handler as well.
         JS_ASSERT(frame->hasReturnValue());
         *mustReturn = true;
-        return ScriptDebugEpilogue(cx, frame, true);
+        return ion::DebugEpilogue(cx, frame, true);
 
       case JSTRAP_THROW:
       case JSTRAP_ERROR:
@@ -541,6 +543,54 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
     JS_ASSERT_IF(ok, frame->hasReturnValue());
     DebugScopes::onPopCall(frame, cx);
     return ok;
+}
+
+bool
+HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn)
+{
+    *mustReturn = false;
+
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = script->baseline->icEntryFromReturnAddress(retAddr).pc(script);
+
+    JS_ASSERT(cx->compartment->debugMode());
+    JS_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
+
+    Value rval;
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    JSInterruptHook hook = cx->runtime->debugHooks.interruptHook;
+
+    if (hook || script->stepModeEnabled()) {
+        if (hook)
+            status = hook(cx, script, pc, &rval, cx->runtime->debugHooks.interruptHookData);
+        if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
+            status = Debugger::onSingleStep(cx, &rval);
+    }
+
+    if (status == JSTRAP_CONTINUE && script->hasBreakpointsAt(pc))
+        status = Debugger::onTrap(cx, &rval);
+
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        break;
+
+      case JSTRAP_ERROR:
+        return false;
+
+      case JSTRAP_RETURN:
+        *mustReturn = true;
+        frame->setReturnValue(rval);
+        return ion::DebugEpilogue(cx, frame, true);
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        return false;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
+
+    return true;
 }
 
 } // namespace ion

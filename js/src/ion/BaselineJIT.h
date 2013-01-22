@@ -127,6 +127,11 @@ struct BaselineScript
     PCMappingEntry &pcMappingEntry(size_t index);
     void copyPCMappingEntries(const PCMappingEntry *entries);
     uint8_t *nativeCodeForPC(HandleScript script, jsbytecode *pc);
+
+    // Toggle debug traps (used for breakpoints and step mode) in the script.
+    // If |pc| is NULL, toggle traps for all ops in the script. Else, only
+    // toggle traps at |pc|.
+    void toggleDebugTraps(UnrootedScript script, jsbytecode *pc);
 };
 
 inline bool IsBaselineEnabled(JSContext *cx)

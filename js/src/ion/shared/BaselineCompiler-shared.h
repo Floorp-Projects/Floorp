@@ -80,6 +80,11 @@ class BaselineCompilerShared
     bool addPCMappingEntry() {
         frame.assertSyncedStack();
 
+        // Don't add multiple entries for a single pc.
+        size_t nentries = pcMappingEntries_.length();
+        if (nentries > 0 && pcMappingEntries_[nentries - 1].pcOffset == pc - script->code)
+            return true;
+
         masm.flushBuffer();
 
         PCMappingEntry entry;
