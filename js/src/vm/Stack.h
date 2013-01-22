@@ -275,6 +275,7 @@ class AbstractFramePtr
     inline UnrootedScript script() const;
     inline JSFunction *fun() const;
     inline JSFunction &callee() const;
+    inline Value calleev() const;
     inline Value &thisValue() const;
 
     inline bool isNonEvalFunctionFrame() const;
@@ -454,8 +455,9 @@ class StackFrame
     void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual);
 
     /* Used for eval. */
-    void initExecuteFrame(UnrootedScript script, StackFrame *prev, FrameRegs *regs,
-                          const Value &thisv, JSObject &scopeChain, ExecuteType type);
+    void initExecuteFrame(UnrootedScript script, StackFrame *prevLink, AbstractFramePtr prev,
+                          FrameRegs *regs, const Value &thisv, JSObject &scopeChain,
+                          ExecuteType type);
 
   public:
     /*
