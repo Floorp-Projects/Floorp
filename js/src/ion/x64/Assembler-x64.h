@@ -558,6 +558,15 @@ class Assembler : public AssemblerX86Shared
         addPendingJump(src, target->raw(), Relocation::IONCODE);
     }
 
+    // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
+    // this instruction.
+    CodeOffsetLabel toggledCall(IonCode *target, bool enabled) {
+        CodeOffsetLabel offset(size());
+        JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
+        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        return offset;
+    }
+
     // Do not mask shared implementations.
     using AssemblerX86Shared::call;
 
