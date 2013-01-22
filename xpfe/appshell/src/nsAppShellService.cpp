@@ -140,6 +140,12 @@ nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate)
                              true, getter_AddRefs(newWindow));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIDocShell> docShell;
+    newWindow->GetDocShell(getter_AddRefs(docShell));
+    if (docShell) {
+      docShell->SetAffectPrivateSessionLifetime(false);
+    }
+
     mHiddenPrivateWindow.swap(newWindow);
   }
 #endif
