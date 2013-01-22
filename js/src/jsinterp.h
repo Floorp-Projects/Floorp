@@ -59,6 +59,25 @@ extern bool
 ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool ok);
 
 /*
+ * Announce to the debugger that an exception has been thrown and propagated
+ * to |frame|. Call whatever hooks have been registered to observe this and
+ * return a JSTrapStatus code indication how execution should proceed:
+ *
+ * - JSTRAP_CONTINUE: Continue throwing the current exception.
+ *
+ * - JSTRAP_THROW: Throw another value. DebugExceptionUnwind has set |cx|'s
+ *   pending exception to the new value.
+ *
+ * - JSTRAP_ERROR: Terminate execution. DebugExceptionUnwind has cleared |cx|'s
+ *   pending exception.
+ *
+ * - JSTRAP_RETURN: Return from |frame|. DebugExceptionUnwind has cleared
+ *   |cx|'s pending exception and set |frame|'s return value.
+ */
+extern JSTrapStatus
+DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
+
+/*
  * For a given |call|, convert null/undefined |this| into the global object for
  * the callee and replace other primitives with boxed versions. This assumes
  * that call.callee() is not strict mode code. This is the special/slow case of
@@ -77,7 +96,7 @@ BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified);
  * an optimization to avoid global-this computation).
  */
 inline bool
-ComputeThis(JSContext *cx, StackFrame *fp);
+ComputeThis(JSContext *cx, AbstractFramePtr frame);
 
 enum MaybeConstruct {
     NO_CONSTRUCT = INITIAL_NONE,
@@ -160,7 +179,7 @@ InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *argv, 
  */
 extern bool
 ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
-              ExecuteType type, StackFrame *evalInFrame, Value *result);
+              ExecuteType type, AbstractFramePtr evalInFrame, Value *result);
 
 /* Execute a script with the given scopeChain as global code. */
 extern bool

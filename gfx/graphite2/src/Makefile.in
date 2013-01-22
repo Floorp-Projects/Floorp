@@ -60,7 +60,3 @@ DEFINES += -DGRAPHITE2_NFILEFACE -DGRAPHITE2_NTRACING -DGRAPHITE2_NSEGCACHE
 # to ensure safe OOM handling
 DEFINES += -DGRAPHITE2_CUSTOM_HEADER="\"MozGrMalloc.h\""
 
-# Filter out -pedantic so that direct_machine.cpp can use computed goto
-CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
-CFLAGS := $(filter-out -pedantic,$(CFLAGS))
-

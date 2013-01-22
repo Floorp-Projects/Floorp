@@ -209,12 +209,6 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp);
 
-extern JS_PUBLIC_API(void *)
-JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp);
-
-extern JS_PUBLIC_API(void)
-JS_SetTopFrameAnnotation(JSContext *cx, void *annotation);
-
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp);
 

@@ -1263,8 +1263,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   // Scope the JSAutoCompartment so that it gets destroyed before we pop the
   // cx and potentially call JS_RestoreFrameChain.
+  XPCAutoRequest ar(mContext);
   {
-    XPCAutoRequest ar(mContext);
     JSAutoCompartment ac(mContext, &aScopeObject);
 
     ++mExecuteDepth;
@@ -1293,6 +1293,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   pusher.Pop();
   ScriptEvaluated(true);
 
+  // Wrap the return value into whatever compartment mContext was in.
+  if (!JS_WrapValue(mContext, aRetValue))
+    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 

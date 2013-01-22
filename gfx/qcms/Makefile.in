@@ -61,12 +61,6 @@ endif
 endif
 endif
 
-# -pedantic causes warnings that we don't care about
-# so turn it off
-ifdef GNU_CC
-OS_CFLAGS := $(filter-out -pedantic,$(OS_CFLAGS))
-endif
-
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

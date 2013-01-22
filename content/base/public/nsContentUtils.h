@@ -2262,6 +2262,43 @@ public:
   }
 };
 
+namespace mozilla {
+
+/**
+ * Use AutoJSContext when you need a JS context on the stack but don't have one
+ * passed as a parameter. AutoJSContext will take care of finding the most
+ * appropriate JS context and release it when leaving the stack.
+ */
+class NS_STACK_CLASS AutoJSContext {
+public:
+  AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  operator JSContext*();
+
+protected:
+  AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+private:
+  // We need this Init() method because we can't use delegating constructor for
+  // the moment. It is a C++11 feature and we do not require C++11 to be
+  // supported to be able to compile Gecko.
+  void Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+  JSContext* mCx;
+  nsCxPusher mPusher;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/**
+ * SafeAutoJSContext is similar to AutoJSContext but will only return the safe
+ * JS context. That means it will never call ::GetCurrentJSContext().
+ */
+class NS_STACK_CLASS SafeAutoJSContext : public AutoJSContext {
+public:
+  SafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+};
+
+} // namespace mozilla
+
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
     foundInterface = static_cast<_interface *>(_allocator);                   \

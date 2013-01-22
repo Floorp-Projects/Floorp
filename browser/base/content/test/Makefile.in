@@ -165,6 +165,7 @@ _BROWSER_FILES = \
                  browser_bug749738.js \
                  browser_bug783614.js \
                  browser_bug797677.js \
+                 browser_bug832435.js \
                  browser_canonizeURL.js \
                  browser_customize.js \
                  browser_findbarClose.js \
