@@ -5745,7 +5745,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       }
 
       bool enabled;
-      JSObject* interfaceObject = define(cx, global, &enabled);
+      JSObject* interfaceObject = define(cx, global, id, &enabled);
       if (enabled) {
         if (!interfaceObject) {
           return NS_ERROR_FAILURE;

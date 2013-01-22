@@ -117,7 +117,13 @@ public:
     Constructor(const GlobalObject&, uint32_t, uint32_t,
                 const TestInterfaceOrOnlyForUseInConstructor&, ErrorResult&);
   */
-  
+
+  static
+  already_AddRefed<TestInterface> Test(const GlobalObject&, ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Test(const GlobalObject&, const nsAString&,
+                                       ErrorResult&);
+
   // Integer types
   int8_t ReadonlyByte();
   int8_t WritableByte();
