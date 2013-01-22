@@ -985,6 +985,7 @@ this.DOMApplicationRegistry = {
       this.downloadPackage(manifest, {
           manifestURL: aManifestURL,
           origin: app.origin,
+          installOrigin: app.installOrigin,
           downloadSize: app.downloadSize
         }, isUpdate, function(aId, aManifest) {
           // Success! Keep the zip in of TmpD, we'll move it out when
