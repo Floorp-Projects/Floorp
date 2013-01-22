@@ -1535,7 +1535,7 @@ StackIter::StackIter(const StackIter &other)
 StackIter::StackIter(const Data &data)
   : data_(data)
 #ifdef JS_ION
-    , ionInlineFrames_(data.cx_, data_.ionFrames_.isScripted() ? &data_.ionFrames_ : NULL)
+    , ionInlineFrames_(data.cx_, data_.ionFrames_.isOptimizedJS() ? &data_.ionFrames_ : NULL)
 #endif
 {
     JS_ASSERT(data.cx_);
@@ -1788,6 +1788,10 @@ StackIter::abstractFramePtr() const
       case DONE:
         break;
       case ION:
+#ifdef JS_ION
+        if (data_.ionFrames_.isBaselineJS())
+            return data_.ionFrames_.baselineFrame();
+#endif
         break;
       case SCRIPTED:
         JS_ASSERT(interpFrame());
@@ -1809,6 +1813,12 @@ StackIter::updatePcQuadratic()
         data_.pc_ = interpFrame()->pcQuadratic(data_.cx_);
         return;
       case ION:
+#ifdef JS_ION
+        if (data_.ionFrames_.isBaselineJS()) {
+            data_.ionFrames_.baselineScriptAndPc(NULL, &data_.pc_);
+            return;
+        }
+#endif
         break;
       case NATIVE:
         break;
@@ -1916,7 +1926,9 @@ StackIter::scopeChain() const
         break;
       case ION:
 #ifdef JS_ION
-        return ionInlineFrames_.scopeChain();
+        if (data_.ionFrames_.isOptimizedJS())
+            return ionInlineFrames_.scopeChain();
+        return data_.ionFrames_.baselineFrame()->scopeChain();
 #else
         break;
 #endif
@@ -2015,6 +2027,10 @@ StackIter::returnValue() const
       case DONE:
         break;
       case ION:
+#ifdef JS_ION
+        if (data_.ionFrames_.isBaselineJS())
+            return *data_.ionFrames_.baselineFrame()->returnValue();
+#endif
         break;
       case SCRIPTED:
         return interpFrame()->returnValue();
@@ -2032,6 +2048,12 @@ StackIter::setReturnValue(const Value &v)
       case DONE:
         break;
       case ION:
+#ifdef JS_ION
+        if (data_.ionFrames_.isBaselineJS()) {
+            data_.ionFrames_.baselineFrame()->setReturnValue(v);
+            return;
+        }
+#endif
         break;
       case SCRIPTED:
         interpFrame()->setReturnValue(v);
@@ -2199,6 +2221,10 @@ AllFramesIter::abstractFramePtr() const
       case SCRIPTED:
         return AbstractFramePtr(interpFrame());
       case ION:
+#ifdef JS_ION
+        if (ionFrames_.isBaselineJS())
+            return ionFrames_.baselineFrame();
+#endif
         break;
       case DONE:
         break;

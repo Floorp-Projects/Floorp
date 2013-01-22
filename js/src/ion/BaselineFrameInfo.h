@@ -260,6 +260,12 @@ class FrameInfo
     inline Address addressOfScopeChain() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScopeChain());
     }
+    inline Address addressOfFlags() const {
+        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
+    }
+    inline Address addressOfReturnValue() const {
+        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfReturnValue());
+    }
     inline Address addressOfStackValue(const StackValue *value) const {
         JS_ASSERT(value->kind() == StackValue::Stack);
         size_t slot = value - &stack[0];

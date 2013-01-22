@@ -245,6 +245,7 @@ struct ResumeFromException
 {
     static const uint32_t RESUME_ENTRY_FRAME = 0;
     static const uint32_t RESUME_CATCH = 1;
+    static const uint32_t RESUME_FORCED_RETURN = 2;
 
     uint8_t *framePointer;
     uint8_t *stackPointer;

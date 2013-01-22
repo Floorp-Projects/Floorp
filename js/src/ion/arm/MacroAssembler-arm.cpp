@@ -2997,10 +2997,12 @@ MacroAssemblerARMCompat::handleException()
 
     Label catch_;
     Label entryFrame;
+    Label return_;
 
     ma_ldr(Operand(sp, offsetof(ResumeFromException, kind)), r0);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
 
     breakpoint(); // Invalid kind.
 
@@ -3021,6 +3023,15 @@ MacroAssemblerARMCompat::handleException()
     ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
     ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
     jump(r0);
+
+    // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
+    bind(&return_);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    loadValue(Address(r11, BaselineFrame::reverseOffsetOfReturnValue()), JSReturnOperand);
+    ma_mov(r11, sp);
+    pop(r11);
+    ret();
 }
 
 Assembler::Condition

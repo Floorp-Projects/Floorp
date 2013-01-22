@@ -227,7 +227,7 @@ CallObject::createForFunction(JSContext *cx, AbstractFramePtr frame)
     assertSameCompartment(cx, frame);
 
     RootedObject scopeChain(cx, frame.scopeChain());
-    RootedFunction callee(cx, &frame.callee());
+    RootedFunction callee(cx, frame.callee());
 
     CallObject *callobj = createForFunction(cx, scopeChain, callee);
     if (!callobj)
@@ -1927,7 +1927,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
          */
-        if (i.isIon())
+        if (i.isIonOptimizedJS())
             continue;
 
         AbstractFramePtr frame = i.abstractFramePtr();
