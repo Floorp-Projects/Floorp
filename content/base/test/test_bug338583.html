@@ -207,8 +207,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 //   d) wrong Content-Type test
 //   e) bad http response code test
 //   f) message eventsource without a data test
-//   g) eventsource with invalid NCName char in the event field test
-//   h) DNS error
+//   g) DNS error
+//   h) EventSource which last message doesn't end with an empty line. See bug 710546
 
   function doTest3(test_id) {
     gEventSourceObj3_a = new EventSource("http://example.org/tests/content/base/test/eventsource.resource");
@@ -310,30 +310,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   }
 
   function doTest3_g(test_id) {
-    gEventSourceObj3_g = new EventSource("badEventFieldName.eventsource");
+    gEventSourceObj3_g = new EventSource("http://hdfskjghsbg.jtiyoejowe.dafsgbhjab.com");
 
-    fnInvalidNCName.hits = 0;
-    gEventSourceObj3_g.addEventListener('message event', fnInvalidNCName, true);
+    gEventSourceObj3_g.onmessage = fn_onmessage;
+    gEventSourceObj3_g.hits = [];
+    gEventSourceObj3_g.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(fnInvalidNCName.hits != 0, "Test 3.g failed");
+      ok(gEventSourceObj3_g.hits['fn_onmessage'] == 0, "Test 3.g failed");
       gEventSourceObj3_g.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
   }
 
+  function fnMessageListenerTest3h(e) {
+    fnMessageListenerTest3h.msg_ok = (fnMessageListenerTest3h.msg_ok && e.data == "ok");
+    fnMessageListenerTest3h.id_ok = (fnMessageListenerTest3h.msg_ok && e.lastEventId == "");
+  }
+
   function doTest3_h(test_id) {
-    gEventSourceObj3_h = new EventSource("http://hdfskjghsbg.jtiyoejowe.dafsgbhjab.com");
+    gEventSourceObj3_h = new EventSource("badMessageEvent2.eventsource");
+
+    gEventSourceObj3_h.addEventListener('message event', fnMessageListenerTest3h, true);
+    fnMessageListenerTest3h.msg_ok = true;
+    fnMessageListenerTest3h.id_ok = true;
 
     gEventSourceObj3_h.onmessage = fn_onmessage;
     gEventSourceObj3_h.hits = [];
     gEventSourceObj3_h.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_h.hits['fn_onmessage'] == 0, "Test 3.h failed");
+      ok(gEventSourceObj3_h.hits['fn_onmessage'] > 1, "Test 3.h.1 failed");
+      if (gEventSourceObj3_h.hits['fn_onmessage'] > 1) {
+        ok(fnMessageListenerTest3h.msg_ok, "Test 3.h.2 failed");
+        ok(fnMessageListenerTest3h.id_ok, "Test 3.h.3 failed");
+      }
       gEventSourceObj3_h.close();
       setTestHasFinished(test_id);
-    }, parseInt(1500*stress_factor));
+    }, parseInt(3000*stress_factor));
   }
 
 // in order to test (4)
@@ -544,8 +558,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       } else if (fn_somedata.expected == 1) {
         ok(e.data == " :xxabcdefghij\nçãá\"\'@`~Ý Ḿyyyy : zz",
           "Test 6.b failed");
-      } else if (fn_somedata.expected == 2) {
-        ok(e.data == "1", "Test 6.c failed");
         gEventSourceObj6.close();
       } else {
         ok(false, "Test 6 failed (unexpected message event)");
