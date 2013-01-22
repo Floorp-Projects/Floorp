@@ -169,6 +169,14 @@
   opacity: 1.0;
 }
 
+.devtools-no-search-result {
+  transition-property: box-shadow, border-color, background-image;
+  transition-duration: 150ms;
+  box-shadow: inset 0 0 0 1px hsla(0,68%,6%,.35);
+  border-color: hsl(10,70%,40%) hsl(10,75%,37%) hsl(10,80%,35%) !important;
+  background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(1,16%,76%,.45), hsla(1,16%,76%,.75));
+}
+
 /* Close button */
 
 .devtools-closebutton {
