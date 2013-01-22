@@ -6,14 +6,14 @@
 
 # jit_test.py -- Python harness for JavaScript trace tests.
 
-import datetime, os, re, sys, tempfile, traceback, time, shlex
+import os, sys, tempfile, traceback, time, shlex
 import subprocess
 from subprocess import *
 from threading import Thread
 import signal
 
 try:
-    from multiprocessing import Process, Queue, Manager, cpu_count
+    from multiprocessing import Process, Manager, cpu_count
     HAVE_MULTIPROCESSING = True
 except ImportError:
     HAVE_MULTIPROCESSING = False
@@ -182,7 +182,6 @@ def run_timeout_cmd(cmdline, options, timeout=60.0):
     # then we are running as a child process for parallel
     # execution and we must ensure to kill our child
     # when we are signaled to exit.
-    import signal
     sigint_handler = signal.getsignal(signal.SIGINT)
     sigterm_handler = signal.getsignal(signal.SIGTERM)
     if (sigint_handler == signal.SIG_IGN):
@@ -206,7 +205,6 @@ def run_timeout_cmd(cmdline, options, timeout=60.0):
         if l[0] is not None:
             try:
                 # In Python 3, we could just do l[0].kill().
-                import signal
                 if sys.platform != 'win32':
                     os.kill(l[0].pid, signal.SIGKILL)
                 else:
