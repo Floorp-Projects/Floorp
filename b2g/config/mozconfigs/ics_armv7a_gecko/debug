@@ -1,3 +1,5 @@
+. "$topsrcdir/b2g/config/mozconfigs/common"
+
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
 
 ac_add_options --enable-application=b2g
