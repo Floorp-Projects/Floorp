@@ -21,6 +21,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "gc/Marking.h"
 #include "methodjit/Retcon.h"
+#include "ion/BaselineJIT.h"
 #include "js/Vector.h"
 
 #include "gc/FindSCCs-inl.h"
@@ -243,6 +244,11 @@ BreakpointSite::recompile(FreeOp *fop)
         mjit::Recompiler::clearStackReferences(fop, script);
         mjit::ReleaseScriptCode(fop, script);
     }
+#endif
+
+#ifdef JS_ION
+    if (script->hasBaselineScript())
+        script->baseline->toggleDebugTraps(script, pc);
 #endif
 }
 

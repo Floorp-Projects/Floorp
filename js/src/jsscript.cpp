@@ -2470,6 +2470,11 @@ JSScript::recompileForStepMode(FreeOp *fop)
         mjit::ReleaseScriptCode(fop, this);
     }
 #endif
+
+#ifdef JS_ION
+    if (hasBaselineScript())
+        baseline->toggleDebugTraps(this, NULL);
+#endif
 }
 
 bool

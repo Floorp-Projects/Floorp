@@ -54,6 +54,9 @@ class IonRuntime
     IonCode *valuePreBarrier_;
     IonCode *shapePreBarrier_;
 
+    // Thunk used by the debugger for breakpoint and step mode.
+    IonCode *debugTrapHandler_;
+
     // Map VMFunction addresses to the IonCode of the wrapper.
     typedef WeakCache<const VMFunction *, IonCode *> VMWrapperMap;
     VMWrapperMap *functionWrappers_;
@@ -65,7 +68,14 @@ class IonRuntime
     IonCode *generateBailoutHandler(JSContext *cx);
     IonCode *generateInvalidator(JSContext *cx);
     IonCode *generatePreBarrier(JSContext *cx, MIRType type);
+    IonCode *generateDebugTrapHandler(JSContext *cx);
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
+
+    IonCode *debugTrapHandler(JSContext *cx) {
+        if (!debugTrapHandler_)
+            debugTrapHandler_ = generateDebugTrapHandler(cx);
+        return debugTrapHandler_;
+    }
 
   public:
     IonRuntime();
@@ -151,9 +161,13 @@ class IonCompartment
     IonCode *valuePreBarrier() {
         return rt->valuePreBarrier_;
     }
-    
+
     IonCode *shapePreBarrier() {
         return rt->shapePreBarrier_;
+    }
+
+    IonCode *debugTrapHandler(JSContext *cx) {
+        return rt->debugTrapHandler(cx);
     }
 
     AutoFlushCache *flusher() {

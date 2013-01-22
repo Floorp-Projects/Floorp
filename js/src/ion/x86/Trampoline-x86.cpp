@@ -14,6 +14,7 @@
 #include "ion/IonSpewer.h"
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
+#include "ion/x86/BaselineHelpers-x86.h"
 
 #include "jsscriptinlines.h"
 
@@ -573,3 +574,53 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     return linker.newCode(cx);
 }
 
+typedef bool (*HandleDebugTrapFn)(JSContext *, BaselineFrame *, uint8_t *, JSBool *);
+static const VMFunction HandleDebugTrapInfo = FunctionInfo<HandleDebugTrapFn>(HandleDebugTrap);
+
+IonCode *
+IonRuntime::generateDebugTrapHandler(JSContext *cx)
+{
+    MacroAssembler masm;
+
+    Register scratch1 = eax;
+    Register scratch2 = ecx;
+    Register scratch3 = edx;
+
+    // Load the return address in scratch1.
+    masm.loadPtr(Address(esp, 0), scratch1);
+
+    // Load BaselineFrame pointer in scratch2.
+    masm.mov(ebp, scratch2);
+    masm.subPtr(Imm32(BaselineFrame::Size()), scratch2);
+
+    // Call the HandleDebugTrap VM function.
+    EmitEnterStubFrame(masm, scratch3);
+
+    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCode *code = ion->getVMWrapper(HandleDebugTrapInfo);
+    if (!code)
+        return NULL;
+
+    masm.push(scratch1);
+    masm.push(scratch2);
+    EmitCallVM(code, masm);
+
+    EmitLeaveStubFrame(masm);
+
+    // If the stub returns |true|, we have to perform a forced return
+    // (return from the JS frame). If the stub returns |false|, just return
+    // from the trap stub so that execution continues at the current pc.
+    Label forcedReturn;
+    masm.branchTest32(Assembler::NonZero, ReturnReg, ReturnReg, &forcedReturn);
+    masm.ret();
+
+    masm.bind(&forcedReturn);
+    masm.loadValue(Address(ebp, BaselineFrame::reverseOffsetOfReturnValue()),
+                   JSReturnOperand);
+    masm.mov(ebp, esp);
+    masm.pop(ebp);
+    masm.ret();
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}

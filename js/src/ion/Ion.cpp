@@ -134,6 +134,7 @@ IonRuntime::IonRuntime()
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
     invalidator_(NULL),
+    debugTrapHandler_(NULL),
     functionWrappers_(NULL)
 {
 }

@@ -163,6 +163,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitInterruptCheck();
     bool emitUseCountIncrement();
     bool emitDebugPrologue();
+    bool emitDebugTrap();
 
     bool initScopeChain();
 
