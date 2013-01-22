@@ -560,7 +560,10 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
 int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, int len)
 {
   CSFLogDebug(logTag,  "%s : channel %d", __FUNCTION__, channel);
-  if(mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
+
+  // can't enable this assertion, because we do.  Suppress it
+  // NS_ASSERTION(mEngineReceiving,"We shouldn't send RTCP on the receiver side");
+  if(mEngineReceiving && mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
   {
     CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
     return len;

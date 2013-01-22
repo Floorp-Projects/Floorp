@@ -315,13 +315,19 @@ gfxFontUtils::ReadCMAPTableFormat12(const uint8_t *aBuf, uint32_t aLength,
     // and record character coverage in aCharacterMap.
     uint32_t prevEndCharCode = 0;
     for (uint32_t i = 0; i < numGroups; i++, group++) {
-        const uint32_t startCharCode = group->startCharCode;
+        uint32_t startCharCode = group->startCharCode;
         const uint32_t endCharCode = group->endCharCode;
         NS_ENSURE_TRUE((prevEndCharCode < startCharCode || i == 0) &&
                        startCharCode <= endCharCode &&
                        endCharCode <= CMAP_MAX_CODEPOINT, 
                        NS_ERROR_GFX_CMAP_MALFORMED);
-        aCharacterMap.SetRange(startCharCode, endCharCode);
+        // don't include a character that maps to glyph ID 0 (.notdef)
+        if (group->startGlyphId == 0) {
+            startCharCode++;
+        }
+        if (startCharCode <= endCharCode) {
+            aCharacterMap.SetRange(startCharCode, endCharCode);
+        }
         prevEndCharCode = endCharCode;
     }
 
@@ -379,7 +385,20 @@ gfxFontUtils::ReadCMAPTableFormat4(const uint8_t *aBuf, uint32_t aLength,
         prevEndCount = endCount;
 
         if (idRangeOffset == 0) {
-            aCharacterMap.SetRange(startCount, endCount);
+            // figure out if there's a code in the range that would map to
+            // glyph ID 0 (.notdef); if so, we need to skip setting that
+            // character code in the map
+            const uint16_t skipCode = 65536 - ReadShortAt16(idDeltas, i);
+            if (startCount < skipCode) {
+                aCharacterMap.SetRange(startCount,
+                                       std::min<uint16_t>(skipCode - 1,
+                                                          endCount));
+            }
+            if (skipCode < endCount) {
+                aCharacterMap.SetRange(std::max<uint16_t>(startCount,
+                                                          skipCode + 1),
+                                       endCount);
+            }
         } else {
             // const uint16_t idDelta = ReadShortAt16(idDeltas, i); // Unused: self-documenting.
             for (uint32_t c = startCount; c <= endCount; ++c) {
@@ -397,9 +416,10 @@ gfxFontUtils::ReadCMAPTableFormat4(const uint8_t *aBuf, uint32_t aLength,
                 // make sure we have a glyph
                 if (*gdata != 0) {
                     // The glyph index at this point is:
-                    // glyph = (ReadShortAt16(idDeltas, i) + *gdata) % 65536;
-
-                    aCharacterMap.set(c);
+                    uint16_t glyph = ReadShortAt16(idDeltas, i) + *gdata;
+                    if (glyph) {
+                        aCharacterMap.set(c);
+                    }
                 }
             }
         }

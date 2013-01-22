@@ -181,6 +181,20 @@ InstLDR::asTHIS(Instruction &i)
     return NULL;
 }
 
+InstNOP *
+InstNOP::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstNOP*) (&i);
+    return NULL;
+}
+
+bool
+InstNOP::isTHIS(const Instruction &i)
+{
+    return (i.encode() & 0x0fffffff) == NopInst;
+}
+
 bool
 InstBranchReg::isTHIS(const Instruction &i)
 {
@@ -2469,6 +2483,31 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
     *ptr = (*ptr & ~(0xff << 20)) | (0x35 << 20);
 
     AutoFlushCache::updateTop((uintptr_t)ptr, 4);
+}
+
+void
+Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
+{
+    Instruction *inst = (Instruction *)inst_.raw();
+    JS_ASSERT(inst->is<InstMovW>());
+
+    inst = inst->next();
+    JS_ASSERT(inst->is<InstMovT>());
+
+    inst = inst->next();
+    JS_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
+
+    if (enabled == inst->is<InstBLXReg>()) {
+        // Nothing to do.
+        return;
+    }
+
+    if (enabled)
+        *inst = InstBLXReg(ScratchRegister, Always);
+    else
+        *inst = InstNOP();
+
+    AutoFlushCache::updateTop(uintptr_t(inst), 4);
 }
 
 void

@@ -78,11 +78,6 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    if (fp->annotation()) {
-        IonSpew(IonSpew_BaselineAbort, "frame is annotated");
-        return false;
-    }
-
     return true;
 }
 
