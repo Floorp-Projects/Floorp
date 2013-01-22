@@ -413,6 +413,9 @@ class StackFrame
     void                *hookData_;     /* if HAS_HOOK_DATA, closure returned by call hook */
     FrameRejoinState    rejoin_;        /* for a jit frame rejoining the interpreter
                                          * from JIT code, state at rejoin. */
+#ifdef JS_ION
+    ion::BaselineFrame  *prevBaselineFrame_; /* for a debugger frame, the baseline frame to use as prev. */
+#endif
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(StackFrame, rval_) % sizeof(Value) == 0);
@@ -578,6 +581,19 @@ class StackFrame
     StackFrame *prev() const {
         return prev_;
     }
+
+#ifdef JS_ION
+    /*
+     * To handle eval-in-frame with a baseline JIT frame, |prev_| points to the
+     * entry frame and prevBaselineFrame_ to the actual BaselineFrame. This is
+     * done so that StackIter can skip JIT frames pushed on top of the baseline
+     * frame (these frames should not appear in stack traces).
+     */
+    ion::BaselineFrame *prevBaselineFrame() const {
+        JS_ASSERT(isDebuggerFrame());
+        return prevBaselineFrame_;
+    }
+#endif
 
     inline void resetGeneratorPrev(JSContext *cx);
 
@@ -1899,6 +1915,7 @@ class StackIter
 #ifdef JS_ION
     void nextIonFrame();
     void popIonFrame();
+    void popBaselineDebuggerFrame();
 #endif
     void settleOnNewSegment();
     void settleOnNewState();
