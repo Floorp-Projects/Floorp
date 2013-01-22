@@ -1260,6 +1260,42 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * Single Tap
+   *
+   * @param object aRequest
+            'element' represents the ID of the element to single tap on
+   */
+  singleTap: function MDA_singleTap(aRequest) {
+    this.command_id = this.getCommandId();
+    let serId = aRequest.element;
+    if (this.context == "chrome") {
+      this.sendError("Not in Chrome", 500, null, this.command_id);
+    }
+    else {
+      this.sendAsync("singleTap", {value: serId,
+                                   command_id: this.command_id});
+    }
+  },
+
+  /**
+   * Double Tap
+   *
+   * @param object aRequest
+   *        'element' represents the ID of the element to double tap on
+   */
+  doubleTap: function MDA_doubleTap(aRequest) {
+    this.command_id = this.getCommandId();
+    let serId = aRequest.element;
+    if (this.context == "chrome") {
+      this.sendError("Not in Chrome", 500, null, this.command_id);
+    }
+    else {
+      this.sendAsync("doubleTap", {value: serId,
+                                   command_id: this.command_id});
+    }
+  },
+
+  /**
    * Find an element using the indicated search strategy.
    *
    * @param object aRequest
@@ -2009,6 +2045,8 @@ MarionetteDriverActor.prototype.requestTypes = {
   "executeScript": MarionetteDriverActor.prototype.execute,
   "setScriptTimeout": MarionetteDriverActor.prototype.setScriptTimeout,
   "timeouts": MarionetteDriverActor.prototype.timeouts,
+  "singleTap": MarionetteDriverActor.prototype.singleTap,
+  "doubleTap": MarionetteDriverActor.prototype.doubleTap,
   "executeAsyncScript": MarionetteDriverActor.prototype.executeWithCallback,
   "executeJSScript": MarionetteDriverActor.prototype.executeJSScript,
   "setSearchTimeout": MarionetteDriverActor.prototype.setSearchTimeout,
